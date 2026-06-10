@@ -408,8 +408,8 @@ importers:
         specifier: 17.13.0
         version: 17.13.0(typescript@6.0.3)
       vite-plugin-static-copy:
-        specifier: 4.1.0
-        version: 4.1.0(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: 4.1.1
+        version: 4.1.1(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
 
   apps/db-compare:
     dependencies:
@@ -1012,8 +1012,8 @@ importers:
         specifier: 20.10.2
         version: 20.10.2
       vite-plugin-static-copy:
-        specifier: 4.1.0
-        version: 4.1.0(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
+        specifier: 4.1.1
+        version: 4.1.1(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0))
 
   apps/web-clipper:
     dependencies:
@@ -13297,8 +13297,8 @@ packages:
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
-  vite-plugin-static-copy@4.1.0:
-    resolution: {integrity: sha512-9XOarNV7LgP0KBB7AApxdgFikLXx3daZdqjC3AevYsL6MrUH62zphonLUs2a6LZc1HN1GY+vQdheZ8VVJb6dQQ==}
+  vite-plugin-static-copy@4.1.1:
+    resolution: {integrity: sha512-GrlA8YklrAfSyxJ4M3fdQLOo9oNkp56IM9FYgX/WtEgeIFkPwhu4wzpufBCIuNKCa6Fn77FkRdYxkHqV0FwjAw==}
     engines: {node: ^22.0.0 || >=24.0.0}
     peerDependencies:
       vite: '>=7.3.2'
@@ -19047,7 +19047,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.8.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -19062,7 +19062,7 @@ snapshots:
       debug: 4.4.3
       minimatch: 10.2.5
       semver: 7.8.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
     transitivePeerDependencies:
@@ -28464,7 +28464,7 @@ snapshots:
       pkg-types: 2.3.1
       scule: 1.3.0
       strip-literal: 3.1.0
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       unplugin: 3.0.0
       unplugin-utils: 0.3.1
     optionalDependencies:
@@ -28685,12 +28685,12 @@ snapshots:
       - tsx
       - yaml
 
-  vite-plugin-static-copy@4.1.0(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)):
+  vite-plugin-static-copy@4.1.1(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)):
     dependencies:
       chokidar: 3.6.0
       p-map: 7.0.4
       picocolors: 1.1.1
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
       vite: 8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)
 
   vite-plugin-svgo@2.0.0(typescript@6.0.3)(vite@8.0.16(@types/node@24.13.1)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)):
@@ -28715,7 +28715,7 @@ snapshots:
       picomatch: 4.0.4
       postcss: 8.5.15
       rolldown: 1.0.2
-      tinyglobby: 0.2.16
+      tinyglobby: 0.2.17
     optionalDependencies:
       '@types/node': 24.13.1
       esbuild: 0.27.7
