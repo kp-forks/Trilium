@@ -180,6 +180,11 @@ vi.mock("electron-window-state", () => ({
     default: () => ({ x: 0, y: 0, width: 1200, height: 800, manage: vi.fn() })
 }));
 
+// setupWindowing() installs the WebContents security policy; that behaviour has
+// its own suite (web_contents_security.spec.ts), so stub it out here to keep the
+// windowing tests focused and free of the extra electron app/session surface.
+vi.mock("./web_contents_security", () => ({ setupWebContentsSecurity: vi.fn() }));
+
 vi.mock("@triliumnext/core", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@triliumnext/core")>();
     return {

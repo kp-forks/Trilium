@@ -29,7 +29,6 @@ import { setupPrintingHandlers } from "./services/printing";
 import { getSecuritySettings, registerSecurityIpcHandlers } from "./services/security_settings";
 import { setupShellHandlers } from "./services/shell";
 import { setupSystemTray } from "./services/tray";
-import { setupWebContentsSecurity } from "./services/web_contents_security";
 
 export async function main() {
     // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
@@ -104,7 +103,6 @@ export async function main() {
     });
 
     setupWindowing();
-    setupWebContentsSecurity();
     setupSystemTray();
     setupCustomDictionary();
     setupShellHandlers();

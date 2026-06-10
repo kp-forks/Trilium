@@ -3,6 +3,8 @@ import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
 
+import { setupWebContentsSecurity } from "./web_contents_security.js";
+
 // Preload bundle path. Two layouts:
 //   - Dev: this file lives at apps/desktop/src/services/window.ts, and the
 //     preload bundle is one level up at apps/desktop/src/preload.compiled.cjs
@@ -337,6 +339,12 @@ function getAllWindows() {
  * Call once during desktop startup, before `app.ready` fires.
  */
 export function setupWindowing() {
+    // Window-open, navigation, <webview>-attach and permission policy is applied
+    // to every WebContents the app creates. Installed here rather than left to
+    // each entry point so a new Electron launcher cannot silently ship without
+    // the renderer/main security boundary.
+    setupWebContentsSecurity();
+
     electron.ipcMain.on("create-extra-window", (_event, arg) => {
         createExtraWindow(arg.extraWindowHash);
     });
