@@ -8,7 +8,6 @@ import { formatSize } from "../../../services/utils";
 import { formatDateTime } from "../../../utils/formatters";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
-import FormText from "../../react/FormText";
 import { useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
@@ -48,9 +47,10 @@ export function BackupConfiguration() {
     const [monthlyBackupEnabled, setMonthlyBackupEnabled] = useTriliumOptionBool("monthlyBackupEnabled");
 
     return (
-        <OptionsSection title={t("backup.title")}>
-            <FormText>{t("backup.automatic_backup_description")}</FormText>
-
+        <OptionsSection
+            title={t("backup.automatic_backups_title")}
+            description={t("backup.automatic_backups_description")}
+        >
             <OptionsRowWithToggle
                 name="daily-backup-enabled"
                 label={t("backup.enable_daily_backup")}
@@ -71,8 +71,6 @@ export function BackupConfiguration() {
                 currentValue={monthlyBackupEnabled}
                 onChange={setMonthlyBackupEnabled}
             />
-
-            <FormText>{t("backup.backup_recommendation")}</FormText>
         </OptionsSection>
     );
 }
