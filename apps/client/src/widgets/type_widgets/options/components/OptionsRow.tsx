@@ -92,15 +92,17 @@ interface OptionsRowWithButtonProps {
     label: string;
     description?: string;
     icon?: string;
+    disabled?: boolean;
     onClick: () => void;
 }
 
-export function OptionsRowWithButton({ label, description, icon, onClick }: OptionsRowWithButtonProps) {
+export function OptionsRowWithButton({ label, description, icon, disabled, onClick }: OptionsRowWithButtonProps) {
     return (
         <button
             type="button"
             className="option-row option-row-link"
             onClick={onClick}
+            disabled={disabled}
             aria-label={label}
         >
             <div className="option-row-label">

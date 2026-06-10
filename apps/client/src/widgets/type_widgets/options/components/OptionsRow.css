@@ -94,6 +94,11 @@ button.option-row-link:last-child {
     border-bottom: none;
 }
 
+button.option-row-link:disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
 .search-engine-templates {
     --badge-radius: 12px;
     display: flex;

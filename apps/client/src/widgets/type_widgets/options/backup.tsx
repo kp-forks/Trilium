@@ -45,6 +45,7 @@ export function BackupConfiguration({ refreshCallback }: { refreshCallback: () =
     const [dailyBackupEnabled, setDailyBackupEnabled] = useTriliumOptionBool("dailyBackupEnabled");
     const [weeklyBackupEnabled, setWeeklyBackupEnabled] = useTriliumOptionBool("weeklyBackupEnabled");
     const [monthlyBackupEnabled, setMonthlyBackupEnabled] = useTriliumOptionBool("monthlyBackupEnabled");
+    const [backupInProgress, setBackupInProgress] = useState(false);
 
     return (
         <OptionsSection title={t("backup.title")}>
@@ -77,10 +78,16 @@ export function BackupConfiguration({ refreshCallback }: { refreshCallback: () =
 
             <OptionsRowWithButton
                 label={t("backup.backup_database_now")}
+                disabled={backupInProgress}
                 onClick={async () => {
-                    const { backupFile } = await server.post<BackupDatabaseNowResponse>("database/backup-database");
-                    toast.showMessage(t("backup.database_backed_up_to", { backupFilePath: backupFile }), 10000);
-                    refreshCallback();
+                    setBackupInProgress(true);
+                    try {
+                        const { backupFile } = await server.post<BackupDatabaseNowResponse>("database/backup-database");
+                        toast.showMessage(t("backup.database_backed_up_to", { backupFilePath: backupFile }), 10000);
+                        refreshCallback();
+                    } finally {
+                        setBackupInProgress(false);
+                    }
                 }}
             />
         </OptionsSection>
