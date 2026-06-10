@@ -1501,7 +1501,8 @@
     "delete_row": "行を削除"
   },
   "content_renderer": {
-    "open_externally": "外部で開く"
+    "open_externally": "外部で開く",
+    "mermaid_diagram_error": "マーメイド図のレンダリングに失敗しました: {{error}}"
   },
   "add_label": {
     "add_label": "ラベルを追加",

@@ -2353,7 +2353,11 @@
     "exit-fullscreen": "Esci dalla modalità a schermo intero",
     "unsupported-format": "Per questo formato di file non è disponibile l'anteprima multimediale:\n{{mime}}",
     "zoom-to-fit": "Ingrandisci per riempire",
-    "zoom-reset": "Ripristina lo zoom a schermo intero"
+    "zoom-reset": "Ripristina lo zoom a schermo intero",
+    "previous-video": "Video precedente: {{- title}}",
+    "next-video": "Prossimo video: {{- title}}",
+    "previous-audio": "Audio precedente: {{- title}}",
+    "next-audio": "Audio successivo: {{- title}}"
   },
   "mermaid": {
     "placeholder": "Digita il contenuto del tuo diagramma Mermaid oppure utilizza uno dei diagrammi di esempio riportati di seguito.",
@@ -2796,5 +2800,17 @@
     "type_text": "Testo",
     "type_code": "Codice",
     "tooltip": "Un frammento di testo o codice riutilizzabile, pensato per essere inserito nell'editor (dal menu degli snippet nella barra degli strumenti o tramite un comando con la barra)."
+  },
+  "image_buttons": {
+    "zoom_in": "Ingrandisci",
+    "zoom_out": "Riduci",
+    "reset_zoom": "Ripristina lo zoom"
+  },
+  "image_navigation": {
+    "previous": "Immagine precedente: {{- title}}",
+    "next": "Immagine successiva: {{- title}}"
+  },
+  "image_viewer": {
+    "loading_error": "Si è verificato un errore durante il caricamento dell'immagine."
   }
 }
