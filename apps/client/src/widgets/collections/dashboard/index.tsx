@@ -11,12 +11,11 @@ import linkContextMenuService from "../../../menus/link_context_menu";
 import froca from "../../../services/froca";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
-import { useNoteLabelBoolean, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
+import { useNoteLabelBoolean, useSpacedUpdate } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
 import { getNotePath, NoteContent } from "../legacy/ListOrGridView";
-import ViewModeStorage from "../view_mode_storage";
 
 interface DashboardWidgetLayout {
     x: number;
@@ -31,7 +30,6 @@ export interface DashboardViewConfig {
 
 const DEFAULT_WIDGET_SIZE = { w: 4, h: 3 };
 const INITIALIZED_CLASS = "dashboard-widget-initialized";
-const CONFIG_ATTACHMENT_TITLE = "dashboard.json";
 
 export default function DashboardView({ note, noteIds, viewConfig, saveConfig, highlightedTokens, showTextRepresentation }: ViewModeProps<DashboardViewConfig>) {
     const [ notes, setNotes ] = useState<FNote[]>([]);
@@ -126,22 +124,18 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
         persistLayout(grid);
     }, [ notes ]);
 
-    // React to external changes of the layout attachment (e.g. the same dashboard open in
-    // another split or synced from another instance).
-    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
-        if (!loadResults.getAttachmentRows().some((att) => att.ownerId === note.noteId && att.title === CONFIG_ATTACHMENT_TITLE)) {
+    // React to external changes of the layout (e.g. the same dashboard open in another split
+    // or synced from another instance) propagated through the viewConfig prop.
+    useEffect(() => {
+        const widgets = viewConfig?.widgets ?? {};
+        if (pendingConfigRef.current || sameLayout(widgets, savedWidgetsRef.current)) {
+            // Local changes take precedence; identical layouts (e.g. our own save echoing back)
+            // need no re-apply.
             return;
         }
-        new ViewModeStorage<DashboardViewConfig>(note, "dashboard").restore().then((config) => {
-            const widgets = config?.widgets ?? {};
-            if (sameLayout(widgets, savedWidgetsRef.current)) {
-                // Our own save echoing back, or no effective change.
-                return;
-            }
-            savedWidgetsRef.current = widgets;
-            applyLayout(widgets);
-        });
-    });
+        savedWidgetsRef.current = widgets;
+        applyLayout(widgets);
+    }, [ viewConfig ]);
 
     function applyLayout(widgets: Record<string, DashboardWidgetLayout>) {
         const grid = gridRef.current;
