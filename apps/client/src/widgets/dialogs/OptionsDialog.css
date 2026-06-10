@@ -77,6 +77,12 @@ body.mobile .modal.options-dialog.mobile-view-list .modal-body {
     display: none;
 }
 
+/* With the body hidden, collapse the main pane to just its header (the generic layout gives it
+   flex-grow: 1, which would leave it occupying half the dialog) so the list takes the full height. */
+body.mobile .modal.options-dialog.mobile-view-list .modal-main {
+    flex-grow: 0;
+}
+
 body.mobile .modal.options-dialog.mobile-view-page .modal-sidebar {
     display: none;
 }
