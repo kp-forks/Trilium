@@ -95,21 +95,23 @@ body.mobile .modal.options-dialog.mobile-view-page .modal-header > .modal-title 
 
 /* Sliding transition between the two views, mirroring the setup wizard's page animation: the page
    slides in from the end side, the list back in from the start side. Becoming displayed restarts
-   the animation, so the incoming pane animates exactly when the view switches. The global
-   `motion-disabled` rule suppresses these when animations are turned off in the settings. */
-body.mobile .modal.options-dialog.mobile-view-page .modal-body {
+   the animation, so the incoming pane animates exactly when the view switches. The
+   `animate-view-switch` class is only present once the user switched views within the open dialog,
+   keeping the initial view from sliding when the dialog opens. The global `motion-disabled` rule
+   suppresses these when animations are turned off in the settings. */
+body.mobile .modal.options-dialog.animate-view-switch.mobile-view-page .modal-body {
     animation: options-slide-in-end 0.35s ease-in-out;
 }
 
-body.mobile .modal.options-dialog.mobile-view-list .modal-sidebar {
+body.mobile .modal.options-dialog.animate-view-switch.mobile-view-list .modal-sidebar {
     animation: options-slide-in-start 0.35s ease-in-out;
 }
 
-body[dir=rtl].mobile .modal.options-dialog.mobile-view-page .modal-body {
+body[dir=rtl].mobile .modal.options-dialog.animate-view-switch.mobile-view-page .modal-body {
     animation-name: options-slide-in-start;
 }
 
-body[dir=rtl].mobile .modal.options-dialog.mobile-view-list .modal-sidebar {
+body[dir=rtl].mobile .modal.options-dialog.animate-view-switch.mobile-view-list .modal-sidebar {
     animation-name: options-slide-in-end;
 }
 

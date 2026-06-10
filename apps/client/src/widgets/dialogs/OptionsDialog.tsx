@@ -33,6 +33,9 @@ export default function OptionsDialog() {
     const [ lastSection, setLastSection ] = useState<string | null>(null);
     // Which half of the mobile master-detail flow is visible; has no effect on desktop.
     const [ mobileView, setMobileView ] = useState<"list" | "page">("list");
+    // Whether the user switched views since the dialog was opened. Gates the slide animation so
+    // that only actual list/page switches animate, not the initial view when the dialog opens.
+    const [ viewSwitched, setViewSwitched ] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
 
@@ -45,6 +48,7 @@ export default function OptionsDialog() {
         setNoteContext(noteContext);
         // Requesting a specific section (e.g. "set up a password") skips the mobile master list.
         setMobileView(section ? "page" : "list");
+        setViewSwitched(false);
         setShown(true);
     });
 
@@ -54,7 +58,8 @@ export default function OptionsDialog() {
     useEffect(() => {
         modalRef.current?.classList.toggle("mobile-view-list", mobileView === "list");
         modalRef.current?.classList.toggle("mobile-view-page", mobileView === "page");
-    }, [ mobileView ]);
+        modalRef.current?.classList.toggle("animate-view-switch", viewSwitched);
+    }, [ mobileView, viewSwitched ]);
 
     // Keep navigation between settings pages (sidebar entries, "Related settings" links) inside the
     // dialog; links to regular notes open in the quick-edit popup instead.
@@ -62,6 +67,7 @@ export default function OptionsDialog() {
         if (notePath.split("/").at(-1)?.startsWith("_options")) {
             void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
             setMobileView("page");
+            setViewSwitched(true);
         } else {
             void appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath });
         }
@@ -72,7 +78,10 @@ export default function OptionsDialog() {
             <Modal
                 modalRef={modalRef}
                 title={t("options.title")}
-                header={isMobile && mobileView === "page" ? <MobilePageHeader onBack={() => setMobileView("list")} /> : undefined}
+                header={isMobile && mobileView === "page" ? <MobilePageHeader onBack={() => {
+                    setMobileView("list");
+                    setViewSwitched(true);
+                }} /> : undefined}
                 sidebar={<SettingsSidebar />}
                 isFullPageOnMobile
                 customTitleBarButtons={[{
