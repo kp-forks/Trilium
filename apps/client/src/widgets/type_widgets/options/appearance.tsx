@@ -130,7 +130,6 @@ export default function AppearanceSettings() {
             {isElectron() && <ElectronIntegration /> }
             <Performance />
             <MaxContentWidth />
-            <RibbonOptions />
             <RelatedSettings items={[
                 {
                     title: t("settings_appearance.related_code_blocks"),
@@ -150,6 +149,7 @@ function UserInterface() {
     const [ customThemes, setCustomThemes ] = useState<CustomTheme[]>([]);
     const [ newLayout, setNewLayout ] = useTriliumOptionBool("newLayout");
     const [ layoutOrientation, setLayoutOrientation ] = useTriliumOption("layoutOrientation", true);
+    const [ editedNotesOpenInRibbon, setEditedNotesOpenInRibbon ] = useTriliumOptionBool("editedNotesOpenInRibbon");
 
     useEffect(() => {
         server.get<CustomTheme[]>("options/user-themes").then((userThemes) => {
@@ -245,6 +245,14 @@ function UserInterface() {
                         ]}
                     />
                 </OptionsRow>
+                {!newLayout && (
+                    <OptionsRowWithToggle
+                        name="edited-notes-open-in-ribbon"
+                        label={t("ribbon.edited_notes_message")}
+                        currentValue={editedNotesOpenInRibbon}
+                        onChange={setEditedNotesOpenInRibbon}
+                    />
+                )}
                 <OptionsRow name="layout-orientation" label={t("settings_appearance.ui_layout_orientation")}>
                     <RadioWithIllustration
                         currentValue={layoutOrientation ?? "vertical"}
@@ -688,21 +696,6 @@ function MaxContentWidth() {
                 label={t("max_content_width.centerContent")}
                 currentValue={centerContent}
                 onChange={setCenterContent}
-            />
-        </OptionsSection>
-    );
-}
-
-function RibbonOptions() {
-    const [ editedNotesOpenInRibbon, setEditedNotesOpenInRibbon ] = useTriliumOptionBool("editedNotesOpenInRibbon");
-
-    return (
-        <OptionsSection title={t('ribbon.widgets')}>
-            <OptionsRowWithToggle
-                name="edited-notes-open-in-ribbon"
-                label={t('ribbon.edited_notes_message')}
-                currentValue={editedNotesOpenInRibbon}
-                onChange={setEditedNotesOpenInRibbon}
             />
         </OptionsSection>
     );
