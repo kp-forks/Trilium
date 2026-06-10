@@ -1,0 +1,46 @@
+.dashboard-view {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .dashboard-scroll-container {
+        flex: 1;
+        overflow-y: auto;
+        position: relative;
+    }
+
+    .dashboard-widget {
+        display: flex;
+        flex-direction: column;
+        border: 1px solid var(--main-border-color);
+        border-radius: 6px;
+        background: var(--main-background-color);
+        overflow: hidden;
+
+        &.archived {
+            opacity: 0.6;
+        }
+    }
+
+    .dashboard-widget-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 8px;
+        cursor: grab;
+        border-bottom: 1px solid var(--main-border-color);
+
+        .note-book-title {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+
+    .dashboard-widget-content {
+        flex: 1;
+        overflow: auto;
+        padding: 8px;
+    }
+}

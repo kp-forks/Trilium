@@ -24,7 +24,8 @@ export const ICON_MAPPINGS: Record<ViewTypeOptions, string> = {
     table: "bx bx-table",
     geoMap: "bx bx-map-alt",
     board: "bx bx-columns",
-    presentation: "bx bx-rectangle"
+    presentation: "bx bx-rectangle",
+    dashboard: "bx bxs-dashboard"
 };
 
 const MAX_OPEN_TABS = 50;

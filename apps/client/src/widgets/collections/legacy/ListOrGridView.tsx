@@ -304,7 +304,7 @@ function NoteMenuButton(props: {notePath: string}) {
             />
 }
 
-function getNotePath(parentNote: FNote, childNote: FNote) {
+export function getNotePath(parentNote: FNote, childNote: FNote) {
     if (parentNote.type === "search") {
         // for search note parent, we want to display a non-search path
         return childNote.noteId;
