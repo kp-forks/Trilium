@@ -674,7 +674,7 @@ function MaxContentWidth() {
     const [centerContent, setCenterContent] = useTriliumOptionBool("centerContent");
 
     return (
-        <OptionsSection title={t("max_content_width.title")} description={t("max_content_width.default_description")}>
+        <OptionsSection title={t("max_content_width.title")} description={t("max_content_width.default_description")} helpUrl="t596jLvPrqkS">
             <OptionsRow name="max-content-width" label={t("max_content_width.max_width_label")}>
                 <FormTextBoxWithUnit
                     type="number" min={MIN_CONTENT_WIDTH} step="10"
