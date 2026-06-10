@@ -1,0 +1,11 @@
+/* The download action is an anchor (for the `download` attribute); without this
+   the contained icon button would inherit the link color and look different from
+   plain icon-action buttons. The :visited/:hover states must be covered explicitly,
+   as the global `a:visited`/`a:hover` color rules have a higher specificity than
+   a lone class selector (a previously downloaded file would turn blue again). */
+.database-file-download,
+.database-file-download:visited,
+.database-file-download:hover {
+    color: inherit;
+    text-decoration: none;
+}

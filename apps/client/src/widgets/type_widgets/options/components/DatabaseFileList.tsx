@@ -1,3 +1,5 @@
+import "./DatabaseFileList.css";
+
 import { ComponentChildren } from "preact";
 import { useMemo } from "preact/hooks";
 
@@ -54,7 +56,7 @@ export default function DatabaseFileList({ title, locationDescription, files, do
                         label={<span className="selectable-text">{fileName}</span>}
                         description={`${mtime ? formatDateTime(mtime) : "-"} • ${formatSize(fileSize)}`}
                     >
-                        <a href={`${downloadEndpoint}?filePath=${encodeURIComponent(filePath)}`} download>
+                        <a className="database-file-download" href={`${downloadEndpoint}?filePath=${encodeURIComponent(filePath)}`} download>
                             <ActionButton icon="bx bx-download" text={downloadText} />
                         </a>
                     </OptionsRow>
