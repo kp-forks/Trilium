@@ -108,7 +108,7 @@ export default function OptionsDialog() {
                 header={isMobile && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
                 sidebar={isMobile ? undefined : <SettingsSidebar />}
                 isFullPageOnMobile
-                customTitleBarButtons={[{
+                customTitleBarButtons={!isMobile ? [{
                     iconClassName: "bx-expand-alt",
                     title: t("popup-editor.maximize"),
                     onClick: async () => {
@@ -117,7 +117,7 @@ export default function OptionsDialog() {
                         await appContext.tabManager.openInNewTab(noteId, hoistedNoteId, true);
                         setShown(false);
                     }
-                }]}
+                }] : undefined}
                 className="options-dialog"
                 size="lg"
                 show={shown}
