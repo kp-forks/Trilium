@@ -1612,6 +1612,8 @@ export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unk
  * document-level `goToLink` handler (and before anything that might stop propagation). Modified or
  * middle clicks and external links are left untouched so they can still open in a new tab/window or
  * externally, and clicks inside editable rich text are ignored so they keep placing the caret.
+ * Links that implement their own navigation (and would otherwise never see the click, since this
+ * runs first) can opt out entirely via a `data-no-contained-navigation` attribute.
  */
 export function useContainedLinkNavigation(
     containerRef: RefObject<HTMLElement>,
@@ -1626,6 +1628,7 @@ export function useContainedLinkNavigation(
 
             const link = (e.target as HTMLElement).closest("a");
             if (!link || link.getAttribute("target") === "_blank" || link.isContentEditable) return;
+            if (link.hasAttribute("data-no-contained-navigation")) return;
 
             const href = link.getAttribute("href") ?? link.getAttribute("data-href");
             if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
