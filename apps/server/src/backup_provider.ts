@@ -23,7 +23,7 @@ export default class ServerBackupService extends BackupService {
                 const filePath = path.resolve(dataDir.BACKUP_DIR, fileName);
                 const stat = fs.statSync(filePath);
 
-                return { fileName, filePath, mtime: stat.mtime };
+                return { fileName, filePath, mtime: stat.mtime, fileSize: stat.size };
             });
     }
 

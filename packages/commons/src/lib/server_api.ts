@@ -111,6 +111,8 @@ export interface DatabaseBackup {
     fileName: string;
     filePath: string;
     mtime: Date;
+    /** Size of the backup file, in bytes. */
+    fileSize: number;
 }
 
 export interface ExistingBackupsResponse {

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
+import { formatSize } from "../../../services/utils";
 import { formatDateTime } from "../../../utils/formatters";
 import ActionButton from "../../react/ActionButton";
 import FormText from "../../react/FormText";
@@ -95,12 +96,12 @@ export function BackupList({ backups, backupFolderPath }: { backups: DatabaseBac
             )}
         >
             {backups.length > 0 ? (
-                backups.map(({ fileName, filePath, mtime }) => (
+                backups.map(({ fileName, filePath, mtime, fileSize }) => (
                     <OptionsRow
                         key={filePath}
                         name="existing-backup"
                         label={<span className="selectable-text">{fileName}</span>}
-                        description={mtime ? formatDateTime(mtime) : "-"}
+                        description={`${mtime ? formatDateTime(mtime) : "-"} • ${formatSize(fileSize)}`}
                     >
                         <a href={`api/database/backup/download?filePath=${encodeURIComponent(filePath)}`} download>
                             <ActionButton icon="bx bx-download" text={t("backup.download")} />

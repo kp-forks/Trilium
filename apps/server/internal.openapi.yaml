@@ -2792,6 +2792,9 @@ paths:
                         mtime:
                           type: string
                           format: date-time
+                        fileSize:
+                          type: integer
+                          description: Size of the backup file, in bytes.
                   
   /api/database/vacuum-database:
     post:
