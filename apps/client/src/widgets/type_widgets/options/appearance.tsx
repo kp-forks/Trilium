@@ -527,57 +527,54 @@ function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFa
             show={show}
             onHidden={onHidden}
             stackable
+            sidebar={
+                <FormList fullHeight wrapperClassName="font-picker-list">
+                    {FONT_FAMILIES.map(group => (
+                        <Fragment key={group.title}>
+                            <FormListHeader text={group.title} />
+                            {group.items.map(item => (
+                                <FormListItem
+                                    key={item.value}
+                                    onClick={() => onFontFamilyChange(item.value)}
+                                    checked={fontFamily === item.value}
+                                    selected={fontFamily === item.value}
+                                >
+                                    <span style={{ fontFamily: getFontFamily(item.value) }}>
+                                        {item.label ?? item.value}
+                                    </span>
+                                </FormListItem>
+                            ))}
+                        </Fragment>
+                    ))}
+                </FormList>
+            }
         >
-            <div className="font-picker-content">
-                <div className="font-picker-list">
-                    <FormList fullHeight>
-                        {FONT_FAMILIES.map(group => (
-                            <Fragment key={group.title}>
-                                <FormListHeader text={group.title} />
-                                {group.items.map(item => (
-                                    <FormListItem
-                                        key={item.value}
-                                        onClick={() => onFontFamilyChange(item.value)}
-                                        checked={fontFamily === item.value}
-                                        selected={fontFamily === item.value}
-                                    >
-                                        <span style={{ fontFamily: getFontFamily(item.value) }}>
-                                            {item.label ?? item.value}
-                                        </span>
-                                    </FormListItem>
-                                ))}
-                            </Fragment>
-                        ))}
-                    </FormList>
+            <div className="font-picker-settings">
+                <div className="font-size-control">
+                    <label>{t("fonts.size")}</label>
+                    <div className="font-size-slider">
+                        <Slider
+                            value={fontSize}
+                            onChange={onFontSizeChange}
+                            min={50}
+                            max={200}
+                            step={5}
+                        />
+                        <span className="font-size-value">{fontSize}%</span>
+                    </div>
+                    {sizeDescription && <small className="font-size-description">{sizeDescription}</small>}
                 </div>
 
-                <div className="font-picker-settings">
-                    <div className="font-size-control">
-                        <label>{t("fonts.size")}</label>
-                        <div className="font-size-slider">
-                            <Slider
-                                value={fontSize}
-                                onChange={onFontSizeChange}
-                                min={50}
-                                max={200}
-                                step={5}
-                            />
-                            <span className="font-size-value">{fontSize}%</span>
-                        </div>
-                        {sizeDescription && <small className="font-size-description">{sizeDescription}</small>}
-                    </div>
-
-                    <div className="font-preview">
-                        <label>{t("fonts.preview")}</label>
-                        <div
-                            className="font-preview-text"
-                            style={{
-                                fontFamily: getFontFamily(fontFamily),
-                                fontSize: `${fontSize}%`
-                            }}
-                        >
-                            {PREVIEW_TEXT}
-                        </div>
+                <div className="font-preview">
+                    <label>{t("fonts.preview")}</label>
+                    <div
+                        className="font-preview-text"
+                        style={{
+                            fontFamily: getFontFamily(fontFamily),
+                            fontSize: `${fontSize}%`
+                        }}
+                    >
+                        {PREVIEW_TEXT}
                     </div>
                 </div>
             </div>
