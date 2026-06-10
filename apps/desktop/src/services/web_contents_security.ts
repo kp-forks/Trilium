@@ -100,13 +100,16 @@ export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences
         violations.push("allowRunningInsecureContent");
     }
     // The only legitimate <webview> (the Web View note type) always declares
-    // the dedicated guest partition. Explicitly requesting a different one is
-    // hostile markup; omitting it would attach the guest into the *default*
-    // session — shared cookie jar and trilium-app:// protocol registry — so
-    // it is force-set below either way.
+    // the dedicated guest partition. Anything else is a violation: a different
+    // partition is hostile markup, and an unset/empty one (Electron surfaces an
+    // omitted attribute as "") would otherwise risk attaching the guest into
+    // the *default* session — shared cookie jar and trilium-app:// registry.
+    // Requiring an exact match keeps a single source of truth; supporting
+    // per-note partitions later means relaxing this to a `persist:webview`
+    // prefix check AND having WebView.tsx set the chosen value.
     const partition = prefs.partition ?? requestedPartition;
-    if (partition !== undefined && partition !== WEBVIEW_SESSION_PARTITION) {
-        violations.push(`partition '${partition}'`);
+    if (partition !== WEBVIEW_SESSION_PARTITION) {
+        violations.push(`partition '${partition ?? "<unset>"}'`);
     }
 
     prefs.partition = WEBVIEW_SESSION_PARTITION;

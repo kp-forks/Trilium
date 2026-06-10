@@ -135,7 +135,8 @@ function resetState() {
 
 describe("hardenWebviewPreferences", () => {
     it("reports no violations for a benign attach and forces isolation on", () => {
-        const prefs: Electron.WebPreferences = {};
+        // A legitimate attach (WebView.tsx) always declares the guest partition.
+        const prefs: Electron.WebPreferences = { partition: "persist:webview" };
 
         const violations = hardenWebviewPreferences(prefs);
 
@@ -151,7 +152,7 @@ describe("hardenWebviewPreferences", () => {
         });
     });
 
-    it("accepts the dedicated guest partition and rejects any other", () => {
+    it("requires exactly the guest partition and rejects any other, unset, or empty value", () => {
         const legit: Electron.WebPreferences = { partition: "persist:webview" };
         expect(hardenWebviewPreferences(legit)).toEqual([]);
 
@@ -166,10 +167,21 @@ describe("hardenWebviewPreferences", () => {
         const viaParams: Electron.WebPreferences = {};
         expect(hardenWebviewPreferences(viaParams, "persist:evil")).toEqual(["partition 'persist:evil'"]);
         expect(viaParams.partition).toBe("persist:webview");
+
+        // Unset partition (no attribute) — must not slip through to the default
+        // session, so it is a violation and the attach is denied.
+        const unset: Electron.WebPreferences = {};
+        expect(hardenWebviewPreferences(unset)).toEqual(["partition '<unset>'"]);
+        expect(unset.partition).toBe("persist:webview");
+
+        // Empty partition — Electron surfaces an omitted <webview partition> as
+        // "", which must be rejected just the same.
+        const empty: Electron.WebPreferences = {};
+        expect(hardenWebviewPreferences(empty, "")).toEqual(["partition ''"]);
     });
 
     it("normalizes explicitly-disabled isolation silently (Electron default plumbing, not hostile markup)", () => {
-        const prefs: Electron.WebPreferences = { contextIsolation: false, sandbox: false };
+        const prefs: Electron.WebPreferences = { contextIsolation: false, sandbox: false, partition: "persist:webview" };
 
         const violations = hardenWebviewPreferences(prefs);
 
@@ -179,8 +191,8 @@ describe("hardenWebviewPreferences", () => {
     });
 
     it("strips preload scripts and reports them, including the legacy preloadURL alias", () => {
-        const prefs = { preload: "/evil.js" } as Electron.WebPreferences;
-        const legacyPrefs = { preloadURL: "file:///evil.js" } as Electron.WebPreferences & { preloadURL?: string };
+        const prefs = { preload: "/evil.js", partition: "persist:webview" } as Electron.WebPreferences;
+        const legacyPrefs = { preloadURL: "file:///evil.js", partition: "persist:webview" } as Electron.WebPreferences & { preloadURL?: string };
 
         expect(hardenWebviewPreferences(prefs)).toEqual(["preload script"]);
         expect(hardenWebviewPreferences(legacyPrefs)).toEqual(["preload script"]);
@@ -193,7 +205,8 @@ describe("hardenWebviewPreferences", () => {
             nodeIntegration: true,
             nodeIntegrationInSubFrames: true,
             webSecurity: false,
-            allowRunningInsecureContent: true
+            allowRunningInsecureContent: true,
+            partition: "persist:webview"
         };
 
         const violations = hardenWebviewPreferences(prefs);
@@ -254,7 +267,7 @@ describe("setupWebContentsSecurity", () => {
     });
 
     it("denies an attach requesting nodeIntegration and logs the src", () => {
-        const { preventDefault } = attachWebview({ nodeIntegration: true }, "https://evil.example");
+        const { preventDefault } = attachWebview({ nodeIntegration: true }, "https://evil.example", "persist:webview");
 
         expect(preventDefault).toHaveBeenCalledOnce();
         expect(state.errors).toHaveLength(1);
@@ -263,7 +276,7 @@ describe("setupWebContentsSecurity", () => {
     });
 
     it("denies an attach requesting a preload script", () => {
-        const { preventDefault } = attachWebview({ preload: "/evil.js" } as Electron.WebPreferences);
+        const { preventDefault } = attachWebview({ preload: "/evil.js" } as Electron.WebPreferences, "https://example.com", "persist:webview");
 
         expect(preventDefault).toHaveBeenCalledOnce();
         expect(state.errors[0]).toContain("preload script");
