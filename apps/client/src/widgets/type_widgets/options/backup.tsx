@@ -8,7 +8,8 @@ import { formatDateTime } from "../../../utils/formatters";
 import ActionButton from "../../react/ActionButton";
 import FormText from "../../react/FormText";
 import { useTriliumOptionBool } from "../../react/hooks";
-import { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
+import NoItems from "../../react/NoItems";
+import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function BackupSettings() {
@@ -86,39 +87,22 @@ export function BackupConfiguration({ refreshCallback }: { refreshCallback: () =
 export function BackupList({ backups }: { backups: DatabaseBackup[] }) {
     return (
         <OptionsSection title={t("backup.existing_backups")}>
-            <table class="table table-stripped">
-                <colgroup>
-                    <col width="33%" />
-                    <col />
-                    <col width="1%" />
-                </colgroup>
-                <thead>
-                    <tr>
-                        <th>{t("backup.date-and-time")}</th>
-                        <th>{t("backup.path")}</th>
-                        <th />
-                    </tr>
-                </thead>
-                <tbody>
-                    { backups.length > 0 ? (
-                        backups.map(({ mtime, filePath }) => (
-                            <tr>
-                                <td>{mtime ? formatDateTime(mtime) : "-"}</td>
-                                <td className="selectable-text">{filePath}</td>
-                                <td>
-                                    <a href={`api/database/backup/download?filePath=${encodeURIComponent(filePath)}`} download>
-                                        <ActionButton icon="bx bx-download" text={t("backup.download")} />
-                                    </a>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td className="empty-table-placeholder" colspan={3}>{t("backup.no_backup_yet")}</td>
-                        </tr>
-                    )}
-                </tbody>
-            </table>
+            {backups.length > 0 ? (
+                backups.map(({ mtime, filePath }) => (
+                    <OptionsRow
+                        key={filePath}
+                        name="existing-backup"
+                        label={mtime ? formatDateTime(mtime) : "-"}
+                        description={<span className="selectable-text">{filePath}</span>}
+                    >
+                        <a href={`api/database/backup/download?filePath=${encodeURIComponent(filePath)}`} download>
+                            <ActionButton icon="bx bx-download" text={t("backup.download")} />
+                        </a>
+                    </OptionsRow>
+                ))
+            ) : (
+                <NoItems icon="bx bx-archive" text={t("backup.no_backup_yet")} />
+            )}
         </OptionsSection>
     );
 }
