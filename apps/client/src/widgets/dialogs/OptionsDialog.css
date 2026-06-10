@@ -32,7 +32,7 @@ body.mobile .modal.options-dialog .modal-dialog {
 
 /* The main header only carries the window (maximize/close) buttons, with the title moved into the
    sidebar. Float it over the content so it doesn't leave a tall empty band at the top. */
-.modal.options-dialog .modal-main > .modal-header {
+body.desktop .modal.options-dialog .modal-main > .modal-header {
     position: absolute;
     top: 0;
     right: 4px;
@@ -45,7 +45,58 @@ body.mobile .modal.options-dialog .modal-dialog {
 
 /* Push the page content below the floating header. The variable is also read by the theme
    (theme-next/pages.css) and zeroed on pages that manage their own spacing (e.g. shortcuts). */
-.modal.options-dialog .note-detail-content-widget-content.options {
+body.desktop .modal.options-dialog .note-detail-content-widget-content.options {
     --options-first-item-top-margin: 60px;
     padding-top: var(--options-first-item-top-margin);
+}
+
+/* On mobile the sidebar and the page become a master-detail flow instead: the dialog first shows
+   only the full-height list of pages (replacing the generic bottom-strip sidebar layout from
+   style.css), and tapping an entry reveals the page with a back button in the header. */
+body.mobile .modal.options-dialog .modal-content {
+    height: 100%;
+}
+
+body.mobile .modal.options-dialog .modal-body {
+    height: auto;
+    flex: 1 1 0;
+}
+
+body.mobile .modal.options-dialog .modal-sidebar {
+    height: auto;
+    flex: 1 1 0;
+    min-height: 0;
+    border-bottom: none;
+}
+
+body.mobile .modal.options-dialog .modal-sidebar .settings-navigation {
+    width: auto;
+}
+
+body.mobile .modal.options-dialog.mobile-view-list .modal-body {
+    display: none;
+}
+
+body.mobile .modal.options-dialog.mobile-view-page .modal-sidebar {
+    display: none;
+}
+
+/* In page view the back button + page title replace the static "Options" title. */
+body.mobile .modal.options-dialog.mobile-view-page .modal-header > .modal-title {
+    display: none;
+}
+
+.options-mobile-page-header {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.options-mobile-page-header .options-mobile-page-title {
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }

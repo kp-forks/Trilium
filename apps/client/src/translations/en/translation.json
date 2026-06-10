@@ -737,7 +737,8 @@
     "show_highlights_list": "Show Highlights List"
   },
   "options": {
-    "title": "Options"
+    "title": "Options",
+    "back": "Back to all options"
   },
   "global_menu": {
     "menu": "Menu",
