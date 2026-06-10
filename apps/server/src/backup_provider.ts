@@ -18,7 +18,8 @@ export default class ServerBackupService extends BackupService {
 
         return fs
             .readdirSync(dataDir.BACKUP_DIR)
-            .filter((fileName) => fileName.includes("backup"))
+            // The .db check excludes intermediate SQLite files (e.g. *.db-journal) created while a backup is in progress.
+            .filter((fileName) => fileName.includes("backup") && fileName.endsWith(".db"))
             .map((fileName) => {
                 const filePath = path.resolve(dataDir.BACKUP_DIR, fileName);
                 const stat = fs.statSync(filePath);
