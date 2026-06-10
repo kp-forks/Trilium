@@ -11,7 +11,7 @@ import linkContextMenuService from "../../../menus/link_context_menu";
 import froca from "../../../services/froca";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
-import { useNoteLabelBoolean, useSpacedUpdate } from "../../react/hooks";
+import { useElementSize, useNoteLabelBoolean, useSpacedUpdate } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
@@ -53,6 +53,14 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     useEffect(() => {
         froca.getNotes(noteIds).then(setNotes);
     }, [ noteIds ]);
+
+    // Dragging and resizing don't work meaningfully in the collapsed single-column mode
+    // (the rearrangement would not be persisted anyway), so disable them entirely there.
+    const containerSize = useElementSize(containerRef);
+    const isCollapsed = (containerSize?.width ?? Number.POSITIVE_INFINITY) < SINGLE_COLUMN_BREAKPOINT;
+    useEffect(() => {
+        gridRef.current?.setStatic(isCollapsed);
+    }, [ isCollapsed ]);
 
     function persistLayout(grid: GridStack) {
         if (grid.getColumn() !== GRID_COLUMNS) {

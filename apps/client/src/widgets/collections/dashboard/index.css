@@ -22,6 +22,10 @@
         }
     }
 
+    .grid-stack-static .dashboard-widget-header {
+        cursor: default;
+    }
+
     .dashboard-widget-header {
         display: flex;
         align-items: center;
