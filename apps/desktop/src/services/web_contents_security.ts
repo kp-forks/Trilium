@@ -129,6 +129,10 @@ export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences
  *   (e.g. presentations, zen mode) and shows notifications (user scripts
  *   commonly call `new Notification()` for reminders; the renderer only runs
  *   trusted code, so this stays available to the scripting ecosystem).
+ *   Clipboard *read* stays denied on purpose: the renderer reads via the
+ *   main-process `electronApi.clipboard.readText()` bridge, so the sensitive
+ *   `clipboard-read` permission never has to be granted to the whole session
+ *   (which would also expose it to embedded remote iframes).
  * - `guest`: the `<webview>` partition hosting arbitrary remote pages from
  *   Web View notes. Fullscreen only (embedded video players) — a remote page
  *   must not show OS notifications that appear to come from Trilium.

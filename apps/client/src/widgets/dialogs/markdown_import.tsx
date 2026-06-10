@@ -22,7 +22,7 @@ export default function MarkdownImportDialog() {
 
     useTriliumEvent("showPasteMarkdownDialog", async ({ editorApi }) => {
         if (utils.isElectron()) {
-            const text = await navigator.clipboard.readText();
+            const text = (await window.electronApi?.clipboard.readText()) ?? "";
             convertMarkdownToHtml(text, editorApi);
         } else {
             editorApiRef.current = editorApi;

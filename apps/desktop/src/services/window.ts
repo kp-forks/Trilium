@@ -365,6 +365,8 @@ export function setupWindowing() {
         }
     });
 
+    electron.ipcMain.handle("read-clipboard-text", () => electron.clipboard.readText());
+
     electron.ipcMain.on("show-window", (event) => {
         electron.BrowserWindow.fromWebContents(event.sender)?.show();
     });
