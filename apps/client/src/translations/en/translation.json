@@ -1267,6 +1267,8 @@
     "choose_anonymization": "You can decide yourself if you want to provide a fully or lightly anonymized database. Even fully anonymized DB is very useful, however in some cases lightly anonymized database can speed up the process of bug identification and fixing.",
     "save_lightly_anonymized_database": "Save lightly anonymized database",
     "existing_anonymized_databases": "Existing anonymized databases",
+    "anonymized_databases_location": "Anonymized databases are stored in {{- anonymizedFolder}}.",
+    "download": "Download",
     "creating_fully_anonymized_database": "Creating fully anonymized database...",
     "creating_lightly_anonymized_database": "Creating lightly anonymized database...",
     "error_creating_anonymized_database": "Could not create anonymized database, check backend logs for details",
@@ -1355,8 +1357,6 @@
     "disabled": "disabled"
   },
   "ribbon": {
-    "widgets": "Ribbon widgets",
-    "promoted_attributes_message": "Promoted Attributes ribbon tab will automatically open if promoted attributes are present on the note",
     "edited_notes_message": "Edited Notes ribbon tab will automatically open on day notes"
   },
   "theme": {

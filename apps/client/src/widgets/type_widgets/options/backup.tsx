@@ -4,12 +4,9 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import { formatSize } from "../../../services/utils";
-import { formatDateTime } from "../../../utils/formatters";
-import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import { useTriliumOptionBool } from "../../react/hooks";
-import NoItems from "../../react/NoItems";
+import DatabaseFileList from "./components/DatabaseFileList";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -19,14 +16,7 @@ export default function BackupSettings() {
 
     const refreshBackups = useCallback(() => {
         server.get<ExistingBackupsResponse>("database/backups").then((response) => {
-            // Sort the backup files by modification date & time in a desceding order
-            const backupFiles = [...response.backups].sort((a, b) => {
-                if (a.mtime < b.mtime) return 1;
-                if (a.mtime > b.mtime) return -1;
-                return 0;
-            });
-
-            setBackups(backupFiles);
+            setBackups(response.backups);
             setBackupFolderPath(response.backupFolderPath);
         });
     }, []);
@@ -79,29 +69,16 @@ export function BackupList({ backups, backupFolderPath, refreshCallback }: { bac
     const [backupInProgress, setBackupInProgress] = useState(false);
 
     return (
-        <OptionsSection
+        <DatabaseFileList
             title={t("backup.existing_backups")}
-            description={backupFolderPath && (
-                <span className="selectable-text">{t("backup.backup_location_description", { backupFolder: backupFolderPath })}</span>
-            )}
+            locationDescription={backupFolderPath && t("backup.backup_location_description", { backupFolder: backupFolderPath })}
+            files={backups}
+            downloadEndpoint="api/database/backup/download"
+            rowName="existing-backup"
+            downloadText={t("backup.download")}
+            emptyIcon="bx bx-archive"
+            emptyText={t("backup.no_backup_yet")}
         >
-            {backups.length > 0 ? (
-                backups.map(({ fileName, filePath, mtime, fileSize }) => (
-                    <OptionsRow
-                        key={filePath}
-                        name="existing-backup"
-                        label={<span className="selectable-text">{fileName}</span>}
-                        description={`${mtime ? formatDateTime(mtime) : "-"} • ${formatSize(fileSize)}`}
-                    >
-                        <a href={`api/database/backup/download?filePath=${encodeURIComponent(filePath)}`} download>
-                            <ActionButton icon="bx bx-download" text={t("backup.download")} />
-                        </a>
-                    </OptionsRow>
-                ))
-            ) : (
-                <NoItems icon="bx bx-archive" text={t("backup.no_backup_yet")} />
-            )}
-
             <OptionsRow name="backup-now" centered>
                 <Button
                     name="backup-database-now-button"
@@ -120,6 +97,6 @@ export function BackupList({ backups, backupFolderPath, refreshCallback }: { bac
                     }}
                 />
             </OptionsRow>
-        </OptionsSection>
+        </DatabaseFileList>
     );
 }
