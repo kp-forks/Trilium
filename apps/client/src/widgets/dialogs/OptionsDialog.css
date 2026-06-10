@@ -71,6 +71,7 @@ body.mobile .modal.options-dialog .modal-sidebar {
 
 body.mobile .modal.options-dialog .modal-sidebar .settings-navigation {
     width: auto;
+    padding-inline: 25px;
 }
 
 body.mobile .modal.options-dialog.mobile-view-list .modal-body {
@@ -79,8 +80,14 @@ body.mobile .modal.options-dialog.mobile-view-list .modal-body {
 
 /* With the body hidden, collapse the main pane to just its header (the generic layout gives it
    flex-grow: 1, which would leave it occupying half the dialog) so the list takes the full height. */
-body.mobile .modal.options-dialog.mobile-view-list .modal-main {
-    flex-grow: 0;
+body.mobile .modal.options-dialog.mobile-view-list {
+    .modal-main {
+        flex-grow: 0;
+    }
+
+    .modal-sidebar {
+        background: transparent;
+    }
 }
 
 body.mobile .modal.options-dialog.mobile-view-page .modal-sidebar {
