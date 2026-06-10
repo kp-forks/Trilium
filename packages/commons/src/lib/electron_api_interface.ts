@@ -191,6 +191,14 @@ export interface ElectronClipboardApi {
      * pasted into other applications as an image rather than as a file.
      */
     copyImageToClipboard(buffer: Uint8Array): void;
+
+    /**
+     * Reads plain text from the system clipboard via the main-process
+     * `electron.clipboard`. Used instead of `navigator.clipboard.readText()`
+     * so the renderer's deny-by-default permission policy does not have to
+     * grant the sensitive `clipboard-read` permission to the whole session.
+     */
+    readText(): Promise<string>;
 }
 
 /**

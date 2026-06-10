@@ -816,7 +816,8 @@
     "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden",
     "open_all_in_tabs": "Alle öffnen",
     "open_all_in_tabs_tooltip": "Alle Resultate in neuen Tabs öffnen",
-    "open_all_confirm": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?"
+    "open_all_confirm_one": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?",
+    "open_all_confirm_other": ""
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -860,7 +861,8 @@
     "note_size": "Notengröße",
     "note_size_info": "Die Notizgröße bietet eine grobe Schätzung des Speicherbedarfs für diese Notiz. Es berücksichtigt den Inhalt der Notiz und den Inhalt ihrer Notizrevisionen.",
     "calculate": "berechnen",
-    "subtree_size": "(Zweiggröße: {{size}} in {{count}} Notizen)",
+    "subtree_size_one": "(Zweiggröße: {{size}} in {{count}} Notizen)",
+    "subtree_size_other": "",
     "title": "Notizinfo",
     "mime": "MIME Typ",
     "show_similar_notes": "Zeige ähnliche Notizen"
@@ -871,7 +873,8 @@
     "title": "Notizkarte",
     "fix-nodes": "Knoten fixieren",
     "link-distance": "Verbindungslänge",
-    "too-many-notes": "Dieser Bereich enthält {{count}} Notizen. Die Anzeige aller Notizen kann die Leistung beeinträchtigen.",
+    "too-many-notes_one": "Dieser Bereich enthält {{count}} Notizen. Die Anzeige aller Notizen kann die Leistung beeinträchtigen.",
+    "too-many-notes_other": "",
     "show-anyway": "Karte anzeigen"
   },
   "note_paths": {
@@ -1534,7 +1537,8 @@
     "export": "Exportieren",
     "import-into-note": "In Notiz importieren",
     "apply-bulk-actions": "Massenaktionen anwenden",
-    "converted-to-attachments": "{{count}} Notizen wurden als Anhang konvertiert.",
+    "converted-to-attachments_one": "{{count}} Notizen wurden als Anhang konvertiert.",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "Sind Sie sicher, dass Sie die ausgewählten Notizen in Anhänge ihrer übergeordneten Notizen umwandeln möchten? Diese Operation wird nur auf Bildnotizen angewandt. Andere Notizen werden übersprungen.",
     "open-in-popup": "Schnellbearbeitung",
     "archive": "Archiviere",
@@ -2108,7 +2112,8 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} Notizen",
+    "total_notes_one": "{{count}} Notizen",
+    "total_notes_other": "",
     "prev_page": "Vorherige Seite",
     "next_page": "Nächste Seite"
   },
@@ -2207,7 +2212,8 @@
     "note_paths_other": "{{count}} Pfade",
     "note_paths_title": "Notizpfade",
     "code_note_switcher": "Sprachmodus ändern",
-    "tab_width_spaces": "{{count}} Leerzeichen",
+    "tab_width_spaces_one": "{{count}} Leerzeichen",
+    "tab_width_spaces_other": "",
     "tab_width_spaces_short": "Leerzeichen: {{width}}",
     "tab_width_use_default": "Standard verwenden ({{width}})",
     "tab_width_use_default_style": "Standard verwenden ({{style}})",

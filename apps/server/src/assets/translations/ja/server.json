@@ -56,7 +56,7 @@
     "add-link-to-text": "テキストにリンクを追加ダイアログを開く",
     "follow-link-under-cursor": "カーソル下のリンク先へ移動",
     "insert-date-and-time-to-text": "現在の日時を挿入する",
-    "paste-markdown-into-text": "クリップボードからMarkdownをテキストノートに貼り付けます",
+    "paste-markdown-into-text": "クリップボードからマークダウンをテキストノートに貼り付けます",
     "cut-into-note": "現在のノートから選択範囲を切り取り、サブノートを作成",
     "edit-readonly-note": "読み取り専用ノートの編集",
     "ribbon-tabs": "リボンタブ",
@@ -161,7 +161,7 @@
     "add-link-to-text": "テキストにリンクを追加",
     "follow-link-under-cursor": "カーソル下のリンクをたどる",
     "insert-date-and-time-to-text": "日時を挿入",
-    "paste-markdown-into-text": "Markdownをテキストに貼り付け",
+    "paste-markdown-into-text": "マークダウンをテキストに貼り付け",
     "cut-into-note": "ノートから切り取り",
     "edit-read-only-note": "読み取り専用ノートの編集",
     "toggle-right-pane": "右ペイン切り替え",
@@ -402,7 +402,9 @@
     "presentation_slide": "プレゼンテーションスライド",
     "presentation_slide_first": "最初のスライド",
     "presentation_slide_second": "2番目のスライド",
-    "background": "背景"
+    "background": "背景",
+    "markdown-snippet": "マークダウンスニペット",
+    "code-snippet": "コードスニペット"
   },
   "share_404": {
     "title": "該当なし",

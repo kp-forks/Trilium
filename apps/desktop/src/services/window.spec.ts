@@ -47,7 +47,6 @@ class FakeWebContents {
         return this;
     });
     public listeners = new Map<string, Handler[]>();
-    public setWindowOpenHandler = vi.fn();
     public toggleDevTools = vi.fn();
     public cut = vi.fn();
     public copy = vi.fn();
@@ -180,6 +179,11 @@ vi.mock("electron", () => ({
 vi.mock("electron-window-state", () => ({
     default: () => ({ x: 0, y: 0, width: 1200, height: 800, manage: vi.fn() })
 }));
+
+// setupWindowing() installs the WebContents security policy; that behaviour has
+// its own suite (web_contents_security.spec.ts), so stub it out here to keep the
+// windowing tests focused and free of the extra electron app/session surface.
+vi.mock("./web_contents_security", () => ({ setupWebContentsSecurity: vi.fn() }));
 
 vi.mock("@triliumnext/core", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@triliumnext/core")>();
@@ -329,7 +333,7 @@ describe("window service", () => {
             await windowService.createExtraWindow("#root/abc");
             const win = state.windows[state.windows.length - 1];
             expect(win.loadURL).toHaveBeenCalledWith("trilium-app://app/?extraWindow=1#root/abc");
-            expect(win.webContents.setWindowOpenHandler).toHaveBeenCalled();
+            expect(win.webContents.session.setSpellCheckerLanguages).toHaveBeenCalled();
         });
     });
 
@@ -384,53 +388,8 @@ describe("window service", () => {
             await windowService.createMainWindow();
         });
 
-        it("denies new windows and opens them externally", async () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-            const result = handlerArg({ url: "https://example.com" });
-            expect(result).toEqual({ action: "deny" });
-            await new Promise((r) => setTimeout(r, 0));
-            expect(fakeShell.openExternal).toHaveBeenCalledWith("https://example.com");
-        });
-
-        it("logs when external open fails", async () => {
-            // The inner `openExternal()` doesn't await `shell.openExternal`, so only a
-            // synchronous throw inside it rejects the wrapper and hits the `.catch`.
-            fakeShell.openExternal.mockImplementationOnce(() => {
-                throw new Error("boom");
-            });
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-            handlerArg({ url: "https://bad.example" });
-            await new Promise((r) => setTimeout(r, 0));
-            expect(state.log.error).toHaveBeenCalled();
-        });
-
-        it("blocks external navigation but allows internal redirects", () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const external = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", external, "https://evil.example/page");
-            expect(external.preventDefault).toHaveBeenCalled();
-
-            const internal = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", internal, "trilium-app://app/");
-            expect(internal.preventDefault).not.toHaveBeenCalled();
-
-            // internal host but non-root path is blocked
-            const internalPath = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", internalPath, "http://localhost/somewhere");
-            expect(internalPath.preventDefault).toHaveBeenCalled();
-
-            // URL with no hostname falls back to "" (covers `hostname || ""`) and is blocked.
-            const noHost = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", noHost, "javascript:void(0)");
-            expect(noHost.preventDefault).toHaveBeenCalled();
-
-            // internal host with the root "/?" path is allowed (covers that path comparison).
-            const rootQuery = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", rootQuery, "trilium-app://app/?");
-            expect(rootQuery.preventDefault).not.toHaveBeenCalled();
-        });
+        // Window-open and navigation policy is installed globally by
+        // web_contents_security.ts and tested in web_contents_security.spec.ts.
 
         it("forwards full-screen, navigation and context-menu events", () => {
             const win = state.windows[state.windows.length - 1];
