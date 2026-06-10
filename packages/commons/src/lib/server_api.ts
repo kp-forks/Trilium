@@ -113,6 +113,12 @@ export interface DatabaseBackup {
     mtime: Date;
 }
 
+export interface ExistingBackupsResponse {
+    /** The directory where the backups are stored, or null if there is no user-accessible location (e.g. OPFS on standalone). */
+    backupFolderPath: string | null;
+    backups: DatabaseBackup[];
+}
+
 export type ChangePasswordResponse = Response;
 
 export interface TOTPStatus {

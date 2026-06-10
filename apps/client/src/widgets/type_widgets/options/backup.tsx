@@ -1,4 +1,4 @@
-import { BackupDatabaseNowResponse, DatabaseBackup } from "@triliumnext/commons";
+import { BackupDatabaseNowResponse, DatabaseBackup, ExistingBackupsResponse } from "@triliumnext/commons";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
@@ -14,26 +14,28 @@ import OptionsSection from "./components/OptionsSection";
 
 export default function BackupSettings() {
     const [backups, setBackups] = useState<DatabaseBackup[]>([]);
+    const [backupFolderPath, setBackupFolderPath] = useState<string | null>(null);
 
     const refreshBackups = useCallback(() => {
-        server.get<DatabaseBackup[]>("database/backups").then((backupFiles) => {
+        server.get<ExistingBackupsResponse>("database/backups").then((response) => {
             // Sort the backup files by modification date & time in a desceding order
-            backupFiles.sort((a, b) => {
+            const backupFiles = [...response.backups].sort((a, b) => {
                 if (a.mtime < b.mtime) return 1;
                 if (a.mtime > b.mtime) return -1;
                 return 0;
             });
 
             setBackups(backupFiles);
+            setBackupFolderPath(response.backupFolderPath);
         });
-    }, [setBackups]);
+    }, []);
 
     useEffect(refreshBackups, []);
 
     return (
         <>
             <BackupConfiguration refreshCallback={refreshBackups} />
-            <BackupList backups={backups} />
+            <BackupList backups={backups} backupFolderPath={backupFolderPath} />
         </>
     );
 }
@@ -84,16 +86,12 @@ export function BackupConfiguration({ refreshCallback }: { refreshCallback: () =
     );
 }
 
-export function BackupList({ backups }: { backups: DatabaseBackup[] }) {
-    // All backups live in the same directory, so display it once instead of repeating it per file.
-    const firstBackup = backups.at(0);
-    const backupFolder = firstBackup?.filePath.slice(0, -(firstBackup.fileName.length + 1));
-
+export function BackupList({ backups, backupFolderPath }: { backups: DatabaseBackup[]; backupFolderPath: string | null }) {
     return (
         <OptionsSection
             title={t("backup.existing_backups")}
-            description={backupFolder && (
-                <span className="selectable-text">{t("backup.backup_location_description", { backupFolder })}</span>
+            description={backupFolderPath && (
+                <span className="selectable-text">{t("backup.backup_location_description", { backupFolder: backupFolderPath })}</span>
             )}
         >
             {backups.length > 0 ? (

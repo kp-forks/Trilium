@@ -2774,9 +2774,24 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                type: object
+                properties:
+                  backupFolderPath:
+                    type: string
+                    nullable: true
+                    description: Directory where the backups are stored, or null if there is no user-accessible location.
+                  backups:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        fileName:
+                          type: string
+                        filePath:
+                          type: string
+                        mtime:
+                          type: string
+                          format: date-time
                   
   /api/database/vacuum-database:
     post:
