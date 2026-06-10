@@ -1,14 +1,13 @@
 import "./PopupEditor.css";
 
-import { ComponentChildren, RefObject } from "preact";
-import { useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { ComponentChildren } from "preact";
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
 import { isExperimentalFeatureEnabled } from "../../services/experimental_features";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
-import { parseNavigationStateFromUrl } from "../../services/link";
 import tree from "../../services/tree";
 import utils from "../../services/utils";
 import NoteList from "../collections/NoteList";
@@ -19,29 +18,21 @@ import NoteIcon from "../note_icon";
 import NoteTitleWidget from "../note_title";
 import NoteDetail from "../NoteDetail";
 import PromotedAttributes from "../PromotedAttributes";
-import { useNoteContext, useNoteLabel, useTriliumEvent } from "../react/hooks";
+import { useContainedLinkNavigation, useNoteContext, useNoteLabel, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import ReadOnlyNoteInfoBar from "../ReadOnlyNoteInfoBar";
 import StandaloneRibbonAdapter from "../ribbon/components/StandaloneRibbonAdapter";
 import FormattingToolbar from "../ribbon/FormattingToolbar";
-import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
 import MobileEditorToolbar from "../type_widgets/text/mobile_editor_toolbar";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
-
-/** The settings page the cog opens by default — see `showOptionsCommand`. Treated as the entry point
- *  that gets redirected to the last-viewed section. */
-const DEFAULT_OPTIONS_SECTION = "_optionsAppearance";
 
 export default function PopupEditor() {
     const [ shown, setShown ] = useState(false);
     const [ stacked, setStacked ] = useState(false);
     const parentComponent = useContext(ParentComponent);
     const [ noteContext, setNoteContext ] = useState(new NoteContext("_popup-editor"));
-    // Remembers the settings page last viewed this session so reopening the options popup lands there
-    // instead of always on Appearance. Kept in component state (resets on reload), not persisted.
-    const [ lastOptionsSection, setLastOptionsSection ] = useState<string | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
     const items = useMemo(() => {
@@ -50,21 +41,22 @@ export default function PopupEditor() {
     }, [ isMobile ]);
 
     useTriliumEvent("openInPopup", async ({ noteIdOrPath }) => {
-        const noteContext = new NoteContext("_popup-editor");
-        setStacked(!!document.querySelector(".modal.show"));
-
-        // Reopen settings on the page last viewed this session instead of always on Appearance.
-        const targetIdOrPath = noteIdOrPath === DEFAULT_OPTIONS_SECTION && lastOptionsSection
-            ? lastOptionsSection
-            : noteIdOrPath;
-
-        const noteId = tree.getNoteIdAndParentIdFromUrl(targetIdOrPath);
+        const noteId = tree.getNoteIdAndParentIdFromUrl(noteIdOrPath);
         if (!noteId.noteId) return;
         const note = await froca.getNote(noteId.noteId);
         if (!note) return;
 
+        // Settings pages are displayed in their own dedicated dialog with the page selector sidebar.
+        if (note.isOptions()) {
+            void appContext.triggerCommand("showOptions", { section: noteId.noteId });
+            return;
+        }
+
+        const noteContext = new NoteContext("_popup-editor");
+        setStacked(!!document.querySelector(".modal.show"));
+
         const hasUserSetNoteReadOnly = note.hasLabel("readOnly");
-        await noteContext.setNote(targetIdOrPath, {
+        await noteContext.setNote(noteIdOrPath, {
             viewScope: {
                 // Override auto-readonly notes to be editable, but respect user's choice to have a read-only note.
                 readOnlyTemporarilyDisabled: !hasUserSetNoteReadOnly
@@ -79,8 +71,15 @@ export default function PopupEditor() {
     });
 
     // Keep navigation that follows internal links inside the popup, rather than letting the global
-    // link handler open the target in the background tab.
-    useContainedLinkNavigation(modalRef, noteContext);
+    // link handler open the target in the background tab. Settings links open the options dialog.
+    useContainedLinkNavigation(modalRef, useCallback((notePath, viewScope) => {
+        const targetNoteId = notePath.split("/").at(-1);
+        if (targetNoteId?.startsWith("_options")) {
+            void appContext.triggerCommand("showOptions", { section: targetNoteId });
+        } else {
+            void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
+        }
+    }, [ noteContext ]));
 
     // Add a global class to be able to handle issues with z-index due to rendering in a popup.
     useEffect(() => {
@@ -100,18 +99,12 @@ export default function PopupEditor() {
         return () => popupBackdrop.classList.remove("popup-editor-backdrop");
     }, [shown, stacked]);
 
-    // Settings pages get the revisions-style layout: a full-height sidebar (the page selector) with
-    // the "Options" title above it, instead of the per-note title bar. This avoids duplicating the
-    // current page name between the title and the highlighted selector entry.
-    const isOptions = noteContext.note?.isOptions() ?? false;
-
     return (
         <NoteContextContext.Provider value={noteContext}>
             <DialogWrapper>
                 <Modal
                     modalRef={modalRef}
-                    title={isOptions ? t("options.title") : <TitleRow />}
-                    sidebar={isOptions ? <SettingsPopupSidebar /> : undefined}
+                    title={<TitleRow />}
                     customTitleBarButtons={[{
                         iconClassName: "bx-expand-alt",
                         title: t("popup-editor.maximize"),
@@ -126,14 +119,7 @@ export default function PopupEditor() {
                     size="lg"
                     show={shown}
                     onShown={() => parentComponent?.handleEvent("focusOnDetail", { ntxId: noteContext.ntxId })}
-                    onHidden={() => {
-                        // Remember the settings page in view so the next open lands on it.
-                        const note = noteContext.note;
-                        if (note?.isOptions()) {
-                            setLastOptionsSection(note.noteId);
-                        }
-                        setShown(false);
-                    }}
+                    onHidden={() => setShown(false)}
                     keepInDom // needed for faster loading
                     noFocus // automatic focus breaks block popup
                     stackable
@@ -174,53 +160,4 @@ export function TitleRow() {
             {isNewLayout && <NoteBadges />}
         </div>
     );
-}
-
-/**
- * The settings page selector shown in the quick-edit popup's sidebar. It derives the active page from
- * `useNoteContext()` (resolved against the popup's own context via the surrounding provider) so the
- * highlighted entry tracks navigation. The link clicks themselves are handled by the popup's
- * {@link useContainedLinkNavigation} interceptor.
- */
-function SettingsPopupSidebar() {
-    const { noteId } = useNoteContext();
-    if (!noteId) return null;
-    return <SettingsNavigation activeNoteId={noteId} />;
-}
-
-/**
- * Keeps navigation that follows internal note links (note links, reference links, "Related settings",
- * etc.) inside the popup — whose context lives outside the tab manager — instead of letting the
- * global link handler resolve to the active tab in the background.
- *
- * The listener is attached to `containerRef` in the capture phase so it runs before the
- * document-level `goToLink` handler (and before anything that might stop propagation). Modified or
- * middle clicks and external links are left untouched so they can still open in a new tab/window or
- * externally, and clicks inside editable rich text are ignored so they keep placing the caret.
- */
-function useContainedLinkNavigation(containerRef: RefObject<HTMLElement>, noteContext: NoteContext) {
-    useEffect(() => {
-        const container = containerRef.current;
-        if (!container) return;
-
-        function onClick(e: MouseEvent) {
-            if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
-
-            const link = (e.target as HTMLElement).closest("a");
-            if (!link || link.getAttribute("target") === "_blank" || link.isContentEditable) return;
-
-            const href = link.getAttribute("href") ?? link.getAttribute("data-href");
-            if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
-
-            const { notePath, viewScope } = parseNavigationStateFromUrl(href);
-            if (!notePath) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
-        }
-
-        container.addEventListener("click", onClick, true);
-        return () => container.removeEventListener("click", onClick, true);
-    }, [ containerRef, noteContext ]);
 }

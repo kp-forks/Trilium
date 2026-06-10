@@ -14,7 +14,7 @@ import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import froca from "../../services/froca";
 import keyboard_actions from "../../services/keyboard_actions";
-import { ViewScope } from "../../services/link";
+import { parseNavigationStateFromUrl, ViewScope } from "../../services/link";
 import math from "../../services/math";
 import options, { type OptionValue } from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
@@ -1599,4 +1599,46 @@ export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unk
             }
         }
     }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/**
+ * Keeps navigation that follows internal note links (note links, reference links, "Related settings",
+ * etc.) inside a popup dialog — whose note context lives outside the tab manager — instead of letting
+ * the global link handler resolve to the active tab in the background. The dialog decides what to do
+ * with the parsed target via `onNavigate` (typically `noteContext.setNote()` or routing to another
+ * dialog).
+ *
+ * The listener is attached to `containerRef` in the capture phase so it runs before the
+ * document-level `goToLink` handler (and before anything that might stop propagation). Modified or
+ * middle clicks and external links are left untouched so they can still open in a new tab/window or
+ * externally, and clicks inside editable rich text are ignored so they keep placing the caret.
+ */
+export function useContainedLinkNavigation(
+    containerRef: RefObject<HTMLElement>,
+    onNavigate: (notePath: string, viewScope: ViewScope | undefined) => void
+) {
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        function onClick(e: MouseEvent) {
+            if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+            const link = (e.target as HTMLElement).closest("a");
+            if (!link || link.getAttribute("target") === "_blank" || link.isContentEditable) return;
+
+            const href = link.getAttribute("href") ?? link.getAttribute("data-href");
+            if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
+
+            const { notePath, viewScope } = parseNavigationStateFromUrl(href);
+            if (!notePath) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            onNavigate(notePath, viewScope);
+        }
+
+        container.addEventListener("click", onClick, true);
+        return () => container.removeEventListener("click", onClick, true);
+    }, [ containerRef, onNavigate ]);
 }
