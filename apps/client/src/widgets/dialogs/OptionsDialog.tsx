@@ -9,13 +9,17 @@ import utils from "../../services/utils";
 import NoteDetail from "../NoteDetail";
 import ActionButton from "../react/ActionButton";
 import FormList, { FormListItem } from "../react/FormList";
-import { useChildNotes, useContainedLinkNavigation, useNoteContext, useTriliumEvent } from "../react/hooks";
+import { useChildNotes, useContainedLinkNavigation, useNoteContext, useTriliumEvent, useWindowSize } from "../react/hooks";
 import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
 
 /** The settings page shown when no specific section was requested and none was viewed yet this session. */
 const DEFAULT_SECTION = "_optionsAppearance";
+
+/** Mobile viewports at least this wide (tablets) keep the desktop-style side-by-side sidebar
+ *  layout; narrower ones get the master-detail flow. */
+const TABLET_MIN_WIDTH = 768;
 
 /**
  * The settings dialog, opened via the `showOptions` command. Settings open in a dialog rather than
@@ -40,6 +44,9 @@ export default function OptionsDialog() {
     const [ mobileTransition, setMobileTransition ] = useState<"to-list" | "to-page" | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
+    const { windowWidth } = useWindowSize();
+    // Only narrow mobile viewports get the master-detail flow; tablets keep the sidebar layout.
+    const isMasterDetail = isMobile && windowWidth < TABLET_MIN_WIDTH;
 
     // Switches between the mobile master/detail views with a slide. The initial view on open is
     // set directly (without animating) by the showOptions handler instead.
@@ -47,11 +54,11 @@ export default function OptionsDialog() {
         if (view === mobileView) return;
         setMobileView(view);
         // With animations globally disabled there is no animationend to clear the transition,
-        // so switch directly.
-        if (!document.body.classList.contains("motion-disabled")) {
+        // so switch directly. Outside the master-detail flow there is nothing to animate.
+        if (isMasterDetail && !document.body.classList.contains("motion-disabled")) {
             setMobileTransition(view === "page" ? "to-page" : "to-list");
         }
-    }, [ mobileView ]);
+    }, [ mobileView, isMasterDetail ]);
 
     useTriliumEvent("showOptions", async ({ section }) => {
         const noteContext = new NoteContext("_options-dialog");
@@ -70,11 +77,12 @@ export default function OptionsDialog() {
     // className prop must stay static — rewriting it from a render would wipe them and visually
     // dismiss the dialog. Toggle the mobile view classes directly on the element instead.
     useEffect(() => {
+        modalRef.current?.classList.toggle("mobile-master-detail", isMasterDetail);
         modalRef.current?.classList.toggle("mobile-view-list", mobileView === "list");
         modalRef.current?.classList.toggle("mobile-view-page", mobileView === "page");
         modalRef.current?.classList.toggle("mobile-transition-to-list", mobileTransition === "to-list");
         modalRef.current?.classList.toggle("mobile-transition-to-page", mobileTransition === "to-page");
-    }, [ mobileView, mobileTransition ]);
+    }, [ isMasterDetail, mobileView, mobileTransition ]);
 
     // End the view transition once the slide finishes (animationend bubbles up from the panes).
     useEffect(() => {
@@ -105,8 +113,8 @@ export default function OptionsDialog() {
             <Modal
                 modalRef={modalRef}
                 title={t("options.title")}
-                header={isMobile && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
-                sidebar={isMobile ? undefined : <SettingsSidebar />}
+                header={isMasterDetail && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
+                sidebar={isMasterDetail ? undefined : <SettingsSidebar />}
                 isFullPageOnMobile
                 customTitleBarButtons={!isMobile ? [{
                     iconClassName: "bx-expand-alt",
@@ -129,7 +137,7 @@ export default function OptionsDialog() {
                     setShown(false);
                 }}
             >
-                {isMobile && (
+                {isMasterDetail && (
                     <div className="options-mobile-nav">
                         <MobileSettingsList onSelect={(noteId) => {
                             void noteContext.setNote(noteId, { keepActiveDialog: true });
