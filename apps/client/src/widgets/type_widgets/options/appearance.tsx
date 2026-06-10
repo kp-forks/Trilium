@@ -526,6 +526,7 @@ function FontPickerModal({ show, onHidden, title, fontFamily, fontSize, onFontFa
             size="lg"
             show={show}
             onHidden={onHidden}
+            stackable
         >
             <div className="font-picker-content">
                 <div className="font-picker-list">
