@@ -4,6 +4,7 @@ import electron from "electron";
 import url from "url";
 
 import { validateOpenExternalUrl } from "./shell.js";
+import { isTriliumAppShellUrl, TRILIUM_APP_HOST, TRILIUM_APP_SCHEME } from "./trilium_app_origin.js";
 
 /**
  * Security guard for `<webview>` attachment.
@@ -176,20 +177,7 @@ export function isPermissionAllowedForOrigin(kind: SessionKind, permission: stri
     if (permission === "fullscreen") {
         return true;
     }
-    return isAppShellOrigin(requestingUrl);
-}
-
-/** True only for the app shell's own origin (`trilium-app://app`). */
-function isAppShellOrigin(requestingUrl: string | null | undefined): boolean {
-    if (!requestingUrl) {
-        return false;
-    }
-    try {
-        const parsed = new URL(requestingUrl);
-        return parsed.protocol === "trilium-app:" && parsed.host === "app";
-    } catch {
-        return false;
-    }
+    return isTriliumAppShellUrl(requestingUrl);
 }
 
 /**
@@ -203,7 +191,7 @@ function isAppShellOrigin(requestingUrl: string | null | undefined): boolean {
 export function isNavigationAllowed(targetUrl: string): boolean {
     const parsedUrl = url.parse(targetUrl);
 
-    const isInternal = (parsedUrl.protocol === "trilium-app:" && parsedUrl.hostname === "app")
+    const isInternal = (parsedUrl.protocol === `${TRILIUM_APP_SCHEME}:` && parsedUrl.hostname === TRILIUM_APP_HOST)
         || ["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "");
     return isInternal && (!parsedUrl.path || parsedUrl.path === "/" || parsedUrl.path === "/?");
 }

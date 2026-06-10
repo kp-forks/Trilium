@@ -6,6 +6,8 @@ import EventEmitter from "events";
 import type { Application, Response as ExpressResponse } from "express";
 import { createResponse, type MockResponse } from "node-mocks-http";
 
+import { isTriliumAppShellUrl, TRILIUM_APP_ORIGIN, TRILIUM_APP_SCHEME } from "./services/trilium_app_origin.js";
+
 /**
  * Registers the `trilium-app://` custom scheme as privileged so the renderer
  * can load the UI from `trilium-app://app/` with a proper origin & cookie jar,
@@ -24,7 +26,7 @@ import { createResponse, type MockResponse } from "node-mocks-http";
 export function registerTriliumAppScheme() {
     protocol.registerSchemesAsPrivileged([
         {
-            scheme: "trilium-app",
+            scheme: TRILIUM_APP_SCHEME,
             privileges: {
                 standard: true,
                 secure: true,
@@ -49,7 +51,7 @@ export function registerTriliumAppScheme() {
 export function setupTriliumAppProtocol(app: Application) {
     electron.app.whenReady().then(() => {
         installFrameOriginGuard();
-        electron.protocol.handle("trilium-app", async (request) => {
+        electron.protocol.handle(TRILIUM_APP_SCHEME, async (request) => {
             const origin = request.headers.get("origin");
             if (!isDispatchOriginAllowed(origin)) {
                 console.error(`[trilium-app] blocked ${request.method} ${request.url} from origin '${origin}'`);
@@ -107,7 +109,7 @@ export function setupTriliumAppProtocol(app: Application) {
  * registered, so the scheme does not resolve there at all.
  */
 function installFrameOriginGuard() {
-    electron.session.defaultSession.webRequest.onBeforeRequest({ urls: ["trilium-app://*/*"] }, (details, callback) => {
+    electron.session.defaultSession.webRequest.onBeforeRequest({ urls: [`${TRILIUM_APP_SCHEME}://*/*`] }, (details, callback) => {
         let frameUrls: string[];
         try {
             frameUrls = [];
@@ -141,9 +143,11 @@ export function isRequestorChainTrusted(resourceType: string, frameUrls: string[
 }
 
 function isTrustedFrameUrl(frameUrl: string): boolean {
+    if (isTriliumAppShellUrl(frameUrl)) {
+        return true;
+    }
     try {
-        const parsed = new URL(frameUrl);
-        return (parsed.protocol === "trilium-app:" && parsed.host === "app") || parsed.protocol === "devtools:";
+        return new URL(frameUrl).protocol === "devtools:";
     } catch {
         return false;
     }
@@ -158,7 +162,7 @@ function isTrustedFrameUrl(frameUrl: string): boolean {
  * the absence of the header proves nothing and must be allowed through.
  */
 export function isDispatchOriginAllowed(origin: string | null): boolean {
-    return origin === null || origin === "trilium-app://app";
+    return origin === null || origin === TRILIUM_APP_ORIGIN;
 }
 
 export async function dispatch(app: Application, request: Request): Promise<Response> {

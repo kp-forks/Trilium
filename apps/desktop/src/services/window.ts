@@ -3,6 +3,7 @@ import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
 
+import { TRILIUM_APP_BASE_URL } from "./trilium_app_origin.js";
 import { setupWebContentsSecurity } from "./web_contents_security.js";
 
 // Preload bundle path. Two layouts:
@@ -74,7 +75,7 @@ async function createExtraWindow(extraWindowHash: string) {
     });
 
     win.setMenuBarVisibility(false);
-    win.loadURL(`trilium-app://app/?extraWindow=1${extraWindowHash}`);
+    win.loadURL(`${TRILIUM_APP_BASE_URL}?extraWindow=1${extraWindowHash}`);
 
     configureWebContents(win.webContents, spellcheckEnabled);
 
@@ -129,7 +130,7 @@ async function createMainWindow() {
     mainWindowState.manage(mainWindow);
 
     mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadURL("trilium-app://app/");
+    mainWindow.loadURL(TRILIUM_APP_BASE_URL);
     mainWindow.on("closed", () => (mainWindow = null));
 
     configureWebContents(mainWindow.webContents, spellcheckEnabled);
@@ -253,7 +254,7 @@ async function createSetupWindow() {
         }
     });
     setupWindow.removeMenu();
-    setupWindow.loadURL("trilium-app://app/");
+    setupWindow.loadURL(TRILIUM_APP_BASE_URL);
     setupWindow.on("closed", () => (setupWindow = null));
 }
 
