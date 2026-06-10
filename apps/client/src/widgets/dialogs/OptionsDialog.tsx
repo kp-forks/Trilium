@@ -33,11 +33,24 @@ export default function OptionsDialog() {
     const [ lastSection, setLastSection ] = useState<string | null>(null);
     // Which half of the mobile master-detail flow is visible; has no effect on desktop.
     const [ mobileView, setMobileView ] = useState<"list" | "page">("list");
-    // Whether the user switched views since the dialog was opened. Gates the slide animation so
-    // that only actual list/page switches animate, not the initial view when the dialog opens.
-    const [ viewSwitched, setViewSwitched ] = useState(false);
+    // Direction of the in-flight slide between the two mobile views, or null when at rest. While
+    // set, both panes stay rendered so the outgoing one can slide away as the incoming one slides
+    // in; cleared when the slide animation finishes.
+    const [ mobileTransition, setMobileTransition ] = useState<"to-list" | "to-page" | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
+
+    // Switches between the mobile master/detail views with a slide. The initial view on open is
+    // set directly (without animating) by the showOptions handler instead.
+    const switchMobileView = useCallback((view: "list" | "page") => {
+        if (view === mobileView) return;
+        setMobileView(view);
+        // With animations globally disabled there is no animationend to clear the transition,
+        // so switch directly.
+        if (!document.body.classList.contains("motion-disabled")) {
+            setMobileTransition(view === "page" ? "to-page" : "to-list");
+        }
+    }, [ mobileView ]);
 
     useTriliumEvent("showOptions", async ({ section }) => {
         const noteContext = new NoteContext("_options-dialog");
@@ -48,41 +61,51 @@ export default function OptionsDialog() {
         setNoteContext(noteContext);
         // Requesting a specific section (e.g. "set up a password") skips the mobile master list.
         setMobileView(section ? "page" : "list");
-        setViewSwitched(false);
+        setMobileTransition(null);
         setShown(true);
     });
 
     // Bootstrap adds its own classes (e.g. `show`) to the modal element at runtime, so the
     // className prop must stay static — rewriting it from a render would wipe them and visually
-    // dismiss the dialog. Toggle the mobile view class directly on the element instead.
+    // dismiss the dialog. Toggle the mobile view classes directly on the element instead.
     useEffect(() => {
         modalRef.current?.classList.toggle("mobile-view-list", mobileView === "list");
         modalRef.current?.classList.toggle("mobile-view-page", mobileView === "page");
-        modalRef.current?.classList.toggle("animate-view-switch", viewSwitched);
-    }, [ mobileView, viewSwitched ]);
+        modalRef.current?.classList.toggle("mobile-transition-to-list", mobileTransition === "to-list");
+        modalRef.current?.classList.toggle("mobile-transition-to-page", mobileTransition === "to-page");
+    }, [ mobileView, mobileTransition ]);
+
+    // End the view transition once the slide finishes (animationend bubbles up from the panes).
+    useEffect(() => {
+        const modalElement = modalRef.current;
+        if (!modalElement) return;
+        function onAnimationEnd(e: AnimationEvent) {
+            if (e.animationName.startsWith("options-slide")) {
+                setMobileTransition(null);
+            }
+        }
+        modalElement.addEventListener("animationend", onAnimationEnd);
+        return () => modalElement.removeEventListener("animationend", onAnimationEnd);
+    }, []);
 
     // Keep navigation between settings pages (sidebar entries, "Related settings" links) inside the
     // dialog; links to regular notes open in the quick-edit popup instead.
     useContainedLinkNavigation(modalRef, useCallback((notePath, viewScope) => {
         if (notePath.split("/").at(-1)?.startsWith("_options")) {
             void noteContext.setNote(notePath, { viewScope, keepActiveDialog: true });
-            setMobileView("page");
-            setViewSwitched(true);
+            switchMobileView("page");
         } else {
             void appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath });
         }
-    }, [ noteContext ]));
+    }, [ noteContext, switchMobileView ]));
 
     return (
         <NoteContextContext.Provider value={noteContext}>
             <Modal
                 modalRef={modalRef}
                 title={t("options.title")}
-                header={isMobile && mobileView === "page" ? <MobilePageHeader onBack={() => {
-                    setMobileView("list");
-                    setViewSwitched(true);
-                }} /> : undefined}
-                sidebar={<SettingsSidebar />}
+                header={isMobile && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
+                sidebar={isMobile ? undefined : <SettingsSidebar />}
                 isFullPageOnMobile
                 customTitleBarButtons={[{
                     iconClassName: "bx-expand-alt",
@@ -105,6 +128,7 @@ export default function OptionsDialog() {
                     setShown(false);
                 }}
             >
+                {isMobile && <div className="options-mobile-nav"><SettingsSidebar /></div>}
                 <NoteDetail />
             </Modal>
         </NoteContextContext.Provider>
@@ -127,7 +151,7 @@ function SettingsSidebar() {
  * Replaces the "Options" title in the mobile page view: a back button returning to the master list
  * of pages, followed by the title of the page in view (the static title is hidden via CSS).
  */
-function MobilePageHeader({ onBack }: { onBack: () => void }) {
+function MobilePageHeader({ onBack }: { onBack?: () => void }) {
     const { note } = useNoteContext();
     return (
         <div className="options-mobile-page-header">
@@ -135,6 +159,7 @@ function MobilePageHeader({ onBack }: { onBack: () => void }) {
                 icon="bx bx-chevron-left"
                 text={t("options.back")}
                 onClick={onBack}
+                style={{ visibility: onBack ? "visible" : "hidden" }}
             />
             <h5 className="options-mobile-page-title">{note?.title}</h5>
         </div>
