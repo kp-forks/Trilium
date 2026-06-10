@@ -8,7 +8,8 @@ import { t } from "../../services/i18n";
 import utils from "../../services/utils";
 import NoteDetail from "../NoteDetail";
 import ActionButton from "../react/ActionButton";
-import { useContainedLinkNavigation, useNoteContext, useTriliumEvent } from "../react/hooks";
+import FormList, { FormListItem } from "../react/FormList";
+import { useChildNotes, useContainedLinkNavigation, useNoteContext, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
@@ -128,7 +129,14 @@ export default function OptionsDialog() {
                     setShown(false);
                 }}
             >
-                {isMobile && <div className="options-mobile-nav"><SettingsSidebar /></div>}
+                {isMobile && (
+                    <div className="options-mobile-nav">
+                        <MobileSettingsList onSelect={(noteId) => {
+                            void noteContext.setNote(noteId, { keepActiveDialog: true });
+                            switchMobileView("page");
+                        }} />
+                    </div>
+                )}
                 <NoteDetail />
             </Modal>
         </NoteContextContext.Provider>
@@ -148,20 +156,48 @@ function SettingsSidebar() {
 }
 
 /**
- * Replaces the "Options" title in the mobile page view: a back button returning to the master list
- * of pages, followed by the title of the page in view (the static title is hidden via CSS).
+ * The settings page list shown as the master view of the mobile master-detail flow, using the
+ * standard list component rather than the desktop sidebar's compact selector.
+ */
+function MobileSettingsList({ onSelect }: { onSelect: (noteId: string) => void }) {
+    const pages = useChildNotes("_options");
+    const { noteId: activeNoteId } = useNoteContext();
+    return (
+        <FormList onSelect={onSelect}>
+            {pages.map((page) => (
+                <FormListItem
+                    key={page.noteId}
+                    icon={page.getIcon()}
+                    value={page.noteId}
+                    active={page.noteId === activeNoteId}
+                >
+                    {page.title}
+                </FormListItem>
+            ))}
+        </FormList>
+    );
+}
+
+/**
+ * Replaces the static "Options" title on mobile. In the page view it shows a back button returning
+ * to the master list followed by the title of the page in view; in the list view a decorative
+ * settings icon takes the button's place (keeping the same footprint so the title doesn't shift
+ * between views) followed by the dialog title.
  */
 function MobilePageHeader({ onBack }: { onBack?: () => void }) {
     const { note } = useNoteContext();
     return (
         <div className="options-mobile-page-header">
-            <ActionButton
-                icon="bx bx-chevron-left"
-                text={t("options.back")}
-                onClick={onBack}
-                style={{ visibility: onBack ? "visible" : "hidden" }}
-            />
-            <h5 className="options-mobile-page-title">{note?.title}</h5>
+            {onBack ? (
+                <ActionButton
+                    icon="bx bx-chevron-left"
+                    text={t("options.back")}
+                    onClick={onBack}
+                />
+            ) : (
+                <span className="options-header-icon icon-action bx bx-cog" aria-hidden="true" />
+            )}
+            <h5 className="options-mobile-page-title">{onBack ? note?.title : t("options.title")}</h5>
         </div>
     );
 }

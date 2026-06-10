@@ -58,9 +58,6 @@ body.mobile .modal.options-dialog .modal-dialog .modal-content .modal-body {
 body.mobile .modal.options-dialog .options-mobile-nav {
     height: 100%;
     overflow: auto;
-}
-
-body.mobile .modal.options-dialog .options-mobile-nav .settings-navigation {
     padding: 8px 25px;
 }
 
@@ -80,8 +77,12 @@ body.mobile .modal.options-dialog.mobile-view-page:not(.mobile-transition-to-pag
 }
 
 /* The back button + page title in the custom header replace the static "Options" title. */
-body.mobile .modal.options-dialog .modal-header > .modal-title {
-    display: none;
+body.mobile .modal.options-dialog .modal-header  {
+    border-bottom: 1px solid var(--main-border-color);
+
+    > .modal-title {
+        display: none;
+    }
 }
 
 /* Directional slide mirroring the setup wizard's page animation: opening a page, the list slides
@@ -170,6 +171,17 @@ body[dir=rtl].mobile .modal.options-dialog.mobile-transition-to-list {
     gap: 4px;
     flex-grow: 1;
     min-width: 0;
+}
+
+/* Decorative settings icon shown in the list view. It borrows the `icon-action` class so it keeps
+   exactly the back button's footprint (the title doesn't shift between views), with the
+   interactive affordances neutralized. */
+.options-mobile-page-header .options-header-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    cursor: default;
 }
 
 .options-mobile-page-header .options-mobile-page-title {
