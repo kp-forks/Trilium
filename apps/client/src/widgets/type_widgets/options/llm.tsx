@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from "preact/hooks";
 
 import dialog from "../../../services/dialog";
-import { isExperimentalFeatureEnabled } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
+import { isStandalone } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import FormTextBox from "../../react/FormTextBox";
@@ -13,18 +13,38 @@ import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
 
 export default function LlmSettings() {
-    if (!isExperimentalFeatureEnabled("llm")) {
+    const [aiEnabled, setAiEnabled] = useTriliumOptionBool("aiEnabled");
+
+    if (isStandalone) {
         return (
             <OptionsSection title={t("llm.settings_title")}>
-                <NoItems icon="bx bx-bot" text={t("llm.feature_not_enabled")} />
+                <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
             </OptionsSection>
         );
     }
 
     return (
         <>
-            <ProviderSettings />
-            <McpSettings />
+            <OptionsSection
+                title={t("llm.settings_title")}
+                description={t("llm.settings_description")}
+                helpUrl="GBBMSlVSOIGP"
+            >
+                <OptionsRowWithToggle
+                    name="ai-enabled"
+                    label={t("experimental_features.llm_name")}
+                    description={t("experimental_features.llm_description")}
+                    currentValue={aiEnabled}
+                    onChange={setAiEnabled}
+                />
+            </OptionsSection>
+
+            {aiEnabled && (
+                <>
+                    <ProviderSettings />
+                    <McpSettings />
+                </>
+            )}
         </>
     );
 }
@@ -55,11 +75,7 @@ function ProviderSettings() {
     }, [providers, setProviders]);
 
     return (
-        <OptionsSection
-            title={t("llm.settings_title")}
-            description={t("llm.settings_description")}
-            helpUrl="GBBMSlVSOIGP"
-        >
+        <OptionsSection title={t("llm.configured_providers")}>
             <ProviderList
                 providers={providers}
                 onDelete={handleDeleteProvider}

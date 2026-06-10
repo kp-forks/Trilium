@@ -166,7 +166,9 @@ function ExistingAnonymizedDatabases({ databases, anonymizedFolderPath }: { data
 
 function ExperimentalOptions() {
     const [enabledFeatures, setEnabledFeatures] = useTriliumOptionJson<ExperimentalFeatureId[]>("experimentalFeatures", true);
-    const filteredFeatures = useMemo(() => getAvailableExperimentalFeatures().filter(e => e.id !== "new-layout"), []);
+    // Features with dedicated controls elsewhere (appearance settings and the AI/LLM page, respectively).
+    const integratedFeatures: ExperimentalFeatureId[] = ["new-layout", "llm"];
+    const filteredFeatures = useMemo(() => getAvailableExperimentalFeatures().filter(e => !integratedFeatures.includes(e.id)), []);
 
     const toggleFeature = useCallback((featureId: ExperimentalFeatureId, enabled: boolean) => {
         if (enabled) {

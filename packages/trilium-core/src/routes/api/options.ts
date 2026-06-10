@@ -123,6 +123,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "mfaEnabled",
     "mfaMethod",
     // LLM options
+    "aiEnabled",
     "llmProviders",
     "mcpEnabled",
     // OCR options

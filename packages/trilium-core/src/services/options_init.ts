@@ -264,6 +264,8 @@ const defaultOptions: DefaultOption[] = [
     { name: "experimentalFeatures", value: "[]", isSynced: true },
 
     // AI / LLM
+    // Was previously the "llm" experimental feature; inherit the value from there for existing users.
+    { name: "aiEnabled", value: (optionsMap) => optionsMap.experimentalFeatures?.includes('"llm"') ? "true" : "false", isSynced: true },
     { name: "llmProviders", value: "[]", isSynced: true },
     { name: "mcpEnabled", value: "false", isSynced: false },
 
