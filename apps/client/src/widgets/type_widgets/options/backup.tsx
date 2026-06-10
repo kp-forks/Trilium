@@ -7,10 +7,11 @@ import toast from "../../../services/toast";
 import { formatSize } from "../../../services/utils";
 import { formatDateTime } from "../../../utils/formatters";
 import ActionButton from "../../react/ActionButton";
+import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import { useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
-import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function BackupSettings() {
@@ -35,17 +36,16 @@ export default function BackupSettings() {
 
     return (
         <>
-            <BackupConfiguration refreshCallback={refreshBackups} />
-            <BackupList backups={backups} backupFolderPath={backupFolderPath} />
+            <BackupConfiguration />
+            <BackupList backups={backups} backupFolderPath={backupFolderPath} refreshCallback={refreshBackups} />
         </>
     );
 }
 
-export function BackupConfiguration({ refreshCallback }: { refreshCallback: () => void }) {
+export function BackupConfiguration() {
     const [dailyBackupEnabled, setDailyBackupEnabled] = useTriliumOptionBool("dailyBackupEnabled");
     const [weeklyBackupEnabled, setWeeklyBackupEnabled] = useTriliumOptionBool("weeklyBackupEnabled");
     const [monthlyBackupEnabled, setMonthlyBackupEnabled] = useTriliumOptionBool("monthlyBackupEnabled");
-    const [backupInProgress, setBackupInProgress] = useState(false);
 
     return (
         <OptionsSection title={t("backup.title")}>
@@ -73,28 +73,13 @@ export function BackupConfiguration({ refreshCallback }: { refreshCallback: () =
             />
 
             <FormText>{t("backup.backup_recommendation")}</FormText>
-
-            <hr />
-
-            <OptionsRowWithButton
-                label={t("backup.backup_database_now")}
-                disabled={backupInProgress}
-                onClick={async () => {
-                    setBackupInProgress(true);
-                    try {
-                        const { backupFile } = await server.post<BackupDatabaseNowResponse>("database/backup-database");
-                        toast.showMessage(t("backup.database_backed_up_to", { backupFilePath: backupFile }), 10000);
-                        refreshCallback();
-                    } finally {
-                        setBackupInProgress(false);
-                    }
-                }}
-            />
         </OptionsSection>
     );
 }
 
-export function BackupList({ backups, backupFolderPath }: { backups: DatabaseBackup[]; backupFolderPath: string | null }) {
+export function BackupList({ backups, backupFolderPath, refreshCallback }: { backups: DatabaseBackup[]; backupFolderPath: string | null; refreshCallback: () => void }) {
+    const [backupInProgress, setBackupInProgress] = useState(false);
+
     return (
         <OptionsSection
             title={t("backup.existing_backups")}
@@ -118,6 +103,25 @@ export function BackupList({ backups, backupFolderPath }: { backups: DatabaseBac
             ) : (
                 <NoItems icon="bx bx-archive" text={t("backup.no_backup_yet")} />
             )}
+
+            <OptionsRow name="backup-now" centered>
+                <Button
+                    name="backup-database-now-button"
+                    text={t("backup.backup_database_now")}
+                    size="micro"
+                    disabled={backupInProgress}
+                    onClick={async () => {
+                        setBackupInProgress(true);
+                        try {
+                            const { backupFile } = await server.post<BackupDatabaseNowResponse>("database/backup-database");
+                            toast.showMessage(t("backup.database_backed_up_to", { backupFilePath: backupFile }), 10000);
+                            refreshCallback();
+                        } finally {
+                            setBackupInProgress(false);
+                        }
+                    }}
+                />
+            </OptionsRow>
         </OptionsSection>
     );
 }
