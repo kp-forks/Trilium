@@ -93,6 +93,36 @@ body.mobile .modal.options-dialog.mobile-view-page .modal-header > .modal-title 
     display: none;
 }
 
+/* Sliding transition between the two views, mirroring the setup wizard's page animation: the page
+   slides in from the end side, the list back in from the start side. Becoming displayed restarts
+   the animation, so the incoming pane animates exactly when the view switches. The global
+   `motion-disabled` rule suppresses these when animations are turned off in the settings. */
+body.mobile .modal.options-dialog.mobile-view-page .modal-body {
+    animation: options-slide-in-end 0.35s ease-in-out;
+}
+
+body.mobile .modal.options-dialog.mobile-view-list .modal-sidebar {
+    animation: options-slide-in-start 0.35s ease-in-out;
+}
+
+body[dir=rtl].mobile .modal.options-dialog.mobile-view-page .modal-body {
+    animation-name: options-slide-in-start;
+}
+
+body[dir=rtl].mobile .modal.options-dialog.mobile-view-list .modal-sidebar {
+    animation-name: options-slide-in-end;
+}
+
+@keyframes options-slide-in-end {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes options-slide-in-start {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
 .options-mobile-page-header {
     display: flex;
     align-items: center;
