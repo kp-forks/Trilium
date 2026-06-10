@@ -184,16 +184,20 @@ export function isPermissionAllowedForOrigin(kind: SessionKind, permission: stri
  * Decides whether a renderer-initiated navigation (link click, drag & drop,
  * meta refresh) may proceed. Only the app shell itself is allowed: the
  * `trilium-app://app` origin (the sole host ever served — see the loadURL
- * call sites) or localhost, and only at the root path — internal redirects
- * from the setup and migration pages land there. Anything deeper is in-page
- * SPA routing (which `will-navigate` does not fire for) or hostile.
+ * call sites), and only at the root path. Anything deeper is in-page SPA
+ * routing (which `will-navigate` does not fire for) or hostile.
+ *
+ * `localhost` was previously allowed too, from the era when the desktop
+ * renderer was served over `http://127.0.0.1:<port>`. The custom-protocol
+ * migration made the shell load exclusively from `trilium-app://app/`, so the
+ * carve-out is now dead — and dangerous: it let a crafted link navigate the
+ * privileged window (which keeps the preload bridge) to any local listener.
  */
 export function isNavigationAllowed(targetUrl: string): boolean {
     const parsedUrl = url.parse(targetUrl);
 
-    const isInternal = (parsedUrl.protocol === `${TRILIUM_APP_SCHEME}:` && parsedUrl.hostname === TRILIUM_APP_HOST)
-        || ["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "");
-    return isInternal && (!parsedUrl.path || parsedUrl.path === "/" || parsedUrl.path === "/?");
+    const isAppShell = parsedUrl.protocol === `${TRILIUM_APP_SCHEME}:` && parsedUrl.hostname === TRILIUM_APP_HOST;
+    return isAppShell && (!parsedUrl.path || parsedUrl.path === "/" || parsedUrl.path === "/?");
 }
 
 /**

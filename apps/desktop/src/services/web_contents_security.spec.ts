@@ -506,18 +506,22 @@ describe("navigation guard", () => {
         setupWebContentsSecurity();
     });
 
-    it("only allows internal root navigation (setup and migration redirects)", () => {
+    it("only allows the app shell at its root path", () => {
         expect(isNavigationAllowed("trilium-app://app/")).toBe(true);
-        // Internal host with the root "/?" path is allowed.
+        // Root "/?" path is allowed.
         expect(isNavigationAllowed("trilium-app://app/?")).toBe(true);
-        expect(isNavigationAllowed("http://localhost/")).toBe(true);
-        expect(isNavigationAllowed("http://127.0.0.1/")).toBe(true);
 
-        expect(isNavigationAllowed("https://evil.example/page")).toBe(false);
-        // Internal host but non-root path is blocked.
-        expect(isNavigationAllowed("http://localhost/somewhere")).toBe(false);
+        // App shell but non-root path is blocked (in-page SPA routing / hostile).
+        expect(isNavigationAllowed("trilium-app://app/somewhere")).toBe(false);
         // Our scheme but not the app host — only `trilium-app://app` is ever served.
         expect(isNavigationAllowed("trilium-app://evil/")).toBe(false);
+        expect(isNavigationAllowed("https://evil.example/page")).toBe(false);
+        // localhost is no longer a trusted host: the renderer is served only
+        // from trilium-app://app, so a link to a local listener must not
+        // navigate the privileged window.
+        expect(isNavigationAllowed("http://localhost/")).toBe(false);
+        expect(isNavigationAllowed("http://127.0.0.1/")).toBe(false);
+        expect(isNavigationAllowed("http://127.0.0.1:9090/")).toBe(false);
         // URL with no hostname falls back to "" and is blocked.
         expect(isNavigationAllowed("javascript:void(0)")).toBe(false);
     });
