@@ -1,8 +1,7 @@
-import "./DatabaseFileList.css";
-
 import { ComponentChildren } from "preact";
 import { useMemo } from "preact/hooks";
 
+import open from "../../../../services/open";
 import { formatSize } from "../../../../services/utils";
 import { formatDateTime } from "../../../../utils/formatters";
 import ActionButton from "../../../react/ActionButton";
@@ -56,9 +55,11 @@ export default function DatabaseFileList({ title, locationDescription, files, do
                         label={<span className="selectable-text">{fileName}</span>}
                         description={`${mtime ? formatDateTime(mtime) : "-"} • ${formatSize(fileSize)}`}
                     >
-                        <a className="database-file-download" href={`${downloadEndpoint}?filePath=${encodeURIComponent(filePath)}`} download>
-                            <ActionButton icon="bx bx-download" text={downloadText} />
-                        </a>
+                        <ActionButton
+                            icon="bx bx-download"
+                            text={downloadText}
+                            onClick={() => open.download(open.getUrlForDownload(`${downloadEndpoint}?filePath=${encodeURIComponent(filePath)}`))}
+                        />
                     </OptionsRow>
                 ))
             ) : (
