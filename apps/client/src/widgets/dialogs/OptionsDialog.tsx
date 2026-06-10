@@ -74,6 +74,7 @@ export default function OptionsDialog() {
                 title={t("options.title")}
                 header={isMobile && mobileView === "page" ? <MobilePageHeader onBack={() => setMobileView("list")} /> : undefined}
                 sidebar={<SettingsSidebar />}
+                isFullPageOnMobile
                 customTitleBarButtons={[{
                     iconClassName: "bx-expand-alt",
                     title: t("popup-editor.maximize"),
