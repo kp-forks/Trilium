@@ -30,6 +30,9 @@ export interface DashboardViewConfig {
 
 const DEFAULT_WIDGET_SIZE = { w: 4, h: 3 };
 const INITIALIZED_CLASS = "dashboard-widget-initialized";
+const GRID_COLUMNS = 12;
+/** Below this container width (in pixels) the dashboard collapses to a single column. */
+const SINGLE_COLUMN_BREAKPOINT = 768;
 
 export default function DashboardView({ note, noteIds, viewConfig, saveConfig, highlightedTokens, showTextRepresentation }: ViewModeProps<DashboardViewConfig>) {
     const [ notes, setNotes ] = useState<FNote[]>([]);
@@ -52,6 +55,12 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     }, [ noteIds ]);
 
     function persistLayout(grid: GridStack) {
+        if (grid.getColumn() !== GRID_COLUMNS) {
+            // Collapsed responsive mode — the geometry is a derived single-column layout;
+            // persisting it would overwrite the real one.
+            return;
+        }
+
         const widgets: Record<string, DashboardWidgetLayout> = {};
         for (const node of grid.engine.nodes) {
             if (typeof node.id === "string") {
@@ -72,11 +81,16 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
         if (!container) return;
 
         const grid = GridStack.init({
-            column: 12,
+            column: GRID_COLUMNS,
             cellHeight: 80,
             margin: 8,
             float: true,
-            handle: ".dashboard-widget-header"
+            handle: ".dashboard-widget-header",
+            columnOpts: {
+                // Collapse to a vertical stack when the dashboard itself gets narrow,
+                // covering both mobile devices and narrow splits on desktop.
+                breakpoints: [{ w: SINGLE_COLUMN_BREAKPOINT, c: 1 }]
+            }
         }, container);
         gridRef.current = grid;
         grid.on("change", () => persistLayout(grid));
@@ -141,6 +155,12 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
         const grid = gridRef.current;
         const container = containerRef.current;
         if (!grid || !container) return;
+        if (grid.getColumn() !== GRID_COLUMNS) {
+            // Collapsed responsive mode — the full-width coordinates don't apply to the derived
+            // single-column layout. savedWidgetsRef is already updated, so the next save from this
+            // side won't overwrite the external change.
+            return;
+        }
 
         grid.batchUpdate();
         try {
