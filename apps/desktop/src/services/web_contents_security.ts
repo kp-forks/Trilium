@@ -62,6 +62,7 @@ export function setupWebContentsSecurity() {
     electron.app.whenReady().then(() => {
         installPermissionPolicy(electron.session.defaultSession, "app");
         installPermissionPolicy(electron.session.fromPartition(WEBVIEW_SESSION_PARTITION), "guest");
+        installYouTubeEmbedReferer(electron.session.defaultSession);
     });
 }
 
@@ -269,4 +270,42 @@ function installPermissionPolicy(session: Electron.Session, kind: SessionKind) {
     // state) — without this handler Electron reports everything as granted.
     session.setPermissionCheckHandler((_webContents, permission, requestingOrigin) =>
         isPermissionAllowedForOrigin(kind, permission, requestingOrigin));
+}
+
+/** Host filters for the YouTube embed player (see {@link installYouTubeEmbedReferer}). */
+const YOUTUBE_EMBED_URL_FILTERS = ["https://www.youtube-nocookie.com/*", "https://www.youtube.com/*"];
+
+// A valid third-party web referrer to present for the embed (the desktop
+// renderer has none). Must NOT be a youtube.com URL — YouTube reads its own
+// domain as a self-embed and blocks playback ("video unavailable"); any normal
+// embedding origin works, exactly as the server build's own origin does.
+const YOUTUBE_EMBED_REFERER = "https://triliumnotes.org/";
+
+/**
+ * Supplies a `Referer` for the YouTube embed player (the `link_embed.tsx` Web
+ * View preview). On desktop the renderer is served from `trilium-app://app`,
+ * which is not an `http(s)` origin, so the embed document request goes out with
+ * no `Referer` — YouTube's player then refuses to configure ("video player
+ * configuration error"). A normal browser embed sends the embedding page's
+ * origin as `Referer` (and no `Origin`, since it's a GET navigation), so we
+ * inject an equivalent here.
+ *
+ * Scoped to the default session (the app renderer); `<webview>` guests in the
+ * dedicated partition browse YouTube normally and are untouched. The existing
+ * header is never overwritten, so the player's own same-origin sub-requests
+ * (which already carry a correct `Referer`) are unaffected.
+ */
+function installYouTubeEmbedReferer(session: Electron.Session) {
+    session.webRequest.onBeforeSendHeaders({ urls: YOUTUBE_EMBED_URL_FILTERS }, (details, callback) => {
+        callback({ requestHeaders: withYouTubeEmbedReferer(details.requestHeaders) });
+    });
+}
+
+/** Pure header transform behind {@link installYouTubeEmbedReferer}; exported for tests. */
+export function withYouTubeEmbedReferer(requestHeaders: Record<string, string>): Record<string, string> {
+    const hasReferer = Object.keys(requestHeaders).some((name) => name.toLowerCase() === "referer");
+    if (hasReferer) {
+        return requestHeaders;
+    }
+    return { ...requestHeaders, Referer: YOUTUBE_EMBED_REFERER };
 }

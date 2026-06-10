@@ -12,19 +12,30 @@ const state = vi.hoisted(() => {
         details: { requestingUrl: string }
     ) => void;
     type PermissionCheckHandler = (webContents: unknown, permission: string, requestingOrigin?: string) => boolean;
+    type BeforeSendHeadersListener = (
+        details: { requestHeaders: Record<string, string> },
+        callback: (response: { requestHeaders: Record<string, string> }) => void
+    ) => void;
 
-    /** Fake Electron session capturing the permission handlers installed on it. */
+    /** Fake Electron session capturing the handlers installed on it. */
     function makeFakeSession() {
-        return {
+        const session = {
             requestHandler: undefined as PermissionRequestHandler | undefined,
             checkHandler: undefined as PermissionCheckHandler | undefined,
+            beforeSendHeaders: undefined as BeforeSendHeadersListener | undefined,
             setPermissionRequestHandler(fn: PermissionRequestHandler) {
-                this.requestHandler = fn;
+                session.requestHandler = fn;
             },
             setPermissionCheckHandler(fn: PermissionCheckHandler) {
-                this.checkHandler = fn;
+                session.checkHandler = fn;
+            },
+            webRequest: {
+                onBeforeSendHeaders(_filter: { urls: string[] }, fn: BeforeSendHeadersListener) {
+                    session.beforeSendHeaders = fn;
+                }
             }
         };
+        return session;
     }
 
     return {
@@ -80,7 +91,7 @@ vi.mock("electron", () => ({
     }
 }));
 
-const { hardenWebviewPreferences, isNavigationAllowed, isPermissionAllowed, isPermissionAllowedForOrigin, setupWebContentsSecurity } = await import("./web_contents_security.js");
+const { hardenWebviewPreferences, isNavigationAllowed, isPermissionAllowed, isPermissionAllowedForOrigin, setupWebContentsSecurity, withYouTubeEmbedReferer } = await import("./web_contents_security.js");
 
 interface WindowOpenResult {
     action: "allow" | "deny";
@@ -390,6 +401,47 @@ describe("permission handlers", () => {
         // Fullscreen is origin-independent.
         expect(guestCheck({}, "fullscreen", "https://www.youtube-nocookie.com")).toBe(true);
         expect(guestCheck({}, "clipboard-sanitized-write", "https://www.youtube-nocookie.com")).toBe(false);
+    });
+});
+
+describe("withYouTubeEmbedReferer", () => {
+    it("adds a Referer when the request has none (the desktop embed case)", () => {
+        // trilium-app:// renderer => Electron sends no Referer; YouTube's player
+        // then errors out. We supply a valid web referrer.
+        expect(withYouTubeEmbedReferer({ Accept: "*/*" })).toEqual({
+            Accept: "*/*",
+            Referer: "https://triliumnotes.org/"
+        });
+    });
+
+    it("never overwrites an existing Referer (case-insensitive)", () => {
+        const withCanonical = { Referer: "https://example.com/" };
+        expect(withYouTubeEmbedReferer(withCanonical)).toBe(withCanonical);
+
+        const withLowercase = { referer: "https://example.com/" };
+        expect(withYouTubeEmbedReferer(withLowercase)).toBe(withLowercase);
+    });
+});
+
+describe("YouTube embed referer header", () => {
+    beforeEach(async () => {
+        resetState();
+        setupWebContentsSecurity();
+        await Promise.resolve(); // installation is gated on app.whenReady()
+    });
+
+    it("installs the onBeforeSendHeaders hook on the default session only", () => {
+        expect(state.defaultSession.beforeSendHeaders).toBeDefined();
+        expect(state.partitionSessions.get("persist:webview")?.beforeSendHeaders).toBeUndefined();
+    });
+
+    it("injects the Referer through the installed listener", () => {
+        const listener = state.defaultSession.beforeSendHeaders;
+        if (!listener) throw new Error("onBeforeSendHeaders not installed");
+
+        let result: Record<string, string> | undefined;
+        listener({ requestHeaders: {} }, ({ requestHeaders }) => { result = requestHeaders; });
+        expect(result).toEqual({ Referer: "https://triliumnotes.org/" });
     });
 });
 
