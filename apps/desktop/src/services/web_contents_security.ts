@@ -136,6 +136,11 @@ export function hardenWebviewPreferences(webPreferences: Electron.WebPreferences
  * - `guest`: the `<webview>` partition hosting arbitrary remote pages from
  *   Web View notes. Fullscreen only (embedded video players) — a remote page
  *   must not show OS notifications that appear to come from Trilium.
+ *
+ * The `app` allowlist is gated by request origin (see
+ * {@link isPermissionAllowedForOrigin}): only the `trilium-app://app` shell
+ * gets clipboard-write / notifications, not remote `<iframe>` embeds that share
+ * the default session. Fullscreen is the exception — granted for any origin.
  */
 const PERMISSION_ALLOWLIST = {
     app: new Set(["clipboard-sanitized-write", "fullscreen", "notifications"]),
@@ -147,6 +152,43 @@ export type SessionKind = keyof typeof PERMISSION_ALLOWLIST;
 /** Pure policy check: is `permission` allowed for the given session kind? */
 export function isPermissionAllowed(kind: SessionKind, permission: string): boolean {
     return PERMISSION_ALLOWLIST[kind].has(permission);
+}
+
+/**
+ * Full permission decision: the per-session allowlist {@link isPermissionAllowed}
+ * AND an origin check. The default (`app`) session hosts not only the trusted
+ * app shell but also remote `<iframe>` embeds (e.g. the YouTube preview in
+ * `link_embed.tsx`) — those run with the app session's permissions unless the
+ * request origin is checked. So every allowlisted permission additionally
+ * requires the request to come from the `trilium-app://app` shell, which keeps
+ * a remote embed from inheriting the renderer's clipboard / notification grants.
+ *
+ * `fullscreen` is the deliberate exception: it is allowed for any origin
+ * (embedded video players — both the YouTube `<iframe>` and `<webview>` guests —
+ * legitimately request it, and it carries no exfiltration / spoofing risk that
+ * an origin check would mitigate).
+ */
+export function isPermissionAllowedForOrigin(kind: SessionKind, permission: string, requestingUrl: string | null | undefined): boolean {
+    if (!isPermissionAllowed(kind, permission)) {
+        return false;
+    }
+    if (permission === "fullscreen") {
+        return true;
+    }
+    return isAppShellOrigin(requestingUrl);
+}
+
+/** True only for the app shell's own origin (`trilium-app://app`). */
+function isAppShellOrigin(requestingUrl: string | null | undefined): boolean {
+    if (!requestingUrl) {
+        return false;
+    }
+    try {
+        const parsed = new URL(requestingUrl);
+        return parsed.protocol === "trilium-app:" && parsed.host === "app";
+    } catch {
+        return false;
+    }
 }
 
 /**
@@ -217,7 +259,7 @@ function installNavigationGuard(webContents: Electron.WebContents) {
 function installPermissionPolicy(session: Electron.Session, kind: SessionKind) {
     // Asynchronous requests (e.g. getUserMedia prompting for the camera).
     session.setPermissionRequestHandler((_webContents, permission, callback, details) => {
-        const allowed = isPermissionAllowed(kind, permission);
+        const allowed = isPermissionAllowedForOrigin(kind, permission, details.requestingUrl);
         if (!allowed) {
             getLog().error(`Denied '${permission}' permission request from ${details.requestingUrl} (${kind} session)`);
         }
@@ -225,5 +267,6 @@ function installPermissionPolicy(session: Electron.Session, kind: SessionKind) {
     });
     // Synchronous checks (e.g. navigator.permissions.query, push subscription
     // state) — without this handler Electron reports everything as granted.
-    session.setPermissionCheckHandler((_webContents, permission) => isPermissionAllowed(kind, permission));
+    session.setPermissionCheckHandler((_webContents, permission, requestingOrigin) =>
+        isPermissionAllowedForOrigin(kind, permission, requestingOrigin));
 }

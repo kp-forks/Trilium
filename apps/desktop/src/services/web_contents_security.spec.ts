@@ -11,7 +11,7 @@ const state = vi.hoisted(() => {
         callback: (granted: boolean) => void,
         details: { requestingUrl: string }
     ) => void;
-    type PermissionCheckHandler = (webContents: unknown, permission: string) => boolean;
+    type PermissionCheckHandler = (webContents: unknown, permission: string, requestingOrigin?: string) => boolean;
 
     /** Fake Electron session capturing the permission handlers installed on it. */
     function makeFakeSession() {
@@ -80,7 +80,7 @@ vi.mock("electron", () => ({
     }
 }));
 
-const { hardenWebviewPreferences, isNavigationAllowed, isPermissionAllowed, setupWebContentsSecurity } = await import("./web_contents_security.js");
+const { hardenWebviewPreferences, isNavigationAllowed, isPermissionAllowed, isPermissionAllowedForOrigin, setupWebContentsSecurity } = await import("./web_contents_security.js");
 
 interface WindowOpenResult {
     action: "allow" | "deny";
@@ -281,6 +281,35 @@ describe("isPermissionAllowed", () => {
     });
 });
 
+describe("isPermissionAllowedForOrigin", () => {
+    it("gates non-fullscreen app permissions on the trilium-app://app origin", () => {
+        // The app shell itself keeps its grants.
+        expect(isPermissionAllowedForOrigin("app", "notifications", "trilium-app://app")).toBe(true);
+        expect(isPermissionAllowedForOrigin("app", "clipboard-sanitized-write", "trilium-app://app/some/path")).toBe(true);
+
+        // A remote <iframe> sharing the default session does not.
+        expect(isPermissionAllowedForOrigin("app", "notifications", "https://www.youtube-nocookie.com/embed/x")).toBe(false);
+        expect(isPermissionAllowedForOrigin("app", "clipboard-sanitized-write", "https://evil.example")).toBe(false);
+        // Another host under our own scheme is not the app shell.
+        expect(isPermissionAllowedForOrigin("app", "notifications", "trilium-app://evil")).toBe(false);
+        // A missing / unparseable origin is treated as untrusted.
+        expect(isPermissionAllowedForOrigin("app", "notifications", null)).toBe(false);
+        expect(isPermissionAllowedForOrigin("app", "notifications", "not a url")).toBe(false);
+    });
+
+    it("allows fullscreen for any origin, in both sessions", () => {
+        expect(isPermissionAllowedForOrigin("app", "fullscreen", "https://www.youtube-nocookie.com/embed/x")).toBe(true);
+        expect(isPermissionAllowedForOrigin("guest", "fullscreen", "https://example.com")).toBe(true);
+        expect(isPermissionAllowedForOrigin("app", "fullscreen", null)).toBe(true);
+    });
+
+    it("never grants a permission outside the session allowlist, even from the app shell", () => {
+        expect(isPermissionAllowedForOrigin("app", "geolocation", "trilium-app://app")).toBe(false);
+        expect(isPermissionAllowedForOrigin("app", "clipboard-read", "trilium-app://app")).toBe(false);
+        expect(isPermissionAllowedForOrigin("guest", "notifications", "trilium-app://app")).toBe(false);
+    });
+});
+
 describe("permission handlers", () => {
     beforeEach(async () => {
         resetState();
@@ -299,12 +328,37 @@ describe("permission handlers", () => {
         expect(state.partitionSessions.size).toBe(1);
     });
 
-    it("grants allowlisted permission requests without logging", () => {
+    it("grants allowlisted permission requests from the app shell without logging", () => {
         const handler = state.defaultSession.requestHandler;
         if (!handler) throw new Error("request handler not installed");
 
         const callback = vi.fn();
-        handler({}, "fullscreen", callback, { requestingUrl: "trilium-app://main/" });
+        handler({}, "notifications", callback, { requestingUrl: "trilium-app://app/" });
+
+        expect(callback).toHaveBeenCalledWith(true);
+        expect(state.errors).toEqual([]);
+    });
+
+    it("denies an allowlisted permission requested by a foreign embedded iframe", () => {
+        const handler = state.defaultSession.requestHandler;
+        if (!handler) throw new Error("request handler not installed");
+
+        // A YouTube embed (link_embed.tsx) runs in the default session but must
+        // not inherit the app shell's notification / clipboard grants.
+        const callback = vi.fn();
+        handler({}, "notifications", callback, { requestingUrl: "https://www.youtube-nocookie.com/embed/x" });
+
+        expect(callback).toHaveBeenCalledWith(false);
+        expect(state.errors[0]).toContain("notifications");
+        expect(state.errors[0]).toContain("youtube-nocookie.com");
+    });
+
+    it("grants fullscreen to any origin in the app session (embedded video players)", () => {
+        const handler = state.defaultSession.requestHandler;
+        if (!handler) throw new Error("request handler not installed");
+
+        const callback = vi.fn();
+        handler({}, "fullscreen", callback, { requestingUrl: "https://www.youtube-nocookie.com/embed/x" });
 
         expect(callback).toHaveBeenCalledWith(true);
         expect(state.errors).toEqual([]);
@@ -330,10 +384,12 @@ describe("permission handlers", () => {
         const guestCheck = state.partitionSessions.get("persist:webview")?.checkHandler;
         if (!appCheck || !guestCheck) throw new Error("check handlers not installed");
 
-        expect(appCheck({}, "clipboard-sanitized-write")).toBe(true);
-        expect(appCheck({}, "geolocation")).toBe(false);
-        expect(guestCheck({}, "fullscreen")).toBe(true);
-        expect(guestCheck({}, "clipboard-sanitized-write")).toBe(false);
+        expect(appCheck({}, "clipboard-sanitized-write", "trilium-app://app")).toBe(true);
+        expect(appCheck({}, "clipboard-sanitized-write", "https://www.youtube-nocookie.com")).toBe(false);
+        expect(appCheck({}, "geolocation", "trilium-app://app")).toBe(false);
+        // Fullscreen is origin-independent.
+        expect(guestCheck({}, "fullscreen", "https://www.youtube-nocookie.com")).toBe(true);
+        expect(guestCheck({}, "clipboard-sanitized-write", "https://www.youtube-nocookie.com")).toBe(false);
     });
 });
 
