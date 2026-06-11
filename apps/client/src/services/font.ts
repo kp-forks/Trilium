@@ -31,11 +31,11 @@ export function applyFontsFromOptions() {
         document.head.appendChild(newLink);
     }
 
-    const removeOldLinks = () => {
+    newLink.addEventListener("load", () => {
         for (const oldLink of oldLinks) {
             oldLink.remove();
         }
-    };
-    newLink.addEventListener("load", removeOldLinks, { once: true });
-    newLink.addEventListener("error", removeOldLinks, { once: true });
+    }, { once: true });
+    // If the new stylesheet fails to load, keep the previous one rather than dropping fonts entirely.
+    newLink.addEventListener("error", () => newLink.remove(), { once: true });
 }

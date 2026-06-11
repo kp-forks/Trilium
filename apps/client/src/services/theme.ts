@@ -130,6 +130,13 @@ export async function applyThemeFromOptions() {
     // Custom theme — resolve its note to build the CSS URL and the optional `next` base.
     const { default: server } = await import("./server.js");
     const userThemes = await server.get<CustomThemeInfo[]>("options/user-themes");
+
+    // The theme may have changed again while the request was in flight; applying the stale
+    // one now would override the latest choice (whose own invocation may already have run).
+    if (options.get("theme") !== theme) {
+        return;
+    }
+
     const match = userThemes.find((userTheme) => userTheme.val === theme);
     applyTheme(
         theme,

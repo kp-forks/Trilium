@@ -1,7 +1,7 @@
 import { AnonymizedDbResponse, DatabaseAnonymizeResponse, DatabaseCheckIntegrityResponse, ExistingAnonymizedDatabasesResponse } from "@triliumnext/commons";
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 
-import { type ExperimentalFeatureId,getAvailableExperimentalFeatures } from "../../../services/experimental_features";
+import { type ExperimentalFeatureId, getAvailableExperimentalFeatures } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
