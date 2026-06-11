@@ -116,12 +116,14 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
         const container = containerRef.current;
         if (!grid || !container) return;
 
+        let changed = false;
         grid.batchUpdate();
         try {
             // Drop engine nodes whose element Preact has already unmounted.
             for (const node of [ ...grid.engine.nodes ]) {
                 if (node.el && !node.el.isConnected) {
                     grid.removeWidget(node.el, false, false);
+                    changed = true;
                 }
             }
 
@@ -137,13 +139,18 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
                     autoPosition: !saved
                 });
                 el.classList.add(INITIALIZED_CLASS);
+                changed = true;
             }
         } finally {
             grid.batchUpdate(false);
         }
 
-        // Persist auto-assigned positions and prune entries of removed notes.
-        persistLayout(grid);
+        // Persist auto-assigned positions and prune entries of removed notes — but only when
+        // reconciliation actually touched the grid. Running on an empty grid (e.g. before the
+        // notes have loaded on mount) would otherwise save an empty layout over the real one.
+        if (changed) {
+            persistLayout(grid);
+        }
     }, [ notes ]);
 
     // React to external changes of the layout (e.g. the same dashboard open in another split
