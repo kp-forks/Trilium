@@ -68,10 +68,9 @@
         cursor: default;
     }
 
+    /* Layout, title color and ellipsis are shared with the grid/list card header
+       (.note-book-header) in ListOrGridView.css; only dashboard-specific chrome lives here. */
     .dashboard-widget-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
         padding: 0.45rem 0.5rem 0.45rem 0.85rem;
         cursor: grab;
         border-bottom: 1px solid var(--card-border-color, var(--main-border-color));
@@ -79,13 +78,10 @@
 
         .tn-icon + span {
             flex-grow: 1;
-        }
 
-        .note-book-title {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-weight: 500;
+            a {
+                font-weight: 500;
+            }
         }
     }
 
