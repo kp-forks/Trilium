@@ -64,7 +64,7 @@ export default function RecentNotesWidget() {
 
 - The grid has 12 columns; one row is about 80 px tall. New widgets default to 4 columns × 3 rows and are placed automatically in the first free spot.
 - The user rearranges widgets by dragging the title bar and resizes them from the bottom-right corner. You cannot position widgets programmatically — create them and let auto-placement handle it; the user adjusts afterwards.
-- The layout persists in a `dashboard.json` attachment (role `viewConfig`) on the dashboard note. It is managed by the UI and syncs across devices and splits — do NOT create or modify this attachment.
+- The layout persists in a `dashboard.json` attachment (role `viewConfig`) on the dashboard note. It is managed by the UI and syncs across devices and splits. You cannot alter it — no tool can modify attachments — and there is no need to: the dashboard automatically picks up new child notes as widgets and auto-places them.
 - On narrow screens (under ~768 px) the dashboard collapses to a single read-only column; the saved layout is unaffected.
 
 ## Tips
@@ -77,6 +77,6 @@ export default function RecentNotesWidget() {
 - ❌ Putting the JSX code note directly under the dashboard — it would render as a code widget showing its own source. The JSX note belongs under the render note.
 - ❌ Calling `set_attribute` with `~renderNote` — it will be rejected as dangerous. Ask the user to add the relation instead.
 - ❌ Directing the user to set `~renderNote` on the dashboard note itself — it belongs on the `render`-type child.
-- ❌ Writing the `dashboard.json` attachment to lay out widgets — the UI owns it; rely on auto-placement.
+- ❌ Trying to write the `dashboard.json` attachment (or any view configuration) to lay out widgets — attachments cannot be modified by tools, and the dashboard picks up new widgets automatically; rely on auto-placement.
 - ❌ Setting `#viewType=dashboard` on a `text` note — the view type only applies to `book` (and search) notes.
 - ❌ Prepending an emoji to a widget title to decorate it — find an icon with `search_icons` and set the `iconClass` label instead.
