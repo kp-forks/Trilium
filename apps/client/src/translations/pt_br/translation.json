@@ -1239,8 +1239,6 @@
     "successfully_created_lightly_anonymized_database": "Banco de dados levemente anonimizado criado em {{anonymizedFilePath}}"
   },
   "ribbon": {
-    "widgets": "Widgets de fita",
-    "promoted_attributes_message": "A aba de Atributos Promovidos irá abrir automaticamente se existirem atributos promovidos na nota",
     "edited_notes_message": "A aba de Notas Editadas será aberta automaticamente nas notas do dia"
   },
   "ui-performance": {

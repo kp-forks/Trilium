@@ -1161,8 +1161,6 @@
     "disabled": "vypnuto"
   },
   "ribbon": {
-    "widgets": "Widgety pásu karet",
-    "promoted_attributes_message": "Záložka „Propagované Atributy“ se automaticky otevře, pokud jsou v poznámce přítomny povýšené atributy",
     "edited_notes_message": "Záložka Upravené poznámky na pásu karet se automaticky otevře u denních poznámek"
   },
   "theme": {

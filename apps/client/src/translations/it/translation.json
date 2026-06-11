@@ -186,7 +186,8 @@
     "delete_token": "Elimina/disattiva questo token",
     "rename_token_title": "Rinomina token",
     "rename_token_message": "Inserisci il nome del nuovo token",
-    "delete_token_confirmation": "Sei sicuro di voler eliminare il token ETAPI \"{{name}}\"?"
+    "delete_token_confirmation": "Sei sicuro di voler eliminare il token ETAPI \"{{name}}\"?",
+    "no_tokens": "Non ci sono token ancora."
   },
   "electron_integration": {
     "zoom-factor": "Fattore di ingrandimento",
@@ -241,7 +242,9 @@
     "creating_fully_anonymized_database": "Creazione di un database completamente anonimizzato...",
     "creating_lightly_anonymized_database": "Creazione di un database leggermente anonimizzato...",
     "error_creating_anonymized_database": "Impossibile creare un database anonimo, controllare i log del backend per i dettagli",
-    "description": "Crea una copia anonimizzata del tuo database da condividere con gli sviluppatori durante la risoluzione dei problemi, senza divulgare dati personali."
+    "description": "Crea una copia anonimizzata del tuo database da condividere con gli sviluppatori durante la risoluzione dei problemi, senza divulgare dati personali.",
+    "anonymized_databases_location": "I database anonimizzati vengono archiviati in {{- anonymizedFolder}}.",
+    "download": "Scarica"
   },
   "cpu_arch_warning": {
     "title": "Per favore scarica la versione ARM64",
@@ -481,8 +484,8 @@
     "column-already-exists": "Questa colonna esiste già nella bacheca."
   },
   "backup": {
-    "enable_weekly_backup": "Backup settimanali",
-    "enable_monthly_backup": "Backup mensili",
+    "enable_weekly_backup": "Backup settimanale",
+    "enable_monthly_backup": "Backup mensile",
     "backup_recommendation": "Si raccomanda di mantenere attive le archiviazioni, sebbene ciò possa rendere l'avvio dell'applicazione lento con database grandi e/o dispositivi di archiviazione lenti.",
     "backup_now": "Archivia adesso",
     "backup_database_now": "Archivia il database adesso",
@@ -490,12 +493,15 @@
     "date-and-time": "Data e ora",
     "path": "Percorso",
     "database_backed_up_to": "È stato eseguito il backup del database su {{- backupFilePath}}",
-    "enable_daily_backup": "Backup giornalieri",
+    "enable_daily_backup": "Backup giornaliero",
     "no_backup_yet": "Ancora nessuna archiviazione",
     "automatic_backup": "Backup Automatico",
     "automatic_backup_description": "Trilium può eseguire automaticamente il backup del database:",
     "download": "Scarica",
-    "title": "Backup"
+    "title": "Backup",
+    "automatic_backups_title": "Backup automatici",
+    "automatic_backups_description": "Trilium è in grado di eseguire automaticamente il backup del database. Si consiglia di mantenere attiva questa funzione, ma ciò potrebbe rallentare l'avvio dell'applicazione in presenza di database di grandi dimensioni e/o dispositivi di archiviazione lenti.",
+    "backup_location_description": "I backup vengono salvati in {{- backupFolder}}."
   },
   "backend_log": {
     "refresh": "Aggiorna"
@@ -1530,8 +1536,6 @@
     "disabled": "disabile"
   },
   "ribbon": {
-    "widgets": "Widget della barra multifunzione",
-    "promoted_attributes_message": "La scheda della barra multifunzione Attributi promossi si aprirà automaticamente se gli attributi promossi sono presenti nella nota",
     "edited_notes_message": "La scheda della barra multifunzione Note modificate si aprirà automaticamente nelle note giornaliere"
   },
   "theme": {
@@ -2105,7 +2109,8 @@
     "unpin_tab_description": "Sblocca questa scheda, in modo che possa essere chiusa e spostata liberamente"
   },
   "content_renderer": {
-    "open_externally": "Aperto esternamente"
+    "open_externally": "Aperto esternamente",
+    "mermaid_diagram_error": "Impossibile visualizzare il diagramma Mermaid: {{error}}"
   },
   "call_to_action": {
     "next_theme_title": "Prova il nuovo tema Trilium",
@@ -2491,7 +2496,8 @@
     },
     "base_url": "URL di base",
     "base_url_description": "Facoltativo. Sovrascrivere l'endpoint API predefinito - utile per modelli self-hosted (Ollama, LM Studio, vLLM) o proxy.",
-    "base_url_invalid": "L'URL di base deve essere un URL valido del tipo http:// o https://"
+    "base_url_invalid": "L'URL di base deve essere un URL valido del tipo http:// o https://",
+    "not_available_in_standalone": "Le funzionalità AI/LLM non sono disponibili nella versione standalone di Trilium, poiché i fornitori di LLM non consentono l'accesso diretto dal browser."
   },
   "ocr": {
     "extracted_text": "Testo estratto (OCR)",
@@ -2812,5 +2818,9 @@
   },
   "image_viewer": {
     "loading_error": "Si è verificato un errore durante il caricamento dell'immagine."
+  },
+  "options": {
+    "title": "Opzioni",
+    "back": "Torna a tutte le opzioni"
   }
 }

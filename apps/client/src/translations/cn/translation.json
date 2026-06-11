@@ -1180,8 +1180,6 @@
     "disabled": "禁用"
   },
   "ribbon": {
-    "widgets": "功能选项组件",
-    "promoted_attributes_message": "如果笔记中存在升级属性，则自动打开升级属性功能区标签页",
     "edited_notes_message": "日记笔记自动打开编辑过的笔记功能区标签页"
   },
   "theme": {

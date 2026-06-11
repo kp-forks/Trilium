@@ -1212,8 +1212,6 @@
     "disabled": "díchumasaithe"
   },
   "ribbon": {
-    "widgets": "Giuirléidí ribín",
-    "promoted_attributes_message": "Osclófar an cluaisín ribín Tréithe Ardaithe go huathoibríoch má tá tréithe ardaithe i láthair ar an nóta",
     "edited_notes_message": "Osclófar an cluaisín ribín Nótaí Eagarthóireachta go huathoibríoch ar nótaí lae"
   },
   "theme": {

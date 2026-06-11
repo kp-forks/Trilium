@@ -1363,8 +1363,6 @@
     "disabled": "wyłączony"
   },
   "ribbon": {
-    "widgets": "Widżety wstążki",
-    "promoted_attributes_message": "Karta wstążki Wyróżnione Atrybuty otworzy się automatycznie, jeśli w notatce obecne są wyróżnione atrybuty",
     "edited_notes_message": "Karta wstążki Edytowane Notatki otworzy się automatycznie na notatkach dziennych"
   },
   "theme": {

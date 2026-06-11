@@ -1338,8 +1338,6 @@
     "disabled": "dinonaktifkan"
   },
   "ribbon": {
-    "widgets": "Widget ribbon",
-    "promoted_attributes_message": "Tab ribbon Atribut Dipromosikan akan terbuka otomatis jika atribut yang dipromosikan ada pada catatan",
     "edited_notes_message": "Tab ribbon Catatan yang Diedit akan terbuka otomatis pada catatan harian"
   },
   "theme": {
