@@ -2600,6 +2600,7 @@
   "active_content_badges": {
     "type_icon_pack": "Icon pack",
     "type_backend_script": "Backend script",
+    "type_custom_request_handler": "Custom request handler",
     "type_frontend_script": "Frontend script",
     "type_widget": "Widget",
     "type_app_css": "Custom CSS",
