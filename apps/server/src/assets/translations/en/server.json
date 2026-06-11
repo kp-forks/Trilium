@@ -419,7 +419,8 @@
     "presentation_slide": "Presentation slide",
     "presentation_slide_first": "First slide",
     "presentation_slide_second": "Second slide",
-    "background": "Background"
+    "background": "Background",
+    "dashboard": "Dashboard"
   },
   "sql_init": {
     "db_not_initialized_desktop": "DB not initialized, please follow on-screen instructions.",

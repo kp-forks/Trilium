@@ -930,6 +930,7 @@
     "geo-map": "Geo Map",
     "board": "Board",
     "presentation": "Presentation",
+    "dashboard": "Dashboard",
     "include_archived_notes": "Show archived notes",
     "hide_child_notes": "Hide child notes in tree",
     "open_all_in_tabs": "Open all",
@@ -2345,6 +2346,11 @@
     "edit-note-title": "Click to edit note title",
     "edit-column-title": "Click to edit column title",
     "column-already-exists": "This column already exists on the board."
+  },
+  "dashboard_view": {
+    "refresh-widget": "Refresh",
+    "remove-widget": "Remove from dashboard",
+    "empty-hint": "Any child note becomes a widget. Drag a note here from tree or create a new one."
   },
   "presentation_view": {
     "edit-slide": "Edit this slide",
