@@ -3,15 +3,17 @@ import "gridstack/dist/gridstack.min.css";
 
 import { clsx } from "clsx";
 import { GridStack } from "gridstack";
-import { TargetedMouseEvent } from "preact";
+import { RefObject, TargetedMouseEvent } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import linkContextMenuService from "../../../menus/link_context_menu";
+import branches from "../../../services/branches";
 import froca from "../../../services/froca";
+import { t } from "../../../services/i18n";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
-import { useElementSize, useNoteLabelBoolean, useSpacedUpdate } from "../../react/hooks";
+import { useElementSize, useNoteLabelBoolean, useNoteTreeDrag, useSpacedUpdate } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
@@ -43,6 +45,9 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     // since the viewConfig prop changes identity after every save.
     const savedWidgetsRef = useRef(viewConfig?.widgets ?? {});
     const pendingConfigRef = useRef<DashboardViewConfig | null>(null);
+    // Dropping a note from the note tree clones it into the dashboard; the returned ref holds the
+    // drop positions of those new notes, consumed by the reconcile effect below.
+    const dropPositionsRef = useNoteTreeDropToDashboard(note, containerRef, gridRef);
     const spacedUpdate = useSpacedUpdate(() => {
         if (pendingConfigRef.current) {
             saveConfig(pendingConfigRef.current);
@@ -131,7 +136,8 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
             for (const el of container.querySelectorAll<HTMLElement>(`.grid-stack-item:not(.${INITIALIZED_CLASS})`)) {
                 const noteId = el.dataset.noteId;
                 if (!noteId) continue;
-                const saved = savedWidgetsRef.current[noteId];
+                const saved = dropPositionsRef.current[noteId] ?? savedWidgetsRef.current[noteId];
+                delete dropPositionsRef.current[noteId];
                 grid.makeWidget(el, {
                     id: noteId,
                     ...DEFAULT_WIDGET_SIZE,
@@ -211,6 +217,46 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     );
 }
 
+/** Wire up dropping notes from the note tree onto the dashboard: each dropped note is cloned into
+ *  the dashboard and the first one is positioned under the cursor. Returns a ref holding the drop
+ *  positions of the freshly cloned notes, which the reconcile effect consumes (once) when it
+ *  promotes them to grid widgets — kept out of savedWidgetsRef so persistLayout still saves them. */
+function useNoteTreeDropToDashboard(note: FNote, containerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
+    const dropPositionsRef = useRef<Record<string, DashboardWidgetLayout>>({});
+
+    useNoteTreeDrag(containerRef, {
+        dragEnabled: true,
+        dragNotEnabledMessage: {
+            icon: "bx bx-lock-alt",
+            title: t("book.drag_locked_title"),
+            message: t("book.drag_locked_message")
+        },
+        async callback(treeData, e) {
+            const grid = gridRef.current;
+            const container = containerRef.current;
+            if (!grid || !container) return;
+
+            const dropCell = computeDropCell(grid, container, e);
+            for (let i = 0; i < treeData.length; i++) {
+                const { noteId } = treeData[i];
+                const childNote = await froca.getNote(noteId, true);
+                if (childNote?.getParentNoteIds().includes(note.noteId)) {
+                    // Already a widget on this dashboard — don't create a duplicate clone.
+                    continue;
+                }
+                // Place the first dropped note under the cursor; let the rest auto-position so they
+                // don't all stack on the same cell.
+                if (i === 0 && dropCell) {
+                    dropPositionsRef.current[noteId] = { ...DEFAULT_WIDGET_SIZE, ...dropCell };
+                }
+                await branches.cloneNoteToParentNote(noteId, note.noteId);
+            }
+        }
+    });
+
+    return dropPositionsRef;
+}
+
 interface DashboardWidgetProps {
     note: FNote;
     parentNote: FNote;
@@ -232,26 +278,43 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                 <div className="dashboard-widget-header">
                     <Icon className="note-icon" icon={note.getIcon()} />
                     <NoteLink className="note-book-title"
-                              notePath={notePath}
-                              noPreview
-                              highlightedTokens={highlightedTokens} />
+                        notePath={notePath}
+                        noPreview
+                        highlightedTokens={highlightedTokens} />
                     <ActionButton className="note-book-item-menu"
-                                  icon="bx bx-dots-vertical-rounded" text=""
-                                  onClick={(e: TargetedMouseEvent<HTMLElement>) => {
-                                      linkContextMenuService.openContextMenu(notePath, e);
-                                      e.stopPropagation();
-                                  }} />
+                        icon="bx bx-dots-vertical-rounded" text=""
+                        onClick={(e: TargetedMouseEvent<HTMLElement>) => {
+                            linkContextMenuService.openContextMenu(notePath, e);
+                            e.stopPropagation();
+                        }} />
                 </div>
                 <div className="dashboard-widget-content">
                     <NoteContent note={note}
-                                 trim
-                                 highlightedTokens={highlightedTokens}
-                                 includeArchivedNotes={includeArchived}
-                                 showTextRepresentation={showTextRepresentation} />
+                        trim
+                        highlightedTokens={highlightedTokens}
+                        includeArchivedNotes={includeArchived}
+                        showTextRepresentation={showTextRepresentation} />
                 </div>
             </div>
         </div>
     );
+}
+
+/** Translate a drop event's viewport coordinates into a grid cell, or null when auto-positioning
+ *  is preferable (the grid is in collapsed single-column mode or has no measurable geometry yet). */
+function computeDropCell(grid: GridStack, container: HTMLElement, e: DragEvent): Pick<DashboardWidgetLayout, "x" | "y"> | null {
+    if (grid.getColumn() !== GRID_COLUMNS) {
+        return null;
+    }
+    const rect = container.getBoundingClientRect();
+    const cellWidth = rect.width / GRID_COLUMNS;
+    const cellHeight = grid.getCellHeight();
+    if (!cellWidth || !cellHeight) {
+        return null;
+    }
+    const x = Math.min(GRID_COLUMNS - DEFAULT_WIDGET_SIZE.w, Math.max(0, Math.floor((e.clientX - rect.left) / cellWidth)));
+    const y = Math.max(0, Math.floor((e.clientY - rect.top) / cellHeight));
+    return { x, y };
 }
 
 function sameLayout(a: Record<string, DashboardWidgetLayout>, b: Record<string, DashboardWidgetLayout>) {
