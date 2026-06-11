@@ -101,7 +101,8 @@ export default defineWidget({
 ```jsx
 // API methods
 import { showMessage, showError, getNote, searchForNotes, activateNote,
-         runOnBackend, getActiveContextNote } from "trilium:api";
+         runOnBackend, runAsyncOnBackendWithManualTransactionHandling,
+         getActiveContextNote } from "trilium:api";
 
 // Hooks and components
 import { defineWidget, defineLauncherWidget,
@@ -217,7 +218,21 @@ In JSX, use `import { method } from "trilium:api"`. In JavaScript (Trilium front
 - `showPromptDialog(msg)` - prompt dialog (returns user input)
 
 ### Backend integration
-- `runOnBackend(func, params)` - execute a function on the backend
+- `runOnBackend(func, params)` - execute a function on the backend. The function **MUST be synchronous** — do NOT pass an `async` function. `runOnBackend` wraps the call in a SQL transaction, which does not support async; passing an `async` function triggers the warning *"You're passing an async function to `api.runOnBackend()` which will likely not work as you intended"* and the transaction will not behave correctly.
+- `runAsyncOnBackendWithManualTransactionHandling(func, params)` - use this instead when the backend function genuinely needs to be `async` (e.g. it `await`s a `fetch()`). Automatic transaction management is disabled, so wrap any DB writes in `api.transactional(...)` yourself inside the function.
+
+```jsx
+// ✅ Synchronous backend work — use runOnBackend
+const title = await runOnBackend((noteId) => {
+    return api.getNote(noteId).title;
+}, [noteId]);
+
+// ✅ Async backend work (e.g. fetch) — use the manual-transaction variant
+const data = await runAsyncOnBackendWithManualTransactionHandling(async (url) => {
+    const response = await fetch(url);
+    return await response.json();
+}, [url]);
+```
 
 ### UI interaction
 - `triggerCommand(name, data)` - trigger a command
