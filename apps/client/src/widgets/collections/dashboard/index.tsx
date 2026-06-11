@@ -68,7 +68,15 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
 function useDashboardNotes(noteIds: string[]) {
     const [ notes, setNotes ] = useState<FNote[]>([]);
     useEffect(() => {
-        froca.getNotes(noteIds).then(setNotes);
+        let active = true;
+        void froca.getNotes(noteIds).then(res => {
+            if (active) {
+                setNotes(res);
+            }
+        });
+        return () => {
+            active = false;
+        };
     }, [ noteIds ]);
     return notes;
 }
@@ -272,18 +280,20 @@ function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivE
             if (!grid || !gridContainer) return;
 
             const dropCell = computeDropCell(grid, gridContainer, e);
-            for (let i = 0; i < treeData.length; i++) {
-                const { noteId } = treeData[i];
+            let isFirstNewNote = true;
+            for (const { noteId } of treeData) {
                 const childNote = await froca.getNote(noteId, true);
                 if (childNote?.getParentNoteIds().includes(note.noteId)) {
                     // Already a widget on this dashboard — don't create a duplicate clone.
                     continue;
                 }
-                // Place the first dropped note under the cursor; let the rest auto-position so they
-                // don't all stack on the same cell.
-                if (i === 0 && dropCell) {
+                // Place the first newly cloned note under the cursor; let the rest auto-position so
+                // they don't all stack on the same cell. Skipped (already-present) notes don't count,
+                // so the cursor position always lands on a note actually being added.
+                if (isFirstNewNote && dropCell) {
                     dropPositionsRef.current[noteId] = { ...DEFAULT_WIDGET_SIZE, ...dropCell };
                 }
+                isFirstNewNote = false;
                 await branches.cloneNoteToParentNote(noteId, note.noteId);
             }
         }
@@ -322,10 +332,14 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                     <ActionButton className="note-book-item-menu"
                         icon="bx bx-dots-vertical-rounded" text=""
                         onClick={(e: TargetedMouseEvent<HTMLElement>) => {
-                            openWidgetContextMenu(notePath, note.parentToBranch[parentNote.noteId], e, {
+                            e.stopPropagation();
+                            // The branch may not be in Froca yet (e.g. right after a clone, before the
+                            // WebSocket update arrives); without it there's nothing to remove.
+                            const branchId = note.parentToBranch[parentNote.noteId];
+                            if (!branchId) return;
+                            openWidgetContextMenu(notePath, branchId, e, {
                                 onRefresh: isRenderNote ? () => setRefreshKey((key) => key + 1) : undefined
                             });
-                            e.stopPropagation();
                         }} />
                 </div>
                 <div className="dashboard-widget-content">
