@@ -74,7 +74,7 @@ Use the native `fetch()` API for HTTP requests. Since `fetch()` is async and top
 })();
 ```
 
-Note: `api.axios` was removed in 2026 due to a supply chain security incident. Use `fetch()` instead.
+Note: `api.axios` was removed in March 2026 following an npm supply chain attack. Use `fetch()` instead.
 
 ### Advanced
 - `api.transactional(func)` - wrap code in a database transaction
