@@ -40,6 +40,8 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     const [ notes, setNotes ] = useState<FNote[]>([]);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const containerRef = useRef<HTMLDivElement>(null);
+    // The grid only spans its content height, so drops land on the taller scroll container instead.
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<GridStack | null>(null);
     // Gridstack becomes the source of truth for geometry after init; capture the saved layout once
     // since the viewConfig prop changes identity after every save.
@@ -47,7 +49,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     const pendingConfigRef = useRef<DashboardViewConfig | null>(null);
     // Dropping a note from the note tree clones it into the dashboard; the returned ref holds the
     // drop positions of those new notes, consumed by the reconcile effect below.
-    const dropPositionsRef = useNoteTreeDropToDashboard(note, containerRef, gridRef);
+    const dropPositionsRef = useNoteTreeDropToDashboard(note, scrollContainerRef, containerRef, gridRef);
     const spacedUpdate = useSpacedUpdate(() => {
         if (pendingConfigRef.current) {
             saveConfig(pendingConfigRef.current);
@@ -199,7 +201,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
     return (
         <div className="dashboard-view">
             <CollectionProperties note={note} />
-            <div className="dashboard-scroll-container">
+            <div className="dashboard-scroll-container" ref={scrollContainerRef}>
                 <div className="grid-stack" ref={containerRef}>
                     {notes.map((childNote) => (
                         <DashboardWidget
@@ -221,10 +223,10 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
  *  the dashboard and the first one is positioned under the cursor. Returns a ref holding the drop
  *  positions of the freshly cloned notes, which the reconcile effect consumes (once) when it
  *  promotes them to grid widgets — kept out of savedWidgetsRef so persistLayout still saves them. */
-function useNoteTreeDropToDashboard(note: FNote, containerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
+function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivElement>, gridContainerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
     const dropPositionsRef = useRef<Record<string, DashboardWidgetLayout>>({});
 
-    useNoteTreeDrag(containerRef, {
+    useNoteTreeDrag(dropAreaRef, {
         dragEnabled: true,
         dragNotEnabledMessage: {
             icon: "bx bx-lock-alt",
@@ -233,10 +235,10 @@ function useNoteTreeDropToDashboard(note: FNote, containerRef: RefObject<HTMLDiv
         },
         async callback(treeData, e) {
             const grid = gridRef.current;
-            const container = containerRef.current;
-            if (!grid || !container) return;
+            const gridContainer = gridContainerRef.current;
+            if (!grid || !gridContainer) return;
 
-            const dropCell = computeDropCell(grid, container, e);
+            const dropCell = computeDropCell(grid, gridContainer, e);
             for (let i = 0; i < treeData.length; i++) {
                 const { noteId } = treeData[i];
                 const childNote = await froca.getNote(noteId, true);
