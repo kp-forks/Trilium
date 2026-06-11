@@ -731,7 +731,8 @@
     "rename_token": "トークン名を変更",
     "delete_token": "このトークンを削除/無効にする",
     "rename_token_title": "トークン名の変更",
-    "delete_token_confirmation": "本当にETAPIトークン\"{{name}}\"を削除しますか？"
+    "delete_token_confirmation": "本当にETAPIトークン\"{{name}}\"を削除しますか？",
+    "no_tokens": "トークンはまだありません。"
   },
   "note_paths": {
     "title": "ノートパス",
@@ -1041,7 +1042,10 @@
     "database_backed_up_to": "データベースは {{- backupFilePath}} にバックアップされました",
     "no_backup_yet": "バックアップがありません",
     "download": "ダウンロード",
-    "title": "バックアップ"
+    "title": "バックアップ",
+    "automatic_backups_title": "自動バックアップ",
+    "automatic_backups_description": "Trilium はデータベースを自動的にバックアップできます。バックアップを有効にしておくことをお勧めしますが、データベースが大きい場合やストレージデバイスの速度が遅い場合は、アプリケーションの起動が遅くなる可能性があります。",
+    "backup_location_description": "バックアップは {{- backupFolder}} に保存されます。"
   },
   "password": {
     "wiki": "wiki",
@@ -1649,7 +1653,9 @@
     "successfully_created_fully_anonymized_database": "完全に匿名化されたデータベースを {{anonymizedFilePath}} に作成",
     "successfully_created_lightly_anonymized_database": "軽く匿名化されたデータベースを {{anonymizedFilePath}} に作成",
     "no_anonymized_database_yet": "匿名化されたデータベースはまだありません。",
-    "description": "問題のデバッグ時に開発者と共有するために、個人データを公開することなく、データベースの匿名化されたコピーを作成します。"
+    "description": "問題のデバッグ時に開発者と共有するために、個人データを公開することなく、データベースの匿名化されたコピーを作成します。",
+    "anonymized_databases_location": "匿名化されたデータベースは {{- anonymizedFolder}} に保存されます。",
+    "download": "ダウンロード"
   },
   "database_integrity_check": {
     "title": "データベースの整合性チェック",
@@ -2458,7 +2464,8 @@
     },
     "base_url": "ベース URL",
     "base_url_description": "オプション。デフォルトの API エンドポイントを上書きします — これは、セルフホスト型モデル（Ollama、LM Studio、vLLM）やプロキシを使用する場合に便利です。",
-    "base_url_invalid": "ベース URL は、有効な http:// または https:// 形式の URL である必要があります"
+    "base_url_invalid": "ベース URL は、有効な http:// または https:// 形式の URL である必要があります",
+    "not_available_in_standalone": "LLM プロバイダーがブラウザからの直接アクセスを許可していないため、AI/LLM 機能は Trilium のスタンドアロン版では利用できません。"
   },
   "ocr": {
     "extracted_text": "抽出されたテキスト（OCR）",
@@ -2763,5 +2770,9 @@
   },
   "image_viewer": {
     "loading_error": "画像の読み込み中にエラーが発生しました。"
+  },
+  "options": {
+    "title": "オプション",
+    "back": "すべてのオプションに戻る"
   }
 }
