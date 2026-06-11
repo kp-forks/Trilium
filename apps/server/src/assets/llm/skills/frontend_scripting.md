@@ -12,6 +12,8 @@ CRITICAL: In JSX notes, always use top-level `import` statements (e.g. `import {
 2. Add `#widget` label for widgets, or `#run=frontendStartup` for auto-run scripts.
 3. For mobile, use `#run=mobileStartup` instead.
 
+NOTE: `#widget`, `#run` and `~renderNote` enable code execution, so `set_attribute` refuses them as dangerous. Create the code note yourself, then ask the user to add the activating attribute, telling them exactly which note to open and what to type into its attribute area.
+
 ## Script types
 
 | Type | Language | Required attribute |
@@ -125,7 +127,7 @@ import { ActionButton, Button, LinkButton, Modal,
 For rendering custom content inside a note:
 1. Create a "render note" (type: Render Note) where you want the content to appear.
 2. Create a JSX code note **as a child** of the render note, exporting a default component.
-3. On the render note, add a `~renderNote` relation pointing to the child JSX note.
+3. Ask the user to add a `~renderNote` relation on the render note pointing to the child JSX note (you cannot set this dangerous attribute yourself).
 
 IMPORTANT: Always create the JSX code note as a child of the render note, not as a sibling or at the root. This keeps them organized together.
 

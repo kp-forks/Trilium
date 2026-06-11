@@ -28,7 +28,7 @@ For widgets that compute something, fetch data, or respond to clicks, use a rend
 
 1. Create a note of type `render` as a **child of the dashboard** — this is the widget.
 2. Create a `code` note with mime `text/jsx` as a **child of the render note**, exporting a default component.
-3. On the render note, set a `~renderNote` relation pointing to the JSX note (`set_attribute` with type `relation`, name `renderNote`, value = the JSX note's ID).
+3. Ask the user to activate the widget by adding a `~renderNote` relation on the render note pointing to the JSX note. You CANNOT set this relation yourself — it enables code execution, so `set_attribute` refuses it as dangerous. Tell the user exactly what to do, e.g.: "Open the widget note '<render note title>', click the attribute area at the top, and add `~renderNote` pointing to '<JSX note title>'." Mention which JSX note to target by title.
 
 JSX rules (load the `frontend_scripting` skill for the full API):
 
@@ -74,6 +74,7 @@ export default function RecentNotesWidget() {
 ## Anti-patterns (do NOT do this)
 
 - ❌ Putting the JSX code note directly under the dashboard — it would render as a code widget showing its own source. The JSX note belongs under the render note.
-- ❌ Setting `~renderNote` on the dashboard note itself — it belongs on the `render`-type child.
+- ❌ Calling `set_attribute` with `~renderNote` — it will be rejected as dangerous. Ask the user to add the relation instead.
+- ❌ Directing the user to set `~renderNote` on the dashboard note itself — it belongs on the `render`-type child.
 - ❌ Writing the `dashboard.json` attachment to lay out widgets — the UI owns it; rely on auto-placement.
 - ❌ Setting `#viewType=dashboard` on a `text` note — the view type only applies to `book` (and search) notes.
