@@ -156,6 +156,8 @@ Relations can be inheritable — when set, they apply to all descendant notes.
 
 A backend script with a `#customRequestHandler` label becomes a public REST endpoint under `/custom/...`. The label value is a regular expression matched against the request path (e.g. `#customRequestHandler=create-note` is reachable at `/custom/create-note`).
 
+**The label MUST have a value** — a bare `#customRequestHandler` with no value matches nothing and the endpoint will never run. Always give it a path regex (e.g. `#customRequestHandler=create-note`).
+
 The Express request and response objects are exposed as **`api.req`** and **`api.res`** — **not** bare `req`/`res`. Write the HTTP response by calling methods on `api.res`.
 
 ```javascript
