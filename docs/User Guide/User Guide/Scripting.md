@@ -32,7 +32,7 @@ The solution is marked by red circle at the bottom - this note has [label](Advan
 
 Starting with Trilium v0.104.0, frontend scripts, backend scripts and render notes benefit from an autocomplete system.
 
-The autocomplete triggers automatically when typing <kbd spellcheck="false">.</kbd> or manually by pressing <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">Space</kbd>.
+The autocomplete triggers automatically when typing <kbd>.</kbd> or manually by pressing <kbd>Ctrl</kbd>+<kbd>Space</kbd>.
 
 In addition to that, the editor will also display syntax errors and warnings such as unreachable code.
 
