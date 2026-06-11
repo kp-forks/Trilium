@@ -74,7 +74,7 @@ Use the native `fetch()` API for HTTP requests. Since `fetch()` is async and top
 })();
 ```
 
-Note: `api.axios` was removed in 2026 due to a supply chain security incident. Use `fetch()` instead.
+Note: `api.axios` was removed in March 2026 following an npm supply chain attack. Use `fetch()` instead.
 
 ### Advanced
 - `api.transactional(func)` - wrap code in a database transaction
@@ -151,6 +151,31 @@ These are defined as relations. `api.originEntity` contains the entity that trig
 | `~runOnAttributeChange` | attribute changed/deleted on this note | BAttribute |
 
 Relations can be inheritable — when set, they apply to all descendant notes.
+
+## Custom request handlers
+
+A backend script with a `#customRequestHandler` label becomes a public REST endpoint under `/custom/...`. The label value is a regular expression matched against the request path (e.g. `#customRequestHandler=create-note` is reachable at `/custom/create-note`).
+
+**The label MUST have a value** — a bare `#customRequestHandler` with no value matches nothing and the endpoint will never run. Always give it a path regex (e.g. `#customRequestHandler=create-note`).
+
+The Express request and response objects are exposed as **`api.req`** and **`api.res`** — **not** bare `req`/`res`. Write the HTTP response by calling methods on `api.res`.
+
+```javascript
+const { req, res } = api; // destructure from api — api.req / api.res, never global req/res
+const { secret, title, content } = req.body;
+
+if (req.method === "POST" && secret === "secret-password") {
+    const targetParentNoteId = api.currentNote.getRelationValue("targetNote");
+    const { note } = api.createTextNote(targetParentNoteId, title, content);
+    res.status(201).json(note.getPojo());
+} else {
+    res.sendStatus(400);
+}
+```
+
+- Regex capture groups from the matched path are available in **`api.pathParams`** (e.g. `#customRequestHandler=notes/([0-9]+)` → `api.pathParams[0]`).
+- Query params come from standard Express: `api.req.query.noteId`.
+- These endpoints are **unauthenticated** by default — handle authentication yourself (e.g. a shared secret as above).
 
 ## Example: auto-color notes by category
 
