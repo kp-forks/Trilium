@@ -48,12 +48,15 @@
         }
     }
 
+    /* Match the grid view's card look: translucent fill + soft (transparent-by-default) border
+       rather than a hard outline, so widgets read as cards instead of flat boxes. */
     .dashboard-widget {
         display: flex;
         flex-direction: column;
-        border: 1px solid var(--main-border-color);
-        border-radius: 6px;
-        background: var(--main-background-color);
+        border: 1px solid var(--card-border-color, var(--main-border-color));
+        border-radius: var(--card-border-radius, 8px);
+        background: var(--card-background-color);
+        box-shadow: var(--card-box-shadow);
         overflow: hidden;
 
         &.archived {
@@ -68,10 +71,11 @@
     .dashboard-widget-header {
         display: flex;
         align-items: center;
-        gap: 4px;
-        padding: 4px 8px;
+        gap: 8px;
+        padding: 0.45rem 0.5rem 0.45rem 0.85rem;
         cursor: grab;
-        border-bottom: 1px solid var(--main-border-color);
+        border-bottom: 1px solid var(--card-border-color, var(--main-border-color));
+        flex-shrink: 0;
 
         .tn-icon + span {
             flex-grow: 1;
@@ -81,12 +85,35 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            font-weight: 500;
         }
     }
 
     .dashboard-widget-content {
         flex: 1;
         overflow: auto;
-        padding: 8px;
+        font-size: 0.8rem;
+
+        .note-book-content {
+            height: 100%;
+
+            .rendered-content {
+                padding: 8px 16px;
+            }
+
+            /* Media fills the widget edge-to-edge, like the grid view — no inner padding. */
+            &.type-image,
+            &.type-pdf,
+            &.type-canvas,
+            &.type-video,
+            &.type-code,
+            &.type-mindMap {
+                padding: 0;
+
+                .rendered-content {
+                    padding: 0;
+                }
+            }
+        }
     }
 }
