@@ -1183,8 +1183,6 @@
     "disabled": "deaktiviert"
   },
   "ribbon": {
-    "widgets": "Multifunktionsleisten-Widgets",
-    "promoted_attributes_message": "Die „Hervorgehobene Attribute“-Leiste wird automatisch geöffnet, wenn in der Notiz hervorgehobene Attribute vorhanden sind",
     "edited_notes_message": "Die Multifunktionsleisten-Registerkarte „Bearbeitete Notizen“ wird bei Tagesnotizen automatisch geöffnet"
   },
   "theme": {

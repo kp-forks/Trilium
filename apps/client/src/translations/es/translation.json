@@ -1190,8 +1190,6 @@
     "disabled": "desactivado"
   },
   "ribbon": {
-    "widgets": "Widgets de cinta",
-    "promoted_attributes_message": "La pestaña de la cinta Atributos promovidos se abrirá automáticamente si los atributos promovidos están presentes en la nota",
     "edited_notes_message": "La pestaña de la cinta Notas editadas se abrirá automáticamente en las notas del día"
   },
   "theme": {

@@ -1192,8 +1192,6 @@
     "disabled": "désactivé"
   },
   "ribbon": {
-    "widgets": "Ruban de widgets",
-    "promoted_attributes_message": "L'onglet du ruban Attributs promus s'ouvrira automatiquement si la note possède des attributs mis en avant",
     "edited_notes_message": "L’onglet du ruban \"Notes modifiées\" s’ouvrira automatiquement sur les notes du jour"
   },
   "theme": {

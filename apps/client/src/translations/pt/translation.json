@@ -1111,8 +1111,6 @@
     "disabled": "desativada"
   },
   "ribbon": {
-    "widgets": "Widgets de fita",
-    "promoted_attributes_message": "A guia de Atributos Promovidos irá abrir automaticamente se existirem atributos promovidos na nota",
     "edited_notes_message": "A guia de Notas Editadas será aberta automaticamente nas notas do dia"
   },
   "theme": {

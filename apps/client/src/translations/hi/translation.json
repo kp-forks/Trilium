@@ -1135,8 +1135,6 @@
     "disabled": "बंद"
   },
   "ribbon": {
-    "widgets": "रिबन (Ribbon) विजेट्स",
-    "promoted_attributes_message": "अगर नोट में प्रमोटेड एट्रिब्यूट्स होंगे, तो रिबन का वो टैब अपने-आप खुल जाएगा",
     "edited_notes_message": "दिन वाले नोट्स (day notes) पर 'एडिट किए गए नोट्स' वाला टैब अपने-आप खुल जाएगा"
   },
   "theme": {

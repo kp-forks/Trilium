@@ -1530,8 +1530,6 @@
     "disabled": "disabile"
   },
   "ribbon": {
-    "widgets": "Widget della barra multifunzione",
-    "promoted_attributes_message": "La scheda della barra multifunzione Attributi promossi si aprirà automaticamente se gli attributi promossi sono presenti nella nota",
     "edited_notes_message": "La scheda della barra multifunzione Note modificate si aprirà automaticamente nelle note giornaliere"
   },
   "theme": {

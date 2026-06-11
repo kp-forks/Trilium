@@ -1821,9 +1821,7 @@
     "vacuum_description": "データベースを再構築してファイルサイズを削減します。データは変更されません。"
   },
   "ribbon": {
-    "promoted_attributes_message": "プロモート属性がノートに存在する場合、プロモート属性のリボンタブが自動的に開きます",
-    "edited_notes_message": "編集したノートのリボンタブは、dayノートで自動的に開きます",
-    "widgets": "リボンウィジェット"
+    "edited_notes_message": "編集したノートのリボンタブは、dayノートで自動的に開きます"
   },
   "ui-performance": {
     "enable-motion": "画面遷移とアニメーション",
