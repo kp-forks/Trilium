@@ -358,6 +358,32 @@ export default function buildHiddenSubtreeTemplates() {
                         ]
                     }
                 ]
+            },
+            {
+                id: "_template_dashboard",
+                type: "book",
+                title: t("hidden_subtree_templates.dashboard"),
+                icon: "bx bxs-dashboard",
+                attributes: [
+                    {
+                        name: "template",
+                        type: "label"
+                    },
+                    {
+                        name: "collection",
+                        type: "label"
+                    },
+                    {
+                        name: "viewType",
+                        type: "label",
+                        value: "dashboard"
+                    },
+                    {
+                        // Marks the collection as a beta feature in the note creation menu.
+                        name: "beta",
+                        type: "label"
+                    }
+                ]
             }
         ]
     };
