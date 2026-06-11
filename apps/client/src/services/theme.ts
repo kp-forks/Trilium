@@ -177,8 +177,14 @@ interface CustomThemeInfo {
 /**
  * Swaps the active theme stylesheets without reloading the page. The new stylesheets are appended first and the
  * previous ones removed only once the new ones have loaded, so the swap stays free of a flash of unstyled content.
+ * If any of the new stylesheets fails to load, the swap is rolled back and the previous theme stays applied.
  */
 export function applyTheme(theme: string, customThemeCssUrl?: string, themeBase?: string) {
+    const previousGlob = {
+        theme: window.glob.theme,
+        customThemeCssUrl: window.glob.customThemeCssUrl,
+        themeBase: window.glob.themeBase
+    };
     window.glob.theme = theme;
     window.glob.customThemeCssUrl = customThemeCssUrl;
     window.glob.themeBase = themeBase as ThemeBase | undefined;
@@ -199,7 +205,20 @@ export function applyTheme(theme: string, customThemeCssUrl?: string, themeBase?
         return link;
     });
 
-    void waitForStylesheets(newLinks).then(() => {
+    void waitForStylesheets(newLinks).then((allLoaded) => {
+        // If any new stylesheet failed to load (e.g. a deleted custom theme note or a network
+        // error), keep the previous theme rather than leaving the page unstyled. The metadata is
+        // restored to keep getThemeStyle() consistent with what is actually rendered.
+        if (!allLoaded) {
+            for (const newLink of newLinks) {
+                newLink.remove();
+            }
+            window.glob.theme = previousGlob.theme;
+            window.glob.customThemeCssUrl = previousGlob.customThemeCssUrl;
+            window.glob.themeBase = previousGlob.themeBase;
+            return;
+        }
+
         for (const oldLink of oldLinks) {
             oldLink.remove();
         }
@@ -216,17 +235,22 @@ export function applyTheme(theme: string, customThemeCssUrl?: string, themeBase?
     });
 }
 
-function waitForStylesheets(links: HTMLLinkElement[]): Promise<void> {
+/** Resolves once every link has settled, with `true` only if all of them loaded successfully. */
+function waitForStylesheets(links: HTMLLinkElement[]): Promise<boolean> {
     if (links.length === 0) {
-        return Promise.resolve();
+        return Promise.resolve(true);
     }
 
     return new Promise((resolve) => {
         let remaining = links.length;
-        const onSettled = () => {
+        let allLoaded = true;
+        const onSettled = (e: Event) => {
+            if (e.type === "error") {
+                allLoaded = false;
+            }
             remaining--;
             if (remaining <= 0) {
-                resolve();
+                resolve(allLoaded);
             }
         };
         for (const link of links) {

@@ -231,6 +231,37 @@ describe("applyTheme", () => {
         expect(win.glob?.customThemeCssUrl).toBe("api/notes/download/abc123");
         expect(win.glob?.themeBase).toBe("next-dark");
     });
+
+    it("keeps the previous theme when a new stylesheet fails to load", async () => {
+        applyTheme("dark");
+        fireLoadOnPendingThemeLinks();
+        await Promise.resolve();
+
+        // A failing single-stylesheet theme rolls back the swap, including the glob metadata.
+        applyTheme("my-theme", "api/notes/download/missing");
+        const failedLink = document.head.querySelector<HTMLLinkElement>(`link[href="api/notes/download/missing"]`);
+        expect(failedLink).not.toBeNull();
+        failedLink?.dispatchEvent(new Event("error"));
+        await Promise.resolve();
+
+        expect(themeStylesheetHrefs()).toEqual([`${STYLESHEETS_PATH}/theme-dark.css`]);
+        expect(document.body.getAttribute("data-theme-id")).toBe("dark");
+        expect(win.glob?.theme).toBe("dark");
+        expect(win.glob?.customThemeCssUrl).toBeUndefined();
+
+        // A partial failure of a multi-stylesheet theme also rolls back fully, removing the
+        // stylesheets that did load.
+        applyTheme("next");
+        const loadedLink = document.head.querySelector<HTMLLinkElement>(`link[href="${STYLESHEETS_PATH}/theme-next-light.css"]`);
+        const erroredLink = document.head.querySelector<HTMLLinkElement>(`link[href="${STYLESHEETS_PATH}/theme-next-dark.css"]`);
+        loadedLink?.dispatchEvent(new Event("load"));
+        erroredLink?.dispatchEvent(new Event("error"));
+        await Promise.resolve();
+
+        expect(themeStylesheetHrefs()).toEqual([`${STYLESHEETS_PATH}/theme-dark.css`]);
+        expect(document.body.getAttribute("data-theme-id")).toBe("dark");
+        expect(win.glob?.theme).toBe("dark");
+    });
 });
 
 function themeStylesheetHrefs() {
