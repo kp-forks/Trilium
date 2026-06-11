@@ -4,7 +4,7 @@ import "gridstack/dist/gridstack.min.css";
 import { clsx } from "clsx";
 import { GridStack } from "gridstack";
 import { RefObject, TargetedMouseEvent } from "preact";
-import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { MutableRef, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import branches from "../../../services/branches";
@@ -30,44 +30,86 @@ export interface DashboardViewConfig {
     widgets?: Record<string, DashboardWidgetLayout>;
 }
 
+type WidgetLayouts = Record<string, DashboardWidgetLayout>;
+
 const DEFAULT_WIDGET_SIZE = { w: 4, h: 3 };
 const INITIALIZED_CLASS = "dashboard-widget-initialized";
 const GRID_COLUMNS = 12;
+const CELL_HEIGHT = 80;
+const GRID_MARGIN = 8;
 /** Below this container width (in pixels) the dashboard collapses to a single column. */
 const SINGLE_COLUMN_BREAKPOINT = 768;
 
 export default function DashboardView({ note, noteIds, viewConfig, saveConfig, highlightedTokens, showTextRepresentation }: ViewModeProps<DashboardViewConfig>) {
-    const [ notes, setNotes ] = useState<FNote[]>([]);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const containerRef = useRef<HTMLDivElement>(null);
     // The grid only spans its content height, so drops land on the taller scroll container instead.
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const gridRef = useRef<GridStack | null>(null);
+
+    const notes = useDashboardNotes(noteIds);
+    const isCollapsed = useIsCollapsed(containerRef);
+    const dropPositionsRef = useNoteTreeDropToDashboard(note, scrollContainerRef, containerRef, gridRef);
+    useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, gridRef, dropPositionsRef, isCollapsed });
+
+    return (
+        <div className="dashboard-view">
+            <CollectionProperties note={note} />
+            <div className="dashboard-scroll-container" ref={scrollContainerRef}>
+                <div className="grid-stack" ref={containerRef}>
+                    {notes.map((childNote) => (
+                        <DashboardWidget
+                            key={childNote.noteId}
+                            note={childNote}
+                            parentNote={note}
+                            highlightedTokens={highlightedTokens}
+                            includeArchived={includeArchived}
+                            showTextRepresentation={showTextRepresentation}
+                        />
+                    ))}
+                </div>
+                {noteIds.length === 0 && <DashboardEmptyState collapsed={isCollapsed} />}
+            </div>
+        </div>
+    );
+}
+
+/** Resolve the dashboard's child notes (the widgets) from their IDs. */
+function useDashboardNotes(noteIds: string[]) {
+    const [ notes, setNotes ] = useState<FNote[]>([]);
+    useEffect(() => {
+        froca.getNotes(noteIds).then(setNotes);
+    }, [ noteIds ]);
+    return notes;
+}
+
+/** Whether the dashboard is narrow enough to collapse to a single column, where dragging and
+ *  resizing are disabled (the derived single-column layout isn't persisted). */
+function useIsCollapsed(containerRef: RefObject<HTMLElement>) {
+    const containerSize = useElementSize(containerRef);
+    return (containerSize?.width ?? Number.POSITIVE_INFINITY) < SINGLE_COLUMN_BREAKPOINT;
+}
+
+/** Saves the grid geometry to the view config (debounced) and restores it — both the locally tracked
+ *  layout and external changes arriving through the viewConfig prop. Returns the bits the grid
+ *  lifecycle needs: a `persistLayout(grid)` to call after the grid mutates, and `savedWidgetsRef`,
+ *  the last-known persisted layout used to position widgets as they're created. */
+function useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, containerRef }: {
+    viewConfig: DashboardViewConfig | undefined;
+    saveConfig: (config: DashboardViewConfig) => void;
+    gridRef: MutableRef<GridStack | null>;
+    containerRef: RefObject<HTMLDivElement>;
+}) {
     // Gridstack becomes the source of truth for geometry after init; capture the saved layout once
     // since the viewConfig prop changes identity after every save.
-    const savedWidgetsRef = useRef(viewConfig?.widgets ?? {});
+    const savedWidgetsRef = useRef<WidgetLayouts>(viewConfig?.widgets ?? {});
     const pendingConfigRef = useRef<DashboardViewConfig | null>(null);
-    // Dropping a note from the note tree clones it into the dashboard; the returned ref holds the
-    // drop positions of those new notes, consumed by the reconcile effect below.
-    const dropPositionsRef = useNoteTreeDropToDashboard(note, scrollContainerRef, containerRef, gridRef);
     const spacedUpdate = useSpacedUpdate(() => {
         if (pendingConfigRef.current) {
             saveConfig(pendingConfigRef.current);
             pendingConfigRef.current = null;
         }
     });
-
-    useEffect(() => {
-        froca.getNotes(noteIds).then(setNotes);
-    }, [ noteIds ]);
-
-    // Dragging and resizing don't work meaningfully in the collapsed single-column mode
-    // (the rearrangement would not be persisted anyway), so disable them entirely there.
-    const containerSize = useElementSize(containerRef);
-    const isCollapsed = (containerSize?.width ?? Number.POSITIVE_INFINITY) < SINGLE_COLUMN_BREAKPOINT;
-    useEffect(() => {
-        gridRef.current?.setStatic(isCollapsed);
-    }, [ isCollapsed ]);
 
     function persistLayout(grid: GridStack) {
         if (grid.getColumn() !== GRID_COLUMNS) {
@@ -76,7 +118,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
             return;
         }
 
-        const widgets: Record<string, DashboardWidgetLayout> = {};
+        const widgets: WidgetLayouts = {};
         for (const node of grid.engine.nodes) {
             if (typeof node.id === "string") {
                 widgets[node.id] = { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 };
@@ -90,6 +132,61 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
         spacedUpdate.scheduleUpdate();
     }
 
+    function applyLayout(widgets: WidgetLayouts) {
+        const grid = gridRef.current;
+        const container = containerRef.current;
+        if (!grid || !container) return;
+        if (grid.getColumn() !== GRID_COLUMNS) {
+            // Collapsed responsive mode — the full-width coordinates don't apply to the derived
+            // single-column layout. savedWidgetsRef is already updated, so the next save from this
+            // side won't overwrite the external change.
+            return;
+        }
+
+        grid.batchUpdate();
+        try {
+            for (const el of container.querySelectorAll<HTMLElement>(`.grid-stack-item.${INITIALIZED_CLASS}`)) {
+                const layout = el.dataset.noteId ? widgets[el.dataset.noteId] : undefined;
+                if (layout) {
+                    grid.update(el, layout);
+                }
+            }
+        } finally {
+            grid.batchUpdate(false);
+        }
+    }
+
+    // React to external changes of the layout (e.g. the same dashboard open in another split
+    // or synced from another instance) propagated through the viewConfig prop.
+    useEffect(() => {
+        const widgets = viewConfig?.widgets ?? {};
+        if (pendingConfigRef.current || sameLayout(widgets, savedWidgetsRef.current)) {
+            // Local changes take precedence; identical layouts (e.g. our own save echoing back)
+            // need no re-apply.
+            return;
+        }
+        savedWidgetsRef.current = widgets;
+        applyLayout(widgets);
+    }, [ viewConfig ]);
+
+    return { persistLayout, savedWidgetsRef };
+}
+
+/** Owns the gridstack instance and keeps it reconciled with the Preact-rendered widgets: Preact owns
+ *  the element lifecycle (keyed by noteId), gridstack owns the geometry. Saving and restoring the
+ *  geometry is delegated to {@link useDashboardLayoutPersistence}. */
+function useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, gridRef, dropPositionsRef, isCollapsed }: {
+    note: FNote;
+    notes: FNote[];
+    viewConfig: DashboardViewConfig | undefined;
+    saveConfig: (config: DashboardViewConfig) => void;
+    containerRef: RefObject<HTMLDivElement>;
+    gridRef: MutableRef<GridStack | null>;
+    dropPositionsRef: MutableRef<WidgetLayouts>;
+    isCollapsed: boolean;
+}) {
+    const { persistLayout, savedWidgetsRef } = useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, containerRef });
+
     // Initialize the grid once per parent note.
     useLayoutEffect(() => {
         const container = containerRef.current;
@@ -97,8 +194,8 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
 
         const grid = GridStack.init({
             column: GRID_COLUMNS,
-            cellHeight: 80,
-            margin: 8,
+            cellHeight: CELL_HEIGHT,
+            margin: GRID_MARGIN,
             float: true,
             handle: ".dashboard-widget-header",
             columnOpts: {
@@ -116,8 +213,11 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
         };
     }, [ note ]);
 
-    // Reconcile the rendered children with the gridstack engine: Preact owns the element lifecycle
-    // (keyed by noteId), gridstack owns the geometry.
+    useEffect(() => {
+        gridRef.current?.setStatic(isCollapsed);
+    }, [ isCollapsed ]);
+
+    // Reconcile the rendered children with the gridstack engine.
     useLayoutEffect(() => {
         const grid = gridRef.current;
         const container = containerRef.current;
@@ -134,7 +234,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
                 }
             }
 
-            // Promote newly rendered items to widgets, restoring their saved geometry.
+            // Promote newly rendered items to widgets, restoring their saved (or just-dropped) geometry.
             for (const el of container.querySelectorAll<HTMLElement>(`.grid-stack-item:not(.${INITIALIZED_CLASS})`)) {
                 const noteId = el.dataset.noteId;
                 if (!noteId) continue;
@@ -160,64 +260,6 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
             persistLayout(grid);
         }
     }, [ notes ]);
-
-    // React to external changes of the layout (e.g. the same dashboard open in another split
-    // or synced from another instance) propagated through the viewConfig prop.
-    useEffect(() => {
-        const widgets = viewConfig?.widgets ?? {};
-        if (pendingConfigRef.current || sameLayout(widgets, savedWidgetsRef.current)) {
-            // Local changes take precedence; identical layouts (e.g. our own save echoing back)
-            // need no re-apply.
-            return;
-        }
-        savedWidgetsRef.current = widgets;
-        applyLayout(widgets);
-    }, [ viewConfig ]);
-
-    function applyLayout(widgets: Record<string, DashboardWidgetLayout>) {
-        const grid = gridRef.current;
-        const container = containerRef.current;
-        if (!grid || !container) return;
-        if (grid.getColumn() !== GRID_COLUMNS) {
-            // Collapsed responsive mode — the full-width coordinates don't apply to the derived
-            // single-column layout. savedWidgetsRef is already updated, so the next save from this
-            // side won't overwrite the external change.
-            return;
-        }
-
-        grid.batchUpdate();
-        try {
-            for (const el of container.querySelectorAll<HTMLElement>(`.grid-stack-item.${INITIALIZED_CLASS}`)) {
-                const layout = el.dataset.noteId ? widgets[el.dataset.noteId] : undefined;
-                if (layout) {
-                    grid.update(el, layout);
-                }
-            }
-        } finally {
-            grid.batchUpdate(false);
-        }
-    }
-
-    return (
-        <div className="dashboard-view">
-            <CollectionProperties note={note} />
-            <div className="dashboard-scroll-container" ref={scrollContainerRef}>
-                <div className="grid-stack" ref={containerRef}>
-                    {notes.map((childNote) => (
-                        <DashboardWidget
-                            key={childNote.noteId}
-                            note={childNote}
-                            parentNote={note}
-                            highlightedTokens={highlightedTokens}
-                            includeArchived={includeArchived}
-                            showTextRepresentation={showTextRepresentation}
-                        />
-                    ))}
-                </div>
-                {noteIds.length === 0 && <DashboardEmptyState collapsed={isCollapsed} />}
-            </div>
-        </div>
-    );
 }
 
 /** Wire up dropping notes from the note tree onto the dashboard: each dropped note is cloned into
@@ -225,7 +267,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
  *  positions of the freshly cloned notes, which the reconcile effect consumes (once) when it
  *  promotes them to grid widgets — kept out of savedWidgetsRef so persistLayout still saves them. */
 function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivElement>, gridContainerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
-    const dropPositionsRef = useRef<Record<string, DashboardWidgetLayout>>({});
+    const dropPositionsRef = useRef<WidgetLayouts>({});
 
     useNoteTreeDrag(dropAreaRef, {
         dragEnabled: true,
@@ -347,7 +389,7 @@ function computeDropCell(grid: GridStack, container: HTMLElement, e: DragEvent):
     return { x, y };
 }
 
-function sameLayout(a: Record<string, DashboardWidgetLayout>, b: Record<string, DashboardWidgetLayout>) {
+function sameLayout(a: WidgetLayouts, b: WidgetLayouts) {
     const aKeys = Object.keys(a);
     if (aKeys.length !== Object.keys(b).length) {
         return false;
