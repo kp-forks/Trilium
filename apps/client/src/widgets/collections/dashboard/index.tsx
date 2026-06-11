@@ -7,7 +7,6 @@ import { RefObject, TargetedMouseEvent } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
-import linkContextMenuService from "../../../menus/link_context_menu";
 import branches from "../../../services/branches";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
@@ -18,6 +17,7 @@ import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
 import { getNotePath, NoteContent } from "../legacy/ListOrGridView";
+import openWidgetContextMenu from "./context_menu";
 
 interface DashboardWidgetLayout {
     x: number;
@@ -269,6 +269,9 @@ interface DashboardWidgetProps {
 
 function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived, showTextRepresentation }: DashboardWidgetProps) {
     const notePath = getNotePath(parentNote, note);
+    // Bumping the key remounts NoteContent, which re-runs the render — only meaningful for render notes.
+    const [ refreshKey, setRefreshKey ] = useState(0);
+    const isRenderNote = note.type === "render";
 
     /* The outer .grid-stack-item class list must stay constant across renders so that Preact never
        clobbers the classes gridstack adds there; dynamic classes go on the inner content element. */
@@ -286,12 +289,15 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                     <ActionButton className="note-book-item-menu"
                         icon="bx bx-dots-vertical-rounded" text=""
                         onClick={(e: TargetedMouseEvent<HTMLElement>) => {
-                            linkContextMenuService.openContextMenu(notePath, e);
+                            openWidgetContextMenu(notePath, note.parentToBranch[parentNote.noteId], e, {
+                                onRefresh: isRenderNote ? () => setRefreshKey((key) => key + 1) : undefined
+                            });
                             e.stopPropagation();
                         }} />
                 </div>
                 <div className="dashboard-widget-content">
-                    <NoteContent note={note}
+                    <NoteContent key={refreshKey}
+                        note={note}
                         trim
                         highlightedTokens={highlightedTokens}
                         includeArchivedNotes={includeArchived}
