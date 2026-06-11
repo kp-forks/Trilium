@@ -116,12 +116,27 @@ export function updateColorSchemeClasses() {
     document.body.classList.toggle("dark-theme", colorScheme === "dark");
 }
 
+let backgroundEffectsSuspended = false;
+
+/**
+ * Temporarily suppresses background effects without touching the user's option, e.g. while
+ * DevTools is docked into the window — Chromium disables the native window material then, which
+ * would leave the transparent UI floating over a solid void.
+ */
+export function setBackgroundEffectsSuspended(suspended: boolean) {
+    if (backgroundEffectsSuspended === suspended) {
+        return;
+    }
+    backgroundEffectsSuspended = suspended;
+    updateThemeCapabilities();
+}
+
 /** Toggles the `theme-supports-background-effects` body class to match the active theme's `--allow-background-effects`. */
 export function updateThemeCapabilities() {
     const useBgfx = readCssVar(document.documentElement, "allow-background-effects")
         .asBoolean(false);
 
-    document.body.classList.toggle("theme-supports-background-effects", useBgfx);
+    document.body.classList.toggle("theme-supports-background-effects", useBgfx && !backgroundEffectsSuspended);
 }
 
 /** Reads the current `theme` option and applies it live, resolving custom-theme metadata from the server if needed. */

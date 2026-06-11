@@ -187,6 +187,15 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
     webContents.on("did-navigate", () => webContents.send("did-navigate"));
     webContents.on("did-navigate-in-page", () => webContents.send("did-navigate-in-page"));
 
+    // Keep the renderer informed about whether DevTools is docked into this window, where
+    // Chromium disables the native window material (Mica / vibrancy) and the renderer should
+    // suspend its transparent background effects. Re-checked on focus because re-docking an
+    // already open DevTools emits no dedicated event.
+    const sendDevToolsDockState = () => webContents.send("dev-tools-dock-changed", isDevToolsDocked(webContents));
+    webContents.on("devtools-opened", sendDevToolsDockState);
+    webContents.on("devtools-focused", sendDevToolsDockState);
+    webContents.on("devtools-closed", sendDevToolsDockState);
+
     // Forward context-menu event to the renderer with only the fields we need.
     webContents.on("context-menu", (_event, params) => {
         webContents.send("context-menu", {
@@ -206,6 +215,20 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
             }
         });
     });
+}
+
+/** Whether DevTools for the given contents is open and docked into the page's own window (as opposed to a separate window). */
+function isDevToolsDocked(webContents: WebContents) {
+    const devToolsWebContents = webContents.devToolsWebContents;
+    if (!webContents.isDevToolsOpened() || !devToolsWebContents) {
+        return false;
+    }
+
+    // A docked DevTools view is hosted by the same BrowserWindow as the page itself; when
+    // detached it lives in its own native window, which is not a BrowserWindow and for which
+    // fromWebContents() returns null.
+    const devToolsWindow = electron.BrowserWindow.fromWebContents(devToolsWebContents);
+    return devToolsWindow !== null && devToolsWindow === electron.BrowserWindow.fromWebContents(webContents);
 }
 
 function setupSpellcheckForSession(session: Session) {
@@ -426,6 +449,10 @@ export function setupWindowing() {
 
     electron.ipcMain.on("toggle-dev-tools", (event) => {
         event.sender.toggleDevTools();
+    });
+
+    electron.ipcMain.on("is-dev-tools-docked", (event) => {
+        event.returnValue = isDevToolsDocked(event.sender);
     });
 
     electron.ipcMain.on("is-full-screen", (event) => {

@@ -127,6 +127,12 @@ export interface ElectronWindowApi {
     /** Opens or closes Chromium DevTools for the current window. */
     toggleDevTools(): void;
 
+    /**
+     * Synchronously returns whether DevTools is currently open and docked into this window
+     * (as opposed to detached into a separate window).
+     */
+    isDevToolsDocked(): boolean;
+
     // #endregion
 
     // #region Background effects
@@ -180,6 +186,13 @@ export interface ElectronWindowApi {
      * the renderer (e.g. tray menu, deep links).
      */
     onOpenInSameTab(callback: (noteId: string) => void): void;
+
+    /**
+     * Subscribes to changes of the DevTools docking state. `docked` is `true` only while
+     * DevTools is attached to this window — where Chromium disables the native window
+     * material (Mica / vibrancy) — and `false` when it is closed or in a separate window.
+     */
+    onDevToolsDockChanged(callback: (docked: boolean) => void): void;
 
     // #endregion
 }

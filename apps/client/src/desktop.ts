@@ -10,6 +10,7 @@ import { t } from "./services/i18n.js";
 import { syncNativeWindowWithTheme } from "./services/native_window.js";
 import noteAutocompleteService from "./services/note_autocomplete.js";
 import noteTooltipService from "./services/note_tooltip.js";
+import { setBackgroundEffectsSuspended } from "./services/theme.js";
 import toastService from "./services/toast.js";
 import utils from "./services/utils.js";
 
@@ -57,6 +58,7 @@ function initOnElectron() {
 
     syncNativeWindowWithTheme();
     initFullScreenDetection(win);
+    initDevToolsDockDetection(win);
 
     // With an "auto" theme the effective colors of background effects and the native title bar
     // follow the OS color scheme.
@@ -69,4 +71,14 @@ function initOnElectron() {
 function initFullScreenDetection(win: ElectronWindowApi) {
     win.onEnterFullScreen(() => document.body.classList.add("full-screen"));
     win.onLeaveFullScreen(() => document.body.classList.remove("full-screen"));
+}
+
+/**
+ * Chromium disables the native window material (Mica / vibrancy) while DevTools is docked into
+ * the window, which would leave the transparent background effects floating over a solid void —
+ * suspend them for the duration. DevTools in a separate window does not affect the material.
+ */
+function initDevToolsDockDetection(win: ElectronWindowApi) {
+    setBackgroundEffectsSuspended(win.isDevToolsDocked());
+    win.onDevToolsDockChanged(setBackgroundEffectsSuspended);
 }

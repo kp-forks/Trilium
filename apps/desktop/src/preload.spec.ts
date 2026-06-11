@@ -189,6 +189,20 @@ describe("preload script", () => {
             expect(ipcRendererSent).toContainEqual({ channel: "toggle-dev-tools", args: [] });
         });
 
+        it("isDevToolsDocked uses sendSync", () => {
+            ipcRendererSyncResults.set("is-dev-tools-docked:undefined", true);
+            expect(win().isDevToolsDocked()).toBe(true);
+        });
+
+        it("onDevToolsDockChanged registers and forwards the dock state", () => {
+            const callback = vi.fn();
+            win().onDevToolsDockChanged(callback);
+            const listeners = ipcRendererListeners.get("dev-tools-dock-changed") ?? [];
+            expect(listeners).toHaveLength(1);
+            listeners[0]({}, true);
+            expect(callback).toHaveBeenCalledWith(true);
+        });
+
         it("reloadAllWindows sends correct IPC message", () => {
             win().reloadAllWindows();
             expect(ipcRendererSent).toContainEqual({ channel: "reload-all-windows", args: [] });
