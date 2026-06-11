@@ -16,7 +16,8 @@ body.desktop .modal.popup-editor-dialog .modal-dialog {
     border-bottom-right-radius: var(--bs-modal-border-radius);
 }
 
-body.desktop .modal.popup-editor-dialog .modal-dialog {
+body.desktop .modal.popup-editor-dialog .modal-dialog .modal-content {
+    border-radius: var(--bs-modal-border-radius);
     overflow: hidden;
 }
 

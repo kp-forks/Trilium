@@ -736,6 +736,10 @@
   "show_highlights_list_widget_button": {
     "show_highlights_list": "Show Highlights List"
   },
+  "options": {
+    "title": "Options",
+    "back": "Back to all options"
+  },
   "global_menu": {
     "menu": "Menu",
     "options": "Options",
@@ -1263,6 +1267,8 @@
     "choose_anonymization": "You can decide yourself if you want to provide a fully or lightly anonymized database. Even fully anonymized DB is very useful, however in some cases lightly anonymized database can speed up the process of bug identification and fixing.",
     "save_lightly_anonymized_database": "Save lightly anonymized database",
     "existing_anonymized_databases": "Existing anonymized databases",
+    "anonymized_databases_location": "Anonymized databases are stored in {{- anonymizedFolder}}.",
+    "download": "Download",
     "creating_fully_anonymized_database": "Creating fully anonymized database...",
     "creating_lightly_anonymized_database": "Creating lightly anonymized database...",
     "error_creating_anonymized_database": "Could not create anonymized database, check backend logs for details",
@@ -1351,8 +1357,6 @@
     "disabled": "disabled"
   },
   "ribbon": {
-    "widgets": "Ribbon widgets",
-    "promoted_attributes_message": "Promoted Attributes ribbon tab will automatically open if promoted attributes are present on the note",
     "edited_notes_message": "Edited Notes ribbon tab will automatically open on day notes"
   },
   "theme": {
@@ -1579,13 +1583,16 @@
     "title": "Backup",
     "automatic_backup": "Automatic backup",
     "automatic_backup_description": "Trilium can back up the database automatically:",
-    "enable_daily_backup": "Backup daily",
-    "enable_weekly_backup": "Backup weekly",
-    "enable_monthly_backup": "Backup monthly",
+    "automatic_backups_title": "Automatic backups",
+    "automatic_backups_description": "Trilium can back up the database automatically. It's recommended to keep the backup turned on, but this can make application startup slow with large databases and/or slow storage devices.",
+    "enable_daily_backup": "Daily backup",
+    "enable_weekly_backup": "Weekly backup",
+    "enable_monthly_backup": "Monthly backup",
     "backup_recommendation": "It's recommended to keep the backup turned on, but this can make application startup slow with large databases and/or slow storage devices.",
     "backup_now": "Backup now",
     "backup_database_now": "Backup database now",
     "existing_backups": "Existing backups",
+    "backup_location_description": "Backups are stored in {{- backupFolder}}.",
     "date-and-time": "Date & time",
     "path": "Path",
     "database_backed_up_to": "Database has been backed up to {{- backupFilePath}}",
@@ -1598,6 +1605,7 @@
     "create_token": "Create new ETAPI token",
     "existing_tokens": "Existing tokens",
     "no_tokens_yet": "There are no tokens yet. Click on the button above to create one.",
+    "no_tokens": "There are no tokens yet.",
     "token_name": "Token name",
     "created": "Created",
     "actions": "Actions",
@@ -2711,6 +2719,7 @@
   "llm": {
     "settings_title": "AI / LLM",
     "settings_description": "Configure AI and Large Language Model integrations.",
+    "not_available_in_standalone": "AI/LLM features are not available in the standalone version of Trilium, as LLM providers do not allow direct access from a browser.",
     "feature_not_enabled": "Enable the LLM experimental feature in Settings → Advanced → Experimental features to use AI integrations.",
     "add_provider": "Add Provider",
     "add_provider_title": "Add AI Provider",

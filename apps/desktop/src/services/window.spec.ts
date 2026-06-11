@@ -48,6 +48,8 @@ class FakeWebContents {
     });
     public listeners = new Map<string, Handler[]>();
     public toggleDevTools = vi.fn();
+    public isDevToolsOpened = vi.fn(() => false);
+    public devToolsWebContents: FakeWebContents | null = null;
     public cut = vi.fn();
     public copy = vi.fn();
     public paste = vi.fn();
@@ -413,6 +415,30 @@ describe("window service", () => {
             expect(wc.send).toHaveBeenCalledWith("context-menu", expect.objectContaining({ x: 1 }));
         });
 
+        it("forwards the DevTools dock state to the renderer", () => {
+            const win = state.windows[state.windows.length - 1];
+            const wc = win.webContents;
+
+            // Docked: the DevTools contents resolves to the same BrowserWindow as the page.
+            wc.isDevToolsOpened.mockReturnValue(true);
+            wc.devToolsWebContents = new FakeWebContents();
+            wc.fire("devtools-opened");
+            expect(wc.send).toHaveBeenCalledWith("dev-tools-dock-changed", true);
+
+            // Detached: the DevTools contents has no owning BrowserWindow.
+            wc.send.mockClear();
+            state.fromWebContentsResult = "null";
+            wc.fire("devtools-focused");
+            expect(wc.send).toHaveBeenCalledWith("dev-tools-dock-changed", false);
+
+            // Closed.
+            wc.send.mockClear();
+            state.fromWebContentsResult = undefined;
+            wc.isDevToolsOpened.mockReturnValue(false);
+            wc.fire("devtools-closed");
+            expect(wc.send).toHaveBeenCalledWith("dev-tools-dock-changed", false);
+        });
+
         it("skips full-screen wiring when no window resolves", async () => {
             state.fromWebContentsResult = "null";
             // configureWebContents is invoked during createExtraWindow
@@ -706,6 +732,18 @@ describe("window service", () => {
             const ev = makeEvent();
             fireOn("toggle-dev-tools", ev);
             expect(ev.sender.toggleDevTools).toHaveBeenCalled();
+        });
+
+        it("is-dev-tools-docked reports whether DevTools shares the sender's window", () => {
+            const closed = makeEvent();
+            fireOn("is-dev-tools-docked", closed);
+            expect(closed.returnValue).toBe(false);
+
+            const docked = makeEvent();
+            docked.sender.isDevToolsOpened.mockReturnValue(true);
+            docked.sender.devToolsWebContents = new FakeWebContents();
+            fireOn("is-dev-tools-docked", docked);
+            expect(docked.returnValue).toBe(true);
         });
 
         it("window state queries and mutations", () => {
