@@ -4,9 +4,8 @@ import { EventData } from "../../components/app_context.js";
 import { getEnabledExperimentalFeatureIds } from "../../services/experimental_features.js";
 import { applyFontsFromOptions } from "../../services/font.js";
 import options from "../../services/options.js";
-import { applyThemeFromOptions, updateColorSchemeClasses } from "../../services/theme.js";
+import { applyThemeFromOptions, updateColorSchemeClasses, updateThemeCapabilities } from "../../services/theme.js";
 import utils, { isIOS, isMobile } from "../../services/utils.js";
-import { readCssVar } from "../../utils/css-var.js";
 import type BasicWidget from "../basic_widget.js";
 import FlexContainer from "./flex_container.js";
 
@@ -53,7 +52,7 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
         this.#setMotion();
         this.#setShadows();
         this.#setBackdropEffects();
-        this.#setThemeCapabilities();
+        updateThemeCapabilities();
         this.#setLocaleAndDirection(options.get("locale"));
         this.#setExperimentalFeatures();
         this.#initPWATopbarColor();
@@ -132,15 +131,6 @@ export default class RootContainer extends FlexContainer<BasicWidget> {
     #setBackdropEffects() {
         const enabled = options.is("backdropEffectsEnabled") && !isMobile();
         document.body.classList.toggle("backdrop-effects-disabled", !enabled);
-    }
-
-    #setThemeCapabilities() {
-        // Supports background effects
-
-        const useBgfx = readCssVar(document.documentElement, "allow-background-effects")
-            .asBoolean(false);
-
-        document.body.classList.toggle("theme-supports-background-effects", useBgfx);
     }
 
     #setExperimentalFeatures() {

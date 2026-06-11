@@ -116,6 +116,14 @@ export function updateColorSchemeClasses() {
     document.body.classList.toggle("dark-theme", colorScheme === "dark");
 }
 
+/** Toggles the `theme-supports-background-effects` body class to match the active theme's `--allow-background-effects`. */
+export function updateThemeCapabilities() {
+    const useBgfx = readCssVar(document.documentElement, "allow-background-effects")
+        .asBoolean(false);
+
+    document.body.classList.toggle("theme-supports-background-effects", useBgfx);
+}
+
 /** Reads the current `theme` option and applies it live, resolving custom-theme metadata from the server if needed. */
 export async function applyThemeFromOptions() {
     // Imported lazily because this module is loaded by the entry point before jQuery is initialized;
@@ -182,6 +190,14 @@ export function applyTheme(theme: string, customThemeCssUrl?: string, themeBase?
         }
         document.body.setAttribute("data-theme-id", theme);
         updateColorSchemeClasses();
+        updateThemeCapabilities();
+
+        // The stylesheet swap is invisible to Electron, whose window configuration (Mica tint,
+        // background material, title bar colors) derives from the theme. Imported lazily so this
+        // module stays loadable from the early boot entry point (see `applyThemeFromOptions`).
+        if (window.electronApi) {
+            void import("./native_window.js").then(({ syncNativeWindowWithTheme }) => syncNativeWindowWithTheme());
+        }
     });
 }
 
