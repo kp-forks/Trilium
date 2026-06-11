@@ -2349,7 +2349,8 @@
   },
   "dashboard_view": {
     "refresh-widget": "Refresh",
-    "remove-widget": "Remove from dashboard"
+    "remove-widget": "Remove from dashboard",
+    "empty-hint": "Any child note becomes a widget. Drag a note here from tree or create a new one."
   },
   "presentation_view": {
     "edit-slide": "Edit this slide",

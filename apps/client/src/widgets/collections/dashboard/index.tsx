@@ -214,6 +214,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
                         />
                     ))}
                 </div>
+                {noteIds.length === 0 && <DashboardEmptyState />}
             </div>
         </div>
     );
@@ -303,6 +304,24 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                         includeArchivedNotes={includeArchived}
                         showTextRepresentation={showTextRepresentation} />
                 </div>
+            </div>
+        </div>
+    );
+}
+
+/** Shown when the dashboard has no widgets: a few ghost tiles hint at the underlying grid, with a
+ *  prompt to drag notes in. Purely decorative — pointer-events are disabled so drops still land on
+ *  the scroll container behind it. */
+function DashboardEmptyState() {
+    return (
+        <div className="dashboard-empty-state">
+            <div className="dashboard-ghost-grid" aria-hidden="true">
+                {Array.from({ length: 5 }).map((_, index) => (
+                    <div key={index} className="dashboard-ghost-widget" />
+                ))}
+            </div>
+            <div className="dashboard-empty-hint">
+                <p>{t("dashboard_view.empty-hint")}</p>
             </div>
         </div>
     );
