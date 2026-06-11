@@ -22,6 +22,8 @@ A widget is just a child note, rendered with its normal content. Pick the note t
 | A drawing | `canvas` |
 | **Dynamic / interactive content** | `render` + a Preact JSX child note (see below) |
 
+After creating a widget note, ALWAYS give it an icon: find a fitting one with `search_icons` and assign it with `set_attribute` as the widget note's `iconClass` label (e.g. `bx bx-line-chart`). The icon is shown in the widget's title bar. Never prepend an emoji to the widget title instead.
+
 ## Interactive widgets (Preact render notes) — preferred for dynamic content
 
 For widgets that compute something, fetch data, or respond to clicks, use a render note backed by a Preact JSX component:
@@ -69,7 +71,6 @@ export default function RecentNotesWidget() {
 
 - Keep widget content compact — widgets clip overflowing content with scrollbars.
 - Give widgets meaningful titles; the title bar is always visible and doubles as the drag handle.
-- An icon can be set on a widget note with the `iconClass` label (e.g. `bx bx-line-chart`).
 
 ## Anti-patterns (do NOT do this)
 
@@ -78,3 +79,4 @@ export default function RecentNotesWidget() {
 - ❌ Directing the user to set `~renderNote` on the dashboard note itself — it belongs on the `render`-type child.
 - ❌ Writing the `dashboard.json` attachment to lay out widgets — the UI owns it; rely on auto-placement.
 - ❌ Setting `#viewType=dashboard` on a `text` note — the view type only applies to `book` (and search) notes.
+- ❌ Prepending an emoji to a widget title to decorate it — find an icon with `search_icons` and set the `iconClass` label instead.
