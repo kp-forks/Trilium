@@ -1,0 +1,79 @@
+# Trilium Dashboard Collections
+
+A dashboard is a collection view that renders each child note as a widget on a drag-and-drop grid, similar to Grafana or a home-automation dashboard. The user can freely place and resize the widgets; the layout is saved automatically.
+
+## Creating a dashboard
+
+1. Create a note of type `book` (`create_note` with type `book`).
+2. Set the `viewType` label to `dashboard` on it (`set_attribute` with type `label`, name `viewType`, value `dashboard`).
+
+Every child note of the dashboard becomes a widget.
+
+## Widget types
+
+A widget is just a child note, rendered with its normal content. Pick the note type by what the widget should show:
+
+| Widget should show | Child note type |
+|---|---|
+| Formatted text, checklists, links | `text` |
+| A diagram | `mermaid` |
+| A code snippet | `code` |
+| An embedded web page | `webView` (content is the URL) |
+| A drawing | `canvas` |
+| **Dynamic / interactive content** | `render` + a Preact JSX child note (see below) |
+
+## Interactive widgets (Preact render notes) — preferred for dynamic content
+
+For widgets that compute something, fetch data, or respond to clicks, use a render note backed by a Preact JSX component:
+
+1. Create a note of type `render` as a **child of the dashboard** — this is the widget.
+2. Create a `code` note with mime `text/jsx` as a **child of the render note**, exporting a default component.
+3. On the render note, set a `~renderNote` relation pointing to the JSX note (`set_attribute` with type `relation`, name `renderNote`, value = the JSX note's ID).
+
+JSX rules (load the `frontend_scripting` skill for the full API):
+
+- Use top-level ES `import` only; hooks come from `"trilium:preact"`, API methods from `"trilium:api"`.
+- NEVER use `React`, `require()`, or `await import()` — Trilium uses Preact and JSX notes are ES modules.
+- Export the component as `export default`.
+
+Example — a widget showing the number of notes created in the last 7 days:
+
+```jsx
+import { useState, useEffect } from "trilium:preact";
+import { searchForNotes } from "trilium:api";
+
+export default function RecentNotesWidget() {
+    const [count, setCount] = useState(null);
+
+    useEffect(() => {
+        searchForNotes("note.dateCreated >= TODAY-7").then(notes => setCount(notes.length));
+    }, []);
+
+    return (
+        <div style="text-align: center;">
+            <h3>Notes this week</h3>
+            <strong style="font-size: 2em;">{count === null ? "…" : count}</strong>
+        </div>
+    );
+}
+```
+
+## Layout behavior
+
+- The grid has 12 columns; one row is about 80 px tall. New widgets default to 4 columns × 3 rows and are placed automatically in the first free spot.
+- The user rearranges widgets by dragging the title bar and resizes them from the bottom-right corner. You cannot position widgets programmatically — create them and let auto-placement handle it; the user adjusts afterwards.
+- The layout persists in a `dashboard.json` attachment (role `viewConfig`) on the dashboard note. It is managed by the UI and syncs across devices and splits — do NOT create or modify this attachment.
+- On narrow screens (under ~768 px) the dashboard collapses to a single read-only column; the saved layout is unaffected.
+
+## Tips
+
+- Keep widget content compact — widgets clip overflowing content with scrollbars.
+- Give widgets meaningful titles; the title bar is always visible and doubles as the drag handle.
+- An icon can be set on a widget note with the `iconClass` label (e.g. `bx bx-line-chart`).
+
+## Anti-patterns (do NOT do this)
+
+- ❌ Putting the JSX code note directly under the dashboard — it would render as a code widget showing its own source. The JSX note belongs under the render note.
+- ❌ Setting `~renderNote` on the dashboard note itself — it belongs on the `render`-type child.
+- ❌ Writing the `dashboard.json` attachment to lay out widgets — the UI owns it; rely on auto-placement.
+- ❌ Setting `#viewType=dashboard` on a `text` note — the view type only applies to `book` (and search) notes.
