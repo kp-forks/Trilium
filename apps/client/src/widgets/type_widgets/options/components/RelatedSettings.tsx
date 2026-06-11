@@ -37,6 +37,7 @@ export default function RelatedSettings({ items }: RelatedSettingsProps) {
                         href={targetNoteId
                             ? `#root/_hidden/${targetNoteId}`
                             : `#root/_hidden/_options/${targetPage}`}
+                        noContainedNavigation={!!targetNoteId}
                         onClick={targetNoteId
                             ? (e) => {
                                 // Hidden-subtree config notes open hoisted, in their own tab.

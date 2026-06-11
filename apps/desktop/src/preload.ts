@@ -66,6 +66,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         toggleDevTools() {
             ipcRenderer.send("toggle-dev-tools");
         },
+        isDevToolsDocked(): boolean {
+            return ipcRenderer.sendSync("is-dev-tools-docked");
+        },
 
         // App lifecycle
         reloadAllWindows() {
@@ -98,12 +101,18 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         onOpenInSameTab(callback: (noteId: string) => void) {
             ipcRenderer.on("openInSameTab", (_event, noteId) => callback(noteId));
+        },
+        onDevToolsDockChanged(callback: (docked: boolean) => void) {
+            ipcRenderer.on("dev-tools-dock-changed", (_event, docked: boolean) => callback(docked));
         }
     },
 
     clipboard: {
         copyImageToClipboard(buffer: Uint8Array) {
             ipcRenderer.send("copy-image-to-clipboard", buffer);
+        },
+        readText() {
+            return ipcRenderer.invoke("read-clipboard-text");
         }
     },
 

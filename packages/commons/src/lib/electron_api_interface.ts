@@ -127,6 +127,12 @@ export interface ElectronWindowApi {
     /** Opens or closes Chromium DevTools for the current window. */
     toggleDevTools(): void;
 
+    /**
+     * Synchronously returns whether DevTools is currently open and docked into this window
+     * (as opposed to detached into a separate window).
+     */
+    isDevToolsDocked(): boolean;
+
     // #endregion
 
     // #region Background effects
@@ -181,6 +187,13 @@ export interface ElectronWindowApi {
      */
     onOpenInSameTab(callback: (noteId: string) => void): void;
 
+    /**
+     * Subscribes to changes of the DevTools docking state. `docked` is `true` only while
+     * DevTools is attached to this window — where Chromium disables the native window
+     * material (Mica / vibrancy) — and `false` when it is closed or in a separate window.
+     */
+    onDevToolsDockChanged(callback: (docked: boolean) => void): void;
+
     // #endregion
 }
 
@@ -191,6 +204,14 @@ export interface ElectronClipboardApi {
      * pasted into other applications as an image rather than as a file.
      */
     copyImageToClipboard(buffer: Uint8Array): void;
+
+    /**
+     * Reads plain text from the system clipboard via the main-process
+     * `electron.clipboard`. Used instead of `navigator.clipboard.readText()`
+     * so the renderer's deny-by-default permission policy does not have to
+     * grant the sensitive `clipboard-read` permission to the whole session.
+     */
+    readText(): Promise<string>;
 }
 
 /**

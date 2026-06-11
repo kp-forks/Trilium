@@ -200,6 +200,8 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     includeNoteDefaultBoxSize: "small" | "medium" | "full" | "expandable";
 
     // AI / LLM
+    /** Whether the AI/LLM features (chat sidebar, LLM chat notes) are enabled. */
+    aiEnabled: boolean;
     /** JSON array of configured LLM providers with their API keys */
     llmProviders: string;
     /** Whether the MCP (Model Context Protocol) server endpoint is enabled. */

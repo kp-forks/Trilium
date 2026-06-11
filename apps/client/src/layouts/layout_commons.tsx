@@ -19,6 +19,7 @@ import MarkdownImportDialog from "../widgets/dialogs/markdown_import.js";
 import MoveToDialog from "../widgets/dialogs/move_to.js";
 import NoteTypeChooserDialog from "../widgets/dialogs/note_type_chooser.js";
 import OcrTextDialog from "../widgets/dialogs/ocr_text.js";
+import OptionsDialog from "../widgets/dialogs/OptionsDialog.jsx";
 import PopupEditorDialog from "../widgets/dialogs/PopupEditor.jsx";
 import PrintPreviewDialog from "../widgets/dialogs/print_preview.jsx";
 import PromptDialog from "../widgets/dialogs/prompt.js";
@@ -56,6 +57,7 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<PromptDialog />)
         .child(<IncorrectCpuArchDialog />)
         .child(<PopupEditorDialog />)
+        .child(<OptionsDialog />)
         .child(<CallToActionDialog />)
         .child(<OcrTextDialog />)
         .child(<UploadAttachmentsDialog />)

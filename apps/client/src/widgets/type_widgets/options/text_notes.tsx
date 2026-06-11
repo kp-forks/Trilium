@@ -46,8 +46,8 @@ export default function TextNoteSettings() {
 }
 
 function FormattingToolbar() {
-    const [ textNoteEditorType, setTextNoteEditorType ] = useTriliumOption("textNoteEditorType", true);
-    const [ textNoteEditorMultilineToolbar, setTextNoteEditorMultilineToolbar ] = useTriliumOptionBool("textNoteEditorMultilineToolbar", true);
+    const [ textNoteEditorType, setTextNoteEditorType ] = useTriliumOption("textNoteEditorType");
+    const [ textNoteEditorMultilineToolbar, setTextNoteEditorMultilineToolbar ] = useTriliumOptionBool("textNoteEditorMultilineToolbar");
 
     return (
         <OptionsSection title={t("editing.editor_type.label")}>

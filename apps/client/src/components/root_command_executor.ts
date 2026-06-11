@@ -113,13 +113,6 @@ export default class RootCommandExecutor extends Component {
         await this.showAndHoistSubtree("_hidden");
     }
 
-    async showOptionsCommand({ section }: CommandListenerData<"showOptions">) {
-        await appContext.tabManager.openContextWithNote(section || "_options", {
-            activate: true,
-            hoistedNoteId: "_options"
-        });
-    }
-
     async showSQLConsoleHistoryCommand() {
         await this.showAndHoistSubtree("_sqlConsole");
     }

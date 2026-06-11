@@ -17,6 +17,7 @@ interface UserTheme {
     title: string; // title of the theme, displayed in the UI
     noteId: string; // ID of the note containing the theme
     icon: string; // icon class of the note
+    appThemeBase?: "next" | "next-light" | "next-dark"; // optional base theme to load underneath the custom theme
 }
 
 // options allowed to be updated directly in the Options dialog
@@ -122,6 +123,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "mfaEnabled",
     "mfaMethod",
     // LLM options
+    "aiEnabled",
     "llmProviders",
     "mcpEnabled",
     // OCR options
@@ -239,7 +241,8 @@ function getUserThemes() {
             val: value,
             title,
             noteId: note.noteId,
-            icon: note.getIcon()
+            icon: note.getIcon(),
+            appThemeBase: (note.getLabelValue("appThemeBase") ?? undefined) as "next" | "next-light" | "next-dark" | undefined
         });
     }
 

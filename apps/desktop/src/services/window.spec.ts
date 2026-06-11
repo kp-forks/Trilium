@@ -47,8 +47,9 @@ class FakeWebContents {
         return this;
     });
     public listeners = new Map<string, Handler[]>();
-    public setWindowOpenHandler = vi.fn();
     public toggleDevTools = vi.fn();
+    public isDevToolsOpened = vi.fn(() => false);
+    public devToolsWebContents: FakeWebContents | null = null;
     public cut = vi.fn();
     public copy = vi.fn();
     public paste = vi.fn();
@@ -180,6 +181,11 @@ vi.mock("electron", () => ({
 vi.mock("electron-window-state", () => ({
     default: () => ({ x: 0, y: 0, width: 1200, height: 800, manage: vi.fn() })
 }));
+
+// setupWindowing() installs the WebContents security policy; that behaviour has
+// its own suite (web_contents_security.spec.ts), so stub it out here to keep the
+// windowing tests focused and free of the extra electron app/session surface.
+vi.mock("./web_contents_security", () => ({ setupWebContentsSecurity: vi.fn() }));
 
 vi.mock("@triliumnext/core", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@triliumnext/core")>();
@@ -329,7 +335,7 @@ describe("window service", () => {
             await windowService.createExtraWindow("#root/abc");
             const win = state.windows[state.windows.length - 1];
             expect(win.loadURL).toHaveBeenCalledWith("trilium-app://app/?extraWindow=1#root/abc");
-            expect(win.webContents.setWindowOpenHandler).toHaveBeenCalled();
+            expect(win.webContents.session.setSpellCheckerLanguages).toHaveBeenCalled();
         });
     });
 
@@ -384,53 +390,8 @@ describe("window service", () => {
             await windowService.createMainWindow();
         });
 
-        it("denies new windows and opens them externally", async () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-            const result = handlerArg({ url: "https://example.com" });
-            expect(result).toEqual({ action: "deny" });
-            await new Promise((r) => setTimeout(r, 0));
-            expect(fakeShell.openExternal).toHaveBeenCalledWith("https://example.com");
-        });
-
-        it("logs when external open fails", async () => {
-            // The inner `openExternal()` doesn't await `shell.openExternal`, so only a
-            // synchronous throw inside it rejects the wrapper and hits the `.catch`.
-            fakeShell.openExternal.mockImplementationOnce(() => {
-                throw new Error("boom");
-            });
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const handlerArg = wc.setWindowOpenHandler.mock.calls[0][0] as Handler;
-            handlerArg({ url: "https://bad.example" });
-            await new Promise((r) => setTimeout(r, 0));
-            expect(state.log.error).toHaveBeenCalled();
-        });
-
-        it("blocks external navigation but allows internal redirects", () => {
-            const wc = state.windows[state.windows.length - 1].webContents;
-            const external = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", external, "https://evil.example/page");
-            expect(external.preventDefault).toHaveBeenCalled();
-
-            const internal = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", internal, "trilium-app://app/");
-            expect(internal.preventDefault).not.toHaveBeenCalled();
-
-            // internal host but non-root path is blocked
-            const internalPath = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", internalPath, "http://localhost/somewhere");
-            expect(internalPath.preventDefault).toHaveBeenCalled();
-
-            // URL with no hostname falls back to "" (covers `hostname || ""`) and is blocked.
-            const noHost = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", noHost, "javascript:void(0)");
-            expect(noHost.preventDefault).toHaveBeenCalled();
-
-            // internal host with the root "/?" path is allowed (covers that path comparison).
-            const rootQuery = { preventDefault: vi.fn() };
-            wc.fire("will-navigate", rootQuery, "trilium-app://app/?");
-            expect(rootQuery.preventDefault).not.toHaveBeenCalled();
-        });
+        // Window-open and navigation policy is installed globally by
+        // web_contents_security.ts and tested in web_contents_security.spec.ts.
 
         it("forwards full-screen, navigation and context-menu events", () => {
             const win = state.windows[state.windows.length - 1];
@@ -452,6 +413,30 @@ describe("window service", () => {
             expect(wc.send).toHaveBeenCalledWith("did-navigate");
             expect(wc.send).toHaveBeenCalledWith("did-navigate-in-page");
             expect(wc.send).toHaveBeenCalledWith("context-menu", expect.objectContaining({ x: 1 }));
+        });
+
+        it("forwards the DevTools dock state to the renderer", () => {
+            const win = state.windows[state.windows.length - 1];
+            const wc = win.webContents;
+
+            // Docked: the DevTools contents resolves to the same BrowserWindow as the page.
+            wc.isDevToolsOpened.mockReturnValue(true);
+            wc.devToolsWebContents = new FakeWebContents();
+            wc.fire("devtools-opened");
+            expect(wc.send).toHaveBeenCalledWith("dev-tools-dock-changed", true);
+
+            // Detached: the DevTools contents has no owning BrowserWindow.
+            wc.send.mockClear();
+            state.fromWebContentsResult = "null";
+            wc.fire("devtools-focused");
+            expect(wc.send).toHaveBeenCalledWith("dev-tools-dock-changed", false);
+
+            // Closed.
+            wc.send.mockClear();
+            state.fromWebContentsResult = undefined;
+            wc.isDevToolsOpened.mockReturnValue(false);
+            wc.fire("devtools-closed");
+            expect(wc.send).toHaveBeenCalledWith("dev-tools-dock-changed", false);
         });
 
         it("skips full-screen wiring when no window resolves", async () => {
@@ -747,6 +732,18 @@ describe("window service", () => {
             const ev = makeEvent();
             fireOn("toggle-dev-tools", ev);
             expect(ev.sender.toggleDevTools).toHaveBeenCalled();
+        });
+
+        it("is-dev-tools-docked reports whether DevTools shares the sender's window", () => {
+            const closed = makeEvent();
+            fireOn("is-dev-tools-docked", closed);
+            expect(closed.returnValue).toBe(false);
+
+            const docked = makeEvent();
+            docked.sender.isDevToolsOpened.mockReturnValue(true);
+            docked.sender.devToolsWebContents = new FakeWebContents();
+            fireOn("is-dev-tools-docked", docked);
+            expect(docked.returnValue).toBe(true);
         });
 
         it("window state queries and mutations", () => {
