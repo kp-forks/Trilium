@@ -214,7 +214,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
                         />
                     ))}
                 </div>
-                {noteIds.length === 0 && <DashboardEmptyState />}
+                {noteIds.length === 0 && <DashboardEmptyState collapsed={isCollapsed} />}
             </div>
         </div>
     );
@@ -311,15 +311,18 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
 
 /** Shown when the dashboard has no widgets: a few ghost tiles hint at the underlying grid, with a
  *  prompt to drag notes in. Purely decorative — pointer-events are disabled so drops still land on
- *  the scroll container behind it. */
-function DashboardEmptyState() {
+ *  the scroll container behind it. The ghost grid mirrors the 12-column layout, which is meaningless
+ *  once the grid collapses to a single column, so there we keep only the hint. */
+function DashboardEmptyState({ collapsed }: { collapsed: boolean }) {
     return (
         <div className="dashboard-empty-state">
-            <div className="dashboard-ghost-grid" aria-hidden="true">
-                {Array.from({ length: 5 }).map((_, index) => (
-                    <div key={index} className="dashboard-ghost-widget" />
-                ))}
-            </div>
+            {!collapsed && (
+                <div className="dashboard-ghost-grid" aria-hidden="true">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                        <div key={index} className="dashboard-ghost-widget" />
+                    ))}
+                </div>
+            )}
             <div className="dashboard-empty-hint">
                 <p>{t("dashboard_view.empty-hint")}</p>
             </div>

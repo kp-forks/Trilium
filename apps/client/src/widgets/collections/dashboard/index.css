@@ -48,14 +48,6 @@
         }
     }
 
-    /* The ghost grid mirrors the 12-column layout, which is meaningless once the real grid
-       collapses to a single column — drop it there and keep just the hint. */
-    @media (max-width: 768px) {
-        .dashboard-ghost-grid {
-            display: none;
-        }
-    }
-
     .dashboard-widget {
         display: flex;
         flex-direction: column;
