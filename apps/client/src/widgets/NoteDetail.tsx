@@ -16,7 +16,10 @@ import toast from "../services/toast.js";
 import { isElectron, isMobile } from "../services/utils";
 import NoteTreeWidget from "./note_tree";
 import { ExtendedNoteType, TYPE_MAPPINGS, TypeWidget } from "./note_types";
-import { useLegacyWidget, useNoteContext, useTriliumEvent } from "./react/hooks";
+import Button from "./react/Button";
+import { useDelayedVisibility, useGetContextDataFrom, useLegacyWidget, useNoteContext, useTriliumEvent } from "./react/hooks";
+import Icon from "./react/Icon";
+import NoItems from "./react/NoItems";
 import { NoteListWithLinks } from "./react/NoteList";
 import { TypeWidgetProps } from "./type_widgets/type_widget";
 
@@ -234,6 +237,8 @@ export default function NoteDetail() {
                     props={props}
                 />;
             })}
+
+            <NoteDetailLoadingOverlay noteContext={noteContext} />
         </div>
     );
 }
@@ -284,6 +289,42 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
     );
 }
 
+/**
+ * Covers the note detail while the note's content is being fetched, so the user is not left
+ * looking at (and typing into) the previous note's content when the blob is slow to arrive.
+ *
+ * Driven by the `contentLoad` context data published from `useNoteInfo` (type resolution,
+ * which fetches the content for the auto-readonly check) and `useNoteBlob` (the editors'
+ * own content fetch), and paced by {@link useDelayedVisibility}: fast loads never flash it,
+ * slow loads fade it in, and loads stuck past the stall threshold (or failed outright)
+ * offer a retry.
+ */
+function NoteDetailLoadingOverlay({ noteContext }: { noteContext: NoteContext | null | undefined }) {
+    const contentLoad = useGetContextDataFrom(noteContext, "contentLoad");
+    const phase = useDelayedVisibility(contentLoad?.state === "loading");
+    const isError = contentLoad?.state === "error";
+
+    if (!isError && phase === "hidden") {
+        return null;
+    }
+
+    return (
+        <div className="note-detail-loading-overlay">
+            {isError ? (
+                <NoItems icon="bx bx-error-circle" text={t("note_detail.content_load_error")}>
+                    <Button text={t("note_detail.content_load_retry")} onClick={() => contentLoad?.retry()} />
+                </NoItems>
+            ) : phase === "stalled" ? (
+                <NoItems icon="bx bx-loader-alt bx-spin" text={t("note_detail.content_load_stalled")}>
+                    <Button text={t("note_detail.content_load_retry")} onClick={() => contentLoad?.retry()} />
+                </NoItems>
+            ) : (
+                <Icon icon="bx bx-loader-alt bx-spin" />
+            )}
+        </div>
+    );
+}
+
 /** Manages both note changes and changes to the widget type, which are asynchronous. */
 function useNoteInfo() {
     const { note: actualNote, noteContext, parentComponent } = useNoteContext();
@@ -295,11 +336,21 @@ function useNoteInfo() {
     function refresh() {
         const refreshId = ++refreshIdRef.current;
 
+        // The type resolution below can take a while (the auto-readonly check of
+        // getExtendedWidgetType fetches the note's content), during which the previously
+        // rendered note stays visible — cover it with the content-loading overlay.
+        if (actualNote) {
+            noteContext?.setContextData("contentLoad", { state: "loading", retry: refresh });
+        }
+
         getExtendedWidgetType(actualNote, noteContext).then(type => {
             if (refreshId !== refreshIdRef.current) return;
             setNote(actualNote);
             setType(type);
             setMime(actualNote?.mime);
+            if (actualNote) {
+                noteContext?.setContextData("contentLoad", { state: "loaded", retry: refresh });
+            }
         });
     }
 

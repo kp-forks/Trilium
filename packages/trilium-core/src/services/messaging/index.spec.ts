@@ -5,7 +5,8 @@ import {
     getMessagingProvider,
     initMessaging,
     isMessagingInitialized,
-    sendMessageToAllClients
+    sendMessageToAllClients,
+    shouldLogMessage
 } from "./index.js";
 import type { ClientMessageHandler, MessagingProvider } from "./types.js";
 
@@ -45,5 +46,15 @@ describe("messaging provider (core)", () => {
         sendMessageToAllClients({ type: "ping" });
         expect(fake.sendMessageToAllClients).toHaveBeenCalledWith({ type: "ping" });
         expect(fake.sent).toEqual([{ type: "ping" }]);
+    });
+
+    it("excludes frequent/noisy message types from broadcast logging", () => {
+        expect(shouldLogMessage({ type: "frontend-update" } as WebSocketMessage)).toBe(false);
+        expect(shouldLogMessage({ type: "ping" } as WebSocketMessage)).toBe(false);
+        expect(shouldLogMessage({ type: "sync-failed" } as WebSocketMessage)).toBe(false);
+        expect(shouldLogMessage({ type: "api-log-messages" } as WebSocketMessage)).toBe(false);
+
+        expect(shouldLogMessage({ type: "sync-finished" } as WebSocketMessage)).toBe(true);
+        expect(shouldLogMessage({ type: "reload-frontend" } as WebSocketMessage)).toBe(true);
     });
 });

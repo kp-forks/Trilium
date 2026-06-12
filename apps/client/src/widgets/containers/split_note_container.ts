@@ -250,7 +250,9 @@ export default class SplitNoteContainer extends FlexContainer<SplitNoteWidget> {
             if (widget.hasBeenAlreadyShown || name === "noteSwitchedAndActivated" || appContext.tabManager.getActiveMainContext() === noteSwitchedContext.noteContext.getMainContext()) {
                 widget.hasBeenAlreadyShown = true;
 
-                return [widget.handleEvent("noteSwitched", noteSwitchedContext), this.refreshNotShown(noteSwitchedContext)];
+                // Promise.all (not a bare array) so that awaiting triggerEvent("noteSwitched")
+                // genuinely waits for the tab's widgets to process the switch.
+                return Promise.all([ widget.handleEvent("noteSwitched", noteSwitchedContext), this.refreshNotShown(noteSwitchedContext) ]);
             }
             return Promise.resolve();
 
