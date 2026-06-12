@@ -5,7 +5,6 @@ import froca from "./froca.js";
 import { t } from "./i18n.js";
 import link from "./link.js";
 import { applyLinkEmbeds } from "./link_embed.js";
-import { renderMathInElement } from "./math.js";
 import { getMermaidConfig, loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
 import { sanitizeNoteContentHtml } from "./sanitize_content.js";
 import { formatCodeBlocks } from "./syntax_highlight.js";
@@ -41,6 +40,8 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
     }
 
     if ($renderedContent.find("span.math-tex").length > 0) {
+        // KaTeX is heavy, so the math service is only loaded when there are formulas to render.
+        const { renderMathInElement } = await import("./math.js");
         renderMathInElement($renderedContent[0], { trust: true });
     }
 

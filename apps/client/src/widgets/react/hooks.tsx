@@ -15,7 +15,6 @@ import attributes from "../../services/attributes";
 import froca from "../../services/froca";
 import keyboard_actions from "../../services/keyboard_actions";
 import { parseNavigationStateFromUrl, ViewScope } from "../../services/link";
-import math from "../../services/math";
 import options, { type OptionValue } from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
 import server from "../../services/server";
@@ -1595,32 +1594,36 @@ export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unk
     useEffect(() => {
         if (!containerRef.current) return;
         const mathElements = containerRef.current.querySelectorAll(".math-tex");
+        if (!mathElements.length) return;
 
-        for (const mathEl of mathElements) {
-            // Skip if already rendered by KaTeX
-            if (mathEl.querySelector(".katex")) continue;
+        // KaTeX is heavy, so the math service is only loaded once there are equations to render.
+        void import("../../services/math").then(({ default: math }) => {
+            for (const mathEl of mathElements) {
+                // Skip if already rendered by KaTeX
+                if (mathEl.querySelector(".katex")) continue;
 
-            try {
-                // CKEditor's data format wraps the equation with \(...\) or \[...\]
-                // delimiters. katex.render() expects raw LaTeX without them.
-                const raw = mathEl.textContent?.trim() ?? "";
-                let equation: string;
-                let displayMode = false;
+                try {
+                    // CKEditor's data format wraps the equation with \(...\) or \[...\]
+                    // delimiters. katex.render() expects raw LaTeX without them.
+                    const raw = mathEl.textContent?.trim() ?? "";
+                    let equation: string;
+                    let displayMode = false;
 
-                if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
-                    equation = raw.slice(2, -2);
-                } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
-                    equation = raw.slice(2, -2);
-                    displayMode = true;
-                } else {
-                    equation = raw;
+                    if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
+                        equation = raw.slice(2, -2);
+                    } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
+                        equation = raw.slice(2, -2);
+                        displayMode = true;
+                    } else {
+                        equation = raw;
+                    }
+
+                    math.render(equation, mathEl as HTMLElement, { displayMode });
+                } catch (e) {
+                    console.warn("Failed to render math:", e);
                 }
-
-                math.render(equation, mathEl as HTMLElement, { displayMode });
-            } catch (e) {
-                console.warn("Failed to render math:", e);
             }
-        }
+        });
     }, deps); // eslint-disable-line react-hooks/exhaustive-deps
 }
 
