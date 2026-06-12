@@ -375,10 +375,14 @@ export function useUniqueName(prefix?: string) {
 }
 
 export function useNoteContext() {
+    const parentComponent = useContext(ParentComponent) as ReactWrappedWidget;
     const noteContextContext = useContext(NoteContextContext);
-    const [ noteContext, setNoteContext ] = useState<NoteContext | undefined>(noteContextContext ?? undefined);
-    const [ notePath, setNotePath ] = useState<string | null | undefined>();
-    const [ note, setNote ] = useState<FNote | null | undefined>();
+    // Components can mount after the initial setNoteContext event has already been dispatched
+    // (e.g. when rendered via LazyComponent), so fall back to the note context held by the
+    // closest legacy ancestor instead of waiting for the next note switch.
+    const [ noteContext, setNoteContext ] = useState<NoteContext | undefined>(() => noteContextContext ?? findClosestNoteContext(parentComponent));
+    const [ notePath, setNotePath ] = useState<string | null | undefined>(noteContext?.notePath);
+    const [ note, setNote ] = useState<FNote | null | undefined>(noteContext?.note);
     const [ hoistedNoteId, setHoistedNoteId ] = useState(noteContext?.hoistedNoteId);
     const [ , setViewScope ] = useState<ViewScope>();
     const [ isReadOnlyTemporarilyDisabled, setIsReadOnlyTemporarilyDisabled ] = useState<boolean | null | undefined>(noteContext?.viewScope?.isReadOnly);
@@ -432,7 +436,6 @@ export function useNoteContext() {
         }
     });
 
-    const parentComponent = useContext(ParentComponent) as ReactWrappedWidget;
     useDebugValue(() => `notePath=${notePath}, ntxId=${noteContext?.ntxId}`);
 
     return {
@@ -447,6 +450,26 @@ export function useNoteContext() {
         parentComponent,
         isReadOnlyTemporarilyDisabled
     };
+}
+
+/**
+ * Finds the note context held by the closest legacy ancestor component (e.g. the note split's
+ * `NoteWrapperWidget`). Used to initialize {@link useNoteContext} for components that mount after
+ * the initial `setNoteContext` event has been dispatched (e.g. components rendered via
+ * `LazyComponent`), which would otherwise not know their context until the next note switch.
+ */
+function findClosestNoteContext(component: Component | null): NoteContext | undefined {
+    let current: Component | undefined = component ?? undefined;
+    while (current) {
+        if ("noteContext" in current) {
+            const { noteContext } = current as { noteContext?: NoteContext };
+            if (noteContext) {
+                return noteContext;
+            }
+        }
+        current = current.parent as Component | undefined;
+    }
+    return undefined;
 }
 
 /**

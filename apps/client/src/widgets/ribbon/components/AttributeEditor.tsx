@@ -1,3 +1,5 @@
+import "./AttributeEditor.css";
+
 import { AttributeEditor as CKEditorAttributeEditor, MentionFeed, ModelElement, ModelNode, ModelPosition } from "@triliumnext/ckeditor5";
 import { AttributeType } from "@triliumnext/commons";
 import type { Tooltip } from "bootstrap";
