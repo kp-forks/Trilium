@@ -31,7 +31,11 @@ export function registerTriliumAppScheme() {
                 standard: true,
                 secure: true,
                 supportFetchAPI: true,
-                corsEnabled: true
+                corsEnabled: true,
+                // Chromium only code-caches http(s) scripts by default; without
+                // this the renderer bundle is recompiled from source on every
+                // launch instead of reusing bytecode from the Code Cache dir.
+                codeCache: true
             }
         }
     ]);

@@ -439,7 +439,7 @@ describe("trilium-app protocol dispatcher", () => {
         expect(electronMock.registerSchemesAsPrivileged).toHaveBeenCalledWith([
             expect.objectContaining({
                 scheme: "trilium-app",
-                privileges: expect.objectContaining({ standard: true, secure: true, supportFetchAPI: true, corsEnabled: true })
+                privileges: expect.objectContaining({ standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, codeCache: true })
             })
         ]);
     });
