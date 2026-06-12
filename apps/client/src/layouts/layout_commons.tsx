@@ -1,5 +1,5 @@
 import { ComponentType } from "preact";
-import { useContext, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useContext, useEffect, useRef, useState } from "preact/hooks";
 
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
@@ -72,22 +72,27 @@ function LazyDialog({ loader, triggerEvents }: LazyDialogProps) {
     const parentComponent = useContext(ParentComponent);
     const [ Component, setComponent ] = useState<ComponentType>();
     const [ pendingEvent, setPendingEvent ] = useState<{ name: EventNames, data: unknown }>();
-    // Guards against a second summons that arrives before the import resolves (the `Component`
-    // state is still undefined then, so it cannot be used to short-circuit the load).
     const loadStarted = useRef(false);
 
-    useTriliumEvents(triggerEvents, async (data, name) => {
-        // Once loaded, the dialog receives events directly through the shared host component.
+    // Stable identity so it does not churn useTriliumEvents' handler registration on each of the
+    // load's state updates.
+    const handleSummons = useCallback(async (data: EventData<EventNames>, name: EventNames) => {
+        // Guards against a second summons that arrives before the import resolves (the `Component`
+        // state is still undefined then, so it cannot be used to short-circuit the load).
         if (loadStarted.current) return;
         loadStarted.current = true;
         const module = await loader();
         setComponent(() => module.default);
         setPendingEvent({ name, data });
-    });
+    }, [ loader ]);
+    useTriliumEvents(triggerEvents, handleSummons);
 
     useEffect(() => {
-        if (!Component || !pendingEvent) return;
-        void parentComponent?.handleEvent(pendingEvent.name, pendingEvent.data as EventData<EventNames>);
+        // Wait for the host component as well: clearing pendingEvent before delivery would drop the
+        // buffered summons. If the host is briefly unavailable, this effect re-runs once it appears.
+        if (!Component || !pendingEvent || !parentComponent) return;
+        // Once loaded, the dialog receives events directly through the shared host component.
+        void parentComponent.handleEvent(pendingEvent.name, pendingEvent.data as EventData<EventNames>);
         setPendingEvent(undefined);
     }, [ Component, pendingEvent, parentComponent ]);
 
