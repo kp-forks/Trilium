@@ -325,6 +325,34 @@ describe("SpacedUpdate", () => {
             expect(commits).toEqual(["v2"]);
         });
 
+        it("does not report all-saved while an asynchronous snapshot from rebind is still being captured", async () => {
+            let resolvePrepare: (value: string) => void = () => {};
+            const commits: { key: string; data: string }[] = [];
+            const spacedUpdate = new SpacedUpdate<string>({
+                key: "A",
+                prepare: () => new Promise<string>((resolve) => {
+                    resolvePrepare = resolve;
+                }),
+                commit: async (data) => {
+                    commits.push({ key: "A", data });
+                }
+            }, 50);
+
+            spacedUpdate.scheduleUpdate();
+            spacedUpdate.rebind("B", () => "B content", async (data) => {
+                commits.push({ key: "B", data });
+            });
+
+            // The old binding's snapshot is still being captured, so nothing may be
+            // reported as saved yet (relevant for the beforeunload warning).
+            expect(spacedUpdate.isAllSavedAndTriggerUpdate()).toBe(false);
+
+            resolvePrepare("typed into A");
+            await spacedUpdate.updateNowIfNecessary();
+
+            expect(commits).toEqual([{ key: "A", data: "typed into A" }]);
+        });
+
         it("supports an asynchronous prepare", async () => {
             const commits: string[] = [];
             const spacedUpdate = new SpacedUpdate<string>({

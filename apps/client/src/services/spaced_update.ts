@@ -49,6 +49,8 @@ export default class SpacedUpdate<T = void> {
      * commits and are retried (with backoff) until they land — they are never dropped.
      */
     private pendingCommits = new Map<string | null, PendingCommit<T>>();
+    /** Snapshots whose asynchronous `prepare` is still running — captured but not yet queued. */
+    private pendingSnapshots = new Set<Promise<void>>();
     private drainPromise: Promise<void> | null = null;
     private debounceTimer?: ReturnType<typeof setTimeout>;
     private retryTimer?: ReturnType<typeof setTimeout>;
@@ -115,7 +117,10 @@ export default class SpacedUpdate<T = void> {
     }
 
     isAllSavedAndTriggerUpdate() {
-        const allSaved = !this.changed && this.pendingCommits.size === 0 && !this.drainPromise;
+        const allSaved = !this.changed
+            && this.pendingCommits.size === 0
+            && this.pendingSnapshots.size === 0
+            && !this.drainPromise;
 
         this.updateNowIfNecessary().catch(() => {
             // Failures are logged in runDrain and retried.
@@ -213,12 +218,20 @@ export default class SpacedUpdate<T = void> {
         }
 
         if (result instanceof Promise) {
-            return result.then(
-                (data) => {
-                    this.pendingCommits.set(bindingKey, { data, commit });
-                },
-                restoreOnError
-            );
+            // Track the in-flight snapshot so drain() and isAllSavedAndTriggerUpdate() don't
+            // consider everything saved before the snapshot has been queued for commit.
+            const snapshot: Promise<void> = result
+                .then(
+                    (data) => {
+                        this.pendingCommits.set(bindingKey, { data, commit });
+                    },
+                    restoreOnError
+                )
+                .finally(() => {
+                    this.pendingSnapshots.delete(snapshot);
+                });
+            this.pendingSnapshots.add(snapshot);
+            return snapshot;
         }
 
         this.pendingCommits.set(bindingKey, { data: result, commit });
@@ -229,7 +242,7 @@ export default class SpacedUpdate<T = void> {
             return this.drainPromise;
         }
 
-        if (!this.changed && this.pendingCommits.size === 0) {
+        if (!this.changed && this.pendingCommits.size === 0 && this.pendingSnapshots.size === 0) {
             return Promise.resolve();
         }
 
@@ -242,6 +255,12 @@ export default class SpacedUpdate<T = void> {
 
     private async runDrain(): Promise<void> {
         while (true) {
+            // Wait for snapshots that were started elsewhere (e.g. by rebind) to be queued.
+            // Their failures restore the `changed` flag and are handled by the fold below.
+            while (this.pendingSnapshots.size > 0) {
+                await Promise.allSettled([ ...this.pendingSnapshots ]);
+            }
+
             // Fold any pending change into the queue first, so a queued snapshot and a newer
             // pending change for the same key result in a single save, not two.
             const snapshotted = this.snapshotPending();
