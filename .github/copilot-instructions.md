@@ -241,6 +241,8 @@ Tools are defined using `defineTools()` in `apps/server/src/services/llm/tools/`
 
 10. **Attribute inheritance can be complex** - When checking for labels/relations, use `note.getOwnedAttribute()` for direct attributes or `note.getAttribute()` for inherited ones. Don't assume attributes are directly on the note.
 
+11. **`ELECTRON_RUN_AS_NODE` leak crashes Electron launches** - Shells spawned by Electron-based tools (the VS Code extension host, AI coding agents running inside it) often inherit `ELECTRON_RUN_AS_NODE=1`. With it set, launching the desktop app (`pnpm desktop:start`, `pnpm --filter desktop start-prod`) crashes with `TypeError: Not running in an Electron environment!` because `require("electron")` resolves to the npm stub's path string instead of the built-in module. Unset the variable before launching: `Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue` (PowerShell) or `unset ELECTRON_RUN_AS_NODE` (bash).
+
 ## MCP Server
 - Trilium exposes an MCP (Model Context Protocol) server at `http://localhost:8080/mcp`, configured in `.mcp.json`
 - The MCP server is **only available when the Trilium server is running** (`pnpm run server:start`)

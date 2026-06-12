@@ -321,8 +321,7 @@
     "open_all_in_tabs_tooltip": "Deschide toate rezultatele în taburi noi",
     "open_all_confirm_one": "Aceasta va deschide {{count}} notiță în taburi noi. Continuați?",
     "open_all_confirm_few": "Aceasta va deschide {{count}} notițe în taburi noi. Continuați?",
-    "open_all_confirm_other": "Aceasta va deschide {{count}} de notițe în taburi noi. Continuați?",
-    "open_all_too_many": "Prea multe rezultate ({{count}}). Maximul este {{max}}."
+    "open_all_confirm_other": "Aceasta va deschide {{count}} de notițe în taburi noi. Continuați?"
   },
   "bookmark_switch": {
     "bookmark": "Semn de carte",
@@ -1190,9 +1189,7 @@
     "note_revisions_snapshot_description_short": "Timpul după care va fi creată o nouă revizie a notiței."
   },
   "ribbon": {
-    "edited_notes_message": "Tab-ul panglicii „Notițe editate” se va deschide automat pentru notițele zilnice",
-    "promoted_attributes_message": "Tab-ul panglicii „Atribute promovate” se va deschide automat dacă pentru notița curentă există astfel de atribute",
-    "widgets": "Widget-uri ale panglicii"
+    "edited_notes_message": "Tab-ul panglicii „Notițe editate” se va deschide automat pentru notițele zilnice"
   },
   "script_executor": {
     "execute_query": "Execută interogarea",
@@ -1370,8 +1367,8 @@
     "auto_theme": "Tema clasică (se adaptează la schema de culori a sistemului)",
     "light_theme": "Tema clasică (luminoasă)",
     "dark_theme": "Tema clasică (întunecată)",
-    "modern_themes": "Moderne",
-    "legacy_themes": "Vechi",
+    "modern_themes": "Modernă",
+    "legacy_themes": "Veche",
     "custom_themes": "Personalizate",
     "recommended": "Recomandat",
     "color_scheme": "Schemă de culori",

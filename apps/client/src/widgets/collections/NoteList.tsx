@@ -52,6 +52,9 @@ const ViewComponents: Record<ViewTypeOptions, { normal: LazyLoadedComponent, pri
     },
     presentation: {
         normal: lazy(() => import("./presentation/index.js"))
+    },
+    dashboard: {
+        normal: lazy(() => import("./dashboard/index.js"))
     }
 };
 
@@ -155,7 +158,7 @@ export function useNoteViewType(note?: FNote | null): ViewTypeOptions | undefine
 export function useNoteIds(note: FNote | null | undefined, viewType: ViewTypeOptions | undefined, ntxId: string | null | undefined) {
     const [ noteIds, setNoteIds ] = useState<string[]>([]);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
-    const directChildrenOnly = (viewType === "list" || viewType === "grid" || viewType === "table" || note?.type === "search");
+    const directChildrenOnly = (viewType === "list" || viewType === "grid" || viewType === "table" || viewType === "dashboard" || note?.type === "search");
 
     async function refreshNoteIds() {
         if (!note) {
@@ -227,19 +230,37 @@ export function useViewModeConfig<T extends object>(note: FNote | null | undefin
         storeFn: (data: T) => void;
         note: FNote;
     }>();
+    const storageRef = useRef<{ storage: ViewModeStorage<T>, storeFn: (data: T) => void, note: FNote }>();
 
     useEffect(() => {
         if (!note || !viewType) return;
         setViewConfig(undefined);
         const viewStorage = new ViewModeStorage<T>(note, viewType);
+        const storeFn = (config: T) => {
+            setViewConfig({ note, config, storeFn });
+            viewStorage.store(config);
+        };
+        storageRef.current = { storage: viewStorage, storeFn, note };
         viewStorage.restore().then(config => {
-            const storeFn = (config: T) => {
-                setViewConfig({ note, config, storeFn });
-                viewStorage.store(config);
-            };
             setViewConfig({ note, config, storeFn });
         });
     }, [ note, viewType ]);
+
+    // Reload the config when the underlying attachment changes externally
+    // (e.g. the same view opened in another split, or synced from another instance).
+    // Echoes of our own saves are filtered out by the storage, so views are never handed
+    // a fresh config object for content they already have.
+    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
+        const current = storageRef.current;
+        if (!current || current.note !== note) return;
+        if (!loadResults.getAttachmentRows().some(att => att.ownerId === current.note.noteId && att.title === current.storage.attachmentName)) {
+            return;
+        }
+        current.storage.restoreIfChanged().then(config => {
+            if (config === undefined) return;
+            setViewConfig({ note: current.note, config, storeFn: current.storeFn });
+        });
+    });
 
     // Only expose config for the current note, avoid leaking notes when switching between them.
     if (viewConfig?.note !== note) return undefined;

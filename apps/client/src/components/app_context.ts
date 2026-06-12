@@ -110,7 +110,7 @@ export type CommandMappings = {
         noteId?: string | null;
     };
     showOptions: CommandData & {
-        section: string;
+        section?: string;
     };
     showExportDialog: CommandData & {
         notePath: string;

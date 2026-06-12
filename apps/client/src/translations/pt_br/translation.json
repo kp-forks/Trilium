@@ -634,7 +634,9 @@
     "export": "Exportar",
     "import-into-note": "Importar na nota",
     "apply-bulk-actions": "Aplicar ações em massa",
-    "converted-to-attachments": "{{count}} notas foram convertidas em anexos.",
+    "converted-to-attachments_one": "{{count}} notas foram convertidas em anexos.",
+    "converted-to-attachments_many": "",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "Tem certeza de que deseja converter as notas selecionadas em anexos de suas notas pai? Esta operação se aplica apenas a notas de imagem; outras notas serão ignoradas.",
     "open-in-popup": "Edição rápida",
     "archive": "Ficheiro",
@@ -931,7 +933,9 @@
     "note_size": "Tamanho da nota",
     "calculate": "calcular",
     "title": "Informações da nota",
-    "subtree_size": "(tamanho da subárvore: {{size}} em {{count}} notas)",
+    "subtree_size_one": "(tamanho da subárvore: {{size}} em {{count}} notas)",
+    "subtree_size_many": "",
+    "subtree_size_other": "",
     "note_size_info": "O tamanho da nota fornece uma estimativa aproximada dos requisitos de armazenamento para esta nota. Leva em conta o conteúdo e o conteúdo de suas revisões de nota.",
     "mime": "Tipo MIME",
     "show_similar_notes": "Mostrar notas semelhantes"
@@ -1235,8 +1239,6 @@
     "successfully_created_lightly_anonymized_database": "Banco de dados levemente anonimizado criado em {{anonymizedFilePath}}"
   },
   "ribbon": {
-    "widgets": "Widgets de fita",
-    "promoted_attributes_message": "A aba de Atributos Promovidos irá abrir automaticamente se existirem atributos promovidos na nota",
     "edited_notes_message": "A aba de Notas Editadas será aberta automaticamente nas notas do dia"
   },
   "ui-performance": {
@@ -1961,7 +1963,9 @@
     "shared_locally": "Esta nota é compartilhada localmente em {{- link}}."
   },
   "pagination": {
-    "total_notes": "{{count}} notas"
+    "total_notes_one": "{{count}} notas",
+    "total_notes_many": "",
+    "total_notes_other": ""
   },
   "collections": {
     "rendering_error": "Não foi possível exibir o conteúdo devido a um erro."

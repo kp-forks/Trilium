@@ -373,6 +373,15 @@ function AttributesPane({ note, noteContext, attributesShown, setAttributesShown
     const parentComponent = useContext(ParentComponent);
     const api = useRef<AttributeEditorImperativeHandlers>(null);
 
+    // The attribute editor pulls in CKEditor, so it is only mounted once the panel has been
+    // opened (and stays mounted afterwards so the imperative handlers keep working).
+    const [ editorMounted, setEditorMounted ] = useState(false);
+    useEffect(() => {
+        if (attributesShown) {
+            setEditorMounted(true);
+        }
+    }, [ attributesShown ]);
+
     const context = parentComponent && {
         componentId: parentComponent.componentId,
         note,
@@ -408,11 +417,11 @@ function AttributesPane({ note, noteContext, attributesShown, setAttributesShown
                 <AutoLinkAttributesTab {...context} />
             </div>}
 
-            <AttributeEditor
+            {editorMounted && <AttributeEditor
                 {...context}
                 api={api}
                 ntxId={noteContext.ntxId}
-            />
+            />}
         </BottomPanel>
     );
 }

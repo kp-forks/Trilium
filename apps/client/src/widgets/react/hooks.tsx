@@ -1,4 +1,4 @@
-import { CKTextEditor } from "@triliumnext/ckeditor5";
+import type { CKTextEditor } from "@triliumnext/ckeditor5";
 import { FilterLabelsByType, KeyboardActionNames, NoteType, OptionNames, RelationNames } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import Mark from "mark.js";
@@ -14,8 +14,7 @@ import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import froca from "../../services/froca";
 import keyboard_actions from "../../services/keyboard_actions";
-import { ViewScope } from "../../services/link";
-import math from "../../services/math";
+import { parseNavigationStateFromUrl, ViewScope } from "../../services/link";
 import options, { type OptionValue } from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
 import server from "../../services/server";
@@ -44,11 +43,10 @@ export function useTriliumEvents<T extends EventNames>(eventNames: T[], handler:
     const parentComponent = useContext(ParentComponent);
 
     useLayoutEffect(() => {
-        const handlers: ({ eventName: T, callback: (data: EventData<T>) => void })[] = [];
+        const handlers: ({ eventName: T, callback: (data: EventData<T>) => unknown })[] = [];
         for (const eventName of eventNames) {
-            handlers.push({ eventName, callback: (data) => {
-                handler(data, eventName);
-            }});
+            // Return the handler's result so async handlers stay awaitable through triggerEvent().
+            handlers.push({ eventName, callback: (data) => handler(data, eventName) });
         }
 
         for (const { eventName, callback } of handlers) {
@@ -113,35 +111,63 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
     updateInterval?: number;
 }) {
     const parentComponent = useContext(ParentComponent);
-    const blob = useNoteBlob(note, parentComponent?.componentId);
+    const blob = useNoteBlob(note, parentComponent?.componentId, { reportLoadStateTo: noteContext });
 
-    const callback = useMemo(() => {
-        return async () => {
-            const data = await getData();
+    // The note whose content is currently loaded in the editor. Editor instances are reused
+    // across note switches, so until the new note's blob arrives the editor still holds the
+    // previous note's content — content that must never be saved under the new noteId (#9614).
+    const loadedNoteIdRef = useRef<string>();
 
-            // for read only notes, or if note is not yet available (e.g. lazy creation)
-            if (data === undefined || !note || note.type !== noteType) return;
+    const prepare = useCallback(() => {
+        if (!note || loadedNoteIdRef.current !== note.noteId) return undefined;
+        return getData();
+    }, [ note, getData ]);
 
-            protected_session_holder.touchProtectedSessionIfNecessary(note);
+    const commit = useCallback(async (data: SavedData | undefined) => {
+        // for read only notes, or if note is not yet available (e.g. lazy creation)
+        if (data === undefined || !note || note.type !== noteType) return;
 
-            await server.put(`notes/${note.noteId}/data`, data, parentComponent?.componentId);
+        protected_session_holder.touchProtectedSessionIfNecessary(note);
 
-            noteSavedDataStore.set(note.noteId, data.content);
-            dataSaved?.(data);
-        };
-    }, [ note, getData, dataSaved, noteType, parentComponent ]);
+        await server.put(`notes/${note.noteId}/data`, data, parentComponent?.componentId);
+
+        noteSavedDataStore.set(note.noteId, data.content);
+        dataSaved?.(data);
+    }, [ note, dataSaved, noteType, parentComponent ]);
+
     const stateCallback = useCallback<StateCallback>((state) => {
         noteContext?.setContextData("saveState", {
             state
         });
     }, [ noteContext ]);
-    const spacedUpdate = useSpacedUpdate(callback, updateInterval, stateCallback);
+    const stateCallbackRef = useRef(stateCallback);
+    useEffect(() => {
+        stateCallbackRef.current = stateCallback;
+    }, [ stateCallback ]);
+
+    const spacedUpdateRef = useRef<SpacedUpdate<SavedData | undefined>>();
+    if (!spacedUpdateRef.current) {
+        spacedUpdateRef.current = new SpacedUpdate<SavedData | undefined>(
+            { key: note?.noteId ?? null, prepare, commit },
+            updateInterval,
+            (state) => stateCallbackRef.current(state)
+        );
+    }
+    const spacedUpdate = spacedUpdateRef.current;
+
+    // Rebind to the current note on every render. When the note changes while a change is
+    // still pending, rebind() snapshots it with the previous binding first, so it is saved
+    // under the note it was typed into rather than the note the component now displays.
+    useEffect(() => {
+        spacedUpdate.rebind(note?.noteId ?? null, prepare, commit);
+    });
 
     // React to note/blob changes.
     useEffect(() => {
         if (!blob || !note) return;
         noteSavedDataStore.set(note.noteId, blob.content);
         spacedUpdate.allowUpdateWithoutChange(() => onContentChange(blob.content));
+        loadedNoteIdRef.current = note.noteId;
     }, [ blob ]);
 
     // React to update interval changes.
@@ -184,31 +210,57 @@ export function useBlobEditorSpacedUpdate({ note, noteType, noteContext, getData
     replaceWithoutRevision?: boolean;
 }) {
     const parentComponent = useContext(ParentComponent);
-    const blob = useNoteBlob(note, parentComponent?.componentId);
+    const blob = useNoteBlob(note, parentComponent?.componentId, { reportLoadStateTo: noteContext });
 
-    const callback = useMemo(() => {
-        return async () => {
-            const data = await getData();
+    // Same provenance guard as useEditorSpacedUpdate: never save content under a note it
+    // was not loaded from (#9614).
+    const loadedNoteIdRef = useRef<string>();
 
-            // for read only notes
-            if (data === undefined || note.type !== noteType) return;
+    const prepare = useCallback(() => {
+        if (loadedNoteIdRef.current !== note.noteId) return undefined;
+        return getData();
+    }, [ note, getData ]);
 
-            protected_session_holder.touchProtectedSessionIfNecessary(note);
-            await server.upload(`notes/${note.noteId}/file?replace=${replaceWithoutRevision ? "1" : "0"}`, new File([ data ], note.title, { type: note.mime }), parentComponent?.componentId);
-            dataSaved?.(data);
-        };
-    }, [ note, getData, dataSaved, noteType, parentComponent, replaceWithoutRevision ]);
+    const commit = useCallback(async (data: Blob | undefined) => {
+        // for read only notes
+        if (data === undefined || note.type !== noteType) return;
+
+        protected_session_holder.touchProtectedSessionIfNecessary(note);
+        await server.upload(`notes/${note.noteId}/file?replace=${replaceWithoutRevision ? "1" : "0"}`, new File([ data ], note.title, { type: note.mime }), parentComponent?.componentId);
+        dataSaved?.(data);
+    }, [ note, dataSaved, noteType, parentComponent, replaceWithoutRevision ]);
+
     const stateCallback = useCallback<StateCallback>((state) => {
         noteContext?.setContextData("saveState", {
             state
         });
     }, [ noteContext ]);
-    const spacedUpdate = useSpacedUpdate(callback, updateInterval, stateCallback);
+    const stateCallbackRef = useRef(stateCallback);
+    useEffect(() => {
+        stateCallbackRef.current = stateCallback;
+    }, [ stateCallback ]);
+
+    const spacedUpdateRef = useRef<SpacedUpdate<Blob | undefined>>();
+    if (!spacedUpdateRef.current) {
+        spacedUpdateRef.current = new SpacedUpdate<Blob | undefined>(
+            { key: note.noteId, prepare, commit },
+            updateInterval,
+            (state) => stateCallbackRef.current(state)
+        );
+    }
+    const spacedUpdate = spacedUpdateRef.current;
+
+    // Rebind to the current note on every render; flushes a pending change with the previous
+    // binding when the note changes (see useEditorSpacedUpdate).
+    useEffect(() => {
+        spacedUpdate.rebind(note.noteId, prepare, commit);
+    });
 
     // React to note/blob changes.
     useEffect(() => {
         if (!blob) return;
         spacedUpdate.allowUpdateWithoutChange(() => onContentChange(blob));
+        loadedNoteIdRef.current = note.noteId;
     }, [ blob ]);
 
     // React to update interval changes.
@@ -375,10 +427,14 @@ export function useUniqueName(prefix?: string) {
 }
 
 export function useNoteContext() {
+    const parentComponent = useContext(ParentComponent) as ReactWrappedWidget;
     const noteContextContext = useContext(NoteContextContext);
-    const [ noteContext, setNoteContext ] = useState<NoteContext | undefined>(noteContextContext ?? undefined);
-    const [ notePath, setNotePath ] = useState<string | null | undefined>();
-    const [ note, setNote ] = useState<FNote | null | undefined>();
+    // Components can mount after the initial setNoteContext event has already been dispatched
+    // (e.g. when rendered via LazyComponent), so fall back to the note context held by the
+    // closest legacy ancestor instead of waiting for the next note switch.
+    const [ noteContext, setNoteContext ] = useState<NoteContext | undefined>(() => noteContextContext ?? findClosestNoteContext(parentComponent));
+    const [ notePath, setNotePath ] = useState<string | null | undefined>(noteContext?.notePath);
+    const [ note, setNote ] = useState<FNote | null | undefined>(noteContext?.note);
     const [ hoistedNoteId, setHoistedNoteId ] = useState(noteContext?.hoistedNoteId);
     const [ , setViewScope ] = useState<ViewScope>();
     const [ isReadOnlyTemporarilyDisabled, setIsReadOnlyTemporarilyDisabled ] = useState<boolean | null | undefined>(noteContext?.viewScope?.isReadOnly);
@@ -399,7 +455,10 @@ export function useNoteContext() {
     }, [ notePath ]);
 
     useTriliumEvents([ "setNoteContext", "activeContextChanged", "noteSwitchedAndActivated", "noteSwitched" ], ({ noteContext }) => {
-        if (noteContextContext) return;
+        // When bound to a specific context via the provider (the quick-edit popup), ignore events for
+        // other contexts, but still react when our own bound context navigates in place (e.g. switching
+        // settings pages from the in-popup selector) — otherwise the popup would stay on the first page.
+        if (noteContextContext && noteContext !== noteContextContext) return;
         setNoteContext(noteContext);
         setHoistedNoteId(noteContext.hoistedNoteId);
         setNotePath(noteContext.notePath);
@@ -429,7 +488,6 @@ export function useNoteContext() {
         }
     });
 
-    const parentComponent = useContext(ParentComponent) as ReactWrappedWidget;
     useDebugValue(() => `notePath=${notePath}, ntxId=${noteContext?.ntxId}`);
 
     return {
@@ -444,6 +502,26 @@ export function useNoteContext() {
         parentComponent,
         isReadOnlyTemporarilyDisabled
     };
+}
+
+/**
+ * Finds the note context held by the closest legacy ancestor component (e.g. the note split's
+ * `NoteWrapperWidget`). Used to initialize {@link useNoteContext} for components that mount after
+ * the initial `setNoteContext` event has been dispatched (e.g. components rendered via
+ * `LazyComponent`), which would otherwise not know their context until the next note switch.
+ */
+function findClosestNoteContext(component: Component | null): NoteContext | undefined {
+    let current: Component | undefined = component ?? undefined;
+    while (current) {
+        if ("noteContext" in current) {
+            const { noteContext } = current as { noteContext?: NoteContext };
+            if (noteContext) {
+                return noteContext;
+            }
+        }
+        current = current.parent as Component | undefined;
+    }
+    return undefined;
 }
 
 /**
@@ -696,17 +774,34 @@ export function useNoteLabelInt(note: FNote | undefined | null, labelName: Filte
     ];
 }
 
-export function useNoteBlob(note: FNote | null | undefined, componentId?: string): FBlob | null | undefined {
+export function useNoteBlob(note: FNote | null | undefined, componentId?: string, opts?: {
+    /** Publish the fetch progress as `contentLoad` context data on the given note context, so
+     * the note detail can show a loading state instead of the previous note's content. Should
+     * only be set by widgets whose main content display is gated on this blob. (Passed
+     * explicitly because NoteContextContext is only provided in dialogs, not the main window.) */
+    reportLoadStateTo?: NoteContext | null;
+}): FBlob | null | undefined {
     const [ blob, setBlob ] = useState<FBlob | null>();
     const requestIdRef = useRef(0);
 
+    function reportLoadState(state: "loading" | "loaded" | "error") {
+        opts?.reportLoadStateTo?.setContextData("contentLoad", { state, retry: () => refresh() });
+    }
+
     async function refresh() {
         const requestId = ++requestIdRef.current;
+        if (note) {
+            reportLoadState("loading");
+        }
         const newBlob = await note?.getBlob();
 
         // Only update if this is the latest request.
         if (requestId === requestIdRef.current) {
             setBlob(newBlob);
+            if (note) {
+                // froca.getBlob() resolves to null when the fetch failed.
+                reportLoadState(newBlob ? "loaded" : "error");
+            }
         }
     }
 
@@ -1569,31 +1664,134 @@ export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unk
     useEffect(() => {
         if (!containerRef.current) return;
         const mathElements = containerRef.current.querySelectorAll(".math-tex");
+        if (!mathElements.length) return;
 
-        for (const mathEl of mathElements) {
-            // Skip if already rendered by KaTeX
-            if (mathEl.querySelector(".katex")) continue;
+        // KaTeX is heavy, so the math service is only loaded once there are equations to render.
+        void import("../../services/math").then(({ default: math }) => {
+            for (const mathEl of mathElements) {
+                // Skip if already rendered by KaTeX
+                if (mathEl.querySelector(".katex")) continue;
 
-            try {
-                // CKEditor's data format wraps the equation with \(...\) or \[...\]
-                // delimiters. katex.render() expects raw LaTeX without them.
-                const raw = mathEl.textContent?.trim() ?? "";
-                let equation: string;
-                let displayMode = false;
+                try {
+                    // CKEditor's data format wraps the equation with \(...\) or \[...\]
+                    // delimiters. katex.render() expects raw LaTeX without them.
+                    const raw = mathEl.textContent?.trim() ?? "";
+                    let equation: string;
+                    let displayMode = false;
 
-                if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
-                    equation = raw.slice(2, -2);
-                } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
-                    equation = raw.slice(2, -2);
-                    displayMode = true;
-                } else {
-                    equation = raw;
+                    if (raw.startsWith("\\(") && raw.endsWith("\\)")) {
+                        equation = raw.slice(2, -2);
+                    } else if (raw.startsWith("\\[") && raw.endsWith("\\]")) {
+                        equation = raw.slice(2, -2);
+                        displayMode = true;
+                    } else {
+                        equation = raw;
+                    }
+
+                    math.render(equation, mathEl as HTMLElement, { displayMode });
+                } catch (e) {
+                    console.warn("Failed to render math:", e);
                 }
-
-                math.render(equation, mathEl as HTMLElement, { displayMode });
-            } catch (e) {
-                console.warn("Failed to render math:", e);
             }
-        }
+        });
     }, deps); // eslint-disable-line react-hooks/exhaustive-deps
+}
+
+/**
+ * Keeps navigation that follows internal note links (note links, reference links, "Related settings",
+ * etc.) inside a popup dialog — whose note context lives outside the tab manager — instead of letting
+ * the global link handler resolve to the active tab in the background. The dialog decides what to do
+ * with the parsed target via `onNavigate` (typically `noteContext.setNote()` or routing to another
+ * dialog).
+ *
+ * The listener is attached to `containerRef` in the capture phase so it runs before the
+ * document-level `goToLink` handler (and before anything that might stop propagation). Modified or
+ * middle clicks and external links are left untouched so they can still open in a new tab/window or
+ * externally, and clicks inside editable rich text are ignored so they keep placing the caret.
+ * Links that implement their own navigation (and would otherwise never see the click, since this
+ * runs first) can opt out entirely via a `data-no-contained-navigation` attribute.
+ */
+export function useContainedLinkNavigation(
+    containerRef: RefObject<HTMLElement>,
+    onNavigate: (notePath: string, viewScope: ViewScope | undefined) => void
+) {
+    useEffect(() => {
+        const container = containerRef.current;
+        if (!container) return;
+
+        function onClick(e: MouseEvent) {
+            if (e.defaultPrevented || e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+
+            const link = (e.target as HTMLElement).closest("a");
+            if (!link || link.getAttribute("target") === "_blank" || link.isContentEditable) return;
+            if (link.hasAttribute("data-no-contained-navigation")) return;
+
+            const href = link.getAttribute("href") ?? link.getAttribute("data-href");
+            if (!href?.startsWith("#root/")) return; // external links / in-page anchors handled elsewhere
+
+            const { notePath, viewScope } = parseNavigationStateFromUrl(href);
+            if (!notePath) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+            onNavigate(notePath, viewScope);
+        }
+
+        container.addEventListener("click", onClick, true);
+        return () => container.removeEventListener("click", onClick, true);
+    }, [ containerRef, onNavigate ]);
+}
+
+export type DelayedVisibilityPhase = "hidden" | "visible" | "stalled";
+
+export interface DelayedVisibilityOpts {
+    /** The indicator is never shown if `active` clears within this window (fast loads never flash). */
+    graceMs?: number;
+    /** Once shown, the indicator stays at least this long, even if `active` clears sooner (no two-frame flicker). */
+    minVisibleMs?: number;
+    /** After this much continuous activity the phase escalates to "stalled" so the UI can offer a retry. */
+    stalledMs?: number;
+}
+
+/**
+ * Drives a flicker-free loading indicator from a boolean "is loading" signal:
+ *
+ * - **grace period**: nothing is shown if loading finishes within {@link DelayedVisibilityOpts.graceMs},
+ *   so fast loads never flash a loading state;
+ * - **minimum visibility**: once shown, the indicator stays for at least
+ *   {@link DelayedVisibilityOpts.minVisibleMs}, preventing a skeleton that appears for two frames;
+ * - **escalation**: after {@link DelayedVisibilityOpts.stalledMs} of continuous loading the phase
+ *   becomes `"stalled"`, letting the UI switch to a "still loading / retry" presentation.
+ */
+export function useDelayedVisibility(active: boolean, { graceMs = 150, minVisibleMs = 280, stalledMs = 8000 }: DelayedVisibilityOpts = {}): DelayedVisibilityPhase {
+    const [ phase, setPhase ] = useState<DelayedVisibilityPhase>("hidden");
+    const shownAtRef = useRef(0);
+
+    useEffect(() => {
+        if (active) {
+            if (phase === "hidden") {
+                const graceTimer = setTimeout(() => {
+                    shownAtRef.current = Date.now();
+                    setPhase("visible");
+                }, graceMs);
+                return () => clearTimeout(graceTimer);
+            }
+
+            if (phase === "visible") {
+                const stalledTimer = setTimeout(
+                    () => setPhase("stalled"),
+                    Math.max(0, shownAtRef.current + stalledMs - Date.now())
+                );
+                return () => clearTimeout(stalledTimer);
+            }
+        } else if (phase !== "hidden") {
+            const hideTimer = setTimeout(
+                () => setPhase("hidden"),
+                Math.max(0, shownAtRef.current + minVisibleMs - Date.now())
+            );
+            return () => clearTimeout(hideTimer);
+        }
+    }, [ active, phase, graceMs, minVisibleMs, stalledMs ]);
+
+    return phase;
 }

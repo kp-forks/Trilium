@@ -2,7 +2,10 @@ import { app_info, cls, events, getLog, keyboard_actions as keyboardActionsServi
 import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
-import url from "url";
+
+import { markStartupMetric } from "./startup_metrics.js";
+import { TRILIUM_APP_BASE_URL } from "./trilium_app_origin.js";
+import { setupWebContentsSecurity } from "./web_contents_security.js";
 
 // Preload bundle path. Two layouts:
 //   - Dev: this file lives at apps/desktop/src/services/window.ts, and the
@@ -73,7 +76,7 @@ async function createExtraWindow(extraWindowHash: string) {
     });
 
     win.setMenuBarVisibility(false);
-    win.loadURL(`trilium-app://app/?extraWindow=1${extraWindowHash}`);
+    win.loadURL(`${TRILIUM_APP_BASE_URL}?extraWindow=1${extraWindowHash}`);
 
     configureWebContents(win.webContents, spellcheckEnabled);
 
@@ -125,10 +128,16 @@ async function createMainWindow() {
         ...getWindowExtraOpts()
     });
 
+    markStartupMetric("main-window-created");
+    // First time the renderer has produced a frame of the page — the closest
+    // main-process signal to "the window displays something".
+    mainWindow.once("ready-to-show", () => markStartupMetric("main-window-first-paint"));
+    mainWindow.webContents.once("did-finish-load", () => markStartupMetric("main-window-load-finished"));
+
     mainWindowState.manage(mainWindow);
 
     mainWindow.setMenuBarVisibility(false);
-    mainWindow.loadURL("trilium-app://app/");
+    mainWindow.loadURL(TRILIUM_APP_BASE_URL);
     mainWindow.on("closed", () => (mainWindow = null));
 
     configureWebContents(mainWindow.webContents, spellcheckEnabled);
@@ -166,28 +175,9 @@ function getWindowExtraOpts() {
 }
 
 async function configureWebContents(webContents: WebContents, spellcheckEnabled: boolean) {
-    webContents.setWindowOpenHandler((details) => {
-        async function openExternal() {
-            (await import("electron")).shell.openExternal(details.url);
-        }
-
-        openExternal().catch(err => {
-            getLog().error(`Failed to open external URL ${details.url}: ${err}`);
-        });
-        return { action: "deny" };
-    });
-
-    // prevent drag & drop to navigate away from trilium
-    webContents.on("will-navigate", (ev, targetUrl) => {
-        const parsedUrl = url.parse(targetUrl);
-
-        // we still need to allow internal redirects from setup and migration pages
-        const isInternal = parsedUrl.protocol === "trilium-app:"
-            || ["localhost", "127.0.0.1"].includes(parsedUrl.hostname || "");
-        if (!isInternal || (parsedUrl.path && parsedUrl.path !== "/" && parsedUrl.path !== "/?")) {
-            ev.preventDefault();
-        }
-    });
+    // Window-open and navigation policy is NOT applied here: it is installed
+    // globally for every WebContents (including setup and print windows,
+    // which never pass through this function) by web_contents_security.ts.
 
     if (spellcheckEnabled) {
         setupSpellcheckForSession(webContents.session);
@@ -203,6 +193,15 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
     // Forward navigation events to the renderer for back/forward button state.
     webContents.on("did-navigate", () => webContents.send("did-navigate"));
     webContents.on("did-navigate-in-page", () => webContents.send("did-navigate-in-page"));
+
+    // Keep the renderer informed about whether DevTools is docked into this window, where
+    // Chromium disables the native window material (Mica / vibrancy) and the renderer should
+    // suspend its transparent background effects. Re-checked on focus because re-docking an
+    // already open DevTools emits no dedicated event.
+    const sendDevToolsDockState = () => webContents.send("dev-tools-dock-changed", isDevToolsDocked(webContents));
+    webContents.on("devtools-opened", sendDevToolsDockState);
+    webContents.on("devtools-focused", sendDevToolsDockState);
+    webContents.on("devtools-closed", sendDevToolsDockState);
 
     // Forward context-menu event to the renderer with only the fields we need.
     webContents.on("context-menu", (_event, params) => {
@@ -223,6 +222,20 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
             }
         });
     });
+}
+
+/** Whether DevTools for the given contents is open and docked into the page's own window (as opposed to a separate window). */
+function isDevToolsDocked(webContents: WebContents) {
+    const devToolsWebContents = webContents.devToolsWebContents;
+    if (!webContents.isDevToolsOpened() || !devToolsWebContents) {
+        return false;
+    }
+
+    // A docked DevTools view is hosted by the same BrowserWindow as the page itself; when
+    // detached it lives in its own native window, which is not a BrowserWindow and for which
+    // fromWebContents() returns null.
+    const devToolsWindow = electron.BrowserWindow.fromWebContents(devToolsWebContents);
+    return devToolsWindow !== null && devToolsWindow === electron.BrowserWindow.fromWebContents(webContents);
 }
 
 function setupSpellcheckForSession(session: Session) {
@@ -271,7 +284,7 @@ async function createSetupWindow() {
         }
     });
     setupWindow.removeMenu();
-    setupWindow.loadURL("trilium-app://app/");
+    setupWindow.loadURL(TRILIUM_APP_BASE_URL);
     setupWindow.on("closed", () => (setupWindow = null));
 }
 
@@ -357,6 +370,12 @@ function getAllWindows() {
  * Call once during desktop startup, before `app.ready` fires.
  */
 export function setupWindowing() {
+    // Window-open, navigation, <webview>-attach and permission policy is applied
+    // to every WebContents the app creates. Installed here rather than left to
+    // each entry point so a new Electron launcher cannot silently ship without
+    // the renderer/main security boundary.
+    setupWebContentsSecurity();
+
     electron.ipcMain.on("create-extra-window", (_event, arg) => {
         createExtraWindow(arg.extraWindowHash);
     });
@@ -384,6 +403,8 @@ export function setupWindowing() {
             getLog().error(`copy-image-to-clipboard failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
         }
     });
+
+    electron.ipcMain.handle("read-clipboard-text", () => electron.clipboard.readText());
 
     electron.ipcMain.on("show-window", (event) => {
         electron.BrowserWindow.fromWebContents(event.sender)?.show();
@@ -435,6 +456,10 @@ export function setupWindowing() {
 
     electron.ipcMain.on("toggle-dev-tools", (event) => {
         event.sender.toggleDevTools();
+    });
+
+    electron.ipcMain.on("is-dev-tools-docked", (event) => {
+        event.returnValue = isDevToolsDocked(event.sender);
     });
 
     electron.ipcMain.on("is-full-screen", (event) => {

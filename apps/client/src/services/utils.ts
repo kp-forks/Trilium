@@ -1,5 +1,4 @@
 import { dayjs } from "@triliumnext/commons";
-import { snapdom } from "@zumer/snapdom";
 
 import FNote from "../entities/fnote";
 import type { ViewMode, ViewScope } from "./link.js";
@@ -633,6 +632,7 @@ function prepareElementForSnapdom(source: string | SVGElement | HTMLElement): {
  * @param svgSource either an SVG string, an SVGElement, or an HTMLElement to be downloaded.
  */
 async function downloadAsSvg(nameWithoutExtension: string, svgSource: string | SVGElement | HTMLElement) {
+    const { snapdom } = await import("@zumer/snapdom");
     const { element, cleanup } = prepareElementForSnapdom(svgSource);
 
     try {
@@ -671,6 +671,7 @@ function triggerDownload(fileName: string, dataUrl: string) {
  * @param svgSource either an SVG string, an SVGElement, or an HTMLElement to be converted to PNG.
  */
 async function downloadAsPng(nameWithoutExtension: string, svgSource: string | SVGElement | HTMLElement) {
+    const { snapdom } = await import("@zumer/snapdom");
     const { element, cleanup } = prepareElementForSnapdom(svgSource);
 
     try {

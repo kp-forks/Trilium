@@ -1,3 +1,5 @@
+import "./NoteActions.css";
+
 import { ConvertToAttachmentResponse } from "@triliumnext/commons";
 import { Dropdown as BootstrapDropdown } from "bootstrap";
 import { ComponentChildren, RefObject } from "preact";

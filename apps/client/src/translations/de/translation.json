@@ -225,7 +225,8 @@
     "import-status": "Importstatus",
     "in-progress": "Import läuft: {{progress}}",
     "successful": "Import erfolgreich abgeschlossen.",
-    "importZipRecommendation": "Beim Import einer ZIP-Datei wird die Notizhierarchie aus der Ordnerstruktur im Archiv übernommen."
+    "importZipRecommendation": "Beim Import einer ZIP-Datei wird die Notizhierarchie aus der Ordnerstruktur im Archiv übernommen.",
+    "spreadsheetImportedAsSpreadsheet": "CSV- und Excel-Dateien als bearbeitbare Tabellen statt als Dateien importieren"
   },
   "include_note": {
     "dialog_title": "Notiz beifügen",
@@ -816,7 +817,8 @@
     "hide_child_notes": "Untergeordnete Notizen im Baum ausblenden",
     "open_all_in_tabs": "Alle öffnen",
     "open_all_in_tabs_tooltip": "Alle Resultate in neuen Tabs öffnen",
-    "open_all_confirm": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?"
+    "open_all_confirm_one": "Dies öffnet {{count}} Notiz in neuem Tab. Fortfahren?",
+    "open_all_confirm_other": "Dies öffnet {{count}} Notizen in neuen Tabs. Fortfahren?"
   },
   "edited_notes": {
     "no_edited_notes_found": "An diesem Tag wurden noch keine Notizen bearbeitet...",
@@ -860,7 +862,8 @@
     "note_size": "Notengröße",
     "note_size_info": "Die Notizgröße bietet eine grobe Schätzung des Speicherbedarfs für diese Notiz. Es berücksichtigt den Inhalt der Notiz und den Inhalt ihrer Notizrevisionen.",
     "calculate": "berechnen",
-    "subtree_size": "(Zweiggröße: {{size}} in {{count}} Notizen)",
+    "subtree_size_one": "(Zweiggröße: {{size}} in {{count}} Notiz)",
+    "subtree_size_other": "(Zweiggröße: {{size}} in {{count}} Notizen)",
     "title": "Notizinfo",
     "mime": "MIME Typ",
     "show_similar_notes": "Zeige ähnliche Notizen"
@@ -871,7 +874,8 @@
     "title": "Notizkarte",
     "fix-nodes": "Knoten fixieren",
     "link-distance": "Verbindungslänge",
-    "too-many-notes": "Dieser Bereich enthält {{count}} Notizen. Die Anzeige aller Notizen kann die Leistung beeinträchtigen.",
+    "too-many-notes_one": "Dieser Bereich enthält {{count}} Notiz. Die Anzeige kann die Leistung beeinträchtigen.",
+    "too-many-notes_other": "Dieser Bereich enthält {{count}} Notizen. Die Anzeige aller Notizen kann die Leistung beeinträchtigen.",
     "show-anyway": "Karte anzeigen"
   },
   "note_paths": {
@@ -1179,8 +1183,6 @@
     "disabled": "deaktiviert"
   },
   "ribbon": {
-    "widgets": "Multifunktionsleisten-Widgets",
-    "promoted_attributes_message": "Die „Hervorgehobene Attribute“-Leiste wird automatisch geöffnet, wenn in der Notiz hervorgehobene Attribute vorhanden sind",
     "edited_notes_message": "Die Multifunktionsleisten-Registerkarte „Bearbeitete Notizen“ wird bei Tagesnotizen automatisch geöffnet"
   },
   "theme": {
@@ -1534,7 +1536,8 @@
     "export": "Exportieren",
     "import-into-note": "In Notiz importieren",
     "apply-bulk-actions": "Massenaktionen anwenden",
-    "converted-to-attachments": "{{count}} Notizen wurden als Anhang konvertiert.",
+    "converted-to-attachments_one": "{{count}} Notiz wurde als Anhang konvertiert.",
+    "converted-to-attachments_other": "{{count}} Notizen wurden als Anhang konvertiert.",
     "convert-to-attachment-confirm": "Sind Sie sicher, dass Sie die ausgewählten Notizen in Anhänge ihrer übergeordneten Notizen umwandeln möchten? Diese Operation wird nur auf Bildnotizen angewandt. Andere Notizen werden übersprungen.",
     "open-in-popup": "Schnellbearbeitung",
     "archive": "Archiviere",
@@ -1699,7 +1702,10 @@
     "reopen_last_tab": "Zuletzt geschlossenen Tab erneut öffnen",
     "move_tab_to_new_window": "Tab in neues Fenster verschieben",
     "copy_tab_to_new_window": "Tab in neues Fenster kopieren",
-    "new_tab": "Neuer Tab"
+    "new_tab": "Neuer Tab",
+    "pin_tab": "Tab anheften",
+    "unpin_tab": "Tab lösen",
+    "pinned_prefix": "Angeheftet: "
   },
   "toc": {
     "table_of_contents": "Inhaltsverzeichnis",
@@ -2075,10 +2081,15 @@
     "search_history_title": "Zeige Suchhistorie",
     "search_history_description": "Zeige vorherige Suchen",
     "configure_launch_bar_title": "Startleiste anpassen",
-    "configure_launch_bar_description": "Öffnen Sie die Einstellungen der Startleiste, um Elemente hinzuzufügen oder zu entfernen."
+    "configure_launch_bar_description": "Öffnen Sie die Einstellungen der Startleiste, um Elemente hinzuzufügen oder zu entfernen.",
+    "pin_tab_title": "Tab anheften",
+    "pin_tab_description": "Diese Notiz immer in diesem Tab am Anfang der Tab-Leiste geöffnet halten und versehentliches Schließen verhindern",
+    "unpin_tab_title": "Tab lösen",
+    "unpin_tab_description": "Diesen Tab lösen, sodass er geschlossen und frei verschoben werden kann"
   },
   "content_renderer": {
-    "open_externally": "Extern öffnen"
+    "open_externally": "Extern öffnen",
+    "mermaid_diagram_error": "Mermaid-Diagramm konnte nicht gerendert werden: {{error}}"
   },
   "call_to_action": {
     "next_theme_title": "Teste das neue Trilium Design",
@@ -2090,7 +2101,10 @@
     "dismiss": "Ablehnen",
     "new_layout_title": "Neues Layout",
     "new_layout_message": "Wir haben ein modernisiertes Layout für Trilium eingeführt. Die Multifunktionsleiste wurde entfernt und als neue Statusanzeige und ausklappbaren Sektionen (wie hervorgehobenen Attributen), welche Schlüsselfunktionen übernehmen, nahtlos in das Hauptinterface integriert.\n\nDas neue Layout ist standardmäßig aktiviert und kann temporär in Optionen → Anzeige deaktiviert werden.",
-    "new_layout_button": "Mehr Informationen"
+    "new_layout_button": "Mehr Informationen",
+    "scripting_disabled_title": "Backend-Skripting wurde deaktiviert",
+    "scripting_disabled_button": "Sicherheitseinstellungen öffnen",
+    "scripting_disabled_message": "Backend-Skripting ist aus Sicherheitsgründen jetzt standardmäßig deaktiviert. Ihre Notizen enthalten Backend-Skripte (Notizen mit dem Label #run), die nicht mehr automatisch ausgeführt werden.\n\nWenn Sie auf diese Skripte angewiesen sind, können Sie Backend-Skripting in den Sicherheitseinstellungen wieder aktivieren."
   },
   "settings": {
     "related_settings": "Ähnliche Einstellungen"
@@ -2108,7 +2122,8 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} Notizen",
+    "total_notes_one": "{{count}} Notiz",
+    "total_notes_other": "{{count}} Notizen",
     "prev_page": "Vorherige Seite",
     "next_page": "Nächste Seite"
   },
@@ -2207,7 +2222,8 @@
     "note_paths_other": "{{count}} Pfade",
     "note_paths_title": "Notizpfade",
     "code_note_switcher": "Sprachmodus ändern",
-    "tab_width_spaces": "{{count}} Leerzeichen",
+    "tab_width_spaces_one": "{{count}} Leerzeichen",
+    "tab_width_spaces_other": "{{count}} Leerzeichen",
     "tab_width_spaces_short": "Leerzeichen: {{width}}",
     "tab_width_use_default": "Standard verwenden ({{width}})",
     "tab_width_use_default_style": "Standard verwenden ({{style}})",
@@ -2313,7 +2329,11 @@
     "exit-fullscreen": "Vollbild verlassen",
     "unsupported-format": "Medienvorschau ist für dieses Format nicht verfügbar:\n{{mime}}",
     "zoom-to-fit": "Zoomen um auszufüllen",
-    "zoom-reset": "Zoomen um auszufüllen zurücksetzen"
+    "zoom-reset": "Zoomen um auszufüllen zurücksetzen",
+    "previous-video": "Vorheriges Video: {{- title}}",
+    "next-video": "Nächstes Video: {{- title}}",
+    "previous-audio": "Vorherige Audiodatei: {{- title}}",
+    "next-audio": "Nächste Audiodatei: {{- title}}"
   },
   "mermaid": {
     "placeholder": "Geben den Inhalt des Mermaid-Diagramms ein oder verwenden eine der folgenden Beispieldiagramme.",
@@ -2580,7 +2600,11 @@
     "title": "Revisionsverlauf"
   },
   "spreadsheet": {
-    "read-only": "Diese Notiz ist schreibgeschützt."
+    "read-only": "Diese Notiz ist schreibgeschützt.",
+    "export-xlsx": "Als Excel exportieren (.xlsx)",
+    "export-csv": "Als CSV exportieren (.csv)",
+    "export-failed": "Die Tabelle konnte nicht als Excel-Datei exportiert werden.",
+    "export-csv-failed": "Die Tabelle konnte nicht als CSV-Datei exportiert werden."
   },
   "common": {
     "cancel": "Abbrechen",
@@ -2730,5 +2754,38 @@
     "page_break_description": "Seitenumbruch einfügen (zum Drucken)",
     "markdown_import_description": "Markdown-Datei in diese Notiz importieren",
     "anchor_description": "Anker für interne Verlinkung einfügen"
+  },
+  "image_buttons": {
+    "zoom_in": "Vergrößern",
+    "zoom_out": "Verkleinern",
+    "reset_zoom": "Zoom zurücksetzen"
+  },
+  "image_navigation": {
+    "previous": "Vorheriges Bild: {{- title}}",
+    "next": "Nächstes Bild: {{- title}}"
+  },
+  "image_viewer": {
+    "loading_error": "Beim Laden des Bildes ist ein Fehler aufgetreten."
+  },
+  "security": {
+    "backend_scripting_title": "Backend-Skripting",
+    "backend_scripting_section_description": "Backend-Skripte haben vollen Serverzugriff, einschließlich Dateisystem, Netzwerk und Betriebssystembefehle. Sie können über Synchronisierung, Import oder beliebige Inhalte mit ausführbaren Attributen ausgelöst werden. Frontend-Skripte sind stets aktiviert, da sie in einer abgesicherten Browser-Umgebung ausgeführt werden.",
+    "backend_scripting_label": "Ausführung von Backend-Skripten",
+    "backend_scripting_description": "Ausführung von Backend-Skripten erlauben (Startskripte, benutzerdefinierte Anfrage-Handler, Ereignis-Handler, geplante Skripte usw.).",
+    "sql_console_title": "SQL-Konsole",
+    "sql_console_section_description": "Die SQL-Konsole ermöglicht die Ausführung beliebiger SQL-Abfragen gegen die Datenbank. Sie kann genutzt werden, um sensible Daten auszulesen (z. B. Synchronisierungsgeheimnisse, API-Schlüssel) sowie beliebige Daten zu ändern oder zu löschen. Ein schädliches Frontend-Skript könnte ebenfalls programmatisch auf die SQL-Konsolen-API zugreifen.",
+    "sql_console_label": "SQL-Konsole",
+    "sql_console_description": "Ausführung von Abfragen in der SQL-Konsole erlauben.",
+    "how_to_enable": "Aktivierung",
+    "server_config_hint": "Fügen Sie Folgendes in Ihre config.ini-Datei ein:",
+    "server_env_hint": "Oder setzen Sie folgende Umgebungsvariable:",
+    "restart_required": "Ein Neustart ist erforderlich.",
+    "restart_now": "Anwendung jetzt neu starten"
+  },
+  "snippet_badge": {
+    "label": "{{type}} Snippet",
+    "type_text": "Text",
+    "type_code": "Code",
+    "tooltip": "Ein wiederverwendbares Text- oder Code-Fragment, das in den Editor eingefügt werden kann (über das Snippet-Menü in der Symbolleiste oder per Slash-Befehl)."
   }
 }

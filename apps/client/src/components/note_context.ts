@@ -60,6 +60,13 @@ export interface NoteContextDataMap {
     saveState: {
         state: SaveState;
     };
+    /** Published by content widgets (via `useNoteBlob`) while the note's content is being fetched,
+     * so the note detail can show a loading state instead of the previous note's content. */
+    contentLoad: {
+        state: "loading" | "loaded" | "error";
+        /** Re-attempts the content fetch (e.g. from a "Retry" button after an error). */
+        retry: () => void;
+    };
 }
 
 type ContextDataKey = keyof NoteContextDataMap;
