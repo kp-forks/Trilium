@@ -63,7 +63,7 @@ export interface Api {
     /**
      * Note where the script execution started — the entry point of the current script bundle
      * (in C terms, the file containing `main()`). When a script is spread across multiple code
-     * notes (descendant code notes loaded as modules via `api.require()`), every note in the
+     * notes (descendant code notes loaded as modules via `require()`), every note in the
      * bundle shares the same `startNote`, while {@link currentNote} differs per note.
      * Messages from `api.log()` are grouped under this note.
      *
@@ -75,7 +75,7 @@ export interface Api {
     /**
      * Note containing the source code that is currently executing (in C terms, `__FILE__`).
      * Equal to {@link startNote} unless execution has moved into a descendant module note
-     * loaded via `api.require()`. Don't confuse this with the concept of the active note in
+     * loaded via `require()`. Don't confuse this with the concept of the active note in
      * the UI.
      */
     currentNote: BNote;
@@ -90,7 +90,8 @@ export interface Api {
      * - `~runOnChildNoteCreation` — the newly created child note;
      * - `~runOnAttributeCreation`, `~runOnAttributeChange` — the attribute;
      * - `~runOnBranchCreation`, `~runOnBranchChange`, `~runOnBranchDeletion` — the branch;
-     * - scheduled scripts (`#run=hourly` / `#run=daily`) — the script note itself;
+     * - scheduled scripts (`#run=backendStartup` / `#run=hourly` / `#run=daily`) — the
+     *   script note itself;
      * - search scripts (`~searchScript`) — the search note.
      */
     originEntity?: AbstractBeccaEntity<any> | null;
