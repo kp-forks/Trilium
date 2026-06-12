@@ -1,0 +1,46 @@
+/*
+ * Collapse/expand arrows for nested list items (CollapsibleListItems plugin).
+ *
+ * The `tn-list-collapsed` class is applied on the editing view only — the collapsed state is
+ * never persisted into the note content, which is why everything is scoped to
+ * `.ck-editor__editable` and does not affect read-only or shared note rendering.
+ */
+
+.ck-content.ck-editor__editable li {
+    position: relative;
+}
+
+/* The arrow, rendered in the gutter left of items that have nested items. Kept clickable even
+ * while transparent; the plugin detects clicks on it by their position outside the <li> box. */
+.ck-content.ck-editor__editable li:has(> ul, > ol)::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: -2.1em;
+    top: 0.45em;
+    width: 0.4em;
+    height: 0.4em;
+    border-inline-end: 2px solid var(--ck-color-base-text, currentColor);
+    border-bottom: 2px solid var(--ck-color-base-text, currentColor);
+    transform: rotate(45deg); /* chevron pointing down: expanded */
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 150ms ease, transform 150ms ease;
+}
+
+.ck-content.ck-editor__editable li:hover::before {
+    opacity: 0.4;
+}
+
+.ck-content.ck-editor__editable li.tn-list-collapsed::before {
+    transform: rotate(-45deg); /* chevron pointing at the text: collapsed */
+    opacity: 0.7;
+}
+
+.ck-content.ck-editor__editable li.tn-list-collapsed:dir(rtl)::before {
+    transform: rotate(135deg);
+}
+
+.ck-content.ck-editor__editable li.tn-list-collapsed > ul,
+.ck-content.ck-editor__editable li.tn-list-collapsed > ol {
+    display: none;
+}
