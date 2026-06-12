@@ -207,6 +207,10 @@ export default class SpacedUpdate<T = void> {
         const restoreOnError = (e: unknown): never => {
             this.changed = true;
             this.onStateChanged("error");
+            // The debounce timer may have already fired and gone idle while the snapshot was
+            // being captured; re-arm it so the restored change is retried instead of being
+            // stranded until the next scheduleUpdate() call.
+            this.armDebounceTimer();
             throw e;
         };
 
@@ -285,7 +289,6 @@ export default class SpacedUpdate<T = void> {
 
                 try {
                     await entry.commit(entry.data);
-                    this.retryCount = 0;
 
                     // Delete only if the entry was not superseded by a newer snapshot during the await.
                     if (this.pendingCommits.get(key) === entry) {
@@ -307,6 +310,9 @@ export default class SpacedUpdate<T = void> {
             }
         }
 
+        // Reset the retry backoff only once everything has landed; resetting it on individual
+        // successes would shorten the backoff of a still-failing sibling key.
+        this.retryCount = 0;
         this.onStateChanged(this.changed ? "unsaved" : "saved");
     }
 
