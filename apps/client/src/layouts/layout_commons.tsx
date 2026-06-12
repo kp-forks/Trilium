@@ -4,15 +4,7 @@ import { useContext, useEffect, useState } from "preact/hooks";
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
-import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
-import IncorrectCpuArchDialog from "../widgets/dialogs/incorrect_cpu_arch.js";
-import OcrTextDialog from "../widgets/dialogs/ocr_text.js";
-import OptionsDialog from "../widgets/dialogs/OptionsDialog.jsx";
 import PopupEditorDialog from "../widgets/dialogs/PopupEditor.jsx";
-import PrintPreviewDialog from "../widgets/dialogs/print_preview.jsx";
-import ProtectedSessionPasswordDialog from "../widgets/dialogs/protected_session_password.js";
-import RevisionsDialog from "../widgets/dialogs/revisions.js";
-import UploadAttachmentsDialog from "../widgets/dialogs/upload_attachments.js";
 import { useTriliumEvents } from "../widgets/react/hooks.jsx";
 import { ParentComponent } from "../widgets/react/react_utils.jsx";
 import ToastContainer from "../widgets/Toast.jsx";
@@ -35,19 +27,23 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<LazyDialog triggerEvents={["showImportDialog"]} loader={() => import("../widgets/dialogs/import.js")} />)
         .child(<LazyDialog triggerEvents={["showExportDialog"]} loader={() => import("../widgets/dialogs/export.js")} />)
         .child(<LazyDialog triggerEvents={["showPasteMarkdownDialog"]} loader={() => import("../widgets/dialogs/markdown_import.js")} />)
-        .child(<ProtectedSessionPasswordDialog />)
-        .child(<RevisionsDialog />)
-        .child(<DeleteNotesDialog />)
-        .child(<PrintPreviewDialog />)
+        .child(<LazyDialog triggerEvents={["showProtectedSessionPasswordDialog"]} loader={() => import("../widgets/dialogs/protected_session_password.js")} />)
+        .child(<LazyDialog triggerEvents={["showRevisions"]} loader={() => import("../widgets/dialogs/revisions.js")} />)
+        .child(<LazyDialog triggerEvents={["showDeleteNotesDialog"]} loader={() => import("../widgets/dialogs/delete_notes.js")} />)
+        .child(<LazyDialog triggerEvents={["showPrintPreview"]} loader={() => import("../widgets/dialogs/print_preview.jsx")} />)
         .child(<LazyDialog triggerEvents={["showInfoDialog"]} loader={() => import("../widgets/dialogs/info.js")} />)
         .child(<LazyDialog triggerEvents={["showConfirmDialog", "showConfirmDeleteNoteBoxWithNoteDialog"]} loader={() => import("../widgets/dialogs/confirm.js")} />)
         .child(<LazyDialog triggerEvents={["showPromptDialog"]} loader={() => import("../widgets/dialogs/prompt.js")} />)
-        .child(<IncorrectCpuArchDialog />)
+        .child(<LazyDialog triggerEvents={["showCpuArchWarning"]} loader={() => import("../widgets/dialogs/incorrect_cpu_arch.js")} />)
+        .child(<LazyDialog triggerEvents={["showOptions"]} loader={() => import("../widgets/dialogs/OptionsDialog.jsx")} />)
+        .child(<LazyDialog triggerEvents={["showOcrTextDialog"]} loader={() => import("../widgets/dialogs/ocr_text.js")} />)
+        .child(<LazyDialog triggerEvents={["showUploadAttachmentsDialog"]} loader={() => import("../widgets/dialogs/upload_attachments.js")} />)
+        // The following three are deliberately eager (not wrapped in LazyDialog):
+        //  - PopupEditor keeps itself in the DOM (`keepInDom`) for fast hover-preview latency, so deferring its module would defeat the purpose.
+        //  - CallToAction has no summon event; it decides whether to show itself on startup, so there is nothing to lazily mount against.
+        //  - Toast is needed immediately and continuously to surface messages/errors, including ones raised during startup.
         .child(<PopupEditorDialog />)
-        .child(<OptionsDialog />)
         .child(<CallToActionDialog />)
-        .child(<OcrTextDialog />)
-        .child(<UploadAttachmentsDialog />)
         .child(<ToastContainer />);
 }
 
