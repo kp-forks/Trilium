@@ -459,6 +459,26 @@ describe("app event handlers", () => {
             expect(h.createMainWindow).not.toHaveBeenCalled();
         });
 
+        it("rejects the express-app promise but still creates the window when the server fails to start", async () => {
+            h.isDbInitialized = true;
+            h.startServer = () => Promise.reject(new Error("server exploded"));
+            const { main } = await importMain();
+            const mainPromise = main();
+
+            const ready = h.appOn.get("ready");
+            expect(ready).toBeDefined();
+            await ready?.();
+            expect(h.createMainWindow).toHaveBeenCalledTimes(1);
+
+            // main() itself fails, and the promise handed to the protocol
+            // handler rejects so pending renderer requests fail instead of hanging.
+            // (lastCall: the protocol mock's call history survives vi.resetModules.)
+            await expect(mainPromise).rejects.toThrow("server exploded");
+            const { setupTriliumAppProtocol } = await import("./protocol.js");
+            const appPromise = vi.mocked(setupTriliumAppProtocol).mock.lastCall?.[0];
+            await expect(appPromise).rejects.toThrow("server exploded");
+        });
+
         it("creates the main window while the server is still starting", async () => {
             h.isDbInitialized = true;
             // The server never finishes starting; the window is gated on core

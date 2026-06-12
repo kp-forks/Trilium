@@ -222,11 +222,21 @@ export async function main() {
     markStartupMetric("core-initialized");
     coreInitializedPromise.resolve();
 
-    const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
-    const expressApp = await startTriliumServer();
-    markStartupMetric("server-started");
+    try {
+        const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
+        const expressApp = await startTriliumServer();
+        markStartupMetric("server-started");
 
-    expressAppPromise.resolve(expressApp);
+        expressAppPromise.resolve(expressApp);
+    } catch (err) {
+        // The window may already be up and loading trilium-app:// — fail its
+        // requests with a 500 instead of leaving them awaiting a server that
+        // will never come up. The no-op catch marks the deferred itself as
+        // handled (each protocol request awaits it separately).
+        expressAppPromise.reject(err instanceof Error ? err : new Error(String(err)));
+        expressAppPromise.catch(() => {});
+        throw err;
+    }
 }
 
 /**

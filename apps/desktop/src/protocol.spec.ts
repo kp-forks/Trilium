@@ -254,6 +254,23 @@ describe("trilium-app protocol dispatcher", () => {
         expect(await response.json()).toEqual({ echo: { hello: "world" } });
     });
 
+    it("returns a 500 when the promised Express app rejects (server failed to start)", async () => {
+        electronMock.handle.mockReset();
+        let rejectApp: (err: Error) => void = () => {};
+        setupTriliumAppProtocol(new Promise((_res, rej) => { rejectApp = rej; }));
+        await Promise.resolve(); // let whenReady().then(...) run
+
+        const handler = electronMock.handle.mock.calls[0][1] as (req: Request) => Promise<Response>;
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const responsePromise = handler(new Request("trilium-app://app/anything"));
+        rejectApp(new Error("server never started"));
+        const response = await responsePromise;
+        errorSpy.mockRestore();
+
+        expect(response.status).toBe(500);
+        expect(await response.text()).toBe("Internal Server Error");
+    });
+
     it("rejects when Express forwards an unhandled error to next()", async () => {
         const app = express();
         app.get("/boom", (_req, _res, next) => next(new Error("downstream failure")));
