@@ -46,6 +46,7 @@ class FakeWebContents {
         this.listeners.set(event, list);
         return this;
     });
+    public once = vi.fn((event: string, cb: Handler) => this.on(event, cb));
     public listeners = new Map<string, Handler[]>();
     public toggleDevTools = vi.fn();
     public isDevToolsOpened = vi.fn(() => false);
@@ -89,6 +90,7 @@ class FakeBrowserWindow {
         this.listeners.set(event, list);
         return this;
     });
+    public once = vi.fn((event: string, cb: Handler) => this.on(event, cb));
     public setMenuBarVisibility = vi.fn();
     public removeMenu = vi.fn();
     public loadURL = vi.fn(() => Promise.resolve());
@@ -187,6 +189,10 @@ vi.mock("electron-window-state", () => ({
 // windowing tests focused and free of the extra electron app/session surface.
 vi.mock("./web_contents_security", () => ({ setupWebContentsSecurity: vi.fn() }));
 
+// Startup timing has its own suite (startup_metrics.spec.ts); here we only
+// verify that window creation marks the right milestones.
+vi.mock("./startup_metrics", () => ({ markStartupMetric: vi.fn() }));
+
 vi.mock("@triliumnext/core", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@triliumnext/core")>();
     return {
@@ -217,6 +223,7 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
 
 const windowService = (await import("./window.js")).default;
 const { setupWindowing } = await import("./window.js");
+const { markStartupMetric } = await import("./startup_metrics.js");
 
 function fireOn(channel: string, event: unknown, ...args: unknown[]) {
     const fn = state.ipcOn.get(channel);
@@ -326,6 +333,19 @@ describe("window service", () => {
             await windowService.createMainWindow();
             const opts = state.windows[state.windows.length - 1].opts as Record<string, unknown>;
             expect(opts.frame).toBeUndefined();
+        });
+
+        it("marks startup metrics for creation, first paint, and load finish", async () => {
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            expect(markStartupMetric).toHaveBeenCalledWith("main-window-created");
+
+            win.fire("ready-to-show");
+            expect(markStartupMetric).toHaveBeenCalledWith("main-window-first-paint");
+
+            win.webContents.fire("did-finish-load");
+            expect(markStartupMetric).toHaveBeenCalledWith("main-window-load-finished");
         });
     });
 

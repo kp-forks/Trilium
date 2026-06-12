@@ -1,4 +1,4 @@
-import type { ElectronApi, ElectronContextMenuParams } from "@triliumnext/commons";
+import type { ElectronApi, ElectronContextMenuParams, RendererStartupMetric } from "@triliumnext/commons";
 import { contextBridge, ipcRenderer, webFrame } from "electron";
 
 contextBridge.exposeInMainWorld("electronApi", {
@@ -85,6 +85,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         showWindow() {
             ipcRenderer.send("show-window");
+        },
+        reportStartupMetric(metric: RendererStartupMetric) {
+            ipcRenderer.send("report-startup-metric", metric);
         },
 
         // Background effects
