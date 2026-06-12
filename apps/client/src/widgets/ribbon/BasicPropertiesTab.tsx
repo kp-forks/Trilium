@@ -22,7 +22,7 @@ import FormToggle from "../react/FormToggle";
 import HelpButton from "../react/HelpButton";
 import { useNoteLabel, useNoteLabelBoolean, useNoteProperty, useTriliumEvent, useTriliumOption } from "../react/hooks";
 import Modal from "../react/Modal";
-import { CodeMimeTypesList } from "../type_widgets/options/code_notes";
+import { CodeMimeTypesList } from "../type_widgets/options/code_mime_types_list";
 import { LocaleSelector } from "../type_widgets/options/components/LocaleSelector";
 import { ContentLanguagesList } from "../type_widgets/options/i18n";
 import { TabContext } from "./ribbon-interface";
