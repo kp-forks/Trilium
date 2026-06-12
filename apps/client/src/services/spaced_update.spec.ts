@@ -353,6 +353,67 @@ describe("SpacedUpdate", () => {
             expect(commits).toEqual([{ key: "A", data: "typed into A" }]);
         });
 
+        it("schedules a retry when an asynchronous snapshot rejects, so the change is not stranded", async () => {
+            let rejectPrepare: (e: Error) => void = () => {};
+            const commits: { key: string; data: string }[] = [];
+            const spacedUpdate = new SpacedUpdate<string>({
+                key: "A",
+                prepare: () => new Promise<string>((_, reject) => {
+                    rejectPrepare = reject;
+                }),
+                commit: async (data) => {
+                    commits.push({ key: "A", data });
+                }
+            }, 50);
+
+            spacedUpdate.scheduleUpdate();
+            spacedUpdate.rebind("B", () => "B content", async (data) => {
+                commits.push({ key: "B", data });
+            });
+
+            // The debounce timer fires while the snapshot is still being captured and goes idle.
+            await vi.advanceTimersByTimeAsync(60);
+            expect(commits).toEqual([]);
+
+            // The capture fails: the restored change must be retried (under the current
+            // binding), not stranded until the next keystroke.
+            rejectPrepare(new Error("editor crashed"));
+            await vi.advanceTimersByTimeAsync(100);
+
+            expect(commits).toEqual([{ key: "B", data: "B content" }]);
+        });
+
+        it("keeps growing the retry backoff while a commit keeps failing, even if a sibling key succeeds", async () => {
+            const failingAttempts: number[] = [];
+            const spacedUpdate = new SpacedUpdate<string>({
+                key: "A",
+                prepare: () => "A content",
+                commit: async () => {
+                    failingAttempts.push(Date.now());
+                    throw new Error("offline");
+                }
+            }, 50);
+
+            // First attempt fails at ~50ms and schedules a retry.
+            spacedUpdate.scheduleUpdate();
+            await vi.advanceTimersByTimeAsync(60);
+            expect(failingAttempts).toHaveLength(1);
+
+            // A change for another note succeeds within the same retry pass.
+            spacedUpdate.rebind("B", () => "B content", async () => {});
+            spacedUpdate.scheduleUpdate();
+
+            await vi.advanceTimersByTimeAsync(1000);
+
+            // The sibling success must not reset the failing key's backoff: the gaps
+            // between consecutive failing attempts keep doubling.
+            expect(failingAttempts.length).toBeGreaterThanOrEqual(3);
+            const gaps = failingAttempts.slice(1).map((t, i) => t - failingAttempts[i]);
+            for (let i = 1; i < gaps.length; i++) {
+                expect(gaps[i]).toBeGreaterThan(gaps[i - 1]);
+            }
+        });
+
         it("supports an asynchronous prepare", async () => {
             const commits: string[] = [];
             const spacedUpdate = new SpacedUpdate<string>({
