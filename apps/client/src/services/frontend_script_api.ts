@@ -68,21 +68,31 @@ export interface Api {
     $container: JQuery<HTMLElement> | null;
 
     /**
-     * Note where the script started executing, i.e., the (event) entrypoint of the current script execution.
+     * Note where the script execution started — the entry point of the current script bundle
+     * (in C terms, the file containing `main()`). When a script is spread across multiple code
+     * notes (descendant code notes loaded as modules via `require()`), every note in the
+     * bundle shares the same `startNote`, while {@link currentNote} differs per note.
+     * Messages from `api.log()` are grouped under this note.
      */
     startNote: FNote;
 
     /**
-     * Note where the script is currently executing, i.e. the note where the currently executing source code is written.
+     * Note containing the source code that is currently executing (in C terms, `__FILE__`).
+     * Equal to {@link startNote} unless execution has moved into a descendant module note
+     * loaded via `require()`. Don't confuse this with the note open in the UI — use
+     * `api.getActiveContextNote()` for that.
      */
     currentNote: FNote;
 
     /**
-     * Entity whose event triggered this execution.
+     * Entity whose event triggered this execution, or `null`.
      *
-     * <p>
-     * For front-end scripts, generally there's no origin entity specified since the scripts are run by the user or automatically by the UI (widgets).
-     * If there is an origin entity specified, then it's going to be a note entity.
+     * Most frontend scripts are started by the user or by the UI (startup scripts, widgets),
+     * so this is usually `null`. It is set to a note when:
+     * - the script runs through a `~renderNote` relation — then it's the note being rendered
+     *   (the one carrying the relation), not the script note;
+     * - a backend script calls `api.runOnFrontend()` — then it's the backend execution's
+     *   `originEntity`, provided that entity was a note.
      */
     originEntity: unknown | null;
 

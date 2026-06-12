@@ -37,6 +37,7 @@ JSX rules (load the `frontend_scripting` skill for the full API):
 - Use top-level ES `import` only; hooks come from `"trilium:preact"`, API methods from `"trilium:api"`.
 - NEVER use `React`, `require()`, or `await import()` — Trilium uses Preact and JSX notes are ES modules.
 - Export the component as `export default`.
+- To reference the widget's own note (e.g. to read its attributes or store data under it), use `originEntity` from `"trilium:api"` — it is the render note hosting the component. Do NOT use `getActiveContextNote()`: on a dashboard the active note is the dashboard itself, not the widget.
 
 Example — a widget showing the number of notes created in the last 7 days:
 
@@ -78,5 +79,6 @@ export default function RecentNotesWidget() {
 - ❌ Calling `set_attribute` with `~renderNote` — it will be rejected as dangerous. Ask the user to add the relation instead.
 - ❌ Directing the user to set `~renderNote` on the dashboard note itself — it belongs on the `render`-type child.
 - ❌ Trying to write the `dashboard.json` attachment (or any view configuration) to lay out widgets — attachments cannot be modified by tools, and the dashboard picks up new widgets automatically; rely on auto-placement.
+- ❌ Using `getActiveContextNote()` inside a widget's JSX to get "this widget's note" — when the dashboard is open, the active note is the dashboard, not the widget. Use `originEntity` (the render note) instead.
 - ❌ Setting `#viewType=dashboard` on a `text` note — the view type only applies to `book` (and search) notes.
 - ❌ Prepending an emoji to a widget title to decorate it — find an icon with `search_icons` and set the `iconClass` label instead.
