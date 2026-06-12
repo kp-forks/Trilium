@@ -39,7 +39,9 @@
         "web_clipper_content": "Web sayfalarını (veya ekran görüntülerini) alın ve Web Clipper tarayıcı uzantısını kullanarak bunları doğrudan Trilium'a ekleyin."
     },
     "faq": {
-        "database_answer": "Tüm notlarınız, uygulama klasöründeki bir SQLite veritabanında saklanacaktır. Trilium'un düz metin dosyaları yerine bir veritabanı kullanmasının nedeni, hem performans hem de klonlar (ağaç yapısında aynı notun birden fazla yerde bulunması) gibi bazı özelliklerin uygulanmasının çok daha zor olmasıdır. Uygulama klasörünü bulmak için “Hakkında” penceresine gidin."
+        "database_answer": "Tüm notlarınız, uygulama klasöründeki bir SQLite veritabanında saklanacaktır. Trilium'un düz metin dosyaları yerine bir veritabanı kullanmasının nedeni, hem performans hem de klonlar (ağaç yapısında aynı notun birden fazla yerde bulunması) gibi bazı özelliklerin uygulanmasının çok daha zor olmasıdır. Uygulama klasörünü bulmak için “Hakkında” penceresine gidin.",
+        "server_question": "Trilium'u kullanmak için bir sunucuya ihtiyacım var mı?",
+        "server_answer": "Hayır; sunucu, web tarayıcısı üzerinden erişime izin verir ve birden fazla cihazınız varsa senkronizasyonu yönetir. Başlamak için masaüstü uygulamasını indirip kullanmanız yeterlidir."
     },
     "note_types": {
         "title": "Bilgilerinizi sunmanın çeşitli yolları",
@@ -69,5 +71,9 @@
     "collections": {
         "title": "Koleksiyonlar",
         "calendar_title": "Takvim"
+    },
+    "header": {
+        "documentation": "Dokümantasyon",
+        "support-us": "Destekle"
     }
 }
