@@ -1,6 +1,6 @@
 import "./content_renderer.css";
 
-import { normalizeMimeTypeForCKEditor, renderToHtml, type TextRepresentationResponse } from "@triliumnext/commons";
+import { normalizeMimeTypeForCKEditor, type TextRepresentationResponse } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
 import { h, render } from "preact";
 
@@ -136,6 +136,8 @@ async function renderMarkdown(note: FNote | FAttachment, $renderedContent: JQuer
         return;
     }
 
+    // The markdown renderer pulls in marked, so it is only loaded when a markdown note is rendered.
+    const { renderToHtml } = await import("@triliumnext/commons/src/lib/markdown_renderer");
     const html = renderToHtml(source, note.title, {
         sanitize: (dirty) => DOMPurify.sanitize(dirty),
         wikiLink: { formatHref: (id) => `#root/${id}` }

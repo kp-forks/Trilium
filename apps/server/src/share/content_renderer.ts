@@ -1,4 +1,5 @@
-import { extractYouTubeVideoId, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
+import { extractYouTubeVideoId } from "@triliumnext/commons";
+import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
 import { type BAttachment, type BBranch, becca, BNote, getLog, icon_packs as iconPackService, options, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";

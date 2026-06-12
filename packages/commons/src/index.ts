@@ -23,5 +23,7 @@ export * from "./lib/electron_api_interface.js";
 export * from "./lib/link_embed.js";
 export * from "./lib/llm_api.js";
 export * from "./lib/marked_extensions.js";
-export * from "./lib/markdown_renderer.js";
+// The markdown renderer is deliberately not re-exported here: it pulls in marked, and the barrel
+// is imported by virtually every client module. Import it via its subpath instead,
+// e.g. "@triliumnext/commons/src/lib/markdown_renderer".
 export * from "./lib/task_states.js";
