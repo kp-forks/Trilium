@@ -44,11 +44,10 @@ export function useTriliumEvents<T extends EventNames>(eventNames: T[], handler:
     const parentComponent = useContext(ParentComponent);
 
     useLayoutEffect(() => {
-        const handlers: ({ eventName: T, callback: (data: EventData<T>) => void })[] = [];
+        const handlers: ({ eventName: T, callback: (data: EventData<T>) => unknown })[] = [];
         for (const eventName of eventNames) {
-            handlers.push({ eventName, callback: (data) => {
-                handler(data, eventName);
-            }});
+            // Return the handler's result so async handlers stay awaitable through triggerEvent().
+            handlers.push({ eventName, callback: (data) => handler(data, eventName) });
         }
 
         for (const { eventName, callback } of handlers) {
