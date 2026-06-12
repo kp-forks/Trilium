@@ -353,7 +353,7 @@ describe("SpacedUpdate", () => {
             expect(commits).toEqual([{ key: "A", data: "typed into A" }]);
         });
 
-        it("re-arms the debounce timer when an asynchronous snapshot rejects, so the change is not stranded", async () => {
+        it("schedules a retry when an asynchronous snapshot rejects, so the change is not stranded", async () => {
             let rejectPrepare: (e: Error) => void = () => {};
             const commits: { key: string; data: string }[] = [];
             const spacedUpdate = new SpacedUpdate<string>({

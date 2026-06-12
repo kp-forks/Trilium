@@ -208,9 +208,10 @@ export default class SpacedUpdate<T = void> {
             this.changed = true;
             this.onStateChanged("error");
             // The debounce timer may have already fired and gone idle while the snapshot was
-            // being captured; re-arm it so the restored change is retried instead of being
-            // stranded until the next scheduleUpdate() call.
-            this.armDebounceTimer();
+            // being captured; schedule a retry so the restored change is not stranded until
+            // the next scheduleUpdate() call. Going through the retry timer (rather than the
+            // debounce timer) gives persistent prepare() failures exponential backoff.
+            this.scheduleRetry();
             throw e;
         };
 
