@@ -7,7 +7,7 @@ import { randomString } from "../../services/utils";
 import { useActiveNoteContext, useContentElement, useIsNoteReadOnly, useMathRendering, useNoteProperty, useTextEditor, useTriliumOptionJson } from "../react/hooks";
 import Modal from "../react/Modal";
 import RawHtml from "../react/RawHtml";
-import { HighlightsListOptions } from "../type_widgets/options/text_notes";
+import { HighlightsListOptions } from "../type_widgets/options/highlights_list_options";
 import RightPanelWidget from "./RightPanelWidget";
 
 interface RawHighlight {
