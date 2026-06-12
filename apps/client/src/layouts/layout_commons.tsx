@@ -4,7 +4,6 @@ import { useContext, useEffect, useState } from "preact/hooks";
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
-import CloneToDialog from "../widgets/dialogs/clone_to.js";
 import ConfirmDialog from "../widgets/dialogs/confirm.js";
 import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
 import ExportDialog from "../widgets/dialogs/export.js";
@@ -16,7 +15,6 @@ import InfoDialog from "../widgets/dialogs/info.js";
 import JumpToNoteDialog from "../widgets/dialogs/jump_to_note.js";
 import LinkEmbedDialog from "../widgets/dialogs/link_embed.js";
 import MarkdownImportDialog from "../widgets/dialogs/markdown_import.js";
-import MoveToDialog from "../widgets/dialogs/move_to.js";
 import NoteTypeChooserDialog from "../widgets/dialogs/note_type_chooser.js";
 import OcrTextDialog from "../widgets/dialogs/ocr_text.js";
 import OptionsDialog from "../widgets/dialogs/OptionsDialog.jsx";
@@ -45,8 +43,8 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<NoteTypeChooserDialog />)
         .child(<JumpToNoteDialog />)
         .child(<LazyDialog triggerEvents={["showAddLinkDialog"]} loader={() => import("../widgets/dialogs/add_link.js")} />)
-        .child(<CloneToDialog />)
-        .child(<MoveToDialog />)
+        .child(<LazyDialog triggerEvents={["cloneNoteIdsTo"]} loader={() => import("../widgets/dialogs/clone_to.js")} />)
+        .child(<LazyDialog triggerEvents={["moveBranchIdsTo"]} loader={() => import("../widgets/dialogs/move_to.js")} />)
         .child(<ImportDialog />)
         .child(<ExportDialog />)
         .child(<MarkdownImportDialog />)
