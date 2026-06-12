@@ -25,6 +25,11 @@ Note that most `api.*` methods (e.g. `api.getNote`, `api.searchForNotes`, `api.c
 
 ## Script API (`api` global)
 
+### Script context
+- `api.startNote` - note where the script execution started (the entry point of the script bundle; in C terms, the file with `main()`). All module notes loaded via `require()` share the same `startNote`. May be null when the execution came from the frontend via `runOnBackend()` (the frontend's `startNote` is preserved). `api.log()` messages are grouped under this note.
+- `api.currentNote` - note containing the source code currently executing (in C terms, `__FILE__`). Equal to `startNote` except inside child module notes loaded via `require()`. NOT the note open in the UI.
+- `api.originEntity` - entity whose event triggered this execution; `undefined` when the run was not event-driven (manual Execute button, `note.executeScript()`). For `~runOn*` relations see the table under "Events and triggers"; for scheduled scripts (`#run=hourly`/`#run=daily`) it is the script note itself; for `~searchScript` scripts it is the search note.
+
 ### Note retrieval
 - `api.getNote(noteId)` - get note by ID
 - `api.searchForNotes(query, searchParams)` - search notes (returns array)

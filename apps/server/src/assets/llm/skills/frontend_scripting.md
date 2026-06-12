@@ -132,6 +132,13 @@ For rendering custom content inside a note:
 
 IMPORTANT: Always create the JSX code note as a child of the render note, not as a sibling or at the root. This keeps them organized together.
 
+IMPORTANT: To reference "this widget's note" from inside a render note component, use `originEntity` — for render notes it is the note being rendered (the one carrying the `~renderNote` relation). Do NOT use `getActiveContextNote()` for this: it returns the note the user currently has open in the UI, which is the render note's *host* (e.g. a dashboard or a book view), not the render note itself.
+
+```jsx
+import { originEntity } from "trilium:api";
+// originEntity = the render note hosting this component
+```
+
 Stateless example:
 
 ```jsx
@@ -186,6 +193,11 @@ import { showMessage } from "trilium:api";
 ## Script API
 
 In JSX, use `import { method } from "trilium:api"`. In JavaScript (Trilium frontend), use the `api` global.
+
+### Script context
+- `startNote` - note where the script execution started (the entry point of the script bundle). All module notes loaded by the same execution share one `startNote`; `log()` messages are grouped under it.
+- `currentNote` - note containing the source code currently executing. Equal to `startNote` except inside child module notes. NOT the note open in the UI — that is `getActiveContextNote()`.
+- `originEntity` - note whose event triggered this execution, or `null`. Usually `null` (scripts started by the user or the UI). It is set for render notes — the note being rendered, i.e. the one carrying the `~renderNote` relation — and for `api.runOnFrontend()` calls from the backend (the backend's `originEntity`, if it was a note).
 
 ### Navigation & tabs
 - `activateNote(notePath)` - navigate to a note
