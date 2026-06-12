@@ -63,7 +63,9 @@ export function CodeMimeTypesList() {
             result[initial].push(mimeType);
         }
         return result;
-    }, [ codeNotesMimeTypes ]);
+        // The available mime types are static; the memo does not read the user's selection
+        // (`codeNotesMimeTypes`), so it must not re-group on every checkbox toggle.
+    }, []);
 
     return (
         <ul class="options-mime-types" ref={containerRef}>

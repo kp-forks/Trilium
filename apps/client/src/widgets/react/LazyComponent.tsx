@@ -30,7 +30,10 @@ export default function LazyComponent({ loader }: LazyComponentProps) {
         return () => {
             cancelled = true;
         };
-    }, [ loader ]);
+        // Loads once on mount; the loader is typically an inline arrow that changes identity each
+        // render, so depending on it would re-run the import on every render.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     return (
         <div className="lazy-component">

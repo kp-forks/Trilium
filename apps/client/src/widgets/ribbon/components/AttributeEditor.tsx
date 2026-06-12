@@ -113,7 +113,16 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
     // of the startup module graph.
     const [ editorClass, setEditorClass ] = useState<typeof CKEditorAttributeEditor>();
     useEffect(() => {
-        void import("@triliumnext/ckeditor5").then((ckeditor) => setEditorClass(() => ckeditor.AttributeEditor));
+        let active = true;
+        void import("@triliumnext/ckeditor5").then((ckeditor) => {
+            // Avoid a state update if the editor unmounted before the bundle finished loading.
+            if (active) {
+                setEditorClass(() => ckeditor.AttributeEditor);
+            }
+        });
+        return () => {
+            active = false;
+        };
     }, []);
 
     // Stable config so `useTooltip`'s effect doesn't dispose/recreate the tooltip

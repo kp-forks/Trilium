@@ -20,8 +20,17 @@ export default function StandaloneRibbonAdapter({ component, show }: StandaloneR
     const [ shown, setShown ] = useState<boolean | null | undefined>(false);
 
     useEffect(() => {
-        void shouldShowTab(show, { note, noteContext }).then(setShown);
-    }, [ note ]);
+        let active = true;
+        void shouldShowTab(show, { note, noteContext }).then((result) => {
+            // Ignore a stale resolution if the note changed while the predicate was pending.
+            if (active) {
+                setShown(result);
+            }
+        });
+        return () => {
+            active = false;
+        };
+    }, [ note, noteContext, show ]);
 
     return (
         <Component

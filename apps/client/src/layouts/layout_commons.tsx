@@ -1,5 +1,5 @@
 import { ComponentType } from "preact";
-import { useContext, useEffect, useState } from "preact/hooks";
+import { useContext, useEffect, useRef, useState } from "preact/hooks";
 
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
@@ -72,10 +72,14 @@ function LazyDialog({ loader, triggerEvents }: LazyDialogProps) {
     const parentComponent = useContext(ParentComponent);
     const [ Component, setComponent ] = useState<ComponentType>();
     const [ pendingEvent, setPendingEvent ] = useState<{ name: EventNames, data: unknown }>();
+    // Guards against a second summons that arrives before the import resolves (the `Component`
+    // state is still undefined then, so it cannot be used to short-circuit the load).
+    const loadStarted = useRef(false);
 
     useTriliumEvents(triggerEvents, async (data, name) => {
-        // Once mounted, the dialog receives events directly through the shared host component.
-        if (Component) return;
+        // Once loaded, the dialog receives events directly through the shared host component.
+        if (loadStarted.current) return;
+        loadStarted.current = true;
         const module = await loader();
         setComponent(() => module.default);
         setPendingEvent({ name, data });
