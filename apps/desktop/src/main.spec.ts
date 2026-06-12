@@ -14,7 +14,7 @@ interface SecuritySettings {
     sqlConsoleEnabled?: boolean;
 }
 
-// A tiny real deferred so serverInitializedPromise behaves like the real thing.
+// A tiny real deferred so the core/server init promises behave like the real thing.
 function makeDeferred<T>() {
     let resolve!: (value: T | PromiseLike<T>) => void;
     let reject!: (reason?: unknown) => void;
@@ -63,7 +63,9 @@ const h = vi.hoisted(() => ({
     createSetupWindow: vi.fn((..._a: unknown[]) => Promise.resolve()),
     createExtraWindow: vi.fn((..._a: unknown[]) => {}),
     registerGlobalShortcuts: vi.fn((..._a: unknown[]) => Promise.resolve()),
-    unregisterAll: vi.fn()
+    unregisterAll: vi.fn(),
+    // Controllable server start so tests can simulate a slow/hanging server.
+    startServer: (() => Promise.resolve({})) as () => Promise<unknown>
 }));
 
 vi.mock("electron", () => {
@@ -156,7 +158,7 @@ vi.mock("@triliumnext/server/src/services/config.js", () => ({
 vi.mock("@triliumnext/server/src/services/export/zip/factory.js", () => ({ serverZipExportProviderFactory: vi.fn() }));
 vi.mock("@triliumnext/server/src/services/i18n.js", () => ({ initializeTranslations: vi.fn() }));
 vi.mock("@triliumnext/server/src/services/image_provider.js", () => ({ serverImageProvider: {} }));
-vi.mock("@triliumnext/server/src/www.js", () => ({ default: vi.fn(() => Promise.resolve({})) }));
+vi.mock("@triliumnext/server/src/www.js", () => ({ default: vi.fn(() => h.startServer()) }));
 
 vi.mock("./services/request", () => ({ default: class {} }));
 vi.mock("./services/window", () => ({
@@ -219,6 +221,7 @@ function resetState() {
     h.createExtraWindow.mockClear();
     h.registerGlobalShortcuts.mockClear();
     h.unregisterAll.mockClear();
+    h.startServer = () => Promise.resolve({});
 }
 
 beforeEach(() => {
@@ -443,6 +446,23 @@ describe("app event handlers", () => {
             expect(h.banner).toHaveBeenCalled();
             expect(h.createSetupWindow).toHaveBeenCalled();
             expect(h.createMainWindow).not.toHaveBeenCalled();
+        });
+
+        it("creates the main window while the server is still starting", async () => {
+            h.isDbInitialized = true;
+            // The server never finishes starting; the window is gated on core
+            // initialization only, so it must still be created.
+            h.startServer = () => new Promise(() => {});
+            const { main } = await importMain();
+            void main(); // intentionally not awaited — it only settles once the server starts
+
+            // The ready handler is registered synchronously; awaiting it blocks
+            // only on core initialization, which completes despite the hung server.
+            const ready = h.appOn.get("ready");
+            expect(ready).toBeDefined();
+            await ready?.();
+
+            expect(h.createMainWindow).toHaveBeenCalledTimes(1);
         });
     });
 });

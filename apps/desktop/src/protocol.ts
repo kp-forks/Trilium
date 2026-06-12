@@ -12,8 +12,8 @@ import { isTriliumAppShellUrl, TRILIUM_APP_ORIGIN, TRILIUM_APP_SCHEME } from "./
  * Registers the `trilium-app://` custom scheme as privileged so the renderer
  * can load the UI from `trilium-app://app/` with a proper origin & cookie jar,
  * fetch support, and CORS. The actual request handler is installed by
- * `setupTriliumAppProtocol` below, once the Express app has been built and
- * `app.ready` has fired.
+ * `setupTriliumAppProtocol` below, once `app.ready` has fired (the Express
+ * app may still be building at that point — requests wait for it).
  *
  * **Must be called before `app.ready`.** Electron only honours
  * `registerSchemesAsPrivileged` if it runs synchronously during startup;
@@ -47,8 +47,13 @@ export function registerTriliumAppScheme() {
  * `Readable` for the request and a node-mocks-http response, then dispatch
  * through the Express app so the real session, CSRF, body-parser, multer and
  * error middleware all run.
+ *
+ * Accepts a promise of the Express app so the handler can be installed before
+ * the server has finished building — windows can then be created (and the
+ * renderer can spin up) concurrently with server startup; requests that
+ * arrive early simply wait inside the handler until the app resolves.
  */
-export function setupTriliumAppProtocol(app: Application) {
+export function setupTriliumAppProtocol(app: Application | Promise<Application>) {
     electron.app.whenReady().then(() => {
         installFrameOriginGuard();
         electron.protocol.handle(TRILIUM_APP_SCHEME, async (request) => {
@@ -58,7 +63,7 @@ export function setupTriliumAppProtocol(app: Application) {
                 return new Response("Forbidden", { status: 403 });
             }
             try {
-                return await dispatch(app, request);
+                return await dispatch(await app, request);
             } catch (err) {
                 console.error(`[trilium-app] dispatch failed for ${request.method} ${request.url}:`, err);
                 return new Response("Internal Server Error", { status: 500 });

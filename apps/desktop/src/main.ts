@@ -15,6 +15,7 @@ import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { app, BrowserWindow,globalShortcut } from "electron";
 import electronDebug from "electron-debug";
 import electronDl from "electron-dl";
+import type { Application } from "express";
 import fs from "fs";
 import { t } from "i18next";
 import path, { join, resolve } from "path";
@@ -46,7 +47,17 @@ export async function main() {
     const userDataPath = getUserData();
     app.setPath("userData", userDataPath);
 
-    const serverInitializedPromise = deferred<void>();
+    // Resolved once initializeCore() has finished — the DB is open and options
+    // and translations are readable. That is all window creation needs, so it
+    // (not full server startup) gates onReady(): the renderer spins up
+    // concurrently with the Express app being built.
+    const coreInitializedPromise = deferred<void>();
+
+    // Resolved with the Express app once the server has finished building. The
+    // trilium-app:// protocol handler awaits this per request, so renderer
+    // requests that arrive before the server is up simply wait.
+    const expressAppPromise = deferred<Application>();
+    setupTriliumAppProtocol(expressAppPromise);
 
     // Prevent Trilium starting twice on first install and on uninstall for the Windows installer.
     /* v8 ignore next 3 -- squirrel uses a CJS require() that vi.mock cannot intercept, so the truthy/exit path is un-coverable in unit tests */
@@ -97,7 +108,7 @@ export async function main() {
     });
 
     app.on("ready", async () => {
-        await serverInitializedPromise;
+        await coreInitializedPromise;
         console.log("Starting Electron...");
         await onReady();
     });
@@ -202,14 +213,13 @@ export async function main() {
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)
         }
     });
+    coreInitializedPromise.resolve();
 
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
     const expressApp = await startTriliumServer();
     console.log("Server loaded");
 
-    setupTriliumAppProtocol(expressApp);
-
-    serverInitializedPromise.resolve();
+    expressAppPromise.resolve(expressApp);
 }
 
 /**
