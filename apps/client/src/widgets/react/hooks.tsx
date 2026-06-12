@@ -115,33 +115,61 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
     const parentComponent = useContext(ParentComponent);
     const blob = useNoteBlob(note, parentComponent?.componentId);
 
-    const callback = useMemo(() => {
-        return async () => {
-            const data = await getData();
+    // The note whose content is currently loaded in the editor. Editor instances are reused
+    // across note switches, so until the new note's blob arrives the editor still holds the
+    // previous note's content — content that must never be saved under the new noteId (#9614).
+    const loadedNoteIdRef = useRef<string>();
 
-            // for read only notes, or if note is not yet available (e.g. lazy creation)
-            if (data === undefined || !note || note.type !== noteType) return;
+    const prepare = useCallback(() => {
+        if (!note || loadedNoteIdRef.current !== note.noteId) return undefined;
+        return getData();
+    }, [ note, getData ]);
 
-            protected_session_holder.touchProtectedSessionIfNecessary(note);
+    const commit = useCallback(async (data: SavedData | undefined) => {
+        // for read only notes, or if note is not yet available (e.g. lazy creation)
+        if (data === undefined || !note || note.type !== noteType) return;
 
-            await server.put(`notes/${note.noteId}/data`, data, parentComponent?.componentId);
+        protected_session_holder.touchProtectedSessionIfNecessary(note);
 
-            noteSavedDataStore.set(note.noteId, data.content);
-            dataSaved?.(data);
-        };
-    }, [ note, getData, dataSaved, noteType, parentComponent ]);
+        await server.put(`notes/${note.noteId}/data`, data, parentComponent?.componentId);
+
+        noteSavedDataStore.set(note.noteId, data.content);
+        dataSaved?.(data);
+    }, [ note, dataSaved, noteType, parentComponent ]);
+
     const stateCallback = useCallback<StateCallback>((state) => {
         noteContext?.setContextData("saveState", {
             state
         });
     }, [ noteContext ]);
-    const spacedUpdate = useSpacedUpdate(callback, updateInterval, stateCallback);
+    const stateCallbackRef = useRef(stateCallback);
+    useEffect(() => {
+        stateCallbackRef.current = stateCallback;
+    }, [ stateCallback ]);
+
+    const spacedUpdateRef = useRef<SpacedUpdate<SavedData | undefined>>();
+    if (!spacedUpdateRef.current) {
+        spacedUpdateRef.current = new SpacedUpdate<SavedData | undefined>(
+            { key: note?.noteId ?? null, prepare, commit },
+            updateInterval,
+            (state) => stateCallbackRef.current(state)
+        );
+    }
+    const spacedUpdate = spacedUpdateRef.current;
+
+    // Rebind to the current note on every render. When the note changes while a change is
+    // still pending, rebind() snapshots it with the previous binding first, so it is saved
+    // under the note it was typed into rather than the note the component now displays.
+    useEffect(() => {
+        spacedUpdate.rebind(note?.noteId ?? null, prepare, commit);
+    });
 
     // React to note/blob changes.
     useEffect(() => {
         if (!blob || !note) return;
         noteSavedDataStore.set(note.noteId, blob.content);
         spacedUpdate.allowUpdateWithoutChange(() => onContentChange(blob.content));
+        loadedNoteIdRef.current = note.noteId;
     }, [ blob ]);
 
     // React to update interval changes.
@@ -186,29 +214,55 @@ export function useBlobEditorSpacedUpdate({ note, noteType, noteContext, getData
     const parentComponent = useContext(ParentComponent);
     const blob = useNoteBlob(note, parentComponent?.componentId);
 
-    const callback = useMemo(() => {
-        return async () => {
-            const data = await getData();
+    // Same provenance guard as useEditorSpacedUpdate: never save content under a note it
+    // was not loaded from (#9614).
+    const loadedNoteIdRef = useRef<string>();
 
-            // for read only notes
-            if (data === undefined || note.type !== noteType) return;
+    const prepare = useCallback(() => {
+        if (loadedNoteIdRef.current !== note.noteId) return undefined;
+        return getData();
+    }, [ note, getData ]);
 
-            protected_session_holder.touchProtectedSessionIfNecessary(note);
-            await server.upload(`notes/${note.noteId}/file?replace=${replaceWithoutRevision ? "1" : "0"}`, new File([ data ], note.title, { type: note.mime }), parentComponent?.componentId);
-            dataSaved?.(data);
-        };
-    }, [ note, getData, dataSaved, noteType, parentComponent, replaceWithoutRevision ]);
+    const commit = useCallback(async (data: Blob | undefined) => {
+        // for read only notes
+        if (data === undefined || note.type !== noteType) return;
+
+        protected_session_holder.touchProtectedSessionIfNecessary(note);
+        await server.upload(`notes/${note.noteId}/file?replace=${replaceWithoutRevision ? "1" : "0"}`, new File([ data ], note.title, { type: note.mime }), parentComponent?.componentId);
+        dataSaved?.(data);
+    }, [ note, dataSaved, noteType, parentComponent, replaceWithoutRevision ]);
+
     const stateCallback = useCallback<StateCallback>((state) => {
         noteContext?.setContextData("saveState", {
             state
         });
     }, [ noteContext ]);
-    const spacedUpdate = useSpacedUpdate(callback, updateInterval, stateCallback);
+    const stateCallbackRef = useRef(stateCallback);
+    useEffect(() => {
+        stateCallbackRef.current = stateCallback;
+    }, [ stateCallback ]);
+
+    const spacedUpdateRef = useRef<SpacedUpdate<Blob | undefined>>();
+    if (!spacedUpdateRef.current) {
+        spacedUpdateRef.current = new SpacedUpdate<Blob | undefined>(
+            { key: note.noteId, prepare, commit },
+            updateInterval,
+            (state) => stateCallbackRef.current(state)
+        );
+    }
+    const spacedUpdate = spacedUpdateRef.current;
+
+    // Rebind to the current note on every render; flushes a pending change with the previous
+    // binding when the note changes (see useEditorSpacedUpdate).
+    useEffect(() => {
+        spacedUpdate.rebind(note.noteId, prepare, commit);
+    });
 
     // React to note/blob changes.
     useEffect(() => {
         if (!blob) return;
         spacedUpdate.allowUpdateWithoutChange(() => onContentChange(blob));
+        loadedNoteIdRef.current = note.noteId;
     }, [ blob ]);
 
     // React to update interval changes.

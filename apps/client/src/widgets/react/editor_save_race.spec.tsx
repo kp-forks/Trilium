@@ -26,13 +26,13 @@ import type FNote from "../../entities/fnote";
 import server from "../../services/server";
 import type SpacedUpdate from "../../services/spaced_update";
 import { buildNote } from "../../test/easy-froca";
-import { useEditorSpacedUpdate } from "./hooks";
+import { type SavedData, useEditorSpacedUpdate } from "./hooks";
 import { ParentComponent } from "./react_utils";
 
 vi.stubGlobal("logError", vi.fn());
 vi.stubGlobal("logInfo", vi.fn());
 
-let currentSpacedUpdate: SpacedUpdate | undefined;
+let currentSpacedUpdate: SpacedUpdate<SavedData | undefined> | undefined;
 
 /** Stand-in for EditableText: `editor.content` plays the role of the live CKEditor document. */
 function FakeEditor({ note, noteContext, editor }: {
@@ -52,7 +52,7 @@ function FakeEditor({ note, noteContext, editor }: {
     return null;
 }
 
-function getSpacedUpdate(): SpacedUpdate {
+function getSpacedUpdate(): SpacedUpdate<SavedData | undefined> {
     if (!currentSpacedUpdate) {
         throw new Error("Harness was not rendered yet");
     }
