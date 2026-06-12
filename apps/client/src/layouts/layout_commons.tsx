@@ -7,7 +7,6 @@ import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
 import ConfirmDialog from "../widgets/dialogs/confirm.js";
 import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
 import ExportDialog from "../widgets/dialogs/export.js";
-import HelpDialog from "../widgets/dialogs/help.js";
 import ImportDialog from "../widgets/dialogs/import.js";
 import IncludeNoteDialog from "../widgets/dialogs/include_note.js";
 import IncorrectCpuArchDialog from "../widgets/dialogs/incorrect_cpu_arch.js";
@@ -22,7 +21,6 @@ import PopupEditorDialog from "../widgets/dialogs/PopupEditor.jsx";
 import PrintPreviewDialog from "../widgets/dialogs/print_preview.jsx";
 import PromptDialog from "../widgets/dialogs/prompt.js";
 import ProtectedSessionPasswordDialog from "../widgets/dialogs/protected_session_password.js";
-import RecentChangesDialog from "../widgets/dialogs/recent_changes.js";
 import RevisionsDialog from "../widgets/dialogs/revisions.js";
 import SortChildNotesDialog from "../widgets/dialogs/sort_child_notes.js";
 import UploadAttachmentsDialog from "../widgets/dialogs/upload_attachments.js";
@@ -34,8 +32,8 @@ export function applyModals(rootContainer: RootContainer) {
     rootContainer
         .child(<LazyDialog triggerEvents={["openBulkActionsDialog"]} loader={() => import("../widgets/dialogs/bulk_actions.js")} />)
         .child(<LazyDialog triggerEvents={["openAboutDialog"]} loader={() => import("../widgets/dialogs/about.js")} />)
-        .child(<HelpDialog />)
-        .child(<RecentChangesDialog />)
+        .child(<LazyDialog triggerEvents={["showCheatsheet"]} loader={() => import("../widgets/dialogs/help.js")} />)
+        .child(<LazyDialog triggerEvents={["showRecentChanges"]} loader={() => import("../widgets/dialogs/recent_changes.js")} />)
         .child(<LazyDialog triggerEvents={["editBranchPrefix"]} loader={() => import("../widgets/dialogs/branch_prefix.js")} />)
         .child(<SortChildNotesDialog />)
         .child(<IncludeNoteDialog />)
