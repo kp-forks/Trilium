@@ -3,7 +3,6 @@ import { useContext, useEffect, useState } from "preact/hooks";
 
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
-import AddLinkDialog from "../widgets/dialogs/add_link.js";
 import BranchPrefixDialog from "../widgets/dialogs/branch_prefix.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
 import CloneToDialog from "../widgets/dialogs/clone_to.js";
@@ -46,7 +45,7 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<LinkEmbedDialog />)
         .child(<NoteTypeChooserDialog />)
         .child(<JumpToNoteDialog />)
-        .child(<AddLinkDialog />)
+        .child(<LazyDialog triggerEvents={["showAddLinkDialog"]} loader={() => import("../widgets/dialogs/add_link.js")} />)
         .child(<CloneToDialog />)
         .child(<MoveToDialog />)
         .child(<ImportDialog />)
