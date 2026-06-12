@@ -4,15 +4,12 @@ import { useContext, useEffect, useState } from "preact/hooks";
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
-import ConfirmDialog from "../widgets/dialogs/confirm.js";
 import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
 import IncorrectCpuArchDialog from "../widgets/dialogs/incorrect_cpu_arch.js";
-import InfoDialog from "../widgets/dialogs/info.js";
 import OcrTextDialog from "../widgets/dialogs/ocr_text.js";
 import OptionsDialog from "../widgets/dialogs/OptionsDialog.jsx";
 import PopupEditorDialog from "../widgets/dialogs/PopupEditor.jsx";
 import PrintPreviewDialog from "../widgets/dialogs/print_preview.jsx";
-import PromptDialog from "../widgets/dialogs/prompt.js";
 import ProtectedSessionPasswordDialog from "../widgets/dialogs/protected_session_password.js";
 import RevisionsDialog from "../widgets/dialogs/revisions.js";
 import UploadAttachmentsDialog from "../widgets/dialogs/upload_attachments.js";
@@ -42,9 +39,9 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<RevisionsDialog />)
         .child(<DeleteNotesDialog />)
         .child(<PrintPreviewDialog />)
-        .child(<InfoDialog />)
-        .child(<ConfirmDialog />)
-        .child(<PromptDialog />)
+        .child(<LazyDialog triggerEvents={["showInfoDialog"]} loader={() => import("../widgets/dialogs/info.js")} />)
+        .child(<LazyDialog triggerEvents={["showConfirmDialog", "showConfirmDeleteNoteBoxWithNoteDialog"]} loader={() => import("../widgets/dialogs/confirm.js")} />)
+        .child(<LazyDialog triggerEvents={["showPromptDialog"]} loader={() => import("../widgets/dialogs/prompt.js")} />)
         .child(<IncorrectCpuArchDialog />)
         .child(<PopupEditorDialog />)
         .child(<OptionsDialog />)
