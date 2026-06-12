@@ -1,4 +1,4 @@
-import { CKTextEditor } from "@triliumnext/ckeditor5";
+import type { CKTextEditor } from "@triliumnext/ckeditor5";
 import { FilterLabelsByType, KeyboardActionNames, NoteType, OptionNames, RelationNames } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import Mark from "mark.js";

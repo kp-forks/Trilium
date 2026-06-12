@@ -1,4 +1,4 @@
-import { CKTextEditor, ModelText } from "@triliumnext/ckeditor5";
+import type { CKTextEditor, ModelText } from "@triliumnext/ckeditor5";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 

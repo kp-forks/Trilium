@@ -1,6 +1,6 @@
 import "./AttributeEditor.css";
 
-import { AttributeEditor as CKEditorAttributeEditor, MentionFeed, ModelElement, ModelNode, ModelPosition } from "@triliumnext/ckeditor5";
+import type { AttributeEditor as CKEditorAttributeEditor, MentionFeed, ModelElement, ModelNode, ModelPosition } from "@triliumnext/ckeditor5";
 import { AttributeType } from "@triliumnext/commons";
 import type { Tooltip } from "bootstrap";
 import { createPortal } from "preact/compat";
@@ -107,6 +107,14 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
     const wrapperRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<CKEditorApi>();
     const [ locale ] = useTriliumOption("locale");
+
+    // The CKEditor bundle is heavy and this component mounts in always-visible containers
+    // (e.g. the status bar), so the editor class is loaded on demand to keep CKEditor out
+    // of the startup module graph.
+    const [ editorClass, setEditorClass ] = useState<typeof CKEditorAttributeEditor>();
+    useEffect(() => {
+        void import("@triliumnext/ckeditor5").then((ckeditor) => setEditorClass(() => ckeditor.AttributeEditor));
+    }, []);
 
     // Stable config so `useTooltip`'s effect doesn't dispose/recreate the tooltip
     // on every render (it runs on each keystroke). `focus` shows the help when the
@@ -308,11 +316,11 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
                     }
                 }}
             >   <div style="position: relative;">
-                    <CKEditor
+                    {editorClass && <CKEditor
                         apiRef={editorRef}
                         className="attribute-list-editor"
                         tabIndex={200}
-                        editor={CKEditorAttributeEditor}
+                        editor={editorClass}
                         currentValue={currentValue}
                         config={{
                             toolbar: { items: [] },
@@ -375,7 +383,7 @@ export default function AttributeEditor({ api, note, componentId, notePath, ntxI
                         onBlur={() => save()}
                         onInitialized={() => editorRef.current?.focus()}
                         disableNewlines disableSpellcheck
-                    />
+                    />}
 
                     <div className="attribute-editor-buttons">
                         { needsSaving && <ActionButton
