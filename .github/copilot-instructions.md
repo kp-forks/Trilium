@@ -147,7 +147,7 @@ pnpm server:start-prod                          # Production mode server
 pnpm desktop:start                              # Desktop app development
 pnpm server:test spec/etapi/search.spec.ts     # Run specific test
 pnpm test:parallel                              # Client tests (can run parallel)
-pnpm test:sequential                            # Server tests (sequential due to shared DB)
+pnpm test:sequential                            # Server tests (shared DB) + browser-mode editor tests
 pnpm test:all                                   # All tests (parallel + sequential)
 pnpm coverage                                   # Generate coverage reports
 pnpm typecheck                                  # Type check all projects

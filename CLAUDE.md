@@ -27,7 +27,7 @@ pnpm desktop:build             # Electron
 # Test
 pnpm test:all                  # All tests (parallel + sequential)
 pnpm test:parallel             # Client + most package tests
-pnpm test:sequential           # Server, ckeditor5-mermaid, ckeditor5-math (shared DB)
+pnpm test:sequential           # Server (shared DB) + browser-mode tests (ckeditor5, ckeditor5-mermaid, ckeditor5-math)
 pnpm --filter server test      # Single package tests
 pnpm coverage                  # Coverage reports
 
