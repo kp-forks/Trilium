@@ -13,6 +13,7 @@ import options from "../../services/options";
 import { DEFAULT_GUTTER_SIZE } from "../../services/resizer";
 import Button from "../react/Button";
 import { useActiveNoteContext, useLegacyWidget, useNoteProperty, useTriliumEvent, useTriliumOptionJson } from "../react/hooks";
+import LazyComponent from "../react/LazyComponent";
 import NoItems from "../react/NoItems";
 import LegacyRightPanelWidget from "../right_panel_widget";
 import HighlightsList from "./HighlightsList";
@@ -21,7 +22,6 @@ import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
 import RightPanelWidget from "./RightPanelWidget";
-import SidebarChat from "./SidebarChat";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
@@ -99,7 +99,9 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
             enabled: noteType === "text" && highlightsList.length > 0,
         },
         {
-            el: <SidebarChat />,
+            // Loaded lazily because the chat pulls in the whole LLM + CKEditor graph,
+            // which users without the LLM experimental feature should never download.
+            el: <LazyComponent loader={() => import("./SidebarChat.jsx")} />,
             enabled: noteType !== "llmChat" && isExperimentalFeatureEnabled("llm"),
             position: 1000
         },

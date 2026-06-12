@@ -1,3 +1,5 @@
+import "./CollectionPropertiesTab.css";
+
 import { ComponentChildren } from "preact";
 import { useContext, useMemo } from "preact/hooks";
 

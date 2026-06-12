@@ -13,7 +13,6 @@ import FNote from "../../entities/fnote";
 import dialog from "../../services/dialog";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
-import { renderMathInElement } from "../../services/math";
 import open from "../../services/open";
 import options from "../../services/options";
 import protected_session_holder from "../../services/protected_session_holder";
@@ -577,7 +576,12 @@ function RevisionContentText({ content }: { content: string | Uint8Array | undef
     const contentRef = useRef<HTMLDivElement>(null);
     useEffect(() => {
         if (contentRef.current?.querySelector("span.math-tex")) {
-            renderMathInElement(contentRef.current, { trust: true });
+            // KaTeX is heavy, so the math service is only loaded when there are formulas to render.
+            void import("../../services/math").then(({ renderMathInElement }) => {
+                if (contentRef.current) {
+                    renderMathInElement(contentRef.current, { trust: true });
+                }
+            });
         }
     }, [content]);
     return <RawHtmlBlock containerRef={contentRef} className="ck-content" html={sanitizeNoteContentHtml(content as string)} />;

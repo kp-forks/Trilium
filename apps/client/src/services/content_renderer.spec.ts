@@ -73,7 +73,7 @@ vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerCom
 vi.mock("dompurify", () => ({ default: { sanitize: (s: string) => s, addHook: () => {} } }));
 
 const renderToHtml = vi.fn((...args: any[]) => `<p>${args[0]}</p>`);
-vi.mock("@triliumnext/commons", async (orig) => ({
+vi.mock("@triliumnext/commons/src/lib/markdown_renderer", async (orig) => ({
     ...(await (orig() as Promise<object>)),
     renderToHtml: (...a: any[]) => renderToHtml(...a)
 }));
