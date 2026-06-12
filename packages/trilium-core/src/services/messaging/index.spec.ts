@@ -50,10 +50,10 @@ describe("messaging provider (core)", () => {
 
     it("excludes frequent/noisy message types from broadcast logging", () => {
         expect(shouldLogMessage({ type: "frontend-update" } as WebSocketMessage)).toBe(false);
+        expect(shouldLogMessage({ type: "ping" } as WebSocketMessage)).toBe(false);
         expect(shouldLogMessage({ type: "sync-failed" } as WebSocketMessage)).toBe(false);
         expect(shouldLogMessage({ type: "api-log-messages" } as WebSocketMessage)).toBe(false);
 
-        expect(shouldLogMessage({ type: "ping" } as WebSocketMessage)).toBe(true);
         expect(shouldLogMessage({ type: "sync-finished" } as WebSocketMessage)).toBe(true);
         expect(shouldLogMessage({ type: "reload-frontend" } as WebSocketMessage)).toBe(true);
     });

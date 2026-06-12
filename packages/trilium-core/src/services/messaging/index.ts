@@ -44,11 +44,12 @@ export function sendMessageToAllClients(message: WebSocketMessage): void {
 
 /**
  * Message types excluded from broadcast logging: "frontend-update" fires on
- * every write transaction and embeds full entity payloads, "api-log-messages"
- * would recursively log API log output, and "sync-failed" repeats on every
- * failed sync attempt.
+ * every write transaction and embeds full entity payloads, "ping" fires on
+ * every no-change transaction and carries no data, "api-log-messages" would
+ * recursively log API log output, and "sync-failed" repeats on every failed
+ * sync attempt.
  */
-const UNLOGGED_MESSAGE_TYPES = new Set<WebSocketMessage["type"]>(["frontend-update", "sync-failed", "api-log-messages"]);
+const UNLOGGED_MESSAGE_TYPES = new Set<WebSocketMessage["type"]>(["frontend-update", "ping", "sync-failed", "api-log-messages"]);
 
 /**
  * Whether a broadcast message should be logged by the messaging provider,
