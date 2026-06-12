@@ -1980,6 +1980,9 @@
     "window-on-top": "Keep Window on Top"
   },
   "note_detail": {
+    "content_load_error": "The note's content could not be loaded.",
+    "content_load_retry": "Retry",
+    "content_load_stalled": "Still loading the note's content…",
     "could_not_find_typewidget": "Could not find typeWidget for type '{{type}}'",
     "printing": "Printing in progress...",
     "printing_pdf": "Preparing print preview...",

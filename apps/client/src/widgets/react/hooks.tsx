@@ -112,7 +112,7 @@ export function useEditorSpacedUpdate({ note, noteType, noteContext, getData, on
     updateInterval?: number;
 }) {
     const parentComponent = useContext(ParentComponent);
-    const blob = useNoteBlob(note, parentComponent?.componentId);
+    const blob = useNoteBlob(note, parentComponent?.componentId, { reportLoadStateTo: noteContext });
 
     // The note whose content is currently loaded in the editor. Editor instances are reused
     // across note switches, so until the new note's blob arrives the editor still holds the
@@ -211,7 +211,7 @@ export function useBlobEditorSpacedUpdate({ note, noteType, noteContext, getData
     replaceWithoutRevision?: boolean;
 }) {
     const parentComponent = useContext(ParentComponent);
-    const blob = useNoteBlob(note, parentComponent?.componentId);
+    const blob = useNoteBlob(note, parentComponent?.componentId, { reportLoadStateTo: noteContext });
 
     // Same provenance guard as useEditorSpacedUpdate: never save content under a note it
     // was not loaded from (#9614).
@@ -752,17 +752,34 @@ export function useNoteLabelInt(note: FNote | undefined | null, labelName: Filte
     ];
 }
 
-export function useNoteBlob(note: FNote | null | undefined, componentId?: string): FBlob | null | undefined {
+export function useNoteBlob(note: FNote | null | undefined, componentId?: string, opts?: {
+    /** Publish the fetch progress as `contentLoad` context data on the given note context, so
+     * the note detail can show a loading state instead of the previous note's content. Should
+     * only be set by widgets whose main content display is gated on this blob. (Passed
+     * explicitly because NoteContextContext is only provided in dialogs, not the main window.) */
+    reportLoadStateTo?: NoteContext | null;
+}): FBlob | null | undefined {
     const [ blob, setBlob ] = useState<FBlob | null>();
     const requestIdRef = useRef(0);
 
+    function reportLoadState(state: "loading" | "loaded" | "error") {
+        opts?.reportLoadStateTo?.setContextData("contentLoad", { state, retry: () => refresh() });
+    }
+
     async function refresh() {
         const requestId = ++requestIdRef.current;
+        if (note) {
+            reportLoadState("loading");
+        }
         const newBlob = await note?.getBlob();
 
         // Only update if this is the latest request.
         if (requestId === requestIdRef.current) {
             setBlob(newBlob);
+            if (note) {
+                // froca.getBlob() resolves to null when the fetch failed.
+                reportLoadState(newBlob ? "loaded" : "error");
+            }
         }
     }
 
@@ -1697,4 +1714,58 @@ export function useContainedLinkNavigation(
         container.addEventListener("click", onClick, true);
         return () => container.removeEventListener("click", onClick, true);
     }, [ containerRef, onNavigate ]);
+}
+
+export type DelayedVisibilityPhase = "hidden" | "visible" | "stalled";
+
+export interface DelayedVisibilityOpts {
+    /** The indicator is never shown if `active` clears within this window (fast loads never flash). */
+    graceMs?: number;
+    /** Once shown, the indicator stays at least this long, even if `active` clears sooner (no two-frame flicker). */
+    minVisibleMs?: number;
+    /** After this much continuous activity the phase escalates to "stalled" so the UI can offer a retry. */
+    stalledMs?: number;
+}
+
+/**
+ * Drives a flicker-free loading indicator from a boolean "is loading" signal:
+ *
+ * - **grace period**: nothing is shown if loading finishes within {@link DelayedVisibilityOpts.graceMs},
+ *   so fast loads never flash a loading state;
+ * - **minimum visibility**: once shown, the indicator stays for at least
+ *   {@link DelayedVisibilityOpts.minVisibleMs}, preventing a skeleton that appears for two frames;
+ * - **escalation**: after {@link DelayedVisibilityOpts.stalledMs} of continuous loading the phase
+ *   becomes `"stalled"`, letting the UI switch to a "still loading / retry" presentation.
+ */
+export function useDelayedVisibility(active: boolean, { graceMs = 150, minVisibleMs = 280, stalledMs = 8000 }: DelayedVisibilityOpts = {}): DelayedVisibilityPhase {
+    const [ phase, setPhase ] = useState<DelayedVisibilityPhase>("hidden");
+    const shownAtRef = useRef(0);
+
+    useEffect(() => {
+        if (active) {
+            if (phase === "hidden") {
+                const graceTimer = setTimeout(() => {
+                    shownAtRef.current = Date.now();
+                    setPhase("visible");
+                }, graceMs);
+                return () => clearTimeout(graceTimer);
+            }
+
+            if (phase === "visible") {
+                const stalledTimer = setTimeout(
+                    () => setPhase("stalled"),
+                    Math.max(0, shownAtRef.current + stalledMs - Date.now())
+                );
+                return () => clearTimeout(stalledTimer);
+            }
+        } else if (phase !== "hidden") {
+            const hideTimer = setTimeout(
+                () => setPhase("hidden"),
+                Math.max(0, shownAtRef.current + minVisibleMs - Date.now())
+            );
+            return () => clearTimeout(hideTimer);
+        }
+    }, [ active, phase, graceMs, minVisibleMs, stalledMs ]);
+
+    return phase;
 }

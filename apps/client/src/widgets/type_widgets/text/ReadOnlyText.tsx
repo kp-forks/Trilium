@@ -22,7 +22,7 @@ import { applyReferenceLinks } from "./read_only_helper";
 import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./utils";
 
 export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetProps) {
-    const blob = useNoteBlob(note);
+    const blob = useNoteBlob(note, undefined, { reportLoadStateTo: noteContext });
     const { isRtl } = useNoteLanguage(note);
     const readOnlyContentRef = usePreactRef<HTMLDivElement>(null);
 
