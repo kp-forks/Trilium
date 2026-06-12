@@ -199,6 +199,15 @@ In JSX, use `import { method } from "trilium:api"`. In JavaScript (Trilium front
 - `currentNote` - note containing the source code currently executing. Equal to `startNote` except inside child module notes. NOT the note open in the UI — that is `getActiveContextNote()`.
 - `originEntity` - note whose event triggered this execution, or `null`. Usually `null` (scripts started by the user or the UI). It is set for render notes — the note being rendered, i.e. the one carrying the `~renderNote` relation — and for `api.runOnFrontend()` calls from the backend (the backend's `originEntity`, if it was a note).
 
+Concrete examples:
+
+| Scenario | `startNote` | `currentNote` | `originEntity` |
+|---|---|---|---|
+| Widget script "Clock" (`#widget`) | "Clock" | "Clock" (a child module note while its code runs) | `null` |
+| Startup script (`#run=frontendStartup`) or manual Execute on "Setup" | "Setup" | "Setup" (or module note) | `null` |
+| Render note "Stats" with `~renderNote` → JSX note "StatsComponent" | "StatsComponent" | "StatsComponent" (or module note) | "Stats" (the render note) |
+| `api.runOnFrontend()` called from a backend script | the backend execution's `currentNote` | same | the backend's `originEntity` if it was a note, else `null` |
+
 ### Navigation & tabs
 - `activateNote(notePath)` - navigate to a note
 - `activateNewNote(notePath)` - navigate and wait for sync

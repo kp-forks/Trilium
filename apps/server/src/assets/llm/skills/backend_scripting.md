@@ -30,6 +30,18 @@ Note that most `api.*` methods (e.g. `api.getNote`, `api.searchForNotes`, `api.c
 - `api.currentNote` - note containing the source code currently executing (in C terms, `__FILE__`). Equal to `startNote` except inside child module notes loaded via `require()`. NOT the note open in the UI.
 - `api.originEntity` - entity whose event triggered this execution; `undefined` when the run was not event-driven (manual Execute button, `note.executeScript()`). For `~runOn*` relations see the table under "Events and triggers"; for scheduled scripts (`#run=hourly`/`#run=daily`) it is the script note itself; for `~searchScript` scripts it is the search note.
 
+Concrete examples:
+
+| Scenario | `startNote` | `currentNote` | `originEntity` |
+|---|---|---|---|
+| Execute button / `note.executeScript()` on "Job" | "Job" | "Job" (a child module note while its code runs) | `undefined` |
+| Scheduled "Job" (`#run=backendStartup`/`hourly`/`daily`) | "Job" | "Job" (or module note) | "Job" (the script note itself) |
+| Note "Diary" has `~runOnNoteContentChange` → script "OnChange" | "OnChange" | "OnChange" (or module note) | "Diary" (the changed note; a BAttribute/BBranch for attribute/branch events) |
+| Custom request handler "Endpoint" (`#customRequestHandler`) | "Endpoint" | "Endpoint" (or module note) | `undefined` — the request is in `api.req` |
+| `api.runOnBackend()` called from frontend widget "Clock" | "Clock" (the frontend's `startNote`, preserved) | the frontend note whose function was serialized (the frontend's `currentNote`) | the frontend's `originEntity` (a note) or `null` |
+
+Note: `#customResourceProvider` notes never execute a script — the note's content is served directly as the HTTP response, so there is no `api` context at all. Only `#customRequestHandler` runs code.
+
 ### Note retrieval
 - `api.getNote(noteId)` - get note by ID
 - `api.searchForNotes(query, searchParams)` - search notes (returns array)
