@@ -6,15 +6,8 @@ import type RootContainer from "../widgets/containers/root_container.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
 import ConfirmDialog from "../widgets/dialogs/confirm.js";
 import DeleteNotesDialog from "../widgets/dialogs/delete_notes.js";
-import ExportDialog from "../widgets/dialogs/export.js";
-import ImportDialog from "../widgets/dialogs/import.js";
-import IncludeNoteDialog from "../widgets/dialogs/include_note.js";
 import IncorrectCpuArchDialog from "../widgets/dialogs/incorrect_cpu_arch.js";
 import InfoDialog from "../widgets/dialogs/info.js";
-import JumpToNoteDialog from "../widgets/dialogs/jump_to_note.js";
-import LinkEmbedDialog from "../widgets/dialogs/link_embed.js";
-import MarkdownImportDialog from "../widgets/dialogs/markdown_import.js";
-import NoteTypeChooserDialog from "../widgets/dialogs/note_type_chooser.js";
 import OcrTextDialog from "../widgets/dialogs/ocr_text.js";
 import OptionsDialog from "../widgets/dialogs/OptionsDialog.jsx";
 import PopupEditorDialog from "../widgets/dialogs/PopupEditor.jsx";
@@ -22,7 +15,6 @@ import PrintPreviewDialog from "../widgets/dialogs/print_preview.jsx";
 import PromptDialog from "../widgets/dialogs/prompt.js";
 import ProtectedSessionPasswordDialog from "../widgets/dialogs/protected_session_password.js";
 import RevisionsDialog from "../widgets/dialogs/revisions.js";
-import SortChildNotesDialog from "../widgets/dialogs/sort_child_notes.js";
 import UploadAttachmentsDialog from "../widgets/dialogs/upload_attachments.js";
 import { useTriliumEvents } from "../widgets/react/hooks.jsx";
 import { ParentComponent } from "../widgets/react/react_utils.jsx";
@@ -35,17 +27,17 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<LazyDialog triggerEvents={["showCheatsheet"]} loader={() => import("../widgets/dialogs/help.js")} />)
         .child(<LazyDialog triggerEvents={["showRecentChanges"]} loader={() => import("../widgets/dialogs/recent_changes.js")} />)
         .child(<LazyDialog triggerEvents={["editBranchPrefix"]} loader={() => import("../widgets/dialogs/branch_prefix.js")} />)
-        .child(<SortChildNotesDialog />)
-        .child(<IncludeNoteDialog />)
-        .child(<LinkEmbedDialog />)
-        .child(<NoteTypeChooserDialog />)
-        .child(<JumpToNoteDialog />)
+        .child(<LazyDialog triggerEvents={["sortChildNotes"]} loader={() => import("../widgets/dialogs/sort_child_notes.js")} />)
+        .child(<LazyDialog triggerEvents={["showIncludeNoteDialog"]} loader={() => import("../widgets/dialogs/include_note.js")} />)
+        .child(<LazyDialog triggerEvents={["showLinkEmbedDialog"]} loader={() => import("../widgets/dialogs/link_embed.js")} />)
+        .child(<LazyDialog triggerEvents={["chooseNoteType"]} loader={() => import("../widgets/dialogs/note_type_chooser.js")} />)
+        .child(<LazyDialog triggerEvents={["jumpToNote", "commandPalette"]} loader={() => import("../widgets/dialogs/jump_to_note.js")} />)
         .child(<LazyDialog triggerEvents={["showAddLinkDialog"]} loader={() => import("../widgets/dialogs/add_link.js")} />)
         .child(<LazyDialog triggerEvents={["cloneNoteIdsTo"]} loader={() => import("../widgets/dialogs/clone_to.js")} />)
         .child(<LazyDialog triggerEvents={["moveBranchIdsTo"]} loader={() => import("../widgets/dialogs/move_to.js")} />)
-        .child(<ImportDialog />)
-        .child(<ExportDialog />)
-        .child(<MarkdownImportDialog />)
+        .child(<LazyDialog triggerEvents={["showImportDialog"]} loader={() => import("../widgets/dialogs/import.js")} />)
+        .child(<LazyDialog triggerEvents={["showExportDialog"]} loader={() => import("../widgets/dialogs/export.js")} />)
+        .child(<LazyDialog triggerEvents={["showPasteMarkdownDialog"]} loader={() => import("../widgets/dialogs/markdown_import.js")} />)
         .child(<ProtectedSessionPasswordDialog />)
         .child(<RevisionsDialog />)
         .child(<DeleteNotesDialog />)
