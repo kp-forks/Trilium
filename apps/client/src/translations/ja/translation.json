@@ -619,7 +619,8 @@
     "hide_child_notes": "ツリー内の子ノートを非表示",
     "open_all_in_tabs": "すべて開く",
     "open_all_in_tabs_tooltip": "すべての結果を新しいタブで開く",
-    "open_all_confirm_other": "{{count}} 件のノートを新しいタブで開きます。続行しますか？"
+    "open_all_confirm_other": "{{count}} 件のノートを新しいタブで開きます。続行しますか？",
+    "dashboard": "ダッシュボード"
   },
   "note_types": {
     "geo-map": "ジオマップ",
@@ -850,7 +851,7 @@
     "move_success_message": "選択したノートは以下に移動されました "
   },
   "backend_log": {
-    "refresh": "リフレッシュ"
+    "refresh": "更新"
   },
   "sync": {
     "title": "同期",
@@ -2290,7 +2291,8 @@
     "menu_run_mobile_startup": "モバイル フロントエンドの起動時",
     "menu_change_to_widget": "ウィジェットの変更",
     "menu_change_to_frontend_script": "フロントエンドスクリプトの変更",
-    "menu_theme_base": "テーマベース"
+    "menu_theme_base": "テーマベース",
+    "type_custom_request_handler": "カスタムリクエストハンドラー"
   },
   "setup_form": {
     "more_info": "さらに詳しく"
@@ -2460,7 +2462,8 @@
       "move_note": "ノートを移動",
       "clone_note": "ノートをクローン",
       "set_note_content": "ノートを書き直す",
-      "edit_note_content": "ノートを編集"
+      "edit_note_content": "ノートを編集",
+      "search_icons": "アイコンを検索"
     },
     "base_url": "ベース URL",
     "base_url_description": "オプション。デフォルトの API エンドポイントを上書きします — これは、セルフホスト型モデル（Ollama、LM Studio、vLLM）やプロキシを使用する場合に便利です。",
@@ -2774,5 +2777,10 @@
   "options": {
     "title": "オプション",
     "back": "すべてのオプションに戻る"
+  },
+  "dashboard_view": {
+    "refresh-widget": "更新",
+    "remove-widget": "ダッシュボードから削除",
+    "empty-hint": "子ノートはすべてウィジェットになります。ツリーからここにノートをドラッグするか、新しく作成してください。"
   }
 }
