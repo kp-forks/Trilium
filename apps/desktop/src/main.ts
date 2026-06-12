@@ -29,9 +29,12 @@ import { setupCustomDictionary } from "./services/custom_dictionary";
 import { setupPrintingHandlers } from "./services/printing";
 import { getSecuritySettings, registerSecurityIpcHandlers } from "./services/security_settings";
 import { setupShellHandlers } from "./services/shell";
+import { markStartupMetric, setupStartupMetricsIpc } from "./services/startup_metrics";
 import { setupSystemTray } from "./services/tray";
 
 export async function main() {
+    markStartupMetric("main-process-start");
+
     // Ignore EPIPE errors on stdout/stderr — these occur when the parent process
     // pipe breaks (e.g. after system suspend with Snap packaging).
     for (const stream of [process.stdout, process.stderr]) {
@@ -108,6 +111,7 @@ export async function main() {
     });
 
     app.on("ready", async () => {
+        markStartupMetric("electron-ready");
         await coreInitializedPromise;
         console.log("Starting Electron...");
         await onReady();
@@ -119,6 +123,7 @@ export async function main() {
     setupShellHandlers();
     setupPrintingHandlers();
     registerSecurityIpcHandlers();
+    setupStartupMetricsIpc();
 
     app.on("will-quit", () => {
         globalShortcut.unregisterAll();
@@ -162,6 +167,7 @@ export async function main() {
 
     const dbProvider = new BetterSqlite3Provider();
     dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
+    markStartupMetric("database-opened");
 
     // The IPC provider just registers an `ipcMain.on` listener; no TCP socket
     // or session parser needed, so we can init it here (before startTriliumServer)
@@ -213,11 +219,12 @@ export async function main() {
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)
         }
     });
+    markStartupMetric("core-initialized");
     coreInitializedPromise.resolve();
 
     const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
     const expressApp = await startTriliumServer();
-    console.log("Server loaded");
+    markStartupMetric("server-started");
 
     expressAppPromise.resolve(expressApp);
 }

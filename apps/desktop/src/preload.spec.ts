@@ -223,6 +223,14 @@ describe("preload script", () => {
             expect(ipcRendererSent).toContainEqual({ channel: "show-window", args: [] });
         });
 
+        it("reportStartupMetric sends correct IPC message", () => {
+            win().reportStartupMetric("client-full-render");
+            expect(ipcRendererSent).toContainEqual({
+                channel: "report-startup-metric",
+                args: ["client-full-render"]
+            });
+        });
+
         it("clearCache invokes correct IPC channel", async () => {
             await win().clearCache();
             expect(ipcRendererInvoked).toContainEqual({ channel: "clear-cache", args: [] });

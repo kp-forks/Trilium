@@ -3,6 +3,7 @@ import { RESOURCE_DIR } from "@triliumnext/server/src/services/resource_dir.js";
 import { type BrowserWindow, type BrowserWindowConstructorOptions, default as electron, type Session, type WebContents } from "electron";
 import path from "path";
 
+import { markStartupMetric } from "./startup_metrics.js";
 import { TRILIUM_APP_BASE_URL } from "./trilium_app_origin.js";
 import { setupWebContentsSecurity } from "./web_contents_security.js";
 
@@ -126,6 +127,12 @@ async function createMainWindow() {
         icon: getIcon(),
         ...getWindowExtraOpts()
     });
+
+    markStartupMetric("main-window-created");
+    // First time the renderer has produced a frame of the page — the closest
+    // main-process signal to "the window displays something".
+    mainWindow.once("ready-to-show", () => markStartupMetric("main-window-first-paint"));
+    mainWindow.webContents.once("did-finish-load", () => markStartupMetric("main-window-load-finished"));
 
     mainWindowState.manage(mainWindow);
 

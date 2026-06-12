@@ -182,6 +182,10 @@ vi.mock("./services/security_settings", () => ({
     getSecuritySettings: () => h.securitySettings,
     registerSecurityIpcHandlers: vi.fn()
 }));
+vi.mock("./services/startup_metrics", () => ({
+    markStartupMetric: vi.fn(),
+    setupStartupMetricsIpc: vi.fn()
+}));
 
 const realPlatform = process.platform;
 function setPlatform(platform: NodeJS.Platform) {
@@ -286,6 +290,13 @@ describe("main() bootstrap", () => {
         expect(h.appOn.has("ready")).toBe(true);
         expect(h.appOn.has("will-quit")).toBe(true);
         expect(h.appOn.has("second-instance")).toBe(true);
+
+        // Startup instrumentation is wired up and the boot phases are marked.
+        const { markStartupMetric, setupStartupMetricsIpc } = await import("./services/startup_metrics.js");
+        expect(setupStartupMetricsIpc).toHaveBeenCalled();
+        for (const phase of ["main-process-start", "database-opened", "core-initialized", "server-started"]) {
+            expect(markStartupMetric).toHaveBeenCalledWith(phase);
+        }
     });
 
     it("appends no disable-http-cache switch when TRILIUM_ENV is not dev, and skips smooth-scroll switch when enabled", async () => {

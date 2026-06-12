@@ -36,6 +36,16 @@ export interface ElectronContextMenuParams {
 }
 
 /**
+ * Startup milestones the renderer may report to the main process for startup
+ * timing instrumentation (see `apps/desktop/src/services/startup_metrics.ts`).
+ *
+ * - `client-full-render` — the client finished its initial render: the layout
+ *   widgets are attached to the DOM, the froca note cache is loaded, and a
+ *   frame of the rendered layout has been painted.
+ */
+export type RendererStartupMetric = "client-full-render";
+
+/**
  * Window-level controls: zoom, theme, title bar, full screen, lifecycle, and
  * a handful of main → renderer event subscriptions.
  */
@@ -170,6 +180,14 @@ export interface ElectronWindowApi {
 
     /** Brings the main window to the foreground, restoring it if minimized. */
     showWindow(): void;
+
+    /**
+     * Reports a renderer startup milestone to the main process, which records
+     * it relative to OS process creation alongside the main-process startup
+     * metrics. Only the first report of each metric is recorded; later reports
+     * (e.g. after a window reload or from extra windows) are ignored.
+     */
+    reportStartupMetric(metric: RendererStartupMetric): void;
 
     // #endregion
 
