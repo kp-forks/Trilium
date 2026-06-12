@@ -1,4 +1,4 @@
-import { type Batch, CKTextEditor, ClassicEditor, EditorWatchdog, isListCollapseToggleBatch, PopupEditor, TemplateDefinition, type WatchdogConfig } from "@triliumnext/ckeditor5";
+import { CKTextEditor, ClassicEditor, EditorWatchdog, PopupEditor, TemplateDefinition, type WatchdogConfig } from "@triliumnext/ckeditor5";
 import { DISPLAYABLE_LOCALE_IDS } from "@triliumnext/commons";
 import { HTMLProps, RefObject, useEffect, useImperativeHandle, useRef, useState } from "preact/compat";
 
@@ -277,14 +277,8 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
     // React to on change listener.
     useEffect(() => {
         if (!editor) return;
-        const handler = (_evt: unknown, batch: Batch) => {
-            // Collapsing/expanding list items is editing-only view state that does not alter
-            // the serialized content, so it must not mark the note as modified.
-            if (isListCollapseToggleBatch(batch)) return;
-            onChange();
-        };
-        editor.model.document.on("change:data", handler);
-        return () => editor.model.document.off("change:data", handler);
+        editor.model.document.on("change:data", onChange);
+        return () => editor.model.document.off("change:data", onChange);
     }, [ editor, onChange ]);
 
     return (

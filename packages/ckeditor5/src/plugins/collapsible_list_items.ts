@@ -1,18 +1,17 @@
 import "../theme/collapsible_list_items.css";
 
-import { AttributeOperation, Command, ListEditing, MouseObserver, Plugin, type Batch, type Editor, type ModelElement, type ModelNode, type ModelWriter, type ViewDocumentMouseDownEvent, type ViewElement } from "ckeditor5";
+import { Command, ListEditing, MouseObserver, Plugin, type Editor, type ModelElement, type ModelNode, type ModelWriter, type ViewDocumentMouseDownEvent, type ViewElement } from "ckeditor5";
 
 export const LIST_COLLAPSED_ATTRIBUTE = "listCollapsed";
 
-const COLLAPSED_CLASS = "tn-list-collapsed";
+const COLLAPSED_DATA_ATTRIBUTE = "data-trilium-collapsed";
 
 /**
  * Allows collapsing/expanding nested list items, similar to outliners such as Dynalist or Roam.
  *
- * The collapsed state is kept as a `listCollapsed` model attribute that is rendered only on the
- * editing pipeline (as the `tn-list-collapsed` class on the `<li>`), so it is never written into
- * the saved note content and does not survive a reload. Toggling it must therefore not mark the
- * note as modified — collapse-only batches are filtered out via {@link isListCollapseToggleBatch}.
+ * The collapsed state is kept as a `listCollapsed` model attribute, persisted into the note
+ * content as `data-trilium-collapsed="true"` on the `<li>`. Hiding the nested items is done by
+ * CSS scoped to the editing view, so read-only and shared note rendering stay fully expanded.
  */
 export default class CollapsibleListItems extends Plugin {
 
@@ -30,13 +29,20 @@ export default class CollapsibleListItems extends Plugin {
         editor.plugins.get(ListEditing).registerDowncastStrategy({
             scope: "item",
             attributeName: LIST_COLLAPSED_ATTRIBUTE,
-            setAttributeOnDowncast(writer, value, element, options) {
-                // Editing pipeline only — the collapsed state is never saved into the content.
-                if (value && !options?.dataPipeline) {
-                    writer.addClass(COLLAPSED_CLASS, element);
+            setAttributeOnDowncast(writer, value, element) {
+                if (value) {
+                    writer.setAttribute(COLLAPSED_DATA_ATTRIBUTE, "true", element);
                 } else {
-                    writer.removeClass(COLLAPSED_CLASS, element);
+                    writer.removeAttribute(COLLAPSED_DATA_ATTRIBUTE, element);
                 }
+            }
+        });
+
+        editor.conversion.for("upcast").attributeToAttribute({
+            view: {name: "li", key: COLLAPSED_DATA_ATTRIBUTE},
+            model: {
+                key: LIST_COLLAPSED_ATTRIBUTE,
+                value: (viewElement: ViewElement) => viewElement.getAttribute(COLLAPSED_DATA_ATTRIBUTE) === "true" ? true : null
             }
         });
 
@@ -109,23 +115,34 @@ export default class CollapsibleListItems extends Plugin {
         });
 
         model.document.registerPostFixer((writer) => {
+            const insertedNodes = new Set<ModelNode>();
             const changedBlocks = new Set<ModelElement>();
 
             for (const entry of model.document.differ.getChanges()) {
-                let node: ModelNode | null = null;
                 if (entry.type === "insert") {
-                    node = entry.position.nodeAfter;
+                    let node: ModelNode | null = entry.position.nodeAfter;
+                    for (let i = 0; i < entry.length && node; i++, node = node.nextSibling) {
+                        insertedNodes.add(node);
+                        if (node.is("element") && node.hasAttribute("listItemId")) {
+                            changedBlocks.add(node);
+                        }
+                    }
                 } else if (entry.type === "attribute" && (entry.attributeKey === "listIndent" || entry.attributeKey === "listItemId")) {
-                    node = entry.range.start.nodeAfter;
-                }
-                if (node && node.is("element") && node.hasAttribute("listItemId")) {
-                    changedBlocks.add(node);
+                    const node = entry.range.start.nodeAfter;
+                    if (node && node.is("element") && node.hasAttribute("listItemId")) {
+                        changedBlocks.add(node);
+                    }
                 }
             }
 
             let changed = false;
             for (const block of changedBlocks) {
                 for (const ancestor of getCollapsedAncestors(block)) {
+                    // An ancestor inserted in the same change set arrived together with its
+                    // hidden children (data load, paste of a collapsed subtree) — keep it.
+                    if (insertedNodes.has(ancestor)) {
+                        continue;
+                    }
                     expandItem(writer, ancestor);
                     changed = true;
                 }
@@ -166,21 +183,10 @@ export class ToggleListCollapseCommand extends Command {
 
 }
 
-/**
- * Whether the batch consists solely of collapse/expand toggles. Such batches do not affect the
- * saved content (the attribute has no data downcast), so content-save listeners on `change:data`
- * should ignore them.
- */
-export function isListCollapseToggleBatch(batch: Batch): boolean {
-    return batch.operations.length > 0
-        && batch.operations.every((operation) => operation instanceof AttributeOperation && operation.key === LIST_COLLAPSED_ATTRIBUTE);
-}
-
 function toggleCollapsed(editor: Editor, block: ModelElement): void {
     const collapse = !block.getAttribute(LIST_COLLAPSED_ATTRIBUTE);
 
-    // Not undoable: the state is view-only, an undo step would be invisible in the content.
-    editor.model.enqueueChange({isUndoable: false}, (writer) => {
+    editor.model.change((writer) => {
         for (const itemBlock of getItemBlocks(block)) {
             if (collapse) {
                 writer.setAttribute(LIST_COLLAPSED_ATTRIBUTE, true, itemBlock);

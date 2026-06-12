@@ -1,9 +1,9 @@
 /*
  * Collapse/expand arrows for nested list items (CollapsibleListItems plugin).
  *
- * The `tn-list-collapsed` class is applied on the editing view only — the collapsed state is
- * never persisted into the note content, which is why everything is scoped to
- * `.ck-editor__editable` and does not affect read-only or shared note rendering.
+ * The collapsed state is persisted as `data-trilium-collapsed` on the `<li>`, but the hiding is
+ * scoped to `.ck-editor__editable` so read-only and shared note rendering stay fully expanded
+ * (they have no way to toggle the state).
  */
 
 .ck-content.ck-editor__editable li {
@@ -31,16 +31,16 @@
     opacity: 0.4;
 }
 
-.ck-content.ck-editor__editable li.tn-list-collapsed::before {
+.ck-content.ck-editor__editable li[data-trilium-collapsed="true"]::before {
     transform: rotate(-45deg); /* chevron pointing at the text: collapsed */
     opacity: 0.7;
 }
 
-.ck-content.ck-editor__editable li.tn-list-collapsed:dir(rtl)::before {
+.ck-content.ck-editor__editable li[data-trilium-collapsed="true"]:dir(rtl)::before {
     transform: rotate(135deg);
 }
 
-.ck-content.ck-editor__editable li.tn-list-collapsed > ul,
-.ck-content.ck-editor__editable li.tn-list-collapsed > ol {
+.ck-content.ck-editor__editable li[data-trilium-collapsed="true"] > ul,
+.ck-content.ck-editor__editable li[data-trilium-collapsed="true"] > ol {
     display: none;
 }

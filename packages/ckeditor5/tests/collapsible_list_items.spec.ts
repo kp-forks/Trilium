@@ -1,7 +1,7 @@
-import { _setModelData as setModelData, ClassicEditor, List, Paragraph, Typing, Undo, type Batch, type ModelElement } from "ckeditor5";
+import { _setModelData as setModelData, ClassicEditor, List, Paragraph, Typing, Undo, type ModelElement } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import CollapsibleListItems, { isListCollapseToggleBatch, LIST_COLLAPSED_ATTRIBUTE } from "../src/plugins/collapsible_list_items.js";
+import CollapsibleListItems, { LIST_COLLAPSED_ATTRIBUTE } from "../src/plugins/collapsible_list_items.js";
 
 // Lists are flat in the model: sibling blocks related by listIndent/listItemId.
 const LIST_FIXTURE =
@@ -32,7 +32,7 @@ describe("CollapsibleListItems", () => {
         await editor.destroy();
     });
 
-    it("collapses and expands via the command without changing the saved data", () => {
+    it("collapses and expands via the command and persists the state into the data", () => {
         const dataBefore = editor.getData();
         const command = editor.commands.get("toggleListCollapse");
         expect(command?.isEnabled).toBe(true);
@@ -43,7 +43,7 @@ describe("CollapsibleListItems", () => {
         expect(command?.value).toBe(true);
 
         const domRoot = editor.editing.view.getDomRoot();
-        const collapsedItem = domRoot?.querySelector("li.tn-list-collapsed");
+        const collapsedItem = domRoot?.querySelector('li[data-trilium-collapsed="true"]');
         expect(collapsedItem).not.toBeNull();
         const nestedList = collapsedItem?.querySelector("ul");
         expect(nestedList).not.toBeNull();
@@ -51,13 +51,49 @@ describe("CollapsibleListItems", () => {
             expect(getComputedStyle(nestedList).display).toBe("none");
         }
 
-        // The collapsed state must never leak into the serialized content.
-        expect(editor.getData()).toBe(dataBefore);
+        expect(editor.getData()).toContain('data-trilium-collapsed="true"');
 
         editor.execute("toggleListCollapse");
         expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
         expect(command?.value).toBe(false);
-        expect(domRoot?.querySelector("li.tn-list-collapsed")).toBeNull();
+        expect(domRoot?.querySelector("li[data-trilium-collapsed]")).toBeNull();
+        expect(editor.getData()).toBe(dataBefore);
+    });
+
+    it("round-trips the collapsed state through the data without expanding it on load", () => {
+        editor.setData(
+            '<ul><li data-trilium-collapsed="true">Parent<ul><li>Child</li></ul></li><li>Sibling</li></ul>');
+
+        // Loading a collapsed subtree must not trigger the "content placed under a
+        // collapsed parent" auto-expansion: the children arrive together with the parent.
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const nestedList = domRoot?.querySelector('li[data-trilium-collapsed="true"] ul');
+        expect(nestedList).not.toBeNull();
+        if (nestedList) {
+            expect(getComputedStyle(nestedList).display).toBe("none");
+        }
+
+        expect(editor.getData()).toContain('data-trilium-collapsed="true"');
+    });
+
+    it("normalizes away persisted state that has nothing to collapse", () => {
+        editor.setData('<ul><li data-trilium-collapsed="true">No children</li></ul>');
+
+        expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+        expect(editor.getData()).not.toContain("data-trilium-collapsed");
+    });
+
+    it("collapse toggles are undoable", () => {
+        const dataBefore = editor.getData();
+
+        editor.execute("toggleListCollapse");
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+
+        editor.execute("undo");
+        expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+        expect(editor.getData()).toBe(dataBefore);
     });
 
     it("is only enabled on list items that have nested items", () => {
@@ -85,24 +121,6 @@ describe("CollapsibleListItems", () => {
         expect(getBlock(editor, 1).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
     });
 
-    it("creates non-undoable batches that are recognizable for save suppression", () => {
-        const batches: Batch[] = [];
-        editor.model.document.on("change:data", (_evt, batch) => batches.push(batch as Batch));
-
-        editor.execute("toggleListCollapse");
-        expect(batches).toHaveLength(1);
-        expect(batches.every(isListCollapseToggleBatch)).toBe(true);
-
-        editor.execute("insertText", { text: "!" });
-        const typingBatch = batches.at(-1);
-        expect(typingBatch && isListCollapseToggleBatch(typingBatch)).toBe(false);
-
-        // Undo reverts the typing but not the (non-undoable) collapse.
-        editor.execute("undo");
-        expect(getBlockText(editor, 0)).toBe("Parent");
-        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
-    });
-
     it("expands automatically when the selection moves into a hidden item", () => {
         editor.execute("toggleListCollapse");
         expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
@@ -110,6 +128,7 @@ describe("CollapsibleListItems", () => {
         setSelectionIn(editor, 1);
 
         expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+        expect(editor.getData()).not.toContain("data-trilium-collapsed");
     });
 
     it("expands automatically when an item is indented under a collapsed parent", () => {
@@ -174,16 +193,6 @@ function getBlock(editor: ClassicEditor, index: number): ModelElement {
         throw new Error(`No element block at index ${index}.`);
     }
     return child;
-}
-
-function getBlockText(editor: ClassicEditor, index: number): string {
-    let text = "";
-    for (const node of getBlock(editor, index).getChildren()) {
-        if (node.is("$text")) {
-            text += node.data;
-        }
-    }
-    return text;
 }
 
 function setSelectionIn(editor: ClassicEditor, blockIndex: number): void {
