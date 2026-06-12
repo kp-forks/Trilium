@@ -35,7 +35,7 @@
     "@ai-sdk/google": "3.0.80",
     "@ai-sdk/openai": "3.0.68",
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "ai": "6.0.197",
+    "ai": "6.0.198",
     "better-sqlite3": "12.10.0",
     "html-to-text": "10.0.0",
     "i18next": "26.3.1",
