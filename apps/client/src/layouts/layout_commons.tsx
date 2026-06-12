@@ -3,7 +3,6 @@ import { useContext, useEffect, useState } from "preact/hooks";
 
 import type { EventData, EventNames } from "../components/app_context.js";
 import type RootContainer from "../widgets/containers/root_container.js";
-import AboutDialog from "../widgets/dialogs/about.js";
 import AddLinkDialog from "../widgets/dialogs/add_link.js";
 import BranchPrefixDialog from "../widgets/dialogs/branch_prefix.js";
 import CallToActionDialog from "../widgets/dialogs/call_to_action.jsx";
@@ -38,7 +37,7 @@ import ToastContainer from "../widgets/Toast.jsx";
 export function applyModals(rootContainer: RootContainer) {
     rootContainer
         .child(<LazyDialog triggerEvents={["openBulkActionsDialog"]} loader={() => import("../widgets/dialogs/bulk_actions.js")} />)
-        .child(<AboutDialog />)
+        .child(<LazyDialog triggerEvents={["openAboutDialog"]} loader={() => import("../widgets/dialogs/about.js")} />)
         .child(<HelpDialog />)
         .child(<RecentChangesDialog />)
         .child(<BranchPrefixDialog />)
