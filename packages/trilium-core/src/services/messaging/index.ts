@@ -42,5 +42,21 @@ export function sendMessageToAllClients(message: WebSocketMessage): void {
     messagingProvider.sendMessageToAllClients(message);
 }
 
+/**
+ * Message types excluded from broadcast logging: "frontend-update" fires on
+ * every write transaction and embeds full entity payloads, "api-log-messages"
+ * would recursively log API log output, and "sync-failed" repeats on every
+ * failed sync attempt.
+ */
+const UNLOGGED_MESSAGE_TYPES = new Set<WebSocketMessage["type"]>(["frontend-update", "sync-failed", "api-log-messages"]);
+
+/**
+ * Whether a broadcast message should be logged by the messaging provider,
+ * filtering out types that are too frequent or noisy to log in full.
+ */
+export function shouldLogMessage(message: WebSocketMessage): boolean {
+    return !UNLOGGED_MESSAGE_TYPES.has(message.type);
+}
+
 // Re-export types
 export * from "./types.js";
