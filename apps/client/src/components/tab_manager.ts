@@ -12,6 +12,9 @@ import { partitionPinnedFirst } from "../services/tab_pinning.js";
 import type { EventData } from "./app_context.js";
 import type FNote from "../entities/fnote.js";
 
+/** Where a newly created tab is inserted in the row: appended to the end, or right after the active tab. */
+type TabPlacement = "end" | "afterCurrent";
+
 interface TabState {
     contexts: NoteContext[];
     position: number;
@@ -272,7 +275,8 @@ export default class TabManager extends Component {
         ntxId: string | null = null,
         hoistedNoteId: string = "root",
         mainNtxId: string | null = null,
-        pinned: boolean = false
+        pinned: boolean = false,
+        placement: TabPlacement = "end"
     ): Promise<NoteContext> {
         const noteContext = new NoteContext(ntxId, hoistedNoteId, mainNtxId);
         // set before setEmpty/newNoteContextCreated so the tab renders in its pinned state from the start
@@ -286,11 +290,53 @@ export default class TabManager extends Component {
             return existingNoteContext;
         }
 
-        this.child(noteContext);
+        noteContext.setParent(this);
+        this.children.splice(this.getNewTabInsertionIndex(placement), 0, noteContext);
 
         await this.triggerEvent("newNoteContextCreated", { noteContext });
 
         return noteContext;
+    }
+
+    /**
+     * Index in the flat `children` array at which a newly created (unpinned) tab should be inserted.
+     * `"end"` appends; `"afterCurrent"` inserts right after the active tab and all of its splits,
+     * clamped so an unpinned tab never lands inside the pinned group (which `reorderPinnedFirst`
+     * keeps grouped at the front of the row).
+     */
+    private getNewTabInsertionIndex(placement: TabPlacement): number {
+        if (placement === "end") {
+            return this.children.length;
+        }
+
+        const activeMainNtxId = this.getActiveMainContext()?.ntxId;
+        const activeIndex = activeMainNtxId
+            ? this.children.findIndex((nc) => nc.ntxId === activeMainNtxId)
+            : -1;
+
+        if (activeIndex === -1) {
+            return this.children.length;
+        }
+
+        // Skip past the active tab's main context and all of its splits.
+        let index = activeIndex + 1;
+        while (index < this.children.length && this.children[index].mainNtxId === activeMainNtxId) {
+            index++;
+        }
+
+        // Pinned tabs stay grouped at the front, so never insert the new (unpinned) tab inside them.
+        const firstUnpinnedIndex = this.children.findIndex((nc) => !this.isPartOfPinnedTab(nc));
+        const minIndex = firstUnpinnedIndex === -1 ? this.children.length : firstUnpinnedIndex;
+
+        return Math.max(index, minIndex);
+    }
+
+    private isPartOfPinnedTab(noteContext: NoteContext): boolean {
+        const mainContext = noteContext.mainNtxId
+            ? this.children.find((nc) => nc.ntxId === noteContext.mainNtxId)
+            : noteContext;
+
+        return !!mainContext?.pinned;
     }
 
     async openInNewTab(targetNoteId: string, hoistedNoteId: string | null = null, activate: boolean = false) {
@@ -323,6 +369,7 @@ export default class TabManager extends Component {
             mainNtxId?: string | null;
             hoistedNoteId?: string | null;
             viewScope?: Record<string, any> | null;
+            placement?: TabPlacement | null;
         } = {}
     ): Promise<NoteContext> {
         const noteContext = this.getActiveContext();
@@ -350,6 +397,8 @@ export default class TabManager extends Component {
             hoistedNoteId?: string | null;
             viewScope?: Record<string, any> | null;
             pinned?: boolean | null;
+            /** Where the new tab is placed in the row. Defaults to `"end"`; link/middle-click opens pass `"afterCurrent"`. */
+            placement?: TabPlacement | null;
         } = {}
     ): Promise<NoteContext> {
         const activate = !!opts.activate;
@@ -358,7 +407,13 @@ export default class TabManager extends Component {
         const hoistedNoteId = opts.hoistedNoteId || "root";
         const viewScope = opts.viewScope || { viewMode: "default" };
 
-        const noteContext = await this.openEmptyTab(ntxId, hoistedNoteId, mainNtxId, !!opts.pinned);
+        const noteContext = await this.openEmptyTab(
+            ntxId,
+            hoistedNoteId,
+            mainNtxId,
+            !!opts.pinned,
+            opts.placement ?? "end"
+        );
         if (notePath) {
             await noteContext.setNote(notePath, {
                 // if activate is false, then send normal noteSwitched event

@@ -614,6 +614,9 @@ export default class TabRowWidget extends BasicWidget {
 
         setTimeout(() => $tab.removeClass("note-tab-was-just-added"), 500);
         this.$containerAnchor.before($tab);
+        // The model may insert this tab before the end (e.g. opened from a link, after the
+        // active tab), so mirror the model order in the DOM rather than leaving it appended.
+        this.syncTabOrder();
         this.setVisibility();
         this.setTabCloseEvent($tab);
         this.updateTitle($tab, t("tab_row.new_tab"));

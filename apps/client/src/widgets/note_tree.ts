@@ -244,7 +244,8 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     e.preventDefault();
 
                     appContext.tabManager.openTabWithNoteWithHoisting(notePath, {
-                        activate: !!e.shiftKey
+                        activate: !!e.shiftKey,
+                        placement: "afterCurrent"
                     });
                 }
             }
@@ -410,7 +411,8 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     } else if (ctrlKey) {
                         const notePath = treeService.getNotePath(node);
                         appContext.tabManager.openTabWithNoteWithHoisting(notePath, {
-                            activate: !!event.shiftKey
+                            activate: !!event.shiftKey,
+                            placement: "afterCurrent"
                         });
                     } else if (event.altKey) {
                         node.setSelected(!node.isSelected());
