@@ -141,7 +141,8 @@ group covers the monorepo wiring/convention defects. For the idiomatic "how it s
 **Outdated / mixed imports (Trilium pins ckeditor5 48.2.0).**
 - Spot: deep imports `@ckeditor/ckeditor5-*/src/...`; any `@ckeditor/*` package import instead of the
   `ckeditor5` aggregate; a `ckeditor5`/`@triliumnext/...` import *missing the file extension*;
-  removed/renamed symbols (`Model`/`ViewModel` → `UIModel`; `icons.check` → `IconCheck`).
+  removed/renamed symbols (the UI model class is `ViewModel` — what Trilium's plugins use — not the
+  old `Model`; `icons.check` → `IconCheck`).
 - Why: Trilium always imports from the `ckeditor5` aggregate (pinned 48.2.0) or cross-plugin
   `@triliumnext/ckeditor5-<x>`, **with explicit file extensions** — `eslint-config-ckeditor5`
   (`require-file-extensions-in-imports`, `allow-imports-only-from-main-package-entry-point`,

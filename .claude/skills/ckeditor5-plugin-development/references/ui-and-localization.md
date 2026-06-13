@@ -164,14 +164,14 @@ content for keyboard nav.
 
 ```js
 import { createDropdown, addListToDropdown, addToolbarToDropdown, addMenuToDropdown,
-         SplitButtonView, UIModel, Collection } from 'ckeditor5';
+         SplitButtonView, ViewModel, Collection } from 'ckeditor5';
 
 const dropdown = createDropdown( locale );
 dropdown.buttonView.set( { label: 'Label', withText: true, tooltip: true, icon } );
 
 // List dropdown
 const items = new Collection();
-items.add( { type: 'button', model: new UIModel( { label: 'Foo', withText: true, commandParam: 'foo' } ) } );
+items.add( { type: 'button', model: new ViewModel( { label: 'Foo', withText: true, commandParam: 'foo' } ) } );
 addListToDropdown( dropdown, items );
 dropdown.on( 'execute', evt => editor.execute( 'cmd', { value: evt.source.commandParam } ) );
 

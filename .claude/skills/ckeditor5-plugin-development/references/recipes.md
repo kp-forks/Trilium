@@ -133,7 +133,7 @@ class InternalLink extends Plugin {
 		const balloon = this.editor.plugins.get( 'ContextualBalloon' );
 		this.listenTo( balloon, 'change:visibleView', ( evt, name, visibleView ) => {
 			if ( visibleView === linkUI.formView ) {
-				const button = new ButtonView( this.locale );
+				const button = new ButtonView( this.editor.locale );
 				button.set( { label: 'Internal link', withText: true, tooltip: true } );
 				button.bind( 'isEnabled' ).to( this.editor.commands.get( 'link' ) );
 				button.render();

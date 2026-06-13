@@ -121,7 +121,9 @@ pnpm test:all          # test:parallel && test:sequential
 ```
 
 `math` and `mermaid` **must** run sequentially — running multiple headless Chrome instances at
-once exhausts resources. Light (happy-dom) packages run in parallel.
+once exhausts resources. The aggregator (`ckeditor5`) is also in the sequential group (its
+`src/**/*.spec.ts` includes browser-mode specs); `server` is there for a different reason (shared
+test DB, per `CLAUDE.md`), not browser limits. Light (happy-dom) packages run in parallel.
 
 ## Notes
 
