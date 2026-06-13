@@ -925,7 +925,8 @@
     "hide_child_notes": "Sembunyikan catatan anak di tree",
     "open_all_in_tabs": "Buka semua",
     "open_all_in_tabs_tooltip": "Buka semua hasil di tab baru",
-    "open_all_confirm_other": "Ini akan membuka {{count}} catatan di tab baru. Lanjutkan?"
+    "open_all_confirm_other": "Ini akan membuka {{count}} catatan di tab baru. Lanjutkan?",
+    "dashboard": "Dasbor"
   },
   "edited_notes": {
     "no_edited_notes_found": "Belum ada catatan yang diedit pada hari ini...",
@@ -1179,7 +1180,11 @@
     "exit-fullscreen": "Keluar dari layar penuh",
     "unsupported-format": "Pratinjau media tidak tersedia untuk format file ini:\n{{mime}}",
     "zoom-to-fit": "Perbesar hingga memenuhi",
-    "zoom-reset": "Setel ulang perbesar hingga memenuhi"
+    "zoom-reset": "Setel ulang perbesar hingga memenuhi",
+    "previous-video": "Video sebelumnya: {{- title}}",
+    "next-video": "Video berikutnya: {{- title}}",
+    "previous-audio": "Audio sebelumnya: {{- title}}",
+    "next-audio": "Audio berikutnya: {{- title}}"
   },
   "protected_session": {
     "enter_password_instruction": "Menampilkan catatan terlindungi memerlukan Anda memasukkan kata sandi:",
@@ -1255,7 +1260,9 @@
     "error_creating_anonymized_database": "Tidak dapat membuat database anonim, periksa log backend untuk detail",
     "successfully_created_fully_anonymized_database": "Database yang dianonimkan sepenuhnya berhasil dibuat di {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Database yang dianonimkan secara ringan berhasil dibuat di {{anonymizedFilePath}}",
-    "no_anonymized_database_yet": "Belum ada database anonim."
+    "no_anonymized_database_yet": "Belum ada database anonim.",
+    "anonymized_databases_location": "Database yang dianonimkan disimpan di {{- anonymizedFolder}}.",
+    "download": "Unduh"
   },
   "database_integrity_check": {
     "title": "Pemeriksaan Integritas Database",
@@ -1564,9 +1571,9 @@
     "title": "Cadangan",
     "automatic_backup": "Cadangan otomatis",
     "automatic_backup_description": "Trilium dapat mencadangkan database secara otomatis:",
-    "enable_daily_backup": "Cadangkan setiap hari",
-    "enable_weekly_backup": "Cadangkan setiap minggu",
-    "enable_monthly_backup": "Cadangkan setiap bulan",
+    "enable_daily_backup": "Pencadangan harian",
+    "enable_weekly_backup": "Pencadangan mingguan",
+    "enable_monthly_backup": "Pencadangan bulanan",
     "backup_recommendation": "Disarankan untuk tetap mengaktifkan cadangan, tetapi ini dapat memperlambat startup aplikasi pada database besar dan/atau perangkat penyimpanan yang lambat.",
     "backup_now": "Cadangkan sekarang",
     "backup_database_now": "Cadangkan database sekarang",
@@ -1575,7 +1582,10 @@
     "path": "Path",
     "database_backed_up_to": "Database telah dicadangkan ke {{- backupFilePath}}",
     "no_backup_yet": "belum ada cadangan",
-    "download": "Unduh"
+    "download": "Unduh",
+    "automatic_backups_title": "Pencadangan otomatis",
+    "automatic_backups_description": "Trilium dapat mencadangkan database secara otomatis. Disarankan untuk tetap mengaktifkan pencadangan, tetapi ini dapat memperlambat startup aplikasi pada database besar dan/atau perangkat penyimpanan yang lambat.",
+    "backup_location_description": "Cadangan disimpan di {{- backupFolder}}."
   },
   "etapi": {
     "title": "ETAPI",
@@ -1596,7 +1606,8 @@
     "delete_token": "Hapus / nonaktifkan token ini",
     "rename_token_title": "Ubah nama token",
     "rename_token_message": "Silakan masukkan nama token baru",
-    "delete_token_confirmation": "Apakah Anda yakin ingin menghapus token ETAPI \"{{name}}\"?"
+    "delete_token_confirmation": "Apakah Anda yakin ingin menghapus token ETAPI \"{{name}}\"?",
+    "no_tokens": "Belum ada token."
   },
   "options_widget": {
     "options_status": "Status opsi",
@@ -1960,7 +1971,10 @@
     "print_report_stack_trace": "Stack trace",
     "print_report_collection_content_other": "{{count}} catatan dalam koleksi tidak dapat dicetak karena tidak didukung atau dilindungi.",
     "print_report_collection_details_button": "Lihat detail",
-    "print_report_collection_details_ignored_notes": "Catatan yang diabaikan"
+    "print_report_collection_details_ignored_notes": "Catatan yang diabaikan",
+    "content_load_error": "Konten catatan tidak dapat dimuat.",
+    "content_load_retry": "Coba lagi",
+    "content_load_stalled": "Konten catatan masih dimuat…"
   },
   "note_title": {
     "placeholder": "ketik judul catatan di sini...",
@@ -2358,7 +2372,8 @@
     "unpin_tab_description": "Lepas sematan tab ini, memungkinkannya untuk ditutup dan dipindahkan secara bebas"
   },
   "content_renderer": {
-    "open_externally": "Buka secara eksternal"
+    "open_externally": "Buka secara eksternal",
+    "mermaid_diagram_error": "Diagram Mermaid gagal dirender: {{error}}"
   },
   "modal": {
     "close": "Tutup",
@@ -2566,7 +2581,8 @@
     "menu_run_mobile_startup": "Saat frontend mobile mulai berjalan",
     "menu_change_to_widget": "Ubah menjadi widget",
     "menu_change_to_frontend_script": "Ubah menjadi script frontend",
-    "menu_theme_base": "Basis tema"
+    "menu_theme_base": "Basis tema",
+    "type_custom_request_handler": "Penangan permintaan kustom"
   },
   "setup_form": {
     "more_info": "Pelajari lebih lanjut"
@@ -2716,8 +2732,10 @@
       "rename_note": "Ubah nama catatan",
       "delete_note": "Hapus catatan",
       "move_note": "Pindahkan catatan",
-      "clone_note": "Kloning catatan"
-    }
+      "clone_note": "Kloning catatan",
+      "search_icons": "Cari ikon"
+    },
+    "not_available_in_standalone": "Fitur AI/LLM tidak tersedia dalam versi standalone Trilium, karena penyedia LLM tidak mengizinkan akses langsung dari browser."
   },
   "common": {
     "save": "Simpan",
@@ -2751,5 +2769,20 @@
       "invalid-symbol": "simbol markdown harus satu karakter, kecuali \"[\", \" \", \"X\", dan \"]\"",
       "duplicate-symbol": "simbol markdown duplikat"
     }
+  },
+  "options": {
+    "back": "Kembali ke semua opsi"
+  },
+  "image_navigation": {
+    "previous": "Gambar sebelumnya: {{- title}}",
+    "next": "Gambar berikutnya: {{- title}}"
+  },
+  "image_viewer": {
+    "loading_error": "Terjadi kesalahan saat memuat gambar."
+  },
+  "dashboard_view": {
+    "refresh-widget": "Muat ulang",
+    "remove-widget": "Hapus dari dasbor",
+    "empty-hint": "Setiap catatan anak akan menjadi widget. Seret catatan ke sini dari pohon atau buat yang baru."
   }
 }
