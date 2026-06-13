@@ -1,4 +1,4 @@
-import { ButtonView, Command, Plugin, toWidget, Widget, type Observable } from 'ckeditor5';
+import { ButtonView, Command, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Observable } from 'ckeditor5';
 import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
 
@@ -61,6 +61,16 @@ class LinkEmbedEditing extends Plugin {
     init() {
         this._defineSchema();
         this._defineConverters();
+
+        // linkMention is an empty inline object whose editing view holds a UIElement child, so a
+        // view position inside the rendered widget would otherwise resolve to a degenerate model
+        // position *inside* the atomic element. Map it just outside the mention instead (mirrors
+        // ReferenceLink). The block linkEmbed is a $block object and needs no such mapping.
+        this.editor.editing.mapper.on(
+            'viewToModelPosition',
+            viewToModelPositionOutsideModelElement(this.editor.model, viewElement => viewElement.hasClass('link-mention'))
+        );
+
         this.editor.commands.add(LINK_EMBED_COMMAND, new InsertLinkEmbedCommand(this.editor));
         this.editor.commands.add(CHANGE_LINK_DISPLAY_COMMAND, new ChangeLinkDisplayCommand(this.editor));
     }
