@@ -1,10 +1,10 @@
 import { ClassicEditor, Essentials, Paragraph } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import InsertDateTimePlugin, { COMMAND_NAME } from "./insert_date_time.js";
 
 describe("InsertDateTimePlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let triggerCommand: ReturnType<typeof vi.fn>;
 
@@ -14,19 +14,11 @@ describe("InsertDateTimePlugin", () => {
             getComponentByEl: () => ({ triggerCommand })
         } as unknown as typeof glob;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, InsertDateTimePlugin]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, InsertDateTimePlugin]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin and registers the command and toolbar button", () => {

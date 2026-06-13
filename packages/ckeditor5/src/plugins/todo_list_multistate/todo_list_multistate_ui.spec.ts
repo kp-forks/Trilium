@@ -1,7 +1,8 @@
 import { DEFAULT_TASK_STATES, DONE_STATE_NAME, NONE_STATE_NAME, type TaskStateDef } from "@triliumnext/commons";
 import { _setModelData as setModelData, ClassicEditor, Essentials, Paragraph, TodoList } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../../test/editor-kit.js";
 import TodoListMultistateEditing, { getActiveTaskStates } from "./todo_list_multistate_editing.js";
 import TodoListMultistateUI from "./todo_list_multistate_ui.js";
 
@@ -10,22 +11,10 @@ const TODO_FIXTURE =
     '<paragraph listIndent="0" listItemId="i-a" listType="todo">Task[]</paragraph>';
 
 describe("TodoListMultistateUI", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, TodoList, TodoListMultistateEditing, TodoListMultistateUI]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, TodoList, TodoListMultistateEditing, TodoListMultistateUI]);
     });
 
     it("loads the plugin", () => {
@@ -191,22 +180,14 @@ describe("TodoListMultistateUI", () => {
             stateWithNoTitle
         ];
 
-        const el = document.createElement("div");
-        document.body.appendChild(el);
-        const customEditor = await ClassicEditor.create(el, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, TodoList, TodoListMultistateEditing, TodoListMultistateUI],
-            taskStates: customStates
-        } as unknown as Parameters<typeof ClassicEditor.create>[1]);
+        const customEditor = await createTestEditor(
+            [Essentials, Paragraph, TodoList, TodoListMultistateEditing, TodoListMultistateUI],
+            { taskStates: customStates } as unknown as Parameters<typeof ClassicEditor.create>[1]
+        );
 
-        try {
-            const button = customEditor.ui.componentFactory.create(`taskState:${stateWithNoTitle.name}`) as {
-                label: string;
-            };
-            expect(button.label).toBe(stateWithNoTitle.name);
-        } finally {
-            el.remove();
-            await customEditor.destroy();
-        }
+        const button = customEditor.ui.componentFactory.create(`taskState:${stateWithNoTitle.name}`) as unknown as {
+            label: string;
+        };
+        expect(button.label).toBe(stateWithNoTitle.name);
     });
 });

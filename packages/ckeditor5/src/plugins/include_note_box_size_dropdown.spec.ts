@@ -1,11 +1,11 @@
 import { ClassicEditor, Essentials, Paragraph, Widget, _setModelData as setModelData } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import IncludeNoteBoxSizeDropdown from "./include_note_box_size_dropdown.js";
 import IncludeNote, { BOX_SIZE_COMMAND_NAME, BOX_SIZES } from "./includenote.js";
 
 describe("IncludeNoteBoxSizeDropdown", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
@@ -17,20 +17,12 @@ describe("IncludeNoteBoxSizeDropdown", () => {
         // includenote.ts calls jQuery globally; provide a passthrough stub
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin and registers the dropdown component", () => {

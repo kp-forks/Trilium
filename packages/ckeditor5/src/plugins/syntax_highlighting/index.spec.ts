@@ -1,6 +1,7 @@
 import { _setModelData as setModelData, _getViewData as getViewData, ClassicEditor, CodeBlock, Essentials, GeneralHtmlSupport, HorizontalLine, Paragraph, type EditorConfig } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../../test/editor-kit.js";
 import SyntaxHighlighting from "./index.js";
 
 // A tiny fake highlight.js that wraps the whole text in a single hljs-keyword
@@ -21,37 +22,26 @@ function makeFakeHljs(html: (text: string) => string): FakeHljs {
 const DEFAULT_MIME = "auto-detect";
 
 async function createEditor(
-    editorElement: HTMLDivElement,
     syntaxHighlighting: EditorConfig["syntaxHighlighting"],
     extraPlugins: EditorConfig["plugins"] = [],
     extraConfig: Partial<EditorConfig> = {}
 ): Promise<ClassicEditor> {
-    return ClassicEditor.create(editorElement, {
-        licenseKey: "GPL",
-        plugins: [Essentials, Paragraph, CodeBlock, SyntaxHighlighting, ...(extraPlugins ?? [])],
-        syntaxHighlighting,
-        ...extraConfig
-    });
+    return createTestEditor(
+        [Essentials, Paragraph, CodeBlock, SyntaxHighlighting, ...(extraPlugins ?? [])],
+        {
+            syntaxHighlighting,
+            ...extraConfig
+        }
+    );
 }
 
 describe("SyntaxHighlighting", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor | undefined;
     let fakeHljs: FakeHljs;
 
     beforeEach(() => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
         // Wrap the text in one span so a marker is generated for every codeblock.
         fakeHljs = makeFakeHljs((text) => `<span class="hljs-keyword">${escapeHtml(text)}</span>`);
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        if (editor) {
-            await editor.destroy();
-            editor = undefined;
-        }
     });
 
     function makeConfig(overrides: Partial<NonNullable<EditorConfig["syntaxHighlighting"]>> = {}): EditorConfig["syntaxHighlighting"] {
@@ -65,7 +55,7 @@ describe("SyntaxHighlighting", () => {
     }
 
     it("does nothing when the syntaxHighlighting config is missing", async () => {
-        editor = await createEditor(editorElement, undefined);
+        editor = await createEditor(undefined);
         const plugin = editor.plugins.get(SyntaxHighlighting);
         expect(plugin).toBeInstanceOf(SyntaxHighlighting);
 
@@ -76,7 +66,7 @@ describe("SyntaxHighlighting", () => {
 
     it("does nothing when syntaxHighlighting is disabled", async () => {
         const loadHighlightJs = vi.fn(async () => fakeHljs);
-        editor = await createEditor(editorElement, makeConfig({ enabled: false, loadHighlightJs }));
+        editor = await createEditor(makeConfig({ enabled: false, loadHighlightJs }));
 
         setModelData(editor.model, '<codeBlock language="javascript">const a[]</codeBlock>');
         expect(loadHighlightJs).not.toHaveBeenCalled();
@@ -84,7 +74,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("highlights a code block, downcasting markers to spans", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, '<codeBlock language="javascript">const a[]</codeBlock>');
         await flushPostFixers(editor);
@@ -98,7 +88,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("uses highlightAuto when the language matches the default mime type", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, `<codeBlock language="${DEFAULT_MIME}">hello[]</codeBlock>`);
         await flushPostFixers(editor);
@@ -108,7 +98,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("does not highlight plaintext code blocks", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, '<codeBlock language="text-plain">plain text[]</codeBlock>');
         await flushPostFixers(editor);
@@ -119,7 +109,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("re-highlights when the code block content changes, clearing old markers", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, '<codeBlock language="javascript">const a[]</codeBlock>');
         await flushPostFixers(editor);
@@ -140,7 +130,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("handles softBreaks (newlines) in code blocks", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         editor.model.change((writer) => {
             const root = editor?.model.document.getRoot();
@@ -163,7 +153,7 @@ describe("SyntaxHighlighting", () => {
         // Produce nested spans plus an escaped entity so the entity branch runs.
         fakeHljs = makeFakeHljs(() =>
             '<span class="hljs-meta">#<span class="hljs-keyword">include</span> <span class="hljs-string">&lt;stdio.h&gt;</span></span>');
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         editor.model.change((writer) => {
             const root = editor?.model.document.getRoot();
@@ -184,7 +174,7 @@ describe("SyntaxHighlighting", () => {
 
     it("uses only the first class when highlight.js emits a scoped (space-separated) class", async () => {
         fakeHljs = makeFakeHljs((text) => `<span class="hljs-title function_">${escapeHtml(text)}</span>`);
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, '<codeBlock language="python">def f[]</codeBlock>');
         await flushPostFixers(editor);
@@ -195,7 +185,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("does not highlight when the highlighted block is too large", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         editor.model.change((writer) => {
             const root = editor?.model.document.getRoot();
@@ -217,7 +207,7 @@ describe("SyntaxHighlighting", () => {
 
     it("ignores a falsy highlight result", async () => {
         fakeHljs.highlight.mockReturnValue(undefined);
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, '<codeBlock language="javascript">const a[]</codeBlock>');
         await flushPostFixers(editor);
@@ -231,7 +221,7 @@ describe("SyntaxHighlighting", () => {
         // recurse branch is skipped) and another <htmlDiv> (recursed into) that holds
         // the code block. Inserting the whole subtree as one unit makes the postfixer
         // take the recursive lookForCodeBlocks path.
-        editor = await createEditor(editorElement, makeConfig(), [GeneralHtmlSupport, HorizontalLine], {
+        editor = await createEditor(makeConfig(), [GeneralHtmlSupport, HorizontalLine], {
             htmlSupport: { allow: [{ name: /.*/, attributes: true, classes: true, styles: true }] }
         });
 
@@ -246,7 +236,7 @@ describe("SyntaxHighlighting", () => {
         // A closing </span> with no matching opening tag pops an empty stack, so
         // posStart is undefined and no marker is added for it.
         fakeHljs = makeFakeHljs((text) => `<span class="hljs-keyword">${escapeHtml(text)}</span></span>`);
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model, '<codeBlock language="javascript">a[]</codeBlock>');
         await flushPostFixers(editor);
@@ -260,7 +250,7 @@ describe("SyntaxHighlighting", () => {
         // with no corresponding child text (child stays null -> startOffset fallback,
         // and the child-fetch falls into the empty childText branch).
         fakeHljs = makeFakeHljs(() => '<span class="hljs-comment"></span>');
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         editor.model.change((writer) => {
             const root = editor?.model.document.getRoot();
@@ -278,7 +268,7 @@ describe("SyntaxHighlighting", () => {
     });
 
     it("clears markers when a code block is removed", async () => {
-        editor = await createEditor(editorElement, makeConfig());
+        editor = await createEditor(makeConfig());
 
         setModelData(editor.model,
             '<codeBlock language="javascript">const a</codeBlock><paragraph>after[]</paragraph>');

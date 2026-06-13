@@ -1,6 +1,7 @@
 import { ClassicEditor, Essentials, Paragraph, Plugin, toWidget, Widget, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import IncludeNote from "./includenote.js";
 import IncludeNoteBoxSizeDropdown from "./include_note_box_size_dropdown.js";
 import IncludeNoteToolbar from "./include_note_toolbar.js";
@@ -69,7 +70,6 @@ function getRelatedElementFn(ed: ClassicEditor): (selection: unknown) => unknown
 // ---------------------------------------------------------------------------
 
 describe("IncludeNoteToolbar", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
@@ -81,20 +81,12 @@ describe("IncludeNoteToolbar", () => {
         // includenote.ts calls jQuery globally; provide a passthrough stub.
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin", () => {
@@ -159,7 +151,6 @@ describe("IncludeNoteToolbar", () => {
 // ---------------------------------------------------------------------------
 
 describe("isIncludeNoteWidget — section widget without a class attribute (|| '' branch)", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
@@ -170,20 +161,12 @@ describe("isIncludeNoteWidget — section widget without a class attribute (|| '
 
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar, SectionNoClassWidget]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar, SectionNoClassWidget]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("returns null for a section widget that has no class attribute (exercises the || '' fallback at line 43)", () => {
@@ -217,7 +200,6 @@ describe("isIncludeNoteWidget — section widget without a class attribute (|| '
 // ---------------------------------------------------------------------------
 
 describe("isIncludeNoteWidget — real non-include-note widgets (branch coverage)", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
@@ -243,20 +225,12 @@ describe("isIncludeNoteWidget — real non-include-note widgets (branch coverage
         // Both includenote.ts and linkembed.ts call jQuery globally.
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar, LinkEmbed]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar, LinkEmbed]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("returns null when getSelectedElement returns a non-widget element (covers the !isWidget branch at line 35-36)", () => {

@@ -1,25 +1,14 @@
 import { _setModelData as setModelData, ClassicEditor, Essentials, Indent, IndentBlock, Paragraph, Table, TableEditing } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import IndentBlockShortcutPlugin from "./indent_block_shortcut.js";
 
 describe("IndentBlockShortcutPlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Indent, IndentBlock, Table, TableEditing, IndentBlockShortcutPlugin]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Indent, IndentBlock, Table, TableEditing, IndentBlockShortcutPlugin]);
     });
 
     it("loads the plugin", () => {

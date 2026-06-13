@@ -1,25 +1,14 @@
 import { _setModelData as setModelData, ClassicEditor, Essentials, Paragraph, Strikethrough } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import StrikethroughAsDel from "./strikethrough_as_del.js";
 
 describe("StrikethroughAsDel", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Strikethrough, StrikethroughAsDel]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Strikethrough, StrikethroughAsDel]);
     });
 
     it("registers the plugin", () => {

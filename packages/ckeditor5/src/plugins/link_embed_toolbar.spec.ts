@@ -1,6 +1,7 @@
 import { ClassicEditor, Essentials, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import LinkEmbedToolbar from "./link_embed_toolbar.js";
 import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./linkembed.js";
 
@@ -71,7 +72,6 @@ function getToolbarDef(editor: ClassicEditor): {
 // ---------------------------------------------------------------------------
 
 describe("LinkEmbedToolbar", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
@@ -94,20 +94,12 @@ describe("LinkEmbedToolbar", () => {
 
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, LinkEmbed, LinkEmbedToolbar]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, LinkEmbed, LinkEmbedToolbar]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     // -----------------------------------------------------------------------

@@ -1,7 +1,8 @@
 import { ClassicEditor, Essentials, Paragraph, _setModelData as setModelData, WidgetToolbarRepository } from "ckeditor5";
 import { Admonition } from "@triliumnext/ckeditor5-admonition";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import AdmonitionToolbar from "./admonition_toolbar.js";
 import AdmonitionTypeDropdown from "./admonition_type_dropdown.js";
 
@@ -25,22 +26,10 @@ function selectInsideFirstAdmonition(editor: ClassicEditor): void {
 }
 
 describe("AdmonitionToolbar", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Admonition, AdmonitionTypeDropdown, AdmonitionToolbar]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Admonition, AdmonitionTypeDropdown, AdmonitionToolbar]);
     });
 
     it("loads the plugin", () => {

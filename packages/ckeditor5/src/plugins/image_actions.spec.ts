@@ -1,25 +1,14 @@
 import { ClassicEditor, Essentials, Image, ImageBlock, ImageInline, ImageUtils, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import ImageActions from "./image_actions.js";
 
 describe("ImageActions", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions]);
     });
 
     it("loads the plugin and registers commands and toolbar buttons", () => {
@@ -59,15 +48,7 @@ describe("ImageActions", () => {
         const copyToClipboard = vi.fn();
 
         return (async () => {
-            editorElement.remove();
-            await editor.destroy();
-
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions],
+            editor = await createTestEditor([Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions], {
                 imageActions: {
                     copyToClipboard,
                     download: vi.fn()
@@ -94,15 +75,7 @@ describe("ImageActions", () => {
         const download = vi.fn();
 
         return (async () => {
-            editorElement.remove();
-            await editor.destroy();
-
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions],
+            editor = await createTestEditor([Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions], {
                 imageActions: {
                     copyToClipboard: vi.fn(),
                     download
@@ -129,15 +102,7 @@ describe("ImageActions", () => {
         const copyToClipboard = vi.fn();
 
         return (async () => {
-            editorElement.remove();
-            await editor.destroy();
-
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions],
+            editor = await createTestEditor([Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions], {
                 imageActions: {
                     copyToClipboard,
                     download: vi.fn()
@@ -202,17 +167,9 @@ describe("ImageActions", () => {
 
     it("uses the translate config callback to label buttons when provided", () => {
         return (async () => {
-            editorElement.remove();
-            await editor.destroy();
-
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
             const translate = (key: string) => `translated:${key}`;
 
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions],
+            editor = await createTestEditor([Essentials, Paragraph, Image, ImageBlock, ImageInline, ImageActions], {
                 translate
             });
 

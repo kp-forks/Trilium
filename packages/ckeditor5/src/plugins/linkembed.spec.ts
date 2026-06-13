@@ -10,6 +10,7 @@ import {
 } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND } from "./linkembed.js";
 
 const META = {
@@ -23,7 +24,6 @@ const META = {
 };
 
 describe("LinkEmbed", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let triggerCommand: ReturnType<typeof vi.fn>;
     let renderLinkEmbed: ReturnType<typeof vi.fn>;
@@ -49,19 +49,11 @@ describe("LinkEmbed", () => {
             })
         } as unknown as typeof glob;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     // -----------------------------------------------------------------------

@@ -8,8 +8,9 @@ import {
     type ModelElement,
     type ViewElement
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { createTestEditor, getEditorElement } from "../../../test/editor-kit.js";
 import TodoListMultistateToolbar from "./todo_list_multistate_toolbar.js";
 import TodoListMultistateUI from "./todo_list_multistate_ui.js";
 
@@ -18,28 +19,20 @@ const TODO_FIXTURE =
     '<paragraph listIndent="0" listItemId="todo-b" listType="todo">Second</paragraph>';
 
 describe("TodoListMultistateToolbar", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     async function createEditor(config: Record<string, unknown> = {}) {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, List, TodoListMultistateUI, TodoListMultistateToolbar],
-            ...config
-        });
+        editor = await createTestEditor(
+            [Essentials, Paragraph, List, TodoListMultistateUI, TodoListMultistateToolbar],
+            config
+        );
         setModelData(editor.model, TODO_FIXTURE);
         // Make the editor visible & away from the viewport edge so positioning/DOM lookups work.
+        const editorElement = getEditorElement(editor);
         editorElement.style.marginLeft = "120px";
         editorElement.style.marginTop = "60px";
         return editor;
     }
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
-    });
 
     function getCheckbox(index = 0): HTMLInputElement {
         const domRoot = editor.editing.view.getDomRoot();

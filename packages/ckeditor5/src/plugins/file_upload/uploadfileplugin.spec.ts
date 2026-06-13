@@ -1,25 +1,14 @@
 import { ClassicEditor, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor } from "../../../test/editor-kit.js";
 import Uploadfileplugin from "./uploadfileplugin.js";
 
 describe("Uploadfileplugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Uploadfileplugin]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Uploadfileplugin]);
     });
 
     it("loads the plugin and its required FileUploadEditing dependency", () => {

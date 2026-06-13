@@ -1,25 +1,14 @@
 import { _setModelData as setModelData, _getViewData as getViewData, ClassicEditor, Code, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import InlineCodeNoSpellcheck from "./inline_code_no_spellcheck.js";
 
 describe("InlineCodeNoSpellcheck", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Code, InlineCodeNoSpellcheck]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Code, InlineCodeNoSpellcheck]);
     });
 
     it("loads the plugin", () => {

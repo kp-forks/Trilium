@@ -10,8 +10,9 @@ import {
     _getModelData as getModelData,
     _setModelData as setModelData
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../../test/editor-kit.js";
 import FileUploadCommand from "./fileuploadcommand.js";
 
 /**
@@ -85,28 +86,16 @@ function createUploadAdapterPlugin(editor: ClassicEditor) {
 }
 
 describe("FileUploadCommand", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, FileRepository, ReferenceSchema]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, FileRepository, ReferenceSchema]);
 
         // Provide a minimal upload adapter so FileRepository.createLoader() succeeds.
         createUploadAdapterPlugin(editor);
 
         // Register the command manually (FileUploadEditing is not loaded here).
         editor.commands.add("fileUpload", new FileUploadCommand(editor));
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
     });
 
     // -----------------------------------------------------------------

@@ -1,27 +1,18 @@
 import { Bookmark, ClassicEditor, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor } from "../test/editor-kit.js";
 // Side effect: assigns window.CKEDITOR_TRANSLATIONS, the global CKEditor reads to relabel its
 // built-in strings. Imported before any editor is created so the override is in place.
 import "./translation_overrides.js";
 
 describe("translation overrides", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Bookmark],
+        editor = await createTestEditor([Essentials, Paragraph, Bookmark], {
             toolbar: { items: ["bookmark"] }
         });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("are picked up by the editor UI (Bookmark relabelled to Anchor)", () => {

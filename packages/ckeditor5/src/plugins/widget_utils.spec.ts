@@ -7,8 +7,9 @@ import {
     Widget,
     _setModelData as setModelData,
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import { preventCKEditorHandling } from "./widget_utils.js";
 
 /**
@@ -54,22 +55,10 @@ class TestBoxPlugin extends Plugin {
 }
 
 describe("preventCKEditorHandling", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, TestBoxPlugin],
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, TestBoxPlugin]);
     });
 
     it("attaches event listeners without throwing", () => {

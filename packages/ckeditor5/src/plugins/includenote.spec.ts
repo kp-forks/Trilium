@@ -9,10 +9,10 @@ import {
 } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import IncludeNote, { BOX_SIZE_COMMAND_NAME, BOX_SIZES, COMMAND_NAME } from "./includenote.js";
 
 describe("IncludeNote", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let triggerCommand: ReturnType<typeof vi.fn>;
     let loadIncludedNote: ReturnType<typeof vi.fn>;
@@ -27,20 +27,12 @@ describe("IncludeNote", () => {
         // includenote.ts calls jQuery globally; provide a passthrough stub.
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Widget, IncludeNote]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     // -----------------------------------------------------------------------

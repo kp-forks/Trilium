@@ -1,27 +1,15 @@
 import { _setModelData as setModelData, ClassicEditor, Essentials, Link, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import CopyLinkUrlButton from "./copy_link_url.js";
 
 describe("CopyLinkUrlButton", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     async function createEditor(extraConfig: Record<string, unknown> = {}): Promise<ClassicEditor> {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        return ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Link, CopyLinkUrlButton],
-            ...extraConfig
-        });
+        return createTestEditor([Essentials, Paragraph, Link, CopyLinkUrlButton], extraConfig);
     }
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
-    });
 
     it("registers itself as a plugin", async () => {
         editor = await createEditor();

@@ -8,8 +8,9 @@ import {
     Widget,
 } from "ckeditor5";
 import type { ModelElement, ModelText } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import MoveBlockUpDownPlugin from "./move_block_updown.js";
 
 /** Returns the text data of the Nth block in the editor root (0-indexed). */
@@ -64,22 +65,10 @@ class TestBoxPlugin extends Plugin {
 }
 
 describe("MoveBlockUpDownPlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, MoveBlockUpDownPlugin, TestBoxPlugin]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, MoveBlockUpDownPlugin, TestBoxPlugin]);
     });
 
     it("registers moveBlockUp and moveBlockDown commands", () => {
@@ -440,13 +429,9 @@ describe("MoveBlockUpDownPlugin", () => {
 });
 
 describe("MoveBlockUpDownPlugin with collapsible summary element", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
         // Use a minimal plugin that registers the details/summary schema
         // so we can test the `el.name === 'summary'` hoisting branch.
         class MinimalCollapsibleSchema extends Plugin {
@@ -467,15 +452,7 @@ describe("MoveBlockUpDownPlugin with collapsible summary element", () => {
             }
         }
 
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, MoveBlockUpDownPlugin, MinimalCollapsibleSchema]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, MoveBlockUpDownPlugin, MinimalCollapsibleSchema]);
     });
 
     it("hoists a caret in <summary> to the enclosing <details> when moving up", () => {

@@ -11,6 +11,7 @@ export default defineConfig({
             instances: [{ browser: "chrome" }]
         },
         include: ["src/**/*.spec.ts"],
+        setupFiles: ["./test/setup.ts"],
         globals: true,
         watch: false,
         reporters: ["default", ["junit", { outputFile: "./test-output/vitest/junit.xml", addFileAttribute: true }]],

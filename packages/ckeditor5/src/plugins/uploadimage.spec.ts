@@ -1,6 +1,7 @@
 import { ClassicEditor, Essentials, FileRepository, Paragraph, type FileLoader, type UploadAdapter } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import UploadimagePlugin from "./uploadimage.js";
 
 /**
@@ -73,7 +74,6 @@ function createFakeLoader(file: File | null): FileLoader {
 }
 
 describe("UploadimagePlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let getHeaders: ReturnType<typeof vi.fn>;
     let originalXHR: typeof window.XMLHttpRequest;
@@ -89,20 +89,12 @@ describe("UploadimagePlugin", () => {
         window.XMLHttpRequest = FakeXHR as unknown as typeof window.XMLHttpRequest;
         FakeXHR.last = undefined;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, FileRepository, UploadimagePlugin]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, FileRepository, UploadimagePlugin]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         window.XMLHttpRequest = originalXHR;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     function createAdapter(file: File | null): UploadAdapter {

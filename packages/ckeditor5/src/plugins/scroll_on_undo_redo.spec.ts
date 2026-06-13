@@ -1,27 +1,19 @@
 import { _setModelData as setModelData, ClassicEditor, Essentials, Paragraph, Undo } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import ScrollOnUndoRedoPlugin from "./scroll_on_undo_redo.js";
 
 describe("ScrollOnUndoRedoPlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
         // Create the editor with real timers so CKEditor's internal rAF/timeout usage works.
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Undo, ScrollOnUndoRedoPlugin]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, Undo, ScrollOnUndoRedoPlugin]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         vi.useRealTimers();
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin", () => {

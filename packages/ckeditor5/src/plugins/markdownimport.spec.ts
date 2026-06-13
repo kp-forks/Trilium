@@ -1,10 +1,10 @@
 import { ClassicEditor, Essentials, Paragraph } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import MarkdownImportPlugin, { COMMAND_NAME } from "./markdownimport.js";
 
 describe("MarkdownImportPlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let triggerCommand: ReturnType<typeof vi.fn>;
 
@@ -14,19 +14,11 @@ describe("MarkdownImportPlugin", () => {
             getComponentByEl: () => ({ triggerCommand })
         } as unknown as typeof glob;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, MarkdownImportPlugin]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, MarkdownImportPlugin]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin and registers the command and toolbar button", () => {

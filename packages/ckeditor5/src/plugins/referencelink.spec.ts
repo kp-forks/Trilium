@@ -1,10 +1,10 @@
 import { _getViewData as getViewData, _setModelData as setModelData, ClassicEditor, Essentials, LinkEditing, Paragraph } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import ReferenceLink from "./referencelink.js";
 
 describe("ReferenceLink", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let getReferenceLinkTitle: ReturnType<typeof vi.fn>;
     let getReferenceLinkTitleSync: ReturnType<typeof vi.fn>;
@@ -23,20 +23,12 @@ describe("ReferenceLink", () => {
         // The editingDowncast and upcast converters call jQuery via a global `$`.
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, LinkEditing, ReferenceLink]
-        });
+        editor = await createTestEditor([Essentials, Paragraph, LinkEditing, ReferenceLink]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin, registers the schema and the command", () => {

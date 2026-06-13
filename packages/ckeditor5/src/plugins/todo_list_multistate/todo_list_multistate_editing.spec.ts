@@ -1,8 +1,9 @@
 import { type TaskStateDef } from "@triliumnext/commons";
 import { Tooltip } from "bootstrap";
 import { _setModelData as setModelData, ClassicEditor, Essentials, keyCodes, List, Paragraph, TodoList, type ModelElement } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../../test/editor-kit.js";
 import TodoListMultistateEditing, { getActiveTaskStates, getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
 
 const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";
@@ -16,15 +17,8 @@ const CUSTOM_STATES: TaskStateDef[] = [
 
 const TODO_FIXTURE = '<paragraph listIndent="0" listItemId="t-a" listType="todo">Task[]</paragraph>';
 
-async function createEditor(config: Record<string, unknown> = {}): Promise<{ editorElement: HTMLDivElement; editor: ClassicEditor }> {
-    const editorElement = document.createElement("div");
-    document.body.appendChild(editorElement);
-    const editor = await ClassicEditor.create(editorElement, {
-        licenseKey: "GPL",
-        plugins: [Essentials, Paragraph, List, TodoList, TodoListMultistateEditing],
-        ...config
-    });
-    return { editorElement, editor };
+async function createEditor(config: Record<string, unknown> = {}): Promise<ClassicEditor> {
+    return await createTestEditor([Essentials, Paragraph, List, TodoList, TodoListMultistateEditing], config);
 }
 
 function getBlock(editor: ClassicEditor, index: number): ModelElement {
@@ -46,17 +40,11 @@ function pressCtrlShiftEnter(editor: ClassicEditor): void {
 }
 
 describe("TodoListMultistateEditing", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
-    });
 
     describe("with custom configured states", () => {
         beforeEach(async () => {
-            ({ editorElement, editor } = await createEditor({ taskStates: CUSTOM_STATES }));
+            editor = await createEditor({ taskStates: CUSTOM_STATES });
             setModelData(editor.model, TODO_FIXTURE);
         });
 
@@ -322,7 +310,7 @@ describe("TodoListMultistateEditing", () => {
 
     describe("post-fixer state-to-checkbox forcing on direct attribute writes", () => {
         beforeEach(async () => {
-            ({ editorElement, editor } = await createEditor({ taskStates: CUSTOM_STATES }));
+            editor = await createEditor({ taskStates: CUSTOM_STATES });
             setModelData(editor.model, TODO_FIXTURE);
         });
 
@@ -337,7 +325,7 @@ describe("TodoListMultistateEditing", () => {
 
     describe("with default (no) config and no translate provider", () => {
         beforeEach(async () => {
-            ({ editorElement, editor } = await createEditor());
+            editor = await createEditor();
             setModelData(editor.model, TODO_FIXTURE);
         });
 
@@ -367,10 +355,10 @@ describe("TodoListMultistateEditing", () => {
 
         beforeEach(async () => {
             translate = vi.fn((key: string) => `T:${key}`);
-            ({ editorElement, editor } = await createEditor({
+            editor = await createEditor({
                 taskStates: CUSTOM_STATES,
                 translate
-            }));
+            });
             setModelData(editor.model, TODO_FIXTURE);
         });
 

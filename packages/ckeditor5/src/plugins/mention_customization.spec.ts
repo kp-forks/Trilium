@@ -8,11 +8,11 @@ import {
 } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import MentionCustomization from "./mention_customization.js";
 import ReferenceLink from "./referencelink.js";
 
 describe("MentionCustomization", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
     let createNoteForReferenceLink: ReturnType<typeof vi.fn>;
 
@@ -30,20 +30,18 @@ describe("MentionCustomization", () => {
         // referencelink.ts editing downcast converter calls jQuery globally.
         (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
 
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Mention, ReferenceLink, MentionCustomization]
-        });
+        editor = await createTestEditor([
+            Essentials,
+            Paragraph,
+            Mention,
+            ReferenceLink,
+            MentionCustomization
+        ]);
     });
 
-    afterEach(async () => {
+    afterEach(() => {
         delete (globalThis as { glob?: unknown }).glob;
         delete (globalThis as { $?: unknown }).$;
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("loads the plugin, requires Mention and overrides the mention command", () => {

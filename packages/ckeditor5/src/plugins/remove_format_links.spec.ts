@@ -1,25 +1,14 @@
 import { ClassicEditor, Essentials, Link, Paragraph, RemoveFormat } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import RemoveFormatLinksPlugin from "./remove_format_links.js";
 
 describe("RemoveFormatLinksPlugin", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, Link, RemoveFormat, RemoveFormatLinksPlugin]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, Link, RemoveFormat, RemoveFormatLinksPlugin]);
     });
 
     it("registers itself as a plugin", () => {

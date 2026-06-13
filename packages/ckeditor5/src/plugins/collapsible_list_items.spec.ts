@@ -1,6 +1,7 @@
 import { _setModelData as setModelData, ClassicEditor, keyCodes, List, Paragraph, TodoList, Typing, Undo, type ModelElement } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
+import { createTestEditor, getEditorElement } from "../../test/editor-kit.js";
 import CollapsibleListItems, { LIST_COLLAPSED_ATTRIBUTE, ToggleListCollapseCommand } from "./collapsible_list_items.js";
 
 // Lists are flat in the model: sibling blocks related by listIndent/listItemId.
@@ -12,24 +13,12 @@ const LIST_FIXTURE =
     "<paragraph>Outside of the list</paragraph>";
 
 describe("CollapsibleListItems", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            plugins: [CollapsibleListItems, List, TodoList, Paragraph, Typing, Undo],
-            licenseKey: "GPL"
-        });
+        editor = await createTestEditor([CollapsibleListItems, List, TodoList, Paragraph, Typing, Undo]);
 
         setModelData(editor.model, LIST_FIXTURE);
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("collapses and expands via the command and persists the state into the data", () => {
@@ -194,6 +183,7 @@ describe("CollapsibleListItems", () => {
 
         // Shift the editor away from the viewport's left edge so the negative-inset gutter
         // (where the arrow lives) is actually on-screen and hit-testable.
+        const editorElement = getEditorElement(editor);
         editorElement.style.marginLeft = "160px";
         editorElement.style.marginTop = "60px";
 

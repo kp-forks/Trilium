@@ -1,25 +1,14 @@
 import { _setModelData as setModelData, ClassicEditor, Code, CodeBlock, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import CopyToClipboardButton, { CopyToClipboardCommand } from "./copy_to_clipboard_button.js";
 
 describe("CopyToClipboardButton", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton]);
     });
 
     it("loads the plugin and registers the command and toolbar button", () => {
@@ -42,22 +31,10 @@ describe("CopyToClipboardButton", () => {
 });
 
 describe("CopyToClipboardCommand - code block", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton]);
     });
 
     it("copies code block text using navigator.clipboard.writeText when no config callback", async () => {
@@ -120,19 +97,11 @@ describe("CopyToClipboardCommand - code block", () => {
 
         // Rebuild editor with clipboard config
         return (async () => {
-            editorElement.remove();
-            await editor.destroy();
-
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton],
+            editor = await createTestEditor([Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton], {
                 clipboard: {
                     copy: copyCallback
-                } as unknown as Record<string, unknown>
-            });
+                }
+            } as unknown as Parameters<typeof createTestEditor>[1]);
 
             setModelData(editor.model, "<codeBlock language=\"plaintext\">callback text[]</codeBlock>");
             editor.execute("copyToClipboard");
@@ -177,22 +146,10 @@ describe("CopyToClipboardCommand - code block", () => {
 });
 
 describe("CopyToClipboardCommand - inline code", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton]);
     });
 
     it("copies inline code text when cursor is inside a code-attributed text node", async () => {
@@ -227,19 +184,11 @@ describe("CopyToClipboardCommand - inline code", () => {
         const copyCallback = vi.fn();
 
         return (async () => {
-            editorElement.remove();
-            await editor.destroy();
-
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton],
+            editor = await createTestEditor([Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton], {
                 clipboard: {
                     copy: copyCallback
-                } as unknown as Record<string, unknown>
-            });
+                }
+            } as unknown as Parameters<typeof createTestEditor>[1]);
 
             setModelData(editor.model, "<paragraph><$text code=\"true\">inline[]code</$text></paragraph>");
             editor.execute("copyToClipboard");
@@ -287,28 +236,17 @@ describe("CopyToClipboardCommand - inline code", () => {
 });
 
 describe("CopyToClipboardCommand - executeCallback caching", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
-    });
 
     it("re-uses the executeCallback set on first execute for subsequent calls", () => {
         const copyCallback = vi.fn();
 
         return (async () => {
-            editorElement = document.createElement("div");
-            document.body.appendChild(editorElement);
-
-            editor = await ClassicEditor.create(editorElement, {
-                licenseKey: "GPL",
-                plugins: [Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton],
+            editor = await createTestEditor([Essentials, Paragraph, CodeBlock, Code, CopyToClipboardButton], {
                 clipboard: {
                     copy: copyCallback
-                } as unknown as Record<string, unknown>
-            });
+                }
+            } as unknown as Parameters<typeof createTestEditor>[1]);
 
             setModelData(editor.model, "<codeBlock language=\"plaintext\">first[]</codeBlock>");
             editor.execute("copyToClipboard");

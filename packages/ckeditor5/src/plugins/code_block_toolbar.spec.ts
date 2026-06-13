@@ -1,27 +1,16 @@
 import { BalloonToolbar, ClassicEditor, CodeBlock, Essentials, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../test/editor-kit.js";
 import CodeBlockToolbar from "./code_block_toolbar.js";
 import CodeBlockLanguageDropdown from "./code_block_language_dropdown.js";
 import CopyToClipboardButton from "./copy_to_clipboard_button.js";
 
 describe("CodeBlockToolbar", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, CodeBlock, CodeBlockToolbar]
-        });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
+        editor = await createTestEditor([Essentials, Paragraph, CodeBlock, CodeBlockToolbar]);
     });
 
     it("loads the plugin", () => {
@@ -103,23 +92,12 @@ describe("CodeBlockToolbar", () => {
 });
 
 describe("CodeBlockToolbar — with BalloonToolbar", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, CodeBlock, BalloonToolbar, CodeBlockToolbar],
+        editor = await createTestEditor([Essentials, Paragraph, CodeBlock, BalloonToolbar, CodeBlockToolbar], {
             balloonToolbar: { items: [] }
         });
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("registers a high-priority listener on BalloonToolbar show when BalloonToolbar is present", () => {
