@@ -183,6 +183,78 @@ class SimpleBoxToolbar extends Plugin {
 
 This is the same mechanism images/tables use to show their contextual toolbars.
 
+## External / async-rendered widgets (math, diagrams, charts)
+
+Widgets that render the output of an external library (KaTeX, Mermaid, a charting lib, a code
+highlighter) need a few patterns beyond the static-widget basics. The model stores the **source**
+(e.g. a LaTeX string or diagram code) as an attribute; the **data downcast** emits that source as
+plain markup (so `getData()` is clean and re-parseable), while the **editing downcast** renders it.
+
+**Host the rendered output in a UI element.** A `UIElement`'s render callback runs in the real
+DOM and is the hook for injecting external output into the editing view (UI elements are filtered
+out of the data pipeline, so this never pollutes `getData()`):
+
+```js
+conversion.for( 'editingDowncast' ).elementToElement( {
+	model: { name: 'diagram', attributes: [ 'source' ] },  // attributes → reconvert on change (see below)
+	view: ( modelEl, { writer } ) => {
+		const wrapper = writer.createContainerElement( 'div', { class: 'diagram' } );
+		const rendered = writer.createUIElement( 'div', { class: 'diagram__preview' }, function( domDocument ) {
+			const domElement = this.toDomElement( domDocument );      // real DOM node
+			void renderInto( domElement, modelEl.getAttribute( 'source' ) );  // async render
+			return domElement;
+		} );
+		writer.insert( writer.createPositionAt( wrapper, 0 ), rendered );
+		return toWidget( wrapper, writer, { label: 'diagram' } );
+	}
+} );
+```
+
+**Re-render when the source changes.** Two options:
+- **Idiomatic — reconversion.** Listing the attribute in the model matcher
+  (`model: { name, attributes: [ 'source' ] }`, as above) makes the converter re-run when `source`
+  changes, rebuilding the element and its UI element → the render callback fires again. Simplest;
+  rebuilds the whole widget view.
+- **Imperative — downcast listener.** To update the existing DOM without rebuilding, listen to the
+  editing downcast dispatcher and re-render in place:
+
+  ```js
+  editor.editing.downcastDispatcher.on( 'attribute:source:diagram', ( evt, data, conversionApi ) => {
+  	const viewEl = conversionApi.mapper.toViewElement( data.item );
+  	// locate the rendered DOM node via the view→DOM converter and re-render it
+  } );
+  ```
+
+**Guard against stale async renders.** Overlapping renders can finish out of order and clobber a
+newer one. Gate writes with a generation counter:
+
+```js
+this._gen = 0;
+async renderInto( domEl, source ) {
+	const gen = ++this._gen;
+	const out = await lib.render( source );
+	if ( gen === this._gen ) domEl.innerHTML = out;   // ignore if a newer render started
+}
+```
+
+**Lazy-load the library once.** Cache the load promise so a heavy dependency loads on first use
+and initializes a single time (drive it from config so the host app can supply the loader):
+
+```js
+this._libPromise ??= Promise.resolve( editor.config.get( 'diagram.lazyLoad' )() )
+	.then( lib => { lib.initialize( editor.config.get( 'diagram.config' ) ); return lib; } );
+const lib = await this._libPromise;
+```
+
+**Editable source inside the widget.** If users type the raw source into a textarea/field embedded
+in the widget, wrap that element so the editor's own keystroke/selection handlers don't hijack
+input — give the container the `data-cke-ignore-events` attribute. Debounce the input handler that
+writes back to the model (`editor.model.change(...)`).
+
+**Mode / state machine.** For source/preview/split toggles, store a `displayMode` attribute, expose
+commands that set it, render different DOM per mode in the editing downcast, and bind the
+widget-toolbar buttons' `isOn` to each command's value so they reflect the current mode.
+
 ## Useful widget utilities
 
 `toWidget`, `toWidgetEditable`, `isWidget`, `viewToModelPositionOutsideModelElement`,

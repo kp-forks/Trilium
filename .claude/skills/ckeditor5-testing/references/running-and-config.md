@@ -79,7 +79,9 @@ overrides. The baseline sets:
 - `setupFiles: [ test_setup.js ]` — sets `globalThis.CKEDITOR_GLOBAL_LICENSE_KEY = 'GPL'`.
 - `testTimeout: 5000`.
 - **Browser mode** via `@vitest/browser-playwright`, Chromium (`channel: 'chrome'`), viewport
-  1920×1080, `screenshotFailures: false`.
+  1920×1080, `screenshotFailures: false`. (The browser provider is pluggable — `@vitest/browser-webdriverio`
+  is an equally valid choice; downstream projects pick one. `happy-dom`/`jsdom` also works for tests
+  that don't need real layout, though CKEditor UI/widget tests generally want a real browser.)
 - **Coverage** (`v8`): `include: [ 'src/**' ]`, excludes `src/index.ts`, `src/augmentation.ts`,
   `src/**/*config.ts`; `thresholds: { 100: true }`; reporters `text`, `html`.
 - A `load-svg` plugin so `import icon from './x.svg'` yields the SVG string.

@@ -174,6 +174,21 @@ editor.editing.mapper.on( 'viewToModelPosition',
 
 This maps any position inside the view `<span>` to a position **outside** the model element.
 
+## Preprocessing input data (data processor)
+
+Upcast operates on the view the **data processor** produced from the input string. To massage the
+raw HTML *before* it becomes a view (e.g. protect content the HTML parser would mangle), wrap the
+processor's `toView`:
+
+```js
+const processor = editor.data.processor;
+const toView = processor.toView.bind( processor );
+processor.toView = data => toView( preprocess( data ) );   // and mirror toData for output if needed
+```
+
+Use sparingly — prefer real converters. It's for cases the converter layer can't reach, such as
+preserving newlines inside a formula or shielding a fragment from generic HTML normalization.
+
 ## Where to go deeper
 
 The official CKEditor 5 "Conversion deep dive" docs (ckeditor.com/docs → Framework › Deep dive ›

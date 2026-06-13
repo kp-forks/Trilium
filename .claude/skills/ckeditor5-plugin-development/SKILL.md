@@ -196,7 +196,7 @@ Load the focused reference for the task at hand:
 | `references/conversion.md` | Upcast/downcast pipelines, conversion helpers, custom (callback) converters, attribute/element/marker conversion, position mapping. |
 | `references/commands.md` | `Command` patterns: `refresh()`/`execute()`, state (`value`/`isEnabled`), `forceDisabled()`, `affectsData`, command events. |
 | `references/ui-and-localization.md` | Views & templates, component catalog (buttons, inputs, dropdowns, dialogs/modals, balloons, toolbars), icons, `componentFactory`, focus/keystroke management, and `t()` localization. |
-| `references/widgets.md` | Block & inline widgets: `toWidget`/`toWidgetEditable`, nested editables, `insertObject`, widget toolbars, view↔model position mapping, custom properties. |
+| `references/widgets.md` | Block & inline widgets: `toWidget`/`toWidgetEditable`, nested editables, `insertObject`, widget toolbars, view↔model position mapping, custom properties, and external/async-rendered widgets (UI-element render callbacks, re-render on change, stale-render guard, lazy-load). |
 | `references/conventions.md` | Naming, file/CSS/BEM rules, imports, JSDoc/visibility, `CKEditorError`, TypeScript rules. For writing idiomatic code and reviewing. |
 | `references/tooling-and-packaging.md` | Package generator, `ckeditor5-metadata.json`, build output/integration, custom editor creators, dev-repo setup, the Inspector. |
 | `references/review-checklist.md` | A structured checklist for reviewing an existing plugin (architecture, schema, conversion, commands, UI, a11y, conventions). |
