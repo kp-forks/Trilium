@@ -117,7 +117,7 @@ class Adapter implements UploadAdapter {
 		});
 
 		// Upload progress when it's supported.
-		/* istanbul ignore else */
+		/* v8 ignore next -- legacy: a live browser XMLHttpRequest always exposes `upload`, so the no-progress-support branch is unreachable */
 		if (xhr.upload) {
 			xhr.upload.addEventListener('progress', evt => {
 				if (evt.lengthComputable) {
