@@ -79,11 +79,6 @@ pnpm run test -- -c --files=core    # with coverage
 ## Anatomy of a test
 
 ```js
-/**
- * @license Copyright (c) 2003-2026, CKSource Holding sp. z o.o. All rights reserved.
- * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-licensing-options
- */
-
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { ModelTestEditor } from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
 import { _setModelData, _getModelData } from '@ckeditor/ckeditor5-engine';
@@ -115,8 +110,8 @@ describe( 'ParagraphCommand', () => {
 ```
 
 Conventions visible here and across the suite:
-- Start with the **license header**. Keep one top-level `describe` named after the unit, with
-  nested `describe`s for areas (`value`, `execute()`, …) and small focused `it`s.
+- Keep one top-level `describe` named after the unit, with nested `describe`s for areas
+  (`value`, `execute()`, …) and small focused `it`s.
 - Create the editor in `beforeEach` (return the Promise — Vitest awaits it). **Always tear
   down** in `afterEach` (`editor.destroy()`, and remove any DOM element you appended).
 - Use the lightest test editor that works: `ModelTestEditor` (model only) < `VirtualTestEditor`
@@ -167,7 +162,7 @@ expect( spy ).toHaveBeenCalledWith( 'paragraph' );
 
 ## Quick review checklist
 
-When reviewing tests: license header present; explicit `vitest` imports; lightest suitable
+When reviewing tests: explicit `vitest` imports; lightest suitable
 test editor; editor/command created in `beforeEach` and **destroyed** in `afterEach` (plus DOM
 cleanup); model/view asserted via `_getModelData`/`_getViewData` + `toEqual` with correct
 `[]`/`{}` selection syntax; spies via `vi`; behavior covered for collapsed **and** ranged

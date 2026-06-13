@@ -13,7 +13,6 @@ test files still use the old stack. When you touch a legacy test, migrate it. Th
 - **Add explicit imports** at the top: `import { describe, it, expect, beforeEach, afterEach,
   vi } from 'vitest';` (the old globals from Mocha/Chai are gone; `globals: true` is set but the
   codebase imports explicitly).
-- Keep the **license header** comment.
 - Source imports use the **`.js` extension**: `import { Foo } from '../src/foo.js';`.
 - Drop any `import { expect } from 'chai'` / Chai plugin setup.
 
@@ -90,7 +89,7 @@ it( '…', () => { vi.spyOn( obj, 'm' ); } );
 
 ## Checklist for a migrated file
 
-- [ ] License header kept; explicit `vitest` imports added.
+- [ ] Explicit `vitest` imports added.
 - [ ] All `import … from 'chai'` / `sinon` removed; `.js` extensions on source imports.
 - [ ] Chai matchers → Vitest matchers; `equalMarkup`/`.attribute` rewritten with data helpers.
 - [ ] Sinon → `vi`; sandbox removed.
