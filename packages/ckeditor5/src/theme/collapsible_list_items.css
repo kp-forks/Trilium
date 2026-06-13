@@ -30,6 +30,13 @@
     transition: opacity 150ms ease, transform 150ms ease;
 }
 
+/* In RTL the logical inline-end border lands on the bottom-left corner instead of the
+ * bottom-right, so the base rotation would swing the chevron to point left. Rotate the other
+ * way to keep it pointing down while expanded. */
+.ck-content.ck-editor__editable li:has(> ul, > ol):dir(rtl)::before {
+    transform: rotate(-45deg);
+}
+
 /* To-do items show a checkbox instead of a bullet; its `vertical-align: middle` box sits a
  * little below the text line's centre, so nudge the arrow down to line up with the checkbox
  * rather than the text. The offset is font-size-proportional, hence em (not lh). */
@@ -47,7 +54,8 @@
 }
 
 .ck-content.ck-editor__editable li[data-trilium-collapsed="true"]:dir(rtl)::before {
-    transform: rotate(135deg);
+    /* Mirror of the LTR collapsed arrow: points left, toward the leftward-flowing text. */
+    transform: rotate(45deg);
 }
 
 .ck-content.ck-editor__editable li[data-trilium-collapsed="true"] > ul,
