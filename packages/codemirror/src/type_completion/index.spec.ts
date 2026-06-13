@@ -233,6 +233,44 @@ describe("script note diagnostics", () => {
     }, TIMEOUT);
 });
 
+describe("frontend note (ScriptFNote) surface", () => {
+    it("offers the expanded note member set on api.currentNote", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_FRONTEND, "api.currentNote.|");
+        // A representative slice across the families added to ScriptFNote:
+        // attribute accessors, type predicates, hierarchy, content, fields.
+        for (const member of [
+            "getOwnedLabelValue", "getRelation", "hasRelation", "getAttributeValue",
+            "isHtml", "isJavaScript", "isFolder", "isArchived",
+            "getSubtreeNoteIds", "hasChildren", "getChildBranches",
+            "getJsonContent", "getAttachments", "getMetadata", "targetRelations"
+        ]) {
+            expect(names).toContain(member);
+        }
+    }, TIMEOUT);
+
+    it("type-checks the expanded note members (real signatures, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const note = api.currentNote;\n"
+            + "if (note.isHtml() && !note.isArchived) {\n"
+            + "    const v = note.getLabelValue('foo');\n"
+            + "    const branches = note.getChildBranches();\n"
+            + "    const ids = await note.getSubtreeNoteIds(true);\n"
+            + "    api.showMessage((v ?? '') + branches.length + ids.length);\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("still flags an unknown note member (curated subset, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const v = api.currentNote.thisNoteMemberDoesNotExist();"
+        );
+        expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+});
+
 describe("backend custom request handler api (req/res/pathParams)", () => {
     const HANDLER = { customRequestHandler: true };
 

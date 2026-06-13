@@ -26,6 +26,25 @@ export interface ScriptAttribute {
     isOwned: boolean;
 }
 
+/** An attachment as seen by frontend scripts (subset of the client's `FAttachment`). */
+export interface ScriptAttachment {
+    attachmentId: string;
+    ownerId: string;
+    role: string;
+    mime: string;
+    title: string;
+    utcDateModified: string;
+    contentLength: number;
+}
+
+/** Creation/modification timestamps returned by {@link ScriptFNote.getMetadata}. */
+export interface ScriptNoteMetadata {
+    dateCreated: string;
+    utcDateCreated: string;
+    dateModified: string;
+    utcDateModified: string;
+}
+
 /** A note as seen by frontend scripts (subset of the client's `FNote`). */
 export interface ScriptFNote {
     noteId: string;
@@ -33,29 +52,113 @@ export interface ScriptFNote {
     type: string;
     mime: string;
     isProtected: boolean;
+    /** Whether the note is archived (has the `archived` label). */
+    isArchived: boolean;
+    /** Whether the note's metadata (title, attributes) is read-only. */
+    isMetadataReadOnly: boolean;
+    /** IDs of this note's owned attributes. */
     attributes: string[];
+    /** IDs of relations pointing *at* this note. */
+    targetRelations: string[];
+    /** Parent note IDs. */
     parents: string[];
+    /** Child note IDs. */
     children: string[];
 
+    // --- Hierarchy ---------------------------------------------------------
     getParentNotes(): ScriptFNote[];
     getChildNotes(): Promise<ScriptFNote[]>;
     getParentNoteIds(): string[];
     getChildNoteIds(): string[];
+    getChildNoteIdsWithArchiveFiltering(includeArchived?: boolean): Promise<string[]>;
+    getSubtreeNotes(): Promise<ScriptFNote[]>;
+    getSubtreeNoteIds(includeArchived?: boolean): Promise<string[]>;
+    hasChildren(): boolean;
+    hasAncestor(ancestorNoteId: string, followTemplates?: boolean): boolean;
+    isRoot(): boolean;
+    getParentBranchIds(): string[];
+    getBranchIds(): string[];
+    getParentBranches(): ScriptFBranch[];
+    getChildBranches(): ScriptFBranch[];
+    getAllNotePaths(): string[][];
+    getBestNotePath(hoistedNoteId?: string, activeNotePath?: string | null): string[];
+    getBestNotePathString(hoistedNoteId?: string): string;
 
+    // --- Attributes (inherited + own) --------------------------------------
     getAttributes(type?: string, name?: string): ScriptAttribute[];
     getOwnedAttributes(type?: string, name?: string): ScriptAttribute[];
     getAttribute(type: string, name: string): ScriptAttribute | null;
+    getOwnedAttribute(type: string, name: string): ScriptAttribute | null;
+    getAttributeValue(type: string, name: string): string | null;
+    getOwnedAttributeValue(type: string, name: string): string | null;
     hasAttribute(type: string, name: string): boolean;
-    getLabels(name?: string): ScriptAttribute[];
-    getLabelValue(name: string): string | null;
-    hasLabel(name: string): boolean;
-    getRelations(name?: string): ScriptAttribute[];
-    getRelationValue(name: string): string | null;
-    getRelationTarget(name: string): Promise<ScriptFNote | null>;
+    hasOwnedAttribute(type: string, name: string): boolean;
+    getAttributeDefinitions(): ScriptAttribute[];
+    getPromotedDefinitionAttributes(): ScriptAttribute[];
 
+    // --- Labels ------------------------------------------------------------
+    getLabels(name?: string): ScriptAttribute[];
+    getOwnedLabels(name?: string): ScriptAttribute[];
+    getLabel(name: string): ScriptAttribute | null;
+    getOwnedLabel(name: string): ScriptAttribute | null;
+    getLabelValue(name: string): string | null;
+    getOwnedLabelValue(name: string): string | null;
+    hasLabel(name: string): boolean;
+    hasOwnedLabel(name: string): boolean;
+    hasLabelOrDisabled(name: string): boolean;
+    isLabelTruthy(name: string): boolean;
+
+    // --- Relations ---------------------------------------------------------
+    getRelations(name?: string): ScriptAttribute[];
+    getOwnedRelations(name: string): ScriptAttribute[];
+    getRelation(name: string): ScriptAttribute | null;
+    getOwnedRelation(name: string): ScriptAttribute | null;
+    getRelationValue(name: string): string | null;
+    getOwnedRelationValue(name: string): string | null;
+    hasRelation(name: string): boolean;
+    hasOwnedRelation(name: string): boolean;
+    getLabelOrRelation(nameWithPrefix: string): string | null;
+    getRelationTarget(name: string): Promise<ScriptFNote | null>;
+    getRelationTargets(name: string): Promise<(ScriptFNote | null)[]>;
+    getTargetRelations(): ScriptAttribute[];
+    getTargetRelationSourceNotes(): Promise<ScriptFNote[]>;
+
+    // --- Content & attachments ---------------------------------------------
     getContent(): Promise<string | Uint8Array>;
+    getJsonContent(): Promise<unknown>;
+    getMetadata(): Promise<ScriptNoteMetadata>;
+    attachments: ScriptAttachment[] | null;
+    getAttachments(): Promise<ScriptAttachment[]>;
+    getAttachmentsByRole(role: string): Promise<ScriptAttachment[]>;
+    getAttachmentById(attachmentId: string): Promise<ScriptAttachment | undefined>;
+
+    // --- Type & state predicates -------------------------------------------
     getIcon(): string;
-    isRoot(): boolean;
+    isFolder(): boolean;
+    isShared(): boolean;
+    isContentAvailable(): boolean;
+    isJson(): boolean;
+    isJavaScript(): boolean;
+    isJsx(): boolean;
+    isHtml(): boolean;
+    isMarkdown(): boolean;
+    isOptions(): boolean;
+    isTriliumScript(): boolean;
+    isTriliumSqlite(): boolean;
+}
+
+/** A branch (parent↔child link) as seen by frontend scripts (subset of `FBranch`). */
+export interface ScriptFBranch {
+    branchId: string;
+    noteId: string;
+    parentNoteId: string;
+    notePosition: number;
+    prefix?: string;
+    isExpanded?: boolean;
+    getNote(): Promise<ScriptFNote | null>;
+    getNoteFromCache(): ScriptFNote | undefined;
+    getParentNote(): Promise<ScriptFNote | null>;
+    isTopLevel(): boolean;
 }
 
 /** A split/tab context as seen by frontend scripts (subset of `NoteContext`). */
