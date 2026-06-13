@@ -299,7 +299,7 @@ export default class TabManager extends Component {
     }
 
     /**
-     * Index in the flat `children` array at which a newly created (unpinned) tab should be inserted.
+     * Index in `children` where a newly created (unpinned) tab is inserted.
      * `"end"` appends; `"afterCurrent"` inserts right after the active tab and all of its splits,
      * clamped so an unpinned tab never lands inside the pinned group (which `reorderPinnedFirst`
      * keeps grouped at the front of the row).
@@ -309,7 +309,12 @@ export default class TabManager extends Component {
             return this.children.length;
         }
 
-        const activeMainNtxId = this.getActiveMainContext()?.ntxId;
+        // Resolve the active main context without getActiveMainContext(): it throws on a stale
+        // activeNtxId, which would bypass the activeIndex === -1 fallback below.
+        const activeContext = this.activeNtxId
+            ? this.noteContexts.find((nc) => nc.ntxId === this.activeNtxId)
+            : undefined;
+        const activeMainNtxId = activeContext?.getMainContext().ntxId;
         const activeIndex = activeMainNtxId
             ? this.children.findIndex((nc) => nc.ntxId === activeMainNtxId)
             : -1;
@@ -324,7 +329,7 @@ export default class TabManager extends Component {
             index++;
         }
 
-        // Pinned tabs stay grouped at the front, so never insert the new (unpinned) tab inside them.
+        // Pinned tabs stay grouped first, so never insert the new (unpinned) tab inside them.
         const firstUnpinnedIndex = this.children.findIndex((nc) => !this.isPartOfPinnedTab(nc));
         const minIndex = firstUnpinnedIndex === -1 ? this.children.length : firstUnpinnedIndex;
 
@@ -332,11 +337,7 @@ export default class TabManager extends Component {
     }
 
     private isPartOfPinnedTab(noteContext: NoteContext): boolean {
-        const mainContext = noteContext.mainNtxId
-            ? this.children.find((nc) => nc.ntxId === noteContext.mainNtxId)
-            : noteContext;
-
-        return !!mainContext?.pinned;
+        return !!noteContext.getMainContext().pinned;
     }
 
     async openInNewTab(targetNoteId: string, hoistedNoteId: string | null = null, activate: boolean = false) {
