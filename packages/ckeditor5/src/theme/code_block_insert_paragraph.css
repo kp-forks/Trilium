@@ -1,16 +1,18 @@
 /*
  * "Insert paragraph before/after" hover buttons for code blocks.
  *
- * Code blocks are not widgets, so they don't receive CKEditor's WidgetTypeAround affordance.
- * This plugin injects an equivalent UI element into the editable <pre>; the rules below mirror
- * the widget type-around arrows (tables/images/horizontal lines) as closely as possible by
- * reusing the same CSS custom properties and @keyframes defined by ckeditor5-widget, so the
- * look, colours and transitions stay in sync with the editor theme.
+ * Code blocks are not widgets, so they can't reuse WidgetTypeAround's buttons directly: its
+ * global mousedown handler claims every `.ck-widget__type-around__button` and would crash trying
+ * to resolve a widget from our non-widget host. So we use our own classes, but avoid duplicating
+ * any *values*: every size/colour/timing below comes from ckeditor5-widget's own design tokens
+ * (the `--ck-widget-type-around-*` / `--ck-color-widget-*` custom properties) and its sonar
+ * `@keyframes`, so the buttons match the real widget arrows and track the editor theme.
  *
  * Source of truth: @ckeditor/ckeditor5-widget/dist/index.css (.ck-widget__type-around__*).
  */
 
-/* The wrapper overlays the <pre> padding box (already `position: relative`) without taking flow space. */
+/* The wrapper overlays the <pre> padding box (the nearest positioned ancestor) without taking
+   flow space or capturing pointer events. */
 .ck.ck-editor__editable .ck-code-block__type-around {
     position: absolute;
     inset: 0;
@@ -18,61 +20,22 @@
 }
 
 .ck.ck-editor__editable .ck-code-block__type-around__button {
+    position: absolute;
     width: var(--ck-widget-type-around-button-size);
     height: var(--ck-widget-type-around-button-size);
+    border-radius: 100px;
+    overflow: hidden;
     background: var(--ck-color-widget-type-around-button-hover);
-    transition:
-        opacity var(--ck-widget-handler-animation-duration) var(--ck-widget-handler-animation-curve),
-        background var(--ck-widget-handler-animation-duration) var(--ck-widget-handler-animation-curve);
     opacity: 0;
     pointer-events: none;
     cursor: pointer;
     z-index: var(--ck-z-default);
-    border-radius: 100px;
-    display: block;
-    position: absolute;
-    overflow: hidden;
+    transition:
+        opacity var(--ck-widget-handler-animation-duration) var(--ck-widget-handler-animation-curve),
+        background var(--ck-widget-handler-animation-duration) var(--ck-widget-handler-animation-curve);
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .ck.ck-editor__editable .ck-code-block__type-around__button {
-        transition: none;
-    }
-}
-
-.ck.ck-editor__editable .ck-code-block__type-around__button svg {
-    width: 10px;
-    height: 8px;
-    margin-top: 1px;
-    transition: transform .5s;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    z-index: calc(var(--ck-z-default) + 2);
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ck.ck-editor__editable .ck-code-block__type-around__button svg {
-        transition: none;
-    }
-}
-
-.ck.ck-editor__editable .ck-code-block__type-around__button svg * {
-    stroke-dasharray: 10;
-    stroke-dashoffset: 0;
-    fill: none;
-    stroke: var(--ck-color-widget-type-around-button-icon);
-    stroke-width: 1.5px;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-}
-
-.ck.ck-editor__editable .ck-code-block__type-around__button svg line {
-    stroke-dasharray: 7;
-}
-
-/* Positioning: "before" straddles the top-left edge, "after" the bottom-right — same as widgets. */
+/* "before" straddles the top-left edge, "after" the bottom-right — same as widgets. */
 .ck.ck-editor__editable .ck-code-block__type-around__button_before {
     top: calc(-.5 * var(--ck-widget-outline-thickness));
     left: min(10%, 30px);
@@ -85,49 +48,58 @@
     transform: translateY(50%);
 }
 
-/* Reveal the buttons while hovering the code block. */
+.ck.ck-editor__editable .ck-code-block__type-around__button svg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 10px;
+    height: 8px;
+    margin-top: 1px;
+    transform: translate(-50%, -50%);
+    z-index: calc(var(--ck-z-default) + 2);
+}
+
+.ck.ck-editor__editable .ck-code-block__type-around__button svg * {
+    fill: none;
+    stroke: var(--ck-color-widget-type-around-button-icon);
+    stroke-width: 1.5px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-dasharray: 10;
+}
+
+/* Reveal while hovering the code block; active colour + sonar pulse on the button itself. */
 .ck.ck-editor__editable pre:hover .ck-code-block__type-around__button {
     opacity: 1;
     pointer-events: auto;
 }
 
-/* Active colour + sonar pulse + arrow dash when hovering the button itself (keyframes from ckeditor5-widget). */
 .ck.ck-editor__editable .ck-code-block__type-around__button:hover {
     background: var(--ck-color-widget-type-around-button-active);
     animation: 1s infinite ck-widget-type-around-button-sonar;
 }
 
-.ck.ck-editor__editable .ck-code-block__type-around__button:hover svg polyline {
-    animation: 2s linear ck-widget-type-around-arrow-dash;
-}
-
-.ck.ck-editor__editable .ck-code-block__type-around__button:hover svg line {
-    animation: 2s linear ck-widget-type-around-arrow-tip-dash;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .ck.ck-editor__editable .ck-code-block__type-around__button:hover {
-        animation: none;
-    }
-
-    .ck.ck-editor__editable .ck-code-block__type-around__button:hover svg polyline,
-    .ck.ck-editor__editable .ck-code-block__type-around__button:hover svg line {
-        animation: none;
-    }
-}
-
 /* Glossy highlight overlay on hover, matching the widget. */
 .ck.ck-editor__editable .ck-code-block__type-around__button:hover::after {
     content: "";
-    width: calc(var(--ck-widget-type-around-button-size) - 2px);
-    height: calc(var(--ck-widget-type-around-button-size) - 2px);
-    z-index: calc(var(--ck-z-default) + 1);
-    background: linear-gradient(135deg, #fff0 0%, #ffffff4d 100%);
-    border-radius: 100px;
-    display: block;
     position: absolute;
     top: 1px;
     left: 1px;
+    width: calc(var(--ck-widget-type-around-button-size) - 2px);
+    height: calc(var(--ck-widget-type-around-button-size) - 2px);
+    border-radius: 100px;
+    z-index: calc(var(--ck-z-default) + 1);
+    background: linear-gradient(135deg, #fff0 0%, #ffffff4d 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ck.ck-editor__editable .ck-code-block__type-around__button {
+        transition: none;
+    }
+
+    .ck.ck-editor__editable .ck-code-block__type-around__button:hover {
+        animation: none;
+    }
 }
 
 /* In read-only mode the paragraph can't be inserted, so don't offer the affordance. */
