@@ -4,8 +4,9 @@ How CKEditor 5 plugins are packaged, registered, built, and debugged in the **Tr
 (TriliumNext Notes)** monorepo. This is a pnpm workspace (`pnpm@11.5.2`, `nodeLinker: hoisted`,
 no nx/turbo) with packages under `packages/*` and apps under `apps/*`, org scope `@triliumnext/`.
 The CKEditor 5 **library** is an external dependency pinned to `48.2.0`; there is no package
-generator here — you add a workspace package (or an in-repo plugin) by hand following the layout
-and registration flow below.
+generator here — you add a plugin by hand. **By default a new plugin lives inside the aggregator**
+(a file/folder under `packages/ckeditor5/src/plugins/`); a separate workspace package is the
+exception, reserved for large self-contained features (see "Where a new plugin goes" below).
 
 ## Where the editor lives
 
@@ -19,7 +20,23 @@ and registration flow below.
 The library's own packages (basic-styles, link, image, engine, ui, core, widget, typing, …) are
 **upstream** and not present in this repo — they ship inside the `ckeditor5` npm aggregate.
 
-## Plugin package layout (`packages/ckeditor5-<feature>`)
+## Where a new plugin goes (default: in the aggregator)
+
+**Project direction: keep new plugins inside the aggregator.** The default home for a new feature
+is an **in-aggregator plugin** — a file or folder under `packages/ckeditor5/src/plugins/`, written
+as a normal `Plugin` class and registered in `TRILIUM_PLUGINS`. No new package, `package.json`,
+tsconfig, build, or workspace wiring; just the code and one line in `plugins.ts`. This is the right
+choice for the large majority of features.
+
+**Create a separate `@triliumnext/ckeditor5-<feature>` workspace package only for large,
+self-contained external plugins** — substantial code with their own theme/lang/tests that could
+plausibly stand alone (the existing ones: math, footnotes, mermaid, admonition, collapsible,
+keyboard-marker). When in doubt, start in-aggregator and promote to a package later if it grows.
+
+The package layout below applies **only to the separate-package case**. An in-aggregator plugin
+needs none of it.
+
+## Plugin package layout (`packages/ckeditor5-<feature>`, the separate-package exception)
 
 `package.json`:
 

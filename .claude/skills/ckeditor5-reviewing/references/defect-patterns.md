@@ -191,6 +191,14 @@ nothing loads it, no button shows, or lint/license/localization is off.
   `static get requires()`; check the chain before flagging.)
 - Fix: export the plugin and add it to the appropriate array so it reaches `builtinPlugins`.
 
+**Unnecessary separate package.**
+- Spot: a small/simple feature shipped as a new `@triliumnext/ckeditor5-<feature>` workspace
+  package (its own `package.json`/tsconfig/build/`workspace:*` wiring).
+- Why: project direction is to keep new plugins **in the aggregator** (`packages/ckeditor5/src/plugins/`,
+  registered in `TRILIUM_PLUGINS`). A separate package is reserved for large, self-contained features
+  (math, footnotes, mermaid, …); a thin one is needless overhead.
+- Fix: move it into `packages/ckeditor5/src/plugins/` unless it's genuinely large/standalone. (Minor.)
+
 **Toolbar component not wired up.**
 - Spot: a plugin that registers a `componentFactory` button but no corresponding entry in
   `apps/client/src/widgets/type_widgets/text/toolbar.ts`.

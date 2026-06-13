@@ -9,7 +9,8 @@ description: >-
   the UI library (buttons, dropdowns, dialogs, balloons, toolbars), widgets
   (block/inline, toWidget, nested editables), keystrokes, localization (t()/.po),
   registering a plugin into plugins.ts / the editor classes / toolbar.ts, or
-  scaffolding a new @triliumnext/ckeditor5-* package. Covers the architecture,
+  adding a plugin to the aggregator (or, for large features, a new
+  @triliumnext/ckeditor5-* package). Covers the architecture,
   idiomatic patterns, Trilium packaging/registration, code-style conventions,
   and a review checklist.
 ---
@@ -28,9 +29,10 @@ and review existing ones idiomatically.
 
 ## When to use this skill
 
-Use it whenever the task involves a Trilium CKEditor 5 plugin/feature: creating one (a new
-`@triliumnext/ckeditor5-<feature>` package or an in-repo plugin under
-`packages/ckeditor5/src/plugins/`), extending one, debugging editing behavior, registering a
+Use it whenever the task involves a Trilium CKEditor 5 plugin/feature: creating one (by default an
+in-aggregator plugin under `packages/ckeditor5/src/plugins/`; a separate
+`@triliumnext/ckeditor5-<feature>` package only for large self-contained features), extending one,
+debugging editing behavior, registering a
 plugin so it reaches the editor, or reviewing plugin code for correctness and convention
 compliance. Trigger concepts include: model/view/schema, conversion (upcast/downcast),
 `Command`, `editor.model.change()`, `ButtonView`/`componentFactory`, widgets (`toWidget`),
@@ -211,10 +213,11 @@ converters instead of `attributeToElement`; see `references/widgets.md`.
 
 ## Development workflow
 
-1. **Write the plugin.** Either a new `packages/ckeditor5-<feature>` workspace package
-   (`@triliumnext/ckeditor5-<feature>`, `main: "src/index.ts"`, ships TS source — no per-package
-   `dist` for consumers) or an in-repo plugin file under `packages/ckeditor5/src/plugins/`. See
-   `references/tooling-and-packaging.md` for the package layout and config files.
+1. **Write the plugin.** **Default: an in-aggregator plugin** — a file/folder under
+   `packages/ckeditor5/src/plugins/`. Create a separate `packages/ckeditor5-<feature>` workspace
+   package (`@triliumnext/ckeditor5-<feature>`, `main: "src/index.ts"`, ships TS source) **only for
+   a large, self-contained feature**. See `references/tooling-and-packaging.md` ("Where a new plugin
+   goes").
 2. **Register it so it reaches the editor** (full flow in `references/tooling-and-packaging.md`):
    - For a new workspace package, add `"@triliumnext/ckeditor5-<feature>": "workspace:*"` to
      `packages/ckeditor5/package.json`.
