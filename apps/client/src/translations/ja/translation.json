@@ -1911,7 +1911,10 @@
     "print_report_collection_details_button": "詳細を見る",
     "print_report_collection_details_ignored_notes": "無視されたノート",
     "print_report_error_title": "印刷に失敗しました",
-    "print_report_stack_trace": "スタックトレース"
+    "print_report_stack_trace": "スタックトレース",
+    "content_load_error": "ノートの内容を読み込めませんでした。",
+    "content_load_retry": "再試行",
+    "content_load_stalled": "ノートの内容を読み込み中…"
   },
   "watched_file_update_status": {
     "ignore_this_change": "この変更を無視する",
