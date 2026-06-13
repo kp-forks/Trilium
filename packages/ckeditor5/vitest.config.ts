@@ -10,7 +10,7 @@ export default defineConfig({
             ui: false,
             instances: [{ browser: "chrome" }]
         },
-        include: ["tests/**/*.spec.ts"],
+        include: ["src/**/*.spec.ts"],
         globals: true,
         watch: false
     }

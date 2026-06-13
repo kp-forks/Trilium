@@ -1,7 +1,7 @@
 import { _setModelData as setModelData, ClassicEditor, keyCodes, List, Paragraph, TodoList, Typing, Undo, type ModelElement } from "ckeditor5";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import CollapsibleListItems, { LIST_COLLAPSED_ATTRIBUTE } from "../src/plugins/collapsible_list_items.js";
+import CollapsibleListItems, { LIST_COLLAPSED_ATTRIBUTE } from "./collapsible_list_items.js";
 
 // Lists are flat in the model: sibling blocks related by listIndent/listItemId.
 const LIST_FIXTURE =
