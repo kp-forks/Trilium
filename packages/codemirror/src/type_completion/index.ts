@@ -64,6 +64,7 @@ const API_GLOBALS_PATH = "/trilium-api.d.ts";
 /** The shared public API types module (frontend), injected verbatim from commons. */
 const API_TYPES_PATH = "/trilium-script-api.ts";
 const JQUERY_DTS_PATH = "/jquery-globals.d.ts";
+const GLOB_DTS_PATH = "/trilium-glob.d.ts";
 const TRILIUM_MODULES_DTS_PATH = "/trilium-modules.d.ts";
 
 /** The virtual source-file path used for a given script MIME type. */
@@ -136,6 +137,13 @@ async function createEnv(mime: string, context: ScriptApiContext = {}) {
         const { jqueryGlobals } = await import("./jquery_types.js");
         fsMap.set(JQUERY_DTS_PATH, jqueryGlobals);
         rootFiles.push(JQUERY_DTS_PATH);
+
+        // Frontend scripts also have the browser `glob` global (`window.glob`);
+        // backend scripts don't. Its real type lives in the client app, so a curated
+        // declaration is injected here (see ./glob_types).
+        const { globGlobals } = await import("./glob_types.js");
+        fsMap.set(GLOB_DTS_PATH, globGlobals);
+        rootFiles.push(GLOB_DTS_PATH);
     } else {
         // Backend `api` types come from the same shared public surface in commons
         // (single source of truth, drift-guarded). No jQuery/DOM server-side.

@@ -21,6 +21,8 @@ const TS_TYPE_NOT_ASSIGNABLE = 2322;
 const TS_TOP_LEVEL_AWAIT = 1375;
 /** "Cannot find name '$'. Do you need to install type definitions for jQuery?…" */
 const TS_JQUERY_NOT_FOUND = 2592;
+/** "Cannot find name 'x'." */
+const TS_NAME_NOT_FOUND = 2304;
 /** "Unreachable code detected." — the one diagnostic rendered as a warning marker. */
 const TS_UNREACHABLE_CODE = 7027;
 
@@ -97,6 +99,34 @@ describe("script note diagnostics", () => {
             "const el = $('<div>');"
         );
         expect(codes).toContain(TS_JQUERY_NOT_FOUND);
+    }, TIMEOUT);
+
+    it("provides the glob global to frontend scripts (member + note typing)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "if (glob.isElectron && glob.isDesktop()) {\n"
+            + "    const note = glob.getActiveContextNote();\n"
+            + "    api.showMessage(note?.title ?? glob.triliumVersion);\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("does not provide glob to backend scripts (browser-only global)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const v = glob.triliumVersion;"
+        );
+        // TS2304 "Cannot find name 'glob'." — glob is unavailable server-side.
+        expect(codes).toContain(TS_NAME_NOT_FOUND);
+    }, TIMEOUT);
+
+    it("still surfaces real errors on the glob global (unknown member)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const v = glob.thisGlobMemberDoesNotExist;"
+        );
+        expect(codes).toContain(TS_UNKNOWN_PROPERTY);
     }, TIMEOUT);
 
     it("still surfaces real errors (unknown api member)", async () => {
