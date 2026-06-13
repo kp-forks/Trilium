@@ -65,7 +65,9 @@ directly: `expect( _getModelData( model ) ).toEqual( '<paragraph>…</paragraph>
 - Import `_setModelData`, `_getModelData`, `_getViewData` (and editor classes, `keyCodes`, etc.)
   from `'ckeditor5'`. In-package source imports use a file extension (`../src/foo.js`).
 - Spies/mocks via `vi` (`vi.spyOn` / `vi.fn` / `vi.useFakeTimers`).
-- Test files: `tests/**/*.[jt]s`, no `.spec`/`.test` suffix.
+- Test-file location: **co-located `*.spec.ts`** by default (aggregator, in-aggregator plugins,
+  new code; `include: ['src/**/*.spec.ts']`). The existing standalone packages keep a `tests/` dir
+  (`tests/**/*.[jt]s`, no `.spec` suffix); new packages should use co-located `.spec.ts`.
 
 ## Running math & mermaid
 

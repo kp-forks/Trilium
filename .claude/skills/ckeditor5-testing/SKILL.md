@@ -15,9 +15,11 @@ description: >-
 
 # CKEditor 5 testing (Trilium)
 
-Testing CKEditor 5 plugins in the **Trilium (TriliumNext Notes) monorepo**. Each plugin lives in
-`packages/ckeditor5-<name>/` and owns its tests in `tests/`. Browser-mode packages gate `src/**`
-at **100% coverage**, so every code change should ship with a test.
+Testing CKEditor 5 plugins in the **Trilium (TriliumNext Notes) monorepo**. **Tests are co-located
+`*.spec.ts` next to the source** for the aggregator (`packages/ckeditor5`), in-aggregator plugins,
+and any new code — matching the repo-wide convention. The existing standalone packages
+(`packages/ckeditor5-<name>/`) keep their legacy `tests/` directories. Browser-mode packages gate
+`src/**` at **100% coverage**, so every code change should ship with a test.
 
 ## Scope & sources
 
@@ -48,8 +50,12 @@ Trilium testing (Preact components, jQuery widgets, server routes), use `writing
   in Trilium — those live only in the upstream ckeditor5 monorepo's `tests/_utils`.
 - **Helpers from `'ckeditor5'`:** `_setModelData`, `_getModelData`, `_getViewData` are imported
   from the `ckeditor5` package.
-- **Test files:** `tests/**/*.[jt]s` (no `.spec`/`.test` suffix). `globals: true`. Coverage
-  provider `v8`, `include: src/**`.
+- **Test-file location:** **co-located `*.spec.ts`** next to the source is the default — the
+  aggregator, in-aggregator plugins (`src/plugins/foo.spec.ts`), and new code, with vitest
+  `include: ['src/**/*.spec.ts']` (as on `feature/collapsible_experiment`). The existing standalone
+  packages instead use a `tests/` dir (`include: ['tests/**/*.[jt]s']`, no `.spec` suffix) — leave
+  them; new standalone packages should use co-located `.spec.ts` too. `globals: true`. Coverage
+  provider `v8`, `include: src/**` (test files themselves excluded from coverage).
 - **Imports** from `'ckeditor5'`; in-package source imports use a file extension.
 - **License key:** tests pass `licenseKey: 'GPL'` in the editor config.
 - Some packages (`admonition`, `footnotes`, `keyboard-marker`) have a vitest config but **no

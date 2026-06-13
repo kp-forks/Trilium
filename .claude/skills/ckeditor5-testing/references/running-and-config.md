@@ -85,9 +85,17 @@ export default defineConfig( {
 } );
 ```
 
-Common to both: `globals: true`, test glob `tests/**/*.[jt]s` (no `.spec`/`.test` suffix), the
-`vite-plugin-svgo` plugin so `import icon from './x.svg'` resolves, and coverage via `v8` over
-`src/**`.
+Common to both: `globals: true`, the `vite-plugin-svgo` plugin so `import icon from './x.svg'`
+resolves, and coverage via `v8` over `src/**` (test files themselves excluded).
+
+**Test-file location depends on where the code lives.** The two configs above are the existing
+**standalone packages**, which use a `tests/` directory (`include: ['tests/**/*.[jt]s']`, no
+`.spec` suffix) — keep them that way. The **aggregator** (`packages/ckeditor5`), **in-aggregator
+plugins** (`src/plugins/`), and **any new code** instead use **co-located `*.spec.ts`** next to the
+source — vitest `include: ['src/**/*.spec.ts']` (e.g. `src/plugins/collapsible_list_items.spec.ts`).
+This is the repo-wide convention (see the `writing-unit-tests` skill) and what
+`feature/collapsible_experiment` uses. New standalone packages should also adopt co-located
+`.spec.ts`.
 
 ## Debugging
 
