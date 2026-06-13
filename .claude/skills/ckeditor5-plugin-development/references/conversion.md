@@ -152,14 +152,12 @@ model: ( viewElement, { writer } ) => writer.createElement( 'box', {
 } )
 ```
 
-Pitfall: DOM-targeted lint rules misfire here. SonarCloud's `javascript:S7761` ("prefer
-`.dataset` over `getAttribute('data-*')`") is a **false positive** on converter callbacks — the
-"fix" silently returns `undefined` and drops every `data-*` attribute on upcast, invisibly to
-tests that mock the view tree. Tell-tale signs you're on a *view* element (keep `getAttribute`):
-nearby `consumable.consume(...)`, `el.is( 'element', … )`, `el.getChild(...)`, an
-`editor.conversion.for( 'upcast' )` registration, or a view `writer`. Only switch to `.dataset`
-when the receiver is a genuine DOM element (e.g. from `document.createElement(...)` or
-`domConverter.mapViewToDom(...)`).
+Reaching for `.dataset`/`.classList` here silently returns `undefined` and drops the value —
+and tests that mock the view tree won't catch it. Tell-tale signs you're on a *view* element
+(keep `getAttribute`): nearby `consumable.consume(...)`, `el.is( 'element', … )`,
+`el.getChild(...)`, an `editor.conversion.for( 'upcast' )` registration, or a view `writer`. The
+DOM API (`.dataset`, `.classList`) only applies to a genuine DOM element (e.g. from
+`document.createElement(...)` or `domConverter.mapViewToDom(...)`).
 
 ## Position mapping (inline widgets / structural mismatch)
 
