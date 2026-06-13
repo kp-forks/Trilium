@@ -199,3 +199,24 @@ correctly (disabled where the schema disallows it); UI bound to command state an
 editing view on execute; keyboard accessibility (keystrokes + `accessibility.addKeystrokeInfos`);
 all user-facing strings wrapped in `t()`; model changes inside `model.change()`; cleanup of
 trackers/handlers in `destroy()`. Full version: `references/review-checklist.md`.
+
+## Provenance & updating
+
+This skill was distilled from the CKEditor 5 repository at baseline commit
+**`9ecca53627`** ("Migrated the horizontal line package tests to Vitest", 2026-06-12).
+
+Primary sources distilled:
+- `docs/framework/architecture/*.md` (intro, plugins, core-editor-architecture, editing-engine,
+  ui-library, ui-components)
+- `docs/framework/how-tos.md`, `docs/framework/custom-editor-creator.md`,
+  `docs/framework/deep-dive/localization.md`
+- `docs/framework/contributing/{code-style,package-metadata,development-environment}.md`
+- `docs/framework/development-tools/**` (package-generator, inspector)
+- `docs/tutorials/**` (crash-course, abbreviation-plugin-tutorial, widgets, creating-simple-plugin-timestamp)
+
+To update this skill when the docs change, diff the sources since the baseline and fold in
+what moved, then bump the commit reference above:
+
+```bash
+git diff 9ecca53627..HEAD -- docs/framework docs/tutorials
+```

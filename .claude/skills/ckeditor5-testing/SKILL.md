@@ -169,3 +169,28 @@ cleanup); model/view asserted via `_getModelData`/`_getViewData` + `toEqual` wit
 `[]`/`{}` selection syntax; spies via `vi`; behavior covered for collapsed **and** ranged
 selections and schema-disallowed contexts; new `src/` lines covered (100% gate); no Chai/Sinon
 leftovers; manual tests (if any) under `tests/manual/`.
+
+## Provenance & updating
+
+This skill was distilled from the CKEditor 5 repository at baseline commit
+**`9ecca53627`** ("Migrated the horizontal line package tests to Vitest", 2026-06-12). Because
+the repo is **mid-migration to Vitest**, this skill reflects the *current* setup verified
+against source — not the (stale, Karma-era) published testing docs.
+
+Primary sources distilled:
+- `vitest.config.ts`, `test_setup.js`, root `package.json` scripts, a package `vitest.config.ts`
+- `packages/ckeditor5-core/tests/_utils/*` (test editors & helpers)
+- `packages/ckeditor5-engine/src/dev-utils/{model,view}.ts` (the `_get*/_set*` helpers)
+- Migrated example tests in `packages/ckeditor5-{paragraph,undo,horizontal-line,bookmark}/tests/**`
+- `docs/framework/contributing/testing-environment.md`,
+  `docs/framework/development-tools/testing-helpers.md` (note: partly stale)
+
+To update, diff the sources since the baseline and fold in changes (watch the migration
+progress — more packages move to Vitest over time), then bump the commit reference above:
+
+```bash
+git diff 9ecca53627..HEAD -- vitest.config.ts test_setup.js package.json \
+  packages/ckeditor5-core/tests/_utils packages/ckeditor5-engine/src/dev-utils \
+  docs/framework/contributing/testing-environment.md \
+  docs/framework/development-tools/testing-helpers.md
+```
