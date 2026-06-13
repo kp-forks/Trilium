@@ -55,7 +55,9 @@ Trilium testing (Preact components, jQuery widgets, server routes), use `writing
   `include: ['src/**/*.spec.ts']` (as on `feature/collapsible_experiment`). The existing standalone
   packages instead use a `tests/` dir (`include: ['tests/**/*.[jt]s']`, no `.spec` suffix) — leave
   them; new standalone packages should use co-located `.spec.ts` too. `globals: true`. Coverage
-  provider `v8`, `include: src/**` (test files themselves excluded from coverage).
+  provider `v8`, `include: src/**` (test files themselves excluded from coverage). The aggregate
+  (`packages/ckeditor5`) must also `exclude: ['**/ckeditor5-*/**']` + `allowExternal: false` or the
+  imported sibling packages bleed in (see `references/running-and-config.md`).
 - **Imports** from `'ckeditor5'`; in-package source imports use a file extension.
 - **License key:** tests pass `licenseKey: 'GPL'` in the editor config.
 - Some packages (`admonition`, `footnotes`, `keyboard-marker`) have a vitest config but **no
@@ -82,28 +84,23 @@ test:sequential` runs `math` and `mermaid` **sequentially** (browser resource li
 
 ## Anatomy of a test
 
+In the aggregate (`packages/ckeditor5`), use the shared **editor kit** —
+`createTestEditor()` from `test/editor-kit.ts` builds a real `ClassicEditor` (`licenseKey: 'GPL'`,
+auto-tracked) and the global `afterEach` in `test/setup.ts` (wired via `setupFiles`) destroys every
+tracked editor, so specs **don't** write their own editor-teardown `afterEach`:
+
 ```ts
 import { ClassicEditor, Essentials, Paragraph, _setModelData } from 'ckeditor5';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MyPlugin from '../src/myplugin.js';
+import { describe, it, expect, beforeEach } from 'vitest';
+
+import { createTestEditor } from '../../test/editor-kit.js';
+import MyPlugin from './myplugin.js';
 
 describe( 'MyPlugin', () => {
-	let editorElement: HTMLDivElement, editor: ClassicEditor, model;
+	let editor: ClassicEditor;
 
 	beforeEach( async () => {
-		editorElement = document.createElement( 'div' );
-		document.body.appendChild( editorElement );
-
-		editor = await ClassicEditor.create( editorElement, {
-			licenseKey: 'GPL',
-			plugins: [ Essentials, Paragraph, MyPlugin ]
-		} );
-		model = editor.model;
-	} );
-
-	afterEach( () => {
-		editorElement.remove();
-		return editor.destroy();
+		editor = await createTestEditor( [ Essentials, Paragraph, MyPlugin ] );
 	} );
 
 	it( 'loads the plugin', () => {
@@ -111,19 +108,22 @@ describe( 'MyPlugin', () => {
 	} );
 
 	it( 'keeps the selection in a paragraph', () => {
-		_setModelData( model, '<paragraph>foo[]bar</paragraph>' );
-		expect( model.document.getRoot().getChild( 0 ).name ).toBe( 'paragraph' );
+		_setModelData( editor.model, '<paragraph>foo[]bar</paragraph>' );
+		expect( editor.model.document.getRoot().getChild( 0 ).name ).toBe( 'paragraph' );
 	} );
 } );
 ```
 
+Need the host element? It's `editor.sourceElement` (or `getEditorElement( editor )` from the kit).
+Some legacy specs still hand-roll the create/destroy scaffold (`document.createElement('div')` +
+`ClassicEditor.create(...)` + a teardown `afterEach`) — those are being migrated to `createTestEditor`.
+
 Conventions visible here and across the suite:
 - One top-level `describe` named after the unit, nested `describe`s for areas (`isEnabled`,
   `execute()`, …), small focused `it`s.
-- Create the editor in `beforeEach` (return the Promise or use `async`/`await` — Vitest awaits
-  it), and **always tear down** in `afterEach`: `editor.destroy()` plus `editorElement.remove()`.
-- Pass `licenseKey: 'GPL'`. List only the plugins the test needs (commands can also be
-  instantiated directly, e.g. `new InsertMermaidCommand( editor )`).
+- Create the editor in `beforeEach` (return the Promise or use `async`/`await` — Vitest awaits it).
+- Pass `licenseKey: 'GPL'` (the kit does this for you). List only the plugins the test needs
+  (commands can also be instantiated directly, e.g. `new InsertMermaidCommand( editor )`).
 
 ## Model/view test data
 
@@ -156,12 +156,22 @@ button.fire( 'execute' );
 expect( spy ).toHaveBeenCalledWith( 'insertMermaid' );
 ```
 
+## Stubbing the Trilium glue (`glob` / clipboard / jQuery `$`)
+
+Many in-aggregate plugins reference a global `glob` (the Trilium bridge typed in
+`src/augmentation.ts`), some hit `navigator.clipboard`, and some converters call jQuery `$(...)`.
+Use the globals kit (`test/globals-test-kit.ts`): `installGlobMock({…})` and `mockClipboard({…})`
+install the stub **and register their own teardown** (run by the global `afterEach` in
+`test/setup.ts`), and `$` is a global passthrough from `setup.ts` — so specs **don't** hand-roll
+`globalThis.glob` or delete anything. (Browser mode shares one page, so a leaked global would bleed
+into later specs.) See `references/patterns.md` for the recipe.
+
 ## Reference map
 
 | File | Use it for |
 |------|-----------|
 | `references/test-utilities.md` | Testing against a real `ClassicEditor` (lifecycle, `licenseKey: 'GPL'`), and the `_setModelData`/`_getModelData`/`_getViewData` helpers from `'ckeditor5'` + the `[]`/`{}` selection syntax. |
-| `references/patterns.md` | Idiomatic recipes per concern (schema, conversion round-trips, commands, UI, keystrokes, events, async), all against a real editor; note on the 100% coverage gate for browser-mode packages. |
+| `references/patterns.md` | Idiomatic recipes per concern (schema, conversion round-trips, commands, UI, keystrokes, events, async), all against a real editor; the `glob`/clipboard/jQuery-`$` stubbing recipe (via the globals kit's `installGlobMock`/`mockClipboard`); note on the 100% coverage gate for browser-mode packages. |
 | `references/running-and-config.md` | Per-package `vitest.config.ts` (happy-dom shape and WebdriverIO browser shape), `pnpm --filter` commands, the debug command, `pnpm test:parallel`/`test:sequential` (math+mermaid sequential), coverage thresholds. |
 | `references/test-conventions.md` | Trilium test **conventions & gotchas**: choosing happy-dom vs. browser mode, real-editor teardown, the both-assertion-styles note, sequential math/mermaid, and the pointer to `writing-unit-tests`. |
 

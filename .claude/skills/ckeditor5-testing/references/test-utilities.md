@@ -1,50 +1,51 @@
 # Test utilities & data helpers (Trilium)
 
 Trilium plugin tests run against a **real editor** and assert with the model/view stringify-parse
-helpers. There are no test-editor factories in Trilium.
+helpers. There are no upstream test-editor factories in Trilium — but the aggregate ships a thin
+shared kit that wraps the real `ClassicEditor`.
 
 ## Test against a real `ClassicEditor`
 
-Create a real editor over a real DOM element. Pass `licenseKey: 'GPL'` and only the plugins the
-test needs. Tear down in `afterEach`: destroy the editor and remove the element.
+In the aggregate (`packages/ckeditor5`), use `createTestEditor()` from `test/editor-kit.ts`: it
+creates a real editor (`licenseKey: 'GPL'`, only the plugins you pass) over a fresh host element and
+**tracks** it, and the global `afterEach` in `test/setup.ts` destroys every tracked editor — so no
+per-spec editor teardown:
 
 ```ts
 import { ClassicEditor, Paragraph } from 'ckeditor5';
-import { describe, beforeEach, afterEach, it, expect } from 'vitest';
-import MyEditing from '../src/myediting.js';
+import { describe, beforeEach, it, expect } from 'vitest';
+
+import { createTestEditor } from '../../test/editor-kit.js';
+import MyEditing from './myediting.js';
 
 describe( 'MyEditing', () => {
-	let editorElement: HTMLDivElement, editor: ClassicEditor, model;
+	let editor: ClassicEditor, model;
 
 	beforeEach( async () => {
-		editorElement = document.createElement( 'div' );
-		document.body.appendChild( editorElement );
-
-		editor = await ClassicEditor.create( editorElement, {
-			licenseKey: 'GPL',
-			plugins: [ Paragraph, MyEditing ]
-		} );
+		editor = await createTestEditor( [ Paragraph, MyEditing ] );
 		model = editor.model;
 	} );
-
-	afterEach( () => {
-		editorElement.remove();
-		return editor.destroy();
-	} );
+	// no afterEach: setup.ts destroys tracked editors
 } );
 ```
+
+Pass extra editor config (toolbar, balloon, etc.) as the second arg:
+`createTestEditor( [ Paragraph, MyEditing ], { toolbar: [ 'myButton' ] } )`. Need the host element?
+`editor.sourceElement`, or `getEditorElement( editor )` from the kit.
 
 Notes:
 - `editor.model`, `editor.editing.view`, `editor.ui`, `editor.commands`, `editor.plugins` are all
   available — it's a real editor, not a stripped-down test editor.
 - Commands can be instantiated directly for focused tests:
   `command = new InsertMermaidCommand( editor )` after the editor is created.
-- Teardown matters: always `editor.destroy()` **and** `editorElement.remove()`, or leftover
-  editor DOM/body wrappers will leak between tests.
+- **Standalone packages and legacy specs** (mid-migration to the kit) still hand-roll the scaffold:
+  `document.createElement('div')` + `ClassicEditor.create(...)` + an `afterEach` that calls
+  `editor.destroy()` **and** `editorElement.remove()`. There, forgetting either leaks editor
+  DOM/body wrappers between tests.
 
 > The upstream ckeditor5 monorepo ships `ModelTestEditor` / `VirtualTestEditor` /
 > `ClassicTestEditor` in `@ckeditor/ckeditor5-core/tests/_utils`, but those are monorepo-internal
-> and are **not** available in Trilium. Use a real `ClassicEditor` as above.
+> and are **not** available in Trilium. Use a real `ClassicEditor` (or the kit) as above.
 
 ## Model & view data helpers
 
