@@ -1,6 +1,6 @@
 import "../theme/collapsible_list_items.css";
 
-import { Command, ListEditing, MouseObserver, Plugin, type Editor, type ModelElement, type ModelNode, type ModelWriter, type ViewDocumentMouseDownEvent, type ViewElement } from "ckeditor5";
+import { Command, getCode, ListEditing, MouseObserver, parseKeystroke, Plugin, type Editor, type ModelElement, type ModelNode, type ModelWriter, type ViewDocumentKeyDownEvent, type ViewDocumentMouseDownEvent, type ViewElement } from "ckeditor5";
 
 export const LIST_COLLAPSED_ATTRIBUTE = "listCollapsed";
 
@@ -47,7 +47,35 @@ export default class CollapsibleListItems extends Plugin {
         });
 
         this._enableToggleOnGutterClick();
+        this._enableToggleOnKeystroke();
         this._enableAutoExpand();
+    }
+
+    /**
+     * Toggles the collapsed state on Ctrl+Enter. To-do items keep the native Ctrl+Enter
+     * (check the item), so the handler bails on them; it runs at the highest priority because
+     * the native to-do binding stops the event unconditionally on every Ctrl+Enter.
+     */
+    private _enableToggleOnKeystroke() {
+        const editor = this.editor;
+        const toggleKeystroke = parseKeystroke("Ctrl+Enter");
+
+        this.listenTo<ViewDocumentKeyDownEvent>(editor.editing.view.document, "keydown", (evt, data) => {
+            if (getCode(data) !== toggleKeystroke) {
+                return;
+            }
+            const command = editor.commands.get("toggleListCollapse");
+            if (!command?.isEnabled) {
+                return;
+            }
+            const block = getSelectedListBlock(editor);
+            if (block?.getAttribute("listType") === "todo") {
+                return;
+            }
+            editor.execute("toggleListCollapse");
+            data.preventDefault();
+            evt.stop();
+        }, {priority: "highest"});
     }
 
     /**
