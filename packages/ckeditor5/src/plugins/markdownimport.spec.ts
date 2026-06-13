@@ -1,7 +1,8 @@
 import { ClassicEditor, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import MarkdownImportPlugin, { COMMAND_NAME } from "./markdownimport.js";
 
 describe("MarkdownImportPlugin", () => {
@@ -10,15 +11,11 @@ describe("MarkdownImportPlugin", () => {
 
     beforeEach(async () => {
         triggerCommand = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ triggerCommand })
-        } as unknown as typeof glob;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, MarkdownImportPlugin]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
     });
 
     it("loads the plugin and registers the command and toolbar button", () => {

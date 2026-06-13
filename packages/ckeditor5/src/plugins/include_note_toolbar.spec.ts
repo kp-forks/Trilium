@@ -1,7 +1,8 @@
 import { ClassicEditor, Essentials, Paragraph, Plugin, toWidget, Widget, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import IncludeNote from "./includenote.js";
 import IncludeNoteBoxSizeDropdown from "./include_note_box_size_dropdown.js";
 import IncludeNoteToolbar from "./include_note_toolbar.js";
@@ -74,19 +75,11 @@ describe("IncludeNoteToolbar", () => {
 
     beforeEach(async () => {
         const loadIncludedNote = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ loadIncludedNote })
-        } as unknown as typeof glob;
-
-        // includenote.ts calls jQuery globally; provide a passthrough stub.
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     it("loads the plugin", () => {
@@ -155,18 +148,11 @@ describe("isIncludeNoteWidget — section widget without a class attribute (|| '
 
     beforeEach(async () => {
         const loadIncludedNote = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ loadIncludedNote })
-        } as unknown as typeof glob;
-
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar, SectionNoClassWidget]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     it("returns null for a section widget that has no class attribute (exercises the || '' fallback at line 43)", () => {
@@ -204,7 +190,7 @@ describe("isIncludeNoteWidget — real non-include-note widgets (branch coverage
 
     beforeEach(async () => {
         const loadIncludedNote = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({
                 loadIncludedNote,
                 renderLinkEmbed: vi.fn(),
@@ -220,17 +206,9 @@ describe("isIncludeNoteWidget — real non-include-note widgets (branch coverage
                 }),
                 detectEmbedType: () => "opengraph"
             })
-        } as unknown as typeof glob;
-
-        // Both includenote.ts and linkembed.ts call jQuery globally.
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown, IncludeNoteToolbar, LinkEmbed]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     it("returns null when getSelectedElement returns a non-widget element (covers the !isWidget branch at line 35-36)", () => {

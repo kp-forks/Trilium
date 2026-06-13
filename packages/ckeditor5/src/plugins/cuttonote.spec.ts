@@ -1,7 +1,8 @@
 import { _setModelData as setModelData, ClassicEditor, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import CutToNotePlugin from "./cuttonote.js";
 
 describe("CutToNotePlugin", () => {
@@ -10,15 +11,11 @@ describe("CutToNotePlugin", () => {
 
     beforeEach(async () => {
         triggerCommand = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ triggerCommand })
-        } as unknown as typeof glob;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, CutToNotePlugin]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
     });
 
     it("loads the plugin and registers the toolbar button", () => {

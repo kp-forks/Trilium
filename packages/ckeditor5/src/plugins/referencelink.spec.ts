@@ -1,7 +1,8 @@
 import { _getViewData as getViewData, _setModelData as setModelData, ClassicEditor, Essentials, LinkEditing, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import ReferenceLink from "./referencelink.js";
 
 describe("ReferenceLink", () => {
@@ -14,21 +15,13 @@ describe("ReferenceLink", () => {
         getReferenceLinkTitle = vi.fn(async () => "Some title");
         getReferenceLinkTitleSync = vi.fn(() => "Some title");
         loadReferenceLinkTitle = vi.fn(async () => undefined);
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ loadReferenceLinkTitle }),
             getReferenceLinkTitle,
             getReferenceLinkTitleSync
-        } as unknown as typeof glob;
-
-        // The editingDowncast and upcast converters call jQuery via a global `$`.
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, LinkEditing, ReferenceLink]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     it("loads the plugin, registers the schema and the command", () => {

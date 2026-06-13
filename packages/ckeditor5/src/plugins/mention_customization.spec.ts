@@ -6,9 +6,10 @@ import {
     Mention,
     Paragraph
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import MentionCustomization from "./mention_customization.js";
 import ReferenceLink from "./referencelink.js";
 
@@ -18,17 +19,14 @@ describe("MentionCustomization", () => {
 
     beforeEach(async () => {
         createNoteForReferenceLink = vi.fn(async () => "createdNotePath");
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({
                 createNoteForReferenceLink,
                 loadReferenceLinkTitle: vi.fn(async () => {})
             }),
             getReferenceLinkTitle: vi.fn(async () => "Some title"),
             getReferenceLinkTitleSync: () => "Some title"
-        } as unknown as typeof glob;
-
-        // referencelink.ts editing downcast converter calls jQuery globally.
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([
             Essentials,
@@ -37,11 +35,6 @@ describe("MentionCustomization", () => {
             ReferenceLink,
             MentionCustomization
         ]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     it("loads the plugin, requires Mention and overrides the mention command", () => {

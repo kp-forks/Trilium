@@ -1,7 +1,8 @@
 import { ClassicEditor, Essentials, Paragraph, Widget, _setModelData as setModelData } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import IncludeNoteBoxSizeDropdown from "./include_note_box_size_dropdown.js";
 import IncludeNote, { BOX_SIZE_COMMAND_NAME, BOX_SIZES } from "./includenote.js";
 
@@ -10,19 +11,11 @@ describe("IncludeNoteBoxSizeDropdown", () => {
 
     beforeEach(async () => {
         const loadIncludedNote = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ loadIncludedNote })
-        } as unknown as typeof glob;
-
-        // includenote.ts calls jQuery globally; provide a passthrough stub
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote, IncludeNoteBoxSizeDropdown]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     it("loads the plugin and registers the dropdown component", () => {

@@ -4,13 +4,12 @@ import {
     Essentials,
     Paragraph,
     Plugin,
-    toWidget,
-    Widget,
 } from "ckeditor5";
 import type { ModelElement, ModelText } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { TestBoxPlugin } from "../../test/fixture-plugins.js";
 import MoveBlockUpDownPlugin from "./move_block_updown.js";
 
 /** Returns the text data of the Nth block in the editor root (0-indexed). */
@@ -22,46 +21,6 @@ function getBlockText(editor: ClassicEditor, index: number): string {
     const textNode = (el as ModelElement).getChild(0);
     if (!textNode || !textNode.is("$text")) { return ""; }
     return (textNode as ModelText).data;
-}
-
-/**
- * Minimal block widget plugin for testing the object-element path.
- * Registers a `testBox` element with isObject: true so that selecting it
- * exercises the `getSelectedElement()` branch and the else-branch for
- * selection restoration.
- */
-class TestBoxPlugin extends Plugin {
-    static get requires() {
-        return [Widget];
-    }
-
-    init() {
-        const { model, conversion } = this.editor;
-
-        model.schema.register("testBox", {
-            isObject: true,
-            allowWhere: "$block"
-        });
-
-        conversion.for("upcast").elementToElement({
-            model: "testBox",
-            view: { name: "div", classes: "test-box" }
-        });
-
-        conversion.for("dataDowncast").elementToElement({
-            model: "testBox",
-            view: (_el, { writer }) =>
-                writer.createContainerElement("div", { class: "test-box" })
-        });
-
-        conversion.for("editingDowncast").elementToElement({
-            model: "testBox",
-            view: (_el, { writer }) => {
-                const container = writer.createContainerElement("div", { class: "test-box" });
-                return toWidget(container, writer, { label: "test box widget" });
-            }
-        });
-    }
 }
 
 describe("MoveBlockUpDownPlugin", () => {

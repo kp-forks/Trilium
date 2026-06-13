@@ -1,7 +1,8 @@
 import { ClassicEditor, Essentials, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import LinkEmbedToolbar from "./link_embed_toolbar.js";
 import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./linkembed.js";
 
@@ -75,7 +76,7 @@ describe("LinkEmbedToolbar", () => {
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({
                 renderLinkEmbed: vi.fn(),
                 renderLinkMention: vi.fn(),
@@ -90,16 +91,9 @@ describe("LinkEmbedToolbar", () => {
                 }),
                 detectEmbedType: () => "opengraph"
             })
-        } as unknown as typeof glob;
-
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, LinkEmbed, LinkEmbedToolbar]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     // -----------------------------------------------------------------------

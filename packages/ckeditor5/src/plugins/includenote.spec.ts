@@ -7,9 +7,10 @@ import {
     Widget,
     type ModelElement
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import IncludeNote, { BOX_SIZE_COMMAND_NAME, BOX_SIZES, COMMAND_NAME } from "./includenote.js";
 
 describe("IncludeNote", () => {
@@ -20,19 +21,11 @@ describe("IncludeNote", () => {
     beforeEach(async () => {
         triggerCommand = vi.fn();
         loadIncludedNote = vi.fn();
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({ triggerCommand, loadIncludedNote })
-        } as unknown as typeof glob;
-
-        // includenote.ts calls jQuery globally; provide a passthrough stub.
-        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, Widget, IncludeNote]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        delete (globalThis as { $?: unknown }).$;
     });
 
     // -----------------------------------------------------------------------

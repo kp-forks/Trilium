@@ -2,57 +2,13 @@ import {
     ClassicEditor,
     Essentials,
     Paragraph,
-    Plugin,
-    toWidget,
-    Widget,
     _setModelData as setModelData,
 } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { TestBoxPlugin } from "../../test/fixture-plugins.js";
 import { preventCKEditorHandling } from "./widget_utils.js";
-
-/**
- * Minimal block widget plugin for test purposes.
- *
- * It registers a `testBox` element that renders as a <div data-cke-widget-wrapper> block
- * so we can exercise the full selectParentWidget path.
- */
-class TestBoxPlugin extends Plugin {
-    static get requires() {
-        return [Widget];
-    }
-
-    init() {
-        const { model, conversion } = this.editor;
-
-        model.schema.register("testBox", {
-            isObject: true,
-            allowWhere: "$block",
-        });
-
-        conversion.for("upcast").elementToElement({
-            model: "testBox",
-            view: { name: "div", classes: "test-box" },
-        });
-
-        conversion.for("dataDowncast").elementToElement({
-            model: "testBox",
-            view: (_el, { writer }) =>
-                writer.createContainerElement("div", { class: "test-box" }),
-        });
-
-        conversion.for("editingDowncast").elementToElement({
-            model: "testBox",
-            view: (_el, { writer }) => {
-                const container = writer.createContainerElement("div", {
-                    class: "test-box",
-                });
-                return toWidget(container, writer, { label: "test box widget" });
-            },
-        });
-    }
-}
 
 describe("preventCKEditorHandling", () => {
     let editor: ClassicEditor;

@@ -1,7 +1,8 @@
 import { _setModelData as setModelData, Bold, Bookmark, ClassicEditor, Essentials, Paragraph } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock, mockClipboard } from "../../test/globals-test-kit.js";
 import CopyAnchorLinkButton from "./copy_anchor_link.js";
 
 describe("CopyAnchorLinkButton", () => {
@@ -9,32 +10,19 @@ describe("CopyAnchorLinkButton", () => {
     let getActiveContextNote: ReturnType<typeof vi.fn>;
     let getReferenceLinkTitleSync: ReturnType<typeof vi.fn>;
     let clipboardWrite: ReturnType<typeof vi.fn>;
-    let originalClipboard: typeof navigator.clipboard;
 
     beforeEach(async () => {
         getActiveContextNote = vi.fn(() => ({ noteId: "noteAbc" }));
         getReferenceLinkTitleSync = vi.fn(() => "Some title");
-        globalThis.glob = {
+        installGlobMock({
             getActiveContextNote,
             getReferenceLinkTitleSync
-        } as unknown as typeof glob;
+        });
 
         clipboardWrite = vi.fn(() => Promise.resolve());
-        originalClipboard = navigator.clipboard;
-        Object.defineProperty(navigator, "clipboard", {
-            configurable: true,
-            value: { write: clipboardWrite }
-        });
+        mockClipboard({ write: clipboardWrite });
 
         editor = await createTestEditor([Essentials, Paragraph, Bold, Bookmark, CopyAnchorLinkButton]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
-        Object.defineProperty(navigator, "clipboard", {
-            configurable: true,
-            value: originalClipboard
-        });
     });
 
     function getButton() {

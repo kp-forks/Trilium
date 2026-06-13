@@ -2,6 +2,7 @@ import { ClassicEditor, Essentials, FileRepository, Paragraph, type FileLoader, 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import UploadimagePlugin from "./uploadimage.js";
 
 /**
@@ -80,10 +81,10 @@ describe("UploadimagePlugin", () => {
 
     beforeEach(async () => {
         getHeaders = vi.fn(async () => ({ Authorization: "Bearer token", "x-csrf": "abc" }));
-        globalThis.glob = {
+        installGlobMock({
             getHeaders,
             getActiveContextNote: () => ({ noteId: "noteAbc" })
-        } as unknown as typeof glob;
+        });
 
         originalXHR = window.XMLHttpRequest;
         window.XMLHttpRequest = FakeXHR as unknown as typeof window.XMLHttpRequest;
@@ -93,7 +94,6 @@ describe("UploadimagePlugin", () => {
     });
 
     afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
         window.XMLHttpRequest = originalXHR;
     });
 

@@ -6,11 +6,13 @@ import {
     Essentials,
     Link,
     Paragraph,
-    Undo
+    Undo,
+    type ViewElement
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
+import { installGlobMock } from "../../test/globals-test-kit.js";
 import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND } from "./linkembed.js";
 
 const META = {
@@ -39,7 +41,7 @@ describe("LinkEmbed", () => {
         // YouTube-like URLs => "youtube" (embeddable); everything else => "opengraph".
         detectEmbedType = vi.fn((url: string) => (url.includes("youtube") ? "youtube" : "opengraph"));
 
-        globalThis.glob = {
+        installGlobMock({
             getComponentByEl: () => ({
                 triggerCommand,
                 renderLinkEmbed,
@@ -47,13 +49,9 @@ describe("LinkEmbed", () => {
                 fetchLinkMetadata,
                 detectEmbedType
             })
-        } as unknown as typeof glob;
+        });
 
         editor = await createTestEditor([Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed]);
-    });
-
-    afterEach(() => {
-        delete (globalThis as { glob?: unknown }).glob;
     });
 
     // -----------------------------------------------------------------------
@@ -246,6 +244,41 @@ describe("LinkEmbed", () => {
         expect(container).toBeInstanceOf(HTMLElement);
         expect(metadata).toMatchObject({ url: "https://e.com/", title: "T", favicon: "F" });
         expect(editable).toBe(true);
+    });
+
+    it("maps a view position inside the rendered linkMention to a model position OUTSIDE the object", () => {
+        // linkMention is an empty inline object whose editing view holds a UIElement child. Without
+        // the viewToModelPositionOutsideModelElement mapper registered in LinkEmbedEditing, a view
+        // position inside the rendered widget resolves to a degenerate model position *inside* the
+        // atomic object; the mapper must instead resolve it just after the mention.
+        setModelData(
+            editor.model,
+            '<paragraph>foo<linkMention url="https://e.com/" title="T"></linkMention>bar</paragraph>'
+        );
+
+        const root = editor.editing.view.document.getRoot();
+        let mentionView: ViewElement | undefined;
+        if (root) {
+            for (const { item } of editor.editing.view.createRangeIn(root)) {
+                if (item.is("element") && item.hasClass("link-mention")) {
+                    mentionView = item;
+                    break;
+                }
+            }
+        }
+        expect(mentionView).toBeDefined();
+        if (!mentionView) {
+            return;
+        }
+
+        const viewPosition = editor.editing.view.createPositionAt(mentionView, "end");
+        const modelPosition = editor.editing.mapper.toModelPosition(viewPosition);
+
+        // Must land just after the mention (paragraph offset 4 = "foo"(3) + linkMention(1)),
+        // not inside the atomic linkMention element.
+        expect(modelPosition.parent.is("element", "linkMention")).toBe(false);
+        expect(modelPosition.parent.is("element", "paragraph")).toBe(true);
+        expect(modelPosition.offset).toBe(4);
     });
 
     // -----------------------------------------------------------------------
