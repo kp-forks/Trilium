@@ -187,6 +187,9 @@ Load the focused reference for the task at hand:
 | `references/review-checklist.md` | A structured checklist for reviewing an existing plugin (architecture, schema, conversion, commands, UI, a11y, conventions). |
 | `references/recipes.md` | Task-oriented how-tos: insert content, find/iterate nodes, custom observers, place caret, extend other plugins' UI, etc. |
 
+For **testing** a plugin (Vitest setup, test editors, model/view assertions, command/UI test
+patterns), use the separate **`ckeditor5-testing`** skill.
+
 ## Quick review checklist (summary)
 
 When reviewing a plugin, confirm: editing/UI split with a glue plugin; `static get requires()`
