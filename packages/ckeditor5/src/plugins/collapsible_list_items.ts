@@ -1,6 +1,6 @@
 import "../theme/collapsible_list_items.css";
 
-import { Command, getCode, ListEditing, MouseObserver, parseKeystroke, Plugin, type Editor, type ModelElement, type ModelNode, type ModelWriter, type ViewDocumentKeyDownEvent, type ViewDocumentMouseDownEvent, type ViewElement } from "ckeditor5";
+import { Command, ListEditing, MouseObserver, Plugin, type Editor, type ModelElement, type ModelNode, type ModelWriter, type ViewDocumentMouseDownEvent, type ViewElement } from "ckeditor5";
 
 export const LIST_COLLAPSED_ATTRIBUTE = "listCollapsed";
 
@@ -52,30 +52,21 @@ export default class CollapsibleListItems extends Plugin {
     }
 
     /**
-     * Toggles the collapsed state on Ctrl+Enter. To-do items keep the native Ctrl+Enter
-     * (check the item), so the handler bails on them; it runs at the highest priority because
-     * the native to-do binding stops the event unconditionally on every Ctrl+Enter.
+     * Toggles the collapsed state on Ctrl+Alt+Enter, uniformly for every list type. Ctrl+Enter is
+     * deliberately avoided: it is already the native to-do "check item" shortcut (and a Trilium
+     * global), so collapse gets its own conflict-free binding rather than fighting over it.
      */
     private _enableToggleOnKeystroke() {
         const editor = this.editor;
-        const toggleKeystroke = parseKeystroke("Ctrl+Enter");
 
-        this.listenTo<ViewDocumentKeyDownEvent>(editor.editing.view.document, "keydown", (evt, data) => {
-            if (getCode(data) !== toggleKeystroke) {
-                return;
-            }
+        editor.keystrokes.set("Ctrl+Alt+Enter", (_data, cancel) => {
             const command = editor.commands.get("toggleListCollapse");
             if (!command?.isEnabled) {
                 return;
             }
-            const block = getSelectedListBlock(editor);
-            if (block?.getAttribute("listType") === "todo") {
-                return;
-            }
             editor.execute("toggleListCollapse");
-            data.preventDefault();
-            evt.stop();
-        }, {priority: "highest"});
+            cancel();
+        });
     }
 
     /**

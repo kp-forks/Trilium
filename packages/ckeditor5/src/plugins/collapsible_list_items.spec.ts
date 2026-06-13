@@ -255,26 +255,37 @@ describe("CollapsibleListItems", () => {
         expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
     });
 
-    it("toggles via Ctrl+Enter on a collapsible item and ignores leaves", () => {
-        pressCtrlEnter(editor); // selection starts in the parent
+    it("toggles via Ctrl+Alt+Enter on a collapsible item and ignores leaves", () => {
+        pressCtrlAltEnter(editor); // selection starts in the parent
         expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
 
-        pressCtrlEnter(editor);
+        pressCtrlAltEnter(editor);
         expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
 
         setSelectionIn(editor, 1); // leaf child: nothing to collapse
-        pressCtrlEnter(editor);
+        pressCtrlAltEnter(editor);
         expect(getBlock(editor, 1).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
     });
 
-    it("leaves Ctrl+Enter to the native to-do check on to-do items", () => {
+    it("collapses to-do items via Ctrl+Alt+Enter without checking them", () => {
+        setModelData(editor.model,
+            '<paragraph listIndent="0" listItemId="ta-a" listType="todo">Parent[]</paragraph>' +
+            '<paragraph listIndent="1" listItemId="ta-b" listType="todo">Child</paragraph>');
+
+        pressCtrlAltEnter(editor);
+
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+        expect(getBlock(editor, 0).hasAttribute("todoListChecked")).toBe(false);
+    });
+
+    it("leaves Ctrl+Enter to the native to-do check (no longer bound to collapse)", () => {
         setModelData(editor.model,
             '<paragraph listIndent="0" listItemId="t-a" listType="todo">Parent[]</paragraph>' +
             '<paragraph listIndent="1" listItemId="t-b" listType="todo">Child</paragraph>');
 
         pressCtrlEnter(editor);
 
-        // The collapse toggle must not fire; the native checkTodoList command handles it.
+        // Collapse no longer touches Ctrl+Enter, so the native checkTodoList handles it.
         expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
         expect(getBlock(editor, 0).getAttribute("todoListChecked")).toBe(true);
     });
@@ -291,6 +302,16 @@ function getBlock(editor: ClassicEditor, index: number): ModelElement {
 function setSelectionIn(editor: ClassicEditor, blockIndex: number): void {
     editor.model.change((writer) => {
         writer.setSelection(writer.createPositionAt(getBlock(editor, blockIndex), 0));
+    });
+}
+
+function pressCtrlAltEnter(editor: ClassicEditor): void {
+    editor.editing.view.document.fire("keydown", {
+        keyCode: keyCodes.enter,
+        ctrlKey: true,
+        altKey: true,
+        preventDefault: () => {},
+        stopPropagation: () => {}
     });
 }
 
