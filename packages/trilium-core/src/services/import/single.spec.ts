@@ -12,12 +12,15 @@ import stripBom from "strip-bom";
 import { getContext } from "../context.js";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
-async function testImport(fileName: string, mimetype: string, bufferOverride?: Buffer) {
+async function testImport(fileName: string, mimetype: string, bufferOverride?: Buffer, extraOptions?: Record<string, unknown>) {
     const buffer = bufferOverride ?? fs.readFileSync(`${scriptDir}/samples/${fileName}`);
-    const taskContext = TaskContext.getInstance("import-mdx", "importNotes", {
+    // getInstance caches by task id, so a caller needing distinct options (e.g. safeImport) must
+    // use a distinct id rather than reusing the shared "import-mdx" context.
+    const taskContext = TaskContext.getInstance(extraOptions ? `import-${fileName}` : "import-mdx", "importNotes", {
         textImportedAsText: true,
         codeImportedAsCode: true,
-        spreadsheetImportedAsSpreadsheet: true
+        spreadsheetImportedAsSpreadsheet: true,
+        ...extraOptions
     });
 
     return new Promise<{ buffer: Buffer; importedNote: BNote }>((resolve, reject) => {
@@ -74,6 +77,18 @@ describe("processNoteContent", () => {
         expect(importedNote.mime).toBe("text/html");
         expect(importedNote.title).toBe("IREN Reports Q2 FY25 Results");
         expect(importedNote.getContent().toString().substring(0, 5)).toEqual("<html");
+    });
+
+    it("safe import preserves data-trilium-collapsed on list items", async () => {
+        const html = `<ul><li data-trilium-collapsed="true">Parent<ul><li>Child</li></ul></li></ul>`;
+        const { importedNote } = await testImport("collapsed-list.html", "text/html", Buffer.from(html), { safeImport: true });
+
+        expect(importedNote.mime).toBe("text/html");
+        // safeImport runs the content through the sanitizer; data-* attributes are whitelisted, so
+        // the collapsed-state flag survives along with the nested item.
+        const content = importedNote.getContent().toString();
+        expect(content).toContain(`data-trilium-collapsed="true"`);
+        expect(content).toContain("Child");
     });
 
     it("supports code note with UTF-16", async () => {
