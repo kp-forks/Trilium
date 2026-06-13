@@ -186,6 +186,7 @@ Load the focused reference for the task at hand:
 | `references/tooling-and-packaging.md` | Package generator, `ckeditor5-metadata.json`, build output/integration, custom editor creators, dev-repo setup, the Inspector. |
 | `references/review-checklist.md` | A structured checklist for reviewing an existing plugin (architecture, schema, conversion, commands, UI, a11y, conventions). |
 | `references/recipes.md` | Task-oriented how-tos: insert content, find/iterate nodes, custom observers, place caret, extend other plugins' UI, etc. |
+| `references/core-plugin-patterns.md` | Canonical idioms mined from the actual `packages/*/src` source: toolbar+menu-bar button factory, plugin flags & `augmentation.ts`, `AttributeCommand`/`setAttributeProperties`, inline-attribute boundary helpers, `elementToStructure`+slots, reconversion, `BalloonToolbar`, raw-HTML widgets, clipboard pipeline, markers, post-fixers, async/upload. Each cites its source file. |
 
 For **testing** a plugin (Vitest setup, test editors, model/view assertions, command/UI test
 patterns), use the separate **`ckeditor5-testing`** skill.
