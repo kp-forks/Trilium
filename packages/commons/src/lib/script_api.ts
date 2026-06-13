@@ -45,6 +45,24 @@ export interface ScriptNoteMetadata {
     utcDateModified: string;
 }
 
+/** A note's binary/text content blob (subset of the client's `FBlob`). */
+export interface ScriptBlob {
+    blobId: string;
+    content: string;
+    contentLength: number;
+    dateModified: string;
+    utcDateModified: string;
+}
+
+/** One resolved tree path to a note (subset of the client's `NotePathRecord`). */
+export interface ScriptNotePathRecord {
+    isArchived: boolean;
+    isInHoistedSubTree: boolean;
+    isSearch?: boolean;
+    notePath: string[];
+    isHidden: boolean;
+}
+
 /** A note as seen by frontend scripts (subset of the client's `FNote`). */
 export interface ScriptFNote {
     noteId: string;
@@ -80,9 +98,15 @@ export interface ScriptFNote {
     getBranchIds(): string[];
     getParentBranches(): ScriptFBranch[];
     getChildBranches(): ScriptFBranch[];
+    getBranches(): ScriptFBranch[];
+    getFilteredChildBranches(): ScriptFBranch[];
     getAllNotePaths(): string[][];
     getBestNotePath(hoistedNoteId?: string, activeNotePath?: string | null): string[];
     getBestNotePathString(hoistedNoteId?: string): string;
+    getSortedNotePathRecords(
+        hoistedNoteId?: string,
+        activeNotePath?: string | null
+    ): ScriptNotePathRecord[];
 
     // --- Attributes (inherited + own) --------------------------------------
     getAttributes(type?: string, name?: string): ScriptAttribute[];
@@ -126,11 +150,14 @@ export interface ScriptFNote {
     // --- Content & attachments ---------------------------------------------
     getContent(): Promise<string | Uint8Array>;
     getJsonContent(): Promise<unknown>;
+    getBlob(): Promise<ScriptBlob | null>;
+    getNoteComplement(): Promise<ScriptBlob | null>;
     getMetadata(): Promise<ScriptNoteMetadata>;
     attachments: ScriptAttachment[] | null;
     getAttachments(): Promise<ScriptAttachment[]>;
     getAttachmentsByRole(role: string): Promise<ScriptAttachment[]>;
     getAttachmentById(attachmentId: string): Promise<ScriptAttachment | undefined>;
+    getNotesToInheritAttributesFrom(): ScriptFNote[];
 
     // --- Type & state predicates -------------------------------------------
     getIcon(): string;
@@ -145,6 +172,41 @@ export interface ScriptFNote {
     isOptions(): boolean;
     isTriliumScript(): boolean;
     isTriliumSqlite(): boolean;
+    isLaunchBarConfig(): boolean;
+    isHiddenCompletely(): boolean;
+    isInHiddenSubtree(): boolean;
+    isEligibleForConversionToAttachment(): boolean;
+
+    // --- Presentation ------------------------------------------------------
+    getColorClass(): string;
+    getCssClass(): string;
+    getWorkspaceIconClass(): string;
+    getWorkspaceTabBackgroundColor(): string;
+
+    // --- Scripting runtime -------------------------------------------------
+    getScriptEnv(): "frontend" | "backend" | null;
+    executeScript(): Promise<unknown>;
+
+    // --- Low-level / Froca-managed -----------------------------------------
+    // Exposed for completeness; most scripts should use the higher-level
+    // accessors above rather than these cache fields and mutators.
+    /** Blob ID of the current content; changes when content changes. */
+    blobId: string;
+    /** Map of parent note ID → branch ID. */
+    parentToBranch: Record<string, string>;
+    /** Map of child note ID → branch ID. */
+    childToBranch: Record<string, string>;
+    searchResultsLoaded?: boolean;
+    highlightedTokens?: string[];
+    /** Plain data representation of the note (the live object minus its cache handle). */
+    dto: Record<string, unknown>;
+    addParent(parentNoteId: string, branchId: string, sort?: boolean): void;
+    addChild(childNoteId: string, branchId: string, sort?: boolean): void;
+    sortParents(): void;
+    sortChildren(): void;
+    update(row: Record<string, unknown>): void;
+    invalidateAttributeCache(): void;
+    toString(): string;
 }
 
 /** A branch (parent↔child link) as seen by frontend scripts (subset of `FBranch`). */
