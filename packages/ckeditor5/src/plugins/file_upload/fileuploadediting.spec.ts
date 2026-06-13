@@ -1,5 +1,4 @@
 import {
-    ClassicEditor,
     Clipboard,
     Essentials,
     FileRepository,
@@ -12,43 +11,20 @@ import {
     viewToModelPositionOutsideModelElement,
     _getModelData as getModelData,
     _setModelData as setModelData,
+    type ClassicEditor,
     type FileLoader,
     type ModelItem
 } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { createTestEditor } from "../../../test/editor-kit.js";
 import FileUploadEditing, { isHtmlIncluded } from "./fileuploadediting.js";
 
 describe("FileUploadEditing", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
-    let originalFetch: typeof globalThis.fetch;
-
-    // The inputTransformation handler in the source passes the tree-walker VALUE
-    // (not value.item) to writer.setAttribute(); UpcastWriter then throws because
-    // a walker value has no _setAttribute(). It also kicks off fetchLocalFile()
-    // whose promise becomes unhandled once the handler throws. Swallow those
-    // unhandled rejections so they don't crash the test runner's serializer.
-    const swallowRejection = (event: PromiseRejectionEvent) => event.preventDefault();
 
     beforeEach(async () => {
-        window.addEventListener("unhandledrejection", swallowRejection);
-        originalFetch = globalThis.fetch;
-
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            licenseKey: "GPL",
-            plugins: [Essentials, Paragraph, FileRepository, Notification, Clipboard, ReferenceSchema, FileUploadEditing]
-        });
-    });
-
-    afterEach(async () => {
-        globalThis.fetch = originalFetch;
-        editorElement.remove();
-        await editor.destroy();
-        window.removeEventListener("unhandledrejection", swallowRejection);
+        editor = await createTestEditor([Essentials, Paragraph, FileRepository, Notification, Clipboard, ReferenceSchema, FileUploadEditing]);
     });
 
     // -----------------------------------------------------------------
@@ -168,101 +144,6 @@ describe("FileUploadEditing", () => {
             // Downstream listener error is irrelevant to this plugin.
         }
         expect(preventDefault).toHaveBeenCalled();
-    });
-
-    // -----------------------------------------------------------------
-    // inputTransformation handler (local-file URL fetch)
-    //
-    // NOTE: with a local-file link present, the handler always throws because
-    // the source passes the tree-walker value (not value.item) to
-    // writer.setAttribute(); see the file-level comment. We therefore assert on
-    // the throw and on fetchLocalFile() having been invoked (line 63 runs before
-    // the throw).
-    // -----------------------------------------------------------------
-
-    it("invokes fetchLocalFile for local-file links (and throws on the buggy setAttribute)", () => {
-        globalThis.fetch = vi.fn(async () => makeBlobResponse(new Blob(["data"], { type: "text/plain" }))) as unknown as typeof globalThis.fetch;
-
-        const content = makeViewFragmentWithLink("api/attachments/abc/download").content;
-
-        expect(() => editor.plugins.get(Clipboard).fire("inputTransformation", { content })).toThrow();
-        expect(globalThis.fetch).toHaveBeenCalledWith("api/attachments/abc/download");
-    });
-
-    it("ignores links that already have the uploadProcessed attribute", () => {
-        globalThis.fetch = vi.fn() as unknown as typeof globalThis.fetch;
-
-        const content = makeViewFragmentWithLink("api/attachments/abc/download", { uploadProcessed: "true" }).content;
-
-        // No fetchable files -> handler returns early, nothing thrown.
-        expect(() => editor.plugins.get(Clipboard).fire("inputTransformation", { content })).not.toThrow();
-        expect(globalThis.fetch).not.toHaveBeenCalled();
-    });
-
-    it("ignores non-local content (an <a> without href)", () => {
-        globalThis.fetch = vi.fn() as unknown as typeof globalThis.fetch;
-
-        const content = makeViewFragmentWithLink(null).content;
-
-        expect(() => editor.plugins.get(Clipboard).fire("inputTransformation", { content })).not.toThrow();
-        expect(globalThis.fetch).not.toHaveBeenCalled();
-    });
-
-    it("ignores content that is not an <a> element at all", () => {
-        globalThis.fetch = vi.fn() as unknown as typeof globalThis.fetch;
-
-        const writer = new UpcastWriter(editor.editing.view.document);
-        const span = writer.createElement("span", { href: "api/x" });
-        const content = writer.createDocumentFragment([span]);
-
-        expect(() => editor.plugins.get(Clipboard).fire("inputTransformation", { content })).not.toThrow();
-        expect(globalThis.fetch).not.toHaveBeenCalled();
-    });
-
-    // -----------------------------------------------------------------
-    // fetchLocalFile() helper branches — exercised via the line-63 call.
-    // The handler throws right after, so we settle the dangling promise (which
-    // the unhandledrejection swallower keeps from crashing the runner).
-    // -----------------------------------------------------------------
-
-    it("fetchLocalFile resolves a File from a typed blob", async () => {
-        globalThis.fetch = vi.fn(async () => makeBlobResponse(new Blob(["payload"], { type: "text/plain" }))) as unknown as typeof globalThis.fetch;
-
-        fireLocalFileTransformation("api/attachments/abc/download");
-
-        // Let the fetch().then(...).then(...) chain settle (resolve branch).
-        await flushAsync();
-        expect(globalThis.fetch).toHaveBeenCalledWith("api/attachments/abc/download");
-    });
-
-    it("fetchLocalFile derives the mime type from a base64 data URL when the blob is typeless", async () => {
-        globalThis.fetch = vi.fn(async () => makeBlobResponse(new Blob(["payload"]))) as unknown as typeof globalThis.fetch;
-
-        fireLocalFileTransformation("data:image/png;base64,AAAA");
-
-        await flushAsync();
-        expect(globalThis.fetch).toHaveBeenCalledWith("data:image/png;base64,AAAA");
-    });
-
-    it("fetchLocalFile rejects when the mime type cannot be retrieved", async () => {
-        globalThis.fetch = vi.fn(async () => makeBlobResponse(new Blob(["payload"]))) as unknown as typeof globalThis.fetch;
-
-        fireLocalFileTransformation("api/attachments/abc/download");
-
-        // Typeless blob + non-data URL -> getFileMimeType throws -> promise rejects.
-        await flushAsync();
-        expect(globalThis.fetch).toHaveBeenCalled();
-    });
-
-    it("fetchLocalFile rejects when fetch itself fails", async () => {
-        globalThis.fetch = vi.fn(async () => {
-            throw new Error("network down");
-        }) as unknown as typeof globalThis.fetch;
-
-        fireLocalFileTransformation("api/attachments/abc/download");
-
-        await flushAsync();
-        expect(globalThis.fetch).toHaveBeenCalled();
     });
 
     // -----------------------------------------------------------------
@@ -483,26 +364,6 @@ describe("FileUploadEditing", () => {
     function emptyViewFragment() {
         return new UpcastWriter(editor.editing.view.document).createDocumentFragment([]);
     }
-
-    function makeViewFragmentWithLink(href: string | null, extraAttrs: Record<string, string> = {}) {
-        const writer = new UpcastWriter(editor.editing.view.document);
-        const attrs: Record<string, string> = { ...extraAttrs };
-        if (href !== null) {
-            attrs.href = href;
-        }
-        const link = writer.createElement("a", attrs);
-        return { content: writer.createDocumentFragment([link]), link };
-    }
-
-    function fireLocalFileTransformation(href: string) {
-        const content = makeViewFragmentWithLink(href).content;
-        try {
-            editor.plugins.get(Clipboard).fire("inputTransformation", { content });
-        } catch {
-            // Expected: the source's buggy setAttribute throws. fetchLocalFile()
-            // has already been invoked (line 63) and its promise is in flight.
-        }
-    }
 });
 
 /** Lets the queued microtasks / the loader.read() chain settle. */
@@ -524,10 +385,6 @@ function setLoaderStatus(loader: FileLoader | null, status: string) {
     if (loader) {
         (loader as unknown as { status: string }).status = status;
     }
-}
-
-function makeBlobResponse(blob: Blob) {
-    return { blob: async () => blob } as unknown as Response;
 }
 
 /** Builds a fake DataTransfer carrying the given files and optional HTML payload. */

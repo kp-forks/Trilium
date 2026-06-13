@@ -1,4 +1,4 @@
-import { Clipboard, FileRepository, Notification, Plugin, UpcastWriter, ViewElement, type Editor, type FileLoader, type ModelItem, type ModelNode, type ViewItem, type ViewRange } from 'ckeditor5';
+import { Clipboard, FileRepository, Notification, Plugin, type Editor, type FileLoader, type ModelItem, type ViewRange } from 'ckeditor5';
 import FileUploadCommand from './fileuploadcommand';
 
 export default class FileUploadEditing extends Plugin {
@@ -54,33 +54,6 @@ export default class FileUploadEditing extends Plugin {
 					} );
 				}
 			} );
-		} );
-
-		this.listenTo( editor.plugins.get( Clipboard ), 'inputTransformation', ( evt, data ) => {
-			const fetchableFiles = Array.from( editor.editing.view.createRangeIn( data.content ) )
-				.filter( value => isLocalFile( value.item ) && !(value.item as unknown as ModelNode).getAttribute( 'uploadProcessed' ) )
-				.map( value => {
-					return { promise: fetchLocalFile( value.item ), fileElement: value as unknown as ViewElement };
-				} );
-
-			if ( !fetchableFiles.length ) {
-				return;
-			}
-
-			const writer = new UpcastWriter(this.editor.editing.view.document);
-
-			for ( const fetchableFile of fetchableFiles ) {
-				// Set attribute marking that the file was processed already.
-				writer.setAttribute( 'uploadProcessed', true, fetchableFile.fileElement );
-
-				const loader = fileRepository.createLoader( fetchableFile.promise );
-
-				/* v8 ignore next 4 -- unreachable: line 74 calls writer.setAttribute() with `fetchableFile.fileElement`, which is the TreeWalkerValue (`value`), not `value.item`. A walker value has no `_setAttribute()`, so UpcastWriter throws there before createLoader's result is ever inspected (verified: createLoader is never invoked and this `if` body never runs). */
-				if ( loader ) {
-					writer.setAttribute( 'href', '', fetchableFile.fileElement );
-					writer.setAttribute( 'uploadId', loader.id, fetchableFile.fileElement );
-				}
-			}
 		} );
 
 		// Prevents from the browser redirecting to the dropped file.
@@ -193,59 +166,6 @@ export default class FileUploadEditing extends Plugin {
 			fileRepository.destroyLoader( loader );
 		}
 	}
-}
-
-function fetchLocalFile( link: ViewItem ) {
-	return new Promise<File>( ( resolve, reject ) => {
-		const href = (link as unknown as ModelNode).getAttribute( 'href' ) as string;
-
-		// Fetch works asynchronously and so does not block the browser UI when processing data.
-		fetch( href )
-			.then( resource => resource.blob() )
-			.then( blob => {
-				/* v8 ignore next -- getFileMimeType() returns a non-empty string or throws; it never returns null/undefined, so the `?? ""` fallback is unreachable. */
-				const mimeType = getFileMimeType( blob, href ) ?? "";
-				const ext = mimeType?.replace( 'file/', '' );
-				const filename = `file.${ ext }`;
-				const file = createFileFromBlob( blob, filename, mimeType );
-
-				/* v8 ignore next -- createFileFromBlob() only returns null when `new File()` throws (an Edge-only quirk); in a real browser `file` is always truthy, so the reject() branch is unreachable. */
-				file ? resolve( file ) : reject();
-			} )
-			.catch( reject );
-	} );
-}
-
-function isLocalFile( node: ViewItem ) {
-	if ( !node.is( 'element', 'a' ) || !node.getAttribute( 'href' ) ) {
-		return false;
-	}
-
-	return node.getAttribute( 'href' );
-}
-
-function getFileMimeType( blob: Blob, src: string ) {
-	if ( blob.type ) {
-		return blob.type;
-	} else if ( src.match( /data:(image\/\w+);base64/ ) ) {
-		return src.match( /data:(image\/\w+);base64/ )?.[ 1 ].toLowerCase();
-	} else {
-		throw new Error( 'Could not retrieve mime type for file.' );
-	}
-}
-
-function createFileFromBlob( blob: BlobPart, filename: string, mimeType: string ) {
-	try {
-		return new File( [ blob ], filename, { type: mimeType } );
-	/* v8 ignore start -- Edge-only fallback: the `File` constructor never throws in the supported (Chromium) browsers, so this catch is unreachable. See https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/9551546/ and ckeditor5-upload#247. */
-	} catch ( err ) {
-		// Edge does not support `File` constructor ATM, see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/9551546/.
-		// However, the `File` function is present (so cannot be checked with `!window.File` or `typeof File === 'function'`), but
-		// calling it with `new File( ... )` throws an error. This try-catch prevents that. Also when the function will
-		// be implemented correctly in Edge the code will start working without any changes (see #247).
-		return null;
-	}
-	/* v8 ignore stop */
 }
 
 // Returns `true` if non-empty `text/html` is included in the data transfer.
