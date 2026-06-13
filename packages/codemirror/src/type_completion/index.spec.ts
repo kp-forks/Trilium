@@ -271,6 +271,39 @@ describe("frontend note (ScriptFNote) surface", () => {
     }, TIMEOUT);
 });
 
+describe("backend note (ScriptBNote) surface", () => {
+    it("offers the expanded note member set on api.getNote(...)", async () => {
+        const names = await completionsAtMarker(
+            SCRIPT_MIME_BACKEND,
+            "const note = api.getNote('root');\nnote?.|"
+        );
+        // A representative slice across the families added to ScriptBNote:
+        // attribute write methods, revisions/attachments, hierarchy, tree ops.
+        for (const member of [
+            "setLabel", "toggleLabel", "removeRelation", "getOwnedLabelValue",
+            "getRevisions", "saveRevision", "getAttachments", "saveAttachment",
+            "getAncestors", "getSubtree", "cloneTo", "deleteNote",
+            "searchNotesInSubtree", "isImage", "shareId", "dateModified"
+        ]) {
+            expect(names).toContain(member);
+        }
+    }, TIMEOUT);
+
+    it("type-checks the expanded backend note members (real signatures, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const note = api.getNote('root');\n"
+            + "if (note && note.isHtml()) {\n"
+            + "    note.setLabel('reviewed', 'yes');\n"
+            + "    const rev = note.saveRevision();\n"
+            + "    const sub = note.getSubtree({ includeArchived: true });\n"
+            + "    api.log(rev.title + sub.notes.length + note.cloneTo('root').success);\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+});
+
 describe("backend custom request handler api (req/res/pathParams)", () => {
     const HANDLER = { customRequestHandler: true };
 

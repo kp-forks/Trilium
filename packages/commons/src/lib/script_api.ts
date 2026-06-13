@@ -676,6 +676,51 @@ export interface ScriptBBranch {
     getParentNote(): ScriptBNote | null;
 }
 
+/** A note revision as seen by backend scripts (subset of trilium-core's `BRevision`). */
+export interface ScriptBRevision {
+    revisionId?: string;
+    noteId: string;
+    type: string;
+    mime: string;
+    title: string;
+    dateLastEdited?: string;
+    utcDateLastEdited?: string;
+    contentLength?: number;
+    getContent(): string | Uint8Array;
+    getJsonContent(): unknown;
+}
+
+/** Result of a clone operation ({@link ScriptBNote.cloneTo}); mirrors `CloneResponse`. */
+export interface ScriptCloneResponse {
+    success: boolean;
+    message?: string;
+    branchId?: string;
+    notePath?: string;
+}
+
+/** A single parent→child link in a subtree ({@link ScriptBNote.getSubtree}). */
+export interface ScriptSubtreeRelationship {
+    parentNoteId: string;
+    childNoteId: string;
+}
+
+/** Options accepted by the subtree traversal helpers on {@link ScriptBNote}. */
+export interface ScriptSubtreeOpts {
+    includeArchived?: boolean;
+    includeHidden?: boolean;
+    resolveSearch?: boolean;
+}
+
+/** Input accepted by {@link ScriptBNote.saveAttachment}. */
+export interface ScriptSaveAttachmentInput {
+    attachmentId?: string;
+    role: string;
+    mime: string;
+    title: string;
+    content?: string | Uint8Array;
+    position?: number;
+}
+
 /** A note as seen by backend scripts (subset of trilium-core's `BNote`). */
 export interface ScriptBNote {
     noteId: string;
@@ -683,34 +728,195 @@ export interface ScriptBNote {
     type: string;
     mime: string;
     isProtected: boolean;
+    isArchived: boolean;
+    isDeleted: boolean;
+    /** Share root ID this note is published under, if any. */
+    shareId: string;
+    blobId: string;
+    dateCreated: string;
+    dateModified: string;
+    utcDateCreated: string;
+    utcDateModified: string;
 
+    // --- Content -----------------------------------------------------------
     getContent(): string | Uint8Array;
     setContent(content: string | Uint8Array, opts?: { forceFrontendReload?: boolean }): void;
     getJsonContent<T = unknown>(): T | null;
+    getJsonContentSafely(): unknown;
+    setJsonContent(content: unknown): void;
+    hasStringContent(): boolean;
+    getFileName(): string;
+    getFlatText(): string;
     /** Plain serialisable representation of the note (the real return type is `NotePojo`). */
     getPojo(): Record<string, unknown>;
+    getTitleOrProtected(): string;
+    getIcon(): string;
 
+    // --- Hierarchy ---------------------------------------------------------
+    parents: ScriptBNote[];
+    children: ScriptBNote[];
+    parentBranches: ScriptBBranch[];
+    parentCount: number;
+    childrenCount: number;
     getParentNotes(): ScriptBNote[];
     getChildNotes(): ScriptBNote[];
+    getVisibleChildNotes(): ScriptBNote[];
     getParentBranches(): ScriptBBranch[];
     getChildBranches(): ScriptBBranch[];
+    getVisibleChildBranches(): ScriptBBranch[];
+    getStrongParentBranches(): ScriptBBranch[];
+    getFilteredChildBranches(): ScriptBBranch[];
+    getBranches(): ScriptBBranch[];
+    hasChildren(): boolean;
+    hasVisibleChildren(): boolean;
+    getAncestors(): ScriptBNote[];
+    getAncestorNoteIds(): string[];
+    getDescendantNoteIds(): string[];
+    getDistanceToAncestor(ancestorNoteId: string): number;
+    hasAncestor(ancestorNoteId: string): boolean;
+    isDescendantOfNote(ancestorNoteId: string): boolean;
+    isRoot(): boolean;
+    getSubtree(opts?: ScriptSubtreeOpts): {
+        notes: ScriptBNote[];
+        relationships: ScriptSubtreeRelationship[];
+    };
+    getSubtreeNoteIds(opts?: ScriptSubtreeOpts): string[];
+    getSubtreeNotesIncludingTemplated(): ScriptBNote[];
+    getInheritingNotes(): ScriptBNote[];
 
+    // --- Note paths --------------------------------------------------------
+    getAllNotePaths(): string[][];
+    getBestNotePath(hoistedNoteId?: string): string[];
+    getBestNotePathString(hoistedNoteId?: string): string;
+    getSortedNotePathRecords(hoistedNoteId?: string): ScriptNotePathRecord[];
+    areAllNotePathsArchived(): boolean;
+
+    // --- Attributes (read) -------------------------------------------------
+    ownedAttributes: ScriptAttribute[];
+    targetRelations: ScriptAttribute[];
+    attributeCount: number;
+    ownedAttributeCount: number;
+    labelCount: number;
+    ownedLabelCount: number;
+    relationCount: number;
+    relationCountIncludingLinks: number;
+    ownedRelationCount: number;
+    ownedRelationCountIncludingLinks: number;
+    targetRelationCount: number;
+    targetRelationCountIncludingLinks: number;
     getAttributes(type?: string, name?: string): ScriptAttribute[];
     getOwnedAttributes(type?: string, name?: string): ScriptAttribute[];
     getAttribute(type: string, name: string): ScriptAttribute | null;
+    getOwnedAttribute(type: string, name: string, value?: string | null): ScriptAttribute | null;
+    getAttributeValue(type: string, name: string): string | null;
+    getOwnedAttributeValue(type: string, name: string): string | null;
+    getAttributeById(attributeId: string): ScriptAttribute | undefined;
+    getAttributeCaseInsensitive(
+        type: string,
+        name: string,
+        value?: string | null
+    ): ScriptAttribute | undefined;
     hasAttribute(type: string, name: string): boolean;
+    hasOwnedAttribute(type: string, name: string, value?: string): boolean;
+    getLabelDefinitions(): ScriptAttribute[];
+    getRelationDefinitions(): ScriptAttribute[];
+    getTargetRelations(): ScriptAttribute[];
+
+    // --- Labels ------------------------------------------------------------
     getLabel(name: string): ScriptAttribute | null;
+    getOwnedLabel(name: string): ScriptAttribute | null;
     getLabels(name?: string): ScriptAttribute[];
+    getOwnedLabels(name: string): ScriptAttribute[];
     getLabelValue(name: string): string | null;
+    getOwnedLabelValue(name: string): string | null;
+    getLabelValues(name: string): string[];
+    getOwnedLabelValues(name: string): string[];
     hasLabel(name: string): boolean;
-    addLabel(name: string, value?: string, isInheritable?: boolean): ScriptAttribute;
+    hasOwnedLabel(name: string, value?: string): boolean;
+    isLabelTruthy(name: string): boolean;
+    hasInheritableArchivedLabel(): boolean;
+
+    // --- Relations ---------------------------------------------------------
     getRelation(name: string): ScriptAttribute | null;
+    getOwnedRelation(name: string): ScriptAttribute | null;
     getRelations(name?: string): ScriptAttribute[];
+    getOwnedRelations(name?: string | null): ScriptAttribute[];
     getRelationValue(name: string): string | null;
+    getOwnedRelationValue(name: string): string | null;
     getRelationTarget(name: string): ScriptBNote | null;
+    hasRelation(name: string, value?: string): boolean;
+    hasOwnedRelation(name: string, value?: string): boolean;
+
+    // --- Attributes (write) ------------------------------------------------
+    addLabel(name: string, value?: string, isInheritable?: boolean): ScriptAttribute;
     addRelation(name: string, targetNoteId: string, isInheritable?: boolean): ScriptAttribute;
-    addAttribute(type: string, name: string, value?: string, isInheritable?: boolean): ScriptAttribute;
+    addAttribute(
+        type: string,
+        name: string,
+        value?: string,
+        isInheritable?: boolean
+    ): ScriptAttribute;
+    setLabel(name: string, value?: string): void;
+    setRelation(name: string, value?: string): void;
+    setAttribute(type: string, name: string, value?: string): void;
+    setAttributeValueById(attributeId: string, value?: string): void;
+    toggleLabel(enabled: boolean, name: string, value?: string): void;
+    toggleRelation(enabled: boolean, name: string, value?: string): void;
+    toggleAttribute(type: string, enabled: boolean, name: string, value?: string): void;
+    removeLabel(name: string, value?: string): void;
+    removeRelation(name: string, value?: string): void;
+    removeAttribute(type: string, name: string, value?: string): void;
+    isInherited(): boolean;
+
+    // --- Revisions & attachments -------------------------------------------
+    revisionCount: number | null;
+    getRevisions(): ScriptBRevision[];
+    saveRevision(opts?: { description?: string; source?: string }): ScriptBRevision;
+    getAttachments(): ScriptAttachment[];
+    getAttachmentById(attachmentId: string): ScriptAttachment;
+    getAttachmentByTitle(title: string): ScriptAttachment | undefined;
+    getAttachmentsByRole(role: string): ScriptAttachment[];
+    saveAttachment(
+        attachment: ScriptSaveAttachmentInput,
+        matchBy?: "attachmentId" | "title"
+    ): ScriptAttachment;
+    convertToParentAttachment(opts?: Record<string, unknown>): ScriptAttachment | null;
+    isEligibleForConversionToAttachment(opts?: Record<string, unknown>): boolean;
+
+    // --- Sizes -------------------------------------------------------------
+    contentSize: number | null;
+    contentAndAttachmentsSize: number | null;
+    contentAndAttachmentsAndRevisionsSize: number | null;
+
+    // --- Tree operations ---------------------------------------------------
+    cloneTo(parentNoteId: string): ScriptCloneResponse;
+    deleteNote(deleteId?: string | null): void;
+    sortParents(): void;
+    sortChildren(): void;
+
+    // --- Search ------------------------------------------------------------
+    searchNotesInSubtree(searchString: string): ScriptBNote[];
+    searchNoteInSubtree(searchString: string): ScriptBNote | null;
+    getSearchResultNotes(): ScriptBNote[];
+
+    // --- Type & state predicates -------------------------------------------
     isFolder(): boolean;
+    isContentAvailable(): boolean;
+    isStringNote(): boolean;
+    isHtml(): boolean;
+    isImage(): boolean;
+    isJavaScript(): boolean;
+    isJsx(): boolean;
+    isJson(): boolean;
+    isMarkdown(): boolean;
+    isOptions(): boolean;
+    isLaunchBarConfig(): boolean;
+    isHiddenCompletely(): boolean;
+    isInHiddenSubtree(): boolean;
+
+    // --- Scripting runtime -------------------------------------------------
+    getScriptEnv(): "frontend" | "backend" | null;
+    executeScript(): unknown;
 }
 
 /** Result of the backend note-creation helpers. */
