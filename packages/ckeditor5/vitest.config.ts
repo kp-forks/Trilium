@@ -13,6 +13,7 @@ export default defineConfig({
         include: ["src/**/*.spec.ts"],
         globals: true,
         watch: false,
+        reporters: ["default", ["junit", { outputFile: "./test-output/vitest/junit.xml", addFileAttribute: true }]],
         coverage: {
             thresholds: {
                 lines: 100,
@@ -21,6 +22,7 @@ export default defineConfig({
                 statements: 100
             },
             provider: "v8",
+            reportsDirectory: "./test-output/vitest/coverage",
             // Restrict to this package's own sources. The aggregate imports the sibling
             // @triliumnext/ckeditor5-* workspace packages, whose `src/` would otherwise bleed
             // into this report; they carry their own 100% coverage gates in their own packages.
