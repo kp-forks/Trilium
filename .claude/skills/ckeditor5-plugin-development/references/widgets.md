@@ -180,9 +180,11 @@ Boolean-attribute convention: set `true` to enable, **remove** the attribute to 
 
 ## Widget contextual toolbar
 
-Use `WidgetToolbarRepository` (register in `afterInit()`, because it depends on runtime state).
-Items come from config; `getRelatedElement` decides when the toolbar shows by finding the
-widget view element (detect via the custom property + `isWidget()`):
+A contextual toolbar appears when a **widget is selected** — distinct from the main `toolbar.ts`
+toolbar (which holds the insert button). Register it **inside the plugin** with
+`WidgetToolbarRepository` (in `afterInit()`, because it depends on runtime state). Items come from
+config; `getRelatedElement` decides when the toolbar shows by finding the widget view element
+(detect via the custom property + `isWidget()`):
 
 ```js
 import { Plugin, WidgetToolbarRepository } from 'ckeditor5';
@@ -303,6 +305,9 @@ handlers skip them — math/mermaid use this around their source inputs.
 
 **Registering a new widget plugin in Trilium.** A new plugin is wired in two places: add it to
 the correct array in `packages/ckeditor5/src/plugins.ts` (e.g. `EXTERNAL_PLUGINS` for the
-package-level plugins like `Mermaid`, `Admonition`, `Collapsible`, `Footnotes`, `Math`), and
-add its toolbar component name to `apps/client/src/widgets/type_widgets/text/toolbar.ts`.
-Files use `declare module 'ckeditor5'` augmentation for config and command typings.
+package-level plugins like `Mermaid`, `Admonition`, `Collapsible`, `Footnotes`, `Math`), and add
+its **insert-button** component name to `apps/client/src/widgets/type_widgets/text/toolbar.ts` (see
+`ui-and-localization.md`). The widget's *contextual* toolbar (above) is separate — registered in the
+plugin, not in `toolbar.ts`. Trilium has several (mermaid, admonition, code-block — the last even
+hides itself when the `BalloonToolbar` is shown). Files use `declare module 'ckeditor5'`
+augmentation for config and command typings.

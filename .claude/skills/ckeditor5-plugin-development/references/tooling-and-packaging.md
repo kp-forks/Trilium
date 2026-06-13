@@ -44,13 +44,17 @@ consumers**. An optional `dist/` "NIM build" (the upstream new-installation-meth
 generated for standalone use but is **gitignored and eslint-ignored** — never import from it inside
 the monorepo.
 
-Config files (one set per package):
+Config files (typical set per package — not every package has all of them; e.g. collapsible
+currently lacks `eslint.config.js`/stylelint + lint scripts):
 
 - `tsconfig.json` — `composite: true`, `target: es2019`, `strict`, `module/moduleResolution:
   NodeNext`; plus `tsconfig.test.json` for tests.
 - `vitest.config.ts` — Vitest (browser mode; see the `ckeditor5-testing` skill).
 - `eslint.config.js` — `eslint-config-ckeditor5` + `eslint-plugin-ckeditor5-rules`.
 - `stylelint-config-ckeditor5` for theme CSS.
+
+Plugin packages have **no `vite.config.ts`** — only the aggregator (`packages/ckeditor5`) builds;
+each plugin just ships raw TS via `main: src/index.ts`, compiled by whatever bundles the editor.
 
 `src/` files: `{feature}.ts` (glue), `{feature}editing.ts`, `{feature}ui.ts`, optional
 `{feature}command.ts`, `augmentation.ts`, `index.ts`. Complex plugins add `constants.ts`

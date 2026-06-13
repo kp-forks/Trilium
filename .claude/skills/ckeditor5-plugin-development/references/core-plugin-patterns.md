@@ -23,57 +23,30 @@ Where a snippet shows an `@ckeditor/ckeditor5-*` or relative `../utils.js` impor
 internal style), treat it as a pointer to where the symbol lives upstream, not the path you'd write
 in a Trilium plugin.
 
-## Toolbar + menu-bar button in one factory
+## Buttons & the component factory
 
-Official feature-UI plugins register **both** a toolbar button and a menu-bar item from a single
-shared factory, using the `menuBar:` name prefix. The button binds to the command and refocuses
-the editor on execute.
+Trilium registers toolbar buttons directly via `editor.ui.componentFactory.add(...)` in each
+plugin's `*ui.ts` (see `ui-and-localization.md` for the Trilium pattern and the `toolbar.ts`
+wiring). Trilium has **no menu bar**, so there is no `menuBar:<name>` registration — and the
+library's internal `_getBasicStylesButtonCreator` helper / `MenuBarMenuListItemButtonView` are not
+used here. Useful library facts that still apply:
 
-```ts
-// Source: packages/ckeditor5-basic-styles/src/{bold/boldui.ts, utils.ts}
-import { ButtonView, MenuBarMenuListItemButtonView } from 'ckeditor5';
-// The shared factory is the library's internal helper; downstream import it as
-// `_getBasicStylesButtonCreator` from 'ckeditor5', or write the ~12-line factory yourself.
-import { _getBasicStylesButtonCreator as getButtonCreator } from 'ckeditor5';
-
-const createButton = getButtonCreator( {
-	editor, commandName: 'bold', plugin: this,
-	icon: IconBold, label: t( 'Bold' ), keystroke: 'CTRL+B'
-} );
-
-editor.ui.componentFactory.add( 'bold', () => createButton( ButtonView ) );
-editor.ui.componentFactory.add( 'menuBar:bold', () => createButton( MenuBarMenuListItemButtonView ) );
-```
-
-The factory (`packages/ckeditor5-basic-styles/src/utils.ts`, exported as
-`_getBasicStylesButtonCreator`) does: `view.set({ label, icon, keystroke, isToggleable: true })`,
-`view.bind('isEnabled').to(command,'isEnabled')`, `view.bind('isOn').to(command,'value')`, sets
-`role: 'menuitemcheckbox'` for the menu-bar variant or `tooltip: true` for the toolbar variant,
-and on `execute` runs the command + `editor.editing.view.focus()`.
-
-- **Menu bar** is registered with the `menuBar:<name>` component name; `MenuBarMenuListItemButtonView`
-  is pre-set with `withText: true`, `withKeystroke: true`, `tooltip: false`, `role: 'menuitem'`.
 - `SwitchButtonView` auto-sets `isToggleable`. `FileDialogButtonView` fires a `done` event with a
-  `FileList` (`acceptedType`, `allowMultipleFiles`) — use for file pickers
-  (`packages/ckeditor5-ui/src/button/filedialogbuttonview.ts`).
+  `FileList` (`acceptedType`, `allowMultipleFiles`) — use for file pickers.
 - `componentFactory` API: `add(name, locale => view)`, `create(name)`, `has(name)`, `names()`;
   names are case-insensitive; views are created fresh per `create()`.
 
-## Glue plugin flags & TS dependency typing
+## Glue plugin & dependency typing
 
 ```ts
-// packages/ckeditor5-basic-styles/src/bold.ts
-export class Bold extends Plugin {
-	public static get requires(): PluginDependenciesOf<[ BoldEditing, BoldUI ]> {
-		return [ BoldEditing, BoldUI ];
-	}
-	public static get pluginName() { return 'Bold' as const; }
-	public static override get isOfficialPlugin(): true { return true; }   // first-party marker
+export class Admonition extends Plugin {
+	public static get requires() { return [ AdmonitionEditing, AdmonitionUI ] as const; }
+	public static get pluginName() { return 'Admonition' as const; }
 }
 ```
 
-- `isOfficialPlugin` / `isPremiumPlugin` are licensing/telemetry flags (default `false`); set them
-  with the exact `: true` return type or omit entirely (`ckeditor-plugin-flags` ESLint rule).
+- Trilium glue plugins use `pluginName` / `requires` with `as const` and **do not** set the
+  library's `isOfficialPlugin` / `isPremiumPlugin` flags (those are CKSource first-party markers).
 - `requires()` may list classes **or** plugin-name strings; order = load order.
 - A `Command` must never go in `config.plugins` (it throws) — register with `editor.commands.add()`.
 
@@ -81,10 +54,10 @@ export class Bold extends Plugin {
 
 ```ts
 // packages/ckeditor5-<feature>/src/augmentation.ts
-declare module '@ckeditor/ckeditor5-core' {
-	interface PluginsMap { [ Bold.pluginName ]: Bold; }
-	interface CommandsMap { bold: AttributeCommand; }
-	interface EditorConfig { myFeature?: MyFeatureConfig; }
+declare module 'ckeditor5' {
+	interface PluginsMap { [ Admonition.pluginName ]: Admonition; }
+	interface CommandsMap { admonition: AdmonitionCommand; }   // optional — only if exposed
+	interface EditorConfig { admonition?: AdmonitionConfig; }
 }
 ```
 

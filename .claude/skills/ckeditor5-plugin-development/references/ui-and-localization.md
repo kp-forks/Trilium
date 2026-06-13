@@ -81,6 +81,39 @@ component factory entry alone is not enough. Real examples: the admonition butto
 **Best practice:** on any user action (button/dropdown execute), call
 `editor.editing.view.focus()` so the editor keeps focus.
 
+## Trilium toolbars (`toolbar.ts`)
+
+*Which* names appear, and *where*, is decided in
+`apps/client/src/widgets/type_widgets/text/toolbar.ts`. `buildToolbarConfig(isClassicToolbar)`
+picks one of three layouts:
+
+- **`buildClassicToolbar()`** — the fixed, multi-row toolbar above the editable (used by
+  `ClassicEditor`). Returns `{ toolbar: { items: [ … ] } }`.
+- **`buildFloatingToolbar()`** — used by `PopupEditor`. Returns **two** floating toolbars:
+  `{ toolbar: { items: [ … ] }, blockToolbar: [ … ] }` — a **selection toolbar** (a balloon over
+  the selected text) and a **block toolbar** (the `BlockToolbar` plugin, present only in
+  `POPUP_EDITOR_PLUGINS`, shown at the start of the current block).
+- **`buildMobileToolbar()`** — a single flattened `items` array for touch (checked first).
+
+Each `items` / `blockToolbar` entry is one of:
+
+```ts
+"bold"                                    // a component-factory name (string)
+"|"                                       // a visual separator
+{ label: "Insert", icon, items: [         // a grouped dropdown (nestable)
+	"link", "internallink", "includeNote", "|", "collapsible", "math", "mermaid"
+] }
+```
+
+So adding a custom toolbar item is a **two-step** wire-up: register the component in your plugin's
+`*ui.ts` (above), **and** add its name to the right array(s) in `toolbar.ts` — classic, the floating
+`toolbar`, the floating `blockToolbar`, and/or mobile, as appropriate. Registering the component
+alone makes it available but invisible. (`AttributeEditor`'s minimal toolbar isn't built here.)
+
+> A **widget contextual toolbar** — buttons that appear when a widget is *selected* — is different:
+> it's registered inside the plugin via `WidgetToolbarRepository`, **not** listed in `toolbar.ts`.
+> See `widgets.md`.
+
 ## Component catalog
 
 | Component | Purpose / key props |

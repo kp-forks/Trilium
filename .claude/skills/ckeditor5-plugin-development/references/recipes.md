@@ -7,16 +7,16 @@ content of a single text note, so these recipes operate over that note's model r
 
 ## Get the editor instance
 
+Inside plugin code you already have it: `this.editor` (in a `Plugin`/`Command` subclass) or the
+`editor` argument of a function plugin / converter / `componentFactory` callback. You don't fetch
+it from the DOM — in Trilium the editor is created and owned by the React watchdog component
+(`apps/client/src/widgets/type_widgets/text/CKEditorWithWatchdog.tsx`), not by plugin code.
+
 ```js
-// In a function plugin:
-function MyPlugin( editor ) { /* editor.* */ }
-
-// From a DOM editable element:
-const editor = document.querySelector( '.ck-editor__editable_inline' ).ckeditorInstance;
+class MyPlugin extends Plugin {
+	init() { const editor = this.editor; /* … */ }
+}
 ```
-
-`CKEDITOR_VERSION` in the console reports the version. There is no global registry of
-instances by default.
 
 ## Insert content
 
