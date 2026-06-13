@@ -86,7 +86,7 @@
 }
 
 /* Reveal the buttons while hovering the code block. */
-.ck.ck-editor__editable pre:hover > .ck-code-block__type-around > .ck-code-block__type-around__button {
+.ck.ck-editor__editable pre:hover .ck-code-block__type-around__button {
     opacity: 1;
     pointer-events: auto;
 }

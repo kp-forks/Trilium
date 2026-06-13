@@ -8,9 +8,16 @@ import "../theme/code_block_insert_paragraph.css";
  *
  * Code blocks are NOT widgets — they downcast to a plain editable <pre><code> — so
  * WidgetTypeAround skips them and exposes no public API to opt them in. This plugin
- * re-implements the slice we need: it injects a non-editable UI element into the <pre>
- * (a sibling of the bound <code>, so model<->view position mapping is untouched) and
- * inserts a paragraph next to the block on click.
+ * re-implements the slice we need: a non-editable UI element injected into the editing
+ * view, plus a click handler that inserts a paragraph next to the block.
+ *
+ * The UI element is injected into the <code> element (the one the model `codeBlock` is
+ * bound to), exactly like WidgetTypeAround injects into its mapped widget element — NOT
+ * into the parent <pre>. Injecting into a non-mapped container breaks downcast removal
+ * (e.g. a code block inside a list item throws `view-writer-invalid-range-container` when
+ * the content is replaced), because the stray child shifts the trimmed remove range out
+ * of its container. The buttons stay positioned against the <pre> via CSS (it is the
+ * nearest positioned ancestor), so the placement is unaffected.
  */
 
 const POSITIONS = ["before", "after"] as const;
@@ -58,12 +65,12 @@ export default class CodeBlockInsertParagraph extends Plugin {
             }
 
             const viewCode = conversionApi.mapper.toViewElement(data.item);
-            const pre = viewCode?.parent;
-            if (!pre || !pre.is("element", "pre")) {
+            /* v8 ignore next 3 -- defensive: at low priority the code block has already been converted, so it always maps to a view element */
+            if (!viewCode) {
                 return;
             }
 
-            injectButtons(conversionApi.writer, pre, titles);
+            injectButtons(conversionApi.writer, viewCode, titles);
         }, { priority: "low" });
     }
 
@@ -78,7 +85,12 @@ export default class CodeBlockInsertParagraph extends Plugin {
 
         this.listenTo(view.document, "mousedown", (evt, domEventData) => {
             const domTarget = domEventData.domTarget;
-            const button = domTarget instanceof Element ? domTarget.closest(`.${BUTTON_CLASS}`) : null;
+            /* v8 ignore next 3 -- defensive: a real mousedown always targets an Element (CKEditor's own widget code assumes the same) */
+            if (!(domTarget instanceof Element)) {
+                return;
+            }
+
+            const button = domTarget.closest(`.${BUTTON_CLASS}`);
             if (!button) {
                 return;
             }
@@ -106,7 +118,7 @@ export default class CodeBlockInsertParagraph extends Plugin {
 
 const RETURN_ARROW_ICON = '<svg viewBox="0 0 10 8" xmlns="http://www.w3.org/2000/svg"><path d="M9.055.263v3.972h-6.77M1 4.216l2-2.038m-2 2 2 2.038"/></svg>';
 
-function injectButtons(writer: ViewDowncastWriter, pre: ViewElement, titles: Record<InsertPosition, string>) {
+function injectButtons(writer: ViewDowncastWriter, codeElement: ViewElement, titles: Record<InsertPosition, string>) {
     const wrapper = writer.createUIElement("div", { class: `ck ck-reset_all ${WRAPPER_CLASS}` }, function (domDocument) {
         const domElement = this.toDomElement(domDocument);
         for (const position of POSITIONS) {
@@ -120,5 +132,5 @@ function injectButtons(writer: ViewDowncastWriter, pre: ViewElement, titles: Rec
         return domElement;
     });
 
-    writer.insert(writer.createPositionAt(pre, "end"), wrapper);
+    writer.insert(writer.createPositionAt(codeElement, "end"), wrapper);
 }
