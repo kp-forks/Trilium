@@ -1,11 +1,20 @@
 # Test utilities & data helpers
 
+> **Path scope.** `@ckeditor/ckeditor5-core/tests/_utils/…` and `packages/…` refer to the upstream
+> CKEditor 5 repository ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), not
+> your project. **Downstream caveat:** the model/view helpers (`_setModelData` etc.) are published
+> and importable from the `ckeditor5` / `@ckeditor/ckeditor5-engine` npm packages, so they work in
+> any project. The **test editors** below live in the monorepo's `tests/_utils` and are generally
+> *not* shipped to npm — inside the ckeditor5 repo import them as shown; in a standalone package,
+> follow your package's own test setup (e.g. the package-generator template) and/or test against a
+> real editor build such as `ClassicEditor`.
+
 The building blocks for editor tests: lightweight test editors, shared `_utils`, and the
 model/view stringify-parse helpers.
 
 ## Test editors (pick the lightest that works)
 
-All live in `@ckeditor/ckeditor5-core/tests/_utils/` and expose a static async `create()`
+All live in `@ckeditor/ckeditor5-core/tests/_utils/` (upstream) and expose a static async `create()`
 returning a Promise. Import with the explicit `.js` extension.
 
 | Editor | Pipelines | Use when |

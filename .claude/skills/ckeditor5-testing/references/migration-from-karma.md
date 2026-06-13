@@ -1,7 +1,12 @@
 # Migrating tests: Karma/Mocha/Chai/Sinon → Vitest
 
-The repo is mid-migration (recent commits migrate packages one by one to Vitest). Many test
-files still use the old stack. When you touch a legacy test, migrate it. This is the mapping.
+> This reference is mainly for working **inside the upstream ckeditor5 repository**, which is
+> mid-migration to Vitest. It's equally useful in any project that still has legacy Karma/Mocha/
+> Chai/Sinon CKEditor tests to bring over. The `test_setup.js`/`tests/_utils` references are
+> upstream paths (see `test-utilities.md`).
+
+The ckeditor5 repository is mid-migration (commits migrate packages one by one to Vitest). Many
+test files still use the old stack. When you touch a legacy test, migrate it. This is the mapping.
 
 ## Imports & globals
 

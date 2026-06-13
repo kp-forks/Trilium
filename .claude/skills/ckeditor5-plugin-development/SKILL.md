@@ -201,23 +201,23 @@ editing view on execute; keyboard accessibility (keystrokes + `accessibility.add
 all user-facing strings wrapped in `t()`; model changes inside `model.change()`; cleanup of
 trackers/handlers in `destroy()`. Full version: `references/review-checklist.md`.
 
-## Provenance & updating
+## Provenance & source references
 
-This skill was distilled from the CKEditor 5 repository at baseline commit
-**`9ecca53627`** ("Migrated the horizontal line package tests to Vitest", 2026-06-12).
+**This skill is self-contained and library-focused, not tied to any particular project.** Every
+repository path it cites — `docs/…`, `packages/ckeditor5-…/src/…`, config files, the baseline
+commit — points into the **upstream CKEditor 5 repository**
+([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), **not the project you are
+currently working in**. Those paths are for verification and deeper reading in the library's own
+source. Unless you happen to be working inside the ckeditor5 repository itself, do not try to open
+them as local files — your plugin lives in your own project and imports CKEditor from the
+`ckeditor5` / `@ckeditor/*` npm packages.
 
-Primary sources distilled:
-- `docs/framework/architecture/*.md` (intro, plugins, core-editor-architecture, editing-engine,
-  ui-library, ui-components)
-- `docs/framework/how-tos.md`, `docs/framework/custom-editor-creator.md`,
-  `docs/framework/deep-dive/localization.md`
-- `docs/framework/contributing/{code-style,package-metadata,development-environment}.md`
-- `docs/framework/development-tools/**` (package-generator, inspector)
-- `docs/tutorials/**` (crash-course, abbreviation-plugin-tutorial, widgets, creating-simple-plugin-timestamp)
+This skill was distilled from that upstream repository at commit **`9ecca53627`** (mid-2026):
+the framework docs (`docs/framework/**` — architecture, contributing/code-style, package-metadata,
+deep-dive/localization, development-tools), the tutorials (`docs/tutorials/**` — crash-course,
+abbreviation plugin, widgets, timestamp), and the core plugin source (`packages/ckeditor5-*/src/**`,
+for `references/core-plugin-patterns.md`).
 
-To update this skill when the docs change, diff the sources since the baseline and fold in
-what moved, then bump the commit reference above:
-
-```bash
-git diff 9ecca53627..HEAD -- docs/framework docs/tutorials
-```
+To refresh the skill, browse or clone the upstream repository and compare those paths against
+commit `9ecca53627` — e.g. `git diff 9ecca53627..HEAD -- docs packages` run **inside a clone of
+ckeditor5** — then fold in what changed and bump the commit reference here.

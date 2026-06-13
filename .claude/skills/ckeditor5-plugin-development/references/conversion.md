@@ -119,6 +119,7 @@ This maps any position inside the view `<span>` to a position **outside** the mo
 
 ## Where to go deeper
 
-The official "Conversion deep dive" (`framework/deep-dive/conversion/*`) covers
+The official CKEditor 5 "Conversion deep dive" docs (ckeditor.com/docs → Framework › Deep dive ›
+Conversion) cover
 `elementToStructure`, reconversion/triggers, marker conversion, and data processors. For
 widget-specific conversion patterns see `widgets.md`.

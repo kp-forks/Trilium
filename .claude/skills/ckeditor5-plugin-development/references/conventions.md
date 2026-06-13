@@ -37,7 +37,7 @@ idiomatic plugins and to review them. Items below note the enforcing ESLint rule
   `no-scoped-imports-within-package`).
 - All imports include file extensions (`.ts`/`.js`/`.json`) (`require-file-extensions-in-imports`).
 - In `@if CK_DEBUG` blocks use `require()`, not `import` (`use-require-for-debug-mode-imports`).
-- Each TS file in `packages/*/src/` starts with a `@module path/file` JSDoc tag matching its
+- Each TS source file (in the ckeditor5 source, `packages/*/src/`) starts with a `@module path/file` JSDoc tag matching its
   location (`validate-module-tag`); the package `index.ts` uses `@module <package>`.
 
 ## Plugin specifics

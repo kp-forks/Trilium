@@ -1,5 +1,10 @@
 # Test patterns (Vitest)
 
+> These patterns are portable to any project. Where examples import test editors from
+> `@ckeditor/ckeditor5-core/tests/_utils/…` (an upstream-repo path), see the downstream caveat in
+> `test-utilities.md` — the `_setModelData`/`_getModelData` helpers are published and work anywhere;
+> the test editors are monorepo-internal.
+
 Idiomatic recipes per concern. All examples assume explicit `vitest` imports and a test editor
 created in `beforeEach`, destroyed in `afterEach`. Mirror the structure of the feature: a
 `*editing` test for schema/conversion/command, a `*ui` test for buttons/dropdowns.

@@ -142,7 +142,8 @@ Pattern from the how-tos for a form `<input>` ↔ `<forms><formName>…</formNam
 upcast builds a model sub-structure from a single view element; `editingDowncast` converts
 each model element separately (outer → `toWidget`, inner → `toWidgetEditable`); `dataDowncast`
 collapses the structure back into one view element, consuming the inner items so other
-converters skip them. See the full snippet in `docs/framework/how-tos.md` and `widgets.md`.
+converters skip them. See the full snippet in the upstream CKEditor 5 "How-tos" docs
+(ckeditor.com/docs) and `widgets.md`.
 
 ## Framework-integration gotcha
 

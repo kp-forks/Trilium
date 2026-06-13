@@ -1,5 +1,13 @@
 # Running tests & configuration
 
+> **Two contexts.** The **per-package scripts** below are what the package-generator produces, so
+> they apply to a standalone plugin package in your own project. The **root runner**,
+> `createVitestConfig` factory, `--files` patterns, manual-test and memory-test sections describe how
+> the **upstream ckeditor5 monorepo** tests itself — paths like `vitest.config.ts`,
+> `packages/*/vitest.config.ts`, and `test_setup.js` refer to that repository
+> ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), not your project. Use the
+> monorepo sections only when working inside ckeditor5 itself.
+
 ## Per-package scripts
 
 Each package's `package.json` defines:

@@ -32,6 +32,10 @@ file to Vitest, or configuring the runner. For writing the feature itself, use t
 
 ## The current setup at a glance
 
+This describes how the **upstream ckeditor5 monorepo** tests itself (the source of these patterns).
+A standalone plugin package in your own project gets an equivalent Vitest setup from the
+package-generator template; the **test-writing patterns** below transfer unchanged either way.
+
 - **Runner:** Vitest (`vitest@^4`), one **project per package**. Config comes from the root
   `createVitestConfig({ name: '<short-package-name>' })` factory; each package has a tiny
   `vitest.config.ts` that calls it.
@@ -170,27 +174,22 @@ cleanup); model/view asserted via `_getModelData`/`_getViewData` + `toEqual` wit
 selections and schema-disallowed contexts; new `src/` lines covered (100% gate); no Chai/Sinon
 leftovers; manual tests (if any) under `tests/manual/`.
 
-## Provenance & updating
+## Provenance & source references
 
-This skill was distilled from the CKEditor 5 repository at baseline commit
-**`9ecca53627`** ("Migrated the horizontal line package tests to Vitest", 2026-06-12). Because
-the repo is **mid-migration to Vitest**, this skill reflects the *current* setup verified
+**This skill is self-contained, not tied to any particular project.** Repository paths it cites —
+`vitest.config.ts`, `test_setup.js`, `packages/ckeditor5-…`, `@ckeditor/ckeditor5-…/tests/_utils/…`,
+the baseline commit — point into the **upstream CKEditor 5 repository**
+([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), **not your project**. The
+runner/config specifics describe how the ckeditor5 monorepo tests *itself*; the **patterns** (test
+editors, `_setModelData`/`_getModelData`, `vi` spies, `describe`/`it` structure) are portable to any
+project. Don't open these paths as local files unless you are working inside the ckeditor5
+repository. (Note: the model/view helpers are published via the `ckeditor5` / `@ckeditor/ckeditor5-engine`
+npm packages and work downstream; the `tests/_utils` test editors are monorepo-internal — see
+`references/test-utilities.md` for the downstream caveat.)
+
+This skill was distilled from that upstream repository at commit **`9ecca53627`** (mid-2026).
+Because the repo is **mid-migration to Vitest**, the skill reflects the *current* setup verified
 against source — not the (stale, Karma-era) published testing docs.
 
-Primary sources distilled:
-- `vitest.config.ts`, `test_setup.js`, root `package.json` scripts, a package `vitest.config.ts`
-- `packages/ckeditor5-core/tests/_utils/*` (test editors & helpers)
-- `packages/ckeditor5-engine/src/dev-utils/{model,view}.ts` (the `_get*/_set*` helpers)
-- Migrated example tests in `packages/ckeditor5-{paragraph,undo,horizontal-line,bookmark}/tests/**`
-- `docs/framework/contributing/testing-environment.md`,
-  `docs/framework/development-tools/testing-helpers.md` (note: partly stale)
-
-To update, diff the sources since the baseline and fold in changes (watch the migration
-progress — more packages move to Vitest over time), then bump the commit reference above:
-
-```bash
-git diff 9ecca53627..HEAD -- vitest.config.ts test_setup.js package.json \
-  packages/ckeditor5-core/tests/_utils packages/ckeditor5-engine/src/dev-utils \
-  docs/framework/contributing/testing-environment.md \
-  docs/framework/development-tools/testing-helpers.md
-```
+To refresh, compare the source/config/test-util paths against commit `9ecca53627` inside a clone of
+ckeditor5 (watch the migration progress), then bump the commit reference here.

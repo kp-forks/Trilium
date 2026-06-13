@@ -1,8 +1,13 @@
 # Canonical patterns from the core plugins
 
-Real-world idioms mined from the actual `packages/*/src` source (verified against the codebase
-at the baseline commit). These go beyond the tutorials and are the patterns the official
-plugins actually use. Each item cites its source file.
+> **Source paths below (`packages/ckeditor5-…/src/…`) point into the upstream CKEditor 5 repository
+> ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), not your project.** They
+> show where each idiom lives in the library's own source. Your plugin imports CKEditor from the
+> `ckeditor5` / `@ckeditor/*` npm packages; don't try to open these as local files.
+
+Real-world idioms mined from the actual upstream `packages/*/src` source (verified against the
+library at the baseline commit). These go beyond the tutorials and are the patterns the official
+plugins actually use. Each item cites its source file in the upstream repository.
 
 ## Toolbar + menu-bar button in one factory
 
