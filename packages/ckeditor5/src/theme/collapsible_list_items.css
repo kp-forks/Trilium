@@ -16,7 +16,10 @@
     content: "";
     position: absolute;
     inset-inline-start: -2.1em;
-    top: 0.45em;
+    /* Centre the arrow on the first line: half a line-height, minus half the box, so it
+     * tracks the text's vertical centre across font sizes and line-heights instead of a
+     * fixed offset that only looks right near line-height 1.5. */
+    top: calc(0.5lh - 0.2em);
     width: 0.4em;
     height: 0.4em;
     border-inline-end: 2px solid var(--ck-color-base-text, currentColor);
@@ -25,6 +28,13 @@
     cursor: pointer;
     opacity: 0;
     transition: opacity 150ms ease, transform 150ms ease;
+}
+
+/* To-do items show a checkbox instead of a bullet; its `vertical-align: middle` box sits a
+ * little below the text line's centre, so nudge the arrow down to line up with the checkbox
+ * rather than the text. The offset is font-size-proportional, hence em (not lh). */
+.ck-content.ck-editor__editable .todo-list > li:has(> ul, > ol)::before {
+    top: calc(0.5lh - 0.1em);
 }
 
 .ck-content.ck-editor__editable li:hover::before {
