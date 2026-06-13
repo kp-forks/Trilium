@@ -108,44 +108,17 @@ describe("CodeBlockToolbar — with BalloonToolbar", () => {
         setModelData(editor.model, "<codeBlock language=\"plaintext\">foo[]bar</codeBlock>");
 
         const balloonToolbar = editor.plugins.get("BalloonToolbar") as unknown as {
-            fire(event: string, ...args: unknown[]): unknown;
-        };
-
-        // Spy on the fire call; the listener should call evt.stop() which prevents
-        // further propagation. We simulate the show event and check it is stopped.
-        const stopSpy = vi.fn();
-        const fakeEvt = { stop: stopSpy };
-
-        // Directly fire on the BalloonToolbar observable to trigger our listener.
-        const bToolbar = editor.plugins.get("BalloonToolbar") as unknown as {
-            fire(name: string, evt: unknown, ...args: unknown[]): void;
-        };
-
-        // The listener uses `editor.listenTo(bToolbar, "show", ...)` with high priority.
-        // We can fire the "show" event on the balloonToolbar to exercise the listener.
-        editor.fire("test-show-proxy"); // Warm-up — not the real path.
-
-        // Use the CKEditor event system to fire "show" with a stoppable event info.
-        // CKEditor passes EventInfo as the first arg; we need to invoke our callback.
-        // The safest way: access the listener registered via listenTo by firing through
-        // the observable itself.
-        const observable = editor.plugins.get("BalloonToolbar") as unknown as {
-            _events?: Record<string, unknown>;
+            on(evt: string, fn: () => void): void;
             fire(name: string, ...args: unknown[]): void;
         };
 
-        // Fire "show" — the high-priority listener will call evt.stop() on the EventInfo.
-        // We cannot easily intercept the EventInfo, so instead we verify via a spy on
-        // the BalloonToolbar#show to confirm it fires but the balloon toolbar itself
-        // is suppressed (no balloon rendered):
+        // The plugin registers a high-priority "show" listener that calls evt.stop() when the
+        // selection is inside a code block. CKEditor fires listeners high -> normal, so a
+        // default-priority listener added here must never run once the event is stopped.
         const showSpy = vi.fn();
-        (editor.plugins.get("BalloonToolbar") as unknown as { on(evt: string, fn: () => void): void })
-            .on?.("show", showSpy);
+        balloonToolbar.on("show", showSpy);
+        balloonToolbar.fire("show");
 
-        observable.fire("show");
-
-        // Our high-priority listener stopped the event, so lower-priority listeners
-        // (like showSpy registered above at default priority) should not fire.
         expect(showSpy).not.toHaveBeenCalled();
     });
 

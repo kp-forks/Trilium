@@ -5,6 +5,11 @@ import { createTestEditor } from "../../test/editor-kit.js";
 import CopyToClipboardButton from "./copy_to_clipboard_button.js";
 import InlineCodeToolbar from "./inline_code_toolbar.js";
 
+/** The toolbar definition shape we reach into (WidgetToolbarRepository keeps these private). */
+interface ToolbarDefinition {
+    getRelatedElement: (selection: unknown) => { is(type: string, name: string): boolean } | null;
+}
+
 describe("InlineCodeToolbar", () => {
     let editor: ClassicEditor;
 
@@ -23,172 +28,47 @@ describe("InlineCodeToolbar", () => {
     });
 
     it("registers the inlineCode toolbar in the WidgetToolbarRepository", () => {
-        // The toolbar is registered during afterInit — verify the registration exists
-        // by checking that WidgetToolbarRepository loaded and that the toolbar items are set
-        const widgetToolbarRepository = editor.plugins.get(WidgetToolbarRepository);
-        expect(widgetToolbarRepository).toBeDefined();
+        expect(getInlineCodeDefinition()).toBeDefined();
     });
 
+    // These exercise the plugin's actual getRelatedElement callback (registered in
+    // WidgetToolbarRepository), rather than a re-implementation of the same walk — so a regression
+    // in inline_code_toolbar.ts itself fails the suite.
     describe("getRelatedElement", () => {
-        // Access the registered toolbar config via WidgetToolbarRepository internals
-        function getRelatedElement(selection: unknown): unknown {
-            // We call getRelatedElement with the view document selection to exercise the logic.
-            // Re-create a mock selection that exposes getFirstPosition().
-            const viewSelection = editor.editing.view.document.selection;
-            return (viewSelection as unknown as { getFirstPosition: () => unknown }).getFirstPosition;
-        }
-
-        it("returns the code element when cursor is inside inline code", () => {
-            // Place cursor inside inline code
+        it("returns the <code> attribute element when the selection is inside inline code", () => {
             setModelData(editor.model, "<paragraph><$text code=\"true\">hello[]world</$text></paragraph>");
 
-            // The view selection should now be inside a <code> element
-            const viewSelection = editor.editing.view.document.selection;
-            const firstPosition = viewSelection.getFirstPosition();
-            expect(firstPosition).not.toBeNull();
+            const def = getInlineCodeDefinition();
+            expect(def).toBeDefined();
 
-            if (!firstPosition) {
-                return;
-            }
-
-            // Walk parent chain manually as the plugin does
-            let parent = firstPosition.parent;
-            let foundCode = false;
-            while (parent) {
-                if (parent.is("attributeElement", "code")) {
-                    foundCode = true;
-                    break;
-                }
-                parent = parent.parent;
-            }
-
-            expect(foundCode).toBe(true);
+            const related = def?.getRelatedElement(editor.editing.view.document.selection);
+            expect(related).not.toBeNull();
+            expect(related?.is("attributeElement", "code")).toBe(true);
         });
 
-        it("returns null (no code element found) when cursor is in plain text", () => {
+        it("walks up multiple ancestor levels (bold+code) to find the <code> element", () => {
+            setModelData(editor.model, "<paragraph><$text bold=\"true\" code=\"true\">bold[]code</$text></paragraph>");
+
+            const related = getInlineCodeDefinition()?.getRelatedElement(editor.editing.view.document.selection);
+            expect(related?.is("attributeElement", "code")).toBe(true);
+        });
+
+        it("returns null when the selection is in plain text", () => {
             setModelData(editor.model, "<paragraph>plain[]text</paragraph>");
 
-            const viewSelection = editor.editing.view.document.selection;
-            const firstPosition = viewSelection.getFirstPosition();
-            expect(firstPosition).not.toBeNull();
+            const related = getInlineCodeDefinition()?.getRelatedElement(editor.editing.view.document.selection);
+            expect(related).toBeNull();
+        });
 
-            if (!firstPosition) {
-                return;
-            }
-
-            // Walk parent chain as the plugin does — should not find code
-            let parent = firstPosition.parent;
-            let foundCode = false;
-            while (parent) {
-                if (parent.is("attributeElement", "code")) {
-                    foundCode = true;
-                    break;
-                }
-                parent = parent.parent;
-            }
-
-            expect(foundCode).toBe(false);
+        it("returns null when the selection has no first position (null guard)", () => {
+            const related = getInlineCodeDefinition()?.getRelatedElement({ getFirstPosition: () => null });
+            expect(related).toBeNull();
         });
     });
 
-    describe("getRelatedElement via plugin integration", () => {
-        it("resolves to non-null when inline code is selected", () => {
-            setModelData(editor.model, "<paragraph><$text code=\"true\">inline[]code</$text></paragraph>");
-
-            // Verify the view contains a <code> attributeElement
-            const viewSelection = editor.editing.view.document.selection;
-            const firstPosition = viewSelection.getFirstPosition();
-            expect(firstPosition).not.toBeNull();
-
-            if (!firstPosition) {
-                return;
-            }
-
-            // The parent should be a <code> attributeElement somewhere in the tree
-            let node = firstPosition.parent;
-            let found = false;
-            while (node) {
-                if (node.is("attributeElement", "code")) {
-                    found = true;
-                    break;
-                }
-                node = node.parent;
-            }
-            expect(found).toBe(true);
-        });
-
-        it("resolves to null when selection is in plain paragraph text", () => {
-            setModelData(editor.model, "<paragraph>no[]code</paragraph>");
-
-            const viewSelection = editor.editing.view.document.selection;
-            const firstPosition = viewSelection.getFirstPosition();
-            expect(firstPosition).not.toBeNull();
-
-            if (!firstPosition) {
-                return;
-            }
-
-            let node = firstPosition.parent;
-            let found = false;
-            while (node) {
-                if (node.is("attributeElement", "code")) {
-                    found = true;
-                    break;
-                }
-                node = node.parent;
-            }
-            expect(found).toBe(false);
-        });
-
-        it("walks multiple levels up the parent chain to find a code element", () => {
-            // Place selection inside inline code mixed with bold to create nested attribute elements
-            setModelData(editor.model,
-                "<paragraph><$text bold=\"true\" code=\"true\">bold[]code</$text></paragraph>");
-
-            const viewSelection = editor.editing.view.document.selection;
-            const firstPosition = viewSelection.getFirstPosition();
-            expect(firstPosition).not.toBeNull();
-
-            if (!firstPosition) {
-                return;
-            }
-
-            // Must find code element at some ancestor level
-            let node = firstPosition.parent;
-            let found = false;
-            while (node) {
-                if (node.is("attributeElement", "code")) {
-                    found = true;
-                    break;
-                }
-                node = node.parent;
-            }
-            expect(found).toBe(true);
-        });
-    });
-
-    describe("getRelatedElement null position branch", () => {
-        it("handles an empty selection gracefully by not finding a code element", () => {
-            // With a fresh editor and no explicit setModelData, getFirstPosition() returns
-            // a position in an empty paragraph — not inside <code> — so no code element found.
-            const viewSelection = editor.editing.view.document.selection;
-            const firstPosition = viewSelection.getFirstPosition();
-
-            if (!firstPosition) {
-                // The null-position path is exercised: nothing to assert further
-                return;
-            }
-
-            let node = firstPosition.parent;
-            let found = false;
-            while (node) {
-                if (node.is("attributeElement", "code")) {
-                    found = true;
-                    break;
-                }
-                node = node.parent;
-            }
-            expect(found).toBe(false);
-        });
-    });
+    function getInlineCodeDefinition(): ToolbarDefinition | undefined {
+        const repository = editor.plugins.get(WidgetToolbarRepository);
+        const definitions = (repository as unknown as { _toolbarDefinitions: Map<string, ToolbarDefinition> })._toolbarDefinitions;
+        return definitions?.get("inlineCode");
+    }
 });

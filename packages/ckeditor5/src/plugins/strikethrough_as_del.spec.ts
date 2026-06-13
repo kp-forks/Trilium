@@ -28,20 +28,20 @@ describe("StrikethroughAsDel", () => {
         expect(data).toContain("<del>");
     });
 
-    it("upcasts <del> from HTML so the model has strikethrough attribute", () => {
+    it("upcasts <del> from HTML so the model text node carries the strikethrough attribute", () => {
         editor.setData("<p><del>test</del></p>");
         const root = editor.model.document.getRoot();
         if (!root) {
             throw new Error("Model root not found");
         }
         const paragraph = root.getChild(0);
-        if (!paragraph) {
+        if (!paragraph?.is("element")) {
             throw new Error("Paragraph not found");
         }
-        // After upcast (via Strikethrough plugin), the text should have strikethrough attribute
-        // and re-downcast via our plugin to <del>
-        const output = editor.getData();
-        expect(output).toContain("<del>test</del>");
+        // The Strikethrough plugin upcasts <del> to the `strikethrough` model attribute on the text.
+        const textNode = paragraph.getChild(0);
+        expect(textNode?.is("$text")).toBe(true);
+        expect(textNode?.getAttribute("strikethrough")).toBe(true);
     });
 
     it("produces <del> wrapping when strikethrough spans partial text", () => {

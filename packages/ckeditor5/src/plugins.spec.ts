@@ -1,5 +1,15 @@
+import { BlockToolbar } from "ckeditor5";
 import { describe, expect, it } from "vitest";
-import { CORE_PLUGINS, COMMON_PLUGINS, POPUP_EDITOR_PLUGINS, loadPremiumPlugins } from "./plugins.js";
+
+import { Admonition } from "@triliumnext/ckeditor5-admonition";
+import { COMMON_PLUGINS, CORE_PLUGINS, loadPremiumPlugins, POPUP_EDITOR_PLUGINS } from "./plugins.js";
+import CutToNotePlugin from "./plugins/cuttonote.js";
+import Uploadfileplugin from "./plugins/file_upload/uploadfileplugin.js";
+import IncludeNote from "./plugins/includenote.js";
+import InternalLinkPlugin from "./plugins/internallink.js";
+import LinkEmbed from "./plugins/linkembed.js";
+import MentionCustomization from "./plugins/mention_customization.js";
+import ReferenceLink from "./plugins/referencelink.js";
 
 describe("plugin lists", () => {
     it("CORE_PLUGINS is a non-empty array", () => {
@@ -45,6 +55,33 @@ describe("plugin lists", () => {
         for (const plugin of POPUP_EDITOR_PLUGINS) {
             expect(typeof plugin).toBe("function");
         }
+    });
+
+    // The shape checks above are tautological for catching a *dropped* registration: because
+    // COMMON_PLUGINS is built by spreading CORE_PLUGINS (and POPUP by spreading COMMON), removing
+    // a plugin shrinks both lists and the superset loops still pass. These presence assertions pin
+    // specific load-bearing plugins so deleting a registration line in plugins.ts turns the suite red.
+
+    it("CORE_PLUGINS includes the Trilium-specific core plugins", () => {
+        expect(CORE_PLUGINS).toContain(MentionCustomization);
+        expect(CORE_PLUGINS).toContain(ReferenceLink);
+    });
+
+    it("COMMON_PLUGINS includes the in-tree Trilium feature plugins", () => {
+        expect(COMMON_PLUGINS).toContain(CutToNotePlugin);
+        expect(COMMON_PLUGINS).toContain(InternalLinkPlugin);
+        expect(COMMON_PLUGINS).toContain(IncludeNote);
+        expect(COMMON_PLUGINS).toContain(LinkEmbed);
+        expect(COMMON_PLUGINS).toContain(Uploadfileplugin);
+    });
+
+    it("COMMON_PLUGINS includes the external widget plugins", () => {
+        expect(COMMON_PLUGINS).toContain(Admonition);
+    });
+
+    it("POPUP_EDITOR_PLUGINS adds BlockToolbar on top of COMMON_PLUGINS", () => {
+        expect(POPUP_EDITOR_PLUGINS).toContain(BlockToolbar);
+        expect(COMMON_PLUGINS).not.toContain(BlockToolbar);
     });
 });
 
