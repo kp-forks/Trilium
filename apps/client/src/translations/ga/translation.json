@@ -833,7 +833,8 @@
     "open_all_confirm_two": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
     "open_all_confirm_few": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
     "open_all_confirm_many": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
-    "open_all_confirm_other": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?"
+    "open_all_confirm_other": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
+    "dashboard": "Painéal Rialaithe"
   },
   "edited_notes": {
     "no_edited_notes_found": "Gan aon nótaí eagarthóireachta ar an lá seo go fóill...",
@@ -1132,7 +1133,9 @@
     "successfully_created_fully_anonymized_database": "Cruthaíodh bunachar sonraí lán-anaithnid i {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Cruthaíodh bunachar sonraí atá beagán anaithnid i {{anonymizedFilePath}}",
     "no_anonymized_database_yet": "Gan aon bhunachar sonraí anaithnidithe go fóill.",
-    "description": "Cruthaigh cóip gan ainm de do bhunachar sonraí le roinnt le forbróirí agus fadhbanna á ndífhabhtú, gan sonraí pearsanta a nochtadh."
+    "description": "Cruthaigh cóip gan ainm de do bhunachar sonraí le roinnt le forbróirí agus fadhbanna á ndífhabhtú, gan sonraí pearsanta a nochtadh.",
+    "anonymized_databases_location": "Stóráiltear bunachair shonraí anaithnidithe i {{- anonymizedFolder}}.",
+    "download": "Íoslódáil"
   },
   "database_integrity_check": {
     "title": "Seiceáil Ionracais Bunachar Sonraí",
@@ -1435,7 +1438,10 @@
     "database_backed_up_to": "Tá cúltaca déanta den bhunachar sonraí chuig {{- backupFilePath}}",
     "no_backup_yet": "gan aon chúltaca fós",
     "download": "Íoslódáil",
-    "title": "Cúltaca"
+    "title": "Cúltaca",
+    "automatic_backups_title": "Cúltacaí uathoibríocha",
+    "automatic_backups_description": "Is féidir le Trilium cúltaca den bhunachar sonraí a dhéanamh go huathoibríoch. Moltar an cúltaca a choinneáil casta air, ach is féidir leis seo moill a chur ar thosú feidhmchlár le bunachair shonraí móra agus/nó gléasanna stórála mall.",
+    "backup_location_description": "Stóráiltear cúltacaí i {{- backupFolder}}."
   },
   "etapi": {
     "title": "ETAPI",
@@ -1456,7 +1462,8 @@
     "delete_token": "Scrios / díghníomhachtaigh an comhartha seo",
     "rename_token_title": "Athainmnigh an comhartha",
     "rename_token_message": "Cuir isteach ainm an chomhartha nua le do thoil",
-    "delete_token_confirmation": "An bhfuil tú cinnte gur mian leat comhartha ETAPI \"{{name}}\" a scriosadh?"
+    "delete_token_confirmation": "An bhfuil tú cinnte gur mian leat comhartha ETAPI \"{{name}}\" a scriosadh?",
+    "no_tokens": "Níl aon chomharthaí ann fós."
   },
   "options_widget": {
     "options_status": "Stádas na roghanna",
@@ -1761,7 +1768,10 @@
     "print_report_collection_details_button": "Féach sonraí",
     "print_report_collection_details_ignored_notes": "Nótaí neamhairdithe",
     "print_report_error_title": "Theip ar phriontáil",
-    "print_report_stack_trace": "Rian cruachta"
+    "print_report_stack_trace": "Rian cruachta",
+    "content_load_error": "Níorbh fhéidir ábhar an nóta a luchtú.",
+    "content_load_retry": "Déan iarracht eile",
+    "content_load_stalled": "Ag lódáil ábhar an nóta fós…"
   },
   "note_title": {
     "placeholder": "clóscríobh teideal an nóta anseo...",
@@ -2135,7 +2145,8 @@
     "unpin_tab_description": "Díbhioráin an cluaisín seo, rud a ligfidh dó a bheith dúnta agus bogtha go saor"
   },
   "content_renderer": {
-    "open_externally": "Oscail go seachtrach"
+    "open_externally": "Oscail go seachtrach",
+    "mermaid_diagram_error": "Theip ar léaráid maighdeana mara a rindreáil: {{error}}"
   },
   "modal": {
     "close": "Dún",
@@ -2375,7 +2386,8 @@
     "menu_run_mobile_startup": "Nuair a thosaíonn an taobhlíne soghluaiste",
     "menu_change_to_widget": "Athraigh go giuirléid",
     "menu_change_to_frontend_script": "Athraigh chuig an script tosaigh",
-    "menu_theme_base": "Bunús téama"
+    "menu_theme_base": "Bunús téama",
+    "type_custom_request_handler": "Láimhseálaí iarratais saincheaptha"
   },
   "setup_form": {
     "more_info": "Foghlaim níos mó"
@@ -2545,11 +2557,13 @@
       "move_note": "Bog nóta",
       "clone_note": "Clónáil nóta",
       "set_note_content": "Athscríobh nóta",
-      "edit_note_content": "Cuir nóta in eagar"
+      "edit_note_content": "Cuir nóta in eagar",
+      "search_icons": "Deilbhíní cuardaigh"
     },
     "base_url": "Bun-URL",
     "base_url_description": "Roghnach. Sáraigh an pointe deiridh réamhshocraithe API — úsáideach do mhúnlaí féinóstáilte (Ollama, LM Studio, vLLM) nó do sheachfhreastalaithe.",
-    "base_url_invalid": "Ní mór don bhun-URL a bheith ina URL bailí http:// nó https://"
+    "base_url_invalid": "Ní mór don bhun-URL a bheith ina URL bailí http:// nó https://",
+    "not_available_in_standalone": "Níl gnéithe AI/LLM ar fáil sa leagan neamhspleách de Trilium, toisc nach gceadaíonn soláthraithe LLM rochtain dhíreach ó bhrabhsálaí."
   },
   "ocr": {
     "extracted_text": "Téacs Bainte (OCR)",
@@ -2858,5 +2872,14 @@
     "type_text": "Téacs",
     "type_code": "Cód",
     "tooltip": "Píosa téacs nó cóid in-athúsáidte, atá ceaptha le cur isteach san eagarthóir (ón roghchlár sleachta sa bharra uirlisí, nó trí ordú slaise)."
+  },
+  "options": {
+    "title": "Roghanna",
+    "back": "Ar ais chuig na roghanna go léir"
+  },
+  "dashboard_view": {
+    "refresh-widget": "Athnuachan",
+    "remove-widget": "Bain den phainéal",
+    "empty-hint": "Is giuirléid aon nóta linbh. Tarraing nóta anseo ón gcrann nó cruthaigh ceann nua."
   }
 }
