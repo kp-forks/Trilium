@@ -6,7 +6,7 @@ import { highlightSelectionMatches } from "@codemirror/search";
 import { autocompletion, type CompletionSource } from "@codemirror/autocomplete";
 import { vim } from "@replit/codemirror-vim";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
-import byMimeType from "./syntax_highlighting.js";
+import byMimeType, { MIME_ALIASES } from "./syntax_highlighting.js";
 import smartIndentWithTab from "./extensions/custom_tab.js";
 import type { ThemeDefinition } from "./color_themes.js";
 import { createSearchHighlighter, SearchHighlighter, searchMatchHighlightTheme } from "./find_replace.js";
@@ -318,7 +318,7 @@ export default class CodeMirror extends EditorView {
         this.currentMime = mime;
         let newExtension: Extension[] = [];
 
-        const correspondingSyntax = byMimeType[mime];
+        const correspondingSyntax = byMimeType[MIME_ALIASES[mime] ?? mime];
         if (correspondingSyntax) {
             const resolvedSyntax = await correspondingSyntax();
 
