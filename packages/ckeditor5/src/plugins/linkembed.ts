@@ -35,6 +35,7 @@ class LinkEmbedUI extends Plugin {
                 tooltip: true
             });
 
+            /* v8 ignore next -- LinkEmbedEditing always registers LINK_EMBED_COMMAND (both are required by LinkEmbed), so the no-command branch is unreachable */
             if (command) {
                 buttonView.bind('isOn', 'isEnabled').to(
                     command as Observable & { value: boolean } & { isEnabled: boolean },
@@ -373,6 +374,7 @@ class AutoLinkToMention extends Plugin {
                     if (item.item.data.trim() !== href) continue;
 
                     const parent = item.item.parent;
+                    /* v8 ignore next -- a $textProxy always has an element parent, so this guard never fires */
                     if (!parent?.is('element')) continue;
 
                     this._replaceWithMention(href, parent.getPath());
@@ -392,6 +394,7 @@ class AutoLinkToMention extends Plugin {
 
             editor.model.change((writer) => {
                 const root = editor.model.document.getRoot();
+                /* v8 ignore next -- the document always has a root once the editor is created */
                 if (!root) return;
 
                 // Re-resolve the parent from the stored path.

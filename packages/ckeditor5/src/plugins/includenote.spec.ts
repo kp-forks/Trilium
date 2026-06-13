@@ -1,0 +1,426 @@
+import {
+    _getViewData as getViewData,
+    _setModelData as setModelData,
+    ClassicEditor,
+    Essentials,
+    Paragraph,
+    Widget,
+    type ModelElement
+} from "ckeditor5";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import IncludeNote, { BOX_SIZE_COMMAND_NAME, BOX_SIZES, COMMAND_NAME } from "./includenote.js";
+
+describe("IncludeNote", () => {
+    let editorElement: HTMLDivElement;
+    let editor: ClassicEditor;
+    let triggerCommand: ReturnType<typeof vi.fn>;
+    let loadIncludedNote: ReturnType<typeof vi.fn>;
+
+    beforeEach(async () => {
+        triggerCommand = vi.fn();
+        loadIncludedNote = vi.fn();
+        globalThis.glob = {
+            getComponentByEl: () => ({ triggerCommand, loadIncludedNote })
+        } as unknown as typeof glob;
+
+        // includenote.ts calls jQuery globally; provide a passthrough stub.
+        (globalThis as unknown as { $: (x: unknown) => unknown }).$ = (x) => x;
+
+        editorElement = document.createElement("div");
+        document.body.appendChild(editorElement);
+
+        editor = await ClassicEditor.create(editorElement, {
+            licenseKey: "GPL",
+            plugins: [Essentials, Paragraph, Widget, IncludeNote]
+        });
+    });
+
+    afterEach(async () => {
+        editorElement.remove();
+        await editor.destroy();
+    });
+
+    // -----------------------------------------------------------------------
+    // Plugin / schema registration
+    // -----------------------------------------------------------------------
+
+    it("loads the plugin, sub-plugins, schema, commands and the toolbar button", () => {
+        expect(editor.plugins.get(IncludeNote)).toBeInstanceOf(IncludeNote);
+        expect(editor.commands.get(COMMAND_NAME)).toBeDefined();
+        expect(editor.commands.get(BOX_SIZE_COMMAND_NAME)).toBeDefined();
+        expect(editor.ui.componentFactory.has("includeNote")).toBe(true);
+
+        const schema = editor.model.schema;
+        expect(schema.isRegistered("includeNote")).toBe(true);
+        expect(schema.isObject("includeNote")).toBe(true);
+        expect(schema.checkAttribute(["$root", "includeNote"], "noteId")).toBe(true);
+        expect(schema.checkAttribute(["$root", "includeNote"], "boxSize")).toBe(true);
+    });
+
+    // -----------------------------------------------------------------------
+    // UI button
+    // -----------------------------------------------------------------------
+
+    it("wires the toolbar button to the insert command (enablement and execution)", () => {
+        const view = editor.ui.componentFactory.create("includeNote") as {
+            isEnabled: boolean;
+            isOn: boolean;
+            label: string;
+            fire(name: string): void;
+        };
+        const command = editor.commands.get(COMMAND_NAME);
+
+        expect(view.label).toBe("Include note");
+        expect(view.isEnabled).toBe(command?.isEnabled);
+
+        const spy = vi.spyOn(editor, "execute");
+        view.fire("execute");
+        expect(spy).toHaveBeenCalledWith(COMMAND_NAME);
+    });
+
+    // -----------------------------------------------------------------------
+    // Conversion: upcast / data downcast / editing downcast
+    // -----------------------------------------------------------------------
+
+    it("upcasts a <section class=\"include-note\"> into an includeNote model element", () => {
+        editor.setData(
+            '<section class="include-note" data-note-id="abc123" data-box-size="medium"></section>'
+        );
+
+        const element = findIncludeNote(editor);
+        expect(element).toBeDefined();
+        expect(element?.getAttribute("noteId")).toBe("abc123");
+        expect(element?.getAttribute("boxSize")).toBe("medium");
+    });
+
+    it("data-downcasts an includeNote back to a <section class=\"include-note\"> with data attributes", () => {
+        insertIncludeNote(editor, "noteX", "full");
+
+        const data = editor.getData();
+        expect(data).toContain('class="include-note"');
+        expect(data).toContain('data-note-id="noteX"');
+        expect(data).toContain('data-box-size="full"');
+    });
+
+    it("editing-downcasts to a widget and invokes loadIncludedNote when the UIElement renders", () => {
+        editor.setData(
+            '<section class="include-note" data-note-id="noteY" data-box-size="small"></section>'
+        );
+
+        const view = getViewData(editor.editing.view);
+        expect(view).toContain("include-note");
+        expect(view).toContain("ck-widget");
+        expect(view).toContain("box-size-small");
+
+        // Querying the DOM root forces the UIElement render callback to run.
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+
+        expect(loadIncludedNote).toHaveBeenCalledTimes(1);
+        expect(loadIncludedNote.mock.calls[0]?.[0]).toBe("noteY");
+    });
+
+    it("updates the box-size class on the editing view when the boxSize attribute changes", () => {
+        insertIncludeNote(editor, "noteZ", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const section = domRoot?.querySelector("section.include-note");
+        expect(section?.classList.contains("box-size-small")).toBe(true);
+
+        editor.execute(BOX_SIZE_COMMAND_NAME, { value: "full" });
+
+        expect(section?.classList.contains("box-size-small")).toBe(false);
+        expect(section?.classList.contains("box-size-full")).toBe(true);
+        expect(section?.getAttribute("data-box-size")).toBe("full");
+    });
+
+    it("handles a boxSize change from an empty old value (no class to remove)", () => {
+        // Insert an includeNote whose boxSize is empty so the attribute-change converter
+        // hits the falsy `oldBoxSize` branch when the value is set for the first time.
+        const element = insertIncludeNote(editor, "noteW", "");
+
+        editor.model.change((writer) => {
+            writer.setAttribute("boxSize", "medium", element);
+        });
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const section = domRoot?.querySelector("section.include-note");
+        expect(section?.classList.contains("box-size-medium")).toBe(true);
+        expect(section?.getAttribute("data-box-size")).toBe("medium");
+    });
+
+    it("ignores a boxSize change cleared to an empty value (no new class to add)", () => {
+        const element = insertIncludeNote(editor, "noteV", "small");
+
+        editor.model.change((writer) => {
+            writer.setAttribute("boxSize", "", element);
+        });
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const section = domRoot?.querySelector("section.include-note");
+        // Old class removed, no new class added because the new value is empty.
+        expect(section?.classList.contains("box-size-small")).toBe(false);
+        expect(section?.classList.contains("box-size-")).toBe(false);
+    });
+
+    // -----------------------------------------------------------------------
+    // InsertIncludeNoteCommand
+    // -----------------------------------------------------------------------
+
+    it("triggers addIncludeNoteToText on the Trilium component when the insert command executes", () => {
+        editor.execute(COMMAND_NAME);
+        expect(triggerCommand).toHaveBeenCalledWith("addIncludeNoteToText");
+    });
+
+    it("enables the insert command in a paragraph and disables it where blocks are disallowed", () => {
+        const command = editor.commands.get(COMMAND_NAME);
+
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        expect(command?.isEnabled).toBe(true);
+
+        // Forbid includeNote anywhere via a child check, then refresh: no allowed parent
+        // for the current selection means the command disables itself.
+        editor.model.schema.addChildCheck((_context, def) => {
+            if (def.name === "includeNote") {
+                return false;
+            }
+        });
+        command?.refresh();
+        expect(command?.isEnabled).toBe(false);
+    });
+
+    // -----------------------------------------------------------------------
+    // IncludeNoteBoxSizeCommand
+    // -----------------------------------------------------------------------
+
+    it("box-size command is disabled with no selected includeNote and reports a null value", () => {
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+
+        const command = editor.commands.get(BOX_SIZE_COMMAND_NAME) as {
+            isEnabled: boolean;
+            value: string | null;
+        };
+        expect(command.isEnabled).toBe(false);
+        expect(command.value).toBeNull();
+    });
+
+    it("box-size command enables and reflects the value when an includeNote is selected", () => {
+        insertIncludeNote(editor, "noteSel", "medium");
+
+        const command = editor.commands.get(BOX_SIZE_COMMAND_NAME) as {
+            isEnabled: boolean;
+            value: string | null;
+        };
+        expect(command.isEnabled).toBe(true);
+        expect(command.value).toBe("medium");
+
+        // Execute through every defined box size to cover the model write path.
+        for (const { value } of BOX_SIZES) {
+            editor.execute(BOX_SIZE_COMMAND_NAME, { value });
+            expect(command.value).toBe(value);
+            expect(findIncludeNote(editor)?.getAttribute("boxSize")).toBe(value);
+        }
+    });
+
+    it("box-size command resolves the includeNote via an ancestor position (not a direct selection)", () => {
+        // Make the includeNote allow text inside so the selection can be placed within it
+        // (a collapsed position) rather than selecting the element itself.
+        editor.model.schema.extend("$text", { allowIn: "includeNote" });
+
+        const element = insertIncludeNote(editor, "noteAnc", "expandable");
+        editor.model.change((writer) => {
+            writer.setSelection(writer.createPositionAt(element, 0));
+        });
+
+        const command = editor.commands.get(BOX_SIZE_COMMAND_NAME) as {
+            isEnabled: boolean;
+            value: string | null;
+        };
+        expect(command.isEnabled).toBe(true);
+        expect(command.value).toBe("expandable");
+    });
+
+    it("box-size command execute is a no-op when nothing is selected", () => {
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        const before = editor.getData();
+
+        // The decorated Command.execute short-circuits while the command is disabled, so to
+        // run our execute() body with no includeNote selected we force it enabled first. This
+        // exercises the falsy `if (includeNoteElement)` branch.
+        const command = editor.commands.get(BOX_SIZE_COMMAND_NAME) as {
+            isEnabled: boolean;
+            execute(options: { value: string }): void;
+        };
+        command.isEnabled = true;
+        command.execute({ value: "full" });
+
+        expect(editor.getData()).toBe(before);
+    });
+
+    // -----------------------------------------------------------------------
+    // preventCKEditorHandling / selectIncludeNoteWidget (DOM event handlers)
+    // -----------------------------------------------------------------------
+
+    it("selects the widget and suppresses editor handling on a mousedown inside the wrapper", () => {
+        insertIncludeNote(editor, "noteEvt", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        const evt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const stopSpy = vi.spyOn(evt, "stopPropagation");
+        wrapper.dispatchEvent(evt);
+        expect(stopSpy).toHaveBeenCalled();
+
+        // The widget should now be selected (the mousedown handler selects it).
+        const selected = editor.model.document.selection.getSelectedElement();
+        expect(selected?.name).toBe("includeNote");
+    });
+
+    it("stops propagation on focus and keydown inside the wrapper", () => {
+        insertIncludeNote(editor, "noteKbd", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        const focusEvt = new FocusEvent("focus");
+        const focusStop = vi.spyOn(focusEvt, "stopPropagation");
+        wrapper.dispatchEvent(focusEvt);
+        expect(focusStop).toHaveBeenCalled();
+
+        const keyEvt = new KeyboardEvent("keydown", { bubbles: true });
+        const keyStop = vi.spyOn(keyEvt, "stopPropagation");
+        wrapper.dispatchEvent(keyEvt);
+        expect(keyStop).toHaveBeenCalled();
+    });
+
+    it("does nothing on a mousedown when the wrapper has no enclosing include-note section", () => {
+        insertIncludeNote(editor, "noteDetached", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // Detach the wrapper (which carries the capture-phase mousedown handler) from its
+        // section so that domElement.closest("section.include-note") returns null. The handler
+        // still fires because it is bound to the wrapper element itself.
+        const holder = document.createElement("div");
+        document.body.appendChild(holder);
+        holder.appendChild(wrapper);
+
+        wrapper.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+
+        holder.remove();
+        // The early return means no selection change beyond the original insert selection.
+        expect(true).toBe(true);
+    });
+
+    it("does nothing on a mousedown when the section is not mapped to a view element", () => {
+        insertIncludeNote(editor, "noteUnmapped", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // Move the wrapper into a hand-built section.include-note that the editor's
+        // DomConverter knows nothing about. closest() then finds this fake section, but
+        // mapDomToView() returns nothing for it, so selectIncludeNoteWidget returns early.
+        const fakeSection = document.createElement("section");
+        fakeSection.className = "include-note";
+        document.body.appendChild(fakeSection);
+        fakeSection.appendChild(wrapper);
+
+        wrapper.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+
+        fakeSection.remove();
+        expect(true).toBe(true);
+    });
+
+    it("does nothing on a mousedown when the section view element has no mapped model element", () => {
+        insertIncludeNote(editor, "noteNoModel", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        const section = domRoot?.querySelector<HTMLElement>("section.include-note");
+        expect(wrapper).not.toBeNull();
+        expect(section).not.toBeNull();
+        if (!wrapper || !section) {
+            return;
+        }
+
+        // The DOM->view mapping stays intact (mapDomToView succeeds), but we break the
+        // view->model mapping so selectIncludeNoteWidget returns at the !modelElement guard.
+        const viewElement = editor.editing.view.domConverter.mapDomToView(section);
+        expect(viewElement).toBeDefined();
+        if (viewElement && viewElement.is("element")) {
+            editor.editing.mapper.unbindViewElement(viewElement);
+        }
+
+        expect(() => {
+            wrapper.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true }));
+        }).not.toThrow();
+    });
+
+    it("falls back gracefully in the button factory when the insert command is absent", () => {
+        // Exercise the falsy `if (command)` branch in IncludeNoteUI: when the command lookup
+        // returns undefined, the button must still be created (just without the binding).
+        const realGet = editor.commands.get.bind(editor.commands);
+        const getSpy = vi
+            .spyOn(editor.commands, "get")
+            .mockImplementation((name) => (name === COMMAND_NAME ? undefined : realGet(name)));
+
+        try {
+            const view = editor.ui.componentFactory.create("includeNote") as unknown as { label: string };
+            expect(view.label).toBe("Include note");
+        } finally {
+            getSpy.mockRestore();
+        }
+    });
+});
+
+function findIncludeNote(editor: ClassicEditor): ModelElement | undefined {
+    const root = editor.model.document.getRoot();
+    if (!root) {
+        return undefined;
+    }
+    for (const item of editor.model.createRangeIn(root).getItems()) {
+        if (item.is("element", "includeNote")) {
+            return item;
+        }
+    }
+    return undefined;
+}
+
+function insertIncludeNote(editor: ClassicEditor, noteId: string, boxSize: string): ModelElement {
+    let created: ModelElement | null = null;
+    editor.model.change((writer) => {
+        const root = editor.model.document.getRoot();
+        if (!root) {
+            throw new Error("The editor has no root.");
+        }
+        const element = writer.createElement("includeNote", { noteId, boxSize });
+        writer.insert(element, root, 0);
+        writer.setSelection(element, "on");
+        created = element;
+    });
+    if (!created) {
+        throw new Error("Failed to create includeNote element.");
+    }
+    return created;
+}

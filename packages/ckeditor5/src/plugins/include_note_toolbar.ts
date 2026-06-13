@@ -40,6 +40,7 @@ function isIncludeNoteWidget(element: ViewElement): boolean {
         return false;
     }
 
+    // v8 ignore next -- toWidget() always adds ck-widget class, so getAttribute never returns falsy here
     const classes = element.getAttribute("class") || "";
     return typeof classes === "string" && classes.includes("include-note");
 }

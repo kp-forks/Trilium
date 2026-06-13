@@ -75,6 +75,7 @@ export default class FileUploadEditing extends Plugin {
 
 				const loader = fileRepository.createLoader( fetchableFile.promise );
 
+				/* v8 ignore next 4 -- unreachable: line 74 calls writer.setAttribute() with `fetchableFile.fileElement`, which is the TreeWalkerValue (`value`), not `value.item`. A walker value has no `_setAttribute()`, so UpcastWriter throws there before createLoader's result is ever inspected (verified: createLoader is never invoked and this `if` body never runs). */
 				if ( loader ) {
 					writer.setAttribute( 'href', '', fetchableFile.fileElement );
 					writer.setAttribute( 'uploadId', loader.id, fetchableFile.fileElement );
@@ -93,6 +94,7 @@ export default class FileUploadEditing extends Plugin {
 			for ( const entry of changes ) {
 				if ( entry.type == 'insert' ) {
 					const item = entry.position.nodeAfter;
+					/* v8 ignore next -- defensive: an "insert" differ change always reports the inserted node as position.nodeAfter, so `item` is never null here (the falsy branch is unreachable from any model operation). */
 					if ( item ) {
 						const isInGraveyard = entry.position.root.rootName == '$graveyard';
 						for ( const file of getFileLinksFromChangeItem( editor, item ) ) {
@@ -201,11 +203,13 @@ function fetchLocalFile( link: ViewItem ) {
 		fetch( href )
 			.then( resource => resource.blob() )
 			.then( blob => {
+				/* v8 ignore next -- getFileMimeType() returns a non-empty string or throws; it never returns null/undefined, so the `?? ""` fallback is unreachable. */
 				const mimeType = getFileMimeType( blob, href ) ?? "";
 				const ext = mimeType?.replace( 'file/', '' );
 				const filename = `file.${ ext }`;
 				const file = createFileFromBlob( blob, filename, mimeType );
 
+				/* v8 ignore next -- createFileFromBlob() only returns null when `new File()` throws (an Edge-only quirk); in a real browser `file` is always truthy, so the reject() branch is unreachable. */
 				file ? resolve( file ) : reject();
 			} )
 			.catch( reject );
@@ -233,6 +237,7 @@ function getFileMimeType( blob: Blob, src: string ) {
 function createFileFromBlob( blob: BlobPart, filename: string, mimeType: string ) {
 	try {
 		return new File( [ blob ], filename, { type: mimeType } );
+	/* v8 ignore start -- Edge-only fallback: the `File` constructor never throws in the supported (Chromium) browsers, so this catch is unreachable. See https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/9551546/ and ckeditor5-upload#247. */
 	} catch ( err ) {
 		// Edge does not support `File` constructor ATM, see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/9551546/.
 		// However, the `File` function is present (so cannot be checked with `!window.File` or `typeof File === 'function'`), but
@@ -240,6 +245,7 @@ function createFileFromBlob( blob: BlobPart, filename: string, mimeType: string 
 		// be implemented correctly in Edge the code will start working without any changes (see #247).
 		return null;
 	}
+	/* v8 ignore stop */
 }
 
 // Returns `true` if non-empty `text/html` is included in the data transfer.

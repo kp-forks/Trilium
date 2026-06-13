@@ -87,6 +87,7 @@ class Adapter implements UploadAdapter {
 	 */
 	async _initListeners(resolve: (value: File | PromiseLike<File | null> | null) => void, reject: (reason?: any) => void) {
 		const xhr = this.xhr;
+        /* v8 ignore next 4 -- unreachable: _initListeners runs only after _initRequest() resolves, which always assigns this.xhr */
         if (!xhr) {
             reject("Missing XHR");
             return;
