@@ -1,87 +1,64 @@
-# Test utilities & data helpers
+# Test utilities & data helpers (Trilium)
 
-> **Path scope.** `@ckeditor/ckeditor5-core/tests/_utils/…` and `packages/…` refer to the upstream
-> CKEditor 5 repository ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), not
-> your project. **Downstream caveat:** the model/view helpers (`_setModelData` etc.) are published
-> and importable from the `ckeditor5` / `@ckeditor/ckeditor5-engine` npm packages, so they work in
-> any project. The **test editors** below live in the monorepo's `tests/_utils` and are generally
-> *not* shipped to npm — inside the ckeditor5 repo import them as shown; in a standalone package,
-> follow your package's own test setup (e.g. the package-generator template) and/or test against a
-> real editor build such as `ClassicEditor`.
+Trilium plugin tests run against a **real editor** and assert with the model/view stringify-parse
+helpers. There are no test-editor factories in Trilium.
 
-The building blocks for editor tests: lightweight test editors, shared `_utils`, and the
-model/view stringify-parse helpers.
+## Test against a real `ClassicEditor`
 
-## Test editors (pick the lightest that works)
+Create a real editor over a real DOM element. Pass `licenseKey: 'GPL'` and only the plugins the
+test needs. Tear down in `afterEach`: destroy the editor and remove the element.
 
-All live in `@ckeditor/ckeditor5-core/tests/_utils/` (upstream) and expose a static async `create()`
-returning a Promise. Import with the explicit `.js` extension.
+```ts
+import { ClassicEditor, Paragraph } from 'ckeditor5';
+import { describe, beforeEach, afterEach, it, expect } from 'vitest';
+import MyEditing from '../src/myediting.js';
 
-| Editor | Pipelines | Use when |
-|--------|-----------|----------|
-| `ModelTestEditor` | Full **data** pipeline; **editing pipeline disabled** (no view rendering). Creates the main model root. | Testing pure model logic / commands that only read/write the model. Cheapest. |
-| `VirtualTestEditor` | Full **data + engine** pipeline, **no DOM rendering**. Creates the main model root. | Testing engine behavior, conversion, schema, features — without a real editable element. The default for most feature tests. |
-| `ClassicTestEditor` | A simplified **full classic editor** with UI mounted into a real element (`ElementApiMixin`, `BoxedEditorUIView`, `InlineEditableUIView`). | Testing UI (toolbar buttons, balloons), DOM interaction, focus, or anything needing `editor.ui`. |
+describe( 'MyEditing', () => {
+	let editorElement: HTMLDivElement, editor: ClassicEditor, model;
 
-```js
-import { ModelTestEditor } from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
-import { VirtualTestEditor } from '@ckeditor/ckeditor5-core/tests/_utils/virtualtesteditor.js';
-import { ClassicTestEditor } from '@ckeditor/ckeditor5-core/tests/_utils/classictesteditor.js';
+	beforeEach( async () => {
+		editorElement = document.createElement( 'div' );
+		document.body.appendChild( editorElement );
 
-// Model only:
-editor = await ModelTestEditor.create();                              // then register schema yourself
+		editor = await ClassicEditor.create( editorElement, {
+			licenseKey: 'GPL',
+			plugins: [ Paragraph, MyEditing ]
+		} );
+		model = editor.model;
+	} );
 
-// Engine + plugins, no DOM:
-editor = await VirtualTestEditor.create( { plugins: [ Paragraph, MyFeature ] } );
-
-// Full UI in a real element (remember to create AND remove the element):
-editorElement = document.createElement( 'div' );
-document.body.appendChild( editorElement );
-editor = await ClassicTestEditor.create( editorElement, {
-	plugins: [ Paragraph, MyFeatureUI, Heading ],
-	toolbar: [ 'myButton' ]
+	afterEach( () => {
+		editorElement.remove();
+		return editor.destroy();
+	} );
 } );
 ```
 
-Teardown matters: `await editor.destroy()` in `afterEach`, and `editorElement.remove()` if you
-appended one. Tests don't pass a `licenseKey` — `test_setup.js` sets the global GPL key.
+Notes:
+- `editor.model`, `editor.editing.view`, `editor.ui`, `editor.commands`, `editor.plugins` are all
+  available — it's a real editor, not a stripped-down test editor.
+- Commands can be instantiated directly for focused tests:
+  `command = new InsertMermaidCommand( editor )` after the editor is created.
+- Teardown matters: always `editor.destroy()` **and** `editorElement.remove()`, or leftover
+  editor DOM/body wrappers will leak between tests.
 
-## Other `_utils` helpers (core)
-
-- `ArticlePluginSet` (`articlepluginset.js`) — a glue plugin bundling a typical article editor
-  (Essentials, Paragraph, Heading, Bold/Italic, List, Link, BlockQuote, Image+toolbar/caption,
-  Table+toolbar, MediaEmbed, Indent, Autoformat). Drop it into `plugins: [ ArticlePluginSet ]`
-  to get a realistic editor without listing everything.
-- `removeEditorBodyOrphans()` (`cleanup.js`) — removes leftover `.ck-body-wrapper` elements
-  from the DOM; use after tests that intentionally crash editors (orphaned body collections).
-- `generateLicenseKey( options )` (`generatelicensekey.js`) — builds license keys for license
-  tests (`isExpired`, `expExist`, `licenseType`, `distributionChannel`, …).
-- `testUtils` / `testUtils.createSinonSandbox()` (`utils.js`) — **legacy Sinon helper**. In
-  Vitest, don't use it; use `vi.spyOn`/`vi.fn` (auto-restored, or `vi.restoreAllMocks()` in
-  `afterEach`). See `migration-from-karma.md`.
-
-Packages also keep their own `tests/_utils/` (excluded from the run by config) for
-feature-specific fixtures and helpers — follow the local conventions of the package you edit.
+> The upstream ckeditor5 monorepo ships `ModelTestEditor` / `VirtualTestEditor` /
+> `ClassicTestEditor` in `@ckeditor/ckeditor5-core/tests/_utils`, but those are monorepo-internal
+> and are **not** available in Trilium. Use a real `ClassicEditor` as above.
 
 ## Model & view data helpers
 
-From the engine's `dev-utils` modules. They are re-exported by the `ckeditor5` aggregate, so
-**import them from `'ckeditor5'` in your own project** (or from `@ckeditor/ckeditor5-engine`, the
-in-monorepo style). They stringify/parse engine structures and are the backbone of assertions.
-**Test/debug only — never in `src/`.**
+Imported from the `ckeditor5` package. They stringify/parse engine structures and are the backbone
+of assertions. **Test/debug only — never in `src/`.**
 
 Model:
 - `_setModelData( model, string )` — replace the document content + selection from a string.
 - `_getModelData( model[, options] )` — serialize current model + selection to a string.
-- `_stringifyModel( node[, selectionOrRange] )` / `_parseModel( string, schema )` — pure
-  serialize/parse without touching a document.
 
 View:
-- `_getViewData( view[, options] )` / `_setViewData( view, string )` — same for a view document
-  (e.g. `editor.editing.view`).
-- `_stringifyView( node )` / `_parseView( string )`.
+- `_getViewData( view[, options] )` — serialize a view document (e.g. `editor.editing.view`).
 
-```js
+```ts
 import { _setModelData, _getModelData, _getViewData } from 'ckeditor5';
 
 _setModelData( model, '<paragraph>foo[]bar</paragraph>' );
@@ -89,15 +66,18 @@ expect( _getModelData( model ) ).toEqual( '<paragraph>foo[]bar</paragraph>' );
 expect( _getViewData( editor.editing.view ) ).toEqual( '<p>foo{}bar</p>' );
 ```
 
+Existing Trilium tests sometimes alias on import, e.g.
+`import { _setModelData as setModelData, _getModelData as getModelData } from 'ckeditor5'`.
+
 ### Selection / range string syntax
 
 - `[` … `]` — a position/range **anchored in an element** (also a collapsed `[]` caret).
 - `{` … `}` — a position/range **anchored inside a text node**.
 - A mixed range can use both ends, e.g. `<p>{Foo]<b>Bar</b></p>` starts in the `Foo` text node
   and ends in `<p>` at offset 1.
-- Text attributes serialize as `<$text key="value">text</$text>`; selection attributes appear
-  on the collapsed selection.
+- Text attributes serialize as `<$text key="value">text</$text>`; selection attributes appear on
+  the collapsed selection.
+- Element ranges wrap the node, e.g. `[<mermaid source="..."></mermaid>]` selects the element.
 
-`_getModelData`/`_getViewData` options of note: `withoutSelection: true` to omit the selection
-markers; `rootName` to target a non-default root. Check the `dev-utils/model` and
-`dev-utils/view` API for the full option list.
+`_getModelData`/`_getViewData` options of note: `withoutSelection: true` to omit selection
+markers; `rootName` to target a non-default root.

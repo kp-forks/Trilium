@@ -1,7 +1,28 @@
-# Code-style conventions
+# Code-style conventions (Trilium)
 
-The official CKEditor 5 conventions (enforced by custom ESLint rules). Use them both to write
-idiomatic plugins and to review them. Items below note the enforcing ESLint rule where one exists.
+Conventions for Trilium's CKEditor 5 plugins. Each `@triliumnext/ckeditor5-<feature>` package and
+`packages/ckeditor5` lints with **`eslint-config-ckeditor5`** + **`eslint-plugin-ckeditor5-rules`**
+(theme CSS with `stylelint-config-ckeditor5`), so Trilium inherits the upstream CKEditor naming /
+CSS-BEM / JSDoc / TypeScript rules below, on top of Trilium-specific packaging rules. (The root
+ESLint config **skips `packages/*`** — each package lints itself.) Use these both to write
+idiomatic plugins and to review them. Items below note the enforcing rule where one exists.
+
+## License & headers (per package — not uniform)
+
+These are **inconsistent across the packages** — match the package you're editing, don't assume one
+rule. The `package.json` `license` field varies (`GPL-2.0-or-later` for admonition/collapsible,
+`ISC` for footnotes/math, `GPL-3.0` for keyboard-marker, `SEE LICENSE IN LICENSE.md` for mermaid).
+The CKSource license header is present in some packages (e.g. admonition) and absent in others;
+when present it's this block before imports:
+
+```ts
+/**
+ * @license Copyright (c) 2003-2024, CKSource Holding sp. z o.o. All rights reserved.
+ * For licensing, see LICENSE.md or https://ckeditor.com/legal/ckeditor-oss-license
+ */
+```
+
+Follow the existing files in the package you touch; don't add or strip headers wholesale.
 
 ## Naming
 
@@ -31,22 +52,65 @@ idiomatic plugins and to review them. Items below note the enforcing ESLint rule
 
 ## Imports & modules
 
-- Same package → **relative** paths (`import Position from './position';`). Other packages →
-  by **package name / main entry** (`import { Table } from 'ckeditor5';`), never deep relative
-  (`../../../ckeditor5-utils/src/...`) (`no-relative-imports`, `no-cross-package-imports`,
-  `no-scoped-imports-within-package`).
-- All imports include file extensions (`.ts`/`.js`/`.json`) (`require-file-extensions-in-imports`).
-- In `@if CK_DEBUG` blocks use `require()`, not `import` (`use-require-for-debug-mode-imports`).
-- Each TS source file (in the ckeditor5 source, `packages/*/src/`) starts with a `@module path/file` JSDoc tag matching its
-  location (`validate-module-tag`); the package `index.ts` uses `@module <package>`.
+- **Library symbols always come from the `ckeditor5` aggregate**
+  (`import { Plugin, ButtonView, Command, _setModelData } from 'ckeditor5';`) — never deep
+  `@ckeditor/ckeditor5-*` paths (`allow-imports-only-from-main-package-entry-point`,
+  `no-legacy-imports`). The only allowed `@ckeditor/*` deep imports are the dev/debug packages
+  `@ckeditor/ckeditor5-icons` and `@ckeditor/ckeditor5-inspector`.
+- **Cross-plugin** imports use the workspace package name
+  (`import { Kbd } from '@triliumnext/ckeditor5-keyboard-marker';`); **same-package** imports are
+  relative (`import FooEditing from './fooediting.js';`).
+- **All imports include file extensions** (`.ts`/`.js`/`.json`) — `import './augmentation.js';`
+  even though the source is `.ts` (`require-file-extensions-in-imports`).
+- SVG icons import with the `?raw` suffix (`import fooIcon from '../theme/icons/foo.svg?raw';`) and
+  are surfaced via `export const icons = { fooIcon };` in `index.ts`.
 
 ## Plugin specifics
 
-- Provide `static get pluginName()` (TS: `return 'Name' as const;`) and `static get requires()`
-  for dependencies.
-- Plugin boolean flags: set required flags with the exact literal type/value
-  (`static override get isFooPlugin(): true { return true; }`); never set them to `false` and
-  never set disallowed flags (`ckeditor-plugin-flags`).
+- Provide `static get pluginName()` (`return 'Foo' as const;` — PascalCase, matching the package
+  folder) and `static get requires()` returning the sub-plugins with `as const`
+  (`return [ FooEditing, FooUI ] as const;`).
+- **No `isOfficialPlugin`/`isPremiumPlugin` flags** — Trilium plugins do not set them.
+
+## Type augmentation (`src/augmentation.ts`)
+
+Register the plugin's types into the **`ckeditor5` aggregate module** (not
+`@ckeditor/ckeditor5-core`). Import `./augmentation.js` for side effects from `index.ts`.
+
+```ts
+import type { Foo, FooEditing, FooUI } from './index.js';
+import type FooCommand from './foocommand.js';
+
+declare module 'ckeditor5' {
+	interface PluginsMap {
+		[ Foo.pluginName ]: Foo;
+		[ FooEditing.pluginName ]: FooEditing;
+		[ FooUI.pluginName ]: FooUI;
+	}
+	interface CommandsMap { foo: FooCommand; }   // optional — only if the plugin adds a command
+	interface EditorConfig { foo?: { /* … */ }; } // optional — only if the plugin adds config
+}
+```
+
+## Package & workspace
+
+- Scope is **`@triliumnext/`**; package name `@triliumnext/ckeditor5-<feature>`,
+  `"type": "module"`, `"main": "src/index.ts"` (ships TS source — no per-package dist for
+  consumers), `peerDependencies: { "ckeditor5": "48.2.0" }`.
+- Cross-package deps use the **`workspace:*`** protocol; the aggregator pulls plugins in via
+  `"@triliumnext/ckeditor5-<feature>": "workspace:*"`. See `references/tooling-and-packaging.md`
+  for the full registration flow.
+
+## TypeScript config
+
+Each package has its own `tsconfig.json`: `composite: true`, `target: es2019`, `strict`,
+`module`/`moduleResolution`: `NodeNext` (hence the `.js` import extensions). A `tsconfig.test.json`
+extends it for tests.
+
+## Localization
+
+User-facing strings go through `editor.t( … )`. Translations live in `lang/en.po` (gettext PO) with
+disambiguation/notes in `lang/contexts.json`.
 
 ## Visibility & documentation
 

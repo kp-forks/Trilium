@@ -1,20 +1,27 @@
 # Canonical patterns from the core plugins
 
-> **Source paths below (`packages/ckeditor5-…/src/…`) point into the upstream CKEditor 5 repository
-> ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), not your project.** They
-> show where each idiom lives in the library's own source. Your plugin imports CKEditor from the
-> `ckeditor5` / `@ckeditor/*` npm packages; don't try to open these as local files.
+> **The source paths below (`packages/ckeditor5-basic-styles`, `-link`, `-image`, `-ui`, etc.)
+> point into the CKEditor 5 *library* source
+> ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)) — the external
+> dependency Trilium pins at `48.2.0` — NOT into Trilium's monorepo.** They show where each idiom
+> lives in the library's own source. These are the upstream library packages (basic-styles, link,
+> image, engine, ui, core, widget, typing); do **not** confuse them with Trilium's own
+> `packages/ckeditor5-*` plugins (admonition, collapsible, footnotes, keyboard-marker, math,
+> mermaid), which apply these very same patterns. You can't open the upstream files as local
+> Trilium files — the symbols ship inside the `ckeditor5` npm package.
 
-Real-world idioms mined from the actual upstream `packages/*/src` source (verified against the
-library at the baseline commit). These go beyond the tutorials and are the patterns the official
-plugins actually use. Each item cites its source file in the upstream repository.
+Real-world idioms mined from the actual library `packages/*/src` source (verified against
+`ckeditor5@48.2.0`). These go beyond the tutorials and are the patterns the official plugins
+actually use — and the patterns Trilium's plugins follow. Each item cites its source file in the
+CKEditor library repository.
 
-**Downstream imports.** The snippets keep the symbol names but, in your own project, import them all
-from the single **`ckeditor5`** package — e.g. `import { Plugin, ButtonView,
-MenuBarMenuListItemButtonView, AttributeCommand, TwoStepCaretMovement, findAttributeRange,
-inlineHighlight, Widget, toWidget, WidgetToolbarRepository } from 'ckeditor5';`. Where a snippet
-shows an `@ckeditor/ckeditor5-*` or relative `../utils.js` import (the library's internal style),
-treat it as a pointer to where the symbol lives, not the path you'd write downstream.
+**Imports.** The snippets keep the symbol names but in Trilium you import them all from the single
+**`ckeditor5`** package (with file extensions on relative imports) — e.g. `import { Plugin,
+ButtonView, MenuBarMenuListItemButtonView, AttributeCommand, TwoStepCaretMovement,
+findAttributeRange, inlineHighlight, Widget, toWidget, WidgetToolbarRepository } from 'ckeditor5';`.
+Where a snippet shows an `@ckeditor/ckeditor5-*` or relative `../utils.js` import (the library's
+internal style), treat it as a pointer to where the symbol lives upstream, not the path you'd write
+in a Trilium plugin.
 
 ## Toolbar + menu-bar button in one factory
 
@@ -88,7 +95,9 @@ untyped. (See also `tooling-and-packaging.md`.)
 ## Reusable AttributeCommand + setAttributeProperties
 
 Inline-style features don't hand-roll the command — they reuse `AttributeCommand` and tag the
-attribute as formatting so it behaves natively (copied on Enter, replicated on paste).
+attribute as formatting so it behaves natively (copied on Enter, replicated on paste). Trilium's
+`ckeditor5-keyboard-marker` follows this exactly: it registers a built-in `AttributeCommand` for
+its `$text` attribute rather than writing a custom command.
 
 ```ts
 // packages/ckeditor5-basic-styles/src/bold/boldediting.ts
@@ -265,6 +274,8 @@ editor.editing.view.document.registerPostFixer( writer => { /* view-side cleanup
 
 Post-fixers run after each change (model) or downcast (view) and re-run until all return `false`.
 Use to guarantee structure (e.g. a required paragraph inside an editable, no two adjacent X).
+Trilium's `ckeditor5-admonition` and `ckeditor5-collapsible` register **multiple**
+`registerPostFixer`s to keep their block structure valid (e.g. an enforced title/content region).
 
 ## Inserting content — option details
 
@@ -321,4 +332,6 @@ with `editor.config.get( 'myFeature.key' )`. `define()` only fills values the in
 editable), `BalloonEditor` (selection balloon toolbar), `DecoupledEditor` (you place toolbar +
 editable yourself), `MultiRootEditor` (many editables, no `ElementApiMixin`; `sourceElements` map).
 All share the `create()` flow: `initPlugins()` → `ui.init()` → `data.init()` → fire `ready`. See
-`tooling-and-packaging.md` for the custom-creator anatomy.
+`tooling-and-packaging.md` for the custom-creator anatomy. Trilium subclasses these in
+`packages/ckeditor5/src/index.ts`: `AttributeEditor`/`PopupEditor` extend `BalloonEditor`, and its
+`ClassicEditor` extends `DecoupledEditor` (see `architecture.md` → Editor classes).

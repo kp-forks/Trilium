@@ -1,34 +1,41 @@
-# Test patterns (Vitest)
+# Test patterns (Trilium, Vitest)
 
-> These patterns are portable to any project. Where examples import test editors from
-> `@ckeditor/ckeditor5-core/tests/_utils/…` (an upstream-repo path), see the downstream caveat in
-> `test-utilities.md` — the `_setModelData`/`_getModelData` helpers are published and work anywhere;
-> the test editors are monorepo-internal.
-
-Idiomatic recipes per concern. All examples assume explicit `vitest` imports and a test editor
-created in `beforeEach`, destroyed in `afterEach`. Mirror the structure of the feature: a
-`*editing` test for schema/conversion/command, a `*ui` test for buttons/dropdowns.
+Idiomatic recipes per concern. All examples assume a real `ClassicEditor` created in `beforeEach`
+and destroyed in `afterEach` (see `test-utilities.md`). Mirror the structure of the feature: an
+`*editing` test for schema/conversion/command, a `*ui` test for buttons/dropdowns. Assertions may
+be **Jest-style** (`toBe`/`toEqual`) or **Chai-style** (`to.equal`/`to.be.false`) — both work in
+Vitest; the examples use Jest-style.
 
 ## Setup / teardown
 
-```js
+```ts
+import { ClassicEditor, Paragraph } from 'ckeditor5';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import MyFeature from '../src/myfeature.js';
 
-let editor, model;
+let editorElement: HTMLDivElement, editor: ClassicEditor, model;
 
-beforeEach( () => {
-	return VirtualTestEditor.create( { plugins: [ Paragraph, MyFeature ] } )
-		.then( newEditor => { editor = newEditor; model = editor.model; } );
+beforeEach( async () => {
+	editorElement = document.createElement( 'div' );
+	document.body.appendChild( editorElement );
+	editor = await ClassicEditor.create( editorElement, {
+		licenseKey: 'GPL',
+		plugins: [ Paragraph, MyFeature ]
+	} );
+	model = editor.model;
 } );
 
-afterEach( () => editor.destroy() );   // + element.remove() for ClassicTestEditor
+afterEach( () => {
+	editorElement.remove();
+	return editor.destroy();
+} );
 ```
 
 Return the Promise (or use `async`/`await`) so Vitest waits. Default `testTimeout` is 5000 ms.
 
 ## Schema
 
-```js
+```ts
 it( 'allows the highlight attribute on $text', () => {
 	expect( model.schema.checkAttribute( [ '$root', '$text' ], 'highlight' ) ).toBe( true );
 } );
@@ -42,10 +49,10 @@ it( 'registers placeholder as an inline object', () => {
 
 ## Conversion (round-trips)
 
-Test each direction with the data helpers. Upcast = `setData` then read the model; data
-downcast = `setData`/`setModelData` then `getData`; editing downcast = read `_getViewData`.
+Test each direction with the data helpers. Upcast = `setData` then read the model; data downcast =
+`setModelData` then `getData`; editing downcast = read `_getViewData`.
 
-```js
+```ts
 it( 'upcasts <mark> to the highlight attribute', () => {
 	editor.setData( '<p>foo <mark>bar</mark></p>' );
 	expect( _getModelData( model, { withoutSelection: true } ) )
@@ -64,27 +71,23 @@ it( 'editing-downcasts to <mark> in the editing view', () => {
 } );
 ```
 
-For widgets, assert the editing view contains the widget classes/attributes
-(`ck-widget`, `contenteditable`) while `getData()` stays clean.
+For widgets, assert the editing view contains the widget classes/attributes (`ck-widget`,
+`contenteditable`) while `getData()` stays clean. Widget rendering needs real layout — run such
+tests in a **browser-mode** package, not happy-dom.
 
 ## Commands
 
 Cover `value`, `isEnabled`, and `execute()` — for **collapsed and ranged** selections and for
-**schema-disallowed** contexts (where `isEnabled` must be `false`).
+**schema-disallowed** contexts (where `isEnabled` must be `false`). Instantiate the command
+directly when convenient.
 
-```js
-describe( 'value', () => {
-	it( 'reflects the current selection state', () => {
-		_setModelData( model, '<paragraph>[]foo</paragraph>' );
-		expect( command.value ).toBe( false );
-		_setModelData( model, '<paragraph><$text highlight="true">[]foo</$text></paragraph>' );
-		expect( command.value ).toBe( true );
-	} );
-} );
+```ts
+const command = new InsertMermaidCommand( editor );
 
 describe( 'isEnabled', () => {
-	it( 'is false where the attribute is disallowed', () => {
-		_setModelData( model, '<imageBlock></imageBlock>' );   // selection on object
+	it( 'is false when a mermaid element is selected', () => {
+		_setModelData( model,
+			'<paragraph>foo</paragraph>[<mermaid source="flowchart TB"></mermaid>]' );
 		expect( command.isEnabled ).toBe( false );
 	} );
 } );
@@ -96,31 +99,18 @@ describe( 'execute()', () => {
 		expect( _getModelData( model ) )
 			.toEqual( '<paragraph>[<$text highlight="true">foobar</$text>]</paragraph>' );
 	} );
-
-	it( 'is undoable as a single step', () => {
-		_setModelData( model, '<paragraph>[foobar]</paragraph>' );
-		command.execute();
-		editor.execute( 'undo' );
-		expect( _getModelData( model ) ).toEqual( '<paragraph>[foobar]</paragraph>' );
-	} );
 } );
 ```
 
 ## UI (component factory, button binding, execute)
 
-Use `ClassicTestEditor` so `editor.ui` exists. Verify the factory produces the right view, the
-button reflects command state, and clicking it runs the command.
+`editor.ui` exists on the real editor. Verify the factory produces the right view, the button
+reflects command state, and clicking it runs the command. UI/balloon positioning needs real
+layout — keep these in a **browser-mode** package.
 
-```js
+```ts
 it( 'registers a ButtonView', () => {
 	expect( editor.ui.componentFactory.create( 'highlight' ) ).toBeInstanceOf( ButtonView );
-} );
-
-it( 'binds button state to the command', () => {
-	const button = editor.ui.componentFactory.create( 'highlight' );
-	const command = editor.commands.get( 'highlight' );
-	command.isEnabled = false;
-	expect( button.isEnabled ).toBe( false );
 } );
 
 it( 'executes the command on click and refocuses the editor', () => {
@@ -138,7 +128,7 @@ For dropdowns, `create()` the component, inspect `dropdownView.listView`/`button
 
 ## Keystrokes
 
-```js
+```ts
 it( 'executes the command on Ctrl+Alt+H', () => {
 	const spy = vi.spyOn( editor, 'execute' );
 	const wasHandled = editor.keystrokes.press( {
@@ -150,12 +140,12 @@ it( 'executes the command on Ctrl+Alt+H', () => {
 } );
 ```
 
-(`keyCodes` from `@ckeditor/ckeditor5-utils`.) For view-document keydown handlers, fire on
+(`keyCodes` from `'ckeditor5'`.) For view-document keydown handlers, fire on
 `editor.editing.view.document`.
 
 ## Events & observables
 
-```js
+```ts
 it( 'fires change:value', () => {
 	const spy = vi.fn();
 	command.on( 'change:value', spy );
@@ -170,12 +160,10 @@ it( 'fires change:value', () => {
 - `vi.fn()` — standalone mock callback.
 - `vi.useFakeTimers()` / `vi.advanceTimersByTime()` / `vi.useRealTimers()` — for debounced or
   timeout-based code; restore in `afterEach`.
-- `vi.stubGlobal( 'name', value )` — stub a global. Prefer `vi.restoreAllMocks()` in `afterEach`
-  if you don't rely on auto-restore.
 
 ## Errors / warnings
 
-```js
+```ts
 it( 'throws on invalid config', () => {
 	expect( () => editor.something() ).toThrow( /my-feature-error/ );
 } );
@@ -183,9 +171,10 @@ it( 'throws on invalid config', () => {
 
 For `CKEditorError`, match the error id substring.
 
-## Reaching 100% coverage
+## Reaching 100% coverage (browser-mode packages)
 
-The suite gates `src/**` at 100% (excluding `index.ts`, `augmentation.ts`, `*config.ts`). Every
-branch needs a test: both states of each boolean, each schema-allowed/disallowed path, collapsed
-vs. ranged selection, and error/guard branches. Run `pnpm run coverage` (headless + v8) and read
-the HTML report to find uncovered lines before pushing.
+Browser-mode packages (`footnotes`, `keyboard-marker`, `math`, `mermaid`) gate `src/**` at 100%
+(lines/functions/branches/statements, provider `v8`). Every branch needs a test: both states of
+each boolean, each schema-allowed/disallowed path, collapsed vs. ranged selection, and error/guard
+branches. happy-dom packages (`admonition`, `collapsible`) have **no** threshold. Run the package's
+`test` script and read the coverage text report to find uncovered lines before pushing.

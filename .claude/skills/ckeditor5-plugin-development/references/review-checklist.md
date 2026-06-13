@@ -1,8 +1,9 @@
-# Reviewing a CKEditor 5 plugin
+# Reviewing a CKEditor 5 plugin (Trilium)
 
-A structured checklist for reviewing existing plugin code. Pair each item with the relevant
-reference file when you need the "why". Flag deviations; not every item applies to every
-plugin (e.g. a UI-only or editing-only plugin).
+A structured checklist for reviewing Trilium CKEditor plugin code under `packages/ckeditor5-*`.
+Pair each item with the relevant reference file when you need the "why". Flag deviations; not
+every item applies to every plugin (e.g. a UI-only or editing-only plugin). The Trilium
+integration items at the end are specific to this monorepo.
 
 ## Architecture & structure
 
@@ -68,15 +69,42 @@ plugin (e.g. a UI-only or editing-only plugin).
 
 ## Localization
 
-- [ ] All user-facing strings go through `t()` (named exactly `t` in JS; literal first arg).
-      Reused strings from other packages use the `locale.t` alias, not `t()`.
+- [ ] All user-facing strings go through `editor.t()` with a **literal** first argument (string
+      or object literal), never a variable.
+- [ ] New strings have matching entries in the plugin's `lang/en.po` (`msgctxt` + `msgid` +
+      `msgstr`) **and** `lang/contexts.json` (message id → context). No upstream
+      `window.CKEDITOR_TRANSLATIONS` / `add()` / webpack-language wiring.
+- [ ] Plugins that accept a host `translate` config read it with the identity fallback
+      (`?? ( key => key )`) so labels degrade gracefully (see collapsible).
 
 ## Conventions & hygiene
 
 - [ ] Naming/imports/file names/CSS-BEM/JSDoc/TS rules per `conventions.md`; `CKEditorError`
       with `@error`.
+- [ ] **Imports**: library symbols from `ckeditor5`; cross-package from `@triliumnext/*`; all
+      local/relative imports carry **file extensions** (`./foo.js`).
+- [ ] **License header** matches the package's existing convention (varies per package — some
+      carry the CKSource header, some don't; don't add/strip wholesale).
+- [ ] **`pluginName` / `requires`** declared `as const`; type augmentation done via
+      `declare module 'ckeditor5'` (config + command/plugin maps).
+- [ ] Custom SVG icons imported with `?raw` and re-exported via `export const icons = { … }`
+      from `index.ts`.
 - [ ] Listeners use `this.listenTo()` (auto-cleaned); any other resources cleaned in `destroy()`.
-- [ ] `ckeditor5-metadata.json` updated for new public plugins/UI/HTML output (for distributable
-      packages).
+- [ ] `ckeditor5-metadata.json` updated for new public plugins/UI/HTML output.
 - [ ] Model is the source of truth — no view hacks standing in for model state (except genuine
       view-only state like focus).
+
+## Trilium integration
+
+- [ ] Plugin registered in `packages/ckeditor5/src/plugins.ts` in the **correct array**
+      (package-level plugins like the widget features go in `EXTERNAL_PLUGINS`; in-tree glue
+      plugins go in the internal list).
+- [ ] Toolbar component name added to
+      `apps/client/src/widgets/type_widgets/text/toolbar.ts` (registering the component-factory
+      entry alone won't surface it).
+- [ ] Works across all three editor classes used by Trilium — `AttributeEditor` (Balloon),
+      `ClassicEditor` (Decoupled), `PopupEditor` (Balloon + `BlockToolbar`).
+- [ ] Block widgets enforce structural invariants with `registerPostFixer` (admonition,
+      collapsible) rather than relying on command-side cleanup.
+- [ ] **Tests use the right environment**: happy-dom for unit/model logic; WebdriverIO
+      (browser) only where real DOM/layout is required.

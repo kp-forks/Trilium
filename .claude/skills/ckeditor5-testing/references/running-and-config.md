@@ -1,12 +1,7 @@
-# Running tests & configuration
+# Running tests & configuration (Trilium)
 
-> **Two contexts.** The **per-package scripts** below are what the package-generator produces, so
-> they apply to a standalone plugin package in your own project. The **root runner**,
-> `createVitestConfig` factory, `--files` patterns, manual-test and memory-test sections describe how
-> the **upstream ckeditor5 monorepo** tests itself — paths like `vitest.config.ts`,
-> `packages/*/vitest.config.ts`, and `test_setup.js` refer to that repository
-> ([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), not your project. Use the
-> monorepo sections only when working inside ckeditor5 itself.
+Trilium gives **each** `packages/ckeditor5-*` package its own `vitest.config.ts` (built with
+`defineConfig` directly — there is no shared factory). Vitest is `4.1.8`.
 
 ## Per-package scripts
 
@@ -14,110 +9,115 @@ Each package's `package.json` defines:
 
 | Script | Command | Purpose |
 |--------|---------|---------|
-| `test` | `vitest run` | One-shot run. |
-| `test:debug` | `vitest` | Watch mode (re-runs on change; interactive). |
-| `test:headless` | `vitest run --browser.headless` | Headless browser run (CI-like). |
-| `coverage` | `pnpm run test:headless --coverage` | Headless + coverage (100% gate). |
+| `test` | `vitest` | Run the package's tests (configs set `watch: false`, so this is one-shot). |
+| `test:debug` | `vitest --inspect-brk --no-file-parallelism --browser.headless=false` | Attach a debugger and watch a browser-mode run with a visible window. |
 
-Useful ad-hoc invocations from a package directory:
+Run a single package from anywhere in the monorepo:
 
 ```bash
-vitest run highlightcommand        # filter by filename substring
-vitest run -t "execute"            # filter by test name (-t/--testNamePattern)
-vitest --browser.headless          # watch, headless
-vitest run --coverage              # coverage for this package
+pnpm --filter @triliumnext/ckeditor5-math test
 ```
 
-## Root runner (dev-tools wrapper)
+Or, from the package directory: `vitest run`. Add `-t "name"` to filter by test name, or a
+filename substring to filter by file.
 
-The root `pnpm run test` calls `ckeditor5-dev-tests-run-automated` (from
-`@ckeditor/ckeditor5-dev-tests`), which orchestrates Vitest across packages. It selects packages
-as Vitest **projects** by short name and supports the legacy `--files` patterns.
+## Two config shapes
 
-```bash
-pnpm run test                          # whole suite
-pnpm run test -- --files=highlight     # one package (short name)
-pnpm run test -- -c --files=engine     # with coverage
-pnpm run test -- -cw --files=engine/view/,typing   # coverage + watch, sub-dir + package
-```
+### happy-dom (e.g. `admonition`, `collapsible`)
 
-`--files` (alias `-f`) patterns (also used by manual tests):
-
-| Pattern | Meaning |
-|---------|---------|
-| `core` / `ckeditor5-core` | One package (short or full name). |
-| `editor-*` | Glob over package names. |
-| `!core` / `!(core\|engine)` | Exclude one/several packages. |
-| `engine/view/` | A sub-directory under a package's `tests/`. |
-| `basic-styles/bold*` | Filename glob within a package. |
-| `a,b,c` | Comma-separated sum of patterns. |
-
-Other documented args (legacy Karma names; some map onto Vitest via the wrapper): `--watch`/`-w`,
-`--coverage`/`-c`, `--source-map`/`-s`, `--verbose`/`-v`, `--browsers`, `--port`,
-`--identity-file`/`-i` (license file for closed-source features). Running tests for the whole
-monorepo root (no package) is not supported — tests belong to a package's `tests/` dir.
-
-## Vitest configuration
-
-Root `vitest.config.ts` exports two factories; **package configs should not configure Vitest
-from scratch** — they call the factory:
+Light, no coverage thresholds. Not a real browser — `getBoundingClientRect()` is zeroed, layout
+and `ResizeObserver` are stubbed. Use for model/conversion/command logic.
 
 ```ts
-// packages/ckeditor5-<name>/vitest.config.ts
-import type { ViteUserConfig } from 'vitest/config';
-import { createVitestConfig } from '../../vitest.config';
+import { defineConfig } from 'vitest/config';
+import svg from 'vite-plugin-svgo';
 
-export default createVitestConfig( { name: '<short-package-name>' } );
+export default defineConfig( {
+	plugins: [ svg() ],
+	test: {
+		environment: 'happy-dom',
+		include: [ 'tests/**/*.[jt]s' ],
+		globals: true,
+		watch: false,
+		passWithNoTests: true,
+		coverage: {
+			provider: 'v8',
+			include: [ 'src/**/*.{ts,tsx}' ],
+			exclude: [ '**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}', '**/*.d.ts' ],
+			reporter: [ 'text', 'lcov' ]
+		}
+	}
+} );
 ```
 
-`createVitestConfig({ name, ...overrides })` provides the shared baseline; `name` is the short
-package name used by `--project <short-name>`. Any extra props are merged into `test` as
-overrides. The baseline sets:
+### WebdriverIO browser mode (e.g. `footnotes`, `keyboard-marker`, `math`, `mermaid`)
 
-- `globals: true`; `include: [ 'tests/**/*.{js,ts}' ]`;
-  `exclude: [ '**/_utils', '**/fixtures', '**/manual' ]`.
-- `setupFiles: [ test_setup.js ]` — sets `globalThis.CKEDITOR_GLOBAL_LICENSE_KEY = 'GPL'`.
-- `testTimeout: 5000`.
-- **Browser mode** via `@vitest/browser-playwright`, Chromium (`channel: 'chrome'`), viewport
-  1920×1080, `screenshotFailures: false`. (The browser provider is pluggable — `@vitest/browser-webdriverio`
-  is an equally valid choice; downstream projects pick one. `happy-dom`/`jsdom` also works for tests
-  that don't need real layout, though CKEditor UI/widget tests generally want a real browser.)
-- **Coverage** (`v8`): `include: [ 'src/**' ]`, excludes `src/index.ts`, `src/augmentation.ts`,
-  `src/**/*config.ts`; `thresholds: { 100: true }`; reporters `text`, `html`.
-- A `load-svg` plugin so `import icon from './x.svg'` yields the SVG string.
+Real headless Chrome via `@vitest/browser-webdriverio` (**not** Playwright). Real DOM/layout.
+Gates `src/**` coverage at 100%.
 
-`createWorkspaceConfig( projects )` (default export) wires the root run across
-`packages/*/vitest.config.ts` and the combined coverage (`html`, `json`, `lcovonly` →
-`coverage-vitest/`). Because tests run in a **real browser**, DOM APIs are available directly
-(no jsdom).
+```ts
+import { defineConfig } from 'vitest/config';
+import svg from 'vite-plugin-svgo';
+import { webdriverio } from '@vitest/browser-webdriverio';
 
-## Manual tests
-
-Human-run smoke tests, served by `pnpm run manual` (default `http://localhost:8125`). A manual
-test = **three files** sharing a base name in a `tests/manual/` directory (which must sit at the
-root of `tests/`, e.g. `tests/manual/view/focus.js`, not `tests/view/manual/focus.js`):
-
-- `<name>.md` — the steps to perform and what to verify.
-- `<name>.js`/`.ts` — sets up an editor (`window.editor = editor;`).
-- `<name>.html` — the markup (fragment is fine; merged into a template).
-
-```js
-import { ClassicEditor, Essentials, Paragraph } from 'ckeditor5';
-ClassicEditor.create( { attachTo: document.querySelector( '#editor' ),
-	licenseKey: 'GPL', plugins: [ Essentials, Paragraph ] } )
-	.then( editor => { window.editor = editor; } );
+export default defineConfig( {
+	plugins: [ svg() ],
+	test: {
+		browser: {
+			enabled: true,
+			provider: webdriverio(),
+			headless: true,
+			ui: false,
+			instances: [ { browser: 'chrome' } ]
+		},
+		include: [ 'tests/**/*.[jt]s' ],
+		exclude: [ 'tests/setup.ts' ],
+		globals: true,
+		watch: false,
+		coverage: {
+			thresholds: { lines: 100, functions: 100, branches: 100, statements: 100 },
+			provider: 'v8',
+			include: [ 'src/**/*.{ts,tsx}' ],
+			exclude: [ '**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}', '**/*.d.ts' ],
+			reporter: [ 'text' ]
+		}
+	}
+} );
 ```
 
-`pnpm run manual` options: `--files`, `--language`, `--additional-languages`, `--debug`/`-d`
-(e.g. `--debug engine` enables `// @if CK_DEBUG_ENGINE //` lines; on by default), `--port`,
-`--disable-watch`. Add manual-test dependencies to the package `devDependencies`. Vitest
-excludes `**/manual`, so manual tests never run as units. `pnpm run manual:verify` crawls the
-manual-test pages headlessly to ensure they at least open without errors.
+Common to both: `globals: true`, test glob `tests/**/*.[jt]s` (no `.spec`/`.test` suffix), the
+`vite-plugin-svgo` plugin so `import icon from './x.svg'` resolves, and coverage via `v8` over
+`src/**`.
 
-## Memory-leak tests
+## Debugging
 
-`pnpm run test:memory` builds a browser bundle and runs create/destroy cycles per editor in
-headless Chromium, reporting **Baseline / Growth / Tail Growth / Status** (status `OK` when
-Growth and Tail Growth stay under threshold). Options: `--editor <Name>` (repeatable; defaults
-to Balloon/Classic/Decoupled/Inline/MultiRoot), `--html <file>` (from `scripts/memory/assets`),
-`--no-build` (reuse existing assets).
+Browser-mode packages support an inspector + visible browser:
+
+```bash
+vitest --inspect-brk --no-file-parallelism --browser.headless=false
+# i.e. the package's `test:debug` script
+```
+
+`--no-file-parallelism` keeps one file at a time so breakpoints are predictable;
+`--browser.headless=false` shows the Chrome window.
+
+## Root orchestration
+
+The root `package.json` splits the run because the browser-mode packages compete for browser
+resources:
+
+```bash
+pnpm test:parallel     # all but math & mermaid (and server/ckeditor5), in parallel
+pnpm test:sequential   # math & mermaid (and server/ckeditor5), sequentially
+pnpm test:all          # test:parallel && test:sequential
+```
+
+`math` and `mermaid` **must** run sequentially — running multiple headless Chrome instances at
+once exhausts resources. Light (happy-dom) packages run in parallel.
+
+## Notes
+
+- Some packages (`admonition`, `footnotes`, `keyboard-marker`) have a vitest config but **no tests
+  yet** (`passWithNoTests` / empty `tests/`). Adding tests is encouraged.
+- There are **no** manual-test or memory-leak harnesses in the Trilium plugin packages (those
+  exist only in the upstream ckeditor5 monorepo).

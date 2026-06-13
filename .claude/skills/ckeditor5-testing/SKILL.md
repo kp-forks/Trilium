@@ -1,138 +1,134 @@
 ---
 name: ckeditor5-testing
 description: >-
-  Write and run tests for CKEditor 5 plugins/features. Use when adding or
-  reviewing unit tests for a ckeditor5-* package, debugging a failing test,
-  migrating tests to Vitest, or setting up the test runner. Covers the current
-  Vitest + Playwright browser setup, the test-editor utilities
-  (ClassicTestEditor / VirtualTestEditor / ModelTestEditor), the model/view test
-  helpers (_setModelData/_getModelData/_getViewData and their {}/[] selection
-  syntax), vi spies/mocks, idiomatic patterns for schema/conversion/command/UI
-  tests, the --files runner options, and migrating off the old Karma/Mocha/Chai
-  setup. Complements the ckeditor5-plugin-development skill.
+  Testing CKEditor 5 plugins in the Trilium monorepo. Use when adding or
+  reviewing unit tests for a packages/ckeditor5-* package, debugging a failing
+  test, or setting up a package's test runner. Covers the two Vitest
+  environments Trilium uses (happy-dom and the WebdriverIO browser mode), the
+  per-package vitest.config.ts, testing against a real ClassicEditor, the
+  model/view helpers imported from 'ckeditor5' (_setModelData / _getModelData /
+  _getViewData and their {}/[] selection syntax), vi spies/mocks, idiomatic
+  patterns for schema/conversion/command/UI tests, the pnpm --filter runner, and
+  Trilium-specific conventions and gotchas. Complements the
+  ckeditor5-plugin-development and writing-unit-tests skills.
 ---
 
-# CKEditor 5 testing
+# CKEditor 5 testing (Trilium)
 
-CKEditor 5 keeps a **complete unit-test suite with 100% code coverage per package**. Each
-package owns its tests in `packages/ckeditor5-<name>/tests/`. Every code change should ship
-with a test that proves it is needed.
+Testing CKEditor 5 plugins in the **Trilium (TriliumNext Notes) monorepo**. Each plugin lives in
+`packages/ckeditor5-<name>/` and owns its tests in `tests/`. Browser-mode packages gate `src/**`
+at **100% coverage**, so every code change should ship with a test.
 
-> **Important — the published docs are out of date.** The official "Testing environment" guide
-> describes **Karma + Mocha + Chai + Sinon**. The repository has **migrated to Vitest**
-> (browser mode via Playwright). Write new/edited tests in the **Vitest** style described here;
-> treat Chai/Sinon idioms (`expect().to.equal`, `sinon.spy`, `equalMarkup`) as legacy to be
-> migrated, not copied. See `references/migration-from-karma.md`.
+## Scope & sources
+
+This skill covers testing CKEditor 5 plugins in the **Trilium (TriliumNext Notes) monorepo**
+(`packages/ckeditor5-*`). The CKEditor 5 library is pinned to 48.2.0. For general (non-CKEditor)
+Trilium testing, see the `writing-unit-tests` skill.
 
 ## When to use this skill
 
-Adding/reviewing unit tests for a feature, debugging a failing test, migrating a legacy test
-file to Vitest, or configuring the runner. For writing the feature itself, use the
-`ckeditor5-plugin-development` skill.
+Adding/reviewing unit tests for a plugin, debugging a failing test, or configuring a package's
+runner. For writing the feature itself, use the `ckeditor5-plugin-development` skill. For general
+Trilium testing (Preact components, jQuery widgets, server routes), use `writing-unit-tests`.
 
 ## The current setup at a glance
 
-This describes how the **upstream ckeditor5 monorepo** tests itself (the source of these patterns).
-A standalone plugin package in your own project gets an equivalent Vitest setup from the
-package-generator template; the **test-writing patterns** below transfer unchanged either way.
-
-- **Runner:** Vitest (`vitest@^4`), one **project per package**. Config comes from the root
-  `createVitestConfig({ name: '<short-package-name>' })` factory; each package has a tiny
-  `vitest.config.ts` that calls it.
-- **Environment:** real browser via `@vitest/browser-playwright` (Chromium). Tests have real
-  DOM APIs (`document.createElement`, etc.).
-- **Globals:** `globals: true` is set, but migrated tests still **import explicitly** from
-  `vitest` — do the same.
-- **Test files:** `tests/**/*.{js,ts}`; excluded: `**/_utils`, `**/fixtures`, `**/manual`.
-- **Setup:** `test_setup.js` sets `globalThis.CKEDITOR_GLOBAL_LICENSE_KEY = 'GPL'` — you do
-  **not** pass a license key in tests.
-- **Coverage:** `src/**` at **100%** thresholds (excludes `index.ts`, `augmentation.ts`,
-  `*config.ts`). Provider `v8`.
-- **TypeScript:** tests may be `.js` or `.ts`; import source with explicit `.js` extension
-  (`../src/foo.js`).
-- **Imports:** in your own project, import editor classes and the model/view helpers from the
-  `ckeditor5` package (e.g. `import { ClassicEditor, _setModelData } from 'ckeditor5';`). The
-  `@ckeditor/ckeditor5-core/tests/_utils/*` test editors shown below exist only in the ckeditor5
-  monorepo — see `references/test-utilities.md` for the downstream alternative.
+- **Runner:** Vitest (`vitest@4.1.8`). **No shared factory** — each package has its own
+  `vitest.config.ts` built with `defineConfig` directly.
+- **Two environments**, chosen per package:
+  - **happy-dom** (`environment: "happy-dom"`) — used by `admonition`, `collapsible`. Light, no
+    coverage thresholds. happy-dom is **not a real browser**: `getBoundingClientRect()` returns
+    zeros, layout is stubbed, `ResizeObserver` is stubbed. Fine for model/conversion/command
+    logic; wrong for anything that measures the DOM.
+  - **WebdriverIO browser mode** (`@vitest/browser-webdriverio`, headless Chrome) — used by
+    `footnotes`, `keyboard-marker`, `math`, `mermaid`. Real DOM/layout. Gates `src/**` coverage
+    at 100% (lines/functions/branches/statements). This is **not Playwright**.
+- **Real editor, no test-editor factories.** Tests create a real `ClassicEditor` against a real
+  DOM element (see below). There is **no** `ModelTestEditor`/`VirtualTestEditor`/`ClassicTestEditor`
+  in Trilium — those live only in the upstream ckeditor5 monorepo's `tests/_utils`.
+- **Helpers from `'ckeditor5'`:** `_setModelData`, `_getModelData`, `_getViewData` are imported
+  from the `ckeditor5` package.
+- **Test files:** `tests/**/*.[jt]s` (no `.spec`/`.test` suffix). `globals: true`. Coverage
+  provider `v8`, `include: src/**`.
+- **Imports** from `'ckeditor5'`; in-package source imports use a file extension.
+- **License key:** tests pass `licenseKey: 'GPL'` in the editor config.
+- Some packages (`admonition`, `footnotes`, `keyboard-marker`) have a vitest config but **no
+  tests yet** — adding tests is encouraged.
 
 ## Running tests
 
-Per-package (from the package dir) — the everyday loop:
-
 ```bash
-vitest run                      # one-shot ("test" script)
-vitest                          # watch / debug ("test:debug")
-vitest run --browser.headless   # headless ("test:headless")
-pnpm run coverage               # headless + coverage (100% gate)
-vitest run paragraphcommand     # filter by file name substring
+pnpm --filter @triliumnext/ckeditor5-math test     # one package (from anywhere)
+# or, from the package dir:
+vitest run
 ```
 
-From the repo root, the dev-tools wrapper runs the suite and accepts `--files` patterns
-(see `references/running-and-config.md`):
+Debug a browser-mode package with a visible browser:
 
 ```bash
-pnpm run test                       # ckeditor5-dev-tests-run-automated (wraps Vitest)
-pnpm run test -- --files=paragraph  # one package (short name)
-pnpm run test -- -c --files=core    # with coverage
+vitest --inspect-brk --no-file-parallelism --browser.headless=false
 ```
 
-`--files` rules (shared with manual tests): `core` or `ckeditor5-core` (a package),
-`editor-*` (glob), `!core` / `!(core|engine)` (exclude), `engine/view/` (a sub-dir),
-`basic-styles/bold*` (file glob), comma-separated sums.
+Root orchestration: `pnpm test:parallel` runs the light packages in parallel; `pnpm
+test:sequential` runs `math` and `mermaid` **sequentially** (browser resource limits).
+`pnpm test:all` runs both. Each package exposes `"test": "vitest"` and
+`"test:debug": "vitest --inspect-brk --no-file-parallelism --browser.headless=false"`.
 
 ## Anatomy of a test
 
-```js
+```ts
+import { ClassicEditor, Essentials, Paragraph, _setModelData } from 'ckeditor5';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-// ModelTestEditor lives in the ckeditor5 monorepo's tests/_utils (see references/test-utilities.md).
-import { ModelTestEditor } from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
-import { _setModelData, _getModelData } from 'ckeditor5';
-import { ParagraphCommand } from '../src/paragraphcommand.js';
+import MyPlugin from '../src/myplugin.js';
 
-describe( 'ParagraphCommand', () => {
-	let editor, model, command;
+describe( 'MyPlugin', () => {
+	let editorElement: HTMLDivElement, editor: ClassicEditor, model;
 
-	beforeEach( () => {
-		return ModelTestEditor.create().then( newEditor => {
-			editor = newEditor;
-			model = editor.model;
-			command = new ParagraphCommand( editor );
-			editor.commands.add( 'paragraph', command );
-			model.schema.register( 'paragraph', { inheritAllFrom: '$block' } );
-			model.schema.register( 'heading1', { inheritAllFrom: '$block' } );
+	beforeEach( async () => {
+		editorElement = document.createElement( 'div' );
+		document.body.appendChild( editorElement );
+
+		editor = await ClassicEditor.create( editorElement, {
+			licenseKey: 'GPL',
+			plugins: [ Essentials, Paragraph, MyPlugin ]
 		} );
+		model = editor.model;
 	} );
 
 	afterEach( () => {
-		command.destroy();        // or editor.destroy() when you create a full editor
+		editorElement.remove();
+		return editor.destroy();
 	} );
 
-	it( 'is true when selection is in a paragraph', () => {
+	it( 'loads the plugin', () => {
+		expect( editor.plugins.get( MyPlugin ) ).toBeInstanceOf( MyPlugin );
+	} );
+
+	it( 'keeps the selection in a paragraph', () => {
 		_setModelData( model, '<paragraph>foo[]bar</paragraph>' );
-		expect( command.value ).toBe( true );
+		expect( model.document.getRoot().getChild( 0 ).name ).toBe( 'paragraph' );
 	} );
 } );
 ```
 
 Conventions visible here and across the suite:
-- Keep one top-level `describe` named after the unit, with nested `describe`s for areas
-  (`value`, `execute()`, …) and small focused `it`s.
-- Create the editor in `beforeEach` (return the Promise — Vitest awaits it). **Always tear
-  down** in `afterEach` (`editor.destroy()`, and remove any DOM element you appended).
-- Use the lightest test editor that works: `ModelTestEditor` (model only) < `VirtualTestEditor`
-  (model+engine, no DOM render) < `ClassicTestEditor` (full UI in a real element). Details in
-  `references/test-utilities.md`.
+- One top-level `describe` named after the unit, nested `describe`s for areas (`isEnabled`,
+  `execute()`, …), small focused `it`s.
+- Create the editor in `beforeEach` (return the Promise or use `async`/`await` — Vitest awaits
+  it), and **always tear down** in `afterEach`: `editor.destroy()` plus `editorElement.remove()`.
+- Pass `licenseKey: 'GPL'`. List only the plugins the test needs (commands can also be
+  instantiated directly, e.g. `new InsertMermaidCommand( editor )`).
 
 ## Model/view test data
 
-`_setModelData()` / `_getModelData()` (and `_getViewData()`/`_setViewData()`) stringify and
-parse the engine structures, with a special selection syntax:
+`_setModelData()` / `_getModelData()` (and `_getViewData()`) stringify and parse the engine
+structures, with a special selection syntax:
 
 - `[]` — collapsed selection, **or** brackets around a range, anchored in an **element**.
 - `{}` — selection anchored inside a **text node** (e.g. `foo{}bar` / `f{oo}bar`).
 - Attributes render as `<$text bold="true">word</$text>`; elements as `<paragraph>…</paragraph>`.
 
-```js
+```ts
 _setModelData( model, '<paragraph>foo[]bar</paragraph>' );
 expect( _getModelData( model ) ).toEqual( '<paragraph>foo[]bar</paragraph>' );
 expect( _getViewData( editor.editing.view ) ).toEqual( '<p>foo{}bar</p>' );
@@ -142,54 +138,32 @@ These are dev/test utilities only — never ship them in production code.
 
 ## Assertions & spies (Vitest)
 
-- Matchers: `expect(x).toBe()`, `.toEqual()`, `.toBeInstanceOf()`, `.toHaveBeenCalledOnce()`,
-  `.toHaveBeenCalledWith()`, `.toThrow()`. There are **no** custom Chai matchers (`equalMarkup`,
-  `.attribute`) — compare stringified model/view with `.toEqual()` instead.
-- Spies/mocks via `vi`: `const spy = vi.spyOn( editor, 'execute' );` then
-  `expect( spy ).toHaveBeenCalledWith( 'paragraph' )`. Also `vi.fn()`, `vi.useFakeTimers()`,
-  `vi.stubGlobal()`. (Replaces Sinon — see the migration reference.)
+- Both **Jest-style** (`expect(x).toBe(y)`, `.toEqual()`, `.toBeInstanceOf()`,
+  `.toHaveBeenCalledWith()`) and **Chai-style** (`expect(x).to.equal(y)`, `.to.be.false`,
+  `.to.instanceOf()`) matchers work in Vitest. The existing Trilium tests mix both. There are
+  **no** custom matchers — compare stringified model/view directly.
+- Spies/mocks via `vi`: `vi.spyOn( editor, 'execute' )`, `vi.fn()`, `vi.useFakeTimers()`.
 
-```js
+```ts
 const spy = vi.spyOn( editor, 'execute' );
 button.fire( 'execute' );
-expect( spy ).toHaveBeenCalledOnce();
-expect( spy ).toHaveBeenCalledWith( 'paragraph' );
+expect( spy ).toHaveBeenCalledWith( 'insertMermaid' );
 ```
 
 ## Reference map
 
 | File | Use it for |
 |------|-----------|
-| `references/test-utilities.md` | The test editors (`ModelTestEditor`/`VirtualTestEditor`/`ClassicTestEditor`), other `_utils` (`articlepluginset`, `cleanup`, `generatelicensekey`), and the `_get/_set/_stringify/_parse` model & view helpers + selection syntax. |
-| `references/patterns.md` | Idiomatic test recipes per concern: schema, conversion round-trips, commands (`value`/`isEnabled`/`execute`), UI (component factory, button binding, execute spy), keystrokes, events, async, and reaching 100% coverage. |
-| `references/running-and-config.md` | Full runner reference: per-package vs. root wrapper, `--files` patterns, coverage/headless/watch, the `createVitestConfig` factory, browser mode, manual tests (md/js/html), memory-leak tests. |
-| `references/migration-from-karma.md` | Mapping legacy Karma/Mocha/Chai/Sinon idioms to Vitest — for migrating existing test files (the repo is mid-migration). |
+| `references/test-utilities.md` | Testing against a real `ClassicEditor` (lifecycle, `licenseKey: 'GPL'`), and the `_setModelData`/`_getModelData`/`_getViewData` helpers from `'ckeditor5'` + the `[]`/`{}` selection syntax. |
+| `references/patterns.md` | Idiomatic recipes per concern (schema, conversion round-trips, commands, UI, keystrokes, events, async), all against a real editor; note on the 100% coverage gate for browser-mode packages. |
+| `references/running-and-config.md` | Per-package `vitest.config.ts` (happy-dom shape and WebdriverIO browser shape), `pnpm --filter` commands, the debug command, `pnpm test:parallel`/`test:sequential` (math+mermaid sequential), coverage thresholds. |
+| `references/test-conventions.md` | Trilium test **conventions & gotchas**: choosing happy-dom vs. browser mode, real-editor teardown, the both-assertion-styles note, sequential math/mermaid, and the pointer to `writing-unit-tests`. |
 
 ## Quick review checklist
 
-When reviewing tests: explicit `vitest` imports; lightest suitable
-test editor; editor/command created in `beforeEach` and **destroyed** in `afterEach` (plus DOM
-cleanup); model/view asserted via `_getModelData`/`_getViewData` + `toEqual` with correct
-`[]`/`{}` selection syntax; spies via `vi`; behavior covered for collapsed **and** ranged
-selections and schema-disallowed contexts; new `src/` lines covered (100% gate); no Chai/Sinon
-leftovers; manual tests (if any) under `tests/manual/`.
-
-## Provenance & source references
-
-**This skill is self-contained, not tied to any particular project.** Repository paths it cites —
-`vitest.config.ts`, `test_setup.js`, `packages/ckeditor5-…`, `@ckeditor/ckeditor5-…/tests/_utils/…`,
-the baseline commit — point into the **upstream CKEditor 5 repository**
-([github.com/ckeditor/ckeditor5](https://github.com/ckeditor/ckeditor5)), **not your project**. The
-runner/config specifics describe how the ckeditor5 monorepo tests *itself*; the **patterns** (test
-editors, `_setModelData`/`_getModelData`, `vi` spies, `describe`/`it` structure) are portable to any
-project. Don't open these paths as local files unless you are working inside the ckeditor5
-repository. (Note: the model/view helpers are published via the `ckeditor5` / `@ckeditor/ckeditor5-engine`
-npm packages and work downstream; the `tests/_utils` test editors are monorepo-internal — see
-`references/test-utilities.md` for the downstream caveat.)
-
-This skill was distilled from that upstream repository at commit **`9ecca53627`** (mid-2026).
-Because the repo is **mid-migration to Vitest**, the skill reflects the *current* setup verified
-against source — not the (stale, Karma-era) published testing docs.
-
-To refresh, compare the source/config/test-util paths against commit `9ecca53627` inside a clone of
-ckeditor5 (watch the migration progress), then bump the commit reference here.
+When reviewing tests: editor created in `beforeEach` with `licenseKey: 'GPL'` and **destroyed**
+in `afterEach` (plus `editorElement.remove()`); model/view asserted via
+`_getModelData`/`_getViewData` with correct `[]`/`{}` selection syntax; spies via `vi`; behavior
+covered for collapsed **and** ranged selections and schema-disallowed contexts; for browser-mode
+packages, new `src/` lines covered (100% gate); no reliance on real layout when the package uses
+happy-dom.

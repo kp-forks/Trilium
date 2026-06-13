@@ -2,12 +2,31 @@
 
 The conceptual foundation. Read this before working on editing behavior.
 
+> **Scope.** Everything here is engine mechanics from the **`ckeditor5` library** (the npm
+> aggregate, pinned to `48.2.0` in the Trilium monorepo). The APIs (`editor.model`,
+> `editor.editing`, `Plugin`, the writer, schema, conversion) are the library's, imported as
+> `import { Plugin } from 'ckeditor5'` (with file extensions). Paths under
+> `packages/ckeditor5-*` (admonition, collapsible, footnotes, keyboard-marker, math, mermaid)
+> are **Trilium's own** plugins that consume these APIs; the editor build/aggregator lives in
+> `packages/ckeditor5`. Trilium examples are cited throughout — they exercise the same library
+> mechanics described below.
+
 ## Editor classes
 
-`Editor` (`module:core/editor/editor~Editor`) is the entry point that glues everything.
+`Editor` (the `Editor` base from `ckeditor5`) is the entry point that glues everything.
 Editors are created with the **static async** `create()` (constructors are protected).
-Built-in types: `ClassicEditor`, `InlineEditor`, `BalloonEditor`, `DecoupledEditor`; you may
-implement your own (see `tooling-and-packaging.md` → custom editor creators).
+Built-in library types: `ClassicEditor`, `InlineEditor`, `BalloonEditor`, `DecoupledEditor`;
+integrators may subclass their own (see `tooling-and-packaging.md` → custom editor creators).
+
+Trilium defines **three editor classes** in `packages/ckeditor5/src/index.ts`, each subclassing
+a built-in:
+- `AttributeEditor extends BalloonEditor` — inline/balloon editing.
+- `ClassicEditor extends DecoupledEditor` — toolbar + editable placed by the app (note the
+  name: Trilium's `ClassicEditor` is decoupled, not the library's boxed `ClassicEditor`).
+- `PopupEditor extends BalloonEditor` — balloon variant for popups.
+
+The plugin registry lives in `packages/ckeditor5/src/plugins.ts`. Whichever class is used,
+`editor.model` / `editor.editing` / `editor.conversion` etc. are the same library APIs below.
 
 Key properties:
 
@@ -126,6 +145,12 @@ Definition properties: `inheritAllFrom`, `allowIn`, `allowChildren`, `allowConte
 Behavior that flags produce (observable in the block-widget feature):
 - `isLimit` — element can't be split (Enter) or emptied/left by Backspace; good for titles.
 - `isObject` / `$blockObject` / `$inlineObject` — selected/deleted/copied as a unit.
+
+Trilium's block features lean on exactly these: `ckeditor5-admonition` and
+`ckeditor5-collapsible` register block elements inheriting from `$blockObject` and mark inner
+title/content regions with `isLimit`, then guard structure with one or more
+`registerPostFixer` invariants (see `core-plugin-patterns.md` → post-fixers). `ckeditor5-footnotes`
+splits its schema across `schema.ts` / `converters.ts` with shared `constants.ts`.
 
 Custom checks for disallowing in specific contexts:
 

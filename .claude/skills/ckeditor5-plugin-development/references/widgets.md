@@ -2,16 +2,26 @@
 
 A **widget** is a model element rendered in the editing view with widget behavior: clickable
 to select, copy/paste/delete as a unit, hover/focus outlines, and optional **nested editable**
-regions. The widget system lives partly in the engine and partly in `@ckeditor/ckeditor5-widget`.
+regions. The widget system ships in `ckeditor5` (engine + widget layer); import everything
+from `ckeditor5`.
+
+In the Trilium monorepo the live examples are:
+- **admonition** (`packages/ckeditor5-admonition`) and **collapsible**
+  (`packages/ckeditor5-collapsible`) — block widgets with nested editable content, schema
+  invariants enforced by `registerPostFixer`.
+- **math** (`packages/ckeditor5-math`, KaTeX) and **mermaid** (`packages/ckeditor5-mermaid`) —
+  external/async-rendered widgets (see the dedicated section below).
 
 Two flavors:
-- **Block widget** — `inheritAllFrom: '$blockObject'` (e.g. a box, block image, table).
+- **Block widget** — `inheritAllFrom: '$blockObject'` (admonition box, collapsible, block
+  image, table).
 - **Inline widget** — `inheritAllFrom: '$inlineObject'` (text-like; lives where `$text` is
   allowed, e.g. a placeholder/merge-field).
 
 Both follow the standard editing/UI/glue split (see SKILL.md). The editing plugin must
 `static get requires() { return [ Widget ]; }` — without the `Widget` plugin the view gets
-widget classes but no behavior (clicking won't select).
+widget classes but no behavior (clicking won't select). Local imports use file extensions
+(`./admonitionediting.js`); library symbols come from `ckeditor5`.
 
 ## Inline widget recipe (placeholder)
 
@@ -146,6 +156,16 @@ function createSimpleBox( writer ) {
 // refresh(): isEnabled = schema.findAllowedParent( selection.getFirstPosition(), 'simpleBox' ) !== null;
 ```
 
+**Trilium block widgets — schema invariants via post-fixers.** Admonition and collapsible use
+`inheritAllFrom: '$blockObject'` (+ `isLimit` on the nested editable) exactly as above, and
+additionally guard structural invariants with `editor.model.document.registerPostFixer(...)` —
+fixers that run after every change to repair illegal states (e.g. ensure the required child
+exists, drop empties, prevent disallowed nesting). Collapsible registers several such fixers
+(its `collapsible-editing.ts` wires multiple invariants); admonition does the same in
+`admonitionediting.ts`. A post-fixer returns `true` if it made a change (to re-run the cycle).
+Prefer post-fixers over command-side cleanup so the document stays valid no matter how the
+change originated (paste, undo, collaboration).
+
 ## Widget attributes (e.g. a boolean toggle)
 
 Add to schema (`allowAttributes: [ 'secret' ]`), convert with the two-way
@@ -181,14 +201,19 @@ class SimpleBoxToolbar extends Plugin {
 // !!viewElement.getCustomProperty('simpleBox') && isWidget(viewElement).
 ```
 
-This is the same mechanism images/tables use to show their contextual toolbars.
+This is the same mechanism images/tables use to show their contextual toolbars. In Trilium,
+mermaid registers its widget toolbar this way (`packages/ckeditor5-mermaid/src/mermaidtoolbar.ts`),
+hosting the source/preview/split-mode buttons.
 
-## External / async-rendered widgets (math, diagrams, charts)
+## External / async-rendered widgets (math, mermaid)
 
-Widgets that render the output of an external library (KaTeX, Mermaid, a charting lib, a code
-highlighter) need a few patterns beyond the static-widget basics. The model stores the **source**
-(e.g. a LaTeX string or diagram code) as an attribute; the **data downcast** emits that source as
-plain markup (so `getData()` is clean and re-parseable), while the **editing downcast** renders it.
+Trilium's **math** (KaTeX, `packages/ckeditor5-math`) and **mermaid**
+(`packages/ckeditor5-mermaid`) plugins are the real-world references for this section. Widgets
+that render the output of an external library need a few patterns beyond the static-widget
+basics. The model stores the **source** (the LaTeX string / mermaid diagram code) as an
+attribute; the **data downcast** emits that source wrapped in plain markup (so `getData()` is
+clean and re-parseable — see the data-processor note below), while the **editing downcast**
+renders it via KaTeX/Mermaid.
 
 **Host the rendered output in a UI element.** A `UIElement`'s render callback runs in the real
 DOM and is the hook for injecting external output into the editing view (UI elements are filtered
@@ -238,11 +263,14 @@ async renderInto( domEl, source ) {
 ```
 
 **Lazy-load the library once.** Cache the load promise so a heavy dependency loads on first use
-and initializes a single time (drive it from config so the host app can supply the loader):
+and initializes a single time, driven from config so Trilium can supply the loader. Math reads
+`mathConfig.lazyLoad` (and `mathConfig.katexRenderOptions`) from `editor.config`
+(`packages/ckeditor5-math/src/mathediting.ts`, `mathui.ts`); the augmentation in
+`augmentation.ts` types the config shape via `declare module 'ckeditor5'`:
 
-```js
-this._libPromise ??= Promise.resolve( editor.config.get( 'diagram.lazyLoad' )() )
-	.then( lib => { lib.initialize( editor.config.get( 'diagram.config' ) ); return lib; } );
+```ts
+this._libPromise ??= Promise.resolve( editor.config.get( 'math.lazyLoad' )() )
+	.then( lib => { lib.initialize( editor.config.get( 'math.config' ) ); return lib; } );
 const lib = await this._libPromise;
 ```
 
@@ -251,9 +279,17 @@ in the widget, wrap that element so the editor's own keystroke/selection handler
 input — give the container the `data-cke-ignore-events` attribute. Debounce the input handler that
 writes back to the model (`editor.model.change(...)`).
 
-**Mode / state machine.** For source/preview/split toggles, store a `displayMode` attribute, expose
-commands that set it, render different DOM per mode in the editing downcast, and bind the
-widget-toolbar buttons' `isOn` to each command's value so they reflect the current mode.
+**Mode / state machine.** For source/preview/split toggles, store a display-mode attribute,
+expose one command per mode that sets it, render different DOM per mode in the editing
+downcast, and bind the widget-toolbar buttons' `isOn` to each command's value so they reflect
+the current mode. Mermaid is exactly this: separate `mermaidSourceViewCommand`,
+`mermaidPreviewCommand`, and `mermaidSplitViewCommand`
+(`packages/ckeditor5-mermaid/src/commands/`) drive the mode, surfaced through the widget
+toolbar from `mermaidtoolbar.ts`.
+
+**Pre-process input with a data processor.** To accept the raw source on load, wrap/transform
+it in a data-processor step so upcast sees a converter-friendly shape; mermaid does this in its
+editing setup so a fenced/diagram block round-trips cleanly through `getData()`.
 
 ## Useful widget utilities
 
@@ -261,8 +297,12 @@ widget-toolbar buttons' `isOn` to each command's value so they reflect the curre
 `WidgetToolbarRepository`, plus engine helpers `model.insertObject`, `model.insertContent`,
 `writer.setCustomProperty`, `selection.getSelectedElement()`, `position.findAncestor(name)`.
 
-If you attach custom DOM event handlers inside a widget, wrap them in a container with the
-`data-cke-ignore-events` attribute so the editor's default handlers skip them. Advanced
-behaviors are covered by the engine's "widget internals" deep dive. There are also tutorials
-for **data from an external source** and **using React in a widget** if your widget needs
-async content or framework components.
+If you attach custom DOM event handlers inside a widget (or an editable source field), wrap
+them in a container with the `data-cke-ignore-events` attribute so the editor's default
+handlers skip them — math/mermaid use this around their source inputs.
+
+**Registering a new widget plugin in Trilium.** A new plugin is wired in two places: add it to
+the correct array in `packages/ckeditor5/src/plugins.ts` (e.g. `EXTERNAL_PLUGINS` for the
+package-level plugins like `Mermaid`, `Admonition`, `Collapsible`, `Footnotes`, `Math`), and
+add its toolbar component name to `apps/client/src/widgets/type_widgets/text/toolbar.ts`.
+Files use `declare module 'ckeditor5'` augmentation for config and command typings.

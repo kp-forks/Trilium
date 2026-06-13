@@ -1,7 +1,9 @@
 # Recipes (task-oriented how-tos)
 
-Common snippets from the official how-tos. All model mutations run inside
-`editor.model.change( writer => … )`.
+Task-oriented snippets for Trilium's CKEditor plugins (`packages/ckeditor5-*`). All library
+symbols import from `ckeditor5` (48.2.0); local imports carry file extensions. All model
+mutations run inside `editor.model.change( writer => … )`. In Trilium the "document" is the
+content of a single text note, so these recipes operate over that note's model root.
 
 ## Get the editor instance
 
@@ -83,10 +85,17 @@ const links = new Set();
 for ( const { type, item } of editor.model.createRangeIn( editor.model.document.getRoot() ).getWalker() ) {
 	if ( type === 'text' && item.hasAttribute( 'linkHref' ) ) links.add( item.getAttribute( 'linkHref' ) );
 }
+
+// Trilium: count every admonition in the current note's content:
+let count = 0;
+for ( const { item } of editor.model.createRangeIn( editor.model.document.getRoot() ).getWalker() ) {
+	if ( item.is( 'element', 'admonition' ) ) count++;
+}
 ```
 
 `item.is(...)` is the canonical type check: `is('element', 'name')`, `is('$text')`,
-`is('rootElement')`, `is('element')`, etc.
+`is('rootElement')`, `is('element')`, etc. This same walk powers footnotes' dynamic dropdown,
+which scans the note for existing `footnote` elements each time it opens.
 
 ## Set an attribute on the editable DOM root
 
@@ -138,14 +147,21 @@ class InternalLink extends Plugin {
 
 ## Widget: one view element ↔ multiple/nested model elements
 
-Pattern from the how-tos for a form `<input>` ↔ `<forms><formName>…</formName></forms>`:
-upcast builds a model sub-structure from a single view element; `editingDowncast` converts
+Upcast builds a model sub-structure from a single view element; `editingDowncast` converts
 each model element separately (outer → `toWidget`, inner → `toWidgetEditable`); `dataDowncast`
-collapses the structure back into one view element, consuming the inner items so other
-converters skip them. See the full snippet in the upstream CKEditor 5 "How-tos" docs
-(ckeditor.com/docs) and `widgets.md`.
+collapses the structure back into one (or a few) view elements, consuming the inner items so
+other converters skip them. Trilium's admonition and collapsible plugins are exactly this
+shape (a container widget wrapping nested editable content) — see their `*editing.ts` and
+`widgets.md` for the full treatment.
 
-## Framework-integration gotcha
+## Extend another Trilium plugin's UI
 
-Building large React apps may hit `JavaScript heap out of memory`; raise Node's heap:
-`NODE_OPTIONS="--max-old-space-size=4096" npm run build`.
+The same `linkUI.formView` pattern above works in Trilium to add an "internal link" button to
+the link balloon — Trilium uses it to inject note-link affordances into CKEditor's link form.
+Get the upstream plugin via `editor.plugins.get( LinkUI )` and the shared balloon via
+`editor.plugins.get( 'ContextualBalloon' )`; both come from `ckeditor5`.
+
+## Build-time gotcha
+
+A large client build can hit `JavaScript heap out of memory`; raise Node's heap for the build
+command: `NODE_OPTIONS="--max-old-space-size=4096"`.
