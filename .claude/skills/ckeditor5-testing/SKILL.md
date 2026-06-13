@@ -50,6 +50,10 @@ package-generator template; the **test-writing patterns** below transfer unchang
   `*config.ts`). Provider `v8`.
 - **TypeScript:** tests may be `.js` or `.ts`; import source with explicit `.js` extension
   (`../src/foo.js`).
+- **Imports:** in your own project, import editor classes and the model/view helpers from the
+  `ckeditor5` package (e.g. `import { ClassicEditor, _setModelData } from 'ckeditor5';`). The
+  `@ckeditor/ckeditor5-core/tests/_utils/*` test editors shown below exist only in the ckeditor5
+  monorepo — see `references/test-utilities.md` for the downstream alternative.
 
 ## Running tests
 
@@ -80,8 +84,9 @@ pnpm run test -- -c --files=core    # with coverage
 
 ```js
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+// ModelTestEditor lives in the ckeditor5 monorepo's tests/_utils (see references/test-utilities.md).
 import { ModelTestEditor } from '@ckeditor/ckeditor5-core/tests/_utils/modeltesteditor.js';
-import { _setModelData, _getModelData } from '@ckeditor/ckeditor5-engine';
+import { _setModelData, _getModelData } from 'ckeditor5';
 import { ParagraphCommand } from '../src/paragraphcommand.js';
 
 describe( 'ParagraphCommand', () => {

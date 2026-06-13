@@ -65,8 +65,10 @@ feature-specific fixtures and helpers — follow the local conventions of the pa
 
 ## Model & view data helpers
 
-From `@ckeditor/ckeditor5-engine` (the `dev-utils` model/view modules). They stringify/parse
-engine structures and are the backbone of assertions. **Test/debug only — never in `src/`.**
+From the engine's `dev-utils` modules. They are re-exported by the `ckeditor5` aggregate, so
+**import them from `'ckeditor5'` in your own project** (or from `@ckeditor/ckeditor5-engine`, the
+in-monorepo style). They stringify/parse engine structures and are the backbone of assertions.
+**Test/debug only — never in `src/`.**
 
 Model:
 - `_setModelData( model, string )` — replace the document content + selection from a string.
@@ -80,7 +82,7 @@ View:
 - `_stringifyView( node )` / `_parseView( string )`.
 
 ```js
-import { _setModelData, _getModelData, _getViewData } from '@ckeditor/ckeditor5-engine';
+import { _setModelData, _getModelData, _getViewData } from 'ckeditor5';
 
 _setModelData( model, '<paragraph>foo[]bar</paragraph>' );
 expect( _getModelData( model ) ).toEqual( '<paragraph>foo[]bar</paragraph>' );

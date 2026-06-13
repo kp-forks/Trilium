@@ -9,6 +9,13 @@ Real-world idioms mined from the actual upstream `packages/*/src` source (verifi
 library at the baseline commit). These go beyond the tutorials and are the patterns the official
 plugins actually use. Each item cites its source file in the upstream repository.
 
+**Downstream imports.** The snippets keep the symbol names but, in your own project, import them all
+from the single **`ckeditor5`** package — e.g. `import { Plugin, ButtonView,
+MenuBarMenuListItemButtonView, AttributeCommand, TwoStepCaretMovement, findAttributeRange,
+inlineHighlight, Widget, toWidget, WidgetToolbarRepository } from 'ckeditor5';`. Where a snippet
+shows an `@ckeditor/ckeditor5-*` or relative `../utils.js` import (the library's internal style),
+treat it as a pointer to where the symbol lives, not the path you'd write downstream.
+
 ## Toolbar + menu-bar button in one factory
 
 Official feature-UI plugins register **both** a toolbar button and a menu-bar item from a single
@@ -16,9 +23,11 @@ shared factory, using the `menuBar:` name prefix. The button binds to the comman
 the editor on execute.
 
 ```ts
-// packages/ckeditor5-basic-styles/src/bold/boldui.ts  (+ utils.ts getButtonCreator)
-import { ButtonView, MenuBarMenuListItemButtonView } from '@ckeditor/ckeditor5-ui';
-import { getButtonCreator } from '../utils.js';
+// Source: packages/ckeditor5-basic-styles/src/{bold/boldui.ts, utils.ts}
+import { ButtonView, MenuBarMenuListItemButtonView } from 'ckeditor5';
+// The shared factory is the library's internal helper; downstream import it as
+// `_getBasicStylesButtonCreator` from 'ckeditor5', or write the ~12-line factory yourself.
+import { _getBasicStylesButtonCreator as getButtonCreator } from 'ckeditor5';
 
 const createButton = getButtonCreator( {
 	editor, commandName: 'bold', plugin: this,
@@ -101,13 +110,13 @@ For attributes that wrap text and need correct caret behavior at their edges:
 
 ```ts
 // packages/ckeditor5-link/src/linkediting.ts
-import { TwoStepCaretMovement, inlineHighlight } from '@ckeditor/ckeditor5-typing';
+import { TwoStepCaretMovement, inlineHighlight } from 'ckeditor5'; // source: @ckeditor/ckeditor5-typing
 
 editor.plugins.get( TwoStepCaretMovement ).registerAttribute( 'linkHref' );   // caret stops at edges
 inlineHighlight( editor, 'linkHref', 'a', 'ck-link_selected' );               // class when caret inside
 
 // packages/ckeditor5-link/src/linkcommand.ts
-import { findAttributeRange } from '@ckeditor/ckeditor5-typing';
+import { findAttributeRange } from 'ckeditor5'; // source: @ckeditor/ckeditor5-typing
 const linkRange = findAttributeRange( position, 'linkHref', linkHref, model ); // whole same-value run
 ```
 

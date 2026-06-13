@@ -45,6 +45,21 @@ data (HTML) ──upcast──▶ MODEL ──editing downcast──▶ editing 
                           └────data downcast──────▶ data view ──▶ getData()/output HTML
 ```
 
+## Importing CKEditor in your project
+
+In your own project, import everything from the single **`ckeditor5`** npm package (and
+`ckeditor5-premium-features` for premium plugins):
+
+```js
+import { Plugin, Command, ButtonView, Widget, toWidget } from 'ckeditor5';
+```
+
+The `@ckeditor/ckeditor5-*` paths you'll see in the library's own source (and cited in
+`references/core-plugin-patterns.md`) resolve to the same symbols, but downstream you should import
+from `ckeditor5` to avoid duplicate-module-instance problems. The routine exception is the
+**CKEditor Inspector**, a separate dev-only package:
+`import CKEditorInspector from '@ckeditor/ckeditor5-inspector';`.
+
 ## Plugin anatomy
 
 A plugin implements `PluginInterface`; the easy way is to extend `Plugin`. A plain function
