@@ -236,6 +236,9 @@ converters instead of `attributeToElement`; see `references/widgets.md`.
   `pnpm --filter @triliumnext/ckeditor5-<feature> test` (also `lint`, `stylelint`, `test:debug`).
 - **Verify** with `editor.getData()` / `editor.setData()` and by exercising selection edge
   cases (collapsed vs. ranged, inside objects/limits).
+- **A changed plugin won't apply to an already-open editor via HMR.** A plugin's `init()` runs
+  only when the editor is *built*, so do a **full page reload** (or close/reopen the note) to get a
+  fresh editor instance that picks up your change — otherwise you're testing the old code.
 
 ## Reference map
 

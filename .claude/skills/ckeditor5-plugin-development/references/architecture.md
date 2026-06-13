@@ -244,6 +244,16 @@ this.set( 'value', undefined );
 command.on( 'change:value', ( evt, name, newVal, oldVal ) => {} );
 ```
 
+- **Footgun (TypeScript) — declare observable fields with `declare x: T`, never `x!: T`.** A field
+  you back with `this.set({ x })` must be typed with the **type-only `declare`** modifier (emits no
+  code). The definite-assignment form `x!: T` looks equivalent but, under `useDefineForClassFields`
+  (the default at our `target: es2022`, and the Vite/esbuild default), it emits a real field
+  initializer that pre-sets the property to `undefined`; CKEditor's `this.set({ x })` then throws
+  `observable-set-cannot-override` (it refuses to convert an own data property into an observable
+  accessor). `declare` is the correct CKEditor 5 pattern — see
+  `packages/ckeditor5/src/plugins/file_upload/progressbarview.ts` (`declare width: number;` +
+  `this.set( 'width', 100 )`).
+
 - **Binding** mirrors one observable's properties to another (heavily used in UI):
 
 ```js
