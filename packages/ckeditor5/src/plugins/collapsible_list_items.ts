@@ -241,14 +241,28 @@ function getSelectedListBlock(editor: Editor): ModelElement | null {
 
 /**
  * Maps the view `<li>` back to the first model block of the list item. The model keeps lists
- * flat (sibling blocks with `listIndent`/`listItemId` attributes), so mapping a view position at
- * the start of the `<li>` yields a model position directly before the item's first block.
+ * flat (sibling blocks with `listIndent`/`listItemId` attributes).
+ *
+ * A view position at the `<li>`'s offset 0 maps *before* the item's first block for plain lists
+ * (so the block is `nodeAfter`), but *inside* it for to-do lists — their `<li>` wraps content in
+ * a `<span class="todo-list__label">`, so offset 0 sits before that wrapper and the mapped model
+ * position lands within the block (whose `nodeAfter` is then a text node). Resolve from both the
+ * node after the position and the position's own block ancestry to cover both shapes.
  */
 function getListBlockFromViewListItem(editor: Editor, viewItem: ViewElement): ModelElement | null {
     const viewPosition = editor.editing.view.createPositionAt(viewItem, 0);
-    const block = editor.editing.mapper.toModelPosition(viewPosition).nodeAfter;
-    if (block && block.is("element") && block.hasAttribute("listItemId")) {
-        return block;
+    const modelPosition = editor.editing.mapper.toModelPosition(viewPosition);
+
+    if (isListBlock(modelPosition.nodeAfter)) {
+        return modelPosition.nodeAfter;
+    }
+    // To-do case: the position landed inside the block; walk up to the enclosing list item.
+    let ancestor: typeof modelPosition.parent | null = modelPosition.parent;
+    while (ancestor && ancestor.is("element")) {
+        if (ancestor.hasAttribute("listItemId")) {
+            return ancestor;
+        }
+        ancestor = ancestor.parent;
     }
     return null;
 }

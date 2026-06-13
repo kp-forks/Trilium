@@ -186,6 +186,75 @@ describe("CollapsibleListItems", () => {
         expect(getBlock(editor, 1).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
     });
 
+    it("toggles when the rendered arrow is clicked at its real on-screen position", () => {
+        // Unlike the test above (which dispatches straight onto the <li>), this reproduces a
+        // genuine user click: it asks the browser what element actually sits at the arrow's
+        // pixel coordinates and dispatches there — so it catches a mismatch between where the
+        // arrow paints and what the mousedown handler receives as its target.
+
+        // Shift the editor away from the viewport's left edge so the negative-inset gutter
+        // (where the arrow lives) is actually on-screen and hit-testable.
+        editorElement.style.marginLeft = "160px";
+        editorElement.style.marginTop = "60px";
+
+        const parentLi = editor.editing.view.getDomRoot()?.querySelector("li");
+        expect(parentLi).toBeTruthy();
+        if (!parentLi) {
+            return;
+        }
+
+        const rect = parentLi.getBoundingClientRect();
+        const fontSize = parseFloat(getComputedStyle(parentLi).fontSize);
+        // CSS: inset-inline-start: -2.1em; width/height: 0.4em; top: 0.45em → aim at its centre.
+        const x = Math.round(rect.left - 1.9 * fontSize);
+        const y = Math.round(rect.top + 0.65 * fontSize);
+
+        // Click whatever element actually sits at the arrow's coordinates — the real target,
+        // not a forced <li> — so a mismatch between where the arrow paints and what the
+        // handler receives would be caught.
+        const hit = document.elementFromPoint(x, y);
+        hit?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, clientX: x, clientY: y }));
+
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+    });
+
+    it("toggles a to-do list item when its gutter arrow is clicked", () => {
+        // To-do <li>s wrap content in <span class="todo-list__label">, which shifts the
+        // view->model mapping; regression guard for that resolution (the click works for
+        // bulleted lists but used to silently no-op on to-do lists).
+        setModelData(editor.model,
+            '<paragraph listIndent="0" listItemId="td-a" listType="todo">Parent[]</paragraph>' +
+            '<paragraph listIndent="1" listItemId="td-b" listType="todo">Child</paragraph>' +
+            '<paragraph listIndent="1" listItemId="td-c" listType="todo">Other child</paragraph>');
+
+        const parentLi = editor.editing.view.getDomRoot()?.querySelector("li");
+        expect(parentLi).toBeTruthy();
+        if (!parentLi) {
+            return;
+        }
+
+        const rect = parentLi.getBoundingClientRect();
+        const fontSize = parseFloat(getComputedStyle(parentLi).fontSize);
+        const x = Math.round(rect.left - 1.9 * fontSize);
+        const y = Math.round(rect.top + 0.65 * fontSize);
+
+        const hit = document.elementFromPoint(x, y);
+        hit?.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, cancelable: true, clientX: x, clientY: y }));
+
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+    });
+
+    it("resolves the model item from a to-do <li> via the command", () => {
+        // Selection-independent of the click path: the command's getSelectedListBlock must
+        // also work for to-do items (it does, via the selection), proving end to end.
+        setModelData(editor.model,
+            '<paragraph listIndent="0" listItemId="tc-a" listType="todo">Parent[]</paragraph>' +
+            '<paragraph listIndent="1" listItemId="tc-b" listType="todo">Child</paragraph>');
+
+        editor.execute("toggleListCollapse");
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+    });
+
     it("toggles via Ctrl+Enter on a collapsible item and ignores leaves", () => {
         pressCtrlEnter(editor); // selection starts in the parent
         expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
