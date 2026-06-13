@@ -99,6 +99,7 @@ describe("UploadimagePlugin", () => {
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
         window.XMLHttpRequest = originalXHR;
         editorElement.remove();
         await editor.destroy();

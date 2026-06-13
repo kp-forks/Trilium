@@ -36,6 +36,7 @@ describe("CopyAnchorLinkButton", () => {
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
         editorElement.remove();
         await editor.destroy();
         Object.defineProperty(navigator, "clipboard", {

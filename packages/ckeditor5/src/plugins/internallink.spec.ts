@@ -24,6 +24,7 @@ describe("InternalLinkPlugin", () => {
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
         editorElement.remove();
         await editor.destroy();
     });

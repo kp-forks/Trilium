@@ -91,6 +91,8 @@ describe("IncludeNoteToolbar", () => {
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
+        delete (globalThis as { $?: unknown }).$;
         editorElement.remove();
         await editor.destroy();
     });
@@ -178,6 +180,8 @@ describe("isIncludeNoteWidget — section widget without a class attribute (|| '
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
+        delete (globalThis as { $?: unknown }).$;
         editorElement.remove();
         await editor.destroy();
     });
@@ -249,6 +253,8 @@ describe("isIncludeNoteWidget — real non-include-note widgets (branch coverage
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
+        delete (globalThis as { $?: unknown }).$;
         editorElement.remove();
         await editor.destroy();
     });

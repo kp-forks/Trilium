@@ -104,6 +104,8 @@ describe("LinkEmbedToolbar", () => {
     });
 
     afterEach(async () => {
+        delete (globalThis as { glob?: unknown }).glob;
+        delete (globalThis as { $?: unknown }).$;
         editorElement.remove();
         await editor.destroy();
     });
