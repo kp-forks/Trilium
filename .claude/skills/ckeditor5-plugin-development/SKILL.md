@@ -214,7 +214,9 @@ upcast + (data & editing) downcast converters; a `Command` whose `refresh()` set
 correctly (disabled where the schema disallows it); UI bound to command state and refocusing the
 editing view on execute; keyboard accessibility (keystrokes + `accessibility.addKeystrokeInfos`);
 all user-facing strings wrapped in `t()`; model changes inside `model.change()`; cleanup of
-trackers/handlers in `destroy()`. Full version: `references/review-checklist.md`.
+trackers/handlers in `destroy()`. Full version: `references/review-checklist.md`. To **drive** a
+review (workflow, CKEditor-specific defect patterns, contribution process), use the separate
+**`ckeditor5-reviewing`** skill, which delegates back to this checklist.
 
 ## Provenance & source references
 
