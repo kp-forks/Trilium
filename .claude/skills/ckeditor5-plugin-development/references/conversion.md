@@ -97,10 +97,69 @@ don't greedily match unrelated elements.
 ## Consumables
 
 Each view/model item is "consumed" once during conversion so multiple converters don't
-double-process it. In advanced converters you manage this explicitly with `consumable.consume(
-item, 'insert' | 'attribute:foo' | … )` and `consumable.test(...)`. Example: a `dataDowncast`
-that flattens nested model elements into one view element consumes the children itself
-(see `recipes.md` "single view element / multiple model elements").
+double-process it. The matcher form differs by pipeline:
+
+- **Upcast** (view items) uses an **object matcher**: `consumable.test( viewItem, { name: true } )`,
+  `consume( viewItem, { name: true, classes: 'image' } )`, `consume( viewItem, { attributes: 'data-x' } )`.
+- **Downcast** (model items) uses the **event name / string** form: `consumable.consume( data.item, evt.name )`,
+  or `'insert'` / `'attribute:foo'`.
+
+Example: a `dataDowncast` that flattens nested model elements into one view element consumes the
+children itself (see `recipes.md` "single view element / multiple model elements").
+
+### Always `test()` before `consume()` in custom upcast converters
+
+`consume()` returns `false` (and does nothing) if the item was already consumed by another
+converter — and `false` is easy to ignore. In a manual upcast converter, **test first, bail if
+unavailable, then consume**:
+
+```js
+conversion.for( 'upcast' ).add( dispatcher => {
+	dispatcher.on( 'element:a', ( evt, data, conversionApi ) => {
+		const { consumable, writer } = conversionApi;
+		// Bail if another converter already claimed this element.
+		if ( !consumable.test( data.viewItem, { name: true } ) ) {
+			return;
+		}
+		// … build the model, then claim the item so others skip it:
+		consumable.consume( data.viewItem, { name: true } );
+	} );
+} );
+```
+
+Why it matters: **unconsumed elements survive.** If your converter returns early without
+consuming (e.g. `<a>` wrapping an `<img>` where the `<img>` didn't match), a catch-all converter
+like General HTML Support (GHS) re-processes the leftover and you get **duplicated elements**
+(`<a><a>…</a></a>`). The rule of thumb: every element your converter is responsible for must be
+consumed on **every** code path that handles it, including early returns. Add a test that feeds a
+**pre-consumed** element and asserts your converter produces nothing.
+
+## View elements are not DOM elements
+
+Inside upcast/downcast converter callbacks, the element you receive is a **CKEditor view
+element**, not a DOM node. Its API only *mirrors the DOM by name*:
+
+- Reading: `viewElement.getAttribute( key )` (string|undefined), `hasAttribute( key )`,
+  `hasClass( name )`, `getClassNames()` (iterator), `getStyle( prop )`, `getChildren()`.
+- There is **no `.dataset`, no `.classList`, no `.getAttributeNS`** — those are DOM-only.
+- Writing (downcast) goes through the **view writer**, not the element:
+  `writer.setAttribute( 'data-x', v, el )`, `writer.addClass( 'foo', el )`, `writer.setStyle(...)`.
+
+```js
+// Upcast: read data-* with getAttribute, NOT viewElement.dataset (undefined → drops the value).
+model: ( viewElement, { writer } ) => writer.createElement( 'box', {
+	type: viewElement.getAttribute( 'data-type' ) || 'default'
+} )
+```
+
+Pitfall: DOM-targeted lint rules misfire here. SonarCloud's `javascript:S7761` ("prefer
+`.dataset` over `getAttribute('data-*')`") is a **false positive** on converter callbacks — the
+"fix" silently returns `undefined` and drops every `data-*` attribute on upcast, invisibly to
+tests that mock the view tree. Tell-tale signs you're on a *view* element (keep `getAttribute`):
+nearby `consumable.consume(...)`, `el.is( 'element', … )`, `el.getChild(...)`, an
+`editor.conversion.for( 'upcast' )` registration, or a view `writer`. Only switch to `.dataset`
+when the receiver is a genuine DOM element (e.g. from `document.createElement(...)` or
+`domConverter.mapViewToDom(...)`).
 
 ## Position mapping (inline widgets / structural mismatch)
 
