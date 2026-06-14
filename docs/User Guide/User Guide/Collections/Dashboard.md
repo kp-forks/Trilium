@@ -20,7 +20,8 @@ The dashboard uses the same rendering mechanism as the <a class="reference-link
 *   Static content, via <a class="reference-link" href="../Note%20Types/Text.md">Text</a> or <a class="reference-link" href="../Note%20Types/Code.md">Code</a>.
 *   Images via <a class="reference-link" href="../Note%20Types/File.md">File</a>, <a class="reference-link" href="../Note%20Types/Mermaid%20Diagrams.md">Mermaid Diagrams</a>, <a class="reference-link" href="../Note%20Types/Mind%20Map.md">Mind Map</a>.
 *   Interactive widgets via <a class="reference-link" href="../Note%20Types/Render%20Note.md">Render Note</a>.
-*   Web pages can be displayed via <a class="reference-link" href="../Note%20Types/Web%20View.md">Web View</a>.
+*   Web pages can be displayed via <a class="reference-link" href="../Note%20Types/Web%20View.md">Web View</a> and refreshed via the context menu.
+*   <a class="reference-link" href="../Collections.md">Collections</a> render interactively inside the dashboard
 
 > [!TIP]
 > Interactive widgets through the use of <a class="reference-link" href="../Note%20Types/Render%20Note.md">Render Note</a> is the highlighted use case of the dashboard. Using the <a class="reference-link" href="../AI.md">AI</a> chat, these widgets can be easily created as the AI is instructed in how to write them.
