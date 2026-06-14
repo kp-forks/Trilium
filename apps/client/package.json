@@ -78,7 +78,7 @@
     "tabulator-tables": "6.4.0"
   },
   "devDependencies": {
-    "@ckeditor/ckeditor5-inspector": "5.0.1",
+    "@ckeditor/ckeditor5-inspector": "5.0.2",
     "@codecov/vite-plugin": "2.0.1",
     "@prefresh/vite": "3.0.1",
     "@types/bootstrap": "5.2.11",
