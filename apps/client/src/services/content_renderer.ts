@@ -376,6 +376,18 @@ async function mountInteractiveWidget(vnode: JSX.Element, container: HTMLElement
         import("../components/app_context")
     ]);
     renderReactWidgetAtElement(appContext, vnode, container);
+
+    // The global [data-trigger-command] click delegate resolves its handler via
+    // closest(".component").prop("component"). A standalone mount has no legacy widget setting that
+    // prop (ReactWrappedWidget does it in the note detail), so point the rendered ".component"
+    // element(s) at appContext — an unhandled command there is converted into an event, reaching the
+    // widget's own useTriliumEvent subscription. Without it an embedded command button (e.g. the geo
+    // map "Add marker") throws "component is undefined".
+    for (const el of container.querySelectorAll<HTMLElement>(".component")) {
+        if (!$(el).prop("component")) {
+            $(el).prop("component", appContext);
+        }
+    }
 }
 
 /**

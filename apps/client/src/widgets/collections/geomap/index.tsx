@@ -64,8 +64,11 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
         setZoom(viewConfig?.view?.zoom ?? DEFAULT_ZOOM);
     }, [ note, viewConfig ]);
 
-    // Note creation.
-    useTriliumEvent("geoMapCreateChildNote", () => {
+    // Note creation. Scoped to this map instance via a local callback rather than the global
+    // geoMapCreateChildNote command: embedded maps share no note context (no distinct ntxId), so a
+    // broadcast command would arm placement mode on every map at once. The button is this command's
+    // only trigger, so a direct handler keeps it isolated to the clicked map.
+    const startNotePlacement = useCallback(() => {
         toast.showPersistent({
             icon: "plus",
             id: "geo-new-note",
@@ -75,7 +78,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
 
         setState(State.NewNote);
 
-        const globalKeyListener: (this: Window, ev: KeyboardEvent) => any = (e) => {
+        const globalKeyListener: (this: Window, ev: KeyboardEvent) => void = (e) => {
             if (e.key === "Escape") {
                 setState(State.Normal);
 
@@ -84,7 +87,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
             }
         };
         window.addEventListener("keydown", globalKeyListener);
-    });
+    }, []);
 
     useTriliumEvent("deleteFromMap", ({ noteId }) => {
         moveMarker(noteId, null);
@@ -142,7 +145,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
                         icon="bx bx-plus"
                         text={t("geo-map.create-child-note-text")}
                         title={t("geo-map.create-child-note-title")}
-                        triggerCommand="geoMapCreateChildNote"
+                        onClick={startNotePlacement}
                         disabled={isReadOnly}
                     />
                 </>}
