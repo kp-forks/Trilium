@@ -57,16 +57,31 @@ describe("reconcilePersistedLayout", () => {
 
         // Archived notes hidden: only the normal widget remains in the grid. Persisting the layout
         // now must not drop the archived widget's geometry just because it is no longer rendered —
-        // otherwise re-showing it would auto-position it instead of restoring its placement.
-        const afterHide = reconcilePersistedLayout(shown, { normal });
+        // it is still a child of the dashboard, so re-showing it should restore its placement
+        // instead of auto-positioning it.
+        const afterHide = reconcilePersistedLayout(shown, { normal }, new Set([ "archived", "normal" ]));
         expect(afterHide).toEqual({ archived, normal });
     });
 
     it("applies position changes and additions coming from the grid", () => {
         const previous: WidgetLayouts = { a: normal };
-        const next = reconcilePersistedLayout(previous, { a: { ...normal, x: 6 }, b: archived });
+        const next = reconcilePersistedLayout(previous, { a: { ...normal, x: 6 }, b: archived }, new Set([ "a", "b" ]));
         // Moved widgets win over their previous geometry, and brand-new widgets are included.
         expect(next).toEqual({ a: { ...normal, x: 6 }, b: archived });
+    });
+
+    it("prunes the saved position of a widget whose note is no longer a child of the dashboard", () => {
+        // `removed` is absent from the grid AND no longer a live child (its branch was deleted) —
+        // its stale geometry must be dropped so the persisted layout doesn't grow unbounded.
+        const previous: WidgetLayouts = { normal, removed: archived };
+        const next = reconcilePersistedLayout(previous, { normal }, new Set([ "normal" ]));
+        expect(next).toEqual({ normal });
+    });
+
+    it("keeps a hidden child but prunes a removed note in the same pass", () => {
+        const previous: WidgetLayouts = { normal, hidden: archived, removed: { x: 8, y: 8, w: 1, h: 1 } };
+        const next = reconcilePersistedLayout(previous, { normal }, new Set([ "normal", "hidden" ]));
+        expect(next).toEqual({ normal, hidden: archived });
     });
 });
 

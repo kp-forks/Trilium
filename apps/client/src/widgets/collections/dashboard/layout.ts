@@ -34,11 +34,20 @@ export function computeDropCell(grid: GridStack, container: HTMLElement, e: { cl
  * previously-persisted layout (`previous`), producing the layout to persist next.
  *
  * A widget can be absent from `present` not only because it was removed from the dashboard, but
- * also because it was filtered out of view (e.g. archived notes hidden). Its saved position must be
- * retained so that toggling it back restores its placement instead of auto-positioning it.
+ * also because it was filtered out of view (e.g. archived notes hidden). To tell the two apart we
+ * take `liveNoteIds` — the note IDs that are still children of the dashboard. A saved position is
+ * retained only while its note is still a live child (so toggling a hidden widget back restores its
+ * placement); the geometry of notes that are no longer children is pruned so the persisted layout
+ * doesn't accumulate stale entries over repeated remove-and-add cycles.
  */
-export function reconcilePersistedLayout(previous: WidgetLayouts, present: WidgetLayouts): WidgetLayouts {
-    return { ...previous, ...present };
+export function reconcilePersistedLayout(previous: WidgetLayouts, present: WidgetLayouts, liveNoteIds: Set<string>): WidgetLayouts {
+    const result: WidgetLayouts = { ...present };
+    for (const [ noteId, layout ] of Object.entries(previous)) {
+        if (!(noteId in result) && liveNoteIds.has(noteId)) {
+            result[noteId] = layout;
+        }
+    }
+    return result;
 }
 
 /** Whether two layouts describe the same widgets in the same positions. */

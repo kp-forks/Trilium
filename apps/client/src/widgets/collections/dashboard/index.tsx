@@ -92,7 +92,8 @@ function useIsCollapsed(containerRef: RefObject<HTMLElement>) {
  *  layout and external changes arriving through the viewConfig prop. Returns the bits the grid
  *  lifecycle needs: a `persistLayout(grid)` to call after the grid mutates, and `savedWidgetsRef`,
  *  the last-known persisted layout used to position widgets as they're created. */
-function useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, containerRef }: {
+function useDashboardLayoutPersistence({ note, viewConfig, saveConfig, gridRef, containerRef }: {
+    note: FNote;
     viewConfig: DashboardViewConfig | undefined;
     saveConfig: (config: DashboardViewConfig) => void;
     gridRef: MutableRef<GridStack | null>;
@@ -122,7 +123,10 @@ function useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, contai
                 present[node.id] = { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 };
             }
         }
-        const widgets = reconcilePersistedLayout(savedWidgetsRef.current, present);
+        // The grid only carries the widgets currently shown; pass the dashboard's full child set so
+        // hidden (e.g. archived) widgets keep their saved geometry while widgets whose note is no
+        // longer a child are pruned instead of lingering in the persisted layout forever.
+        const widgets = reconcilePersistedLayout(savedWidgetsRef.current, present, new Set(note.children));
         if (sameLayout(widgets, savedWidgetsRef.current)) {
             return;
         }
@@ -184,7 +188,7 @@ function useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, g
     dropPositionsRef: MutableRef<WidgetLayouts>;
     isCollapsed: boolean;
 }) {
-    const { persistLayout, savedWidgetsRef } = useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, containerRef });
+    const { persistLayout, savedWidgetsRef } = useDashboardLayoutPersistence({ note, viewConfig, saveConfig, gridRef, containerRef });
 
     // Initialize the grid once per parent note.
     useLayoutEffect(() => {
