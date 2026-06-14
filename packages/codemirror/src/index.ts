@@ -26,6 +26,21 @@ const preventCtrlEnterKeymap: readonly KeyBinding[] = [
     }
 ];
 
+// Lint diagnostics (e.g. the TypeScript script linter or the Mermaid linter) can produce very
+// long messages; without a width cap and wrapping the tooltip overflows the editor and gets
+// clipped at the edges. `.cm-tooltip-lint` is the diagnostics list shared by both the gutter
+// tooltip (where it also carries `.cm-tooltip`) and the inline hover tooltip (where it's nested
+// inside a `.cm-tooltip-hover` wrapper), so targeting it directly covers both.
+const lintTooltipTheme = EditorView.baseTheme({
+    ".cm-tooltip-lint": {
+        maxWidth: "min(40em, 90vw)"
+    },
+    ".cm-diagnostic": {
+        whiteSpace: "normal",
+        overflowWrap: "anywhere"
+    }
+});
+
 type ContentChangedListener = () => void;
 
 export interface EditorConfig {
@@ -91,6 +106,7 @@ export default class CodeMirror extends EditorView {
             languageCompartment.of([]),
             lineWrappingCompartment.of(config.lineWrapping ? EditorView.lineWrapping : []),
             searchMatchHighlightTheme,
+            lintTooltipTheme,
             searchHighlightCompartment.of([]),
             typeCompletionCompartment.of([]),
             completionSourceCompartment.of([]),
