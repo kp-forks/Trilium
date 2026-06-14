@@ -1,4 +1,4 @@
-import { h } from "preact";
+import { h, VNode } from "preact";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mock heavy / side-effecting collaborators BEFORE importing the SUT. ---
@@ -69,7 +69,7 @@ vi.mock("mermaid", () => ({
 const pdfViewerComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerComponent }));
 
-const webViewComponent = vi.fn((_props: any) => h("span", { class: "mock-webview-marker" }));
+const webViewComponent = vi.fn((_props: any): VNode<any> => h("span", { class: "mock-webview-marker" }));
 vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
 
 const embeddedNoteListComponent = vi.fn((_props: any) => null);
