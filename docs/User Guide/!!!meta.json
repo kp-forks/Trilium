@@ -9102,6 +9102,13 @@
                                             "position": 10
                                         },
                                         {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "mHbBMPDPkVV5",
+                                            "isInheritable": false,
+                                            "position": 20
+                                        },
+                                        {
                                             "type": "label",
                                             "name": "iconClass",
                                             "value": "bx bx-list-ul",
@@ -9114,13 +9121,6 @@
                                             "value": "lists",
                                             "isInheritable": false,
                                             "position": 20
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "mHbBMPDPkVV5",
-                                            "isInheritable": false,
-                                            "position": 30
                                         }
                                     ],
                                     "format": "markdown",
@@ -12676,6 +12676,13 @@
                                     "value": "bx bxs-dashboard",
                                     "isInheritable": false,
                                     "position": 30
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "1vHRoWCEjj0L",
+                                    "isInheritable": false,
+                                    "position": 120
                                 }
                             ],
                             "format": "markdown",

@@ -47,7 +47,7 @@ To collapse or expand a list item that has nested sub-items:
 
 *   Using the mouse, move the cursor over the list item and an arrow will appear to its left. Clicking it will toggle between collapsed and expanded.
 *   For bullet lists and numbered lists, it's also possible to click directly on the marker (e.g. the bullet or the number) instead of on the arrow to collapse or expand it. This won't work for to-do lists since this would toggle the to-do instead.
-*   Press <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">Alt</kbd>+<kbd spellcheck="false">Enter</kbd> which will toggle the collapse/expand state for the item at the cursor position.
+*   Press <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Enter</kbd> which will toggle the collapse/expand state for the item at the cursor position.
 
 Of note:
 
