@@ -12,7 +12,7 @@ import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
-import { useElementSize, useNoteLabelBoolean, useNoteTreeDrag, useSpacedUpdate } from "../../react/hooks";
+import { useCollectionTreeDrag, useElementSize, useNoteLabelBoolean, useSpacedUpdate } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
@@ -39,7 +39,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
 
     const notes = useDashboardNotes(noteIds);
     const isCollapsed = useIsCollapsed(containerRef);
-    const dropPositionsRef = useNoteTreeDropToDashboard(note, scrollContainerRef, containerRef, gridRef);
+    const dropPositionsRef = useNoteTreeDropToDashboard(note, includeArchived, scrollContainerRef, containerRef, gridRef);
     useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, gridRef, dropPositionsRef, isCollapsed });
 
     return (
@@ -264,22 +264,19 @@ function useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, g
  *  the dashboard and the first one is positioned under the cursor. Returns a ref holding the drop
  *  positions of the freshly cloned notes, which the reconcile effect consumes (once) when it
  *  promotes them to grid widgets — kept out of savedWidgetsRef so persistLayout still saves them. */
-function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivElement>, gridContainerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
+function useNoteTreeDropToDashboard(note: FNote, includeArchived: boolean, dropAreaRef: RefObject<HTMLDivElement>, gridContainerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
     const dropPositionsRef = useRef<WidgetLayouts>({});
 
-    useNoteTreeDrag(dropAreaRef, {
+    useCollectionTreeDrag(dropAreaRef, {
         dragEnabled: true,
-        dragNotEnabledMessage: {
-            icon: "bx bx-lock-alt",
-            title: t("book.drag_locked_title"),
-            message: t("book.drag_locked_message")
-        },
+        includeArchived,
         async callback(treeData, e) {
             const grid = gridRef.current;
             const gridContainer = gridContainerRef.current;
-            if (!grid || !gridContainer) return;
+            if (!grid || !gridContainer) return [];
 
             const dropCell = computeDropCell(grid, gridContainer, e);
+            const addedNoteIds: string[] = [];
             let isFirstNewNote = true;
             for (const { noteId } of treeData) {
                 const childNote = await froca.getNote(noteId, true);
@@ -295,7 +292,9 @@ function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivE
                 }
                 isFirstNewNote = false;
                 await branches.cloneNoteToParentNote(noteId, note.noteId);
+                addedNoteIds.push(noteId);
             }
+            return addedNoteIds;
         }
     });
 

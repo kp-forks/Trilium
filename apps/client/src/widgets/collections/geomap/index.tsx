@@ -16,7 +16,7 @@ import { escapeHtml } from "../../../services/utils";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
 import { ButtonOrActionButton } from "../../react/Button";
-import { useNoteBlob, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useNoteTreeDrag, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
+import { useCollectionTreeDrag, useNoteBlob, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useSpacedUpdate, useTriliumEvent } from "../../react/hooks";
 import { ViewModeProps } from "../interface";
 import { createNewNote, moveMarker } from "./api";
 import openContextMenu, { openMapContextMenu } from "./context_menu";
@@ -47,6 +47,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
     const [ hasScale ] = useNoteLabelBoolean(note, "map:scale");
     const [ hideLabels ] = useNoteLabelBoolean(note, "map:hideLabels");
     const [ isReadOnly ] = useNoteLabelBoolean(note, "readOnly");
+    const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const [ notes, setNotes ] = useState<FNote[]>([]);
     const layerData = useLayerData(note);
     const spacedUpdate = useSpacedUpdate(() => {
@@ -104,16 +105,12 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
     // Dragging
     const containerRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<L.Map>(null);
-    useNoteTreeDrag(containerRef, {
+    useCollectionTreeDrag(containerRef, {
         dragEnabled: !isReadOnly,
-        dragNotEnabledMessage: {
-            icon: "bx bx-lock-alt",
-            title: t("book.drag_locked_title"),
-            message: t("book.drag_locked_message")
-        },
+        includeArchived,
         async callback(treeData, e) {
             const api = apiRef.current;
-            if (!note || !api || isReadOnly) return;
+            if (!note || !api || isReadOnly) return [];
 
             const { noteId } = treeData[0];
 
@@ -126,10 +123,12 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
             const parents = targetNote?.getParentNoteIds();
             if (parents?.includes(note.noteId)) {
                 await moveMarker(noteId, latlng);
-            } else {
-                await branches.cloneNoteToParentNote(noteId, note.noteId);
-                await moveMarker(noteId, latlng);
+                return [];
             }
+
+            await branches.cloneNoteToParentNote(noteId, note.noteId);
+            await moveMarker(noteId, latlng);
+            return [ noteId ];
         }
     });
 
