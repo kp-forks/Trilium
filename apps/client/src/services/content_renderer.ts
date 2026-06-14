@@ -2,7 +2,7 @@ import "./content_renderer.css";
 
 import { normalizeMimeTypeForCKEditor, type TextRepresentationResponse } from "@triliumnext/commons";
 import DOMPurify from "dompurify";
-import { h, render } from "preact";
+import { h, type JSX, render } from "preact";
 
 import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
@@ -57,7 +57,13 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
 
     const $renderedContent = $('<div class="rendered-content">');
 
-    if (type === "text" || type === "book") {
+    if ((type === "book" || type === "search") && options.interactive && !options.tooltip
+        && entity instanceof FNote && entity.getLabelValue("viewType") !== "dashboard") {
+        // Render the live collection view (grid/table/board/calendar/map/presentation). The dashboard
+        // view type is excluded: it's the only view that re-propagates `interactive` to its tiles, so
+        // skipping it here is what keeps an embedded collection from recursing into itself.
+        await renderCollection(entity, $renderedContent);
+    } else if (type === "text" || type === "book") {
         await renderText(entity, $renderedContent, options);
     } else if (type === "markdown") {
         await renderMarkdown(entity, $renderedContent, options);
@@ -87,8 +93,6 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (type === "webView" && options.interactive && !options.tooltip && entity instanceof FNote && entity.hasLabel("webViewSrc")) {
         await renderWebView(entity, $renderedContent);
-    } else if (type === "search" && options.interactive && !options.tooltip && entity instanceof FNote) {
-        await renderSearch(entity, $renderedContent);
     } else if (entity instanceof FNote) {
         $renderedContent.addClass("no-preview");
         $renderedContent.append(
@@ -349,7 +353,7 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
     const $container = $('<div class="note-detail-web-view">');
     const container = $container.get(0);
     if (container) {
-        render(h(WebView, {
+        await mountInteractiveWidget(h(WebView, {
             note,
             ntxId: undefined,
             viewScope: undefined,
@@ -361,30 +365,49 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
 }
 
 /**
- * Executes a saved search and mounts the live {@link SearchNoteList} — the same results widget used
- * in the note detail — into the rendered content. Used by interactive contexts (e.g. the dashboard
- * and included notes) that opt in via {@link RenderOptions.interactive}; every other context keeps
- * the static no-preview fallback. Loaded lazily so the collection views (and their dependencies) are
- * only pulled in when a saved search is actually embedded.
+ * Mounts an interactive embedded widget (web view, collection) through the Trilium event bridge.
+ * Wrapping it in a {@link ParentComponent} provider connected to {@link appContext} is what lets its
+ * `useTriliumEvent` subscriptions actually receive events — a bare standalone Preact root has no
+ * parent component in context, so otherwise e.g. an embedded collection never reacts to new notes.
  */
-async function renderSearch(note: FNote, $renderedContent: JQuery<HTMLElement>) {
-    const [ { SearchNoteList }, { default: froca } ] = await Promise.all([
+async function mountInteractiveWidget(vnode: JSX.Element, container: HTMLElement) {
+    const [ { renderReactWidgetAtElement }, { default: appContext } ] = await Promise.all([
+        import("../widgets/react/react_utils"),
+        import("../components/app_context")
+    ]);
+    renderReactWidgetAtElement(appContext, vnode, container);
+}
+
+/**
+ * Mounts a collection — a book or a saved search — as the live {@link EmbeddedNoteList}, the same
+ * results widget used in the note detail (grid/list/table/board/calendar/map/presentation). Used by
+ * interactive contexts (e.g. the dashboard and included notes) that opt in via
+ * {@link RenderOptions.interactive}; every other context keeps the static fallback. Loaded lazily so
+ * the collection views (and their dependencies) are only pulled in when a collection is embedded.
+ */
+async function renderCollection(note: FNote, $renderedContent: JQuery<HTMLElement>) {
+    const [ { EmbeddedNoteList }, { default: froca } ] = await Promise.all([
         import("../widgets/collections/NoteList"),
         import("./froca.js")
     ]);
 
-    // A saved search must run server-side before its (virtual) result children exist.
-    await froca.loadSearchNote(note.noteId);
+    // A saved search must run server-side before its (virtual) result children exist; a book already
+    // has real children, so it skips execution.
+    if (note.type === "search") {
+        await froca.loadSearchNote(note.noteId);
+    }
 
-    const $container = $('<div class="rendered-search">');
+    const $container = $('<div class="rendered-collection">');
     const container = $container.get(0);
     if (container) {
-        render(h(SearchNoteList, {
+        await mountInteractiveWidget(h(EmbeddedNoteList, {
             note,
             notePath: note.getBestNotePathString(),
             ntxId: undefined,
             media: "screen",
-            highlightedTokens: note.highlightedTokens
+            highlightedTokens: note.highlightedTokens,
+            // Search results get text-representation (highlighted snippets); books don't.
+            showTextRepresentation: note.type === "search"
         }), container);
     }
     $renderedContent.append($container);

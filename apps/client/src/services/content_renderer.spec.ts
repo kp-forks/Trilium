@@ -71,8 +71,8 @@ vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerCom
 const webViewComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
 
-const searchNoteListComponent = vi.fn(() => null);
-vi.mock("../widgets/collections/NoteList", () => ({ SearchNoteList: searchNoteListComponent }));
+const embeddedNoteListComponent = vi.fn(() => null);
+vi.mock("../widgets/collections/NoteList", () => ({ EmbeddedNoteList: embeddedNoteListComponent }));
 
 // `addHook` is a no-op here: sanitize_content.ts registers a DOMPurify hook at
 // module load (pulled in transitively), which would otherwise throw against this mock.
@@ -456,7 +456,7 @@ describe("generic FNote fallback / webView", () => {
         expect($renderedContent.hasClass("no-preview")).toBe(false);
     });
 
-    it("executes the search and mounts the live results list for an interactive search note", async () => {
+    it("executes the search and mounts the live collection list for an interactive search note", async () => {
         const note = buildNote({ title: "Saved", type: "search" });
         vi.spyOn(note, "getBestNotePathString").mockReturnValue("root/saved");
         const loadSpy = vi.spyOn(froca, "loadSearchNote").mockResolvedValue(undefined);
@@ -465,24 +465,51 @@ describe("generic FNote fallback / webView", () => {
 
         expect(type).toBe("search");
         expect(loadSpy).toHaveBeenCalledWith(note.noteId);
-        expect(searchNoteListComponent).toHaveBeenCalledOnce();
-        expect(searchNoteListComponent.mock.calls[0]?.[0]).toMatchObject({ note, media: "screen" });
-        expect($renderedContent.find(".rendered-search").length).toBe(1);
-        expect($renderedContent.hasClass("no-preview")).toBe(false);
+        expect(embeddedNoteListComponent).toHaveBeenCalledOnce();
+        expect(embeddedNoteListComponent.mock.calls[0]?.[0]).toMatchObject({ note, media: "screen", showTextRepresentation: true });
+        expect($renderedContent.find(".rendered-collection").length).toBe(1);
 
         loadSpy.mockRestore();
     });
 
-    it("keeps the static fallback for a search note when interactive is off", async () => {
-        const note = buildNote({ title: "Saved2", type: "search" });
+    it("mounts the collection view for an interactive book note without executing a search", async () => {
+        const note = buildNote({ title: "Coll", type: "book" });
+        vi.spyOn(note, "getBestNotePathString").mockReturnValue("root/coll");
         const loadSpy = vi.spyOn(froca, "loadSearchNote").mockResolvedValue(undefined);
 
-        const { $renderedContent } = await getRenderedContent(note);
+        const { type, $renderedContent } = await getRenderedContent(note, { interactive: true });
+
+        expect(type).toBe("book");
+        expect(loadSpy).not.toHaveBeenCalled();
+        expect(embeddedNoteListComponent).toHaveBeenCalledOnce();
+        expect(embeddedNoteListComponent.mock.calls[0]?.[0]).toMatchObject({ note, media: "screen", showTextRepresentation: false });
+        expect($renderedContent.find(".rendered-collection").length).toBe(1);
+
+        loadSpy.mockRestore();
+    });
+
+    it("does not embed a dashboard-view collection, to avoid recursion", async () => {
+        const note = buildNote({ title: "Dash", type: "book", "#viewType": "dashboard" });
+        const { $renderedContent } = await getRenderedContent(note, { interactive: true });
+        // Falls back to renderText (the basic children list) instead of the live collection.
+        expect(embeddedNoteListComponent).not.toHaveBeenCalled();
+        expect($renderedContent.find(".rendered-collection").length).toBe(0);
+        expect($renderedContent.find(".from-render-text").length).toBe(1);
+    });
+
+    it("keeps the static fallback for book/search notes when interactive is off", async () => {
+        const loadSpy = vi.spyOn(froca, "loadSearchNote").mockResolvedValue(undefined);
+
+        // Book falls back to renderText (basic children list).
+        const book = await getRenderedContent(buildNote({ title: "Coll2", type: "book" }));
+        // Search has no static renderer, so it lands in the no-preview block.
+        const search = await getRenderedContent(buildNote({ title: "Saved2", type: "search" }));
 
         expect(loadSpy).not.toHaveBeenCalled();
-        expect(searchNoteListComponent).not.toHaveBeenCalled();
-        expect($renderedContent.find(".rendered-search").length).toBe(0);
-        expect($renderedContent.hasClass("no-preview")).toBe(true);
+        expect(embeddedNoteListComponent).not.toHaveBeenCalled();
+        expect(book.$renderedContent.find(".from-render-text").length).toBe(1);
+        expect(search.$renderedContent.hasClass("no-preview")).toBe(true);
+        expect(search.$renderedContent.find(".rendered-collection").length).toBe(0);
 
         loadSpy.mockRestore();
     });

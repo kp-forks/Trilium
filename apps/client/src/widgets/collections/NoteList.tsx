@@ -70,8 +70,17 @@ export default function NoteList(props: Pick<NoteListProps, "displayOnlyCollecti
 }
 
 export function SearchNoteList(props: Omit<NoteListProps, "isEnabled" | "viewType">) {
+    return <EmbeddedNoteList {...props} showTextRepresentation />;
+}
+
+/**
+ * Mounts a collection — a book or an (already-executed) saved search — as a live, prop-driven note
+ * list, picking the view type from the note's `viewType` label. Unlike {@link NoteList} it reads no
+ * note context, so it can be embedded outside the note detail (e.g. dashboard tiles, included notes).
+ */
+export function EmbeddedNoteList(props: Omit<NoteListProps, "isEnabled" | "viewType">) {
     const viewType = useNoteViewType(props.note);
-    return <CustomNoteList {...props} isEnabled={true} viewType={viewType} showTextRepresentation />;
+    return <CustomNoteList {...props} isEnabled={true} viewType={viewType} />;
 }
 
 export function CustomNoteList({ note, viewType, isEnabled: shouldEnable, notePath, highlightedTokens, displayOnlyCollections, ntxId, onReady, onProgressChanged, ...restProps }: NoteListProps) {
