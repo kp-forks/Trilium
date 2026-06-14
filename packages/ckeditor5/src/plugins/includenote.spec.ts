@@ -107,6 +107,9 @@ describe("IncludeNote", () => {
 
         expect(loadIncludedNote).toHaveBeenCalledTimes(1);
         expect(loadIncludedNote.mock.calls[0]?.[0]).toBe("noteY");
+        // The box size is passed explicitly so the client render does not have to read it back
+        // from the DOM (which may not be flushed yet at conversion time).
+        expect(loadIncludedNote.mock.calls[0]?.[2]).toBe("small");
     });
 
     it("updates the box-size class on the editing view when the boxSize attribute changes", () => {
@@ -121,6 +124,22 @@ describe("IncludeNote", () => {
         expect(section?.classList.contains("box-size-small")).toBe(false);
         expect(section?.classList.contains("box-size-full")).toBe(true);
         expect(section?.getAttribute("data-box-size")).toBe("full");
+    });
+
+    it("re-renders the included note content with the new size on a genuine box-size change", () => {
+        insertIncludeNote(editor, "noteReload", "small");
+
+        // One call for the initial render.
+        expect(loadIncludedNote).toHaveBeenCalledTimes(1);
+        expect(loadIncludedNote.mock.calls[0]?.[2]).toBe("small");
+
+        editor.execute(BOX_SIZE_COMMAND_NAME, { value: "expandable" });
+
+        // The downcast handler drives a second render with the new size, without any DOM observer.
+        expect(loadIncludedNote).toHaveBeenCalledTimes(2);
+        const reloadCall = loadIncludedNote.mock.calls[1];
+        expect(reloadCall?.[0]).toBe("noteReload");
+        expect(reloadCall?.[2]).toBe("expandable");
     });
 
     it("handles a boxSize change from an empty old value (no class to remove)", () => {

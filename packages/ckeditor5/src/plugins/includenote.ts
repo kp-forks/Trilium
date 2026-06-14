@@ -1,4 +1,4 @@
-import { ButtonView, Command, type Editor, Plugin, toWidget, Widget, type Observable } from 'ckeditor5';
+import { ButtonView, Command, type Editor, type ModelElement, Plugin, toWidget, type ViewElement, Widget, type Observable } from 'ckeditor5';
 import noteIcon from '../icons/note.svg?raw';
 
 export const COMMAND_NAME = 'insertIncludeNote';
@@ -115,7 +115,7 @@ class IncludeNoteEditing extends Plugin {
 			view: ( modelElement, { writer: viewWriter } ) => {
 
 				const noteId = modelElement.getAttribute( 'noteId' ) as string;
-				const boxSize = modelElement.getAttribute( 'boxSize' );
+				const boxSize = modelElement.getAttribute( 'boxSize' ) as string | undefined;
 
 				const section = viewWriter.createContainerElement( 'section', {
 					class: 'include-note box-size-' + boxSize,
@@ -132,7 +132,7 @@ class IncludeNoteEditing extends Plugin {
 					const editorEl = editor.editing.view.getDomRoot();
 					const component = glob.getComponentByEl<EditorComponent>( editorEl );
 
-					component.loadIncludedNote( noteId, $( domElement ) );
+					component.loadIncludedNote( noteId, $( domElement ), boxSize );
 
 					preventCKEditorHandling( domElement, editor );
 
@@ -165,6 +165,12 @@ class IncludeNoteEditing extends Plugin {
 				if ( newBoxSize ) {
 					viewWriter.addClass( 'box-size-' + newBoxSize, viewElement );
 					viewWriter.setAttribute( 'data-box-size', newBoxSize, viewElement );
+
+					// Re-render the included note content with the new box size. We drive this
+					// directly from the converter (rather than observing the DOM attribute) so the
+					// content is only rebuilt on a genuine box-size change — not whenever CKEditor
+					// re-applies unrelated attributes (e.g. `draggable` while selecting the widget).
+					reloadIncludedNote( editor, viewElement, data.item as ModelElement, newBoxSize );
 				}
 			} );
 		} );
@@ -221,6 +227,28 @@ class IncludeNoteBoxSizeCommand extends Command {
 		// Check if we're inside an include note
 		const firstPosition = selection.getFirstPosition();
 		return firstPosition?.findAncestor( 'includeNote' ) ?? null;
+	}
+}
+
+/**
+ * Re-renders the included note content of an already-rendered widget after its box size changed.
+ *
+ * The wrapper is a `UIElement` whose DOM is opaque to CKEditor, so we reach into it directly to
+ * trigger the client-side render. The box size is passed explicitly because, at conversion time,
+ * the updated `data-box-size` attribute may not yet be flushed to the DOM.
+ *
+ * On the initial insert the attribute converter runs before the widget has been rendered to the
+ * DOM, so `mapViewToDom()` returns nothing and this is a no-op — the `UIElement` render callback
+ * performs that first paint instead. It only does work on a subsequent, genuine box-size change.
+ */
+function reloadIncludedNote( editor: Editor, viewElement: ViewElement, modelElement: ModelElement, boxSize: string ) {
+	const sectionDom = editor.editing.view.domConverter.mapViewToDom( viewElement );
+	const wrapperDom = sectionDom?.querySelector<HTMLElement>( '.include-note-wrapper' );
+	const noteId = modelElement.getAttribute( 'noteId' ) as string | undefined;
+
+	if ( wrapperDom && noteId ) {
+		const component = glob.getComponentByEl<EditorComponent>( editor.editing.view.getDomRoot() );
+		component.loadIncludedNote( noteId, $( wrapperDom ), boxSize );
 	}
 }
 
