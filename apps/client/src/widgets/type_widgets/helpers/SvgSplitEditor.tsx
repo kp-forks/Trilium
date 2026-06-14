@@ -115,6 +115,7 @@ export default function SvgSplitEditor({ ntxId, note, attachmentName, renderSvg,
             className="svg-editor"
             note={note} ntxId={ntxId}
             error={error}
+            previewStale={!!svg}
             onContentChanged={onContentChanged}
             dataSaved={onSave}
             placeholder={t("mermaid.placeholder")}

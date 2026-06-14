@@ -1159,6 +1159,11 @@
   "editable_code": {
     "placeholder": "Type the content of your code note here..."
   },
+  "split_editor": {
+    "render_error": "Unable to render the preview",
+    "show_details": "Show details",
+    "last_valid_render": "Showing last valid render"
+  },
   "editable_text": {
     "placeholder": "Type the content of your note here...",
     "editor_crashed_title": "The text editor crashed",
