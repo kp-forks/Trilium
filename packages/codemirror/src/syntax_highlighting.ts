@@ -16,6 +16,15 @@ async function buildMermaid() {
     return [ mermaid(), foldByIndent() ];
 }
 
+async function buildJson() {
+    // `jsonParseLinter` validates with the real JSON.parse, so it reports precise,
+    // correctly-positioned syntax errors (unlike a tolerant Lezer grammar). The
+    // gutter marker mirrors the TypeScript script linter and the Mermaid linter.
+    const { json, jsonParseLinter } = await import('@codemirror/lang-json');
+    const { linter, lintGutter } = await import('@codemirror/lint');
+    return [ json(), linter(jsonParseLinter()), lintGutter() ];
+}
+
 const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown> | LanguageSupport | Extension[]>) | null> = {
     "text/plain": null,
 
@@ -23,7 +32,7 @@ const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown
     "application/edn": async () => (await import('@codemirror/legacy-modes/mode/clojure')).clojure,
     "application/javascript;env=backend": async () => buildJavaScript(),
     "application/javascript;env=frontend": async () => buildJavaScript(),
-    "application/json": async () => ((await import('@codemirror/lang-json')).json()),
+    "application/json": async () => buildJson(),
     "application/ld+json": async () => (await import('@codemirror/legacy-modes/mode/javascript')).jsonld,
     "application/mbox": async () => (await import('@codemirror/legacy-modes/mode/mbox')).mbox,
     "application/n-triples": async () => (await import('@codemirror/legacy-modes/mode/ntriples')).ntriples,
