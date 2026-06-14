@@ -311,9 +311,10 @@ interface DashboardWidgetProps {
 
 function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived, showTextRepresentation }: DashboardWidgetProps) {
     const notePath = getNotePath(parentNote, note);
-    // Bumping the key remounts NoteContent, which re-runs the render — only meaningful for render notes.
+    // Bumping the key remounts NoteContent, which re-runs the render — meaningful for render notes
+    // (re-runs the script) and web views (reloads the embedded page).
     const [ refreshKey, setRefreshKey ] = useState(0);
-    const isRenderNote = note.type === "render";
+    const canRefresh = note.type === "render" || note.type === "webView";
 
     /* The outer .grid-stack-item class list must stay constant across renders so that Preact never
        clobbers the classes gridstack adds there; dynamic classes go on the inner content element. */
@@ -337,7 +338,7 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                             const branchId = note.parentToBranch[parentNote.noteId];
                             if (!branchId) return;
                             openWidgetContextMenu(notePath, branchId, e, {
-                                onRefresh: isRenderNote ? () => setRefreshKey((key) => key + 1) : undefined
+                                onRefresh: canRefresh ? () => setRefreshKey((key) => key + 1) : undefined
                             });
                         }} />
                 </div>
