@@ -13,7 +13,7 @@ import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import { TitleRow } from "./PopupEditor";
 
 /**
- * PoC: a quick-edit-style popup whose sidebar is a hoisted note tree.
+ * A quick-edit-style popup whose sidebar is a hoisted note tree.
  *
  * Summoned via the `openInTreePopup` command with a `noteIdOrPath` to open and a `hoistedNoteId`
  * to scope the sidebar tree to. Used to open the launch-bar configuration subtree in a modal
