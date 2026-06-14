@@ -346,6 +346,7 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                     <NoteContent key={refreshKey}
                         note={note}
                         trim
+                        interactive
                         highlightedTokens={highlightedTokens}
                         includeArchivedNotes={includeArchived}
                         showTextRepresentation={showTextRepresentation} />

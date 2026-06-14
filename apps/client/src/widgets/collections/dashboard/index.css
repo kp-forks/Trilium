@@ -103,7 +103,8 @@
             &.type-canvas,
             &.type-video,
             &.type-code,
-            &.type-mindMap {
+            &.type-mindMap,
+            &.type-webView {
                 padding: 0;
 
                 .rendered-content {

@@ -13,3 +13,8 @@
         margin-bottom: 0;
     }
 }
+
+/* An interactive embedded web view (RenderOptions.interactive) fills the height its host provides. */
+.rendered-content:has(> .note-detail-web-view) {
+    height: 100%;
+}

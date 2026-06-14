@@ -207,13 +207,15 @@ function NoteAttributes({ note }: { note: FNote }) {
     return <span className="note-list-attributes" ref={ref} />;
 }
 
-export function NoteContent({ note, trim, noChildrenList, highlightedTokens, includeArchivedNotes, showTextRepresentation, onReady }: {
+export function NoteContent({ note, trim, noChildrenList, highlightedTokens, includeArchivedNotes, showTextRepresentation, interactive, onReady }: {
     note: FNote;
     trim?: boolean;
     noChildrenList?: boolean;
     highlightedTokens: string[] | null | undefined;
     includeArchivedNotes: boolean;
     showTextRepresentation?: boolean;
+    /** Render live interactive type widgets (e.g. web views) instead of static previews. */
+    interactive?: boolean;
     onReady?: () => void;
 }) {
     const contentRef = useRef<HTMLDivElement>(null);
@@ -242,7 +244,8 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
             noChildrenList,
             noIncludedNotes: true,
             includeArchivedNotes,
-            showTextRepresentation
+            showTextRepresentation,
+            interactive
         })
             .then(({ $renderedContent, type }) => {
                 if (!contentRef.current) return;

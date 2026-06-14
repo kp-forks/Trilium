@@ -33,6 +33,12 @@ export interface RenderOptions {
     /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
     seenNoteIds?: Set<string>;
     showTextRepresentation?: boolean;
+    /**
+     * If enabled, note types that have a richer live representation (currently only web views) are
+     * mounted as their interactive type widget instead of a static preview/placeholder. Off by
+     * default and intentionally left off for lightweight previews such as tooltips and the note list.
+     */
+    interactive?: boolean;
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
@@ -79,6 +85,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         const $button = $(`<button class="btn btn-sm"><span class="tn-icon bx bx-log-in"></span> Enter protected session</button>`).on("click", protectedSessionService.enterProtectedSession);
 
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
+    } else if (type === "webView" && options.interactive && !options.tooltip && entity instanceof FNote && entity.hasLabel("webViewSrc")) {
+        await renderWebView(entity, $renderedContent);
     } else if (entity instanceof FNote) {
         $renderedContent.addClass("no-preview");
         $renderedContent.append(
@@ -326,6 +334,28 @@ async function renderMermaid(note: FNote | FAttachment, $renderedContent: JQuery
 
         $renderedContent.append($error);
     }
+}
+
+/**
+ * Mounts the live {@link WebView} type widget — an Electron `<webview>` or a sandboxed `<iframe>` —
+ * into the rendered content. Used by interactive contexts (e.g. the dashboard) that opt in via
+ * {@link RenderOptions.interactive}; every other context keeps the static "open externally" fallback.
+ * Loaded lazily so the widget (and its dependencies) are only pulled in when a web view is embedded.
+ */
+async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>) {
+    const WebView = (await import("../widgets/type_widgets/WebView")).default;
+    const $container = $('<div class="note-detail-web-view">');
+    const container = $container.get(0);
+    if (container) {
+        render(h(WebView, {
+            note,
+            ntxId: undefined,
+            viewScope: undefined,
+            parentComponent: undefined,
+            noteContext: undefined
+        }), container);
+    }
+    $renderedContent.append($container);
 }
 
 function getRenderingType(entity: FNote | FAttachment) {

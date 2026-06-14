@@ -68,6 +68,9 @@ vi.mock("mermaid", () => ({
 const pdfViewerComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerComponent }));
 
+const webViewComponent = vi.fn(() => null);
+vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
+
 // `addHook` is a no-op here: sanitize_content.ts registers a DOMPurify hook at
 // module load (pulled in transitively), which would otherwise throw against this mock.
 vi.mock("dompurify", () => ({ default: { sanitize: (s: string) => s, addHook: () => {} } }));
@@ -436,6 +439,37 @@ describe("generic FNote fallback / webView", () => {
         const { $renderedContent } = await getRenderedContent(note);
         expect($renderedContent.find(".webview-footer").length).toBe(0);
         expect($renderedContent.hasClass("no-preview")).toBe(true);
+    });
+
+    it("mounts the live WebView widget when interactive (outside a tooltip)", async () => {
+        const note = buildNote({ title: "WI", type: "webView", "#webViewSrc": "https://example.com" });
+        const { type, $renderedContent } = await getRenderedContent(note, { interactive: true });
+        expect(type).toBe("webView");
+        expect(webViewComponent).toHaveBeenCalledOnce();
+        expect(webViewComponent.mock.calls[0]?.[0]).toMatchObject({ note });
+        expect($renderedContent.find(".note-detail-web-view").length).toBe(1);
+        // The live embed replaces the static fallback.
+        expect($renderedContent.find(".webview-footer").length).toBe(0);
+        expect($renderedContent.hasClass("no-preview")).toBe(false);
+    });
+
+    it("keeps the static fallback in a tooltip or without a src, even when interactive", async () => {
+        // Tooltips never embed the live widget, even with interactive set.
+        const tip = await getRenderedContent(
+            buildNote({ title: "WT", type: "webView", "#webViewSrc": "https://example.com" }),
+            { interactive: true, tooltip: true }
+        );
+        // Interactive set, but the note has no configured src.
+        const noSrc = await getRenderedContent(
+            buildNote({ title: "WN", type: "webView" }),
+            { interactive: true }
+        );
+
+        expect(webViewComponent).not.toHaveBeenCalled();
+        expect(tip.$renderedContent.find(".note-detail-web-view").length).toBe(0);
+        expect(tip.$renderedContent.find(".webview-footer").length).toBe(1);
+        expect(noSrc.$renderedContent.find(".note-detail-web-view").length).toBe(0);
+        expect(noSrc.$renderedContent.hasClass("no-preview")).toBe(true);
     });
 });
 
