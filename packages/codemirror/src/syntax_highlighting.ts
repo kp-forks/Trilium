@@ -199,4 +199,13 @@ const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown
     "text/xml": async () => (await import('@codemirror/lang-xml')).xml()
 }
 
+/**
+ * Maps MIME types that aren't first-class code-note languages onto an equivalent
+ * {@link byMimeType} language for syntax highlighting. For example, SVG image notes
+ * (`image/svg+xml`) are XML under the hood, so their source view highlights as XML.
+ */
+export const MIME_ALIASES: Record<string, SupportedMimeTypes> = {
+    "image/svg+xml": "text/xml"
+};
+
 export default byMimeType;
