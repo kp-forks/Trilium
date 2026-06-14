@@ -4,7 +4,7 @@ import { dayjs, type RevisionItem, type RevisionPojo } from "@triliumnext/common
 import clsx from "clsx";
 import { diffWords } from "diff";
 import HtmlDiff from "htmldiff-js";
-import { Fragment } from "preact";
+import { ComponentChildren, Fragment } from "preact";
 import type { CSSProperties } from "preact/compat";
 import { Dispatch, StateUpdater, useEffect, useRef, useState } from "preact/hooks";
 
@@ -25,7 +25,7 @@ import Button from "../react/Button";
 import Dropdown from "../react/Dropdown";
 import FormList, { FormDropdownDivider, FormListItem } from "../react/FormList";
 import FormToggle from "../react/FormToggle";
-import { useTriliumEvent } from "../react/hooks";
+import { useMobileMasterDetail, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import NoItems from "../react/NoItems";
 import { RawHtmlBlock, SanitizedHtml } from "../react/RawHtml";
@@ -41,11 +41,15 @@ export default function RevisionsDialog() {
     const [ shown, setShown ] = useState(false);
     const [ showDiff, setShowDiff ] = useState(true);
     const [ refreshCounter, setRefreshCounter ] = useState(0);
+    const modalRef = useRef<HTMLDivElement>(null);
+    const { isMasterDetail, mobileView, switchMobileView, resetMobileView } = useMobileMasterDetail(modalRef, "revision-slide");
 
     useTriliumEvent("showRevisions", async ({ noteId }) => {
         const note = await getNote(noteId);
         if (note) {
             setNote(note);
+            // Mobile opens on the revision list; selecting one slides to its detail.
+            resetMobileView("list");
             setShown(true);
         }
     });
@@ -104,67 +108,121 @@ export default function RevisionsDialog() {
         );
     }
 
+    const selectRevision = (revisionId: string) => {
+        const correspondingRevision = (revisions ?? []).find((r) => r.revisionId === revisionId);
+        if (correspondingRevision) {
+            setCurrentRevision(correspondingRevision);
+        }
+        switchMobileView("page");
+    };
+
+    const revisionsList = (
+        <RevisionsList
+            revisions={revisions ?? []}
+            onSelect={selectRevision}
+            currentRevision={currentRevision}
+        />
+    );
+
+    const menu = note && (
+        <RevisionsMenu
+            note={note}
+            onRevisionSaved={() => {
+                setRefreshCounter(c => c + 1);
+                setCurrentRevision(undefined);
+            }}
+            onAllDeleted={() => {
+                setRevisions([]);
+                setCurrentRevision(undefined);
+            }}
+            hasRevisions={true}
+        />
+    );
+
     return (
         <Modal
+            modalRef={modalRef}
             className="revisions-dialog"
             size="xl"
             title={t("revisions.note_revisions")}
             helpPageId="vZWERwf8U3nx"
-            header={note && (
-                <RevisionsMenu
-                    note={note}
-                    onRevisionSaved={() => {
-                        setRefreshCounter(c => c + 1);
-                        setCurrentRevision(undefined);
-                    }}
-                    onAllDeleted={() => {
-                        setRevisions([]);
-                        setCurrentRevision(undefined);
-                    }}
-                    hasRevisions={true}
-                />
-            )}
-            sidebar={
-                <RevisionsList
-                    revisions={revisions ?? []}
-                    onSelect={(revisionId) => {
-                        const correspondingRevision = (revisions ?? []).find((r) => r.revisionId === revisionId);
-                        if (correspondingRevision) {
-                            setCurrentRevision(correspondingRevision);
-                        }
-                    }}
-                    currentRevision={currentRevision}
-                />
-            }
+            header={isMasterDetail
+                ? (
+                    <RevisionsMobileHeader
+                        inPage={mobileView === "page"}
+                        onBack={() => switchMobileView("list")}
+                        revisionItem={currentRevision}
+                        menu={menu}
+                    />
+                )
+                : menu}
+            sidebar={isMasterDetail ? undefined : revisionsList}
             onHidden={onHidden}
             show={shown}
         >
-            <RevisionToolbar
-                revisionItem={currentRevision}
-                showDiff={showDiff}
-                setShowDiff={setShowDiff}
-                setShown={setShown}
-                onRevisionDeleted={() => {
-                    setRefreshCounter(c => c + 1);
-                    setCurrentRevision(undefined);
-                }}
-                onDescriptionUpdated={(revisionId, description) => {
-                    setRevisions(prev => prev?.map(r =>
-                        r.revisionId === revisionId ? { ...r, description } : r
-                    ));
-                    if (currentRevision?.revisionId === revisionId) {
-                        setCurrentRevision({ ...currentRevision, description });
-                    }
-                }}
-            />
-            <div className="revision-content-wrapper">
-                <RevisionPreview
-                    noteContent={noteContent}
+            {isMasterDetail && (
+                <div className="revision-mobile-nav">
+                    {revisionsList}
+                </div>
+            )}
+            <div className="revision-detail">
+                <RevisionToolbar
                     revisionItem={currentRevision}
                     showDiff={showDiff}
+                    setShowDiff={setShowDiff}
+                    setShown={setShown}
+                    onRevisionDeleted={() => {
+                        setRefreshCounter(c => c + 1);
+                        setCurrentRevision(undefined);
+                        // The detail is now empty; on mobile slide back to the list.
+                        switchMobileView("list");
+                    }}
+                    onDescriptionUpdated={(revisionId, description) => {
+                        setRevisions(prev => prev?.map(r =>
+                            r.revisionId === revisionId ? { ...r, description } : r
+                        ));
+                        if (currentRevision?.revisionId === revisionId) {
+                            setCurrentRevision({ ...currentRevision, description });
+                        }
+                    }}
                 />
+                <div className="revision-content-wrapper">
+                    <RevisionPreview
+                        noteContent={noteContent}
+                        revisionItem={currentRevision}
+                        showDiff={showDiff}
+                    />
+                </div>
             </div>
         </Modal>
+    );
+}
+
+/**
+ * Replaces the static "Note revisions" title on narrow mobile (the master-detail flow). In the list
+ * view a decorative history icon precedes the dialog title and the actions menu stays available; in
+ * the page view a back button returns to the list, followed by the revision's date.
+ */
+function RevisionsMobileHeader({ inPage, onBack, revisionItem, menu }: {
+    inPage: boolean,
+    onBack: () => void,
+    revisionItem?: RevisionItem,
+    menu?: ComponentChildren
+}) {
+    const pageTitle = revisionItem?.dateCreated
+        ? dayjs(revisionItem.dateCreated).format("MMM D, YYYY · HH:mm")
+        : t("revisions.note_revisions");
+
+    return (
+        <div className="revision-mobile-header">
+            {inPage ? (
+                <ActionButton icon="bx bx-chevron-left" text={t("revisions.back")} onClick={onBack} />
+            ) : (
+                <span className="revision-header-icon icon-action bx bx-history" aria-hidden="true" />
+            )}
+            <h5 className="revision-mobile-title">{inPage ? pageTitle : t("revisions.note_revisions")}</h5>
+            {!inPage && menu}
+        </div>
     );
 }
 
