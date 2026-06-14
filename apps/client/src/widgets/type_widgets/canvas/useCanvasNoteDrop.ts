@@ -17,8 +17,11 @@ const STACK_OFFSET = 24;
  * `text/plain` payload; we read it, translate the drop point into scene coordinates, and insert an
  * `embeddable` element linking to each note (`root/<noteId>`).
  *
- * The handlers run in the capture phase and stop propagation once a note payload is recognized, so
- * Excalidraw's own drop handling never sees the event; non-note drags fall through untouched.
+ * The handlers run in the capture phase. During `dragover` the browser only exposes the available
+ * data *types*, not the data, so we can't yet tell a note drag from any other `text/plain` drag — we
+ * accept (and stop propagation for) every `text/plain` drag to claim the drop. On `drop` the actual
+ * payload is readable: a recognized note payload is handled here and kept from Excalidraw, while any
+ * other `text/plain` drop falls through to Excalidraw's own handling.
  */
 export default function useCanvasNoteDrop(apiRef: RefObject<ExcalidrawImperativeAPI>, isReadOnly: boolean) {
     const onDragOverCapture = useCallback((e: JSX.TargetedDragEvent<HTMLElement>) => {
