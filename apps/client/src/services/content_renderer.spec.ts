@@ -86,10 +86,11 @@ vi.mock("@triliumnext/commons/src/lib/markdown_renderer", async (orig) => ({
 }));
 
 // --- Imports AFTER the mocks. ---
+import appContext from "../components/app_context.js";
 import FAttachment from "../entities/fattachment.js";
 import { buildNote } from "../test/easy-froca.js";
-import froca from "./froca.js";
 import { disposeInteractiveContent, getRenderedContent as rawGetRenderedContent } from "./content_renderer.js";
+import froca from "./froca.js";
 import server from "./server.js";
 
 // getRenderedContent declares an explicit `this` parameter; bind it so callers don't need to.
@@ -455,6 +456,37 @@ describe("generic FNote fallback / webView", () => {
         // The live embed replaces the static fallback.
         expect($renderedContent.find(".webview-footer").length).toBe(0);
         expect($renderedContent.hasClass("no-preview")).toBe(false);
+    });
+
+    it("points a freshly mounted .component element at appContext so embedded command buttons resolve", async () => {
+        // The real renderReactWidgetAtElement runs here; make the mounted widget emit a bare
+        // ".component" element (as a real widget root would) with no component prop yet.
+        webViewComponent.mockImplementationOnce(() => h("div", { class: "component" }));
+        const note = buildNote({ title: "WICmp", type: "webView", "#webViewSrc": "https://example.com" });
+
+        const { $renderedContent } = await getRenderedContent(note, { interactive: true });
+
+        const $component = $renderedContent.find(".note-detail-web-view .component");
+        expect($component.length).toBe(1);
+        expect($component.prop("component")).toBe(appContext);
+    });
+
+    it("leaves a .component element that already carries a component prop untouched", async () => {
+        const preexisting = { marker: "already-wired" };
+        webViewComponent.mockImplementationOnce(() => h("div", {
+            class: "component",
+            ref: (el: HTMLElement | null) => {
+                if (el) {
+                    $(el).prop("component", preexisting);
+                }
+            }
+        }));
+        const note = buildNote({ title: "WICmp2", type: "webView", "#webViewSrc": "https://example.com" });
+
+        const { $renderedContent } = await getRenderedContent(note, { interactive: true });
+
+        const $component = $renderedContent.find(".note-detail-web-view .component");
+        expect($component.prop("component")).toBe(preexisting);
     });
 
     it("executes the search and mounts the live collection list for an interactive search note", async () => {

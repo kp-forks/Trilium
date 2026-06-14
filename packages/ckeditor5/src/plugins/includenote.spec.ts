@@ -347,6 +347,31 @@ describe("IncludeNote", () => {
         expect(stop).not.toHaveBeenCalled();
     });
 
+    it("treats a mousedown whose target is not an Element (e.g. a text node) as non-interactive", () => {
+        insertIncludeNote(editor, "noteText", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // A capture-phase mousedown on a bare text node makes evt.target a Text, not an Element. The
+        // interactive-target guard must short-circuit and report "not interactive", so the widget's
+        // normal suppression (preventDefault + stopPropagation) still runs.
+        const textNode = document.createTextNode("plain text");
+        wrapper.appendChild(textNode);
+
+        const evt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const prevent = vi.spyOn(evt, "preventDefault");
+        const stop = vi.spyOn(evt, "stopPropagation");
+        textNode.dispatchEvent(evt);
+
+        expect(prevent).toHaveBeenCalled();
+        expect(stop).toHaveBeenCalled();
+    });
+
     it("stops propagation on focus and keydown inside the wrapper", () => {
         insertIncludeNote(editor, "noteKbd", "small");
 
