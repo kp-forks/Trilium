@@ -46,12 +46,26 @@ export async function validateMermaid(view: EditorView): Promise<Diagnostic[]> {
     const { doc } = view.state;
     const diagnostics = await getMermaidDiagnostics(doc.toString());
 
-    return diagnostics.map(({ message, fromLine, fromColumn, toLine, toColumn }) => ({
-        severity: "error",
-        message,
-        from: doc.line(fromLine).from + fromColumn,
-        to: doc.line(toLine).from + toColumn
-    }));
+    return diagnostics.map(({ message, fromLine, fromColumn, toLine, toColumn }) => {
+        // Clamp to the document/line bounds: an out-of-range position reported by a future
+        // Mermaid version would otherwise throw from doc.line() and (since this is an async
+        // lint source) silently drop every diagnostic.
+        const fromLineObj = doc.line(clampLine(fromLine, doc.lines));
+        const toLineObj = doc.line(clampLine(toLine, doc.lines));
+        const from = Math.min(fromLineObj.from + fromColumn, fromLineObj.to);
+        const to = Math.min(toLineObj.from + toColumn, toLineObj.to);
+
+        return {
+            severity: "error",
+            message,
+            from: Math.min(from, to),
+            to: Math.max(from, to)
+        };
+    });
+}
+
+function clampLine(line: number, lineCount: number) {
+    return Math.max(1, Math.min(line, lineCount));
 }
 
 /**
@@ -73,6 +87,11 @@ export async function getMermaidDiagnostics(text: string): Promise<MermaidLineDi
     try {
         await mermaid.parse(text);
     } catch (e: unknown) {
+        if (typeof e !== "object" || e === null) {
+            // mermaid.parse is expected to throw a structured error object; bail out
+            // gracefully if it ever rejects with a primitive or null.
+            return [];
+        }
         const hash = (e as MermaidParseError).hash;
         if (!hash) {
             // Some diagram types (e.g. the newer Langium-based parsers) throw errors

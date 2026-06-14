@@ -61,7 +61,7 @@ body.desktop .note-detail-split .note-detail-code-editor {
     user-select: text;
 }
 
-.note-detail-error-card pre {
+.note-detail-split .note-detail-error-card pre {
     margin: 0.5em 0 0;
     padding: 0.5em 0.75em;
     border-radius: 4px;
