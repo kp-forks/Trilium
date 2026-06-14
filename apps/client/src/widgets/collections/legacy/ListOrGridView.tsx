@@ -238,6 +238,11 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
     }, []);
 
     useEffect(() => {
+        let cancelled = false;
+        // Tracks the rendered content so the cleanup can unmount any interactive widget it carries
+        // (collections, web views) — otherwise their standalone Preact roots leak when the note
+        // changes or the card unmounts.
+        let rendered: JQuery<HTMLElement> | undefined;
         setReady(false);
         content_renderer.getRenderedContent(note, {
             trim,
@@ -248,7 +253,13 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
             interactive
         })
             .then(({ $renderedContent, type }) => {
-                if (!contentRef.current) return;
+                if (cancelled || !contentRef.current) {
+                    // Superseded by a newer render or unmounted while rendering — tear down what was
+                    // just mounted instead of letting it leak (and don't clobber newer content).
+                    content_renderer.disposeInteractiveContent($renderedContent);
+                    return;
+                }
+                rendered = $renderedContent;
                 if ($renderedContent[0].innerHTML) {
                     contentRef.current.replaceChildren(...$renderedContent);
                 } else {
@@ -260,12 +271,19 @@ export function NoteContent({ note, trim, noChildrenList, highlightedTokens, inc
                 onReadyRef.current?.();
             })
             .catch(e => {
+                if (cancelled) return;
                 console.warn(`Caught error while rendering note '${note.noteId}' of type '${note.type}'`);
                 console.error(e);
                 contentRef.current?.replaceChildren(t("collections.rendering_error"));
                 setReady(true);
                 onReadyRef.current?.();
             });
+        return () => {
+            cancelled = true;
+            if (rendered) {
+                content_renderer.disposeInteractiveContent(rendered);
+            }
+        };
     }, [ note, highlightedTokens ]);
 
     return <div ref={contentRef} className={clsx("note-book-content", `type-${noteType}`, {"note-book-content-ready": ready})} />;
