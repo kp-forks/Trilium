@@ -542,8 +542,8 @@ function RevisionActions({ revisionItem, setShown, onRevisionDeleted, variant }:
     if (variant === "footer") {
         return (
             <>
-                <Button kind="secondary" icon="bx bx-trash" text={t("revisions.delete_button")} onClick={onDelete} />
-                <Button kind="secondary" icon="bx bx-download" text={t("revisions.download_button")} onClick={onDownload} />
+                <ActionButton icon="bx bx-trash" text={t("revisions.delete_button")} onClick={onDelete} frame />
+                <ActionButton icon="bx bx-download" text={t("revisions.download_button")} onClick={onDownload} frame />
                 <Button kind="primary" icon="bx bx-history" text={t("revisions.restore_button")} onClick={onRestore} />
             </>
         );

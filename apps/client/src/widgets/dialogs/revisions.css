@@ -34,11 +34,16 @@ body.mobile .revisions-dialog {
         background-color: var(--modal-background-color);
 
         > .btn {
-            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 4px;
+        }
+
+        /* Restore (the labelled primary action) grows to fill; the icon-only delete/download size
+           to their content. */
+        > .btn:last-child {
+            flex: 1;
         }
     }
 }
