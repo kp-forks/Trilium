@@ -27,7 +27,7 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>)
         $titleRow.append($toggle, $title);
         $wrapper.append($titleRow);
 
-        const { $renderedContent, type } = await content_renderer.getRenderedContent(note);
+        const { $renderedContent, type } = await content_renderer.getRenderedContent(note, { interactive: true });
         const $content = $(`<div class="include-note-content type-${type}" style="display: none;">`).append($renderedContent);
         $wrapper.append($content);
 
@@ -43,7 +43,7 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>)
         // Standard display
         $wrapper.append($('<h4 class="include-note-title">').append($link));
 
-        const { $renderedContent, type } = await content_renderer.getRenderedContent(note);
+        const { $renderedContent, type } = await content_renderer.getRenderedContent(note, { interactive: true });
         $wrapper.append($(`<div class="include-note-content type-${type}">`).append($renderedContent));
     }
 
