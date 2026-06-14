@@ -139,4 +139,48 @@ describe("useNoteIds refresh race", () => {
 
         expect(currentNoteIds).toEqual(["child-a", "child-b"]);
     });
+
+    it("hands React a fresh array when froca's live children array is mutated in place", async () => {
+        // The `includeArchived`/hidden/search paths of getChildNoteIdsWithArchiveFiltering return
+        // froca's *live* `note.children` array, which `addChild` mutates in place on a clone. If the
+        // hook re-published that same reference, React's Object.is bail-out would skip the update and
+        // downstream effects (note resolution, grid reconcile) would never see the new child.
+        const note = buildNote({ title: "Dashboard", type: "book" });
+        const liveChildren = [ "child-a", "child-b" ];
+        note.getChildNoteIdsWithArchiveFiltering = vi.fn(async () => liveChildren);
+
+        const parent = new Component();
+        container = document.createElement("div");
+        document.body.appendChild(container);
+
+        await act(async () => {
+            render(
+                <ParentComponent.Provider value={parent}>
+                    <Harness note={note} />
+                </ParentComponent.Provider>,
+                container
+            );
+        });
+        // Drain the mount refresh's async chain (effect → getNoteIds → setNoteIds).
+        await act(async () => {
+            await flushMicrotasks();
+        });
+        expect(currentNoteIds).toEqual([ "child-a", "child-b" ]);
+        // Must be a copy, not froca's internal array.
+        expect(currentNoteIds).not.toBe(liveChildren);
+        const afterMount = currentNoteIds;
+
+        // Simulate the clone: addChild pushes into the same array, then an entitiesReloaded arrives.
+        liveChildren.push("child-new");
+        await act(async () => {
+            await parent.handleEvent("entitiesReloaded", {
+                loadResults: branchEntitiesReloaded(note.noteId, "child-new")
+            });
+            await flushMicrotasks();
+        });
+
+        expect(currentNoteIds).toEqual([ "child-a", "child-b", "child-new" ]);
+        // A new reference is what makes React/`useEffect([noteIds])` downstream actually re-run.
+        expect(currentNoteIds).not.toBe(afterMount);
+    });
 });

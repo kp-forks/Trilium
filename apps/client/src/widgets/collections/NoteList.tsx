@@ -170,7 +170,10 @@ export function useNoteIds(note: FNote | null | undefined, viewType: ViewTypeOpt
             // A newer refresh was issued while we were awaiting; let it win.
             return;
         }
-        setNoteIds(result);
+        // getNoteIds may hand back froca's live children array, which is mutated in place when notes
+        // are cloned/removed. Setting that same reference would be a no-op for React (Object.is), so
+        // downstream effects never re-run. Copy it, and skip the update only when nothing changed.
+        setNoteIds(prev => sameNoteIds(prev, result) ? prev : [ ...result ]);
     }
 
     async function getNoteIds(note: FNote) {
@@ -227,6 +230,11 @@ export function useNoteIds(note: FNote | null | undefined, viewType: ViewTypeOpt
     }, [ note, noteIds, setNoteIds ]);
 
     return noteIds;
+}
+
+/** Order-sensitive equality for note-id lists, used to skip no-op `noteIds` updates. */
+function sameNoteIds(a: string[], b: string[]) {
+    return a.length === b.length && a.every((id, index) => id === b[index]);
 }
 
 export function useViewModeConfig<T extends object>(note: FNote | null | undefined, viewType: ViewModeStorageType | undefined) {
