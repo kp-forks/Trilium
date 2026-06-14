@@ -22,6 +22,7 @@ const state = vi.hoisted(() => ({
         setToolTip: ReturnType<typeof vi.fn>;
         on: ReturnType<typeof vi.fn>;
         setContextMenu: ReturnType<typeof vi.fn>;
+        destroy: ReturnType<typeof vi.fn>;
         clickHandlers: Map<string, Handler>;
         lastTemplate: unknown[];
     },
@@ -60,6 +61,9 @@ vi.mock("electron", () => ({
             lastTemplate: unknown[] = [];
             on = vi.fn((event: string, fn: Handler) => {
                 this.clickHandlers.set(event, fn);
+            });
+            destroy = vi.fn(() => {
+                state.trayInstance = undefined;
             });
             constructor() {
                 state.trayInstance = this;
@@ -206,9 +210,12 @@ describe("tray", () => {
         expect(state.trayInstance).toBeUndefined();
     });
 
-    it("reload-tray ipc is a no-op before the tray exists", () => {
-        // The handler is only registered inside createTray, so it can't be fired
-        // yet — assert no tray was created as a side effect of prior tests.
+    it("reload-tray with the tray disabled does not create a tray", () => {
+        // The reload-tray handler now reconciles the tray with the option, so
+        // firing it while `disableTray` is set must not bring a tray into being
+        // (exercises destroyTray's no-tray early return).
+        state.disableTray = true;
+        state.ipcHandlers.get("reload-tray")?.();
         expect(state.trayInstance).toBeUndefined();
     });
 
@@ -534,6 +541,42 @@ describe("tray", () => {
             win.listeners.get("maximize")?.();
 
             expect((buildSpy?.mock.calls.length ?? 0)).toBeGreaterThan(callsBefore);
+        });
+    });
+
+    describe("runtime enable/disable (no restart)", () => {
+        beforeEach(() => {
+            // Start each test with a live tray so we can toggle it off and on.
+            state.disableTray = false;
+            fireAppCreated();
+        });
+
+        it("destroys the tray when disabled and recreates it when re-enabled", () => {
+            expect(state.trayInstance).toBeDefined();
+            const destroy = state.trayInstance?.destroy;
+
+            // Toggle the option on -> tray is torn down without a restart.
+            state.disableTray = true;
+            state.ipcHandlers.get("reload-tray")?.();
+            expect(destroy).toHaveBeenCalled();
+            expect(state.trayInstance).toBeUndefined();
+
+            // Firing again while disabled is a no-op (destroyTray early return).
+            expect(() => state.ipcHandlers.get("reload-tray")?.()).not.toThrow();
+            expect(state.trayInstance).toBeUndefined();
+
+            // Toggle the option back off -> a fresh tray is created.
+            state.disableTray = false;
+            state.ipcHandlers.get("reload-tray")?.();
+            expect(state.trayInstance).toBeDefined();
+            expect(state.trayInstance?.setToolTip).toHaveBeenCalledWith("tray.tooltip");
+        });
+
+        it("refreshes rather than recreates the tray when reloaded while enabled", () => {
+            const before = state.trayInstance;
+            expect(before).toBeDefined();
+            state.ipcHandlers.get("reload-tray")?.();
+            expect(state.trayInstance).toBe(before);
         });
     });
 

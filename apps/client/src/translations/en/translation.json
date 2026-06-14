@@ -1522,7 +1522,7 @@
   "tray": {
     "title": "System Tray",
     "enable_tray": "Tray icon",
-    "enable_tray_description": "Trilium needs to be restarted for this change to take effect."
+    "enable_tray_description": "Changes apply immediately, though on some platforms hiding the tray icon may require restarting Trilium."
   },
   "text_editor": {
     "title": "Editor",
