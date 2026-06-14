@@ -18,7 +18,7 @@ import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
 import { getNotePath, NoteContent } from "../legacy/ListOrGridView";
 import openWidgetContextMenu from "./context_menu";
-import { computeDropCell, DEFAULT_WIDGET_SIZE, GRID_COLUMNS, sameLayout, WidgetLayouts } from "./layout";
+import { computeDropCell, DEFAULT_WIDGET_SIZE, GRID_COLUMNS, reconcilePersistedLayout, sameLayout, WidgetLayouts } from "./layout";
 
 export interface DashboardViewConfig {
     widgets?: WidgetLayouts;
@@ -116,12 +116,13 @@ function useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, contai
             return;
         }
 
-        const widgets: WidgetLayouts = {};
+        const present: WidgetLayouts = {};
         for (const node of grid.engine.nodes) {
             if (typeof node.id === "string") {
-                widgets[node.id] = { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 };
+                present[node.id] = { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 };
             }
         }
+        const widgets = reconcilePersistedLayout(savedWidgetsRef.current, present);
         if (sameLayout(widgets, savedWidgetsRef.current)) {
             return;
         }

@@ -29,6 +29,18 @@ export function computeDropCell(grid: GridStack, container: HTMLElement, e: { cl
     return { x, y };
 }
 
+/**
+ * Merge the geometry of the widgets currently present in the grid (`present`) over the
+ * previously-persisted layout (`previous`), producing the layout to persist next.
+ *
+ * A widget can be absent from `present` not only because it was removed from the dashboard, but
+ * also because it was filtered out of view (e.g. archived notes hidden). Its saved position must be
+ * retained so that toggling it back restores its placement instead of auto-positioning it.
+ */
+export function reconcilePersistedLayout(previous: WidgetLayouts, present: WidgetLayouts): WidgetLayouts {
+    return { ...previous, ...present };
+}
+
 /** Whether two layouts describe the same widgets in the same positions. */
 export function sameLayout(a: WidgetLayouts, b: WidgetLayouts) {
     const aKeys = Object.keys(a);
