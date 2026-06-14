@@ -1,4 +1,5 @@
 import { restoreElements, viewportCoordsToSceneCoords } from "@excalidraw/excalidraw";
+import { ExcalidrawEmbeddableElement } from "@excalidraw/excalidraw/element/types";
 import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
 import { RefObject } from "preact";
 import { JSX } from "preact";
@@ -48,7 +49,8 @@ export default function useCanvasNoteDrop(apiRef: RefObject<ExcalidrawImperative
         // `restoreElements` (rather than `convertToExcalidrawElements`) normalizes these partial
         // elements: Excalidraw's element factory is skipped for embeddables, so a bare skeleton
         // would omit `backgroundColor`/`strokeColor`/`seed`/etc. and crash hit-testing. restore
-        // fills every default (and generates fresh ids).
+        // fills every default (and generates fresh ids). We assert to the concrete embeddable type
+        // (a superset of these literals); an embeddable array is a valid restoreElements input.
         const partialElements = noteIds.map((noteId, i) => ({
             type: "embeddable",
             x: x + i * STACK_OFFSET,
@@ -56,7 +58,7 @@ export default function useCanvasNoteDrop(apiRef: RefObject<ExcalidrawImperative
             width: EMBEDDABLE_WIDTH,
             height: EMBEDDABLE_HEIGHT,
             link: `root/${noteId}`
-        })) as Parameters<typeof restoreElements>[0];
+        })) as ExcalidrawEmbeddableElement[];
 
         const newElements = restoreElements(partialElements, null);
         api.updateScene({ elements: [...api.getSceneElements(), ...newElements] });

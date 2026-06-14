@@ -80,11 +80,11 @@ describe("useNoteIds refresh race", () => {
         container = document.createElement("div");
         document.body.appendChild(container);
 
-        return { note, pending, parent };
+        return { note, pending, parent, container };
     }
 
     it("commits the newest refresh even when an older one resolves last", async () => {
-        const { note, pending, parent } = setup();
+        const { note, pending, parent, container } = setup();
 
         // Mount issues the first refresh (reflecting the pre-clone child set).
         await act(async () => {
@@ -120,7 +120,7 @@ describe("useNoteIds refresh race", () => {
     });
 
     it("applies a single refresh's result normally", async () => {
-        const { note, pending, parent } = setup();
+        const { note, pending, parent, container } = setup();
 
         await act(async () => {
             render(
@@ -150,15 +150,16 @@ describe("useNoteIds refresh race", () => {
         note.getChildNoteIdsWithArchiveFiltering = vi.fn(async () => liveChildren);
 
         const parent = new Component();
-        container = document.createElement("div");
-        document.body.appendChild(container);
+        const mountPoint = document.createElement("div");
+        container = mountPoint;
+        document.body.appendChild(mountPoint);
 
         await act(async () => {
             render(
                 <ParentComponent.Provider value={parent}>
                     <Harness note={note} />
                 </ParentComponent.Provider>,
-                container
+                mountPoint
             );
         });
         // Drain the mount refresh's async chain (effect → getNoteIds → setNoteIds).

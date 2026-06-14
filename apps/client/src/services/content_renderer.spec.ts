@@ -69,10 +69,10 @@ vi.mock("mermaid", () => ({
 const pdfViewerComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerComponent }));
 
-const webViewComponent = vi.fn(() => h("span", { class: "mock-webview-marker" }));
+const webViewComponent = vi.fn((_props: any) => h("span", { class: "mock-webview-marker" }));
 vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
 
-const embeddedNoteListComponent = vi.fn(() => null);
+const embeddedNoteListComponent = vi.fn((_props: any) => null);
 vi.mock("../widgets/collections/NoteList", () => ({ EmbeddedNoteList: embeddedNoteListComponent }));
 
 // `addHook` is a no-op here: sanitize_content.ts registers a DOMPurify hook at
