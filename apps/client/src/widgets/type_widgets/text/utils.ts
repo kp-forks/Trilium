@@ -48,6 +48,10 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>,
         $wrapper.append($(`<div class="include-note-content type-${type}">`).append($renderedContent));
     }
 
+    // Unmount any interactive widgets from a previous render of this include (e.g. on a box-size
+    // change or refreshIncludedNote) before $el.empty() discards their DOM — otherwise their
+    // standalone Preact roots (collections, web views) would leak.
+    content_renderer.disposeInteractiveContent($el);
     $el.empty().append($wrapper);
 }
 
