@@ -4,7 +4,6 @@ import { useCallback, useContext, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
-import { t } from "../../services/i18n";
 import NoteTreeWidget from "../note_tree";
 import NoteDetail from "../NoteDetail";
 import PromotedAttributes from "../PromotedAttributes";
@@ -55,7 +54,10 @@ export default function TreePopupEditor() {
         <NoteContextContext.Provider value={noteContext}>
             <Modal
                 modalRef={modalRef}
-                title={t("tree-popup.title")}
+                // Reuse the quick-edit note header (icon + editable title); it lives in the main
+                // header, so skip the sidebar header that would otherwise duplicate it.
+                title={<TitleRow />}
+                hideSidebarHeader
                 className="tree-popup-editor-dialog"
                 size="xl"
                 sidebar={<TreeSidebar noteContext={noteContext} />}
@@ -65,7 +67,6 @@ export default function TreePopupEditor() {
                 scrollable
                 stackable
             >
-                <div className="tree-popup-editor-title"><TitleRow /></div>
                 <PromotedAttributes />
                 <NoteDetail />
             </Modal>

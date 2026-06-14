@@ -6,6 +6,10 @@
 
 .modal.tree-popup-editor-dialog .modal-content {
     height: 80vh;
+
+    .note-detail-doc-content {
+        padding: unset;
+    }
 }
 
 /* Sidebar holding the hoisted note tree. */
@@ -30,9 +34,5 @@ body.desktop .modal.tree-popup-editor-dialog .modal-sidebar {
     height: 100%;
 }
 
-.modal.tree-popup-editor-dialog .tree-popup-editor-title {
-    display: flex;
-    align-items: center;
-    gap: 0.35em;
-    margin-bottom: 0.5em;
-}
+/* The header note title (icon + editable title) reuses the quick-edit TitleRow styling — see the
+   shared `.popup-editor-dialog, .tree-popup-editor-dialog` rules in PopupEditor.css. */
