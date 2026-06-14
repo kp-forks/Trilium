@@ -13,6 +13,12 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>,
     const effectiveBoxSize = boxSize ?? $el.closest('section.include-note').attr('data-box-size');
     const isExpandable = effectiveBoxSize === 'expandable';
 
+    // The editing-view downcast passes the `.include-note-wrapper` element itself as $el, whereas the
+    // read-only and refresh paths pass the outer `section.include-note`. Build the content in a
+    // detached wrapper either way (so the old content stays visible during the async render — no
+    // flicker), then swap it in; when $el is already the wrapper we move the built children straight
+    // into it instead of nesting a redundant second `.include-note-wrapper`.
+    const isWrapper = $el.hasClass('include-note-wrapper');
     const $wrapper = $('<div class="include-note-wrapper">');
     const $link = await link.createLink(note.noteId, {
         showTooltip: false,
@@ -52,7 +58,7 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>,
     // change or refreshIncludedNote) before $el.empty() discards their DOM — otherwise their
     // standalone Preact roots (collections, web views) would leak.
     content_renderer.disposeInteractiveContent($el);
-    $el.empty().append($wrapper);
+    $el.empty().append(isWrapper ? $wrapper.children() : $wrapper);
 }
 
 export function refreshIncludedNote(container: HTMLDivElement, noteId: string) {
