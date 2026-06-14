@@ -209,10 +209,23 @@ Intercept paste/copy/drop via the clipboard pipeline events rather than raw DOM:
 // packages/ckeditor5-clipboard/src/clipboardpipeline.ts
 // input chain:  view 'paste'/'drop' → 'clipboardInput' → 'inputTransformation' → 'contentInsertion'
 // output chain: view 'copy'/'cut'   → 'clipboardOutput'
-this.listenTo( editor.plugins.get( 'ClipboardPipeline' ), 'inputTransformation', ( evt, data ) => {
+import { ClipboardPipeline } from 'ckeditor5';
+static get requires() { return [ ClipboardPipeline ]; }   // and add it to requires()
+this.listenTo( editor.plugins.get( ClipboardPipeline ), 'inputTransformation', ( evt, data ) => {
 	// data.content is a view DocumentFragment; transform pasted content here
 }, { priority: 'low' } );
 ```
+
+- **Footgun — `inputTransformation`/`contentInsertion` fire on `ClipboardPipeline`, NOT the
+  `Clipboard` umbrella plugin.** `editor.plugins.get( Clipboard )` does **not** emit those events:
+  in `@ckeditor/ckeditor5-clipboard`, `ClipboardPipeline._setupPasteDrop()` is what fires
+  `new EventInfo( this, 'inputTransformation' )`, and the separate `Clipboard` class never
+  references the event (its `init()` only registers keystroke accessibility info) — there is no
+  `.delegate()` between them. So `this.listenTo( editor.plugins.get( Clipboard ), 'inputTransformation', … )`
+  is a **silently-dead handler** (no error, never runs). Listen on `ClipboardPipeline` and add it to
+  `requires()`. (Contrast: the raw `'clipboardInput'` view event fires on
+  `editor.editing.view.document` — a different, correct emitter that the upload pipeline does listen
+  to; see `packages/ckeditor5/src/plugins/file_upload/fileuploadediting.ts`.)
 
 Add a custom observer by subclassing `DomEventObserver` and `view.addObserver(MyObserver)` (see the
 double-click recipe in `recipes.md`). Prefix custom view events with a namespace.

@@ -149,6 +149,7 @@ class IncludeNoteEditing extends Plugin {
 		conversion.for( 'editingDowncast' ).add( dispatcher => {
 			dispatcher.on( 'attribute:boxSize:includeNote', ( evt, data, conversionApi ) => {
 				const viewElement = conversionApi.mapper.toViewElement( data.item );
+				/* v8 ignore next 3 -- defensive guard: when the attribute:boxSize event fires the model item is always mapped to a rendered view element; forcing an unmapped state (mapper.unbindModelElement) crashes the conversion pipeline elsewhere before this guard can be observed, so it is unreachable from a unit test */
 				if ( !viewElement ) {
 					return;
 				}

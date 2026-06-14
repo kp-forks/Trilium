@@ -1,7 +1,8 @@
 import { _setModelData as setModelData, ClassicEditor, keyCodes, List, Paragraph, TodoList, Typing, Undo, type ModelElement } from "ckeditor5";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import CollapsibleListItems, { LIST_COLLAPSED_ATTRIBUTE } from "./collapsible_list_items.js";
+import { createTestEditor, getEditorElement } from "../../test/editor-kit.js";
+import CollapsibleListItems, { LIST_COLLAPSED_ATTRIBUTE, ToggleListCollapseCommand } from "./collapsible_list_items.js";
 
 // Lists are flat in the model: sibling blocks related by listIndent/listItemId.
 const LIST_FIXTURE =
@@ -12,24 +13,12 @@ const LIST_FIXTURE =
     "<paragraph>Outside of the list</paragraph>";
 
 describe("CollapsibleListItems", () => {
-    let editorElement: HTMLDivElement;
     let editor: ClassicEditor;
 
     beforeEach(async () => {
-        editorElement = document.createElement("div");
-        document.body.appendChild(editorElement);
-
-        editor = await ClassicEditor.create(editorElement, {
-            plugins: [CollapsibleListItems, List, TodoList, Paragraph, Typing, Undo],
-            licenseKey: "GPL"
-        });
+        editor = await createTestEditor([CollapsibleListItems, List, TodoList, Paragraph, Typing, Undo]);
 
         setModelData(editor.model, LIST_FIXTURE);
-    });
-
-    afterEach(async () => {
-        editorElement.remove();
-        await editor.destroy();
     });
 
     it("collapses and expands via the command and persists the state into the data", () => {
@@ -194,6 +183,7 @@ describe("CollapsibleListItems", () => {
 
         // Shift the editor away from the viewport's left edge so the negative-inset gutter
         // (where the arrow lives) is actually on-screen and hit-testable.
+        const editorElement = getEditorElement(editor);
         editorElement.style.marginLeft = "160px";
         editorElement.style.marginTop = "60px";
 
@@ -288,6 +278,145 @@ describe("CollapsibleListItems", () => {
         // Collapse no longer touches Ctrl+Enter, so the native checkTodoList handles it.
         expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
         expect(getBlock(editor, 0).getAttribute("todoListChecked")).toBe(true);
+    });
+
+    it("removes the data attribute in the view when the model attribute is set to false", () => {
+        // The downcast strategy's setAttributeOnDowncast runs with a falsy value when the model
+        // attribute is present but false (rather than removed), exercising its removeAttribute
+        // branch directly.
+        editor.execute("toggleListCollapse");
+        const domRoot = editor.editing.view.getDomRoot();
+        expect(domRoot?.querySelector("li[data-trilium-collapsed]")).not.toBeNull();
+
+        editor.model.change((writer) => {
+            writer.setAttribute(LIST_COLLAPSED_ATTRIBUTE, false, getBlock(editor, 0));
+        });
+
+        expect(domRoot?.querySelector("li[data-trilium-collapsed]")).toBeNull();
+    });
+
+    it("ignores a persisted data attribute whose value is not exactly \"true\"", () => {
+        editor.setData(
+            '<ul><li data-trilium-collapsed="false">Parent<ul><li>Child</li></ul></li></ul>');
+
+        // The upcast converter maps anything other than "true" to null (no model attribute).
+        expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+        expect(editor.getData()).not.toContain("data-trilium-collapsed");
+    });
+
+    it("ignores a mousedown that does not target a list item", () => {
+        // Click in the paragraph outside the list: data.target is not an <li>, so the handler
+        // bails before resolving any block and nothing collapses.
+        const domRoot = editor.editing.view.getDomRoot();
+        const paragraph = domRoot?.querySelector("p");
+        expect(paragraph).toBeTruthy();
+        if (!paragraph) {
+            return;
+        }
+
+        const rect = paragraph.getBoundingClientRect();
+        paragraph.dispatchEvent(new MouseEvent("mousedown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.left - 10,
+            clientY: rect.top + 5
+        }));
+
+        expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+    });
+
+    it("treats a click past the right edge as a gutter click in RTL", () => {
+        const domRoot = editor.editing.view.getDomRoot();
+        if (domRoot) {
+            domRoot.setAttribute("dir", "rtl");
+            domRoot.style.direction = "rtl";
+        }
+
+        const parentLi = domRoot?.querySelector("li");
+        expect(parentLi).toBeTruthy();
+        if (!parentLi) {
+            return;
+        }
+        parentLi.style.direction = "rtl";
+
+        const rect = parentLi.getBoundingClientRect();
+        // In RTL the gutter sits to the right of the box; a click past rect.right is a gutter click.
+        parentLi.dispatchEvent(new MouseEvent("mousedown", {
+            bubbles: true,
+            cancelable: true,
+            clientX: rect.right + 10,
+            clientY: rect.top + 5
+        }));
+
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+    });
+
+    it("is a no-op when execute runs with no list item selected", () => {
+        setSelectionIn(editor, 4); // the paragraph outside the list
+
+        const command = editor.commands.get("toggleListCollapse");
+        expect(command).toBeInstanceOf(ToggleListCollapseCommand);
+        if (!(command instanceof ToggleListCollapseCommand)) {
+            return;
+        }
+        // editor.execute() (and the decorated command.execute()) short-circuit a disabled
+        // command before its body runs, so invoke the raw method to exercise its null-block
+        // guard with a non-list selection active.
+        expect(() => ToggleListCollapseCommand.prototype.execute.call(command)).not.toThrow();
+        expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+    });
+
+    it("ignores list attribute changes whose target is not a list block", () => {
+        // A listIndent change on the trailing range covers the postfixer branch where the
+        // changed range's nodeAfter is not a resolvable list element.
+        expect(() => editor.model.change((writer) => {
+            const last = getBlock(editor, 4); // "Outside of the list" paragraph
+            writer.setAttribute("listIndent", 0, last);
+            writer.removeAttribute("listIndent", last);
+        })).not.toThrow();
+
+        expect(getBlock(editor, 0).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+    });
+
+    it("does nothing when execute runs on a leaf list item", () => {
+        setSelectionIn(editor, 1); // leaf child, no nested items
+
+        const command = editor.commands.get("toggleListCollapse");
+        expect(command?.isEnabled).toBe(false);
+        expect(command).toBeInstanceOf(ToggleListCollapseCommand);
+        if (!(command instanceof ToggleListCollapseCommand)) {
+            return;
+        }
+        // Block exists but has nothing to collapse: the hasNestedItems guard short-circuits.
+        expect(() => ToggleListCollapseCommand.prototype.execute.call(command)).not.toThrow();
+        expect(getBlock(editor, 1).hasAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(false);
+    });
+
+    it("collapses from a selection in a later block of a multi-block item", () => {
+        setModelData(editor.model,
+            '<paragraph listIndent="0" listItemId="m-a" listType="bulleted">First</paragraph>' +
+            '<paragraph listIndent="0" listItemId="m-a" listType="bulleted">Second[]</paragraph>' +
+            '<paragraph listIndent="1" listItemId="m-b" listType="bulleted">Child</paragraph>');
+
+        // Selection is in the second block, so getItemBlocks must walk back to the first one.
+        editor.execute("toggleListCollapse");
+
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+        expect(getBlock(editor, 1).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
+    });
+
+    it("treats a list block without a numeric indent as indent 0", () => {
+        // listItemId present but no listIndent: getIndent falls back to 0, so a deeper sibling
+        // still counts as nested and the item is collapsible.
+        setModelData(editor.model,
+            '<paragraph listItemId="n-a" listType="bulleted">Parent[]</paragraph>' +
+            '<paragraph listIndent="1" listItemId="n-b" listType="bulleted">Child</paragraph>');
+
+        const command = editor.commands.get("toggleListCollapse");
+        expect(command?.isEnabled).toBe(true);
+
+        editor.execute("toggleListCollapse");
+        expect(getBlock(editor, 0).getAttribute(LIST_COLLAPSED_ATTRIBUTE)).toBe(true);
     });
 });
 

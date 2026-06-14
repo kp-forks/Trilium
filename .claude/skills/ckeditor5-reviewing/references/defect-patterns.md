@@ -47,6 +47,13 @@ group covers the monorepo wiring/convention defects. For the idiomatic "how it s
 - Fix: declare the attribute to trigger reconversion, or use a separate `attributeToAttribute`/
   `attributeToElement` converter, or `editor.editing.reconvertItem(item)`.
 
+**Clipboard-pipeline handler bound to the wrong emitter (silently dead).**
+- Spot: `listenTo(editor.plugins.get(Clipboard), 'inputTransformation'|'contentInsertion', …)` — the
+  handler is attached to the `Clipboard` *umbrella* glue plugin (a real one in `ckeditor5-math/src/automath.ts:28`).
+- Why: those events fire on **`ClipboardPipeline`**, not `Clipboard` (which only `requires` it), so the
+  handler never runs — no error, no test failure (a Trilium handler sat dead ~1 year this way).
+- Fix: `listenTo(editor.plugins.get(ClipboardPipeline), 'inputTransformation', …)`.
+
 ## Schema
 
 **Object/limit flags wrong.**

@@ -97,6 +97,31 @@ This is the repo-wide convention (see the `writing-unit-tests` skill) and what
 `feature/collapsible_experiment` uses. New standalone packages should also adopt co-located
 `.spec.ts`.
 
+## Coverage scope for the aggregate (`packages/ckeditor5`)
+
+The aggregate **imports** the sibling `@triliumnext/ckeditor5-*` workspace packages, so a plain
+`--coverage` run instruments their loaded `src/` too — and the `include: ['src/**']` glob matches
+those sibling sources. The report then reads a misleading **~48%** instead of the aggregate's real
+number. Those siblings carry their own 100% gates in their own packages, so scope the aggregate's
+report to its own sources only — `packages/ckeditor5/vitest.config.ts` does this with:
+
+```ts
+coverage: {
+	provider: 'v8',
+	allowExternal: false,                    // don't reach outside the package root
+	include: [ 'src/**/*.{ts,tsx}' ],
+	exclude: [
+		'**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}', '**/*.d.ts',
+		'**/node_modules/**', '**/ckeditor5-*/**' // <- keeps imported siblings out
+	],
+	reporter: [ 'text', 'lcov' ],
+	reportsDirectory: './test-output/vitest/coverage'
+}
+```
+
+`reporter: ['text', 'lcov']` + that `reportsDirectory` are what the `analyzing-coverage`
+analyzer (`lcov.info`) and Codecov consume — keep them when adding coverage to a package.
+
 ## Debugging
 
 Browser-mode packages support an inspector + visible browser:

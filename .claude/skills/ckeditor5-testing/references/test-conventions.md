@@ -23,26 +23,32 @@ general `writing-unit-tests` skill reserves `@vitest/browser` for exactly these 
 
 ## Real-editor lifecycle & teardown
 
-There are **no** test-editor factories in Trilium. Create a real `ClassicEditor` over a real
-element with `licenseKey: 'GPL'`, and always tear it down:
+There are **no** upstream test-editor factories (`ModelTestEditor` etc.) in Trilium — tests build a
+real `ClassicEditor` over a real element with `licenseKey: 'GPL'`. In the aggregate
+(`packages/ckeditor5`), the shared kit does this for you: `createTestEditor()` from
+`test/editor-kit.ts` creates and **tracks** the editor, and the global `afterEach` in
+`test/setup.ts` (wired via `setupFiles`) destroys every tracked editor and removes its host element.
+So aggregate specs no longer write an editor-teardown `afterEach`:
 
 ```ts
-beforeEach( async () => {
-	editorElement = document.createElement( 'div' );
-	document.body.appendChild( editorElement );
-	editor = await ClassicEditor.create( editorElement, {
-		licenseKey: 'GPL', plugins: [ Paragraph, MyPlugin ]
-	} );
-} );
+import { createTestEditor } from '../../test/editor-kit.js';
 
-afterEach( () => {
-	editorElement.remove();
-	return editor.destroy();
+beforeEach( async () => {
+	editor = await createTestEditor( [ Paragraph, MyPlugin ] );
 } );
+// no afterEach for the editor — setup.ts tears it down
 ```
 
-Forgetting `editor.destroy()` or `editorElement.remove()` leaks editor DOM / body wrappers across
-tests and causes flakiness.
+The host element is `editor.sourceElement` (or `getEditorElement( editor )` from the kit). The
+standalone packages (and legacy specs mid-migration to the kit) still hand-roll create + an
+`afterEach` calling `editor.destroy()` and `editorElement.remove()`; forgetting either there leaks
+editor DOM / body wrappers across tests and causes flakiness.
+
+**Globals: use the kit's installers.** Stub the Trilium `glob` / `navigator.clipboard` via
+`installGlobMock()` / `mockClipboard()` from `test/globals-test-kit.ts` — they register their own
+teardown (run by `setup.ts`), and `$` is a global passthrough from `setup.ts`. Don't hand-roll
+`globalThis.glob` + a manual `delete`; browser mode's shared page leaks a forgotten global into
+later specs (see `patterns.md`).
 
 ## Assertion styles — both work
 

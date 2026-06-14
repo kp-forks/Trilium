@@ -1,37 +1,69 @@
 # Test patterns (Trilium, Vitest)
 
 Idiomatic recipes per concern. All examples assume a real `ClassicEditor` created in `beforeEach`
-and destroyed in `afterEach` (see `test-utilities.md`). Mirror the structure of the feature: an
-`*editing` test for schema/conversion/command, a `*ui` test for buttons/dropdowns. Assertions may
-be **Jest-style** (`toBe`/`toEqual`) or **Chai-style** (`to.equal`/`to.be.false`) — both work in
-Vitest; the examples use Jest-style.
+(see `test-utilities.md`). Mirror the structure of the feature: an `*editing` test for
+schema/conversion/command, a `*ui` test for buttons/dropdowns. Assertions may be **Jest-style**
+(`toBe`/`toEqual`) or **Chai-style** (`to.equal`/`to.be.false`) — both work in Vitest; the examples
+use Jest-style.
 
 ## Setup / teardown
 
+In the aggregate (`packages/ckeditor5`), use the shared editor kit — `createTestEditor()` from
+`test/editor-kit.ts` builds the editor (`licenseKey: 'GPL'`, auto-tracked) and the global
+`afterEach` in `test/setup.ts` destroys it, so a spec needs **no** editor-teardown `afterEach`:
+
 ```ts
 import { ClassicEditor, Paragraph } from 'ckeditor5';
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import MyFeature from '../src/myfeature.js';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-let editorElement: HTMLDivElement, editor: ClassicEditor, model;
+import { createTestEditor } from '../../test/editor-kit.js';
+import MyFeature from './myfeature.js';
+
+let editor: ClassicEditor, model;
 
 beforeEach( async () => {
-	editorElement = document.createElement( 'div' );
-	document.body.appendChild( editorElement );
-	editor = await ClassicEditor.create( editorElement, {
-		licenseKey: 'GPL',
-		plugins: [ Paragraph, MyFeature ]
-	} );
+	editor = await createTestEditor( [ Paragraph, MyFeature ] );
 	model = editor.model;
-} );
-
-afterEach( () => {
-	editorElement.remove();
-	return editor.destroy();
 } );
 ```
 
-Return the Promise (or use `async`/`await`) so Vitest waits. Default `testTimeout` is 5000 ms.
+Return the Promise (or use `async`/`await`) so Vitest waits. Default `testTimeout` is 5000 ms. Need
+the host element? It's `editor.sourceElement` (or `getEditorElement( editor )` from the kit). The
+standalone packages (and legacy specs mid-migration) still hand-roll the scaffold —
+`document.createElement('div')` + `ClassicEditor.create(...)` + an `afterEach` that calls
+`editor.destroy()` and `editorElement.remove()`.
+
+## Stubbing the Trilium glue (`glob` / `navigator.clipboard` / jQuery `$`)
+
+Many in-aggregate plugins reach for a global `glob` (the Trilium bridge — typed in
+`packages/ckeditor5/src/augmentation.ts` with `getComponentByEl`, `getReferenceLinkTitle`,
+`getReferenceLinkTitleSync`, `getActiveContextNote`, `getHeaders`), some buttons hit
+`navigator.clipboard`, and some converters call jQuery `$(...)` (e.g. the `editingDowncast`
+converter in `packages/ckeditor5/src/plugins/referencelink.ts`). Use the globals kit
+(`test/globals-test-kit.ts`) so each stub **tears itself down** after the test — never hand-roll
+`globalThis.glob = …` plus a manual `delete`:
+
+```ts
+import { installGlobMock, mockClipboard } from '../../test/globals-test-kit.js';
+
+beforeEach( async () => {
+	const triggerCommand = vi.fn();
+	installGlobMock( { getComponentByEl: () => ( { triggerCommand } ) } ); // removed after the test
+	editor = await createTestEditor( [ Essentials, Paragraph, InternalLinkPlugin ] );
+} );
+// no afterEach: setup.ts runs the kit's cleanups (and destroys the editor)
+```
+
+- `installGlobMock( obj )` casts to the global `glob` type for you and returns `obj` for assertions; its teardown is queued and run by the global `afterEach` in `test/setup.ts`.
+- `mockClipboard( obj )` swaps `navigator.clipboard` and restores the original afterwards.
+- jQuery `$` is already a global passthrough installed by `test/setup.ts` — specs don't set it.
+
+**Why a kit and not hand-rolled globals:** browser mode runs every spec in **one shared page**, so a
+leaked `glob`/`$`/clipboard survives into later specs and causes test-order-dependent flakiness — a
+review caught exactly this missing cleanup. The kit makes teardown automatic. (Existing specs still
+hand-roll `globalThis.glob = … as unknown as typeof glob` + a manual `delete` in `afterEach`; that's
+the legacy pattern being migrated to `installGlobMock` — see
+`packages/ckeditor5/src/plugins/internallink.spec.ts`.)
 
 ## Schema
 
