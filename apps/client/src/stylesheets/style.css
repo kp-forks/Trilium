@@ -1365,6 +1365,16 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     border-bottom: 1px solid var(--card-border-color, var(--main-border-color));
 }
 
+/* createLink wraps the icon and anchor in a single <span>; lay it out as a flex
+   row so the (larger) note icon lines up vertically with the title text instead
+   of sitting on the text baseline. */
+.include-note-title > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
 .include-note-title .bx {
     flex-shrink: 0;
     font-size: 1.2em;
@@ -1388,6 +1398,7 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
 
 /* The title inside the expandable row defers its header styling to the row. */
 .include-note-title-row .include-note-title {
+    margin: 0;
     padding: 0;
     border-bottom: none;
     font-weight: inherit;
