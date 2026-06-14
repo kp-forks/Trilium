@@ -15,7 +15,8 @@ export async function loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>,
 
     const $wrapper = $('<div class="include-note-wrapper">');
     const $link = await link.createLink(note.noteId, {
-        showTooltip: false
+        showTooltip: false,
+        showNoteIcon: true
     });
 
     if (isExpandable) {
