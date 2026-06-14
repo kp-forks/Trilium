@@ -159,13 +159,18 @@ export function useNoteIds(note: FNote | null | undefined, viewType: ViewTypeOpt
     const [ noteIds, setNoteIds ] = useState<string[]>([]);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const directChildrenOnly = (viewType === "list" || viewType === "grid" || viewType === "table" || viewType === "dashboard" || note?.type === "search");
+    // getNoteIds can do a server round-trip (archive filtering), so concurrent refreshes may resolve
+    // out of order. Track the latest issued refresh so a stale one can't clobber a newer result.
+    const refreshSeqRef = useRef(0);
 
     async function refreshNoteIds() {
-        if (!note) {
-            setNoteIds([]);
-        } else {
-            setNoteIds(await getNoteIds(note));
+        const seq = ++refreshSeqRef.current;
+        const result = note ? await getNoteIds(note) : [];
+        if (seq !== refreshSeqRef.current) {
+            // A newer refresh was issued while we were awaiting; let it win.
+            return;
         }
+        setNoteIds(result);
     }
 
     async function getNoteIds(note: FNote) {
