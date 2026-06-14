@@ -1,0 +1,85 @@
+import { restoreElements, viewportCoordsToSceneCoords } from "@excalidraw/excalidraw";
+import { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+import { RefObject } from "preact";
+import { JSX } from "preact";
+import { useCallback } from "preact/hooks";
+
+/** Default size of an embeddable created by dropping a note onto the canvas. */
+const EMBEDDABLE_WIDTH = 480;
+const EMBEDDABLE_HEIGHT = 320;
+/** Offset between successive embeddables when several notes are dropped at once. */
+const STACK_OFFSET = 24;
+
+/**
+ * Lets the user drag notes from the note tree onto the canvas to create note embeddables (rendered
+ * by {@link NoteEmbeddable}). The note tree puts `[{ noteId, ... }]` JSON into the drag's
+ * `text/plain` payload; we read it, translate the drop point into scene coordinates, and insert an
+ * `embeddable` element linking to each note (`root/<noteId>`).
+ *
+ * The handlers run in the capture phase and stop propagation once a note payload is recognized, so
+ * Excalidraw's own drop handling never sees the event; non-note drags fall through untouched.
+ */
+export default function useCanvasNoteDrop(apiRef: RefObject<ExcalidrawImperativeAPI>, isReadOnly: boolean) {
+    const onDragOverCapture = useCallback((e: JSX.TargetedDragEvent<HTMLElement>) => {
+        if (isReadOnly || !e.dataTransfer?.types.includes("text/plain")) {
+            return;
+        }
+        // Signal that we accept the drop so the browser fires a `drop` event here.
+        e.preventDefault();
+        e.stopPropagation();
+    }, [isReadOnly]);
+
+    const onDropCapture = useCallback((e: JSX.TargetedDragEvent<HTMLElement>) => {
+        const api = apiRef.current;
+        if (isReadOnly || !api) {
+            return;
+        }
+
+        const noteIds = parseDroppedNoteIds(e.dataTransfer?.getData("text/plain"));
+        if (!noteIds.length) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const { x, y } = viewportCoordsToSceneCoords({ clientX: e.clientX, clientY: e.clientY }, api.getAppState());
+
+        // `restoreElements` (rather than `convertToExcalidrawElements`) normalizes these partial
+        // elements: Excalidraw's element factory is skipped for embeddables, so a bare skeleton
+        // would omit `backgroundColor`/`strokeColor`/`seed`/etc. and crash hit-testing. restore
+        // fills every default (and generates fresh ids).
+        const partialElements = noteIds.map((noteId, i) => ({
+            type: "embeddable",
+            x: x + i * STACK_OFFSET,
+            y: y + i * STACK_OFFSET,
+            width: EMBEDDABLE_WIDTH,
+            height: EMBEDDABLE_HEIGHT,
+            link: `root/${noteId}`
+        })) as Parameters<typeof restoreElements>[0];
+
+        const newElements = restoreElements(partialElements, null);
+        api.updateScene({ elements: [...api.getSceneElements(), ...newElements] });
+    }, [apiRef, isReadOnly]);
+
+    return { onDragOverCapture, onDropCapture };
+}
+
+/** Extracts note IDs from the note tree's drag payload, returning `[]` for anything unrecognized. */
+function parseDroppedNoteIds(payload: string | undefined): string[] {
+    if (!payload) {
+        return [];
+    }
+
+    try {
+        const parsed = JSON.parse(payload);
+        if (!Array.isArray(parsed)) {
+            return [];
+        }
+        return parsed
+            .map((entry) => (entry && typeof entry.noteId === "string" ? entry.noteId : null))
+            .filter((noteId): noteId is string => noteId !== null);
+    } catch {
+        return [];
+    }
+}

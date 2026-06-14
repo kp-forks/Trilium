@@ -9,6 +9,7 @@ import "./Canvas.css";
 import { NonDeleted, NonDeletedExcalidrawElement, ExcalidrawEmbeddableElement } from "@excalidraw/excalidraw/element/types";
 import { goToLinkExt } from "../../../services/link";
 import useCanvasPersistence from "./persistence";
+import useCanvasNoteDrop from "./useCanvasNoteDrop";
 import { LANGUAGE_MAPPINGS } from "./i18n";
 import { DISPLAYABLE_LOCALE_IDS } from "@triliumnext/commons";
 import tree from "../../../services/tree";
@@ -24,6 +25,7 @@ export default function Canvas({ note, noteContext }: TypeWidgetProps) {
     const colorScheme = useColorScheme();
     const [ locale ] = useTriliumOption("locale");
     const persistence = useCanvasPersistence(note, noteContext, apiRef, colorScheme, isReadOnly);
+    const noteDrop = useCanvasNoteDrop(apiRef, isReadOnly);
 
     /** Use excalidraw's native zoom instead of the global zoom. */
     const onWheel = useCallback((e: MouseEvent) => {
@@ -62,7 +64,7 @@ export default function Canvas({ note, noteContext }: TypeWidgetProps) {
 
     return (
         <div className="canvas-render" onWheel={onWheel}>
-            <div className="excalidraw-wrapper">
+            <div className="excalidraw-wrapper" {...noteDrop}>
                 <Excalidraw
                     excalidrawAPI={api => apiRef.current = api}
                     theme={colorScheme}
