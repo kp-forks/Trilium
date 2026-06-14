@@ -1,6 +1,6 @@
 import "./OptionsDialog.css";
 
-import { useCallback, useContext, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useContext, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
@@ -9,17 +9,13 @@ import utils from "../../services/utils";
 import NoteDetail from "../NoteDetail";
 import ActionButton from "../react/ActionButton";
 import FormList, { FormListItem } from "../react/FormList";
-import { useChildNotes, useContainedLinkNavigation, useNoteContext, useTriliumEvent, useWindowSize } from "../react/hooks";
+import { useChildNotes, useContainedLinkNavigation, useMobileMasterDetail, useNoteContext, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
 
 /** The settings page shown when no specific section was requested and none was viewed yet this session. */
 const DEFAULT_SECTION = "_optionsAppearance";
-
-/** Mobile viewports at least this wide (tablets) keep the desktop-style side-by-side sidebar
- *  layout; narrower ones get the master-detail flow. */
-const TABLET_MIN_WIDTH = 768;
 
 /**
  * The settings dialog, opened via the `showOptions` command. Settings open in a dialog rather than
@@ -36,29 +32,9 @@ export default function OptionsDialog() {
     // Remembers the page last viewed this session so reopening the dialog lands there instead of
     // always on Appearance. Kept in component state (resets on reload), not persisted.
     const [ lastSection, setLastSection ] = useState<string | null>(null);
-    // Which half of the mobile master-detail flow is visible; has no effect on desktop.
-    const [ mobileView, setMobileView ] = useState<"list" | "page">("list");
-    // Direction of the in-flight slide between the two mobile views, or null when at rest. While
-    // set, both panes stay rendered so the outgoing one can slide away as the incoming one slides
-    // in; cleared when the slide animation finishes.
-    const [ mobileTransition, setMobileTransition ] = useState<"to-list" | "to-page" | null>(null);
     const modalRef = useRef<HTMLDivElement>(null);
     const isMobile = utils.isMobile();
-    const { windowWidth } = useWindowSize();
-    // Only narrow mobile viewports get the master-detail flow; tablets keep the sidebar layout.
-    const isMasterDetail = isMobile && windowWidth < TABLET_MIN_WIDTH;
-
-    // Switches between the mobile master/detail views with a slide. The initial view on open is
-    // set directly (without animating) by the showOptions handler instead.
-    const switchMobileView = useCallback((view: "list" | "page") => {
-        if (view === mobileView) return;
-        setMobileView(view);
-        // With animations globally disabled there is no animationend to clear the transition,
-        // so switch directly. Outside the master-detail flow there is nothing to animate.
-        if (isMasterDetail && !document.body.classList.contains("motion-disabled")) {
-            setMobileTransition(view === "page" ? "to-page" : "to-list");
-        }
-    }, [ mobileView, isMasterDetail ]);
+    const { isMasterDetail, mobileView, switchMobileView, resetMobileView } = useMobileMasterDetail(modalRef, "options-slide");
 
     useTriliumEvent("showOptions", async ({ section }) => {
         const noteContext = new NoteContext("_options-dialog");
@@ -68,34 +44,9 @@ export default function OptionsDialog() {
         noteContext.triggerEvent = (name, data) => parentComponent?.handleEventInChildren(name, data);
         setNoteContext(noteContext);
         // Requesting a specific section (e.g. "set up a password") skips the mobile master list.
-        setMobileView(section ? "page" : "list");
-        setMobileTransition(null);
+        resetMobileView(section ? "page" : "list");
         setShown(true);
     });
-
-    // Bootstrap adds its own classes (e.g. `show`) to the modal element at runtime, so the
-    // className prop must stay static — rewriting it from a render would wipe them and visually
-    // dismiss the dialog. Toggle the mobile view classes directly on the element instead.
-    useEffect(() => {
-        modalRef.current?.classList.toggle("mobile-master-detail", isMasterDetail);
-        modalRef.current?.classList.toggle("mobile-view-list", mobileView === "list");
-        modalRef.current?.classList.toggle("mobile-view-page", mobileView === "page");
-        modalRef.current?.classList.toggle("mobile-transition-to-list", mobileTransition === "to-list");
-        modalRef.current?.classList.toggle("mobile-transition-to-page", mobileTransition === "to-page");
-    }, [ isMasterDetail, mobileView, mobileTransition ]);
-
-    // End the view transition once the slide finishes (animationend bubbles up from the panes).
-    useEffect(() => {
-        const modalElement = modalRef.current;
-        if (!modalElement) return;
-        function onAnimationEnd(e: AnimationEvent) {
-            if (e.animationName.startsWith("options-slide")) {
-                setMobileTransition(null);
-            }
-        }
-        modalElement.addEventListener("animationend", onAnimationEnd);
-        return () => modalElement.removeEventListener("animationend", onAnimationEnd);
-    }, []);
 
     // Keep navigation between settings pages (sidebar entries, "Related settings" links) inside the
     // dialog; links to regular notes open in the quick-edit popup instead.

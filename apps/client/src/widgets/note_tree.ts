@@ -457,10 +457,18 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
                 const notePath = treeService.getNotePath(data.node);
 
-                const activeNoteContext = appContext.tabManager.getActiveContext();
+                // Prefer the context this tree is bound to (e.g. a popup editor with its own
+                // hoisted context) over the globally active tab. For the main sidebar tree the
+                // bound context already is the active context, so behaviour is unchanged there.
+                const activeNoteContext = this.noteContext ?? appContext.tabManager.getActiveContext();
                 const opts: SetNoteOpts = {};
                 if (activeNoteContext?.viewScope?.viewMode === "contextual-help") {
                     opts.viewScope = activeNoteContext.viewScope;
+                }
+                // When this tree drives a context other than the active tab (e.g. one embedded in a
+                // popup editor), keep any open dialog so navigating the tree doesn't dismiss the popup.
+                if (activeNoteContext && activeNoteContext !== appContext.tabManager.getActiveContext()) {
+                    opts.keepActiveDialog = true;
                 }
                 await activeNoteContext?.setNote(notePath, opts);
             },
