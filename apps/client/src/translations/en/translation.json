@@ -2456,6 +2456,9 @@
   "popup-editor": {
     "maximize": "Switch to full editor"
   },
+  "tree-popup": {
+    "title": "Configure"
+  },
   "server": {
     "unknown_http_error_title": "Communication error with the server",
     "unknown_http_error_content": "Status code: {{statusCode}}\nURL: {{method}} {{url}}\nMessage: {{message}}",
