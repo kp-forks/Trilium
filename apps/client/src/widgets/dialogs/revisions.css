@@ -3,6 +3,11 @@ body.mobile .revisions-dialog {
         height: 95vh;
     }
 
+    .modal-content {
+        flex: 1;
+        min-height: 0;
+    }
+
     .modal-footer {
         font-size: 0.9em;
     }
