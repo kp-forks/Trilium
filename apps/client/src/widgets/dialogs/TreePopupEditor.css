@@ -17,6 +17,10 @@ body.desktop .modal.tree-popup-editor-dialog .modal-sidebar {
     width: 300px;
 }
 
+body.mobile .modal.tree-popup-editor-dialog .modal-sidebar {
+    border-top: 1px solid var(--main-border-color);
+}
+
 /* Match the normal left-pane sidebar so the tree blends in instead of sitting on the plain modal
    background (mirrors how the Options modal tints its own sidebar). */
 .modal.tree-popup-editor-dialog .modal-sidebar {
