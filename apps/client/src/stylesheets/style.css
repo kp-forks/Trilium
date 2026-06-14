@@ -1327,8 +1327,11 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     overflow: auto;
 }
 
-.include-note[data-box-size="small"] .include-note-content.type-pdf {
-    height: 10em; /* PDF is rendered in iframe and must be sized absolutely */
+/* PDFs and web views render in an (absolutely positioned) iframe, so they need an explicit
+   height per box size instead of an intrinsic, content-driven one. */
+.include-note[data-box-size="small"] .include-note-content.type-pdf,
+.include-note[data-box-size="small"] .include-note-content.type-webView {
+    height: 10em;
 }
 
 .include-note[data-box-size="medium"] .include-note-content {
@@ -1336,12 +1339,18 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     overflow: auto;
 }
 
-.include-note[data-box-size="medium"] .include-note-content.type-pdf .rendered-content {
-    height: 20em; /* PDF is rendered in iframe and must be sized absolutely */
+.include-note[data-box-size="medium"] .include-note-content.type-pdf .rendered-content,
+.include-note[data-box-size="medium"] .include-note-content.type-webView .rendered-content {
+    height: 20em;
 }
 
-.include-note[data-box-size="full"] .include-note-content.type-pdf .rendered-content {
-    height: 50em; /* PDF is rendered in iframe and it's not possible to put full height so at least a large height */
+.include-note[data-box-size="full"] .include-note-content.type-pdf .rendered-content,
+.include-note[data-box-size="full"] .include-note-content.type-webView .rendered-content {
+    height: 50em; /* an iframe can't take a percentage full height, so fall back to a large fixed one */
+}
+
+.include-note[data-box-size="expandable"] .include-note-content.type-webView .rendered-content {
+    height: 20em;
 }
 
 .include-note-wrapper {
@@ -1441,7 +1450,8 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
 .include-note-content.type-pdf,
 .include-note-content.type-image,
 .include-note-content.type-video,
-.include-note-content.type-canvas {
+.include-note-content.type-canvas,
+.include-note-content.type-webView {
     padding: 0;
 }
 
