@@ -1850,11 +1850,21 @@ export function useContainedLinkNavigation(
 
             e.preventDefault();
             e.stopPropagation();
-            onNavigate(notePath, viewScope);
+            // A double-click also fires a separate `dblclick` event that the global handler in
+            // link.ts treats as "open in a new tab", which would navigate away and dismiss the
+            // surrounding dialog. The preceding `click` already navigated, so for `dblclick` we
+            // only need to swallow the event and skip the redundant navigation.
+            if (e.type !== "dblclick") {
+                onNavigate(notePath, viewScope);
+            }
         }
 
         container.addEventListener("click", onClick, true);
-        return () => container.removeEventListener("click", onClick, true);
+        container.addEventListener("dblclick", onClick, true);
+        return () => {
+            container.removeEventListener("click", onClick, true);
+            container.removeEventListener("dblclick", onClick, true);
+        };
     }, [ containerRef, onNavigate ]);
 }
 
