@@ -9,8 +9,15 @@
 }
 
 /* Sidebar holding the hoisted note tree. */
-.modal.tree-popup-editor-dialog .modal-sidebar {
+body.desktop .modal.tree-popup-editor-dialog .modal-sidebar {
     width: 300px;
+}
+
+/* Match the normal left-pane sidebar so the tree blends in instead of sitting on the plain modal
+   background (mirrors how the Options modal tints its own sidebar). */
+.modal.tree-popup-editor-dialog .modal-sidebar {
+    color: var(--left-pane-text-color);
+    background-color: var(--left-pane-background-color);
 }
 
 .modal.tree-popup-editor-dialog .tree-popup-sidebar {
