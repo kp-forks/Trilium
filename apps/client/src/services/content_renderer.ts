@@ -87,6 +87,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (type === "webView" && options.interactive && !options.tooltip && entity instanceof FNote && entity.hasLabel("webViewSrc")) {
         await renderWebView(entity, $renderedContent);
+    } else if (type === "search" && options.interactive && !options.tooltip && entity instanceof FNote) {
+        await renderSearch(entity, $renderedContent);
     } else if (entity instanceof FNote) {
         $renderedContent.addClass("no-preview");
         $renderedContent.append(
@@ -353,6 +355,36 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
             viewScope: undefined,
             parentComponent: undefined,
             noteContext: undefined
+        }), container);
+    }
+    $renderedContent.append($container);
+}
+
+/**
+ * Executes a saved search and mounts the live {@link SearchNoteList} — the same results widget used
+ * in the note detail — into the rendered content. Used by interactive contexts (e.g. the dashboard
+ * and included notes) that opt in via {@link RenderOptions.interactive}; every other context keeps
+ * the static no-preview fallback. Loaded lazily so the collection views (and their dependencies) are
+ * only pulled in when a saved search is actually embedded.
+ */
+async function renderSearch(note: FNote, $renderedContent: JQuery<HTMLElement>) {
+    const [ { SearchNoteList }, { default: froca } ] = await Promise.all([
+        import("../widgets/collections/NoteList"),
+        import("./froca.js")
+    ]);
+
+    // A saved search must run server-side before its (virtual) result children exist.
+    await froca.loadSearchNote(note.noteId);
+
+    const $container = $('<div class="rendered-search">');
+    const container = $container.get(0);
+    if (container) {
+        render(h(SearchNoteList, {
+            note,
+            notePath: note.getBestNotePathString(),
+            ntxId: undefined,
+            media: "screen",
+            highlightedTokens: note.highlightedTokens
         }), container);
     }
     $renderedContent.append($container);

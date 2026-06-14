@@ -71,6 +71,9 @@ vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerCom
 const webViewComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
 
+const searchNoteListComponent = vi.fn(() => null);
+vi.mock("../widgets/collections/NoteList", () => ({ SearchNoteList: searchNoteListComponent }));
+
 // `addHook` is a no-op here: sanitize_content.ts registers a DOMPurify hook at
 // module load (pulled in transitively), which would otherwise throw against this mock.
 vi.mock("dompurify", () => ({ default: { sanitize: (s: string) => s, addHook: () => {} } }));
@@ -451,6 +454,37 @@ describe("generic FNote fallback / webView", () => {
         // The live embed replaces the static fallback.
         expect($renderedContent.find(".webview-footer").length).toBe(0);
         expect($renderedContent.hasClass("no-preview")).toBe(false);
+    });
+
+    it("executes the search and mounts the live results list for an interactive search note", async () => {
+        const note = buildNote({ title: "Saved", type: "search" });
+        vi.spyOn(note, "getBestNotePathString").mockReturnValue("root/saved");
+        const loadSpy = vi.spyOn(froca, "loadSearchNote").mockResolvedValue(undefined);
+
+        const { type, $renderedContent } = await getRenderedContent(note, { interactive: true });
+
+        expect(type).toBe("search");
+        expect(loadSpy).toHaveBeenCalledWith(note.noteId);
+        expect(searchNoteListComponent).toHaveBeenCalledOnce();
+        expect(searchNoteListComponent.mock.calls[0]?.[0]).toMatchObject({ note, media: "screen" });
+        expect($renderedContent.find(".rendered-search").length).toBe(1);
+        expect($renderedContent.hasClass("no-preview")).toBe(false);
+
+        loadSpy.mockRestore();
+    });
+
+    it("keeps the static fallback for a search note when interactive is off", async () => {
+        const note = buildNote({ title: "Saved2", type: "search" });
+        const loadSpy = vi.spyOn(froca, "loadSearchNote").mockResolvedValue(undefined);
+
+        const { $renderedContent } = await getRenderedContent(note);
+
+        expect(loadSpy).not.toHaveBeenCalled();
+        expect(searchNoteListComponent).not.toHaveBeenCalled();
+        expect($renderedContent.find(".rendered-search").length).toBe(0);
+        expect($renderedContent.hasClass("no-preview")).toBe(true);
+
+        loadSpy.mockRestore();
     });
 
     it("keeps the static fallback in a tooltip or without a src, even when interactive", async () => {
