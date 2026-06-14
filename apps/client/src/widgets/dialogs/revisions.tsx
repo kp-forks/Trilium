@@ -121,6 +121,7 @@ export default function RevisionsDialog() {
             revisions={revisions ?? []}
             onSelect={selectRevision}
             currentRevision={currentRevision}
+            detailed={utils.isMobile()}
         />
     );
 
@@ -371,15 +372,22 @@ function buildRevisionTooltip(item: RevisionItem): string {
     ].filter(Boolean).join("\n");
 }
 
-function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem }) {
+function RevisionsList({ revisions, onSelect, currentRevision, detailed }: { revisions: RevisionItem[], onSelect: (val: string) => void, currentRevision?: RevisionItem, detailed?: boolean }) {
     let lastGroup: DateGroup | "" = "";
 
     return (
-        <FormList onSelect={onSelect} fullHeight wrapperClassName="revision-list">
+        <FormList onSelect={onSelect} fullHeight wrapperClassName={clsx("revision-list", detailed && "detailed")}>
             {revisions.map((item) => {
                 const group = item.dateCreated ? getDateGroup(item.dateCreated) : "" as DateGroup;
                 const showHeader = group !== lastGroup;
                 lastGroup = group;
+
+                // On touch devices the hover tooltip is unreachable, so the source/size it carries are
+                // surfaced inline as a meta line instead.
+                const meta = detailed && [
+                    getRevisionSourceTitle(item.source),
+                    item.contentLength && utils.formatSize(item.contentLength)
+                ].filter(Boolean).join(" · ");
 
                 return (
                     <Fragment key={item.revisionId}>
@@ -390,7 +398,7 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                             key={item.revisionId}
                             value={item.revisionId}
                             icon={REVISION_SOURCE_ICONS[item.source ?? ""] ?? DEFAULT_REVISION_ICON}
-                            title={buildRevisionTooltip(item)}
+                            title={detailed ? undefined : buildRevisionTooltip(item)}
                             active={currentRevision && item.revisionId === currentRevision.revisionId}
                         >
                             <div>
@@ -400,6 +408,11 @@ function RevisionsList({ revisions, onSelect, currentRevision }: { revisions: Re
                                 {item.description && (
                                     <div className="revision-item-description">
                                         {item.description}
+                                    </div>
+                                )}
+                                {meta && (
+                                    <div className="revision-item-meta">
+                                        {meta}
                                     </div>
                                 )}
                             </div>

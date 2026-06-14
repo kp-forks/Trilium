@@ -118,6 +118,18 @@ body.desktop .revisions-dialog {
                 min-width: 0;
             }
         }
+
+        /* On touch devices the items carry the source/size inline (no hover tooltip), so let the
+           description wrap to its full text and give the rows a little more breathing room. */
+        &.detailed {
+            .dropdown-item {
+                padding-block: 6px;
+            }
+
+            .revision-item-description {
+                white-space: normal;
+            }
+        }
     }
 
     .revision-item-description {
