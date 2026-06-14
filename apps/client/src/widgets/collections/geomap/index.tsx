@@ -127,7 +127,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
             if (parents?.includes(note.noteId)) {
                 await moveMarker(noteId, latlng);
             } else {
-                await branches.cloneNoteToParentNote(noteId, noteId);
+                await branches.cloneNoteToParentNote(noteId, note.noteId);
                 await moveMarker(noteId, latlng);
             }
         }
