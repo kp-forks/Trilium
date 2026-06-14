@@ -1,3 +1,4 @@
+import { h } from "preact";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mock heavy / side-effecting collaborators BEFORE importing the SUT. ---
@@ -68,7 +69,7 @@ vi.mock("mermaid", () => ({
 const pdfViewerComponent = vi.fn(() => null);
 vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerComponent }));
 
-const webViewComponent = vi.fn(() => null);
+const webViewComponent = vi.fn(() => h("span", { class: "mock-webview-marker" }));
 vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
 
 const embeddedNoteListComponent = vi.fn(() => null);
@@ -88,7 +89,7 @@ vi.mock("@triliumnext/commons/src/lib/markdown_renderer", async (orig) => ({
 import FAttachment from "../entities/fattachment.js";
 import { buildNote } from "../test/easy-froca.js";
 import froca from "./froca.js";
-import { getRenderedContent as rawGetRenderedContent } from "./content_renderer.js";
+import { disposeInteractiveContent, getRenderedContent as rawGetRenderedContent } from "./content_renderer.js";
 import server from "./server.js";
 
 // getRenderedContent declares an explicit `this` parameter; bind it so callers don't need to.
@@ -531,6 +532,28 @@ describe("generic FNote fallback / webView", () => {
         expect(tip.$renderedContent.find(".webview-footer").length).toBe(1);
         expect(noSrc.$renderedContent.find(".note-detail-web-view").length).toBe(0);
         expect(noSrc.$renderedContent.hasClass("no-preview")).toBe(true);
+    });
+});
+
+describe("interactive content disposal", () => {
+    it("tags an interactive mount and disposes it, unmounting the widget", async () => {
+        const note = buildNote({ title: "WI", type: "webView", "#webViewSrc": "https://example.com" });
+        const { $renderedContent } = await getRenderedContent(note, { interactive: true });
+
+        const mount = $renderedContent.find("[data-interactive-mount]");
+        expect(mount.length).toBe(1);
+        expect(mount.find(".mock-webview-marker").length).toBe(1);
+
+        disposeInteractiveContent($renderedContent);
+        // render(null, ...) unmounted the widget, clearing the mount's rendered tree.
+        expect(mount.find(".mock-webview-marker").length).toBe(0);
+    });
+
+    it("is a no-op for content with no interactive mounts", async () => {
+        const note = buildNote({ title: "T", type: "text" });
+        const { $renderedContent } = await getRenderedContent(note);
+        expect($renderedContent.find("[data-interactive-mount]").length).toBe(0);
+        expect(() => disposeInteractiveContent($renderedContent)).not.toThrow();
     });
 });
 

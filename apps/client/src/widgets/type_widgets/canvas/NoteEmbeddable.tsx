@@ -19,6 +19,11 @@ export default function NoteEmbeddable({ noteId }: { noteId: string }) {
             return;
         }
 
+        // Holds the rendered content while it is mounted so the cleanup can unmount any interactive
+        // widgets it carries (collections, web views) — their standalone Preact roots would otherwise
+        // leak, keeping event subscriptions, maps and Bootstrap dropdowns alive after the embed is gone.
+        let rendered: JQuery<HTMLElement> | undefined;
+
         (async () => {
             const note = await froca.getNote(noteId);
             if (!note || cancelled) {
@@ -27,14 +32,20 @@ export default function NoteEmbeddable({ noteId }: { noteId: string }) {
 
             const { $renderedContent } = await content_renderer.getRenderedContent(note, { interactive: true });
             if (cancelled) {
+                // We were unmounted while rendering; tear down what was just mounted.
+                content_renderer.disposeInteractiveContent($renderedContent);
                 return;
             }
 
+            rendered = $renderedContent;
             container.replaceChildren(...$renderedContent.toArray());
         })();
 
         return () => {
             cancelled = true;
+            if (rendered) {
+                content_renderer.disposeInteractiveContent(rendered);
+            }
         };
     }, [noteId]);
 

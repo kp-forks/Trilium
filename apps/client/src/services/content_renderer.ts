@@ -364,6 +364,9 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
     $renderedContent.append($container);
 }
 
+/** Marks a standalone Preact root mounted by {@link mountInteractiveWidget} so it can be unmounted. */
+const INTERACTIVE_MOUNT_ATTR = "data-interactive-mount";
+
 /**
  * Mounts an interactive embedded widget (web view, collection) through the Trilium event bridge.
  * Wrapping it in a {@link ParentComponent} provider connected to {@link appContext} is what lets its
@@ -376,6 +379,8 @@ async function mountInteractiveWidget(vnode: JSX.Element, container: HTMLElement
         import("../components/app_context")
     ]);
     renderReactWidgetAtElement(appContext, vnode, container);
+    // Mark the standalone Preact root so disposeInteractiveContent() can later unmount it.
+    container.setAttribute(INTERACTIVE_MOUNT_ATTR, "");
 
     // The global [data-trigger-command] click delegate resolves its handler via
     // closest(".component").prop("component"). A standalone mount has no legacy widget setting that
@@ -387,6 +392,19 @@ async function mountInteractiveWidget(vnode: JSX.Element, container: HTMLElement
         if (!$(el).prop("component")) {
             $(el).prop("component", appContext);
         }
+    }
+}
+
+/**
+ * Unmounts any interactive widgets (web views, collections) that {@link getRenderedContent} mounted
+ * into the given content, running their cleanup — `useTriliumEvent` unsubscribe, Bootstrap dropdown
+ * disposal, map teardown. A caller embedding interactive content must call this when it replaces or
+ * discards that content, otherwise the standalone Preact roots leak. Safe (no-op) for content with no
+ * interactive widgets.
+ */
+export function disposeInteractiveContent($renderedContent: JQuery<HTMLElement>) {
+    for (const el of $renderedContent.find(`[${INTERACTIVE_MOUNT_ATTR}]`).toArray()) {
+        render(null, el);
     }
 }
 
@@ -460,5 +478,6 @@ function getRenderingType(entity: FNote | FAttachment) {
 }
 
 export default {
-    getRenderedContent
+    getRenderedContent,
+    disposeInteractiveContent
 };
