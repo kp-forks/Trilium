@@ -107,6 +107,9 @@ describe("IncludeNote", () => {
 
         expect(loadIncludedNote).toHaveBeenCalledTimes(1);
         expect(loadIncludedNote.mock.calls[0]?.[0]).toBe("noteY");
+        // The box size is passed explicitly so the client render does not have to read it back
+        // from the DOM (which may not be flushed yet at conversion time).
+        expect(loadIncludedNote.mock.calls[0]?.[2]).toBe("small");
     });
 
     it("updates the box-size class on the editing view when the boxSize attribute changes", () => {
@@ -121,6 +124,22 @@ describe("IncludeNote", () => {
         expect(section?.classList.contains("box-size-small")).toBe(false);
         expect(section?.classList.contains("box-size-full")).toBe(true);
         expect(section?.getAttribute("data-box-size")).toBe("full");
+    });
+
+    it("re-renders the included note content with the new size on a genuine box-size change", () => {
+        insertIncludeNote(editor, "noteReload", "small");
+
+        // One call for the initial render.
+        expect(loadIncludedNote).toHaveBeenCalledTimes(1);
+        expect(loadIncludedNote.mock.calls[0]?.[2]).toBe("small");
+
+        editor.execute(BOX_SIZE_COMMAND_NAME, { value: "expandable" });
+
+        // The downcast handler drives a second render with the new size, without any DOM observer.
+        expect(loadIncludedNote).toHaveBeenCalledTimes(2);
+        const reloadCall = loadIncludedNote.mock.calls[1];
+        expect(reloadCall?.[0]).toBe("noteReload");
+        expect(reloadCall?.[2]).toBe("expandable");
     });
 
     it("handles a boxSize change from an empty old value (no class to remove)", () => {
@@ -268,6 +287,89 @@ describe("IncludeNote", () => {
         // The widget should now be selected (the mousedown handler selects it).
         const selected = editor.model.document.selection.getSelectedElement();
         expect(selected?.name).toBe("includeNote");
+    });
+
+    it("suppresses the native caret on a non-interactive mousedown but not on interactive targets", () => {
+        insertIncludeNote(editor, "noteCaret", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // Clicking a plain (non-interactive) area should preventDefault so the browser does not
+        // drop a caret next to the contenteditable=false widget.
+        const plainEvt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const plainPrevent = vi.spyOn(plainEvt, "preventDefault");
+        wrapper.dispatchEvent(plainEvt);
+        expect(plainPrevent).toHaveBeenCalled();
+
+        // Clicking a link must keep native behaviour: the handler steps aside entirely, so neither
+        // preventDefault nor stopPropagation is called.
+        const innerLink = document.createElement("a");
+        innerLink.href = "#root/abc";
+        wrapper.appendChild(innerLink);
+
+        const linkEvt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const linkPrevent = vi.spyOn(linkEvt, "preventDefault");
+        const linkStop = vi.spyOn(linkEvt, "stopPropagation");
+        innerLink.dispatchEvent(linkEvt);
+        expect(linkPrevent).not.toHaveBeenCalled();
+        expect(linkStop).not.toHaveBeenCalled();
+    });
+
+    it("leaves a mousedown inside an embedded collection untouched so the live widget keeps working", () => {
+        insertIncludeNote(editor, "noteColl", "full");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // Simulate the embedded collection markup (e.g. a geo-map marker lives under .rendered-collection).
+        const collection = document.createElement("div");
+        collection.className = "rendered-collection";
+        const marker = document.createElement("div");
+        collection.appendChild(marker);
+        wrapper.appendChild(collection);
+
+        const evt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const prevent = vi.spyOn(evt, "preventDefault");
+        const stop = vi.spyOn(evt, "stopPropagation");
+        marker.dispatchEvent(evt);
+
+        // The handler must step aside completely so Leaflet (and other live widgets) get the event.
+        expect(prevent).not.toHaveBeenCalled();
+        expect(stop).not.toHaveBeenCalled();
+    });
+
+    it("treats a mousedown whose target is not an Element (e.g. a text node) as non-interactive", () => {
+        insertIncludeNote(editor, "noteText", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // A capture-phase mousedown on a bare text node makes evt.target a Text, not an Element. The
+        // interactive-target guard must short-circuit and report "not interactive", so the widget's
+        // normal suppression (preventDefault + stopPropagation) still runs.
+        const textNode = document.createTextNode("plain text");
+        wrapper.appendChild(textNode);
+
+        const evt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const prevent = vi.spyOn(evt, "preventDefault");
+        const stop = vi.spyOn(evt, "stopPropagation");
+        textNode.dispatchEvent(evt);
+
+        expect(prevent).toHaveBeenCalled();
+        expect(stop).toHaveBeenCalled();
     });
 
     it("stops propagation on focus and keydown inside the wrapper", () => {

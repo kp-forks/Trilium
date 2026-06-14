@@ -70,8 +70,17 @@ export default function NoteList(props: Pick<NoteListProps, "displayOnlyCollecti
 }
 
 export function SearchNoteList(props: Omit<NoteListProps, "isEnabled" | "viewType">) {
+    return <EmbeddedNoteList {...props} showTextRepresentation />;
+}
+
+/**
+ * Mounts a collection — a book or an (already-executed) saved search — as a live, prop-driven note
+ * list, picking the view type from the note's `viewType` label. Unlike {@link NoteList} it reads no
+ * note context, so it can be embedded outside the note detail (e.g. dashboard tiles, included notes).
+ */
+export function EmbeddedNoteList(props: Omit<NoteListProps, "isEnabled" | "viewType">) {
     const viewType = useNoteViewType(props.note);
-    return <CustomNoteList {...props} isEnabled={true} viewType={viewType} showTextRepresentation />;
+    return <CustomNoteList {...props} isEnabled={true} viewType={viewType} />;
 }
 
 export function CustomNoteList({ note, viewType, isEnabled: shouldEnable, notePath, highlightedTokens, displayOnlyCollections, ntxId, onReady, onProgressChanged, ...restProps }: NoteListProps) {
@@ -159,13 +168,21 @@ export function useNoteIds(note: FNote | null | undefined, viewType: ViewTypeOpt
     const [ noteIds, setNoteIds ] = useState<string[]>([]);
     const [ includeArchived ] = useNoteLabelBoolean(note, "includeArchived");
     const directChildrenOnly = (viewType === "list" || viewType === "grid" || viewType === "table" || viewType === "dashboard" || note?.type === "search");
+    // getNoteIds can do a server round-trip (archive filtering), so concurrent refreshes may resolve
+    // out of order. Track the latest issued refresh so a stale one can't clobber a newer result.
+    const refreshSeqRef = useRef(0);
 
     async function refreshNoteIds() {
-        if (!note) {
-            setNoteIds([]);
-        } else {
-            setNoteIds(await getNoteIds(note));
+        const seq = ++refreshSeqRef.current;
+        const result = note ? await getNoteIds(note) : [];
+        if (seq !== refreshSeqRef.current) {
+            // A newer refresh was issued while we were awaiting; let it win.
+            return;
         }
+        // getNoteIds may hand back froca's live children array, which is mutated in place when notes
+        // are cloned/removed. Setting that same reference would be a no-op for React (Object.is), so
+        // downstream effects never re-run. Copy it, and skip the update only when nothing changed.
+        setNoteIds(prev => sameNoteIds(prev, result) ? prev : [ ...result ]);
     }
 
     async function getNoteIds(note: FNote) {
@@ -222,6 +239,11 @@ export function useNoteIds(note: FNote | null | undefined, viewType: ViewTypeOpt
     }, [ note, noteIds, setNoteIds ]);
 
     return noteIds;
+}
+
+/** Order-sensitive equality for note-id lists, used to skip no-op `noteIds` updates. */
+function sameNoteIds(a: string[], b: string[]) {
+    return a.length === b.length && a.every((id, index) => id === b[index]);
 }
 
 export function useViewModeConfig<T extends object>(note: FNote | null | undefined, viewType: ViewModeStorageType | undefined) {

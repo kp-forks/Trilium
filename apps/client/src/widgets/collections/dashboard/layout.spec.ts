@@ -1,7 +1,7 @@
 import type { GridStack } from "gridstack";
 import { describe, expect, it } from "vitest";
 
-import { computeDropCell, DEFAULT_WIDGET_SIZE, GRID_COLUMNS, sameLayout, WidgetLayouts } from "./layout";
+import { computeDropCell, DEFAULT_WIDGET_SIZE, GRID_COLUMNS, reconcilePersistedLayout, sameLayout, WidgetLayouts } from "./layout";
 
 /** Minimal GridStack stand-in exposing only what computeDropCell reads. */
 function fakeGrid({ columns = GRID_COLUMNS, cellHeight = 80 }: { columns?: number; cellHeight?: number } = {}) {
@@ -44,6 +44,44 @@ describe("computeDropCell", () => {
     it("returns null when the grid has no measurable geometry yet", () => {
         expect(computeDropCell(fakeGrid({ cellHeight: 0 }), fakeContainer(), { clientX: 100, clientY: 100 })).toBeNull();
         expect(computeDropCell(fakeGrid(), fakeContainer({ width: 0 }), { clientX: 100, clientY: 100 })).toBeNull();
+    });
+});
+
+describe("reconcilePersistedLayout", () => {
+    const archived = { x: 5, y: 3, w: 4, h: 3 };
+    const normal = { x: 0, y: 0, w: 4, h: 3 };
+
+    it("retains a widget's saved position while it is filtered out of the grid (archived hidden → shown)", () => {
+        // Archived notes shown: both widgets live in the grid and are persisted together.
+        const shown: WidgetLayouts = { archived, normal };
+
+        // Archived notes hidden: only the normal widget remains in the grid. Persisting the layout
+        // now must not drop the archived widget's geometry just because it is no longer rendered —
+        // it is still a child of the dashboard, so re-showing it should restore its placement
+        // instead of auto-positioning it.
+        const afterHide = reconcilePersistedLayout(shown, { normal }, new Set([ "archived", "normal" ]));
+        expect(afterHide).toEqual({ archived, normal });
+    });
+
+    it("applies position changes and additions coming from the grid", () => {
+        const previous: WidgetLayouts = { a: normal };
+        const next = reconcilePersistedLayout(previous, { a: { ...normal, x: 6 }, b: archived }, new Set([ "a", "b" ]));
+        // Moved widgets win over their previous geometry, and brand-new widgets are included.
+        expect(next).toEqual({ a: { ...normal, x: 6 }, b: archived });
+    });
+
+    it("prunes the saved position of a widget whose note is no longer a child of the dashboard", () => {
+        // `removed` is absent from the grid AND no longer a live child (its branch was deleted) —
+        // its stale geometry must be dropped so the persisted layout doesn't grow unbounded.
+        const previous: WidgetLayouts = { normal, removed: archived };
+        const next = reconcilePersistedLayout(previous, { normal }, new Set([ "normal" ]));
+        expect(next).toEqual({ normal });
+    });
+
+    it("keeps a hidden child but prunes a removed note in the same pass", () => {
+        const previous: WidgetLayouts = { normal, hidden: archived, removed: { x: 8, y: 8, w: 1, h: 1 } };
+        const next = reconcilePersistedLayout(previous, { normal }, new Set([ "normal", "hidden" ]));
+        expect(next).toEqual({ normal, hidden: archived });
     });
 });
 

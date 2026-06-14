@@ -13,6 +13,7 @@ import FBlob from "../../entities/fblob";
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import froca from "../../services/froca";
+import { t } from "../../services/i18n";
 import keyboard_actions from "../../services/keyboard_actions";
 import { parseNavigationStateFromUrl, ViewScope } from "../../services/link";
 import options, { type OptionValue } from "../../services/options";
@@ -1161,6 +1162,48 @@ export function useNoteTreeDrag(containerRef: MutableRef<HTMLElement | null | un
             container.removeEventListener("dragleave", onDragLeave);
         };
     }, [ containerRef, callback ]);
+}
+
+/**
+ * Collection-specific wrapper around {@link useNoteTreeDrag}. It standardizes the drag-locked
+ * message shared by every collection view and, when the collection hides archived notes, warns the
+ * user after a drop that any archived notes were cloned in but stay hidden until "Show archived
+ * notes" is enabled (otherwise the note silently has no effect on the view).
+ *
+ * The `callback` should return the IDs of the notes it actually added (cloned) to the collection so
+ * the warning only mentions newly-copied notes, not ones that were already present.
+ */
+export function useCollectionTreeDrag(containerRef: MutableRef<HTMLElement | null | undefined>, { dragEnabled, includeArchived, callback }: {
+    dragEnabled: boolean,
+    includeArchived: boolean,
+    callback: (data: DragData[], e: DragEvent) => string[] | Promise<string[]>
+}) {
+    const wrappedCallback = useCallback(async (data: DragData[], e: DragEvent) => {
+        const addedNoteIds = await callback(data, e);
+        if (!includeArchived && addedNoteIds?.length) {
+            await warnIfArchivedNotesHidden(addedNoteIds);
+        }
+    }, [ includeArchived, callback ]);
+
+    useNoteTreeDrag(containerRef, {
+        dragEnabled,
+        dragNotEnabledMessage: {
+            icon: "bx bx-lock-alt",
+            title: t("book.drag_locked_title"),
+            message: t("book.drag_locked_message")
+        },
+        callback: wrappedCallback
+    });
+}
+
+/** Toast a heads-up when freshly cloned notes are archived and the collection hides them. */
+async function warnIfArchivedNotesHidden(addedNoteIds: string[]) {
+    const notes = await froca.getNotes(addedNoteIds);
+    const archivedCount = notes.filter((note) => note.isArchived).length;
+    if (!archivedCount) {
+        return;
+    }
+    toast.showMessage(t("book.archived_notes_hidden", { count: archivedCount }), 5000, "bx bx-archive");
 }
 
 /**
