@@ -43,6 +43,7 @@ export default function RevisionsDialog() {
     const [ refreshCounter, setRefreshCounter ] = useState(0);
     const modalRef = useRef<HTMLDivElement>(null);
     const { isMasterDetail, mobileView, switchMobileView, resetMobileView } = useMobileMasterDetail(modalRef, "revision-slide");
+    const isMobile = utils.isMobile();
 
     useTriliumEvent("showRevisions", async ({ noteId }) => {
         const note = await getNote(noteId);
@@ -125,6 +126,13 @@ export default function RevisionsDialog() {
         />
     );
 
+    const handleRevisionDeleted = () => {
+        setRefreshCounter(c => c + 1);
+        setCurrentRevision(undefined);
+        // The detail is now empty; on mobile slide back to the list.
+        switchMobileView("list");
+    };
+
     const menu = note && (
         <RevisionsMenu
             note={note}
@@ -172,12 +180,9 @@ export default function RevisionsDialog() {
                     showDiff={showDiff}
                     setShowDiff={setShowDiff}
                     setShown={setShown}
-                    onRevisionDeleted={() => {
-                        setRefreshCounter(c => c + 1);
-                        setCurrentRevision(undefined);
-                        // The detail is now empty; on mobile slide back to the list.
-                        switchMobileView("list");
-                    }}
+                    // On mobile the action buttons move to a bottom footer instead of the toolbar.
+                    showActions={!isMobile}
+                    onRevisionDeleted={handleRevisionDeleted}
                     onDescriptionUpdated={(revisionId, description) => {
                         setRevisions(prev => prev?.map(r =>
                             r.revisionId === revisionId ? { ...r, description } : r
@@ -194,6 +199,16 @@ export default function RevisionsDialog() {
                         showDiff={showDiff}
                     />
                 </div>
+                {isMobile && currentRevision && canInteractWithRevision(currentRevision) && (
+                    <div className="revision-detail-footer">
+                        <RevisionActions
+                            revisionItem={currentRevision}
+                            setShown={setShown}
+                            onRevisionDeleted={handleRevisionDeleted}
+                            variant="footer"
+                        />
+                    </div>
+                )}
             </div>
         </Modal>
     );
@@ -423,16 +438,18 @@ function RevisionsList({ revisions, onSelect, currentRevision, detailed }: { rev
         </FormList>);
 }
 
-function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevisionDeleted, onDescriptionUpdated }: {
+function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, showActions, onRevisionDeleted, onDescriptionUpdated }: {
     revisionItem?: RevisionItem,
     showDiff: boolean,
     setShowDiff: Dispatch<StateUpdater<boolean>>,
     setShown: Dispatch<StateUpdater<boolean>>,
+    /** Whether the delete/download/restore buttons are shown inline; on mobile they move to a footer. */
+    showActions: boolean,
     onRevisionDeleted?: () => void,
     onDescriptionUpdated?: (revisionId: string, description: string) => void,
 }) {
     const canShowDiff = DIFFABLE_TYPES.includes(revisionItem?.type ?? "");
-    const canInteract = revisionItem && (!revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable());
+    const canInteract = revisionItem && canInteractWithRevision(revisionItem);
     const [ editingDescription, setEditingDescription ] = useState(false);
     const [ descriptionDraft, setDescriptionDraft ] = useState("");
 
@@ -442,7 +459,7 @@ function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevi
 
     return (
         <div className="revision-toolbar">
-            {revisionItem && (
+            {revisionItem && (canShowDiff || (showActions && canInteract)) && (
                 <div className="revision-toolbar-actions">
                     {canShowDiff && (
                         <FormToggle
@@ -453,38 +470,13 @@ function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevi
                         />
                     )}
                     <div style="flex-grow: 1" />
-                    {canInteract && (
-                        <>
-                            <ActionButton
-                                icon="bx bx-trash"
-                                text={t("revisions.delete_button")}
-                                onClick={async () => {
-                                    if (await dialog.confirm(t("revisions.confirm_delete"))) {
-                                        await server.remove(`revisions/${revisionItem.revisionId}`);
-                                        toast.showMessage(t("revisions.revision_deleted"));
-                                        onRevisionDeleted?.();
-                                    }
-                                }} frame />
-                            <ActionButton
-                                icon="bx bx-download"
-                                text={t("revisions.download_button")}
-                                onClick={() => {
-                                    if (revisionItem.revisionId) {
-                                        open.downloadRevision(revisionItem.noteId, revisionItem.revisionId);
-                                    }
-                                }}
-                                frame />
-                            <Button
-                                icon="bx bx-history"
-                                text={t("revisions.restore_button")}
-                                onClick={async () => {
-                                    if (await dialog.confirm(t("revisions.confirm_restore"))) {
-                                        await server.post(`revisions/${revisionItem.revisionId}/restore`);
-                                        setShown(false);
-                                        toast.showMessage(t("revisions.revision_restored"));
-                                    }
-                                }}/>
-                        </>
+                    {showActions && canInteract && (
+                        <RevisionActions
+                            revisionItem={revisionItem}
+                            setShown={setShown}
+                            onRevisionDeleted={onRevisionDeleted}
+                            variant="toolbar"
+                        />
                     )}
                 </div>
             )}
@@ -508,6 +500,61 @@ function RevisionToolbar({ revisionItem, showDiff, setShowDiff, setShown, onRevi
                 />
             )}
         </div>
+    );
+}
+
+/** Whether the user may delete/download/restore the revision (protected revisions need an unlocked session). */
+function canInteractWithRevision(revisionItem: RevisionItem) {
+    return !revisionItem.isProtected || protected_session_holder.isProtectedSessionAvailable();
+}
+
+/**
+ * The delete/download/restore actions for the current revision. Rendered inline in the toolbar on
+ * desktop (`variant="toolbar"`, icon-only) and as labelled buttons in the detail footer on mobile
+ * (`variant="footer"`).
+ */
+function RevisionActions({ revisionItem, setShown, onRevisionDeleted, variant }: {
+    revisionItem: RevisionItem,
+    setShown: Dispatch<StateUpdater<boolean>>,
+    onRevisionDeleted?: () => void,
+    variant: "toolbar" | "footer"
+}) {
+    const onDelete = async () => {
+        if (await dialog.confirm(t("revisions.confirm_delete"))) {
+            await server.remove(`revisions/${revisionItem.revisionId}`);
+            toast.showMessage(t("revisions.revision_deleted"));
+            onRevisionDeleted?.();
+        }
+    };
+    const onDownload = () => {
+        if (revisionItem.revisionId) {
+            open.downloadRevision(revisionItem.noteId, revisionItem.revisionId);
+        }
+    };
+    const onRestore = async () => {
+        if (await dialog.confirm(t("revisions.confirm_restore"))) {
+            await server.post(`revisions/${revisionItem.revisionId}/restore`);
+            setShown(false);
+            toast.showMessage(t("revisions.revision_restored"));
+        }
+    };
+
+    if (variant === "footer") {
+        return (
+            <>
+                <Button kind="secondary" icon="bx bx-trash" text={t("revisions.delete_button")} onClick={onDelete} />
+                <Button kind="secondary" icon="bx bx-download" text={t("revisions.download_button")} onClick={onDownload} />
+                <Button kind="primary" icon="bx bx-history" text={t("revisions.restore_button")} onClick={onRestore} />
+            </>
+        );
+    }
+
+    return (
+        <>
+            <ActionButton icon="bx bx-trash" text={t("revisions.delete_button")} onClick={onDelete} frame />
+            <ActionButton icon="bx bx-download" text={t("revisions.download_button")} onClick={onDownload} frame />
+            <Button icon="bx bx-history" text={t("revisions.restore_button")} onClick={onRestore} />
+        </>
     );
 }
 

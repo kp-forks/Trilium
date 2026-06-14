@@ -23,6 +23,24 @@ body.mobile .revisions-dialog {
     .revision-content {
         padding: 0.5em;
     }
+
+    /* The action buttons (delete/download/restore) move out of the toolbar into a bottom footer. */
+    .revision-detail-footer {
+        flex-shrink: 0;
+        display: flex;
+        gap: 8px;
+        padding: 12px 16px calc(max(env(safe-area-inset-bottom), 12px));
+        border-top: 1px solid var(--main-border-color);
+        background-color: var(--modal-background-color);
+
+        > .btn {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+    }
 }
 
 body.desktop .revisions-dialog {
