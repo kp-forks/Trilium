@@ -262,11 +262,20 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
 	// commenting out click events to allow link click handler to still work
 	//domElement.addEventListener( 'click', stopEventPropagationAndHackRendererFocus, { capture: true } );
 
-	domElement.addEventListener( 'mousedown', ( evt: Event ) => {
+	domElement.addEventListener( 'mousedown', ( evt: MouseEvent ) => {
 		evt.stopPropagation();
 		// This prevents rendering changed view selection thus preventing to changing DOM selection while inside a widget.
 		//@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
+
+		// Suppress the browser's native caret for clicks on non-interactive areas. The widget's
+		// <section> is contenteditable=false inside an editable root, so the default mousedown action
+		// drops a caret next to it that visibly moves as the user clicks around. Interactive targets
+		// (links, buttons, form controls, embedded editables) keep their native behaviour — `click`
+		// and focus still fire because preventing the default of `mousedown` does not cancel them.
+		if ( !isInteractiveTarget( evt.target, domElement ) ) {
+			evt.preventDefault();
+		}
 
 		// Select the widget so the toolbar can appear
 		selectIncludeNoteWidget( domElement, editor );
@@ -283,6 +292,27 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
         //@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
 	}
+}
+
+/**
+ * Whether a mousedown target needs the browser's native handling (focus, caret placement, media
+ * controls) to keep working. Used to decide when it is safe to `preventDefault()` on a widget click
+ * in order to suppress the stray native caret without breaking interactive embedded content.
+ *
+ * The match is bounded to within `boundary` (the widget wrapper) so the editable editor root — an
+ * ancestor with `contenteditable="true"` — is never mistaken for an interactive target.
+ */
+function isInteractiveTarget( target: EventTarget | null, boundary: HTMLElement ): boolean {
+	if ( !( target instanceof Element ) ) {
+		return false;
+	}
+
+	const match = target.closest(
+		'a, button, input, textarea, select, label, audio, video, ' +
+		'[role="button"], [role="textbox"], [contenteditable]:not([contenteditable="false"])'
+	);
+
+	return !!match && boundary.contains( match );
 }
 
 function selectIncludeNoteWidget( domElement: HTMLElement, editor: Editor ) {

@@ -289,6 +289,35 @@ describe("IncludeNote", () => {
         expect(selected?.name).toBe("includeNote");
     });
 
+    it("suppresses the native caret on a non-interactive mousedown but not on interactive targets", () => {
+        insertIncludeNote(editor, "noteCaret", "small");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // Clicking a plain (non-interactive) area should preventDefault so the browser does not
+        // drop a caret next to the contenteditable=false widget.
+        const plainEvt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const plainPrevent = vi.spyOn(plainEvt, "preventDefault");
+        wrapper.dispatchEvent(plainEvt);
+        expect(plainPrevent).toHaveBeenCalled();
+
+        // Clicking a link must keep native behaviour, so preventDefault must NOT be called (the
+        // capture-phase handler on the wrapper still sees the event via its child target).
+        const innerLink = document.createElement("a");
+        innerLink.href = "#root/abc";
+        wrapper.appendChild(innerLink);
+
+        const linkEvt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const linkPrevent = vi.spyOn(linkEvt, "preventDefault");
+        innerLink.dispatchEvent(linkEvt);
+        expect(linkPrevent).not.toHaveBeenCalled();
+    });
+
     it("stops propagation on focus and keydown inside the wrapper", () => {
         insertIncludeNote(editor, "noteKbd", "small");
 
