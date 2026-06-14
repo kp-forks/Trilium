@@ -306,16 +306,45 @@ describe("IncludeNote", () => {
         wrapper.dispatchEvent(plainEvt);
         expect(plainPrevent).toHaveBeenCalled();
 
-        // Clicking a link must keep native behaviour, so preventDefault must NOT be called (the
-        // capture-phase handler on the wrapper still sees the event via its child target).
+        // Clicking a link must keep native behaviour: the handler steps aside entirely, so neither
+        // preventDefault nor stopPropagation is called.
         const innerLink = document.createElement("a");
         innerLink.href = "#root/abc";
         wrapper.appendChild(innerLink);
 
         const linkEvt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
         const linkPrevent = vi.spyOn(linkEvt, "preventDefault");
+        const linkStop = vi.spyOn(linkEvt, "stopPropagation");
         innerLink.dispatchEvent(linkEvt);
         expect(linkPrevent).not.toHaveBeenCalled();
+        expect(linkStop).not.toHaveBeenCalled();
+    });
+
+    it("leaves a mousedown inside an embedded collection untouched so the live widget keeps working", () => {
+        insertIncludeNote(editor, "noteColl", "full");
+
+        const domRoot = editor.editing.view.getDomRoot();
+        const wrapper = domRoot?.querySelector("div.include-note-wrapper");
+        expect(wrapper).not.toBeNull();
+        if (!wrapper) {
+            return;
+        }
+
+        // Simulate the embedded collection markup (e.g. a geo-map marker lives under .rendered-collection).
+        const collection = document.createElement("div");
+        collection.className = "rendered-collection";
+        const marker = document.createElement("div");
+        collection.appendChild(marker);
+        wrapper.appendChild(collection);
+
+        const evt = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
+        const prevent = vi.spyOn(evt, "preventDefault");
+        const stop = vi.spyOn(evt, "stopPropagation");
+        marker.dispatchEvent(evt);
+
+        // The handler must step aside completely so Leaflet (and other live widgets) get the event.
+        expect(prevent).not.toHaveBeenCalled();
+        expect(stop).not.toHaveBeenCalled();
     });
 
     it("stops propagation on focus and keydown inside the wrapper", () => {

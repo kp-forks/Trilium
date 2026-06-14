@@ -263,19 +263,24 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
 	//domElement.addEventListener( 'click', stopEventPropagationAndHackRendererFocus, { capture: true } );
 
 	domElement.addEventListener( 'mousedown', ( evt: MouseEvent ) => {
+		// Interactive embedded content — links, form controls, and live widgets such as collections
+		// (geo map, calendar, board, table) — needs the browser's native event handling to remain
+		// usable, e.g. dragging a geo-map marker relies on the mousedown reaching Leaflet. Leave those
+		// events completely alone: don't stop propagation, suppress the default, or steal selection.
+		if ( isInteractiveTarget( evt.target, domElement ) ) {
+			return;
+		}
+
 		evt.stopPropagation();
+
+		// Suppress the browser's native caret on non-interactive areas. The widget's <section> is
+		// contenteditable=false inside an editable root, so the default mousedown action drops a caret
+		// next to it that visibly moves as the user clicks around.
+		evt.preventDefault();
+
 		// This prevents rendering changed view selection thus preventing to changing DOM selection while inside a widget.
 		//@ts-expect-error: We are accessing a private field.
 		editor.editing.view._renderer.isFocused = false;
-
-		// Suppress the browser's native caret for clicks on non-interactive areas. The widget's
-		// <section> is contenteditable=false inside an editable root, so the default mousedown action
-		// drops a caret next to it that visibly moves as the user clicks around. Interactive targets
-		// (links, buttons, form controls, embedded editables) keep their native behaviour — `click`
-		// and focus still fire because preventing the default of `mousedown` does not cancel them.
-		if ( !isInteractiveTarget( evt.target, domElement ) ) {
-			evt.preventDefault();
-		}
 
 		// Select the widget so the toolbar can appear
 		selectIncludeNoteWidget( domElement, editor );
@@ -295,9 +300,10 @@ function preventCKEditorHandling( domElement: HTMLElement, editor: Editor ) {
 }
 
 /**
- * Whether a mousedown target needs the browser's native handling (focus, caret placement, media
- * controls) to keep working. Used to decide when it is safe to `preventDefault()` on a widget click
- * in order to suppress the stray native caret without breaking interactive embedded content.
+ * Whether a mousedown target needs the browser's native handling to keep working — so the widget's
+ * event interception should step aside. Covers form controls, links and media (which need focus,
+ * caret or their own controls) and, crucially, live embedded widgets: web views and collection views
+ * (geo map, calendar, board, table) whose own drag/click handlers rely on the native event.
  *
  * The match is bounded to within `boundary` (the widget wrapper) so the editable editor root — an
  * ancestor with `contenteditable="true"` — is never mistaken for an interactive target.
@@ -308,6 +314,7 @@ function isInteractiveTarget( target: EventTarget | null, boundary: HTMLElement 
 	}
 
 	const match = target.closest(
+		'.rendered-collection, .note-detail-web-view, ' +
 		'a, button, input, textarea, select, label, audio, video, ' +
 		'[role="button"], [role="textbox"], [contenteditable]:not([contenteditable="false"])'
 	);
