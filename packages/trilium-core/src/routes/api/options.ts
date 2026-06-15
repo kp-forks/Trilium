@@ -92,6 +92,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "checkForUpdates",
     "disableTray",
     "closeToTray",
+    "launchOnStartup",
     "eraseUnusedAttachmentsAfterSeconds",
     "eraseUnusedAttachmentsAfterTimeScale",
     "disableTray",

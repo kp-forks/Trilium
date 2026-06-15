@@ -36,6 +36,15 @@ function reloadTray() {
     window.electronApi?.tray.reloadTray();
 }
 
+/**
+ * Re-applies the OS autostart entry after the `launchOnStartup` option changes.
+ *
+ * On any other platform than Electron, nothing happens.
+ */
+function reapplyLaunchOnStartup() {
+    window.electronApi?.autoLaunch.reapply();
+}
+
 function parseDate(str: string) {
     try {
         return new Date(Date.parse(str));
@@ -864,6 +873,7 @@ export default {
     reloadFrontendApp,
     restartDesktopApp,
     reloadTray,
+    reapplyLaunchOnStartup,
     parseDate,
     formatDateISO,
     formatDateTime,

@@ -380,6 +380,15 @@ describe("preload script", () => {
         });
     });
 
+    describe("autoLaunch", () => {
+        const autoLaunch = () => getGroup("autoLaunch");
+
+        it("reapply sends correct IPC message", () => {
+            autoLaunch().reapply();
+            expect(ipcRendererSent).toContainEqual({ channel: "reapply-launch-on-startup", args: [] });
+        });
+    });
+
     describe("printing", () => {
         const printing = () => getGroup("printing");
 

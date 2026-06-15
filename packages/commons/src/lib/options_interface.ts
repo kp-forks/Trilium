@@ -170,6 +170,8 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     disableTray: boolean;
     /** When closing the window on desktop, hide it to the system tray instead of quitting. Requires the tray icon to be enabled. */
     closeToTray: boolean;
+    /** Whether the desktop app is launched automatically when the user logs into their computer. */
+    launchOnStartup: boolean;
     editedNotesOpenInRibbon: boolean;
     codeBlockWordWrap: boolean;
     codeBlockTabWidth: number;

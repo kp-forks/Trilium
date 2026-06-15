@@ -1519,6 +1519,11 @@
     "custom_url_placeholder": "Search engine URL",
     "save_button": "Save"
   },
+  "startup": {
+    "title": "Startup",
+    "launch_on_startup": "Launch on startup",
+    "launch_on_startup_description": "Open Trilium automatically when you log into your computer."
+  },
   "tray": {
     "title": "System Tray",
     "enable_tray": "Tray icon",

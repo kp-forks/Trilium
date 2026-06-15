@@ -161,6 +161,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         }
     },
 
+    autoLaunch: {
+        reapply() {
+            ipcRenderer.send("reapply-launch-on-startup");
+        }
+    },
+
     printing: {
         sendPrintProgress(progress: number) {
             ipcRenderer.send("print-progress", progress);

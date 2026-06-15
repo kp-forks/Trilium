@@ -21,6 +21,7 @@ export default function OtherSettings() {
             <SearchSettings />
             {isElectron() && <>
                 <SearchEngineSettings />
+                <StartupSettings />
                 <TrayOptionsSettings />
             </>}
             <NoteErasureTimeout />
@@ -103,6 +104,26 @@ function SearchEngineSettings() {
                     placeholder={t("search_engine.custom_url_placeholder")}
                 />
             </OptionsRow>
+        </OptionsSection>
+    );
+}
+
+function StartupSettings() {
+    const [ launchOnStartup, setLaunchOnStartup ] = useTriliumOptionBool("launchOnStartup");
+
+    return (
+        <OptionsSection title={t("startup.title")}>
+            <OptionsRowWithToggle
+                name="launch-on-startup"
+                label={t("startup.launch_on_startup")}
+                description={t("startup.launch_on_startup_description")}
+                currentValue={launchOnStartup}
+                onChange={async enabled => {
+                    await setLaunchOnStartup(enabled);
+                    // Apply the change immediately so the user doesn't have to restart the app.
+                    utils.reapplyLaunchOnStartup();
+                }}
+            />
         </OptionsSection>
     );
 }

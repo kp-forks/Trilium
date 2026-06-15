@@ -348,6 +348,12 @@ export interface ElectronTrayApi {
     reloadTray(): void;
 }
 
+/** Autostart / launch-on-login controls. */
+export interface ElectronAutoLaunchApi {
+    /** Re-applies the OS autostart entry after the `launchOnStartup` option changes. */
+    reapply(): void;
+}
+
 /**
  * Printing and PDF export flow. Trilium drives Electron's printing pipeline
  * through a small state machine that the main process owns, with progress and
@@ -492,6 +498,8 @@ export interface ElectronApi {
     spellcheck: ElectronSpellcheckApi;
     /** System tray menu controls. */
     tray: ElectronTrayApi;
+    /** Autostart / launch-on-login controls. */
+    autoLaunch: ElectronAutoLaunchApi;
     /** Printing and PDF export pipeline. */
     printing: ElectronPrintingApi;
     /** Read/write access to Chromium's back/forward navigation history. */

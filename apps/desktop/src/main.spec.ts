@@ -63,6 +63,8 @@ const h = vi.hoisted(() => ({
     createSetupWindow: vi.fn((..._a: unknown[]) => Promise.resolve()),
     createExtraWindow: vi.fn((..._a: unknown[]) => {}),
     registerGlobalShortcuts: vi.fn((..._a: unknown[]) => Promise.resolve()),
+    setupAutoLaunch: vi.fn(),
+    applyLaunchOnStartup: vi.fn(),
     unregisterAll: vi.fn(),
     // Controllable server start so tests can simulate a slow/hanging server.
     startServer: (() => Promise.resolve({})) as () => Promise<unknown>
@@ -177,6 +179,10 @@ vi.mock("./protocol", () => ({ registerTriliumAppScheme: vi.fn(), setupTriliumAp
 vi.mock("./services/custom_dictionary", () => ({ setupCustomDictionary: vi.fn() }));
 vi.mock("./services/printing", () => ({ setupPrintingHandlers: vi.fn() }));
 vi.mock("./services/tray", () => ({ setupSystemTray: vi.fn() }));
+vi.mock("./services/auto_launch", () => ({
+    setupAutoLaunch: (...a: unknown[]) => h.setupAutoLaunch(...a),
+    applyLaunchOnStartup: (...a: unknown[]) => h.applyLaunchOnStartup(...a)
+}));
 vi.mock("./services/shell", () => ({ setupShellHandlers: vi.fn() }));
 vi.mock("./services/security_settings", () => ({
     getSecuritySettings: () => h.securitySettings,
@@ -423,6 +429,9 @@ describe("app event handlers", () => {
 
             expect(h.createMainWindow).toHaveBeenCalledTimes(1);
             expect(h.registerGlobalShortcuts).toHaveBeenCalled();
+            // The autostart entry is reconciled with the stored option on a DB-ready boot.
+            expect(h.setupAutoLaunch).toHaveBeenCalled();
+            expect(h.applyLaunchOnStartup).toHaveBeenCalled();
 
             // The "activate" handler is registered on darwin.
             const activate = h.appOn.get("activate");

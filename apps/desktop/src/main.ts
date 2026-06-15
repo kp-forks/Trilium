@@ -25,6 +25,7 @@ import { PRODUCT_NAME } from "./app-info";
 import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme, setupTriliumAppProtocol } from "./protocol";
+import { applyLaunchOnStartup, setupAutoLaunch } from "./services/auto_launch";
 import { setupCustomDictionary } from "./services/custom_dictionary";
 import { setupPrintingHandlers } from "./services/printing";
 import { getSecuritySettings, registerSecurityIpcHandlers } from "./services/security_settings";
@@ -119,6 +120,7 @@ export async function main() {
 
     setupWindowing();
     setupSystemTray();
+    setupAutoLaunch();
     setupCustomDictionary();
     setupShellHandlers();
     setupPrintingHandlers();
@@ -262,6 +264,11 @@ async function onReady() {
         await sql_init.dbReady;
 
         await windowService.createMainWindow();
+
+        // Repair the OS autostart entry so it matches the stored option (it can
+        // drift if the user toggled it elsewhere). Options are loaded now that the
+        // DB is ready.
+        applyLaunchOnStartup();
 
         if (process.platform === "darwin") {
             app.on("activate", async () => {

@@ -1,0 +1,65 @@
+import { getLog, options as optionService, utils as coreUtils } from "@triliumnext/core";
+import electron from "electron";
+import fs from "fs";
+import os from "os";
+import path from "path";
+
+// Electron's app.setLoginItemSettings() covers macOS and Windows but is a no-op on
+// Linux, where autostart is instead a freedesktop ".desktop" file dropped into the
+// per-user autostart directory. We therefore branch on the platform.
+const LINUX_AUTOSTART_DIR = path.join(os.homedir(), ".config", "autostart");
+const LINUX_DESKTOP_FILE = path.join(LINUX_AUTOSTART_DIR, "trilium.desktop");
+
+/**
+ * Reconciles the OS autostart entry with the current `launchOnStartup` option.
+ * Safe to call repeatedly (it's idempotent) and on every startup, so the OS state
+ * is repaired if it drifts from the stored option. Failures are logged rather than
+ * thrown so a permission error (e.g. a read-only autostart dir on Linux) can't take
+ * down app startup.
+ */
+export function applyLaunchOnStartup() {
+    try {
+        const enabled = optionService.getOptionBool("launchOnStartup");
+
+        if (process.platform === "linux") {
+            applyLinuxAutostart(enabled);
+        } else {
+            // macOS + Windows: handled natively by Electron.
+            electron.app.setLoginItemSettings({ openAtLogin: enabled });
+        }
+    } catch (e) {
+        getLog().error(`Failed to apply launch-on-startup setting: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+    }
+}
+
+/**
+ * Registers the IPC the renderer sends after the `launchOnStartup` option changes,
+ * so the autostart entry updates immediately without an app restart.
+ */
+export function setupAutoLaunch() {
+    electron.ipcMain.on("reapply-launch-on-startup", applyLaunchOnStartup);
+}
+
+function applyLinuxAutostart(enabled: boolean) {
+    if (enabled) {
+        fs.mkdirSync(LINUX_AUTOSTART_DIR, { recursive: true });
+        fs.writeFileSync(LINUX_DESKTOP_FILE, buildLinuxDesktopEntry());
+    } else {
+        fs.rmSync(LINUX_DESKTOP_FILE, { force: true });
+    }
+}
+
+function buildLinuxDesktopEntry() {
+    // When packaged as an AppImage, APPIMAGE points at the bundle to relaunch;
+    // otherwise fall back to the running executable.
+    const exec = process.env.APPIMAGE ?? process.execPath;
+    return [
+        "[Desktop Entry]",
+        "Type=Application",
+        `Name=${electron.app.getName()}`,
+        `Exec="${exec}"`,
+        "Terminal=false",
+        "X-GNOME-Autostart-enabled=true",
+        ""
+    ].join("\n");
+}
