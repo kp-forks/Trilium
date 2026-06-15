@@ -2,7 +2,7 @@ import "./SettingsNavigation.css";
 
 import clsx from "clsx";
 
-import { useChildNotes } from "../../../react/hooks";
+import { useOptionPages } from "../../../dialogs/OptionsDialog";
 
 interface SettingsNavigationProps {
     /** Note ID of the settings page currently being displayed (e.g. `_optionsAppearance`). */
@@ -18,7 +18,7 @@ interface SettingsNavigationProps {
  * modified clicks (ctrl/middle/shift) fall through to the global handler to open a new tab/window.
  */
 export default function SettingsNavigation({ activeNoteId }: SettingsNavigationProps) {
-    const pages = useChildNotes("_options");
+    const pages = useOptionPages();
 
     return (
         <nav className="settings-navigation">
