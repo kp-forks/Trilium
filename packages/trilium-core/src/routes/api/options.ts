@@ -91,6 +91,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "highlightsList",
     "checkForUpdates",
     "disableTray",
+    "closeToTray",
     "eraseUnusedAttachmentsAfterSeconds",
     "eraseUnusedAttachmentsAfterTimeScale",
     "disableTray",

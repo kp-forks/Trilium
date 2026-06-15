@@ -168,6 +168,8 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     downloadImagesAutomatically: boolean;
     checkForUpdates: boolean;
     disableTray: boolean;
+    /** When closing the window on desktop, hide it to the system tray instead of quitting. Requires the tray icon to be enabled. */
+    closeToTray: boolean;
     editedNotesOpenInRibbon: boolean;
     codeBlockWordWrap: boolean;
     codeBlockTabWidth: number;

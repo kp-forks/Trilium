@@ -1522,7 +1522,9 @@
   "tray": {
     "title": "System Tray",
     "enable_tray": "Tray icon",
-    "enable_tray_description": "Changes apply immediately, though on some platforms hiding the tray icon may require restarting Trilium."
+    "enable_tray_description": "Changes apply immediately, though on some platforms hiding the tray icon may require restarting Trilium.",
+    "close_to_tray": "Close to tray",
+    "close_to_tray_description": "When you close the window, keep Trilium running in the system tray instead of quitting. Requires the tray icon to be enabled."
   },
   "text_editor": {
     "title": "Editor",

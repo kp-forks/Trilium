@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
     shouldUseDarkColors: false,
     // captured handlers
     appHandlers: new Map<string, Handler>(),
+    appQuit: vi.fn(),
     ipcHandlers: new Map<string, Handler>(),
     nativeThemeHandlers: new Map<string, Handler>(),
     i18nHandlers: new Map<string, Handler>(),
@@ -87,7 +88,8 @@ vi.mock("electron", () => ({
             on: (channel: string, fn: Handler) => state.ipcHandlers.set(channel, fn)
         },
         app: {
-            on: (event: string, fn: Handler) => state.appHandlers.set(event, fn)
+            on: (event: string, fn: Handler) => state.appHandlers.set(event, fn),
+            quit: (...args: unknown[]) => state.appQuit(...args)
         },
         BrowserWindow: {
             getAllWindows: () => state.browserWindowAll
@@ -454,13 +456,17 @@ describe("tray", () => {
             await todayClick?.();
             expect(win.webContents.send).toHaveBeenCalledWith("openInSameTab", "today");
 
-            // "close" closes all BrowserWindow windows.
+            // "close" (labelled "Quit Trilium") genuinely quits the app. It calls
+            // app.quit() rather than closing windows so the close-to-tray
+            // interceptor (which would otherwise hide them) is bypassed via
+            // before-quit.
             findItem("tray.close")?.click?.(
                 undefined as never,
                 undefined as never,
                 undefined as never
             );
-            expect(win.close).toHaveBeenCalled();
+            expect(state.appQuit).toHaveBeenCalled();
+            expect(win.close).not.toHaveBeenCalled();
         });
 
         it("open-new-window and new-note no-op when no focused window", () => {

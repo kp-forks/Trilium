@@ -433,10 +433,16 @@ describe("app event handlers", () => {
             await activate?.();
             expect(h.createMainWindow).toHaveBeenCalledTimes(2);
 
-            // Existing windows → do not create another.
+            // Existing windows → do not create another; instead reveal the
+            // (possibly close-to-tray-hidden) last focused window.
+            const show = vi.fn();
+            const focus = vi.fn();
             h.allWindows = [{}];
+            h.lastFocusedWindow = { isMinimized: () => false, restore: vi.fn(), show, focus };
             await activate?.();
             expect(h.createMainWindow).toHaveBeenCalledTimes(2);
+            expect(show).toHaveBeenCalled();
+            expect(focus).toHaveBeenCalled();
         });
 
         it("does not register activate on non-darwin even when DB is initialized", async () => {

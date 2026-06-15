@@ -17,6 +17,8 @@ const state = vi.hoisted(() => ({
     ipcOn: new Map<string, Handler>(),
     ipcHandle: new Map<string, Handler>(),
     ipcEmit: vi.fn(),
+    // captured electron.app event handlers (e.g. before-quit)
+    appOn: new Map<string, Handler>(),
     // captured events.subscribe callbacks keyed by event name
     eventSubs: new Map<string, Handler>(),
     // captured BrowserWindow instances
@@ -155,7 +157,9 @@ const fakeNativeImage = {
 const fakeApp = {
     setUserTasks: vi.fn(),
     relaunch: vi.fn(),
-    exit: vi.fn()
+    exit: vi.fn(),
+    quit: vi.fn(),
+    on: vi.fn((event: string, cb: Handler) => state.appOn.set(event, cb))
 };
 
 const electronSurface = {
@@ -268,6 +272,7 @@ beforeEach(() => {
     state.keyboardActions = [];
     state.windows = [];
     state.fromWebContentsResult = undefined;
+    state.appOn.clear();
     state.registerResults = [];
     state.nativeImageEmpty = false;
     state.nativeImageThrow = false;
@@ -892,6 +897,67 @@ describe("window service", () => {
             await cb();
             spy.mockRestore();
             expect(state.log.error).toHaveBeenCalledWith(expect.stringContaining("Failed to swap"));
+        });
+    });
+
+    describe("close-to-tray", () => {
+        it("hides the main window instead of closing when closeToTray is enabled", async () => {
+            state.optionBools = { closeToTray: true };
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).toHaveBeenCalled();
+            expect(win.hide).toHaveBeenCalled();
+            // The window must survive so it can be shown again from the tray.
+            expect(windowService.getMainWindow()).toBe(win);
+        });
+
+        it("closes normally when closeToTray is disabled", async () => {
+            state.optionBools = {};
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
+        });
+
+        it("closes normally when the tray is disabled, even if closeToTray is on", async () => {
+            state.optionBools = { closeToTray: true, disableTray: true };
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
+        });
+
+        // NOTE: keep this test LAST. `before-quit` flips the module-level
+        // `isQuitting` flag to `true` and nothing resets it, so any close-to-tray
+        // assertion ordered after this one would see the window close for real.
+        it("lets the main window close for real once a genuine quit is underway", async () => {
+            setupWindowing();
+            state.optionBools = { closeToTray: true };
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            // Simulate a real quit (Cmd+Q, tray "Quit", app menu, OS shutdown).
+            const beforeQuit = state.appOn.get("before-quit");
+            if (!beforeQuit) throw new Error("before-quit handler not registered");
+            beforeQuit();
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
         });
     });
 });

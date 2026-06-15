@@ -36,6 +36,11 @@ let setupWindow: BrowserWindow | null;
 let allWindows: BrowserWindow[] = []; // Used to store all windows, sorted by the order of focus.
 const loadedSpellcheckSessions = new WeakSet<Session>();
 
+// Set to `true` once the app is genuinely quitting (via `before-quit`, which fires
+// for every real quit path: Cmd+Q, the tray "Quit" item, the app menu, OS shutdown).
+// The close-to-tray interceptor checks this so a true quit isn't swallowed into a hide.
+let isQuitting = false;
+
 function trackWindowFocus(win: BrowserWindow) {
     // We need to get the last focused window from allWindows. If the last window is closed, we return the previous window.
     // Therefore, we need to push the window into the allWindows array every time it gets focused.
@@ -138,6 +143,15 @@ async function createMainWindow() {
 
     mainWindow.setMenuBarVisibility(false);
     mainWindow.loadURL(TRILIUM_APP_BASE_URL);
+    // Close-to-tray: when enabled, closing the main window hides it to the tray
+    // instead of quitting. Only intercepts a genuine window close (not an app
+    // quit, which sets `isQuitting` first). Extra windows are unaffected.
+    mainWindow.on("close", (event) => {
+        if (!isQuitting && !optionService.getOptionBool("disableTray") && optionService.getOptionBool("closeToTray")) {
+            event.preventDefault();
+            mainWindow?.hide();
+        }
+    });
     mainWindow.on("closed", () => (mainWindow = null));
 
     configureWebContents(mainWindow.webContents, spellcheckEnabled);
@@ -375,6 +389,12 @@ export function setupWindowing() {
     // each entry point so a new Electron launcher cannot silently ship without
     // the renderer/main security boundary.
     setupWebContentsSecurity();
+
+    // Mark a genuine quit so the close-to-tray interceptor lets windows close for
+    // real. Fires for every quit path (Cmd+Q, tray "Quit", app menu, OS shutdown).
+    electron.app.on("before-quit", () => {
+        isQuitting = true;
+    });
 
     electron.ipcMain.on("create-extra-window", (_event, arg) => {
         createExtraWindow(arg.extraWindowHash);

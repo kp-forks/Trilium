@@ -267,6 +267,12 @@ async function onReady() {
             app.on("activate", async () => {
                 if (BrowserWindow.getAllWindows().length === 0) {
                     await windowService.createMainWindow();
+                } else {
+                    // Close-to-tray may have hidden the window rather than destroying
+                    // it, so a dock-icon click must reveal the existing window.
+                    const win = windowService.getLastFocusedWindow();
+                    win?.show();
+                    win?.focus();
                 }
             });
         }

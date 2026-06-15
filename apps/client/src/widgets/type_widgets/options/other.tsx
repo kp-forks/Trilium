@@ -109,6 +109,7 @@ function SearchEngineSettings() {
 
 function TrayOptionsSettings() {
     const [ disableTray, setDisableTray ] = useTriliumOptionBool("disableTray");
+    const [ closeToTray, setCloseToTray ] = useTriliumOptionBool("closeToTray");
 
     return (
         <OptionsSection title={t("tray.title")}>
@@ -122,6 +123,15 @@ function TrayOptionsSettings() {
                     // Apply the change immediately so the user doesn't have to restart the app.
                     utils.reloadTray();
                 }}
+            />
+            <OptionsRowWithToggle
+                name="close-to-tray"
+                label={t("tray.close_to_tray")}
+                description={t("tray.close_to_tray_description")}
+                currentValue={closeToTray}
+                // Close-to-tray with no tray icon would hide the app with no way back.
+                disabled={disableTray}
+                onChange={setCloseToTray}
             />
         </OptionsSection>
     );

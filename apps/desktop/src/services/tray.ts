@@ -263,12 +263,11 @@ function updateTrayMenu() {
             label: t("tray.close"),
             type: "normal",
             icon: getIconPath("close"),
-            click: () => {
-                const windows = electron.BrowserWindow.getAllWindows();
-                windows.forEach(window => {
-                    window.close();
-                });
-            }
+            // Genuinely quit. `app.quit()` triggers `before-quit`, which clears the
+            // close-to-tray interception so the windows close for real instead of
+            // hiding back to the tray. Works on macOS too (where closing the last
+            // window does not quit by itself).
+            click: () => electron.app.quit()
         }
     ]);
 
