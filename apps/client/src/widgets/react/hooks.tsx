@@ -13,6 +13,7 @@ import FBlob from "../../entities/fblob";
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
 import froca from "../../services/froca";
+import { t } from "../../services/i18n";
 import keyboard_actions from "../../services/keyboard_actions";
 import { parseNavigationStateFromUrl, ViewScope } from "../../services/link";
 import options, { type OptionValue } from "../../services/options";
@@ -943,6 +944,79 @@ export function useWindowSize() {
     return size;
 }
 
+/** Mobile viewports at least this wide (tablets) keep a side-by-side layout; narrower ones get the
+ *  master-detail flow. */
+export const MASTER_DETAIL_TABLET_MIN_WIDTH = 768;
+
+export interface MobileMasterDetail {
+    /** True on narrow mobile viewports where the list and detail collapse into a master-detail flow. */
+    isMasterDetail: boolean;
+    /** Which half of the master-detail flow is currently visible. */
+    mobileView: "list" | "page";
+    /** Switch between the two views with a slide animation. */
+    switchMobileView: (view: "list" | "page") => void;
+    /** Set the view directly without animating (e.g. when (re)opening the dialog). */
+    resetMobileView: (view: "list" | "page") => void;
+}
+
+/**
+ * Drives the mobile master-detail flow shared by dialogs that pair a list with a detail pane (e.g.
+ * the settings and revisions dialogs): it tracks which pane is visible, animates the slide between
+ * them, and toggles the corresponding classes on the modal element (`mobile-master-detail`,
+ * `mobile-view-{list,page}`, `mobile-transition-to-{list,page}`). The dialog supplies the layout and
+ * slide keyframes in CSS; the keyframe names must start with `slideAnimationPrefix` so the in-flight
+ * transition can be cleared once the slide finishes.
+ */
+export function useMobileMasterDetail(modalRef: RefObject<HTMLElement>, slideAnimationPrefix: string): MobileMasterDetail {
+    const [ mobileView, setMobileView ] = useState<"list" | "page">("list");
+    // Direction of the in-flight slide between the two views, or null when at rest. While set, both
+    // panes stay rendered so the outgoing one can slide away as the incoming one slides in.
+    const [ mobileTransition, setMobileTransition ] = useState<"to-list" | "to-page" | null>(null);
+    const isMobile = utils.isMobile();
+    const { windowWidth } = useWindowSize();
+    const isMasterDetail = isMobile && windowWidth < MASTER_DETAIL_TABLET_MIN_WIDTH;
+
+    const switchMobileView = useCallback((view: "list" | "page") => {
+        if (view === mobileView) return;
+        setMobileView(view);
+        // With animations globally disabled there is no animationend to clear the transition, so
+        // switch directly. Outside the master-detail flow there is nothing to animate.
+        if (isMasterDetail && !document.body.classList.contains("motion-disabled")) {
+            setMobileTransition(view === "page" ? "to-page" : "to-list");
+        }
+    }, [ mobileView, isMasterDetail ]);
+
+    const resetMobileView = useCallback((view: "list" | "page") => {
+        setMobileView(view);
+        setMobileTransition(null);
+    }, []);
+
+    // Bootstrap adds its own classes (e.g. `show`) to the modal element at runtime, so the className
+    // prop must stay static; toggle the mobile view classes directly on the element instead.
+    useEffect(() => {
+        modalRef.current?.classList.toggle("mobile-master-detail", isMasterDetail);
+        modalRef.current?.classList.toggle("mobile-view-list", mobileView === "list");
+        modalRef.current?.classList.toggle("mobile-view-page", mobileView === "page");
+        modalRef.current?.classList.toggle("mobile-transition-to-list", mobileTransition === "to-list");
+        modalRef.current?.classList.toggle("mobile-transition-to-page", mobileTransition === "to-page");
+    }, [ isMasterDetail, mobileView, mobileTransition ]);
+
+    // End the view transition once the slide finishes (animationend bubbles up from the panes).
+    useEffect(() => {
+        const modalElement = modalRef.current;
+        if (!modalElement) return;
+        function onAnimationEnd(e: AnimationEvent) {
+            if (e.animationName.startsWith(slideAnimationPrefix)) {
+                setMobileTransition(null);
+            }
+        }
+        modalElement.addEventListener("animationend", onAnimationEnd);
+        return () => modalElement.removeEventListener("animationend", onAnimationEnd);
+    }, [ slideAnimationPrefix ]);
+
+    return { isMasterDetail, mobileView, switchMobileView, resetMobileView };
+}
+
 // Workaround for https://github.com/twbs/bootstrap/issues/37474
 // Bootstrap's dispose() sets ALL properties to null. But pending animation callbacks
 // (scheduled via setTimeout) can still fire and crash when accessing null properties.
@@ -1161,6 +1235,48 @@ export function useNoteTreeDrag(containerRef: MutableRef<HTMLElement | null | un
             container.removeEventListener("dragleave", onDragLeave);
         };
     }, [ containerRef, callback ]);
+}
+
+/**
+ * Collection-specific wrapper around {@link useNoteTreeDrag}. It standardizes the drag-locked
+ * message shared by every collection view and, when the collection hides archived notes, warns the
+ * user after a drop that any archived notes were cloned in but stay hidden until "Show archived
+ * notes" is enabled (otherwise the note silently has no effect on the view).
+ *
+ * The `callback` should return the IDs of the notes it actually added (cloned) to the collection so
+ * the warning only mentions newly-copied notes, not ones that were already present.
+ */
+export function useCollectionTreeDrag(containerRef: MutableRef<HTMLElement | null | undefined>, { dragEnabled, includeArchived, callback }: {
+    dragEnabled: boolean,
+    includeArchived: boolean,
+    callback: (data: DragData[], e: DragEvent) => string[] | Promise<string[]>
+}) {
+    const wrappedCallback = useCallback(async (data: DragData[], e: DragEvent) => {
+        const addedNoteIds = await callback(data, e);
+        if (!includeArchived && addedNoteIds?.length) {
+            await warnIfArchivedNotesHidden(addedNoteIds);
+        }
+    }, [ includeArchived, callback ]);
+
+    useNoteTreeDrag(containerRef, {
+        dragEnabled,
+        dragNotEnabledMessage: {
+            icon: "bx bx-lock-alt",
+            title: t("book.drag_locked_title"),
+            message: t("book.drag_locked_message")
+        },
+        callback: wrappedCallback
+    });
+}
+
+/** Toast a heads-up when freshly cloned notes are archived and the collection hides them. */
+async function warnIfArchivedNotesHidden(addedNoteIds: string[]) {
+    const notes = await froca.getNotes(addedNoteIds);
+    const archivedCount = notes.filter((note) => note.isArchived).length;
+    if (!archivedCount) {
+        return;
+    }
+    toast.showMessage(t("book.archived_notes_hidden", { count: archivedCount }), 5000, "bx bx-archive");
 }
 
 /**
@@ -1734,11 +1850,21 @@ export function useContainedLinkNavigation(
 
             e.preventDefault();
             e.stopPropagation();
-            onNavigate(notePath, viewScope);
+            // A double-click also fires a separate `dblclick` event that the global handler in
+            // link.ts treats as "open in a new tab", which would navigate away and dismiss the
+            // surrounding dialog. The preceding `click` already navigated, so for `dblclick` we
+            // only need to swallow the event and skip the redundant navigation.
+            if (e.type !== "dblclick") {
+                onNavigate(notePath, viewScope);
+            }
         }
 
         container.addEventListener("click", onClick, true);
-        return () => container.removeEventListener("click", onClick, true);
+        container.addEventListener("dblclick", onClick, true);
+        return () => {
+            container.removeEventListener("click", onClick, true);
+            container.removeEventListener("dblclick", onClick, true);
+        };
     }, [ containerRef, onNavigate ]);
 }
 

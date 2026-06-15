@@ -23,3 +23,11 @@ There are a few websites that do render such as `wikipedia.org`.
 Do note that we are also applying some sandboxing constraints on the server side, so if you have any issues other than the unresolvable `X-Frame-Options` described above, feel free to report them.
 
 On the desktop side, a different technology is used which bypasses the constraints of an `iframe` (`webview`).
+
+## Embedding in other note types
+
+Starting with v0.104.0, web views can be embedded into other note types:
+
+*   <a class="reference-link" href="../Collections/Dashboard.md">Dashboard</a>
+*   <a class="reference-link" href="Canvas.md">Canvas</a>
+*   <a class="reference-link" href="Text.md">Text</a> notes via <a class="reference-link" href="Text/Include%20Note.md">Include Note</a>.

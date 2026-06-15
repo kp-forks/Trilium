@@ -1078,6 +1078,10 @@ export default class FNote {
         return this.mime.startsWith("application/javascript");
     }
 
+    isSvg() {
+        return this.mime === "image/svg+xml";
+    }
+
     /**
      * Provides note's date metadata.
      */

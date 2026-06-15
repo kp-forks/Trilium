@@ -5,7 +5,7 @@ import branches from "../../../services/branches";
 import { t } from "../../../services/i18n";
 
 export default function openWidgetContextMenu(notePath: string, branchId: string, e: ContextMenuEvent, { onRefresh }: {
-    /** When provided (i.e. the widget is a render note), adds a "Refresh" item that re-renders it. */
+    /** When provided (i.e. the widget is a render note or web view), adds a "Refresh" item that re-renders it. */
     onRefresh?: () => void;
 }) {
     const items: MenuItem<CommandNames>[] = [

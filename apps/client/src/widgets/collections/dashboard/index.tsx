@@ -12,13 +12,13 @@ import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import ActionButton from "../../react/ActionButton";
-import { useElementSize, useNoteLabelBoolean, useNoteTreeDrag, useSpacedUpdate } from "../../react/hooks";
+import { useCollectionTreeDrag, useElementSize, useNoteLabelBoolean, useSpacedUpdate } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteLink from "../../react/NoteLink";
 import { ViewModeProps } from "../interface";
 import { getNotePath, NoteContent } from "../legacy/ListOrGridView";
 import openWidgetContextMenu from "./context_menu";
-import { computeDropCell, DEFAULT_WIDGET_SIZE, GRID_COLUMNS, sameLayout, WidgetLayouts } from "./layout";
+import { computeDropCell, DEFAULT_WIDGET_SIZE, GRID_COLUMNS, reconcilePersistedLayout, sameLayout, WidgetLayouts } from "./layout";
 
 export interface DashboardViewConfig {
     widgets?: WidgetLayouts;
@@ -39,7 +39,7 @@ export default function DashboardView({ note, noteIds, viewConfig, saveConfig, h
 
     const notes = useDashboardNotes(noteIds);
     const isCollapsed = useIsCollapsed(containerRef);
-    const dropPositionsRef = useNoteTreeDropToDashboard(note, scrollContainerRef, containerRef, gridRef);
+    const dropPositionsRef = useNoteTreeDropToDashboard(note, includeArchived, scrollContainerRef, containerRef, gridRef);
     useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, gridRef, dropPositionsRef, isCollapsed });
 
     return (
@@ -92,7 +92,8 @@ function useIsCollapsed(containerRef: RefObject<HTMLElement>) {
  *  layout and external changes arriving through the viewConfig prop. Returns the bits the grid
  *  lifecycle needs: a `persistLayout(grid)` to call after the grid mutates, and `savedWidgetsRef`,
  *  the last-known persisted layout used to position widgets as they're created. */
-function useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, containerRef }: {
+function useDashboardLayoutPersistence({ note, viewConfig, saveConfig, gridRef, containerRef }: {
+    note: FNote;
     viewConfig: DashboardViewConfig | undefined;
     saveConfig: (config: DashboardViewConfig) => void;
     gridRef: MutableRef<GridStack | null>;
@@ -116,12 +117,16 @@ function useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, contai
             return;
         }
 
-        const widgets: WidgetLayouts = {};
+        const present: WidgetLayouts = {};
         for (const node of grid.engine.nodes) {
             if (typeof node.id === "string") {
-                widgets[node.id] = { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 };
+                present[node.id] = { x: node.x ?? 0, y: node.y ?? 0, w: node.w ?? 1, h: node.h ?? 1 };
             }
         }
+        // The grid only carries the widgets currently shown; pass the dashboard's full child set so
+        // hidden (e.g. archived) widgets keep their saved geometry while widgets whose note is no
+        // longer a child are pruned instead of lingering in the persisted layout forever.
+        const widgets = reconcilePersistedLayout(savedWidgetsRef.current, present, new Set(note.children));
         if (sameLayout(widgets, savedWidgetsRef.current)) {
             return;
         }
@@ -183,7 +188,7 @@ function useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, g
     dropPositionsRef: MutableRef<WidgetLayouts>;
     isCollapsed: boolean;
 }) {
-    const { persistLayout, savedWidgetsRef } = useDashboardLayoutPersistence({ viewConfig, saveConfig, gridRef, containerRef });
+    const { persistLayout, savedWidgetsRef } = useDashboardLayoutPersistence({ note, viewConfig, saveConfig, gridRef, containerRef });
 
     // Initialize the grid once per parent note.
     useLayoutEffect(() => {
@@ -264,22 +269,19 @@ function useDashboardGrid({ note, notes, viewConfig, saveConfig, containerRef, g
  *  the dashboard and the first one is positioned under the cursor. Returns a ref holding the drop
  *  positions of the freshly cloned notes, which the reconcile effect consumes (once) when it
  *  promotes them to grid widgets — kept out of savedWidgetsRef so persistLayout still saves them. */
-function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivElement>, gridContainerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
+function useNoteTreeDropToDashboard(note: FNote, includeArchived: boolean, dropAreaRef: RefObject<HTMLDivElement>, gridContainerRef: RefObject<HTMLDivElement>, gridRef: RefObject<GridStack | null>) {
     const dropPositionsRef = useRef<WidgetLayouts>({});
 
-    useNoteTreeDrag(dropAreaRef, {
+    useCollectionTreeDrag(dropAreaRef, {
         dragEnabled: true,
-        dragNotEnabledMessage: {
-            icon: "bx bx-lock-alt",
-            title: t("book.drag_locked_title"),
-            message: t("book.drag_locked_message")
-        },
+        includeArchived,
         async callback(treeData, e) {
             const grid = gridRef.current;
             const gridContainer = gridContainerRef.current;
-            if (!grid || !gridContainer) return;
+            if (!grid || !gridContainer) return [];
 
             const dropCell = computeDropCell(grid, gridContainer, e);
+            const addedNoteIds: string[] = [];
             let isFirstNewNote = true;
             for (const { noteId } of treeData) {
                 const childNote = await froca.getNote(noteId, true);
@@ -295,7 +297,9 @@ function useNoteTreeDropToDashboard(note: FNote, dropAreaRef: RefObject<HTMLDivE
                 }
                 isFirstNewNote = false;
                 await branches.cloneNoteToParentNote(noteId, note.noteId);
+                addedNoteIds.push(noteId);
             }
+            return addedNoteIds;
         }
     });
 
@@ -312,9 +316,10 @@ interface DashboardWidgetProps {
 
 function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived, showTextRepresentation }: DashboardWidgetProps) {
     const notePath = getNotePath(parentNote, note);
-    // Bumping the key remounts NoteContent, which re-runs the render — only meaningful for render notes.
+    // Bumping the key remounts NoteContent, which re-runs the render — meaningful for render notes
+    // (re-runs the script) and web views (reloads the embedded page).
     const [ refreshKey, setRefreshKey ] = useState(0);
-    const isRenderNote = note.type === "render";
+    const canRefresh = note.type === "render" || note.type === "webView";
 
     /* The outer .grid-stack-item class list must stay constant across renders so that Preact never
        clobbers the classes gridstack adds there; dynamic classes go on the inner content element. */
@@ -338,7 +343,7 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                             const branchId = note.parentToBranch[parentNote.noteId];
                             if (!branchId) return;
                             openWidgetContextMenu(notePath, branchId, e, {
-                                onRefresh: isRenderNote ? () => setRefreshKey((key) => key + 1) : undefined
+                                onRefresh: canRefresh ? () => setRefreshKey((key) => key + 1) : undefined
                             });
                         }} />
                 </div>
@@ -346,6 +351,7 @@ function DashboardWidget({ note, parentNote, highlightedTokens, includeArchived,
                     <NoteContent key={refreshKey}
                         note={note}
                         trim
+                        interactive
                         highlightedTokens={highlightedTokens}
                         includeArchivedNotes={includeArchived}
                         showTextRepresentation={showTextRepresentation} />

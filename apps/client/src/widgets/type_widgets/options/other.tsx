@@ -5,7 +5,7 @@ import { t } from "../../../services/i18n";
 import search from "../../../services/search";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import { isElectron } from "../../../services/utils";
+import utils, { isElectron } from "../../../services/utils";
 import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
 import FormText from "../../react/FormText";
@@ -117,7 +117,11 @@ function TrayOptionsSettings() {
                 label={t("tray.enable_tray")}
                 description={t("tray.enable_tray_description")}
                 currentValue={!disableTray}
-                onChange={trayEnabled => setDisableTray(!trayEnabled)}
+                onChange={async trayEnabled => {
+                    await setDisableTray(!trayEnabled);
+                    // Apply the change immediately so the user doesn't have to restart the app.
+                    utils.reloadTray();
+                }}
             />
         </OptionsSection>
     );

@@ -21,6 +21,8 @@ const TS_TYPE_NOT_ASSIGNABLE = 2322;
 const TS_TOP_LEVEL_AWAIT = 1375;
 /** "Cannot find name '$'. Do you need to install type definitions for jQuery?…" */
 const TS_JQUERY_NOT_FOUND = 2592;
+/** "Cannot find name 'x'." */
+const TS_NAME_NOT_FOUND = 2304;
 /** "Unreachable code detected." — the one diagnostic rendered as a warning marker. */
 const TS_UNREACHABLE_CODE = 7027;
 
@@ -97,6 +99,34 @@ describe("script note diagnostics", () => {
             "const el = $('<div>');"
         );
         expect(codes).toContain(TS_JQUERY_NOT_FOUND);
+    }, TIMEOUT);
+
+    it("provides the glob global to frontend scripts (member + note typing)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "if (glob.isElectron && glob.isDesktop()) {\n"
+            + "    const note = glob.getActiveContextNote();\n"
+            + "    api.showMessage(note?.title ?? glob.triliumVersion);\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("does not provide glob to backend scripts (browser-only global)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const v = glob.triliumVersion;"
+        );
+        // TS2304 "Cannot find name 'glob'." — glob is unavailable server-side.
+        expect(codes).toContain(TS_NAME_NOT_FOUND);
+    }, TIMEOUT);
+
+    it("still surfaces real errors on the glob global (unknown member)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const v = glob.thisGlobMemberDoesNotExist;"
+        );
+        expect(codes).toContain(TS_UNKNOWN_PROPERTY);
     }, TIMEOUT);
 
     it("still surfaces real errors (unknown api member)", async () => {
@@ -200,6 +230,77 @@ describe("script note diagnostics", () => {
             "api.thisMethodDoesNotExist();\nconst el = <div/>;"
         );
         expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+});
+
+describe("frontend note (ScriptFNote) surface", () => {
+    it("offers the expanded note member set on api.currentNote", async () => {
+        const names = await completionsAtMarker(SCRIPT_MIME_FRONTEND, "api.currentNote.|");
+        // A representative slice across the families added to ScriptFNote:
+        // attribute accessors, type predicates, hierarchy, content, fields.
+        for (const member of [
+            "getOwnedLabelValue", "getRelation", "hasRelation", "getAttributeValue",
+            "isHtml", "isJavaScript", "isFolder", "isArchived",
+            "getSubtreeNoteIds", "hasChildren", "getChildBranches",
+            "getJsonContent", "getAttachments", "getMetadata", "targetRelations"
+        ]) {
+            expect(names).toContain(member);
+        }
+    }, TIMEOUT);
+
+    it("type-checks the expanded note members (real signatures, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const note = api.currentNote;\n"
+            + "if (note.isHtml() && !note.isArchived) {\n"
+            + "    const v = note.getLabelValue('foo');\n"
+            + "    const branches = note.getChildBranches();\n"
+            + "    const ids = await note.getSubtreeNoteIds(true);\n"
+            + "    api.showMessage((v ?? '') + branches.length + ids.length);\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
+    }, TIMEOUT);
+
+    it("still flags an unknown note member (curated subset, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_FRONTEND,
+            "const v = api.currentNote.thisNoteMemberDoesNotExist();"
+        );
+        expect(codes).toContain(TS_UNKNOWN_PROPERTY);
+    }, TIMEOUT);
+});
+
+describe("backend note (ScriptBNote) surface", () => {
+    it("offers the expanded note member set on api.getNote(...)", async () => {
+        const names = await completionsAtMarker(
+            SCRIPT_MIME_BACKEND,
+            "const note = api.getNote('root');\nnote?.|"
+        );
+        // A representative slice across the families added to ScriptBNote:
+        // attribute write methods, revisions/attachments, hierarchy, tree ops.
+        for (const member of [
+            "setLabel", "toggleLabel", "removeRelation", "getOwnedLabelValue",
+            "getRevisions", "saveRevision", "getAttachments", "saveAttachment",
+            "getAncestors", "getSubtree", "cloneTo", "deleteNote",
+            "searchNotesInSubtree", "isImage", "shareId", "dateModified"
+        ]) {
+            expect(names).toContain(member);
+        }
+    }, TIMEOUT);
+
+    it("type-checks the expanded backend note members (real signatures, not any)", async () => {
+        const codes = await getScriptDiagnosticCodes(
+            SCRIPT_MIME_BACKEND,
+            "const note = api.getNote('root');\n"
+            + "if (note && note.isHtml()) {\n"
+            + "    note.setLabel('reviewed', 'yes');\n"
+            + "    const rev = note.saveRevision();\n"
+            + "    const sub = note.getSubtree({ includeArchived: true });\n"
+            + "    api.log(rev.title + sub.notes.length + note.cloneTo('root').success);\n"
+            + "}"
+        );
+        expect(codes).toEqual([]);
     }, TIMEOUT);
 });
 

@@ -341,6 +341,7 @@
   },
   "revisions": {
     "note_revisions": "Note Revisions",
+    "back": "Back",
     "delete_all_revisions": "Delete all revisions of this note",
     "delete_all_button": "Delete all revisions",
     "help_title": "Help on Note Revisions",
@@ -1152,10 +1153,17 @@
   "book": {
     "no_children_help": "This collection doesn't have any child notes so there's nothing to display.",
     "drag_locked_title": "Locked for editing",
-    "drag_locked_message": "Dragging not allowed since the collection is locked for editing."
+    "drag_locked_message": "Dragging not allowed since the collection is locked for editing.",
+    "archived_notes_hidden_one": "An archived note was copied here but stays hidden until you enable \"Show archived notes\".",
+    "archived_notes_hidden_other": "{{count}} archived notes were copied here but stay hidden until you enable \"Show archived notes\"."
   },
   "editable_code": {
     "placeholder": "Type the content of your code note here..."
+  },
+  "split_editor": {
+    "render_error": "Unable to render the preview",
+    "show_details": "Show details",
+    "last_valid_render": "Showing last valid render"
   },
   "editable_text": {
     "placeholder": "Type the content of your note here...",
@@ -1514,7 +1522,7 @@
   "tray": {
     "title": "System Tray",
     "enable_tray": "Tray icon",
-    "enable_tray_description": "Trilium needs to be restarted for this change to take effect."
+    "enable_tray_description": "Changes apply immediately, though on some platforms hiding the tray icon may require restarting Trilium."
   },
   "text_editor": {
     "title": "Editor",

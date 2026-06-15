@@ -7,7 +7,8 @@ import electron from "electron";
 import { default as i18next, t } from "i18next";
 import path from "path";
 
-let tray: Tray;
+let tray: Tray | null = null;
+let listenersRegistered = false;
 // `mainWindow.isVisible` doesn't work with `mainWindow.show` and `mainWindow.hide` - it returns `false` when the window
 // is minimized
 const windowVisibilityMap: Record<number, boolean> = {};; // Dictionary for storing window ID and its visibility status
@@ -291,21 +292,63 @@ function changeVisibility() {
 }
 
 function createTray() {
-    if (tray || optionService.getOptionBool("disableTray")) {
-        return;
-    }
-
     tray = new electron.Tray(getTrayIconPath());
     tray.setToolTip(t("tray.tooltip"));
     // Restore focus
     tray.on("click", changeVisibility);
     updateTrayMenu();
+}
 
+function destroyTray() {
+    if (!tray) {
+        return;
+    }
+
+    // Best-effort: on Windows, macOS and most Linux DEs this removes the icon
+    // immediately. On GNOME the StatusNotifier host ignores the unregister, so
+    // the icon lingers until the app restarts — upstream Electron bug #24976,
+    // with no app-level workaround.
+    tray.destroy();
+    tray = null;
+}
+
+/**
+ * Reconciles the tray with the current `disableTray` option so the setting takes
+ * effect without restarting the app. This is the single entry point for the
+ * `reload-tray` IPC the renderer sends after the option changes, as well as for
+ * window focus/close, theme and language changes — it creates, destroys or just
+ * refreshes the tray as appropriate.
+ */
+function reloadTray() {
+    if (optionService.getOptionBool("disableTray")) {
+        destroyTray();
+        return;
+    }
+
+    if (tray) {
+        updateTrayMenu();
+    } else {
+        createTray();
+    }
+}
+
+/**
+ * Registers the long-lived listeners exactly once. Deferred until a real window
+ * exists (rather than run from {@link setupSystemTray}) because `isMac()` needs
+ * the core to be initialised, which isn't guaranteed during the early Electron
+ * startup when `setupSystemTray` runs.
+ */
+function registerTrayListeners() {
+    if (listenersRegistered) {
+        return;
+    }
+    listenersRegistered = true;
+
+    electron.ipcMain.on("reload-tray", reloadTray);
     if (!coreUtils.isMac()) {
         // macOS uses template icons which work great on dark & light themes.
         electron.nativeTheme.on("updated", updateTrayMenu);
     }
-    electron.ipcMain.on("reload-tray", updateTrayMenu);
     i18next.on("languageChanged", updateTrayMenu);
 }
 
@@ -314,13 +357,15 @@ function createTray() {
  *
  * Skipping while the DB is uninitialised avoids attaching a tray to the setup
  * wizard, where it would block the app from quitting via "close last window".
- * `createTray` is idempotent so subsequent windows (extra windows, the macOS
- * "activate" re-creation path) are no-ops.
+ * Both {@link registerTrayListeners} and {@link reloadTray} are idempotent, so
+ * subsequent windows (extra windows, the macOS "activate" re-creation path) just
+ * refresh the existing tray.
  */
 export function setupSystemTray() {
     electron.app.on("browser-window-created", () => {
         if (sql_init.isDbInitialized()) {
-            createTray();
+            registerTrayListeners();
+            reloadTray();
         }
     });
 }

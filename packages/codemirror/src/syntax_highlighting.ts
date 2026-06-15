@@ -16,6 +16,15 @@ async function buildMermaid() {
     return [ mermaid(), foldByIndent() ];
 }
 
+async function buildJson() {
+    // `jsonParseLinter` validates with the real JSON.parse, so it reports precise,
+    // correctly-positioned syntax errors (unlike a tolerant Lezer grammar). The
+    // gutter marker mirrors the TypeScript script linter and the Mermaid linter.
+    const { json, jsonParseLinter } = await import('@codemirror/lang-json');
+    const { linter, lintGutter } = await import('@codemirror/lint');
+    return [ json(), linter(jsonParseLinter()), lintGutter() ];
+}
+
 const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown> | LanguageSupport | Extension[]>) | null> = {
     "text/plain": null,
 
@@ -23,7 +32,7 @@ const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown
     "application/edn": async () => (await import('@codemirror/legacy-modes/mode/clojure')).clojure,
     "application/javascript;env=backend": async () => buildJavaScript(),
     "application/javascript;env=frontend": async () => buildJavaScript(),
-    "application/json": async () => ((await import('@codemirror/lang-json')).json()),
+    "application/json": async () => buildJson(),
     "application/ld+json": async () => (await import('@codemirror/legacy-modes/mode/javascript')).jsonld,
     "application/mbox": async () => (await import('@codemirror/legacy-modes/mode/mbox')).mbox,
     "application/n-triples": async () => (await import('@codemirror/legacy-modes/mode/ntriples')).ntriples,
@@ -198,5 +207,14 @@ const byMimeType: Record<SupportedMimeTypes, (() => Promise<StreamParser<unknown
     "text/x-z80": async () => (await import('@codemirror/legacy-modes/mode/z80')).z80,
     "text/xml": async () => (await import('@codemirror/lang-xml')).xml()
 }
+
+/**
+ * Maps MIME types that aren't first-class code-note languages onto an equivalent
+ * {@link byMimeType} language for syntax highlighting. For example, SVG image notes
+ * (`image/svg+xml`) are XML under the hood, so their source view highlights as XML.
+ */
+export const MIME_ALIASES: Record<string, SupportedMimeTypes> = {
+    "image/svg+xml": "text/xml"
+};
 
 export default byMimeType;

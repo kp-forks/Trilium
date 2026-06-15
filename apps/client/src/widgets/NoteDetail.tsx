@@ -13,11 +13,10 @@ import dialog from "../services/dialog";
 import { t } from "../services/i18n";
 import protected_session_holder from "../services/protected_session_holder";
 import toast from "../services/toast.js";
-import { isElectron, isMobile } from "../services/utils";
-import NoteTreeWidget from "./note_tree";
+import { isElectron } from "../services/utils";
 import { ExtendedNoteType, TYPE_MAPPINGS, TypeWidget } from "./note_types";
 import Button from "./react/Button";
-import { useDelayedVisibility, useGetContextDataFrom, useLegacyWidget, useNoteContext, useTriliumEvent } from "./react/hooks";
+import { useDelayedVisibility, useGetContextDataFrom, useNoteContext, useTriliumEvent } from "./react/hooks";
 import Icon from "./react/Icon";
 import NoItems from "./react/NoItems";
 import { NoteListWithLinks } from "./react/NoteList";
@@ -42,7 +41,6 @@ export default function NoteDetail() {
     const [ noteTypesToRender, setNoteTypesToRender ] = useState<{ [ key in ExtendedNoteType ]?: (props: TypeWidgetProps) => VNode }>({});
     const [ activeNoteType, setActiveNoteType ] = useState<ExtendedNoteType>();
     const widgetRequestId = useRef(0);
-    const hasFixedTree = note && noteContext?.hoistedNoteId === "_lbMobileRoot" && isMobile() && note.noteId.startsWith("_lbMobile");
 
     // Defer loading for tabs that haven't been active yet (e.g. on app refresh).
     // A tab can hold multiple splits; activating the tab makes all of them visible at once, so deferral
@@ -221,12 +219,9 @@ export default function NoteDetail() {
         <div
             ref={containerRef}
             class={clsx("component note-detail", {
-                "full-height": isFullHeight,
-                "fixed-tree": hasFixedTree
+                "full-height": isFullHeight
             })}
         >
-            {hasFixedTree && <FixedTree noteContext={noteContext} />}
-
             {Object.entries(noteTypesToRender).map(([ itemType, Element ]) => {
                 return <NoteDetailWrapper
                     Element={Element}
@@ -255,11 +250,6 @@ export function isContextInActiveTab(noteContext: NoteContext | undefined, activ
     }
 
     return activeMainNtxId === noteContext.getMainContext().ntxId;
-}
-
-function FixedTree({ noteContext }: { noteContext: NoteContext }) {
-    const [ treeEl ] = useLegacyWidget(() => new NoteTreeWidget(), { noteContext });
-    return <div class="fixed-note-tree-container">{treeEl}</div>;
 }
 
 /**
