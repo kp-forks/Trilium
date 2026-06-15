@@ -1519,6 +1519,9 @@
     "custom_url_placeholder": "Search engine URL",
     "save_button": "Save"
   },
+  "desktop": {
+    "web_placeholder": "These options apply only for desktop builds."
+  },
   "startup": {
     "title": "Startup",
     "launch_on_startup": "Launch on startup",
