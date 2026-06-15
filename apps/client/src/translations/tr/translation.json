@@ -366,6 +366,24 @@
     "title": "Son değişiklikler",
     "erase_notes_button": "Silinen notları tamamen kaldır",
     "deleted_notes_message": "Silinen notlar kaldırıldı.",
-    "no_changes_message": "Henüz değişiklik yok..."
+    "no_changes_message": "Henüz değişiklik yok...",
+    "undelete_link": "silinenleri geri al",
+    "confirm_undelete": "Bu notu ve alt notlarını geri yüklemek istiyor musunuz?"
+  },
+  "revisions": {
+    "diff_off_hint": "Not içeriğini görüntülemek için tıklayın",
+    "note_revisions": "Not Revizyonları",
+    "back": "Geri",
+    "delete_all_revisions": "Bu notun tüm revizyonlarını silin",
+    "delete_all_button": "Tüm revizyonları sil",
+    "help_title": "Not Revizyonları hakkında yardım",
+    "confirm_delete_all": "Bu notun tüm revizyonlarını silmek istiyor musun?",
+    "no_revisions": "Bu not için henüz revizyon yok...",
+    "restore_button": "Eski Haline Getir",
+    "highlight_changes": "Değişiklikleri vurgula",
+    "maximum_revisions": "Not Düzenleme Anlık Görüntü Sınırı: {{number}}.",
+    "save_revision_now": "Şimdi bir düzenleme kaydet",
+    "diff_off": "İçeriği göster",
+    "diff_identical": "Bu revizyon, mevcut notun içeriğiyle aynıdır."
   }
 }
