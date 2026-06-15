@@ -63,6 +63,11 @@ const h = vi.hoisted(() => ({
     createSetupWindow: vi.fn((..._a: unknown[]) => Promise.resolve()),
     createExtraWindow: vi.fn((..._a: unknown[]) => {}),
     registerGlobalShortcuts: vi.fn((..._a: unknown[]) => Promise.resolve()),
+    setupAutoLaunch: vi.fn(),
+    applyLaunchOnStartup: vi.fn(),
+    wasLaunchedHidden: vi.fn(() => false),
+    disableTray: false,
+    mainWindow: null as FakeWindow | null,
     unregisterAll: vi.fn(),
     // Controllable server start so tests can simulate a slow/hanging server.
     startServer: (() => Promise.resolve({})) as () => Promise<unknown>
@@ -112,12 +117,15 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
             h.initConfig = config;
             return Promise.resolve();
         }),
-        options: { getOptionOrNull: (key: string) => {
-            if (key === "smoothScrollEnabled") return h.smoothScroll;
-            if (key === "locale") return h.locale;
-            if (key === "formattingLocale") return h.formattingLocale;
-            return null;
-        } },
+        options: {
+            getOptionOrNull: (key: string) => {
+                if (key === "smoothScrollEnabled") return h.smoothScroll;
+                if (key === "locale") return h.locale;
+                if (key === "formattingLocale") return h.formattingLocale;
+                return null;
+            },
+            getOptionBool: (key: string) => (key === "disableTray" ? h.disableTray : false)
+        },
         sql_init: { isDbInitialized: () => h.isDbInitialized, dbReady: Promise.resolve() },
         ws: { sendTransactionEntityChangesToAllClients: (...a: unknown[]) => h.sendTransactionEntityChangesToAllClients(...a) },
         cls: { getAndClearEntityChangeIds: () => h.entityChangeIds },
@@ -164,6 +172,7 @@ vi.mock("./services/request", () => ({ default: class {} }));
 vi.mock("./services/window", () => ({
     default: {
         getLastFocusedWindow: () => h.lastFocusedWindow,
+        getMainWindow: () => h.mainWindow,
         createExtraWindow: (...a: unknown[]) => h.createExtraWindow(...a),
         createMainWindow: (...a: unknown[]) => h.createMainWindow(...a),
         createSetupWindow: (...a: unknown[]) => h.createSetupWindow(...a),
@@ -177,6 +186,11 @@ vi.mock("./protocol", () => ({ registerTriliumAppScheme: vi.fn(), setupTriliumAp
 vi.mock("./services/custom_dictionary", () => ({ setupCustomDictionary: vi.fn() }));
 vi.mock("./services/printing", () => ({ setupPrintingHandlers: vi.fn() }));
 vi.mock("./services/tray", () => ({ setupSystemTray: vi.fn() }));
+vi.mock("./services/auto_launch", () => ({
+    setupAutoLaunch: (...a: unknown[]) => h.setupAutoLaunch(...a),
+    applyLaunchOnStartup: (...a: unknown[]) => h.applyLaunchOnStartup(...a),
+    wasLaunchedHidden: () => h.wasLaunchedHidden()
+}));
 vi.mock("./services/shell", () => ({ setupShellHandlers: vi.fn() }));
 vi.mock("./services/security_settings", () => ({
     getSecuritySettings: () => h.securitySettings,
@@ -211,6 +225,7 @@ function resetState() {
     h.isDbInitialized = true;
     h.securitySettings = {};
     h.lastFocusedWindow = null;
+    h.mainWindow = null;
     h.entityChangeIds = [];
     h.locale = null;
     h.formattingLocale = null;
@@ -423,6 +438,9 @@ describe("app event handlers", () => {
 
             expect(h.createMainWindow).toHaveBeenCalledTimes(1);
             expect(h.registerGlobalShortcuts).toHaveBeenCalled();
+            // The autostart entry is reconciled with the stored option on a DB-ready boot.
+            expect(h.setupAutoLaunch).toHaveBeenCalled();
+            expect(h.applyLaunchOnStartup).toHaveBeenCalled();
 
             // The "activate" handler is registered on darwin.
             const activate = h.appOn.get("activate");
@@ -433,10 +451,25 @@ describe("app event handlers", () => {
             await activate?.();
             expect(h.createMainWindow).toHaveBeenCalledTimes(2);
 
-            // Existing windows → do not create another.
+            // Existing windows → do not create another; instead reveal the
+            // (possibly close-to-tray-hidden) last focused window.
+            const show = vi.fn();
+            const focus = vi.fn();
             h.allWindows = [{}];
+            h.lastFocusedWindow = { isMinimized: () => false, restore: vi.fn(), show, focus };
             await activate?.();
             expect(h.createMainWindow).toHaveBeenCalledTimes(2);
+            expect(show).toHaveBeenCalled();
+            expect(focus).toHaveBeenCalled();
+
+            // Hidden-on-autostart window was never focused → fall back to the main window.
+            const mainShow = vi.fn();
+            const mainFocus = vi.fn();
+            h.lastFocusedWindow = null;
+            h.mainWindow = { isMinimized: () => false, restore: vi.fn(), show: mainShow, focus: mainFocus };
+            await activate?.();
+            expect(mainShow).toHaveBeenCalled();
+            expect(mainFocus).toHaveBeenCalled();
         });
 
         it("does not register activate on non-darwin even when DB is initialized", async () => {

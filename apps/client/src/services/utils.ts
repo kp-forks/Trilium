@@ -33,7 +33,16 @@ export function restartDesktopApp() {
  * On any other platform than Electron, nothing happens.
  */
 function reloadTray() {
-    window.electronApi?.tray.reloadTray();
+    window.electronApi?.systemIntegration.reloadTray();
+}
+
+/**
+ * Re-applies the OS autostart entry after the `launchOnStartup` option changes.
+ *
+ * On any other platform than Electron, nothing happens.
+ */
+function reapplyLaunchOnStartup() {
+    window.electronApi?.systemIntegration.reapplyLaunchOnStartup();
 }
 
 function parseDate(str: string) {
@@ -864,6 +873,7 @@ export default {
     reloadFrontendApp,
     restartDesktopApp,
     reloadTray,
+    reapplyLaunchOnStartup,
     parseDate,
     formatDateISO,
     formatDateTime,

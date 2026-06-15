@@ -25,6 +25,7 @@ import { PRODUCT_NAME } from "./app-info";
 import IpcMessagingProvider from "./ipc_messaging_provider";
 import DesktopPlatformProvider from "./platform_provider";
 import { registerTriliumAppScheme, setupTriliumAppProtocol } from "./protocol";
+import { applyLaunchOnStartup, setupAutoLaunch, wasLaunchedHidden } from "./services/auto_launch";
 import { setupCustomDictionary } from "./services/custom_dictionary";
 import { setupPrintingHandlers } from "./services/printing";
 import { getSecuritySettings, registerSecurityIpcHandlers } from "./services/security_settings";
@@ -119,6 +120,7 @@ export async function main() {
 
     setupWindowing();
     setupSystemTray();
+    setupAutoLaunch();
     setupCustomDictionary();
     setupShellHandlers();
     setupPrintingHandlers();
@@ -261,12 +263,28 @@ async function onReady() {
     if (sql_init.isDbInitialized()) {
         await sql_init.dbReady;
 
-        await windowService.createMainWindow();
+        // Open minimized to the tray only when launched at login with the option
+        // on (never on a manual launch, which expects a window) and the tray is
+        // available to summon it from.
+        const startHidden = wasLaunchedHidden() && !options.getOptionBool("disableTray");
+        await windowService.createMainWindow(startHidden);
+
+        // Repair the OS autostart entry so it matches the stored option (it can
+        // drift if the user toggled it elsewhere). Options are loaded now that the
+        // DB is ready.
+        applyLaunchOnStartup();
 
         if (process.platform === "darwin") {
             app.on("activate", async () => {
                 if (BrowserWindow.getAllWindows().length === 0) {
                     await windowService.createMainWindow();
+                } else {
+                    // Close-to-tray, or hide-on-autostart, may have left a hidden
+                    // window that was never focused, so fall back to the main window
+                    // to reveal it on a dock-icon click.
+                    const win = windowService.getLastFocusedWindow() ?? windowService.getMainWindow();
+                    win?.show();
+                    win?.focus();
                 }
             });
         }

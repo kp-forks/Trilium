@@ -14,6 +14,7 @@ const state = vi.hoisted(() => ({
     shouldUseDarkColors: false,
     // captured handlers
     appHandlers: new Map<string, Handler>(),
+    appQuit: vi.fn(),
     ipcHandlers: new Map<string, Handler>(),
     nativeThemeHandlers: new Map<string, Handler>(),
     i18nHandlers: new Map<string, Handler>(),
@@ -28,6 +29,7 @@ const state = vi.hoisted(() => ({
     },
     // controllable windows
     lastFocusedWindow: null as unknown,
+    mainWindow: null as unknown,
     allWindows: [] as unknown[],
     browserWindowAll: [] as unknown[]
 }));
@@ -87,7 +89,8 @@ vi.mock("electron", () => ({
             on: (channel: string, fn: Handler) => state.ipcHandlers.set(channel, fn)
         },
         app: {
-            on: (event: string, fn: Handler) => state.appHandlers.set(event, fn)
+            on: (event: string, fn: Handler) => state.appHandlers.set(event, fn),
+            quit: (...args: unknown[]) => state.appQuit(...args)
         },
         BrowserWindow: {
             getAllWindows: () => state.browserWindowAll
@@ -98,6 +101,7 @@ vi.mock("electron", () => ({
 vi.mock("./window.js", () => ({
     default: {
         getLastFocusedWindow: () => state.lastFocusedWindow,
+        getMainWindow: () => state.mainWindow,
         getAllWindows: () => state.allWindows
     }
 }));
@@ -122,7 +126,7 @@ interface FakeWindow {
     show: ReturnType<typeof vi.fn>;
     focus: ReturnType<typeof vi.fn>;
     hide: ReturnType<typeof vi.fn>;
-    isVisible: () => boolean;
+    isVisible: ReturnType<typeof vi.fn>;
     close: ReturnType<typeof vi.fn>;
 }
 
@@ -151,7 +155,7 @@ function makeWindow(idOrTitle?: number | string, maybeTitle = "My Note - Trilium
         show: vi.fn(),
         focus: vi.fn(),
         hide: vi.fn(),
-        isVisible: () => true,
+        isVisible: vi.fn(() => true),
         close: vi.fn()
     };
 }
@@ -187,6 +191,7 @@ describe("tray", () => {
         state.isDev = false;
         state.shouldUseDarkColors = false;
         state.lastFocusedWindow = null;
+        state.mainWindow = null;
         state.allWindows = [];
         state.browserWindowAll = [];
         // Bookmarks subtree must always exist for buildBookmarksMenu.
@@ -268,6 +273,26 @@ describe("tray", () => {
             click?.();
             expect(win.show).toHaveBeenCalled();
             expect(win.focus).toHaveBeenCalled();
+        });
+
+        it("click handler summons a window started hidden (no focus history)", () => {
+            // hide-on-autostart: the window was created hidden, never focused, so it
+            // isn't in the focus list — only reachable via getMainWindow().
+            const win = makeWindow(1);
+            win.isVisible.mockReturnValue(false);
+            state.lastFocusedWindow = null;
+            state.mainWindow = win;
+            state.allWindows = [win];
+            state.browserWindowAll = [win];
+
+            // Build the menu so the window is seeded into windowVisibilityMap (as
+            // hidden, from isVisible()).
+            state.ipcHandlers.get("reload-tray")?.();
+
+            state.trayInstance?.clickHandlers.get("click")?.();
+            expect(win.show).toHaveBeenCalled();
+            expect(win.focus).toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
         });
     });
 
@@ -454,13 +479,17 @@ describe("tray", () => {
             await todayClick?.();
             expect(win.webContents.send).toHaveBeenCalledWith("openInSameTab", "today");
 
-            // "close" closes all BrowserWindow windows.
+            // "close" (labelled "Quit Trilium") genuinely quits the app. It calls
+            // app.quit() rather than closing windows so the close-to-tray
+            // interceptor (which would otherwise hide them) is bypassed via
+            // before-quit.
             findItem("tray.close")?.click?.(
                 undefined as never,
                 undefined as never,
                 undefined as never
             );
-            expect(win.close).toHaveBeenCalled();
+            expect(state.appQuit).toHaveBeenCalled();
+            expect(win.close).not.toHaveBeenCalled();
         });
 
         it("open-new-window and new-note no-op when no focused window", () => {
