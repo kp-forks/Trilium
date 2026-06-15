@@ -21,8 +21,8 @@ export default function OtherSettings() {
             <SearchSettings />
             {isElectron() && <>
                 <SearchEngineSettings />
-                <StartupSettings />
                 <TrayOptionsSettings />
+                <StartupSettings />
             </>}
             <NoteErasureTimeout />
             <AttachmentErasureTimeout />
