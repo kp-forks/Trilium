@@ -342,16 +342,12 @@ export interface ElectronSpellcheckApi {
     getAvailableSpellCheckerLanguages(): string[];
 }
 
-/** System tray controls. */
-export interface ElectronTrayApi {
+/** OS integration controls — system tray and autostart / launch-on-login. */
+export interface ElectronSystemIntegrationApi {
     /** Rebuilds the tray icon and menu — call after changing tray-related settings. */
     reloadTray(): void;
-}
-
-/** Autostart / launch-on-login controls. */
-export interface ElectronAutoLaunchApi {
-    /** Re-applies the OS autostart entry after the `launchOnStartup` option changes. */
-    reapply(): void;
+    /** Re-applies the OS autostart entry after the `launchOnStartup` / `hideOnAutoStart` options change. */
+    reapplyLaunchOnStartup(): void;
 }
 
 /**
@@ -496,10 +492,8 @@ export interface ElectronApi {
     contextMenu: ElectronContextMenuApi;
     /** Chromium spell checker controls (dictionary, language list). */
     spellcheck: ElectronSpellcheckApi;
-    /** System tray menu controls. */
-    tray: ElectronTrayApi;
-    /** Autostart / launch-on-login controls. */
-    autoLaunch: ElectronAutoLaunchApi;
+    /** OS integration — system tray and autostart / launch-on-login. */
+    systemIntegration: ElectronSystemIntegrationApi;
     /** Printing and PDF export pipeline. */
     printing: ElectronPrintingApi;
     /** Read/write access to Chromium's back/forward navigation history. */

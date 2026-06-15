@@ -155,14 +155,11 @@ contextBridge.exposeInMainWorld("electronApi", {
         }
     },
 
-    tray: {
+    systemIntegration: {
         reloadTray() {
             ipcRenderer.send("reload-tray");
-        }
-    },
-
-    autoLaunch: {
-        reapply() {
+        },
+        reapplyLaunchOnStartup() {
             ipcRenderer.send("reapply-launch-on-startup");
         }
     },

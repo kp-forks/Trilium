@@ -33,7 +33,7 @@ export function restartDesktopApp() {
  * On any other platform than Electron, nothing happens.
  */
 function reloadTray() {
-    window.electronApi?.tray.reloadTray();
+    window.electronApi?.systemIntegration.reloadTray();
 }
 
 /**
@@ -42,7 +42,7 @@ function reloadTray() {
  * On any other platform than Electron, nothing happens.
  */
 function reapplyLaunchOnStartup() {
-    window.electronApi?.autoLaunch.reapply();
+    window.electronApi?.systemIntegration.reapplyLaunchOnStartup();
 }
 
 function parseDate(str: string) {
