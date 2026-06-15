@@ -4,8 +4,9 @@ import { useCallback, useContext, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
+import type FNote from "../../entities/fnote";
 import { t } from "../../services/i18n";
-import utils from "../../services/utils";
+import utils, { isElectron } from "../../services/utils";
 import NoteDetail from "../NoteDetail";
 import ActionButton from "../react/ActionButton";
 import FormList, { FormListItem } from "../react/FormList";
@@ -103,6 +104,38 @@ export default function OptionsDialog() {
 }
 
 /**
+ * The children of `_options` to list in the settings modal, filtered to those applicable to the
+ * running platform (see {@link isOptionPageVisibleOnPlatform}). Shared by the desktop sidebar
+ * ({@link SettingsNavigation}) and the mobile master list ({@link MobileSettingsList}) so both stay
+ * in sync.
+ */
+export function useOptionPages() {
+    return useChildNotes("_options").filter(isOptionPageVisibleOnPlatform);
+}
+
+/**
+ * Whether an option page applies to the running platform. A page note in the hidden subtree (see
+ * `hidden_subtree.ts`) can carry a boolean label restricting it to one platform: `#electronOnly`
+ * hides it on the server (web/mobile) clients, `#serverOnly` hides it on the desktop (Electron) app.
+ * Pages without either label apply everywhere. The page still exists in the note tree and stays
+ * reachable directly; only the modal's navigation hides it.
+ *
+ * This is the platform axis (Electron app vs. served over HTTP), distinct from the layout axis
+ * (`isDesktop`/`isMobile`) that the launcher's `desktopOnly` label uses.
+ */
+export function isOptionPageVisibleOnPlatform(page: FNote) {
+    if (!isElectron() && page.isLabelTruthy("electronOnly")) {
+        return false;
+    }
+
+    if (isElectron() && page.isLabelTruthy("serverOnly")) {
+        return false;
+    }
+
+    return true;
+}
+
+/**
  * The settings page selector shown in the dialog's sidebar. It derives the active page from
  * `useNoteContext()` (resolved against the dialog's own context via the surrounding provider) so the
  * highlighted entry tracks navigation. The link clicks themselves are handled by the dialog's
@@ -119,7 +152,7 @@ function SettingsSidebar() {
  * standard list component rather than the desktop sidebar's compact selector.
  */
 function MobileSettingsList({ onSelect }: { onSelect: (noteId: string) => void }) {
-    const pages = useChildNotes("_options");
+    const pages = useOptionPages();
     const { noteId: activeNoteId } = useNoteContext();
     return (
         <FormList onSelect={onSelect}>
