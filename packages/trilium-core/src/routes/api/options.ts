@@ -96,7 +96,6 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "hideOnAutoStart",
     "eraseUnusedAttachmentsAfterSeconds",
     "eraseUnusedAttachmentsAfterTimeScale",
-    "disableTray",
     "customSearchEngineName",
     "customSearchEngineUrl",
     "editedNotesOpenInRibbon",

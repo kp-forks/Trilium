@@ -67,6 +67,7 @@ const h = vi.hoisted(() => ({
     applyLaunchOnStartup: vi.fn(),
     wasLaunchedHidden: vi.fn(() => false),
     disableTray: false,
+    mainWindow: null as FakeWindow | null,
     unregisterAll: vi.fn(),
     // Controllable server start so tests can simulate a slow/hanging server.
     startServer: (() => Promise.resolve({})) as () => Promise<unknown>
@@ -171,6 +172,7 @@ vi.mock("./services/request", () => ({ default: class {} }));
 vi.mock("./services/window", () => ({
     default: {
         getLastFocusedWindow: () => h.lastFocusedWindow,
+        getMainWindow: () => h.mainWindow,
         createExtraWindow: (...a: unknown[]) => h.createExtraWindow(...a),
         createMainWindow: (...a: unknown[]) => h.createMainWindow(...a),
         createSetupWindow: (...a: unknown[]) => h.createSetupWindow(...a),
@@ -223,6 +225,7 @@ function resetState() {
     h.isDbInitialized = true;
     h.securitySettings = {};
     h.lastFocusedWindow = null;
+    h.mainWindow = null;
     h.entityChangeIds = [];
     h.locale = null;
     h.formattingLocale = null;
@@ -458,6 +461,15 @@ describe("app event handlers", () => {
             expect(h.createMainWindow).toHaveBeenCalledTimes(2);
             expect(show).toHaveBeenCalled();
             expect(focus).toHaveBeenCalled();
+
+            // Hidden-on-autostart window was never focused → fall back to the main window.
+            const mainShow = vi.fn();
+            const mainFocus = vi.fn();
+            h.lastFocusedWindow = null;
+            h.mainWindow = { isMinimized: () => false, restore: vi.fn(), show: mainShow, focus: mainFocus };
+            await activate?.();
+            expect(mainShow).toHaveBeenCalled();
+            expect(mainFocus).toHaveBeenCalled();
         });
 
         it("does not register activate on non-darwin even when DB is initialized", async () => {

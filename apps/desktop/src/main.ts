@@ -279,9 +279,10 @@ async function onReady() {
                 if (BrowserWindow.getAllWindows().length === 0) {
                     await windowService.createMainWindow();
                 } else {
-                    // Close-to-tray may have hidden the window rather than destroying
-                    // it, so a dock-icon click must reveal the existing window.
-                    const win = windowService.getLastFocusedWindow();
+                    // Close-to-tray, or hide-on-autostart, may have left a hidden
+                    // window that was never focused, so fall back to the main window
+                    // to reveal it on a dock-icon click.
+                    const win = windowService.getLastFocusedWindow() ?? windowService.getMainWindow();
                     win?.show();
                     win?.focus();
                 }

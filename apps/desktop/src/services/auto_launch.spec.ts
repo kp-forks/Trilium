@@ -80,12 +80,14 @@ beforeEach(() => {
     state.wasOpenedAsHidden = false;
     state.ipcOn.clear();
     delete process.env.APPIMAGE;
+    delete process.env.XDG_CONFIG_HOME;
 });
 
 afterEach(() => {
     setPlatform(ORIGINAL_PLATFORM);
     setExecPath(ORIGINAL_EXECPATH);
     delete process.env.APPIMAGE;
+    delete process.env.XDG_CONFIG_HOME;
 });
 
 describe("auto_launch", () => {
@@ -162,6 +164,17 @@ describe("auto_launch", () => {
 
         const [, content] = state.writeFileSync.mock.calls[0] as [string, string];
         expect(content).toContain('Exec="/home/user/Apps/Trilium.AppImage"');
+    });
+
+    it("honours $XDG_CONFIG_HOME for the Linux autostart directory", () => {
+        setPlatform("linux");
+        state.launchOnStartup = true;
+        process.env.XDG_CONFIG_HOME = "/home/user/.xdgconfig";
+
+        applyLaunchOnStartup();
+
+        const [file] = state.writeFileSync.mock.calls[0] as [string, string];
+        expect(file).toBe(path.join("/home/user/.xdgconfig", "autostart", "trilium.desktop"));
     });
 
     it("removes the .desktop file on Linux when disabled", () => {

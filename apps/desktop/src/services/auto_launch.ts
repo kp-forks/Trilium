@@ -7,8 +7,6 @@ import path from "path";
 // Electron's app.setLoginItemSettings() covers macOS and Windows but is a no-op on
 // Linux, where autostart is instead a freedesktop ".desktop" file dropped into the
 // per-user autostart directory. We therefore branch on the platform.
-const LINUX_AUTOSTART_DIR = path.join(os.homedir(), ".config", "autostart");
-const LINUX_DESKTOP_FILE = path.join(LINUX_AUTOSTART_DIR, "trilium.desktop");
 
 // We tag the autostart command so the app can tell, at launch, that it was started
 // by the OS at login (and should hide to the tray) rather than launched manually
@@ -65,12 +63,22 @@ export function setupAutoLaunch() {
 }
 
 function applyLinuxAutostart(enabled: boolean, hidden: boolean) {
+    const autostartDir = getLinuxAutostartDir();
+    const desktopFile = path.join(autostartDir, "trilium.desktop");
     if (enabled) {
-        fs.mkdirSync(LINUX_AUTOSTART_DIR, { recursive: true });
-        fs.writeFileSync(LINUX_DESKTOP_FILE, buildLinuxDesktopEntry(hidden));
+        fs.mkdirSync(autostartDir, { recursive: true });
+        fs.writeFileSync(desktopFile, buildLinuxDesktopEntry(hidden));
     } else {
-        fs.rmSync(LINUX_DESKTOP_FILE, { force: true });
+        fs.rmSync(desktopFile, { force: true });
     }
+}
+
+function getLinuxAutostartDir() {
+    // XDG Base Directory spec: use $XDG_CONFIG_HOME when set and non-empty,
+    // otherwise fall back to ~/.config. Read lazily so the env is honoured at apply
+    // time rather than module load.
+    const configHome = process.env.XDG_CONFIG_HOME || path.join(os.homedir(), ".config");
+    return path.join(configHome, "autostart");
 }
 
 function buildLinuxDesktopEntry(hidden: boolean) {
