@@ -600,7 +600,7 @@
   "tray": {
     "title": "Vassoio di Sistema",
     "enable_tray": "Icona nella barra delle applicazioni",
-    "enable_tray_description": "Per rendere effettiva questa modifica, è necessario riavviare Trilium."
+    "enable_tray_description": "Le modifiche hanno effetto immediato, anche se su alcune piattaforme per nascondere l'icona nella barra delle applicazioni potrebbe essere necessario riavviare Trilium."
   },
   "heading_style": {
     "title": "Stile dell'intestazione",
@@ -1288,7 +1288,8 @@
     "open_all_in_tabs_tooltip": "Apri tutti i risultati in nuove schede",
     "open_all_confirm_one": "Verrà aperta {{count}} nota in una nuova scheda. Vuoi continuare?",
     "open_all_confirm_many": "Verranno aperte {{count}} note in nuove schede. Vuoi continuare?",
-    "open_all_confirm_other": "Verranno aperte {{count}} note in nuove schede. Vuoi continuare?"
+    "open_all_confirm_other": "Verranno aperte {{count}} note in nuove schede. Vuoi continuare?",
+    "dashboard": "Pannello di controllo"
   },
   "edited_notes": {
     "no_edited_notes_found": "Nessuna nota modificata per questo giorno...",
@@ -1435,7 +1436,10 @@
   "book": {
     "no_children_help": "Questa raccolta non ha note secondarie, quindi non c'è nulla da visualizzare.",
     "drag_locked_title": "Bloccato per la modifica",
-    "drag_locked_message": "Trascinamento non consentito poiché la raccolta è bloccata per la modifica."
+    "drag_locked_message": "Trascinamento non consentito poiché la raccolta è bloccata per la modifica.",
+    "archived_notes_hidden_one": "Una nota archiviata è stata copiata qui, ma rimane nascosta finché non si attiva l'opzione \"Mostra note archiviate\".",
+    "archived_notes_hidden_many": "{{count}} note archiviate sono state copiate qui, ma rimangono nascoste finché non si attiva l'opzione \"Mostra note archiviate\".",
+    "archived_notes_hidden_other": "{{count}} note archiviate sono state copiate qui, ma rimangono nascoste finché non si attiva l'opzione \"Mostra note archiviate\"."
   },
   "editable_code": {
     "placeholder": "Digita qui il contenuto della tua nota di codice..."
@@ -1875,7 +1879,10 @@
     "print_report_collection_details_button": "Vedi dettagli",
     "print_report_collection_details_ignored_notes": "Note ignorate",
     "print_report_error_title": "Impossibile stampare",
-    "print_report_stack_trace": "Traccia dello stack"
+    "print_report_stack_trace": "Traccia dello stack",
+    "content_load_error": "Non è stato possibile caricare il contenuto della nota.",
+    "content_load_retry": "Riprova",
+    "content_load_stalled": "Caricamento del contenuto della nota in corso…"
   },
   "note_title": {
     "placeholder": "scrivi qui il titolo della nota...",
@@ -2336,7 +2343,8 @@
     "menu_run_mobile_startup": "Quando si avvia il frontend mobile",
     "menu_change_to_widget": "Passa al widget",
     "menu_change_to_frontend_script": "Modifica allo script frontend",
-    "menu_theme_base": "Tema base"
+    "menu_theme_base": "Tema base",
+    "type_custom_request_handler": "Gestore delle richieste personalizzato"
   },
   "setup_form": {
     "more_info": "Per saperne di più"
@@ -2492,7 +2500,8 @@
       "move_note": "Sposta nota",
       "clone_note": "Clona nota",
       "set_note_content": "Nota di riscrittura",
-      "edit_note_content": "Nota dell'editore"
+      "edit_note_content": "Nota dell'editore",
+      "search_icons": "Icone di ricerca"
     },
     "base_url": "URL di base",
     "base_url_description": "Facoltativo. Sovrascrivere l'endpoint API predefinito - utile per modelli self-hosted (Ollama, LM Studio, vLLM) o proxy.",
@@ -2592,7 +2601,8 @@
     "source_description_llm": "Creato dall'assistente AI",
     "source_description_restore": "Salvato prima di ripristinare una revisione precedente",
     "source_description_unknown": "Fonte non disponibile",
-    "diff_identical": "Questa revisione è identica al contenuto dell'attuale."
+    "diff_identical": "Questa revisione è identica al contenuto dell'attuale.",
+    "back": "Indietro"
   },
   "auto_link_attribute_list": {
     "title": "Attributi di sistema"
@@ -2822,5 +2832,15 @@
   "options": {
     "title": "Opzioni",
     "back": "Torna a tutte le opzioni"
+  },
+  "split_editor": {
+    "show_details": "Mostra i dettagli",
+    "last_valid_render": "Visualizzazione dell'ultimo rendering valido",
+    "render_error": "Impossibile visualizzare l'anteprima"
+  },
+  "dashboard_view": {
+    "refresh-widget": "Aggiorna",
+    "remove-widget": "Rimuovi dalla dashboard",
+    "empty-hint": "Ogni nota secondaria diventa un widget. Trascina qui una nota dall'albero o creane una nuova."
   }
 }
