@@ -110,6 +110,8 @@ function SearchEngineSettings() {
 
 function StartupSettings() {
     const [ launchOnStartup, setLaunchOnStartup ] = useTriliumOptionBool("launchOnStartup");
+    const [ hideOnAutoStart, setHideOnAutoStart ] = useTriliumOptionBool("hideOnAutoStart");
+    const [ disableTray ] = useTriliumOptionBool("disableTray");
 
     return (
         <OptionsSection title={t("startup.title")}>
@@ -121,6 +123,20 @@ function StartupSettings() {
                 onChange={async enabled => {
                     await setLaunchOnStartup(enabled);
                     // Apply the change immediately so the user doesn't have to restart the app.
+                    utils.reapplyLaunchOnStartup();
+                }}
+            />
+            <OptionsRowWithToggle
+                name="hide-on-auto-start"
+                label={t("startup.hide_on_auto_start")}
+                description={t("startup.hide_on_auto_start_description")}
+                currentValue={hideOnAutoStart}
+                // Only meaningful when launched at login, and the tray must exist to
+                // bring the hidden window back.
+                disabled={!launchOnStartup || disableTray}
+                onChange={async enabled => {
+                    await setHideOnAutoStart(enabled);
+                    // Re-tag the autostart entry so it launches hidden (or not).
                     utils.reapplyLaunchOnStartup();
                 }}
             />

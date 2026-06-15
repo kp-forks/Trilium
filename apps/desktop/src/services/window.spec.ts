@@ -340,6 +340,14 @@ describe("window service", () => {
             expect(opts.frame).toBeUndefined();
         });
 
+        it("creates the window hidden when startHidden is set, visible otherwise", async () => {
+            await windowService.createMainWindow(true);
+            expect((state.windows[state.windows.length - 1].opts as Record<string, unknown>).show).toBe(false);
+
+            await windowService.createMainWindow();
+            expect((state.windows[state.windows.length - 1].opts as Record<string, unknown>).show).toBe(true);
+        });
+
         it("marks startup metrics for creation, first paint, and load finish", async () => {
             await windowService.createMainWindow();
             const win = state.windows[state.windows.length - 1];

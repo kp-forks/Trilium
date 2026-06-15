@@ -65,6 +65,8 @@ const h = vi.hoisted(() => ({
     registerGlobalShortcuts: vi.fn((..._a: unknown[]) => Promise.resolve()),
     setupAutoLaunch: vi.fn(),
     applyLaunchOnStartup: vi.fn(),
+    wasLaunchedHidden: vi.fn(() => false),
+    disableTray: false,
     unregisterAll: vi.fn(),
     // Controllable server start so tests can simulate a slow/hanging server.
     startServer: (() => Promise.resolve({})) as () => Promise<unknown>
@@ -114,12 +116,15 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
             h.initConfig = config;
             return Promise.resolve();
         }),
-        options: { getOptionOrNull: (key: string) => {
-            if (key === "smoothScrollEnabled") return h.smoothScroll;
-            if (key === "locale") return h.locale;
-            if (key === "formattingLocale") return h.formattingLocale;
-            return null;
-        } },
+        options: {
+            getOptionOrNull: (key: string) => {
+                if (key === "smoothScrollEnabled") return h.smoothScroll;
+                if (key === "locale") return h.locale;
+                if (key === "formattingLocale") return h.formattingLocale;
+                return null;
+            },
+            getOptionBool: (key: string) => (key === "disableTray" ? h.disableTray : false)
+        },
         sql_init: { isDbInitialized: () => h.isDbInitialized, dbReady: Promise.resolve() },
         ws: { sendTransactionEntityChangesToAllClients: (...a: unknown[]) => h.sendTransactionEntityChangesToAllClients(...a) },
         cls: { getAndClearEntityChangeIds: () => h.entityChangeIds },
@@ -181,7 +186,8 @@ vi.mock("./services/printing", () => ({ setupPrintingHandlers: vi.fn() }));
 vi.mock("./services/tray", () => ({ setupSystemTray: vi.fn() }));
 vi.mock("./services/auto_launch", () => ({
     setupAutoLaunch: (...a: unknown[]) => h.setupAutoLaunch(...a),
-    applyLaunchOnStartup: (...a: unknown[]) => h.applyLaunchOnStartup(...a)
+    applyLaunchOnStartup: (...a: unknown[]) => h.applyLaunchOnStartup(...a),
+    wasLaunchedHidden: () => h.wasLaunchedHidden()
 }));
 vi.mock("./services/shell", () => ({ setupShellHandlers: vi.fn() }));
 vi.mock("./services/security_settings", () => ({

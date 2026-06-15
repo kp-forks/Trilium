@@ -1522,7 +1522,9 @@
   "startup": {
     "title": "Startup",
     "launch_on_startup": "Launch on startup",
-    "launch_on_startup_description": "Open Trilium automatically when you log into your computer."
+    "launch_on_startup_description": "Open Trilium automatically when you log into your computer.",
+    "hide_on_auto_start": "Start minimized to tray",
+    "hide_on_auto_start_description": "When launched automatically at login, start hidden in the system tray instead of opening a window. Requires launch on startup and the tray icon to be enabled."
   },
   "tray": {
     "title": "System Tray",

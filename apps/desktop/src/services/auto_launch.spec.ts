@@ -5,9 +5,11 @@ type Handler = (...args: unknown[]) => unknown;
 
 const state = vi.hoisted(() => ({
     launchOnStartup: false,
+    hideOnAutoStart: false,
     appName: "Trilium Notes",
     setLoginItemSettings: vi.fn(),
     setLoginItemThrows: false,
+    wasOpenedAsHidden: false,
     ipcOn: new Map<string, Handler>(),
     mkdirSync: vi.fn(),
     writeFileSync: vi.fn(),
@@ -22,6 +24,7 @@ vi.mock("electron", () => ({
                 if (state.setLoginItemThrows) throw new Error("boom");
                 return state.setLoginItemSettings(...a);
             },
+            getLoginItemSettings: () => ({ wasOpenedAsHidden: state.wasOpenedAsHidden }),
             getName: () => state.appName
         },
         ipcMain: {
@@ -42,11 +45,17 @@ vi.mock("os", () => ({ default: { homedir: () => "/home/user" } }));
 
 vi.mock("@triliumnext/core", () => ({
     getLog: () => state.log,
-    options: { getOptionBool: (name: string) => (name === "launchOnStartup" ? state.launchOnStartup : false) },
+    options: {
+        getOptionBool: (name: string) => {
+            if (name === "launchOnStartup") return state.launchOnStartup;
+            if (name === "hideOnAutoStart") return state.hideOnAutoStart;
+            return false;
+        }
+    },
     utils: { safeExtractMessageAndStackFromError: (e: unknown) => String(e) }
 }));
 
-const { applyLaunchOnStartup, setupAutoLaunch } = await import("./auto_launch.js");
+const { applyLaunchOnStartup, setupAutoLaunch, wasLaunchedHidden, START_HIDDEN_FLAG } = await import("./auto_launch.js");
 
 // Built with the same path.join as the module so the assertions hold on every OS.
 const AUTOSTART_DIR = path.join("/home/user", ".config", "autostart");
@@ -66,7 +75,9 @@ function setExecPath(p: string) {
 beforeEach(() => {
     vi.clearAllMocks();
     state.launchOnStartup = false;
+    state.hideOnAutoStart = false;
     state.setLoginItemThrows = false;
+    state.wasOpenedAsHidden = false;
     state.ipcOn.clear();
     delete process.env.APPIMAGE;
 });
@@ -82,14 +93,34 @@ describe("auto_launch", () => {
         setPlatform("win32");
         state.launchOnStartup = true;
         applyLaunchOnStartup();
-        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: true });
+        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: true, openAsHidden: false, args: [] });
     });
 
     it("disables the OS login item when the option is off", () => {
         setPlatform("darwin");
         state.launchOnStartup = false;
         applyLaunchOnStartup();
-        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: false });
+        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: false, openAsHidden: false, args: [] });
+    });
+
+    it("tags the login item to start hidden when hide-on-auto-start is on", () => {
+        setPlatform("win32");
+        state.launchOnStartup = true;
+        state.hideOnAutoStart = true;
+        applyLaunchOnStartup();
+        expect(state.setLoginItemSettings).toHaveBeenCalledWith({
+            openAtLogin: true,
+            openAsHidden: true,
+            args: [START_HIDDEN_FLAG]
+        });
+    });
+
+    it("does not start hidden when autostart is off, even if hide-on-auto-start is on", () => {
+        setPlatform("darwin");
+        state.launchOnStartup = false;
+        state.hideOnAutoStart = true;
+        applyLaunchOnStartup();
+        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: false, openAsHidden: false, args: [] });
     });
 
     it("writes a .desktop autostart file on Linux when enabled", () => {
@@ -107,6 +138,18 @@ describe("auto_launch", () => {
         expect(content).toContain("Name=Trilium Notes");
         // Linux must not touch the (no-op) Electron login-item API.
         expect(state.setLoginItemSettings).not.toHaveBeenCalled();
+    });
+
+    it("appends the start-hidden flag to the Linux Exec line when enabled", () => {
+        setPlatform("linux");
+        setExecPath("/opt/trilium/trilium");
+        state.launchOnStartup = true;
+        state.hideOnAutoStart = true;
+
+        applyLaunchOnStartup();
+
+        const [, content] = state.writeFileSync.mock.calls[0] as [string, string];
+        expect(content).toContain(`Exec="/opt/trilium/trilium" ${START_HIDDEN_FLAG}`);
     });
 
     it("prefers APPIMAGE over execPath for the Linux Exec line", () => {
@@ -139,6 +182,27 @@ describe("auto_launch", () => {
         expect(state.log.error).toHaveBeenCalledWith(expect.stringContaining("Failed to apply launch-on-startup"));
     });
 
+    it("wasLaunchedHidden reflects the --start-hidden argv flag on Windows/Linux", () => {
+        setPlatform("win32");
+        const original = process.argv;
+        try {
+            process.argv = ["node", "main.js", START_HIDDEN_FLAG];
+            expect(wasLaunchedHidden()).toBe(true);
+            process.argv = ["node", "main.js"];
+            expect(wasLaunchedHidden()).toBe(false);
+        } finally {
+            process.argv = original;
+        }
+    });
+
+    it("wasLaunchedHidden reflects wasOpenedAsHidden on macOS", () => {
+        setPlatform("darwin");
+        state.wasOpenedAsHidden = true;
+        expect(wasLaunchedHidden()).toBe(true);
+        state.wasOpenedAsHidden = false;
+        expect(wasLaunchedHidden()).toBe(false);
+    });
+
     it("setupAutoLaunch registers the reapply IPC, which applies the current setting", () => {
         setPlatform("win32");
         setupAutoLaunch();
@@ -148,6 +212,6 @@ describe("auto_launch", () => {
 
         state.launchOnStartup = true;
         handler?.();
-        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: true });
+        expect(state.setLoginItemSettings).toHaveBeenCalledWith({ openAtLogin: true, openAsHidden: false, args: [] });
     });
 });

@@ -88,7 +88,7 @@ async function createExtraWindow(extraWindowHash: string) {
     trackWindowFocus(win);
 }
 
-async function createMainWindow() {
+async function createMainWindow(startHidden = false) {
     if ("setUserTasks" in electron.app) {
         electron.app.setUserTasks([
             {
@@ -122,6 +122,10 @@ async function createMainWindow() {
         minWidth: 500,
         minHeight: 400,
         title: "Trilium Notes",
+        // Start hidden (launched at login with hide-on-autostart) means the window
+        // is never shown until the user summons it from the tray. Constructing it
+        // hidden avoids a visible flash that show()-then-hide() would cause.
+        show: !startHidden,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
