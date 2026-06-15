@@ -28,6 +28,15 @@ The solution is marked by red circle at the bottom - this note has [label](Advan
 
 (`#run=frontendStartup` does not work for [Mobile frontend](Installation%20%26%20Setup/Mobile%20Frontend.md) - if you want to have scripts running there, give the script `#run=mobileStartup` label).
 
+### Execute button
+
+Runnable code notes (frontend or backend) and saved SQL consoles can optionally have a dedicated execute button alongside a description.
+
+To do so, apply the following [labels](Advanced%20Usage/Attributes/Labels.md):
+
+*   A `#executeButton` with the value of the label being displayed as the label of the button.
+*   An optional `#executeDescription` which adds explanatory text beside it.
+
 ## Autocomplete & linting
 
 Starting with Trilium v0.104.0, frontend scripts, backend scripts and render notes benefit from an autocomplete system.

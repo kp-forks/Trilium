@@ -14,9 +14,13 @@ The sorting dialog allows:
 
 Child notes can be automatically sorted by attaching specific [labels](../../Advanced%20Usage/Attributes.md) to the parent note:
 
-*   `#sorted`: Enables sorting. Can optionally include the name of the note's property/label for sorting criteria (details below).
-*   `#sortDirection`: By default, sorting is ascending. Set this to `desc` to sort in descending order.
-*   `#sortFoldersFirst`: Notes with children will be sorted to the top.
+|  |  |
+| --- | --- |
+| `#sorted` | Enables sorting. Can optionally include the name of the note's property/label for sorting criteria (details below). |
+| `#sortDirection` | By default, sorting is ascending. Set this to `desc` to sort in descending order. |
+| `#sortFoldersFirst` | Notes with children will be sorted to the top. |
+| `#sortNatural` | Sort numbers naturally instead of alphabetically, so 2 comes before 10. |
+| `#sortLocale` | The language code driving the natural sort (e.g. `zh-CN`, `de`). Only meaningful together with `#sortNatural`. |
 
 Sorting is done by comparing note properties or specific labels on child notes. There are four sorting levels, with the first having the highest priority. Lower priority levels are applied only if higher priority comparisons result in equality.
 

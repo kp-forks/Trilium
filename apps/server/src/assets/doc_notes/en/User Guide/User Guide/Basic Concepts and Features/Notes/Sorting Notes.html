@@ -7,22 +7,48 @@
 <ul>
   <li>Sorting by title, creation or modification date.</li>
   <li>Changing sorting direction can also be adjusted (ascending or descending).</li>
-  <li>Ensuring folders are displayed at the top.</li>
-  <li>Natural sort, based on the sorting rules of a particular language.</li>
+  <li
+ >Ensuring folders are displayed at the top.</li>
+    <li>Natural sort, based on the sorting rules of a particular language.</li>
 </ul>
 <h2>Automatic/Permanent Sorting</h2>
 <p>Child notes can be automatically sorted by attaching specific <a href="#root/_help_zEY4DaJG4YT5">labels</a> to
   the parent note:</p>
-<ul>
-  <li><code spellcheck="false">#sorted</code>: Enables sorting. Can optionally
-    include the name of the note's property/label for sorting criteria (details
-    below).</li>
-  <li><code spellcheck="false">#sortDirection</code>: By default, sorting is
-    ascending. Set this to <code spellcheck="false">desc</code> to sort in descending
-    order.</li>
-  <li><code spellcheck="false">#sortFoldersFirst</code>: Notes with children
-    will be sorted to the top.</li>
-</ul>
+<figure class="table">
+  <table>
+    <tbody>
+      <tr>
+        <th scope="row"><code spellcheck="false">#sorted</code>
+        </th>
+        <td>Enables sorting. Can optionally include the name of the note's property/label
+          for sorting criteria (details below).</td>
+      </tr>
+      <tr>
+        <th scope="row"><code spellcheck="false">#sortDirection</code>
+        </th>
+        <td>By default, sorting is ascending. Set this to <code spellcheck="false">desc</code> to
+          sort in descending order.</td>
+      </tr>
+      <tr>
+        <th scope="row"><code spellcheck="false">#sortFoldersFirst</code>
+        </th>
+        <td>Notes with children will be sorted to the top.</td>
+      </tr>
+      <tr>
+        <th scope="row"><code spellcheck="false">#sortNatural</code>
+        </th>
+        <td>Sort numbers naturally instead of alphabetically, so 2 comes before 10.</td>
+      </tr>
+      <tr>
+        <th scope="row"><code spellcheck="false">#sortLocale</code>
+        </th>
+        <td>The language code driving the natural sort (e.g. <code spellcheck="false">zh-CN</code>,
+          <code
+          spellcheck="false">de</code>). Only meaningful together with <code spellcheck="false">#sortNatural</code>.</td>
+      </tr>
+    </tbody>
+  </table>
+</figure>
 <p>Sorting is done by comparing note properties or specific labels on child
   notes. There are four sorting levels, with the first having the highest
   priority. Lower priority levels are applied only if higher priority comparisons
