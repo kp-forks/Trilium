@@ -113,6 +113,16 @@ export default function ShortcutSettings() {
                     placeholder={t("shortcuts.type_text_to_filter")}
                     currentValue={filter} onChange={(value) => setFilter(value)}
                 />
+                {conflicts.size > 0 &&
+                    <button
+                        type="button"
+                        class={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
+                        title={t("shortcuts.conflicts_badge_tooltip")}
+                        onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
+                    >
+                        <span class="bx bx-error-circle" />
+                        {t("shortcuts.conflicts_badge", { count: conflicts.size })}
+                    </button>}
                 <Dropdown
                     buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
                     hideToggleArrow

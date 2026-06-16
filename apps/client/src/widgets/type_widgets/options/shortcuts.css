@@ -24,6 +24,30 @@
         .icon-action.active {
             color: var(--link-color);
         }
+
+        /* Prominent pill flagging that conflicts exist; click to filter to them. */
+        .shortcut-conflicts-badge {
+            flex: 0 0 auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35em;
+            border: 1px solid var(--icon-button-danger-color, #d9534f);
+            border-radius: 999px;
+            padding: 0.2em 0.7em;
+            font-size: 0.85em;
+            font-weight: 600;
+            white-space: nowrap;
+            color: var(--icon-button-danger-color, #d9534f);
+            background: transparent;
+            cursor: pointer;
+            transition: background-color 0.15s, color 0.15s;
+        }
+
+        .shortcut-conflicts-badge:hover,
+        .shortcut-conflicts-badge.active {
+            color: var(--main-background-color);
+            background: var(--icon-button-danger-color, #d9534f);
+        }
     }
 
     > footer {

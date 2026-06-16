@@ -1745,7 +1745,10 @@
     "filter_all": "All shortcuts",
     "filter_conflicts": "Conflicts ({{count}})",
     "filter_global": "Global shortcuts ({{count}})",
-    "filter_modified": "Changed from default ({{count}})"
+    "filter_modified": "Changed from default ({{count}})",
+    "conflicts_badge_one": "{{count}} conflict",
+    "conflicts_badge_other": "{{count}} conflicts",
+    "conflicts_badge_tooltip": "Some shortcuts are assigned to more than one action. Click to show only the conflicting shortcuts."
   },
   "spellcheck": {
     "title": "Spell Check",
