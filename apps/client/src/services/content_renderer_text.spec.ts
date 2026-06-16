@@ -200,7 +200,7 @@ describe("Text content renderer", () => {
         // The conditional KaTeX auto-render branch ran: it was invoked exactly once
         // with the rendered content element ($renderedContent[0]) and the trust flag.
         expect(renderMathInElementSpy).toHaveBeenCalledTimes(1);
-        expect(renderMathInElementSpy).toHaveBeenCalledWith(contentEl, { trust: true });
+        expect(renderMathInElementSpy).toHaveBeenCalledWith(contentEl, { trust: true, throwOnError: false });
     });
 
     it("does not invoke KaTeX inline rendering when no math-tex spans are present", async () => {
