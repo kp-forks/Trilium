@@ -975,7 +975,7 @@
   "tray": {
     "title": "システムトレイ",
     "enable_tray": "トレイアイコン",
-    "enable_tray_description": "この変更を有効にするには、Trilium を再起動する必要があります。"
+    "enable_tray_description": "変更はすぐに適用されますが、一部のプラットフォームでは、トレイアイコンを非表示にするために Trilium の再起動が必要になる場合があります。"
   },
   "heading_style": {
     "title": "見出しのスタイル",
@@ -2070,7 +2070,8 @@
   "book": {
     "no_children_help": "このコレクションには子ノートがないため、表示するものがありません。",
     "drag_locked_title": "編集をロック中",
-    "drag_locked_message": "コレクションは編集がロックされているため、ドラッグは許可されていません。"
+    "drag_locked_message": "コレクションは編集がロックされているため、ドラッグは許可されていません。",
+    "archived_notes_hidden_other": "{{count}} 件のアーカイブされたノートがここにコピーされましたが、\"アーカイブされたノートを表示\" を有効にするまで非表示になります。"
   },
   "native_title_bar": {
     "title": "ネイティブタイトルバー（アプリの再起動が必要です）",
@@ -2594,7 +2595,8 @@
     "source_description_llm": "AI アシスタントにより作成",
     "source_description_restore": "以前の変更履歴を復元する前に保存しました",
     "source_description_unknown": "ソースが利用できません",
-    "diff_identical": "今回の改訂内容は、現在のノートの内容と同一です。"
+    "diff_identical": "今回の改訂内容は、現在のノートの内容と同一です。",
+    "back": "戻る"
   },
   "revisions_snapshot": {
     "title": "ノートの変更履歴"
@@ -2785,5 +2787,10 @@
     "refresh-widget": "更新",
     "remove-widget": "ダッシュボードから削除",
     "empty-hint": "子ノートはすべてウィジェットになります。ツリーからここにノートをドラッグするか、新しく作成してください。"
+  },
+  "split_editor": {
+    "render_error": "プレビューをレンダリングできませんでした",
+    "show_details": "詳細を表示",
+    "last_valid_render": "最後に有効だったレンダリングを表示"
   }
 }

@@ -419,7 +419,8 @@
     "presentation_slide_second": "Seconda diapositiva",
     "background": "Contesto",
     "markdown-snippet": "Snippet Markdown",
-    "code-snippet": "Codice Snippet"
+    "code-snippet": "Codice Snippet",
+    "dashboard": "Pannello di controllo"
   },
   "sql_init": {
     "db_not_initialized_desktop": "Database non inizializzato, seguire le istruzioni a schermo.",

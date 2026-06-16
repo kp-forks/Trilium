@@ -697,7 +697,9 @@ function RevisionContentText({ content }: { content: string | Uint8Array | undef
             // KaTeX is heavy, so the math service is only loaded when there are formulas to render.
             void import("../../services/math").then(({ renderMathInElement }) => {
                 if (contentRef.current) {
-                    renderMathInElement(contentRef.current, { trust: true });
+                    // throwOnError: false renders invalid formulas as an inline red error
+                    // instead of throwing and logging to the console.
+                    renderMathInElement(contentRef.current, { trust: true, throwOnError: false });
                 }
             });
         }

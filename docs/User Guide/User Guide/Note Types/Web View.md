@@ -7,6 +7,8 @@ A webview needs to know which URL to render, and it can be provided by setting t
 #webViewSrc="https://www.wikipedia.org"
 ```
 
+The URL needs to contain the full scheme.
+
 ## Web view on the server vs. Electron
 
 When accessing Trilium via a browser instead of the desktop application, the web view will still try to render the content of the desired webpage. However, since it's running in a browser there are quite a few limitations as opposed to the desktop one.

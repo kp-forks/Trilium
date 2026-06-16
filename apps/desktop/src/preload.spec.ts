@@ -371,12 +371,17 @@ describe("preload script", () => {
         });
     });
 
-    describe("tray", () => {
-        const tray = () => getGroup("tray");
+    describe("systemIntegration", () => {
+        const systemIntegration = () => getGroup("systemIntegration");
 
         it("reloadTray sends correct IPC message", () => {
-            tray().reloadTray();
+            systemIntegration().reloadTray();
             expect(ipcRendererSent).toContainEqual({ channel: "reload-tray", args: [] });
+        });
+
+        it("reapplyLaunchOnStartup sends correct IPC message", () => {
+            systemIntegration().reapplyLaunchOnStartup();
+            expect(ipcRendererSent).toContainEqual({ channel: "reapply-launch-on-startup", args: [] });
         });
     });
 

@@ -91,8 +91,10 @@ function updateWindowVisibilityMap(allWindows: BrowserWindow[]) {
     allWindows.forEach(window => {
         const windowId = window.id;
         if (!(windowId in windowVisibilityMap)) {
-            // If it does not exist, it is the newly created window
-            windowVisibilityMap[windowId] = true;
+            // Newly created window: seed from its actual state rather than assuming
+            // visible, so a window created hidden (hide-on-autostart) is tracked as
+            // hidden and the tray can bring it into view.
+            windowVisibilityMap[windowId] = window.isVisible();
             registerVisibilityListener(window);
         }
     });
@@ -263,12 +265,11 @@ function updateTrayMenu() {
             label: t("tray.close"),
             type: "normal",
             icon: getIconPath("close"),
-            click: () => {
-                const windows = electron.BrowserWindow.getAllWindows();
-                windows.forEach(window => {
-                    window.close();
-                });
-            }
+            // Genuinely quit. `app.quit()` triggers `before-quit`, which clears the
+            // close-to-tray interception so the windows close for real instead of
+            // hiding back to the tray. Works on macOS too (where closing the last
+            // window does not quit by itself).
+            click: () => electron.app.quit()
         }
     ]);
 
@@ -276,18 +277,21 @@ function updateTrayMenu() {
 }
 
 function changeVisibility() {
-    const lastFocusedWindow = windowService.getLastFocusedWindow();
+    // Fall back to the main window: a window started hidden (hide-on-autostart)
+    // has never been focused, so it isn't in the focus list yet — but it's still
+    // the thing the tray click should reveal.
+    const targetWindow = windowService.getLastFocusedWindow() ?? windowService.getMainWindow();
 
-    if (!lastFocusedWindow) {
+    if (!targetWindow) {
         return;
     }
 
     // If the window is visible, hide it
-    if (windowVisibilityMap[lastFocusedWindow.id]) {
-        lastFocusedWindow.hide();
+    if (windowVisibilityMap[targetWindow.id]) {
+        targetWindow.hide();
     } else {
-        lastFocusedWindow.show();
-        lastFocusedWindow.focus();
+        targetWindow.show();
+        targetWindow.focus();
     }
 }
 
