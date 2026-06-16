@@ -1,6 +1,7 @@
 import { ActionKeyboardShortcut, KeyboardShortcut, OptionNames } from "@triliumnext/commons";
 import { t } from "../../../services/i18n";
 import { arrayEqual, reloadFrontendApp } from "../../../services/utils";
+import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
@@ -112,6 +113,16 @@ function isShortcutModified(action: ActionKeyboardShortcut) {
     return !arrayEqual(action.effectiveShortcuts ?? [], action.defaultShortcuts ?? []);
 }
 
+function revertShortcut(action: ActionKeyboardShortcut) {
+    void options.save(getOptionName(action.actionName), JSON.stringify(action.defaultShortcuts ?? []));
+}
+
+function formatDefaultShortcuts(action: ActionKeyboardShortcut) {
+    return action.defaultShortcuts?.length
+        ? action.defaultShortcuts.join(", ")
+        : t("shortcuts.no_default_shortcut");
+}
+
 function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
     // Hide separators when filtering is active.
     if ("separator" in action) {
@@ -132,7 +143,7 @@ function KeyboardShortcutTable({ filteredKeyboardActions, filter }: { filteredKe
                 <tr class="text-nowrap">
                     <th>{t("shortcuts.action_name")}</th>
                     <th>{t("shortcuts.shortcuts")}</th>
-                    <th>{t("shortcuts.default_shortcuts")}</th>
+                    <th class="revert-col" />
                     <th>{t("shortcuts.description")}</th>
                 </tr>
             </thead>
@@ -157,7 +168,14 @@ function KeyboardShortcutTable({ filteredKeyboardActions, filter }: { filteredKe
                                 <td>
                                     <ShortcutEditor keyboardShortcut={action} />
                                 </td>
-                                <td>{action.defaultShortcuts?.join(", ")}</td>
+                                <td class="revert-col">
+                                    {isShortcutModified(action) &&
+                                        <ActionButton
+                                            icon="bx bx-reset"
+                                            text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                                            onClick={() => revertShortcut(action)}
+                                        />}
+                                </td>
                                 <td>{action.description}</td>
                             </>
                         )}

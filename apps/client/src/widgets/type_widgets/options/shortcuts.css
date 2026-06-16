@@ -28,6 +28,13 @@
             width: 25%;
         }
 
+        th.revert-col,
+        td.revert-col {
+            width: 1%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
         .shortcut-modified-indicator {
             display: inline-block;
             width: 0.5em;
