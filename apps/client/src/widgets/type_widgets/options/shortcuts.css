@@ -38,6 +38,14 @@
         gap: 0.5em;
     }
 
+    /* Fixed-width slot matching the .icon-action button, so the revert button never shifts the row. */
+    .shortcut-revert-slot {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        width: 37px;
+    }
+
     .shortcut-editor {
         display: flex;
         flex-wrap: wrap;
@@ -94,17 +102,10 @@
         }
     }
 
-    /* Idle state reuses the standard .icon-action button styling; only the recording pill is custom. */
+    /* The recorder stays a fixed-size .icon-action button; recording is shown as an active highlight
+       (no size change) so toggling it never reflows the row. */
     .shortcut-recorder.recording {
-        display: inline-flex;
-        align-items: center;
-        height: 35px;
-        padding-inline: 0.75em;
-        border: 1px solid var(--link-color);
-        border-radius: var(--button-border-radius);
-        background: var(--button-background-color);
         color: var(--link-color);
-        white-space: nowrap;
-        cursor: pointer;
+        border-color: var(--link-color);
     }
 }

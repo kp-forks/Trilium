@@ -8,6 +8,7 @@ import { t } from "../../../services/i18n";
 import options from "../../../services/options";
 import server from "../../../services/server";
 import { KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
+import toast from "../../../services/toast";
 import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
@@ -185,13 +186,16 @@ function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
         >
             <div class="shortcut-row-input">
                 <ShortcutEditor keyboardShortcut={action} />
-                {isShortcutModified(action) &&
-                    <ActionButton
-                        icon="bx bx-reset"
-                        text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
-                        tooltipClass="tooltip-top"
-                        onClick={() => revertShortcut(action)}
-                    />}
+                {/* Always reserve the slot so the revert button appearing/disappearing never shifts the row. */}
+                <span class="shortcut-revert-slot">
+                    {isShortcutModified(action) &&
+                        <ActionButton
+                            icon="bx bx-reset"
+                            text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                            tooltipClass="tooltip-top"
+                            onClick={() => revertShortcut(action)}
+                        />}
+                </span>
             </div>
         </OptionsRow>
     );
@@ -253,6 +257,8 @@ function ShortcutEditor({ keyboardShortcut: action }: { keyboardShortcut: Action
     );
 }
 
+const RECORDING_TOAST_ID = "shortcut-recorder-recording";
+
 function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void }) {
     const [ recording, setRecording ] = useState(false);
 
@@ -260,6 +266,12 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
         if (!recording) {
             return;
         }
+
+        toast.showPersistent({
+            id: RECORDING_TOAST_ID,
+            icon: "bx bxs-keyboard",
+            message: t("shortcuts.recording_toast")
+        });
 
         const onKeyDown = (e: KeyboardEvent) => {
             // Swallow the combination so it never reaches the application's own shortcut handlers.
@@ -282,21 +294,22 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
 
         // Capture phase on window so we intercept the keystroke ahead of any other listener.
         window.addEventListener("keydown", onKeyDown, true);
-        return () => window.removeEventListener("keydown", onKeyDown, true);
+        return () => {
+            window.removeEventListener("keydown", onKeyDown, true);
+            toast.closePersistent(RECORDING_TOAST_ID);
+        };
     }, [ recording, onCapture ]);
 
+    // Keep the button a fixed-size icon-action in both states so toggling recording never reflows
+    // the row; the recording state is conveyed through styling and the tooltip.
     return (
         <button
             type="button"
-            class={recording
-                ? "shortcut-recorder recording"
-                : "shortcut-recorder icon-action bx bx-plus"}
-            title={recording ? undefined : t("shortcuts.record_shortcut")}
+            class={`shortcut-recorder icon-action bx bx-plus ${recording ? "recording" : ""}`}
+            title={recording ? t("shortcuts.press_keys") : t("shortcuts.record_shortcut")}
             onClick={() => setRecording((value) => !value)}
             onBlur={() => setRecording(false)}
-        >
-            {recording ? t("shortcuts.press_keys") : null}
-        </button>
+        />
     );
 }
 

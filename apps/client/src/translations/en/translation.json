@@ -1734,6 +1734,7 @@
     "record_shortcut": "Add a shortcut",
     "remove_shortcut": "Remove this shortcut",
     "press_keys": "Press keys…",
+    "recording_toast": "Press a key combination to assign it, or Esc to cancel.",
     "make_global": "Make this a system-wide (global) shortcut",
     "make_local": "Make this an in-app shortcut",
     "global_shortcut": "System-wide (global) shortcut, only active on the desktop app"
