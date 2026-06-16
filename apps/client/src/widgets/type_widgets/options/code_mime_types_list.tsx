@@ -3,6 +3,7 @@ import "./code_mime_types_list.css";
 import { default as codeNoteMimeTypes } from "@triliumnext/codemirror/src/syntax_highlighting";
 import { MimeType } from "@triliumnext/commons";
 import { byMimeType as codeBlockMimeTypes } from "@triliumnext/highlightjs/src/syntax_highlighting";
+import type { Tooltip } from "bootstrap";
 import { useMemo, useRef } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
@@ -19,7 +20,13 @@ type MimeTypeWithDisabled = MimeType & { disabled?: boolean };
  */
 export function CodeMimeTypesList() {
     const containerRef = useRef<HTMLUListElement>(null);
-    useStaticTooltip(containerRef, {
+    // The config must keep a stable reference: `useStaticTooltip` re-runs (tearing down and
+    // recreating the delegated tooltip) whenever the config identity changes. Toggling a checkbox
+    // re-renders this component, so an inline config would recreate the tooltip on every toggle and
+    // leave a stale, disposed delegated instance on the label that was just clicked — that label
+    // then loses its tooltip until the page is reopened. The callback only reads static syntax
+    // tables, so the memo has no dependencies.
+    const tooltipConfig = useMemo<Partial<Tooltip.Options>>(() => ({
         title() {
             const mime = this.querySelector("input")?.value;
             if (!mime || mime === "text/plain") return "";
@@ -38,8 +45,13 @@ export function CodeMimeTypesList() {
         placement: "left",
         fallbackPlacements: [ "left", "right" ],
         animation: false,
-        html: true
-    });
+        html: true,
+        // Hover only: clicking a label focuses the wrapped checkbox, and the default "hover focus"
+        // trigger would keep the tooltip pinned via that focus after the mouse leaves, causing it to
+        // overlap the next hovered label's tooltip.
+        trigger: "hover"
+    }), []);
+    useStaticTooltip(containerRef, tooltipConfig);
     const [ codeNotesMimeTypes, setCodeNotesMimeTypes ] = useTriliumOptionJson<string[]>("codeNotesMimeTypes");
     const groupedMimeTypes: Record<string, MimeType[]> = useMemo(() => {
         mime_types.loadMimeTypes();
