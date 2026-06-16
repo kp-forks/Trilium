@@ -133,4 +133,22 @@
         color: var(--link-color);
         border-color: var(--link-color);
     }
+
+    /* On mobile, stack each row so the shortcut editor sits underneath the action label.
+       OptionsRow keeps these rows inline because they contain .icon-action buttons. */
+    body.mobile & {
+        .option-row {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .option-row-input {
+            width: 100%;
+        }
+
+        .shortcut-editor {
+            justify-content: flex-start;
+        }
+    }
 }
