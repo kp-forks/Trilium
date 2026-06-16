@@ -1738,7 +1738,10 @@
     "make_global": "Make this a system-wide (global) shortcut",
     "make_local": "Make this an in-app shortcut",
     "global_shortcut": "System-wide (global) shortcut, only active on the desktop app",
-    "conflict_chip": "This combination is also assigned to: {{actions}}"
+    "conflict_chip": "This combination is also assigned to: {{actions}}",
+    "show_conflicts_only": "Show conflicts only",
+    "show_conflicts_only_count": "Show conflicts only ({{count}})",
+    "no_conflicts": "No conflicting shortcuts."
   },
   "spellcheck": {
     "title": "Spell Check",

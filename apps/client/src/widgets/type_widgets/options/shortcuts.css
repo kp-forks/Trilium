@@ -8,6 +8,18 @@
         padding-block: 0.5em;
         border-bottom: 1px solid var(--main-border-color);
         margin-bottom: 1em;
+        display: flex;
+        align-items: center;
+        gap: 1em;
+
+        > :first-child {
+            flex: 1;
+        }
+
+        .form-checkbox {
+            flex: 0 0 auto;
+            white-space: nowrap;
+        }
     }
 
     > footer {

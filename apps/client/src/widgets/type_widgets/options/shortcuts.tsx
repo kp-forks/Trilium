@@ -12,6 +12,7 @@ import toast from "../../../services/toast";
 import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
+import FormCheckbox from "../../react/FormCheckbox";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumEvent } from "../../react/hooks";
@@ -23,6 +24,7 @@ import OptionsSection from "./components/OptionsSection";
 export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
     const [ filter, setFilter ] = useState<string>();
+    const [ conflictsOnly, setConflictsOnly ] = useState(false);
 
     useEffect(() => {
         server.get<KeyboardShortcut[]>("keyboard-actions").then(setKeyboardShortcuts);
@@ -83,7 +85,9 @@ export default function ShortcutSettings() {
     const filteredGroups = groups
         .map((group) => ({
             ...group,
-            actions: filter ? group.actions.filter((action) => filterKeyboardAction(action, filterLowerCase)) : group.actions
+            actions: group.actions.filter((action) =>
+                (!conflictsOnly || conflicts.has(action.actionName)) &&
+                (!filter || filterKeyboardAction(action, filterLowerCase)))
         }))
         .filter((group) => group.actions.length > 0);
 
@@ -99,6 +103,13 @@ export default function ShortcutSettings() {
                     placeholder={t("shortcuts.type_text_to_filter")}
                     currentValue={filter} onChange={(value) => setFilter(value)}
                 />
+                <FormCheckbox
+                    label={conflicts.size > 0
+                        ? t("shortcuts.show_conflicts_only_count", { count: conflicts.size })
+                        : t("shortcuts.show_conflicts_only")}
+                    currentValue={conflictsOnly}
+                    onChange={setConflictsOnly}
+                />
             </header>
 
             {filteredGroups.length > 0
@@ -109,12 +120,19 @@ export default function ShortcutSettings() {
                         ))}
                     </OptionsSection>
                 ))
-                : (
-                    <NoItems
-                        icon="bx bx-filter-alt"
-                        text={t("shortcuts.no_results", { filter })}
-                    />
-                )}
+                : conflictsOnly && conflicts.size === 0
+                    ? (
+                        <NoItems
+                            icon="bx bx-check-circle"
+                            text={t("shortcuts.no_conflicts")}
+                        />
+                    )
+                    : (
+                        <NoItems
+                            icon="bx bx-filter-alt"
+                            text={t("shortcuts.no_results", { filter })}
+                        />
+                    )}
 
             <footer>
                 <Button
