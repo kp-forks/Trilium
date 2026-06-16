@@ -357,6 +357,13 @@ describe("renderToHtml", () => {
             expect(html).toContain('<code spellcheck="false">$x$</code>');
             expect(html).toContain('<span class="math-tex">\\(y\\)</span>');
         });
+
+        it("renders an escaped dollar as a single literal dollar without adding backslashes (#10179)", () => {
+            // Markdown `\$` is an escaped dollar; the backslash must be consumed, leaving
+            // just `$`. It must not gain extra backslashes (the reported `\\$` output).
+            expect(render("\\$")).toBe("<p>$</p>");
+            expect(render("price is \\$5 today")).toBe("<p>price is $5 today</p>");
+        });
     });
 
     describe("wiki links and transclusions", () => {

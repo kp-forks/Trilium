@@ -372,9 +372,6 @@ export class CustomMarkdownRenderer extends Renderer {
  * delegated to the caller so this works in both Node and the browser.
  */
 export function renderToHtml(content: string, title: string, options: RenderToHtmlOptions): string {
-    // Double-escape slashes in math expressions — otherwise the parser consumes them.
-    content = content.replaceAll("\\$", "\\\\$");
-
     const { processedText, placeholderMap: formulaMap } = extractFormulas(content);
 
     const marked = new Marked({ async: false, gfm: true });

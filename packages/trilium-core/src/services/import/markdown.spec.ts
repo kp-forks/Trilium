@@ -237,13 +237,18 @@ $$`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
-    it("preserves escaped math expressions", () => {
-        const scenarios = [
-            "\\$\\$\sqrt{x^{2}+1}\\$\\$",
-            "The equation is \\$e=mc^{2}\\$."
+    it("renders escaped math delimiters as literal dollars without rendering math (#10179)", () => {
+        // `\$` is a standard Markdown escape: the backslash is consumed and the dollar
+        // is kept literal (never treated as a formula delimiter). The escape must NOT
+        // leak extra backslashes into the output — the reported bug doubled them to `\\$`.
+        const scenarios: [input: string, expected: string][] = [
+            ["\\$\\$\sqrt{x^{2}+1}\\$\\$", `<p>$$\sqrt{x^{2}+1}$$</p>`],
+            ["The equation is \\$e=mc^{2}\\$.", `<p>The equation is $e=mc^{2}$.</p>`]
         ];
-        for (const scenario of scenarios) {
-            expect(markdownService.renderToHtml(scenario, "Title")).toStrictEqual(`<p>${scenario}</p>`);
+        for (const [input, expected] of scenarios) {
+            const html = markdownService.renderToHtml(input, "Title");
+            expect(html).toStrictEqual(expected);
+            expect(html).not.toContain("math-tex");
         }
     });
 
