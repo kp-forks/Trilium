@@ -108,6 +108,10 @@ export default function ShortcutSettings() {
     )
 }
 
+function isShortcutModified(action: ActionKeyboardShortcut) {
+    return !arrayEqual(action.effectiveShortcuts ?? [], action.defaultShortcuts ?? []);
+}
+
 function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
     // Hide separators when filtering is active.
     if ("separator" in action) {
@@ -145,7 +149,11 @@ function KeyboardShortcutTable({ filteredKeyboardActions, filter }: { filteredKe
                             </td>
                         : (
                             <>
-                                <td>{action.friendlyName}</td>
+                                <td>
+                                    {isShortcutModified(action) &&
+                                        <span class="shortcut-modified-indicator" title={t("shortcuts.modified_from_default")} />}
+                                    {action.friendlyName}
+                                </td>
                                 <td>
                                     <ShortcutEditor keyboardShortcut={action} />
                                 </td>

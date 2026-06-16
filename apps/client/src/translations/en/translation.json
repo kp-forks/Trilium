@@ -1731,7 +1731,8 @@
     "reload_app": "Reload app to apply changes",
     "set_all_to_default": "Set all shortcuts to the default",
     "confirm_reset": "Do you really want to reset all keyboard shortcuts to the default?",
-    "no_results": "No shortcuts found matching '{{filter}}'"
+    "no_results": "No shortcuts found matching '{{filter}}'",
+    "modified_from_default": "This shortcut has been changed from its default."
   },
   "spellcheck": {
     "title": "Spell Check",

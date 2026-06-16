@@ -28,6 +28,16 @@
             width: 25%;
         }
 
+        .shortcut-modified-indicator {
+            display: inline-block;
+            width: 0.5em;
+            height: 0.5em;
+            margin-right: 0.5em;
+            border-radius: 50%;
+            background-color: var(--link-color);
+            vertical-align: middle;
+        }
+
         .separator {
             background-color: var(--accented-background-color);
             font-weight: bold;
