@@ -10,7 +10,7 @@ import options from "../../../services/options";
 import server from "../../../services/server";
 import { canonicalizeShortcut, KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
 import toast from "../../../services/toast";
-import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/utils";
+import { arrayEqual, isElectron, isMobile, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
@@ -121,6 +121,7 @@ export default function ShortcutSettings() {
                     iconAction
                     title={t("shortcuts.filter")}
                     dropdownRef={filterDropdownRef}
+                    dropdownContainerClassName={isMobile() ? "mobile-bottom-menu" : undefined}
                 >
                     <FilterContent
                         activeFilter={activeFilter}
