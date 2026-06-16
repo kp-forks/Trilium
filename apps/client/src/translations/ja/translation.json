@@ -975,7 +975,9 @@
   "tray": {
     "title": "システムトレイ",
     "enable_tray": "トレイアイコン",
-    "enable_tray_description": "変更はすぐに適用されますが、一部のプラットフォームでは、トレイアイコンを非表示にするために Trilium の再起動が必要になる場合があります。"
+    "enable_tray_description": "変更はすぐに適用されますが、一部のプラットフォームでは、トレイアイコンを非表示にするために Trilium の再起動が必要になる場合があります。",
+    "close_to_tray": "閉じるとトレイに格納",
+    "close_to_tray_description": "ウィンドウを閉じると、Trilium を終了させずに、システムトレイで実行されたままになります。トレイアイコンが有効になっている必要があります。"
   },
   "heading_style": {
     "title": "見出しのスタイル",
@@ -2792,5 +2794,15 @@
     "render_error": "プレビューをレンダリングできませんでした",
     "show_details": "詳細を表示",
     "last_valid_render": "最後に有効だったレンダリングを表示"
+  },
+  "desktop": {
+    "web_placeholder": "これらのオプションはデスクトップ版のみに適用されます。"
+  },
+  "startup": {
+    "title": "スタートアップ",
+    "launch_on_startup": "スタートアップ時に起動",
+    "launch_on_startup_description": "コンピューターにログインしたときに Trilium を自動的に起動します。",
+    "hide_on_auto_start": "トレイに最小化して起動",
+    "hide_on_auto_start_description": "ログイン時に自動的に起動する場合、ウィンドウを開くのではなく、最小化して起動します。スタートアップ時に起動とトレイアイコンが有効になっている必要があります。"
   }
 }

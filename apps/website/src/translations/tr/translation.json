@@ -75,5 +75,9 @@
     "header": {
         "documentation": "Dokümantasyon",
         "support-us": "Destekle"
+    },
+    "resources": {
+        "download": "İndir",
+        "website": "Website"
     }
 }
