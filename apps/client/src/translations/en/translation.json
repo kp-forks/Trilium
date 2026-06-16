@@ -1741,7 +1741,12 @@
     "conflict_chip": "This combination is also assigned to: {{actions}}",
     "show_conflicts_only": "Show conflicts only",
     "show_conflicts_only_count": "Show conflicts only ({{count}})",
-    "no_conflicts": "No conflicting shortcuts."
+    "no_conflicts": "No conflicting shortcuts.",
+    "no_matches": "No shortcuts match the selected filters.",
+    "filter": "Filter shortcuts",
+    "filter_all": "All shortcuts",
+    "filter_global": "System-wide (global) shortcuts only",
+    "filter_local": "In-app (local) shortcuts only"
   },
   "spellcheck": {
     "title": "Spell Check",

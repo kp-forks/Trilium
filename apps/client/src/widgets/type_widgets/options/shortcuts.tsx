@@ -12,7 +12,9 @@ import toast from "../../../services/toast";
 import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
+import Dropdown from "../../react/Dropdown";
 import FormCheckbox from "../../react/FormCheckbox";
+import { FormDropdownDivider, FormListItem } from "../../react/FormList";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumEvent } from "../../react/hooks";
@@ -25,6 +27,7 @@ export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
     const [ filter, setFilter ] = useState<string>();
     const [ conflictsOnly, setConflictsOnly ] = useState(false);
+    const [ scopeFilter, setScopeFilter ] = useState<ScopeFilter>(null);
 
     useEffect(() => {
         server.get<KeyboardShortcut[]>("keyboard-actions").then(setKeyboardShortcuts);
@@ -87,6 +90,7 @@ export default function ShortcutSettings() {
             ...group,
             actions: group.actions.filter((action) =>
                 (!conflictsOnly || conflicts.has(action.actionName)) &&
+                matchesScopeFilter(action, scopeFilter) &&
                 (!filter || filterKeyboardAction(action, filterLowerCase)))
         }))
         .filter((group) => group.actions.length > 0);
@@ -110,6 +114,16 @@ export default function ShortcutSettings() {
                     currentValue={conflictsOnly}
                     onChange={setConflictsOnly}
                 />
+                <Dropdown
+                    buttonClassName={`bx bx-filter-alt ${scopeFilter ? "active" : ""}`}
+                    hideToggleArrow
+                    noSelectButtonStyle
+                    noDropdownListStyle
+                    iconAction
+                    title={t("shortcuts.filter")}
+                >
+                    <ScopeFilterContent scopeFilter={scopeFilter} setScopeFilter={setScopeFilter} />
+                </Dropdown>
             </header>
 
             {filteredGroups.length > 0
@@ -120,19 +134,26 @@ export default function ShortcutSettings() {
                         ))}
                     </OptionsSection>
                 ))
-                : conflictsOnly && conflicts.size === 0
+                : filter
                     ? (
-                        <NoItems
-                            icon="bx bx-check-circle"
-                            text={t("shortcuts.no_conflicts")}
-                        />
-                    )
-                    : (
                         <NoItems
                             icon="bx bx-filter-alt"
                             text={t("shortcuts.no_results", { filter })}
                         />
-                    )}
+                    )
+                    : conflictsOnly && conflicts.size === 0
+                        ? (
+                            <NoItems
+                                icon="bx bx-check-circle"
+                                text={t("shortcuts.no_conflicts")}
+                            />
+                        )
+                        : (
+                            <NoItems
+                                icon="bx bx-filter-alt"
+                                text={t("shortcuts.no_matches")}
+                            />
+                        )}
 
             <footer>
                 <Button
@@ -236,6 +257,46 @@ export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, Sho
     }
 
     return result;
+}
+
+/**
+ * Restricts the list to actions that have at least one shortcut of a given scope: `"global"` for
+ * system-wide shortcuts, `"local"` for in-app ones, or `null` for no restriction.
+ */
+type ScopeFilter = "global" | "local" | null;
+
+export function matchesScopeFilter(action: ActionKeyboardShortcut, scopeFilter: ScopeFilter) {
+    if (scopeFilter === null) {
+        return true;
+    }
+
+    const shortcuts = action.effectiveShortcuts ?? [];
+    return scopeFilter === "global"
+        ? shortcuts.some(isGlobalShortcut)
+        : shortcuts.some((shortcut) => !isGlobalShortcut(shortcut));
+}
+
+function ScopeFilterContent({ scopeFilter, setScopeFilter }: {
+    scopeFilter: ScopeFilter;
+    setScopeFilter: (value: ScopeFilter) => void;
+}) {
+    return (
+        <>
+            <FormListItem
+                checked={scopeFilter === null}
+                onClick={() => setScopeFilter(null)}
+            >{t("shortcuts.filter_all")}</FormListItem>
+            <FormDropdownDivider />
+            <FormListItem
+                checked={scopeFilter === "global"}
+                onClick={() => setScopeFilter("global")}
+            >{t("shortcuts.filter_global")}</FormListItem>
+            <FormListItem
+                checked={scopeFilter === "local"}
+                onClick={() => setScopeFilter("local")}
+            >{t("shortcuts.filter_local")}</FormListItem>
+        </>
+    );
 }
 
 function isShortcutModified(action: ActionKeyboardShortcut) {

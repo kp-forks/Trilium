@@ -20,6 +20,15 @@
             flex: 0 0 auto;
             white-space: nowrap;
         }
+
+        .dropdown {
+            flex: 0 0 auto;
+        }
+
+        /* Highlight the filter button while a scope filter is applied. */
+        .icon-action.active {
+            color: var(--link-color);
+        }
     }
 
     > footer {
