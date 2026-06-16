@@ -43,7 +43,8 @@ for (let i = 1; i <= 19; i++) {
     keyMap[`f${i}`] = [ keyCode ];
 }
 
-const KEYCODES_WITH_NO_MODIFIER = new Set([
+// Key codes (e.g. function keys, Delete, Enter) that are allowed as shortcuts without a modifier.
+export const KEYCODES_WITH_NO_MODIFIER = new Set([
     "Delete",
     "Enter",
     "NumpadEnter",

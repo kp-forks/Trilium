@@ -8,6 +8,7 @@ import FormTextBox from "../../react/FormTextBox";
 import RawHtml from "../../react/RawHtml";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
+import { KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import server from "../../../services/server";
 import options from "../../../services/options";
@@ -246,11 +247,8 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
                 return;
             }
 
-            // Wait for a non-modifier key before finalizing the combination.
-            if (MODIFIER_KEYS.has(e.key)) {
-                return;
-            }
-
+            // Ignore lone modifiers and invalid single-key combinations (keyboardEventToShortcut
+            // returns null) so recording continues until a bindable combination is pressed.
             const shortcut = keyboardEventToShortcut(e);
             if (shortcut) {
                 onCapture(shortcut);
@@ -280,27 +278,37 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
 
 const MODIFIER_KEYS = new Set([ "Control", "Alt", "Shift", "Meta" ]);
 
-/** Converts a captured {@link KeyboardEvent} into a shortcut string matching the stored format (e.g. `Ctrl+Shift+J`). */
-function keyboardEventToShortcut(e: KeyboardEvent): string | null {
+const NAMED_KEYS: Record<string, string> = {
+    ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right",
+    " ": "Space", Spacebar: "Space"
+};
+
+/**
+ * Converts a captured {@link KeyboardEvent} into a shortcut string matching the stored format
+ * (e.g. `Ctrl+Shift+J`). Returns `null` when the event is not a valid, bindable shortcut, i.e.:
+ *  - a lone modifier key (Ctrl/Alt/Shift/Meta), or
+ *  - a modifier-less key the matcher would never fire — everything except function keys, Delete
+ *    and Enter (see {@link KEYCODES_WITH_NO_MODIFIER}).
+ */
+export function keyboardEventToShortcut(e: KeyboardEvent): string | null {
     const key = normalizeCapturedKey(e);
     if (!key) {
         return null;
     }
 
-    const parts: string[] = [];
-    if (e.ctrlKey) parts.push("Ctrl");
-    if (e.altKey) parts.push("Alt");
-    if (e.shiftKey) parts.push("Shift");
-    if (e.metaKey) parts.push("Meta");
-    parts.push(key);
+    const modifiers: string[] = [];
+    if (e.ctrlKey) modifiers.push("Ctrl");
+    if (e.altKey) modifiers.push("Alt");
+    if (e.shiftKey) modifiers.push("Shift");
+    if (e.metaKey) modifiers.push("Meta");
 
-    return parts.join("+");
+    // Disallow single-key shortcuts that have no modifier, since they would never match at runtime.
+    if (modifiers.length === 0 && !KEYCODES_WITH_NO_MODIFIER.has(e.code)) {
+        return null;
+    }
+
+    return [ ...modifiers, key ].join("+");
 }
-
-const NAMED_KEYS: Record<string, string> = {
-    ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right",
-    " ": "Space", Spacebar: "Space"
-};
 
 function normalizeCapturedKey(e: KeyboardEvent): string | null {
     const { code, key } = e;
