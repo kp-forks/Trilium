@@ -364,6 +364,16 @@ describe("renderToHtml", () => {
             expect(render("\\$")).toBe("<p>$</p>");
             expect(render("price is \\$5 today")).toBe("<p>price is $5 today</p>");
         });
+
+        it("leaves mismatched dollar runs as literal text instead of a malformed formula", () => {
+            // Asymmetric delimiters (e.g. `$$…$`) must not be parsed as math — otherwise a
+            // stray `$` ends up inside the formula body and crashes KaTeX. GitHub renders
+            // these as plain text, and so should we.
+            expect(render("$$e=mc^2$")).toBe("<p>$$e=mc^2$</p>");
+            expect(render("$e=mc^2$$")).toBe("<p>$e=mc^2$$</p>");
+            expect(render("$$$x$$")).toBe("<p>$$$x$$</p>");
+            expect(render("$$e=mc^2$")).not.toContain("math-tex");
+        });
     });
 
     describe("wiki links and transclusions", () => {
