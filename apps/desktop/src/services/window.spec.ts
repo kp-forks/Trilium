@@ -732,6 +732,14 @@ describe("window service", () => {
             expect(ev.returnValue).toEqual(["en-US", "de"]);
         });
 
+        it("set-spellchecker-languages applies the codes to every open window's session", () => {
+            new FakeBrowserWindow();
+            fireOn("set-spellchecker-languages", makeEvent(), ["en-US", "fr"]);
+            for (const win of state.windows) {
+                expect(win.webContents.session.setSpellCheckerLanguages).toHaveBeenCalledWith(["en-US", "fr"]);
+            }
+        });
+
         it("title bar / material / vibrancy / button position setters", () => {
             const win = state.windows[state.windows.length - 1];
             fireOn("set-title-bar-overlay", makeEvent(), { color: "#fff", symbolColor: "#000" });

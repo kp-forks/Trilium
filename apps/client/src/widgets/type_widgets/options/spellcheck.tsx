@@ -67,6 +67,9 @@ function SpellcheckLanguages() {
 
     const setSelectedCodes = useCallback((codes: string[]) => {
         setSpellCheckLanguageCode(codes.join(", "));
+        // Apply immediately to the live Electron sessions so the change takes
+        // effect without restarting the app.
+        window.electronApi?.spellcheck.setSpellCheckerLanguages(codes);
     }, [setSpellCheckLanguageCode]);
 
     const availableLanguages = useMemo<SpellcheckLanguage[]>(() => {

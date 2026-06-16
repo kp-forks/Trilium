@@ -152,6 +152,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         getAvailableSpellCheckerLanguages(): string[] {
             return ipcRenderer.sendSync("get-available-spellchecker-languages");
+        },
+        setSpellCheckerLanguages(languageCodes: string[]) {
+            ipcRenderer.send("set-spellchecker-languages", languageCodes);
         }
     },
 

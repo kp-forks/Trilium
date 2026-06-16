@@ -340,6 +340,13 @@ export interface ElectronSpellcheckApi {
 
     /** Returns the BCP-47 language tags Chromium can spell-check on this platform. */
     getAvailableSpellCheckerLanguages(): string[];
+
+    /**
+     * Applies the spell-check language list to every open window's session
+     * immediately, without an application restart. No-op on macOS, where the OS
+     * spell checker auto-detects the language.
+     */
+    setSpellCheckerLanguages(languageCodes: string[]): void;
 }
 
 /** OS integration controls — system tray and autostart / launch-on-login. */

@@ -259,13 +259,29 @@ function isDevToolsDocked(webContents: WebContents) {
 function setupSpellcheckForSession(session: Session) {
     if (!loadedSpellcheckSessions.has(session)) {
         loadedSpellcheckSessions.add(session);
+        session.setSpellCheckerLanguages(getConfiguredSpellcheckLanguages());
+    }
+}
 
-        const languageCodes = optionService
-            .getOption("spellCheckLanguageCode")
-            .split(",")
-            .map((code) => code.trim())
-            .filter(Boolean);
+function getConfiguredSpellcheckLanguages(): string[] {
+    return optionService
+        .getOption("spellCheckLanguageCode")
+        .split(",")
+        .map((code) => code.trim())
+        .filter(Boolean);
+}
 
+/**
+ * Re-applies the spell-check language list to every open window's session so a
+ * language change in the settings takes effect without restarting the app.
+ * Sessions are deduplicated because all windows share the default session.
+ */
+function applySpellcheckLanguages(languageCodes: string[]) {
+    const sessions = new Set<Session>();
+    for (const win of electron.BrowserWindow.getAllWindows()) {
+        sessions.add(win.webContents.session);
+    }
+    for (const session of sessions) {
         session.setSpellCheckerLanguages(languageCodes);
     }
 }
@@ -449,6 +465,10 @@ export function setupWindowing() {
 
     electron.ipcMain.on("get-available-spellchecker-languages", (event) => {
         event.returnValue = event.sender.session.availableSpellCheckerLanguages;
+    });
+
+    electron.ipcMain.on("set-spellchecker-languages", (_event, languageCodes: string[]) => {
+        applySpellcheckLanguages(languageCodes);
     });
 
     // Window management IPC handlers (replacing @electron/remote for renderer access)
