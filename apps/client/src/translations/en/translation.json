@@ -1743,12 +1743,9 @@
     "no_matches": "No shortcuts match the selected filters.",
     "filter": "Filter shortcuts",
     "filter_all": "All shortcuts",
-    "filter_conflicts": "Conflicts",
-    "filter_conflicts_count": "Conflicts ({{count}})",
-    "filter_global": "Global shortcuts",
-    "filter_global_count": "Global shortcuts ({{count}})",
-    "filter_modified": "Changed from default",
-    "filter_modified_count": "Changed from default ({{count}})"
+    "filter_conflicts": "Conflicts ({{count}})",
+    "filter_global": "Global shortcuts ({{count}})",
+    "filter_modified": "Changed from default ({{count}})"
   },
   "spellcheck": {
     "title": "Spell Check",

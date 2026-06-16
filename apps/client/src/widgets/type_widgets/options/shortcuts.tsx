@@ -305,16 +305,19 @@ function FilterContent({ activeFilter, onSelect, conflictCount, globalCount, mod
             <FormDropdownDivider />
             <FormListItem
                 checked={activeFilter === "conflicts"}
+                disabled={conflictCount === 0}
                 onClick={() => onSelect("conflicts")}
-            >{conflictCount > 0 ? t("shortcuts.filter_conflicts_count", { count: conflictCount }) : t("shortcuts.filter_conflicts")}</FormListItem>
+            >{t("shortcuts.filter_conflicts", { count: conflictCount })}</FormListItem>
             <FormListItem
                 checked={activeFilter === "global"}
+                disabled={globalCount === 0}
                 onClick={() => onSelect("global")}
-            >{globalCount > 0 ? t("shortcuts.filter_global_count", { count: globalCount }) : t("shortcuts.filter_global")}</FormListItem>
+            >{t("shortcuts.filter_global", { count: globalCount })}</FormListItem>
             <FormListItem
                 checked={activeFilter === "modified"}
+                disabled={modifiedCount === 0}
                 onClick={() => onSelect("modified")}
-            >{modifiedCount > 0 ? t("shortcuts.filter_modified_count", { count: modifiedCount }) : t("shortcuts.filter_modified")}</FormListItem>
+            >{t("shortcuts.filter_modified", { count: modifiedCount })}</FormListItem>
         </>
     );
 }
