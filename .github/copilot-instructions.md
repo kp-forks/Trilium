@@ -126,6 +126,7 @@ Common UI components are available in `apps/client/src/widgets/react/` — **alw
 - `Slider` - Range slider with label
 - `Checkbox`, `RadioButton` - Form controls
 - `CollapsibleSection` - Expandable content sections
+- `Badge` - Colored pill/label with optional icon, tooltip, and `onClick` (for counts, status flags); set its color via the `--color` CSS variable on a wrapper class, not inline styles. `BadgeWithDropdown` pairs a badge with a dropdown menu
 
 **Do not use Bootstrap utility classes** (e.g. `form-control-sm`, `form-select-sm`, `input-group`) on these components — they manage their own styling internally. If you need to adjust sizing or layout, use props provided by the component or CSS custom properties, not Bootstrap overrides.
 

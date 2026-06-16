@@ -12,6 +12,7 @@ import { canonicalizeShortcut, KEYCODES_WITH_NO_MODIFIER } from "../../../servic
 import toast from "../../../services/toast";
 import { arrayEqual, isElectron, isMobile, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
+import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "../../react/FormList";
@@ -114,15 +115,13 @@ export default function ShortcutSettings() {
                     currentValue={filter} onChange={(value) => setFilter(value)}
                 />
                 {conflicts.size > 0 &&
-                    <button
-                        type="button"
-                        class={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
-                        title={t("shortcuts.conflicts_badge_tooltip")}
+                    <Badge
+                        className={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
+                        icon="bx bx-error-circle"
+                        text={t("shortcuts.conflicts_badge", { count: conflicts.size })}
+                        tooltip={t("shortcuts.conflicts_badge_tooltip")}
                         onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
-                    >
-                        <span class="bx bx-error-circle" />
-                        {t("shortcuts.conflicts_badge", { count: conflicts.size })}
-                    </button>}
+                    />}
                 <Dropdown
                     buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
                     hideToggleArrow
