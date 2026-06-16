@@ -1721,7 +1721,7 @@
   },
   "shortcuts": {
     "keyboard_shortcuts": "Keyboard Shortcuts",
-    "multiple_shortcuts": "Multiple shortcuts for the same action can be separated by comma.",
+    "multiple_shortcuts": "Press the + button next to an action and type a key combination to assign a shortcut. Each action can have several shortcuts.",
     "electron_documentation": "See <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">Electron documentation</a> for available modifiers and key codes.",
     "type_text_to_filter": "Type text to filter shortcuts...",
     "reload_app": "Reload app to apply changes",
@@ -1730,7 +1730,10 @@
     "no_results": "No shortcuts found matching '{{filter}}'",
     "modified_from_default": "This shortcut has been changed from its default.",
     "revert_to_default": "Revert to default ({{shortcuts}})",
-    "no_default_shortcut": "no shortcut"
+    "no_default_shortcut": "no shortcut",
+    "record_shortcut": "Add a shortcut",
+    "remove_shortcut": "Remove this shortcut",
+    "press_keys": "Press keys…"
   },
   "spellcheck": {
     "title": "Spell Check",

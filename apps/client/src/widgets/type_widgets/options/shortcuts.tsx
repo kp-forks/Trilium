@@ -195,23 +195,136 @@ function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
 }
 
 function ShortcutEditor({ keyboardShortcut: action }: { keyboardShortcut: ActionKeyboardShortcut }) {
-    const originalShortcut = (action.effectiveShortcuts ?? []).join(", ");
+    const shortcuts = action.effectiveShortcuts ?? [];
+
+    const saveShortcuts = (newShortcuts: string[]) => {
+        void options.save(getOptionName(action.actionName), JSON.stringify(newShortcuts));
+    };
+
+    const addShortcut = (shortcut: string) => {
+        if (!shortcuts.includes(shortcut)) {
+            saveShortcuts([ ...shortcuts, shortcut ]);
+        }
+    };
 
     return (
-        <FormTextBox
-            currentValue={originalShortcut}
-            onBlur={(newShortcut) => {
-                const { actionName } = action;
-                const optionName = getOptionName(actionName);
-                const newShortcuts = newShortcut
-                    .replace("+,", "+Comma")
-                    .split(",")
-                    .map((shortcut) => shortcut.replace("+Comma", "+,"))
-                    .filter((shortcut) => !!shortcut);
-                options.save(optionName, JSON.stringify(newShortcuts));
-            }}
-        />
-    )
+        <div class="shortcut-editor">
+            {shortcuts.map((shortcut) => (
+                <span class="shortcut-chip" key={shortcut}>
+                    <kbd>{shortcut}</kbd>
+                    <button
+                        type="button"
+                        class="shortcut-chip-remove"
+                        title={t("shortcuts.remove_shortcut")}
+                        onClick={() => saveShortcuts(shortcuts.filter((s) => s !== shortcut))}
+                    >
+                        <span class="bx bx-x" />
+                    </button>
+                </span>
+            ))}
+
+            <ShortcutRecorder onCapture={addShortcut} />
+        </div>
+    );
+}
+
+function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void }) {
+    const [ recording, setRecording ] = useState(false);
+
+    useEffect(() => {
+        if (!recording) {
+            return;
+        }
+
+        const onKeyDown = (e: KeyboardEvent) => {
+            // Swallow the combination so it never reaches the application's own shortcut handlers.
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            if (e.key === "Escape") {
+                setRecording(false);
+                return;
+            }
+
+            // Wait for a non-modifier key before finalizing the combination.
+            if (MODIFIER_KEYS.has(e.key)) {
+                return;
+            }
+
+            const shortcut = keyboardEventToShortcut(e);
+            if (shortcut) {
+                onCapture(shortcut);
+                setRecording(false);
+            }
+        };
+
+        // Capture phase on window so we intercept the keystroke ahead of any other listener.
+        window.addEventListener("keydown", onKeyDown, true);
+        return () => window.removeEventListener("keydown", onKeyDown, true);
+    }, [ recording, onCapture ]);
+
+    return (
+        <button
+            type="button"
+            class={recording
+                ? "shortcut-recorder recording"
+                : "shortcut-recorder icon-action bx bx-plus"}
+            title={recording ? undefined : t("shortcuts.record_shortcut")}
+            onClick={() => setRecording((value) => !value)}
+            onBlur={() => setRecording(false)}
+        >
+            {recording ? t("shortcuts.press_keys") : null}
+        </button>
+    );
+}
+
+const MODIFIER_KEYS = new Set([ "Control", "Alt", "Shift", "Meta" ]);
+
+/** Converts a captured {@link KeyboardEvent} into a shortcut string matching the stored format (e.g. `Ctrl+Shift+J`). */
+function keyboardEventToShortcut(e: KeyboardEvent): string | null {
+    const key = normalizeCapturedKey(e);
+    if (!key) {
+        return null;
+    }
+
+    const parts: string[] = [];
+    if (e.ctrlKey) parts.push("Ctrl");
+    if (e.altKey) parts.push("Alt");
+    if (e.shiftKey) parts.push("Shift");
+    if (e.metaKey) parts.push("Meta");
+    parts.push(key);
+
+    return parts.join("+");
+}
+
+const NAMED_KEYS: Record<string, string> = {
+    ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right",
+    " ": "Space", Spacebar: "Space"
+};
+
+function normalizeCapturedKey(e: KeyboardEvent): string | null {
+    const { code, key } = e;
+
+    if (MODIFIER_KEYS.has(key)) {
+        return null;
+    }
+
+    // Use the physical code for letters/digits so the result is keyboard-layout independent.
+    const letter = /^Key([A-Z])$/.exec(code);
+    if (letter) {
+        return letter[1];
+    }
+    const digit = /^(?:Digit|Numpad)(\d)$/.exec(code);
+    if (digit) {
+        return digit[1];
+    }
+
+    if (NAMED_KEYS[key]) {
+        return NAMED_KEYS[key];
+    }
+
+    // Function keys and named keys (Enter, Delete, F5, Home, …) already match the stored format.
+    return key.length === 1 ? key.toUpperCase() : key;
 }
 
 const PREFIX = "keyboardShortcuts";
