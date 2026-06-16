@@ -117,38 +117,14 @@
         <td>Scripts with this label won't be included into parent script execution.</td>
       </tr>
       <tr>
-        <td><code spellcheck="false">sorted</code>
+        <td><code spellcheck="false">sorted</code>, <code spellcheck="false">sortDirection</code>,
+          <code
+          spellcheck="false">sortFoldersFirst</code>, <code spellcheck="false">sortNatural</code>,
+            <code
+            spellcheck="false">sortLocale</code>, <code spellcheck="false">top</code>, <code spellcheck="false">bottom</code>
         </td>
-        <td>
-          <p>Keeps child notes sorted by title alphabetically.</p>
-          <p>When given a value, it will sort by the value of another label instead.
-            If one of the child notes doesn't have the specified label, the title will
-            be used for them instead.</p>
-        </td>
-      </tr>
-      <tr>
-        <td><code spellcheck="false">sortDirection</code>
-        </td>
-        <td>
-          <p>If <code spellcheck="false">sorted</code> is applied, specifies the direction
-            of the sort:</p>
-          <ul>
-            <li><code spellcheck="false">ASC</code>, ascending (default)</li>
-            <li><code spellcheck="false">DESC</code>, descending</li>
-          </ul>
-        </td>
-      </tr>
-      <tr>
-        <td><code spellcheck="false">sortFoldersFirst</code>
-        </td>
-        <td>If <code spellcheck="false">sorted</code> is applied, folders (notes with
-          children) will be sorted as a group at the top, and the rest will be sorted.</td>
-      </tr>
-      <tr>
-        <td><code spellcheck="false">top</code>
-        </td>
-        <td>If <code spellcheck="false">sorted</code> is applied to the parent note,
-          keeps given note on top in its parent.</td>
+        <td>Manages automatic/permanent sorting. See&nbsp;<a class="reference-link"
+          href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_aGlEvb9hyDhS">Sorting Notes</a>.</td>
       </tr>
       <tr>
         <td><code spellcheck="false">hidePromotedAttributes</code>
@@ -388,7 +364,7 @@
         </td>
         <td>Additional printing options, generally configured through the&nbsp;
           <a
-          class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_NRnIZmSMc5sj">Printing &amp; Exporting as PDF</a>&nbsp;dialog.</td>
+          class="reference-link" href="#root/_help_NRnIZmSMc5sj">Printing &amp; Exporting as PDF</a>&nbsp;dialog.</td>
       </tr>
       <tr>
         <td><code spellcheck="false">geolocation</code>
@@ -416,7 +392,49 @@
       <tr>
         <td><code spellcheck="false">webViewSrc</code>
         </td>
-        <td>Defines the URL of the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_1vHRoWCEjj0L">Web View</a>.</td>
+        <td>Defines the URL of the&nbsp;<a class="reference-link" href="#root/_help_1vHRoWCEjj0L">Web View</a>.</td>
+      </tr>
+      <tr>
+        <td><code spellcheck="false">tabWidth</code>, <code spellcheck="false">indentWidthTabs</code>,
+          <code
+          spellcheck="false">wrapLines</code>
+        </td>
+        <td>Per-note Code editor settings: indentation width, indent with tabs vs.
+          spaces, and word wrapping. See&nbsp;<a class="reference-link" href="#root/_help_6f9hih2hXXZk">Code</a>.</td>
+      </tr>
+      <tr>
+        <td><code spellcheck="false">datePattern</code>, <code spellcheck="false">weekPattern</code>,
+          <code
+          spellcheck="false">monthPattern</code>, <code spellcheck="false">quarterPattern</code>,
+            <code
+            spellcheck="false">yearPattern</code>
+        </td>
+        <td>Customizes the title naming pattern of day / week / month / quarter /
+          year notes. See&nbsp;<a class="reference-link" href="#root/_help_l0tKav7yLHGF">Day Notes</a>.</td>
+      </tr>
+      <tr>
+        <td><code spellcheck="false">enableWeekNote</code>, <code spellcheck="false">enableQuarterNote</code>
+        </td>
+        <td>Enables optional week and quarter notes in the calendar hierarchy; set
+          on the calendar root. See&nbsp;<a class="reference-link" href="#root/_help_l0tKav7yLHGF">Day Notes</a>.</td>
+      </tr>
+      <tr>
+        <td><code spellcheck="false">fullContentWidth</code>
+        </td>
+        <td>Expands the note to the full editor width, ignoring the configured content
+          width (useful for wide tables). See&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_t596jLvPrqkS">Content width</a>.</td>
+      </tr>
+      <tr>
+        <td><code spellcheck="false">iconPack</code>
+        </td>
+        <td>Identifies a custom icon pack by its prefix. See&nbsp;<a class="reference-link"
+          href="#root/pOsGYCXsbNQG/pKK96zzmvBGf/_help_g1mlRoU8CsqC">Creating an icon pack</a>.</td>
+      </tr>
+      <tr>
+        <td><code spellcheck="false">clipperInbox</code>
+        </td>
+        <td>Overrides the default location where the Web Clipper saves clippings (defaults
+          to the day note). See&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/_help_MtPxeAWVAzMg">Web Clipper</a>.</td>
       </tr>
     </tbody>
   </table>
