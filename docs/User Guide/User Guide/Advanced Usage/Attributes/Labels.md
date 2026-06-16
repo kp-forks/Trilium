@@ -50,7 +50,7 @@ This is a list of labels that Trilium natively supports.
 | `disableInclusion` | Scripts with this label won't be included into parent script execution. |
 | `sorted`, `sortDirection`, `sortFoldersFirst`, `sortNatural`, `sortLocale`, `top`, `bottom` | Manages automatic/permanent sorting. See <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/Notes/Sorting%20Notes.md">Sorting Notes</a>. |
 | `hidePromotedAttributes` | Hide <a class="reference-link" href="Promoted%20Attributes.md">Promoted Attributes</a> on this note. Generally useful when defining inherited attributes, but the parent note doesn't need them. |
-| `readOnly` | Marks a note to be always be [read-only](../../Basic%20Concepts%20and%20Features/Notes/Read-Only%20Notes.md), if it's a supported note (text, code, mermaid). |
+| `readOnly` | Marks a note to always be [read-only](../../Basic%20Concepts%20and%20Features/Notes/Read-Only%20Notes.md), if it's a supported note (text, code, mermaid). |
 | `autoReadOnlyDisabled` | Disables automatic [read-only mode](../../Basic%20Concepts%20and%20Features/Notes/Read-Only%20Notes.md) for the given note. |
 | `appCss` | Marks CSS notes which are loaded into the Trilium application and can thus be used to modify Trilium's looks. See <a class="reference-link" href="../../Theme%20development/Custom%20app-wide%20CSS.md">Custom app-wide CSS</a> for more info. |
 | `appTheme` | Marks CSS notes which are full Trilium themes and are thus available in Trilium options. See <a class="reference-link" href="../../Theme%20development">Theme development</a> for more information. |
@@ -72,7 +72,7 @@ This is a list of labels that Trilium natively supports.
 | `titleTemplate` | Default title of notes created as children of this note. This value is evaluated as a JavaScript string and thus can be enriched with dynamic content via the injected `now` and `parentNote` variables.  <br>  <br>See <a class="reference-link" href="../Default%20Note%20Title.md">Default Note Title</a> for more info. |
 | `template` | This note will appear in the selection of available template when creating new note. See <a class="reference-link" href="../Templates.md">Templates</a> for more information. |
 | `toc` | Controls the display of the <a class="reference-link" href="../../Note%20Types/Text/Table%20of%20contents.md">Table of contents</a> for a given note. `#toc` or `#toc=show` to always display the table of contents, `#toc=false` to always hide it. |
-| `color` | defines color of the note in note tree, links etc. Use any valid CSS color value like 'red' or #a13d5f  <br>Note: this color may be automatically adjusted when displayed to ensure sufficient contrast with the background. |
+| `color` | defines color of the note in note tree, links etc. Use any valid CSS color value like 'red' or #a13d5f   <br>Note: this color may be automatically adjusted when displayed to ensure sufficient contrast with the background. |
 | `keyboardShortcut` | Defines a keyboard shortcut which will immediately jump to this note. Example: 'ctrl+alt+e'. Requires frontend reload for the change to take effect. |
 | `keepCurrentHoisting` | Opening this link won't change hoisting even if the note is not displayable in the current hoisted subtree. |
 | `executeButton` | Title of the button which will execute the current code note |

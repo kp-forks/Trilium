@@ -7,9 +7,8 @@ Once created, the note map will display the relations between notes. Only the no
 
 The note map can be customized using the following <a class="reference-link" href="../Advanced%20Usage/Attributes/Labels.md">Labels</a>:
 
-|  |  |
+| Label | Description |
 | --- | --- |
-| `#mapIncludeRelation`, `#mapIncludeRelation` | Comma-delimited relation names to include or exclude from the note map. |
+| `#mapIncludeRelation` | Comma-delimited relation names to include from the note map. |
+| `#mapExcludeRelation` | Comma-delimited relation names to exclude from the note map. |
 | `#mapRootNoteId` | The ID of the note the map roots from, with a special value `hoisted` (default behavior). |
-
-The labels `mapIncludeRelation` and `mapExcludeRelation`, if set, filter the note map to include only the specified relations or to exclude the specified relations, respectively.

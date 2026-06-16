@@ -46,7 +46,7 @@ These relations are supported and used internally by Trilium.
 | `renderNote` | notes of type <a class="reference-link" href="../../Note%20Types/Render%20Note.md">Render Note</a> will be rendered using a code note (HTML or script) and it is necessary to point using this relation to which note should be rendered |
 | `widget` | Used in the context of custom <a class="reference-link" href="../../Scripting/Frontend%20Basics/Launch%20Bar%20Widgets.md">Launch Bar Widgets</a>, to refer to the widget that will be rendered. |
 | `shareCss` | CSS note which will be injected into the share page. CSS note must be in the shared sub-tree as well. Consider using `shareHiddenFromTree` and `shareOmitDefaultCss` as well. |
-| `shareJs` | JavaScript note which will be injected into the share page. JS note must be in the shared sub-tree as well. Consider using `share_hidden_from_tree`. |
+| `shareJs` | JavaScript note which will be injected into the share page. JS note must be in the shared sub-tree as well. Consider using `shareHiddenFromTree`. |
 | `shareHtml` | HTML note which will be injected into the share page at locations specified by the `shareHtmlLocation` label. HTML note must be in the shared sub-tree as well. Consider using `shareHiddenFromTree`. |
 | `shareTemplate` | Embedded JavaScript note that will be used as the template for displaying the shared note. Falls back to the default template. Consider using `shareHiddenFromTree`. |
 | `shareFavicon` | Favicon note to be set in the shared page. Typically you want to set it to share root and make it inheritable. Favicon note must be in the shared sub-tree as well. Consider using `shareHiddenFromTree`. |
