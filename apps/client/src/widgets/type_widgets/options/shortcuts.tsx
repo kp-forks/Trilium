@@ -1,7 +1,8 @@
 import "./shortcuts.css";
 
 import { ActionKeyboardShortcut, KeyboardShortcut, OptionNames } from "@triliumnext/commons";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
+import { Dropdown as BootstrapDropdown } from "bootstrap";
+import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
@@ -26,6 +27,12 @@ export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
     const [ filter, setFilter ] = useState<string>();
     const [ activeFilter, setActiveFilter ] = useState<ShortcutFilter>(null);
+    const filterDropdownRef = useRef<BootstrapDropdown>(null);
+
+    const selectFilter = useCallback((value: ShortcutFilter) => {
+        setActiveFilter(value);
+        filterDropdownRef.current?.hide();
+    }, []);
 
     useEffect(() => {
         server.get<KeyboardShortcut[]>("keyboard-actions").then(setKeyboardShortcuts);
@@ -83,6 +90,7 @@ export default function ShortcutSettings() {
     const filterLowerCase = filter?.toLowerCase() ?? "";
     const groups = useMemo(() => groupShortcuts(keyboardShortcuts), [ keyboardShortcuts ]);
     const conflicts = useMemo(() => computeConflicts(keyboardShortcuts), [ keyboardShortcuts ]);
+    const globalCount = useMemo(() => keyboardShortcuts.filter((s) => "actionName" in s && hasGlobalShortcut(s)).length, [ keyboardShortcuts ]);
     const filteredGroups = groups
         .map((group) => ({
             ...group,
@@ -111,8 +119,14 @@ export default function ShortcutSettings() {
                     noDropdownListStyle
                     iconAction
                     title={t("shortcuts.filter")}
+                    dropdownRef={filterDropdownRef}
                 >
-                    <FilterContent activeFilter={activeFilter} setActiveFilter={setActiveFilter} conflictCount={conflicts.size} />
+                    <FilterContent
+                        activeFilter={activeFilter}
+                        onSelect={selectFilter}
+                        conflictCount={conflicts.size}
+                        globalCount={globalCount}
+                    />
                 </Dropdown>
             </header>
 
@@ -255,37 +269,42 @@ export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, Sho
  */
 type ShortcutFilter = "conflicts" | "global" | null;
 
+function hasGlobalShortcut(action: ActionKeyboardShortcut) {
+    return (action.effectiveShortcuts ?? []).some(isGlobalShortcut);
+}
+
 export function matchesFilter(action: ActionKeyboardShortcut, activeFilter: ShortcutFilter, conflicts: Map<string, ShortcutConflicts>) {
     switch (activeFilter) {
         case "conflicts":
             return conflicts.has(action.actionName);
         case "global":
-            return (action.effectiveShortcuts ?? []).some(isGlobalShortcut);
+            return hasGlobalShortcut(action);
         default:
             return true;
     }
 }
 
-function FilterContent({ activeFilter, setActiveFilter, conflictCount }: {
+function FilterContent({ activeFilter, onSelect, conflictCount, globalCount }: {
     activeFilter: ShortcutFilter;
-    setActiveFilter: (value: ShortcutFilter) => void;
+    onSelect: (value: ShortcutFilter) => void;
     conflictCount: number;
+    globalCount: number;
 }) {
     return (
         <>
             <FormListItem
                 checked={activeFilter === null}
-                onClick={() => setActiveFilter(null)}
+                onClick={() => onSelect(null)}
             >{t("shortcuts.filter_all")}</FormListItem>
             <FormDropdownDivider />
             <FormListItem
                 checked={activeFilter === "conflicts"}
-                onClick={() => setActiveFilter("conflicts")}
+                onClick={() => onSelect("conflicts")}
             >{conflictCount > 0 ? t("shortcuts.filter_conflicts_count", { count: conflictCount }) : t("shortcuts.filter_conflicts")}</FormListItem>
             <FormListItem
                 checked={activeFilter === "global"}
-                onClick={() => setActiveFilter("global")}
-            >{t("shortcuts.filter_global")}</FormListItem>
+                onClick={() => onSelect("global")}
+            >{globalCount > 0 ? t("shortcuts.filter_global_count", { count: globalCount }) : t("shortcuts.filter_global")}</FormListItem>
         </>
     );
 }

@@ -1745,7 +1745,8 @@
     "filter_all": "All shortcuts",
     "filter_conflicts": "Conflicts only",
     "filter_conflicts_count": "Conflicts only ({{count}})",
-    "filter_global": "Global shortcuts only"
+    "filter_global": "Global shortcuts only",
+    "filter_global_count": "Global shortcuts only ({{count}})"
   },
   "spellcheck": {
     "title": "Spell Check",
