@@ -1,9 +1,14 @@
+import { ActionKeyboardShortcut, KeyboardShortcut } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
-import { keyboardEventToShortcut } from "./shortcuts";
+import { computeConflicts, keyboardEventToShortcut } from "./shortcuts";
 
 function keyEvent(init: KeyboardEventInit) {
     return new KeyboardEvent("keydown", init);
+}
+
+function action(actionName: string, friendlyName: string, effectiveShortcuts: string[]): ActionKeyboardShortcut {
+    return { actionName, friendlyName, effectiveShortcuts } as ActionKeyboardShortcut;
 }
 
 describe("keyboardEventToShortcut", () => {
@@ -57,5 +62,87 @@ describe("keyboardEventToShortcut", () => {
         it("allows a single key once a modifier is held", () => {
             expect(keyboardEventToShortcut(keyEvent({ key: "a", code: "KeyA", shiftKey: true }))).toBe("Shift+A");
         });
+    });
+});
+
+describe("computeConflicts", () => {
+    it("reports no conflicts when every shortcut is unique", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+K" ])
+        ]);
+
+        expect(conflicts.size).toBe(0);
+    });
+
+    it("flags both actions sharing a combination, keyed by the original shortcut string", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+J" ])
+        ]);
+
+        expect(conflicts.get("a")?.get("Ctrl+J")).toEqual([ "Action B" ]);
+        expect(conflicts.get("b")?.get("Ctrl+J")).toEqual([ "Action A" ]);
+    });
+
+    it("detects conflicts across differing modifier order and key aliases", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "Ctrl+Shift+J" ]),
+            action("b", "Action B", [ "Shift+Ctrl+J" ]),
+            action("c", "Action C", [ "Ctrl+Del" ]),
+            action("d", "Action D", [ "Ctrl+Delete" ])
+        ]);
+
+        expect(conflicts.get("a")?.get("Ctrl+Shift+J")).toEqual([ "Action B" ]);
+        expect(conflicts.get("c")?.get("Ctrl+Del")).toEqual([ "Action D" ]);
+    });
+
+    it("treats a global shortcut as conflicting with its in-app equivalent", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "global:Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+J" ])
+        ]);
+
+        expect(conflicts.get("a")?.get("global:Ctrl+J")).toEqual([ "Action B" ]);
+        expect(conflicts.get("b")?.get("Ctrl+J")).toEqual([ "Action A" ]);
+    });
+
+    it("lists every other action when more than two collide", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+J" ]),
+            action("c", "Action C", [ "Ctrl+J" ])
+        ]);
+
+        expect(conflicts.get("a")?.get("Ctrl+J")).toEqual([ "Action B", "Action C" ]);
+    });
+
+    it("only marks the conflicting shortcut on an action that also has unique ones", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "Ctrl+J", "Ctrl+K" ]),
+            action("b", "Action B", [ "Ctrl+K" ])
+        ]);
+
+        const perShortcut = conflicts.get("a");
+        expect(perShortcut?.has("Ctrl+J")).toBe(false);
+        expect(perShortcut?.get("Ctrl+K")).toEqual([ "Action B" ]);
+    });
+
+    it("does not treat an action's own duplicate shortcut as a conflict", () => {
+        const conflicts = computeConflicts([
+            action("a", "Action A", [ "Ctrl+J", "Ctrl+J" ])
+        ]);
+
+        expect(conflicts.size).toBe(0);
+    });
+
+    it("ignores separators", () => {
+        const conflicts = computeConflicts([
+            { separator: "Group" } as KeyboardShortcut,
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+J" ])
+        ]);
+
+        expect(conflicts.get("a")?.get("Ctrl+J")).toEqual([ "Action B" ]);
     });
 });

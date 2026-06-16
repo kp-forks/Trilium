@@ -7,7 +7,7 @@ import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
 import options from "../../../services/options";
 import server from "../../../services/server";
-import { KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
+import { canonicalizeShortcut, KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
 import toast from "../../../services/toast";
 import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
@@ -79,6 +79,7 @@ export default function ShortcutSettings() {
 
     const filterLowerCase = filter?.toLowerCase() ?? "";
     const groups = useMemo(() => groupShortcuts(keyboardShortcuts), [ keyboardShortcuts ]);
+    const conflicts = useMemo(() => computeConflicts(keyboardShortcuts), [ keyboardShortcuts ]);
     const filteredGroups = groups
         .map((group) => ({
             ...group,
@@ -104,7 +105,7 @@ export default function ShortcutSettings() {
                 ? filteredGroups.map((group) => (
                     <OptionsSection key={group.title} title={group.title}>
                         {group.actions.map((action) => (
-                            <ShortcutRow key={action.actionName} action={action} />
+                            <ShortcutRow key={action.actionName} action={action} conflicts={conflicts.get(action.actionName)} />
                         ))}
                     </OptionsSection>
                 ))
@@ -149,6 +150,76 @@ function groupShortcuts(shortcuts: KeyboardShortcut[]): ShortcutGroup[] {
     return groups;
 }
 
+/**
+ * Maps a single shortcut string (as stored, e.g. `Ctrl+J` or `global:Ctrl+J`) to the friendly names
+ * of the *other* actions that fire on the same physical combination.
+ */
+type ShortcutConflicts = Map<string, string[]>;
+
+/**
+ * Detects shortcut conflicts in a single O(total shortcuts) pass and returns a render-ready lookup:
+ * `actionName → (shortcut string → conflicting action names)`. A row not present in the map has no
+ * conflicts, and a shortcut not present on a row's entry is conflict-free — so the render path is
+ * just two cheap map lookups, with all the canonicalization done up front.
+ *
+ * Two shortcuts conflict when their {@link canonicalizeShortcut} forms match. The `global:` prefix is
+ * stripped first: an OS-level global shortcut still swallows the same combination an in-app one wants.
+ */
+export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, ShortcutConflicts> {
+    // First pass: bucket every action by the canonical combination of each of its shortcuts.
+    const byCombo = new Map<string, ActionKeyboardShortcut[]>();
+    for (const shortcut of shortcuts) {
+        if (!("actionName" in shortcut)) {
+            continue;
+        }
+
+        for (const combo of shortcut.effectiveShortcuts ?? []) {
+            const key = canonicalizeShortcut(stripGlobalPrefix(combo));
+            if (!key) {
+                continue;
+            }
+
+            let actions = byCombo.get(key);
+            if (!actions) {
+                byCombo.set(key, actions = []);
+            }
+            if (!actions.includes(shortcut)) {
+                actions.push(shortcut);
+            }
+        }
+    }
+
+    // Second pass: for combinations shared by 2+ actions, record the conflicting names per action.
+    const result = new Map<string, ShortcutConflicts>();
+    for (const shortcut of shortcuts) {
+        if (!("actionName" in shortcut)) {
+            continue;
+        }
+
+        for (const combo of shortcut.effectiveShortcuts ?? []) {
+            const actions = byCombo.get(canonicalizeShortcut(stripGlobalPrefix(combo)));
+            if (!actions || actions.length < 2) {
+                continue;
+            }
+
+            const others = actions
+                .filter((other) => other !== shortcut)
+                .map((other) => other.friendlyName ?? other.actionName);
+            if (!others.length) {
+                continue;
+            }
+
+            let perShortcut = result.get(shortcut.actionName);
+            if (!perShortcut) {
+                result.set(shortcut.actionName, perShortcut = new Map());
+            }
+            perShortcut.set(combo, [ ...new Set(others) ]);
+        }
+    }
+
+    return result;
+}
+
 function isShortcutModified(action: ActionKeyboardShortcut) {
     return !arrayEqual(action.effectiveShortcuts ?? [], action.defaultShortcuts ?? []);
 }
@@ -171,7 +242,7 @@ function filterKeyboardAction(action: ActionKeyboardShortcut, filter: string) {
         (action.description && action.description.toLowerCase().includes(filter));
 }
 
-function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
+function ShortcutRow({ action, conflicts }: { action: ActionKeyboardShortcut; conflicts?: ShortcutConflicts }) {
     return (
         <OptionsRow
             name={action.actionName}
@@ -185,7 +256,7 @@ function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
             description={action.description}
         >
             <div class="shortcut-row-input">
-                <ShortcutEditor keyboardShortcut={action} />
+                <ShortcutEditor keyboardShortcut={action} conflicts={conflicts} />
                 {/* Always reserve the slot so the revert button appearing/disappearing never shifts the row. */}
                 <span class="shortcut-revert-slot">
                     {isShortcutModified(action) &&
@@ -201,7 +272,7 @@ function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
     );
 }
 
-function ShortcutEditor({ keyboardShortcut: action }: { keyboardShortcut: ActionKeyboardShortcut }) {
+function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShortcut: ActionKeyboardShortcut; conflicts?: ShortcutConflicts }) {
     const shortcuts = action.effectiveShortcuts ?? [];
     const electron = isElectron();
 
@@ -225,8 +296,14 @@ function ShortcutEditor({ keyboardShortcut: action }: { keyboardShortcut: Action
         <div class="shortcut-editor">
             {shortcuts.map((shortcut) => {
                 const global = isGlobalShortcut(shortcut);
+                const conflictsWith = conflicts?.get(shortcut);
                 return (
-                    <span class={`shortcut-chip ${global ? "global" : ""}`} key={shortcut}>
+                    <span class={`shortcut-chip ${global ? "global" : ""} ${conflictsWith ? "conflict" : ""}`} key={shortcut}>
+                        {conflictsWith &&
+                            <span
+                                class="bx bx-error-circle shortcut-chip-conflict"
+                                title={t("shortcuts.conflict_chip", { actions: conflictsWith.join(", ") })}
+                            />}
                         {electron
                             ? (
                                 <button

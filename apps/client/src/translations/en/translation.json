@@ -1737,7 +1737,8 @@
     "recording_toast": "Press a key combination to assign it, or Esc to cancel.",
     "make_global": "Make this a system-wide (global) shortcut",
     "make_local": "Make this an in-app shortcut",
-    "global_shortcut": "System-wide (global) shortcut, only active on the desktop app"
+    "global_shortcut": "System-wide (global) shortcut, only active on the desktop app",
+    "conflict_chip": "This combination is also assigned to: {{actions}}"
   },
   "spellcheck": {
     "title": "Spell Check",
