@@ -64,21 +64,34 @@
         color: var(--main-text-color);
     }
 
-    .shortcut-chip-remove {
+    .shortcut-chip-action,
+    .shortcut-chip-global-indicator {
         display: inline-flex;
         align-items: center;
         justify-content: center;
         padding: 0.1em;
+        color: var(--muted-text-color);
+    }
+
+    .shortcut-chip-action {
         border: none;
         background: none;
-        color: var(--muted-text-color);
         border-radius: 4px;
         cursor: pointer;
     }
 
-    .shortcut-chip-remove:hover {
+    .shortcut-chip-action:hover {
         color: var(--main-text-color);
         background: var(--hover-item-background-color);
+    }
+
+    .shortcut-chip-global {
+        transition: opacity 0.2s, color 0.2s;
+
+        &.active {
+            color: var(--link-color);
+            opacity: 1;
+        }
     }
 
     /* Idle state reuses the standard .icon-action button styling; only the recording pill is custom. */

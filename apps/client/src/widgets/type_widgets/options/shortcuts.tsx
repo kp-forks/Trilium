@@ -1,21 +1,23 @@
+import "./shortcuts.css";
+
 import { ActionKeyboardShortcut, KeyboardShortcut, OptionNames } from "@triliumnext/commons";
+import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
+
+import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
-import { arrayEqual, reloadFrontendApp } from "../../../services/utils";
+import options from "../../../services/options";
+import server from "../../../services/server";
+import { KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
+import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
+import { useTriliumEvent } from "../../react/hooks";
+import NoItems from "../../react/NoItems";
 import RawHtml from "../../react/RawHtml";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
-import { KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
-import server from "../../../services/server";
-import options from "../../../services/options";
-import dialog from "../../../services/dialog";
-import { useTriliumEvent } from "../../react/hooks";
-import "./shortcuts.css";
-import NoItems from "../../react/NoItems";
 
 export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
@@ -23,7 +25,7 @@ export default function ShortcutSettings() {
 
     useEffect(() => {
         server.get<KeyboardShortcut[]>("keyboard-actions").then(setKeyboardShortcuts);
-    }, [])
+    }, []);
 
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         const optionNames = loadResults.getOptionNames();
@@ -124,7 +126,7 @@ export default function ShortcutSettings() {
                 />
             </footer>
         </div>
-    )
+    );
 }
 
 interface ShortcutGroup {
@@ -197,6 +199,7 @@ function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
 
 function ShortcutEditor({ keyboardShortcut: action }: { keyboardShortcut: ActionKeyboardShortcut }) {
     const shortcuts = action.effectiveShortcuts ?? [];
+    const electron = isElectron();
 
     const saveShortcuts = (newShortcuts: string[]) => {
         void options.save(getOptionName(action.actionName), JSON.stringify(newShortcuts));
@@ -208,21 +211,42 @@ function ShortcutEditor({ keyboardShortcut: action }: { keyboardShortcut: Action
         }
     };
 
+    const toggleGlobal = (shortcut: string) => {
+        const toggled = setGlobalShortcut(shortcut, !isGlobalShortcut(shortcut));
+        // De-duplicate in case the toggled form already exists (e.g. both local and global variants).
+        saveShortcuts([ ...new Set(shortcuts.map((s) => (s === shortcut ? toggled : s))) ]);
+    };
+
     return (
         <div class="shortcut-editor">
-            {shortcuts.map((shortcut) => (
-                <span class="shortcut-chip" key={shortcut}>
-                    <kbd>{shortcut}</kbd>
-                    <button
-                        type="button"
-                        class="shortcut-chip-remove"
-                        title={t("shortcuts.remove_shortcut")}
-                        onClick={() => saveShortcuts(shortcuts.filter((s) => s !== shortcut))}
-                    >
-                        <span class="bx bx-x" />
-                    </button>
-                </span>
-            ))}
+            {shortcuts.map((shortcut) => {
+                const global = isGlobalShortcut(shortcut);
+                return (
+                    <span class={`shortcut-chip ${global ? "global" : ""}`} key={shortcut}>
+                        {electron
+                            ? (
+                                <button
+                                    type="button"
+                                    class={`shortcut-chip-action shortcut-chip-global ${global ? "active" : ""}`}
+                                    title={global ? t("shortcuts.make_local") : t("shortcuts.make_global")}
+                                    onClick={() => toggleGlobal(shortcut)}
+                                >
+                                    <span class="bx bx-globe" />
+                                </button>
+                            )
+                            : global && <span class="bx bx-globe shortcut-chip-global-indicator" title={t("shortcuts.global_shortcut")} />}
+                        <kbd>{stripGlobalPrefix(shortcut)}</kbd>
+                        <button
+                            type="button"
+                            class="shortcut-chip-action shortcut-chip-remove"
+                            title={t("shortcuts.remove_shortcut")}
+                            onClick={() => saveShortcuts(shortcuts.filter((s) => s !== shortcut))}
+                        >
+                            <span class="bx bx-x" />
+                        </button>
+                    </span>
+                );
+            })}
 
             <ShortcutRecorder onCapture={addShortcut} />
         </div>
@@ -274,6 +298,21 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
             {recording ? t("shortcuts.press_keys") : null}
         </button>
     );
+}
+
+const GLOBAL_PREFIX = "global:";
+
+function isGlobalShortcut(shortcut: string) {
+    return shortcut.startsWith(GLOBAL_PREFIX);
+}
+
+function stripGlobalPrefix(shortcut: string) {
+    return isGlobalShortcut(shortcut) ? shortcut.substring(GLOBAL_PREFIX.length) : shortcut;
+}
+
+function setGlobalShortcut(shortcut: string, global: boolean) {
+    const bare = stripGlobalPrefix(shortcut);
+    return global ? `${GLOBAL_PREFIX}${bare}` : bare;
 }
 
 const MODIFIER_KEYS = new Set([ "Control", "Alt", "Shift", "Meta" ]);
