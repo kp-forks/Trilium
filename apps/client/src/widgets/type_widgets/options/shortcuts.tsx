@@ -91,6 +91,7 @@ export default function ShortcutSettings() {
     const groups = useMemo(() => groupShortcuts(keyboardShortcuts), [ keyboardShortcuts ]);
     const conflicts = useMemo(() => computeConflicts(keyboardShortcuts), [ keyboardShortcuts ]);
     const globalCount = useMemo(() => keyboardShortcuts.filter((s) => "actionName" in s && hasGlobalShortcut(s)).length, [ keyboardShortcuts ]);
+    const modifiedCount = useMemo(() => keyboardShortcuts.filter((s) => "actionName" in s && isShortcutModified(s)).length, [ keyboardShortcuts ]);
     const filteredGroups = groups
         .map((group) => ({
             ...group,
@@ -126,6 +127,7 @@ export default function ShortcutSettings() {
                         onSelect={selectFilter}
                         conflictCount={conflicts.size}
                         globalCount={globalCount}
+                        modifiedCount={modifiedCount}
                     />
                 </Dropdown>
             </header>
@@ -265,9 +267,10 @@ export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, Sho
 
 /**
  * The active list filter: `"conflicts"` keeps only actions involved in a conflict, `"global"` keeps
- * only actions that have a system-wide (global) shortcut, and `null` applies no restriction.
+ * only actions that have a system-wide (global) shortcut, `"modified"` keeps only actions whose
+ * shortcuts differ from their default, and `null` applies no restriction.
  */
-type ShortcutFilter = "conflicts" | "global" | null;
+type ShortcutFilter = "conflicts" | "global" | "modified" | null;
 
 function hasGlobalShortcut(action: ActionKeyboardShortcut) {
     return (action.effectiveShortcuts ?? []).some(isGlobalShortcut);
@@ -279,16 +282,19 @@ export function matchesFilter(action: ActionKeyboardShortcut, activeFilter: Shor
             return conflicts.has(action.actionName);
         case "global":
             return hasGlobalShortcut(action);
+        case "modified":
+            return isShortcutModified(action);
         default:
             return true;
     }
 }
 
-function FilterContent({ activeFilter, onSelect, conflictCount, globalCount }: {
+function FilterContent({ activeFilter, onSelect, conflictCount, globalCount, modifiedCount }: {
     activeFilter: ShortcutFilter;
     onSelect: (value: ShortcutFilter) => void;
     conflictCount: number;
     globalCount: number;
+    modifiedCount: number;
 }) {
     return (
         <>
@@ -305,6 +311,10 @@ function FilterContent({ activeFilter, onSelect, conflictCount, globalCount }: {
                 checked={activeFilter === "global"}
                 onClick={() => onSelect("global")}
             >{globalCount > 0 ? t("shortcuts.filter_global_count", { count: globalCount }) : t("shortcuts.filter_global")}</FormListItem>
+            <FormListItem
+                checked={activeFilter === "modified"}
+                onClick={() => onSelect("modified")}
+            >{modifiedCount > 0 ? t("shortcuts.filter_modified_count", { count: modifiedCount }) : t("shortcuts.filter_modified")}</FormListItem>
         </>
     );
 }

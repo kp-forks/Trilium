@@ -7,8 +7,8 @@ function keyEvent(init: KeyboardEventInit) {
     return new KeyboardEvent("keydown", init);
 }
 
-function action(actionName: string, friendlyName: string, effectiveShortcuts: string[]): ActionKeyboardShortcut {
-    return { actionName, friendlyName, effectiveShortcuts } as ActionKeyboardShortcut;
+function action(actionName: string, friendlyName: string, effectiveShortcuts: string[], defaultShortcuts: string[] = effectiveShortcuts): ActionKeyboardShortcut {
+    return { actionName, friendlyName, effectiveShortcuts, defaultShortcuts } as ActionKeyboardShortcut;
 }
 
 describe("keyboardEventToShortcut", () => {
@@ -172,5 +172,15 @@ describe("matchesFilter", () => {
         expect(matchesFilter(globalAction, "conflicts", conflicts)).toBe(true);
         expect(matchesFilter(mixedAction, "conflicts", conflicts)).toBe(true);
         expect(matchesFilter(noShortcuts, "conflicts", conflicts)).toBe(false);
+    });
+
+    it("keeps only actions changed from their default when filtering by modified", () => {
+        const unchanged = action("e", "Action E", [ "Ctrl+J" ], [ "Ctrl+J" ]);
+        const changed = action("f", "Action F", [ "Ctrl+J" ], [ "Ctrl+K" ]);
+        const cleared = action("g", "Action G", [], [ "Ctrl+K" ]);
+
+        expect(matchesFilter(unchanged, "modified", conflicts)).toBe(false);
+        expect(matchesFilter(changed, "modified", conflicts)).toBe(true);
+        expect(matchesFilter(cleared, "modified", conflicts)).toBe(true);
     });
 });
