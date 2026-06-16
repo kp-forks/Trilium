@@ -13,7 +13,6 @@ import { arrayEqual, isElectron, reloadFrontendApp } from "../../../services/uti
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
-import FormCheckbox from "../../react/FormCheckbox";
 import { FormDropdownDivider, FormListItem } from "../../react/FormList";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
@@ -26,8 +25,7 @@ import OptionsSection from "./components/OptionsSection";
 export default function ShortcutSettings() {
     const [ keyboardShortcuts, setKeyboardShortcuts ] = useState<KeyboardShortcut[]>([]);
     const [ filter, setFilter ] = useState<string>();
-    const [ conflictsOnly, setConflictsOnly ] = useState(false);
-    const [ scopeFilter, setScopeFilter ] = useState<ScopeFilter>(null);
+    const [ activeFilter, setActiveFilter ] = useState<ShortcutFilter>(null);
 
     useEffect(() => {
         server.get<KeyboardShortcut[]>("keyboard-actions").then(setKeyboardShortcuts);
@@ -89,8 +87,7 @@ export default function ShortcutSettings() {
         .map((group) => ({
             ...group,
             actions: group.actions.filter((action) =>
-                (!conflictsOnly || conflicts.has(action.actionName)) &&
-                matchesScopeFilter(action, scopeFilter) &&
+                matchesFilter(action, activeFilter, conflicts) &&
                 (!filter || filterKeyboardAction(action, filterLowerCase)))
         }))
         .filter((group) => group.actions.length > 0);
@@ -107,22 +104,15 @@ export default function ShortcutSettings() {
                     placeholder={t("shortcuts.type_text_to_filter")}
                     currentValue={filter} onChange={(value) => setFilter(value)}
                 />
-                <FormCheckbox
-                    label={conflicts.size > 0
-                        ? t("shortcuts.show_conflicts_only_count", { count: conflicts.size })
-                        : t("shortcuts.show_conflicts_only")}
-                    currentValue={conflictsOnly}
-                    onChange={setConflictsOnly}
-                />
                 <Dropdown
-                    buttonClassName={`bx bx-filter-alt ${scopeFilter ? "active" : ""}`}
+                    buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
                     hideToggleArrow
                     noSelectButtonStyle
                     noDropdownListStyle
                     iconAction
                     title={t("shortcuts.filter")}
                 >
-                    <ScopeFilterContent scopeFilter={scopeFilter} setScopeFilter={setScopeFilter} />
+                    <FilterContent activeFilter={activeFilter} setActiveFilter={setActiveFilter} conflictCount={conflicts.size} />
                 </Dropdown>
             </header>
 
@@ -141,7 +131,7 @@ export default function ShortcutSettings() {
                             text={t("shortcuts.no_results", { filter })}
                         />
                     )
-                    : conflictsOnly && conflicts.size === 0
+                    : activeFilter === "conflicts" && conflicts.size === 0
                         ? (
                             <NoItems
                                 icon="bx bx-check-circle"
@@ -260,41 +250,42 @@ export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, Sho
 }
 
 /**
- * Restricts the list to actions that have at least one shortcut of a given scope: `"global"` for
- * system-wide shortcuts, `"local"` for in-app ones, or `null` for no restriction.
+ * The active list filter: `"conflicts"` keeps only actions involved in a conflict, `"global"` keeps
+ * only actions that have a system-wide (global) shortcut, and `null` applies no restriction.
  */
-type ScopeFilter = "global" | "local" | null;
+type ShortcutFilter = "conflicts" | "global" | null;
 
-export function matchesScopeFilter(action: ActionKeyboardShortcut, scopeFilter: ScopeFilter) {
-    if (scopeFilter === null) {
-        return true;
+export function matchesFilter(action: ActionKeyboardShortcut, activeFilter: ShortcutFilter, conflicts: Map<string, ShortcutConflicts>) {
+    switch (activeFilter) {
+        case "conflicts":
+            return conflicts.has(action.actionName);
+        case "global":
+            return (action.effectiveShortcuts ?? []).some(isGlobalShortcut);
+        default:
+            return true;
     }
-
-    const shortcuts = action.effectiveShortcuts ?? [];
-    return scopeFilter === "global"
-        ? shortcuts.some(isGlobalShortcut)
-        : shortcuts.some((shortcut) => !isGlobalShortcut(shortcut));
 }
 
-function ScopeFilterContent({ scopeFilter, setScopeFilter }: {
-    scopeFilter: ScopeFilter;
-    setScopeFilter: (value: ScopeFilter) => void;
+function FilterContent({ activeFilter, setActiveFilter, conflictCount }: {
+    activeFilter: ShortcutFilter;
+    setActiveFilter: (value: ShortcutFilter) => void;
+    conflictCount: number;
 }) {
     return (
         <>
             <FormListItem
-                checked={scopeFilter === null}
-                onClick={() => setScopeFilter(null)}
+                checked={activeFilter === null}
+                onClick={() => setActiveFilter(null)}
             >{t("shortcuts.filter_all")}</FormListItem>
             <FormDropdownDivider />
             <FormListItem
-                checked={scopeFilter === "global"}
-                onClick={() => setScopeFilter("global")}
-            >{t("shortcuts.filter_global")}</FormListItem>
+                checked={activeFilter === "conflicts"}
+                onClick={() => setActiveFilter("conflicts")}
+            >{conflictCount > 0 ? t("shortcuts.filter_conflicts_count", { count: conflictCount }) : t("shortcuts.filter_conflicts")}</FormListItem>
             <FormListItem
-                checked={scopeFilter === "local"}
-                onClick={() => setScopeFilter("local")}
-            >{t("shortcuts.filter_local")}</FormListItem>
+                checked={activeFilter === "global"}
+                onClick={() => setActiveFilter("global")}
+            >{t("shortcuts.filter_global")}</FormListItem>
         </>
     );
 }

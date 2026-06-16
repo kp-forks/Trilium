@@ -16,16 +16,11 @@
             flex: 1;
         }
 
-        .form-checkbox {
-            flex: 0 0 auto;
-            white-space: nowrap;
-        }
-
         .dropdown {
             flex: 0 0 auto;
         }
 
-        /* Highlight the filter button while a scope filter is applied. */
+        /* Highlight the filter button while a filter is applied. */
         .icon-action.active {
             color: var(--link-color);
         }
