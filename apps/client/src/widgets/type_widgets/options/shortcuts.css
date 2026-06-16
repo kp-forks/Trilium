@@ -21,37 +21,34 @@
         justify-content: space-between;
     }
 
-    table {
-        width: 100%;
+    .shortcut-group-title {
+        margin: 1.5em 0 0;
+        padding-block: 0.5em;
+        font-weight: bold;
+        color: var(--muted-text-color);
+        text-transform: uppercase;
+        font-size: 0.85em;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--main-border-color);
+    }
 
-        th {
-            width: 25%;
-        }
+    .shortcut-modified-indicator {
+        display: inline-block;
+        width: 0.5em;
+        height: 0.5em;
+        margin-right: 0.5em;
+        border-radius: 50%;
+        background-color: var(--link-color);
+        vertical-align: middle;
+    }
 
-        th.revert-col,
-        td.revert-col {
-            width: 1%;
-            text-align: center;
-            white-space: nowrap;
-        }
+    .shortcut-row-input {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+    }
 
-        .shortcut-modified-indicator {
-            display: inline-block;
-            width: 0.5em;
-            height: 0.5em;
-            margin-right: 0.5em;
-            border-radius: 50%;
-            background-color: var(--link-color);
-            vertical-align: middle;
-        }
-
-        .separator {
-            background-color: var(--accented-background-color);
-            font-weight: bold;
-
-            &:first-of-type {
-                padding-top: 1em;
-            }
-        }
+    .shortcut-row-input > input {
+        min-width: 220px;
     }
 }

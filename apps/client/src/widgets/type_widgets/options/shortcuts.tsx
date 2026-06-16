@@ -6,6 +6,7 @@ import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import RawHtml from "../../react/RawHtml";
+import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import server from "../../../services/server";
@@ -92,7 +93,7 @@ export default function ShortcutSettings() {
                 />
             </header>
 
-            <KeyboardShortcutTable filteredKeyboardActions={filteredKeyboardShortcuts} filter={filter} />
+            <KeyboardShortcutList filteredKeyboardActions={filteredKeyboardShortcuts} filter={filter} />
 
             <footer>
                 <Button
@@ -136,63 +137,47 @@ function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
         (action.description && action.description.toLowerCase().includes(filter));
 }
 
-function KeyboardShortcutTable({ filteredKeyboardActions, filter }: { filteredKeyboardActions: KeyboardShortcut[], filter: string | undefined }) {
+function KeyboardShortcutList({ filteredKeyboardActions, filter }: { filteredKeyboardActions: KeyboardShortcut[], filter: string | undefined }) {
+    if (filteredKeyboardActions.length === 0) {
+        return (
+            <NoItems
+                icon="bx bx-filter-alt"
+                text={t("shortcuts.no_results", { filter })}
+            />
+        );
+    }
+
     return (
-        <table class="keyboard-shortcut-table" cellPadding="10">
-            <thead>
-                <tr class="text-nowrap">
-                    <th>{t("shortcuts.action_name")}</th>
-                    <th>{t("shortcuts.shortcuts")}</th>
-                    <th class="revert-col" />
-                    <th>{t("shortcuts.description")}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {filteredKeyboardActions.length > 0
-                 ? filteredKeyboardActions.map(action => (
-                    <tr>
-                        {"separator" in action ?
-                            <td class="separator" colspan={4} style={{
-                                backgroundColor: "var(--accented-background-color)",
-                                fontWeight: "bold"
-                            }}>
-                                {action.separator}
-                            </td>
-                        : (
-                            <>
-                                <td>
+        <div class="keyboard-shortcut-list">
+            {filteredKeyboardActions.map(action => (
+                "separator" in action
+                    ? <h5 class="shortcut-group-title" key={`sep-${action.separator}`}>{action.separator}</h5>
+                    : (
+                        <OptionsRow
+                            key={action.actionName}
+                            name={action.actionName}
+                            label={
+                                <>
                                     {isShortcutModified(action) &&
                                         <span class="shortcut-modified-indicator" title={t("shortcuts.modified_from_default")} />}
                                     {action.friendlyName}
-                                </td>
-                                <td>
-                                    <ShortcutEditor keyboardShortcut={action} />
-                                </td>
-                                <td class="revert-col">
-                                    {isShortcutModified(action) &&
-                                        <ActionButton
-                                            icon="bx bx-reset"
-                                            text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
-                                            onClick={() => revertShortcut(action)}
-                                        />}
-                                </td>
-                                <td>{action.description}</td>
-                            </>
-                        )}
-                    </tr>
-                ))
-                : (
-                    <tr>
-                        <td colspan={4} class="text-center">
-                            <NoItems
-                                icon="bx bx-filter-alt"
-                                text={t("shortcuts.no_results", { filter })}
-                            />
-                        </td>
-                    </tr>
-                )}
-            </tbody>
-        </table>
+                                </>
+                            }
+                            description={action.description}
+                        >
+                            <div class="shortcut-row-input">
+                                <ShortcutEditor keyboardShortcut={action} />
+                                {isShortcutModified(action) &&
+                                    <ActionButton
+                                        icon="bx bx-reset"
+                                        text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                                        onClick={() => revertShortcut(action)}
+                                    />}
+                            </div>
+                        </OptionsRow>
+                    )
+            ))}
+        </div>
     );
 }
 
