@@ -1804,7 +1804,9 @@ export function useMathRendering(containerRef: RefObject<HTMLElement>, deps: unk
                         equation = raw;
                     }
 
-                    math.render(equation, mathEl as HTMLElement, { displayMode });
+                    // throwOnError: false renders invalid formulas as an inline red error
+                    // instead of throwing (the catch below stays as a final safety net).
+                    math.render(equation, mathEl as HTMLElement, { displayMode, throwOnError: false });
                 } catch (e) {
                     console.warn("Failed to render math:", e);
                 }

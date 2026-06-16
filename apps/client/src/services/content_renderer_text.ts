@@ -42,7 +42,10 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
     if ($renderedContent.find("span.math-tex").length > 0) {
         // KaTeX is heavy, so the math service is only loaded when there are formulas to render.
         const { renderMathInElement } = await import("./math.js");
-        renderMathInElement($renderedContent[0], { trust: true });
+        // throwOnError: false makes KaTeX render invalid formulas as an inline red error
+        // (with the parse message as a tooltip) instead of throwing and leaving raw `$…$`
+        // text plus a console error — matching the editor's behavior.
+        renderMathInElement($renderedContent[0], { trust: true, throwOnError: false });
     }
 
     const getNoteIdFromLink = (el: HTMLElement) => tree.getNoteIdFromUrl($(el).attr("href") || "");

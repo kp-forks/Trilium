@@ -141,6 +141,8 @@ function applyIncludedNotes(container: HTMLDivElement) {
 function applyMath(container: HTMLDivElement) {
     const equations = container.querySelectorAll("span.math-tex");
     for (const equation of equations) {
-        renderMathInElement(equation, { trust: true });
+        // throwOnError: false renders invalid formulas as an inline red error (with the
+        // parse message as a tooltip) instead of throwing and logging to the console.
+        renderMathInElement(equation, { trust: true, throwOnError: false });
     }
 }
