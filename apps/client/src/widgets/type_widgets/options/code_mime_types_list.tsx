@@ -35,8 +35,8 @@ export function CodeMimeTypesList() {
             const hasCodeNoteSyntax = !!codeNoteMimeTypes[mime];
 
             return `
-                <strong>${t("code_mime_types.tooltip_syntax_highlighting")}</strong><br/>
-                ${hasCodeBlockSyntax ? "✅" : "❌"} ${t("code_mime_types.tooltip_code_block_syntax")}<br/>
+                <strong>${t("code_mime_types.tooltip_syntax_highlighting")}</strong>
+                ${hasCodeBlockSyntax ? "✅" : "❌"} ${t("code_mime_types.tooltip_code_block_syntax")}
                 ${hasCodeNoteSyntax ? "✅" : "❌"} ${t("code_mime_types.tooltip_code_note_syntax")}
             `;
         },
