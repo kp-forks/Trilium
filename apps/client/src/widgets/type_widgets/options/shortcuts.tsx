@@ -48,19 +48,21 @@ export default function ShortcutSettings() {
         let updatedShortcuts: (KeyboardShortcut[] | null) = null;
 
         for (const optionName of optionNames) {
-            if (!(optionName.startsWith("keyboardShortcuts"))) {
+            if (!(optionName.startsWith(PREFIX))) {
                 continue;
             }
 
-            const newValue = options.get(optionName);
             const actionName = getActionNameFromOptionName(optionName);
-            const correspondingShortcut = keyboardShortcuts.find(s => "actionName" in s && s.actionName === actionName);
+            const index = keyboardShortcuts.findIndex(s => "actionName" in s && s.actionName === actionName);
+            const correspondingShortcut = keyboardShortcuts[index];
             if (correspondingShortcut && "effectiveShortcuts" in correspondingShortcut) {
-                correspondingShortcut.effectiveShortcuts = JSON.parse(newValue);
-
-                if (!updatedShortcuts) {
-                    updatedShortcuts = Array.from(keyboardShortcuts);
-                }
+                // Replace the matched entry with a fresh object rather than mutating state in place,
+                // which would violate Preact's immutability contract.
+                updatedShortcuts ??= Array.from(keyboardShortcuts);
+                updatedShortcuts[index] = {
+                    ...correspondingShortcut,
+                    effectiveShortcuts: JSON.parse(options.get(optionName))
+                };
             }
         }
 
@@ -192,7 +194,7 @@ interface ShortcutGroup {
     actions: ActionKeyboardShortcut[];
 }
 
-function groupShortcuts(shortcuts: KeyboardShortcut[]): ShortcutGroup[] {
+export function groupShortcuts(shortcuts: KeyboardShortcut[]): ShortcutGroup[] {
     const groups: ShortcutGroup[] = [];
 
     for (const shortcut of shortcuts) {
@@ -347,7 +349,7 @@ function formatDefaultShortcuts(action: ActionKeyboardShortcut) {
         : t("shortcuts.no_default_shortcut");
 }
 
-function filterKeyboardAction(action: ActionKeyboardShortcut, filter: string) {
+export function filterKeyboardAction(action: ActionKeyboardShortcut, filter: string) {
     return action.actionName.toLowerCase().includes(filter) ||
         (action.friendlyName && action.friendlyName.toLowerCase().includes(filter)) ||
         (action.defaultShortcuts ?? []).some((shortcut) => shortcut.toLowerCase().includes(filter)) ||
@@ -468,7 +470,7 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
             e.preventDefault();
             e.stopImmediatePropagation();
 
-            if (e.key === "Escape") {
+            if (isRecorderCancelKey(e)) {
                 setRecording(false);
                 return;
             }
@@ -503,6 +505,14 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
     );
 }
 
+/**
+ * Whether a keystroke should cancel the recorder. Only a bare Escape cancels — Escape held with a
+ * modifier (e.g. Ctrl+Escape) is a valid bindable combination and must be recorded, not swallowed.
+ */
+export function isRecorderCancelKey(e: KeyboardEvent) {
+    return e.key === "Escape" && !e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey;
+}
+
 const GLOBAL_PREFIX = "global:";
 
 function isGlobalShortcut(shortcut: string) {
@@ -513,7 +523,7 @@ function stripGlobalPrefix(shortcut: string) {
     return isGlobalShortcut(shortcut) ? shortcut.substring(GLOBAL_PREFIX.length) : shortcut;
 }
 
-function setGlobalShortcut(shortcut: string, global: boolean) {
+export function setGlobalShortcut(shortcut: string, global: boolean) {
     const bare = stripGlobalPrefix(shortcut);
     return global ? `${GLOBAL_PREFIX}${bare}` : bare;
 }
@@ -579,10 +589,12 @@ function normalizeCapturedKey(e: KeyboardEvent): string | null {
 
 const PREFIX = "keyboardShortcuts";
 
-function getOptionName(actionName: string) {
+export function getOptionName(actionName: string) {
     return `${PREFIX}${actionName.substr(0, 1).toUpperCase()}${actionName.substr(1)}` as OptionNames;
 }
 
-function getActionNameFromOptionName(optionName: string) {
-    return optionName.at(PREFIX.length)?.toLowerCase() + optionName.substring(PREFIX.length + 1);
+export function getActionNameFromOptionName(optionName: string) {
+    // `?? ""` guards against `String.at()` returning undefined (which would otherwise coerce to the
+    // literal "undefined" when concatenated) for an option name with no action suffix.
+    return (optionName.at(PREFIX.length)?.toLowerCase() ?? "") + optionName.substring(PREFIX.length + 1);
 }
