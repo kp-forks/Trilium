@@ -323,7 +323,8 @@
     "task-state-attr-is-completed": "完了としてカウント",
     "task-state-attr-color": "色",
     "task-state-attr-is-hidden": "リストから非表示",
-    "security-title": "セキュリティ"
+    "security-title": "セキュリティ",
+    "desktop-title": "デスクトップ"
   },
   "notes": {
     "new-note": "新しいノート",
