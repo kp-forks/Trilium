@@ -94,7 +94,6 @@ export default [
     { type: "relation", name: "internalLink" },
     { type: "relation", name: "imageLink" },
     { type: "relation", name: "relationMapLink" },
-    { type: "relation", name: "includeMapLink" },
     { type: "relation", name: "runOnNoteCreation", isDangerous: true },
     { type: "relation", name: "runOnNoteTitleChange", isDangerous: true },
     { type: "relation", name: "runOnNoteChange", isDangerous: true },
