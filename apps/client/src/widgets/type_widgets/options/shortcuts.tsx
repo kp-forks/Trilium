@@ -186,6 +186,7 @@ function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
                     <ActionButton
                         icon="bx bx-reset"
                         text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                        tooltipClass="tooltip-top"
                         onClick={() => revertShortcut(action)}
                     />}
             </div>
