@@ -57,6 +57,17 @@ export function clampPan(x: number, y: number, bounds: PanBounds): { x: number; 
 }
 
 /**
+ * The content translation that keeps a viewport point fixed across a scale change — i.e. a zoom
+ * anchored on (`cursorX`, `cursorY`) (wrapper-local pixels) rather than the viewport centre.
+ * `scale0`/`posX0`/`posY0` describe the transform before zooming to `scale1`.
+ */
+export function zoomToPointPosition(scale0: number, posX0: number, posY0: number, scale1: number, cursorX: number, cursorY: number): { x: number; y: number } {
+    const contentX = (cursorX - posX0) / scale0;
+    const contentY = (cursorY - posY0) / scale0;
+    return { x: cursorX - contentX * scale1, y: cursorY - contentY * scale1 };
+}
+
+/**
  * Wires keyboard zoom (`+`/`-`/`/`, with or without Ctrl/Cmd) and pan (arrows / WASD, Shift to speed
  * up) onto the focusable `elementRef`, driving the react-zoom-pan-pinch instance in `apiRef`. While
  * keys are held it runs a requestAnimationFrame loop that reuses the library's own
@@ -99,18 +110,10 @@ export function useImageViewerKeyboard(
             const controls = activeControls();
             if (api && dt > 0 && controls.length) {
                 if (controls.includes("zoomIn") || controls.includes("zoomOut")) {
-                    const { positionX: beforeX, positionY: beforeY } = api.instance.state;
+                    const { scale, positionX, positionY } = api.instance.state;
                     if (controls.includes("zoomIn")) api.zoomIn(ZOOM_RATE * dt, 0);
                     if (controls.includes("zoomOut")) api.zoomOut(ZOOM_RATE * dt, 0);
-                    // Keep an in-progress mouse pan anchored. The library recomputes the pan position
-                    // from startCoords captured at press time, so without this the next mousemove would
-                    // discard the zoom's shift (snapping the pan back). Offset startCoords by the zoom's
-                    // position delta so the drag continues smoothly from the zoomed view.
-                    const { startCoords, isPanning, state } = api.instance;
-                    if (isPanning && startCoords) {
-                        startCoords.x -= state.positionX - beforeX;
-                        startCoords.y -= state.positionY - beforeY;
-                    }
+                    anchorZoomToCursor(api, scale, positionX, positionY);
                 }
 
                 const { dx, dy } = getPanDelta(controls, shift, dt);
@@ -120,6 +123,9 @@ export function useImageViewerKeyboard(
                     if (bounds) {
                         const next = clampPan(positionX + dx, positionY + dy, bounds);
                         api.setTransform(next.x, next.y, scale, 0);
+                        // Keyboard panning shifts the image under a held mouse cursor; re-anchor the
+                        // drag so the new point under the cursor becomes its grab point.
+                        reanchorPan(api, positionX, positionY);
                     }
                 }
             }
@@ -176,4 +182,41 @@ export function useImageViewerKeyboard(
             stop();
         };
     }, [ apiRef, elementRef ]);
+}
+
+/**
+ * After a programmatic (keyboard) zoom, keeps a simultaneous mouse drag smooth and anchored on the
+ * cursor. Two things otherwise fight a drag+zoom: the library zooms toward the viewport centre, not
+ * the grabbed point; and it recomputes the pan position each mousemove from startCoords captured at
+ * press time, discarding the zoom's shift. So while panning we relocate the freshly-scaled view to
+ * keep the cursor's content-point fixed, then offset startCoords by that move so the drag carries on
+ * from there. The cursor is recovered from the pan's own invariant (clientX = positionX +
+ * startCoords.x), so no pointer tracking is needed. `scale0`/`posX0`/`posY0` are the transform before
+ * the zoom; the new scale is read live from the instance.
+ */
+function anchorZoomToCursor(api: ReactZoomPanPinchRef, scale0: number, posX0: number, posY0: number) {
+    const { startCoords, isPanning, state, wrapperComponent } = api.instance;
+    if (!isPanning || !startCoords) return;
+
+    const rect = wrapperComponent?.getBoundingClientRect();
+    if (rect) {
+        const cursorX = posX0 + startCoords.x - rect.left;
+        const cursorY = posY0 + startCoords.y - rect.top;
+        const { x, y } = zoomToPointPosition(scale0, posX0, posY0, state.scale, cursorX, cursorY);
+        api.setTransform(x, y, state.scale, 0);
+    }
+    reanchorPan(api, posX0, posY0);
+}
+
+/**
+ * Keeps an in-progress mouse drag smooth after a programmatic transform. The library recomputes the
+ * pan position each mousemove from startCoords captured at press time, so without this the next move
+ * would discard the keyboard zoom/pan's shift (snapping back). Offsetting startCoords by the position
+ * change — from (`beforeX`, `beforeY`) to the live position — makes the drag continue from there.
+ */
+function reanchorPan(api: ReactZoomPanPinchRef, beforeX: number, beforeY: number) {
+    const { startCoords, isPanning, state } = api.instance;
+    if (!isPanning || !startCoords) return;
+    startCoords.x -= state.positionX - beforeX;
+    startCoords.y -= state.positionY - beforeY;
 }
