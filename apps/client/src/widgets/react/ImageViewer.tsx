@@ -97,13 +97,18 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
             updateZoomState(zoomRef.current?.instance?.state?.scale ?? 1);
         });
         const timer = setTimeout(reveal, REVEAL_FALLBACK_MS);
-        img.decode().then(reveal, () => {
-            // decode() can reject for an image that still paints fine — notably large images on
-            // memory-constrained Chrome (Android), which throw EncodingError despite loading OK.
-            // Only fail when the image truly didn't load; otherwise reveal without the smooth fade.
-            if (img.complete && img.naturalWidth > 0) reveal();
-            else settle(() => setLoadingError(true));
-        });
+        if (typeof img.decode === "function") {
+            img.decode().then(reveal, () => {
+                // decode() can reject for an image that still paints fine — notably large images on
+                // memory-constrained Chrome (Android), which throw EncodingError despite loading OK.
+                // Only fail when the image truly didn't load; otherwise reveal without the smooth fade.
+                if (img.complete && img.naturalWidth > 0) reveal();
+                else settle(() => setLoadingError(true));
+            });
+        } else {
+            // No decode() (ancient/unusual runtimes, some headless test envs): reveal without the fade.
+            reveal();
+        }
 
         return () => settle(() => {});
     }, [ src ]);

@@ -98,6 +98,14 @@ describe("ImageViewer", () => {
         expect(container.querySelector(".content-error-message")).not.toBeNull();
     });
 
+    it("reveals without decode() where the API is unavailable (ancient/headless runtimes)", async () => {
+        (HTMLImageElement.prototype as { decode?: () => Promise<void> }).decode = undefined;
+        const container = renderViewer({ src: "x" });
+
+        await vi.waitFor(() => expect(wrapperClassList(container)?.contains("img-loaded")).toBe(true));
+        expect(wrapperClassList(container)?.contains("img-loading-error")).toBe(false);
+    });
+
     it("reveals an image that loaded even when decode() rejects (e.g. Chrome Android memory limits)", async () => {
         // A large image can load fine yet have decode() reject; only a true load failure has naturalWidth 0.
         HTMLImageElement.prototype.decode = () => Promise.reject(new Error("EncodingError"));
