@@ -120,6 +120,7 @@ export default function ShortcutSettings() {
                         icon="bx bx-error-circle"
                         text={t("shortcuts.conflicts_badge", { count: conflicts.size })}
                         tooltip={t("shortcuts.conflicts_badge_tooltip")}
+                        outline
                         onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
                     />}
                 <Dropdown
