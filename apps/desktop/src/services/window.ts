@@ -73,7 +73,11 @@ async function createExtraWindow(extraWindowHash: string) {
             nodeIntegration: false,
             contextIsolation: true,
             preload: getPreloadScript(),
-            spellcheck: spellcheckEnabled,
+            // Always attach Chromium's spell-check subsystem so it can be toggled at
+            // runtime via session.setSpellCheckerEnabled(); the actual on/off state is
+            // applied from the option in configureWebContents(). webPreferences.spellcheck
+            // is immutable after creation, so leaving it false would force a restart to enable.
+            spellcheck: true,
             webviewTag: true
         },
         ...getWindowExtraOpts(),
@@ -130,7 +134,11 @@ async function createMainWindow(startHidden = false) {
             nodeIntegration: false,
             contextIsolation: true,
             preload: getPreloadScript(),
-            spellcheck: spellcheckEnabled,
+            // Always attach Chromium's spell-check subsystem so it can be toggled at
+            // runtime via session.setSpellCheckerEnabled(); the actual on/off state is
+            // applied from the option in configureWebContents(). webPreferences.spellcheck
+            // is immutable after creation, so leaving it false would force a restart to enable.
+            spellcheck: true,
             webviewTag: true
         },
         icon: getIcon(),
@@ -197,9 +205,7 @@ async function configureWebContents(webContents: WebContents, spellcheckEnabled:
     // globally for every WebContents (including setup and print windows,
     // which never pass through this function) by web_contents_security.ts.
 
-    if (spellcheckEnabled) {
-        setupSpellcheckForSession(webContents.session);
-    }
+    setupSpellcheckForSession(webContents.session, spellcheckEnabled);
 
     // Forward full-screen events to the renderer via IPC.
     const win = electron.BrowserWindow.fromWebContents(webContents);
@@ -256,7 +262,10 @@ function isDevToolsDocked(webContents: WebContents) {
     return devToolsWindow !== null && devToolsWindow === electron.BrowserWindow.fromWebContents(webContents);
 }
 
-function setupSpellcheckForSession(session: Session) {
+function setupSpellcheckForSession(session: Session, enabled: boolean) {
+    session.setSpellCheckerEnabled(enabled);
+    // Preload the configured languages once per session (idempotent thereafter via the
+    // WeakSet guard) so a later live enable already has them. Harmless while disabled.
     if (!loadedSpellcheckSessions.has(session)) {
         loadedSpellcheckSessions.add(session);
         session.setSpellCheckerLanguages(getConfiguredSpellcheckLanguages());
@@ -283,6 +292,21 @@ function applySpellcheckLanguages(languageCodes: string[]) {
     }
     for (const session of sessions) {
         session.setSpellCheckerLanguages(languageCodes);
+    }
+}
+
+/**
+ * Enables or disables the spell checker on every open window's session so the
+ * toggle in settings takes effect without restarting the app. Relies on the
+ * windows having been created with `webPreferences.spellcheck: true`.
+ */
+function applySpellcheckEnabled(enabled: boolean) {
+    const sessions = new Set<Session>();
+    for (const win of electron.BrowserWindow.getAllWindows()) {
+        sessions.add(win.webContents.session);
+    }
+    for (const session of sessions) {
+        session.setSpellCheckerEnabled(enabled);
     }
 }
 
@@ -469,6 +493,10 @@ export function setupWindowing() {
 
     electron.ipcMain.on("set-spellchecker-languages", (_event, languageCodes: string[]) => {
         applySpellcheckLanguages(languageCodes);
+    });
+
+    electron.ipcMain.on("set-spellchecker-enabled", (_event, enabled: boolean) => {
+        applySpellcheckEnabled(enabled);
     });
 
     // Window management IPC handlers (replacing @electron/remote for renderer access)

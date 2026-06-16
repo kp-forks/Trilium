@@ -377,6 +377,14 @@ describe("preload script", () => {
                 args: [["en-US", "fr"]]
             });
         });
+
+        it("setSpellCheckerEnabled sends correct IPC message", () => {
+            spell().setSpellCheckerEnabled(false);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-spellchecker-enabled",
+                args: [false]
+            });
+        });
     });
 
     describe("systemIntegration", () => {

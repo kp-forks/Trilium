@@ -347,6 +347,12 @@ export interface ElectronSpellcheckApi {
      * spell checker auto-detects the language.
      */
     setSpellCheckerLanguages(languageCodes: string[]): void;
+
+    /**
+     * Enables or disables the built-in spell checker on every open window's
+     * session immediately, without an application restart.
+     */
+    setSpellCheckerEnabled(enabled: boolean): void;
 }
 
 /** OS integration controls — system tray and autostart / launch-on-login. */
