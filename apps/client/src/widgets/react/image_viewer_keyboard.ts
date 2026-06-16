@@ -98,8 +98,20 @@ export function useImageViewerKeyboard(
             const api = apiRef.current;
             const controls = activeControls();
             if (api && dt > 0 && controls.length) {
-                if (controls.includes("zoomIn")) api.zoomIn(ZOOM_RATE * dt, 0);
-                if (controls.includes("zoomOut")) api.zoomOut(ZOOM_RATE * dt, 0);
+                if (controls.includes("zoomIn") || controls.includes("zoomOut")) {
+                    const { positionX: beforeX, positionY: beforeY } = api.instance.state;
+                    if (controls.includes("zoomIn")) api.zoomIn(ZOOM_RATE * dt, 0);
+                    if (controls.includes("zoomOut")) api.zoomOut(ZOOM_RATE * dt, 0);
+                    // Keep an in-progress mouse pan anchored. The library recomputes the pan position
+                    // from startCoords captured at press time, so without this the next mousemove would
+                    // discard the zoom's shift (snapping the pan back). Offset startCoords by the zoom's
+                    // position delta so the drag continues smoothly from the zoomed view.
+                    const { startCoords, isPanning, state } = api.instance;
+                    if (isPanning && startCoords) {
+                        startCoords.x -= state.positionX - beforeX;
+                        startCoords.y -= state.positionY - beforeY;
+                    }
+                }
 
                 const { dx, dy } = getPanDelta(controls, shift, dt);
                 if (dx || dy) {
