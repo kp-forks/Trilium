@@ -96,3 +96,5 @@ This is a list of labels that Trilium natively supports.
 | `fullContentWidth` | Expands the note to the full editor width, ignoring the configured content width (useful for wide tables). See <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/UI%20Elements/Content%20width.md">Content width</a>. |
 | `iconPack` | Identifies a custom icon pack by its prefix. See <a class="reference-link" href="../../Theme%20development/Creating%20an%20icon%20pack.md">Creating an icon pack</a>. |
 | `clipperInbox` | Overrides the default location where the Web Clipper saves clippings (defaults to the day note). See <a class="reference-link" href="../../Installation%20%26%20Setup/Web%20Clipper.md">Web Clipper</a>. |
+| `similarNotesWidgetDisabled` | Disables the <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/Navigation/Similar%20Notes.md">Similar Notes</a> ribbon tab (old layout only) |
+| `docName` , `docUrl` | Used internally for the in-app help. |
