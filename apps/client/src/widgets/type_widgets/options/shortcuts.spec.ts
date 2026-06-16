@@ -1,7 +1,7 @@
 import { ActionKeyboardShortcut, KeyboardShortcut } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
-import { computeConflicts, keyboardEventToShortcut, matchesFilter } from "./shortcuts";
+import { computeConflicts, filterKeyboardAction, getActionNameFromOptionName, getOptionName, groupShortcuts, isRecorderCancelKey, keyboardEventToShortcut, matchesFilter, setGlobalShortcut } from "./shortcuts";
 
 function keyEvent(init: KeyboardEventInit) {
     return new KeyboardEvent("keydown", init);
@@ -62,6 +62,101 @@ describe("keyboardEventToShortcut", () => {
         it("allows a single key once a modifier is held", () => {
             expect(keyboardEventToShortcut(keyEvent({ key: "a", code: "KeyA", shiftKey: true }))).toBe("Shift+A");
         });
+
+        it("treats Escape with a modifier as a bindable shortcut, not a bare cancel key", () => {
+            // The recorder uses bare Escape to cancel, so these must still produce a shortcut.
+            expect(keyboardEventToShortcut(keyEvent({ key: "Escape", code: "Escape", ctrlKey: true }))).toBe("Ctrl+Escape");
+            expect(keyboardEventToShortcut(keyEvent({ key: "Escape", code: "Escape", altKey: true }))).toBe("Alt+Escape");
+        });
+    });
+});
+
+describe("isRecorderCancelKey", () => {
+    it("cancels on a bare Escape", () => {
+        expect(isRecorderCancelKey(keyEvent({ key: "Escape", code: "Escape" }))).toBe(true);
+    });
+
+    it("does not cancel when Escape is held with a modifier", () => {
+        expect(isRecorderCancelKey(keyEvent({ key: "Escape", code: "Escape", ctrlKey: true }))).toBe(false);
+        expect(isRecorderCancelKey(keyEvent({ key: "Escape", code: "Escape", altKey: true }))).toBe(false);
+        expect(isRecorderCancelKey(keyEvent({ key: "Escape", code: "Escape", shiftKey: true }))).toBe(false);
+        expect(isRecorderCancelKey(keyEvent({ key: "Escape", code: "Escape", metaKey: true }))).toBe(false);
+    });
+
+    it("does not cancel on other keys", () => {
+        expect(isRecorderCancelKey(keyEvent({ key: "a", code: "KeyA" }))).toBe(false);
+    });
+});
+
+describe("groupShortcuts", () => {
+    it("buckets actions under the preceding separator", () => {
+        const groups = groupShortcuts([
+            { separator: "Navigation" } as KeyboardShortcut,
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+K" ]),
+            { separator: "Editing" } as KeyboardShortcut,
+            action("c", "Action C", [ "Ctrl+L" ])
+        ]);
+
+        expect(groups.map((g) => g.title)).toEqual([ "Navigation", "Editing" ]);
+        expect(groups[0].actions.map((a) => a.actionName)).toEqual([ "a", "b" ]);
+        expect(groups[1].actions.map((a) => a.actionName)).toEqual([ "c" ]);
+    });
+
+    it("ignores actions that precede the first separator", () => {
+        const groups = groupShortcuts([
+            action("orphan", "Orphan", [ "Ctrl+J" ]),
+            { separator: "Group" } as KeyboardShortcut,
+            action("a", "Action A", [ "Ctrl+K" ])
+        ]);
+
+        expect(groups).toHaveLength(1);
+        expect(groups[0].actions.map((a) => a.actionName)).toEqual([ "a" ]);
+    });
+});
+
+describe("filterKeyboardAction", () => {
+    const target = {
+        ...action("toggleZenMode", "Toggle Zen Mode", [ "Ctrl+Shift+Z" ], [ "Ctrl+Alt+Z" ]),
+        description: "Hide the UI chrome"
+    } as ActionKeyboardShortcut;
+
+    it("matches against the action name, friendly name and description (lower-cased)", () => {
+        expect(filterKeyboardAction(target, "zen")).toBeTruthy();
+        expect(filterKeyboardAction(target, "togglezen")).toBeTruthy();
+        expect(filterKeyboardAction(target, "chrome")).toBeTruthy();
+    });
+
+    it("matches against both effective and default shortcuts", () => {
+        expect(filterKeyboardAction(target, "ctrl+shift+z")).toBeTruthy();
+        expect(filterKeyboardAction(target, "ctrl+alt+z")).toBeTruthy();
+    });
+
+    it("returns falsy when nothing matches", () => {
+        expect(filterKeyboardAction(target, "nonexistent")).toBeFalsy();
+    });
+});
+
+describe("option name round-trip", () => {
+    it("maps an action name to its option name and back", () => {
+        expect(getOptionName("toggleZenMode")).toBe("keyboardShortcutsToggleZenMode");
+        expect(getActionNameFromOptionName("keyboardShortcutsToggleZenMode")).toBe("toggleZenMode");
+    });
+
+    it("returns an empty string (not 'undefined') for a suffix-less option name", () => {
+        expect(getActionNameFromOptionName("keyboardShortcuts")).toBe("");
+    });
+});
+
+describe("setGlobalShortcut", () => {
+    it("adds the global prefix and is idempotent", () => {
+        expect(setGlobalShortcut("Ctrl+J", true)).toBe("global:Ctrl+J");
+        expect(setGlobalShortcut("global:Ctrl+J", true)).toBe("global:Ctrl+J");
+    });
+
+    it("strips the global prefix to make a shortcut local", () => {
+        expect(setGlobalShortcut("global:Ctrl+J", false)).toBe("Ctrl+J");
+        expect(setGlobalShortcut("Ctrl+J", false)).toBe("Ctrl+J");
     });
 });
 
