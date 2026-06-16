@@ -8,7 +8,7 @@ import FormTextBox from "../../react/FormTextBox";
 import RawHtml from "../../react/RawHtml";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import server from "../../../services/server";
 import options from "../../../services/options";
 import dialog from "../../../services/dialog";
@@ -74,13 +74,16 @@ export default function ShortcutSettings() {
     }, [ keyboardShortcuts ]);
 
     const filterLowerCase = filter?.toLowerCase() ?? "";
-    const filteredKeyboardShortcuts = filter ? keyboardShortcuts.filter((action) => filterKeyboardAction(action, filterLowerCase)) : keyboardShortcuts;
+    const groups = useMemo(() => groupShortcuts(keyboardShortcuts), [ keyboardShortcuts ]);
+    const filteredGroups = groups
+        .map((group) => ({
+            ...group,
+            actions: filter ? group.actions.filter((action) => filterKeyboardAction(action, filterLowerCase)) : group.actions
+        }))
+        .filter((group) => group.actions.length > 0);
 
     return (
-        <OptionsSection
-            className="shortcuts-options-section"
-            noCard
-        >
+        <div className="shortcuts-options-section">
             <FormText>
                 {t("shortcuts.multiple_shortcuts")}{" "}
                 <RawHtml html={t("shortcuts.electron_documentation")} />
@@ -93,7 +96,20 @@ export default function ShortcutSettings() {
                 />
             </header>
 
-            <KeyboardShortcutList filteredKeyboardActions={filteredKeyboardShortcuts} filter={filter} />
+            {filteredGroups.length > 0
+                ? filteredGroups.map((group) => (
+                    <OptionsSection key={group.title} title={group.title}>
+                        {group.actions.map((action) => (
+                            <ShortcutRow key={action.actionName} action={action} />
+                        ))}
+                    </OptionsSection>
+                ))
+                : (
+                    <NoItems
+                        icon="bx bx-filter-alt"
+                        text={t("shortcuts.no_results", { filter })}
+                    />
+                )}
 
             <footer>
                 <Button
@@ -106,8 +122,27 @@ export default function ShortcutSettings() {
                     onClick={resetShortcuts}
                 />
             </footer>
-        </OptionsSection>
+        </div>
     )
+}
+
+interface ShortcutGroup {
+    title: string;
+    actions: ActionKeyboardShortcut[];
+}
+
+function groupShortcuts(shortcuts: KeyboardShortcut[]): ShortcutGroup[] {
+    const groups: ShortcutGroup[] = [];
+
+    for (const shortcut of shortcuts) {
+        if ("separator" in shortcut) {
+            groups.push({ title: shortcut.separator, actions: [] });
+        } else {
+            groups[groups.length - 1]?.actions.push(shortcut);
+        }
+    }
+
+    return groups;
 }
 
 function isShortcutModified(action: ActionKeyboardShortcut) {
@@ -124,12 +159,7 @@ function formatDefaultShortcuts(action: ActionKeyboardShortcut) {
         : t("shortcuts.no_default_shortcut");
 }
 
-function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
-    // Hide separators when filtering is active.
-    if ("separator" in action) {
-        return !filter;
-    }
-
+function filterKeyboardAction(action: ActionKeyboardShortcut, filter: string) {
     return action.actionName.toLowerCase().includes(filter) ||
         (action.friendlyName && action.friendlyName.toLowerCase().includes(filter)) ||
         (action.defaultShortcuts ?? []).some((shortcut) => shortcut.toLowerCase().includes(filter)) ||
@@ -137,47 +167,29 @@ function filterKeyboardAction(action: KeyboardShortcut, filter: string) {
         (action.description && action.description.toLowerCase().includes(filter));
 }
 
-function KeyboardShortcutList({ filteredKeyboardActions, filter }: { filteredKeyboardActions: KeyboardShortcut[], filter: string | undefined }) {
-    if (filteredKeyboardActions.length === 0) {
-        return (
-            <NoItems
-                icon="bx bx-filter-alt"
-                text={t("shortcuts.no_results", { filter })}
-            />
-        );
-    }
-
+function ShortcutRow({ action }: { action: ActionKeyboardShortcut }) {
     return (
-        <div class="keyboard-shortcut-list">
-            {filteredKeyboardActions.map(action => (
-                "separator" in action
-                    ? <h5 class="shortcut-group-title" key={`sep-${action.separator}`}>{action.separator}</h5>
-                    : (
-                        <OptionsRow
-                            key={action.actionName}
-                            name={action.actionName}
-                            label={
-                                <>
-                                    {isShortcutModified(action) &&
-                                        <span class="shortcut-modified-indicator" title={t("shortcuts.modified_from_default")} />}
-                                    {action.friendlyName}
-                                </>
-                            }
-                            description={action.description}
-                        >
-                            <div class="shortcut-row-input">
-                                <ShortcutEditor keyboardShortcut={action} />
-                                {isShortcutModified(action) &&
-                                    <ActionButton
-                                        icon="bx bx-reset"
-                                        text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
-                                        onClick={() => revertShortcut(action)}
-                                    />}
-                            </div>
-                        </OptionsRow>
-                    )
-            ))}
-        </div>
+        <OptionsRow
+            name={action.actionName}
+            label={
+                <>
+                    {isShortcutModified(action) &&
+                        <span class="shortcut-modified-indicator" title={t("shortcuts.modified_from_default")} />}
+                    {action.friendlyName}
+                </>
+            }
+            description={action.description}
+        >
+            <div class="shortcut-row-input">
+                <ShortcutEditor keyboardShortcut={action} />
+                {isShortcutModified(action) &&
+                    <ActionButton
+                        icon="bx bx-reset"
+                        text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                        onClick={() => revertShortcut(action)}
+                    />}
+            </div>
+        </OptionsRow>
     );
 }
 
