@@ -1461,7 +1461,8 @@
     "erase_attachments_after": "Erase unused attachments after",
     "erase_attachments_after_description": "Time before unused attachments are permanently erased.",
     "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
-    "erase_unused_attachments_now": "Erase unused attachments now",
+    "erase_unused_attachments_now": "Erase unused attachments",
+    "erase_now_button": "Erase now",
     "unused_attachments_erased": "Unused attachments have been erased."
   },
   "network_connections": {
@@ -1475,7 +1476,8 @@
     "erase_notes_after": "Erase notes after",
     "erase_notes_after_description": "Time before deleted notes are permanently erased.",
     "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
-    "erase_deleted_notes_now": "Erase deleted notes now",
+    "erase_deleted_notes_now": "Erase deleted notes",
+    "erase_now_button": "Erase now",
     "deleted_notes_erased": "Deleted notes have been erased."
   },
   "revisions_snapshot": {
@@ -1493,8 +1495,9 @@
     "note_revisions_snapshot_limit_description_short": "Max revisions per note. Use -1 for unlimited, 0 to disable.",
     "snapshot_number_limit_label": "Maximum revisions",
     "snapshot_number_limit_unit": "snapshots",
-    "erase_excess_revision_snapshots": "Erase excess revision snapshots now",
+    "erase_excess_revision_snapshots": "Erase excess revision snapshots",
     "erase_excess_revision_snapshots_description": "Delete revisions exceeding the limit for all notes.",
+    "erase_now_button": "Erase now",
     "erase_excess_revision_snapshots_prompt": "Excess revision snapshots have been erased."
   },
   "search": {
@@ -1670,8 +1673,10 @@
     "new_password_confirmation": "New password confirmation",
     "change_password": "Change password",
     "change_password_description": "Update your current password",
+    "change_password_button": "Update",
     "reset_password": "Reset password",
     "reset_password_description": "Permanently lose access to protected notes",
+    "reset_password_button": "Reset",
     "cancel": "Cancel",
     "protected_session_timeout": "Protected Session",
     "protected_session_timeout_description": "Time of inactivity before the session is cleared from browser memory. See",
@@ -1772,7 +1777,7 @@
     "help": "Help",
     "test_title": "Test Connection",
     "test_description": "Test the connection to the sync server. If not initialized, this will set up syncing.",
-    "test_button": "Test sync",
+    "test_button": "Test",
     "handshake_failed": "Sync server handshake failed, error: {{message}}"
   },
   "api_log": {

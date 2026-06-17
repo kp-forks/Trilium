@@ -53,8 +53,9 @@ export function SyncConfiguration() {
             </OptionsRow>
 
             <OptionsRowWithButton
-                label={t("sync_2.test_button")}
+                label={t("sync_2.test_title")}
                 description={t("sync_2.test_description")}
+                buttonText={t("sync_2.test_button")}
                 onClick={async () => {
                     await Promise.all([
                         setSyncServerHost(localHost),

@@ -92,50 +92,28 @@ export function OptionsRowWithToggle({ name, label, description, currentValue, o
 interface OptionsRowWithButtonProps {
     label: string;
     description?: string;
+    /** Icon for the action button, in {@link Button} format (e.g. `bx-refresh`, without the leading `bx `). */
     icon?: string;
     disabled?: boolean;
     onClick: () => void;
-    /**
-     * The label of the action button. When set, the row renders as passive label/description text
-     * with a discrete button on the right — the intuitive pattern. When omitted, the whole row is
-     * clickable instead (legacy). In button mode `icon` is forwarded to the {@link Button}, so it
-     * must be in `Button` format (e.g. `bx-refresh`, without the leading `bx `).
-     */
-    buttonText?: string;
+    /** Label of the action button shown on the right of the row. */
+    buttonText: string;
 }
 
+/**
+ * A settings row with passive label/description text and a discrete action button on the right.
+ * The button — not the whole row — is the affordance, which reads more clearly as clickable.
+ */
 export function OptionsRowWithButton({ label, description, icon, disabled, onClick, buttonText }: OptionsRowWithButtonProps) {
-    if (buttonText) {
-        return (
-            <div className="option-row">
-                <div className="option-row-label">
-                    <label>{label}</label>
-                    {description && <small className="option-row-description">{description}</small>}
-                </div>
-                <div className="option-row-input">
-                    <Button text={buttonText} icon={icon} disabled={disabled} onClick={onClick} />
-                </div>
-            </div>
-        );
-    }
-
     return (
-        <button
-            type="button"
-            className="option-row option-row-link"
-            onClick={onClick}
-            disabled={disabled}
-            aria-label={label}
-        >
+        <div className="option-row">
             <div className="option-row-label">
-                <span style={{ cursor: "pointer" }}>{label}</span>
+                <label>{label}</label>
                 {description && <small className="option-row-description">{description}</small>}
             </div>
-            {icon && (
-                <div className="option-row-input">
-                    <span className={icon} />
-                </div>
-            )}
-        </button>
+            <div className="option-row-input">
+                <Button text={buttonText} icon={icon} disabled={disabled} onClick={onClick} />
+            </div>
+        </div>
     );
 }

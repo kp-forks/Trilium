@@ -31,14 +31,14 @@ function ChangePassword() {
             <OptionsRowWithButton
                 label={t("password.change_password")}
                 description={t("password.change_password_description")}
-                icon="bx bx-chevron-right"
+                buttonText={t("password.change_password_button")}
                 onClick={() => setShowModal(true)}
             />
 
             <OptionsRowWithButton
                 label={t("password.reset_password")}
                 description={t("password.reset_password_description")}
-                icon="bx bx-chevron-right"
+                buttonText={t("password.reset_password_button")}
                 onClick={async () => {
                     if (!await dialog.confirm(t("password.reset_confirmation"))) {
                         return;
