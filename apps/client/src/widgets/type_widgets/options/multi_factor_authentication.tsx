@@ -15,6 +15,7 @@ import utils, { isElectron } from "../../../services/utils";
 import Admonition from "../../react/Admonition";
 import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
+import Collapsible from "../../react/Collapsible";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import { FormInlineRadioGroup } from "../../react/FormRadioGroup";
@@ -638,7 +639,7 @@ function formatRecoveryCodeUsedDate(statusEntry: string) {
 }
 
 /**
- * Read-only OAuth/OpenID status card. OAuth is configured entirely server-side (env vars / config.ini),
+ * Read-only OAuth status card. OAuth is configured entirely server-side (env vars / config.ini),
  * so this card offers no controls — it just reflects whether OAuth is available, and when it's the
  * active method, the signed-in account. It stays visible even while TOTP is the active method so the
  * user can always tell whether OAuth is set up.
@@ -675,17 +676,35 @@ function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
                 </div>
             ) : (
                 <>
-                    <p>{t("multi_factor_authentication.oauth_description_warning")}</p>
+                    <p>{t("multi_factor_authentication.oauth_not_configured_hint")}</p>
 
-                    { status?.missingVars && (
-                        <Admonition type="caution">
+                    { status?.missingVars && status.missingVars.length > 0 && (
+                        <Admonition type="note">
                             {t("multi_factor_authentication.oauth_missing_vars", {
                                 variables: status.missingVars.map(v => `"${v}"`).join(", ")
                             })}
                         </Admonition>
                     )}
+
+                    <OAuthConfigHint />
                 </>
             )}
         </OptionsSection>
+    );
+}
+
+/**
+ * Collapsible "How to enable" hint for OAuth, mirroring the security page's {@link ServerConfigHint}.
+ * Lists the config.ini section and the equivalent environment variables the server reads — OAuth has no
+ * in-app setup, so this is the only place the values are documented in the UI.
+ */
+function OAuthConfigHint() {
+    return (
+        <Collapsible title={t("multi_factor_authentication.oauth_how_to_enable")}>
+            <p>{t("multi_factor_authentication.oauth_server_config_hint")}</p>
+            <pre><code>{"[MultiFactorAuthentication]\noauthBaseUrl=\noauthClientId=\noauthClientSecret="}</code></pre>
+            <p>{t("multi_factor_authentication.oauth_server_env_hint")}</p>
+            <pre><code>{"TRILIUM_OAUTH_BASE_URL=\nTRILIUM_OAUTH_CLIENT_ID=\nTRILIUM_OAUTH_CLIENT_SECRET="}</code></pre>
+        </Collapsible>
     );
 }
