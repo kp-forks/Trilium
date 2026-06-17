@@ -18,6 +18,7 @@ import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
+import { useStaticTooltip } from "../../react/hooks";
 import Modal from "../../react/Modal";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import { OptionsRowWithButton } from "./components/OptionsRow";
@@ -503,11 +504,20 @@ function TotpRecoveryKeys({ status, onRegenerate, onRemoveTotp }: {
 
 /**
  * A row of dots, one per recovery code in order, showing at a glance which codes are still available
- * (filled) and which have been spent (hollow). Each dot carries a tooltip with its status.
+ * (filled) and which have been spent (hollow). Each dot carries a Bootstrap tooltip with its status,
+ * delegated from the container via a `selector` so a single tooltip instance covers every dot and
+ * reads each dot's own `title` on hover.
  */
 function RecoveryCodeDots({ status }: { status: string[] }) {
+    const dotsRef = useRef<HTMLDivElement>(null);
+    useStaticTooltip(dotsRef, {
+        selector: ".recovery-code-dot",
+        animation: false,
+        title() { return this.getAttribute("title") ?? ""; }
+    });
+
     return (
-        <div className="recovery-code-dots">
+        <div className="recovery-code-dots" ref={dotsRef}>
             {status.map((entry, index) => {
                 const unused = isUnusedRecoveryCode(entry);
                 return (
