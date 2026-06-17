@@ -26,6 +26,7 @@ function AdvancedSyncOptions() {
             <OptionsRowWithButton
                 label={t("sync.force_full_sync_label")}
                 description={t("sync.force_full_sync_description")}
+                buttonText={t("sync.force_full_sync_button")}
                 onClick={async () => {
                     await server.post("sync/force-full-sync");
                     toast.showMessage(t("sync.full_sync_triggered"));
@@ -35,6 +36,7 @@ function AdvancedSyncOptions() {
             <OptionsRowWithButton
                 label={t("sync.fill_entity_changes_label")}
                 description={t("sync.fill_entity_changes_description")}
+                buttonText={t("sync.fill_entity_changes_button")}
                 onClick={async () => {
                     toast.showMessage(t("sync.filling_entity_changes"));
                     await server.post("sync/fill-entity-changes");
@@ -51,6 +53,7 @@ function DatabaseOptions() {
             <OptionsRowWithButton
                 label={t("database_integrity_check.check_integrity_label")}
                 description={t("database_integrity_check.check_integrity_description")}
+                buttonText={t("database_integrity_check.check_button")}
                 onClick={async () => {
                     toast.showMessage(t("database_integrity_check.checking_integrity"));
 
@@ -67,6 +70,7 @@ function DatabaseOptions() {
             <OptionsRowWithButton
                 label={t("consistency_checks.find_and_fix_label")}
                 description={t("consistency_checks.find_and_fix_description")}
+                buttonText={t("consistency_checks.find_and_fix_button")}
                 onClick={async () => {
                     toast.showMessage(t("consistency_checks.finding_and_fixing_message"));
                     await server.post("database/find-and-fix-consistency-issues");
@@ -77,6 +81,7 @@ function DatabaseOptions() {
             <OptionsRowWithButton
                 label={t("vacuum_database.vacuum_label")}
                 description={t("vacuum_database.vacuum_description")}
+                buttonText={t("vacuum_database.button_text")}
                 onClick={async () => {
                     toast.showMessage(t("vacuum_database.vacuuming_database"));
                     await server.post("database/vacuum-database");
@@ -131,6 +136,7 @@ function DatabaseAnonymizationOptions() {
                 <OptionsRowWithButton
                     label={t("database_anonymization.full_anonymization")}
                     description={t("database_anonymization.full_anonymization_description")}
+                    buttonText={t("database_anonymization.save_fully_anonymized_database")}
                     disabled={anonymizationInProgress}
                     onClick={() => anonymize("full")}
                 />
@@ -138,6 +144,7 @@ function DatabaseAnonymizationOptions() {
                 <OptionsRowWithButton
                     label={t("database_anonymization.light_anonymization")}
                     description={t("database_anonymization.light_anonymization_description")}
+                    buttonText={t("database_anonymization.save_lightly_anonymized_database")}
                     disabled={anonymizationInProgress}
                     onClick={() => anonymize("light")}
                 />

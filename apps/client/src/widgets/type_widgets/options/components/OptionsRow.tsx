@@ -2,6 +2,7 @@ import "./OptionsRow.css";
 
 import { cloneElement, ComponentChildren, VNode } from "preact";
 
+import Button from "../../../react/Button";
 import FormToggle from "../../../react/FormToggle";
 import { useUniqueName } from "../../../react/hooks";
 
@@ -94,9 +95,30 @@ interface OptionsRowWithButtonProps {
     icon?: string;
     disabled?: boolean;
     onClick: () => void;
+    /**
+     * The label of the action button. When set, the row renders as passive label/description text
+     * with a discrete button on the right — the intuitive pattern. When omitted, the whole row is
+     * clickable instead (legacy). In button mode `icon` is forwarded to the {@link Button}, so it
+     * must be in `Button` format (e.g. `bx-refresh`, without the leading `bx `).
+     */
+    buttonText?: string;
 }
 
-export function OptionsRowWithButton({ label, description, icon, disabled, onClick }: OptionsRowWithButtonProps) {
+export function OptionsRowWithButton({ label, description, icon, disabled, onClick, buttonText }: OptionsRowWithButtonProps) {
+    if (buttonText) {
+        return (
+            <div className="option-row">
+                <div className="option-row-label">
+                    <label>{label}</label>
+                    {description && <small className="option-row-description">{description}</small>}
+                </div>
+                <div className="option-row-input">
+                    <Button text={buttonText} icon={icon} disabled={disabled} onClick={onClick} />
+                </div>
+            </div>
+        );
+    }
+
     return (
         <button
             type="button"
