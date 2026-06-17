@@ -274,7 +274,7 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
                 height: isFullHeight ? "100%" : ""
             }}
         >
-            <Element {...cachedProps} />
+            <Element {...cachedProps} isVisible={isVisible} />
         </div>
     );
 }

@@ -8,7 +8,7 @@ import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
-export default function AudioPreview({ note, noteContext }: { note: FNote, noteContext?: NoteContext }) {
+export default function AudioPreview({ note, noteContext, isVisible = true }: { note: FNote, noteContext?: NoteContext, isVisible?: boolean }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -31,7 +31,10 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
         setPlaying(false);
     }, [note.noteId]);
     const onError = useCallback(() => setError(true), []);
-    const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef);
+    // Mirror the element's real play state on every transition: "pause" isn't fired reliably when a track
+    // ends or its src is swapped, so derive from `paused` rather than assuming play→true / pause→false.
+    const syncPlaying = useCallback(() => setPlaying(!!audioRef.current && !audioRef.current.paused), []);
+    const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef, isVisible);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, audioRef);
 
     if (error) {
@@ -44,8 +47,10 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
                 class="audio-preview"
                 src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
                 ref={audioRef}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
+                onPlay={syncPlaying}
+                onPause={syncPlaying}
+                onEnded={syncPlaying}
+                onEmptied={syncPlaying}
                 onError={onError}
             />
             <div className="audio-preview-icon-wrapper">

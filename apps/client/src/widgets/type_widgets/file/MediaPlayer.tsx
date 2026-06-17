@@ -8,6 +8,7 @@ import type FNote from "../../../entities/fnote";
 import attributes from "../../../services/attributes";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
+import { logError } from "../../../services/ws";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import { useTriliumEvent, useTriliumEvents } from "../../react/hooks";
@@ -167,28 +168,30 @@ const OWNED_MEDIA_ACTIONS: MediaSessionAction[] = [ "previoustrack", "nexttrack"
  * seek-to (scrubber) and stop, with the note title as metadata. Play/pause and basic seek are left to the
  * browser's default binding on the element. Jumping to a sibling auto-plays it, like a playlist. Starting
  * playback pauses every other media player (audio or video), so only one plays at a time; that player owns
- * the global Media Session and keeps the OS controls even while paused or its tab is backgrounded. It hands
- * the session over only when another player starts playing, or releases it when its tab is closed (unmount).
+ * the global Media Session and keeps the OS controls while paused or while its tab is inactive (it keeps
+ * playing in the background). It releases the session — and, when its tab switches to a different note type so
+ * this player is hidden/cached, also stops playing — on that navigation, on a handover, or on unmount.
  */
-export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
+export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, isVisible: boolean) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
     // Stable identity for this player instance, used to coordinate with the other mounted players.
     const self = useRef<object>({}).current;
 
-    // Forces a re-render so isCurrentNote / ownsSession get re-evaluated after navigation or a playback
-    // change (a cached/background player otherwise wouldn't notice its context going stale).
+    // Re-render on tab/note switches so a cached/background player re-evaluates promptly — its ownership of
+    // the session can change when another player starts or its own context navigates.
     const [ , bump ] = useState(0);
     useTriliumEvents([ "activeContextChanged", "activeNoteChanged" ], () => bump((tick) => tick + 1));
 
-    // The player that's currently playing owns the OS Media Session: starting playback pauses every other
-    // player (below), so at most one is active at a time. Ownership is kept through pauses and tab switches,
-    // and released only on handover (another player starts) or unmount (its tab is closed) — not when merely
-    // paused or navigated away. `isCurrentNote` (this player's own context still shows it) only gates the
-    // on-screen prev/next buttons and the session's track-skip handlers, not ownership itself.
-    const isCurrentNote = isCurrentContextNote(noteContext, note.noteId);
-    const ownsSession = activeMediaPlayer === self;
+    // The currently-playing player owns the OS Media Session. It owns iff it's the *displayed* type widget for
+    // its context (`isVisible`) AND it holds the active-playback slot — so the session is kept through pauses and
+    // while the tab is merely inactive (still the displayed type there → background playback). It's released on a
+    // handover (another player starts), on unmount (tab closed), or when the tab switches to a different note type
+    // so this player is hidden/cached (the stop-on-stale effect below also pauses it then). Using `isVisible`
+    // rather than a note-id match avoids a transient release during a same-type sibling jump, where the cached
+    // props briefly lag the context's note id.
+    const ownsSession = isVisible && activeMediaPlayer === self;
 
-    const wrapped = navigation && isCurrentNote ? {
+    const wrapped = navigation && isVisible ? {
         ...navigation,
         navigatePrevious: () => { autoPlayTargetNoteId = navigation.previousId; navigation.navigatePrevious(); },
         navigateNext: () => { autoPlayTargetNoteId = navigation.nextId; navigation.navigateNext(); }
@@ -238,6 +241,16 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
         mediaPlayerSubscribers.add(onActivePlayerChange);
         return () => { mediaPlayerSubscribers.delete(onActivePlayerChange); };
     }, [ self, mediaRef ]);
+
+    // Stop a hidden/cached player: when its tab switches to a different note type this widget is no longer the
+    // displayed one (`isVisible` false), so pause it and give up the active slot — there's no visible player for
+    // it anymore. A merely-inactive tab still displays this type (isVisible stays true) and so keeps playing.
+    useEffect(() => {
+        if (!isVisible) {
+            mediaRef.current?.pause();
+            if (activeMediaPlayer === self) setActiveMediaPlayer(null);
+        }
+    }, [ isVisible, mediaRef, self ]);
 
     // Bind the OS Media Session (which desktop/hardware media keys route to, rather than keydown) and its
     // metadata while this player owns the session (its context's current note, and the one playing). They're
@@ -362,19 +375,25 @@ export function SkipButton({ mediaRef, seconds, icon, text }: { mediaRef: RefObj
 export function useMediaPlayMode(noteContext: NoteContext | undefined, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>): { mode: MediaPlayMode; setMode: (mode: MediaPlayMode) => void } {
     const parentNoteId = getParentFromNotePath(noteContext?.notePath)?.parentNoteId;
     const [ mode, setLocalMode ] = useState<MediaPlayMode>("once");
+    const [ refreshCounter, setRefreshCounter ] = useState(0);
 
-    const refresh = useCallback(() => {
+    // Load the mode from the parent's label. The `active` flag discards a stale response when the parent
+    // changes mid-flight (rapid navigation), so a slower earlier fetch can't overwrite a newer note's mode.
+    useEffect(() => {
         if (!parentNoteId) {
             setLocalMode("once");
             return;
         }
-        froca.getNote(parentNoteId).then((parent) => setLocalMode(playModeFromLabel(parent?.getLabelValue(MEDIA_PLAY_MODE_LABEL)))).catch(() => {});
-    }, [ parentNoteId ]);
+        let active = true;
+        froca.getNote(parentNoteId)
+            .then((parent) => { if (active) setLocalMode(playModeFromLabel(parent?.getLabelValue(MEDIA_PLAY_MODE_LABEL))); })
+            .catch(() => {});
+        return () => { active = false; };
+    }, [ parentNoteId, refreshCounter ]);
 
-    useEffect(refresh, [ refresh ]);
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (parentNoteId && loadResults.getAttributeRows().some((attr) => attr.noteId === parentNoteId && attr.name === MEDIA_PLAY_MODE_LABEL)) {
-            refresh();
+            setRefreshCounter((counter) => counter + 1);
         }
     });
 
@@ -395,7 +414,7 @@ export function useMediaPlayMode(noteContext: NoteContext | undefined, mediaRef:
             } else {
                 void attributes.setLabel(parent.noteId, MEDIA_PLAY_MODE_LABEL, value);
             }
-        }).catch(() => {});
+        }).catch((e) => logError(`Could not persist media play mode: ${e}`));
     }, [ parentNoteId ]);
 
     return { mode, setMode };

@@ -43,12 +43,11 @@ export default function Dropdown({ id, className, buttonClassName, isStatic, chi
 
     const { showTooltip, hideTooltip } = useTooltip(containerRef, {
         ...titleOptions,
-        // Drive the tooltip text from the config (not just the `title` attribute): Bootstrap reads the
-        // attribute only once on init, so a dynamic title (e.g. the media play-mode button) would otherwise
-        // stay stale. useTooltip recreates the tooltip each render, so this keeps it in sync with the prop.
-        // Fall back to "" (Bootstrap's default) since it rejects an explicit `undefined`; an empty title
-        // simply shows no tooltip.
-        title: title ?? "",
+        // Drive the tooltip from config, not just the `title` attribute: Bootstrap reads the attribute once
+        // on init, so a dynamic title (e.g. the media play-mode button) would otherwise go stale (useTooltip
+        // recreates the tooltip each render, keeping this in sync). Prefer the `title` prop, then a
+        // `titleOptions.title` escape-hatch, then "" (Bootstrap rejects `undefined`; "" shows no tooltip).
+        title: title ?? titleOptions?.title ?? "",
         placement: titlePosition ?? "bottom",
         fallbackPlacements: [ titlePosition ?? "bottom" ],
         trigger: "manual"

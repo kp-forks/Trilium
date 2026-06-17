@@ -13,7 +13,7 @@ import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, See
 
 const AUTO_HIDE_DELAY = 3000;
 
-export default function VideoPreview({ note, noteContext }: { note: FNote, noteContext?: NoteContext }) {
+export default function VideoPreview({ note, noteContext, isVisible = true }: { note: FNote, noteContext?: NoteContext, isVisible?: boolean }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -27,6 +27,9 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
         setPlaying(false);
     }, [note.noteId]);
     const onError = useCallback(() => setError(true), []);
+    // Mirror the element's real play state on every transition: "pause" isn't fired reliably when a track
+    // ends or its src is swapped, so derive from `paused` rather than assuming play→true / pause→false.
+    const syncPlaying = useCallback(() => setPlaying(!!videoRef.current && !videoRef.current.paused), []);
 
     const togglePlayback = useCallback(() => {
         const video = videoRef.current;
@@ -44,7 +47,7 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
     }, [togglePlayback]);
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
-    const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef);
+    const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef, isVisible);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, videoRef);
 
     if (error) {
@@ -58,8 +61,10 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
                 class="video-preview"
                 src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
                 datatype={note?.mime}
-                onPlay={() => setPlaying(true)}
-                onPause={() => setPlaying(false)}
+                onPlay={syncPlaying}
+                onPause={syncPlaying}
+                onEnded={syncPlaying}
+                onEmptied={syncPlaying}
                 onError={onError}
             />
 
