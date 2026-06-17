@@ -90,7 +90,6 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     customDateTimeFormat: string;
 
     // Multi-Factor Authentication
-    mfaEnabled: boolean;
     mfaMethod: string;
     totpEncryptionSalt: string;
     totpEncryptedSecret: string;

@@ -113,6 +113,7 @@ function generateOAuthConfig() {
         issuerBaseURL: config.MultiFactorAuthentication.oauthIssuerBaseUrl,
         secret: config.MultiFactorAuthentication.oauthClientSecret,
         clientSecret: config.MultiFactorAuthentication.oauthClientSecret,
+        clientAuthMethod: resolveClientAuthMethod(),
         authorizationParams: {
             response_type: "code",
             scope: "openid profile email",
@@ -158,3 +159,23 @@ export default {
     isTokenValid,
     isUserSaved,
 };
+
+const GOOGLE_ISSUER = "https://accounts.google.com";
+
+/**
+ * Chooses the token-endpoint client authentication method based on the issuer.
+ *
+ * - **Google** → `client_secret_post`. express-openid-connect defaults to `client_secret_basic`,
+ *   whose oauth4webapi implementation form-url-encodes the client_id/secret per RFC 6749 §2.3.1
+ *   ("-" → %2D, "." → %2E) inside the HTTP Basic header. Google does not decode Basic credentials, so
+ *   a Google client_id (which always contains "-" and ".") arrives corrupted and the token exchange
+ *   fails with "invalid_client: The OAuth client was not found." Posting the credentials in the body
+ *   sidesteps the Basic-auth encoding.
+ * - **Any other issuer** → `client_secret_basic`, the OIDC default a spec-compliant provider expects
+ *   (e.g. Authelia/Keycloak register confidential clients as `client_secret_basic` and reject a
+ *   mismatched method).
+ */
+function resolveClientAuthMethod() {
+    const issuer = config.MultiFactorAuthentication.oauthIssuerBaseUrl.replace(/\/+$/, "");
+    return issuer === GOOGLE_ISSUER ? "client_secret_post" : "client_secret_basic";
+}

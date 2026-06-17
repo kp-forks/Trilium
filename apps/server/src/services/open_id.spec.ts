@@ -124,6 +124,18 @@ describe("open_id", () => {
             expect(typeof cfg.afterCallback).toBe("function");
         });
 
+        it("auto-selects the token-endpoint auth method by issuer", () => {
+            setOauthConfig(true);
+
+            // Non-Google issuer (the setOauthConfig default) → spec-default client_secret_basic.
+            expect(openID.generateOAuthConfig().clientAuthMethod).toBe("client_secret_basic");
+
+            // Google issuer (trailing slash tolerated) → client_secret_post, since Google rejects the
+            // RFC-encoded Basic credentials (client_ids contain "-"/"." which become %2D/%2E).
+            mfa.oauthIssuerBaseUrl = "https://accounts.google.com/";
+            expect(openID.generateOAuthConfig().clientAuthMethod).toBe("client_secret_post");
+        });
+
         it("returns the session unchanged when the DB is not initialized", async () => {
             const cfg = buildConfig();
             const spy = vi.spyOn(sqlInit, "isDbInitialized").mockReturnValue(false);
