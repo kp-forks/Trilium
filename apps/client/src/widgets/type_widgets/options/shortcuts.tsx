@@ -2,6 +2,7 @@ import "./shortcuts.css";
 
 import { ActionKeyboardShortcut, KeyboardShortcut, OptionNames } from "@triliumnext/commons";
 import { Dropdown as BootstrapDropdown } from "bootstrap";
+import { ComponentChildren, RefObject } from "preact";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import dialog from "../../../services/dialog";
@@ -17,7 +18,8 @@ import Button from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "../../react/FormList";
 import FormTextBox from "../../react/FormTextBox";
-import { useTriliumEvent } from "../../react/hooks";
+import { useStaticTooltip, useTriliumEvent } from "../../react/hooks";
+import { TooltipIcon } from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
@@ -357,7 +359,7 @@ function ShortcutRow({ action, conflicts }: { action: ActionKeyboardShortcut; co
             label={
                 <>
                     {isShortcutModified(action) &&
-                        <span class="shortcut-modified-indicator" title={t("shortcuts.modified_from_default")} />}
+                        <TooltipIcon className="shortcut-modified-indicator" tooltip={t("shortcuts.modified_from_default")} tooltipClass="tooltip-top" />}
                     {action.friendlyName}
                 </>
             }
@@ -408,31 +410,31 @@ function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShort
                 return (
                     <span class={`shortcut-chip ${global ? "global" : ""} ${conflictsWith ? "conflict" : ""}`} key={shortcut}>
                         {conflictsWith &&
-                            <span
-                                class="bx bx-error-circle shortcut-chip-conflict"
-                                title={t("shortcuts.conflict_chip", { actions: conflictsWith.join(", ") })}
+                            <TooltipIcon
+                                icon="bx bx-error-circle"
+                                className="shortcut-chip-conflict"
+                                tooltip={t("shortcuts.conflict_chip", { actions: conflictsWith.join(", ") })}
+                                tooltipClass="tooltip-top"
                             />}
                         {electron
                             ? (
-                                <button
-                                    type="button"
-                                    class={`shortcut-chip-action shortcut-chip-global ${global ? "active" : ""}`}
+                                <TooltipButton
+                                    className={`shortcut-chip-action shortcut-chip-global ${global ? "active" : ""}`}
                                     title={global ? t("shortcuts.make_local") : t("shortcuts.make_global")}
                                     onClick={() => toggleGlobal(shortcut)}
                                 >
                                     <span class="bx bx-globe" />
-                                </button>
+                                </TooltipButton>
                             )
-                            : global && <span class="bx bx-globe shortcut-chip-global-indicator" title={t("shortcuts.global_shortcut")} />}
+                            : global && <TooltipIcon icon="bx bx-globe" className="shortcut-chip-global-indicator" tooltip={t("shortcuts.global_shortcut")} tooltipClass="tooltip-top" />}
                         <kbd>{stripGlobalPrefix(shortcut)}</kbd>
-                        <button
-                            type="button"
-                            class="shortcut-chip-action shortcut-chip-remove"
+                        <TooltipButton
+                            className="shortcut-chip-action shortcut-chip-remove"
                             title={t("shortcuts.remove_shortcut")}
                             onClick={() => saveShortcuts(shortcuts.filter((s) => s !== shortcut))}
                         >
                             <span class="bx bx-x" />
-                        </button>
+                        </TooltipButton>
                     </span>
                 );
             })}
@@ -488,13 +490,47 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
     // Keep the button a fixed-size icon-action in both states so toggling recording never reflows
     // the row; the recording state is conveyed through styling and the tooltip.
     return (
-        <button
-            type="button"
-            class={`shortcut-recorder icon-action bx bx-plus ${recording ? "recording" : ""}`}
-            title={recording ? t("shortcuts.press_keys") : t("shortcuts.record_shortcut")}
+        <ActionButton
+            className={`shortcut-recorder ${recording ? "recording" : ""}`}
+            icon="bx bx-plus"
+            text={recording ? t("shortcuts.press_keys") : t("shortcuts.record_shortcut")}
+            titlePosition="top"
+            tooltipClass="tooltip-top"
             onClick={() => setRecording((value) => !value)}
             onBlur={() => setRecording(false)}
         />
+    );
+}
+
+/**
+ * Attaches a Bootstrap tooltip to an element on the shortcuts page. Uses the `tooltip-top` popup
+ * class so the tooltip renders above the options modal (matching the revert ActionButton), and a
+ * focus trigger on mobile where hover is unavailable.
+ */
+function useShortcutTooltip(elRef: RefObject<Element>, title: string) {
+    useStaticTooltip(elRef, {
+        title,
+        placement: "top",
+        fallbackPlacements: [ "top" ],
+        customClass: "tooltip-top",
+        trigger: isMobile() ? "focus" : "hover focus",
+        animation: false
+    });
+}
+
+/** Icon button carrying a Bootstrap tooltip instead of a native `title`. */
+function TooltipButton({ className, title, onClick, children }: {
+    className: string;
+    title: string;
+    onClick: () => void;
+    children?: ComponentChildren;
+}) {
+    const ref = useRef<HTMLButtonElement>(null);
+    useShortcutTooltip(ref, title);
+    return (
+        <button ref={ref} type="button" class={className} onClick={onClick}>
+            {children}
+        </button>
     );
 }
 
