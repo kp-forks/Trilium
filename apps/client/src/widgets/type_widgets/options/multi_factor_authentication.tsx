@@ -132,6 +132,8 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
     const [ recoveryStatus, setRecoveryStatus ] = useState<string[]>();
     // Whether the verify-before-enable enrollment modal is open.
     const [ showEnroll, setShowEnroll ] = useState(false);
+    // Freshly regenerated recovery codes, shown once so the user can save them (dismissed with "Done").
+    const [ regeneratedCodes, setRegeneratedCodes ] = useState<string[]>();
 
     const refreshRecoveryKeys = useCallback(async () => {
         const result = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/enabled");
@@ -172,6 +174,23 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
         refreshRecoveryKeys();
     }, [ refreshTotpStatus, refreshRecoveryKeys ]);
 
+    // Issues a fresh batch of recovery codes for the (already enrolled) secret, replacing the old
+    // ones. The server refuses if no secret is set, so this can't mint codes for an inactive TOTP.
+    const regenerateRecoveryCodes = useCallback(async () => {
+        if (!await dialog.confirm(t("multi_factor_authentication.recovery_keys_regenerate_confirm"))) {
+            return;
+        }
+
+        const result = await server.post<TOTPRecoveryKeysResponse>("totp_recovery/regenerate");
+        if (!result.success || !result.recoveryCodes) {
+            toast.showError(t("multi_factor_authentication.recovery_keys_error"));
+            return;
+        }
+
+        setRegeneratedCodes(result.recoveryCodes);
+        refreshRecoveryKeys();
+    }, [ refreshRecoveryKeys ]);
+
     useEffect(() => {
         // The TOTP secret status is fetched by the parent; here we only load the recovery codes.
         refreshRecoveryKeys();
@@ -202,11 +221,16 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
             />
         </OptionsSection>
 
-        {/* Recovery codes are part of TOTP, so they only appear once a secret is enrolled. They're
-            issued during enrollment (and re-issued when the secret is regenerated) — never minted
-            standalone — so this is a read-only view. */}
+        {/* Recovery codes are part of TOTP, so they only appear once a secret is enrolled. They can
+            be regenerated for the existing secret, but never minted while TOTP is inactive. */}
         {totpStatus?.set &&
-            <TotpRecoveryKeys status={recoveryStatus} onRemoveTotp={removeTotp} />}
+            <TotpRecoveryKeys
+                status={recoveryStatus}
+                generatedCodes={regeneratedCodes}
+                onRegenerate={regenerateRecoveryCodes}
+                onDismissGenerated={() => setRegeneratedCodes(undefined)}
+                onRemoveTotp={removeTotp}
+            />}
 
         {createPortal(
             <TotpEnrollmentModal
@@ -512,31 +536,49 @@ function downloadRecoveryCodes(codes: string[]) {
 }
 
 /**
- * Read-only recovery-codes status for an enrolled TOTP, plus the destructive remove-TOTP action.
- * The codes themselves are shown once during enrollment; here we only report how many remain. There's
- * no generate/regenerate action — fresh codes are only issued by (re-)enrolling the secret.
+ * Recovery-codes management for an enrolled TOTP: a read-only status (how many remain), a confirmed
+ * regenerate action (which replaces the codes for the existing secret), and the destructive
+ * remove-TOTP action. Codes are only ever shown once — right after enrollment or regeneration.
  */
-function TotpRecoveryKeys({ status, onRemoveTotp }: {
+function TotpRecoveryKeys({ status, generatedCodes, onRegenerate, onDismissGenerated, onRemoveTotp }: {
     status?: string[],
+    /** Freshly regenerated codes to show once; when set, the section switches to the save-them view. */
+    generatedCodes?: string[],
+    onRegenerate: () => void,
+    onDismissGenerated: () => void,
     onRemoveTotp: () => void
 }) {
+    // Just regenerated: show the new codes once so the user can save them, then return to the status.
+    if (generatedCodes) {
+        return (
+            <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
+                <FormText>{t("multi_factor_authentication.recovery_keys_regenerated_instructions")}</FormText>
+
+                <RecoveryCodesList codes={generatedCodes} />
+
+                <Button text={t("multi_factor_authentication.recovery_keys_done")} onClick={onDismissGenerated} />
+            </OptionsSection>
+        );
+    }
+
     const remaining = status?.filter(isUnusedRecoveryCode).length ?? 0;
 
     return (
         <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
-            <div className="option-row">
-                <div className="option-row-label">
+            <OptionsRowWithButton
+                label={
                     <span className="recovery-codes-title">
                         {t("multi_factor_authentication.recovery_keys_label")}
                         {status && status.length > 0 && <RecoveryCodeDots status={status} />}
                     </span>
-                    <small className="option-row-description">
-                        {status && status.length > 0
-                            ? t("multi_factor_authentication.recovery_keys_remaining", { remaining, total: status.length })
-                            : t("multi_factor_authentication.recovery_keys_no_key_set")}
-                    </small>
-                </div>
-            </div>
+                }
+                description={status && status.length > 0
+                    ? t("multi_factor_authentication.recovery_keys_remaining", { remaining, total: status.length })
+                    : t("multi_factor_authentication.recovery_keys_no_key_set")}
+                icon="bx-refresh"
+                buttonText={t("multi_factor_authentication.recovery_keys_regenerate")}
+                onClick={onRegenerate}
+            />
 
             <OptionsRowWithButton
                 label={t("multi_factor_authentication.totp_remove_label")}

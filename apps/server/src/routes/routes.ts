@@ -76,6 +76,7 @@ function register(app: express.Application) {
     asyncApiRoute(GET, '/api/oauth/validate', openID.isTokenValid);
 
     apiRoute(PST, '/api/totp_recovery/verify', recoveryCodes.verifyRecoveryCode);
+    apiRoute(PST, '/api/totp_recovery/regenerate', recoveryCodes.regenerateRecoveryCodes);
     apiRoute(GET, '/api/totp_recovery/enabled', recoveryCodes.checkForRecoveryKeys);
     apiRoute(GET, '/api/totp_recovery/used', recoveryCodes.getUsedRecoveryCodes);
 

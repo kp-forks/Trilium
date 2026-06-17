@@ -3,6 +3,7 @@ import type { Request } from "express";
 import { describe, expect, it } from "vitest";
 
 import recoveryCodesService from "../../services/encryption/recovery_codes.js";
+import totpService from "../../services/totp.js";
 import recoveryCodesRoute from "./recovery_codes.js";
 
 describe("Recovery codes API", () => {
@@ -36,5 +37,25 @@ describe("Recovery codes API", () => {
         expect(used.success).toBe(true);
         // The used code is replaced by an ISO-ish timestamp; the rest stay as indices.
         expect(used.usedRecoveryCodes.some(c => /T/.test(c))).toBe(true);
+    });
+
+    it("regenerateRecoveryCodes refuses when no TOTP secret is set", () => {
+        const result = cls.init(() => {
+            totpService.resetTotp(); // clears any secret + codes
+            return recoveryCodesRoute.regenerateRecoveryCodes();
+        });
+        expect(result.success).toBe(false);
+        expect(result.recoveryCodes).toBeUndefined();
+        expect(recoveryCodesRoute.checkForRecoveryKeys()).toEqual({ success: true, keysExist: false });
+    });
+
+    it("regenerateRecoveryCodes issues and persists fresh codes when a secret is set", () => {
+        const result = cls.init(() => {
+            totpService.setSecret("JBSWY3DPEHPK3PXP");
+            return recoveryCodesRoute.regenerateRecoveryCodes();
+        });
+        expect(result.success).toBe(true);
+        expect(result.recoveryCodes).toHaveLength(8);
+        expect(recoveryCodesRoute.checkForRecoveryKeys()).toEqual({ success: true, keysExist: true });
     });
 });
