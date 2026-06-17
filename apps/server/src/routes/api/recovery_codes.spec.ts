@@ -58,4 +58,30 @@ describe("Recovery codes API", () => {
         expect(result.recoveryCodes).toHaveLength(8);
         expect(recoveryCodesRoute.checkForRecoveryKeys()).toEqual({ success: true, keysExist: true });
     });
+
+    it("regenerateRecoveryCodes invalidates the previous batch", () => {
+        // Seed an initial batch tied to a TOTP secret, capturing one code from it.
+        const oldCode = cls.init(() => {
+            totpService.setSecret("JBSWY3DPEHPK3PXP");
+            const initial = recoveryCodesService.createRecoveryCodes();
+            recoveryCodesService.setRecoveryCodes(initial.join(","));
+            return initial[0];
+        });
+
+        // Regenerating mints a brand-new batch, replacing the old one.
+        const regenerated = cls.init(() => recoveryCodesRoute.regenerateRecoveryCodes());
+        expect(regenerated.success).toBe(true);
+        const newCodes = regenerated.recoveryCodes;
+        expect(newCodes).toHaveLength(8);
+        const newCode = newCodes?.[0];
+        expect(newCode).toBeDefined();
+
+        // A code from the OLD batch must no longer verify after regeneration.
+        const oldReq = { body: { recovery_code_guess: oldCode } } as unknown as Request;
+        expect(cls.init(() => recoveryCodesRoute.verifyRecoveryCode(oldReq))).toEqual({ success: false });
+
+        // A code from the NEW batch verifies.
+        const newReq = { body: { recovery_code_guess: newCode } } as unknown as Request;
+        expect(cls.init(() => recoveryCodesRoute.verifyRecoveryCode(newReq))).toEqual({ success: true });
+    });
 });
