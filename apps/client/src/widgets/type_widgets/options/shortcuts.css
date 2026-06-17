@@ -84,6 +84,26 @@
         box-shadow: inset 0 0 0 1px var(--icon-button-danger-color, #d9534f);
     }
 
+    /* Revert chip: previews the default the row reverts to. A plain gray chip; the whole chip is the
+       button, with muted text to keep it quieter than the real (active) shortcut chips. */
+    .shortcut-chip.shortcut-chip-revert {
+        padding: 0.1em 0.5em;
+        border: none;
+        background: var(--input-background-color);
+        color: var(--muted-text-color);
+        cursor: pointer;
+        transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .shortcut-chip.shortcut-chip-revert:hover {
+        color: var(--main-text-color);
+        background: var(--hover-item-background-color);
+    }
+
+    .shortcut-chip.shortcut-chip-revert kbd {
+        color: inherit;
+    }
+
     .shortcut-chip-conflict {
         color: var(--icon-button-danger-color, #d9534f);
     }

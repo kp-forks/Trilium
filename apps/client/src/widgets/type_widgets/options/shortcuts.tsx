@@ -444,15 +444,26 @@ function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShort
                 );
             })}
 
-            {isShortcutModified(action) &&
-                <ActionButton
-                    icon="bx bx-reset"
-                    text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
-                    tooltipClass="tooltip-top"
-                    onClick={() => revertShortcut(action)}
-                />}
+            {isShortcutModified(action) && <RevertChip action={action} />}
             <ShortcutRecorder onCapture={addShortcut} />
         </div>
+    );
+}
+
+/**
+ * Revert affordance styled like a shortcut chip: instead of an opaque reset icon, it previews the
+ * default combination the row will return to, so the user sees the target before clicking.
+ */
+function RevertChip({ action }: { action: ActionKeyboardShortcut }) {
+    return (
+        <TooltipButton
+            className="shortcut-chip shortcut-chip-revert"
+            title={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+            onClick={() => revertShortcut(action)}
+        >
+            <span class="bx bx-reset" />
+            <kbd>{formatDefaultShortcuts(action)}</kbd>
+        </TooltipButton>
     );
 }
 
@@ -516,8 +527,8 @@ function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void
 
 /**
  * Attaches a Bootstrap tooltip to an element on the shortcuts page. Uses the `tooltip-top` popup
- * class so the tooltip renders above the options modal (matching the revert ActionButton), and a
- * focus trigger on mobile where hover is unavailable.
+ * class so the tooltip renders above the options modal, and a focus trigger on mobile where hover
+ * is unavailable.
  */
 function useShortcutTooltip(elRef: RefObject<Element>, title: string) {
     useStaticTooltip(elRef, {
