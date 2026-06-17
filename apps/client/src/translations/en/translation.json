@@ -1747,8 +1747,8 @@
     "oauth_how_to_enable": "How to enable",
     "oauth_server_config_hint": "Add the following to your config.ini file and restart the application:",
     "oauth_server_env_hint": "Or set the following environment variables:",
-    "oauth_user_account": "User Account: ",
-    "oauth_user_email": "User Email: ",
+    "oauth_user_account": "Account name",
+    "oauth_user_email": "Email address",
     "oauth_user_not_logged_in": "Not logged in!"
   },
   "shortcuts": {

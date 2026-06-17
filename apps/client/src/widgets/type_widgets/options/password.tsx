@@ -259,14 +259,14 @@ function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
             }
         >
             { configured ? (
-                <div class="col-md-6">
-                    <span><b>{t("multi_factor_authentication.oauth_user_account")}</b></span>
-                    <span class="user-account-name">{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
-
-                    <br />
-                    <span><b>{t("multi_factor_authentication.oauth_user_email")}</b></span>
-                    <span class="user-account-email">{status?.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
-                </div>
+                <>
+                    <OptionsRow name="oauth-user-account" label={t("multi_factor_authentication.oauth_user_account")}>
+                        <span>{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
+                    </OptionsRow>
+                    <OptionsRow name="oauth-user-email" label={t("multi_factor_authentication.oauth_user_email")}>
+                        <span>{status?.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
+                    </OptionsRow>
+                </>
             ) : (
                 <>
                     <p>{t("multi_factor_authentication.oauth_not_configured_hint")}</p>
