@@ -6,6 +6,7 @@ import toast from "../../../services/toast";
 import Button from "../../react/Button";
 import FormGroup from "../../react/FormGroup";
 import FormTextBox from "../../react/FormTextBox";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsSection from "./components/OptionsSection";
 import OptionsRow, { OptionsRowWithButton } from "./components/OptionsRow";
 import protected_session_holder from "../../../services/protected_session_holder";
@@ -17,6 +18,7 @@ import Modal from "../../react/Modal";
 export default function PasswordSettings() {
     return (
         <>
+            <OptionsPageHeader />
             <ChangePassword />
             <ProtectedSessionTimeout />
         </>

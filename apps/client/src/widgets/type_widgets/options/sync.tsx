@@ -6,12 +6,18 @@ import server from "../../../services/server";
 import toast from "../../../services/toast";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOption } from "../../react/hooks";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithButton } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
 
 export default function SyncOptions() {
-    return <SyncConfiguration />;
+    return (
+        <>
+            <OptionsPageHeader />
+            <SyncConfiguration />
+        </>
+    );
 }
 
 export function SyncConfiguration() {

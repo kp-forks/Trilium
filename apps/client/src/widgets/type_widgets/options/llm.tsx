@@ -8,6 +8,7 @@ import Button from "../../react/Button";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
@@ -17,14 +18,18 @@ export default function LlmSettings() {
 
     if (isStandalone) {
         return (
-            <OptionsSection title={t("llm.settings_title")}>
-                <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
-            </OptionsSection>
+            <>
+                <OptionsPageHeader />
+                <OptionsSection title={t("llm.settings_title")}>
+                    <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
+                </OptionsSection>
+            </>
         );
     }
 
     return (
         <>
+            <OptionsPageHeader />
             <OptionsSection
                 title={t("llm.settings_title")}
                 description={t("llm.settings_description")}

@@ -18,6 +18,7 @@ import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import Modal from "../../react/Modal";
 import Slider from "../../react/Slider";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import PlatformIndicator from "./components/PlatformIndicator";
@@ -125,6 +126,7 @@ const FONT_FAMILIES: FontGroup[] = [
 export default function AppearanceSettings() {
     return (
         <>
+            <OptionsPageHeader />
             <UserInterface />
             <Fonts />
             {isElectron() && <ElectronIntegration /> }

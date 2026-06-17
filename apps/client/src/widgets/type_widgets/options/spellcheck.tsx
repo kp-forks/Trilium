@@ -8,14 +8,25 @@ import FormText from "../../react/FormText";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
 import CheckboxList from "./components/CheckboxList";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function SpellcheckSettings() {
     if (isElectron()) {
-        return <ElectronSpellcheckSettings />;
+        return (
+            <>
+                <OptionsPageHeader />
+                <ElectronSpellcheckSettings />
+            </>
+        );
     }
-    return <WebSpellcheckSettings />;
+    return (
+        <>
+            <OptionsPageHeader />
+            <WebSpellcheckSettings />
+        </>
+    );
 }
 
 interface SpellcheckLanguage {

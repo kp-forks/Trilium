@@ -9,6 +9,7 @@ import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
@@ -16,6 +17,7 @@ import TimeSelector from "./components/TimeSelector";
 export default function OtherSettings() {
     return (
         <>
+            <OptionsPageHeader />
             <SearchSettings />
             <NoteErasureTimeout />
             <AttachmentErasureTimeout />

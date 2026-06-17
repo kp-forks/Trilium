@@ -8,11 +8,13 @@ import toast from "../../../services/toast";
 import FormText from "../../react/FormText";
 import { useTriliumOptionJson } from "../../react/hooks";
 import DatabaseFileList from "./components/DatabaseFileList";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function AdvancedSettings() {
     return <>
+        <OptionsPageHeader />
         <DatabaseOptions />
         <DatabaseAnonymizationOptions />
         <ExperimentalOptions />

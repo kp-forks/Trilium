@@ -5,6 +5,7 @@ import { isElectron, restartDesktopApp } from "../../../services/utils";
 import Button from "../../react/Button";
 import Collapsible from "../../react/Collapsible";
 import { useTriliumOptionBool } from "../../react/hooks";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -23,6 +24,7 @@ export default function SecuritySettings() {
 
     return (
         <>
+            <OptionsPageHeader />
             <BackendScriptingSettings
                 liveValue={liveBackendScripting}
                 pendingValue={pendingBackendScripting}

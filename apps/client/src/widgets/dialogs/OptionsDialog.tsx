@@ -13,6 +13,7 @@ import FormList, { FormListItem } from "../react/FormList";
 import { useChildNotes, useContainedLinkNavigation, useMobileMasterDetail, useNoteContext, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
+import { ShowOptionsPageTitleContext } from "../type_widgets/options/components/OptionsPageHeader";
 import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
 
 /** The settings page shown when no specific section was requested and none was viewed yet this session. */
@@ -62,44 +63,48 @@ export default function OptionsDialog() {
 
     return (
         <NoteContextContext.Provider value={noteContext}>
-            <Modal
-                modalRef={modalRef}
-                title={t("options.title")}
-                header={isMasterDetail && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
-                sidebar={isMasterDetail ? undefined : <SettingsSidebar />}
-                isFullPageOnMobile
-                customTitleBarButtons={!isMobile ? [{
-                    iconClassName: "bx-expand-alt",
-                    title: t("popup-editor.maximize"),
-                    onClick: async () => {
-                        if (!noteContext.noteId) return;
-                        const { noteId, hoistedNoteId } = noteContext;
-                        await appContext.tabManager.openInNewTab(noteId, hoistedNoteId, true);
-                        setShown(false);
-                    }
-                }] : undefined}
-                className="options-dialog"
-                size="lg"
-                show={shown}
-                onHidden={() => {
+            {/* On desktop/tablet the dialog hides the note's own title, so each settings page renders
+                its title in its OptionsPageHeader. In the mobile master-detail flow the modal header
+                shows the title instead, so the page header there contributes only its actions. */}
+            <ShowOptionsPageTitleContext.Provider value={!isMasterDetail}>
+                <Modal
+                    modalRef={modalRef}
+                    title={t("options.title")}
+                    header={isMasterDetail && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
+                    sidebar={isMasterDetail ? undefined : <SettingsSidebar />}
+                    isFullPageOnMobile
+                    customTitleBarButtons={!isMobile ? [{
+                        iconClassName: "bx-expand-alt",
+                        title: t("popup-editor.maximize"),
+                        onClick: async () => {
+                            if (!noteContext.noteId) return;
+                            const { noteId, hoistedNoteId } = noteContext;
+                            await appContext.tabManager.openInNewTab(noteId, hoistedNoteId, true);
+                            setShown(false);
+                        }
+                    }] : undefined}
+                    className="options-dialog"
+                    size="lg"
+                    show={shown}
+                    onHidden={() => {
                     // Remember the settings page in view so the next open lands on it.
-                    if (noteContext.noteId) {
-                        setLastSection(noteContext.noteId);
-                    }
-                    setShown(false);
-                }}
-            >
-                {isMasterDetail && (
-                    <div className="options-mobile-nav">
-                        <MobileSettingsList onSelect={(noteId) => {
-                            void noteContext.setNote(noteId, { keepActiveDialog: true });
-                            switchMobileView("page");
-                        }} />
-                    </div>
-                )}
-                {!isMasterDetail && <OptionsPageHeader />}
-                <NoteDetail />
-            </Modal>
+                        if (noteContext.noteId) {
+                            setLastSection(noteContext.noteId);
+                        }
+                        setShown(false);
+                    }}
+                >
+                    {isMasterDetail && (
+                        <div className="options-mobile-nav">
+                            <MobileSettingsList onSelect={(noteId) => {
+                                void noteContext.setNote(noteId, { keepActiveDialog: true });
+                                switchMobileView("page");
+                            }} />
+                        </div>
+                    )}
+                    <NoteDetail />
+                </Modal>
+            </ShowOptionsPageTitleContext.Provider>
         </NoteContextContext.Provider>
     );
 }
@@ -168,26 +173,6 @@ function MobileSettingsList({ onSelect }: { onSelect: (noteId: string) => void }
                 </FormListItem>
             ))}
         </FormList>
-    );
-}
-
-/**
- * The title banner shown at the top of the content area on desktop and tablet layouts, where the
- * page title isn't otherwise visible (the modal header only carries the window buttons). It mirrors
- * the quick-edit popup's title row — the page's icon in a circular badge beside the title — but is
- * purely decorative since settings pages aren't user-editable. On the mobile master-detail flow the
- * page title already lives in the modal header (see {@link MobilePageHeader}), so this is omitted.
- */
-function OptionsPageHeader() {
-    const { note } = useNoteContext();
-    if (!note) return null;
-    return (
-        <div className="options-page-header">
-            <div className="options-page-header-inner">
-                <span className={`options-page-header-icon ${note.getIcon()}`} aria-hidden="true" />
-                <h2 className="options-page-header-title">{note.title}</h2>
-            </div>
-        </div>
     );
 }
 

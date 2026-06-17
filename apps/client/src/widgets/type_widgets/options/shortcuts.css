@@ -1,58 +1,50 @@
-.shortcuts-options-section {
-    > header {
-        position: sticky;
-        top: 0;
-        left: 0;
-        right: 0;
-        background: var(--main-background-color);
-        padding-block: 0.5em;
-        border-bottom: 1px solid var(--main-border-color);
-        margin-bottom: 1em;
-        display: flex;
-        flex-direction: column;
-        gap: 1em;
+/* The shortcuts page feeds its controls into its OptionsPageHeader: the conflicts badge and reset
+   buttons on the title row, the filter/search box on the full-width row beneath. The sticky bar,
+   background and bottom border come from the header itself. */
+.shortcut-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    justify-content: flex-end;
+    /* Keep the reset buttons clear of the dialog's window buttons (top-right). */
+    margin-inline-end: 3em;
 
-        .shortcut-header-row {
-            display: flex;
-            align-items: center;
-            gap: 0.5em;
-
-            &:first-of-type {
-                margin-inline-end: 3em;
-                justify-content: flex-end;
-            }
-
-            /* Search row (last): the search box grows so the filter button sits at the trailing edge. */
-            &.shortcut-header-row:last-child > :first-child {
-                flex: 1;
-            }
-        }
-
-
-        .dropdown {
-            flex: 0 0 auto;
-        }
-
-        /* Highlight the filter button while a filter is applied. */
-        .icon-action.active {
-            color: var(--link-color);
-        }
-
-        /* Prominent danger badge flagging that conflicts exist; click to filter to them.
-           Pushed to the trailing edge of the second row, away from the buttons. */
-        .shortcut-conflicts-badge {
-            flex: 0 0 auto;
-            margin-inline-end: auto;
-            --color: var(--icon-button-danger-color, #d9534f);
-        }
-
-        /* While the conflicts filter is active, fill the outline badge solid. */
-        .shortcut-conflicts-badge.active {
-            background-color: var(--color);
-            color: white;
-        }
+    /* Prominent danger badge flagging that conflicts exist; click to filter to them. Pushed to the
+       leading edge of the row, away from the buttons. */
+    .shortcut-conflicts-badge {
+        flex: 0 0 auto;
+        margin-inline-end: auto;
+        --color: var(--icon-button-danger-color, #d9534f);
     }
 
+    /* While the conflicts filter is active, fill the outline badge solid. */
+    .shortcut-conflicts-badge.active {
+        background-color: var(--color);
+        color: white;
+    }
+}
+
+.shortcut-header-filter {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+
+    /* The search box grows so the filter button sits at the trailing edge. */
+    > :first-child {
+        flex: 1;
+    }
+
+    .dropdown {
+        flex: 0 0 auto;
+    }
+
+    /* Highlight the filter button while a filter is applied. */
+    .icon-action.active {
+        color: var(--link-color);
+    }
+}
+
+.shortcuts-options-section {
     .shortcut-modified-indicator {
         display: inline-block;
         width: 0.5em;

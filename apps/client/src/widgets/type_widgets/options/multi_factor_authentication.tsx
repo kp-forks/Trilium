@@ -1,6 +1,7 @@
 import { Trans } from "react-i18next"
 import { t } from "../../../services/i18n"
 import FormText from "../../react/FormText"
+import OptionsPageHeader from "./components/OptionsPageHeader"
 import OptionsSection from "./components/OptionsSection"
 import FormCheckbox from "../../react/FormCheckbox"
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks"
@@ -21,11 +22,15 @@ export default function MultiFactorAuthenticationSettings() {
     return (!isElectron()
         ? (
             <>
+                <OptionsPageHeader />
                 <EnableMultiFactor mfaEnabled={mfaEnabled} setMfaEnabled={setMfaEnabled} />
                 { mfaEnabled && <MultiFactorMethod /> }
             </>
         ) : (
-            <FormText>{t("multi_factor_authentication.electron_disabled")}</FormText>
+            <>
+                <OptionsPageHeader />
+                <FormText>{t("multi_factor_authentication.electron_disabled")}</FormText>
+            </>
         )
     )
 }

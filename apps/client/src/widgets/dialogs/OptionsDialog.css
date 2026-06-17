@@ -37,68 +37,6 @@ body.desktop .modal.options-dialog .modal-main > .modal-header {
     margin: auto;
 }
 
-/* Page title banner at the top of the content area. The outer bar spans the full content width and
-   sticks to the top of the scrolling body (with the modal background painted behind it so cards
-   scroll cleanly beneath); the inner row aligns with the centered option cards. Reuses the
-   quick-edit popup's title-row look: the page icon sits in a circular badge (same --note-icon-*
-   theme tokens as the popup's note icon) beside the page title. */
-.modal.options-dialog .options-page-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    background: var(--modal-background-color);
-    border-bottom: 1px solid var(--main-border-color);
-}
-
-.modal.options-dialog .options-page-header-inner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    max-width: var(--options-card-max-width);
-    margin: 0 auto;
-    /* Leave room for the floating window buttons and breathing space around the title. */
-    padding: 14px 0;
-}
-
-.modal.options-dialog .options-page-header-icon {
-    --badge-size: 40px;
-
-    position: relative;
-    flex: 0 0 auto;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--badge-size);
-    height: var(--badge-size);
-    font-size: 22px;
-    line-height: 1;
-}
-
-/* The glyph, painted above the circle. */
-.modal.options-dialog .options-page-header-icon::before {
-    position: relative;
-    z-index: 1;
-    color: var(--note-icon-color);
-}
-
-/* The circular background behind the glyph. */
-.modal.options-dialog .options-page-header-icon::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: 50%;
-    background: var(--note-icon-background-color);
-}
-
-.modal.options-dialog .options-page-header-title {
-    margin: 0;
-    font-size: 1.4rem;
-    font-weight: 600;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-}
-
 /* The dialog fills the full mobile page (isFullPageOnMobile), so the body stretches instead of
    using the fixed desktop height. Applies to both the master-detail and the tablet layout. */
 body.mobile .modal.options-dialog .modal-body {
@@ -270,4 +208,8 @@ body[dir=rtl].mobile .modal.options-dialog.mobile-master-detail.mobile-transitio
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.modal.options-dialog .options-page-header {
+    margin-bottom: 2em;
 }

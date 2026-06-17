@@ -21,6 +21,7 @@ import FormTextBox from "../../react/FormTextBox";
 import { useStaticTooltip, useTriliumEvent } from "../../react/hooks";
 import { TooltipIcon } from "../../react/Icon";
 import NoItems from "../../react/NoItems";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -112,10 +113,11 @@ export default function ShortcutSettings() {
         .filter((group) => group.actions.length > 0);
 
     return (
-        <div className="shortcuts-options-section">
-            <header>
-                <div class="shortcut-header-row">
-                    {conflictCount > 0 &&
+        <>
+            <OptionsPageHeader
+                actions={
+                    <div className="shortcut-header-buttons">
+                        {conflictCount > 0 &&
                         <Badge
                             className={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
                             icon="bx bx-error-circle"
@@ -124,72 +126,77 @@ export default function ShortcutSettings() {
                             outline
                             onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
                         />}
-                    <Button
-                        text={t("shortcuts.reload_app")}
-                        onClick={reloadFrontendApp}
-                        size="micro"
-                    />
-                    <Button
-                        text={t("shortcuts.set_all_to_default")}
-                        onClick={resetShortcuts}
-                        size="micro"
-                    />
-                </div>
-                <div class="shortcut-header-row">
-                    <FormTextBox
-                        placeholder={t("shortcuts.type_text_to_filter")}
-                        currentValue={filter} onChange={(value) => setFilter(value)}
-                    />
-                    <Dropdown
-                        buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
-                        hideToggleArrow
-                        noSelectButtonStyle
-                        noDropdownListStyle
-                        iconAction
-                        title={t("shortcuts.filter")}
-                        dropdownRef={filterDropdownRef}
-                        dropdownContainerClassName={isMobile() ? "mobile-bottom-menu" : undefined}
-                    >
-                        <FilterContent
-                            activeFilter={activeFilter}
-                            onSelect={selectFilter}
-                            conflictCount={conflictCount}
-                            globalCount={globalCount}
-                            modifiedCount={modifiedCount}
+                        <Button
+                            text={t("shortcuts.reload_app")}
+                            onClick={reloadFrontendApp}
+                            size="micro"
                         />
-                    </Dropdown>
-                </div>
-            </header>
+                        <Button
+                            text={t("shortcuts.set_all_to_default")}
+                            onClick={resetShortcuts}
+                            size="micro"
+                        />
+                    </div>
+                }
+                below={
+                    <div className="shortcut-header-filter">
+                        <FormTextBox
+                            placeholder={t("shortcuts.type_text_to_filter")}
+                            currentValue={filter} onChange={(value) => setFilter(value)}
+                        />
+                        <Dropdown
+                            buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
+                            hideToggleArrow
+                            noSelectButtonStyle
+                            noDropdownListStyle
+                            iconAction
+                            title={t("shortcuts.filter")}
+                            dropdownRef={filterDropdownRef}
+                            dropdownContainerClassName={isMobile() ? "mobile-bottom-menu" : undefined}
+                        >
+                            <FilterContent
+                                activeFilter={activeFilter}
+                                onSelect={selectFilter}
+                                conflictCount={conflictCount}
+                                globalCount={globalCount}
+                                modifiedCount={modifiedCount}
+                            />
+                        </Dropdown>
+                    </div>
+                }
+            />
 
-            {filteredGroups.length > 0
-                ? filteredGroups.map((group) => (
-                    <OptionsSection key={group.title} title={group.title}>
-                        {group.actions.map((action) => (
-                            <ShortcutRow key={action.actionName} action={action} conflicts={conflicts.get(action.actionName)} />
-                        ))}
-                    </OptionsSection>
-                ))
-                : filter
-                    ? (
-                        <NoItems
-                            icon="bx bx-filter-alt"
-                            text={t("shortcuts.no_results", { filter })}
-                        />
-                    )
-                    : activeFilter === "conflicts" && conflictCount === 0
+            <div className="shortcuts-options-section">
+                {filteredGroups.length > 0
+                    ? filteredGroups.map((group) => (
+                        <OptionsSection key={group.title} title={group.title}>
+                            {group.actions.map((action) => (
+                                <ShortcutRow key={action.actionName} action={action} conflicts={conflicts.get(action.actionName)} />
+                            ))}
+                        </OptionsSection>
+                    ))
+                    : filter
                         ? (
                             <NoItems
-                                icon="bx bx-check-circle"
-                                text={t("shortcuts.no_conflicts")}
+                                icon="bx bx-filter-alt"
+                                text={t("shortcuts.no_results", { filter })}
                             />
                         )
-                        : (
-                            <NoItems
-                                icon="bx bx-filter-alt"
-                                text={t("shortcuts.no_matches")}
-                            />
-                        )}
-        </div>
+                        : activeFilter === "conflicts" && conflictCount === 0
+                            ? (
+                                <NoItems
+                                    icon="bx bx-check-circle"
+                                    text={t("shortcuts.no_conflicts")}
+                                />
+                            )
+                            : (
+                                <NoItems
+                                    icon="bx bx-filter-alt"
+                                    text={t("shortcuts.no_matches")}
+                                />
+                            )}
+            </div>
+        </>
     );
 }
 
