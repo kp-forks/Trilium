@@ -66,25 +66,24 @@
     min-width: 0;
 }
 
-/* In the settings dialog: a full-width bar that sticks to the top of the scrolling body, painted
-   with the modal background so cards scroll cleanly beneath it. */
-.modal.options-dialog .options-page-header {
+/* A full-width bar that sticks to the top of the scrolling content, so cards scroll cleanly beneath
+   it. The background is painted per context (below) so the sticky bar matches its surroundings. */
+.options-page-header {
     position: sticky;
     top: 0;
     z-index: 1;
-    background: var(--modal-background-color);
     border-bottom: 1px solid var(--main-border-color);
     padding-block: 10px;
 }
 
-/* Standalone (page opened in a tab): the note's own title chrome already shows the title, so this is
-   just the actions bar. Keep it sticky to the content with the main background. */
-.note-split.options .options-page-header {
-    position: sticky;
-    top: 0;
-    z-index: 1;
+/* In the settings dialog the content area is painted with the modal background. */
+.modal.options-dialog .options-page-header {
+    background: var(--modal-background-color);
+}
+
+/* Standalone (page opened in a tab): the content uses the main background, and this header stands in
+   for the note's own title chrome, which InlineTitle suppresses for options pages. */
+.note-split .options-page-header {
     background: var(--main-background-color);
-    border-bottom: 1px solid var(--main-border-color);
-    padding-block: 8px;
     margin-bottom: 1em;
 }

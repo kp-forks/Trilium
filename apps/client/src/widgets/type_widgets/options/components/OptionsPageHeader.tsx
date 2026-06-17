@@ -1,18 +1,8 @@
 import "./OptionsPageHeader.css";
 
-import { ComponentChildren, createContext } from "preact";
-import { useContext } from "preact/hooks";
+import { ComponentChildren } from "preact";
 
 import { useNoteContext } from "../../../react/hooks";
-
-/**
- * Whether an options page's header should render the page title and icon. The settings dialog sets
- * this to `true` on desktop/tablet, where it hides the note's own title chrome and the page header
- * is the only place the title appears. It stays `false` standalone (the note's normal title chrome
- * already shows the title) and in the dialog's mobile master-detail flow (the modal header shows it
- * there), so the header renders only its actions in those cases.
- */
-export const ShowOptionsPageTitleContext = createContext(false);
 
 interface OptionsPageHeaderProps {
     /**
@@ -28,30 +18,30 @@ interface OptionsPageHeaderProps {
 }
 
 /**
- * The header banner an options page renders at the top of its content. It shows the page title and
- * icon (when {@link ShowOptionsPageTitleContext} is set) beside any page-defined
- * {@link OptionsPageHeaderProps.actions}, with optional {@link OptionsPageHeaderProps.below} content
- * on a full-width row underneath. The same component is used in the settings dialog (where it sticks
- * to the top as a full-width bar — see the `.modal.options-dialog` styling) and standalone in a tab
- * (`.note-split.options`), so each page owns its header in both contexts.
+ * The header banner an options page renders at the top of its content: the page title and icon
+ * beside any page-defined {@link OptionsPageHeaderProps.actions}, with optional
+ * {@link OptionsPageHeaderProps.below} content on a full-width row underneath.
+ *
+ * This header is the page's title everywhere it renders — in the settings dialog, and (for a page
+ * opened standalone in a tab) in place of the note's own title chrome, which `InlineTitle` suppresses
+ * for options pages. The sticky-bar styling differs per context (see the CSS), but each page owns its
+ * header the same way in all of them.
  */
 export default function OptionsPageHeader({ actions, below }: OptionsPageHeaderProps) {
     const { note } = useNoteContext();
-    const showTitle = useContext(ShowOptionsPageTitleContext);
-    const titleNote = showTitle ? note : null;
 
-    // Nothing to render: no title belongs here and the page provided no content.
-    if (!titleNote && !actions && !below) return null;
+    // Nothing to render: the note isn't available yet and the page provided no content.
+    if (!note && !actions && !below) return null;
 
     return (
         <div className="options-page-header">
             <div className="options-page-header-inner">
-                {(titleNote || actions) && (
+                {(note || actions) && (
                     <div className="options-page-header-main">
-                        {titleNote && (
+                        {note && (
                             <div className="options-page-header-titles">
-                                <span className={`options-page-header-icon ${titleNote.getIcon()}`} aria-hidden="true" />
-                                <h2 className="options-page-header-title">{titleNote.title}</h2>
+                                <span className={`options-page-header-icon ${note.getIcon()}`} aria-hidden="true" />
+                                <h2 className="options-page-header-title">{note.title}</h2>
                             </div>
                         )}
                         {actions && <div className="options-page-header-actions">{actions}</div>}

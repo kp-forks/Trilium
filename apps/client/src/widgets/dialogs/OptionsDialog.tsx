@@ -14,7 +14,6 @@ import FormList, { FormListItem } from "../react/FormList";
 import { useChildNotes, useContainedLinkNavigation, useMobileMasterDetail, useNoteContext, useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
-import { ShowOptionsPageTitleContext } from "../type_widgets/options/components/OptionsPageHeader";
 import SettingsNavigation from "../type_widgets/options/components/SettingsNavigation";
 
 /** The settings page shown when no specific section was requested and none was viewed yet this session. */
@@ -64,49 +63,44 @@ export default function OptionsDialog() {
 
     return (
         <NoteContextContext.Provider value={noteContext}>
-            {/* On desktop/tablet the dialog hides the note's own title, so each settings page renders
-                its title in its OptionsPageHeader. In the mobile master-detail flow the modal header
-                shows the title instead, so the page header there contributes only its actions. */}
-            <ShowOptionsPageTitleContext.Provider value={!isMasterDetail}>
-                <Modal
-                    modalRef={modalRef}
-                    title={t("options.title")}
-                    header={isMasterDetail && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
-                    sidebar={isMasterDetail ? undefined : <SettingsSidebar />}
-                    isFullPageOnMobile
-                    customTitleBarButtons={!isMobile ? [{
-                        iconClassName: "bx-expand-alt",
-                        title: t("popup-editor.maximize"),
-                        onClick: async () => {
-                            if (!noteContext.noteId) return;
-                            const { noteId, hoistedNoteId } = noteContext;
-                            await appContext.tabManager.openInNewTab(noteId, hoistedNoteId, true);
-                            setShown(false);
-                        }
-                    }] : undefined}
-                    className="options-dialog"
-                    size="lg"
-                    show={shown}
-                    onHidden={() => {
-                    // Remember the settings page in view so the next open lands on it.
-                        if (noteContext.noteId) {
-                            setLastSection(noteContext.noteId);
-                        }
+            <Modal
+                modalRef={modalRef}
+                title={t("options.title")}
+                header={isMasterDetail && (mobileView === "page" ? <MobilePageHeader onBack={() => switchMobileView("list")} /> : <MobilePageHeader />)}
+                sidebar={isMasterDetail ? undefined : <SettingsSidebar />}
+                isFullPageOnMobile
+                customTitleBarButtons={!isMobile ? [{
+                    iconClassName: "bx-expand-alt",
+                    title: t("popup-editor.maximize"),
+                    onClick: async () => {
+                        if (!noteContext.noteId) return;
+                        const { noteId, hoistedNoteId } = noteContext;
+                        await appContext.tabManager.openInNewTab(noteId, hoistedNoteId, true);
                         setShown(false);
-                    }}
-                >
-                    {isMasterDetail && (
-                        <div className="options-mobile-nav">
-                            <MobileSettingsList onSelect={(noteId) => {
-                                void noteContext.setNote(noteId, { keepActiveDialog: true });
-                                switchMobileView("page");
-                            }} />
-                        </div>
-                    )}
-                    <SettingsScrollReset modalRef={modalRef} />
-                    <NoteDetail />
-                </Modal>
-            </ShowOptionsPageTitleContext.Provider>
+                    }
+                }] : undefined}
+                className="options-dialog"
+                size="lg"
+                show={shown}
+                onHidden={() => {
+                    // Remember the settings page in view so the next open lands on it.
+                    if (noteContext.noteId) {
+                        setLastSection(noteContext.noteId);
+                    }
+                    setShown(false);
+                }}
+            >
+                {isMasterDetail && (
+                    <div className="options-mobile-nav">
+                        <MobileSettingsList onSelect={(noteId) => {
+                            void noteContext.setNote(noteId, { keepActiveDialog: true });
+                            switchMobileView("page");
+                        }} />
+                    </div>
+                )}
+                <SettingsScrollReset modalRef={modalRef} />
+                <NoteDetail />
+            </Modal>
         </NoteContextContext.Provider>
     );
 }
@@ -199,25 +193,28 @@ function MobileSettingsList({ onSelect }: { onSelect: (noteId: string) => void }
 }
 
 /**
- * Replaces the static "Options" title on mobile. In the page view it shows a back button returning
- * to the master list followed by the title of the page in view; in the list view a decorative
- * settings icon takes the button's place (keeping the same footprint so the title doesn't shift
- * between views) followed by the dialog title.
+ * Replaces the static "Options" title on mobile. In the page view it shows just a back button
+ * returning to the master list — the page title itself is rendered by the page's own
+ * {@link OptionsPageHeader} below. In the list view a decorative settings icon and the dialog title
+ * take its place.
  */
 function MobilePageHeader({ onBack }: { onBack?: () => void }) {
-    const { note } = useNoteContext();
-    return (
-        <div className="options-mobile-page-header">
-            {onBack ? (
+    if (onBack) {
+        return (
+            <div className="options-mobile-page-header">
                 <ActionButton
                     icon="bx bx-chevron-left"
                     text={t("options.back")}
                     onClick={onBack}
                 />
-            ) : (
-                <span className="options-header-icon icon-action bx bx-cog" aria-hidden="true" />
-            )}
-            <h5 className="options-mobile-page-title">{onBack ? note?.title : t("options.title")}</h5>
+            </div>
+        );
+    }
+
+    return (
+        <div className="options-mobile-page-header">
+            <span className="options-header-icon icon-action bx bx-cog" aria-hidden="true" />
+            <h5 className="options-mobile-page-title">{t("options.title")}</h5>
         </div>
     );
 }
