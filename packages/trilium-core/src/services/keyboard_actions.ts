@@ -407,7 +407,9 @@ function getDefaultKeyboardActions() {
             actionName: "lastTab",
             friendlyName: t("keyboard_action_names.switch-to-last-tab"),
             iconClass: "bx bx-rectangle",
-            defaultShortcuts: ["CommandOrControl+0"],
+            // Unbound by default: CommandOrControl+0 is the conventional "reset zoom" key (see zoomReset),
+            // and "switch to last tab" is a niche action, so it no longer squats on that combination.
+            defaultShortcuts: [],
             scope: "window"
         },
 
