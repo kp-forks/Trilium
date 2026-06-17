@@ -6,6 +6,7 @@ import { isStandalone } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import FormTextBox from "../../react/FormTextBox";
+import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
 import OptionsPageHeader from "./components/OptionsPageHeader";
@@ -29,18 +30,18 @@ export default function LlmSettings() {
 
     return (
         <>
-            <OptionsPageHeader helpUrl="GBBMSlVSOIGP" />
-            <OptionsSection
-                description={t("llm.settings_description")}
-            >
-                <OptionsRowWithToggle
-                    name="ai-enabled"
-                    label={t("experimental_features.llm_name")}
-                    description={t("experimental_features.llm_description")}
-                    currentValue={aiEnabled}
-                    onChange={setAiEnabled}
-                />
-            </OptionsSection>
+            <OptionsPageHeader
+                helpUrl="GBBMSlVSOIGP"
+                actions={
+                    <FormToggle
+                        switchOnName="" switchOffName=""
+                        switchOnTooltip={t("experimental_features.llm_name")}
+                        switchOffTooltip={t("experimental_features.llm_name")}
+                        currentValue={aiEnabled}
+                        onChange={setAiEnabled}
+                    />
+                }
+            />
 
             {aiEnabled && (
                 <>
