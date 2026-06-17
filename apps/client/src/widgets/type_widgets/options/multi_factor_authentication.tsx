@@ -538,19 +538,20 @@ function RecoveryCodesModal({ codes, onHidden }: {
     );
 }
 
-/** Downloads the recovery codes as a plain-text file. Uses a Blob so it works over HTTP, unlike the clipboard API. */
+/**
+ * Downloads the recovery codes as a plain-text file. Uses a `data:` URL rather than a `blob:` one
+ * because the app's global anchor-click handler (services/link.ts `goToLinkExt`) calls
+ * `preventDefault()` on any `<a>` click whose href isn't a `data:` URL — which would silently cancel
+ * a blob download. A `data:` URL is explicitly let through there, and it works over HTTP too.
+ */
 function downloadRecoveryCodes(codes: string[]) {
-    const blob = new Blob([ `${codes.join("\n")}\n` ], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
+    const content = `${codes.join("\n")}\n`;
     const link = document.createElement("a");
-    link.href = url;
+    link.href = `data:text/plain;charset=utf-8,${encodeURIComponent(content)}`;
     link.download = "trilium-recovery-codes.txt";
     document.body.appendChild(link);
     link.click();
     link.remove();
-    // Defer revocation so the in-flight download isn't cancelled (immediate revoke breaks it in some
-    // browsers — see the same pattern in services/image.ts).
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 /**
