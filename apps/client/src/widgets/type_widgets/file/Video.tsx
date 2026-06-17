@@ -20,7 +20,12 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
     const [error, setError] = useState(false);
     const { visible: controlsVisible, onMouseMove, flash: flashControls } = useAutoHideControls(videoRef, playing);
 
-    useEffect(() => setError(false), [note.noteId]);
+    useEffect(() => {
+        setError(false);
+        // The player instance is reused across notes (just a new src), which stops playback but doesn't
+        // reliably fire "pause" — reset so the controls don't keep showing the previous note's playing state.
+        setPlaying(false);
+    }, [note.noteId]);
     const onError = useCallback(() => setError(true), []);
 
     const togglePlayback = useCallback(() => {
