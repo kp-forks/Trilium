@@ -539,12 +539,12 @@ function RecoveryCodeDots({ status }: { status: string[] }) {
  * a used code as an ISO timestamp of when it was consumed, and an unused one as its plain numeric
  * index, so a purely numeric entry is one that's still available.
  */
-function isUnusedRecoveryCode(statusEntry: string) {
+export function isUnusedRecoveryCode(statusEntry: string) {
     return /^\d+$/.test(statusEntry);
 }
 
 /** Formats a used-code timestamp (stored with `/` date separators) into a readable local date. */
-function formatRecoveryCodeUsedDate(statusEntry: string) {
+export function formatRecoveryCodeUsedDate(statusEntry: string) {
     const date = new Date(statusEntry.replace(/\//g, "-"));
     return isNaN(date.getTime()) ? statusEntry : date.toLocaleString();
 }

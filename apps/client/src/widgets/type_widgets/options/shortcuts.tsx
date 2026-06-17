@@ -518,7 +518,7 @@ function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShort
 
 const RECORDING_TOAST_ID = "shortcut-recorder-recording";
 
-function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void }) {
+export function ShortcutRecorder({ onCapture }: { onCapture: (shortcut: string) => void }) {
     const [ recording, setRecording ] = useState(false);
 
     useEffect(() => {
