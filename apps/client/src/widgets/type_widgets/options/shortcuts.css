@@ -71,6 +71,16 @@
         gap: 0.4em;
     }
 
+    /* Reserve the revert button's slot (matching its .icon-action width) so the add button to its
+       right never shifts as a row's modified state toggles, while only mounting the button when
+       there's something to revert. */
+    .shortcut-revert-slot {
+        flex: 0 0 auto;
+        display: flex;
+        justify-content: center;
+        width: 37px;
+    }
+
     .shortcut-chip {
         display: inline-flex;
         align-items: center;
@@ -82,26 +92,6 @@
 
     .shortcut-chip.conflict {
         box-shadow: inset 0 0 0 1px var(--icon-button-danger-color, #d9534f);
-    }
-
-    /* Revert chip: previews the default the row reverts to. A plain gray chip; the whole chip is the
-       button, with muted text to keep it quieter than the real (active) shortcut chips. */
-    .shortcut-chip.shortcut-chip-revert {
-        padding: 0.1em 0.5em;
-        border: none;
-        background: var(--input-background-color);
-        color: var(--muted-text-color);
-        cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .shortcut-chip.shortcut-chip-revert:hover {
-        color: var(--main-text-color);
-        background: var(--hover-item-background-color);
-    }
-
-    .shortcut-chip.shortcut-chip-revert kbd {
-        color: inherit;
     }
 
     .shortcut-chip-conflict {
@@ -153,6 +143,24 @@
     .shortcut-recorder.recording {
         color: var(--link-color);
         border-color: var(--link-color);
+    }
+
+    /* Desktop: keep idle rows uncluttered by revealing the add button only on row hover (or while
+       it is focused / recording). Fade rather than display:none so the row never reflows. Mobile has
+       no hover, so the button stays visible there (see the body.mobile block below). */
+    body.desktop & {
+        .shortcut-recorder {
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+        }
+
+        .option-row:hover .shortcut-recorder,
+        .shortcut-recorder:focus,
+        .shortcut-recorder.recording {
+            opacity: 1;
+            pointer-events: auto;
+        }
     }
 
     /* On mobile, stack each row so the shortcut editor sits underneath the action label.

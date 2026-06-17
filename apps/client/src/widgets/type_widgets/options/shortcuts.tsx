@@ -444,26 +444,19 @@ function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShort
                 );
             })}
 
-            {isShortcutModified(action) && <RevertChip action={action} />}
+            {/* Reserve the slot so the add button never shifts when a row's modified state toggles,
+                but only mount the revert button when there's actually something to revert. */}
+            <span class="shortcut-revert-slot">
+                {isShortcutModified(action) &&
+                    <ActionButton
+                        icon="bx bx-reset"
+                        text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                        tooltipClass="tooltip-top"
+                        onClick={() => revertShortcut(action)}
+                    />}
+            </span>
             <ShortcutRecorder onCapture={addShortcut} />
         </div>
-    );
-}
-
-/**
- * Revert affordance styled like a shortcut chip: instead of an opaque reset icon, it previews the
- * default combination the row will return to, so the user sees the target before clicking.
- */
-function RevertChip({ action }: { action: ActionKeyboardShortcut }) {
-    return (
-        <TooltipButton
-            className="shortcut-chip shortcut-chip-revert"
-            title={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
-            onClick={() => revertShortcut(action)}
-        >
-            <span class="bx bx-reset" />
-            <kbd>{formatDefaultShortcuts(action)}</kbd>
-        </TooltipButton>
     );
 }
 
