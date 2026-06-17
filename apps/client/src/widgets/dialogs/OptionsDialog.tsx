@@ -1,6 +1,7 @@
 import "./OptionsDialog.css";
 
-import { useCallback, useContext, useRef, useState } from "preact/hooks";
+import type { RefObject } from "preact";
+import { useCallback, useContext, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
@@ -102,6 +103,7 @@ export default function OptionsDialog() {
                             }} />
                         </div>
                     )}
+                    <SettingsScrollReset modalRef={modalRef} />
                     <NoteDetail />
                 </Modal>
             </ShowOptionsPageTitleContext.Provider>
@@ -139,6 +141,26 @@ export function isOptionPageVisibleOnPlatform(page: FNote) {
     }
 
     return true;
+}
+
+/**
+ * Settings pages navigate in place within a single note context, so the modal's scroll container is
+ * never re-mounted between pages and keeps the previous page's scroll position — leaving a freshly
+ * opened page scrolled partway down. This resets it back to the top whenever the active page changes.
+ *
+ * It lives under the dialog's note-context provider so it re-renders on in-place navigation, and
+ * resets both scroll containers in use: the `.modal-body` on the desktop sidebar layout and the
+ * `.note-detail` pane in the mobile master-detail flow.
+ */
+function SettingsScrollReset({ modalRef }: { modalRef: RefObject<HTMLDivElement> }) {
+    const { noteId } = useNoteContext();
+    useLayoutEffect(() => {
+        const modal = modalRef.current;
+        if (!modal) return;
+        modal.querySelector<HTMLElement>(".modal-body")?.scrollTo({ top: 0 });
+        modal.querySelector<HTMLElement>(".note-detail")?.scrollTo({ top: 0 });
+    }, [ modalRef, noteId ]);
+    return null;
 }
 
 /**
