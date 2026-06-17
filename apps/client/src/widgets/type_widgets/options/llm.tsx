@@ -43,11 +43,15 @@ export default function LlmSettings() {
                 }
             />
 
-            {aiEnabled && (
+            {aiEnabled ? (
                 <>
                     <ProviderSettings />
                     <McpSettings />
                 </>
+            ) : (
+                <OptionsSection>
+                    <NoItems icon="bx bx-bot" text={t("llm.disabled_placeholder")} />
+                </OptionsSection>
             )}
         </>
     );

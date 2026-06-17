@@ -52,8 +52,16 @@ function ElectronSpellcheckSettings() {
                 />
             } />
 
-            {spellCheckEnabled && <SpellcheckLanguages />}
-            {spellCheckEnabled && <CustomDictionary />}
+            {spellCheckEnabled ? (
+                <>
+                    <SpellcheckLanguages />
+                    <CustomDictionary />
+                </>
+            ) : (
+                <OptionsSection>
+                    <NoItems icon="bx bx-check-double" text={t("spellcheck.disabled_placeholder")} />
+                </OptionsSection>
+            )}
         </>
     );
 }

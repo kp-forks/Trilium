@@ -1784,6 +1784,7 @@
     "title": "Spell Check",
     "description": "These options apply only for desktop builds, browsers will use their own native spell check.",
     "enable": "Check spelling",
+    "disabled_placeholder": "Spell check is turned off. Enable it to choose languages and manage the custom dictionary.",
     "language_code_label": "Spell Check Languages",
     "custom_dictionary_title": "Custom Dictionary",
     "custom_dictionary_description": "Words added to the dictionary are synced across all your devices.",
@@ -2793,6 +2794,7 @@
     "summary": "Summary"
   },
   "llm": {
+    "disabled_placeholder": "AI features are turned off. Enable them to configure providers and MCP.",
     "not_available_in_standalone": "AI/LLM features are not available in the standalone version of Trilium, as LLM providers do not allow direct access from a browser.",
     "feature_not_enabled": "Enable the LLM experimental feature in Settings → Advanced → Experimental features to use AI integrations.",
     "add_provider": "Add Provider",
