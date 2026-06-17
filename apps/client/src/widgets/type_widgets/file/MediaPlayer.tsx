@@ -3,7 +3,6 @@ import "./MediaPlayer.css";
 import { RefObject } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
-import appContext from "../../../components/app_context";
 import type NoteContext from "../../../components/note_context";
 import type FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
@@ -154,22 +153,23 @@ const OWNED_MEDIA_ACTIONS: MediaSessionAction[] = [ "previoustrack", "nexttrack"
  * Wires a media player to its surroundings: sibling navigation (returned, for the prev/next buttons) plus
  * PageUp/PageDown, and the OS Media Session — previous/next track, seek (matching the −10s/+30s buttons),
  * seek-to (scrubber) and stop, with the note title as metadata. Play/pause and basic seek are left to the
- * browser's default binding on the element. Jumping to a sibling auto-plays it, like a playlist. Everything
- * is scoped to the note actually shown in the active tab, so a cached background player stands down and
- * can't hijack the global Media Session.
+ * browser's default binding on the element. Jumping to a sibling auto-plays it, like a playlist. Ownership of
+ * the global Media Session follows the note shown in this player's own context, so a player keeps the OS
+ * controls while its tab plays in the background, and only a stale/cached player stands down.
  */
 export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
 
-    // The previous note's player can linger mounted (cached) in the background while its context still
-    // reports active, so gate everything on this note being the one actually shown in the active tab.
-    // Computed each render so it tracks navigation immediately; the events only force a re-render for
-    // cached players, which otherwise wouldn't re-evaluate.
+    // Ownership tracks the note shown in this player's *own* context, not the active tab — so a player keeps
+    // the OS Media Session while its tab sits in the background with its media still playing, and stands down
+    // only once its context navigates to a different note (a stale/cached player) or it unmounts (tab closed).
+    // Recomputed each render; the switch events just force cached/background players to re-render so they
+    // re-evaluate promptly when navigation changes their context's note.
     const [ , bumpOnNoteSwitch ] = useState(0);
     useTriliumEvents([ "activeContextChanged", "activeNoteChanged" ], () => bumpOnNoteSwitch((tick) => tick + 1));
-    const isShown = isShownNote(noteContext, note.noteId);
+    const isCurrentNote = isCurrentContextNote(noteContext, note.noteId);
 
-    const wrapped = navigation && isShown ? {
+    const wrapped = navigation && isCurrentNote ? {
         ...navigation,
         navigatePrevious: () => { autoPlayTargetNoteId = navigation.previousId; navigation.navigatePrevious(); },
         navigateNext: () => { autoPlayTargetNoteId = navigation.nextId; navigation.navigateNext(); }
@@ -178,9 +178,9 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
 
     // Bind the OS Media Session (which desktop/hardware media keys route to, rather than keydown) and its
-    // metadata while this is the shown player. They're global, so only ever release our own — otherwise the
-    // outgoing player's cleanup (switching media → media) would clobber the incoming player's; the release
-    // also clears them so nothing lingers in the OS overlay after leaving media.
+    // metadata while this player is its context's current note. They're global, so only ever release our own
+    // — otherwise the outgoing player's cleanup (switching media → media) would clobber the incoming player's;
+    // the release also clears them so nothing lingers in the OS overlay after leaving media.
     const hasMediaNav = !!wrapped;
     const wrappedRef = useRef(wrapped);
     wrappedRef.current = wrapped;
@@ -196,7 +196,7 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
             for (const action of OWNED_MEDIA_ACTIONS) setHandler(action, null);
             mediaSession.metadata = null;
         };
-        if (!isShown) {
+        if (!isCurrentNote) {
             release();
             return;
         }
@@ -204,17 +204,17 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
         // Metadata makes Chromium reliably present the OS controls for video (it does so for audio by
         // default) and shows the note title there.
         if (typeof MediaMetadata !== "undefined") mediaSession.metadata = new MediaMetadata({ title: note.title });
-        // Previous/next track navigate siblings (only when there are any); the live re-check covers the
-        // window before a backgrounded player re-renders.
-        setHandler("previoustrack", hasMediaNav ? () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigatePrevious(); } : null);
-        setHandler("nexttrack", hasMediaNav ? () => { if (isShownNote(noteContext, note.noteId)) wrappedRef.current?.navigateNext(); } : null);
+        // Previous/next track navigate siblings (only when there are any); the live re-check guards against
+        // the context having navigated to a different note since these handlers were bound.
+        setHandler("previoustrack", hasMediaNav ? () => { if (isCurrentContextNote(noteContext, note.noteId)) wrappedRef.current?.navigatePrevious(); } : null);
+        setHandler("nexttrack", hasMediaNav ? () => { if (isCurrentContextNote(noteContext, note.noteId)) wrappedRef.current?.navigateNext(); } : null);
         // Seek/stop drive this player's element, using the same amounts as its rewind/fast-forward buttons.
         setHandler("seekbackward", (details) => seekBy(mediaRef, -(details.seekOffset || SEEK_BACK_SECONDS)));
         setHandler("seekforward", (details) => seekBy(mediaRef, details.seekOffset || SEEK_FORWARD_SECONDS));
         setHandler("seekto", (details) => { if (details.seekTime != null) seekTo(mediaRef, details.seekTime); });
         setHandler("stop", () => stopMedia(mediaRef));
         return release;
-    }, [ isShown, hasMediaNav, noteContext, note.noteId, note.title, mediaRef ]);
+    }, [ isCurrentNote, hasMediaNav, noteContext, note.noteId, note.title, mediaRef ]);
 
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {
@@ -234,9 +234,15 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
     return wrapped;
 }
 
-/** Whether `noteId` is the note actually shown in the active tab (so a cached background player stands down). */
-function isShownNote(noteContext: NoteContext | undefined, noteId: string): boolean {
-    return !!noteContext && noteContext.isActive() && appContext.tabManager.getActiveContextNoteId() === noteId;
+/**
+ * Whether `noteId` is the current note of `noteContext` — the note this player is showing in its own
+ * tab/split, regardless of whether that tab is the active one. This gates Media Session ownership: a
+ * backgrounded player stays the owner while its media plays, and only a stale/cached player (whose context
+ * has since moved to a different note) reports false and stands down. Closing the tab unmounts the player,
+ * which releases the session via the effect cleanup instead.
+ */
+function isCurrentContextNote(noteContext: NoteContext | undefined, noteId: string): boolean {
+    return !!noteContext && noteContext.noteId === noteId;
 }
 
 function seekBy(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, offset: number) {
