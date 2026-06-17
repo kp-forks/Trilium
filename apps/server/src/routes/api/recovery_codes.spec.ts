@@ -84,4 +84,24 @@ describe("Recovery codes API", () => {
         const newReq = { body: { recovery_code_guess: newCode } } as unknown as Request;
         expect(cls.init(() => recoveryCodesRoute.verifyRecoveryCode(newReq))).toEqual({ success: true });
     });
+
+    it("getUsedRecoveryCodes marks every consumed code as used, including adjacent ones", () => {
+        // Seed a batch and consume the first TWO codes, which sit next to each other in the stored
+        // order. A used code is stored as a timestamp; an unused one is reported as its numeric index.
+        const codes = cls.init(() => {
+            totpService.setSecret("JBSWY3DPEHPK3PXP");
+            const generated = recoveryCodesService.createRecoveryCodes();
+            recoveryCodesService.setRecoveryCodes(generated.join(","));
+            return generated;
+        });
+        cls.init(() => recoveryCodesService.verifyRecoveryCode(codes[0]));
+        cls.init(() => recoveryCodesService.verifyRecoveryCode(codes[1]));
+
+        const used = recoveryCodesRoute.getUsedRecoveryCodes() as { success: boolean; usedRecoveryCodes: string[] };
+        // Both consumed codes must be reported as used (non-numeric timestamp entries), mirroring the
+        // client's isUnusedRecoveryCode check (/^\d+$/). Catches a stateful global regex that would
+        // advance past the first match and misclassify the adjacent second code as still available.
+        const usedCount = used.usedRecoveryCodes.filter((entry) => !/^\d+$/.test(entry)).length;
+        expect(usedCount).toBe(2);
+    });
 });

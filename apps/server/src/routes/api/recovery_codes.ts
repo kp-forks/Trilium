@@ -34,7 +34,10 @@ function getUsedRecoveryCodes() {
         return []
     }
 
-    const dateRegex = RegExp(/^\d{4}\/\d{2}\/\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/gm);
+    // No global/multiline flags: RegExp.test() on a /g regex is stateful (it advances lastIndex), so
+    // reusing one instance across the .map() below would skip past a used code that immediately
+    // follows another used one and misreport it as still available.
+    const dateRegex = /^\d{4}\/\d{2}\/\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
     const recoveryCodes = recovery_codes.getRecoveryCodes();
 
     const usedStatus = recoveryCodes.map(recoveryKey => {
