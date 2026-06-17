@@ -183,8 +183,10 @@ function OptionsPageHeader() {
     if (!note) return null;
     return (
         <div className="options-page-header">
-            <span className={`options-page-header-icon ${note.getIcon()}`} aria-hidden="true" />
-            <h2 className="options-page-header-title">{note.title}</h2>
+            <div className="options-page-header-inner">
+                <span className={`options-page-header-icon ${note.getIcon()}`} aria-hidden="true" />
+                <h2 className="options-page-header-title">{note.title}</h2>
+            </div>
         </div>
     );
 }

@@ -37,17 +37,27 @@ body.desktop .modal.options-dialog .modal-main > .modal-header {
     margin: auto;
 }
 
-/* Page title banner at the top of the content area. Aligns with the centered option cards and
-   reuses the quick-edit popup's title-row look: the page icon sits in a circular badge (same
-   --note-icon-* theme tokens as the popup's note icon) beside the page title. */
+/* Page title banner at the top of the content area. The outer bar spans the full content width and
+   sticks to the top of the scrolling body (with the modal background painted behind it so cards
+   scroll cleanly beneath); the inner row aligns with the centered option cards. Reuses the
+   quick-edit popup's title-row look: the page icon sits in a circular badge (same --note-icon-*
+   theme tokens as the popup's note icon) beside the page title. */
 .modal.options-dialog .options-page-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--modal-background-color);
+    border-bottom: 1px solid var(--main-border-color);
+}
+
+.modal.options-dialog .options-page-header-inner {
     display: flex;
     align-items: center;
     gap: 12px;
     max-width: var(--options-card-max-width);
     margin: 0 auto;
-    /* Leave room for the floating window buttons and breathing space above the first card. */
-    padding: 18px 0 6px;
+    /* Leave room for the floating window buttons and breathing space around the title. */
+    padding: 14px 0;
 }
 
 .modal.options-dialog .options-page-header-icon {
