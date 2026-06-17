@@ -22,7 +22,7 @@ describe("TOTP API", () => {
         vi.clearAllMocks();
         mockGenerateSecret.mockReturnValue(SECRET);
         mockValidate.mockReturnValue(true);
-        // Start each test with no persisted secret so the persist/not-persist assertions are meaningful.
+        // Reset to no persisted secret each test, so persist assertions below are meaningful.
         cls.init(() => totpEncryption.resetTotpSecret());
     });
 
@@ -30,30 +30,31 @@ describe("TOTP API", () => {
         const result = cls.init(() => totpRoute.generateSecret());
         expect(result.success).toBe(true);
         expect(result.message).toMatch(/^[A-Z2-7]+$/);
-        // The secret must not be stored until the user confirms a code for it — otherwise generating
-        // (then walking away) could enable TOTP for a secret they never set up, locking them out.
+        // Generation must not store the secret — that only happens after the user confirms a code.
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });
 
-    it("confirmSecret persists the secret when the code is valid", () => {
+    it("confirmSecret persists the secret and issues recovery codes when the code is valid", () => {
         mockValidate.mockReturnValue(true);
-        const result = cls.init(() => totpRoute.confirmSecret(confirmReq({ secret: SECRET, token: "000000" })));
-        expect(result).toEqual({ success: true });
+        const result = runConfirm({ secret: SECRET, token: "000000" }) as
+            { success: boolean; recoveryCodes?: string[] };
+        expect(result.success).toBe(true);
+        // Recovery codes are issued atomically with enabling TOTP, to be shown as the final step.
+        expect(result.recoveryCodes).toHaveLength(8);
         expect(mockValidate).toHaveBeenCalledWith({ passcode: "000000", secret: SECRET });
         expect(totpRoute.getTOTPStatus().set).toBe(true);
     });
 
     it("confirmSecret rejects an invalid code and leaves nothing persisted", () => {
         mockValidate.mockReturnValue(false);
-        const result = cls.init(() => totpRoute.confirmSecret(confirmReq({ secret: SECRET, token: "999999" })));
-        expect(result).toEqual({ success: false });
+        expect(runConfirm({ secret: SECRET, token: "999999" })).toEqual({ success: false });
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });
 
     it("confirmSecret rejects missing secret or token without validating", () => {
-        expect(cls.init(() => totpRoute.confirmSecret(confirmReq({ token: "000000" })))).toEqual({ success: false });
-        expect(cls.init(() => totpRoute.confirmSecret(confirmReq({ secret: SECRET })))).toEqual({ success: false });
-        expect(cls.init(() => totpRoute.confirmSecret(confirmReq({})))).toEqual({ success: false });
+        expect(runConfirm({ token: "000000" })).toEqual({ success: false });
+        expect(runConfirm({ secret: SECRET })).toEqual({ success: false });
+        expect(runConfirm({})).toEqual({ success: false });
         expect(mockValidate).not.toHaveBeenCalled();
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });
@@ -71,6 +72,6 @@ describe("TOTP API", () => {
     });
 });
 
-function confirmReq(body: unknown) {
-    return { body } as unknown as Request;
+function runConfirm(body: unknown) {
+    return cls.init(() => totpRoute.confirmSecret({ body } as unknown as Request));
 }

@@ -1,6 +1,7 @@
-import type { Request } from 'express';
+import type { Request } from "express";
 
-import totpService from '../../services/totp.js';
+import recoveryCodesService from "../../services/encryption/recovery_codes.js";
+import totpService from "../../services/totp.js";
 
 function generateTOTPSecret() {
     return totpService.generateSecret();
@@ -10,6 +11,10 @@ function generateTOTPSecret() {
  * Confirms a freshly generated secret by checking a code the user produced for it, and only then
  * persists it. This is the gate that prevents enabling TOTP for a secret the user can't actually
  * generate codes for (which would otherwise lock them out at the next login).
+ *
+ * On success we also (re)generate the recovery codes so they're issued atomically with enabling
+ * TOTP and can be shown as the final enrollment step — the fallback for when the authenticator is
+ * lost.
  */
 function confirmTOTPSecret(req: Request) {
     const secret = req.body?.secret;
@@ -24,11 +29,16 @@ function confirmTOTPSecret(req: Request) {
     }
 
     totpService.setSecret(secret);
-    return { success: true };
+    const recoveryCodes = recoveryCodesService.generateRecoveryCodes();
+    return { success: true, recoveryCodes };
 }
 
 function getTOTPStatus() {
-    return { success: true, message: totpService.isTotpEnabled(), set: totpService.checkForTotpSecret() };
+    return {
+        success: true,
+        message: totpService.isTotpEnabled(),
+        set: totpService.checkForTotpSecret()
+    };
 }
 
 function getSecret() {

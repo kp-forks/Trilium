@@ -1,21 +1,21 @@
-import { options } from '@triliumnext/core';
-import { generateSecret as generateRandomSecret, Totp } from 'time2fa';
+import { options } from "@triliumnext/core";
+import { generateSecret as generateRandomSecret, Totp } from "time2fa";
 
-import recoveryCodesService from './encryption/recovery_codes.js';
-import totpEncryptionService from './encryption/totp_encryption.js';
+import recoveryCodesService from "./encryption/recovery_codes.js";
+import totpEncryptionService from "./encryption/totp_encryption.js";
 
 function isTotpEnabled(): boolean {
-    return options.getOptionOrNull('mfaEnabled') === "true" &&
-        options.getOptionOrNull('mfaMethod') === "totp" &&
+    return options.getOptionOrNull("mfaEnabled") === "true" &&
+        options.getOptionOrNull("mfaMethod") === "totp" &&
         totpEncryptionService.isTotpSecretSet();
 }
 
 /**
  * Generates a fresh TOTP secret but deliberately does NOT persist it. The caller must first confirm
- * the user can produce a valid code for this secret (via {@link validateTOTPForSecret}) and only then
- * activate it with {@link setSecret}. Persisting only after this proof-of-possession check prevents
- * the user from locking themselves out by enabling TOTP for a secret their authenticator never
- * received correctly.
+ * the user can produce a valid code for this secret (via {@link validateTOTPForSecret}) and only
+ * then activate it with {@link setSecret}. Persisting only after this proof-of-possession check
+ * prevents the user from locking themselves out by enabling TOTP for a secret their authenticator
+ * never received correctly.
  */
 function generateSecret(): { success: boolean; message?: string } {
     try {
@@ -26,10 +26,10 @@ function generateSecret(): { success: boolean; message?: string } {
             message: secret
         };
     } catch (e) {
-        console.error('Failed to create TOTP secret:', e);
+        console.error("Failed to create TOTP secret:", e);
         return {
             success: false,
-            message: e instanceof Error ? e.message : 'Unknown error occurred'
+            message: e instanceof Error ? e.message : "Unknown error occurred"
         };
     }
 }
@@ -60,7 +60,7 @@ function validateTOTPForSecret(secret: string, submittedPasscode: string): boole
             secret: secret.trim()
         });
     } catch (e) {
-        console.error('Failed to validate TOTP:', e);
+        console.error("Failed to validate TOTP:", e);
         return false;
     }
 }
@@ -76,8 +76,8 @@ function validateTOTP(submittedPasscode: string): boolean {
 function resetTotp(): void {
     totpEncryptionService.resetTotpSecret();
     recoveryCodesService.clearRecoveryCodes();
-    options.setOption('mfaEnabled', 'false');
-    options.setOption('mfaMethod', '');
+    options.setOption("mfaEnabled", "false");
+    options.setOption("mfaMethod", "");
 }
 
 export default {

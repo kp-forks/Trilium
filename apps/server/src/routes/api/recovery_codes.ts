@@ -1,6 +1,5 @@
 import recovery_codes from '../../services/encryption/recovery_codes.js';
 import type { Request } from 'express';
-import { randomBytes } from 'crypto';
 
 function setRecoveryCodes(req: Request) {
     const success = recovery_codes.setRecoveryCodes(req.body.recoveryCodes.join(','));
@@ -20,11 +19,7 @@ function checkForRecoveryKeys() {
 }
 
 function generateRecoveryCodes() {
-    const recoveryKeys = Array.from({ length: 8 }, () => randomBytes(16).toString('base64'));
-
-    recovery_codes.setRecoveryCodes(recoveryKeys.join(','));
-
-    return { success: true, recoveryCodes: recoveryKeys };
+    return { success: true, recoveryCodes: recovery_codes.generateRecoveryCodes() };
 }
 
 function getUsedRecoveryCodes() {

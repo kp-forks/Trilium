@@ -47,6 +47,19 @@
     letter-spacing: 0.15em;
 }
 
+/* Recovery-codes step: two monospaced columns so all eight codes fit compactly. */
+.modal.totp-enrollment-modal .totp-recovery-codes {
+    column-count: 2;
+    font-family: var(--monospace-font-family, monospace);
+}
+
+/* Copy / download actions sit in a row beneath the codes. */
+.modal.totp-enrollment-modal .totp-recovery-actions {
+    display: flex;
+    gap: 8px;
+    margin-block: 12px;
+}
+
 /* One dot per recovery code, shown inline right after the "Recovery codes" label. */
 .recovery-code-dots {
     display: flex;

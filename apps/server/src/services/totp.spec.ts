@@ -68,8 +68,8 @@ describe("totp", () => {
         });
         expect(result?.success).toBe(true);
         expect(result?.message).toBe(SECRET);
-        // Generation alone must NOT persist the secret: it only becomes active after the user confirms
-        // a code for it, which is what prevents an accidental lockout.
+        // Generation alone must NOT persist the secret: it only becomes active after the user
+        // confirms a code for it, which is what prevents an accidental lockout.
         expect(totp.checkForTotpSecret()).toBe(false);
     });
 
@@ -109,7 +109,7 @@ describe("totp", () => {
         errorSpy.mockRestore();
     });
 
-    it("validateTOTPForSecret validates against the supplied secret, no stored secret needed", () => {
+    it("validateTOTPForSecret validates against a supplied secret without a stored one", () => {
         cls.init(() => {
             totpEncryption.resetTotpSecret();
         });

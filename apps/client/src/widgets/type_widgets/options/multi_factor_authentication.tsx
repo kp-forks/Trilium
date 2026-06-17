@@ -1,6 +1,7 @@
 import "./multi_factor_authentication.css";
 
 import { OAuthStatus, TOTPConfirmResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus } from "@triliumnext/commons";
+import { RefObject } from "preact";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { Trans } from "react-i18next";
@@ -9,7 +10,7 @@ import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import { isElectron } from "../../../services/utils";
+import utils, { isElectron } from "../../../services/utils";
 import Admonition from "../../react/Admonition";
 import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
@@ -178,19 +179,18 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
             setGeneratedKeys(result.recoveryCodes);
         }
 
-        await server.post("totp_recovery/set", {
-            recoveryCodes: result.recoveryCodes,
-        });
+        // `totp_recovery/generate` already persisted the codes, so no extra `set` round-trip is needed.
         await refreshRecoveryKeys();
     }, [ refreshRecoveryKeys ]);
 
-    // Runs once the user has proven they can produce a valid code: the server has now persisted the
-    // secret, so reflect the freshly-active state and (re)generate recovery codes.
-    const onEnrollmentConfirmed = useCallback(async () => {
+    // Runs once enrollment is finished: the secret is persisted and recovery codes were issued by
+    // `totp/confirm` (and shown in the modal), so we only refresh state here — generating again would
+    // invalidate the codes the user just saved.
+    const onEnrollmentComplete = useCallback(() => {
         toast.showMessage(t("multi_factor_authentication.totp_enroll_enabled"));
         refreshTotpStatus();
-        await generateRecoveryKeys();
-    }, [ refreshTotpStatus, generateRecoveryKeys ]);
+        void refreshRecoveryKeys();
+    }, [ refreshTotpStatus, refreshRecoveryKeys ]);
 
     const removeTotp = useCallback(async () => {
         if (!await dialog.confirm(t("multi_factor_authentication.totp_remove_confirm"))) {
@@ -246,7 +246,7 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
             <TotpEnrollmentModal
                 show={showEnroll}
                 onHidden={() => setShowEnroll(false)}
-                onConfirmed={onEnrollmentConfirmed}
+                onComplete={onEnrollmentComplete}
             />,
             document.body
         )}
@@ -254,21 +254,29 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
 }
 
 /**
- * Verify-before-enable enrollment dialog. On open it fetches a fresh (not-yet-persisted) TOTP secret,
- * shows it for the user to add to their authenticator, and requires them to enter a valid code for it.
- * The secret is only persisted server-side on a successful `totp/confirm`, so cancelling or failing
- * verification can never leave TOTP active for a secret the user can't actually generate codes for.
+ * Verify-before-enable enrollment dialog with two steps:
+ *
+ *  1. Fetch a fresh (not-yet-persisted) secret, show it for the user to add to their authenticator,
+ *     and require them to enter a valid code. The secret is only persisted server-side once the code
+ *     checks out, so cancelling or failing verification can never enable TOTP for a secret the user
+ *     can't actually generate codes for.
+ *  2. Show the recovery codes issued alongside the secret by `totp/confirm`, so the user can save the
+ *     fallback they'll need if they ever lose their authenticator, before finishing.
  */
-function TotpEnrollmentModal({ show, onHidden, onConfirmed }: {
+function TotpEnrollmentModal({ show, onHidden, onComplete }: {
     show: boolean,
     onHidden: () => void,
-    onConfirmed: () => Promise<void> | void
+    /** Called when the dialog closes after TOTP was enabled, so the surrounding section can refresh. */
+    onComplete: () => void
 }) {
     const [ secret, setSecret ] = useState<string>();
     const [ loadFailed, setLoadFailed ] = useState(false);
     const [ code, setCode ] = useState("");
     const [ codeRejected, setCodeRejected ] = useState(false);
     const [ verifying, setVerifying ] = useState(false);
+    // Set once verification succeeds: switches the dialog to the "save your recovery codes" step.
+    const [ recoveryCodes, setRecoveryCodes ] = useState<string[]>();
+    const [ acknowledged, setAcknowledged ] = useState(false);
     const codeRef = useRef<HTMLInputElement>(null);
 
     // Each time the modal opens, reset state and request a fresh secret.
@@ -282,6 +290,8 @@ function TotpEnrollmentModal({ show, onHidden, onConfirmed }: {
         setCode("");
         setCodeRejected(false);
         setVerifying(false);
+        setRecoveryCodes(undefined);
+        setAcknowledged(false);
 
         void server.get<TOTPGenerate>("totp/generate").then((result) => {
             if (result.success) {
@@ -292,12 +302,12 @@ function TotpEnrollmentModal({ show, onHidden, onConfirmed }: {
         });
     }, [ show ]);
 
-    // Focus the code field once the secret has loaded.
+    // Focus the code field once the secret has loaded (verify step only).
     useEffect(() => {
-        if (secret) {
+        if (secret && !recoveryCodes) {
             codeRef.current?.focus();
         }
-    }, [ secret ]);
+    }, [ secret, recoveryCodes ]);
 
     const verify = useCallback(async () => {
         if (!secret || code.length === 0 || verifying) {
@@ -317,62 +327,162 @@ function TotpEnrollmentModal({ show, onHidden, onConfirmed }: {
             return;
         }
 
-        await onConfirmed();
+        // TOTP is now active server-side; advance to the recovery-codes step so the user can save them.
+        setRecoveryCodes(result.recoveryCodes ?? []);
+    }, [ secret, code, verifying ]);
+
+    const inRecoveryStep = !!recoveryCodes;
+
+    // The bootstrap "hidden" event is the single place we react to the dialog closing: if the user got
+    // as far as the recovery step then TOTP is enabled, so refresh the surrounding section.
+    const handleModalHidden = useCallback(() => {
+        if (recoveryCodes) {
+            onComplete();
+        }
         onHidden();
-    }, [ secret, code, verifying, onConfirmed, onHidden ]);
+    }, [ recoveryCodes, onComplete, onHidden ]);
 
     return (
         <Modal
             className="totp-enrollment-modal"
-            title={t("multi_factor_authentication.totp_enroll_title")}
+            title={inRecoveryStep
+                ? t("multi_factor_authentication.totp_enroll_recovery_title")
+                : t("multi_factor_authentication.totp_enroll_title")}
             size="md"
             show={show}
-            onHidden={onHidden}
-            onSubmit={() => void verify()}
+            onHidden={handleModalHidden}
+            onSubmit={() => {
+                if (inRecoveryStep) {
+                    if (acknowledged) {
+                        onHidden();
+                    }
+                } else {
+                    void verify();
+                }
+            }}
             stackable
-            footer={<>
-                <Button text={t("multi_factor_authentication.totp_enroll_cancel")} onClick={onHidden} />
-                <Button
-                    text={t("multi_factor_authentication.totp_enroll_verify")}
+            footer={inRecoveryStep
+                ? <Button
+                    text={t("multi_factor_authentication.totp_enroll_finish")}
                     kind="primary"
-                    disabled={!secret || code.length === 0 || verifying}
+                    disabled={!acknowledged}
+                    onClick={onHidden}
                 />
-            </>}
-        >
-            {loadFailed
-                ? <Admonition type="caution">{t("multi_factor_authentication.totp_enroll_generate_error")}</Admonition>
                 : <>
-                    <FormText>{t("multi_factor_authentication.totp_enroll_instructions")}</FormText>
-
-                    <FormGroup name="totp-enroll-secret" label={t("multi_factor_authentication.totp_enroll_secret_label")}>
-                        <FormTextBox
-                            className="totp-enroll-secret"
-                            currentValue={secret ?? ""}
-                            readOnly
-                            onFocus={(e) => e.currentTarget.select()}
-                        />
-                    </FormGroup>
-
-                    <Admonition type="caution">{t("multi_factor_authentication.totp_secret_warning")}</Admonition>
-
-                    <FormGroup
-                        name="totp-enroll-code"
-                        label={t("multi_factor_authentication.totp_enroll_code_label")}
-                        error={codeRejected ? t("multi_factor_authentication.totp_enroll_invalid_code") : undefined}
-                    >
-                        <FormTextBox
-                            inputRef={codeRef}
-                            currentValue={code}
-                            onChange={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
-                            inputMode="numeric"
-                            autoComplete="one-time-code"
-                            placeholder={t("multi_factor_authentication.totp_enroll_code_placeholder")}
-                            maxLength={6}
-                        />
-                    </FormGroup>
+                    <Button text={t("multi_factor_authentication.totp_enroll_cancel")} onClick={onHidden} />
+                    <Button
+                        text={t("multi_factor_authentication.totp_enroll_verify")}
+                        kind="primary"
+                        disabled={!secret || code.length === 0 || verifying}
+                    />
                 </>}
+        >
+            {inRecoveryStep
+                ? <TotpRecoveryStep codes={recoveryCodes} acknowledged={acknowledged} setAcknowledged={setAcknowledged} />
+                : loadFailed
+                    ? <Admonition type="caution">{t("multi_factor_authentication.totp_enroll_generate_error")}</Admonition>
+                    : <TotpVerifyStep secret={secret} code={code} setCode={setCode} codeRejected={codeRejected} codeRef={codeRef} />}
         </Modal>
     );
+}
+
+/** Step 1: show the generated secret and collect a verification code from the user's authenticator. */
+function TotpVerifyStep({ secret, code, setCode, codeRejected, codeRef }: {
+    secret?: string,
+    code: string,
+    setCode: (value: string) => void,
+    codeRejected: boolean,
+    codeRef: RefObject<HTMLInputElement>
+}) {
+    return (
+        <>
+            <FormText>{t("multi_factor_authentication.totp_enroll_instructions")}</FormText>
+
+            <FormGroup name="totp-enroll-secret" label={t("multi_factor_authentication.totp_enroll_secret_label")}>
+                <FormTextBox
+                    className="totp-enroll-secret"
+                    currentValue={secret ?? ""}
+                    readOnly
+                    onFocus={(e) => e.currentTarget.select()}
+                />
+            </FormGroup>
+
+            <Admonition type="caution">{t("multi_factor_authentication.totp_secret_warning")}</Admonition>
+
+            <FormGroup
+                name="totp-enroll-code"
+                label={t("multi_factor_authentication.totp_enroll_code_label")}
+                error={codeRejected ? t("multi_factor_authentication.totp_enroll_invalid_code") : undefined}
+            >
+                <FormTextBox
+                    inputRef={codeRef}
+                    currentValue={code}
+                    onChange={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    placeholder={t("multi_factor_authentication.totp_enroll_code_placeholder")}
+                    maxLength={6}
+                />
+            </FormGroup>
+        </>
+    );
+}
+
+/** Step 2: present the issued recovery codes with copy/download and require the user to acknowledge saving them. */
+function TotpRecoveryStep({ codes, acknowledged, setAcknowledged }: {
+    codes: string[],
+    acknowledged: boolean,
+    setAcknowledged: (value: boolean) => void
+}) {
+    return (
+        <>
+            <FormText>{t("multi_factor_authentication.totp_enroll_recovery_instructions")}</FormText>
+
+            <ol className="totp-recovery-codes">
+                {codes.map((recoveryCode) => <li key={recoveryCode}><code>{recoveryCode}</code></li>)}
+            </ol>
+
+            <div className="totp-recovery-actions">
+                <Button
+                    icon="bx-copy"
+                    text={t("multi_factor_authentication.totp_enroll_recovery_copy")}
+                    onClick={() => {
+                        utils.copyHtmlToClipboard(codes.join("\n"));
+                        toast.showMessage(t("multi_factor_authentication.totp_enroll_recovery_copied"));
+                    }}
+                />
+                <Button
+                    icon="bx-download"
+                    text={t("multi_factor_authentication.totp_enroll_recovery_download")}
+                    onClick={() => downloadRecoveryCodes(codes)}
+                />
+            </div>
+
+            <Admonition type="caution">
+                <Trans i18nKey="multi_factor_authentication.recovery_keys_description_warning" />
+            </Admonition>
+
+            <FormCheckbox
+                name="totp-recovery-saved"
+                label={t("multi_factor_authentication.totp_enroll_saved_ack")}
+                currentValue={acknowledged}
+                onChange={setAcknowledged}
+            />
+        </>
+    );
+}
+
+/** Downloads the recovery codes as a plain-text file. Uses a Blob so it works over HTTP, unlike the clipboard API. */
+function downloadRecoveryCodes(codes: string[]) {
+    const blob = new Blob([ `${codes.join("\n")}\n` ], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "trilium-recovery-codes.txt";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
 }
 
 function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys, onRemoveTotp }: {

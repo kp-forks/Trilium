@@ -144,6 +144,8 @@ export interface TOTPGenerate {
 export interface TOTPConfirmResponse {
     /** Whether the submitted code was valid for the secret; on success the secret is now persisted. */
     success: boolean;
+    /** Freshly issued recovery codes, returned only on success so they can be shown once for saving. */
+    recoveryCodes?: string[];
 }
 
 export interface TOTPRecoveryKeysResponse {
