@@ -138,8 +138,16 @@ export function VolumeControl({ mediaRef }: { mediaRef: RefObject<HTMLVideoEleme
 /** noteId of the sibling we're jumping to, so only *that* note auto-plays (a cancelled jump can't leak). */
 let autoPlayTargetNoteId: string | null = null;
 
-/** noteId of the player currently owning the (global) Media Session action handlers, if any. */
-let mediaSessionOwner: string | null = null;
+/** The player instance currently owning the (global) Media Session action handlers, if any. */
+let mediaSessionOwner: object | null = null;
+
+/** The player instance whose media element is currently playing. At most one plays at a time: starting
+ * playback in one player makes it active and pauses every other one (see {@link setActiveMediaPlayer}). */
+let activeMediaPlayer: object | null = null;
+
+/** Per-instance callbacks (one per mounted player) invoked when {@link activeMediaPlayer} changes, so each
+ * player can pause itself when it isn't the active one and re-evaluate Media Session ownership. */
+const mediaPlayerSubscribers = new Set<() => void>();
 
 /** Seconds the OS seek-back/seek-forward jump, matching the player's rewind/fast-forward buttons. */
 const SEEK_BACK_SECONDS = 10;
@@ -153,21 +161,28 @@ const OWNED_MEDIA_ACTIONS: MediaSessionAction[] = [ "previoustrack", "nexttrack"
  * Wires a media player to its surroundings: sibling navigation (returned, for the prev/next buttons) plus
  * PageUp/PageDown, and the OS Media Session — previous/next track, seek (matching the −10s/+30s buttons),
  * seek-to (scrubber) and stop, with the note title as metadata. Play/pause and basic seek are left to the
- * browser's default binding on the element. Jumping to a sibling auto-plays it, like a playlist. Ownership of
- * the global Media Session follows the note shown in this player's own context, so a player keeps the OS
- * controls while its tab plays in the background, and only a stale/cached player stands down.
+ * browser's default binding on the element. Jumping to a sibling auto-plays it, like a playlist. Starting
+ * playback pauses every other media player (audio or video), so only one plays at a time; that player owns
+ * the global Media Session and keeps the OS controls even while paused or its tab is backgrounded. It hands
+ * the session over only when another player starts playing, or releases it when its tab is closed (unmount).
  */
 export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
+    // Stable identity for this player instance, used to coordinate with the other mounted players.
+    const self = useRef<object>({}).current;
 
-    // Ownership tracks the note shown in this player's *own* context, not the active tab — so a player keeps
-    // the OS Media Session while its tab sits in the background with its media still playing, and stands down
-    // only once its context navigates to a different note (a stale/cached player) or it unmounts (tab closed).
-    // Recomputed each render; the switch events just force cached/background players to re-render so they
-    // re-evaluate promptly when navigation changes their context's note.
-    const [ , bumpOnNoteSwitch ] = useState(0);
-    useTriliumEvents([ "activeContextChanged", "activeNoteChanged" ], () => bumpOnNoteSwitch((tick) => tick + 1));
+    // Forces a re-render so isCurrentNote / ownsSession get re-evaluated after navigation or a playback
+    // change (a cached/background player otherwise wouldn't notice its context going stale).
+    const [ , bump ] = useState(0);
+    useTriliumEvents([ "activeContextChanged", "activeNoteChanged" ], () => bump((tick) => tick + 1));
+
+    // The player that's currently playing owns the OS Media Session: starting playback pauses every other
+    // player (below), so at most one is active at a time. Ownership is kept through pauses and tab switches,
+    // and released only on handover (another player starts) or unmount (its tab is closed) — not when merely
+    // paused or navigated away. `isCurrentNote` (this player's own context still shows it) only gates the
+    // on-screen prev/next buttons and the session's track-skip handlers, not ownership itself.
     const isCurrentNote = isCurrentContextNote(noteContext, note.noteId);
+    const ownsSession = activeMediaPlayer === self;
 
     const wrapped = navigation && isCurrentNote ? {
         ...navigation,
@@ -177,10 +192,35 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
 
+    // Only one media element plays at a time. Starting playback claims the global "active" slot and notifies
+    // every other mounted player (audio or video) so they pause themselves and hand over the OS Media Session.
+    // The slot is *kept* through pause/end (a paused player keeps the session); it's only released when another
+    // player claims it or when this player unmounts (its tab is closed).
+    useEffect(() => {
+        const media = mediaRef.current;
+        if (!media) return;
+        const claim = () => setActiveMediaPlayer(self);
+        media.addEventListener("play", claim);
+        return () => {
+            media.removeEventListener("play", claim);
+            if (activeMediaPlayer === self) setActiveMediaPlayer(null);
+        };
+    }, [ self, mediaRef ]);
+
+    // When another player claims the active slot, pause ourselves and re-render so we release the session.
+    useEffect(() => {
+        const onActivePlayerChange = () => {
+            if (activeMediaPlayer !== self) mediaRef.current?.pause();
+            bump((tick) => tick + 1);
+        };
+        mediaPlayerSubscribers.add(onActivePlayerChange);
+        return () => { mediaPlayerSubscribers.delete(onActivePlayerChange); };
+    }, [ self, mediaRef ]);
+
     // Bind the OS Media Session (which desktop/hardware media keys route to, rather than keydown) and its
-    // metadata while this player is its context's current note. They're global, so only ever release our own
-    // — otherwise the outgoing player's cleanup (switching media → media) would clobber the incoming player's;
-    // the release also clears them so nothing lingers in the OS overlay after leaving media.
+    // metadata while this player owns the session (its context's current note, and the one playing). They're
+    // global, so only ever release our own — otherwise the outgoing player's cleanup during a handover would
+    // clobber the incoming player's; the release also clears them so nothing lingers in the OS overlay.
     const hasMediaNav = !!wrapped;
     const wrappedRef = useRef(wrapped);
     wrappedRef.current = wrapped;
@@ -191,16 +231,16 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
             try { mediaSession.setActionHandler(action, handler); } catch { /* action unsupported */ }
         };
         const release = () => {
-            if (mediaSessionOwner !== note.noteId) return;
+            if (mediaSessionOwner !== self) return;
             mediaSessionOwner = null;
             for (const action of OWNED_MEDIA_ACTIONS) setHandler(action, null);
             mediaSession.metadata = null;
         };
-        if (!isCurrentNote) {
+        if (!ownsSession) {
             release();
             return;
         }
-        mediaSessionOwner = note.noteId;
+        mediaSessionOwner = self;
         // Metadata makes Chromium reliably present the OS controls for video (it does so for audio by
         // default) and shows the note title there.
         if (typeof MediaMetadata !== "undefined") mediaSession.metadata = new MediaMetadata({ title: note.title });
@@ -214,7 +254,7 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
         setHandler("seekto", (details) => { if (details.seekTime != null) seekTo(mediaRef, details.seekTime); });
         setHandler("stop", () => stopMedia(mediaRef));
         return release;
-    }, [ isCurrentNote, hasMediaNav, noteContext, note.noteId, note.title, mediaRef ]);
+    }, [ ownsSession, hasMediaNav, noteContext, note.noteId, note.title, mediaRef, self ]);
 
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {
@@ -243,6 +283,13 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
  */
 function isCurrentContextNote(noteContext: NoteContext | undefined, noteId: string): boolean {
     return !!noteContext && noteContext.noteId === noteId;
+}
+
+/** Marks `player` as the one currently playing and notifies the rest so they pause and release the session. */
+function setActiveMediaPlayer(player: object | null) {
+    if (activeMediaPlayer === player) return;
+    activeMediaPlayer = player;
+    for (const notify of mediaPlayerSubscribers) notify();
 }
 
 function seekBy(mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, offset: number) {
