@@ -1721,8 +1721,6 @@
   },
   "shortcuts": {
     "keyboard_shortcuts": "Keyboard Shortcuts",
-    "multiple_shortcuts": "Press the + button next to an action and type a key combination to assign a shortcut. Each action can have several shortcuts.",
-    "electron_documentation": "See <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">Electron documentation</a> for available modifiers and key codes.",
     "type_text_to_filter": "Type text to filter shortcuts...",
     "reload_app": "Reload app to apply changes",
     "set_all_to_default": "Set all shortcuts to the default",

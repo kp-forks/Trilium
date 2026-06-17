@@ -16,11 +16,9 @@ import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "../../react/FormList";
-import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumEvent } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
-import RawHtml from "../../react/RawHtml";
 import OptionsRow from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -106,11 +104,6 @@ export default function ShortcutSettings() {
 
     return (
         <div className="shortcuts-options-section">
-            <FormText>
-                {t("shortcuts.multiple_shortcuts")}{" "}
-                <RawHtml html={t("shortcuts.electron_documentation")} />
-            </FormText>
-
             <header>
                 <FormTextBox
                     placeholder={t("shortcuts.type_text_to_filter")}
