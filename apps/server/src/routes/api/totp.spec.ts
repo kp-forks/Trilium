@@ -1,4 +1,4 @@
-import { cls } from "@triliumnext/core";
+import { cls, options } from "@triliumnext/core";
 import type { Request } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -69,7 +69,19 @@ describe("TOTP API", () => {
         const codes = Array.from({ length: 8 }, (_, i) => `recovery-code-${i}`);
         expect(runEnable({ secret: SECRET, recoveryCodes: codes })).toEqual({ success: true });
         expect(totpRoute.getTOTPStatus().set).toBe(true);
+        expect(totpRoute.getTOTPStatus().message).toBe(true);
         expect(recoveryCodes.isRecoveryCodeSet()).toBe(true);
+    });
+
+    it("enableSecret enforces TOTP at login even when the stored mfaMethod is stale", () => {
+        // Simulates an upgraded install where an older resetTotp left mfaMethod = "" behind. The
+        // sign-in dropdown reads "" as "local" and never rewrites it during enrollment, so the
+        // commit itself must select the TOTP method — otherwise isTotpEnabled() stays false and
+        // login would silently skip the second factor the user believes is active.
+        cls.init(() => options.setOption("mfaMethod", ""));
+        const codes = Array.from({ length: 8 }, (_, i) => `recovery-code-${i}`);
+        expect(runEnable({ secret: SECRET, recoveryCodes: codes })).toEqual({ success: true });
+        expect(totpRoute.getTOTPStatus().message).toBe(true);
     });
 
     it("enableSecret rejects a missing secret or empty recovery codes without persisting", () => {

@@ -1,3 +1,4 @@
+import { options } from "@triliumnext/core";
 import type { Request } from "express";
 
 import recoveryCodesService from "../../services/encryption/recovery_codes.js";
@@ -46,6 +47,12 @@ function enableTOTP(req: Request) {
         return { success: false };
     }
 
+    // Committing a secret must also select TOTP as the MFA method: login enforcement
+    // (totpService.isTotpEnabled) gates on mfaMethod === "totp", and an upgraded install can carry a
+    // stale value (e.g. the "" an older resetTotp left behind) that the sign-in dropdown never
+    // rewrites while it already reads as "local". Setting it here makes "secret committed" always
+    // imply "TOTP enforced at login".
+    options.setOption("mfaMethod", "totp");
     totpService.setSecret(secret);
     recoveryCodesService.setRecoveryCodes(recoveryCodes.join(","));
     return { success: true };
