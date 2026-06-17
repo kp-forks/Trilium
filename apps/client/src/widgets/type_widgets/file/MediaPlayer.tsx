@@ -1,19 +1,20 @@
 import "./MediaPlayer.css";
 
 import { RefObject } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context";
 import type FNote from "../../../entities/fnote";
+import attributes from "../../../services/attributes";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
-import { useTriliumEvents } from "../../react/hooks";
+import { useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import { getParentFromNotePath } from "../../react/sibling_navigation";
 import { noteSiblingProvider, type SiblingNavigationState, useSiblingKeyboard, useSiblingNavigation } from "../../react/SiblingNavigator";
-import { getAutoAdvanceTarget, MEDIA_PLAY_MODE_LABEL } from "./media_play_mode";
+import { getAutoAdvanceTarget, MEDIA_PLAY_MODE_ICONS, MEDIA_PLAY_MODE_LABEL, MEDIA_PLAY_MODE_LABEL_KEYS, MEDIA_PLAY_MODES, type MediaPlayMode, playModeFromLabel, playModeToLabel, shouldLoop } from "./media_play_mode";
 
 const NO_KEYS: readonly string[] = [];
 
@@ -353,33 +354,77 @@ export function SkipButton({ mediaRef, seconds, icon, text }: { mediaRef: RefObj
     );
 }
 
-export function LoopButton({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
-    const [loop, setLoop] = useState(() => mediaRef.current?.loop ?? false);
+/**
+ * The folder-level play mode (read from the parent's `#mediaNotesPlayMode` label) for the current media note,
+ * kept in sync as that label changes. Derives the element's `loop` from the mode and persists changes back to
+ * the parent — the `auto` mode's actual auto-advance is handled by {@link useMediaSessionController}.
+ */
+export function useMediaPlayMode(noteContext: NoteContext | undefined, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>): { mode: MediaPlayMode; setMode: (mode: MediaPlayMode) => void } {
+    const parentNoteId = getParentFromNotePath(noteContext?.notePath)?.parentNoteId;
+    const [ mode, setLocalMode ] = useState<MediaPlayMode>("once");
 
+    const refresh = useCallback(() => {
+        if (!parentNoteId) {
+            setLocalMode("once");
+            return;
+        }
+        froca.getNote(parentNoteId).then((parent) => setLocalMode(playModeFromLabel(parent?.getLabelValue(MEDIA_PLAY_MODE_LABEL)))).catch(() => {});
+    }, [ parentNoteId ]);
+
+    useEffect(refresh, [ refresh ]);
+    useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
+        if (parentNoteId && loadResults.getAttributeRows().some((attr) => attr.noteId === parentNoteId && attr.name === MEDIA_PLAY_MODE_LABEL)) {
+            refresh();
+        }
+    });
+
+    // Looping is derived from the mode (auto-advance for "auto" lives in useMediaSessionController's ended handler).
     useEffect(() => {
         const media = mediaRef.current;
-        if (!media) return;
-        setLoop(media.loop);
+        if (media) media.loop = shouldLoop(mode);
+    }, [ mode, mediaRef ]);
 
-        const observer = new MutationObserver(() => setLoop(media.loop));
-        observer.observe(media, { attributes: true, attributeFilter: ["loop"] });
-        return () => observer.disconnect();
-    }, [ mediaRef ]);
+    const setMode = useCallback((next: MediaPlayMode) => {
+        setLocalMode(next); // optimistic; the entitiesReloaded refresh confirms it once the parent label is written
+        if (!parentNoteId) return;
+        froca.getNote(parentNoteId).then((parent) => {
+            if (!parent) return;
+            const value = playModeToLabel(next);
+            if (value === null) {
+                attributes.removeOwnedLabelByName(parent, MEDIA_PLAY_MODE_LABEL);
+            } else {
+                void attributes.setLabel(parent.noteId, MEDIA_PLAY_MODE_LABEL, value);
+            }
+        }).catch(() => {});
+    }, [ parentNoteId ]);
 
-    const toggle = () => {
-        const media = mediaRef.current;
-        if (!media) return;
-        media.loop = !media.loop;
-        setLoop(media.loop);
-    };
+    return { mode, setMode };
+}
 
+/** Replaces the loop toggle: a dropdown to pick the folder's play mode (play once / loop / autoplay). */
+export function PlayModeButton({ mode, onSelectMode }: { mode: MediaPlayMode, onSelectMode: (mode: MediaPlayMode) => void }) {
     return (
-        <ActionButton
-            className={loop ? "active" : ""}
-            icon="bx bx-repeat"
-            text={loop ? t("media.disable-loop") : t("media.loop")}
-            onClick={toggle}
-        />
+        <Dropdown
+            iconAction
+            hideToggleArrow
+            className="play-mode-dropdown"
+            text={<Icon icon={MEDIA_PLAY_MODE_ICONS[mode]} />}
+            title={t("media.play-mode-title", { mode: t(MEDIA_PLAY_MODE_LABEL_KEYS[mode]) })}
+        >
+            {MEDIA_PLAY_MODES.map((candidate) => (
+                <li key={candidate}>
+                    <button
+                        type="button"
+                        class={`dropdown-item ${candidate === mode ? "active" : ""}`}
+                        onClick={() => onSelectMode(candidate)}
+                    >
+                        <Icon icon={MEDIA_PLAY_MODE_ICONS[candidate]} />
+                        <span class="play-mode-name">{t(MEDIA_PLAY_MODE_LABEL_KEYS[candidate])}</span>
+                        {candidate === mode && <Icon icon="bx bx-check" className="play-mode-check" />}
+                    </button>
+                </li>
+            ))}
+        </Dropdown>
     );
 }
 

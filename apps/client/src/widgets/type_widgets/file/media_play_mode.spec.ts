@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { type AutoAdvanceNavigation, getAutoAdvanceTarget } from "./media_play_mode";
+import { type AutoAdvanceNavigation, getAutoAdvanceTarget, MEDIA_PLAY_MODES, type MediaPlayMode, playModeFromLabel, playModeToLabel, shouldLoop } from "./media_play_mode";
 
 describe("getAutoAdvanceTarget", () => {
     const nav = (index: number, total: number, nextId: string): AutoAdvanceNavigation => ({ index, total, nextId });
@@ -26,5 +26,43 @@ describe("getAutoAdvanceTarget", () => {
 
     it("does not advance when there is no sibling navigation (a lone item or none)", () => {
         expect(getAutoAdvanceTarget("auto", null)).toBeNull();
+    });
+});
+
+describe("playModeFromLabel", () => {
+    it("maps the parent's label value to a mode", () => {
+        expect(playModeFromLabel("loop")).toBe("loop");
+        expect(playModeFromLabel("auto")).toBe("auto");
+    });
+
+    it("treats a missing or unrecognised label as play-once", () => {
+        expect(playModeFromLabel(null)).toBe("once");
+        expect(playModeFromLabel(undefined)).toBe("once");
+        expect(playModeFromLabel("")).toBe("once");
+        expect(playModeFromLabel("once")).toBe("once");
+        expect(playModeFromLabel("bogus")).toBe("once");
+    });
+});
+
+describe("playModeToLabel", () => {
+    it("removes the label for play-once and writes the value otherwise", () => {
+        expect(playModeToLabel("once")).toBeNull();
+        expect(playModeToLabel("loop")).toBe("loop");
+        expect(playModeToLabel("auto")).toBe("auto");
+    });
+
+    it("round-trips with playModeFromLabel for every mode", () => {
+        for (const mode of MEDIA_PLAY_MODES) {
+            expect(playModeFromLabel(playModeToLabel(mode))).toBe(mode);
+        }
+    });
+});
+
+describe("shouldLoop", () => {
+    it("loops only in loop mode", () => {
+        const looping: Record<MediaPlayMode, boolean> = { once: false, loop: true, auto: false };
+        for (const mode of MEDIA_PLAY_MODES) {
+            expect(shouldLoop(mode)).toBe(looping[mode]);
+        }
     });
 });

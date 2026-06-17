@@ -9,7 +9,7 @@ import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
 import NoItems from "../../react/NoItems";
-import { LoopButton, MediaSiblingButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
@@ -40,6 +40,7 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
     const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef);
+    const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, videoRef);
 
     if (error) {
         return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
@@ -62,6 +63,7 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
                 <div class="media-buttons-row">
                     <div className="left">
                         <PlaybackSpeed mediaRef={videoRef} />
+                        <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />
                         <RotateButton videoRef={videoRef} />
                     </div>
                     <div className="center">
@@ -71,7 +73,6 @@ export default function VideoPreview({ note, noteContext }: { note: FNote, noteC
                         <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
                         <SkipButton mediaRef={videoRef} seconds={30} icon="bx bx-fast-forward" text={t("media.forward-30s")} />
                         <MediaSiblingButton navigation={siblingNavigation} direction="next" tooltipI18nKey="media.next-video" />
-                        <LoopButton mediaRef={videoRef} />
                     </div>
                     <div className="right">
                         <VolumeControl mediaRef={videoRef} />

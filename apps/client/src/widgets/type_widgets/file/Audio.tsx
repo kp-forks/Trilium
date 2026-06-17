@@ -6,7 +6,7 @@ import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { LoopButton, MediaSiblingButton, PlaybackSpeed, PlayPauseButton, SeekBar, SkipButton, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 export default function AudioPreview({ note, noteContext }: { note: FNote, noteContext?: NoteContext }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -27,6 +27,7 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
     useEffect(() => setError(false), [note.noteId]);
     const onError = useCallback(() => setError(true), []);
     const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef);
+    const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, audioRef);
 
     if (error) {
         return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
@@ -51,6 +52,7 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
                 <div class="media-buttons-row">
                     <div className="left">
                         <PlaybackSpeed mediaRef={audioRef} />
+                        <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />
                     </div>
 
                     <div className="center">
@@ -60,7 +62,6 @@ export default function AudioPreview({ note, noteContext }: { note: FNote, noteC
                         <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
                         <SkipButton mediaRef={audioRef} seconds={30} icon="bx bx-fast-forward" text={t("media.forward-30s")} />
                         <MediaSiblingButton navigation={siblingNavigation} direction="next" tooltipI18nKey="media.next-audio" />
-                        <LoopButton mediaRef={audioRef} />
                     </div>
 
                     <div className="right">
