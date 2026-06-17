@@ -29,14 +29,16 @@ export function getSiblingNavigation(siblingNoteIds: string[], currentNoteId: st
 export type SiblingDirection = "previous" | "next" | "first" | "last";
 
 /**
- * Maps a `KeyboardEvent.code` to a navigation direction. PageUp/PageDown and the Previous/Next Track
- * media keys (prev/next) are built in, as are Home/End (first/last) unless `includeEdges` is false (e.g.
- * media players reserve Home/End for seeking); a renderer can supply extra codes for prev/next (e.g. the
- * image viewer adds `Backspace`/`Space`). Using `code` keeps it keyboard-layout independent.
+ * Maps a `KeyboardEvent.code` to a navigation direction. PageUp/PageDown (prev/next) are built in, as are
+ * Home/End (first/last) unless `includeEdges` is false (e.g. media players reserve Home/End for seeking); a
+ * renderer can supply extra codes for prev/next (e.g. the image viewer adds `Backspace`/`Space`). Using
+ * `code` keeps it keyboard-layout independent. The Previous/Next Track media keys are deliberately not
+ * handled here — OS media-key integration is wired only for video/audio (via `navigator.mediaSession`),
+ * where the hardware keys actually route reliably; for images it mostly never fired.
  */
 export function codeToSiblingDirection(code: string, extraPrevious: readonly string[], extraNext: readonly string[], includeEdges = true): SiblingDirection | null {
-    if (code === "PageUp" || code === "MediaTrackPrevious" || extraPrevious.includes(code)) return "previous";
-    if (code === "PageDown" || code === "MediaTrackNext" || extraNext.includes(code)) return "next";
+    if (code === "PageUp" || extraPrevious.includes(code)) return "previous";
+    if (code === "PageDown" || extraNext.includes(code)) return "next";
     if (includeEdges && code === "Home") return "first";
     if (includeEdges && code === "End") return "last";
     return null;
