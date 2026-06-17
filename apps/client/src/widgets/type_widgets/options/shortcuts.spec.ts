@@ -7,8 +7,8 @@ function keyEvent(init: KeyboardEventInit) {
     return new KeyboardEvent("keydown", init);
 }
 
-function action(actionName: string, friendlyName: string, effectiveShortcuts: string[], defaultShortcuts: string[] = effectiveShortcuts): ActionKeyboardShortcut {
-    return { actionName, friendlyName, effectiveShortcuts, defaultShortcuts } as ActionKeyboardShortcut;
+function action(actionName: string, friendlyName: string, effectiveShortcuts: string[], defaultShortcuts: string[] = effectiveShortcuts, scope?: ActionKeyboardShortcut["scope"]): ActionKeyboardShortcut {
+    return { actionName, friendlyName, effectiveShortcuts, defaultShortcuts, scope } as ActionKeyboardShortcut;
 }
 
 describe("keyboardEventToShortcut", () => {
@@ -239,6 +239,39 @@ describe("computeConflicts", () => {
         ]);
 
         expect(conflicts.get("a")?.get("Ctrl+J")).toEqual([ "Action B" ]);
+    });
+
+    describe("scope awareness", () => {
+        const shortcuts = (sc: string) => [ sc ];
+
+        it("flags same-combo actions that share a scope (e.g. Ctrl+0 lastTab vs zoomReset, both window)", () => {
+            const conflicts = computeConflicts([
+                action("lastTab", "Switch to Last Tab", shortcuts("Ctrl+0"), undefined, "window"),
+                action("zoomReset", "Reset Zoom Level", shortcuts("Ctrl+0"), undefined, "window")
+            ]);
+
+            expect(conflicts.get("lastTab")?.get("Ctrl+0")).toEqual([ "Reset Zoom Level" ]);
+            expect(conflicts.get("zoomReset")?.get("Ctrl+0")).toEqual([ "Switch to Last Tab" ]);
+        });
+
+        it("does not flag same-combo actions in mutually-exclusive scopes (e.g. Ctrl+Enter text vs code)", () => {
+            const conflicts = computeConflicts([
+                action("followLinkUnderCursor", "Follow Link Under Cursor", shortcuts("Ctrl+Enter"), undefined, "text-detail"),
+                action("runActiveNote", "Run Active Note", shortcuts("Ctrl+Enter"), undefined, "code-detail")
+            ]);
+
+            expect(conflicts.size).toBe(0);
+        });
+
+        it("treats a window-scoped shortcut as conflicting with any other scope", () => {
+            const conflicts = computeConflicts([
+                action("a", "Window Action", shortcuts("Ctrl+K"), undefined, "window"),
+                action("b", "Tree Action", shortcuts("Ctrl+K"), undefined, "note-tree")
+            ]);
+
+            expect(conflicts.get("a")?.get("Ctrl+K")).toEqual([ "Tree Action" ]);
+            expect(conflicts.get("b")?.get("Ctrl+K")).toEqual([ "Window Action" ]);
+        });
     });
 });
 

@@ -211,14 +211,29 @@ export function groupShortcuts(shortcuts: KeyboardShortcut[]): ShortcutGroup[] {
  */
 type ShortcutConflicts = Map<string, string[]>;
 
+type ShortcutScope = ActionKeyboardShortcut["scope"];
+
+/**
+ * Whether two shortcuts attached at the given scopes can fire on the same keystroke. A `window`-scoped
+ * shortcut is bound to the whole window, so it overlaps every other scope; two more specific scopes
+ * (e.g. `text-detail` vs `code-detail`) target mutually-exclusive contexts and never collide unless
+ * they are the same. An undefined scope is treated as `window` (the most permissive default).
+ */
+function scopesConflict(a: ShortcutScope, b: ShortcutScope) {
+    const scopeA = a ?? "window";
+    const scopeB = b ?? "window";
+    return scopeA === scopeB || scopeA === "window" || scopeB === "window";
+}
+
 /**
  * Detects shortcut conflicts in a single O(total shortcuts) pass and returns a render-ready lookup:
  * `actionName → (shortcut string → conflicting action names)`. A row not present in the map has no
  * conflicts, and a shortcut not present on a row's entry is conflict-free — so the render path is
  * just two cheap map lookups, with all the canonicalization done up front.
  *
- * Two shortcuts conflict when their {@link canonicalizeShortcut} forms match. The `global:` prefix is
- * stripped first: an OS-level global shortcut still swallows the same combination an in-app one wants.
+ * Two shortcuts conflict when their {@link canonicalizeShortcut} forms match *and* their scopes
+ * overlap (see {@link scopesConflict}). The `global:` prefix is stripped first: an OS-level global
+ * shortcut still swallows the same combination an in-app one wants.
  */
 export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, ShortcutConflicts> {
     // First pass: bucket every action by the canonical combination of each of its shortcuts.
@@ -258,7 +273,7 @@ export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, Sho
             }
 
             const others = actions
-                .filter((other) => other !== shortcut)
+                .filter((other) => other !== shortcut && scopesConflict(shortcut.scope, other.scope))
                 .map((other) => other.friendlyName ?? other.actionName);
             if (!others.length) {
                 continue;
