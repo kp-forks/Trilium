@@ -138,7 +138,10 @@ export interface TOTPStatus {
 
 export interface TOTPGenerate {
     success: boolean;
+    /** The bare base32 secret, shown for manual entry. */
     message: string;
+    /** The `otpauth://` URL for the secret, rendered as a scannable QR code. Absent on failure. */
+    url?: string;
 }
 
 export interface TOTPVerifyResponse {

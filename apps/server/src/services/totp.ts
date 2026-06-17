@@ -1,12 +1,11 @@
 import { options } from "@triliumnext/core";
-import { generateSecret as generateRandomSecret, Totp } from "time2fa";
+import { Totp } from "time2fa";
 
 import recoveryCodesService from "./encryption/recovery_codes.js";
 import totpEncryptionService from "./encryption/totp_encryption.js";
 
 function isTotpEnabled(): boolean {
-    return options.getOptionOrNull("mfaEnabled") === "true" &&
-        options.getOptionOrNull("mfaMethod") === "totp" &&
+    return options.getOptionOrNull("mfaMethod") === "totp" &&
         totpEncryptionService.isTotpSecretSet();
 }
 
@@ -16,14 +15,19 @@ function isTotpEnabled(): boolean {
  * then activate it with {@link setSecret}. Persisting only after this proof-of-possession check
  * prevents the user from locking themselves out by enabling TOTP for a secret their authenticator
  * never received correctly.
+ *
+ * Returns both the bare secret (for manual entry) and the `otpauth://` URL the authenticator expects,
+ * which the client renders as a scannable QR code. `accountName` is only the human-readable label
+ * shown next to the "Trilium" issuer in the authenticator app (typically the instance host).
  */
-function generateSecret(): { success: boolean; message?: string } {
+function generateSecret(accountName = "Trilium"): { success: boolean; message?: string; url?: string } {
     try {
-        const secret = generateRandomSecret();
+        const key = Totp.generateKey({ issuer: "Trilium", user: accountName });
 
         return {
             success: true,
-            message: secret
+            message: key.secret,
+            url: key.url
         };
     } catch (e) {
         console.error("Failed to create TOTP secret:", e);
@@ -76,8 +80,6 @@ function validateTOTP(submittedPasscode: string): boolean {
 function resetTotp(): void {
     totpEncryptionService.resetTotpSecret();
     recoveryCodesService.clearRecoveryCodes();
-    options.setOption("mfaEnabled", "false");
-    options.setOption("mfaMethod", "");
 }
 
 export default {

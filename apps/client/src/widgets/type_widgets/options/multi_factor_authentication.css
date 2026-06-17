@@ -40,6 +40,32 @@
     color: white;
 }
 
+/* Enrollment dialog: the scannable QR code, centred above the manual-entry secret. */
+.modal.totp-enrollment-modal .totp-enroll-qr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-block: 12px;
+}
+
+/* The QR itself sits on a white plate with quiet-zone padding so it scans reliably regardless of the
+   surrounding theme (QR readers expect dark modules on a light background). The SVG is viewBox-only
+   (scalable), so its size is fixed here. */
+.modal.totp-enrollment-modal .totp-enroll-qr-code {
+    width: 180px;
+    height: 180px;
+    padding: 10px;
+    background: #fff;
+    border-radius: 6px;
+}
+
+.modal.totp-enrollment-modal .totp-enroll-qr-code svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 /* Enrollment dialog: render the generated secret in a monospace face and space the characters out a
    little so the base32 string is easy to read and transcribe into an authenticator app. */
 .modal.totp-enrollment-modal .totp-enroll-secret {

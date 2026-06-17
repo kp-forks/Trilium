@@ -3,7 +3,8 @@ import "./multi_factor_authentication.css";
 import { OAuthStatus, TOTPEnableResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus, TOTPVerifyResponse } from "@triliumnext/commons";
 import { RefObject } from "preact";
 import { createPortal } from "preact/compat";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import qrcode from "qrcode-generator";
 import { Trans } from "react-i18next";
 
 import dialog from "../../../services/dialog";
@@ -19,15 +20,14 @@ import FormGroup from "../../react/FormGroup";
 import { FormInlineRadioGroup } from "../../react/FormRadioGroup";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
-import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { useTriliumOption } from "../../react/hooks";
 import Modal from "../../react/Modal";
-import RawHtml from "../../react/RawHtml";
+import RawHtml, { RawHtmlBlock } from "../../react/RawHtml";
 import OptionsPageHeader from "./components/OptionsPageHeader";
 import { OptionsRowWithButton } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
 export default function MultiFactorAuthenticationSettings() {
-    const [ mfaEnabled, setMfaEnabled ] = useTriliumOptionBool("mfaEnabled");
     const [ mfaMethod, setMfaMethod ] = useTriliumOption("mfaMethod");
     const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
     const [ oauthStatus, setOauthStatus ] = useState<OAuthStatus>();
@@ -41,25 +41,22 @@ export default function MultiFactorAuthenticationSettings() {
         server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
     }, [ refreshTotpStatus ]);
 
-    // MFA is genuinely active only when it's enabled AND the selected method is fully configured —
-    // the enable checkbox alone isn't enough (e.g. enabled with no TOTP secret generated yet). OAuth
-    // is "configured" once the server has all its environment variables (no missing vars).
+    // MFA is active when the selected method is fully set up: a TOTP secret has been enrolled, or
+    // OAuth has all its server-side environment variables (no missing vars). There's no separate
+    // enable switch — enrolling a method is what turns it on, and removing it is what turns it off.
     const oauthConfigured = (oauthStatus?.missingVars?.length ?? 1) === 0;
-    const mfaActive = !!mfaEnabled && (
-        (mfaMethod === "totp" && !!totpStatus?.set)
-        || (mfaMethod === "oauth" && oauthConfigured)
-    );
+    const mfaActive = (mfaMethod === "totp" && !!totpStatus?.set)
+        || (mfaMethod === "oauth" && oauthConfigured);
 
     return (!isElectron()
         ? (
             <>
                 <OptionsPageHeader actions={<MfaStatusBadge active={mfaActive} />} />
-                <EnableMultiFactor mfaEnabled={mfaEnabled} setMfaEnabled={setMfaEnabled} />
-                { mfaEnabled && <MultiFactorMethod
+                <MultiFactorMethod
                     mfaMethod={mfaMethod} setMfaMethod={setMfaMethod}
                     totpStatus={totpStatus} oauthStatus={oauthStatus}
                     refreshTotpStatus={refreshTotpStatus}
-                /> }
+                />
             </>
         ) : (
             <>
@@ -84,20 +81,6 @@ function MfaStatusBadge({ active }: { active: boolean }) {
     );
 }
 
-function EnableMultiFactor({ mfaEnabled, setMfaEnabled }: { mfaEnabled: boolean, setMfaEnabled: (newValue: boolean) => Promise<void>}) {
-    return (
-        <OptionsSection title={t("multi_factor_authentication.title")}>
-            <FormText><Trans i18nKey="multi_factor_authentication.description" /></FormText>
-
-            <FormCheckbox
-                name="mfa-enabled"
-                label={t("multi_factor_authentication.mfa_enabled")}
-                currentValue={mfaEnabled} onChange={setMfaEnabled}
-            />
-        </OptionsSection>
-    );
-}
-
 function MultiFactorMethod({ mfaMethod, setMfaMethod, totpStatus, oauthStatus, refreshTotpStatus }: {
     mfaMethod: string,
     setMfaMethod: (newValue: string) => Promise<void>,
@@ -113,6 +96,8 @@ function MultiFactorMethod({ mfaMethod, setMfaMethod, totpStatus, oauthStatus, r
 
     return (
         <>
+            <FormText><Trans i18nKey="multi_factor_authentication.description" /></FormText>
+
             {!methodSetUp &&
                 <OptionsSection className="mfa-options" title={t("multi_factor_authentication.mfa_method")}>
                     <FormInlineRadioGroup
@@ -199,8 +184,8 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
 
         await server.post("totp/reset");
         toast.showMessage(t("multi_factor_authentication.totp_removed"));
-        // mfaEnabled/mfaMethod are reset server-side and sync back over WebSocket, collapsing this
-        // whole section; refresh locally too so the change shows immediately.
+        // The secret and recovery codes are gone server-side; refresh so the section drops back to
+        // its "not set up" state (badge inactive, method selector shown) right away.
         refreshTotpStatus();
         refreshRecoveryKeys();
     }, [ refreshTotpStatus, refreshRecoveryKeys ]);
@@ -270,6 +255,8 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
     onComplete: () => void
 }) {
     const [ secret, setSecret ] = useState<string>();
+    // The `otpauth://` URL for the secret, rendered as a scannable QR code alongside the manual secret.
+    const [ secretUrl, setSecretUrl ] = useState<string>();
     const [ loadFailed, setLoadFailed ] = useState(false);
     const [ code, setCode ] = useState("");
     const [ codeRejected, setCodeRejected ] = useState(false);
@@ -289,6 +276,7 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         }
 
         setSecret(undefined);
+        setSecretUrl(undefined);
         setLoadFailed(false);
         setCode("");
         setCodeRejected(false);
@@ -300,6 +288,7 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         void server.get<TOTPGenerate>("totp/generate").then((result) => {
             if (result.success) {
                 setSecret(result.message);
+                setSecretUrl(result.url);
             } else {
                 setLoadFailed(true);
             }
@@ -395,14 +384,15 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
                 ? <TotpRecoveryStep codes={recoveryCodes} acknowledged={acknowledged} setAcknowledged={setAcknowledged} />
                 : loadFailed
                     ? <Admonition type="caution">{t("multi_factor_authentication.totp_enroll_generate_error")}</Admonition>
-                    : <TotpVerifyStep secret={secret} code={code} setCode={setCode} codeRejected={codeRejected} codeRef={codeRef} />}
+                    : <TotpVerifyStep secret={secret} secretUrl={secretUrl} code={code} setCode={setCode} codeRejected={codeRejected} codeRef={codeRef} />}
         </Modal>
     );
 }
 
 /** Step 1: show the generated secret and collect a verification code from the user's authenticator. */
-function TotpVerifyStep({ secret, code, setCode, codeRejected, codeRef }: {
+function TotpVerifyStep({ secret, secretUrl, code, setCode, codeRejected, codeRef }: {
     secret?: string,
+    secretUrl?: string,
     code: string,
     setCode: (value: string) => void,
     codeRejected: boolean,
@@ -412,6 +402,8 @@ function TotpVerifyStep({ secret, code, setCode, codeRejected, codeRef }: {
         <>
             <FormText>{t("multi_factor_authentication.totp_enroll_instructions")}</FormText>
 
+            {secretUrl && <TotpQrCode url={secretUrl} />}
+
             <FormGroup name="totp-enroll-secret" label={t("multi_factor_authentication.totp_enroll_secret_label")}>
                 <FormTextBox
                     className="totp-enroll-secret"
@@ -420,8 +412,6 @@ function TotpVerifyStep({ secret, code, setCode, codeRejected, codeRef }: {
                     onFocus={(e) => e.currentTarget.select()}
                 />
             </FormGroup>
-
-            <Admonition type="caution">{t("multi_factor_authentication.totp_secret_warning")}</Admonition>
 
             <FormGroup
                 name="totp-enroll-code"
@@ -439,6 +429,29 @@ function TotpVerifyStep({ secret, code, setCode, codeRejected, codeRef }: {
                 />
             </FormGroup>
         </>
+    );
+}
+
+/**
+ * Renders an `otpauth://` URL as an inline SVG QR code for scanning into an authenticator app. The URL
+ * is generated from our own secret (not user input), so the SVG is trusted and rendered via RawHtml.
+ */
+function TotpQrCode({ url }: { url: string }) {
+    const svg = useMemo(() => {
+        // typeNumber 0 lets the library pick the smallest version that fits; "M" error correction is
+        // the authenticator-app standard. cellSize/margin set the viewBox units — actual display size
+        // is controlled by CSS via the `scalable` (viewBox-only) output.
+        const qr = qrcode(0, "M");
+        qr.addData(url);
+        qr.make();
+        return qr.createSvgTag({ cellSize: 4, margin: 2, scalable: true });
+    }, [ url ]);
+
+    return (
+        <div className="totp-enroll-qr">
+            <FormText>{t("multi_factor_authentication.totp_enroll_scan")}</FormText>
+            <RawHtmlBlock className="totp-enroll-qr-code" html={svg} />
+        </div>
     );
 }
 

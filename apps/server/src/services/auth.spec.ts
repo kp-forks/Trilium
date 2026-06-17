@@ -28,7 +28,6 @@ describe("Auth", () => {
 
         it("goes to login and asks for TOTP if enabled", async () => {
             cls.init(() => {
-                options.setOption("mfaEnabled", "true");
                 options.setOption("mfaMethod", "totp");
                 options.setOption("totpVerificationHash", "hi");
             });
@@ -41,7 +40,7 @@ describe("Auth", () => {
 
         it("goes to login and doesn't ask for TOTP is disabled", async () => {
             cls.init(() => {
-                options.setOption("mfaEnabled", "false");
+                options.setOption("totpVerificationHash", "");
             });
             const response = await supertest(app)
                 .get("/")
@@ -59,7 +58,6 @@ describe("Auth", () => {
 
         it("doesn't ask for authentication when disabled, even if TOTP is enabled", async () => {
             cls.init(() => {
-                options.setOption("mfaEnabled", "true");
                 options.setOption("mfaMethod", "totp");
                 options.setOption("totpVerificationHash", "hi");
             });
@@ -70,7 +68,7 @@ describe("Auth", () => {
 
         it("doesn't ask for authentication when disabled, with TOTP disabled", async () => {
             cls.init(() => {
-                options.setOption("mfaEnabled", "false");
+                options.setOption("totpVerificationHash", "");
             });
             await supertest(app)
                 .get("/")

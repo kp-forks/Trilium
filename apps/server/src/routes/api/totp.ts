@@ -3,8 +3,10 @@ import type { Request } from "express";
 import recoveryCodesService from "../../services/encryption/recovery_codes.js";
 import totpService from "../../services/totp.js";
 
-function generateTOTPSecret() {
-    return totpService.generateSecret();
+function generateTOTPSecret(req: Request) {
+    // The hostname is only a human-readable account label in the authenticator app (under the
+    // "Trilium" issuer), helping users with several instances tell them apart.
+    return totpService.generateSecret(req.hostname);
 }
 
 /**

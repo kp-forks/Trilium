@@ -2,14 +2,13 @@ import { cls } from "@triliumnext/core";
 import type { Request } from "express";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGenerateSecret, mockValidate } = vi.hoisted(() => ({
-    mockGenerateSecret: vi.fn<() => string>(),
+const { mockGenerateKey, mockValidate } = vi.hoisted(() => ({
+    mockGenerateKey: vi.fn<(opts: { issuer: string; user: string }) => { secret: string; url: string }>(),
     mockValidate: vi.fn<(args: { passcode: string; secret: string }) => boolean>()
 }));
 
 vi.mock("time2fa", () => ({
-    generateSecret: mockGenerateSecret,
-    Totp: { validate: mockValidate }
+    Totp: { generateKey: mockGenerateKey, validate: mockValidate }
 }));
 
 import recoveryCodes from "../../services/encryption/recovery_codes.js";
@@ -21,7 +20,7 @@ const SECRET = "JBSWY3DPEHPK3PXP";
 describe("TOTP API", () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        mockGenerateSecret.mockReturnValue(SECRET);
+        mockGenerateKey.mockReturnValue({ secret: SECRET, url: `otpauth://totp/Trilium:localhost?issuer=Trilium&secret=${SECRET}` });
         mockValidate.mockReturnValue(true);
         // Reset secret + codes each test, so the persist assertions below are meaningful.
         cls.init(() => {
@@ -30,10 +29,13 @@ describe("TOTP API", () => {
         });
     });
 
-    it("generates a base32 secret without persisting it", () => {
-        const result = cls.init(() => totpRoute.generateSecret());
+    it("generates a base32 secret and otpauth URL without persisting it", () => {
+        const result = cls.init(() => totpRoute.generateSecret({ hostname: "localhost" } as Request));
         expect(result.success).toBe(true);
         expect(result.message).toMatch(/^[A-Z2-7]+$/);
+        expect(result.url).toContain("otpauth://");
+        // The request hostname is used as the account label under the "Trilium" issuer.
+        expect(mockGenerateKey).toHaveBeenCalledWith({ issuer: "Trilium", user: "localhost" });
         // Generation must not store the secret — that only happens at enable.
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });

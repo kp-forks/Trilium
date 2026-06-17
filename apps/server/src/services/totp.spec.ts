@@ -1,13 +1,12 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockGenerateSecret, mockValidate } = vi.hoisted(() => ({
-    mockGenerateSecret: vi.fn<() => string>(),
+const { mockGenerateKey, mockValidate } = vi.hoisted(() => ({
+    mockGenerateKey: vi.fn<(opts: { issuer: string; user: string }) => { secret: string; url: string }>(),
     mockValidate: vi.fn<(args: { passcode: string; secret: string }) => boolean>()
 }));
 
 vi.mock("time2fa", () => ({
-    generateSecret: mockGenerateSecret,
-    Totp: { validate: mockValidate }
+    Totp: { generateKey: mockGenerateKey, validate: mockValidate }
 }));
 
 import { cls, options } from "@triliumnext/core";
@@ -18,6 +17,7 @@ import sql_init from "./sql_init.js";
 import totp from "./totp.js";
 
 const SECRET = "JBSWY3DPEHPK3PXP";
+const SECRET_URL = `otpauth://totp/Trilium:host?issuer=Trilium&secret=${SECRET}`;
 
 describe("totp", () => {
     beforeAll(async () => {
@@ -27,47 +27,44 @@ describe("totp", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
-        mockGenerateSecret.mockReturnValue(SECRET);
+        mockGenerateKey.mockReturnValue({ secret: SECRET, url: SECRET_URL });
         mockValidate.mockReturnValue(true);
     });
 
-    it("isTotpEnabled requires mfaEnabled+totp method+secret set", () => {
+    it("isTotpEnabled requires totp method + secret set", () => {
+        // method is totp but no secret yet
         cls.init(() => {
             totpEncryption.resetTotpSecret();
-            options.setOption("mfaEnabled", "false");
             options.setOption("mfaMethod", "totp");
         });
         expect(totp.isTotpEnabled()).toBe(false);
 
+        // secret set, but method is oauth
         cls.init(() => {
-            options.setOption("mfaEnabled", "true");
             options.setOption("mfaMethod", "oauth");
+            totp.setSecret(SECRET);
         });
         expect(totp.isTotpEnabled()).toBe(false);
 
-        // method is totp + enabled, but no secret yet
+        // method totp + secret set
         cls.init(() => {
             options.setOption("mfaMethod", "totp");
-        });
-        expect(totp.isTotpEnabled()).toBe(false);
-
-        // now persist a secret as well
-        cls.init(() => {
-            totp.setSecret(SECRET);
         });
         expect(totp.isTotpEnabled()).toBe(true);
     });
 
-    it("generateSecret returns a fresh secret without persisting it", () => {
+    it("generateSecret returns a fresh secret and otpauth URL without persisting it", () => {
         cls.init(() => {
             totpEncryption.resetTotpSecret();
         });
-        let result: { success: boolean; message?: string } | undefined;
+        let result: { success: boolean; message?: string; url?: string } | undefined;
         cls.init(() => {
-            result = totp.generateSecret();
+            result = totp.generateSecret("host");
         });
         expect(result?.success).toBe(true);
         expect(result?.message).toBe(SECRET);
+        expect(result?.url).toBe(SECRET_URL);
+        expect(mockGenerateKey).toHaveBeenCalledWith({ issuer: "Trilium", user: "host" });
         // Generation alone must NOT persist the secret: it only becomes active after the user
         // confirms a code for it, which is what prevents an accidental lockout.
         expect(totp.checkForTotpSecret()).toBe(false);
@@ -86,7 +83,7 @@ describe("totp", () => {
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
         // Error instance -> the error's message is surfaced
-        mockGenerateSecret.mockImplementation(() => {
+        mockGenerateKey.mockImplementation(() => {
             throw new Error("gen failed");
         });
         let result: { success: boolean; message?: string } | undefined;
@@ -97,7 +94,7 @@ describe("totp", () => {
         expect(result?.message).toBe("gen failed");
 
         // non-Error throw -> falls back to a generic message
-        mockGenerateSecret.mockImplementation(() => {
+        mockGenerateKey.mockImplementation(() => {
             throw "string failure";
         });
         cls.init(() => {
@@ -159,9 +156,8 @@ describe("totp", () => {
         errorSpy.mockRestore();
     });
 
-    it("resetTotp clears the secret, recovery codes, and disables MFA", () => {
+    it("resetTotp clears the secret and recovery codes", () => {
         cls.init(() => {
-            options.setOption("mfaEnabled", "true");
             options.setOption("mfaMethod", "totp");
             totp.setSecret(SECRET);
             recoveryCodes.setRecoveryCodes("AAAAAAAAAAAAAAAAAAAAAA==,BBBBBBBBBBBBBBBBBBBBBB==");
@@ -175,7 +171,5 @@ describe("totp", () => {
 
         expect(totp.checkForTotpSecret()).toBe(false);
         expect(recoveryCodes.isRecoveryCodeSet()).toBe(false);
-        expect(options.getOptionOrNull("mfaEnabled")).toBe("false");
-        expect(options.getOptionOrNull("mfaMethod")).toBe("");
     });
 });
