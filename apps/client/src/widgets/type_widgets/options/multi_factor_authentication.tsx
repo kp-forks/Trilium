@@ -70,45 +70,61 @@ function EnableMultiFactor({ mfaEnabled, setMfaEnabled }: { mfaEnabled: boolean,
 
 function MultiFactorMethod() {
     const [ mfaMethod, setMfaMethod ] = useTriliumOption("mfaMethod");
+    const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
+    const [ oauthStatus, setOauthStatus ] = useState<OAuthStatus>();
+
+    const refreshTotpStatus = useCallback(() => {
+        server.get<TOTPStatus>("totp/status").then(setTotpStatus);
+    }, []);
+
+    useEffect(() => {
+        refreshTotpStatus();
+        server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
+    }, [ refreshTotpStatus ]);
+
+    // The method selector only matters during initial setup. Switching method once one is configured
+    // silently strands the existing setup and can leave MFA effectively off (see the remove flow),
+    // so once the current method is set up we hide the selector — removing TOTP (or reconfiguring
+    // OAuth server-side) is the way to change method.
+    const methodSetUp = mfaMethod === "totp" ? totpStatus?.set : oauthStatus?.enabled;
 
     return (
         <>
-            <OptionsSection className="mfa-options" title={t("multi_factor_authentication.mfa_method")}>
-                <FormInlineRadioGroup
-                    name="mfaMethod"
-                    currentValue={mfaMethod} onChange={setMfaMethod}
-                    values={[
-                        { value: "totp", label: t("multi_factor_authentication.totp_title") },
-                        { value: "oauth", label: t("multi_factor_authentication.oauth_title") }
-                    ]}
-                />
+            {!methodSetUp &&
+                <OptionsSection className="mfa-options" title={t("multi_factor_authentication.mfa_method")}>
+                    <FormInlineRadioGroup
+                        name="mfaMethod"
+                        currentValue={mfaMethod} onChange={setMfaMethod}
+                        values={[
+                            { value: "totp", label: t("multi_factor_authentication.totp_title") },
+                            { value: "oauth", label: t("multi_factor_authentication.oauth_title") }
+                        ]}
+                    />
 
-                <FormText>
-                    { mfaMethod === "totp"
-                        ? t("multi_factor_authentication.totp_description")
-                        : <RawHtml html={t("multi_factor_authentication.oauth_description")} /> }
-                </FormText>
-            </OptionsSection>
+                    <FormText>
+                        { mfaMethod === "totp"
+                            ? t("multi_factor_authentication.totp_description")
+                            : <RawHtml html={t("multi_factor_authentication.oauth_description")} /> }
+                    </FormText>
+                </OptionsSection>}
 
             { mfaMethod === "totp"
-                ? <TotpSettings />
-                : <OAuthSettings /> }
+                ? <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} />
+                : <OAuthSettings status={oauthStatus} /> }
         </>
     );
 }
 
-function TotpSettings() {
-    const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
+function TotpSettings({ totpStatus, refreshTotpStatus }: {
+    totpStatus?: TOTPStatus,
+    refreshTotpStatus: () => void
+}) {
     // The per-code used/unused status loaded from the server (one entry per code). `undefined` means
     // no recovery codes have been set up yet.
     const [ recoveryStatus, setRecoveryStatus ] = useState<string[]>();
     // The plaintext codes from a generation done in this session, shown once so the user can save
     // them. Cleared on unmount — they can never be retrieved again, only replaced.
     const [ generatedKeys, setGeneratedKeys ] = useState<string[]>();
-
-    const refreshTotpStatus = useCallback(() => {
-        server.get<TOTPStatus>("totp/status").then(setTotpStatus);
-    }, []);
 
     const refreshRecoveryKeys = useCallback(async () => {
         const result = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/enabled");
@@ -158,9 +174,9 @@ function TotpSettings() {
     }, [ refreshTotpStatus, refreshRecoveryKeys ]);
 
     useEffect(() => {
-        refreshTotpStatus();
+        // The TOTP secret status is fetched by the parent; here we only load the recovery codes.
         refreshRecoveryKeys();
-    }, []);
+    }, [ refreshRecoveryKeys ]);
 
     return (<>
         <OptionsSection title={t("multi_factor_authentication.totp_secret_title")}>
@@ -319,13 +335,7 @@ function formatRecoveryCodeUsedDate(statusEntry: string) {
     return isNaN(date.getTime()) ? statusEntry : date.toLocaleString();
 }
 
-function OAuthSettings() {
-    const [ status, setStatus ] = useState<OAuthStatus>();
-
-    useEffect(() => {
-        server.get<OAuthStatus>("oauth/status").then(setStatus);
-    }, []);
-
+function OAuthSettings({ status }: { status?: OAuthStatus }) {
     return (
         <OptionsSection title={t("multi_factor_authentication.oauth_title")}>
             { status?.enabled ? (
