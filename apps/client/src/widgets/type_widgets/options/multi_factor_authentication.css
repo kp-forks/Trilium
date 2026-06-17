@@ -19,3 +19,37 @@
 .mfa-status-badge.inactive {
     --color: var(--muted-text-color, #888);
 }
+
+/* Keeps the "Recovery codes" label text and its dots on one line, the dots sitting just after the
+   title. Lives inside the row's <label>, so text and dots share one box and stay aligned. */
+.recovery-codes-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* One dot per recovery code, shown inline right after the "Recovery codes" label. */
+.recovery-code-dots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.recovery-code-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    box-sizing: border-box;
+}
+
+/* Available (still usable) codes: solid accent fill. */
+.recovery-code-dot.available {
+    background-color: var(--admonition-tip-accent-color, #40c025);
+}
+
+/* Spent codes: hollow, muted outline so they read as no longer usable. */
+.recovery-code-dot.used {
+    background-color: transparent;
+    border: 1.5px solid var(--muted-text-color, #888);
+    opacity: 0.7;
+}

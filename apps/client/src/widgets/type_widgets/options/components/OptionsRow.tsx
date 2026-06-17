@@ -90,7 +90,7 @@ export function OptionsRowWithToggle({ name, label, description, currentValue, o
 }
 
 interface OptionsRowWithButtonProps {
-    label: string;
+    label: ComponentChildren;
     description?: string;
     /** Icon for the action button, in {@link Button} format (e.g. `bx-refresh`, without the leading `bx `). */
     icon?: string;

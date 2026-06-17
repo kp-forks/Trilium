@@ -1,23 +1,25 @@
-import "./multi_factor_authentication.css"
+import "./multi_factor_authentication.css";
 
-import { Trans } from "react-i18next"
-import { t } from "../../../services/i18n"
-import { Badge } from "../../react/Badge"
-import FormText from "../../react/FormText"
-import OptionsPageHeader from "./components/OptionsPageHeader"
-import OptionsSection from "./components/OptionsSection"
-import FormCheckbox from "../../react/FormCheckbox"
-import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks"
-import { FormInlineRadioGroup } from "../../react/FormRadioGroup"
-import Admonition from "../../react/Admonition"
-import { useCallback, useEffect, useState } from "preact/hooks"
-import { OAuthStatus, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus } from "@triliumnext/commons"
-import server from "../../../services/server"
-import Button from "../../react/Button"
-import dialog from "../../../services/dialog"
-import toast from "../../../services/toast"
-import RawHtml from "../../react/RawHtml"
-import { isElectron } from "../../../services/utils"
+import { OAuthStatus, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus } from "@triliumnext/commons";
+import { useCallback, useEffect, useState } from "preact/hooks";
+import { Trans } from "react-i18next";
+
+import dialog from "../../../services/dialog";
+import { t } from "../../../services/i18n";
+import server from "../../../services/server";
+import toast from "../../../services/toast";
+import { isElectron } from "../../../services/utils";
+import Admonition from "../../react/Admonition";
+import { Badge } from "../../react/Badge";
+import Button from "../../react/Button";
+import FormCheckbox from "../../react/FormCheckbox";
+import { FormInlineRadioGroup } from "../../react/FormRadioGroup";
+import FormText from "../../react/FormText";
+import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import RawHtml from "../../react/RawHtml";
+import OptionsPageHeader from "./components/OptionsPageHeader";
+import { OptionsRowWithButton } from "./components/OptionsRow";
+import OptionsSection from "./components/OptionsSection";
 
 export default function MultiFactorAuthenticationSettings() {
     const [ mfaEnabled, setMfaEnabled ] = useTriliumOptionBool("mfaEnabled");
@@ -35,7 +37,7 @@ export default function MultiFactorAuthenticationSettings() {
                 <FormText>{t("multi_factor_authentication.electron_disabled")}</FormText>
             </>
         )
-    )
+    );
 }
 
 function MfaStatusBadge({ mfaEnabled }: { mfaEnabled: boolean }) {
@@ -63,7 +65,7 @@ function EnableMultiFactor({ mfaEnabled, setMfaEnabled }: { mfaEnabled: boolean,
                 currentValue={mfaEnabled} onChange={setMfaEnabled}
             />
         </OptionsSection>
-    )
+    );
 }
 
 function MultiFactorMethod() {
@@ -83,25 +85,30 @@ function MultiFactorMethod() {
 
                 <FormText>
                     { mfaMethod === "totp"
-                    ? t("multi_factor_authentication.totp_description")
-                    : <RawHtml html={t("multi_factor_authentication.oauth_description")} /> }
+                        ? t("multi_factor_authentication.totp_description")
+                        : <RawHtml html={t("multi_factor_authentication.oauth_description")} /> }
                 </FormText>
             </OptionsSection>
 
             { mfaMethod === "totp"
-            ? <TotpSettings />
-            : <OAuthSettings /> }
+                ? <TotpSettings />
+                : <OAuthSettings /> }
         </>
-    )
+    );
 }
 
 function TotpSettings() {
     const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
-    const [ recoveryKeys, setRecoveryKeys ] = useState<string[]>();
+    // The per-code used/unused status loaded from the server (one entry per code). `undefined` means
+    // no recovery codes have been set up yet.
+    const [ recoveryStatus, setRecoveryStatus ] = useState<string[]>();
+    // The plaintext codes from a generation done in this session, shown once so the user can save
+    // them. Cleared on unmount — they can never be retrieved again, only replaced.
+    const [ generatedKeys, setGeneratedKeys ] = useState<string[]>();
 
     const refreshTotpStatus = useCallback(() => {
         server.get<TOTPStatus>("totp/status").then(setTotpStatus);
-    }, [])
+    }, []);
 
     const refreshRecoveryKeys = useCallback(async () => {
         const result = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/enabled");
@@ -112,12 +119,12 @@ function TotpSettings() {
         }
 
         if (!result.keysExist) {
-            setRecoveryKeys(undefined);
+            setRecoveryStatus(undefined);
             return;
         }
 
         const usedResult = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/used");
-        setRecoveryKeys(usedResult.usedRecoveryCodes);
+        setRecoveryStatus(usedResult.usedRecoveryCodes);
     }, []);
 
     const generateRecoveryKeys = useCallback(async () => {
@@ -128,13 +135,14 @@ function TotpSettings() {
         }
 
         if (result.recoveryCodes) {
-            setRecoveryKeys(result.recoveryCodes);
+            setGeneratedKeys(result.recoveryCodes);
         }
 
         await server.post("totp_recovery/set", {
             recoveryCodes: result.recoveryCodes,
         });
-    }, []);
+        await refreshRecoveryKeys();
+    }, [ refreshRecoveryKeys ]);
 
     useEffect(() => {
         refreshTotpStatus();
@@ -144,8 +152,8 @@ function TotpSettings() {
     return (<>
         <OptionsSection title={t("multi_factor_authentication.totp_secret_title")}>
             {totpStatus?.set
-            ? <Admonition type="warning">{t("multi_factor_authentication.totp_secret_description_warning")}</Admonition>
-            : <Admonition type="note">{t("multi_factor_authentication.no_totp_secret_warning")}</Admonition>
+                ? <Admonition type="warning">{t("multi_factor_authentication.totp_secret_description_warning")}</Admonition>
+                : <Admonition type="note">{t("multi_factor_authentication.no_totp_secret_warning")}</Admonition>
             }
 
             <Button
@@ -175,53 +183,110 @@ function TotpSettings() {
             />
         </OptionsSection>
 
-        <TotpRecoveryKeys values={recoveryKeys} generateRecoveryKeys={generateRecoveryKeys} />
-    </>)
+        <TotpRecoveryKeys status={recoveryStatus} generatedKeys={generatedKeys} generateRecoveryKeys={generateRecoveryKeys} />
+    </>);
 }
 
-function TotpRecoveryKeys({ values, generateRecoveryKeys }: { values?: string[], generateRecoveryKeys: () => Promise<void> }) {
+function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys }: {
+    status?: string[],
+    generatedKeys?: string[],
+    generateRecoveryKeys: () => Promise<void>
+}) {
+    // Freshly generated in this session: show the plaintext codes once so the user can save them.
+    if (generatedKeys) {
+        return (
+            <OptionsSection title={t("multi_factor_authentication.recovery_keys_title")}>
+                <FormText>{t("multi_factor_authentication.recovery_keys_description")}</FormText>
+
+                <Admonition type="caution">
+                    <Trans i18nKey="multi_factor_authentication.recovery_keys_description_warning" />
+                </Admonition>
+
+                <ol style={{ columnCount: 2 }}>
+                    {generatedKeys.map(key => <li key={key}><code>{key}</code></li>)}
+                </ol>
+
+                <Button
+                    text={t("multi_factor_authentication.recovery_keys_regenerate")}
+                    onClick={generateRecoveryKeys}
+                />
+            </OptionsSection>
+        );
+    }
+
+    // Already set up: a single compact row whose label carries a dot per code (showing which are
+    // spent), with the remaining count as the description and a replace action on the right.
+    if (status) {
+        const remaining = status.filter(isUnusedRecoveryCode).length;
+        return (
+            <OptionsSection title={t("multi_factor_authentication.recovery_keys_title")}>
+                <OptionsRowWithButton
+                    label={
+                        <span className="recovery-codes-title">
+                            {t("multi_factor_authentication.recovery_keys_label")}
+                            <RecoveryCodeDots status={status} />
+                        </span>
+                    }
+                    description={t("multi_factor_authentication.recovery_keys_remaining", { remaining, total: status.length })}
+                    icon="bx-refresh"
+                    buttonText={t("multi_factor_authentication.recovery_keys_generate_new")}
+                    onClick={generateRecoveryKeys}
+                />
+            </OptionsSection>
+        );
+    }
+
+    // Not set up yet: the original empty state with a generate action.
     return (
         <OptionsSection title={t("multi_factor_authentication.recovery_keys_title")}>
             <FormText>{t("multi_factor_authentication.recovery_keys_description")}</FormText>
 
-            {values ? (
-                <>
-                    <Admonition type="caution">
-                        <Trans i18nKey={t("multi_factor_authentication.recovery_keys_description_warning")} />
-                    </Admonition>
-
-                    <ol style={{ columnCount: 2 }}>
-                        {values.map(key => {
-                            let text = "";
-
-                            if (typeof key === 'string') {
-                                const date = new Date(key.replace(/\//g, '-'));
-                                if (isNaN(date.getTime())) {
-                                    return <li><code>{key}</code></li>
-                                } else {
-                                    text = t("multi_factor_authentication.recovery_keys_used", { date: key.replace(/\//g, '-') });
-                                }
-                            } else {
-                                text = t("multi_factor_authentication.recovery_keys_unused", { index: key });
-                            }
-
-                            return <li>{text}</li>
-                        })}
-                    </ol>
-                </>
-            ) : (
-                <p>{t("multi_factor_authentication.recovery_keys_no_key_set")}</p>
-            )}
+            <p>{t("multi_factor_authentication.recovery_keys_no_key_set")}</p>
 
             <Button
-                text={!values
-                    ? t("multi_factor_authentication.recovery_keys_generate")
-                    : t("multi_factor_authentication.recovery_keys_regenerate")
-                }
+                text={t("multi_factor_authentication.recovery_keys_generate")}
                 onClick={generateRecoveryKeys}
             />
         </OptionsSection>
     );
+}
+
+/**
+ * A row of dots, one per recovery code in order, showing at a glance which codes are still available
+ * (filled) and which have been spent (hollow). Each dot carries a tooltip with its status.
+ */
+function RecoveryCodeDots({ status }: { status: string[] }) {
+    return (
+        <div className="recovery-code-dots">
+            {status.map((entry, index) => {
+                const unused = isUnusedRecoveryCode(entry);
+                return (
+                    <span
+                        key={index}
+                        className={`recovery-code-dot ${unused ? "available" : "used"}`}
+                        title={unused
+                            ? t("multi_factor_authentication.recovery_keys_dot_available")
+                            : t("multi_factor_authentication.recovery_keys_dot_used", { date: formatRecoveryCodeUsedDate(entry) })}
+                    />
+                );
+            })}
+        </div>
+    );
+}
+
+/**
+ * Whether a recovery-code status entry represents an unused (still usable) code. The server returns
+ * a used code as an ISO timestamp of when it was consumed, and an unused one as its plain numeric
+ * index, so a purely numeric entry is one that's still available.
+ */
+function isUnusedRecoveryCode(statusEntry: string) {
+    return /^\d+$/.test(statusEntry);
+}
+
+/** Formats a used-code timestamp (stored with `/` date separators) into a readable local date. */
+function formatRecoveryCodeUsedDate(statusEntry: string) {
+    const date = new Date(statusEntry.replace(/\//g, "-"));
+    return isNaN(date.getTime()) ? statusEntry : date.toLocaleString();
 }
 
 function OAuthSettings() {
@@ -256,5 +321,5 @@ function OAuthSettings() {
                 </>
             )}
         </OptionsSection>
-    )
+    );
 }
