@@ -15,7 +15,7 @@ import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
 import Collapsible from "../../react/Collapsible";
 import FormGroup from "../../react/FormGroup";
-import { FormInlineRadioGroup } from "../../react/FormRadioGroup";
+import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOption } from "../../react/hooks";
@@ -31,10 +31,11 @@ export default function PasswordSettings() {
     return (
         <>
             <OptionsPageHeader />
+            {/* The sign-in method (and its two-factor / OAuth settings) is only available on the server
+                build — the desktop app authenticates differently — matching the former MFA page's
+                serverOnly scope. */}
+            {!isElectron() && <SignInMethod />}
             <ChangePassword />
-            {/* Two-factor auth (TOTP) and OAuth are only available on the server build — the desktop
-                app authenticates differently — matching the former MFA page's serverOnly scope. */}
-            {!isElectron() && <TwoFactorAuthentication />}
             <ProtectedSessionTimeout />
         </>
     );
@@ -183,7 +184,10 @@ function ProtectedSessionTimeout() {
  * `totpStatus.set` to know whether to offer switching methods) and delegates the heavier TOTP UI to
  * its own module; OAuth is small and read-only, so it lives here.
  */
-function TwoFactorAuthentication() {
+function SignInMethod() {
+    // `mfaMethod` is the persisted choice: "oauth" means sign in via an OAuth provider, anything else
+    // ("totp") means the local password (with TOTP as optional second factor). The dropdown speaks in
+    // the user-facing "local"/"oauth" terms and maps back to the option here.
     const [ mfaMethod, setMfaMethod ] = useTriliumOption("mfaMethod");
     const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
     const [ oauthStatus, setOauthStatus ] = useState<OAuthStatus>();
@@ -197,51 +201,45 @@ function TwoFactorAuthentication() {
         server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
     }, [ refreshTotpStatus ]);
 
-    // The method selector only matters during initial setup. Switching method once one is configured
-    // silently strands the existing setup and can leave MFA effectively off (see the remove flow),
-    // so once the current method is set up we hide the selector — removing TOTP (or reconfiguring
-    // OAuth server-side) is the way to change method.
-    const methodSetUp = mfaMethod === "totp" ? totpStatus?.set : oauthStatus?.enabled;
+    const usingOAuth = mfaMethod === "oauth";
 
     return (
         <>
-            {!methodSetUp &&
-                <OptionsSection className="mfa-options" title={t("multi_factor_authentication.mfa_method")}>
-                    <FormInlineRadioGroup
-                        name="mfaMethod"
-                        currentValue={mfaMethod} onChange={setMfaMethod}
+            <OptionsSection className="signin-method" title={t("multi_factor_authentication.authentication_title")}>
+                <OptionsRow name="signin-method" label={t("multi_factor_authentication.signin_method")}>
+                    <FormSelect
                         values={[
-                            { value: "totp", label: t("multi_factor_authentication.totp_title") },
-                            { value: "oauth", label: t("multi_factor_authentication.oauth_title") }
+                            { value: "local", label: t("multi_factor_authentication.signin_local") },
+                            { value: "oauth", label: t("multi_factor_authentication.signin_oauth") }
                         ]}
+                        keyProperty="value" titleProperty="label"
+                        currentValue={usingOAuth ? "oauth" : "local"}
+                        onChange={(value) => setMfaMethod(value === "oauth" ? "oauth" : "totp")}
                     />
+                </OptionsRow>
 
-                    <FormText>
-                        { mfaMethod === "totp"
-                            ? t("multi_factor_authentication.totp_description")
-                            : <RawHtml html={t("multi_factor_authentication.oauth_description")} /> }
-                    </FormText>
-                </OptionsSection>}
+                <FormText>
+                    { usingOAuth
+                        ? <RawHtml html={t("multi_factor_authentication.oauth_description")} />
+                        : t("multi_factor_authentication.signin_local_description") }
+                </FormText>
+            </OptionsSection>
 
-            { mfaMethod === "totp" &&
-                <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} /> }
-
-            {/* OAuth is configured entirely server-side, so its card is read-only and stays visible
-                regardless of the active method — it's a status indicator for whether OAuth is available. */}
-            <OAuthStatusCard status={oauthStatus} />
+            { usingOAuth
+                ? <OAuthStatusCard status={oauthStatus} />
+                : <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} /> }
         </>
     );
 }
 
 /**
- * Read-only OAuth status card. OAuth is configured entirely server-side (env vars / config.ini),
- * so this card offers no controls — it just reflects whether OAuth is available, and when it's the
- * active method, the signed-in account. It stays visible even while TOTP is the active method so the
- * user can always tell whether OAuth is set up.
+ * Read-only OAuth status card, shown when OAuth is the selected sign-in method. OAuth is configured
+ * entirely server-side (env vars / config.ini), so this card offers no controls — it just reflects
+ * whether OAuth is available and, once signed in, the connected account.
  */
 function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
-    // "Configured" is purely about the server-side variables being present, independent of which MFA
-    // method is currently active (the server's `enabled` flag additionally requires mfaMethod === 'oauth').
+    // "Configured" is purely about the server-side variables being present (the server's `enabled` flag
+    // additionally requires mfaMethod === 'oauth', which is implied here since this card only renders then).
     const configured = (status?.missingVars?.length ?? 1) === 0;
 
     return (

@@ -1692,9 +1692,11 @@
     "password_changed_success": "Password has been changed. Trilium will be reloaded after you press OK."
   },
   "multi_factor_authentication": {
-    "mfa_method": "MFA Method",
-    "totp_title": "Time-based One-Time Password (TOTP)",
-    "totp_description": "TOTP (Time-Based One-Time Password) is a security feature that generates a unique, temporary code which changes every 30 seconds. You use this code, along with your password to log into your account, making it much harder for anyone else to access it.",
+    "authentication_title": "Authentication",
+    "signin_method": "Sign-in with",
+    "signin_local": "Local password",
+    "signin_oauth": "OAuth provider (e.g. Google)",
+    "signin_local_description": "Sign in with your Trilium password. You can optionally enable two-factor authentication for an extra layer of security.",
     "totp_setup_label": "Set up two-factor authentication",
     "totp_setup_description": "Generate a time-based code from an authenticator app as your second factor. You'll scan a QR code and confirm a code to finish — recovery codes are issued at the end.",
     "totp_setup_button": "Set up",
