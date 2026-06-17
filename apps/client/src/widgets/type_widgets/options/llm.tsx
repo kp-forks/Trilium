@@ -20,7 +20,7 @@ export default function LlmSettings() {
         return (
             <>
                 <OptionsPageHeader />
-                <OptionsSection title={t("llm.settings_title")}>
+                <OptionsSection>
                     <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
                 </OptionsSection>
             </>
@@ -31,7 +31,6 @@ export default function LlmSettings() {
         <>
             <OptionsPageHeader />
             <OptionsSection
-                title={t("llm.settings_title")}
                 description={t("llm.settings_description")}
                 helpUrl="GBBMSlVSOIGP"
             >

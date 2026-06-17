@@ -1624,7 +1624,6 @@
     "download": "Download"
   },
   "etapi": {
-    "title": "ETAPI",
     "description": "ETAPI is a REST API used to access Trilium instance programmatically, without UI.",
     "create_token": "Create new ETAPI token",
     "existing_tokens": "Existing tokens",
@@ -2794,7 +2793,6 @@
     "summary": "Summary"
   },
   "llm": {
-    "settings_title": "AI / LLM",
     "settings_description": "Configure AI and Large Language Model integrations.",
     "not_available_in_standalone": "AI/LLM features are not available in the standalone version of Trilium, as LLM providers do not allow direct access from a browser.",
     "feature_not_enabled": "Enable the LLM experimental feature in Settings → Advanced → Experimental features to use AI integrations.",

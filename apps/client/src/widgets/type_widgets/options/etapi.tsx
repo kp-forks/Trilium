@@ -56,7 +56,6 @@ export default function EtapiSettings() {
         <>
             <OptionsPageHeader />
             <OptionsSection
-                title={t("etapi.title")}
                 description={t("etapi.description")}
                 helpUrl="pgxEVkzLl1OP"
             >
