@@ -292,12 +292,15 @@ function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
  * in-app setup, so this is the only place the values are documented in the UI.
  */
 function OAuthConfigHint() {
+    // oauthBaseUrl is the app's externally-reachable base URL, which for the user reading this is
+    // exactly the origin they're browsing from — so prefill it as a sensible example value.
+    const baseUrl = window.location.origin;
     return (
         <Collapsible title={t("multi_factor_authentication.oauth_how_to_enable")}>
             <p>{t("multi_factor_authentication.oauth_server_config_hint")}</p>
-            <pre><code>{"[MultiFactorAuthentication]\noauthBaseUrl=\noauthClientId=\noauthClientSecret="}</code></pre>
+            <pre><code>{`[MultiFactorAuthentication]\noauthBaseUrl=${baseUrl}\noauthClientId=\noauthClientSecret=`}</code></pre>
             <p>{t("multi_factor_authentication.oauth_server_env_hint")}</p>
-            <pre><code>{"TRILIUM_OAUTH_BASE_URL=\nTRILIUM_OAUTH_CLIENT_ID=\nTRILIUM_OAUTH_CLIENT_SECRET="}</code></pre>
+            <pre><code>{`TRILIUM_OAUTH_BASE_URL=${baseUrl}\nTRILIUM_OAUTH_CLIENT_ID=\nTRILIUM_OAUTH_CLIENT_SECRET=`}</code></pre>
         </Collapsible>
     );
 }
