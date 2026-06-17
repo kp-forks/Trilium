@@ -40,13 +40,32 @@
     color: white;
 }
 
-/* Enrollment dialog: the scannable QR code, centred above the manual-entry secret. */
+/* Enrollment dialog step 1: QR code (left) and the manual-entry secret (right) on one row — two
+   ways to add the same account. The QR takes a fixed width; the secret column fills the rest. */
+.modal.totp-enrollment-modal .totp-enroll-grid {
+    display: grid;
+    /* Fixed QR column (180px plate + 2×10px padding) so its caption wraps within it instead of
+       stretching the column and squeezing the field. */
+    grid-template-columns: 200px 1fr;
+    gap: 16px;
+    align-items: start;
+    margin-block: 12px;
+}
+
+/* Step headings ("1. …", "2. …") that break the enrollment flow into clear stages. */
+.modal.totp-enrollment-modal .totp-enroll-step-title {
+    margin-block: 18px 8px;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+/* The scannable QR code with its caption stacked above it. */
 .modal.totp-enrollment-modal .totp-enroll-qr {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    margin-block: 12px;
+    text-align: center;
 }
 
 /* The QR itself sits on a white plate with quiet-zone padding so it scans reliably regardless of the

@@ -130,9 +130,6 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
     // The per-code used/unused status loaded from the server (one entry per code). `undefined` means
     // no recovery codes have been set up yet.
     const [ recoveryStatus, setRecoveryStatus ] = useState<string[]>();
-    // The plaintext codes from a generation done in this session, shown once so the user can save
-    // them. Cleared on unmount — they can never be retrieved again, only replaced.
-    const [ generatedKeys, setGeneratedKeys ] = useState<string[]>();
     // Whether the verify-before-enable enrollment modal is open.
     const [ showEnroll, setShowEnroll ] = useState(false);
 
@@ -152,21 +149,6 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
         const usedResult = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/used");
         setRecoveryStatus(usedResult.usedRecoveryCodes);
     }, []);
-
-    const generateRecoveryKeys = useCallback(async () => {
-        const result = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/generate");
-        if (!result.success) {
-            toast.showError(t("multi_factor_authentication.recovery_keys_error"));
-            return;
-        }
-
-        if (result.recoveryCodes) {
-            setGeneratedKeys(result.recoveryCodes);
-        }
-
-        // `totp_recovery/generate` already persisted the codes, so no extra `set` round-trip is needed.
-        await refreshRecoveryKeys();
-    }, [ refreshRecoveryKeys ]);
 
     // Runs once enrollment is committed (the modal's Finish step persisted the secret and the recovery
     // codes it already showed), so we only refresh state here — generating again would invalidate the
@@ -220,12 +202,11 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
             />
         </OptionsSection>
 
-        <TotpRecoveryKeys
-            status={recoveryStatus}
-            generatedKeys={generatedKeys}
-            generateRecoveryKeys={generateRecoveryKeys}
-            onRemoveTotp={totpStatus?.set ? removeTotp : undefined}
-        />
+        {/* Recovery codes are part of TOTP, so they only appear once a secret is enrolled. They're
+            issued during enrollment (and re-issued when the secret is regenerated) — never minted
+            standalone — so this is a read-only view. */}
+        {totpStatus?.set &&
+            <TotpRecoveryKeys status={recoveryStatus} onRemoveTotp={removeTotp} />}
 
         {createPortal(
             <TotpEnrollmentModal
@@ -402,17 +383,25 @@ function TotpVerifyStep({ secret, secretUrl, code, setCode, codeRejected, codeRe
         <>
             <FormText>{t("multi_factor_authentication.totp_enroll_instructions")}</FormText>
 
-            {secretUrl && <TotpQrCode url={secretUrl} />}
+            <h5 className="totp-enroll-step-title">{t("multi_factor_authentication.totp_enroll_step1_title")}</h5>
+            <div className="totp-enroll-grid">
+                {secretUrl && <TotpQrCode url={secretUrl} />}
 
-            <FormGroup name="totp-enroll-secret" label={t("multi_factor_authentication.totp_enroll_secret_label")}>
-                <FormTextBox
-                    className="totp-enroll-secret"
-                    currentValue={secret ?? ""}
-                    readOnly
-                    onFocus={(e) => e.currentTarget.select()}
-                />
-            </FormGroup>
+                <FormGroup
+                    className="totp-enroll-secret-group"
+                    name="totp-enroll-secret"
+                    label={t("multi_factor_authentication.totp_enroll_secret_label")}
+                >
+                    <FormTextBox
+                        className="totp-enroll-secret"
+                        currentValue={secret ?? ""}
+                        readOnly
+                        onFocus={(e) => e.currentTarget.select()}
+                    />
+                </FormGroup>
+            </div>
 
+            <h5 className="totp-enroll-step-title">{t("multi_factor_authentication.totp_enroll_step2_title")}</h5>
             <FormGroup
                 name="totp-enroll-code"
                 label={t("multi_factor_authentication.totp_enroll_code_label")}
@@ -465,6 +454,23 @@ function TotpRecoveryStep({ codes, acknowledged, setAcknowledged }: {
         <>
             <FormText>{t("multi_factor_authentication.totp_enroll_recovery_instructions")}</FormText>
 
+            <RecoveryCodesList codes={codes} />
+
+            <FormCheckbox
+                name="totp-recovery-saved"
+                label={t("multi_factor_authentication.totp_enroll_saved_ack")}
+                currentValue={acknowledged}
+                onChange={setAcknowledged}
+            />
+        </>
+    );
+}
+
+/** The recovery codes themselves, with copy/download actions and the keep-them-safe caution. Shared
+ *  by enrollment (step 2) and the standalone regenerate flow. */
+function RecoveryCodesList({ codes }: { codes: string[] }) {
+    return (
+        <>
             <ol className="totp-recovery-codes">
                 {codes.map((recoveryCode) => <li key={recoveryCode}><code>{recoveryCode}</code></li>)}
             </ol>
@@ -488,13 +494,6 @@ function TotpRecoveryStep({ codes, acknowledged, setAcknowledged }: {
             <Admonition type="caution">
                 <Trans i18nKey="multi_factor_authentication.recovery_keys_description_warning" />
             </Admonition>
-
-            <FormCheckbox
-                name="totp-recovery-saved"
-                label={t("multi_factor_authentication.totp_enroll_saved_ack")}
-                currentValue={acknowledged}
-                onChange={setAcknowledged}
-            />
         </>
     );
 }
@@ -512,77 +511,40 @@ function downloadRecoveryCodes(codes: string[]) {
     URL.revokeObjectURL(url);
 }
 
-function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys, onRemoveTotp }: {
+/**
+ * Read-only recovery-codes status for an enrolled TOTP, plus the destructive remove-TOTP action.
+ * The codes themselves are shown once during enrollment; here we only report how many remain. There's
+ * no generate/regenerate action — fresh codes are only issued by (re-)enrolling the secret.
+ */
+function TotpRecoveryKeys({ status, onRemoveTotp }: {
     status?: string[],
-    generatedKeys?: string[],
-    generateRecoveryKeys: () => Promise<void>,
-    /** When set, TOTP is configured and a "remove two-factor authentication" action is shown. */
-    onRemoveTotp?: () => void
+    onRemoveTotp: () => void
 }) {
-    // Freshly generated in this session: show the plaintext codes once so the user can save them.
-    if (generatedKeys) {
-        return (
-            <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
-                <FormText>{t("multi_factor_authentication.recovery_keys_description")}</FormText>
+    const remaining = status?.filter(isUnusedRecoveryCode).length ?? 0;
 
-                <Admonition type="caution">
-                    <Trans i18nKey="multi_factor_authentication.recovery_keys_description_warning" />
-                </Admonition>
-
-                <ol style={{ columnCount: 2 }}>
-                    {generatedKeys.map(key => <li key={key}><code>{key}</code></li>)}
-                </ol>
-
-                <Button
-                    text={t("multi_factor_authentication.recovery_keys_regenerate")}
-                    onClick={generateRecoveryKeys}
-                />
-            </OptionsSection>
-        );
-    }
-
-    // Already set up: a compact recovery-codes row (a dot per code showing which are spent, the
-    // remaining count, and a replace action), followed by the destructive remove-TOTP action.
-    if (status) {
-        const remaining = status.filter(isUnusedRecoveryCode).length;
-        return (
-            <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
-                <OptionsRowWithButton
-                    label={
-                        <span className="recovery-codes-title">
-                            {t("multi_factor_authentication.recovery_keys_label")}
-                            <RecoveryCodeDots status={status} />
-                        </span>
-                    }
-                    description={t("multi_factor_authentication.recovery_keys_remaining", { remaining, total: status.length })}
-                    icon="bx-refresh"
-                    buttonText={t("multi_factor_authentication.recovery_keys_generate_new")}
-                    onClick={generateRecoveryKeys}
-                />
-
-                {onRemoveTotp &&
-                    <OptionsRowWithButton
-                        label={t("multi_factor_authentication.totp_remove_label")}
-                        description={t("multi_factor_authentication.totp_remove_description")}
-                        icon="bx-trash"
-                        buttonClassName="totp-remove-button"
-                        buttonText={t("multi_factor_authentication.totp_remove_button")}
-                        onClick={onRemoveTotp}
-                    />}
-            </OptionsSection>
-        );
-    }
-
-    // Not set up yet: the original empty state with a generate action.
     return (
         <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
-            <FormText>{t("multi_factor_authentication.recovery_keys_description")}</FormText>
+            <div className="option-row">
+                <div className="option-row-label">
+                    <span className="recovery-codes-title">
+                        {t("multi_factor_authentication.recovery_keys_label")}
+                        {status && status.length > 0 && <RecoveryCodeDots status={status} />}
+                    </span>
+                    <small className="option-row-description">
+                        {status && status.length > 0
+                            ? t("multi_factor_authentication.recovery_keys_remaining", { remaining, total: status.length })
+                            : t("multi_factor_authentication.recovery_keys_no_key_set")}
+                    </small>
+                </div>
+            </div>
 
-            <p>{t("multi_factor_authentication.recovery_keys_no_key_set")}</p>
-
-            <Button
-                text={t("multi_factor_authentication.recovery_keys_generate")}
-                onClick={generateRecoveryKeys}
+            <OptionsRowWithButton
+                label={t("multi_factor_authentication.totp_remove_label")}
+                description={t("multi_factor_authentication.totp_remove_description")}
+                icon="bx-trash"
+                buttonClassName="totp-remove-button"
+                buttonText={t("multi_factor_authentication.totp_remove_button")}
+                onClick={onRemoveTotp}
             />
         </OptionsSection>
     );

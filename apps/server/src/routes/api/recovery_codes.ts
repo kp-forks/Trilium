@@ -1,11 +1,6 @@
 import recovery_codes from '../../services/encryption/recovery_codes.js';
 import type { Request } from 'express';
 
-function setRecoveryCodes(req: Request) {
-    const success = recovery_codes.setRecoveryCodes(req.body.recoveryCodes.join(','));
-    return { success: success, message: 'Recovery codes set!' };
-}
-
 function verifyRecoveryCode(req: Request) {
     const success = recovery_codes.verifyRecoveryCode(req.body.recovery_code_guess);
 
@@ -16,10 +11,6 @@ function checkForRecoveryKeys() {
     return {
         success: true, keysExist: recovery_codes.isRecoveryCodeSet()
     };
-}
-
-function generateRecoveryCodes() {
-    return { success: true, recoveryCodes: recovery_codes.generateRecoveryCodes() };
 }
 
 function getUsedRecoveryCodes() {
@@ -41,8 +32,6 @@ function getUsedRecoveryCodes() {
 }
 
 export default {
-    setRecoveryCodes,
-    generateRecoveryCodes,
     verifyRecoveryCode,
     checkForRecoveryKeys,
     getUsedRecoveryCodes

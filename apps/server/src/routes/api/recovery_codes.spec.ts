@@ -2,6 +2,7 @@ import { cls } from "@triliumnext/core";
 import type { Request } from "express";
 import { describe, expect, it } from "vitest";
 
+import recoveryCodesService from "../../services/encryption/recovery_codes.js";
 import recoveryCodesRoute from "./recovery_codes.js";
 
 describe("Recovery codes API", () => {
@@ -12,15 +13,19 @@ describe("Recovery codes API", () => {
         expect(recoveryCodesRoute.getUsedRecoveryCodes()).toEqual([]);
     });
 
-    it("generates codes, then verifies and marks one as used", () => {
-        const generated = cls.init(() => recoveryCodesRoute.generateRecoveryCodes());
-        expect(generated.success).toBe(true);
-        expect(generated.recoveryCodes).toHaveLength(8);
+    it("verifies a code and marks it as used", () => {
+        // Recovery codes are issued during TOTP enrollment, not by this route, so seed them via the
+        // service to exercise the read/verify endpoints.
+        const codes = cls.init(() => {
+            const generated = recoveryCodesService.createRecoveryCodes();
+            recoveryCodesService.setRecoveryCodes(generated.join(","));
+            return generated;
+        });
+        expect(codes).toHaveLength(8);
 
         expect(recoveryCodesRoute.checkForRecoveryKeys()).toEqual({ success: true, keysExist: true });
 
-        const guess = generated.recoveryCodes[0];
-        const verifyReq = { body: { recovery_code_guess: guess } } as unknown as Request;
+        const verifyReq = { body: { recovery_code_guess: codes[0] } } as unknown as Request;
         expect(cls.init(() => recoveryCodesRoute.verifyRecoveryCode(verifyReq))).toEqual({ success: true });
 
         // A wrong guess fails.
@@ -31,12 +36,5 @@ describe("Recovery codes API", () => {
         expect(used.success).toBe(true);
         // The used code is replaced by an ISO-ish timestamp; the rest stay as indices.
         expect(used.usedRecoveryCodes.some(c => /T/.test(c))).toBe(true);
-    });
-
-    it("sets recovery codes from an explicit list", () => {
-        const codes = Array.from({ length: 3 }, (_, i) => `code-${i}`);
-        const req = { body: { recoveryCodes: codes } } as unknown as Request;
-        const result = cls.init(() => recoveryCodesRoute.setRecoveryCodes(req));
-        expect(result.message).toBe("Recovery codes set!");
     });
 });

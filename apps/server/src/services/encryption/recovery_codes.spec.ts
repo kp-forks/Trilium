@@ -57,17 +57,6 @@ describe("recovery_codes", () => {
         expect(recoveryCodes.isRecoveryCodeSet()).toBe(false);
     });
 
-    it("generateRecoveryCodes returns 8 codes and persists them", () => {
-        let codes: string[] = [];
-        cls.init(() => {
-            recoveryCodes.clearRecoveryCodes();
-            codes = recoveryCodes.generateRecoveryCodes();
-        });
-        expect(codes).toHaveLength(8);
-        expect(recoveryCodes.isRecoveryCodeSet()).toBe(true);
-        expect(recoveryCodes.getRecoveryCodes()).toEqual(codes);
-    });
-
     it("rejects codes failing the format regex without consuming a code", () => {
         cls.init(() => {
             recoveryCodes.setRecoveryCodes([ CODE_A, CODE_B ].join(","));

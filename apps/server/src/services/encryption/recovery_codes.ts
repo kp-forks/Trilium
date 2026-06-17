@@ -29,13 +29,6 @@ function createRecoveryCodes(): string[] {
     return Array.from({ length: 8 }, () => crypto.randomBytes(16).toString('base64'));
 }
 
-/** Generates a fresh set of recovery codes, persists them (replacing any existing ones), and returns them. */
-function generateRecoveryCodes(): string[] {
-    const recoveryCodes = createRecoveryCodes();
-    setRecoveryCodes(recoveryCodes.join(','));
-    return recoveryCodes;
-}
-
 function clearRecoveryCodes() {
     sql.transactional(() => {
         optionService.setOption('recoveryCodeInitialVector', '');
@@ -101,7 +94,6 @@ function verifyRecoveryCode(recoveryCodeGuess: string) {
 export default {
     setRecoveryCodes,
     createRecoveryCodes,
-    generateRecoveryCodes,
     clearRecoveryCodes,
     getRecoveryCodes,
     verifyRecoveryCode,
