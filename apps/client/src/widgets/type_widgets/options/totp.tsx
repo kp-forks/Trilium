@@ -1,6 +1,6 @@
-import "./multi_factor_authentication.css";
+import "./totp.css";
 
-import { OAuthStatus, TOTPEnableResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus, TOTPVerifyResponse } from "@triliumnext/commons";
+import { TOTPEnableResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus, TOTPVerifyResponse } from "@triliumnext/commons";
 import { RefObject } from "preact";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -11,123 +11,24 @@ import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import utils, { isElectron } from "../../../services/utils";
+import utils from "../../../services/utils";
 import Admonition from "../../react/Admonition";
-import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
-import Collapsible from "../../react/Collapsible";
 import FormCheckbox from "../../react/FormCheckbox";
 import FormGroup from "../../react/FormGroup";
-import { FormInlineRadioGroup } from "../../react/FormRadioGroup";
 import FormText from "../../react/FormText";
 import FormTextBox from "../../react/FormTextBox";
-import { useTriliumOption } from "../../react/hooks";
 import Modal from "../../react/Modal";
-import RawHtml, { RawHtmlBlock } from "../../react/RawHtml";
-import OptionsPageHeader from "./components/OptionsPageHeader";
+import { RawHtmlBlock } from "../../react/RawHtml";
 import { OptionsRowWithButton } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
-export default function MultiFactorAuthenticationSettings() {
-    const [ mfaMethod, setMfaMethod ] = useTriliumOption("mfaMethod");
-    const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
-    const [ oauthStatus, setOauthStatus ] = useState<OAuthStatus>();
-
-    const refreshTotpStatus = useCallback(() => {
-        server.get<TOTPStatus>("totp/status").then(setTotpStatus);
-    }, []);
-
-    useEffect(() => {
-        refreshTotpStatus();
-        server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
-    }, [ refreshTotpStatus ]);
-
-    // MFA is active when the selected method is fully set up: a TOTP secret has been enrolled, or
-    // OAuth has all its server-side environment variables (no missing vars). There's no separate
-    // enable switch — enrolling a method is what turns it on, and removing it is what turns it off.
-    const oauthConfigured = (oauthStatus?.missingVars?.length ?? 1) === 0;
-    const mfaActive = (mfaMethod === "totp" && !!totpStatus?.set)
-        || (mfaMethod === "oauth" && oauthConfigured);
-
-    return (!isElectron()
-        ? (
-            <>
-                <OptionsPageHeader actions={<MfaStatusBadge active={mfaActive} />} />
-                <MultiFactorMethod
-                    mfaMethod={mfaMethod} setMfaMethod={setMfaMethod}
-                    totpStatus={totpStatus} oauthStatus={oauthStatus}
-                    refreshTotpStatus={refreshTotpStatus}
-                />
-            </>
-        ) : (
-            <>
-                <OptionsPageHeader />
-                <FormText>{t("multi_factor_authentication.electron_disabled")}</FormText>
-            </>
-        )
-    );
-}
-
-function MfaStatusBadge({ active }: { active: boolean }) {
-    return (
-        <div className="mfa-header-actions">
-            <Badge
-                className={`mfa-status-badge ${active ? "active" : "inactive"}`}
-                icon={active ? "bx bx-check-shield" : "bx bx-shield-x"}
-                text={active ? t("multi_factor_authentication.status_active") : t("multi_factor_authentication.status_inactive")}
-                tooltip={active ? t("multi_factor_authentication.status_active_tooltip") : t("multi_factor_authentication.status_inactive_tooltip")}
-                outline
-            />
-        </div>
-    );
-}
-
-function MultiFactorMethod({ mfaMethod, setMfaMethod, totpStatus, oauthStatus, refreshTotpStatus }: {
-    mfaMethod: string,
-    setMfaMethod: (newValue: string) => Promise<void>,
-    totpStatus?: TOTPStatus,
-    oauthStatus?: OAuthStatus,
-    refreshTotpStatus: () => void
-}) {
-    // The method selector only matters during initial setup. Switching method once one is configured
-    // silently strands the existing setup and can leave MFA effectively off (see the remove flow),
-    // so once the current method is set up we hide the selector — removing TOTP (or reconfiguring
-    // OAuth server-side) is the way to change method.
-    const methodSetUp = mfaMethod === "totp" ? totpStatus?.set : oauthStatus?.enabled;
-
-    return (
-        <>
-            <FormText><Trans i18nKey="multi_factor_authentication.description" /></FormText>
-
-            {!methodSetUp &&
-                <OptionsSection className="mfa-options" title={t("multi_factor_authentication.mfa_method")}>
-                    <FormInlineRadioGroup
-                        name="mfaMethod"
-                        currentValue={mfaMethod} onChange={setMfaMethod}
-                        values={[
-                            { value: "totp", label: t("multi_factor_authentication.totp_title") },
-                            { value: "oauth", label: t("multi_factor_authentication.oauth_title") }
-                        ]}
-                    />
-
-                    <FormText>
-                        { mfaMethod === "totp"
-                            ? t("multi_factor_authentication.totp_description")
-                            : <RawHtml html={t("multi_factor_authentication.oauth_description")} /> }
-                    </FormText>
-                </OptionsSection>}
-
-            { mfaMethod === "totp" &&
-                <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} /> }
-
-            {/* OAuth is configured entirely server-side, so its card is read-only and stays visible
-                regardless of the active method — it's a status indicator for whether OAuth is available. */}
-            <OAuthStatusCard status={oauthStatus} />
-        </>
-    );
-}
-
-function TotpSettings({ totpStatus, refreshTotpStatus }: {
+/**
+ * TOTP (authenticator-app) two-factor settings. Owns the recovery-codes state and the enrollment /
+ * regenerate dialogs; the TOTP secret status itself is owned by the parent (which also needs it to
+ * decide whether to show the method selector) and passed in.
+ */
+export function TotpSettings({ totpStatus, refreshTotpStatus }: {
     totpStatus?: TOTPStatus,
     refreshTotpStatus: () => void
 }) {
@@ -173,7 +74,7 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
         await server.post("totp/reset");
         toast.showMessage(t("multi_factor_authentication.totp_removed"));
         // The secret and recovery codes are gone server-side; refresh so the section drops back to
-        // its "not set up" state (badge inactive, method selector shown) right away.
+        // its "not set up" state (method selector shown) right away.
         refreshTotpStatus();
         refreshRecoveryKeys();
     }, [ refreshTotpStatus, refreshRecoveryKeys ]);
@@ -636,75 +537,4 @@ function isUnusedRecoveryCode(statusEntry: string) {
 function formatRecoveryCodeUsedDate(statusEntry: string) {
     const date = new Date(statusEntry.replace(/\//g, "-"));
     return isNaN(date.getTime()) ? statusEntry : date.toLocaleString();
-}
-
-/**
- * Read-only OAuth status card. OAuth is configured entirely server-side (env vars / config.ini),
- * so this card offers no controls — it just reflects whether OAuth is available, and when it's the
- * active method, the signed-in account. It stays visible even while TOTP is the active method so the
- * user can always tell whether OAuth is set up.
- */
-function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
-    // "Configured" is purely about the server-side variables being present, independent of which MFA
-    // method is currently active (the server's `enabled` flag additionally requires mfaMethod === 'oauth').
-    const configured = (status?.missingVars?.length ?? 1) === 0;
-
-    return (
-        <OptionsSection
-            title={
-                <span className="oauth-status-title">
-                    {t("multi_factor_authentication.oauth_title")}
-                    <Badge
-                        className={`oauth-status-badge ${configured ? "configured" : "not-configured"}`}
-                        icon={configured ? "bx bx-check" : "bx bx-x"}
-                        text={configured
-                            ? t("multi_factor_authentication.oauth_status_configured")
-                            : t("multi_factor_authentication.oauth_status_not_configured")}
-                        outline
-                    />
-                </span>
-            }
-        >
-            { configured ? (
-                <div class="col-md-6">
-                    <span><b>{t("multi_factor_authentication.oauth_user_account")}</b></span>
-                    <span class="user-account-name">{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
-
-                    <br />
-                    <span><b>{t("multi_factor_authentication.oauth_user_email")}</b></span>
-                    <span class="user-account-email">{status?.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
-                </div>
-            ) : (
-                <>
-                    <p>{t("multi_factor_authentication.oauth_not_configured_hint")}</p>
-
-                    { status?.missingVars && status.missingVars.length > 0 && (
-                        <Admonition type="note">
-                            {t("multi_factor_authentication.oauth_missing_vars", {
-                                variables: status.missingVars.map(v => `"${v}"`).join(", ")
-                            })}
-                        </Admonition>
-                    )}
-
-                    <OAuthConfigHint />
-                </>
-            )}
-        </OptionsSection>
-    );
-}
-
-/**
- * Collapsible "How to enable" hint for OAuth, mirroring the security page's {@link ServerConfigHint}.
- * Lists the config.ini section and the equivalent environment variables the server reads — OAuth has no
- * in-app setup, so this is the only place the values are documented in the UI.
- */
-function OAuthConfigHint() {
-    return (
-        <Collapsible title={t("multi_factor_authentication.oauth_how_to_enable")}>
-            <p>{t("multi_factor_authentication.oauth_server_config_hint")}</p>
-            <pre><code>{"[MultiFactorAuthentication]\noauthBaseUrl=\noauthClientId=\noauthClientSecret="}</code></pre>
-            <p>{t("multi_factor_authentication.oauth_server_env_hint")}</p>
-            <pre><code>{"TRILIUM_OAUTH_BASE_URL=\nTRILIUM_OAUTH_CLIENT_ID=\nTRILIUM_OAUTH_CLIENT_SECRET="}</code></pre>
-        </Collapsible>
-    );
 }

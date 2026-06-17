@@ -1692,15 +1692,7 @@
     "password_changed_success": "Password has been changed. Trilium will be reloaded after you press OK."
   },
   "multi_factor_authentication": {
-    "title": "Multi-Factor Authentication",
-    "status_active": "Active",
-    "status_inactive": "Inactive",
-    "status_active_tooltip": "Multi-Factor Authentication is enabled for your account.",
-    "status_inactive_tooltip": "Multi-Factor Authentication is currently disabled.",
-    "description": "Multi-Factor Authentication (MFA) adds an extra layer of security to your account. Instead of just entering a password to log in, MFA requires you to provide one or more additional pieces of evidence to verify your identity. This way, even if someone gets hold of your password, they still can't access your account without the second piece of information. It's like adding an extra lock to your door, making it much harder for anyone else to break in.<br><br>Please follow the instructions below to enable MFA. If you don't config correctly, login will fall back to password only.",
-    "mfa_enabled": "Enable Multi-Factor Authentication",
     "mfa_method": "MFA Method",
-    "electron_disabled": "Multi-Factor Authentication is not supported in the desktop build currently.",
     "totp_title": "Time-based One-Time Password (TOTP)",
     "totp_description": "TOTP (Time-Based One-Time Password) is a security feature that generates a unique, temporary code which changes every 30 seconds. You use this code, along with your password to log into your account, making it much harder for anyone else to access it.",
     "totp_setup_label": "Set up two-factor authentication",
