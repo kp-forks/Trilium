@@ -92,14 +92,17 @@
     letter-spacing: 0.15em;
 }
 
-/* Recovery-codes step: two monospaced columns so all eight codes fit compactly. */
-.modal.totp-enrollment-modal .totp-recovery-codes {
+/* Recovery-codes list (shared by the enrollment dialog and the regenerate dialog): two monospaced
+   columns so all eight codes fit compactly. */
+.totp-recovery-codes {
     column-count: 2;
     font-family: var(--monospace-font-family, monospace);
+    font-size: 0.9em;
+    user-select: text;
 }
 
 /* Copy / download actions sit in a row beneath the codes. */
-.modal.totp-enrollment-modal .totp-recovery-actions {
+.totp-recovery-actions {
     display: flex;
     gap: 8px;
     margin-block: 12px;

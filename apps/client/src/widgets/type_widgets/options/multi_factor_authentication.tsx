@@ -197,40 +197,24 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
     }, [ refreshRecoveryKeys ]);
 
     return (<>
-        <OptionsSection title={t("multi_factor_authentication.totp_secret_title")}>
-            {totpStatus?.set
-                ? <Admonition type="warning">{t("multi_factor_authentication.totp_secret_description_warning")}</Admonition>
-                : <Admonition type="note">{t("multi_factor_authentication.no_totp_secret_warning")}</Admonition>
-            }
-
-            <Button
-                text={totpStatus?.set
-                    ? t("multi_factor_authentication.totp_secret_regenerate")
-                    : t("multi_factor_authentication.totp_secret_generate")}
-                onClick={async () => {
-                    if (totpStatus?.set && !await dialog.confirm(t("multi_factor_authentication.totp_secret_regenerate_confirm"))) {
-                        return;
-                    }
-
-                    // Don't generate-and-persist here. The enrollment modal fetches a secret, has the
-                    // user confirm a code for it, and only then is it persisted server-side — so a
-                    // botched setup leaves the existing (or no) secret untouched instead of locking
-                    // the user out on next login.
-                    setShowEnroll(true);
-                }}
-            />
-        </OptionsSection>
-
-        {/* Recovery codes are part of TOTP, so they only appear once a secret is enrolled. They can
-            be regenerated for the existing secret, but never minted while TOTP is inactive. */}
-        {totpStatus?.set &&
-            <TotpRecoveryKeys
+        {/* Before enrollment, a single call-to-action opens the dialog — which is where the secret is
+            generated, verified, and (only on Finish) persisted. Once a secret is set, that's replaced
+            by the recovery-codes panel; recovery codes are part of TOTP and never exist without it. */}
+        {totpStatus?.set
+            ? <TotpRecoveryKeys
                 status={recoveryStatus}
-                generatedCodes={regeneratedCodes}
                 onRegenerate={regenerateRecoveryCodes}
-                onDismissGenerated={() => setRegeneratedCodes(undefined)}
                 onRemoveTotp={removeTotp}
-            />}
+            />
+            : <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
+                <OptionsRowWithButton
+                    label={t("multi_factor_authentication.totp_setup_label")}
+                    description={t("multi_factor_authentication.totp_setup_description")}
+                    icon="bx-plus"
+                    buttonText={t("multi_factor_authentication.totp_setup_button")}
+                    onClick={() => setShowEnroll(true)}
+                />
+            </OptionsSection>}
 
         {createPortal(
             <TotpEnrollmentModal
@@ -238,6 +222,11 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
                 onHidden={() => setShowEnroll(false)}
                 onComplete={onEnrollmentComplete}
             />,
+            document.body
+        )}
+
+        {createPortal(
+            <RecoveryCodesModal codes={regeneratedCodes} onHidden={() => setRegeneratedCodes(undefined)} />,
             document.body
         )}
     </>);
@@ -522,6 +511,33 @@ function RecoveryCodesList({ codes }: { codes: string[] }) {
     );
 }
 
+/**
+ * Shows a freshly issued batch of recovery codes once, in a modal — the same presentation used by the
+ * enrollment dialog's final step — so regenerating codes feels identical to setting them up. Open
+ * when `codes` is set; dismissing clears them on the caller's side.
+ */
+function RecoveryCodesModal({ codes, onHidden }: {
+    codes?: string[],
+    onHidden: () => void
+}) {
+    return (
+        <Modal
+            className="totp-recovery-modal"
+            title={t("multi_factor_authentication.recovery_keys_regenerated_title")}
+            size="md"
+            show={!!codes}
+            onHidden={onHidden}
+            stackable
+            footer={<Button text={t("multi_factor_authentication.recovery_keys_done")} kind="primary" onClick={onHidden} />}
+        >
+            {codes && <>
+                <FormText>{t("multi_factor_authentication.recovery_keys_regenerated_instructions")}</FormText>
+                <RecoveryCodesList codes={codes} />
+            </>}
+        </Modal>
+    );
+}
+
 /** Downloads the recovery codes as a plain-text file. Uses a Blob so it works over HTTP, unlike the clipboard API. */
 function downloadRecoveryCodes(codes: string[]) {
     const blob = new Blob([ `${codes.join("\n")}\n` ], { type: "text/plain" });
@@ -532,35 +548,22 @@ function downloadRecoveryCodes(codes: string[]) {
     document.body.appendChild(link);
     link.click();
     link.remove();
-    URL.revokeObjectURL(url);
+    // Defer revocation so the in-flight download isn't cancelled (immediate revoke breaks it in some
+    // browsers — see the same pattern in services/image.ts).
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 /**
  * Recovery-codes management for an enrolled TOTP: a read-only status (how many remain), a confirmed
  * regenerate action (which replaces the codes for the existing secret), and the destructive
- * remove-TOTP action. Codes are only ever shown once — right after enrollment or regeneration.
+ * remove-TOTP action. The codes themselves are only ever shown once — in a modal right after
+ * enrollment or regeneration (see {@link RecoveryCodesModal}).
  */
-function TotpRecoveryKeys({ status, generatedCodes, onRegenerate, onDismissGenerated, onRemoveTotp }: {
+function TotpRecoveryKeys({ status, onRegenerate, onRemoveTotp }: {
     status?: string[],
-    /** Freshly regenerated codes to show once; when set, the section switches to the save-them view. */
-    generatedCodes?: string[],
     onRegenerate: () => void,
-    onDismissGenerated: () => void,
     onRemoveTotp: () => void
 }) {
-    // Just regenerated: show the new codes once so the user can save them, then return to the status.
-    if (generatedCodes) {
-        return (
-            <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
-                <FormText>{t("multi_factor_authentication.recovery_keys_regenerated_instructions")}</FormText>
-
-                <RecoveryCodesList codes={generatedCodes} />
-
-                <Button text={t("multi_factor_authentication.recovery_keys_done")} onClick={onDismissGenerated} />
-            </OptionsSection>
-        );
-    }
-
     const remaining = status?.filter(isUnusedRecoveryCode).length ?? 0;
 
     return (
