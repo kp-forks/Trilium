@@ -5,12 +5,15 @@ import { useEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context";
 import type FNote from "../../../entities/fnote";
+import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import Dropdown from "../../react/Dropdown";
 import { useTriliumEvents } from "../../react/hooks";
 import Icon from "../../react/Icon";
+import { getParentFromNotePath } from "../../react/sibling_navigation";
 import { noteSiblingProvider, type SiblingNavigationState, useSiblingKeyboard, useSiblingNavigation } from "../../react/SiblingNavigator";
+import { getAutoAdvanceTarget, MEDIA_PLAY_MODE_LABEL } from "./media_play_mode";
 
 const NO_KEYS: readonly string[] = [];
 
@@ -192,20 +195,38 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
 
     useSiblingKeyboard(wrapped, noteContext, undefined, NO_KEYS, NO_KEYS, { edgeKeys: false });
 
+    const hasMediaNav = !!wrapped;
+    const wrappedRef = useRef(wrapped);
+    wrappedRef.current = wrapped;
+
     // Only one media element plays at a time. Starting playback claims the global "active" slot and notifies
     // every other mounted player (audio or video) so they pause themselves and hand over the OS Media Session.
     // The slot is *kept* through pause/end (a paused player keeps the session); it's only released when another
-    // player claims it or when this player unmounts (its tab is closed).
+    // player claims it or when this player unmounts (its tab is closed). When a track ends and the parent folder
+    // opted in (`#mediaNotesPlayMode=auto`), auto-advance to the next sibling: navigation reuses this same media
+    // element (siblings share the type), so playback — and with it the OS session that keeps a backgrounded /
+    // sleeping mobile page alive — continues across the jump rather than the page going idle.
     useEffect(() => {
         const media = mediaRef.current;
         if (!media) return;
         const claim = () => setActiveMediaPlayer(self);
+        const onEnded = () => {
+            const navigation = wrappedRef.current;
+            if (!navigation) return;
+            const parentNoteId = getParentFromNotePath(noteContext?.notePath)?.parentNoteId;
+            const playMode = parentNoteId ? froca.notes[parentNoteId]?.getLabelValue(MEDIA_PLAY_MODE_LABEL) : null;
+            if (getAutoAdvanceTarget(playMode, navigation)) {
+                navigation.navigateNext();
+            }
+        };
         media.addEventListener("play", claim);
+        media.addEventListener("ended", onEnded);
         return () => {
             media.removeEventListener("play", claim);
+            media.removeEventListener("ended", onEnded);
             if (activeMediaPlayer === self) setActiveMediaPlayer(null);
         };
-    }, [ self, mediaRef ]);
+    }, [ self, mediaRef, noteContext ]);
 
     // When another player claims the active slot, pause ourselves and re-render so we release the session.
     useEffect(() => {
@@ -221,9 +242,6 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
     // metadata while this player owns the session (its context's current note, and the one playing). They're
     // global, so only ever release our own — otherwise the outgoing player's cleanup during a handover would
     // clobber the incoming player's; the release also clears them so nothing lingers in the OS overlay.
-    const hasMediaNav = !!wrapped;
-    const wrappedRef = useRef(wrapped);
-    wrappedRef.current = wrapped;
     useEffect(() => {
         if (!("mediaSession" in navigator)) return;
         const mediaSession = navigator.mediaSession;
