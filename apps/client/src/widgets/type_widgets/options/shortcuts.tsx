@@ -382,19 +382,7 @@ function ShortcutRow({ action, conflicts }: { action: ActionKeyboardShortcut; co
             }
             description={action.description}
         >
-            <div class="shortcut-row-input">
-                <ShortcutEditor keyboardShortcut={action} conflicts={conflicts} />
-                {/* Always reserve the slot so the revert button appearing/disappearing never shifts the row. */}
-                <span class="shortcut-revert-slot">
-                    {isShortcutModified(action) &&
-                        <ActionButton
-                            icon="bx bx-reset"
-                            text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
-                            tooltipClass="tooltip-top"
-                            onClick={() => revertShortcut(action)}
-                        />}
-                </span>
-            </div>
+            <ShortcutEditor keyboardShortcut={action} conflicts={conflicts} />
         </OptionsRow>
     );
 }
@@ -456,6 +444,13 @@ function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShort
                 );
             })}
 
+            {isShortcutModified(action) &&
+                <ActionButton
+                    icon="bx bx-reset"
+                    text={t("shortcuts.revert_to_default", { shortcuts: formatDefaultShortcuts(action) })}
+                    tooltipClass="tooltip-top"
+                    onClick={() => revertShortcut(action)}
+                />}
             <ShortcutRecorder onCapture={addShortcut} />
         </div>
     );

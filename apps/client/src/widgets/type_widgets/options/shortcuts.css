@@ -63,20 +63,6 @@
         vertical-align: middle;
     }
 
-    .shortcut-row-input {
-        display: flex;
-        align-items: center;
-        gap: 0.5em;
-    }
-
-    /* Fixed-width slot matching the .icon-action button, so the revert button never shifts the row. */
-    .shortcut-revert-slot {
-        flex: 0 0 auto;
-        display: flex;
-        justify-content: center;
-        width: 37px;
-    }
-
     .shortcut-editor {
         display: flex;
         flex-wrap: wrap;
