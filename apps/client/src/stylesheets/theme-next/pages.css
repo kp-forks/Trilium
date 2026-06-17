@@ -36,9 +36,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
-    color: #757575;
-    border: 1px solid #ddd;
+    background-color: var(--main-background-color);
+    color: var(--main-text-color);
+    border: 1px solid var(--main-border-color);
     border-radius: 4px;
     padding: 10px 20px;
     font-size: 14px;
@@ -49,7 +49,7 @@
     transition: background-color 0.3s;
 }
 .google-login-btn:hover {
-    background-color: #f5f5f5;
+    background-color: var(--hover-item-background-color);
 }
 .google-login-btn img {
     margin-inline-end: 10px;
