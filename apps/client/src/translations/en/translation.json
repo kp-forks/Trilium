@@ -1199,7 +1199,7 @@
     "play-mode-title": "Play mode: {{mode}}",
     "play-mode-once": "Play once",
     "play-mode-loop": "Loop",
-    "play-mode-auto": "Autoplay",
+    "play-mode-next": "Play next",
     "rotate": "Rotate",
     "picture-in-picture": "Picture-in-picture",
     "exit-picture-in-picture": "Exit picture-in-picture",

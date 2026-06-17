@@ -207,7 +207,7 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
     // every other mounted player (audio or video) so they pause themselves and hand over the OS Media Session.
     // The slot is *kept* through pause/end (a paused player keeps the session); it's only released when another
     // player claims it or when this player unmounts (its tab is closed). When a track ends and the parent folder
-    // opted in (`#mediaNotesPlayMode=auto`), auto-advance to the next sibling: navigation reuses this same media
+    // opted in (`#mediaNotesPlayMode=next`), auto-advance to the next sibling: navigation reuses this same media
     // element (siblings share the type), so playback — and with it the OS session that keeps a backgrounded /
     // sleeping mobile page alive — continues across the jump rather than the page going idle.
     useEffect(() => {
@@ -397,7 +397,7 @@ export function useMediaPlayMode(noteContext: NoteContext | undefined, mediaRef:
         }
     });
 
-    // Looping is derived from the mode (auto-advance for "auto" lives in useMediaSessionController's ended handler).
+    // Looping is derived from the mode (auto-advance for "next" lives in useMediaSessionController's ended handler).
     useEffect(() => {
         const media = mediaRef.current;
         if (media) media.loop = shouldLoop(mode);
