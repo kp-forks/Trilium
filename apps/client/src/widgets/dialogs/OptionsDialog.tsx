@@ -97,6 +97,7 @@ export default function OptionsDialog() {
                         }} />
                     </div>
                 )}
+                {!isMasterDetail && <OptionsPageHeader />}
                 <NoteDetail />
             </Modal>
         </NoteContextContext.Provider>
@@ -167,6 +168,24 @@ function MobileSettingsList({ onSelect }: { onSelect: (noteId: string) => void }
                 </FormListItem>
             ))}
         </FormList>
+    );
+}
+
+/**
+ * The title banner shown at the top of the content area on desktop and tablet layouts, where the
+ * page title isn't otherwise visible (the modal header only carries the window buttons). It mirrors
+ * the quick-edit popup's title row — the page's icon in a circular badge beside the title — but is
+ * purely decorative since settings pages aren't user-editable. On the mobile master-detail flow the
+ * page title already lives in the modal header (see {@link MobilePageHeader}), so this is omitted.
+ */
+function OptionsPageHeader() {
+    const { note } = useNoteContext();
+    if (!note) return null;
+    return (
+        <div className="options-page-header">
+            <span className={`options-page-header-icon ${note.getIcon()}`} aria-hidden="true" />
+            <h2 className="options-page-header-title">{note.title}</h2>
+        </div>
     );
 }
 
