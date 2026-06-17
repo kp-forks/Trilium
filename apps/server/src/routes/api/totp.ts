@@ -12,8 +12,14 @@ function getSecret() {
     return totpService.getTotpSecret();
 }
 
+function resetTOTP() {
+    totpService.resetTotp();
+    return { success: true };
+}
+
 export default {
     generateSecret: generateTOTPSecret,
     getTOTPStatus,
-    getSecret
+    getSecret,
+    resetTOTP
 };

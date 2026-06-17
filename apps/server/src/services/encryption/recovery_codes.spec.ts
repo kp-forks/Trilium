@@ -30,6 +30,20 @@ describe("recovery_codes", () => {
         expect(recoveryCodes.getRecoveryCodes()).toEqual([CODE_A, CODE_B]);
     });
 
+    it("clearRecoveryCodes wipes the stored codes", () => {
+        cls.init(() => {
+            recoveryCodes.setRecoveryCodes([CODE_A, CODE_B].join(","));
+        });
+        expect(recoveryCodes.isRecoveryCodeSet()).toBe(true);
+
+        cls.init(() => {
+            recoveryCodes.clearRecoveryCodes();
+        });
+
+        expect(recoveryCodes.isRecoveryCodeSet()).toBe(false);
+        expect(recoveryCodes.getRecoveryCodes()).toEqual([]);
+    });
+
     it("rejects codes failing the format regex without consuming a code", () => {
         cls.init(() => {
             recoveryCodes.setRecoveryCodes([CODE_A, CODE_B].join(","));

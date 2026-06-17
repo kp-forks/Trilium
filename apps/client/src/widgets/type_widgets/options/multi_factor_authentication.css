@@ -28,6 +28,18 @@
     gap: 10px;
 }
 
+/* Destructive removal action, tinted with the shared danger colour to set it apart. */
+.totp-remove-button.btn {
+    --color: var(--icon-button-danger-color, #d9534f);
+    color: var(--color);
+    border-color: var(--color);
+}
+
+.totp-remove-button.btn:hover {
+    background-color: var(--color);
+    color: white;
+}
+
 /* One dot per recovery code, shown inline right after the "Recovery codes" label. */
 .recovery-code-dots {
     display: flex;

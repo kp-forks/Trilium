@@ -24,6 +24,16 @@ function setRecoveryCodes(recoveryCodes: string) {
     return false;
 }
 
+function clearRecoveryCodes() {
+    sql.transactional(() => {
+        optionService.setOption('recoveryCodeInitialVector', '');
+        optionService.setOption('recoveryCodeSecurityKey', '');
+        optionService.setOption('recoveryCodesEncrypted', '');
+        optionService.setOption('encryptedRecoveryCodes', 'false');
+        return true;
+    });
+}
+
 function getRecoveryCodes() {
     if (!isRecoveryCodeSet()) {
         return []
@@ -78,6 +88,7 @@ function verifyRecoveryCode(recoveryCodeGuess: string) {
 
 export default {
     setRecoveryCodes,
+    clearRecoveryCodes,
     getRecoveryCodes,
     verifyRecoveryCode,
     isRecoveryCodeSet

@@ -144,6 +144,19 @@ function TotpSettings() {
         await refreshRecoveryKeys();
     }, [ refreshRecoveryKeys ]);
 
+    const removeTotp = useCallback(async () => {
+        if (!await dialog.confirm(t("multi_factor_authentication.totp_remove_confirm"))) {
+            return;
+        }
+
+        await server.post("totp/reset");
+        toast.showMessage(t("multi_factor_authentication.totp_removed"));
+        // mfaEnabled/mfaMethod are reset server-side and sync back over WebSocket, collapsing this
+        // whole section; refresh locally too so the change shows immediately.
+        refreshTotpStatus();
+        refreshRecoveryKeys();
+    }, [ refreshTotpStatus, refreshRecoveryKeys ]);
+
     useEffect(() => {
         refreshTotpStatus();
         refreshRecoveryKeys();
@@ -183,19 +196,26 @@ function TotpSettings() {
             />
         </OptionsSection>
 
-        <TotpRecoveryKeys status={recoveryStatus} generatedKeys={generatedKeys} generateRecoveryKeys={generateRecoveryKeys} />
+        <TotpRecoveryKeys
+            status={recoveryStatus}
+            generatedKeys={generatedKeys}
+            generateRecoveryKeys={generateRecoveryKeys}
+            onRemoveTotp={totpStatus?.set ? removeTotp : undefined}
+        />
     </>);
 }
 
-function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys }: {
+function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys, onRemoveTotp }: {
     status?: string[],
     generatedKeys?: string[],
-    generateRecoveryKeys: () => Promise<void>
+    generateRecoveryKeys: () => Promise<void>,
+    /** When set, TOTP is configured and a "remove two-factor authentication" action is shown. */
+    onRemoveTotp?: () => void
 }) {
     // Freshly generated in this session: show the plaintext codes once so the user can save them.
     if (generatedKeys) {
         return (
-            <OptionsSection title={t("multi_factor_authentication.recovery_keys_title")}>
+            <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
                 <FormText>{t("multi_factor_authentication.recovery_keys_description")}</FormText>
 
                 <Admonition type="caution">
@@ -214,12 +234,12 @@ function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys }: {
         );
     }
 
-    // Already set up: a single compact row whose label carries a dot per code (showing which are
-    // spent), with the remaining count as the description and a replace action on the right.
+    // Already set up: a compact recovery-codes row (a dot per code showing which are spent, the
+    // remaining count, and a replace action), followed by the destructive remove-TOTP action.
     if (status) {
         const remaining = status.filter(isUnusedRecoveryCode).length;
         return (
-            <OptionsSection title={t("multi_factor_authentication.recovery_keys_title")}>
+            <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
                 <OptionsRowWithButton
                     label={
                         <span className="recovery-codes-title">
@@ -232,13 +252,23 @@ function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys }: {
                     buttonText={t("multi_factor_authentication.recovery_keys_generate_new")}
                     onClick={generateRecoveryKeys}
                 />
+
+                {onRemoveTotp &&
+                    <OptionsRowWithButton
+                        label={t("multi_factor_authentication.totp_remove_label")}
+                        description={t("multi_factor_authentication.totp_remove_description")}
+                        icon="bx-trash"
+                        buttonClassName="totp-remove-button"
+                        buttonText={t("multi_factor_authentication.totp_remove_button")}
+                        onClick={onRemoveTotp}
+                    />}
             </OptionsSection>
         );
     }
 
     // Not set up yet: the original empty state with a generate action.
     return (
-        <OptionsSection title={t("multi_factor_authentication.recovery_keys_title")}>
+        <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
             <FormText>{t("multi_factor_authentication.recovery_keys_description")}</FormText>
 
             <p>{t("multi_factor_authentication.recovery_keys_no_key_set")}</p>

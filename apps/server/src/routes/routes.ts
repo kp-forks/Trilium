@@ -68,6 +68,7 @@ function register(app: express.Application) {
     apiRoute(GET, '/api/totp/generate', totp.generateSecret);
     apiRoute(GET, '/api/totp/status', totp.getTOTPStatus);
     apiRoute(GET, '/api/totp/get', totp.getSecret);
+    apiRoute(PST, '/api/totp/reset', totp.resetTOTP);
 
     apiRoute(GET, '/api/oauth/status', openID.getOAuthStatus);
     asyncApiRoute(GET, '/api/oauth/validate', openID.isTokenValid);

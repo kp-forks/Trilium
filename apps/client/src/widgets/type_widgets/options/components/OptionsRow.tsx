@@ -98,13 +98,15 @@ interface OptionsRowWithButtonProps {
     onClick: () => void;
     /** Label of the action button shown on the right of the row. */
     buttonText: string;
+    /** Extra class on the action button, e.g. to tint a destructive action. */
+    buttonClassName?: string;
 }
 
 /**
  * A settings row with passive label/description text and a discrete action button on the right.
  * The button — not the whole row — is the affordance, which reads more clearly as clickable.
  */
-export function OptionsRowWithButton({ label, description, icon, disabled, onClick, buttonText }: OptionsRowWithButtonProps) {
+export function OptionsRowWithButton({ label, description, icon, disabled, onClick, buttonText, buttonClassName }: OptionsRowWithButtonProps) {
     return (
         <div className="option-row">
             <div className="option-row-label">
@@ -112,7 +114,7 @@ export function OptionsRowWithButton({ label, description, icon, disabled, onCli
                 {description && <small className="option-row-description">{description}</small>}
             </div>
             <div className="option-row-input">
-                <Button text={buttonText} icon={icon} disabled={disabled} onClick={onClick} />
+                <Button className={buttonClassName} text={buttonText} icon={icon} disabled={disabled} onClick={onClick} />
             </div>
         </div>
     );

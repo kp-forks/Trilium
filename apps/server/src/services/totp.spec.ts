@@ -12,6 +12,7 @@ vi.mock("time2fa", () => ({
 
 import { cls, options } from "@triliumnext/core";
 
+import recoveryCodes from "./encryption/recovery_codes.js";
 import totpEncryption from "./encryption/totp_encryption.js";
 import sql_init from "./sql_init.js";
 import totp from "./totp.js";
@@ -130,19 +131,22 @@ describe("totp", () => {
         errorSpy.mockRestore();
     });
 
-    it("resetTotp clears the secret and disables MFA", () => {
+    it("resetTotp clears the secret, recovery codes, and disables MFA", () => {
         cls.init(() => {
             options.setOption("mfaEnabled", "true");
             options.setOption("mfaMethod", "totp");
             totp.createSecret();
+            recoveryCodes.setRecoveryCodes("AAAAAAAAAAAAAAAAAAAAAA==,BBBBBBBBBBBBBBBBBBBBBB==");
         });
         expect(totp.checkForTotpSecret()).toBe(true);
+        expect(recoveryCodes.isRecoveryCodeSet()).toBe(true);
 
         cls.init(() => {
             totp.resetTotp();
         });
 
         expect(totp.checkForTotpSecret()).toBe(false);
+        expect(recoveryCodes.isRecoveryCodeSet()).toBe(false);
         expect(options.getOptionOrNull("mfaEnabled")).toBe("false");
         expect(options.getOptionOrNull("mfaMethod")).toBe("");
     });

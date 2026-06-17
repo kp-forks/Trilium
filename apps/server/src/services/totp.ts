@@ -1,6 +1,7 @@
 import { options } from '@triliumnext/core';
 import { Totp, generateSecret } from 'time2fa';
 
+import recoveryCodesService from './encryption/recovery_codes.js';
 import totpEncryptionService from './encryption/totp_encryption.js';
 
 function isTotpEnabled(): boolean {
@@ -53,6 +54,7 @@ function validateTOTP(submittedPasscode: string): boolean {
 
 function resetTotp(): void {
     totpEncryptionService.resetTotpSecret();
+    recoveryCodesService.clearRecoveryCodes();
     options.setOption('mfaEnabled', 'false');
     options.setOption('mfaMethod', '');
 }
