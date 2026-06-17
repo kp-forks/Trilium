@@ -30,6 +30,13 @@ export function SeekBar({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | H
         const onTimeUpdate = () => setCurrentTime(media.currentTime);
         const onDurationChange = () => setDuration(media.duration);
 
+        // Seed from the element now: if its metadata already loaded before this (passive) effect ran — common
+        // for cached/fast media or a reused element — the initial durationchange/timeupdate already fired and
+        // the listeners below would miss them, leaving duration 0. That pins max=0, so the slider sticks at the
+        // start and any seek snaps playback back to 0.
+        onTimeUpdate();
+        onDurationChange();
+
         media.addEventListener("timeupdate", onTimeUpdate);
         media.addEventListener("durationchange", onDurationChange);
         return () => {
