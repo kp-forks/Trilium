@@ -3,6 +3,7 @@ import "./OptionsPageHeader.css";
 import { ComponentChildren } from "preact";
 
 import { useNoteContext } from "../../../react/hooks";
+import HelpButton from "../../../react/HelpButton";
 
 interface OptionsPageHeaderProps {
     /**
@@ -15,6 +16,11 @@ interface OptionsPageHeaderProps {
      * — e.g. the shortcuts page's filter/search box.
      */
     below?: ComponentChildren;
+    /**
+     * In-app help page shown as a help button next to the title. Use this for single-section pages
+     * where the help is page-level rather than scoped to one card.
+     */
+    helpUrl?: string;
 }
 
 /**
@@ -27,7 +33,7 @@ interface OptionsPageHeaderProps {
  * for options pages. The sticky-bar styling differs per context (see the CSS), but each page owns its
  * header the same way in all of them.
  */
-export default function OptionsPageHeader({ actions, below }: OptionsPageHeaderProps) {
+export default function OptionsPageHeader({ actions, below, helpUrl }: OptionsPageHeaderProps) {
     const { note } = useNoteContext();
 
     // Nothing to render: the note isn't available yet and the page provided no content.
@@ -42,6 +48,7 @@ export default function OptionsPageHeader({ actions, below }: OptionsPageHeaderP
                             <div className="options-page-header-titles">
                                 <span className={`options-page-header-icon ${note.getIcon()}`} aria-hidden="true" />
                                 <h2 className="options-page-header-title">{note.title}</h2>
+                                {helpUrl && <HelpButton helpPage={helpUrl} />}
                             </div>
                         )}
                         {actions && <div className="options-page-header-actions">{actions}</div>}

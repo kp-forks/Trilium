@@ -14,7 +14,7 @@ import TimeSelector from "./components/TimeSelector";
 export default function SyncOptions() {
     return (
         <>
-            <OptionsPageHeader />
+            <OptionsPageHeader helpUrl="cbkrhQjrkKrh" />
             <SyncConfiguration />
         </>
     );
@@ -30,7 +30,7 @@ export function SyncConfiguration() {
     useEffect(() => setLocalProxy(syncProxy), [syncProxy]);
 
     return (
-        <OptionsSection helpUrl="cbkrhQjrkKrh">
+        <OptionsSection>
             <OptionsRow name="sync-server-host" label={t("sync_2.server_address")} description={t("sync_2.server_address_description")} stacked>
                 <FormTextBox
                     placeholder="https://<host>:<port>"

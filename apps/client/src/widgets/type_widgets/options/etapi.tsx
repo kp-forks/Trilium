@@ -54,10 +54,9 @@ export default function EtapiSettings() {
 
     return (
         <>
-            <OptionsPageHeader />
+            <OptionsPageHeader helpUrl="pgxEVkzLl1OP" />
             <OptionsSection
                 description={t("etapi.description")}
-                helpUrl="pgxEVkzLl1OP"
             >
                 <TokenList tokens={tokens} />
 
