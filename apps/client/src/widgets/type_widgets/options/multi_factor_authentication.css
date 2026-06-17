@@ -1,0 +1,21 @@
+/* Flex row holding the status badge, so the badge sizes to its content instead of stretching to
+   fill the full header width (the shared actions slot isn't itself a flex container). */
+.mfa-header-actions {
+    display: flex;
+    align-items: center;
+}
+
+/* Status badge on the MFA page header, mirroring the shortcuts page's outline badge: a colored
+   outline whose hue is driven by the --color variable (green when active, muted when inactive). */
+.mfa-status-badge {
+    flex: 0 0 auto;
+    margin-inline-end: auto;
+}
+
+.mfa-status-badge.active {
+    --color: var(--admonition-tip-accent-color, #40c025);
+}
+
+.mfa-status-badge.inactive {
+    --color: var(--muted-text-color, #888);
+}

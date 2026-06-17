@@ -1,5 +1,8 @@
+import "./multi_factor_authentication.css"
+
 import { Trans } from "react-i18next"
 import { t } from "../../../services/i18n"
+import { Badge } from "../../react/Badge"
 import FormText from "../../react/FormText"
 import OptionsPageHeader from "./components/OptionsPageHeader"
 import OptionsSection from "./components/OptionsSection"
@@ -22,7 +25,7 @@ export default function MultiFactorAuthenticationSettings() {
     return (!isElectron()
         ? (
             <>
-                <OptionsPageHeader />
+                <OptionsPageHeader actions={<MfaStatusBadge mfaEnabled={mfaEnabled} />} />
                 <EnableMultiFactor mfaEnabled={mfaEnabled} setMfaEnabled={setMfaEnabled} />
                 { mfaEnabled && <MultiFactorMethod /> }
             </>
@@ -33,6 +36,20 @@ export default function MultiFactorAuthenticationSettings() {
             </>
         )
     )
+}
+
+function MfaStatusBadge({ mfaEnabled }: { mfaEnabled: boolean }) {
+    return (
+        <div className="mfa-header-actions">
+            <Badge
+                className={`mfa-status-badge ${mfaEnabled ? "active" : "inactive"}`}
+                icon={mfaEnabled ? "bx bx-check-shield" : "bx bx-shield-x"}
+                text={mfaEnabled ? t("multi_factor_authentication.status_active") : t("multi_factor_authentication.status_inactive")}
+                tooltip={mfaEnabled ? t("multi_factor_authentication.status_active_tooltip") : t("multi_factor_authentication.status_inactive_tooltip")}
+                outline
+            />
+        </div>
+    );
 }
 
 function EnableMultiFactor({ mfaEnabled, setMfaEnabled }: { mfaEnabled: boolean, setMfaEnabled: (newValue: boolean) => Promise<void>}) {
