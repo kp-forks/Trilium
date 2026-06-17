@@ -93,9 +93,16 @@ export default function ShortcutSettings() {
     const filterLowerCase = filter?.toLowerCase() ?? "";
     const groups = useMemo(() => groupShortcuts(keyboardShortcuts), [ keyboardShortcuts ]);
     const conflicts = useMemo(() => computeConflicts(keyboardShortcuts), [ keyboardShortcuts ]);
+    const conflictGroups = useMemo(() => computeConflictGroups(keyboardShortcuts), [ keyboardShortcuts ]);
+    // Count distinct clashing key combinations, not the number of actions involved: two actions on one
+    // key is a single conflict, not two.
+    const conflictCount = conflictGroups.length;
     const globalCount = useMemo(() => keyboardShortcuts.filter((s) => "actionName" in s && hasGlobalShortcut(s)).length, [ keyboardShortcuts ]);
     const modifiedCount = useMemo(() => keyboardShortcuts.filter((s) => "actionName" in s && isShortcutModified(s)).length, [ keyboardShortcuts ]);
-    const filteredGroups = groups
+
+    // When filtering by conflicts, group the actions by the combination they collide on instead of
+    // by their settings section, so the colliding actions sit together.
+    const filteredGroups = (activeFilter === "conflicts" ? conflictGroups : groups)
         .map((group) => ({
             ...group,
             actions: group.actions.filter((action) =>
@@ -108,11 +115,11 @@ export default function ShortcutSettings() {
         <div className="shortcuts-options-section">
             <header>
                 <div class="shortcut-header-row">
-                    {conflicts.size > 0 &&
+                    {conflictCount > 0 &&
                         <Badge
                             className={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
                             icon="bx bx-error-circle"
-                            text={t("shortcuts.conflicts_badge", { count: conflicts.size })}
+                            text={t("shortcuts.conflicts_badge", { count: conflictCount })}
                             tooltip={t("shortcuts.conflicts_badge_tooltip")}
                             outline
                             onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
@@ -146,7 +153,7 @@ export default function ShortcutSettings() {
                         <FilterContent
                             activeFilter={activeFilter}
                             onSelect={selectFilter}
-                            conflictCount={conflicts.size}
+                            conflictCount={conflictCount}
                             globalCount={globalCount}
                             modifiedCount={modifiedCount}
                         />
@@ -169,7 +176,7 @@ export default function ShortcutSettings() {
                             text={t("shortcuts.no_results", { filter })}
                         />
                     )
-                    : activeFilter === "conflicts" && conflicts.size === 0
+                    : activeFilter === "conflicts" && conflictCount === 0
                         ? (
                             <NoItems
                                 icon="bx bx-check-circle"
@@ -288,6 +295,48 @@ export function computeConflicts(shortcuts: KeyboardShortcut[]): Map<string, Sho
     }
 
     return result;
+}
+
+/**
+ * Groups conflicting actions by the key combination they collide on, for the "Conflicts" filter view.
+ * Each returned group is titled with the combination (e.g. `Ctrl+0`) and lists every action bound to
+ * it that conflicts with another (scope-aware — see {@link scopesConflict}). An action with two
+ * conflicting shortcuts appears under both combinations. Shaped like {@link groupShortcuts} so it
+ * drops straight into the same render path.
+ */
+export function computeConflictGroups(shortcuts: KeyboardShortcut[]): ShortcutGroup[] {
+    const byCombo = new Map<string, { display: string; actions: ActionKeyboardShortcut[] }>();
+    for (const shortcut of shortcuts) {
+        if (!("actionName" in shortcut)) {
+            continue;
+        }
+
+        for (const combo of shortcut.effectiveShortcuts ?? []) {
+            const bare = stripGlobalPrefix(combo);
+            const key = canonicalizeShortcut(bare);
+            if (!key) {
+                continue;
+            }
+
+            let group = byCombo.get(key);
+            if (!group) {
+                // The first stored form of the combination is used as the readable group title.
+                byCombo.set(key, group = { display: bare, actions: [] });
+            }
+            if (!group.actions.includes(shortcut)) {
+                group.actions.push(shortcut);
+            }
+        }
+    }
+
+    const groups: ShortcutGroup[] = [];
+    for (const { display, actions } of byCombo.values()) {
+        const conflicting = actions.filter((a) => actions.some((b) => b !== a && scopesConflict(a.scope, b.scope)));
+        if (conflicting.length >= 2) {
+            groups.push({ title: display, actions: conflicting });
+        }
+    }
+    return groups;
 }
 
 /**

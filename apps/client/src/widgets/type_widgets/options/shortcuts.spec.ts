@@ -1,7 +1,7 @@
 import { ActionKeyboardShortcut, KeyboardShortcut } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
-import { computeConflicts, filterKeyboardAction, getActionNameFromOptionName, getOptionName, groupShortcuts, isRecorderCancelKey, keyboardEventToShortcut, matchesFilter, setGlobalShortcut } from "./shortcuts";
+import { computeConflictGroups, computeConflicts, filterKeyboardAction, getActionNameFromOptionName, getOptionName, groupShortcuts, isRecorderCancelKey, keyboardEventToShortcut, matchesFilter, setGlobalShortcut } from "./shortcuts";
 
 function keyEvent(init: KeyboardEventInit) {
     return new KeyboardEvent("keydown", init);
@@ -272,6 +272,41 @@ describe("computeConflicts", () => {
             expect(conflicts.get("a")?.get("Ctrl+K")).toEqual([ "Tree Action" ]);
             expect(conflicts.get("b")?.get("Ctrl+K")).toEqual([ "Window Action" ]);
         });
+    });
+});
+
+describe("computeConflictGroups", () => {
+    it("groups conflicting actions by the combination they collide on, titled with the combo", () => {
+        const groups = computeConflictGroups([
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+J" ]),
+            action("c", "Action C", [ "Ctrl+K" ])
+        ]);
+
+        expect(groups).toHaveLength(1);
+        expect(groups[0].title).toBe("Ctrl+J");
+        expect(groups[0].actions.map((a) => a.actionName)).toEqual([ "a", "b" ]);
+    });
+
+    it("excludes combinations whose actions are in mutually-exclusive scopes", () => {
+        const groups = computeConflictGroups([
+            action("a", "Action A", [ "Ctrl+Enter" ], undefined, "text-detail"),
+            action("b", "Action B", [ "Ctrl+Enter" ], undefined, "code-detail")
+        ]);
+
+        expect(groups).toHaveLength(0);
+    });
+
+    it("lists an action under each combination it conflicts on", () => {
+        const groups = computeConflictGroups([
+            action("multi", "Multi", [ "Ctrl+J", "Ctrl+K" ]),
+            action("a", "Action A", [ "Ctrl+J" ]),
+            action("b", "Action B", [ "Ctrl+K" ])
+        ]);
+
+        expect(groups.map((g) => g.title)).toEqual([ "Ctrl+J", "Ctrl+K" ]);
+        expect(groups[0].actions.map((a) => a.actionName)).toEqual([ "multi", "a" ]);
+        expect(groups[1].actions.map((a) => a.actionName)).toEqual([ "multi", "b" ]);
     });
 });
 
