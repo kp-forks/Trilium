@@ -1727,6 +1727,7 @@
     "totp_enroll_recovery_download": "Download",
     "totp_enroll_saved_ack": "I've saved my recovery codes somewhere safe",
     "totp_enroll_finish": "Finish setup",
+    "totp_enroll_enable_error": "Couldn't enable two-factor authentication. Please try again.",
     "totp_section_title": "TOTP",
     "totp_remove_label": "Remove two-factor authentication",
     "totp_remove_description": "Completely remove your two-factor authentication setup. Unlike switching it off above, you'd have to set it up again from scratch to use it.",

@@ -12,6 +12,7 @@ vi.mock("time2fa", () => ({
     Totp: { validate: mockValidate }
 }));
 
+import recoveryCodes from "../../services/encryption/recovery_codes.js";
 import totpEncryption from "../../services/encryption/totp_encryption.js";
 import totpRoute from "./totp.js";
 
@@ -22,40 +23,57 @@ describe("TOTP API", () => {
         vi.clearAllMocks();
         mockGenerateSecret.mockReturnValue(SECRET);
         mockValidate.mockReturnValue(true);
-        // Reset to no persisted secret each test, so persist assertions below are meaningful.
-        cls.init(() => totpEncryption.resetTotpSecret());
+        // Reset secret + codes each test, so the persist assertions below are meaningful.
+        cls.init(() => {
+            totpEncryption.resetTotpSecret();
+            recoveryCodes.clearRecoveryCodes();
+        });
     });
 
     it("generates a base32 secret without persisting it", () => {
         const result = cls.init(() => totpRoute.generateSecret());
         expect(result.success).toBe(true);
         expect(result.message).toMatch(/^[A-Z2-7]+$/);
-        // Generation must not store the secret — that only happens after the user confirms a code.
+        // Generation must not store the secret — that only happens at enable.
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });
 
-    it("confirmSecret persists the secret and issues recovery codes when the code is valid", () => {
+    it("verifySecret issues recovery codes but persists nothing when the code is valid", () => {
         mockValidate.mockReturnValue(true);
-        const result = runConfirm({ secret: SECRET, token: "000000" }) as
+        const result = runVerify({ secret: SECRET, token: "000000" }) as
             { success: boolean; recoveryCodes?: string[] };
         expect(result.success).toBe(true);
-        // Recovery codes are issued atomically with enabling TOTP, to be shown as the final step.
         expect(result.recoveryCodes).toHaveLength(8);
         expect(mockValidate).toHaveBeenCalledWith({ passcode: "000000", secret: SECRET });
-        expect(totpRoute.getTOTPStatus().set).toBe(true);
+        // Verifying alone must neither enable TOTP nor store the recovery codes.
+        expect(totpRoute.getTOTPStatus().set).toBe(false);
+        expect(recoveryCodes.isRecoveryCodeSet()).toBe(false);
     });
 
-    it("confirmSecret rejects an invalid code and leaves nothing persisted", () => {
+    it("verifySecret rejects an invalid code", () => {
         mockValidate.mockReturnValue(false);
-        expect(runConfirm({ secret: SECRET, token: "999999" })).toEqual({ success: false });
+        expect(runVerify({ secret: SECRET, token: "999999" })).toEqual({ success: false });
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });
 
-    it("confirmSecret rejects missing secret or token without validating", () => {
-        expect(runConfirm({ token: "000000" })).toEqual({ success: false });
-        expect(runConfirm({ secret: SECRET })).toEqual({ success: false });
-        expect(runConfirm({})).toEqual({ success: false });
+    it("verifySecret rejects missing secret or token without validating", () => {
+        expect(runVerify({ token: "000000" })).toEqual({ success: false });
+        expect(runVerify({ secret: SECRET })).toEqual({ success: false });
+        expect(runVerify({})).toEqual({ success: false });
         expect(mockValidate).not.toHaveBeenCalled();
+    });
+
+    it("enableSecret commits the secret and recovery codes, activating TOTP", () => {
+        const codes = Array.from({ length: 8 }, (_, i) => `recovery-code-${i}`);
+        expect(runEnable({ secret: SECRET, recoveryCodes: codes })).toEqual({ success: true });
+        expect(totpRoute.getTOTPStatus().set).toBe(true);
+        expect(recoveryCodes.isRecoveryCodeSet()).toBe(true);
+    });
+
+    it("enableSecret rejects a missing secret or empty recovery codes without persisting", () => {
+        expect(runEnable({ recoveryCodes: [ "a" ] })).toEqual({ success: false });
+        expect(runEnable({ secret: SECRET })).toEqual({ success: false });
+        expect(runEnable({ secret: SECRET, recoveryCodes: [] })).toEqual({ success: false });
         expect(totpRoute.getTOTPStatus().set).toBe(false);
     });
 
@@ -72,6 +90,10 @@ describe("TOTP API", () => {
     });
 });
 
-function runConfirm(body: unknown) {
-    return cls.init(() => totpRoute.confirmSecret({ body } as unknown as Request));
+function runVerify(body: unknown) {
+    return cls.init(() => totpRoute.verifySecret({ body } as unknown as Request));
+}
+
+function runEnable(body: unknown) {
+    return cls.init(() => totpRoute.enableSecret({ body } as unknown as Request));
 }

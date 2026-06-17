@@ -141,11 +141,16 @@ export interface TOTPGenerate {
     message: string;
 }
 
-export interface TOTPConfirmResponse {
-    /** Whether the submitted code was valid for the secret; on success the secret is now persisted. */
+export interface TOTPVerifyResponse {
+    /** Whether the submitted code was valid for the secret. Verification persists nothing on its own. */
     success: boolean;
-    /** Freshly issued recovery codes, returned only on success so they can be shown once for saving. */
+    /** Freshly issued (not yet persisted) recovery codes, returned only on success for the user to save. */
     recoveryCodes?: string[];
+}
+
+export interface TOTPEnableResponse {
+    /** Whether the secret and recovery codes were committed, activating TOTP. */
+    success: boolean;
 }
 
 export interface TOTPRecoveryKeysResponse {

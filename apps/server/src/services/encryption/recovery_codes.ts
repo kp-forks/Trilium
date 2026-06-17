@@ -24,9 +24,14 @@ function setRecoveryCodes(recoveryCodes: string) {
     return false;
 }
 
+/** Generates a fresh set of recovery codes WITHOUT persisting them (the caller decides when to commit). */
+function createRecoveryCodes(): string[] {
+    return Array.from({ length: 8 }, () => crypto.randomBytes(16).toString('base64'));
+}
+
 /** Generates a fresh set of recovery codes, persists them (replacing any existing ones), and returns them. */
 function generateRecoveryCodes(): string[] {
-    const recoveryCodes = Array.from({ length: 8 }, () => crypto.randomBytes(16).toString('base64'));
+    const recoveryCodes = createRecoveryCodes();
     setRecoveryCodes(recoveryCodes.join(','));
     return recoveryCodes;
 }
@@ -95,6 +100,7 @@ function verifyRecoveryCode(recoveryCodeGuess: string) {
 
 export default {
     setRecoveryCodes,
+    createRecoveryCodes,
     generateRecoveryCodes,
     clearRecoveryCodes,
     getRecoveryCodes,

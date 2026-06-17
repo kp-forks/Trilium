@@ -1,6 +1,6 @@
 import "./multi_factor_authentication.css";
 
-import { OAuthStatus, TOTPConfirmResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus } from "@triliumnext/commons";
+import { OAuthStatus, TOTPEnableResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus, TOTPVerifyResponse } from "@triliumnext/commons";
 import { RefObject } from "preact";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
@@ -183,9 +183,9 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
         await refreshRecoveryKeys();
     }, [ refreshRecoveryKeys ]);
 
-    // Runs once enrollment is finished: the secret is persisted and recovery codes were issued by
-    // `totp/confirm` (and shown in the modal), so we only refresh state here — generating again would
-    // invalidate the codes the user just saved.
+    // Runs once enrollment is committed (the modal's Finish step persisted the secret and the recovery
+    // codes it already showed), so we only refresh state here — generating again would invalidate the
+    // codes the user just saved.
     const onEnrollmentComplete = useCallback(() => {
         toast.showMessage(t("multi_factor_authentication.totp_enroll_enabled"));
         refreshTotpStatus();
@@ -254,19 +254,19 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
 }
 
 /**
- * Verify-before-enable enrollment dialog with two steps:
+ * Verify-before-enable enrollment dialog with two steps, and crucially nothing is persisted until the
+ * user finishes — so dismissing at any point leaves TOTP exactly as it was:
  *
- *  1. Fetch a fresh (not-yet-persisted) secret, show it for the user to add to their authenticator,
- *     and require them to enter a valid code. The secret is only persisted server-side once the code
- *     checks out, so cancelling or failing verification can never enable TOTP for a secret the user
- *     can't actually generate codes for.
- *  2. Show the recovery codes issued alongside the secret by `totp/confirm`, so the user can save the
- *     fallback they'll need if they ever lose their authenticator, before finishing.
+ *  1. Fetch a fresh secret, show it for the user to add to their authenticator, and require a valid
+ *     code (`totp/verify`). This proves possession but commits nothing.
+ *  2. Show the recovery codes `totp/verify` issued so the user can save the fallback they'll need if
+ *     they lose their authenticator. Finishing (`totp/enable`) is the single point that persists the
+ *     secret + codes and actually enables TOTP.
  */
 function TotpEnrollmentModal({ show, onHidden, onComplete }: {
     show: boolean,
     onHidden: () => void,
-    /** Called when the dialog closes after TOTP was enabled, so the surrounding section can refresh. */
+    /** Called when TOTP has been committed (enabled), so the surrounding section can refresh. */
     onComplete: () => void
 }) {
     const [ secret, setSecret ] = useState<string>();
@@ -275,8 +275,11 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
     const [ codeRejected, setCodeRejected ] = useState(false);
     const [ verifying, setVerifying ] = useState(false);
     // Set once verification succeeds: switches the dialog to the "save your recovery codes" step.
+    // Nothing is persisted server-side at this point — the secret and these codes are only committed
+    // when the user finishes (see `enable`), so dismissing here leaves TOTP exactly as it was.
     const [ recoveryCodes, setRecoveryCodes ] = useState<string[]>();
     const [ acknowledged, setAcknowledged ] = useState(false);
+    const [ enabling, setEnabling ] = useState(false);
     const codeRef = useRef<HTMLInputElement>(null);
 
     // Each time the modal opens, reset state and request a fresh secret.
@@ -292,6 +295,7 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         setVerifying(false);
         setRecoveryCodes(undefined);
         setAcknowledged(false);
+        setEnabling(false);
 
         void server.get<TOTPGenerate>("totp/generate").then((result) => {
             if (result.success) {
@@ -309,6 +313,8 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         }
     }, [ secret, recoveryCodes ]);
 
+    // Step 1: check the code against the secret. Persists nothing — on success we only advance to the
+    // recovery-codes step with the codes the server issued.
     const verify = useCallback(async () => {
         if (!secret || code.length === 0 || verifying) {
             return;
@@ -317,7 +323,7 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         setVerifying(true);
         setCodeRejected(false);
 
-        const result = await server.post<TOTPConfirmResponse>("totp/confirm", { secret, token: code });
+        const result = await server.post<TOTPVerifyResponse>("totp/verify", { secret, token: code });
         setVerifying(false);
 
         if (!result.success) {
@@ -327,20 +333,29 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
             return;
         }
 
-        // TOTP is now active server-side; advance to the recovery-codes step so the user can save them.
         setRecoveryCodes(result.recoveryCodes ?? []);
     }, [ secret, code, verifying ]);
 
-    const inRecoveryStep = !!recoveryCodes;
-
-    // The bootstrap "hidden" event is the single place we react to the dialog closing: if the user got
-    // as far as the recovery step then TOTP is enabled, so refresh the surrounding section.
-    const handleModalHidden = useCallback(() => {
-        if (recoveryCodes) {
-            onComplete();
+    // Step 2 (Finish): the single commit point — persist the secret and recovery codes, enabling TOTP.
+    const enable = useCallback(async () => {
+        if (!secret || !recoveryCodes || !acknowledged || enabling) {
+            return;
         }
+
+        setEnabling(true);
+        const result = await server.post<TOTPEnableResponse>("totp/enable", { secret, recoveryCodes });
+        setEnabling(false);
+
+        if (!result.success) {
+            toast.showError(t("multi_factor_authentication.totp_enroll_enable_error"));
+            return;
+        }
+
+        onComplete();
         onHidden();
-    }, [ recoveryCodes, onComplete, onHidden ]);
+    }, [ secret, recoveryCodes, acknowledged, enabling, onComplete, onHidden ]);
+
+    const inRecoveryStep = !!recoveryCodes;
 
     return (
         <Modal
@@ -350,12 +365,11 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
                 : t("multi_factor_authentication.totp_enroll_title")}
             size="md"
             show={show}
-            onHidden={handleModalHidden}
+            // Dismissing simply closes; nothing was persisted unless the user finished (see `enable`).
+            onHidden={onHidden}
             onSubmit={() => {
                 if (inRecoveryStep) {
-                    if (acknowledged) {
-                        onHidden();
-                    }
+                    void enable();
                 } else {
                     void verify();
                 }
@@ -365,8 +379,8 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
                 ? <Button
                     text={t("multi_factor_authentication.totp_enroll_finish")}
                     kind="primary"
-                    disabled={!acknowledged}
-                    onClick={onHidden}
+                    disabled={!acknowledged || enabling}
+                    onClick={() => void enable()}
                 />
                 : <>
                     <Button text={t("multi_factor_authentication.totp_enroll_cancel")} onClick={onHidden} />

@@ -66,7 +66,8 @@ function register(app: express.Application) {
 
 
     apiRoute(GET, '/api/totp/generate', totp.generateSecret);
-    apiRoute(PST, '/api/totp/confirm', totp.confirmSecret);
+    apiRoute(PST, '/api/totp/verify', totp.verifySecret);
+    apiRoute(PST, '/api/totp/enable', totp.enableSecret);
     apiRoute(GET, '/api/totp/status', totp.getTOTPStatus);
     apiRoute(GET, '/api/totp/get', totp.getSecret);
     apiRoute(PST, '/api/totp/reset', totp.resetTOTP);

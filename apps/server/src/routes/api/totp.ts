@@ -8,15 +8,13 @@ function generateTOTPSecret() {
 }
 
 /**
- * Confirms a freshly generated secret by checking a code the user produced for it, and only then
- * persists it. This is the gate that prevents enabling TOTP for a secret the user can't actually
- * generate codes for (which would otherwise lock them out at the next login).
- *
- * On success we also (re)generate the recovery codes so they're issued atomically with enabling
- * TOTP and can be shown as the final enrollment step — the fallback for when the authenticator is
- * lost.
+ * Verifies a freshly generated secret by checking a code the user produced for it, WITHOUT
+ * persisting anything. On success we issue recovery codes (also unpersisted) so they can be shown as
+ * the next enrollment step. The secret only becomes active once {@link enableTOTP} commits it — so
+ * abandoning the flow here (e.g. closing the dialog without saving the recovery codes) leaves TOTP
+ * disabled and can never lock the user out.
  */
-function confirmTOTPSecret(req: Request) {
+function verifyTOTPSecret(req: Request) {
     const secret = req.body?.secret;
     const token = req.body?.token;
 
@@ -28,9 +26,27 @@ function confirmTOTPSecret(req: Request) {
         return { success: false };
     }
 
+    return { success: true, recoveryCodes: recoveryCodesService.createRecoveryCodes() };
+}
+
+/**
+ * Commits a verified secret together with its recovery codes, activating TOTP. This is the final
+ * enrollment step, reached only after the user confirms they've saved the recovery codes, so this
+ * is the single point where anything is persisted.
+ */
+function enableTOTP(req: Request) {
+    const secret = req.body?.secret;
+    const recoveryCodes = req.body?.recoveryCodes;
+
+    const hasSecret = typeof secret === "string" && secret.length > 0;
+    const hasCodes = Array.isArray(recoveryCodes) && recoveryCodes.length > 0;
+    if (!hasSecret || !hasCodes) {
+        return { success: false };
+    }
+
     totpService.setSecret(secret);
-    const recoveryCodes = recoveryCodesService.generateRecoveryCodes();
-    return { success: true, recoveryCodes };
+    recoveryCodesService.setRecoveryCodes(recoveryCodes.join(","));
+    return { success: true };
 }
 
 function getTOTPStatus() {
@@ -52,7 +68,8 @@ function resetTOTP() {
 
 export default {
     generateSecret: generateTOTPSecret,
-    confirmSecret: confirmTOTPSecret,
+    verifySecret: verifyTOTPSecret,
+    enableSecret: enableTOTP,
     getTOTPStatus,
     getSecret,
     resetTOTP
