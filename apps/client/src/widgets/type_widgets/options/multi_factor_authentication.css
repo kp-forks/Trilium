@@ -20,6 +20,24 @@
     --color: var(--muted-text-color, #888);
 }
 
+/* OAuth section heading: the title text and its configured/not-configured status badge on one line,
+   the badge sitting just after the title. */
+.oauth-status-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Status badge mirrors the page-header MFA badge: a colored outline whose hue is driven by --color
+   (green when configured, muted otherwise). */
+.oauth-status-badge.configured {
+    --color: var(--admonition-tip-accent-color, #40c025);
+}
+
+.oauth-status-badge.not-configured {
+    --color: var(--muted-text-color, #888);
+}
+
 /* Keeps the "Recovery codes" label text and its dots on one line, the dots sitting just after the
    title. Lives inside the row's <label>, so text and dots share one box and stay aligned. */
 .recovery-codes-title {

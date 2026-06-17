@@ -116,9 +116,12 @@ function MultiFactorMethod({ mfaMethod, setMfaMethod, totpStatus, oauthStatus, r
                     </FormText>
                 </OptionsSection>}
 
-            { mfaMethod === "totp"
-                ? <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} />
-                : <OAuthSettings status={oauthStatus} /> }
+            { mfaMethod === "totp" &&
+                <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} /> }
+
+            {/* OAuth is configured entirely server-side, so its card is read-only and stays visible
+                regardless of the active method — it's a status indicator for whether OAuth is available. */}
+            <OAuthStatusCard status={oauthStatus} />
         </>
     );
 }
@@ -634,17 +637,41 @@ function formatRecoveryCodeUsedDate(statusEntry: string) {
     return isNaN(date.getTime()) ? statusEntry : date.toLocaleString();
 }
 
-function OAuthSettings({ status }: { status?: OAuthStatus }) {
+/**
+ * Read-only OAuth/OpenID status card. OAuth is configured entirely server-side (env vars / config.ini),
+ * so this card offers no controls — it just reflects whether OAuth is available, and when it's the
+ * active method, the signed-in account. It stays visible even while TOTP is the active method so the
+ * user can always tell whether OAuth is set up.
+ */
+function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
+    // "Configured" is purely about the server-side variables being present, independent of which MFA
+    // method is currently active (the server's `enabled` flag additionally requires mfaMethod === 'oauth').
+    const configured = (status?.missingVars?.length ?? 1) === 0;
+
     return (
-        <OptionsSection title={t("multi_factor_authentication.oauth_title")}>
-            { status?.enabled ? (
+        <OptionsSection
+            title={
+                <span className="oauth-status-title">
+                    {t("multi_factor_authentication.oauth_title")}
+                    <Badge
+                        className={`oauth-status-badge ${configured ? "configured" : "not-configured"}`}
+                        icon={configured ? "bx bx-check" : "bx bx-x"}
+                        text={configured
+                            ? t("multi_factor_authentication.oauth_status_configured")
+                            : t("multi_factor_authentication.oauth_status_not_configured")}
+                        outline
+                    />
+                </span>
+            }
+        >
+            { configured ? (
                 <div class="col-md-6">
                     <span><b>{t("multi_factor_authentication.oauth_user_account")}</b></span>
-                    <span class="user-account-name">{status.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
+                    <span class="user-account-name">{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
 
                     <br />
                     <span><b>{t("multi_factor_authentication.oauth_user_email")}</b></span>
-                    <span class="user-account-email">{status.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
+                    <span class="user-account-email">{status?.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
                 </div>
             ) : (
                 <>
