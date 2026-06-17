@@ -19,7 +19,7 @@ export default function LlmSettings() {
     if (isStandalone) {
         return (
             <>
-                <OptionsPageHeader />
+                <OptionsPageHeader helpUrl="GBBMSlVSOIGP" />
                 <OptionsSection>
                     <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
                 </OptionsSection>
@@ -29,10 +29,9 @@ export default function LlmSettings() {
 
     return (
         <>
-            <OptionsPageHeader />
+            <OptionsPageHeader helpUrl="GBBMSlVSOIGP" />
             <OptionsSection
                 description={t("llm.settings_description")}
-                helpUrl="GBBMSlVSOIGP"
             >
                 <OptionsRowWithToggle
                     name="ai-enabled"
