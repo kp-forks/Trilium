@@ -107,37 +107,51 @@ export default function ShortcutSettings() {
     return (
         <div className="shortcuts-options-section">
             <header>
-                <FormTextBox
-                    placeholder={t("shortcuts.type_text_to_filter")}
-                    currentValue={filter} onChange={(value) => setFilter(value)}
-                />
-                {conflicts.size > 0 &&
-                    <Badge
-                        className={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
-                        icon="bx bx-error-circle"
-                        text={t("shortcuts.conflicts_badge", { count: conflicts.size })}
-                        tooltip={t("shortcuts.conflicts_badge_tooltip")}
-                        outline
-                        onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
-                    />}
-                <Dropdown
-                    buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
-                    hideToggleArrow
-                    noSelectButtonStyle
-                    noDropdownListStyle
-                    iconAction
-                    title={t("shortcuts.filter")}
-                    dropdownRef={filterDropdownRef}
-                    dropdownContainerClassName={isMobile() ? "mobile-bottom-menu" : undefined}
-                >
-                    <FilterContent
-                        activeFilter={activeFilter}
-                        onSelect={selectFilter}
-                        conflictCount={conflicts.size}
-                        globalCount={globalCount}
-                        modifiedCount={modifiedCount}
+                <div class="shortcut-header-row">
+                    {conflicts.size > 0 &&
+                        <Badge
+                            className={`shortcut-conflicts-badge ${activeFilter === "conflicts" ? "active" : ""}`}
+                            icon="bx bx-error-circle"
+                            text={t("shortcuts.conflicts_badge", { count: conflicts.size })}
+                            tooltip={t("shortcuts.conflicts_badge_tooltip")}
+                            outline
+                            onClick={() => setActiveFilter(activeFilter === "conflicts" ? null : "conflicts")}
+                        />}
+                    <Button
+                        text={t("shortcuts.reload_app")}
+                        onClick={reloadFrontendApp}
+                        size="micro"
                     />
-                </Dropdown>
+                    <Button
+                        text={t("shortcuts.set_all_to_default")}
+                        onClick={resetShortcuts}
+                        size="micro"
+                    />
+                </div>
+                <div class="shortcut-header-row">
+                    <FormTextBox
+                        placeholder={t("shortcuts.type_text_to_filter")}
+                        currentValue={filter} onChange={(value) => setFilter(value)}
+                    />
+                    <Dropdown
+                        buttonClassName={`bx bx-filter-alt ${activeFilter ? "active" : ""}`}
+                        hideToggleArrow
+                        noSelectButtonStyle
+                        noDropdownListStyle
+                        iconAction
+                        title={t("shortcuts.filter")}
+                        dropdownRef={filterDropdownRef}
+                        dropdownContainerClassName={isMobile() ? "mobile-bottom-menu" : undefined}
+                    >
+                        <FilterContent
+                            activeFilter={activeFilter}
+                            onSelect={selectFilter}
+                            conflictCount={conflicts.size}
+                            globalCount={globalCount}
+                            modifiedCount={modifiedCount}
+                        />
+                    </Dropdown>
+                </div>
             </header>
 
             {filteredGroups.length > 0
@@ -168,18 +182,6 @@ export default function ShortcutSettings() {
                                 text={t("shortcuts.no_matches")}
                             />
                         )}
-
-            <footer>
-                <Button
-                    text={t("shortcuts.reload_app")}
-                    onClick={reloadFrontendApp}
-                />
-
-                <Button
-                    text={t("shortcuts.set_all_to_default")}
-                    onClick={resetShortcuts}
-                />
-            </footer>
         </div>
     );
 }
