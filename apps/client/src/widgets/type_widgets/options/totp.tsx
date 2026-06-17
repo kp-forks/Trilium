@@ -212,17 +212,22 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         setVerifying(true);
         setCodeRejected(false);
 
-        const result = await server.post<TOTPVerifyResponse>("totp/verify", { secret, token: code });
-        setVerifying(false);
+        try {
+            const result = await server.post<TOTPVerifyResponse>("totp/verify", { secret, token: code });
 
-        if (!result.success) {
-            setCodeRejected(true);
-            setCode("");
-            codeRef.current?.focus();
-            return;
+            if (!result.success) {
+                setCodeRejected(true);
+                setCode("");
+                codeRef.current?.focus();
+                return;
+            }
+
+            setRecoveryCodes(result.recoveryCodes ?? []);
+        } finally {
+            // server.ts already surfaces a request failure via a toast; the finally just guarantees the
+            // Verify button is never left stuck disabled if the request throws.
+            setVerifying(false);
         }
-
-        setRecoveryCodes(result.recoveryCodes ?? []);
     }, [ secret, code, verifying ]);
 
     // Step 2 (Finish): the single commit point — persist the secret and recovery codes, enabling TOTP.
@@ -232,16 +237,22 @@ function TotpEnrollmentModal({ show, onHidden, onComplete }: {
         }
 
         setEnabling(true);
-        const result = await server.post<TOTPEnableResponse>("totp/enable", { secret, recoveryCodes });
-        setEnabling(false);
 
-        if (!result.success) {
-            toast.showError(t("multi_factor_authentication.totp_enroll_enable_error"));
-            return;
+        try {
+            const result = await server.post<TOTPEnableResponse>("totp/enable", { secret, recoveryCodes });
+
+            if (!result.success) {
+                toast.showError(t("multi_factor_authentication.totp_enroll_enable_error"));
+                return;
+            }
+
+            onComplete();
+            onHidden();
+        } finally {
+            // Guarantee the Finish button is re-enabled even if the request throws (server.ts toasts
+            // the failure itself).
+            setEnabling(false);
         }
-
-        onComplete();
-        onHidden();
     }, [ secret, recoveryCodes, acknowledged, enabling, onComplete, onHidden ]);
 
     const inRecoveryStep = !!recoveryCodes;
