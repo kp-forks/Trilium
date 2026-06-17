@@ -103,7 +103,7 @@ describe("Login (token) API", () => {
     it("rejects login when TOTP is enabled and the submitted token is wrong", async () => {
         cls.init(() => {
             optionService.setOption("mfaEnabled", "true");
-            totpService.createSecret(); // stores a secret so TOTP counts as enabled
+            totpService.setSecret("JBSWY3DPEHPK3PXP"); // stores a secret so TOTP counts as enabled
         });
 
         const req = { body: { password: "demo1234", totpToken: "000000" } } as unknown as Request;

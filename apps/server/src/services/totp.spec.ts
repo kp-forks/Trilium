@@ -51,28 +51,38 @@ describe("totp", () => {
         });
         expect(totp.isTotpEnabled()).toBe(false);
 
-        // now set a secret as well
+        // now persist a secret as well
         cls.init(() => {
-            totp.createSecret();
+            totp.setSecret(SECRET);
         });
         expect(totp.isTotpEnabled()).toBe(true);
     });
 
-    it("createSecret stores the generated secret on success", () => {
+    it("generateSecret returns a fresh secret without persisting it", () => {
         cls.init(() => {
             totpEncryption.resetTotpSecret();
         });
         let result: { success: boolean; message?: string } | undefined;
         cls.init(() => {
-            result = totp.createSecret();
+            result = totp.generateSecret();
         });
         expect(result?.success).toBe(true);
         expect(result?.message).toBe(SECRET);
-        expect(totp.checkForTotpSecret()).toBe(true);
-        expect(totp.getTotpSecret()).not.toBeNull();
+        // Generation alone must NOT persist the secret: it only becomes active after the user confirms
+        // a code for it, which is what prevents an accidental lockout.
+        expect(totp.checkForTotpSecret()).toBe(false);
     });
 
-    it("createSecret returns failure when secret generation throws", () => {
+    it("setSecret persists a secret so it can be retrieved", () => {
+        cls.init(() => {
+            totpEncryption.resetTotpSecret();
+            totp.setSecret(SECRET);
+        });
+        expect(totp.checkForTotpSecret()).toBe(true);
+        expect(totp.getTotpSecret()).toBe(SECRET);
+    });
+
+    it("generateSecret returns failure when secret generation throws", () => {
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
         // Error instance -> the error's message is surfaced
@@ -81,7 +91,7 @@ describe("totp", () => {
         });
         let result: { success: boolean; message?: string } | undefined;
         cls.init(() => {
-            result = totp.createSecret();
+            result = totp.generateSecret();
         });
         expect(result?.success).toBe(false);
         expect(result?.message).toBe("gen failed");
@@ -91,12 +101,30 @@ describe("totp", () => {
             throw "string failure";
         });
         cls.init(() => {
-            result = totp.createSecret();
+            result = totp.generateSecret();
         });
         expect(result?.success).toBe(false);
         expect(result?.message).toBeTruthy();
 
         errorSpy.mockRestore();
+    });
+
+    it("validateTOTPForSecret validates against the supplied secret, no stored secret needed", () => {
+        cls.init(() => {
+            totpEncryption.resetTotpSecret();
+        });
+
+        mockValidate.mockReturnValue(true);
+        expect(totp.validateTOTPForSecret(SECRET, "000000")).toBe(true);
+        expect(mockValidate).toHaveBeenCalledWith({ passcode: "000000", secret: SECRET });
+
+        mockValidate.mockReturnValue(false);
+        expect(totp.validateTOTPForSecret(SECRET, "000000")).toBe(false);
+
+        // An empty secret short-circuits without invoking the validator.
+        mockValidate.mockClear();
+        expect(totp.validateTOTPForSecret("", "000000")).toBe(false);
+        expect(mockValidate).not.toHaveBeenCalled();
     });
 
     it("validateTOTP returns false when no secret is set", () => {
@@ -109,7 +137,7 @@ describe("totp", () => {
 
     it("validateTOTP delegates to Totp.validate when a secret is set", () => {
         cls.init(() => {
-            totp.createSecret();
+            totp.setSecret(SECRET);
         });
 
         mockValidate.mockReturnValue(true);
@@ -122,7 +150,7 @@ describe("totp", () => {
     it("validateTOTP returns false when Totp.validate throws", () => {
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
         cls.init(() => {
-            totp.createSecret();
+            totp.setSecret(SECRET);
         });
         mockValidate.mockImplementation(() => {
             throw new Error("invalid");
@@ -135,7 +163,7 @@ describe("totp", () => {
         cls.init(() => {
             options.setOption("mfaEnabled", "true");
             options.setOption("mfaMethod", "totp");
-            totp.createSecret();
+            totp.setSecret(SECRET);
             recoveryCodes.setRecoveryCodes("AAAAAAAAAAAAAAAAAAAAAA==,BBBBBBBBBBBBBBBBBBBBBB==");
         });
         expect(totp.checkForTotpSecret()).toBe(true);

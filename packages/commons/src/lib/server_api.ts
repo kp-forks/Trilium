@@ -141,6 +141,11 @@ export interface TOTPGenerate {
     message: string;
 }
 
+export interface TOTPConfirmResponse {
+    /** Whether the submitted code was valid for the secret; on success the secret is now persisted. */
+    success: boolean;
+}
+
 export interface TOTPRecoveryKeysResponse {
     success: boolean;
     recoveryCodes?: string[];

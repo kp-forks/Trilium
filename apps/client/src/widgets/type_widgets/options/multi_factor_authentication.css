@@ -40,6 +40,13 @@
     color: white;
 }
 
+/* Enrollment dialog: render the generated secret in a monospace face and space the characters out a
+   little so the base32 string is easy to read and transcribe into an authenticator app. */
+.modal.totp-enrollment-modal .totp-enroll-secret {
+    font-family: var(--monospace-font-family, monospace);
+    letter-spacing: 0.15em;
+}
+
 /* One dot per recovery code, shown inline right after the "Recovery codes" label. */
 .recovery-code-dots {
     display: flex;

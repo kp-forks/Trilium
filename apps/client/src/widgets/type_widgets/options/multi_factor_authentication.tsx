@@ -1,7 +1,8 @@
 import "./multi_factor_authentication.css";
 
-import { OAuthStatus, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus } from "@triliumnext/commons";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { OAuthStatus, TOTPConfirmResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus } from "@triliumnext/commons";
+import { createPortal } from "preact/compat";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { Trans } from "react-i18next";
 
 import dialog from "../../../services/dialog";
@@ -13,9 +14,12 @@ import Admonition from "../../react/Admonition";
 import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
 import FormCheckbox from "../../react/FormCheckbox";
+import FormGroup from "../../react/FormGroup";
 import { FormInlineRadioGroup } from "../../react/FormRadioGroup";
 import FormText from "../../react/FormText";
+import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import Modal from "../../react/Modal";
 import RawHtml from "../../react/RawHtml";
 import OptionsPageHeader from "./components/OptionsPageHeader";
 import { OptionsRowWithButton } from "./components/OptionsRow";
@@ -23,13 +27,38 @@ import OptionsSection from "./components/OptionsSection";
 
 export default function MultiFactorAuthenticationSettings() {
     const [ mfaEnabled, setMfaEnabled ] = useTriliumOptionBool("mfaEnabled");
+    const [ mfaMethod, setMfaMethod ] = useTriliumOption("mfaMethod");
+    const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
+    const [ oauthStatus, setOauthStatus ] = useState<OAuthStatus>();
+
+    const refreshTotpStatus = useCallback(() => {
+        server.get<TOTPStatus>("totp/status").then(setTotpStatus);
+    }, []);
+
+    useEffect(() => {
+        refreshTotpStatus();
+        server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
+    }, [ refreshTotpStatus ]);
+
+    // MFA is genuinely active only when it's enabled AND the selected method is fully configured —
+    // the enable checkbox alone isn't enough (e.g. enabled with no TOTP secret generated yet). OAuth
+    // is "configured" once the server has all its environment variables (no missing vars).
+    const oauthConfigured = (oauthStatus?.missingVars?.length ?? 1) === 0;
+    const mfaActive = !!mfaEnabled && (
+        (mfaMethod === "totp" && !!totpStatus?.set)
+        || (mfaMethod === "oauth" && oauthConfigured)
+    );
 
     return (!isElectron()
         ? (
             <>
-                <OptionsPageHeader actions={<MfaStatusBadge mfaEnabled={mfaEnabled} />} />
+                <OptionsPageHeader actions={<MfaStatusBadge active={mfaActive} />} />
                 <EnableMultiFactor mfaEnabled={mfaEnabled} setMfaEnabled={setMfaEnabled} />
-                { mfaEnabled && <MultiFactorMethod /> }
+                { mfaEnabled && <MultiFactorMethod
+                    mfaMethod={mfaMethod} setMfaMethod={setMfaMethod}
+                    totpStatus={totpStatus} oauthStatus={oauthStatus}
+                    refreshTotpStatus={refreshTotpStatus}
+                /> }
             </>
         ) : (
             <>
@@ -40,14 +69,14 @@ export default function MultiFactorAuthenticationSettings() {
     );
 }
 
-function MfaStatusBadge({ mfaEnabled }: { mfaEnabled: boolean }) {
+function MfaStatusBadge({ active }: { active: boolean }) {
     return (
         <div className="mfa-header-actions">
             <Badge
-                className={`mfa-status-badge ${mfaEnabled ? "active" : "inactive"}`}
-                icon={mfaEnabled ? "bx bx-check-shield" : "bx bx-shield-x"}
-                text={mfaEnabled ? t("multi_factor_authentication.status_active") : t("multi_factor_authentication.status_inactive")}
-                tooltip={mfaEnabled ? t("multi_factor_authentication.status_active_tooltip") : t("multi_factor_authentication.status_inactive_tooltip")}
+                className={`mfa-status-badge ${active ? "active" : "inactive"}`}
+                icon={active ? "bx bx-check-shield" : "bx bx-shield-x"}
+                text={active ? t("multi_factor_authentication.status_active") : t("multi_factor_authentication.status_inactive")}
+                tooltip={active ? t("multi_factor_authentication.status_active_tooltip") : t("multi_factor_authentication.status_inactive_tooltip")}
                 outline
             />
         </div>
@@ -68,20 +97,13 @@ function EnableMultiFactor({ mfaEnabled, setMfaEnabled }: { mfaEnabled: boolean,
     );
 }
 
-function MultiFactorMethod() {
-    const [ mfaMethod, setMfaMethod ] = useTriliumOption("mfaMethod");
-    const [ totpStatus, setTotpStatus ] = useState<TOTPStatus>();
-    const [ oauthStatus, setOauthStatus ] = useState<OAuthStatus>();
-
-    const refreshTotpStatus = useCallback(() => {
-        server.get<TOTPStatus>("totp/status").then(setTotpStatus);
-    }, []);
-
-    useEffect(() => {
-        refreshTotpStatus();
-        server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
-    }, [ refreshTotpStatus ]);
-
+function MultiFactorMethod({ mfaMethod, setMfaMethod, totpStatus, oauthStatus, refreshTotpStatus }: {
+    mfaMethod: string,
+    setMfaMethod: (newValue: string) => Promise<void>,
+    totpStatus?: TOTPStatus,
+    oauthStatus?: OAuthStatus,
+    refreshTotpStatus: () => void
+}) {
     // The method selector only matters during initial setup. Switching method once one is configured
     // silently strands the existing setup and can leave MFA effectively off (see the remove flow),
     // so once the current method is set up we hide the selector — removing TOTP (or reconfiguring
@@ -125,6 +147,8 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
     // The plaintext codes from a generation done in this session, shown once so the user can save
     // them. Cleared on unmount — they can never be retrieved again, only replaced.
     const [ generatedKeys, setGeneratedKeys ] = useState<string[]>();
+    // Whether the verify-before-enable enrollment modal is open.
+    const [ showEnroll, setShowEnroll ] = useState(false);
 
     const refreshRecoveryKeys = useCallback(async () => {
         const result = await server.get<TOTPRecoveryKeysResponse>("totp_recovery/enabled");
@@ -160,6 +184,14 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
         await refreshRecoveryKeys();
     }, [ refreshRecoveryKeys ]);
 
+    // Runs once the user has proven they can produce a valid code: the server has now persisted the
+    // secret, so reflect the freshly-active state and (re)generate recovery codes.
+    const onEnrollmentConfirmed = useCallback(async () => {
+        toast.showMessage(t("multi_factor_authentication.totp_enroll_enabled"));
+        refreshTotpStatus();
+        await generateRecoveryKeys();
+    }, [ refreshTotpStatus, generateRecoveryKeys ]);
+
     const removeTotp = useCallback(async () => {
         if (!await dialog.confirm(t("multi_factor_authentication.totp_remove_confirm"))) {
             return;
@@ -194,20 +226,11 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
                         return;
                     }
 
-                    const result = await server.get<TOTPGenerate>("totp/generate");
-                    if (!result.success) {
-                        toast.showError(result.message);
-                        return;
-                    }
-
-                    await dialog.prompt({
-                        title: t("multi_factor_authentication.totp_secret_generated"),
-                        message: t("multi_factor_authentication.totp_secret_warning"),
-                        defaultValue: result.message,
-                        readOnly: true
-                    });
-                    refreshTotpStatus();
-                    await generateRecoveryKeys();
+                    // Don't generate-and-persist here. The enrollment modal fetches a secret, has the
+                    // user confirm a code for it, and only then is it persisted server-side — so a
+                    // botched setup leaves the existing (or no) secret untouched instead of locking
+                    // the user out on next login.
+                    setShowEnroll(true);
                 }}
             />
         </OptionsSection>
@@ -218,7 +241,138 @@ function TotpSettings({ totpStatus, refreshTotpStatus }: {
             generateRecoveryKeys={generateRecoveryKeys}
             onRemoveTotp={totpStatus?.set ? removeTotp : undefined}
         />
+
+        {createPortal(
+            <TotpEnrollmentModal
+                show={showEnroll}
+                onHidden={() => setShowEnroll(false)}
+                onConfirmed={onEnrollmentConfirmed}
+            />,
+            document.body
+        )}
     </>);
+}
+
+/**
+ * Verify-before-enable enrollment dialog. On open it fetches a fresh (not-yet-persisted) TOTP secret,
+ * shows it for the user to add to their authenticator, and requires them to enter a valid code for it.
+ * The secret is only persisted server-side on a successful `totp/confirm`, so cancelling or failing
+ * verification can never leave TOTP active for a secret the user can't actually generate codes for.
+ */
+function TotpEnrollmentModal({ show, onHidden, onConfirmed }: {
+    show: boolean,
+    onHidden: () => void,
+    onConfirmed: () => Promise<void> | void
+}) {
+    const [ secret, setSecret ] = useState<string>();
+    const [ loadFailed, setLoadFailed ] = useState(false);
+    const [ code, setCode ] = useState("");
+    const [ codeRejected, setCodeRejected ] = useState(false);
+    const [ verifying, setVerifying ] = useState(false);
+    const codeRef = useRef<HTMLInputElement>(null);
+
+    // Each time the modal opens, reset state and request a fresh secret.
+    useEffect(() => {
+        if (!show) {
+            return;
+        }
+
+        setSecret(undefined);
+        setLoadFailed(false);
+        setCode("");
+        setCodeRejected(false);
+        setVerifying(false);
+
+        void server.get<TOTPGenerate>("totp/generate").then((result) => {
+            if (result.success) {
+                setSecret(result.message);
+            } else {
+                setLoadFailed(true);
+            }
+        });
+    }, [ show ]);
+
+    // Focus the code field once the secret has loaded.
+    useEffect(() => {
+        if (secret) {
+            codeRef.current?.focus();
+        }
+    }, [ secret ]);
+
+    const verify = useCallback(async () => {
+        if (!secret || code.length === 0 || verifying) {
+            return;
+        }
+
+        setVerifying(true);
+        setCodeRejected(false);
+
+        const result = await server.post<TOTPConfirmResponse>("totp/confirm", { secret, token: code });
+        setVerifying(false);
+
+        if (!result.success) {
+            setCodeRejected(true);
+            setCode("");
+            codeRef.current?.focus();
+            return;
+        }
+
+        await onConfirmed();
+        onHidden();
+    }, [ secret, code, verifying, onConfirmed, onHidden ]);
+
+    return (
+        <Modal
+            className="totp-enrollment-modal"
+            title={t("multi_factor_authentication.totp_enroll_title")}
+            size="md"
+            show={show}
+            onHidden={onHidden}
+            onSubmit={() => void verify()}
+            stackable
+            footer={<>
+                <Button text={t("multi_factor_authentication.totp_enroll_cancel")} onClick={onHidden} />
+                <Button
+                    text={t("multi_factor_authentication.totp_enroll_verify")}
+                    kind="primary"
+                    disabled={!secret || code.length === 0 || verifying}
+                />
+            </>}
+        >
+            {loadFailed
+                ? <Admonition type="caution">{t("multi_factor_authentication.totp_enroll_generate_error")}</Admonition>
+                : <>
+                    <FormText>{t("multi_factor_authentication.totp_enroll_instructions")}</FormText>
+
+                    <FormGroup name="totp-enroll-secret" label={t("multi_factor_authentication.totp_enroll_secret_label")}>
+                        <FormTextBox
+                            className="totp-enroll-secret"
+                            currentValue={secret ?? ""}
+                            readOnly
+                            onFocus={(e) => e.currentTarget.select()}
+                        />
+                    </FormGroup>
+
+                    <Admonition type="caution">{t("multi_factor_authentication.totp_secret_warning")}</Admonition>
+
+                    <FormGroup
+                        name="totp-enroll-code"
+                        label={t("multi_factor_authentication.totp_enroll_code_label")}
+                        error={codeRejected ? t("multi_factor_authentication.totp_enroll_invalid_code") : undefined}
+                    >
+                        <FormTextBox
+                            inputRef={codeRef}
+                            currentValue={code}
+                            onChange={(value) => setCode(value.replace(/\D/g, "").slice(0, 6))}
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            placeholder={t("multi_factor_authentication.totp_enroll_code_placeholder")}
+                            maxLength={6}
+                        />
+                    </FormGroup>
+                </>}
+        </Modal>
+    );
 }
 
 function TotpRecoveryKeys({ status, generatedKeys, generateRecoveryKeys, onRemoveTotp }: {

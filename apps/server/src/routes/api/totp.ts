@@ -1,7 +1,30 @@
+import type { Request } from 'express';
+
 import totpService from '../../services/totp.js';
 
 function generateTOTPSecret() {
-    return totpService.createSecret();
+    return totpService.generateSecret();
+}
+
+/**
+ * Confirms a freshly generated secret by checking a code the user produced for it, and only then
+ * persists it. This is the gate that prevents enabling TOTP for a secret the user can't actually
+ * generate codes for (which would otherwise lock them out at the next login).
+ */
+function confirmTOTPSecret(req: Request) {
+    const secret = req.body?.secret;
+    const token = req.body?.token;
+
+    if (typeof secret !== "string" || !secret || typeof token !== "string" || !token) {
+        return { success: false };
+    }
+
+    if (!totpService.validateTOTPForSecret(secret, token)) {
+        return { success: false };
+    }
+
+    totpService.setSecret(secret);
+    return { success: true };
 }
 
 function getTOTPStatus() {
@@ -19,6 +42,7 @@ function resetTOTP() {
 
 export default {
     generateSecret: generateTOTPSecret,
+    confirmSecret: confirmTOTPSecret,
     getTOTPStatus,
     getSecret,
     resetTOTP
