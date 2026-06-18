@@ -1187,6 +1187,7 @@
   "media": {
     "play": "Play (Space)",
     "pause": "Pause (Space)",
+    "seek": "Seek (Left/Right arrow keys)",
     "back-10s": "Back 10s (Left arrow key)",
     "forward-30s": "Forward 30s",
     "previous-video": "Previous video: {{- title}}",
