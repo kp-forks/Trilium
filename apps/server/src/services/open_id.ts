@@ -155,8 +155,6 @@ function generateOAuthConfig(endSessionSupported = false) {
         authorizationParams: {
             response_type: "code",
             scope: "openid profile email",
-            access_type: "offline",
-            prompt: "consent",
         },
         routes: authRoutes,
         // Only enable RP-Initiated Logout when the provider actually advertises an end_session_endpoint

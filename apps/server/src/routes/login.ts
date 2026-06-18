@@ -106,13 +106,7 @@ async function setPassword(req: Request, res: Response) {
  */
 async function login(req: Request, res: Response) {
     if (openID.isOpenIDEnabled()) {
-        void res.oidc.login({
-            returnTo: '/',
-            authorizationParams: {
-                prompt: 'consent',
-                access_type: 'offline'
-            }
-        });
+        void res.oidc.login({ returnTo: '/' });
         return;
     }
 
@@ -173,7 +167,10 @@ function logout(req: Request, res: Response) {
         req.session.loggedIn = false;
 
         if (openID.isOpenIDEnabled() && openIDEncryption.isSubjectIdentifierSaved()) {
+            // oidc.logout() already issues the redirect (to the provider's end-session
+            // endpoint, or locally), so we must not send our own response afterwards.
             void res.oidc.logout({ returnTo: '/' });
+            return;
         }
 
         res.redirect('login');
