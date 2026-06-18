@@ -1997,7 +1997,6 @@
     "recovery_keys_remaining": "{{remaining}} von {{total}} verbleibend. Können nicht erneut angezeigt, nur ersetzt werden.",
     "recovery_keys_dot_available": "Verfügbar",
     "recovery_keys_dot_used": "Verwendet am {{- date}}",
-    "oauth_status_configured": "Konfiguriert",
     "oauth_status_not_configured": "Nicht konfiguriert",
     "oauth_not_configured_hint": "Ermöglichen Sie die Anmeldung über ein Konto eines anderen Dienstes, z. B. Google. Richten Sie OpenID Connect auf dem Server ein, um es als Anmeldemethode zu aktivieren.",
     "oauth_how_to_enable": "Aktivierung",
