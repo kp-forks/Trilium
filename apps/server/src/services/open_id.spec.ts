@@ -3,7 +3,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
-import openID, { resolveOAuthIdentity } from "./open_id.js";
+import openID, { resolveOAuthIdentity, supportsRpInitiatedLogout } from "./open_id.js";
 import sql from "./sql.js";
 import sqlInit from "./sql_init.js";
 
@@ -185,6 +185,14 @@ describe("open_id", () => {
             expect(openID.generateOAuthConfig().clientAuthMethod).toBe("client_secret_post");
         });
 
+        it("enables RP-Initiated Logout (idpLogout) only when the provider supports it", () => {
+            setOauthConfig(true);
+            // Default off, and on only when discovery confirmed an end_session_endpoint at startup.
+            expect(openID.generateOAuthConfig().idpLogout).toBe(false);
+            expect(openID.generateOAuthConfig(false).idpLogout).toBe(false);
+            expect(openID.generateOAuthConfig(true).idpLogout).toBe(true);
+        });
+
         it("returns the session unchanged when the DB is not initialized", async () => {
             const cfg = buildConfig();
             const spy = vi.spyOn(sqlInit, "isDbInitialized").mockReturnValue(false);
@@ -353,6 +361,66 @@ describe("open_id", () => {
             expect(resolveOAuthIdentity(undefined, undefined)).toEqual({ name: "", email: "" });
             // Non-string claim values are ignored rather than coerced.
             expect(resolveOAuthIdentity({ name: 42, email: null }, undefined)).toEqual({ name: "", email: "" });
+        });
+    });
+
+    describe("supportsRpInitiatedLogout", () => {
+        it("is true only for a non-empty string end_session_endpoint", () => {
+            expect(supportsRpInitiatedLogout({ end_session_endpoint: "https://idp.example/logout" })).toBe(true);
+            expect(supportsRpInitiatedLogout({ end_session_endpoint: "" })).toBe(false);
+            // Provider without the endpoint (Google, Authelia) — the case that crashes idpLogout.
+            expect(supportsRpInitiatedLogout({ authorization_endpoint: "https://idp.example/auth" })).toBe(false);
+            // Non-string / non-object inputs are rejected rather than coerced.
+            expect(supportsRpInitiatedLogout({ end_session_endpoint: 42 })).toBe(false);
+            expect(supportsRpInitiatedLogout(null)).toBe(false);
+            expect(supportsRpInitiatedLogout(undefined)).toBe(false);
+            expect(supportsRpInitiatedLogout("not an object")).toBe(false);
+        });
+    });
+
+    describe("isRpInitiatedLogoutSupported", () => {
+        const wellKnownUrl = "https://issuer.example.com/.well-known/openid-configuration";
+
+        function mockFetch(impl: (url: string) => Partial<Response> | Promise<Partial<Response>>) {
+            return vi.spyOn(globalThis, "fetch").mockImplementation(
+                ((url: string) => Promise.resolve(impl(url))) as typeof fetch
+            );
+        }
+
+        it("fetches the issuer's discovery document and reflects end_session_endpoint", async () => {
+            setOauthConfig(true);
+            const fetchSpy = mockFetch(() => ({
+                ok: true,
+                json: () => Promise.resolve({ end_session_endpoint: "https://issuer.example.com/logout" })
+            }));
+
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(true);
+            expect(fetchSpy).toHaveBeenCalledWith(wellKnownUrl, expect.anything());
+        });
+
+        it("is false when discovery omits end_session_endpoint", async () => {
+            setOauthConfig(true);
+            mockFetch(() => ({ ok: true, json: () => Promise.resolve({}) }));
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
+        });
+
+        it("fails closed (false) on a non-OK response or a thrown fetch", async () => {
+            setOauthConfig(true);
+
+            mockFetch(() => ({ ok: false, status: 404, json: () => Promise.resolve({}) }));
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
+
+            vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network down"));
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
+        });
+
+        it("does not attempt discovery when no issuer is configured", async () => {
+            setOauthConfig(true);
+            mfa.oauthIssuerBaseUrl = "";
+            const fetchSpy = mockFetch(() => ({ ok: true, json: () => Promise.resolve({}) }));
+
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
+            expect(fetchSpy).not.toHaveBeenCalled();
         });
     });
 });

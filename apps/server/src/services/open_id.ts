@@ -132,7 +132,7 @@ function deriveFaviconUrl(baseUrl: string) {
     }
 }
 
-function generateOAuthConfig() {
+function generateOAuthConfig(endSessionSupported = false) {
     const authRoutes = {
         callback: "/callback",
         login: "/authenticate",
@@ -159,7 +159,12 @@ function generateOAuthConfig() {
             prompt: "consent",
         },
         routes: authRoutes,
-        idpLogout: true,
+        // Only enable RP-Initiated Logout when the provider actually advertises an end_session_endpoint
+        // (see isRpInitiatedLogoutSupported). With idpLogout on, express-openid-connect unconditionally
+        // builds a redirect to that endpoint at logout; providers without one (e.g. Google, Authelia)
+        // would otherwise crash POST /logout with a 500. When false, logout falls back to clearing the
+        // local session and redirecting to postLogoutRedirect.
+        idpLogout: endSessionSupported,
         logoutParams,
         afterCallback: async (req: Request, res: Response, session: Session) => {
             if (!sqlInit.isDbInitialized()) return session;
@@ -243,9 +248,68 @@ export default {
     clearSavedUser,
     isTokenValid,
     isUserSaved,
+    isRpInitiatedLogoutSupported,
 };
 
 const GOOGLE_ISSUER = "https://accounts.google.com";
+
+// Cap the startup discovery probe so a slow/unreachable provider can't stall server boot.
+const DISCOVERY_TIMEOUT_MS = 10_000;
+
+/**
+ * Probes the configured OIDC issuer's discovery document to decide whether RP-Initiated Logout is
+ * available, i.e. whether `idpLogout` can be safely enabled in {@link generateOAuthConfig}. The issuer
+ * is fixed in config.ini/env and only changes on restart, so this is resolved once at startup rather
+ * than per logout. Any fetch/parse failure is treated as "unsupported" so a transient network blip
+ * degrades to a working local logout rather than breaking it.
+ */
+async function isRpInitiatedLogoutSupported() {
+    const issuer = config.MultiFactorAuthentication.oauthIssuerBaseUrl.replace(/\/+$/, "");
+    if (!issuer) {
+        return false;
+    }
+
+    // The discovery document lives at `{issuer}/.well-known/openid-configuration` — appended to the full
+    // issuer (which may carry a path, e.g. Keycloak realms) rather than resolved against the origin root.
+    const metadataUrl = `${issuer}/.well-known/openid-configuration`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), DISCOVERY_TIMEOUT_MS);
+    try {
+        const response = await fetch(metadataUrl, { signal: controller.signal });
+        if (!response.ok) {
+            getLog().info(`OAuth: discovery for ${issuer} returned HTTP ${response.status}; treating RP-Initiated Logout as unsupported.`);
+            return false;
+        }
+        const metadata: unknown = await response.json();
+        return supportsRpInitiatedLogout(metadata);
+    } catch (error) {
+        getLog().info(`OAuth: discovery fetch for ${issuer} failed, treating RP-Initiated Logout as unsupported. ${error instanceof Error ? error.message : error}`);
+        return false;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+/**
+ * The single field of the OIDC discovery document we consume. The full metadata is large and arrives as
+ * untrusted network JSON, so rather than pull in (and pin) openid-client's transitive `ServerMetadata`
+ * type for one property, we mirror just what we read and validate it at runtime.
+ */
+interface OidcDiscoveryMetadata {
+    end_session_endpoint?: string;
+}
+
+/**
+ * Pure predicate: does an OIDC discovery document advertise a usable `end_session_endpoint`? Extracted
+ * from the network probe so the support decision can be unit-tested without a live provider.
+ */
+export function supportsRpInitiatedLogout(metadata: unknown) {
+    if (typeof metadata !== "object" || metadata === null) {
+        return false;
+    }
+    const { end_session_endpoint } = metadata as OidcDiscoveryMetadata;
+    return typeof end_session_endpoint === "string" && end_session_endpoint.length > 0;
+}
 
 /**
  * Chooses the token-endpoint client authentication method based on the issuer.

@@ -113,8 +113,12 @@ export default async function buildApp() {
 
     // Mount the OIDC middleware whenever OAuth is configured — not only once an account is enrolled —
     // so the provider round-trip is available for the owner's first (enrollment) sign-in too.
-    if (openID.isOpenIDConfigured())
-        app.use(auth(openID.generateOAuthConfig()));
+    if (openID.isOpenIDConfigured()) {
+        // Probe the provider's discovery document once here so RP-Initiated Logout is only enabled when
+        // the provider supports it (otherwise POST /logout 500s); see isRpInitiatedLogoutSupported.
+        const endSessionSupported = await openID.isRpInitiatedLogoutSupported();
+        app.use(auth(openID.generateOAuthConfig(endSessionSupported)));
+    }
 
     await assets.register(app);
     routes.register(app);
