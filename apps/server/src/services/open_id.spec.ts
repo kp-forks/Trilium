@@ -129,6 +129,17 @@ describe("open_id", () => {
             return openID.generateOAuthConfig();
         }
 
+        // express-session exposes a callback-style regenerate(); the success paths call it to defeat
+        // session fixation, so the mock session must provide a working one (invoked synchronously here).
+        function sessionWith(initial: Record<string, unknown> = {}) {
+            return {
+                ...initial,
+                regenerate(cb: (err?: unknown) => void) {
+                    cb();
+                }
+            } as Record<string, unknown>;
+        }
+
         it("wires routes and credentials from config", () => {
             const cfg = buildConfig();
             expect(cfg.baseURL).toBe("https://app.example.com");
@@ -176,7 +187,7 @@ describe("open_id", () => {
                     user: { sub: "sub-1", name: "Alice", email: "alice@example.com" },
                     fetchUserInfo: vi.fn().mockResolvedValue({})
                 },
-                session: { loggedIn: true } as Record<string, unknown>
+                session: sessionWith({ loggedIn: true })
             } as never;
             const session = { marker: 3 } as never;
 
@@ -195,7 +206,7 @@ describe("open_id", () => {
             const fetchUserInfo = vi.fn().mockResolvedValue({ name: "Alice", email: "alice@example.com" });
             const req = {
                 oidc: { user: { sub: "sub-1" }, fetchUserInfo },
-                session: { loggedIn: true } as Record<string, unknown>
+                session: sessionWith({ loggedIn: true })
             } as never;
 
             await cfg.afterCallback(req, {} as never, { marker: 7 } as never);
@@ -213,7 +224,7 @@ describe("open_id", () => {
                     user: { sub: "sub-1", name: "Alice", email: "alice@example.com" },
                     fetchUserInfo: vi.fn().mockRejectedValue(new Error("network down"))
                 },
-                session: { loggedIn: true } as Record<string, unknown>
+                session: sessionWith({ loggedIn: true })
             } as never;
 
             await cfg.afterCallback(req, {} as never, { marker: 8 } as never);
@@ -244,7 +255,7 @@ describe("open_id", () => {
             const verifySpy = vi.spyOn(openIDEncryption, "verifySubjectIdentifier").mockReturnValue(true);
             const req = {
                 oidc: { user: { sub: "enrolled-sub", name: "Alice", email: "alice@example.com" } },
-                session: {} as Record<string, unknown>
+                session: sessionWith()
             } as never;
             const session = { marker: 5 } as never;
 
@@ -269,6 +280,28 @@ describe("open_id", () => {
             const result = await cfg.afterCallback(req, {} as never, session);
 
             expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(false);
+            expect(result).toBe(session);
+        });
+
+        it("fails closed when session regeneration errors", async () => {
+            const cfg = buildConfig();
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(true);
+            vi.spyOn(openIDEncryption, "verifySubjectIdentifier").mockReturnValue(true);
+            const req = {
+                oidc: { user: { sub: "enrolled-sub", name: "Alice", email: "alice@example.com" } },
+                session: {
+                    regenerate(cb: (err?: unknown) => void) {
+                        cb(new Error("store unavailable"));
+                    }
+                } as Record<string, unknown>
+            } as never;
+            const session = { marker: 9 } as never;
+
+            const result = await cfg.afterCallback(req, {} as never, session);
+
+            // Regeneration failed → the session must not be elevated.
+            expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(false);
+            expect((req as { session: { lastAuthState?: unknown } }).session.lastAuthState).toBeUndefined();
             expect(result).toBe(session);
         });
     });

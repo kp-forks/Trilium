@@ -184,6 +184,21 @@ function generateOAuthConfig() {
                 openIDEncryption.saveUser(incomingSubject, name, email);
             }
 
+            // Regenerate the session to prevent session fixation — mirroring the password and sync login
+            // paths. This is the privilege-elevation point (anonymous/owner session → bound OAuth identity),
+            // so the post-login session ID must be server-chosen rather than one an attacker could have
+            // planted. Fail closed: if regeneration errors, leave the session unauthenticated rather than
+            // flipping loggedIn on the old ID.
+            try {
+                await new Promise<void>((resolve, reject) => {
+                    req.session.regenerate((err) => (err ? reject(err) : resolve()));
+                });
+            } catch (error) {
+                getLog().error(`OAuth session regeneration failed, refusing login: ${error instanceof Error ? error.message : error}`);
+                req.session.loggedIn = false;
+                return session;
+            }
+
             req.session.loggedIn = true;
             req.session.lastAuthState = {
                 totpEnabled: false,
