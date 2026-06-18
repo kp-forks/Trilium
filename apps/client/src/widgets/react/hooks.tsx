@@ -21,6 +21,7 @@ import protected_session_holder from "../../services/protected_session_holder";
 import server from "../../services/server";
 import shortcuts, { Handler, removeIndividualBinding } from "../../services/shortcuts";
 import SpacedUpdate, { type StateCallback } from "../../services/spaced_update";
+import { getEffectiveThemeStyle } from "../../services/theme";
 import toast, { ToastOptions } from "../../services/toast";
 import tree from "../../services/tree";
 import utils, { escapeRegExp, getErrorMessage, randomString, reloadFrontendApp } from "../../services/utils";
@@ -1752,21 +1753,12 @@ export function useGetContextDataFrom<K extends keyof NoteContextDataMap>(
     return data;
 }
 
+/** The effective light/dark style, updated on any theme change — a theme-option swap or, for auto themes, the
+ *  OS light/dark flip (both delivered via the global `themeChanged` event). */
 export function useColorScheme() {
-    const themeStyle = window.glob.getThemeStyle();
-    const defaultValue = themeStyle === "auto" ? (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) : themeStyle === "dark";
-    const [ prefersDark, setPrefersDark ] = useState(defaultValue);
-
-    useEffect(() => {
-        if (themeStyle !== "auto") return;
-        const mediaQueryList = window.matchMedia("(prefers-color-scheme: dark)");
-        const listener = (e: MediaQueryListEvent) => setPrefersDark(e.matches);
-
-        mediaQueryList.addEventListener("change", listener);
-        return () => mediaQueryList.removeEventListener("change", listener);
-    }, [ themeStyle ]);
-
-    return prefersDark ? "dark" : "light";
+    const [ themeStyle, setThemeStyle ] = useState(getEffectiveThemeStyle);
+    useTriliumEvent("themeChanged", ({ themeStyle }) => setThemeStyle(themeStyle));
+    return themeStyle;
 }
 
 /**

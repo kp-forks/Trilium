@@ -4,6 +4,7 @@ import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
+import { useTriliumEvent } from "../../react/hooks";
 import { formatTime } from "./MediaPlayer";
 
 /** Below this normalized amplitude a bucket is considered silence and painted with the silence color. */
@@ -61,12 +62,15 @@ export function WaveformSeekBar({ mediaRef, peaks }: { mediaRef: RefObject<HTMLV
         return () => observer.disconnect();
     }, []);
 
-    // Resolve the theme's waveform colors once on mount and cache them — the draw runs up to ~60 times/second
-    // during the morph, so it must not force a style recalculation each frame.
-    useEffect(() => {
+    // Resolve the theme's waveform colors and cache them — the draw runs up to ~60 times/second during the
+    // morph, so it must not force a style recalculation each frame. Re-resolved on mount and whenever the theme
+    // changes (option swap or OS light/dark flip).
+    const refreshColors = useCallback(() => {
         const canvas = canvasRef.current;
         if (canvas) setColors(readColors(canvas));
     }, []);
+    useEffect(refreshColors, [ refreshColors ]);
+    useTriliumEvent("themeChanged", refreshColors);
 
     // Animate flat → analyzed once the peaks are available. While they are null (loading or undecodable) morph
     // stays at 0 and the bars hold the flat placeholder.

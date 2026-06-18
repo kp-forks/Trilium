@@ -432,6 +432,12 @@ type EventMappings = {
     activeScreenChanged: {
         activeScreen: Screen;
     };
+    /** Triggered when the active theme changes (theme option swap or, for auto themes, the OS light/dark flip),
+     * once the new stylesheet is applied. Lets widgets that read CSS variables in JS (e.g. canvas renderers)
+     * re-read them. Consume with {@link useTriliumEvent}("themeChanged") or the {@link useColorScheme} hook. */
+    themeChanged: {
+        themeStyle: "light" | "dark";
+    };
     activeContextChanged: {
         noteContext: NoteContext;
     };
