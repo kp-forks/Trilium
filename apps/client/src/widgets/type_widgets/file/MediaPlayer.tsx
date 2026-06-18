@@ -179,7 +179,7 @@ const OWNED_MEDIA_ACTIONS: MediaSessionAction[] = [ "previoustrack", "nexttrack"
  * playing in the background). It releases the session — and, when its tab switches to a different note type so
  * this player is hidden/cached, also stops playing — on that navigation, on a handover, or on unmount.
  */
-export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, isVisible: boolean) {
+export function useMediaSessionController(note: FNote, noteContext: NoteContext | undefined, mimePrefix: string, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>, isVisible: boolean, playMode: MediaPlayMode) {
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
     // Stable identity for this player instance, used to coordinate with the other mounted players.
     const self = useRef<object>({}).current;
@@ -209,6 +209,9 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
     const hasMediaNav = !!wrapped;
     const wrappedRef = useRef(wrapped);
     wrappedRef.current = wrapped;
+    // Read inside the (stable) ended handler without re-registering the listener on every mode change.
+    const playModeRef = useRef(playMode);
+    playModeRef.current = playMode;
 
     // Only one media element plays at a time. Starting playback claims the global "active" slot and notifies
     // every other mounted player (audio or video) so they pause themselves and hand over the OS Media Session.
@@ -223,10 +226,7 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
         const claim = () => setActiveMediaPlayer(self);
         const onEnded = () => {
             const navigation = wrappedRef.current;
-            if (!navigation) return;
-            const parentNoteId = getParentFromNotePath(noteContext?.notePath)?.parentNoteId;
-            const playMode = parentNoteId ? froca.notes[parentNoteId]?.getLabelValue(MEDIA_PLAY_MODE_LABEL) : null;
-            if (getAutoAdvanceTarget(playMode, navigation)) {
+            if (navigation && getAutoAdvanceTarget(playModeRef.current, navigation)) {
                 navigation.navigateNext();
             }
         };
@@ -237,7 +237,7 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
             media.removeEventListener("ended", onEnded);
             if (activeMediaPlayer === self) setActiveMediaPlayer(null);
         };
-    }, [ self, mediaRef, noteContext ]);
+    }, [ self, mediaRef ]);
 
     // When another player claims the active slot, pause ourselves and re-render so we release the session.
     useEffect(() => {
@@ -377,12 +377,18 @@ export function SkipButton({ mediaRef, seconds, icon, text }: { mediaRef: RefObj
 /**
  * The folder-level play mode (read from the parent's `#mediaNotesPlayMode` label) for the current media note,
  * kept in sync as that label changes. Derives the element's `loop` from the mode and persists changes back to
- * the parent — the `auto` mode's actual auto-advance is handled by {@link useMediaSessionController}.
+ * the parent — the `next` mode's actual auto-advance is handled by {@link useMediaSessionController} (which
+ * receives the resolved `mode`).
  */
 export function useMediaPlayMode(noteContext: NoteContext | undefined, mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>): { mode: MediaPlayMode; setMode: (mode: MediaPlayMode) => void } {
     const parentNoteId = getParentFromNotePath(noteContext?.notePath)?.parentNoteId;
     const [ mode, setLocalMode ] = useState<MediaPlayMode>("once");
     const [ refreshCounter, setRefreshCounter ] = useState(0);
+
+    // On a folder change, reset to the default immediately so the button doesn't briefly show the previous
+    // folder's mode until the new parent's label loads. Keyed on parentNoteId only — resetting on every
+    // refreshCounter bump would flash "once" when the mode is changed via the dropdown.
+    useEffect(() => { setLocalMode("once"); }, [ parentNoteId ]);
 
     // Load the mode from the parent's label. The `active` flag discards a stale response when the parent
     // changes mid-flight (rapid navigation), so a slower earlier fetch can't overwrite a newer note's mode.

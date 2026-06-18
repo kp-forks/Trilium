@@ -47,8 +47,8 @@ export default function VideoPreview({ note, noteContext, isVisible = true }: { 
     }, [togglePlayback]);
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
-    const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef, isVisible);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, videoRef);
+    const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef, isVisible, playMode);
 
     if (error) {
         return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;

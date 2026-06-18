@@ -34,8 +34,8 @@ export default function AudioPreview({ note, noteContext, isVisible = true }: { 
     // Mirror the element's real play state on every transition: "pause" isn't fired reliably when a track
     // ends or its src is swapped, so derive from `paused` rather than assuming play→true / pause→false.
     const syncPlaying = useCallback(() => setPlaying(!!audioRef.current && !audioRef.current.paused), []);
-    const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef, isVisible);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, audioRef);
+    const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef, isVisible, playMode);
 
     if (error) {
         return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
