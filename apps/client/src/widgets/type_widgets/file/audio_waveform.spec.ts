@@ -25,6 +25,25 @@ describe("computePeaks", () => {
         expect(peaks[1]).toBeCloseTo(1);
     });
 
+    it("contrast-stretches a near-uniform energy band so it isn't flat", () => {
+        // A "meeting"-like signal: silent gaps plus continuous speech that only varies between two close levels.
+        const bucketLen = 200;
+        const samples = new Float32Array(bucketLen * 5);
+        const fill = (bucket: number, amp: number) => samples.fill(amp, bucket * bucketLen, (bucket + 1) * bucketLen);
+        fill(0, 0); // silent gap
+        fill(1, 0.4);
+        fill(2, 0.5); // loudest
+        fill(3, 0.4);
+        fill(4, 0.5);
+        const peaks = computePeaks(samples, 5);
+
+        // Loudest stays at 1, the silent gap stays at 0, and the quieter speech is pushed well below the louder
+        // speech — a plain max-normalize would have left 0.4/0.5 = 0.8 vs 1.0 (a nearly flat block).
+        expect(peaks[2]).toBeCloseTo(1);
+        expect(peaks[0]).toBe(0);
+        expect(peaks[2] - peaks[1]).toBeGreaterThan(0.5);
+    });
+
     it("treats silence as zero", () => {
         const peaks = computePeaks(new Float32Array(100), 4);
         expect(peaks).toEqual([ 0, 0, 0, 0 ]);

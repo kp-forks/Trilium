@@ -18,6 +18,13 @@ export const WAVEFORM_BUCKETS = 1000;
  *  the caller falls back to the plain seek bar. */
 export const MAX_WAVEFORM_BYTES = 60 * 1024 * 1024;
 
+/** Buckets quieter than this fraction of the loudest one are treated as silence and excluded when locating the
+ *  noise floor, so a few dead-air gaps can't drag the floor down to zero and defeat the contrast stretch. */
+const ACTIVE_FRACTION = 0.05;
+/** The noise floor is this percentile of the audible buckets — low enough to keep nearly all speech above it,
+ *  high enough to sit above background hiss. The quietest few percent of speech clip to the baseline. */
+const FLOOR_PERCENTILE = 0.05;
+
 export interface Waveform {
     /** Normalized 0..1 amplitude per bucket. */
     peaks: number[];
@@ -30,7 +37,12 @@ export interface Waveform {
  *
  * RMS (rather than peak) is deliberate: it tracks perceived loudness, so sustained speech reads as tall bars
  * and silence/room-tone collapses to near-zero — which is exactly the "speech vs. silence" overview the seek
- * bar is for. The result is normalized so the loudest bucket is 1.
+ * bar is for.
+ *
+ * The envelope is then contrast-stretched: the audible range `[noise-floor, loudest]` is mapped onto `[0, 1]`,
+ * rather than `[0, loudest]`. Voice recordings (meetings especially) sit on a constant noise floor with fairly
+ * even speech energy, so a plain max-normalization leaves every bar in a narrow high band — a flat-looking
+ * block. Subtracting the floor spreads the speech across the full height and lets pauses drop to the baseline.
  *
  * Pure and synchronous so it can be unit-tested without the Web Audio API.
  */
@@ -42,7 +54,7 @@ export function computePeaks(samples: Float32Array, buckets: number): number[] {
         return new Array(buckets).fill(0);
     }
 
-    const result = new Array<number>(buckets);
+    const rms = new Array<number>(buckets);
     const bucketSize = samples.length / buckets;
     let max = 0;
 
@@ -56,19 +68,29 @@ export function computePeaks(samples: Float32Array, buckets: number): number[] {
             sumSquares += s * s;
             count++;
         }
-        const rms = count > 0 ? Math.sqrt(sumSquares / count) : 0;
-        result[b] = rms;
-        if (rms > max) {
-            max = rms;
+        rms[b] = count > 0 ? Math.sqrt(sumSquares / count) : 0;
+        if (rms[b] > max) {
+            max = rms[b];
         }
     }
 
-    if (max > 0) {
-        for (let b = 0; b < buckets; b++) {
-            result[b] /= max;
-        }
+    if (max <= 0) {
+        return new Array(buckets).fill(0);
     }
-    return result;
+
+    const floor = noiseFloor(rms, max);
+    const range = max - floor;
+    return rms.map((value) => (range > 0 ? Math.max(0, Math.min(1, (value - floor) / range)) : value / max));
+}
+
+/** Estimate the noise floor as a low percentile of the audible buckets (those carrying real sound), so dead-air
+ *  gaps don't drag it to zero. Returns 0 when nothing is audible, which makes the stretch a plain max-normalize. */
+function noiseFloor(rms: readonly number[], max: number): number {
+    const audible = rms.filter((value) => value > max * ACTIVE_FRACTION).sort((a, b) => a - b);
+    if (audible.length === 0) {
+        return 0;
+    }
+    return audible[Math.floor((audible.length - 1) * FLOOR_PERCENTILE)];
 }
 
 /**
