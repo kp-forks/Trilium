@@ -7,6 +7,7 @@
        with the type accent shown only as the leading bar below. */
     padding-inline-start: 1em;
     border-color: var(--main-border-color);
+    background: var(--main-background-color);
 }
 
 /* Thick accent bar on the leading edge. It has no radius of its own; the card's
