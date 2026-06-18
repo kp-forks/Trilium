@@ -95,7 +95,6 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     totpEncryptedSecret: string;
     totpVerificationHash: string;
     encryptedRecoveryCodes: boolean;
-    userSubjectIdentifierSaved: boolean;
     recoveryCodeInitialVector: string;
     recoveryCodeSecurityKey: string;
     recoveryCodesEncrypted: string;

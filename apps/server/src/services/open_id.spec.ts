@@ -91,12 +91,10 @@ describe("open_id", () => {
         expect(status.email).toBe("alice@example.com");
     });
 
-    it("clearSavedUser empties user_data and clears the option", () => {
+    it("clearSavedUser empties user_data", () => {
         const result = cls.init(() => openID.clearSavedUser());
         expect(result.success).toBe(true);
         expect(openID.isUserSaved()).toBe(false);
-        // clearSavedUser sets the option to a falsy value
-        expect(options.getOptionOrNull("userSubjectIdentifierSaved")).toBeFalsy();
     });
 
     describe("isTokenValid", () => {

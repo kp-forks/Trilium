@@ -181,7 +181,6 @@ const defaultOptions: DefaultOption[] = [
     { name: "editedNotesOpenInRibbon", value: "true", isSynced: true },
     { name: "mfaMethod", value: "totp", isSynced: false },
     { name: "encryptedRecoveryCodes", value: "false", isSynced: false },
-    { name: "userSubjectIdentifierSaved", value: "false", isSynced: false },
 
     // Appearance
     { name: "splitEditorOrientation", value: "horizontal", isSynced: true },

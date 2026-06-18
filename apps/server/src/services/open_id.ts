@@ -58,7 +58,6 @@ function getUserEmail() {
 
 function clearSavedUser() {
     sql.execute("DELETE FROM user_data");
-    options.setOption("userSubjectIdentifierSaved", false);
     return {
         success: true,
         message: "Account data removed."
