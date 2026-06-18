@@ -175,7 +175,9 @@
     "password": "パスワード",
     "button": "ログイン",
     "remember-me": "ログイン情報を記憶する",
-    "sign_in_with_sso": "{{ ssoIssuerName }}でログイン"
+    "sign_in_with_sso": "{{ ssoIssuerName }}でログイン",
+    "sso-wrong-account": "そのアカウントはこの Trilium インスタンスにリンクされているものではありません。リンクされているアカウントでサインインしてください。",
+    "sso-not-enrolled": "シングルサインオンはまだ設定されていません。まずパスワードでサインインし、設定からアカウントをリンクしてください。"
   },
   "set_password": {
     "title": "パスワードの設定",
