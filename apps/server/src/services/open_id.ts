@@ -110,7 +110,26 @@ function getSSOIssuerName() {
 }
 
 function getSSOIssuerIcon() {
-    return config.MultiFactorAuthentication.oauthIssuerIcon;
+    const configuredIcon = config.MultiFactorAuthentication.oauthIssuerIcon;
+    if (configuredIcon) {
+        return configuredIcon;
+    }
+
+    // Fall back to the issuer's favicon so any OIDC provider gets a sensible default icon
+    // without requiring explicit configuration.
+    return deriveFaviconUrl(config.MultiFactorAuthentication.oauthIssuerBaseUrl);
+}
+
+function deriveFaviconUrl(baseUrl: string) {
+    if (!baseUrl) {
+        return "";
+    }
+
+    try {
+        return new URL("/favicon.ico", baseUrl).toString();
+    } catch {
+        return "";
+    }
 }
 
 function generateOAuthConfig() {

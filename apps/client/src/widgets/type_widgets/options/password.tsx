@@ -359,9 +359,7 @@ function OAuthProviderRows({ status }: { status?: OAuthStatus }) {
         <>
             <OptionsRow name="oauth-provider" label={t("multi_factor_authentication.oauth_provider")}>
                 <span className="oauth-provider">
-                    { status?.issuerIcon
-                        ? <img className="oauth-provider-icon" src={status.issuerIcon} alt="" />
-                        : <span className="bx bx-key oauth-provider-icon" /> }
+                    <OAuthProviderIcon src={status?.issuerIcon} />
                     <span>{displayName}</span>
                 </span>
             </OptionsRow>
@@ -372,6 +370,21 @@ function OAuthProviderRows({ status }: { status?: OAuthStatus }) {
             )}
         </>
     );
+}
+
+/**
+ * Provider icon for the OAuth status card. Renders the configured/derived issuer icon, falling back
+ * to a neutral key glyph when no icon is available or the image fails to load (e.g. a derived
+ * favicon URL that the issuer doesn't actually serve).
+ */
+function OAuthProviderIcon({ src }: { src?: string }) {
+    const [ failed, setFailed ] = useState(false);
+
+    if (!src || failed) {
+        return <span className="bx bx-key oauth-provider-icon" />;
+    }
+
+    return <img className="oauth-provider-icon" src={src} alt="" onError={() => setFailed(true)} />;
 }
 
 /**

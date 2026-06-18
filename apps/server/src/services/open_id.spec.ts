@@ -73,6 +73,23 @@ describe("open_id", () => {
         expect(openID.getSSOIssuerIcon()).toBe("icon.png");
     });
 
+    it("derives the issuer icon from the base URL favicon when none is configured", () => {
+        setOauthConfig(true);
+        mfa.oauthIssuerIcon = "";
+
+        // Falls back to the issuer's favicon.
+        mfa.oauthIssuerBaseUrl = "https://issuer.example.com";
+        expect(openID.getSSOIssuerIcon()).toBe("https://issuer.example.com/favicon.ico");
+
+        // Trailing slashes / extra path segments resolve against the origin root.
+        mfa.oauthIssuerBaseUrl = "https://accounts.google.com/";
+        expect(openID.getSSOIssuerIcon()).toBe("https://accounts.google.com/favicon.ico");
+
+        // No (or invalid) base URL → no icon, leaving the UI to use its glyph fallback.
+        mfa.oauthIssuerBaseUrl = "";
+        expect(openID.getSSOIssuerIcon()).toBe("");
+    });
+
     it("isUserSaved and getOAuthStatus read user_data", () => {
         cls.init(() => {
             sql.transactional(() => {
