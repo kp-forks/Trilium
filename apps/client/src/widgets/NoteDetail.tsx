@@ -2,7 +2,7 @@ import "./NoteDetail.css";
 
 import clsx from "clsx";
 import { isValidElement, VNode } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useContext, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../components/app_context";
 import NoteContext from "../components/note_context";
@@ -20,6 +20,7 @@ import { useDelayedVisibility, useGetContextDataFrom, useNoteContext, useTrilium
 import Icon from "./react/Icon";
 import NoItems from "./react/NoItems";
 import { NoteListWithLinks } from "./react/NoteList";
+import { ContainerVisibilityContext } from "./react/react_utils";
 import { TypeWidgetProps } from "./type_widgets/type_widget";
 
 /**
@@ -257,6 +258,10 @@ export function isContextInActiveTab(noteContext: NoteContext | undefined, activ
  * while the widget is visible, to avoid rendering in the background. When not visible, the DOM element is simply hidden.
  */
 function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { Element: (props: TypeWidgetProps) => VNode, type: ExtendedNoteType, isVisible: boolean, isFullHeight: boolean, props: TypeWidgetProps }) {
+    // False when an enclosing dialog (e.g. the quick-edit popup) is hidden but kept in the DOM, so a widget
+    // there is told it isn't displayed even though it's the context's current type — letting a media player
+    // inside a closed popup stop, just like one in a navigated-away tab.
+    const containerVisible = useContext(ContainerVisibilityContext);
     const [ cachedProps, setCachedProps ] = useState(props);
 
     useEffect(() => {
@@ -274,7 +279,7 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
                 height: isFullHeight ? "100%" : ""
             }}
         >
-            <Element {...cachedProps} isVisible={isVisible} />
+            <Element {...cachedProps} isVisible={isVisible && containerVisible} />
         </div>
     );
 }
