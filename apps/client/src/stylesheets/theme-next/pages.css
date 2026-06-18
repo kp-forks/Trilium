@@ -202,12 +202,9 @@ body.desktop .options-section:not(.tn-no-card) {
     padding-bottom: var(--default-padding);
 }
 
-.options-section:not(.tn-no-card) h4 {
+.options-section h4 {
     text-transform: uppercase;
     letter-spacing: .4pt;
-}
-
-.options-section:not(.tn-no-card) h4 {
     font-size: var(--options-title-font-size);
     font-weight: 600;
     color: var(--launcher-pane-text-color);
