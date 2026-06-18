@@ -122,7 +122,6 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "seenCallToActions",
     "experimentalFeatures",
     "newLayout",
-    "mfaEnabled",
     "mfaMethod",
     // LLM options
     "aiEnabled",

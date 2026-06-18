@@ -1,6 +1,7 @@
 import "./OptionsDialog.css";
 
-import { useCallback, useContext, useRef, useState } from "preact/hooks";
+import type { RefObject } from "preact";
+import { useCallback, useContext, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import NoteContext from "../../components/note_context";
@@ -97,6 +98,7 @@ export default function OptionsDialog() {
                         }} />
                     </div>
                 )}
+                <SettingsScrollReset modalRef={modalRef} />
                 <NoteDetail />
             </Modal>
         </NoteContextContext.Provider>
@@ -136,6 +138,26 @@ export function isOptionPageVisibleOnPlatform(page: FNote) {
 }
 
 /**
+ * Settings pages navigate in place within a single note context, so the modal's scroll container is
+ * never re-mounted between pages and keeps the previous page's scroll position — leaving a freshly
+ * opened page scrolled partway down. This resets it back to the top whenever the active page changes.
+ *
+ * It lives under the dialog's note-context provider so it re-renders on in-place navigation, and
+ * resets both scroll containers in use: the `.modal-body` on the desktop sidebar layout and the
+ * `.note-detail` pane in the mobile master-detail flow.
+ */
+function SettingsScrollReset({ modalRef }: { modalRef: RefObject<HTMLDivElement> }) {
+    const { noteId } = useNoteContext();
+    useLayoutEffect(() => {
+        const modal = modalRef.current;
+        if (!modal) return;
+        modal.querySelector<HTMLElement>(".modal-body")?.scrollTo({ top: 0 });
+        modal.querySelector<HTMLElement>(".note-detail")?.scrollTo({ top: 0 });
+    }, [ modalRef, noteId ]);
+    return null;
+}
+
+/**
  * The settings page selector shown in the dialog's sidebar. It derives the active page from
  * `useNoteContext()` (resolved against the dialog's own context via the surrounding provider) so the
  * highlighted entry tracks navigation. The link clicks themselves are handled by the dialog's
@@ -171,25 +193,28 @@ function MobileSettingsList({ onSelect }: { onSelect: (noteId: string) => void }
 }
 
 /**
- * Replaces the static "Options" title on mobile. In the page view it shows a back button returning
- * to the master list followed by the title of the page in view; in the list view a decorative
- * settings icon takes the button's place (keeping the same footprint so the title doesn't shift
- * between views) followed by the dialog title.
+ * Replaces the static "Options" title on mobile. In the page view it shows just a back button
+ * returning to the master list — the page title itself is rendered by the page's own
+ * {@link OptionsPageHeader} below. In the list view a decorative settings icon and the dialog title
+ * take its place.
  */
 function MobilePageHeader({ onBack }: { onBack?: () => void }) {
-    const { note } = useNoteContext();
-    return (
-        <div className="options-mobile-page-header">
-            {onBack ? (
+    if (onBack) {
+        return (
+            <div className="options-mobile-page-header">
                 <ActionButton
                     icon="bx bx-chevron-left"
                     text={t("options.back")}
                     onClick={onBack}
                 />
-            ) : (
-                <span className="options-header-icon icon-action bx bx-cog" aria-hidden="true" />
-            )}
-            <h5 className="options-mobile-page-title">{onBack ? note?.title : t("options.title")}</h5>
+            </div>
+        );
+    }
+
+    return (
+        <div className="options-mobile-page-header">
+            <span className="options-header-icon icon-action bx bx-cog" aria-hidden="true" />
+            <h5 className="options-mobile-page-title">{t("options.title")}</h5>
         </div>
     );
 }

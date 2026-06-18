@@ -179,7 +179,6 @@ const defaultOptions: DefaultOption[] = [
     { name: "searchAutocompleteFuzzy", value: "false", isSynced: true },
 
     { name: "editedNotesOpenInRibbon", value: "true", isSynced: true },
-    { name: "mfaEnabled", value: "false", isSynced: false },
     { name: "mfaMethod", value: "totp", isSynced: false },
     { name: "encryptedRecoveryCodes", value: "false", isSynced: false },
     { name: "userSubjectIdentifierSaved", value: "false", isSynced: false },

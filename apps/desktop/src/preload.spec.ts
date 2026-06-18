@@ -369,6 +369,22 @@ describe("preload script", () => {
             ipcRendererSyncResults.set("get-available-spellchecker-languages:undefined", ["en-US", "de-DE"]);
             expect(spell().getAvailableSpellCheckerLanguages()).toEqual(["en-US", "de-DE"]);
         });
+
+        it("setSpellCheckerLanguages sends correct IPC message", () => {
+            spell().setSpellCheckerLanguages(["en-US", "fr"]);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-spellchecker-languages",
+                args: [["en-US", "fr"]]
+            });
+        });
+
+        it("setSpellCheckerEnabled sends correct IPC message", () => {
+            spell().setSpellCheckerEnabled(false);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-spellchecker-enabled",
+                args: [false]
+            });
+        });
     });
 
     describe("systemIntegration", () => {

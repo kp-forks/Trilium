@@ -3,6 +3,7 @@ import type { NextFunction, Request, Response } from "express";
 
 import config from "./config.js";
 import { isInternalElectronRequest } from "./electron_request.js";
+import recoveryCodeService from "./encryption/recovery_codes.js";
 import etapiTokenService from "./etapi_tokens.js";
 import { getLog } from "@triliumnext/core";
 import openID from "./open_id.js";
@@ -180,6 +181,38 @@ async function checkCredentials(req: Request, res: Response, next: NextFunction)
     } else {
         next();
     }
+}
+
+export type LoginFactor = "password" | "totp";
+
+/**
+ * Verifies submitted login credentials, returning the factor that failed or `null` when they are all
+ * valid.
+ *
+ * The password is checked BEFORE the TOTP / recovery-code second factor on purpose: verifying a
+ * recovery code consumes it (codes are single-use, see {@link recoveryCodeService.verifyRecoveryCode}).
+ * Checking the second factor first would burn a recovery code on a login attempt that then fails on a
+ * wrong password — silently wasting one of the user's limited codes. Password-first guarantees a
+ * recovery code is only ever consumed once the rest of the login is known to succeed.
+ */
+export async function verifyLoginCredentials(password: string, totpToken: string): Promise<LoginFactor | null> {
+    if (!(await passwordEncryptionService.verifyPassword(password))) {
+        return "password";
+    }
+
+    if (totp.isTotpEnabled() && !verifyTOTP(totpToken)) {
+        return "totp";
+    }
+
+    return null;
+}
+
+function verifyTOTP(submittedTotpToken: string) {
+    if (totp.validateTOTP(submittedTotpToken)) {
+        return true;
+    }
+
+    return recoveryCodeService.verifyRecoveryCode(submittedTotpToken);
 }
 
 export default {

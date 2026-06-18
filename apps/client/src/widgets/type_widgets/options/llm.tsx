@@ -6,8 +6,10 @@ import { isStandalone } from "../../../services/utils";
 import ActionButton from "../../react/ActionButton";
 import Button from "../../react/Button";
 import FormTextBox from "../../react/FormTextBox";
+import FormToggle from "../../react/FormToggle";
 import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import NoItems from "../../react/NoItems";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "./llm/AddProviderModal";
@@ -17,33 +19,39 @@ export default function LlmSettings() {
 
     if (isStandalone) {
         return (
-            <OptionsSection title={t("llm.settings_title")}>
-                <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
-            </OptionsSection>
+            <>
+                <OptionsPageHeader helpUrl="GBBMSlVSOIGP" />
+                <OptionsSection>
+                    <NoItems icon="bx bx-bot" text={t("llm.not_available_in_standalone")} />
+                </OptionsSection>
+            </>
         );
     }
 
     return (
         <>
-            <OptionsSection
-                title={t("llm.settings_title")}
-                description={t("llm.settings_description")}
+            <OptionsPageHeader
                 helpUrl="GBBMSlVSOIGP"
-            >
-                <OptionsRowWithToggle
-                    name="ai-enabled"
-                    label={t("experimental_features.llm_name")}
-                    description={t("experimental_features.llm_description")}
-                    currentValue={aiEnabled}
-                    onChange={setAiEnabled}
-                />
-            </OptionsSection>
+                actions={
+                    <FormToggle
+                        switchOnName="" switchOffName=""
+                        switchOnTooltip={t("experimental_features.llm_name")}
+                        switchOffTooltip={t("experimental_features.llm_name")}
+                        currentValue={aiEnabled}
+                        onChange={setAiEnabled}
+                    />
+                }
+            />
 
-            {aiEnabled && (
+            {aiEnabled ? (
                 <>
                     <ProviderSettings />
                     <McpSettings />
                 </>
+            ) : (
+                <OptionsSection>
+                    <NoItems icon="bx bx-bot" text={t("llm.disabled_placeholder")} />
+                </OptionsSection>
             )}
         </>
     );

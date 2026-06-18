@@ -39,11 +39,41 @@ function register(app: Application) {
 
         getLog().info(errMessage);
 
+        // Some upstream errors carry their real cause in OAuth/OIDC-style `error` /
+        // `error_description` properties rather than the generic `.message`. The express-openid-connect
+        // callback is the prime example: a failed token exchange surfaces only "server responded with an
+        // error in the response body" as the message, while the actual reason (e.g. redirect_uri_mismatch,
+        // invalid_client) lives in these fields. Log them so such failures are diagnosable.
+        const oauthDetail = extractOAuthErrorDetail(err);
+        if (oauthDetail) {
+            getLog().error(`OAuth/OpenID error on ${req.method} ${req.url}: ${oauthDetail}`);
+        }
+
         res.status(statusCode).send({
             message: err instanceof Error ? err.message : "Unknown Error"
         });
 
     });
+}
+
+/**
+ * Pulls the OAuth/OIDC error code and description off an error, if present. Returns `null` when the
+ * error carries neither, so callers can skip logging for ordinary errors.
+ */
+export function extractOAuthErrorDetail(err: unknown) {
+    if (typeof err !== "object" || err === null) {
+        return null;
+    }
+
+    const candidate = err as { error?: unknown; error_description?: unknown };
+    const code = typeof candidate.error === "string" ? candidate.error : undefined;
+    const description = typeof candidate.error_description === "string" ? candidate.error_description : undefined;
+
+    if (!code && !description) {
+        return null;
+    }
+
+    return [ code, description ].filter(Boolean).join(": ");
 }
 
 export default {
