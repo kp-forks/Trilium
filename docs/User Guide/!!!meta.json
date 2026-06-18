@@ -1073,9 +1073,52 @@
                                             "value": "reverse-proxy",
                                             "isInheritable": false,
                                             "position": 20
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "ud6MShXL4WpO",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "5ERVJb9s4FRD",
+                                            "isInheritable": false,
+                                            "position": 40
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "fDLvzOx29Pfg",
+                                            "isInheritable": false,
+                                            "position": 50
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "LLzSMXACKhUs",
+                                            "isInheritable": false,
+                                            "position": 60
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "l2VkvOwUNfZj",
+                                            "isInheritable": false,
+                                            "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "x1lQNKQBqLcA",
+                                            "isInheritable": false,
+                                            "position": 80
                                         }
                                     ],
                                     "format": "markdown",
+                                    "dataFileName": "2. Reverse proxy.md",
                                     "attachments": [],
                                     "dirFileName": "2. Reverse proxy",
                                     "children": [
@@ -1427,7 +1470,7 @@
                                         "WOcw2SLH6tbX",
                                         "7DAiwaf8Z7Rz"
                                     ],
-                                    "title": "Multi-Factor Authentication & OpenID Connect",
+                                    "title": "Multi-factor authentication with TOTP",
                                     "notePosition": 120,
                                     "prefix": null,
                                     "isExpanded": false,
@@ -1437,9 +1480,16 @@
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "Gzjqa934BdH4",
+                                            "value": "x1lQNKQBqLcA",
                                             "isInheritable": false,
                                             "position": 10
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "4TIF1oA4VQRO",
+                                            "isInheritable": false,
+                                            "position": 20
                                         },
                                         {
                                             "type": "label",
@@ -1454,17 +1504,10 @@
                                             "value": "bx bx-stopwatch",
                                             "isInheritable": false,
                                             "position": 20
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "4TIF1oA4VQRO",
-                                            "isInheritable": false,
-                                            "position": 30
                                         }
                                     ],
                                     "format": "markdown",
-                                    "dataFileName": "Multi-Factor Authentication & .md",
+                                    "dataFileName": "Multi-factor authentication wi.md",
                                     "attachments": []
                                 },
                                 {
@@ -1485,6 +1528,76 @@
                                 },
                                 {
                                     "isClone": false,
+                                    "noteId": "x1lQNKQBqLcA",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "Otzi9La2YAUX",
+                                        "WOcw2SLH6tbX",
+                                        "x1lQNKQBqLcA"
+                                    ],
+                                    "title": "Signing in with OpenID Connect",
+                                    "notePosition": 130,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "text",
+                                    "mime": "text/html",
+                                    "attributes": [
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "7DAiwaf8Z7Rz",
+                                            "isInheritable": false,
+                                            "position": 10
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "Gzjqa934BdH4",
+                                            "isInheritable": false,
+                                            "position": 20
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "4TIF1oA4VQRO",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bxs-key",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "shareAlias",
+                                            "value": "openid-connect",
+                                            "isInheritable": false,
+                                            "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "vcjrb3VVYPZI",
+                                            "isInheritable": false,
+                                            "position": 80
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "ud6MShXL4WpO",
+                                            "isInheritable": false,
+                                            "position": 90
+                                        }
+                                    ],
+                                    "format": "markdown",
+                                    "dataFileName": "Signing in with OpenID Connect.md",
+                                    "attachments": []
+                                },
+                                {
+                                    "isClone": false,
                                     "noteId": "yeEaYqosGLSh",
                                     "notePath": [
                                         "pOsGYCXsbNQG",
@@ -1493,7 +1606,7 @@
                                         "yeEaYqosGLSh"
                                     ],
                                     "title": "Third-party cloud hosting",
-                                    "notePosition": 130,
+                                    "notePosition": 140,
                                     "prefix": null,
                                     "isExpanded": false,
                                     "type": "text",
@@ -1549,7 +1662,7 @@
                                         "iGTnKjubbXkA"
                                     ],
                                     "title": "System Requirements",
-                                    "notePosition": 140,
+                                    "notePosition": 150,
                                     "prefix": null,
                                     "isExpanded": false,
                                     "type": "text",

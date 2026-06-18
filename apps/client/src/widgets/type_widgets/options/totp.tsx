@@ -1,7 +1,7 @@
 import "./totp.css";
 
 import { TOTPEnableResponse, TOTPGenerate, TOTPRecoveryKeysResponse, TOTPStatus, TOTPVerifyResponse } from "@triliumnext/commons";
-import { RefObject } from "preact";
+import { ComponentChildren, RefObject } from "preact";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 import qrcode from "qrcode-generator";
@@ -21,6 +21,7 @@ import FormTextBox from "../../react/FormTextBox";
 import { useStaticTooltip } from "../../react/hooks";
 import Modal from "../../react/Modal";
 import { RawHtmlBlock } from "../../react/RawHtml";
+import MfaStatusBadge from "./components/MfaStatusBadge";
 import { OptionsRowWithButton } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -102,17 +103,32 @@ export function TotpSettings({ totpStatus, refreshTotpStatus }: {
         refreshRecoveryKeys();
     }, [ refreshRecoveryKeys ]);
 
+    // Status badge mirroring the OpenID card: TOTP is either enabled (a secret is set) or off.
+    const totpEnabled = totpStatus?.set ?? false;
+    const totpTitle = (
+        <span className="mfa-status-title">
+            {t("multi_factor_authentication.totp_section_title")}
+            <MfaStatusBadge
+                tone={totpEnabled ? "active" : "inactive"}
+                text={totpEnabled
+                    ? t("multi_factor_authentication.totp_status_active")
+                    : t("multi_factor_authentication.totp_status_inactive")}
+            />
+        </span>
+    );
+
     return (<>
         {/* Before enrollment, a single call-to-action opens the dialog — which is where the secret is
             generated, verified, and (only on Finish) persisted. Once a secret is set, that's replaced
             by the recovery-codes panel; recovery codes are part of TOTP and never exist without it. */}
         {totpStatus?.set
             ? <TotpRecoveryKeys
+                title={totpTitle}
                 status={recoveryStatus}
                 onRegenerate={regenerateRecoveryCodes}
                 onRemoveTotp={removeTotp}
             />
-            : <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
+            : <OptionsSection title={totpTitle}>
                 <OptionsRowWithButton
                     label={t("multi_factor_authentication.totp_setup_label")}
                     description={t("multi_factor_authentication.totp_setup_description")}
@@ -477,7 +493,8 @@ function downloadRecoveryCodes(codes: string[]) {
  * remove-TOTP action. The codes themselves are only ever shown once — in a modal right after
  * enrollment or regeneration (see {@link RecoveryCodesModal}).
  */
-function TotpRecoveryKeys({ status, onRegenerate, onRemoveTotp }: {
+function TotpRecoveryKeys({ title, status, onRegenerate, onRemoveTotp }: {
+    title: ComponentChildren,
     status?: string[],
     onRegenerate: () => void,
     onRemoveTotp: () => void
@@ -485,7 +502,7 @@ function TotpRecoveryKeys({ status, onRegenerate, onRemoveTotp }: {
     const remaining = status?.filter(isUnusedRecoveryCode).length ?? 0;
 
     return (
-        <OptionsSection title={t("multi_factor_authentication.totp_section_title")}>
+        <OptionsSection title={title}>
             <OptionsRowWithButton
                 label={
                     <span className="recovery-codes-title">

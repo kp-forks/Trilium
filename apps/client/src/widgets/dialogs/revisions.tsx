@@ -663,7 +663,7 @@ function RevisionContent({ noteContent, revisionItem, fullRevision, showDiff }: 
                     //Base64 of other format images may be embedded in svg
                     const encodedSVG = encodeURIComponent(content as string);
                     return <img
-                        src={`data:${fullRevision.mime};utf8,${encodedSVG}`}
+                        src={`data:${fullRevision.mime},${encodedSVG}`}
                         style={IMAGE_STYLE} />;
                 }
                 default: {

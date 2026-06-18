@@ -164,10 +164,19 @@ export interface TOTPRecoveryKeysResponse {
 }
 
 export interface OAuthStatus {
+    /** Whether OAuth is the active login method (configured *and* an account has been enrolled). */
     enabled: boolean;
+    /** Whether the owner has bound their provider identity to this instance (enrollment complete). */
+    enrolled?: boolean;
     name?: string;
     email?: string;
     missingVars?: string[];
+    /** The configured provider's display name (`oauthIssuerName`); empty when unset. */
+    issuerName?: string;
+    /** The configured provider's issuer base URL (`oauthIssuerBaseUrl`). */
+    issuerUrl?: string;
+    /** The configured provider's icon URL (`oauthIssuerIcon`); empty when unset. */
+    issuerIcon?: string;
 }
 
 // Interface for the Ollama model response
@@ -424,6 +433,11 @@ export type BootstrapDefinition = {
     isRtl: boolean;
     TRILIUM_SAFE_MODE: boolean;
     componentId?: string;
+    /**
+     * True for exactly one bootstrap after the owner binds their OAuth account, letting the client show a
+     * one-shot "account connected" toast once the post-enrollment redirect lands on the app root.
+     */
+    oauthJustEnrolled?: boolean;
 };
 
 /**
