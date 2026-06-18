@@ -433,6 +433,11 @@ export type BootstrapDefinition = {
     isRtl: boolean;
     TRILIUM_SAFE_MODE: boolean;
     componentId?: string;
+    /**
+     * True for exactly one bootstrap after the owner binds their OAuth account, letting the client show a
+     * one-shot "account connected" toast once the post-enrollment redirect lands on the app root.
+     */
+    oauthJustEnrolled?: boolean;
 };
 
 /**

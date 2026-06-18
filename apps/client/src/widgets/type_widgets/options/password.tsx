@@ -261,6 +261,8 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
 
     // Enrollment is a full-page provider round-trip (not an XHR): navigate to the OIDC login route,
     // which on return binds the identity to this still-authenticated session (see open_id afterCallback).
+    // The return lands on the app root and drops this modal; the resulting "connected" toast is driven by
+    // a one-shot bootstrap flag (see showOAuthEnrollmentResultToast), so nothing is tracked here.
     const connectAccount = useCallback(() => {
         window.location.href = "authenticate";
     }, []);

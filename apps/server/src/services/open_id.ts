@@ -174,6 +174,9 @@ function generateOAuthConfig(endSessionSupported = false) {
             }
 
             const incomingSubject = user.sub.toString();
+            // Distinguishes the owner binding their account for the first time (enrollment) from a routine
+            // login, so we can surface a one-shot "connected" toast only on enrollment (see below).
+            const isEnrollment = !openIDEncryption.isSubjectIdentifierSaved();
 
             if (openIDEncryption.isSubjectIdentifierSaved()) {
                 // An account is already enrolled, so this is a login attempt. Only the enrolled identity
@@ -231,6 +234,11 @@ function generateOAuthConfig(endSessionSupported = false) {
                 totpEnabled: false,
                 ssoEnabled: true
             };
+            // Set after regeneration (which wipes the prior session) so /bootstrap can deliver a one-shot
+            // "account connected" signal to the client when it reloads onto the app root post-redirect.
+            if (isEnrollment) {
+                req.session.ssoJustEnrolled = true;
+            }
 
             return session;
         },

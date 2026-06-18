@@ -38,5 +38,11 @@ export declare module "express-session" {
          * or an attempt before enrollment). Read and cleared by the login page so the message shows once.
          */
         ssoError?: "wrong_account" | "not_enrolled";
+        /**
+         * One-shot flag set by the OIDC afterCallback when the owner binds their account for the first
+         * time. Read and cleared by /bootstrap so the client can show a single "account connected" toast
+         * after the post-enrollment redirect lands on the app root.
+         */
+        ssoJustEnrolled?: true;
     }
 }
