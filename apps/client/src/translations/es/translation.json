@@ -2289,8 +2289,6 @@
     "mute": "Silenciar (M)",
     "unmute": "Activar sonido (M)",
     "playback-speed": "Velocidad de reproducción",
-    "loop": "Bucle",
-    "disable-loop": "Deshabilitar bucle",
     "rotate": "Rotar",
     "picture-in-picture": "Imagen en imagen",
     "exit-picture-in-picture": "Salir del modo imagen en imagen",

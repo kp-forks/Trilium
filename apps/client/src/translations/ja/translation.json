@@ -2379,8 +2379,6 @@
     "mute": "ミュート (M)",
     "unmute": "ミュート解除 (M)",
     "playback-speed": "再生速度",
-    "loop": "ループ",
-    "disable-loop": "ループを解除",
     "rotate": "回転",
     "picture-in-picture": "ピクチャーインピクチャー",
     "exit-picture-in-picture": "ピクチャーインピクチャーを終了",
