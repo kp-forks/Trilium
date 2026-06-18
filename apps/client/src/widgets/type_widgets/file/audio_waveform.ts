@@ -106,8 +106,19 @@ export async function loadWaveform(url: string, { signal, buckets = WAVEFORM_BUC
             return null;
         }
 
+        // Bail on oversized files from the header before downloading the body, when the server reports it.
+        const contentLength = Number(response.headers.get("Content-Length"));
+        if (contentLength > MAX_WAVEFORM_BYTES) {
+            return null;
+        }
+
         const buffer = await response.arrayBuffer();
         if (buffer.byteLength === 0 || buffer.byteLength > MAX_WAVEFORM_BYTES) {
+            return null;
+        }
+
+        // Decoding is CPU-heavy; if navigation already moved on while the body was downloading, don't start it.
+        if (signal?.aborted) {
             return null;
         }
 

@@ -30,6 +30,7 @@ export function WaveformSeekBar({ mediaRef, peaks }: { mediaRef: RefObject<HTMLV
     const [duration, setDuration] = useState(0);
     const [size, setSize] = useState({ width: 0, height: 0 });
     const [morph, setMorph] = useState(0);
+    const [colors, setColors] = useState<WaveformColors>(DEFAULT_COLORS);
 
     // Mirror the media element's clock — same seeding pattern as SeekBar: read the element now in case its
     // metadata already loaded before this passive effect attached the listeners.
@@ -60,6 +61,13 @@ export function WaveformSeekBar({ mediaRef, peaks }: { mediaRef: RefObject<HTMLV
         return () => observer.disconnect();
     }, []);
 
+    // Resolve the theme's waveform colors once on mount and cache them — the draw runs up to ~60 times/second
+    // during the morph, so it must not force a style recalculation each frame.
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (canvas) setColors(readColors(canvas));
+    }, []);
+
     // Animate flat → analyzed once the peaks are available. While they are null (loading or undecodable) morph
     // stays at 0 and the bars hold the flat placeholder.
     useEffect(() => {
@@ -82,8 +90,8 @@ export function WaveformSeekBar({ mediaRef, peaks }: { mediaRef: RefObject<HTMLV
     const progress = duration > 0 ? Math.min(1, currentTime / duration) : 0;
 
     useEffect(() => {
-        drawWaveform(canvasRef.current, peaks, progress, size, morph);
-    }, [ peaks, progress, size, morph ]);
+        drawWaveform(canvasRef.current, peaks, progress, size, morph, colors);
+    }, [ peaks, progress, size, morph, colors ]);
 
     const seekToFraction = useCallback((fraction: number) => {
         const media = mediaRef.current;
@@ -103,6 +111,9 @@ export function WaveformSeekBar({ mediaRef, peaks }: { mediaRef: RefObject<HTMLV
     // cursor strays outside the canvas mid-drag.
     const onPointerDown = useCallback((e: PointerEvent) => {
         e.preventDefault();
+        // preventDefault suppresses the default focus-on-click, so focus explicitly to keep keyboard seeking
+        // reachable after a mouse/touch interaction.
+        canvasRef.current?.focus();
         canvasRef.current?.setPointerCapture(e.pointerId);
         seekToClientX(e.clientX);
     }, [ seekToClientX ]);
@@ -156,7 +167,7 @@ export function WaveformSeekBar({ mediaRef, peaks }: { mediaRef: RefObject<HTMLV
     );
 }
 
-function drawWaveform(canvas: HTMLCanvasElement | null, peaks: number[] | null, progress: number, size: { width: number; height: number }, morph: number) {
+function drawWaveform(canvas: HTMLCanvasElement | null, peaks: number[] | null, progress: number, size: { width: number; height: number }, morph: number, colors: WaveformColors) {
     if (!canvas || size.width <= 0 || size.height <= 0) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -169,11 +180,6 @@ function drawWaveform(canvas: HTMLCanvasElement | null, peaks: number[] | null, 
     }
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, width, height);
-
-    const styles = getComputedStyle(canvas);
-    const playedColor = resolveColor(styles, "--waveform-played-color", "#4caf9d");
-    const unplayedColor = resolveColor(styles, "--waveform-unplayed-color", "#5a5a5a");
-    const silenceColor = resolveColor(styles, "--waveform-silence-color", "#333333");
 
     const analyzed = !!peaks && peaks.length > 0;
     const barStride = BAR_WIDTH + BAR_GAP;
@@ -199,14 +205,38 @@ function drawWaveform(canvas: HTMLCanvasElement | null, peaks: number[] | null, 
         const amplitude = FLAT_LEVEL + (target - FLAT_LEVEL) * morph;
         const x = bar * barStride;
         const barHeight = Math.max(MIN_BAR_HEIGHT, amplitude * maxBarHeight);
-        ctx.fillStyle = analyzed && target < SILENCE_THRESHOLD ? silenceColor : (x < playX ? playedColor : unplayedColor);
+        ctx.fillStyle = analyzed && target < SILENCE_THRESHOLD ? colors.silence : (x < playX ? colors.played : colors.unplayed);
         ctx.fillRect(x, mid - barHeight / 2, BAR_WIDTH, barHeight);
     }
 }
 
-/** Read a CSS custom property, falling back to a literal default if the theme leaves it unset or the browser
- *  hands back an unresolved `var(...)` reference. */
-function resolveColor(styles: CSSStyleDeclaration, name: string, fallback: string): string {
-    const value = styles.getPropertyValue(name).trim();
-    return value && !value.startsWith("var(") ? value : fallback;
+interface WaveformColors {
+    played: string;
+    unplayed: string;
+    silence: string;
+}
+
+/** Fallback colors used until the theme's values are resolved (and if a custom property is left unset). */
+const DEFAULT_COLORS: WaveformColors = { played: "#4caf9d", unplayed: "#5a5a5a", silence: "#333333" };
+
+function readColors(canvas: HTMLCanvasElement): WaveformColors {
+    return {
+        played: resolveColor(canvas, "--waveform-played-color", DEFAULT_COLORS.played),
+        unplayed: resolveColor(canvas, "--waveform-unplayed-color", DEFAULT_COLORS.unplayed),
+        silence: resolveColor(canvas, "--waveform-silence-color", DEFAULT_COLORS.silence)
+    };
+}
+
+/** Resolve a CSS custom property to a concrete color, even when the theme defines it through nested `var()`
+ *  references (which `getPropertyValue` returns unresolved). A throwaway element inherits the canvas' cascade,
+ *  so the browser's style engine substitutes the variables; we read back the computed `color`. */
+function resolveColor(canvas: HTMLCanvasElement, name: string, fallback: string): string {
+    const host = canvas.parentElement ?? canvas;
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name}, ${fallback})`;
+    probe.style.display = "none";
+    host.appendChild(probe);
+    const resolved = getComputedStyle(probe).color;
+    host.removeChild(probe);
+    return resolved || fallback;
 }
