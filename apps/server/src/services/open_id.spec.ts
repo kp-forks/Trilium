@@ -1,9 +1,10 @@
 import { cls, options } from "@triliumnext/core";
+import type { NextFunction, Request as ExpressRequest, RequestHandler, Response as ExpressResponse } from "express";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
-import openID, { resolveOAuthIdentity, supportsRpInitiatedLogout } from "./open_id.js";
+import openID, { createReactiveOidcMiddleware, resolveOAuthIdentity, supportsRpInitiatedLogout } from "./open_id.js";
 import sql from "./sql.js";
 import sqlInit from "./sql_init.js";
 
@@ -424,5 +425,148 @@ describe("open_id", () => {
             expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
             expect(fetchSpy).not.toHaveBeenCalled();
         });
+    });
+});
+
+/**
+ * The reactive OIDC middleware is the fix for "switching the MFA method to OpenID requires a server
+ * restart". The old code decided *once at startup* whether to mount express-openid-connect; these tests
+ * pin down the new contract: the middleware is always mounted, re-evaluates `isOpenIDConfigured()` on
+ * every request, and lazily builds (and caches) the underlying handler the first time OAuth is used.
+ */
+describe("createReactiveOidcMiddleware", () => {
+    function setup() {
+        let configured = false;
+
+        const oidcHandler = vi.fn(((_req, _res, next) => next()) as RequestHandler);
+        const buildAuth = vi.fn(() => oidcHandler);
+        const isRpInitiatedLogoutSupported = vi.fn().mockResolvedValue(false);
+        const generateOAuthConfig = vi.fn((endSessionSupported: boolean) => ({ endSessionSupported }) as never);
+        const isConfigured = vi.fn(() => configured);
+
+        const middleware = createReactiveOidcMiddleware({
+            isConfigured,
+            isRpInitiatedLogoutSupported,
+            generateOAuthConfig,
+            buildAuth
+        });
+
+        return {
+            middleware,
+            oidcHandler,
+            buildAuth,
+            isRpInitiatedLogoutSupported,
+            generateOAuthConfig,
+            isConfigured,
+            setConfigured: (value: boolean) => { configured = value; }
+        };
+    }
+
+    async function run(middleware: RequestHandler) {
+        const next = vi.fn() as unknown as NextFunction;
+        const req = {} as ExpressRequest;
+        const res = {} as ExpressResponse;
+        await middleware(req, res, next);
+        return { next, req, res };
+    }
+
+    it("passes through without building the OIDC handler when OAuth is not selected", async () => {
+        const t = setup(); // starts unconfigured
+
+        const { next } = await run(t.middleware);
+
+        expect(next).toHaveBeenCalledOnce();
+        expect(t.buildAuth).not.toHaveBeenCalled();
+        expect(t.oidcHandler).not.toHaveBeenCalled();
+        // No work is done while OAuth is unselected — not even the discovery probe.
+        expect(t.isRpInitiatedLogoutSupported).not.toHaveBeenCalled();
+    });
+
+    it("builds and delegates to the OIDC handler when OAuth is selected", async () => {
+        const t = setup();
+        t.setConfigured(true);
+
+        const { req, res, next } = await run(t.middleware);
+
+        expect(t.isRpInitiatedLogoutSupported).toHaveBeenCalledOnce();
+        expect(t.generateOAuthConfig).toHaveBeenCalledWith(false);
+        expect(t.buildAuth).toHaveBeenCalledOnce();
+        expect(t.oidcHandler).toHaveBeenCalledWith(req, res, expect.any(Function));
+        // The wrapper must hand off to the OIDC handler and NOT call next() itself — calling it again
+        // after the handler already drove the request double-invokes the pipeline ("Cannot set headers
+        // after they are sent"). Exactly one next() (the one the handler makes) must reach the chain.
+        expect(next).toHaveBeenCalledOnce();
+    });
+
+    it("builds the underlying handler only once across requests (cached)", async () => {
+        const t = setup();
+        t.setConfigured(true);
+
+        await run(t.middleware);
+        await run(t.middleware);
+
+        expect(t.buildAuth).toHaveBeenCalledOnce();
+        expect(t.isRpInitiatedLogoutSupported).toHaveBeenCalledOnce();
+        expect(t.oidcHandler).toHaveBeenCalledTimes(2);
+    });
+
+    it("passes the discovery-probe result into the OAuth config", async () => {
+        const t = setup();
+        t.isRpInitiatedLogoutSupported.mockResolvedValue(true);
+        t.setConfigured(true);
+
+        await run(t.middleware);
+
+        expect(t.generateOAuthConfig).toHaveBeenCalledWith(true);
+    });
+
+    // This is the regression the whole change exists to fix: with the old startup-only mount, flipping
+    // mfaMethod to "oauth" at runtime did nothing until a restart. Here the same instance starts
+    // unselected (passes through) and then activates on the next request after the option flips.
+    it("activates without a restart when the sign-in method switches to OAuth at runtime", async () => {
+        const t = setup(); // unconfigured at "boot"
+
+        await run(t.middleware);
+        expect(t.buildAuth).not.toHaveBeenCalled();
+        expect(t.oidcHandler).not.toHaveBeenCalled();
+
+        // User switches the MFA method to OpenID in Settings — no restart.
+        t.setConfigured(true);
+
+        const { req, res } = await run(t.middleware);
+        expect(t.buildAuth).toHaveBeenCalledOnce();
+        expect(t.oidcHandler).toHaveBeenCalledWith(req, res, expect.any(Function));
+    });
+
+    it("stops delegating when OAuth is deselected at runtime", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        await run(t.middleware); // builds + delegates
+        expect(t.oidcHandler).toHaveBeenCalledOnce();
+
+        // Switch back to local/TOTP — the request should pass straight through again.
+        t.setConfigured(false);
+        const { next } = await run(t.middleware);
+
+        expect(next).toHaveBeenCalledOnce();
+        expect(t.oidcHandler).toHaveBeenCalledOnce(); // not invoked a second time
+    });
+
+    it("builds the handler only once even under concurrent first requests", async () => {
+        const t = setup();
+        t.setConfigured(true);
+
+        // A deferred discovery probe keeps the first build in flight while a second request arrives,
+        // exercising the in-flight-init guard (otherwise both requests would each build a handler).
+        let resolveProbe: (value: boolean) => void = () => {};
+        t.isRpInitiatedLogoutSupported.mockReturnValue(new Promise<boolean>((resolve) => { resolveProbe = resolve; }));
+
+        const first = run(t.middleware);
+        const second = run(t.middleware);
+        resolveProbe(false);
+        await Promise.all([first, second]);
+
+        expect(t.buildAuth).toHaveBeenCalledOnce();
+        expect(t.oidcHandler).toHaveBeenCalledTimes(2);
     });
 });

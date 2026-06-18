@@ -1,6 +1,6 @@
 import { getLog, options } from "@triliumnext/core";
-import type { NextFunction, Request, Response } from "express";
-import type { Session } from "express-openid-connect";
+import type { NextFunction, Request, RequestHandler, Response } from "express";
+import { auth, type Session } from "express-openid-connect";
 
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
@@ -244,6 +244,69 @@ function generateOAuthConfig(endSessionSupported = false) {
         },
     };
     return authConfig;
+}
+
+type AuthBuilder = typeof auth;
+
+interface ReactiveOidcDeps {
+    /** Whether OAuth is currently configured and selected as the sign-in method. Re-checked per request. */
+    isConfigured: () => boolean;
+    /** Discovery probe deciding whether RP-Initiated Logout (idpLogout) can be safely enabled. */
+    isRpInitiatedLogoutSupported: () => Promise<boolean>;
+    /** Builds the express-openid-connect config for the current provider settings. */
+    generateOAuthConfig: (endSessionSupported: boolean) => Parameters<AuthBuilder>[0];
+    /** The express-openid-connect `auth()` factory (injectable so the middleware is unit-testable). */
+    buildAuth: AuthBuilder;
+}
+
+/**
+ * Builds the always-mounted OIDC middleware.
+ *
+ * The provider round-trip used to be mounted only once, at server startup, gated on whether OAuth was
+ * the selected sign-in method at that moment. That coupled a *permanent* mounting decision to the
+ * *runtime-mutable* `mfaMethod` option, so switching to OpenID in Settings did nothing until a restart.
+ *
+ * This middleware is mounted unconditionally and instead re-evaluates `isOpenIDConfigured()` on every
+ * request: while OAuth is unselected it simply passes through, and the first time OAuth is actually in
+ * use it lazily builds the underlying express-openid-connect handler and caches it. The discovery probe
+ * (endSessionSupported) only depends on the issuer — which is fixed in config and changes solely on
+ * restart — so it is resolved once on that first use. An in-flight guard ensures concurrent first
+ * requests build the handler exactly once.
+ */
+export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {}): RequestHandler {
+    const {
+        isConfigured = isOpenIDConfigured,
+        isRpInitiatedLogoutSupported: probeRpLogout = isRpInitiatedLogoutSupported,
+        generateOAuthConfig: buildOAuthConfig = generateOAuthConfig,
+        buildAuth = auth
+    } = deps;
+
+    let oidcMiddleware: RequestHandler | null = null;
+    let oidcInit: Promise<void> | null = null;
+
+    return async (req: Request, res: Response, next: NextFunction) => {
+        // OAuth not selected as the sign-in method → behave as if the middleware were never mounted.
+        if (!isConfigured()) {
+            return next();
+        }
+
+        if (!oidcMiddleware) {
+            oidcInit ??= (async () => {
+                const endSessionSupported = await probeRpLogout();
+                oidcMiddleware = buildAuth(buildOAuthConfig(endSessionSupported));
+            })();
+            await oidcInit;
+        }
+
+        // Hand off entirely to the express-openid-connect handler: it drives the request by side effect
+        // (sends a response/redirect or calls next() itself) and returns undefined. We must NOT call
+        // next() ourselves afterwards — doing so double-invokes the downstream pipeline and triggers
+        // "Cannot set headers after they are sent". The guard only covers a failed build.
+        if (!oidcMiddleware) {
+            return next();
+        }
+        return oidcMiddleware(req, res, next);
+    };
 }
 
 export default {
