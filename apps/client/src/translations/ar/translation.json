@@ -2189,7 +2189,6 @@
     "menu_run_mobile_startup": "عند بدء تشغيل واجهة الهاتف المحمول"
   },
   "media": {
-    "loop": "حلقة",
     "rotate": "تدوير",
     "picture-in-picture": "صورة داخل صورة",
     "play": "تشغيل (مسافة)",
@@ -2199,7 +2198,6 @@
     "mute": "كتم الصوت (M)",
     "unmute": "إلغاء كتم الصوت (M)",
     "playback-speed": "سرعة التشغيل",
-    "disable-loop": "إيقاف التكرار",
     "exit-picture-in-picture": "الخروج من وضع الصورة داخل الصورة",
     "fullscreen": "ملء الشاشة (F)",
     "exit-fullscreen": "الخروج من وضع ملء الشاشة",
