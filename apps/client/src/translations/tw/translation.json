@@ -2258,8 +2258,6 @@
     "mute": "靜音 (M)",
     "unmute": "解除靜音 (M)",
     "playback-speed": "播放速度",
-    "loop": "循環",
-    "disable-loop": "解除循環",
     "rotate": "旋轉",
     "picture-in-picture": "畫中畫",
     "exit-picture-in-picture": "退出畫中畫",
