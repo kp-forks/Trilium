@@ -387,6 +387,10 @@ function OAuthProviderRows({ status }: { status?: OAuthStatus }) {
 function OAuthProviderIcon({ src }: { src?: string }) {
     const [ failed, setFailed ] = useState(false);
 
+    // Reset the fallback flag when the source changes (e.g. the user switches providers), otherwise a
+    // previously-failed load would keep showing the key glyph even when the new URL is perfectly valid.
+    useEffect(() => setFailed(false), [src]);
+
     if (!src || failed) {
         return <span className="bx bx-key oauth-provider-icon" />;
     }

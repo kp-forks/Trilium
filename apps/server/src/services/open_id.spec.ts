@@ -569,4 +569,21 @@ describe("createReactiveOidcMiddleware", () => {
         expect(t.buildAuth).toHaveBeenCalledOnce();
         expect(t.oidcHandler).toHaveBeenCalledTimes(2);
     });
+
+    // A failed first init must not be cached as a permanently-rejected promise: a transient failure
+    // (discovery probe error, malformed config) would otherwise break every subsequent OAuth request
+    // until a server restart. The next request must be allowed to retry and recover.
+    it("retries the build on a subsequent request after a failed init", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        t.isRpInitiatedLogoutSupported.mockRejectedValueOnce(new Error("transient discovery failure"));
+
+        await expect(run(t.middleware)).rejects.toThrow("transient discovery failure");
+        expect(t.oidcHandler).not.toHaveBeenCalled();
+
+        // Second request: the probe succeeds and the handler is finally built and delegated to.
+        const { req, res } = await run(t.middleware);
+        expect(t.buildAuth).toHaveBeenCalledOnce();
+        expect(t.oidcHandler).toHaveBeenCalledWith(req, res, expect.any(Function));
+    });
 });

@@ -166,9 +166,11 @@ function logout(req: Request, res: Response) {
     req.session.regenerate(() => {
         req.session.loggedIn = false;
 
-        if (openID.isOpenIDEnabled() && openIDEncryption.isSubjectIdentifierSaved()) {
+        if (openID.isOpenIDEnabled() && openIDEncryption.isSubjectIdentifierSaved() && res.oidc) {
             // oidc.logout() already issues the redirect (to the provider's end-session
             // endpoint, or locally), so we must not send our own response afterwards.
+            // res.oidc is only present once the OIDC middleware has initialised; if it
+            // hasn't (e.g. a failed lazy init), fall through to the local redirect below.
             void res.oidc.logout({ returnTo: '/' });
             return;
         }

@@ -300,7 +300,15 @@ export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {
                 const endSessionSupported = await probeRpLogout();
                 oidcMiddleware = authFactory(buildOAuthConfig(endSessionSupported));
             })();
-            await oidcInit;
+            try {
+                await oidcInit;
+            } catch (error) {
+                // Reset so the next request can retry — otherwise a single failed init (transient
+                // discovery-probe failure, malformed config, etc.) would leave the rejected promise
+                // cached and break every subsequent OAuth request until a server restart.
+                oidcInit = null;
+                throw error;
+            }
         }
 
         // Hand off entirely to the express-openid-connect handler: it drives the request by side effect
