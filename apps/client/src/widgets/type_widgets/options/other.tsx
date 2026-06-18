@@ -9,6 +9,7 @@ import Button from "../../react/Button";
 import FormText from "../../react/FormText";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useTriliumOption, useTriliumOptionBool, useTriliumOptionJson } from "../../react/hooks";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import TimeSelector from "./components/TimeSelector";
@@ -16,6 +17,7 @@ import TimeSelector from "./components/TimeSelector";
 export default function OtherSettings() {
     return (
         <>
+            <OptionsPageHeader />
             <SearchSettings />
             <NoteErasureTimeout />
             <AttachmentErasureTimeout />
@@ -67,6 +69,7 @@ function NoteErasureTimeout() {
             <OptionsRowWithButton
                 label={t("note_erasure_timeout.erase_deleted_notes_now")}
                 description={t("note_erasure_timeout.manual_erasing_description")}
+                buttonText={t("note_erasure_timeout.erase_now_button")}
                 onClick={() => {
                     server.post("notes/erase-deleted-notes-now").then(() => {
                         toast.showMessage(t("note_erasure_timeout.deleted_notes_erased"));
@@ -92,6 +95,7 @@ function AttachmentErasureTimeout() {
             <OptionsRowWithButton
                 label={t("attachment_erasure_timeout.erase_unused_attachments_now")}
                 description={t("attachment_erasure_timeout.manual_erasing_description")}
+                buttonText={t("attachment_erasure_timeout.erase_now_button")}
                 onClick={() => {
                     server.post("notes/erase-unused-attachments-now").then(() => {
                         toast.showMessage(t("attachment_erasure_timeout.unused_attachments_erased"));
@@ -132,6 +136,7 @@ function RevisionSettings() {
             <OptionsRowWithButton
                 label={t("revisions_snapshot_limit.erase_excess_revision_snapshots")}
                 description={t("revisions_snapshot_limit.erase_excess_revision_snapshots_description")}
+                buttonText={t("revisions_snapshot_limit.erase_now_button")}
                 onClick={async () => {
                     await server.post("revisions/erase-all-excess-revisions");
                     toast.showMessage(t("revisions_snapshot_limit.erase_excess_revision_snapshots_prompt"));

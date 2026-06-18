@@ -138,7 +138,22 @@ export interface TOTPStatus {
 
 export interface TOTPGenerate {
     success: boolean;
+    /** The bare base32 secret, shown for manual entry. */
     message: string;
+    /** The `otpauth://` URL for the secret, rendered as a scannable QR code. Absent on failure. */
+    url?: string;
+}
+
+export interface TOTPVerifyResponse {
+    /** Whether the submitted code was valid for the secret. Verification persists nothing on its own. */
+    success: boolean;
+    /** Freshly issued (not yet persisted) recovery codes, returned only on success for the user to save. */
+    recoveryCodes?: string[];
+}
+
+export interface TOTPEnableResponse {
+    /** Whether the secret and recovery codes were committed, activating TOTP. */
+    success: boolean;
 }
 
 export interface TOTPRecoveryKeysResponse {

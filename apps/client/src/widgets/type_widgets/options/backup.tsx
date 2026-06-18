@@ -7,6 +7,7 @@ import toast from "../../../services/toast";
 import Button from "../../react/Button";
 import { useTriliumOptionBool } from "../../react/hooks";
 import DatabaseFileList from "./components/DatabaseFileList";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 
@@ -25,6 +26,7 @@ export default function BackupSettings() {
 
     return (
         <>
+            <OptionsPageHeader />
             <BackupConfiguration />
             <BackupList backups={backups} backupFolderPath={backupFolderPath} refreshCallback={refreshBackups} />
         </>
