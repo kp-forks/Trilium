@@ -2,7 +2,7 @@
   from another service, like Google or Authelia, to verify your identity.</p>
 <p>When OpenID is activated, the password-based authentication in Trilium
   is replaced with a button that connects using your provider. This means
-  that the configuration of&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz">Multi-factor authentication with TOTP</a>&nbsp;no
+  that the configuration of&nbsp;<a class="reference-link" href="#root/_help_7DAiwaf8Z7Rz">Multi-factor authentication with TOTP</a>&nbsp;no
   longer takes effect, since your provider has to handle any multi-factor
   authentication.</p>
 <h2>Setup</h2>
@@ -25,23 +25,16 @@
   </ol>
   </li>
   <li>
-    <p>Set the following information using&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_Gzjqa934BdH4">Configuration (config.ini or environment variables)</a>:</p>
+    <p>Set the following information using&nbsp;<a class="reference-link" href="#root/_help_Gzjqa934BdH4">Configuration (config.ini or environment variables)</a>:</p>
     <figure
-    class="table" style="width:100%;">
-      <table class="ck-table-resized">
-        <colgroup>
-          <col style="width:11.84%;">
-            <col style="width:30.43%;">
-              <col style="width:30.21%;">
-                <col style="width:27.52%;">
-        </colgroup>
+    class="table">
+      <table>
         <thead>
           <tr>
-            <th scope="col">Configuration</th>
-            <th scope="col"><code spellcheck="false">config.ini</code> in <code spellcheck="false">[MultiFactorAuthentication]</code> section</th>
-            <th
-            scope="col">Environment variable</th>
-              <th scope="col">Description</th>
+            <th>Configuration</th>
+            <th><code spellcheck="false">config.ini</code> in <code spellcheck="false">[MultiFactorAuthentication]</code> section</th>
+            <th>Environment variable</th>
+            <th>Description</th>
           </tr>
         </thead>
         <tbody>
@@ -55,22 +48,24 @@
           </tr>
           <tr>
             <td>Client ID*</td>
-            <td><code spellcheck="false">oauthClientId</code>&nbsp;</td>
+            <td><code spellcheck="false">oauthClientId</code>
+            </td>
             <td><code spellcheck="false">TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTID</code>
             </td>
             <td>The client ID from your provider configuration.</td>
           </tr>
           <tr>
             <td>Client Secret*</td>
-            <td><code spellcheck="false">oauthClientSecret</code>&nbsp;</td>
+            <td><code spellcheck="false">oauthClientSecret</code>
+            </td>
             <td><code spellcheck="false">TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTSECRET</code>
             </td>
             <td>The client secret from your provider configuration.</td>
           </tr>
         </tbody>
       </table>
-      <figcaption>Asterisk (*) marks a required field</figcaption>
       </figure>
+      <p>Asterisk (*) marks a required field</p>
   </li>
   <li>
     <p>The default OAuth issuer is Google. To use other services such as Authentik
@@ -79,22 +74,14 @@
       spellcheck="false">oauthIssuerName</code>, and <code spellcheck="false">oauthIssuerIcon</code> in
         the <code spellcheck="false">config.ini</code> file. Alternatively, these
         values can be set using environment variables:</p>
-    <figure class="table"
-    style="width:100%;">
-      <table class="ck-table-resized">
-        <colgroup>
-          <col style="width:11.09%;">
-            <col style="width:24.68%;">
-              <col style="width:17.8%;">
-                <col style="width:46.43%;">
-        </colgroup>
+    <figure class="table">
+      <table>
         <thead>
           <tr>
-            <th scope="col">Configuration</th>
-            <th scope="col"><code spellcheck="false">config.ini</code> in <code spellcheck="false">[MultiFactorAuthentication]</code> section</th>
-            <th
-            scope="col">Environment variable</th>
-              <th scope="col">Description</th>
+            <th>Configuration</th>
+            <th><code spellcheck="false">config.ini</code> in <code spellcheck="false">[MultiFactorAuthentication]</code> section</th>
+            <th>Environment variable</th>
+            <th>Description</th>
           </tr>
         </thead>
         <tbody>
@@ -126,8 +113,8 @@
           </tr>
         </tbody>
       </table>
-      <figcaption>All the fields here are optional, since the default OAuth issuer is Google.</figcaption>
     </figure>
+    <p>All the fields here are optional, since the default OAuth issuer is Google.</p>
   </li>
   <li>Restart the server so that the changes are applied.</li>
 </ol>
@@ -167,7 +154,7 @@
 <p>When switching providers (e.g. going from Google to Authelia), it's important
   to take the following steps:</p>
 <ol>
-  <li>Go to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_4TIF1oA4VQRO">Options</a>&nbsp;→ <em>Password &amp; Auth</em>.</li>
+  <li>Go to&nbsp;<a class="reference-link" href="#root/_help_4TIF1oA4VQRO">Options</a>&nbsp;→ <em>Password &amp; Auth</em>.</li>
   <li
  >In the <em>OpenID Connect</em> section, press the <em>Disconnect</em> button.</li>
     <li
