@@ -91,6 +91,14 @@ describe("open_id", () => {
         expect(status.email).toBe("alice@example.com");
     });
 
+    it("getOAuthStatus surfaces the configured issuer details", () => {
+        setOauthConfig(true);
+        const status = openID.getOAuthStatus();
+        expect(status.issuerName).toBe("Acme");
+        expect(status.issuerUrl).toBe("https://issuer.example.com");
+        expect(status.issuerIcon).toBe("icon.png");
+    });
+
     it("clearSavedUser empties user_data", () => {
         const result = cls.init(() => openID.clearSavedUser());
         expect(result.success).toBe(true);

@@ -71,7 +71,10 @@ function getOAuthStatus() {
         email: getUserEmail(),
         enabled: isOpenIDEnabled(),
         enrolled: openIDEncryption.isSubjectIdentifierSaved(),
-        missingVars: checkOpenIDConfig()
+        missingVars: checkOpenIDConfig(),
+        issuerName: getSSOIssuerName(),
+        issuerUrl: config.MultiFactorAuthentication.oauthIssuerBaseUrl,
+        issuerIcon: getSSOIssuerIcon()
     };
 }
 

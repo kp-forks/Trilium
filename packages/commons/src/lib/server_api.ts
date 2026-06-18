@@ -171,6 +171,12 @@ export interface OAuthStatus {
     name?: string;
     email?: string;
     missingVars?: string[];
+    /** The configured provider's display name (`oauthIssuerName`); empty when unset. */
+    issuerName?: string;
+    /** The configured provider's issuer base URL (`oauthIssuerBaseUrl`). */
+    issuerUrl?: string;
+    /** The configured provider's icon URL (`oauthIssuerIcon`); empty when unset. */
+    issuerIcon?: string;
 }
 
 // Interface for the Ollama model response

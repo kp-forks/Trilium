@@ -299,6 +299,7 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
                 </>
             ) : enrolled ? (
                 <>
+                    <OAuthProviderRows status={status} />
                     <OptionsRow name="oauth-user-account" label={t("multi_factor_authentication.oauth_user_account")}>
                         <span>{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
                     </OptionsRow>
@@ -317,6 +318,7 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
                 </>
             ) : (
                 <>
+                    <OAuthProviderRows status={status} />
                     <Admonition type="note">{t("multi_factor_authentication.oauth_not_enrolled_hint")}</Admonition>
 
                     <OptionsRowWithButton
@@ -330,6 +332,51 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
             )}
         </OptionsSection>
     );
+}
+
+/**
+ * Identifies the configured OAuth provider: its icon and display name, plus the issuer URL. Shown
+ * whenever OAuth is configured so the owner can confirm which server they'll be redirected to.
+ */
+function OAuthProviderRows({ status }: { status?: OAuthStatus }) {
+    const displayName = oauthProviderDisplayName(status);
+    return (
+        <>
+            <OptionsRow name="oauth-provider" label={t("multi_factor_authentication.oauth_provider")}>
+                <span className="oauth-provider">
+                    { status?.issuerIcon
+                        ? <img className="oauth-provider-icon" src={status.issuerIcon} alt="" />
+                        : <span className="bx bx-key oauth-provider-icon" /> }
+                    <span>{displayName}</span>
+                </span>
+            </OptionsRow>
+            { status?.issuerUrl && (
+                <OptionsRow name="oauth-provider-url" label={t("multi_factor_authentication.oauth_provider_url")}>
+                    <span>{status.issuerUrl}</span>
+                </OptionsRow>
+            )}
+        </>
+    );
+}
+
+/**
+ * Resolves the provider's display name: the configured issuer name, falling back to the host of the
+ * issuer URL (e.g. "auth.example.com"), and finally to a generic label when neither is available.
+ */
+function oauthProviderDisplayName(status?: OAuthStatus) {
+    if (status?.issuerName) {
+        return status.issuerName;
+    }
+
+    if (status?.issuerUrl) {
+        try {
+            return new URL(status.issuerUrl).host;
+        } catch {
+            return status.issuerUrl;
+        }
+    }
+
+    return t("multi_factor_authentication.oauth_provider_unknown");
 }
 
 /**
