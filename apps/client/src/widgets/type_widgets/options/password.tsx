@@ -196,10 +196,14 @@ function SignInMethod() {
         server.get<TOTPStatus>("totp/status").then(setTotpStatus);
     }, []);
 
+    const refreshOauthStatus = useCallback(() => {
+        server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
+    }, []);
+
     useEffect(() => {
         refreshTotpStatus();
-        server.get<OAuthStatus>("oauth/status").then(setOauthStatus);
-    }, [ refreshTotpStatus ]);
+        refreshOauthStatus();
+    }, [ refreshTotpStatus, refreshOauthStatus ]);
 
     const usingOAuth = mfaMethod === "oauth";
 
@@ -226,21 +230,42 @@ function SignInMethod() {
             </OptionsSection>
 
             { usingOAuth
-                ? <OAuthStatusCard status={oauthStatus} />
+                ? <OAuthStatusCard status={oauthStatus} refreshStatus={refreshOauthStatus} />
                 : <TotpSettings totpStatus={totpStatus} refreshTotpStatus={refreshTotpStatus} /> }
         </>
     );
 }
 
 /**
- * Read-only OAuth status card, shown when OAuth is the selected sign-in method. OAuth is configured
- * entirely server-side (env vars / config.ini), so this card offers no controls — it just reflects
- * whether OAuth is available and, once signed in, the connected account.
+ * OAuth status card, shown when OAuth is the selected sign-in method. The provider credentials are
+ * configured server-side (env vars / config.ini), but binding an account is an explicit in-app step —
+ * mirroring TOTP's verify-before-enable. Three states:
+ *  - **not configured** → show the config hint (the server vars are missing);
+ *  - **configured, not enrolled** → offer "Connect account", which runs the provider round-trip and
+ *    binds the returned identity. SSO only becomes the live login method once this completes;
+ *  - **enrolled** → show the connected account and a "Disconnect" action.
  */
-function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
+function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refreshStatus: () => void }) {
     // "Configured" is purely about the server-side variables being present (the server's `enabled` flag
     // additionally requires mfaMethod === 'oauth', which is implied here since this card only renders then).
     const configured = (status?.missingVars?.length ?? 1) === 0;
+    const enrolled = status?.enrolled ?? false;
+
+    // Enrollment is a full-page provider round-trip (not an XHR): navigate to the OIDC login route,
+    // which on return binds the identity to this still-authenticated session (see open_id afterCallback).
+    const connectAccount = useCallback(() => {
+        window.location.href = "authenticate";
+    }, []);
+
+    const disconnectAccount = useCallback(async () => {
+        if (!await dialog.confirm(t("multi_factor_authentication.oauth_disconnect_confirm"))) {
+            return;
+        }
+
+        await server.post("oauth/disconnect");
+        toast.showMessage(t("multi_factor_authentication.oauth_disconnected"));
+        refreshStatus();
+    }, [ refreshStatus ]);
 
     return (
         <OptionsSection
@@ -258,16 +283,7 @@ function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
                 </span>
             }
         >
-            { configured ? (
-                <>
-                    <OptionsRow name="oauth-user-account" label={t("multi_factor_authentication.oauth_user_account")}>
-                        <span>{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
-                    </OptionsRow>
-                    <OptionsRow name="oauth-user-email" label={t("multi_factor_authentication.oauth_user_email")}>
-                        <span>{status?.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
-                    </OptionsRow>
-                </>
-            ) : (
+            { !configured ? (
                 <>
                     <p>{t("multi_factor_authentication.oauth_not_configured_hint")}</p>
 
@@ -280,6 +296,36 @@ function OAuthStatusCard({ status }: { status?: OAuthStatus }) {
                     )}
 
                     <OAuthConfigHint />
+                </>
+            ) : enrolled ? (
+                <>
+                    <OptionsRow name="oauth-user-account" label={t("multi_factor_authentication.oauth_user_account")}>
+                        <span>{status?.name ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
+                    </OptionsRow>
+                    <OptionsRow name="oauth-user-email" label={t("multi_factor_authentication.oauth_user_email")}>
+                        <span>{status?.email ?? t("multi_factor_authentication.oauth_user_not_logged_in")}</span>
+                    </OptionsRow>
+
+                    <OptionsRowWithButton
+                        label={t("multi_factor_authentication.oauth_disconnect_label")}
+                        description={t("multi_factor_authentication.oauth_disconnect_description")}
+                        icon="bx-trash"
+                        buttonClassName="oauth-disconnect-button"
+                        buttonText={t("multi_factor_authentication.oauth_disconnect_button")}
+                        onClick={() => void disconnectAccount()}
+                    />
+                </>
+            ) : (
+                <>
+                    <Admonition type="note">{t("multi_factor_authentication.oauth_not_enrolled_hint")}</Admonition>
+
+                    <OptionsRowWithButton
+                        label={t("multi_factor_authentication.oauth_connect_label")}
+                        description={t("multi_factor_authentication.oauth_connect_description")}
+                        icon="bx-log-in"
+                        buttonText={t("multi_factor_authentication.oauth_connect_button")}
+                        onClick={connectAccount}
+                    />
                 </>
             )}
         </OptionsSection>

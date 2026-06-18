@@ -111,7 +111,9 @@ export default async function buildApp() {
     startSessionCleanup();
     app.use(favicon(path.join(assetsDir, isDev ? "icon-dev.ico" : "icon.ico")));
 
-    if (openID.isOpenIDEnabled())
+    // Mount the OIDC middleware whenever OAuth is configured — not only once an account is enrolled —
+    // so the provider round-trip is available for the owner's first (enrollment) sign-in too.
+    if (openID.isOpenIDConfigured())
         app.use(auth(openID.generateOAuthConfig()));
 
     await assets.register(app);

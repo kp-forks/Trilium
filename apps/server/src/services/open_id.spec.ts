@@ -42,14 +42,29 @@ describe("open_id", () => {
         expect(status.enabled).toBe(false);
     });
 
-    it("isOpenIDEnabled requires full config and mfaMethod=oauth", () => {
+    it("isOpenIDConfigured requires full config and mfaMethod=oauth", () => {
         setOauthConfig(true);
         cls.init(() => options.setOption("mfaMethod", "totp"));
-        expect(openID.isOpenIDEnabled()).toBe(false); // method not oauth
+        expect(openID.isOpenIDConfigured()).toBe(false); // method not oauth
 
         cls.init(() => options.setOption("mfaMethod", "oauth"));
-        expect(openID.isOpenIDEnabled()).toBe(true);
+        expect(openID.isOpenIDConfigured()).toBe(true);
         expect(openID.getOAuthStatus().missingVars).toEqual([]);
+    });
+
+    it("isOpenIDEnabled additionally requires an enrolled account", () => {
+        setOauthConfig(true);
+        cls.init(() => options.setOption("mfaMethod", "oauth"));
+
+        // Configured but not enrolled → SSO is not yet the active login method.
+        vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(false);
+        expect(openID.isOpenIDEnabled()).toBe(false);
+        expect(openID.getOAuthStatus().enrolled).toBe(false);
+
+        // Once an identity is bound, OAuth becomes active.
+        vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(true);
+        expect(openID.isOpenIDEnabled()).toBe(true);
+        expect(openID.getOAuthStatus().enrolled).toBe(true);
     });
 
     it("exposes issuer name/icon from config", () => {
@@ -147,22 +162,20 @@ describe("open_id", () => {
 
         it("returns the session unchanged when there is no user", async () => {
             const cfg = buildConfig();
-            const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
             const session = { marker: 2 } as never;
             const result = await cfg.afterCallback({ oidc: { user: undefined } } as never, {} as never, session);
             expect(result).toBe(session);
-            logSpy.mockRestore();
         });
 
-        it("saves the user and sets the session login flags", async () => {
-            cls.init(() => {
-                sql.transactional(() => sql.execute("DELETE FROM user_data"));
-            });
+        it("enrolls the user when an authenticated owner signs in and none is enrolled yet", async () => {
             const cfg = buildConfig();
+            // No account enrolled yet, and the request comes from an already-logged-in session (the owner
+            // enrolling from Settings) → bind the identity and keep them logged in.
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(false);
             const saveSpy = vi.spyOn(openIDEncryption, "saveUser").mockReturnValue(true);
             const req = {
                 oidc: { user: { sub: "sub-1", name: "Alice", email: "alice@example.com" } },
-                session: {} as Record<string, unknown>
+                session: { loggedIn: true } as Record<string, unknown>
             } as never;
             const session = { marker: 3 } as never;
 
@@ -170,6 +183,57 @@ describe("open_id", () => {
 
             expect(saveSpy).toHaveBeenCalledWith("sub-1", "Alice", "alice@example.com");
             expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(true);
+            expect(result).toBe(session);
+        });
+
+        it("refuses enrollment from an unauthenticated session (no first-login claim)", async () => {
+            const cfg = buildConfig();
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(false);
+            const saveSpy = vi.spyOn(openIDEncryption, "saveUser").mockReturnValue(true);
+            const req = {
+                oidc: { user: { sub: "stranger", name: "Mallory", email: "mallory@evil.example" } },
+                session: {} as Record<string, unknown>
+            } as never;
+            const session = { marker: 4 } as never;
+
+            const result = await cfg.afterCallback(req, {} as never, session);
+
+            expect(saveSpy).not.toHaveBeenCalled();
+            expect((req as { session: { loggedIn?: boolean } }).session.loggedIn).toBeFalsy();
+            expect(result).toBe(session);
+        });
+
+        it("logs in an enrolled user only when the subject identifier matches", async () => {
+            const cfg = buildConfig();
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(true);
+            const verifySpy = vi.spyOn(openIDEncryption, "verifySubjectIdentifier").mockReturnValue(true);
+            const req = {
+                oidc: { user: { sub: "enrolled-sub", name: "Alice", email: "alice@example.com" } },
+                session: {} as Record<string, unknown>
+            } as never;
+            const session = { marker: 5 } as never;
+
+            const result = await cfg.afterCallback(req, {} as never, session);
+
+            expect(verifySpy).toHaveBeenCalledWith("enrolled-sub");
+            expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(true);
+            expect((req as { session: { lastAuthState: { ssoEnabled: boolean } } }).session.lastAuthState.ssoEnabled).toBe(true);
+            expect(result).toBe(session);
+        });
+
+        it("rejects login when the authenticated account is not the enrolled one", async () => {
+            const cfg = buildConfig();
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(true);
+            vi.spyOn(openIDEncryption, "verifySubjectIdentifier").mockReturnValue(false);
+            const req = {
+                oidc: { user: { sub: "other-sub", name: "Mallory", email: "mallory@evil.example" } },
+                session: {} as Record<string, unknown>
+            } as never;
+            const session = { marker: 6 } as never;
+
+            const result = await cfg.afterCallback(req, {} as never, session);
+
+            expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(false);
             expect(result).toBe(session);
         });
     });

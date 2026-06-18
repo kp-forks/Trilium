@@ -164,7 +164,10 @@ export interface TOTPRecoveryKeysResponse {
 }
 
 export interface OAuthStatus {
+    /** Whether OAuth is the active login method (configured *and* an account has been enrolled). */
     enabled: boolean;
+    /** Whether the owner has bound their provider identity to this instance (enrollment complete). */
+    enrolled?: boolean;
     name?: string;
     email?: string;
     missingVars?: string[];

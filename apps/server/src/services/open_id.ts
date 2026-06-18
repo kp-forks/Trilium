@@ -1,4 +1,4 @@
-import { options } from "@triliumnext/core";
+import { getLog, options } from "@triliumnext/core";
 import type { NextFunction, Request, Response } from "express";
 import type { Session } from "express-openid-connect";
 
@@ -21,8 +21,24 @@ function checkOpenIDConfig() {
     return missingVars;
 }
 
-function isOpenIDEnabled() {
+/**
+ * Whether OAuth is configured and selected as the sign-in method. This is what gates the OIDC
+ * middleware (so the provider round-trip — and therefore enrollment — is available) and is
+ * deliberately independent of whether an account has been enrolled yet. Before enrollment the login
+ * page still falls back to the password form, letting the owner sign in and enroll without a lockout.
+ */
+function isOpenIDConfigured() {
     return !(checkOpenIDConfig().length > 0) && options.getOptionOrNull('mfaMethod') === 'oauth';
+}
+
+/**
+ * Whether OAuth is the *active* login method. Beyond being configured, this additionally requires an
+ * enrolled account: until the owner has bound their provider identity (see {@link generateOAuthConfig}'s
+ * `afterCallback`), SSO is not yet live and the login page keeps offering the password form. Mirrors
+ * TOTP, where selecting the method isn't enough — a secret must be committed before it's enforced.
+ */
+function isOpenIDEnabled() {
+    return isOpenIDConfigured() && openIDEncryption.isSubjectIdentifierSaved();
 }
 
 function isUserSaved() {
@@ -55,6 +71,7 @@ function getOAuthStatus() {
         name: getUsername(),
         email: getUserEmail(),
         enabled: isOpenIDEnabled(),
+        enrolled: openIDEncryption.isSubjectIdentifierSaved(),
         missingVars: checkOpenIDConfig()
     };
 }
@@ -126,16 +143,38 @@ function generateOAuthConfig() {
         afterCallback: async (req: Request, res: Response, session: Session) => {
             if (!sqlInit.isDbInitialized()) return session;
 
-            if (!req.oidc.user) {
-                console.log("user invalid!");
+            const user = req.oidc.user;
+            if (!user || user.sub === undefined || user.sub === null) {
+                getLog().info("OAuth callback received without a usable user; ignoring.");
                 return session;
             }
 
-            openIDEncryption.saveUser(
-                req.oidc.user.sub.toString(),
-                req.oidc.user.name.toString(),
-                req.oidc.user.email.toString()
-            );
+            const incomingSubject = user.sub.toString();
+
+            if (openIDEncryption.isSubjectIdentifierSaved()) {
+                // An account is already enrolled, so this is a login attempt. Only the enrolled identity
+                // may proceed — otherwise any user the IdP authenticates could sign in to this instance.
+                if (!openIDEncryption.verifySubjectIdentifier(incomingSubject)) {
+                    getLog().info("OAuth login rejected: the authenticated account is not the enrolled one.");
+                    req.session.loggedIn = false;
+                    return session;
+                }
+            } else {
+                // No account is enrolled yet. Binding the identity is only allowed when the request comes
+                // from an already-authenticated session — i.e. the owner enrolling from Settings. A
+                // sign-in from an anonymous session is refused so a stranger can't claim the instance by
+                // simply being the first to authenticate.
+                if (!req.session.loggedIn) {
+                    getLog().info("OAuth enrollment rejected: sign-in attempted before an account was enrolled.");
+                    return session;
+                }
+
+                openIDEncryption.saveUser(
+                    incomingSubject,
+                    user.name?.toString() ?? "",
+                    user.email?.toString() ?? ""
+                );
+            }
 
             req.session.loggedIn = true;
             req.session.lastAuthState = {
@@ -154,6 +193,7 @@ export default {
     getOAuthStatus,
     getSSOIssuerName,
     getSSOIssuerIcon,
+    isOpenIDConfigured,
     isOpenIDEnabled,
     clearSavedUser,
     isTokenValid,
