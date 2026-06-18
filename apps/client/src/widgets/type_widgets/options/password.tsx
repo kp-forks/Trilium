@@ -10,7 +10,7 @@ import protected_session_holder from "../../../services/protected_session_holder
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { isElectron } from "../../../services/utils";
-import Admonition from "../../react/Admonition";
+import Admonition, { ExtendedAdmonition } from "../../react/Admonition";
 import Button from "../../react/Button";
 import Collapsible from "../../react/Collapsible";
 import FormGroup from "../../react/FormGroup";
@@ -320,8 +320,15 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
                 </>
             ) : (
                 <>
+                    <ExtendedAdmonition
+                        type="note"
+                        icon="bx bx-info-circle"
+                        title={t("multi_factor_authentication.oauth_not_enrolled_title")}
+                    >
+                        {t("multi_factor_authentication.oauth_not_enrolled_hint")}
+                    </ExtendedAdmonition>
+
                     <OAuthProviderRows status={status} />
-                    <Admonition type="note">{t("multi_factor_authentication.oauth_not_enrolled_hint")}</Admonition>
 
                     <OptionsRowWithButton
                         label={t("multi_factor_authentication.oauth_connect_label")}
