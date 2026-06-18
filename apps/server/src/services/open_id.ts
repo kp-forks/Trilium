@@ -1,6 +1,6 @@
 import { getLog, options } from "@triliumnext/core";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
-import { auth, type Session } from "express-openid-connect";
+import type { Session } from "express-openid-connect";
 
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
@@ -246,7 +246,7 @@ function generateOAuthConfig(endSessionSupported = false) {
     return authConfig;
 }
 
-type AuthBuilder = typeof auth;
+type AuthBuilder = typeof import("express-openid-connect").auth;
 
 interface ReactiveOidcDeps {
     /** Whether OAuth is currently configured and selected as the sign-in method. Re-checked per request. */
@@ -278,7 +278,7 @@ export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {
         isConfigured = isOpenIDConfigured,
         isRpInitiatedLogoutSupported: probeRpLogout = isRpInitiatedLogoutSupported,
         generateOAuthConfig: buildOAuthConfig = generateOAuthConfig,
-        buildAuth = auth
+        buildAuth
     } = deps;
 
     let oidcMiddleware: RequestHandler | null = null;
@@ -292,8 +292,13 @@ export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {
 
         if (!oidcMiddleware) {
             oidcInit ??= (async () => {
+                // Load express-openid-connect lazily so the (heavy) library and its transitive deps are
+                // only evaluated the first time OAuth is actually used, never on a server that runs with
+                // OAuth unselected. The sole static reference to the package is the erased `Session` type
+                // import, so the bundler keeps it out of the eager-init graph (see scripts/build-utils.ts).
+                const authFactory = buildAuth ?? (await import("express-openid-connect")).auth;
                 const endSessionSupported = await probeRpLogout();
-                oidcMiddleware = buildAuth(buildOAuthConfig(endSessionSupported));
+                oidcMiddleware = authFactory(buildOAuthConfig(endSessionSupported));
             })();
             await oidcInit;
         }
