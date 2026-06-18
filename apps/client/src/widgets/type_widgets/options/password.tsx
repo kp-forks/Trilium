@@ -11,7 +11,6 @@ import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { isElectron } from "../../../services/utils";
 import Admonition from "../../react/Admonition";
-import { Badge } from "../../react/Badge";
 import Button from "../../react/Button";
 import Collapsible from "../../react/Collapsible";
 import FormGroup from "../../react/FormGroup";
@@ -21,6 +20,7 @@ import FormTextBox from "../../react/FormTextBox";
 import { useTriliumOption } from "../../react/hooks";
 import Modal from "../../react/Modal";
 import RawHtml from "../../react/RawHtml";
+import MfaStatusBadge, { MfaStatusTone } from "./components/MfaStatusBadge";
 import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithButton } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
@@ -254,11 +254,11 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
     // The status badge mirrors the card's three states: an account is bound (green "Connected"),
     // the server is set up but no account is bound yet (amber "Not connected"), or the server-side
     // variables are missing entirely (muted "Not configured").
-    const badge = enrolled
-        ? { className: "connected", icon: "bx bx-check", text: t("multi_factor_authentication.oauth_status_connected") }
+    const badge: { tone: MfaStatusTone, text: string } = enrolled
+        ? { tone: "active", text: t("multi_factor_authentication.oauth_status_connected") }
         : configured
-            ? { className: "not-connected", icon: "bx bx-link", text: t("multi_factor_authentication.oauth_status_not_connected") }
-            : { className: "not-configured", icon: "bx bx-x", text: t("multi_factor_authentication.oauth_status_not_configured") };
+            ? { tone: "pending", text: t("multi_factor_authentication.oauth_status_not_connected") }
+            : { tone: "inactive", text: t("multi_factor_authentication.oauth_status_not_configured") };
 
     // Enrollment is a full-page provider round-trip (not an XHR): navigate to the OIDC login route,
     // which on return binds the identity to this still-authenticated session (see open_id afterCallback).
@@ -279,14 +279,9 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
     return (
         <OptionsSection
             title={
-                <span className="oauth-status-title">
+                <span className="mfa-status-title">
                     {t("multi_factor_authentication.oauth_title")}
-                    <Badge
-                        className={`oauth-status-badge ${badge.className}`}
-                        icon={badge.icon}
-                        text={badge.text}
-                        outline
-                    />
+                    <MfaStatusBadge tone={badge.tone} text={badge.text} />
                 </span>
             }
         >

@@ -1721,6 +1721,8 @@
     "totp_enroll_finish": "Finish setup",
     "totp_enroll_enable_error": "Couldn't enable two-factor authentication. Please try again.",
     "totp_section_title": "Two-factor authentication",
+    "totp_status_active": "Active",
+    "totp_status_inactive": "Inactive",
     "totp_remove_label": "Remove two-factor authentication",
     "totp_remove_description": "Completely remove your two-factor authentication setup. Unlike switching it off above, you'd have to set it up again from scratch to use it.",
     "totp_remove_button": "Remove",
