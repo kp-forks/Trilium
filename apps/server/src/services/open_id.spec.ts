@@ -3,7 +3,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
-import openID from "./open_id.js";
+import openID, { resolveOAuthIdentity } from "./open_id.js";
 import sql from "./sql.js";
 import sqlInit from "./sql_init.js";
 
@@ -172,7 +172,10 @@ describe("open_id", () => {
             vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(false);
             const saveSpy = vi.spyOn(openIDEncryption, "saveUser").mockReturnValue(true);
             const req = {
-                oidc: { user: { sub: "sub-1", name: "Alice", email: "alice@example.com" } },
+                oidc: {
+                    user: { sub: "sub-1", name: "Alice", email: "alice@example.com" },
+                    fetchUserInfo: vi.fn().mockResolvedValue({})
+                },
                 session: { loggedIn: true } as Record<string, unknown>
             } as never;
             const session = { marker: 3 } as never;
@@ -182,6 +185,40 @@ describe("open_id", () => {
             expect(saveSpy).toHaveBeenCalledWith("sub-1", "Alice", "alice@example.com");
             expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(true);
             expect(result).toBe(session);
+        });
+
+        it("enrolls with name/email from UserInfo when the ID token omits them (Authelia case)", async () => {
+            const cfg = buildConfig();
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(false);
+            const saveSpy = vi.spyOn(openIDEncryption, "saveUser").mockReturnValue(true);
+            // ID token carries only `sub`; the profile claims arrive from the UserInfo endpoint.
+            const fetchUserInfo = vi.fn().mockResolvedValue({ name: "Alice", email: "alice@example.com" });
+            const req = {
+                oidc: { user: { sub: "sub-1" }, fetchUserInfo },
+                session: { loggedIn: true } as Record<string, unknown>
+            } as never;
+
+            await cfg.afterCallback(req, {} as never, { marker: 7 } as never);
+
+            expect(fetchUserInfo).toHaveBeenCalled();
+            expect(saveSpy).toHaveBeenCalledWith("sub-1", "Alice", "alice@example.com");
+        });
+
+        it("falls back to ID token claims when the UserInfo fetch fails", async () => {
+            const cfg = buildConfig();
+            vi.spyOn(openIDEncryption, "isSubjectIdentifierSaved").mockReturnValue(false);
+            const saveSpy = vi.spyOn(openIDEncryption, "saveUser").mockReturnValue(true);
+            const req = {
+                oidc: {
+                    user: { sub: "sub-1", name: "Alice", email: "alice@example.com" },
+                    fetchUserInfo: vi.fn().mockRejectedValue(new Error("network down"))
+                },
+                session: { loggedIn: true } as Record<string, unknown>
+            } as never;
+
+            await cfg.afterCallback(req, {} as never, { marker: 8 } as never);
+
+            expect(saveSpy).toHaveBeenCalledWith("sub-1", "Alice", "alice@example.com");
         });
 
         it("refuses enrollment from an unauthenticated session (no first-login claim)", async () => {
@@ -233,6 +270,31 @@ describe("open_id", () => {
 
             expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(false);
             expect(result).toBe(session);
+        });
+    });
+
+    describe("resolveOAuthIdentity", () => {
+        it("prefers the ID token claims when present", () => {
+            const identity = resolveOAuthIdentity(
+                { name: "Alice", email: "alice@id.example" },
+                { name: "Other", email: "other@userinfo.example" }
+            );
+            expect(identity).toEqual({ name: "Alice", email: "alice@id.example" });
+        });
+
+        it("falls back to UserInfo per-field when the ID token omits or blanks a claim", () => {
+            expect(resolveOAuthIdentity({ sub: "x" }, { name: "Alice", email: "alice@example.com" }))
+                .toEqual({ name: "Alice", email: "alice@example.com" });
+            // Empty strings in the ID token are treated as missing.
+            expect(resolveOAuthIdentity({ name: "", email: "alice@id.example" }, { name: "Alice" }))
+                .toEqual({ name: "Alice", email: "alice@id.example" });
+        });
+
+        it("yields empty strings when a claim is on neither source", () => {
+            expect(resolveOAuthIdentity({ sub: "x" }, undefined)).toEqual({ name: "", email: "" });
+            expect(resolveOAuthIdentity(undefined, undefined)).toEqual({ name: "", email: "" });
+            // Non-string claim values are ignored rather than coerced.
+            expect(resolveOAuthIdentity({ name: 42, email: null }, undefined)).toEqual({ name: "", email: "" });
         });
     });
 });

@@ -168,11 +168,20 @@ function generateOAuthConfig() {
                     return session;
                 }
 
-                openIDEncryption.saveUser(
-                    incomingSubject,
-                    user.name?.toString() ?? "",
-                    user.email?.toString() ?? ""
-                );
+                // The profile claims (name/email) aren't guaranteed to be in the ID token under the
+                // authorization-code flow — spec-compliant providers (Authelia, Zitadel, Keycloak) only
+                // return them from the UserInfo endpoint. Fetch it and merge so enrollment records a real
+                // name/email regardless of provider; on failure we fall back to whatever the ID token
+                // carried (e.g. Google, which does include them).
+                let userInfo: Record<string, unknown> | undefined;
+                try {
+                    userInfo = await req.oidc.fetchUserInfo();
+                } catch (error) {
+                    getLog().info(`OAuth enrollment: UserInfo fetch failed, using ID token claims only. ${error instanceof Error ? error.message : error}`);
+                }
+
+                const { name, email } = resolveOAuthIdentity(user, userInfo);
+                openIDEncryption.saveUser(incomingSubject, name, email);
             }
 
             req.session.loggedIn = true;
@@ -217,4 +226,29 @@ const GOOGLE_ISSUER = "https://accounts.google.com";
 function resolveClientAuthMethod() {
     const issuer = config.MultiFactorAuthentication.oauthIssuerBaseUrl.replace(/\/+$/, "");
     return issuer === GOOGLE_ISSUER ? "client_secret_post" : "client_secret_basic";
+}
+
+/**
+ * Resolves the display name and email to enroll for an OAuth account. These profile claims may live in
+ * the ID token (e.g. Google) or only be available from the UserInfo endpoint (e.g. Authelia, Zitadel,
+ * Keycloak), so each field is taken from the ID token when present and falls back to UserInfo. A field
+ * absent from both yields an empty string, matching the previous behaviour.
+ */
+export function resolveOAuthIdentity(
+    idTokenClaims: Record<string, unknown> | undefined,
+    userInfo: Record<string, unknown> | undefined
+) {
+    return {
+        name: firstNonEmptyString(idTokenClaims?.name, userInfo?.name) ?? "",
+        email: firstNonEmptyString(idTokenClaims?.email, userInfo?.email) ?? ""
+    };
+}
+
+function firstNonEmptyString(...values: unknown[]) {
+    for (const value of values) {
+        if (typeof value === "string" && value.length > 0) {
+            return value;
+        }
+    }
+    return undefined;
 }
