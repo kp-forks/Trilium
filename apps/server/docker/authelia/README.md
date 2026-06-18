@@ -46,7 +46,7 @@ click through. Trilium's back channel must trust it too; see step 2.
    TRILIUM_OAUTH_CLIENT_SECRET=insecure_secret
    TRILIUM_OAUTH_ISSUER_BASE_URL=https://auth.example.com:9091
    TRILIUM_OAUTH_ISSUER_NAME=Authelia
-   TRILIUM_OAUTH_ISSUER_ICON=https://auth.example.com:9091/api/oidc/consent/logo
+   TRILIUM_OAUTH_ISSUER_ICON=https://auth.example.com:9091/favicon.ico
    # So Node trusts the self-signed Authelia cert on the back channel (token/userinfo calls):
    NODE_EXTRA_CA_CERTS=apps/server/docker/authelia/config/certs/public.crt
    ```
