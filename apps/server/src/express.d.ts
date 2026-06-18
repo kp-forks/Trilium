@@ -33,5 +33,10 @@ export declare module "express-session" {
         };
         /** Set during /bootstrap to mark the session as modified so express-session persists it and sends the cookie. */
         csrfInitialized?: true;
+        /**
+         * One-shot SSO rejection reason set by the OIDC afterCallback when a login is refused (wrong account,
+         * or an attempt before enrollment). Read and cleared by the login page so the message shows once.
+         */
+        ssoError?: "wrong_account" | "not_enrolled";
     }
 }

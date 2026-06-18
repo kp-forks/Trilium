@@ -279,6 +279,7 @@ describe("open_id", () => {
 
             expect(saveSpy).not.toHaveBeenCalled();
             expect((req as { session: { loggedIn?: boolean } }).session.loggedIn).toBeFalsy();
+            expect((req as { session: { ssoError?: string } }).session.ssoError).toBe("not_enrolled");
             expect(result).toBe(session);
         });
 
@@ -313,6 +314,7 @@ describe("open_id", () => {
             const result = await cfg.afterCallback(req, {} as never, session);
 
             expect((req as { session: { loggedIn: boolean } }).session.loggedIn).toBe(false);
+            expect((req as { session: { ssoError?: string } }).session.ssoError).toBe("wrong_account");
             expect(result).toBe(session);
         });
 

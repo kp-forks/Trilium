@@ -11,9 +11,17 @@ import totp from '../services/totp.js';
 
 function loginPage(req: Request, res: Response) {
     // Login page is triggered twice. Once here, and another time (see sendLoginError) if the password is failed.
+    // A failed SSO round-trip (wrong account / not yet enrolled) leaves a one-shot reason on the session in
+    // the OIDC afterCallback; read and clear it so the message shows exactly once.
+    const ssoError = req.session.ssoError;
+    if (ssoError) {
+        delete req.session.ssoError;
+    }
+
     res.render('login', {
         wrongPassword: false,
         wrongTotp: false,
+        ssoError,
         totpEnabled: totp.isTotpEnabled(),
         ssoEnabled: openID.isOpenIDEnabled(),
         ssoIssuerName: openID.getSSOIssuerName(),
@@ -148,8 +156,11 @@ function sendLoginError(req: Request, res: Response, errorType: 'password' | 'to
     res.status(401).render('login', {
         wrongPassword: errorType === 'password',
         wrongTotp: errorType === 'totp',
+        ssoError: false,
         totpEnabled: totp.isTotpEnabled(),
         ssoEnabled: openID.isOpenIDEnabled(),
+        ssoIssuerName: openID.getSSOIssuerName(),
+        ssoIssuerIcon: openID.getSSOIssuerIcon(),
         assetPath,
         assetPathFragment: assetUrlFragment,
         appPath,

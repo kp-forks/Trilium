@@ -183,6 +183,7 @@ function generateOAuthConfig(endSessionSupported = false) {
                 if (!openIDEncryption.verifySubjectIdentifier(incomingSubject)) {
                     getLog().info("OAuth login rejected: the authenticated account is not the enrolled one.");
                     req.session.loggedIn = false;
+                    req.session.ssoError = "wrong_account";
                     return session;
                 }
             } else {
@@ -192,6 +193,7 @@ function generateOAuthConfig(endSessionSupported = false) {
                 // simply being the first to authenticate.
                 if (!req.session.loggedIn) {
                     getLog().info("OAuth enrollment rejected: sign-in attempted before an account was enrolled.");
+                    req.session.ssoError = "not_enrolled";
                     return session;
                 }
 

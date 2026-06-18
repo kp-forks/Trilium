@@ -23,6 +23,12 @@
         <img class="img-fluid d-block mx-auto" style="height: 8rem;" src="<%= assetPathFragment %>/images/icon-color.svg" aria-hidden="true" draggable="false" >
         <h1 class="text-center"><%= t("login.heading") %></h1>
 
+        <% if ( ssoError ) { %>
+            <div class="alert alert-warning">
+                <%= ssoError === "wrong_account" ? t("login.sso-wrong-account") : t("login.sso-not-enrolled") %>
+            </div>
+        <% } %>
+
         <% if (ssoEnabled) { %>
             <a href="/authenticate" class="google-login-btn">
                 <% if (ssoIssuerIcon.length > 0) { %>
