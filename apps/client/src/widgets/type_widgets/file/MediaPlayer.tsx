@@ -422,11 +422,14 @@ export function useMediaPlayMode(noteContext: NoteContext | undefined, mediaRef:
         froca.getNote(parentNoteId).then((parent) => {
             if (!parent) return;
             const value = playModeToLabel(next);
+            // Return the persist promise so a failed server write reaches the outer .catch instead of leaving the
+            // optimistic mode silently diverged. Removal stays owned-only (never an inherited ancestor's label),
+            // but via the awaitable removeAttributeById so its failure is caught too.
             if (value === null) {
-                attributes.removeOwnedLabelByName(parent, MEDIA_PLAY_MODE_LABEL);
-            } else {
-                void attributes.setLabel(parent.noteId, MEDIA_PLAY_MODE_LABEL, value);
+                const owned = parent.getOwnedLabel(MEDIA_PLAY_MODE_LABEL);
+                return owned ? attributes.removeAttributeById(parent.noteId, owned.attributeId) : undefined;
             }
+            return attributes.setLabel(parent.noteId, MEDIA_PLAY_MODE_LABEL, value);
         }).catch((e) => logError(`Could not persist media play mode: ${e}`));
     }, [ parentNoteId ]);
 
