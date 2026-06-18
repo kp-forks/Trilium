@@ -214,6 +214,7 @@
     "shrinkImages": "Shrink images",
     "textImportedAsText": "Import HTML, Markdown and TXT as text notes if it's unclear from metadata",
     "codeImportedAsCode": "Import recognized code files (e.g. <code>.json</code>) as code notes if it's unclear from metadata",
+    "spreadsheetImportedAsSpreadsheet": "Import CSV and Excel files as editable spreadsheets rather than files",
     "replaceUnderscoresWithSpaces": "Replace underscores with spaces in imported note names",
     "import": "Import",
     "failed": "Import failed: {{message}}.",
@@ -340,6 +341,7 @@
   },
   "revisions": {
     "note_revisions": "Note Revisions",
+    "back": "Back",
     "delete_all_revisions": "Delete all revisions of this note",
     "delete_all_button": "Delete all revisions",
     "help_title": "Help on Note Revisions",
@@ -735,6 +737,10 @@
   "show_highlights_list_widget_button": {
     "show_highlights_list": "Show Highlights List"
   },
+  "options": {
+    "title": "Options",
+    "back": "Back to all options"
+  },
   "global_menu": {
     "menu": "Menu",
     "options": "Options",
@@ -861,6 +867,18 @@
     "zoom_in_title": "Zoom In",
     "zoom_out_title": "Zoom Out"
   },
+  "image_buttons": {
+    "zoom_in": "Zoom in",
+    "zoom_out": "Zoom out",
+    "reset_zoom": "Reset zoom"
+  },
+  "image_navigation": {
+    "previous": "Previous image: {{- title}}",
+    "next": "Next image: {{- title}}"
+  },
+  "image_viewer": {
+    "loading_error": "There was an error loading the image."
+  },
   "zpetne_odkazy": {
     "backlink_one": "{{count}} Backlink",
     "backlink_other": "{{count}} Backlinks",
@@ -913,6 +931,7 @@
     "geo-map": "Geo Map",
     "board": "Board",
     "presentation": "Presentation",
+    "dashboard": "Dashboard",
     "include_archived_notes": "Show archived notes",
     "hide_child_notes": "Hide child notes in tree",
     "open_all_in_tabs": "Open all",
@@ -1134,10 +1153,17 @@
   "book": {
     "no_children_help": "This collection doesn't have any child notes so there's nothing to display.",
     "drag_locked_title": "Locked for editing",
-    "drag_locked_message": "Dragging not allowed since the collection is locked for editing."
+    "drag_locked_message": "Dragging not allowed since the collection is locked for editing.",
+    "archived_notes_hidden_one": "An archived note was copied here but stays hidden until you enable \"Show archived notes\".",
+    "archived_notes_hidden_other": "{{count}} archived notes were copied here but stay hidden until you enable \"Show archived notes\"."
   },
   "editable_code": {
     "placeholder": "Type the content of your code note here..."
+  },
+  "split_editor": {
+    "render_error": "Unable to render the preview",
+    "show_details": "Show details",
+    "last_valid_render": "Showing last valid render"
   },
   "editable_text": {
     "placeholder": "Type the content of your note here...",
@@ -1163,6 +1189,10 @@
     "pause": "Pause (Space)",
     "back-10s": "Back 10s (Left arrow key)",
     "forward-30s": "Forward 30s",
+    "previous-video": "Previous video: {{- title}}",
+    "next-video": "Next video: {{- title}}",
+    "previous-audio": "Previous audio: {{- title}}",
+    "next-audio": "Next audio: {{- title}}",
     "mute": "Mute (M)",
     "unmute": "Unmute (M)",
     "playback-speed": "Playback speed",
@@ -1231,7 +1261,7 @@
     "title": "Consistency Checks",
     "find_and_fix_label": "Find and fix consistency issues",
     "find_and_fix_description": "Scan for and automatically repair any data consistency issues in the database.",
-    "find_and_fix_button": "Find and fix consistency issues",
+    "find_and_fix_button": "Fix issues",
     "finding_and_fixing_message": "Finding and fixing consistency issues...",
     "issues_fixed_message": "Any consistency issue which may have been found is now fixed."
   },
@@ -1240,12 +1270,14 @@
     "description": "Create an anonymized copy of your database for sharing with developers when debugging issues, without exposing personal data.",
     "full_anonymization": "Full anonymization",
     "full_anonymization_description": "Creates a copy of the database with all note content removed, leaving only structure and non-sensitive metadata. Safe for sharing online when debugging issues.",
-    "save_fully_anonymized_database": "Save fully anonymized database",
+    "save_fully_anonymized_database": "Create copy",
     "light_anonymization": "Light anonymization",
     "light_anonymization_description": "Creates a copy with note content removed, but titles, attributes, and custom scripts/widgets remain. Provides more context for debugging.",
     "choose_anonymization": "You can decide yourself if you want to provide a fully or lightly anonymized database. Even fully anonymized DB is very useful, however in some cases lightly anonymized database can speed up the process of bug identification and fixing.",
-    "save_lightly_anonymized_database": "Save lightly anonymized database",
+    "save_lightly_anonymized_database": "Create copy",
     "existing_anonymized_databases": "Existing anonymized databases",
+    "anonymized_databases_location": "Anonymized databases are stored in {{- anonymizedFolder}}.",
+    "download": "Download",
     "creating_fully_anonymized_database": "Creating fully anonymized database...",
     "creating_lightly_anonymized_database": "Creating lightly anonymized database...",
     "error_creating_anonymized_database": "Could not create anonymized database, check backend logs for details",
@@ -1257,7 +1289,7 @@
     "title": "Database Integrity Check",
     "check_integrity_label": "Check database integrity",
     "check_integrity_description": "Verify that the database is not corrupted on the SQLite level.",
-    "check_button": "Check database integrity",
+    "check_button": "Check integrity",
     "checking_integrity": "Checking database integrity...",
     "integrity_check_succeeded": "Integrity check succeeded - no problems found.",
     "integrity_check_failed": "Integrity check failed: {{results}}"
@@ -1266,10 +1298,10 @@
     "title": "Sync",
     "force_full_sync_label": "Force full sync",
     "force_full_sync_description": "Trigger a complete synchronization with the sync server, re-uploading all changes.",
-    "force_full_sync_button": "Force full sync",
+    "force_full_sync_button": "Force sync",
     "fill_entity_changes_label": "Fill entity changes",
     "fill_entity_changes_description": "Rebuild entity change records. Use this if sync is missing some changes.",
-    "fill_entity_changes_button": "Fill entity changes records",
+    "fill_entity_changes_button": "Fill changes",
     "full_sync_triggered": "Full sync triggered",
     "filling_entity_changes": "Filling entity changes rows...",
     "sync_rows_filled_successfully": "Sync rows filled successfully",
@@ -1284,7 +1316,7 @@
     "vacuum_label": "Vacuum database",
     "vacuum_description": "Rebuild the database to reduce file size. No data will be changed.",
     "description": "This will rebuild the database which will typically result in a smaller database file. No data will be actually changed.",
-    "button_text": "Vacuum database",
+    "button_text": "Vacuum now",
     "vacuuming_database": "Vacuuming database...",
     "database_vacuumed": "Database has been vacuumed"
   },
@@ -1334,8 +1366,6 @@
     "disabled": "disabled"
   },
   "ribbon": {
-    "widgets": "Ribbon widgets",
-    "promoted_attributes_message": "Promoted Attributes ribbon tab will automatically open if promoted attributes are present on the note",
     "edited_notes_message": "Edited Notes ribbon tab will automatically open on day notes"
   },
   "theme": {
@@ -1431,7 +1461,8 @@
     "erase_attachments_after": "Erase unused attachments after",
     "erase_attachments_after_description": "Time before unused attachments are permanently erased.",
     "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
-    "erase_unused_attachments_now": "Erase unused attachments now",
+    "erase_unused_attachments_now": "Erase unused attachments",
+    "erase_now_button": "Erase now",
     "unused_attachments_erased": "Unused attachments have been erased."
   },
   "network_connections": {
@@ -1445,7 +1476,8 @@
     "erase_notes_after": "Erase notes after",
     "erase_notes_after_description": "Time before deleted notes are permanently erased.",
     "manual_erasing_description": "Trigger erasing manually, ignoring the timeout above.",
-    "erase_deleted_notes_now": "Erase deleted notes now",
+    "erase_deleted_notes_now": "Erase deleted notes",
+    "erase_now_button": "Erase now",
     "deleted_notes_erased": "Deleted notes have been erased."
   },
   "revisions_snapshot": {
@@ -1463,8 +1495,9 @@
     "note_revisions_snapshot_limit_description_short": "Max revisions per note. Use -1 for unlimited, 0 to disable.",
     "snapshot_number_limit_label": "Maximum revisions",
     "snapshot_number_limit_unit": "snapshots",
-    "erase_excess_revision_snapshots": "Erase excess revision snapshots now",
+    "erase_excess_revision_snapshots": "Erase excess revision snapshots",
     "erase_excess_revision_snapshots_description": "Delete revisions exceeding the limit for all notes.",
+    "erase_now_button": "Erase now",
     "erase_excess_revision_snapshots_prompt": "Excess revision snapshots have been erased."
   },
   "search": {
@@ -1489,10 +1522,22 @@
     "custom_url_placeholder": "Search engine URL",
     "save_button": "Save"
   },
+  "desktop": {
+    "web_placeholder": "These options apply only for desktop builds."
+  },
+  "startup": {
+    "title": "Startup",
+    "launch_on_startup": "Launch on startup",
+    "launch_on_startup_description": "Open Trilium automatically when you log into your computer.",
+    "hide_on_auto_start": "Start minimized to tray",
+    "hide_on_auto_start_description": "When launched automatically at login, start hidden in the system tray instead of opening a window. Requires launch on startup and the tray icon to be enabled."
+  },
   "tray": {
     "title": "System Tray",
     "enable_tray": "Tray icon",
-    "enable_tray_description": "Trilium needs to be restarted for this change to take effect."
+    "enable_tray_description": "Changes apply immediately, though on some platforms hiding the tray icon may require restarting Trilium.",
+    "close_to_tray": "Close to tray",
+    "close_to_tray_description": "When you close the window, keep Trilium running in the system tray instead of quitting. Requires the tray icon to be enabled."
   },
   "text_editor": {
     "title": "Editor",
@@ -1562,13 +1607,16 @@
     "title": "Backup",
     "automatic_backup": "Automatic backup",
     "automatic_backup_description": "Trilium can back up the database automatically:",
-    "enable_daily_backup": "Backup daily",
-    "enable_weekly_backup": "Backup weekly",
-    "enable_monthly_backup": "Backup monthly",
+    "automatic_backups_title": "Automatic backups",
+    "automatic_backups_description": "Trilium can back up the database automatically. It's recommended to keep the backup turned on, but this can make application startup slow with large databases and/or slow storage devices.",
+    "enable_daily_backup": "Daily backup",
+    "enable_weekly_backup": "Weekly backup",
+    "enable_monthly_backup": "Monthly backup",
     "backup_recommendation": "It's recommended to keep the backup turned on, but this can make application startup slow with large databases and/or slow storage devices.",
     "backup_now": "Backup now",
     "backup_database_now": "Backup database now",
     "existing_backups": "Existing backups",
+    "backup_location_description": "Backups are stored in {{- backupFolder}}.",
     "date-and-time": "Date & time",
     "path": "Path",
     "database_backed_up_to": "Database has been backed up to {{- backupFilePath}}",
@@ -1576,11 +1624,11 @@
     "download": "Download"
   },
   "etapi": {
-    "title": "ETAPI",
     "description": "ETAPI is a REST API used to access Trilium instance programmatically, without UI.",
     "create_token": "Create new ETAPI token",
     "existing_tokens": "Existing tokens",
     "no_tokens_yet": "There are no tokens yet. Click on the button above to create one.",
+    "no_tokens": "There are no tokens yet.",
     "token_name": "Token name",
     "created": "Created",
     "actions": "Actions",
@@ -1624,8 +1672,10 @@
     "new_password_confirmation": "New password confirmation",
     "change_password": "Change password",
     "change_password_description": "Update your current password",
+    "change_password_button": "Update password",
     "reset_password": "Reset password",
     "reset_password_description": "Permanently lose access to protected notes",
+    "reset_password_button": "Reset now",
     "cancel": "Cancel",
     "protected_session_timeout": "Protected Session",
     "protected_session_timeout_description": "Time of inactivity before the session is cleared from browser memory. See",
@@ -1641,58 +1691,101 @@
     "password_changed_success": "Password has been changed. Trilium will be reloaded after you press OK."
   },
   "multi_factor_authentication": {
-    "title": "Multi-Factor Authentication",
-    "description": "Multi-Factor Authentication (MFA) adds an extra layer of security to your account. Instead of just entering a password to log in, MFA requires you to provide one or more additional pieces of evidence to verify your identity. This way, even if someone gets hold of your password, they still can't access your account without the second piece of information. It's like adding an extra lock to your door, making it much harder for anyone else to break in.<br><br>Please follow the instructions below to enable MFA. If you don't config correctly, login will fall back to password only.",
-    "mfa_enabled": "Enable Multi-Factor Authentication",
-    "mfa_method": "MFA Method",
-    "electron_disabled": "Multi-Factor Authentication is not supported in the desktop build currently.",
-    "totp_title": "Time-based One-Time Password (TOTP)",
-    "totp_description": "TOTP (Time-Based One-Time Password) is a security feature that generates a unique, temporary code which changes every 30 seconds. You use this code, along with your password to log into your account, making it much harder for anyone else to access it.",
-    "totp_secret_title": "Generate TOTP Secret",
-    "totp_secret_generate": "Generate TOTP Secret",
-    "totp_secret_regenerate": "Regenerate TOTP Secret",
-    "no_totp_secret_warning": "To enable TOTP, you need to generate a TOTP secret first.",
-    "totp_secret_description_warning": "After generating a new TOTP secret, you will be required to login again with the new TOTP secret.",
-    "totp_secret_generated": "TOTP Secret Generated",
-    "totp_secret_warning": "Please save the generated secret in a secure location. It will not be shown again.",
-    "totp_secret_regenerate_confirm": "Are you sure you want to regenerate the TOTP secret? This will invalidate previous TOTP secret and all existing recovery codes.",
-    "recovery_keys_title": "Single Sign-on Recovery Keys",
-    "recovery_keys_description": "Single sign-on recovery keys are used to login in the even you cannot access your Authenticator codes.",
+    "authentication_title": "Authentication",
+    "signin_method": "Sign-in with",
+    "signin_local": "Local password (optionally with two-factor authentication)",
+    "signin_oauth": "OpenID Connect provider (e.g. Google)",
+    "signin_local_description": "Sign in with your Trilium password. You can optionally enable two-factor authentication for an extra layer of security.",
+    "totp_setup_label": "Time-based one-time password (TOTP)",
+    "totp_setup_description": "Generate a time-based code from an authenticator app as your second factor. You'll scan a QR code and confirm a code to finish. Recovery codes are issued at the end.",
+    "totp_setup_button": "Set up",
+    "totp_enroll_title": "Confirm your authenticator",
+    "totp_enroll_instructions": "TOTP won't be enabled until you confirm a valid code below, so you can't lock yourself out by mistake.",
+    "totp_enroll_step1_title": "1. Add the account to your authenticator app",
+    "totp_enroll_step2_title": "2. Enter the verification code",
+    "totp_enroll_scan": "Scan this QR code:",
+    "totp_enroll_secret_label": "Can't scan? Enter this code manually",
+    "totp_enroll_code_label": "Verification code",
+    "totp_enroll_code_placeholder": "000000",
+    "totp_enroll_verify": "Verify & continue",
+    "totp_enroll_cancel": "Cancel",
+    "totp_enroll_invalid_code": "That code didn't match. Check that your device's clock is correct and enter the latest code.",
+    "totp_enroll_generate_error": "Couldn't generate a TOTP secret. Please close this dialog and try again.",
+    "totp_enroll_enabled": "Two-factor authentication is now enabled.",
+    "totp_enroll_recovery_title": "Save your recovery codes",
+    "totp_enroll_recovery_instructions": "Save these recovery codes somewhere safe. Each one can be used once to sign in if you lose access to your authenticator app.",
+    "totp_enroll_recovery_copy": "Copy",
+    "totp_enroll_recovery_copied": "Recovery codes copied to clipboard.",
+    "totp_enroll_recovery_download": "Download",
+    "totp_enroll_saved_ack": "I've saved my recovery codes somewhere safe",
+    "totp_enroll_finish": "Finish setup",
+    "totp_enroll_enable_error": "Couldn't enable two-factor authentication. Please try again.",
+    "totp_section_title": "Two-factor authentication",
+    "totp_remove_label": "Remove two-factor authentication",
+    "totp_remove_description": "Completely remove your two-factor authentication setup. Unlike switching it off above, you'd have to set it up again from scratch to use it.",
+    "totp_remove_button": "Remove",
+    "totp_remove_confirm": "Permanently remove two-factor authentication? This erases your setup, not just switches it off, so you'd have to set it up again from scratch to use it. Until then, you'll sign in with just your password.",
+    "totp_removed": "Two-factor authentication has been removed.",
     "recovery_keys_description_warning": "Recovery keys won't be shown again after leaving the page, keep them somewhere safe and secure.<br>After a recovery key is used it cannot be used again.",
     "recovery_keys_error": "Error generating recovery codes",
     "recovery_keys_no_key_set": "No recovery codes set",
-    "recovery_keys_generate": "Generate Recovery Codes",
-    "recovery_keys_regenerate": "Regenerate Recovery Codes",
-    "recovery_keys_used": "Used: {{date}}",
-    "recovery_keys_unused": "Recovery code {{index}} is unused",
-    "oauth_title": "OAuth/OpenID",
-    "oauth_description": "OpenID is a standardized way to let you log into websites using an account from another service, like Google, to verify your identity. The default issuer is Google, but you can change it to any other OpenID provider. Check <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">here</a> for more information. Follow these <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">instructions</a> to setup an OpenID service through Google.",
-    "oauth_description_warning": "To enable OAuth/OpenID, you need to set the OAuth/OpenID base URL, client ID and client secret in the config.ini file and restart the application. If you want to set from environment variables, please set TRILIUM_OAUTH_BASE_URL, TRILIUM_OAUTH_CLIENT_ID and TRILIUM_OAUTH_CLIENT_SECRET.",
-    "oauth_missing_vars": "Missing settings: {{-variables}}",
-    "oauth_user_account": "User Account: ",
-    "oauth_user_email": "User Email: ",
+    "recovery_keys_regenerate": "Regenerate recovery codes",
+    "recovery_keys_regenerate_confirm": "Regenerate recovery codes? Your current recovery codes will stop working immediately, and you'll need to save the new ones.",
+    "recovery_keys_regenerated_title": "New recovery codes",
+    "recovery_keys_regenerated_instructions": "Here are your new recovery codes. Save them now: they replace your previous codes and won't be shown again.",
+    "recovery_keys_done": "Done",
+    "recovery_keys_label": "Recovery codes",
+    "recovery_keys_remaining": "{{remaining}} of {{total}} remaining. Can't be shown again, only replaced.",
+    "recovery_keys_dot_available": "Available",
+    "recovery_keys_dot_used": "Used on {{- date}}",
+    "oauth_title": "OpenID Connect",
+    "oauth_status_configured": "Configured",
+    "oauth_status_not_configured": "Not configured",
+    "oauth_description": "OpenID Connect lets you log in using an account from another service, like Google, to verify your identity. The default issuer is Google, but you can change it to any other OpenID Connect provider. Check <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">here</a> for more information. Follow these <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">instructions</a> to set up an OpenID Connect service through Google.",
+    "oauth_not_configured_hint": "Let people sign in with an account from another service, like Google. Set OpenID Connect up on the server to enable it as a login method.",
+    "oauth_missing_vars": "Still to set: {{-variables}}",
+    "oauth_how_to_enable": "How to enable",
+    "oauth_server_config_hint": "Add the following to your config.ini file and restart the application:",
+    "oauth_server_env_hint": "Or set the following environment variables:",
+    "oauth_user_account": "Account name",
+    "oauth_user_email": "Email address",
     "oauth_user_not_logged_in": "Not logged in!"
   },
   "shortcuts": {
     "keyboard_shortcuts": "Keyboard Shortcuts",
-    "multiple_shortcuts": "Multiple shortcuts for the same action can be separated by comma.",
-    "electron_documentation": "See <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">Electron documentation</a> for available modifiers and key codes.",
     "type_text_to_filter": "Type text to filter shortcuts...",
-    "action_name": "Action name",
-    "shortcuts": "Shortcuts",
-    "default_shortcuts": "Default shortcuts",
-    "description": "Description",
-    "reload_app": "Reload app to apply changes",
-    "set_all_to_default": "Set all shortcuts to the default",
+    "reload_app": "Reload app",
+    "set_all_to_default": "Reset all",
     "confirm_reset": "Do you really want to reset all keyboard shortcuts to the default?",
-    "no_results": "No shortcuts found matching '{{filter}}'"
+    "no_results": "No shortcuts found matching '{{filter}}'",
+    "modified_from_default": "This shortcut has been changed from its default.",
+    "revert_to_default": "Revert to default ({{shortcuts}})",
+    "no_default_shortcut": "no shortcut",
+    "record_shortcut": "Add a shortcut",
+    "remove_shortcut": "Remove this shortcut",
+    "press_keys": "Press keys…",
+    "recording_toast": "Press a key combination to assign it, or Esc to cancel.",
+    "make_global": "Make this a system-wide (global) shortcut",
+    "make_local": "Make this an in-app shortcut",
+    "global_shortcut": "System-wide (global) shortcut, only active on the desktop app",
+    "conflict_chip": "This combination is also assigned to: {{actions}}",
+    "no_conflicts": "No conflicting shortcuts.",
+    "no_matches": "No shortcuts match the selected filters.",
+    "filter": "Filter shortcuts",
+    "filter_all": "All shortcuts",
+    "filter_conflicts": "Conflicts ({{count}})",
+    "filter_global": "Global shortcuts ({{count}})",
+    "filter_modified": "Changed from default ({{count}})",
+    "conflicts_badge_one": "{{count}} conflict",
+    "conflicts_badge_other": "{{count}} conflicts",
+    "conflicts_badge_tooltip": "Some shortcuts are assigned to more than one action. Click to show only the conflicting shortcuts."
   },
   "spellcheck": {
     "title": "Spell Check",
     "description": "These options apply only for desktop builds, browsers will use their own native spell check.",
     "enable": "Check spelling",
+    "disabled_placeholder": "Spell check is turned off. Enable it to choose languages and manage the custom dictionary.",
     "language_code_label": "Spell Check Languages",
-    "restart-required": "Changes to the spell check options will take effect after application restart.",
     "custom_dictionary_title": "Custom Dictionary",
     "custom_dictionary_description": "Words added to the dictionary are synced across all your devices.",
     "custom_dictionary_edit": "Custom words",
@@ -1712,7 +1805,7 @@
     "help": "Help",
     "test_title": "Test Connection",
     "test_description": "Test the connection to the sync server. If not initialized, this will set up syncing.",
-    "test_button": "Test sync",
+    "test_button": "Test now",
     "handshake_failed": "Sync server handshake failed, error: {{message}}"
   },
   "api_log": {
@@ -1954,6 +2047,9 @@
     "window-on-top": "Keep Window on Top"
   },
   "note_detail": {
+    "content_load_error": "The note's content could not be loaded.",
+    "content_load_retry": "Retry",
+    "content_load_stalled": "Still loading the note's content…",
     "could_not_find_typewidget": "Could not find typeWidget for type '{{type}}'",
     "printing": "Printing in progress...",
     "printing_pdf": "Preparing print preview...",
@@ -2321,6 +2417,11 @@
     "edit-column-title": "Click to edit column title",
     "column-already-exists": "This column already exists on the board."
   },
+  "dashboard_view": {
+    "refresh-widget": "Refresh",
+    "remove-widget": "Remove from dashboard",
+    "empty-hint": "Any child note becomes a widget. Drag a note here from tree or create a new one."
+  },
   "presentation_view": {
     "edit-slide": "Edit this slide",
     "start-presentation": "Start presentation",
@@ -2366,7 +2467,8 @@
     "unpin_tab_description": "Unpin this tab, allowing it to be closed and moved freely"
   },
   "content_renderer": {
-    "open_externally": "Open externally"
+    "open_externally": "Open externally",
+    "mermaid_diagram_error": "Mermaid diagram failed to render: {{error}}"
   },
   "modal": {
     "close": "Close",
@@ -2568,6 +2670,7 @@
   "active_content_badges": {
     "type_icon_pack": "Icon pack",
     "type_backend_script": "Backend script",
+    "type_custom_request_handler": "Custom request handler",
     "type_frontend_script": "Frontend script",
     "type_widget": "Widget",
     "type_app_css": "Custom CSS",
@@ -2691,8 +2794,8 @@
     "summary": "Summary"
   },
   "llm": {
-    "settings_title": "AI / LLM",
-    "settings_description": "Configure AI and Large Language Model integrations.",
+    "disabled_placeholder": "AI features are turned off. Enable them to configure providers and MCP.",
+    "not_available_in_standalone": "AI/LLM features are not available in the standalone version of Trilium, as LLM providers do not allow direct access from a browser.",
     "feature_not_enabled": "Enable the LLM experimental feature in Settings → Advanced → Experimental features to use AI integrations.",
     "add_provider": "Add Provider",
     "add_provider_title": "Add AI Provider",
@@ -2737,7 +2840,8 @@
       "rename_note": "Rename note",
       "delete_note": "Delete note",
       "move_note": "Move note",
-      "clone_note": "Clone note"
+      "clone_note": "Clone note",
+      "search_icons": "Search icons"
     }
   },
   "common": {
@@ -2745,7 +2849,11 @@
     "cancel": "Cancel"
   },
   "spreadsheet": {
-    "read-only": "This note is read-only."
+    "read-only": "This note is read-only.",
+    "export-xlsx": "Export to Excel (.xlsx)",
+    "export-csv": "Export to CSV (.csv)",
+    "export-failed": "Failed to export the spreadsheet to Excel.",
+    "export-csv-failed": "Failed to export the spreadsheet to CSV."
   },
   "text-editor": {
     "checkbox-tooltip": "Right click for more task states.\nPress {{shortcut}} to cycle between states.",

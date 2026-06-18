@@ -66,15 +66,17 @@ function register(app: express.Application) {
 
 
     apiRoute(GET, '/api/totp/generate', totp.generateSecret);
+    apiRoute(PST, '/api/totp/verify', totp.verifySecret);
+    apiRoute(PST, '/api/totp/enable', totp.enableSecret);
     apiRoute(GET, '/api/totp/status', totp.getTOTPStatus);
     apiRoute(GET, '/api/totp/get', totp.getSecret);
+    apiRoute(PST, '/api/totp/reset', totp.resetTOTP);
 
     apiRoute(GET, '/api/oauth/status', openID.getOAuthStatus);
     asyncApiRoute(GET, '/api/oauth/validate', openID.isTokenValid);
 
-    apiRoute(PST, '/api/totp_recovery/set', recoveryCodes.setRecoveryCodes);
     apiRoute(PST, '/api/totp_recovery/verify', recoveryCodes.verifyRecoveryCode);
-    apiRoute(GET, '/api/totp_recovery/generate', recoveryCodes.generateRecoveryCodes);
+    apiRoute(PST, '/api/totp_recovery/regenerate', recoveryCodes.regenerateRecoveryCodes);
     apiRoute(GET, '/api/totp_recovery/enabled', recoveryCodes.checkForRecoveryKeys);
     apiRoute(GET, '/api/totp_recovery/used', recoveryCodes.getUsedRecoveryCodes);
 
@@ -152,6 +154,7 @@ function register(app: express.Application) {
     apiRoute(PST, "/api/special-notes/save-llm-chat", llmSpecialNotesRoute.saveLlmChat);
     asyncRoute(PST, "/api/database/anonymize/:type", [auth.checkApiAuthOrElectron, csrfMiddleware], databaseRoute.anonymize, apiResultHandler);
     apiRoute(GET, "/api/database/anonymized-databases", databaseRoute.getExistingAnonymizedDatabases);
+    route(GET, "/api/database/anonymized/download", [auth.checkApiAuthOrElectron], databaseRoute.downloadAnonymizedDatabase);
 
     if (process.env.TRILIUM_INTEGRATION_TEST === "memory") {
         asyncRoute(PST, "/api/database/rebuild/", [auth.checkApiAuthOrElectron], databaseRoute.rebuildIntegrationTestDatabase, apiResultHandler);

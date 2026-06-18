@@ -812,7 +812,8 @@
     "note_size": "नोट साइज़",
     "note_size_info": "नोट साइज़ स्टोरेज की ज़रूरतों का एक अंदाज़ा देता है। इसमें नोट का कंटेंट और उसके रिविज़न शामिल हैं।",
     "calculate": "हिसाब लगाएं",
-    "subtree_size": "(सब-ट्री साइज़: {{count}} नोट्स में {{size}})",
+    "subtree_size_one": "(सब-ट्री साइज़: {{count}} नोट्स में {{size}})",
+    "subtree_size_other": "",
     "title": "नोट की जानकारी",
     "show_similar_notes": "मिलते-जुलते नोट्स दिखाएं"
   },
@@ -1134,8 +1135,6 @@
     "disabled": "बंद"
   },
   "ribbon": {
-    "widgets": "रिबन (Ribbon) विजेट्स",
-    "promoted_attributes_message": "अगर नोट में प्रमोटेड एट्रिब्यूट्स होंगे, तो रिबन का वो टैब अपने-आप खुल जाएगा",
     "edited_notes_message": "दिन वाले नोट्स (day notes) पर 'एडिट किए गए नोट्स' वाला टैब अपने-आप खुल जाएगा"
   },
   "theme": {
@@ -1320,7 +1319,6 @@
     "no_backup_yet": "अभी तक कोई बैकअप नहीं है"
   },
   "etapi": {
-    "title": "ETAPI",
     "description": "ETAPI एक REST API है जिसका इस्तेमाल बिना UI के प्रोग्राम द्वारा ट्रिलियम को एक्सेस करने के लिए किया जाता है।",
     "create_token": "नया ETAPI टोकन बनाएं",
     "existing_tokens": "पुराने टोकन्स",
@@ -1366,33 +1364,12 @@
     "password_changed_success": "पासवर्ड बदल दिया गया है। OK दबाने पर ट्रिलियम फिर से लोड होगा।"
   },
   "multi_factor_authentication": {
-    "title": "मल्टी-फैक्टर ऑथेंटिकेशन (MFA)",
-    "description": "मल्टी-फैक्टर ऑथेंटिकेशन (MFA) आपके अकाउंट की सुरक्षा बढ़ा देता है। इसमें सिर्फ़ पासवर्ड ही काफ़ी नहीं होता, बल्कि एक और पहचान भी देनी होती है। इससे अगर आपका पासवर्ड किसी को पता चल भी जाए, तो भी वो आपका अकाउंट नहीं खोल पाएगा। नीचे दिए निर्देशों से इसे चालू करें।",
-    "mfa_enabled": "MFA चालू करें",
-    "mfa_method": "MFA तरीका",
-    "electron_disabled": "मल्टी-फैक्टर ऑथेंटिकेशन फ़िलहाल डेस्कटॉप वर्जन में उपलब्ध नहीं है।",
-    "totp_title": "समय-आधारित वन-टाइम पासवर्ड (TOTP)",
-    "totp_description": "TOTP हर 30 सेकंड में बदलने वाला एक कोड होता है। लॉग-इन के समय पासवर्ड के साथ यह कोड भी डालना पड़ता है, जिससे सुरक्षा बढ़ जाती है।",
-    "totp_secret_title": "TOTP सीक्रेट (Secret) बनाएं",
-    "totp_secret_generate": "TOTP सीक्रेट बनाएं",
-    "totp_secret_regenerate": "नया TOTP सीक्रेट बनाएं",
-    "no_totp_secret_warning": "TOTP चालू करने के लिए पहले एक 'सीक्रेट' बनाना होगा।",
-    "totp_secret_description_warning": "नया सीक्रेट बनाने के बाद आपको दोबारा लॉग-इन करना पड़ेगा।",
-    "totp_secret_generated": "TOTP सीक्रेट बन गया",
-    "totp_secret_warning": "कृपया इस सीक्रेट को सुरक्षित रख लें। यह दोबारा नहीं दिखाया जाएगा।",
-    "totp_secret_regenerate_confirm": "क्या आप नया सीक्रेट बनाना चाहते हैं? इससे पुराने कोड और रिकवरी कोड काम करना बंद कर देंगे।",
-    "recovery_keys_title": "रिकवरी कीज़ (Recovery Keys)",
-    "recovery_keys_description": "अगर आप अपने ऑथेंटिकेटर कोड एक्सेस नहीं कर पा रहे, तो इन रिकवरी कीज़ से लॉग-इन कर सकते हैं।",
     "recovery_keys_description_warning": "रिकवरी कीज़ को कहीं सुरक्षित लिख लें, ये दोबारा नहीं दिखाई जाएंगी। एक बार इस्तेमाल होने के बाद वो की दोबारा काम नहीं करेगी।",
     "recovery_keys_error": "रिकवरी कोड बनाने में एरर",
     "recovery_keys_no_key_set": "कोई रिकवरी कोड सेट नहीं है",
-    "recovery_keys_generate": "रिकवरी कोड बनाएं",
     "recovery_keys_regenerate": "नए रिकवरी कोड बनाएं",
-    "recovery_keys_used": "इस्तेमाल हुआ: {{date}}",
-    "recovery_keys_unused": "रिकवरी कोड {{index}} का इस्तेमाल नहीं हुआ है",
     "oauth_title": "OAuth/OpenID",
     "oauth_description": "OpenID एक मानक तरीका है जिससे आप अपनी पहचान साबित करने के लिए गूगल जैसी दूसरी सर्विस के अकाउंट से वेबसाइट पर लॉग-इन कर सकते हैं। डिफ़ॉल्ट रूप से गूगल सेट है, पर आप कोई और प्रोवाइडर भी चुन सकते हैं। ज़्यादा जानकारी के लिए <a href=\"#\">यहाँ</a> क्लिक करें।",
-    "oauth_description_warning": "OAuth/OpenID चालू करने के लिए आपको config.ini फ़ाइल में बेस URL, क्लाइंट ID और क्लाइंट सीक्रेट सेट करके ऐप को रीस्टार्ट करना होगा।",
     "oauth_missing_vars": "ये सेटिंग्स गायब हैं: {{-variables}}",
     "oauth_user_account": "यूजर अकाउंट: ",
     "oauth_user_email": "यूजर ईमेल: ",
@@ -1400,13 +1377,7 @@
   },
   "shortcuts": {
     "keyboard_shortcuts": "कीबोर्ड शॉर्टकट्स",
-    "multiple_shortcuts": "एक ही काम के लिए कई शॉर्टकट्स को कॉमा (,) से अलग किया जा सकता है।",
-    "electron_documentation": "उपलब्ध की-कोड्स के लिए <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">Electron डॉक्यूमेंटेशन</a> देखें।",
     "type_text_to_filter": "शॉर्टकट खोजने के लिए यहाँ लिखें..।",
-    "action_name": "एक्शन का नाम",
-    "shortcuts": "शॉर्टकट्स",
-    "default_shortcuts": "डिफ़ॉल्ट शॉर्टकट्स",
-    "description": "विवरण (Description)",
     "reload_app": "बदलाव लागू करने के लिए ऐप रीलोड करें",
     "set_all_to_default": "सभी शॉर्टकट्स डिफ़ॉल्ट पर सेट करें",
     "confirm_reset": "क्या आप वाकई सभी शॉर्टकट्स को डिफ़ॉल्ट पर सेट करना चाहते हैं?",
@@ -1416,8 +1387,7 @@
     "title": "स्पेल चेक (Spell Check)",
     "description": "ये विकल्प सिर्फ़ डेस्कटॉप वर्जन के लिए हैं, ब्राउज़र अपना स्पेल चेक इस्तेमाल करेंगे।",
     "enable": "स्पेल चेक चालू करें",
-    "language_code_label": "भाषा कोड (Language code)",
-    "restart-required": "स्पेल चेक में बदलाव ऐप रीस्टार्ट करने के बाद ही दिखेंगे।"
+    "language_code_label": "भाषा कोड (Language code)"
   },
   "sync_2": {
     "config_title": "सिंक कॉन्फ़िगरेशन",
@@ -1493,7 +1463,8 @@
     "export": "एक्सपोर्ट (Export)",
     "import-into-note": "नोट में इम्पोर्ट (Import) करें",
     "apply-bulk-actions": "एक साथ कई एक्शन्स लें",
-    "converted-to-attachments": "{{count}} नोट्स को अटैचमेंट में बदल दिया गया है।",
+    "converted-to-attachments_one": "{{count}} नोट्स को अटैचमेंट में बदल दिया गया है।",
+    "converted-to-attachments_other": "",
     "convert-to-attachment-confirm": "क्या आप वाकई चुने हुए नोट्स को अटैचमेंट में बदलना चाहते हैं? यह सिर्फ़ इमेज नोट्स पर काम करेगा।",
     "open-in-popup": "तुरंत एडिट करें"
   },
@@ -1997,7 +1968,8 @@
     "percentage": "%"
   },
   "pagination": {
-    "total_notes": "{{count}} नोट्स",
+    "total_notes_one": "{{count}} नोट्स",
+    "total_notes_other": "",
     "prev_page": "पिछला पेज",
     "next_page": "अगला पेज"
   },
@@ -2130,5 +2102,8 @@
   },
   "setup_form": {
     "more_info": "और जानें"
+  },
+  "sidebar_chat": {
+    "view_all_chats": "सभी चैट देखें"
   }
 }

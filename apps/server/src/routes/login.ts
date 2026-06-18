@@ -1,10 +1,10 @@
-import { i18n, password as passwordService, password_encryption, ValidationError } from "@triliumnext/core";
+import { i18n, password as passwordService, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from 'express';
 
 import appPath from "../services/app_path.js";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";
+import { verifyLoginCredentials } from "../services/auth.js";
 import openIDEncryption from '../services/encryption/open_id_encryption.js';
-import recoveryCodeService from '../services/encryption/recovery_codes.js';
 import { getLog } from "@triliumnext/core";
 import openID from '../services/open_id.js';
 import totp from '../services/totp.js';
@@ -111,15 +111,9 @@ async function login(req: Request, res: Response) {
     const submittedPassword = req.body.password;
     const submittedTotpToken = req.body.totpToken;
 
-    if (totp.isTotpEnabled()) {
-        if (!verifyTOTP(submittedTotpToken)) {
-            sendLoginError(req, res, 'totp');
-            return;
-        }
-    }
-
-    if (!(await password_encryption.verifyPassword(submittedPassword))) {
-        sendLoginError(req, res, 'password');
+    const failedFactor = await verifyLoginCredentials(submittedPassword, submittedTotpToken);
+    if (failedFactor) {
+        sendLoginError(req, res, failedFactor);
         return;
     }
 
@@ -141,14 +135,6 @@ async function login(req: Request, res: Response) {
         req.session.loggedIn = true;
         res.redirect('.');
     });
-}
-
-function verifyTOTP(submittedTotpToken: string) {
-    if (totp.validateTOTP(submittedTotpToken)) return true;
-
-    const recoveryCodeValidates = recoveryCodeService.verifyRecoveryCode(submittedTotpToken);
-
-    return recoveryCodeValidates;
 }
 
 function sendLoginError(req: Request, res: Response, errorType: 'password' | 'totp' = 'password') {

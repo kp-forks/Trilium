@@ -89,6 +89,15 @@ export interface DatabaseAnonymizeResponse {
 export interface AnonymizedDbResponse {
     filePath: string;
     fileName: string;
+    mtime: Date;
+    /** Size of the anonymized database file, in bytes. */
+    fileSize: number;
+}
+
+export interface ExistingAnonymizedDatabasesResponse {
+    /** The directory where the anonymized databases are stored. */
+    anonymizedFolderPath: string;
+    databases: AnonymizedDbResponse[];
 }
 
 export type SyncTestResponse = Response;
@@ -111,6 +120,14 @@ export interface DatabaseBackup {
     fileName: string;
     filePath: string;
     mtime: Date;
+    /** Size of the backup file, in bytes. */
+    fileSize: number;
+}
+
+export interface ExistingBackupsResponse {
+    /** The directory where the backups are stored, or null if there is no user-accessible location (e.g. OPFS on standalone). */
+    backupFolderPath: string | null;
+    backups: DatabaseBackup[];
 }
 
 export type ChangePasswordResponse = Response;
@@ -121,7 +138,22 @@ export interface TOTPStatus {
 
 export interface TOTPGenerate {
     success: boolean;
+    /** The bare base32 secret, shown for manual entry. */
     message: string;
+    /** The `otpauth://` URL for the secret, rendered as a scannable QR code. Absent on failure. */
+    url?: string;
+}
+
+export interface TOTPVerifyResponse {
+    /** Whether the submitted code was valid for the secret. Verification persists nothing on its own. */
+    success: boolean;
+    /** Freshly issued (not yet persisted) recovery codes, returned only on success for the user to save. */
+    recoveryCodes?: string[];
+}
+
+export interface TOTPEnableResponse {
+    /** Whether the secret and recovery codes were committed, activating TOTP. */
+    success: boolean;
 }
 
 export interface TOTPRecoveryKeysResponse {

@@ -232,7 +232,7 @@ export const noteTools = defineTools({
             "- 'text': rich text (provide content in Markdown)",
             "- 'code': source code (must also set mime)",
             "- 'render': displays output of a child code note (content is empty, add a code note as child and set ~renderNote relation)",
-            "- 'book': container that displays children as a book/list",
+            "- 'book': container that displays children as a collection (grid/list by default; a #viewType label selects other views, e.g. 'dashboard' renders children as widgets on a drag-and-drop grid — load the 'dashboards' skill first via load_skill)",
             "- 'mermaid': Mermaid diagram source",
             "- 'canvas': Excalidraw drawing (JSON content)",
             "- 'webView': embedded web page (set content to URL or HTML)",
