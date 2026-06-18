@@ -7,11 +7,11 @@
   applies regardless of which proxy you use.</p>
 <h2>Provider guides</h2>
 <ul>
-  <li><a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/vcjrb3VVYPZI/_help_ud6MShXL4WpO">Nginx</a>
+  <li><a class="reference-link" href="#root/_help_ud6MShXL4WpO">Nginx</a>
   </li>
-  <li><a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/vcjrb3VVYPZI/_help_5ERVJb9s4FRD">Traefik</a>
+  <li><a class="reference-link" href="#root/_help_5ERVJb9s4FRD">Traefik</a>
   </li>
-  <li><a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/vcjrb3VVYPZI/_help_fDLvzOx29Pfg">Apache using Docker</a>
+  <li><a class="reference-link" href="#root/_help_fDLvzOx29Pfg">Apache using Docker</a>
   </li>
 </ul>
 <h2>Applies to every proxy</h2>
@@ -22,13 +22,11 @@
     <code
     spellcheck="false">Upgrade</code>and <code spellcheck="false">Connection</code> headers through,
       otherwise the client will appear to load but never receive updates.</li>
-  <li
- ><strong>Configure the trusted proxy.</strong> So that Trilium sees the
+  <li><strong>Configure the trusted proxy.</strong> So that Trilium sees the
     real client IP (for rate limiting, logging, and secure cookies) rather
-    than the proxy's address. See&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/vcjrb3VVYPZI/_help_LLzSMXACKhUs">Trusted proxy</a>.</li>
-    <li
-   ><strong>Terminate TLS at the proxy.</strong> See&nbsp;<a class="reference-link"
-      href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/_help_l2VkvOwUNfZj">HTTPS (TLS)</a>.</li>
+    than the proxy's address. See&nbsp;<a class="reference-link" href="#root/_help_LLzSMXACKhUs">Trusted proxy</a>.</li>
+  <li><strong>Terminate TLS at the proxy.</strong> See&nbsp;<a class="reference-link"
+    href="#root/_help_l2VkvOwUNfZj">HTTPS (TLS)</a>.</li>
 </ul>
 <h2>Putting an authentication proxy in front of Trilium</h2>
 <p>Some setups place a <strong>forward-auth / SSO layer</strong> (Authelia,
@@ -38,17 +36,15 @@
   a machine-to-machine process that runs unattended in the background — it
   has no browser and cannot complete an interactive login challenge. When
   the proxy intercepts a sync request, it returns its HTML login page instead
-  of the expected JSON, and the client fails with an error such as:</p>
-<div><pre><code class="language-text-x-trilium-auto">Sync failed: Request to GET https://trilium.example.com/api/setup/status failed,
+  of the expected JSON, and the client fails with an error such as:</p><pre><code class="language-text-x-trilium-auto">Sync failed: Request to GET https://trilium.example.com/api/setup/status failed,
 error: Unexpected token '&lt;', "&lt;!doctype "... is not valid JSON
 </code></pre>
-</div>
 <p>There are two ways to resolve this:</p>
 <ul>
   <li><strong>Preferred, use Trilium's built-in authentication.</strong> Don't
     gate Trilium at the proxy at all. Trilium can authenticate the web interface
-    itself, including via <a href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/_help_x1lQNKQBqLcA">OpenID Connect</a>.
-    This leaves the sync endpoints free to authenticate the way they're designed
+    itself, including via <a href="#root/_help_x1lQNKQBqLcA">OpenID Connect</a>. This
+    leaves the sync endpoints free to authenticate the way they're designed
     to.</li>
   <li><strong>Exempt the sync endpoints from the proxy's authentication.</strong> If
     you must keep auth at the proxy, exclude these paths from the forward-auth
@@ -70,8 +66,7 @@ error: Unexpected token '&lt;', "&lt;!doctype "... is not valid JSON
     does not expose unauthenticated access to your data.</p>
 </aside>
 <p>An example for Nginx, where <code spellcheck="false">/auth</code> is your
-  forward-auth endpoint:</p>
-<div><pre><code class="language-text-x-trilium-auto">server {
+  forward-auth endpoint:</p><pre><code class="language-text-x-trilium-auto">server {
     # ... TLS, server_name, etc. ...
 
     # Sync and setup endpoints authenticate themselves — skip forward-auth.
@@ -98,4 +93,3 @@ error: Unexpected token '&lt;', "&lt;!doctype "... is not valid JSON
         proxy_pass http://trilium;
     }
 }</code></pre>
-</div>

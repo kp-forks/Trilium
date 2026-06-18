@@ -547,8 +547,12 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
                 continue;
             }
 
-            // Ensure value is consistent.
-            if (attribute.value !== attrDef.value || attribute.type !== attrDef.type) {
+            // Ensure value is consistent. Normalize the expected value the same way it is written
+            // below (`attrDef.value ?? ""`): many definitions omit `value` (undefined) while the
+            // stored attribute holds "". Comparing the raw `attrDef.value` made `"" !== undefined`
+            // always true, so every value-less attribute was re-saved on each run — and save()
+            // unconditionally emits a sync entity change, churning all open editors.
+            if (attribute.value !== (attrDef.value ?? "") || attribute.type !== attrDef.type) {
                 attribute.type = attrDef.type;
                 attribute.value = attrDef.value ?? "";
                 attribute.save();

@@ -44,6 +44,7 @@ import IncludeNoteBoxSizeDropdown from "./plugins/include_note_box_size_dropdown
 import IncludeNoteToolbar from "./plugins/include_note_toolbar.js";
 import LinkEmbedToolbar from "./plugins/link_embed_toolbar.js";
 import TodoListMultistate from "./plugins/todo_list_multistate/todo_list_multistate.js";
+import TodoListUncheckOnEnter from "./plugins/todo_list_uncheck_on_enter.js";
 import CollapsibleListItems from "./plugins/collapsible_list_items.js";
 
 /**
@@ -150,6 +151,7 @@ export const COMMON_PLUGINS: typeof Plugin[] = [
 	List,
 	ListProperties,
 	TodoList,
+	TodoListUncheckOnEnter,
 	PasteFromOffice,
 	PictureEditing,
 	Table,
