@@ -10,9 +10,8 @@ import protected_session_holder from "../../../services/protected_session_holder
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import { isElectron } from "../../../services/utils";
-import Admonition, { ExtendedAdmonition } from "../../react/Admonition";
+import { ExtendedAdmonition } from "../../react/Admonition";
 import Button from "../../react/Button";
-import Collapsible from "../../react/Collapsible";
 import FormGroup from "../../react/FormGroup";
 import FormSelect from "../../react/FormSelect";
 import FormText from "../../react/FormText";
@@ -284,21 +283,26 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
                     <MfaStatusBadge tone={badge.tone} text={badge.text} />
                 </span>
             }
+            noCard={!configured}
         >
             { !configured ? (
-                <>
+                <ExtendedAdmonition
+                    type="note"
+                    icon="bx bx-info-circle"
+                    title={t("multi_factor_authentication.oauth_not_configured_title")}
+                    detailsLabel={t("multi_factor_authentication.oauth_how_to_enable")}
+                    details={<OAuthConfigInstructions />}
+                >
                     <p>{t("multi_factor_authentication.oauth_not_configured_hint")}</p>
 
                     { status?.missingVars && status.missingVars.length > 0 && (
-                        <Admonition type="note">
+                        <p>
                             {t("multi_factor_authentication.oauth_missing_vars", {
                                 variables: status.missingVars.map(v => `"${v}"`).join(", ")
                             })}
-                        </Admonition>
+                        </p>
                     )}
-
-                    <OAuthConfigHint />
-                </>
+                </ExtendedAdmonition>
             ) : enrolled ? (
                 <>
                     <OAuthProviderRows status={status} />
@@ -324,6 +328,8 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
                         type="note"
                         icon="bx bx-info-circle"
                         title={t("multi_factor_authentication.oauth_not_enrolled_title")}
+                        detailsLabel={t("multi_factor_authentication.oauth_not_enrolled_details_label")}
+                        details={t("multi_factor_authentication.oauth_not_enrolled_details")}
                     >
                         {t("multi_factor_authentication.oauth_not_enrolled_hint")}
                     </ExtendedAdmonition>
@@ -389,20 +395,20 @@ function oauthProviderDisplayName(status?: OAuthStatus) {
 }
 
 /**
- * Collapsible "How to enable" hint for OAuth, mirroring the security page's ServerConfigHint. Lists
+ * "How to enable" instructions for OAuth, shown in the not-configured admonition's collapsible. Lists
  * the config.ini section and the equivalent environment variables the server reads — OAuth has no
  * in-app setup, so this is the only place the values are documented in the UI.
  */
-function OAuthConfigHint() {
+function OAuthConfigInstructions() {
     // oauthBaseUrl is the app's externally-reachable base URL, which for the user reading this is
     // exactly the origin they're browsing from — so prefill it as a sensible example value.
     const baseUrl = window.location.origin;
     return (
-        <Collapsible title={t("multi_factor_authentication.oauth_how_to_enable")}>
+        <>
             <p>{t("multi_factor_authentication.oauth_server_config_hint")}</p>
             <pre><code>{`[MultiFactorAuthentication]\noauthBaseUrl=${baseUrl}\noauthClientId=\noauthClientSecret=`}</code></pre>
             <p>{t("multi_factor_authentication.oauth_server_env_hint")}</p>
             <pre><code>{`TRILIUM_OAUTH_BASE_URL=${baseUrl}\nTRILIUM_OAUTH_CLIENT_ID=\nTRILIUM_OAUTH_CLIENT_SECRET=`}</code></pre>
-        </Collapsible>
+        </>
     );
 }
