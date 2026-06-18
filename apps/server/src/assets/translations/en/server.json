@@ -175,7 +175,9 @@
     "password": "Password",
     "remember-me": "Remember me",
     "button": "Login",
-    "sign_in_with_sso": "Sign in with {{ ssoIssuerName }}"
+    "sign_in_with_sso": "Sign in with {{ ssoIssuerName }}",
+    "sso-wrong-account": "That account isn't the one linked to this Trilium instance. Sign in with the linked account.",
+    "sso-not-enrolled": "Single sign-on isn't set up yet. Sign in with your password first, then link your account from the settings."
   },
   "password": {
     "incorrect": "The password you entered is incorrect."

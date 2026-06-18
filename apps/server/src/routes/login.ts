@@ -11,9 +11,17 @@ import totp from '../services/totp.js';
 
 function loginPage(req: Request, res: Response) {
     // Login page is triggered twice. Once here, and another time (see sendLoginError) if the password is failed.
+    // A failed SSO round-trip (wrong account / not yet enrolled) leaves a one-shot reason on the session in
+    // the OIDC afterCallback; read and clear it so the message shows exactly once.
+    const ssoError = req.session.ssoError;
+    if (ssoError) {
+        delete req.session.ssoError;
+    }
+
     res.render('login', {
         wrongPassword: false,
         wrongTotp: false,
+        ssoError,
         totpEnabled: totp.isTotpEnabled(),
         ssoEnabled: openID.isOpenIDEnabled(),
         ssoIssuerName: openID.getSSOIssuerName(),
@@ -98,13 +106,7 @@ async function setPassword(req: Request, res: Response) {
  */
 async function login(req: Request, res: Response) {
     if (openID.isOpenIDEnabled()) {
-        void res.oidc.login({
-            returnTo: '/',
-            authorizationParams: {
-                prompt: 'consent',
-                access_type: 'offline'
-            }
-        });
+        void res.oidc.login({ returnTo: '/' });
         return;
     }
 
@@ -148,8 +150,11 @@ function sendLoginError(req: Request, res: Response, errorType: 'password' | 'to
     res.status(401).render('login', {
         wrongPassword: errorType === 'password',
         wrongTotp: errorType === 'totp',
+        ssoError: false,
         totpEnabled: totp.isTotpEnabled(),
         ssoEnabled: openID.isOpenIDEnabled(),
+        ssoIssuerName: openID.getSSOIssuerName(),
+        ssoIssuerIcon: openID.getSSOIssuerIcon(),
         assetPath,
         assetPathFragment: assetUrlFragment,
         appPath,
@@ -161,8 +166,13 @@ function logout(req: Request, res: Response) {
     req.session.regenerate(() => {
         req.session.loggedIn = false;
 
-        if (openID.isOpenIDEnabled() && openIDEncryption.isSubjectIdentifierSaved()) {
+        if (openID.isOpenIDEnabled() && openIDEncryption.isSubjectIdentifierSaved() && res.oidc) {
+            // oidc.logout() already issues the redirect (to the provider's end-session
+            // endpoint, or locally), so we must not send our own response afterwards.
+            // res.oidc is only present once the OIDC middleware has initialised; if it
+            // hasn't (e.g. a failed lazy init), fall through to the local redirect below.
             void res.oidc.logout({ returnTo: '/' });
+            return;
         }
 
         res.redirect('login');
