@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 
 import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
+import { oauthAccountLabel, oauthProviderDisplayName } from "../../../services/oauth_status";
 import protected_session_holder from "../../../services/protected_session_holder";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
@@ -272,10 +273,14 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
             return;
         }
 
+        // Resolve the labels before disconnecting, while the account is still bound.
+        const account = oauthAccountLabel(status);
+        const provider = oauthProviderDisplayName(status);
+
         await server.post("oauth/disconnect");
-        toast.showMessage(t("multi_factor_authentication.oauth_disconnected"));
+        toast.showMessage(t("multi_factor_authentication.oauth_disconnected", { account, provider }));
         refreshStatus();
-    }, [ refreshStatus ]);
+    }, [ status, refreshStatus ]);
 
     return (
         <OptionsSection
@@ -387,26 +392,6 @@ function OAuthProviderIcon({ src }: { src?: string }) {
     }
 
     return <img className="oauth-provider-icon" src={src} alt="" onError={() => setFailed(true)} />;
-}
-
-/**
- * Resolves the provider's display name: the configured issuer name, falling back to the host of the
- * issuer URL (e.g. "auth.example.com"), and finally to a generic label when neither is available.
- */
-function oauthProviderDisplayName(status?: OAuthStatus) {
-    if (status?.issuerName) {
-        return status.issuerName;
-    }
-
-    if (status?.issuerUrl) {
-        try {
-            return new URL(status.issuerUrl).host;
-        } catch {
-            return status.issuerUrl;
-        }
-    }
-
-    return t("multi_factor_authentication.oauth_provider_unknown");
 }
 
 /**

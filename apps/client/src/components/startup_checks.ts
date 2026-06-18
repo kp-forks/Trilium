@@ -1,4 +1,7 @@
+import type { OAuthStatus } from "@triliumnext/commons";
+
 import { t } from "../services/i18n";
+import { oauthAccountLabel, oauthProviderDisplayName } from "../services/oauth_status";
 import server from "../services/server";
 import toast from "../services/toast";
 import Component from "./component";
@@ -36,8 +39,19 @@ export class StartupChecks extends Component {
  * (`window.glob.oauthJustEnrolled`, set once by the OIDC afterCallback and cleared by /bootstrap), so
  * nothing has to be stored on the client across the redirect.
  */
-export function showOAuthEnrollmentResultToast() {
-    if (window.glob?.oauthJustEnrolled) {
-        toast.showMessage(t("multi_factor_authentication.oauth_connect_success"));
+export async function showOAuthEnrollmentResultToast() {
+    if (!window.glob?.oauthJustEnrolled) {
+        return;
+    }
+
+    try {
+        const status = await server.get<OAuthStatus>("oauth/status");
+        toast.showMessage(t("multi_factor_authentication.oauth_connect_success", {
+            account: oauthAccountLabel(status),
+            provider: oauthProviderDisplayName(status)
+        }));
+    } catch {
+        // Couldn't resolve the account details — still confirm the connection generically.
+        toast.showMessage(t("multi_factor_authentication.oauth_connect_success_generic"));
     }
 }

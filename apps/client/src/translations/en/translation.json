@@ -1768,8 +1768,10 @@
     "oauth_disconnect_description": "Unbind the connected account. Sign-in will fall back to your password until you connect an account again.",
     "oauth_disconnect_button": "Disconnect",
     "oauth_disconnect_confirm": "Are you sure you want to disconnect this account? Sign-in will fall back to your password until you connect an account again.",
-    "oauth_disconnected": "Account disconnected.",
-    "oauth_connect_success": "Account connected successfully."
+    "oauth_disconnected": "Disconnected {{account}} from {{provider}}.",
+    "oauth_connect_success": "Connected to {{provider}} as {{account}}.",
+    "oauth_connect_success_generic": "Account connected successfully.",
+    "oauth_account_unknown": "your account"
   },
   "shortcuts": {
     "keyboard_shortcuts": "Keyboard Shortcuts",
