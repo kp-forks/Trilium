@@ -62,6 +62,13 @@ interface NoteAndBranch {
 
 
 export interface Api {
+
+     /**
+     * Converts the given HTML string to Markdown.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
     htmlToMarkdown(html: string): string
 
     /**
