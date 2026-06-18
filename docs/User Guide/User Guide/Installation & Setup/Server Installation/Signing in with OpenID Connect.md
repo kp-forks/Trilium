@@ -78,3 +78,15 @@ To disable the OpenID Connect authentication and instead rely on the local passw
 
 1.  Modify the `config.ini` or environment variables (depending on how you set up the provider information) and temporarily deactivate the multi-factor authentication section by renaming `[MultiFactorAuthentication]` to something else (e.g. `[MultiFactorAuthentication.bak]`.
 2.  Restart the server for the changes to take effect.
+
+## Troubleshooting
+
+### Setup fails with “invalid user”
+
+If you are running behind a [reverse proxy](2.%20Reverse%20proxy.md), a buffer overflow can cause this issue. Here is a sample fix for <a class="reference-link" href="2.%20Reverse%20proxy/Nginx.md">Nginx</a>: 
+
+```
+proxy_buffer_size 128k;
+proxy_buffers 4 256k;
+proxy_busy_buffers_size 256k;
+```

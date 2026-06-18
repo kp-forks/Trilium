@@ -1576,6 +1576,20 @@
                                             "value": "openid-connect",
                                             "isInheritable": false,
                                             "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "vcjrb3VVYPZI",
+                                            "isInheritable": false,
+                                            "position": 80
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "ud6MShXL4WpO",
+                                            "isInheritable": false,
+                                            "position": 90
                                         }
                                     ],
                                     "format": "markdown",

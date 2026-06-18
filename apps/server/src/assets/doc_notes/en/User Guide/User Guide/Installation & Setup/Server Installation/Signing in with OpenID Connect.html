@@ -184,3 +184,11 @@
   <li
  >Restart the server for the changes to take effect.</li>
 </ol>
+<h2>Troubleshooting</h2>
+<h3>Setup fails with “invalid user”</h3>
+<p>If you are running behind a <a href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/_help_vcjrb3VVYPZI">reverse proxy</a>,
+  a buffer overflow can cause this issue. Here is a sample fix for&nbsp;
+  <a
+  class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/WOcw2SLH6tbX/vcjrb3VVYPZI/_help_ud6MShXL4WpO">Nginx</a>: </p><pre><code class="language-text-x-trilium-auto">proxy_buffer_size 128k;
+proxy_buffers 4 256k;
+proxy_busy_buffers_size 256k;</code></pre>
