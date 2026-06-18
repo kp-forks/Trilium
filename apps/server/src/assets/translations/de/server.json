@@ -165,7 +165,7 @@
     "code-notes-title": "Code Notizen",
     "images-title": "Medien",
     "spellcheck-title": "Rechtschreibprüfung",
-    "password-title": "Passwort",
+    "password-title": "Passwort & Authentifizierung",
     "etapi-title": "ETAPI",
     "backup-title": "Sicherung",
     "sync-title": "Synchronisation",
@@ -195,7 +195,8 @@
     "task-state-attr-is-completed": "Gilt als abgeschlossen",
     "task-state-attr-color": "Farbe",
     "task-state-attr-is-hidden": "Aus Liste ausblenden",
-    "security-title": "Sicherheit"
+    "security-title": "Sicherheit",
+    "desktop-title": "Desktop"
   },
   "notes": {
     "new-note": "Neue Notiz",
@@ -254,7 +255,8 @@
     "presentation_slide_second": "Zweite Folie",
     "background": "Hintergrund",
     "markdown-snippet": "Markdown-Snippet",
-    "code-snippet": "Code-Snippet"
+    "code-snippet": "Code-Snippet",
+    "dashboard": "Dashboard"
   },
   "keyboard_action_names": {
     "copy-notes-to-clipboard": "Notizen in Zwischenablage kopieren",
