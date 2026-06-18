@@ -251,6 +251,15 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
     const configured = (status?.missingVars?.length ?? 1) === 0;
     const enrolled = status?.enrolled ?? false;
 
+    // The status badge mirrors the card's three states: an account is bound (green "Connected"),
+    // the server is set up but no account is bound yet (amber "Not connected"), or the server-side
+    // variables are missing entirely (muted "Not configured").
+    const badge = enrolled
+        ? { className: "connected", icon: "bx bx-check", text: t("multi_factor_authentication.oauth_status_connected") }
+        : configured
+            ? { className: "not-connected", icon: "bx bx-link", text: t("multi_factor_authentication.oauth_status_not_connected") }
+            : { className: "not-configured", icon: "bx bx-x", text: t("multi_factor_authentication.oauth_status_not_configured") };
+
     // Enrollment is a full-page provider round-trip (not an XHR): navigate to the OIDC login route,
     // which on return binds the identity to this still-authenticated session (see open_id afterCallback).
     const connectAccount = useCallback(() => {
@@ -273,11 +282,9 @@ function OAuthStatusCard({ status, refreshStatus }: { status?: OAuthStatus, refr
                 <span className="oauth-status-title">
                     {t("multi_factor_authentication.oauth_title")}
                     <Badge
-                        className={`oauth-status-badge ${configured ? "configured" : "not-configured"}`}
-                        icon={configured ? "bx bx-check" : "bx bx-x"}
-                        text={configured
-                            ? t("multi_factor_authentication.oauth_status_configured")
-                            : t("multi_factor_authentication.oauth_status_not_configured")}
+                        className={`oauth-status-badge ${badge.className}`}
+                        icon={badge.icon}
+                        text={badge.text}
                         outline
                     />
                 </span>
