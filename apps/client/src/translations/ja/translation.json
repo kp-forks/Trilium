@@ -2156,7 +2156,6 @@
     "recovery_keys_remaining": "残り {{remaining}} / {{total}} 。再表示はできず、置き換えのみ可能です。",
     "recovery_keys_dot_available": "利用可能",
     "recovery_keys_dot_used": "{{- date}} に使用済み",
-    "oauth_status_configured": "設定済み",
     "oauth_status_not_configured": "未設定",
     "oauth_not_configured_hint": "Google などの他のサービスのアカウントでログインできるようにします。サーバーで OpenID Connect を有効にして、ログイン方法として設定してください。",
     "oauth_how_to_enable": "有効にする方法",
