@@ -257,6 +257,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         setSqlConsoleEnabled(enabled: boolean): Promise<boolean> {
             return ipcRenderer.invoke("security-set-sql-console", enabled);
+        },
+        setLanAccessEnabled(enabled: boolean): Promise<boolean> {
+            return ipcRenderer.invoke("security-set-lan-access", enabled);
         }
     }
 } satisfies ElectronApi);

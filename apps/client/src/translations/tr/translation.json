@@ -472,6 +472,23 @@
     "multi_value": "Çok değerli",
     "label_type_title": "Etiket türü, Trilium'un etiket değerini girmek için uygun arayüzü seçmesine yardımcı olacaktır.",
     "label_type": "Tür",
-    "text": "Metin"
+    "text": "Metin",
+    "textarea": "Çok Satırlı Metin",
+    "number": "Sayı",
+    "time": "Zaman",
+    "date": "Tarih",
+    "date_time": "Tarih & Zaman",
+    "inverse_relation_title": "Bu ilişkinin hangisinin tersi olduğunu belirlemeye yarayan isteğe bağlı ayar. Örnek: Baba - Oğul, birbirlerinin tersi ilişkilerdir.",
+    "inverse_relation": "Ters ilişki",
+    "inheritable_title": "Kalıtsal özellik, bu ağacın altındaki tüm alt ögelere aktarılacaktır.",
+    "inheritable": "Kalıtsal",
+    "save_and_close": "Kaydet & kapat <kbd>Ctrl+Enter</kbd>",
+    "delete": "Sil",
+    "related_notes_title": "Bu etiketle ilişkili diğer notlar",
+    "more_notes": "Diğer notlar",
+    "label": "Etiket ayrıntısı",
+    "label_definition": "Etiket tanımı ayrıntısı",
+    "relation": "İlişki ayrıntısı",
+    "relation_definition": "İlişki tanımı ayrıntısı"
   }
 }

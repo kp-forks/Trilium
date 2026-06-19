@@ -463,4 +463,15 @@ export type SetupSyncFromServerResponse = {
     error: string;
 }
 
+export interface NetworkAddressesResponse {
+    /** Reachable URLs (protocol + host + port) other devices can sync with. */
+    addresses: string[];
+    /**
+     * Whether this host is bound to a network-reachable interface. `false` when
+     * it only listens on loopback, in which case the advertised addresses can't
+     * actually be reached by another device.
+     */
+    reachableOnNetwork: boolean;
+}
+
 export type ScriptParams = any[];

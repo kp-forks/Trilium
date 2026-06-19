@@ -598,5 +598,10 @@ describe("preload script", () => {
             await security().setSqlConsoleEnabled(false);
             expect(ipcRendererInvoked).toContainEqual({ channel: "security-set-sql-console", args: [false] });
         });
+
+        it("setLanAccessEnabled invokes the corresponding IPC channel", async () => {
+            await security().setLanAccessEnabled(true);
+            expect(ipcRendererInvoked).toContainEqual({ channel: "security-set-lan-access", args: [true] });
+        });
     });
 });
