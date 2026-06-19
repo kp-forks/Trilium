@@ -1244,6 +1244,20 @@ export interface BackendApi {
      */
     unescapeHtml(str: string): string;
     /**
+     * Converts the given HTML string to Markdown.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
+    htmlToMarkdown(html: string): string;
+    /**
+     * Converts the given Markdown string to HTML.
+     *
+     * @param markdown - Markdown content to convert
+     * @returns HTML representation of the input Markdown
+     */
+    markdownToHtml(markdown: string): string;
+    /**
      * sql
      * @type {module:sql}
      */
