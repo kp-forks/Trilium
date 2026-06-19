@@ -143,7 +143,21 @@ function handleException(e: unknown | Error, method: HttpMethod, path: string, r
 }
 
 export function createUploadMiddleware(): RequestHandler {
+    // None of our upload routes consume nested multipart text fields, so reject any bracketed field
+    // name outright. This activates multer 2.2.0's guard against CVE-2026-5079 (DoS via deeply-nested
+    // field names) and must be set unconditionally — it is a safety limit, not a user-facing size
+    // limit gated by TRILIUM_NO_UPLOAD_LIMIT. `fieldNestingDepth` is not yet in @types/multer 2.1.0,
+    // hence the local intersection type.
+    const limits: NonNullable<multer.Options["limits"]> & { fieldNestingDepth?: number } = {
+        fieldNestingDepth: 0
+    };
+
+    if (!process.env.TRILIUM_NO_UPLOAD_LIMIT) {
+        limits.fileSize = MAX_ALLOWED_FILE_SIZE_MB * 1024 * 1024;
+    }
+
     const multerOptions: multer.Options = {
+        limits,
         fileFilter: (req: express.Request, file, cb) => {
             // UTF-8 file names are not well decoded by multer/busboy, so we handle the conversion on our side.
             // See https://github.com/expressjs/multer/pull/1102.
@@ -151,12 +165,6 @@ export function createUploadMiddleware(): RequestHandler {
             cb(null, true);
         }
     };
-
-    if (!process.env.TRILIUM_NO_UPLOAD_LIMIT) {
-        multerOptions.limits = {
-            fileSize: MAX_ALLOWED_FILE_SIZE_MB * 1024 * 1024
-        };
-    }
 
     return multer(multerOptions).single("upload");
 }
