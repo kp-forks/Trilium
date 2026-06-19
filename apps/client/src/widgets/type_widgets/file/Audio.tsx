@@ -6,7 +6,10 @@ import { t } from "../../../services/i18n";
 import { getUrlForDownload } from "../../../services/open";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
-import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { loadWaveform } from "./audio_waveform";
+import { AudioVisualizer } from "./AudioVisualizer";
+import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { WaveformSeekBar } from "./WaveformSeekBar";
 
 export default function AudioPreview({ note, noteContext, isVisible = true }: { note: FNote, noteContext?: NoteContext, isVisible?: boolean }) {
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -36,6 +39,7 @@ export default function AudioPreview({ note, noteContext, isVisible = true }: { 
     const syncPlaying = useCallback(() => setPlaying(!!audioRef.current && !audioRef.current.paused), []);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, audioRef);
     const siblingNavigation = useMediaSessionController(note, noteContext, "audio/", audioRef, isVisible, playMode);
+    const waveformPeaks = useWaveformPeaks(note.noteId);
 
     if (error) {
         return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
@@ -53,11 +57,12 @@ export default function AudioPreview({ note, noteContext, isVisible = true }: { 
                 onEmptied={syncPlaying}
                 onError={onError}
             />
-            <div className="audio-preview-icon-wrapper">
+            <div className="audio-preview-visualization-wrapper">
+                <AudioVisualizer mediaRef={audioRef} isPlaying={playing} />
                 <Icon icon="bx bx-music" className="audio-preview-icon" />
             </div>
             <div className="media-preview-controls">
-                <SeekBar mediaRef={audioRef} />
+                <WaveformSeekBar mediaRef={audioRef} peaks={waveformPeaks} />
 
                 <div class="media-buttons-row">
                     <div className="left">
@@ -81,6 +86,26 @@ export default function AudioPreview({ note, noteContext, isVisible = true }: { 
             </div>
         </div>
     );
+}
+
+/** Decode the note's audio into a normalized waveform for the seek bar. Returns `null` while loading or when no
+ *  waveform is available (oversized/undecodable file); the seek bar then falls back to a plain track. The fetch
+ *  is aborted when the note changes so a slow decode for a previous note can't paint over the current one. */
+function useWaveformPeaks(noteId: string): number[] | null {
+    const [peaks, setPeaks] = useState<number[] | null>(null);
+
+    useEffect(() => {
+        setPeaks(null);
+        const controller = new AbortController();
+        loadWaveform(getUrlForDownload(`api/notes/${noteId}/open`), { signal: controller.signal })
+            .then((waveform) => {
+                if (!controller.signal.aborted) setPeaks(waveform?.peaks ?? null);
+            })
+            .catch(() => {});
+        return () => controller.abort();
+    }, [ noteId ]);
+
+    return peaks;
 }
 
 function useKeyboardShortcuts(audioRef: MutableRef<HTMLAudioElement | null>, togglePlayback: () => void) {
