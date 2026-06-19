@@ -1588,6 +1588,9 @@ importers:
         specifier: workspace:*
         version: link:../commons
     devDependencies:
+      '@types/yauzl':
+        specifier: 3.4.0
+        version: 3.4.0
       pdfjs-dist:
         specifier: 5.7.284
         version: 5.7.284
