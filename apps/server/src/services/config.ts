@@ -28,10 +28,15 @@ import dataDir from "./data_dir.js";
 import resourceDir from "./resource_dir.js";
 
 /**
- * Path to the sample configuration file that serves as a template for new installations.
- * This file contains all available configuration options with documentation.
+ * Path to the sample configuration file copied into the data directory on first
+ * run. Desktop builds get a trimmed template: web-deployment options (host, port,
+ * CORS, reverse proxy, sessions, OAuth) don't apply because the renderer talks to
+ * the bundled server in-process, and network/scripting are managed through the UI.
+ * `process.versions.electron` is used (not the core `isElectron()`) because this
+ * runs at module load, before the platform is initialized.
  */
-const configSampleFilePath = path.resolve(resourceDir.RESOURCE_DIR, "config-sample.ini");
+const configSampleFileName = process.versions.electron ? "config-sample-desktop.ini" : "config-sample.ini";
+const configSampleFilePath = path.resolve(resourceDir.RESOURCE_DIR, configSampleFileName);
 
 /**
  * Initialize config.ini file if it doesn't exist.

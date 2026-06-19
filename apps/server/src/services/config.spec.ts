@@ -320,6 +320,32 @@ corsAllowOrigin=https://ini-cors.com
             expect(fs.writeFileSync).toHaveBeenCalledWith("/test/config.ini", sampleContents);
             expect(config.General.instanceName).toBe("from-sample");
         });
+
+        it("uses the trimmed desktop sample under Electron", async () => {
+            const originalElectron = process.versions.electron;
+            Object.defineProperty(process.versions, "electron", { value: "41.0.0", configurable: true });
+            try {
+                vi.mocked(fs.existsSync).mockReturnValue(false);
+                const desktopSample = "[General]\ninstanceName=desktop-sample";
+                vi.mocked(fs.readFileSync).mockImplementation((path) => {
+                    if (String(path).includes("config-sample-desktop.ini")) {
+                        return Buffer.from(desktopSample) as any;
+                    }
+                    return desktopSample as any;
+                });
+
+                const { default: config } = await import("./config.js");
+
+                expect(fs.writeFileSync).toHaveBeenCalledWith("/test/config.ini", desktopSample);
+                expect(config.General.instanceName).toBe("desktop-sample");
+            } finally {
+                if (originalElectron === undefined) {
+                    delete (process.versions as { electron?: string }).electron;
+                } else {
+                    Object.defineProperty(process.versions, "electron", { value: originalElectron, configurable: true });
+                }
+            }
+        });
     });
 
     describe("Boolean transformation edge cases", () => {
