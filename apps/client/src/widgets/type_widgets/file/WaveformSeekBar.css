@@ -1,6 +1,6 @@
 .waveform-seekbar {
     /* Placeholder colors — tune to taste. Read by the canvas renderer via getComputedStyle. */
-    --waveform-played-color: #4caf9d;
+    --waveform-played-color: var(--quick-search-result-highlight-color);
     --waveform-unplayed-color: #5a5a5a;
     --waveform-silence-color: #333333;
 
