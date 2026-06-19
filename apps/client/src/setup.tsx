@@ -11,7 +11,7 @@ import { getCurrentLanguage, initLocale, t } from "./services/i18n";
 import server from "./services/server";
 import { isElectron, isMobileApp, replaceHtmlEscapedSlashes } from "./services/utils";
 import ActionButton from "./widgets/react/ActionButton";
-import Admonition from "./widgets/react/Admonition";
+import Admonition, { ExtendedAdmonition } from "./widgets/react/Admonition";
 import Button from "./widgets/react/Button";
 import { Card, CardFrame, CardSection } from "./widgets/react/Card";
 import FormGroup from "./widgets/react/FormGroup";
@@ -443,8 +443,12 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             onBack={() => setState("firstOptions")}
         >
             {networkInfo && !networkInfo.reachableOnNetwork ? (
-                <Admonition type="caution" className="sync-from-desktop-unreachable">
-                    <strong>{t("setup.sync-from-desktop-unreachable-title")}</strong>
+                <ExtendedAdmonition
+                    type="caution"
+                    className="sync-from-desktop-unreachable"
+                    icon="bx bx-wifi-off"
+                    title={t("setup.sync-from-desktop-unreachable-title")}
+                >
                     <p>{t("setup.sync-from-desktop-unreachable-description")}</p>
                     {isElectron() && (
                         <div class="unreachable-actions">
@@ -463,7 +467,7 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                             />
                         </div>
                     )}
-                </Admonition>
+                </ExtendedAdmonition>
             ) : (
                 <>
                     <div class="card-columns">
