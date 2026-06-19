@@ -127,6 +127,7 @@ function register(app: express.Application) {
 
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
+    apiRoute(GET, "/api/network-addresses", systemInfoRoute.getNetworkAddresses);
 
     // docker health check
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);

@@ -1,11 +1,23 @@
 import { execSync } from "child_process";
 import { isMac, isWindows } from "../../services/utils";
-import { arch, cpus } from "os";
+import { arch, cpus, networkInterfaces } from "os";
 
 function systemChecks() {
     return {
         isCpuArchMismatch: isCpuArchMismatch()
     }
+}
+
+/**
+ * Returns this host's non-internal network addresses. Consumed by the setup
+ * "sync from desktop" screen so the user can see which addresses another device
+ * should connect to. This lives server-side because the renderer can't reach
+ * Node's `os` module (node integration is disabled in the Electron renderer).
+ */
+function getNetworkAddresses() {
+    return {
+        addresses: collectNetworkAddresses(networkInterfaces())
+    };
 }
 
 /**
@@ -40,6 +52,37 @@ export const isCpuArchMismatch = () => {
     }
 };
 
+/**
+ * Collects this host's non-internal network addresses, sorted by how likely
+ * each is to be the reachable LAN address. Pure and exported so it can be
+ * unit-tested without touching the real OS interfaces.
+ */
+export function collectNetworkAddresses(interfaces: ReturnType<typeof networkInterfaces>): string[] {
+    const addresses: string[] = [];
+
+    for (const nets of Object.values(interfaces)) {
+        if (!nets) continue;
+        for (const net of nets) {
+            if (net.internal) continue;
+            if (net.family === "IPv6" && net.scopeid !== 0) continue;
+            addresses.push(net.address);
+        }
+    }
+
+    addresses.sort((a, b) => networkScore(a) - networkScore(b));
+
+    return addresses;
+}
+
+function networkScore(addr: string): number {
+    if (addr.startsWith("192.168.")) return 0;
+    if (addr.startsWith("10.")) return 1;
+    if (/^172\.(1[6-9]|2\d|3[01])\./.test(addr)) return 2;
+    if (addr.includes(":")) return 4; // IPv6
+    return 3;
+}
+
 export default {
-    systemChecks
+    systemChecks,
+    getNetworkAddresses
 };

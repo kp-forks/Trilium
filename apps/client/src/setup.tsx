@@ -410,7 +410,11 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
-    const networkAddresses = getNetworkAddresses();
+    const [ networkAddresses, setNetworkAddresses ] = useState<string[]>([]);
+
+    useEffect(() => {
+        getNetworkAddresses().then(setNetworkAddresses);
+    }, []);
 
     useEffect(() => {
         const interval = setInterval(async () => {
@@ -541,37 +545,15 @@ function SetupPage({ title, description, className, illustration, children, foot
     );
 }
 
-function getNetworkAddresses(): string[] {
+async function getNetworkAddresses(): Promise<string[]> {
     if (!isElectron()) {
         return [`${location.protocol}//${location.host}`];
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const os = require("os") as typeof import("os");
-    const interfaces = os.networkInterfaces();
-    const addresses: string[] = [];
-
-    for (const nets of Object.values(interfaces)) {
-        if (!nets) continue;
-        for (const net of nets) {
-            if (net.internal) continue;
-            if (net.family === "IPv6" && net.scopeid !== 0) continue;
-            addresses.push(net.address);
-        }
-    }
-
-    // Sort by likelihood of being the local network address.
-    addresses.sort((a, b) => networkScore(a) - networkScore(b));
-
+    // Node's `os` module isn't available in the renderer (node integration is
+    // disabled), so the desktop's network interfaces are enumerated server-side.
+    const { addresses } = await server.get<{ addresses: string[] }>("network-addresses");
     return addresses.map((addr) => `${location.protocol}//${addr}:${location.port}`);
-}
-
-function networkScore(addr: string): number {
-    if (addr.startsWith("192.168.")) return 0;
-    if (addr.startsWith("10.")) return 1;
-    if (/^172\.(1[6-9]|2\d|3[01])\./.test(addr)) return 2;
-    if (addr.includes(":")) return 4; // IPv6
-    return 3;
 }
 
 function onSetupFinished() {
