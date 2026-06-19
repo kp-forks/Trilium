@@ -446,6 +446,18 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                 <Admonition type="caution" className="sync-from-desktop-unreachable">
                     <strong>{t("setup.sync-from-desktop-unreachable-title")}</strong>
                     <p>{t("setup.sync-from-desktop-unreachable-description")}</p>
+                    {networkInfo.configPath && (
+                        <p class="config-path">
+                            <code>{networkInfo.configPath}</code>
+                            {isElectron() && (
+                                <Button
+                                    icon="bx bx-edit"
+                                    text={t("setup.sync-from-desktop-open-config")}
+                                    onClick={() => void openConfigFile(networkInfo.configPath)}
+                                />
+                            )}
+                        </p>
+                    )}
                 </Admonition>
             ) : (
                 <>
@@ -577,6 +589,20 @@ async function getNetworkAddresses(): Promise<NetworkAddressesResponse> {
     // protocol and port included), and reports whether it's actually bound to a
     // network-reachable interface.
     return await server.get<NetworkAddressesResponse>("network-addresses");
+}
+
+async function openConfigFile(configPath?: string) {
+    if (!configPath) {
+        return;
+    }
+
+    // `openPath` resolves to a non-empty string when the OS couldn't open the
+    // file (e.g. no editor associated with `.ini`). The path is also shown in
+    // the banner, so the user can still navigate to it manually.
+    const error = await window.electronApi?.shell.openPath(configPath);
+    if (error) {
+        console.error(`Could not open config file "${configPath}": ${error}`);
+    }
 }
 
 function onSetupFinished() {
