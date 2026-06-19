@@ -7,18 +7,12 @@ function getHost() {
         return envHost;
     }
 
-    const configHost = config["Network"]["host"];
-    if (configHost) {
-        return configHost;
-    }
-
-    // The desktop renderer talks to the server via the `trilium-app://`
-    // custom protocol (in-process); the TCP listener only needs to serve
-    // same-host traffic (the renderer's WebSocket). Binding loopback by
-    // default keeps the local port off the LAN — defense in depth on top
-    // of the per-request auth marker. A user who wants LAN access can still
-    // set `[Network] host=` in config.ini.
-    return isElectron ? "127.0.0.1" : "0.0.0.0";
+    // `config.Network.host` resolves the standard env var, then config.ini, then
+    // a platform-aware default — loopback on desktop (the renderer reaches the
+    // server in-process via `trilium-app://`, so the listener can stay off the
+    // LAN as defense in depth), all interfaces on server. A user who wants LAN
+    // access sets `[Network] host=` in config.ini. See `configMapping.Network.host`.
+    return config["Network"]["host"];
 }
 
 export default getHost();

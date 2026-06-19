@@ -324,7 +324,13 @@ const configMapping = {
         host: {
             standardEnvVar: 'TRILIUM_NETWORK_HOST',
             iniGetter: () => getIniSection("Network")?.host,
-            defaultValue: '0.0.0.0'
+            // Desktop (Electron) binds loopback by default: the renderer reaches
+            // the server in-process via `trilium-app://`, so the TCP listener
+            // only needs same-host traffic, and keeping the port off the LAN is
+            // defense in depth on top of the per-request auth marker. Server
+            // builds bind all interfaces. Either can be overridden via the env
+            // var or config.ini.
+            defaultValue: process.versions.electron ? '127.0.0.1' : '0.0.0.0'
         },
         port: {
             standardEnvVar: 'TRILIUM_NETWORK_PORT',
