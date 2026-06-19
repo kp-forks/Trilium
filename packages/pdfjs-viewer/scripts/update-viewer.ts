@@ -1,4 +1,3 @@
-/// <reference path="./yauzl.d.ts" />
 import { join, dirname } from "path";
 import packageJson from "../package.json" with { type: "json" };
 import fs from "fs/promises";

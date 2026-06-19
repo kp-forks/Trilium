@@ -10,6 +10,7 @@
     "@triliumnext/commons": "workspace:*"
   },
   "devDependencies": {
+    "@types/yauzl": "3.4.0",
     "pdfjs-dist": "6.0.227",
     "yauzl": "3.4.0"
   }
