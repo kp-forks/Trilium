@@ -175,6 +175,10 @@ export const uploadMiddlewareWithErrorHandling = function (req: express.Request,
     uploadMiddleware(req, res, (err) => {
         if (err?.code === "LIMIT_FILE_SIZE") {
             res.setHeader("Content-Type", "text/plain").status(400).send(`Cannot upload file because it excceeded max allowed file size of ${MAX_ALLOWED_FILE_SIZE_MB} MiB`);
+        } else if (err?.code === "LIMIT_FIELD_NESTING") {
+            // Triggered by the fieldNestingDepth: 0 limit (CVE-2026-5079 guard). Without this branch the
+            // error would be swallowed and the request forwarded to the handler with no file.
+            res.setHeader("Content-Type", "text/plain").status(400).send("Upload rejected: nested multipart field names are not allowed.");
         } else {
             next();
         }
