@@ -1,7 +1,18 @@
+.dark-theme {
+
+}
+
 .audio-preview-visualization-wrapper {
     /* Gradient endpoints — tune to taste. Read by the canvas renderer via getComputedStyle. */
-    --audio-visualizer-low-color: rgb(206, 206, 206);
-    --audio-visualizer-high-color: black;
+    body.light-theme & {
+        --audio-visualizer-low-color: #cecece;
+        --audio-visualizer-high-color: black;
+    }
+    
+    body.dark-theme & {
+        --audio-visualizer-low-color: #2e2e2e;
+        --audio-visualizer-high-color: white;
+    }
 
     flex-grow: 1;
     min-height: 0;
