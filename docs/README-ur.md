@@ -172,7 +172,7 @@ zadam/Trilium انسٹینس سے TriliumNext/Trilium انسٹینس پر منت
 
 ## 🏗 انسٹالیشن
 
-### Windows / MacOS
+### ❓TriliumNext کیوں؟
 
 [تازہ ترین ریلیز صفحے](https://github.com/TriliumNext/Trilium/releases/latest)
 سے اپنے پلیٹ فارم کے لیے بائنری ریلیز ڈاؤنلوڈ کریں، پیکیج انزپ کریں اور
