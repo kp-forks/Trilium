@@ -2390,7 +2390,11 @@
     "previous-video": "前の動画: {{- title}}",
     "next-video": "次の動画: {{- title}}",
     "previous-audio": "前の音声: {{- title}}",
-    "next-audio": "次の音声: {{- title}}"
+    "next-audio": "次の音声: {{- title}}",
+    "play-mode-title": "プレイモード: {{mode}}",
+    "play-mode-once": "1回再生",
+    "play-mode-loop": "ループ",
+    "play-mode-next": "次を再生"
   },
   "mermaid": {
     "placeholder": "マーメイド図の内容を入力するか、以下のサンプル図のいずれかを使用してください。",
