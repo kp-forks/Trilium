@@ -295,6 +295,58 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
         return release;
     }, [ ownsSession, hasMediaNav, noteContext, note.noteId, note.title, mediaRef, self ]);
 
+    // Keep the OS Media Session's playback and position state in sync while we own it. Android Chrome relies on
+    // these to treat the page as actively playing media: it keeps the notification controls present and makes
+    // the backgrounded tab far less likely to be frozen/suspended — a freeze drops the audio stream's connection
+    // and stops playback. Without them Chrome only infers state from the element, which is unreliable once hidden.
+    useEffect(() => {
+        if (!("mediaSession" in navigator)) return;
+        const mediaSession = navigator.mediaSession;
+        const media = mediaRef.current;
+        if (!ownsSession || !media) return;
+
+        const syncPlaybackState = () => {
+            mediaSession.playbackState = media.paused ? "paused" : "playing";
+        };
+        const syncPositionState = () => {
+            if (typeof mediaSession.setPositionState !== "function") return;
+            // setPositionState throws on a non-finite/zero duration or an out-of-range position.
+            if (!Number.isFinite(media.duration) || media.duration <= 0) return;
+            try {
+                mediaSession.setPositionState({
+                    duration: media.duration,
+                    playbackRate: media.playbackRate || 1,
+                    position: Math.min(Math.max(0, media.currentTime), media.duration)
+                });
+            } catch { /* transient invalid state; the next timeupdate will retry */ }
+        };
+        const syncBoth = () => { syncPlaybackState(); syncPositionState(); };
+
+        syncBoth();
+        media.addEventListener("play", syncBoth);
+        media.addEventListener("pause", syncPlaybackState);
+        media.addEventListener("ended", syncPlaybackState);
+        media.addEventListener("durationchange", syncPositionState);
+        media.addEventListener("ratechange", syncPositionState);
+        media.addEventListener("timeupdate", syncPositionState);
+        media.addEventListener("seeked", syncPositionState);
+        return () => {
+            media.removeEventListener("play", syncBoth);
+            media.removeEventListener("pause", syncPlaybackState);
+            media.removeEventListener("ended", syncPlaybackState);
+            media.removeEventListener("durationchange", syncPositionState);
+            media.removeEventListener("ratechange", syncPositionState);
+            media.removeEventListener("timeupdate", syncPositionState);
+            media.removeEventListener("seeked", syncPositionState);
+            // We no longer own the session (handover/hidden/unmount); clear so the OS overlay doesn't keep a
+            // stale "playing" state. A new owner immediately sets its own.
+            mediaSession.playbackState = "none";
+            if (typeof mediaSession.setPositionState === "function") {
+                try { mediaSession.setPositionState(); } catch { /* nothing to clear */ }
+            }
+        };
+    }, [ ownsSession, mediaRef ]);
+
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {
         if (autoPlayTargetNoteId !== note.noteId) return;
