@@ -339,13 +339,16 @@ export function useMediaSessionController(note: FNote, noteContext: NoteContext 
             media.removeEventListener("timeupdate", syncPositionState);
             media.removeEventListener("seeked", syncPositionState);
             // We no longer own the session (handover/hidden/unmount); clear so the OS overlay doesn't keep a
-            // stale "playing" state. A new owner immediately sets its own.
-            mediaSession.playbackState = "none";
-            if (typeof mediaSession.setPositionState === "function") {
-                try { mediaSession.setPositionState(); } catch { /* nothing to clear */ }
+            // stale "playing" state — but only if another player hasn't already taken the slot, otherwise this
+            // late cleanup would clobber the new owner's freshly-set state.
+            if (activeMediaPlayer === self || activeMediaPlayer === null) {
+                mediaSession.playbackState = "none";
+                if (typeof mediaSession.setPositionState === "function") {
+                    try { mediaSession.setPositionState(); } catch { /* nothing to clear */ }
+                }
             }
         };
-    }, [ ownsSession, mediaRef ]);
+    }, [ ownsSession, mediaRef, self ]);
 
     // Auto-play the freshly-opened sibling once it can play (only when reached via navigation).
     useEffect(() => {

@@ -37,7 +37,16 @@ export function useAudioAnalyser(mediaRef: RefObject<HTMLMediaElement>): () => U
             }
         };
         media.addEventListener("play", onPlay);
-        return () => media.removeEventListener("play", onPlay);
+        return () => {
+            media.removeEventListener("play", onPlay);
+            // Release the audio resources on unmount: AudioContexts are limited (Chromium throws once too many
+            // are open), and a WeakMap entry alone never frees the underlying context.
+            const bundle = analyserCache.get(media);
+            if (bundle) {
+                void bundle.context.close();
+            }
+            analyserCache.delete(media);
+        };
     }, [ mediaRef ]);
 
     return useCallback(() => {
