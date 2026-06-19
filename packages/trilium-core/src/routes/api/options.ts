@@ -160,6 +160,8 @@ function getOptions() {
     // Expose scripting config (read-only, from config.ini / env vars)
     resultMap["backendScriptingEnabled"] = config.Security.backendScriptingEnabled ? "true" : "false";
     resultMap["sqlConsoleEnabled"] = config.Security.sqlConsoleEnabled ? "true" : "false";
+    // Desktop LAN-access override (read-only; toggled via the Electron security bridge)
+    resultMap["allowLanAccess"] = config.Security.allowLanAccess ? "true" : "false";
 
     // Detect if the user has any backend scripts with #run labels (backendStartup, hourly, daily).
     // Filter by MIME type since #run can also appear on frontend scripts.
