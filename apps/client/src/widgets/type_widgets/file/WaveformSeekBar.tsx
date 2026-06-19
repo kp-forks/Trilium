@@ -210,7 +210,11 @@ function drawWaveform(canvas: HTMLCanvasElement | null, peaks: number[] | null, 
         const amplitude = FLAT_LEVEL + (target - FLAT_LEVEL) * morph;
         const x = bar * barStride;
         const barHeight = Math.max(MIN_BAR_HEIGHT, amplitude * maxBarHeight);
-        ctx.fillStyle = analyzed && target < SILENCE_THRESHOLD ? colors.silence : (x < playX ? colors.played : colors.unplayed);
+        // Played bars always take the played color (so silence gaps fill as the playhead passes); the silence
+        // color only distinguishes still-unplayed gaps. Silence is classified from the final target so the
+        // colour stays stable during the morph rather than flickering as the height crosses the threshold.
+        const silent = analyzed && target < SILENCE_THRESHOLD;
+        ctx.fillStyle = x < playX ? colors.played : (silent ? colors.silence : colors.unplayed);
         ctx.fillRect(x, mid - barHeight / 2, BAR_WIDTH, barHeight);
     }
 }
