@@ -644,6 +644,26 @@ export interface FrontendApi {
      */
     formatNoteSize(size: number): string;
     /**
+     * Converts the given HTML string to Markdown.
+     *
+     * Unlike the backend API, this runs on the server (the HTML→Markdown
+     * converter is backend-only), so it returns a promise.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
+    htmlToMarkdown(html: string): Promise<string>;
+    /**
+     * Converts the given Markdown string to HTML.
+     *
+     * Runs entirely in the browser; the promise is only needed because the
+     * Markdown renderer is loaded on demand.
+     *
+     * @param markdown - Markdown content to convert
+     * @returns HTML representation of the input Markdown
+     */
+    markdownToHtml(markdown: string): Promise<string>;
+    /**
      * @returns date in YYYY-MM-DD format
      */
     formatDateISO(date: Date): string;

@@ -1,5 +1,6 @@
-import { dayjs, formatLogMessage } from "@triliumnext/commons";
+import { dayjs, formatLogMessage, type ToMarkdownResponse } from "@triliumnext/commons";
 import type { FrontendApi as PublicFrontendApi, ScriptFNote as PublicScriptFNote } from "@triliumnext/commons/src/lib/script_api.js";
+import DOMPurify from "dompurify";
 
 import appContext from "../components/app_context.js";
 import type Component from "../components/component.js";
@@ -469,6 +470,28 @@ export interface Api {
      */
     formatNoteSize: typeof utils.formatSize;
 
+    /**
+     * Converts the given HTML string to Markdown.
+     *
+     * Unlike the backend API, this runs on the server (the HTML→Markdown
+     * converter is backend-only), so it returns a promise.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
+    htmlToMarkdown(html: string): Promise<string>;
+
+    /**
+     * Converts the given Markdown string to HTML.
+     *
+     * Runs entirely in the browser; the promise is only needed because the
+     * Markdown renderer is loaded on demand.
+     *
+     * @param markdown - Markdown content to convert
+     * @returns HTML representation of the input Markdown
+     */
+    markdownToHtml(markdown: string): Promise<string>;
+
     logMessages: Record<string, string[]>;
     logSpacedUpdates: Record<string, SpacedUpdate>;
 
@@ -711,6 +734,19 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
     this.randomString = utils.randomString;
     this.formatSize = utils.formatSize;
     this.formatNoteSize = utils.formatSize;
+
+    this.htmlToMarkdown = async (html) => {
+        const { markdownContent } = await server.post<ToMarkdownResponse>("other/to-markdown", { htmlContent: html });
+        return markdownContent;
+    };
+    this.markdownToHtml = async (markdown) => {
+        // The Markdown renderer pulls in marked, so it is only loaded on demand.
+        const { renderToHtml } = await import("@triliumnext/commons/src/lib/markdown_renderer");
+        return renderToHtml(markdown, "", {
+            sanitize: (dirty) => DOMPurify.sanitize(dirty),
+            wikiLink: { formatHref: (id) => `#root/${id}` }
+        });
+    };
 
     this.logMessages = {};
     this.logSpacedUpdates = {};
