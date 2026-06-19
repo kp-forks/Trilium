@@ -1013,8 +1013,6 @@
     "mute": "Ztlumit (M)",
     "unmute": "Zrušit ztlumení (M)",
     "playback-speed": "Rychlost přehrávání",
-    "loop": "Cyklus",
-    "disable-loop": "Zakázat cyklus",
     "rotate": "Otočit",
     "picture-in-picture": "Obraz v obraze",
     "exit-picture-in-picture": "Ukončit obraz v obraze",
@@ -1161,8 +1159,6 @@
     "disabled": "vypnuto"
   },
   "ribbon": {
-    "widgets": "Widgety pásu karet",
-    "promoted_attributes_message": "Záložka „Propagované Atributy“ se automaticky otevře, pokud jsou v poznámce přítomny povýšené atributy",
     "edited_notes_message": "Záložka Upravené poznámky na pásu karet se automaticky otevře u denních poznámek"
   },
   "theme": {
@@ -1363,7 +1359,6 @@
     "no_backup_yet": "Zatím neexistuje žádná záloha"
   },
   "etapi": {
-    "title": "ETAPI",
     "description": "ETAPI je REST API používané pro programatický přístup k instanci Trilium bez uživatelského rozhraní.",
     "create_token": "Vytvořit nový ETAPI token",
     "existing_tokens": "Existující tokeny",
@@ -1409,33 +1404,12 @@
     "password_changed_success": "Heslo bylo změněno. Trilium se po stisknutí OK znovu načte."
   },
   "multi_factor_authentication": {
-    "title": "Vícefaktorová autentizace",
-    "description": "Vícefaktorová autentizace (MFA) přidává další vrstvu zabezpečení k vašemu účtu. Místo pouhého zadání hesla pro přihlášení MFA vyžaduje, abyste poskytli jeden nebo více dalších důkazů pro ověření vaší identity. Tímto způsobem, i když se někdo dostane k vašemu heslu, nemůže se k vašemu účtu dostat bez druhého kusu informace. Je to jako přidání dalšího zámku ke dveřím, což ztěžuje vniknutí kohokoli jiného.<br><br>Postupujte podle pokynů níže a povolte MFA. Pokud to nenakonfigurujete správně, přihlášení se vrátí pouze k heslu.",
-    "mfa_enabled": "Povolit vícefaktorovou autentizaci",
-    "mfa_method": "Metoda MFA",
-    "electron_disabled": "Multifaktorová autentizace není v desktop verzi aktuálně podporována.",
-    "totp_title": "Časově založené jednorázové heslo (TOTP)",
-    "totp_description": "TOTP (Časově založené jednorázové heslo) je bezpečnostní funkce, která generuje jedinečný, dočasný kód, který se mění každých 30 sekund. Tento kód spolu s vaším heslem použijete k přihlášení do svého účtu, což ztěžuje přístup k němu pro kohokoli jiného.",
-    "totp_secret_title": "Generovat TOTP tajný klíč",
-    "totp_secret_generate": "Generovat TOTP tajný klíč",
-    "totp_secret_regenerate": "Regenerovat TOTP tajný klíč",
-    "no_totp_secret_warning": "Pro povolení TOTP je nejprve nutné vygenerovat TOTP tajný klíč.",
-    "totp_secret_description_warning": "Po vygenerování nového TOTP tajného klíče budete muset znovu přihlásit pomocí nového TOTP tajného klíče.",
-    "totp_secret_generated": "TOTP tajný klíč vygenerován",
-    "totp_secret_warning": "Uložte vygenerovaný tajný klíč na bezpečném místě. Nebude znovu zobrazen.",
-    "totp_secret_regenerate_confirm": "Jste si jisti, že chcete regenerovat TOTP tajný klíč? Tím se zneplatní předchozí TOTP tajný klíč a všechny existující záchranné kódy.",
-    "recovery_keys_title": "Záchranné klíče pro jednotné přihlašování",
-    "recovery_keys_description": "Záchranné klíče pro jednotné přihlašování se používají k přihlášení v případě, že nemáte přístup ke svým autentifikačním kódům.",
     "recovery_keys_description_warning": "Záchranné klíče nebudou po opuštění stránky znovu zobrazeny, uchovejte je na bezpečném místě. Po použití záchranného klíče jej nelze znovu použít.",
     "recovery_keys_error": "Chyba při generování záchranných kódů",
     "recovery_keys_no_key_set": "Nebyly nastaveny žádné záchranné kódy",
-    "recovery_keys_generate": "Generovat záchranné kódy",
     "recovery_keys_regenerate": "Regenerovat záchranné kódy",
-    "recovery_keys_used": "Použito: {{date}}",
-    "recovery_keys_unused": "Záchranný kód {{index}} nebyl použit",
     "oauth_title": "OAuth/OpenID",
     "oauth_description": "OpenID je standardizovaný způsob, jak se přihlásit na webové stránky pomocí účtu z jiné služby, jako je Google, pro ověření vaší identity. Výchozí vydavatel je Google, ale můžete jej změnit na jakéhokoli jiného ⟨OpenID provider⟩. Podrobnosti naleznete <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">zde</a>. Postupujte podle těchto <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">instrukcí</a> pro nastavení služby OpenID přes Google.",
-    "oauth_description_warning": "Pro povolení OAuth/OpenID musíte nastavit základní ⟨URL⟩ OAuth/OpenID, ID klienta a tajný klíč klienta v souboru config.ini a restartovat aplikaci. Pokud chcete nastavit z proměnných prostředí, nastavte TRILIUM_OAUTH_BASE_URL, TRILIUM_OAUTH_CLIENT_ID a TRILIUM_OAUTH_CLIENT_SECRET.",
     "oauth_missing_vars": "Chybějící nastavení: {{-variables}}",
     "oauth_user_account": "Uživatelský účet: ",
     "oauth_user_email": "Uživatelský e-mail: ",
@@ -1443,13 +1417,7 @@
   },
   "shortcuts": {
     "keyboard_shortcuts": "Klávesové zkratky",
-    "multiple_shortcuts": "Více zkratek pro stejnou akci lze oddělit čárkou.",
-    "electron_documentation": "Dostupné modifikátory a kódy kláves naleznete v <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">dokumentaci Electronu</a>.",
     "type_text_to_filter": "Napište text pro filtrování zkratek...",
-    "action_name": "Název akce",
-    "shortcuts": "Zkratky",
-    "default_shortcuts": "Výchozí zkratky",
-    "description": "Popis",
     "reload_app": "Načtěte aplikaci pro použití změn",
     "set_all_to_default": "Nastavte všechny zkratky na výchozí",
     "confirm_reset": "Opravdu chcete resetovat všechny klávesové zkratky na výchozí?",
@@ -1459,8 +1427,7 @@
     "title": "Kontrola pravopisu",
     "description": "Tato nastavení platí pouze pro ⟨desktop⟩ verze, prohlížeče budou používat vlastní nativní kontrolu pravopisu.",
     "enable": "Povolit kontrolu pravopisu",
-    "language_code_label": "Kód jazyka(ů)",
-    "restart-required": "Změny v nastavení kontroly pravopisu se projeví po restartu aplikace."
+    "language_code_label": "Kód jazyka(ů)"
   },
   "sync_2": {
     "config_title": "Konfigurace Synchronizace",
@@ -2296,8 +2263,6 @@
     "summary": "Shrnutí"
   },
   "llm": {
-    "settings_title": "AI / LLM",
-    "settings_description": "Konfigurovat integrace AI a Large Language Model.",
     "feature_not_enabled": "Povolte experimentální funkci LLM v Nastavení → Pokročilé → Experimentální funkce pro použití integrací AI.",
     "add_provider": "Přidat poskytovatele",
     "add_provider_title": "Přidat poskytovatele AI",

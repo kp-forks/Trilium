@@ -52,7 +52,7 @@ function makeOpfs(seed: Record<string, { data: Uint8Array; lastModified: number 
             for (const [name, entry] of files) {
                 yield [name, {
                     kind: "file",
-                    async getFile() { return { lastModified: entry.lastModified }; }
+                    async getFile() { return { lastModified: entry.lastModified, size: entry.data.byteLength }; }
                 }];
             }
         }
@@ -119,8 +119,8 @@ describe("StandaloneBackupService with OPFS", () => {
 
     it("lists matching backups newest-first and ignores non-backup entries", async () => {
         const fs = makeOpfs({
-            "backup-old.db": { data: new Uint8Array(), lastModified: 100 },
-            "backup-new.db": { data: new Uint8Array(), lastModified: 200 },
+            "backup-old.db": { data: new Uint8Array(3), lastModified: 100 },
+            "backup-new.db": { data: new Uint8Array(8), lastModified: 200 },
             "notes.txt": { data: new Uint8Array(), lastModified: 300 }
         });
         installOpfs(async () => fs.root);
@@ -128,6 +128,7 @@ describe("StandaloneBackupService with OPFS", () => {
         const backups = await new StandaloneBackupService(options).getExistingBackups();
         expect(backups.map(b => b.fileName)).toEqual(["backup-new.db", "backup-old.db"]);
         expect(backups[0].filePath).toBe("/backups/backup-new.db");
+        expect(backups.map(b => b.fileSize)).toEqual([8, 3]);
     });
 
     it("reads and deletes a backup by path/name", async () => {

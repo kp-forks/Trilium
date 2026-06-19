@@ -45,9 +45,9 @@ describe("codeToSiblingDirection", () => {
         expect(codeToSiblingDirection("End", [], [])).toBe("last");
     });
 
-    it("maps the Previous/Next Track media keys", () => {
-        expect(codeToSiblingDirection("MediaTrackPrevious", [], [])).toBe("previous");
-        expect(codeToSiblingDirection("MediaTrackNext", [], [])).toBe("next");
+    it("ignores the Previous/Next Track media keys (OS media-key integration is video/audio-only)", () => {
+        expect(codeToSiblingDirection("MediaTrackPrevious", [], [])).toBeNull();
+        expect(codeToSiblingDirection("MediaTrackNext", [], [])).toBeNull();
     });
 
     it("honors caller-provided extra keys (e.g. the image viewer's Backspace/Space)", () => {

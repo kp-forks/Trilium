@@ -357,6 +357,23 @@ describe("renderToHtml", () => {
             expect(html).toContain('<code spellcheck="false">$x$</code>');
             expect(html).toContain('<span class="math-tex">\\(y\\)</span>');
         });
+
+        it("renders an escaped dollar as a single literal dollar without adding backslashes (#10179)", () => {
+            // Markdown `\$` is an escaped dollar; the backslash must be consumed, leaving
+            // just `$`. It must not gain extra backslashes (the reported `\\$` output).
+            expect(render("\\$")).toBe("<p>$</p>");
+            expect(render("price is \\$5 today")).toBe("<p>price is $5 today</p>");
+        });
+
+        it("leaves mismatched dollar runs as literal text instead of a malformed formula", () => {
+            // Asymmetric delimiters (e.g. `$$…$`) must not be parsed as math — otherwise a
+            // stray `$` ends up inside the formula body and crashes KaTeX. GitHub renders
+            // these as plain text, and so should we.
+            expect(render("$$e=mc^2$")).toBe("<p>$$e=mc^2$</p>");
+            expect(render("$e=mc^2$$")).toBe("<p>$e=mc^2$$</p>");
+            expect(render("$$$x$$")).toBe("<p>$$$x$$</p>");
+            expect(render("$$e=mc^2$")).not.toContain("math-tex");
+        });
     });
 
     describe("wiki links and transclusions", () => {

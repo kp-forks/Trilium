@@ -107,6 +107,8 @@ export function startElectron(callback: () => void): DeferredPromise<void> {
         // IPC calls hit no listener — which storms the TabHistoryNavigationButtons
         // render loop with tens of thousands of blocking sendSync calls and pegs
         // the renderer. Desktop registers these in apps/desktop/src/main.ts.
+        // (This also installs the WebContents security policy — webview-attach
+        // vetting, window-open/navigation guards, permission handlers.)
         setupWindowing();
 
         // Create the main window.

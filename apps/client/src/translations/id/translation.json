@@ -925,7 +925,8 @@
     "hide_child_notes": "Sembunyikan catatan anak di tree",
     "open_all_in_tabs": "Buka semua",
     "open_all_in_tabs_tooltip": "Buka semua hasil di tab baru",
-    "open_all_confirm_other": "Ini akan membuka {{count}} catatan di tab baru. Lanjutkan?"
+    "open_all_confirm_other": "Ini akan membuka {{count}} catatan di tab baru. Lanjutkan?",
+    "dashboard": "Dasbor"
   },
   "edited_notes": {
     "no_edited_notes_found": "Belum ada catatan yang diedit pada hari ini...",
@@ -1170,8 +1171,6 @@
     "mute": "Bisukan (M)",
     "unmute": "Aktifkan suara (M)",
     "playback-speed": "Kecepatan pemutaran",
-    "loop": "Ulangi",
-    "disable-loop": "Nonaktifkan pengulangan",
     "rotate": "Putar",
     "picture-in-picture": "Picture-in-picture",
     "exit-picture-in-picture": "Keluar dari picture-in-picture",
@@ -1179,7 +1178,11 @@
     "exit-fullscreen": "Keluar dari layar penuh",
     "unsupported-format": "Pratinjau media tidak tersedia untuk format file ini:\n{{mime}}",
     "zoom-to-fit": "Perbesar hingga memenuhi",
-    "zoom-reset": "Setel ulang perbesar hingga memenuhi"
+    "zoom-reset": "Setel ulang perbesar hingga memenuhi",
+    "previous-video": "Video sebelumnya: {{- title}}",
+    "next-video": "Video berikutnya: {{- title}}",
+    "previous-audio": "Audio sebelumnya: {{- title}}",
+    "next-audio": "Audio berikutnya: {{- title}}"
   },
   "protected_session": {
     "enter_password_instruction": "Menampilkan catatan terlindungi memerlukan Anda memasukkan kata sandi:",
@@ -1255,7 +1258,9 @@
     "error_creating_anonymized_database": "Tidak dapat membuat database anonim, periksa log backend untuk detail",
     "successfully_created_fully_anonymized_database": "Database yang dianonimkan sepenuhnya berhasil dibuat di {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Database yang dianonimkan secara ringan berhasil dibuat di {{anonymizedFilePath}}",
-    "no_anonymized_database_yet": "Belum ada database anonim."
+    "no_anonymized_database_yet": "Belum ada database anonim.",
+    "anonymized_databases_location": "Database yang dianonimkan disimpan di {{- anonymizedFolder}}.",
+    "download": "Unduh"
   },
   "database_integrity_check": {
     "title": "Pemeriksaan Integritas Database",
@@ -1338,8 +1343,6 @@
     "disabled": "dinonaktifkan"
   },
   "ribbon": {
-    "widgets": "Widget ribbon",
-    "promoted_attributes_message": "Tab ribbon Atribut Dipromosikan akan terbuka otomatis jika atribut yang dipromosikan ada pada catatan",
     "edited_notes_message": "Tab ribbon Catatan yang Diedit akan terbuka otomatis pada catatan harian"
   },
   "theme": {
@@ -1566,9 +1569,9 @@
     "title": "Cadangan",
     "automatic_backup": "Cadangan otomatis",
     "automatic_backup_description": "Trilium dapat mencadangkan database secara otomatis:",
-    "enable_daily_backup": "Cadangkan setiap hari",
-    "enable_weekly_backup": "Cadangkan setiap minggu",
-    "enable_monthly_backup": "Cadangkan setiap bulan",
+    "enable_daily_backup": "Pencadangan harian",
+    "enable_weekly_backup": "Pencadangan mingguan",
+    "enable_monthly_backup": "Pencadangan bulanan",
     "backup_recommendation": "Disarankan untuk tetap mengaktifkan cadangan, tetapi ini dapat memperlambat startup aplikasi pada database besar dan/atau perangkat penyimpanan yang lambat.",
     "backup_now": "Cadangkan sekarang",
     "backup_database_now": "Cadangkan database sekarang",
@@ -1577,10 +1580,12 @@
     "path": "Path",
     "database_backed_up_to": "Database telah dicadangkan ke {{- backupFilePath}}",
     "no_backup_yet": "belum ada cadangan",
-    "download": "Unduh"
+    "download": "Unduh",
+    "automatic_backups_title": "Pencadangan otomatis",
+    "automatic_backups_description": "Trilium dapat mencadangkan database secara otomatis. Disarankan untuk tetap mengaktifkan pencadangan, tetapi ini dapat memperlambat startup aplikasi pada database besar dan/atau perangkat penyimpanan yang lambat.",
+    "backup_location_description": "Cadangan disimpan di {{- backupFolder}}."
   },
   "etapi": {
-    "title": "ETAPI",
     "description": "ETAPI adalah REST API yang digunakan untuk mengakses instance Trilium secara terprogram, tanpa UI.",
     "create_token": "Buat token ETAPI baru",
     "existing_tokens": "Token yang sudah ada",
@@ -1598,7 +1603,8 @@
     "delete_token": "Hapus / nonaktifkan token ini",
     "rename_token_title": "Ubah nama token",
     "rename_token_message": "Silakan masukkan nama token baru",
-    "delete_token_confirmation": "Apakah Anda yakin ingin menghapus token ETAPI \"{{name}}\"?"
+    "delete_token_confirmation": "Apakah Anda yakin ingin menghapus token ETAPI \"{{name}}\"?",
+    "no_tokens": "Belum ada token."
   },
   "options_widget": {
     "options_status": "Status opsi",
@@ -1645,33 +1651,12 @@
     "password_changed_success": "Kata sandi telah diubah. Trilium akan dimuat ulang setelah Anda menekan OK."
   },
   "multi_factor_authentication": {
-    "title": "Autentikasi Multi-Faktor",
-    "description": "Autentikasi Multi-Faktor (MFA) menambahkan lapisan keamanan ekstra ke akun Anda. Alih-alih hanya memasukkan kata sandi untuk login, MFA mengharuskan Anda memberikan satu atau lebih bukti tambahan untuk memverifikasi identitas Anda. Dengan cara ini, meskipun seseorang mendapatkan kata sandi Anda, mereka tetap tidak dapat mengakses akun Anda tanpa informasi kedua tersebut. Ini seperti menambahkan kunci ekstra pada pintu Anda, sehingga jauh lebih sulit bagi orang lain untuk membobolnya.<br><br>Silakan ikuti petunjuk di bawah ini untuk mengaktifkan MFA. Jika konfigurasi tidak benar, login akan kembali menggunakan kata sandi saja.",
-    "mfa_enabled": "Aktifkan Autentikasi Multi-Faktor",
-    "mfa_method": "Metode MFA",
-    "electron_disabled": "Autentikasi Multi-Faktor saat ini tidak didukung pada versi desktop.",
-    "totp_title": "Time-based One-Time Password (TOTP)",
-    "totp_description": "TOTP (Time-Based One-Time Password) adalah fitur keamanan yang menghasilkan kode unik sementara yang berubah setiap 30 detik. Anda menggunakan kode ini, bersama kata sandi Anda, untuk login ke akun, sehingga jauh lebih sulit bagi orang lain untuk mengakses akun Anda.",
-    "totp_secret_title": "Buat Rahasia TOTP",
-    "totp_secret_generate": "Buat Rahasia TOTP",
-    "totp_secret_regenerate": "Buat Ulang Rahasia TOTP",
-    "no_totp_secret_warning": "Untuk mengaktifkan TOTP, Anda perlu membuat rahasia TOTP terlebih dahulu.",
-    "totp_secret_description_warning": "Setelah membuat rahasia TOTP baru, Anda harus login lagi menggunakan rahasia TOTP yang baru.",
-    "totp_secret_generated": "Rahasia TOTP Berhasil Dibuat",
-    "totp_secret_warning": "Harap simpan rahasia yang dibuat di lokasi yang aman. Rahasia ini tidak akan ditampilkan lagi.",
-    "totp_secret_regenerate_confirm": "Apakah Anda yakin ingin membuat ulang rahasia TOTP? Ini akan membatalkan rahasia TOTP sebelumnya dan semua recovery code yang ada.",
-    "recovery_keys_title": "Recovery Key Single Sign-on",
-    "recovery_keys_description": "Recovery key single sign-on digunakan untuk login jika Anda tidak dapat mengakses kode Authenticator Anda.",
     "recovery_keys_description_warning": "Recovery key tidak akan ditampilkan lagi setelah meninggalkan halaman ini, jadi simpanlah di tempat yang aman dan terlindungi.<br>Setelah sebuah recovery key digunakan, key tersebut tidak dapat digunakan lagi.",
     "recovery_keys_error": "Kesalahan saat membuat recovery code",
     "recovery_keys_no_key_set": "Belum ada recovery code yang diatur",
-    "recovery_keys_generate": "Buat Recovery Code",
     "recovery_keys_regenerate": "Buat Ulang Recovery Code",
-    "recovery_keys_used": "Digunakan: {{date}}",
-    "recovery_keys_unused": "Recovery code {{index}} belum digunakan",
     "oauth_title": "OAuth/OpenID",
     "oauth_description": "OpenID adalah cara standar yang memungkinkan Anda login ke situs web menggunakan akun dari layanan lain, seperti Google, untuk memverifikasi identitas Anda. Issuer default adalah Google, tetapi Anda dapat mengubahnya ke penyedia OpenID lain. Lihat <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">di sini</a> untuk informasi lebih lanjut. Ikuti <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">petunjuk ini</a> untuk menyiapkan layanan OpenID melalui Google.",
-    "oauth_description_warning": "Untuk mengaktifkan OAuth/OpenID, Anda perlu menetapkan base URL OAuth/OpenID, client ID, dan client secret di file config.ini lalu memulai ulang aplikasi. Jika ingin mengaturnya melalui environment variable, silakan set TRILIUM_OAUTH_BASE_URL, TRILIUM_OAUTH_CLIENT_ID, dan TRILIUM_OAUTH_CLIENT_SECRET.",
     "oauth_missing_vars": "Pengaturan yang belum ada: {{-variables}}",
     "oauth_user_account": "Akun Pengguna: ",
     "oauth_user_email": "Email Pengguna: ",
@@ -1679,13 +1664,7 @@
   },
   "shortcuts": {
     "keyboard_shortcuts": "Pintasan Keyboard",
-    "multiple_shortcuts": "Beberapa pintasan untuk tindakan yang sama dapat dipisahkan dengan koma.",
-    "electron_documentation": "Lihat <a href=\"https://www.electronjs.org/docs/latest/api/accelerator\">dokumentasi Electron</a> untuk modifier dan kode tombol yang tersedia.",
     "type_text_to_filter": "Ketik teks untuk memfilter pintasan...",
-    "action_name": "Nama tindakan",
-    "shortcuts": "Pintasan",
-    "default_shortcuts": "Pintasan default",
-    "description": "Deskripsi",
     "reload_app": "Muat ulang aplikasi untuk menerapkan perubahan",
     "set_all_to_default": "Setel semua pintasan ke default",
     "confirm_reset": "Apakah Anda benar-benar ingin mereset semua pintasan keyboard ke default?",
@@ -1696,7 +1675,6 @@
     "description": "Opsi ini hanya berlaku untuk versi desktop, browser akan menggunakan pemeriksa ejaan bawaannya sendiri.",
     "enable": "Periksa ejaan",
     "language_code_label": "Bahasa Pemeriksa Ejaan",
-    "restart-required": "Perubahan pada opsi pemeriksa ejaan akan berlaku setelah aplikasi dimulai ulang.",
     "custom_dictionary_title": "Kamus Kustom",
     "custom_dictionary_description": "Kata yang ditambahkan ke kamus akan disinkronkan ke semua perangkat Anda.",
     "custom_dictionary_edit": "Kata kustom",
@@ -1962,7 +1940,10 @@
     "print_report_stack_trace": "Stack trace",
     "print_report_collection_content_other": "{{count}} catatan dalam koleksi tidak dapat dicetak karena tidak didukung atau dilindungi.",
     "print_report_collection_details_button": "Lihat detail",
-    "print_report_collection_details_ignored_notes": "Catatan yang diabaikan"
+    "print_report_collection_details_ignored_notes": "Catatan yang diabaikan",
+    "content_load_error": "Konten catatan tidak dapat dimuat.",
+    "content_load_retry": "Coba lagi",
+    "content_load_stalled": "Konten catatan masih dimuat…"
   },
   "note_title": {
     "placeholder": "ketik judul catatan di sini...",
@@ -2360,7 +2341,8 @@
     "unpin_tab_description": "Lepas sematan tab ini, memungkinkannya untuk ditutup dan dipindahkan secara bebas"
   },
   "content_renderer": {
-    "open_externally": "Buka secara eksternal"
+    "open_externally": "Buka secara eksternal",
+    "mermaid_diagram_error": "Diagram Mermaid gagal dirender: {{error}}"
   },
   "modal": {
     "close": "Tutup",
@@ -2568,7 +2550,8 @@
     "menu_run_mobile_startup": "Saat frontend mobile mulai berjalan",
     "menu_change_to_widget": "Ubah menjadi widget",
     "menu_change_to_frontend_script": "Ubah menjadi script frontend",
-    "menu_theme_base": "Basis tema"
+    "menu_theme_base": "Basis tema",
+    "type_custom_request_handler": "Penangan permintaan kustom"
   },
   "setup_form": {
     "more_info": "Pelajari lebih lanjut"
@@ -2672,8 +2655,6 @@
     "summary": "Ringkasan"
   },
   "llm": {
-    "settings_title": "AI / LLM",
-    "settings_description": "Konfigurasikan integrasi AI dan Large Language Model.",
     "feature_not_enabled": "Aktifkan fitur eksperimental LLM di Pengaturan → Lanjutan → Fitur eksperimental untuk menggunakan integrasi AI.",
     "add_provider": "Tambahkan Provider",
     "add_provider_title": "Tambahkan Provider AI",
@@ -2718,8 +2699,10 @@
       "rename_note": "Ubah nama catatan",
       "delete_note": "Hapus catatan",
       "move_note": "Pindahkan catatan",
-      "clone_note": "Kloning catatan"
-    }
+      "clone_note": "Kloning catatan",
+      "search_icons": "Cari ikon"
+    },
+    "not_available_in_standalone": "Fitur AI/LLM tidak tersedia dalam versi standalone Trilium, karena penyedia LLM tidak mengizinkan akses langsung dari browser."
   },
   "common": {
     "save": "Simpan",
@@ -2753,5 +2736,20 @@
       "invalid-symbol": "simbol markdown harus satu karakter, kecuali \"[\", \" \", \"X\", dan \"]\"",
       "duplicate-symbol": "simbol markdown duplikat"
     }
+  },
+  "options": {
+    "back": "Kembali ke semua opsi"
+  },
+  "image_navigation": {
+    "previous": "Gambar sebelumnya: {{- title}}",
+    "next": "Gambar berikutnya: {{- title}}"
+  },
+  "image_viewer": {
+    "loading_error": "Terjadi kesalahan saat memuat gambar."
+  },
+  "dashboard_view": {
+    "refresh-widget": "Muat ulang",
+    "remove-widget": "Hapus dari dasbor",
+    "empty-hint": "Setiap catatan anak akan menjadi widget. Seret catatan ke sini dari pohon atau buat yang baru."
   }
 }

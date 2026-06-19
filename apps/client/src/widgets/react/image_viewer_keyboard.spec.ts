@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clampPan, codeToControl, getPanDelta } from "./image_viewer_keyboard";
+import { clampPan, codeToControl, getPanDelta, zoomToPointPosition } from "./image_viewer_keyboard";
 
 describe("codeToControl", () => {
     it("maps zoom/reset keys (Equal/Minus/Slash, numpad, Q/E) regardless of modifiers", () => {
@@ -63,5 +63,29 @@ describe("clampPan", () => {
     it("clamps a position past either edge", () => {
         expect(clampPan(20, 20, bounds)).toEqual({ x: 0, y: 0 });
         expect(clampPan(-200, -200, bounds)).toEqual({ x: -100, y: -50 });
+    });
+});
+
+describe("zoomToPointPosition", () => {
+    it("leaves the position unchanged when the cursor sits on the content origin", () => {
+        // Cursor at (posX0, posY0) → content point 0, so scaling moves nothing.
+        expect(zoomToPointPosition(1, 50, 50, 3, 50, 50)).toEqual({ x: 50, y: 50 });
+    });
+
+    it("shifts the position so the cursor's content point stays under the cursor when zooming in", () => {
+        // scale 1→2 at cursor (100,100) over origin: content point 100 must stay put → pos = 100 - 100*2.
+        expect(zoomToPointPosition(1, 0, 0, 2, 100, 100)).toEqual({ x: -100, y: -100 });
+    });
+
+    it("shifts the other way when zooming out, from a non-zero starting transform", () => {
+        // content point = (120-20)/2 = 50; new pos = 120 - 50*1 = 70 (x), (90-(-10))/2=50 → 90-50=40 (y).
+        expect(zoomToPointPosition(2, 20, -10, 1, 120, 90)).toEqual({ x: 70, y: 40 });
+    });
+
+    it("keeps the cursor's content point invariant across the scale change", () => {
+        const [ scale0, posX0, posY0, scale1, cursorX, cursorY ] = [ 1.5, 12, -8, 4.2, 230, 70 ];
+        const { x, y } = zoomToPointPosition(scale0, posX0, posY0, scale1, cursorX, cursorY);
+        expect((cursorX - x) / scale1).toBeCloseTo((cursorX - posX0) / scale0);
+        expect((cursorY - y) / scale1).toBeCloseTo((cursorY - posY0) / scale0);
     });
 });
