@@ -693,8 +693,8 @@ importers:
         specifier: 8.18.1
         version: 8.18.1
       '@types/yauzl':
-        specifier: 3.3.0
-        version: 3.3.0
+        specifier: 3.4.0
+        version: 3.4.0
       archiver:
         specifier: 8.0.0
         version: 8.0.0
@@ -1591,6 +1591,9 @@ importers:
         specifier: workspace:*
         version: link:../commons
     devDependencies:
+      '@types/yauzl':
+        specifier: 3.4.0
+        version: 3.4.0
       pdfjs-dist:
         specifier: 5.7.284
         version: 5.7.284
@@ -5897,8 +5900,8 @@ packages:
   '@types/yauzl@2.10.3':
     resolution: {integrity: sha512-oJoftv0LSuaDZE3Le4DbKX+KS9G36NzOeSap90UIK0yMA/NhKJhqlSGtNDORNRaIbQfzjXDrQa0ytJ6mNRGz/Q==}
 
-  '@types/yauzl@3.3.0':
-    resolution: {integrity: sha512-7YJZZveDGYqCMt0PrN0sjZj9gT07xLqnHBimKwhWYTJ4lh5MxDGmaCaN4+6x1TOPt+dk3Ge8w9cO3uJXoy/qrA==}
+  '@types/yauzl@3.4.0':
+    resolution: {integrity: sha512-NRPn5w6h8dhcnmx3YIRQcqMywY/+nND/uOkJessedcrowO3C0AssHp3tMJpxKAwOhFOo0OV1y9VtsC5hbKKBAw==}
 
   '@typescript-eslint/eslint-plugin@8.61.0':
     resolution: {integrity: sha512-bFNvl9ZczlVb+wR2Akszf3gHfKVj/8WanXaGJ3UstTA7brNKg0cNdk6X1Psu5V7MZ2oQtzZKOEzIUehaoxbDGw==}
@@ -19182,9 +19185,9 @@ snapshots:
       '@types/node': 24.13.2
     optional: true
 
-  '@types/yauzl@3.3.0':
+  '@types/yauzl@3.4.0':
     dependencies:
-      '@types/node': 24.13.1
+      '@types/node': 24.13.2
 
   '@typescript-eslint/eslint-plugin@8.61.0(@typescript-eslint/parser@8.61.0(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3)':
     dependencies:
