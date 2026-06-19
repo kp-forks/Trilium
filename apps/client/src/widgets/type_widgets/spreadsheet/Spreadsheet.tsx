@@ -10,31 +10,24 @@ import "@univerjs/preset-sheets-data-validation/lib/index.css";
 
 import { DEFAULT_STYLES } from '@univerjs/core';
 import { UniverSheetsConditionalFormattingPreset } from '@univerjs/preset-sheets-conditional-formatting';
-import UniverPresetSheetsConditionalFormattingEnUS from '@univerjs/preset-sheets-conditional-formatting/locales/en-US';
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
-import sheetsCoreEnUS  from '@univerjs/preset-sheets-core/locales/en-US';
 import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-validation';
-import UniverPresetSheetsDataValidationEnUS from '@univerjs/preset-sheets-data-validation/locales/en-US';
 import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
-import UniverPresetSheetsFilterEnUS from '@univerjs/preset-sheets-filter/locales/en-US';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
-import sheetsFindReplaceEnUS from '@univerjs/preset-sheets-find-replace/locales/en-US';
 import { UniverSheetsHyperLinkPreset } from '@univerjs/preset-sheets-hyper-link';
-import UniverPresetSheetsHyperLinkEnUS from '@univerjs/preset-sheets-hyper-link/locales/en-US';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
-import sheetsNoteEnUS from '@univerjs/preset-sheets-note/locales/en-US';
 import { UniverSheetsSortPreset } from '@univerjs/preset-sheets-sort';
-import UniverPresetSheetsSortEnUS from '@univerjs/preset-sheets-sort/locales/en-US';
-import { createUniver, FUniver, LocaleType, mergeLocales } from '@univerjs/presets';
+import { createUniver, FUniver, mergeLocales } from '@univerjs/presets';
 import { CalculationMode } from '@univerjs/sheets-formula';
 import { IDialogService, IShortcutService, ISidebarService } from '@univerjs/ui';
-import { MutableRef, useEffect, useRef } from "preact/hooks";
+import { MutableRef, useEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context";
 import { t } from "../../../services/i18n";
 import { useColorScheme, useEffectiveReadOnly, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
 import useSpreadsheetExport from "./export";
+import { loadUniverLocale, UniverLocale } from "./locales";
 import usePersistence from "./persistence";
 
 function buildReadOnlyLocaleOverrides() {
@@ -63,16 +56,38 @@ function buildReadOnlyLocaleOverrides() {
 
 export default function Spreadsheet(props: TypeWidgetProps) {
     const readOnly = useEffectiveReadOnly(props.note, props.noteContext);
+    const locale = useUniverLocale();
+
+    // Wait for the locale bundle before mounting the editor so Univer can be created synchronously
+    // with the right language (the dependent hooks below rely on the API being ready immediately).
+    if (!locale) {
+        return <div className="spreadsheet" />;
+    }
 
     // Use readOnly as key to force full remount (and data reload) when it changes.
-    return <SpreadsheetEditor key={String(readOnly)} {...props} readOnly={readOnly} />;
+    return <SpreadsheetEditor key={String(readOnly)} {...props} readOnly={readOnly} locale={locale} />;
 }
 
-function SpreadsheetEditor({ note, noteContext, readOnly }: TypeWidgetProps & { readOnly: boolean }) {
+/** Loads the Univer locale matching Trilium's UI language once, on mount. */
+function useUniverLocale() {
+    const [locale, setLocale] = useState<UniverLocale>();
+    useEffect(() => {
+        let cancelled = false;
+        void loadUniverLocale().then((loaded) => {
+            if (!cancelled) setLocale(loaded);
+        });
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+    return locale;
+}
+
+function SpreadsheetEditor({ note, noteContext, readOnly, locale }: TypeWidgetProps & { readOnly: boolean; locale: UniverLocale }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const apiRef = useRef<FUniver>();
 
-    useInitializeSpreadsheet(containerRef, apiRef, readOnly);
+    useInitializeSpreadsheet(containerRef, apiRef, readOnly, locale);
     useReleaseFillShortcuts(apiRef);
     useDarkMode(apiRef);
     usePersistence(note, noteContext, apiRef, containerRef);
@@ -187,7 +202,7 @@ function useReleaseFillShortcuts(apiRef: MutableRef<FUniver | undefined>) {
     }, [ apiRef ]);
 }
 
-function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean) {
+function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null>, apiRef: MutableRef<FUniver | undefined>, readOnly: boolean, locale: UniverLocale) {
     useEffect(() => {
         if (!containerRef.current) return;
 
@@ -198,17 +213,12 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
         }
 
         const { univerAPI } = createUniver({
-            locale: LocaleType.EN_US,
+            // Inherit the spreadsheet language (and locale-dependent defaults such as the currency
+            // symbol) from Trilium's UI language instead of hardcoding US English.
+            locale: locale.type,
             locales: {
-                [LocaleType.EN_US]: mergeLocales(
-                    sheetsCoreEnUS,
-                    sheetsFindReplaceEnUS,
-                    sheetsNoteEnUS,
-                    UniverPresetSheetsFilterEnUS,
-                    UniverPresetSheetsSortEnUS,
-                    UniverPresetSheetsDataValidationEnUS,
-                    UniverPresetSheetsConditionalFormattingEnUS,
-                    UniverPresetSheetsHyperLinkEnUS,
+                [locale.type]: mergeLocales(
+                    locale.data,
                     readOnly ? buildReadOnlyLocaleOverrides() : {},
                 ),
             },
@@ -256,7 +266,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
 
         apiRef.current = univerAPI;
         return () => univerAPI.dispose();
-    }, [ apiRef, containerRef, readOnly ]);
+    }, [ apiRef, containerRef, readOnly, locale ]);
 }
 
 function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {

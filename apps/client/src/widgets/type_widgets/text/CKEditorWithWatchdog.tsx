@@ -205,6 +205,11 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
         let isStale = false;
 
         const init = async () => {
+            // Preserve the scroll position across editor recreation: rebuilding the editor briefly
+            // empties the content, which collapses the surrounding scrolling container back to the top.
+            const scrollContainer = container.closest<HTMLElement>(".scrolling-container");
+            const scrollTop = scrollContainer?.scrollTop ?? 0;
+
             // Ensure any previous watchdog is fully destroyed
             if (watchdogRef.current) {
                 try {
@@ -256,6 +261,18 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
             }
 
             await watchdog.create(container, {});
+
+            if (isStale || !scrollContainer || !scrollTop) return;
+
+            // Restore after the content has been set and laid out, otherwise the container is still
+            // collapsed and the assignment gets clamped to a smaller scroll height.
+            requestAnimationFrame(() => {
+                if (!isStale) {
+                    // `behavior: "instant"` overrides the container's `scroll-behavior: smooth`,
+                    // so the position is restored without an animation.
+                    scrollContainer.scrollTo({ top: scrollTop, behavior: "instant" });
+                }
+            });
         };
 
         init();
