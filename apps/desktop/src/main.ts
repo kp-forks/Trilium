@@ -69,8 +69,10 @@ export async function main() {
         process.exit(0);
     }
 
-    // Adds debug features like hotkeys for triggering dev tools and reload
-    electronDebug();
+    // Adds debug features like hotkeys for triggering dev tools and reload.
+    // `showDevTools: false` prevents DevTools from auto-opening on every window
+    // in dev mode — the hotkeys (F12, Ctrl/Cmd+R) remain available.
+    electronDebug({ showDevTools: false });
     electronDl({ saveAs: true });
 
     // needed for excalidraw export https://github.com/zadam/trilium/issues/4271
