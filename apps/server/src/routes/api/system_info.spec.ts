@@ -74,6 +74,7 @@ describe("System info API", () => {
                     { address: "203.0.113.5", internal: false, family: "IPv4" },
                     { address: "192.168.1.20", internal: false, family: "IPv4" },
                     { address: "10.0.0.4", internal: false, family: "IPv4" },
+                    { address: "172.16.0.9", internal: false, family: "IPv4" },
                     { address: "fe80::1", internal: false, family: "IPv6", scopeid: 4 },
                     { address: "fd00::1", internal: false, family: "IPv6", scopeid: 0 }
                 ]
@@ -82,6 +83,7 @@ describe("System info API", () => {
             expect(collectNetworkAddresses(interfaces)).toEqual([
                 "192.168.1.20", // 192.168.* ranks first
                 "10.0.0.4",     // then 10.*
+                "172.16.0.9",   // then 172.16–31.* private range
                 "203.0.113.5",  // then other IPv4
                 "fd00::1"       // IPv6 last; fe80::1 dropped (scopeid !== 0)
             ]);

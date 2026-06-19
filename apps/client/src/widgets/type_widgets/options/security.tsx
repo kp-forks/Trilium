@@ -164,7 +164,7 @@ function LanAccessSettings({ liveValue, pendingValue, setPendingValue }: ToggleS
     const hasPendingChange = pendingValue !== null && pendingValue !== liveValue;
 
     async function handleToggle(enabled: boolean) {
-        const confirmed = await window.electronApi!.security.setLanAccessEnabled(enabled);
+        const confirmed = await window.electronApi?.security.setLanAccessEnabled(enabled);
         if (confirmed) {
             setPendingValue(enabled === liveValue ? null : enabled);
         }
