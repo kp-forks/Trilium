@@ -2792,6 +2792,7 @@
     "sync-from-desktop-unreachable-title": "This device can't be reached by other devices",
     "sync-from-desktop-unreachable-description": "Trilium is only listening on localhost, so another device can't connect to it. Set \"host=0.0.0.0\" under the [Network] section of your config.ini, restart Trilium, and try again.",
     "sync-from-desktop-open-config": "Open config file",
+    "sync-from-desktop-restart": "Restart Trilium",
     "advanced-options": "Advanced options",
     "sync-failed": "Failed to sync: {{message}}",
     "server-host": "Trilium server address",

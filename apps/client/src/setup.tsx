@@ -446,17 +446,22 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                 <Admonition type="caution" className="sync-from-desktop-unreachable">
                     <strong>{t("setup.sync-from-desktop-unreachable-title")}</strong>
                     <p>{t("setup.sync-from-desktop-unreachable-description")}</p>
-                    {networkInfo.configPath && (
-                        <p class="config-path">
-                            <code>{networkInfo.configPath}</code>
-                            {isElectron() && (
+                    {isElectron() && (
+                        <div class="unreachable-actions">
+                            {networkInfo.configPath && (
                                 <Button
                                     icon="bx bx-edit"
                                     text={t("setup.sync-from-desktop-open-config")}
                                     onClick={() => void openConfigFile(networkInfo.configPath)}
                                 />
                             )}
-                        </p>
+                            <Button
+                                kind="primary"
+                                icon="bx bx-refresh"
+                                text={t("setup.sync-from-desktop-restart")}
+                                onClick={() => window.electronApi?.window.restartApp()}
+                            />
+                        </div>
                     )}
                 </Admonition>
             ) : (

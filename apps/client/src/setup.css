@@ -451,17 +451,12 @@ body[dir=rtl] .slide-in-backward {
         }
     }
 
-    .sync-from-desktop-unreachable .config-path {
+    .sync-from-desktop-unreachable .unreachable-actions {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
         gap: 0.75rem;
-        margin-bottom: 0;
-
-        code {
-            user-select: text;
-            word-break: break-all;
-        }
+        margin-top: 1rem;
     }
 }
 
