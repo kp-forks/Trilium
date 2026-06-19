@@ -7,6 +7,7 @@ import { getUrlForDownload } from "../../../services/open";
 import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { loadWaveform } from "./audio_waveform";
+import { AudioVisualizer } from "./AudioVisualizer";
 import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 import { WaveformSeekBar } from "./WaveformSeekBar";
 
@@ -56,7 +57,8 @@ export default function AudioPreview({ note, noteContext, isVisible = true }: { 
                 onEmptied={syncPlaying}
                 onError={onError}
             />
-            <div className="audio-preview-icon-wrapper">
+            <div className="audio-preview-visualization-wrapper">
+                <AudioVisualizer mediaRef={audioRef} isPlaying={playing} />
                 <Icon icon="bx bx-music" className="audio-preview-icon" />
             </div>
             <div className="media-preview-controls">

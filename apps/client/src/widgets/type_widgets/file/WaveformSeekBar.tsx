@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import { useTriliumEvent } from "../../react/hooks";
+import { resolveCssColor } from "./css_color";
 import { formatTime } from "./MediaPlayer";
 
 /** Below this normalized amplitude a bucket is considered silence and painted with the silence color. */
@@ -224,23 +225,10 @@ interface WaveformColors {
 const DEFAULT_COLORS: WaveformColors = { played: "#4caf9d", unplayed: "#5a5a5a", silence: "#333333" };
 
 function readColors(canvas: HTMLCanvasElement): WaveformColors {
-    return {
-        played: resolveColor(canvas, "--waveform-played-color", DEFAULT_COLORS.played),
-        unplayed: resolveColor(canvas, "--waveform-unplayed-color", DEFAULT_COLORS.unplayed),
-        silence: resolveColor(canvas, "--waveform-silence-color", DEFAULT_COLORS.silence)
-    };
-}
-
-/** Resolve a CSS custom property to a concrete color, even when the theme defines it through nested `var()`
- *  references (which `getPropertyValue` returns unresolved). A throwaway element inherits the canvas' cascade,
- *  so the browser's style engine substitutes the variables; we read back the computed `color`. */
-function resolveColor(canvas: HTMLCanvasElement, name: string, fallback: string): string {
     const host = canvas.parentElement ?? canvas;
-    const probe = document.createElement("span");
-    probe.style.color = `var(${name}, ${fallback})`;
-    probe.style.display = "none";
-    host.appendChild(probe);
-    const resolved = getComputedStyle(probe).color;
-    host.removeChild(probe);
-    return resolved || fallback;
+    return {
+        played: resolveCssColor(host, "--waveform-played-color", DEFAULT_COLORS.played),
+        unplayed: resolveCssColor(host, "--waveform-unplayed-color", DEFAULT_COLORS.unplayed),
+        silence: resolveCssColor(host, "--waveform-silence-color", DEFAULT_COLORS.silence)
+    };
 }
