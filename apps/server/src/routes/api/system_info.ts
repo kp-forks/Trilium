@@ -1,8 +1,11 @@
+import type { NetworkAddressesResponse } from "@triliumnext/commons";
 import { execSync } from "child_process";
-import { isMac, isWindows } from "../../services/utils";
 import { arch, cpus, networkInterfaces } from "os";
+
 import config from "../../services/config.js";
+import host from "../../services/host.js";
 import port from "../../services/port.js";
+import { isMac, isWindows } from "../../services/utils";
 
 function systemChecks() {
     return {
@@ -18,11 +21,12 @@ function systemChecks() {
  * `location` points at the internal `trilium-app://` protocol rather than the
  * real HTTP listener — so the protocol and port must be resolved here too.
  */
-function getNetworkAddresses() {
+function getNetworkAddresses(): NetworkAddressesResponse {
     const protocol = config["Network"]["https"] ? "https" : "http";
 
     return {
-        addresses: collectNetworkAddresses(networkInterfaces()).map((addr) => buildNetworkUrl(protocol, addr, port))
+        addresses: collectNetworkAddresses(networkInterfaces()).map((addr) => buildNetworkUrl(protocol, addr, port)),
+        reachableOnNetwork: isHostReachableOnNetwork(host)
     };
 }
 
@@ -96,6 +100,17 @@ function networkScore(addr: string): number {
 export function buildNetworkUrl(protocol: string, address: string, port: number): string {
     const host = address.includes(":") ? `[${address}]` : address;
     return `${protocol}://${host}:${port}`;
+}
+
+/**
+ * Whether the configured listening host is reachable from other devices.
+ * Returns `false` for loopback-only bindings (the Electron desktop default),
+ * where the advertised LAN addresses can't actually be connected to. Pure and
+ * exported for unit testing.
+ */
+export function isHostReachableOnNetwork(host: string): boolean {
+    const normalized = host.trim().toLowerCase();
+    return normalized !== "localhost" && normalized !== "::1" && !normalized.startsWith("127.");
 }
 
 export default {

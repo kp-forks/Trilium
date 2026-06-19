@@ -2789,6 +2789,8 @@
     "sync-from-desktop-step5": "Click the \"Test sync\" button to verify connection is successful.",
     "sync-from-desktop-warning": "Make sure both devices are on the same network.",
     "sync-from-desktop-waiting": "Waiting for connection...",
+    "sync-from-desktop-unreachable-title": "This device can't be reached by other devices",
+    "sync-from-desktop-unreachable-description": "Trilium is only listening on localhost, so another device can't connect to it. Set \"host=0.0.0.0\" under the [Network] section of your config.ini, restart Trilium, and try again.",
     "advanced-options": "Advanced options",
     "sync-failed": "Failed to sync: {{message}}",
     "server-host": "Trilium server address",

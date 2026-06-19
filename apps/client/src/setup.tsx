@@ -1,6 +1,6 @@
 import "./setup.css";
 
-import { LOCALES, SetupSyncFromServerResponse } from "@triliumnext/commons";
+import { LOCALES, NetworkAddressesResponse, SetupSyncFromServerResponse } from "@triliumnext/commons";
 import clsx from "clsx";
 import { ComponentChildren, render } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -410,13 +410,22 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
 }
 
 function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
-    const [ networkAddresses, setNetworkAddresses ] = useState<string[]>([]);
+    const [ networkInfo, setNetworkInfo ] = useState<NetworkAddressesResponse | null>(null);
 
     useEffect(() => {
-        getNetworkAddresses().then(setNetworkAddresses);
+        getNetworkAddresses().then(setNetworkInfo);
     }, []);
 
+    // Don't wait for an incoming connection that can't arrive: when the host is
+    // only bound to loopback the advertised addresses are unreachable, so the
+    // other device will never connect. Hold off polling until reachability is
+    // confirmed.
+    const reachable = networkInfo?.reachableOnNetwork ?? false;
+
     useEffect(() => {
+        if (!reachable) {
+            return;
+        }
         const interval = setInterval(async () => {
             const status = await server.get<{ schemaExists: boolean }>("setup/status");
             if (status.schemaExists) {
@@ -424,7 +433,7 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             }
         }, 1000);
         return () => clearInterval(interval);
-    }, [setState]);
+    }, [setState, reachable]);
 
     return (
         <SetupPage
@@ -433,28 +442,37 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
             illustration={<SyncIllustration targetDevice="desktop" />}
             onBack={() => setState("firstOptions")}
         >
-            <div class="card-columns">
-                <Card heading="On the other device">
-                    <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
-                    <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
-                    <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
-                    <CardSection>4. {t("setup.sync-from-desktop-step4")}</CardSection>
-                    <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
-                </Card>
+            {networkInfo && !networkInfo.reachableOnNetwork ? (
+                <Admonition type="caution" className="sync-from-desktop-unreachable">
+                    <strong>{t("setup.sync-from-desktop-unreachable-title")}</strong>
+                    <p>{t("setup.sync-from-desktop-unreachable-description")}</p>
+                </Admonition>
+            ) : (
+                <>
+                    <div class="card-columns">
+                        <Card heading="On the other device">
+                            <CardSection>1. {t("setup.sync-from-desktop-step1")}</CardSection>
+                            <CardSection>2. {t("setup.sync-from-desktop-step2")}</CardSection>
+                            <CardSection>3. {t("setup.sync-from-desktop-step3")}</CardSection>
+                            <CardSection>4. {t("setup.sync-from-desktop-step4")}</CardSection>
+                            <CardSection>5. {t("setup.sync-from-desktop-step5")}</CardSection>
+                        </Card>
 
-                {networkAddresses.length > 0 && (
-                    <Card heading={t("setup.your-ip-addresses")} className="ip-addresses">
-                        {networkAddresses.map((addr) => (
-                            <CardSection key={addr}>{addr}</CardSection>
-                        ))}
-                    </Card>
-                )}
-            </div>
+                        {networkInfo && networkInfo.addresses.length > 0 && (
+                            <Card heading={t("setup.your-ip-addresses")} className="ip-addresses">
+                                {networkInfo.addresses.map((addr) => (
+                                    <CardSection key={addr}>{addr}</CardSection>
+                                ))}
+                            </Card>
+                        )}
+                    </div>
 
-            <div class="sync-from-desktop-waiting">
-                <div class="main"><Icon icon="bx bx-loader-circle bx-spin" />{" "} {t("setup.sync-from-desktop-waiting")}</div>
-                <div class="subtle">{t("setup.sync-from-desktop-warning")}</div>
-            </div>
+                    <div class="sync-from-desktop-waiting">
+                        <div class="main"><Icon icon="bx bx-loader-circle bx-spin" />{" "} {t("setup.sync-from-desktop-waiting")}</div>
+                        <div class="subtle">{t("setup.sync-from-desktop-warning")}</div>
+                    </div>
+                </>
+            )}
         </SetupPage>
     );
 }
@@ -545,18 +563,20 @@ function SetupPage({ title, description, className, illustration, children, foot
     );
 }
 
-async function getNetworkAddresses(): Promise<string[]> {
+async function getNetworkAddresses(): Promise<NetworkAddressesResponse> {
     if (!isElectron()) {
-        return [`${location.protocol}//${location.host}`];
+        // The browser already reached this server over the network, so the
+        // address it's using is reachable by definition.
+        return { addresses: [`${location.protocol}//${location.host}`], reachableOnNetwork: true };
     }
 
     // Node's `os` module isn't available in the renderer (node integration is
     // disabled), and the desktop renderer's `location` points at the internal
     // `trilium-app://` protocol rather than the real HTTP listener. So the
     // server enumerates its interfaces and builds the reachable URLs (correct
-    // protocol and port included).
-    const { addresses } = await server.get<{ addresses: string[] }>("network-addresses");
-    return addresses;
+    // protocol and port included), and reports whether it's actually bound to a
+    // network-reachable interface.
+    return await server.get<NetworkAddressesResponse>("network-addresses");
 }
 
 function onSetupFinished() {

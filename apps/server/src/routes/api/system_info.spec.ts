@@ -28,7 +28,7 @@ vi.mock("os", () => ({
     networkInterfaces: () => ({})
 }));
 
-import systemInfoRoute, { buildNetworkUrl, collectNetworkAddresses, isCpuArchMismatch } from "./system_info.js";
+import systemInfoRoute, { buildNetworkUrl, collectNetworkAddresses, isCpuArchMismatch, isHostReachableOnNetwork } from "./system_info.js";
 
 type NetworkInterfaces = Parameters<typeof collectNetworkAddresses>[0];
 
@@ -101,6 +101,22 @@ describe("System info API", () => {
 
         it("wraps IPv6 literals in brackets", () => {
             expect(buildNetworkUrl("http", "fd00::1", 37840)).toBe("http://[fd00::1]:37840");
+        });
+    });
+
+    describe("isHostReachableOnNetwork", () => {
+        it("treats loopback bindings as unreachable", () => {
+            expect(isHostReachableOnNetwork("127.0.0.1")).toBe(false);
+            expect(isHostReachableOnNetwork("127.1.2.3")).toBe(false);
+            expect(isHostReachableOnNetwork("localhost")).toBe(false);
+            expect(isHostReachableOnNetwork("::1")).toBe(false);
+            expect(isHostReachableOnNetwork(" LOCALHOST ")).toBe(false);
+        });
+
+        it("treats wildcard and specific interfaces as reachable", () => {
+            expect(isHostReachableOnNetwork("0.0.0.0")).toBe(true);
+            expect(isHostReachableOnNetwork("::")).toBe(true);
+            expect(isHostReachableOnNetwork("192.168.1.20")).toBe(true);
         });
     });
 });
