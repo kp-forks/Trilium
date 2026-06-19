@@ -452,18 +452,11 @@ function SyncFromDesktop({ setState }: { setState: (state: State) => void }) {
                     <p>{t("setup.sync-from-desktop-unreachable-description")}</p>
                     {isElectron() && (
                         <div class="unreachable-actions">
-                            {networkInfo.configPath && (
-                                <Button
-                                    icon="bx bx-edit"
-                                    text={t("setup.sync-from-desktop-open-config")}
-                                    onClick={() => void openConfigFile(networkInfo.configPath)}
-                                />
-                            )}
                             <Button
                                 kind="primary"
-                                icon="bx bx-refresh"
-                                text={t("setup.sync-from-desktop-restart")}
-                                onClick={() => window.electronApi?.window.restartApp()}
+                                icon="bx bx-broadcast"
+                                text={t("setup.sync-from-desktop-allow-access")}
+                                onClick={() => void allowLanAccessAndRestart()}
                             />
                         </div>
                     )}
@@ -600,17 +593,13 @@ async function getNetworkAddresses(): Promise<NetworkAddressesResponse> {
     return await server.get<NetworkAddressesResponse>("network-addresses");
 }
 
-async function openConfigFile(configPath?: string) {
-    if (!configPath) {
-        return;
-    }
-
-    // `openPath` resolves to a non-empty string when the OS couldn't open the
-    // file (e.g. no editor associated with `.ini`). The path is also shown in
-    // the banner, so the user can still navigate to it manually.
-    const error = await window.electronApi?.shell.openPath(configPath);
-    if (error) {
-        console.error(`Could not open config file "${configPath}": ${error}`);
+async function allowLanAccessAndRestart() {
+    // Shows a native confirmation dialog (LAN exposure is a security tradeoff)
+    // and persists the choice to security.json. Only restart once the user has
+    // actually confirmed — otherwise the binding wouldn't change anyway.
+    const confirmed = await window.electronApi?.security.setLanAccessEnabled(true);
+    if (confirmed) {
+        window.electronApi?.window.restartApp();
     }
 }
 

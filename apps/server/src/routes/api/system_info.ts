@@ -3,7 +3,6 @@ import { execSync } from "child_process";
 import { arch, cpus, networkInterfaces } from "os";
 
 import config from "../../services/config.js";
-import dataDir from "../../services/data_dir.js";
 import host from "../../services/host.js";
 import port from "../../services/port.js";
 import { isMac, isWindows } from "../../services/utils";
@@ -27,8 +26,7 @@ function getNetworkAddresses(): NetworkAddressesResponse {
 
     return {
         addresses: collectNetworkAddresses(networkInterfaces()).map((addr) => buildNetworkUrl(protocol, addr, port)),
-        reachableOnNetwork: isHostReachableOnNetwork(host),
-        configPath: dataDir.CONFIG_INI_PATH
+        reachableOnNetwork: isHostReachableOnNetwork(host)
     };
 }
 

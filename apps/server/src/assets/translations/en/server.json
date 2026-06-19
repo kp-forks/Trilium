@@ -420,6 +420,8 @@
     "backend-scripting": "Backend script execution",
     "backend-scripting-warning": "Backend scripts have full access to the server, including the file system and network.",
     "sql-console": "SQL console",
-    "sql-console-warning": "The SQL console allows executing arbitrary SQL queries against the database."
+    "sql-console-warning": "The SQL console allows executing arbitrary SQL queries against the database.",
+    "lan-access": "network access",
+    "lan-access-warning": "Other devices on your local network will be able to connect to this Trilium instance."
   }
 }

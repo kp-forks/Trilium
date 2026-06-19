@@ -472,12 +472,6 @@ export interface NetworkAddressesResponse {
      * actually be reached by another device.
      */
     reachableOnNetwork: boolean;
-    /**
-     * Absolute path to this instance's `config.ini`. Only sent when the request
-     * is served by a Node host (server/desktop); lets the setup screen offer an
-     * "open config" shortcut when the host needs to be reconfigured.
-     */
-    configPath?: string;
 }
 
 export type ScriptParams = any[];

@@ -481,6 +481,14 @@ export interface ElectronSecurityApi {
 
     /** Requests a change to the SQL console setting. Same flow as above. */
     setSqlConsoleEnabled(enabled: boolean): Promise<boolean>;
+
+    /**
+     * Requests enabling/disabling LAN access. When enabled, the desktop binds
+     * its TCP listener to all interfaces (instead of loopback) so other devices
+     * can reach it — e.g. to sync from another device. Same confirmation +
+     * restart flow as above.
+     */
+    setLanAccessEnabled(enabled: boolean): Promise<boolean>;
 }
 
 /**

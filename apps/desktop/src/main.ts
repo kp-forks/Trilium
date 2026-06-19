@@ -166,6 +166,11 @@ export async function main() {
     if (securitySettings.sqlConsoleEnabled !== undefined) {
         config.Security.sqlConsoleEnabled = securitySettings.sqlConsoleEnabled;
     }
+    // Applied before the server (and host.ts) load below, so getHost() picks up
+    // the desktop LAN-access choice on this boot.
+    if (securitySettings.allowLanAccess !== undefined) {
+        config.Security.allowLanAccess = securitySettings.allowLanAccess;
+    }
 
     const dbProvider = new BetterSqlite3Provider();
     dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);

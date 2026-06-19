@@ -345,7 +345,7 @@ corsAllowOrigin=https://ini-cors.com
             expect(config.General.noDesktopIcon).toBe(false);
             expect(config.General.readOnly).toBe(false);
 
-            // Network defaults (server build binds all interfaces by default)
+            // Network defaults (host is the web/server bind address)
             expect(config.Network.host).toBe("0.0.0.0");
             expect(config.Network.port).toBe("3000");
             expect(config.Network.https).toBe(false);
@@ -374,23 +374,11 @@ corsAllowOrigin=https://ini-cors.com
 
             // Logging defaults
             expect(config.Logging.retentionDays).toBe(90);
-        });
 
-        it("defaults the host to loopback on desktop (Electron)", async () => {
-            const originalElectron = process.versions.electron;
-            // The default is computed from `process.versions.electron` at module
-            // load, so stub it before importing config (modules are reset per test).
-            Object.defineProperty(process.versions, "electron", { value: "41.0.0", configurable: true });
-            try {
-                const { default: config } = await import("./config.js");
-                expect(config.Network.host).toBe("127.0.0.1");
-            } finally {
-                if (originalElectron === undefined) {
-                    delete (process.versions as { electron?: string }).electron;
-                } else {
-                    Object.defineProperty(process.versions, "electron", { value: originalElectron, configurable: true });
-                }
-            }
+            // Security defaults (allowLanAccess is the desktop LAN-bind override)
+            expect(config.Security.backendScriptingEnabled).toBe(false);
+            expect(config.Security.sqlConsoleEnabled).toBe(false);
+            expect(config.Security.allowLanAccess).toBe(false);
         });
     });
 });

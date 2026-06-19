@@ -144,6 +144,12 @@ export interface TriliumConfig {
         backendScriptingEnabled: boolean;
         /** Whether the SQL console is accessible (default: false) */
         sqlConsoleEnabled: boolean;
+        /**
+         * Desktop only: whether the TCP listener binds all interfaces (LAN-reachable)
+         * instead of loopback. Managed via the desktop `security.json` override, not
+         * config.ini. Consumed by host.ts; has no effect on server builds.
+         */
+        allowLanAccess: boolean;
     };
 }
 
@@ -322,15 +328,11 @@ const configMapping = {
     },
     Network: {
         host: {
+            // Web/server only — desktop ignores this and resolves its bind
+            // address from the `allowLanAccess` security override (see host.ts).
             standardEnvVar: 'TRILIUM_NETWORK_HOST',
             iniGetter: () => getIniSection("Network")?.host,
-            // Desktop (Electron) binds loopback by default: the renderer reaches
-            // the server in-process via `trilium-app://`, so the TCP listener
-            // only needs same-host traffic, and keeping the port off the LAN is
-            // defense in depth on top of the per-request auth marker. Server
-            // builds bind all interfaces. Either can be overridden via the env
-            // var or config.ini.
-            defaultValue: process.versions.electron ? '127.0.0.1' : '0.0.0.0'
+            defaultValue: '0.0.0.0'
         },
         port: {
             standardEnvVar: 'TRILIUM_NETWORK_PORT',
@@ -490,6 +492,14 @@ const configMapping = {
             iniGetter: () => getIniSection("Security")?.sqlConsoleEnabled,
             defaultValue: false,
             transformer: transformBoolean
+        },
+        allowLanAccess: {
+            // Desktop-only: normally written to security.json and applied by the
+            // Electron main process at startup; host.ts reads it instead of the
+            // [Network] host. Kept off the documented config surface on purpose.
+            iniGetter: () => getIniSection("Security")?.allowLanAccess,
+            defaultValue: false,
+            transformer: transformBoolean
         }
     }
 };
@@ -547,7 +557,8 @@ const config: TriliumConfig = {
     },
     Security: {
         backendScriptingEnabled: getConfigValue(configMapping.Security.backendScriptingEnabled),
-        sqlConsoleEnabled: getConfigValue(configMapping.Security.sqlConsoleEnabled)
+        sqlConsoleEnabled: getConfigValue(configMapping.Security.sqlConsoleEnabled),
+        allowLanAccess: getConfigValue(configMapping.Security.allowLanAccess)
     }
 };
 
