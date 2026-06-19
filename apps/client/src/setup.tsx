@@ -551,9 +551,12 @@ async function getNetworkAddresses(): Promise<string[]> {
     }
 
     // Node's `os` module isn't available in the renderer (node integration is
-    // disabled), so the desktop's network interfaces are enumerated server-side.
+    // disabled), and the desktop renderer's `location` points at the internal
+    // `trilium-app://` protocol rather than the real HTTP listener. So the
+    // server enumerates its interfaces and builds the reachable URLs (correct
+    // protocol and port included).
     const { addresses } = await server.get<{ addresses: string[] }>("network-addresses");
-    return addresses.map((addr) => `${location.protocol}//${addr}:${location.port}`);
+    return addresses;
 }
 
 function onSetupFinished() {

@@ -1,6 +1,8 @@
 import { execSync } from "child_process";
 import { isMac, isWindows } from "../../services/utils";
 import { arch, cpus, networkInterfaces } from "os";
+import config from "../../services/config.js";
+import port from "../../services/port.js";
 
 function systemChecks() {
     return {
@@ -9,14 +11,18 @@ function systemChecks() {
 }
 
 /**
- * Returns this host's non-internal network addresses. Consumed by the setup
- * "sync from desktop" screen so the user can see which addresses another device
- * should connect to. This lives server-side because the renderer can't reach
- * Node's `os` module (node integration is disabled in the Electron renderer).
+ * Returns the reachable URLs another device can use to sync with this host.
+ * Consumed by the setup "sync from desktop" screen. This lives server-side
+ * because the renderer can't reach Node's `os` module (node integration is
+ * disabled in the Electron renderer), and because the desktop renderer's
+ * `location` points at the internal `trilium-app://` protocol rather than the
+ * real HTTP listener — so the protocol and port must be resolved here too.
  */
 function getNetworkAddresses() {
+    const protocol = config["Network"]["https"] ? "https" : "http";
+
     return {
-        addresses: collectNetworkAddresses(networkInterfaces())
+        addresses: collectNetworkAddresses(networkInterfaces()).map((addr) => buildNetworkUrl(protocol, addr, port))
     };
 }
 
@@ -80,6 +86,16 @@ function networkScore(addr: string): number {
     if (/^172\.(1[6-9]|2\d|3[01])\./.test(addr)) return 2;
     if (addr.includes(":")) return 4; // IPv6
     return 3;
+}
+
+/**
+ * Builds a connectable URL from a host address, wrapping IPv6 literals in
+ * brackets as required by the URL authority syntax. Pure and exported for
+ * unit testing.
+ */
+export function buildNetworkUrl(protocol: string, address: string, port: number): string {
+    const host = address.includes(":") ? `[${address}]` : address;
+    return `${protocol}://${host}:${port}`;
 }
 
 export default {

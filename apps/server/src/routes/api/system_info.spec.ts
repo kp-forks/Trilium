@@ -28,7 +28,7 @@ vi.mock("os", () => ({
     networkInterfaces: () => ({})
 }));
 
-import systemInfoRoute, { collectNetworkAddresses, isCpuArchMismatch } from "./system_info.js";
+import systemInfoRoute, { buildNetworkUrl, collectNetworkAddresses, isCpuArchMismatch } from "./system_info.js";
 
 type NetworkInterfaces = Parameters<typeof collectNetworkAddresses>[0];
 
@@ -90,6 +90,17 @@ describe("System info API", () => {
         it("returns an empty list when no usable interfaces exist", () => {
             expect(collectNetworkAddresses({})).toEqual([]);
             expect(collectNetworkAddresses({ lo: undefined } as unknown as NetworkInterfaces)).toEqual([]);
+        });
+    });
+
+    describe("buildNetworkUrl", () => {
+        it("builds a URL with the given protocol and port", () => {
+            expect(buildNetworkUrl("http", "192.168.1.20", 37840)).toBe("http://192.168.1.20:37840");
+            expect(buildNetworkUrl("https", "10.0.0.4", 8080)).toBe("https://10.0.0.4:8080");
+        });
+
+        it("wraps IPv6 literals in brackets", () => {
+            expect(buildNetworkUrl("http", "fd00::1", 37840)).toBe("http://[fd00::1]:37840");
         });
     });
 });
