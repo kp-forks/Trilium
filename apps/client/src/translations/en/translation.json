@@ -1936,6 +1936,9 @@
     "toggle-on-hint": "Make the note a template",
     "toggle-off-hint": "Remove the note as a template"
   },
+  "full_content_width_switch": {
+    "title": "Full width"
+  },
   "open-help-page": "Open help page",
   "find": {
     "case_sensitive": "Case sensitive",

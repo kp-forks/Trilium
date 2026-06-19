@@ -234,6 +234,7 @@ function NoteBasicProperties({ note, focus }: {
     const [ isBookmarked, setIsBookmarked ] = useNoteBookmarkState(note);
     const [ isShared, switchShareState ] = useShareState(note);
     const [ isTemplate, setIsTemplate ] = useNoteLabelBoolean(note, "template");
+    const [ isFullContentWidth, setIsFullContentWidth ] = useNoteLabelBoolean(note, "fullContentWidth");
     const isProtected = useNoteProperty(note, "isProtected");
 
     useEffect(() => {
@@ -274,6 +275,11 @@ function NoteBasicProperties({ note, focus }: {
             currentValue={isTemplate} onChange={setIsTemplate}
             helpPage="KC1HB96bqqHX"
             disabled={note?.noteId.startsWith("_options")}
+        />
+        <FormListToggleableItem
+            icon="bx bx-expand-horizontal"
+            title={t("full_content_width_switch.title")}
+            currentValue={isFullContentWidth} onChange={setIsFullContentWidth}
         />
     </>;
 }
