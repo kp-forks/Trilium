@@ -1,3 +1,8 @@
+// Loading import.ts registers the shared "importNotes" WebSocket toast handlers (progress + success).
+// The OneNote import reuses that taskType, but the OneNote dialog never loads import.ts on its own, so
+// without this side-effect import the progress/finished toasts would never appear.
+import "./import.js";
+
 import server from "./server.js";
 
 export interface OneNoteAccount {

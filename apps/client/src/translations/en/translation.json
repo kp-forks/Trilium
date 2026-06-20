@@ -245,7 +245,6 @@
     "no_notebooks": "No notebooks were found in this account.",
     "select_sections": "Select the sections to import:",
     "import": "Import selected",
-    "import_started": "OneNote import started…",
     "attach_source": "Attach original HTML (debug)",
     "attach_source_hint": "Saves each page's unmodified OneNote HTML as an attachment on the imported note, for comparing against the converted result."
   },

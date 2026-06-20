@@ -17,7 +17,6 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
     const [notebooks, setNotebooks] = useState<OneNoteNotebook[]>([]);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [debug, setDebug] = useState(false);
-    const [importing, setImporting] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const stopPolling = useCallback(() => {
@@ -110,14 +109,13 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
             return;
         }
 
-        setImporting(true);
+        // Close immediately and let the shared import toasts report progress and completion. The
+        // server request stays open for the whole import, so we don't await before closing.
+        closeDialog();
         try {
             await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug });
-            toast.showMessage(t("onenote_import.import_started"));
-            closeDialog();
         } catch (e) {
             toast.showError(e instanceof Error ? e.message : String(e));
-            setImporting(false);
         }
     }, [notebooks, selectedIds, parentNoteId, debug, closeDialog]);
 
@@ -178,7 +176,7 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                 <Button
                     text={t("onenote_import.import")}
                     kind="primary"
-                    disabled={importing || selectedIds.size === 0}
+                    disabled={selectedIds.size === 0}
                     onClick={doImport}
                 />
             </div>
