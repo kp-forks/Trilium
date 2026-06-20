@@ -104,6 +104,8 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                     sections.push({
                         id: section.id,
                         title: section.title,
+                        createdDateTime: section.createdDateTime,
+                        lastModifiedDateTime: section.lastModifiedDateTime,
                         notebookId: notebook.id,
                         notebookTitle: notebook.title,
                         notebookCreatedDateTime: notebook.createdDateTime,

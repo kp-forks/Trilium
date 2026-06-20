@@ -17,6 +17,8 @@ export interface GraphAccount {
 export interface OneNoteSection {
     id: string;
     title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
 }
 
 export interface OneNoteNotebook {
@@ -54,12 +56,12 @@ export async function getAccount(accessToken: string): Promise<GraphAccount> {
  * section groups nest arbitrarily and the notebooks endpoint won't $expand them more than one level.
  */
 export async function listNotebooks(accessToken: string): Promise<OneNoteNotebook[]> {
-    const url = "/me/onenote/notebooks?$select=id,displayName,createdDateTime,lastModifiedDateTime,sectionGroupsUrl&$expand=sections($select=id,displayName),sectionGroups($select=id)&$orderby=displayName";
+    const url = "/me/onenote/notebooks?$select=id,displayName,createdDateTime,lastModifiedDateTime,sectionGroupsUrl&$expand=sections($select=id,displayName,createdDateTime,lastModifiedDateTime),sectionGroups($select=id)&$orderby=displayName";
     const notebooks = await graphGetAll<RawNotebook>(accessToken, url);
 
     return Promise.all(
         notebooks.map(async (notebook) => {
-            const direct = (notebook.sections ?? []).map((s) => ({ id: s.id, title: s.displayName }));
+            const direct = (notebook.sections ?? []).map((s) => ({ id: s.id, title: s.displayName, createdDateTime: s.createdDateTime, lastModifiedDateTime: s.lastModifiedDateTime }));
             const grouped = notebook.sectionGroups?.length && notebook.sectionGroupsUrl ? await sectionsFromSectionGroups(accessToken, notebook.sectionGroupsUrl, "") : [];
             return {
                 id: notebook.id,
@@ -78,13 +80,13 @@ export async function listNotebooks(accessToken: string): Promise<OneNoteNoteboo
  * further round-trip happens only for groups that actually have children.
  */
 async function sectionsFromSectionGroups(accessToken: string, sectionGroupsUrl: string, prefix: string): Promise<OneNoteSection[]> {
-    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName),sectionGroups($select=id)");
+    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName,createdDateTime,lastModifiedDateTime),sectionGroups($select=id)");
     const groups = await graphGetAll<RawSectionGroup>(accessToken, url);
 
     const perGroup = await Promise.all(
         groups.map(async (group) => {
             const path = prefix ? `${prefix} / ${group.displayName}` : group.displayName;
-            const direct = (group.sections ?? []).map((s) => ({ id: s.id, title: `${path} / ${s.displayName}` }));
+            const direct = (group.sections ?? []).map((s) => ({ id: s.id, title: `${path} / ${s.displayName}`, createdDateTime: s.createdDateTime, lastModifiedDateTime: s.lastModifiedDateTime }));
             const nested = group.sectionGroups?.length && group.sectionGroupsUrl ? await sectionsFromSectionGroups(accessToken, group.sectionGroupsUrl, path) : [];
             return [...direct, ...nested];
         })
@@ -180,7 +182,7 @@ interface RawNotebook {
     createdDateTime?: string;
     lastModifiedDateTime?: string;
     sectionGroupsUrl?: string;
-    sections?: { id: string; displayName: string }[];
+    sections?: { id: string; displayName: string; createdDateTime?: string; lastModifiedDateTime?: string }[];
     /** id-only, requested just to detect whether the notebook has section groups to follow. */
     sectionGroups?: { id: string }[];
 }
@@ -189,7 +191,7 @@ interface RawSectionGroup {
     id: string;
     displayName: string;
     sectionGroupsUrl?: string;
-    sections?: { id: string; displayName: string }[];
+    sections?: { id: string; displayName: string; createdDateTime?: string; lastModifiedDateTime?: string }[];
     /** id-only, requested just to detect whether the group has nested section groups to follow. */
     sectionGroups?: { id: string }[];
 }

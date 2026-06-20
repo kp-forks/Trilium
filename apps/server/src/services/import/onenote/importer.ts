@@ -17,6 +17,10 @@ import { type LinkTarget, rewritePageLinks } from "./links.js";
 export interface SectionSelection {
     id: string;
     title: string;
+    /** OneNote's section creation timestamp (ISO 8601), preserved on the imported section folder. */
+    createdDateTime?: string;
+    /** OneNote's section last-modified timestamp (ISO 8601), preserved on the imported section folder. */
+    lastModifiedDateTime?: string;
     notebookId: string;
     notebookTitle: string;
     /** OneNote's notebook creation timestamp (ISO 8601), preserved on the imported notebook folder. */
@@ -56,6 +60,8 @@ interface DownloadedResource {
 
 interface FetchedSection {
     title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
     notebookId: string;
     notebookTitle: string;
     notebookCreatedDateTime?: string;
@@ -96,6 +102,8 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
             }
             fetched.push({
                 title: section.title,
+                createdDateTime: section.createdDateTime,
+                lastModifiedDateTime: section.lastModifiedDateTime,
                 notebookId: section.notebookId,
                 notebookTitle: section.notebookTitle,
                 notebookCreatedDateTime: section.notebookCreatedDateTime,
@@ -142,6 +150,7 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
         }
 
         const sectionNote = createFolder(notebookNoteId, section.title);
+        applyOriginalDates(sectionNote, section.createdDateTime, section.lastModifiedDateTime);
 
         for (const page of section.pages) {
             const { note: pageNote } = noteService.createNewNote({

@@ -18,6 +18,8 @@ export interface OneNoteStatus {
 export interface OneNoteSection {
     id: string;
     title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
 }
 
 export interface OneNoteNotebook {
@@ -32,6 +34,8 @@ export interface OneNoteNotebook {
 export interface OneNoteSectionSelection {
     id: string;
     title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
     notebookId: string;
     notebookTitle: string;
     notebookCreatedDateTime?: string;
