@@ -41,14 +41,35 @@ export function convertPageHtml(rawHtml: string): string {
     return sanitize.sanitizeHtml(scope.innerHTML);
 }
 
-/** OneNote marks checkboxes with `data-tag="to-do"` / `"to-do:completed"`; render them as task items. */
+/**
+ * OneNote marks checkboxes as `<p data-tag="to-do">` / `"to-do:completed"` paragraphs. Group runs of
+ * consecutive to-do paragraphs into a single CKEditor task list (<ul class="todo-list">…), matching
+ * the structure Trilium's TodoList editor plugin produces — completed items use a checked checkbox.
+ */
 function convertTodoTags(scope: HTMLElement) {
-    for (const el of scope.querySelectorAll("[data-tag]")) {
+    const todos = scope.querySelectorAll("p[data-tag]").filter((el) => {
         const tag = el.getAttribute("data-tag");
-        if (tag === "to-do" || tag === "to-do:completed") {
-            const checkbox = tag === "to-do:completed" ? "[x]" : "[ ]";
-            el.set_content(`${checkbox} ${el.innerHTML}`);
+        return tag === "to-do" || tag === "to-do:completed";
+    });
+
+    // Collect adjacent to-do paragraphs so each run becomes one list.
+    const runs: HTMLElement[][] = [];
+    for (const p of todos) {
+        const currentRun = runs[runs.length - 1];
+        if (currentRun && currentRun[currentRun.length - 1].nextElementSibling === p) {
+            currentRun.push(p);
+        } else {
+            runs.push([p]);
         }
+    }
+
+    for (const run of runs) {
+        const items = run.map((p) => {
+            const checked = p.getAttribute("data-tag") === "to-do:completed" ? ` checked="checked"` : "";
+            return `<li><label class="todo-list__label"><input type="checkbox"${checked}><span class="todo-list__label__description">${p.innerHTML}</span></label></li>`;
+        });
+        run[0].insertAdjacentHTML("beforebegin", `<ul class="todo-list">${items.join("")}</ul>`);
+        run.forEach((p) => p.remove());
     }
 }
 

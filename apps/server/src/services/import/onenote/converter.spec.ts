@@ -103,6 +103,19 @@ const STYLES_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): to-do items are paragraphs tagged with data-tag="to-do" /
+// "to-do:completed", not list markup.
+const TAGS_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p data-tag="to-do" style="margin-top:0pt;margin-bottom:0pt">To do</p>
+            <p data-tag="to-do" style="margin-top:0pt;margin-bottom:0pt">Another todo</p>
+            <p data-tag="to-do:completed" style="margin-top:0pt;margin-bottom:0pt">Completed todo</p>
+            <p data-tag="to-do" style="margin-top:0pt;margin-bottom:0pt">Another non-completed TODO</p>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -134,10 +147,22 @@ describe("convertPageHtml", () => {
         expect(parse(out).querySelectorAll("br")).toHaveLength(1);
     });
 
-    it("converts OneNote to-do tags into task-list checkboxes", () => {
-        const out = converter.convertPageHtml(`<body><p data-tag="to-do:completed">done</p><p data-tag="to-do">todo</p></body>`);
-        expect(out).toContain("[x] done");
-        expect(out).toContain("[ ] todo");
+    it("converts OneNote to-do tags into a Trilium task list", () => {
+        const out = converter.convertPageHtml(TAGS_SAMPLE);
+        const root = parse(out);
+
+        // Consecutive to-do paragraphs become one CKEditor todo-list, not literal "[ ]" text.
+        expect(root.querySelectorAll("ul.todo-list")).toHaveLength(1);
+        expect(root.querySelectorAll("li")).toHaveLength(4);
+        expect(root.querySelectorAll(`input[type="checkbox"]`)).toHaveLength(4);
+        expect(root.querySelectorAll("span.todo-list__label__description")).toHaveLength(4);
+
+        // Exactly the one completed item is checked.
+        expect(root.querySelectorAll("input[checked]")).toHaveLength(1);
+
+        expect(out).toContain("Completed todo");
+        expect(out).not.toContain("[ ]");
+        expect(out).not.toContain("[x]");
     });
 
     it("converts inline-style formatting (bold/italic/underline) to semantic tags", () => {
