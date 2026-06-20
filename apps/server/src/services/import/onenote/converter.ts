@@ -10,9 +10,8 @@
  * bullets. We therefore drop block-level <br> spacing and empty list items while preserving genuine
  * in-paragraph soft breaks.
  *
- * Still a first pass: text formatting carried as inline styles (e.g. font-weight:bold) is currently
- * dropped by the sanitizer rather than converted to semantic tags, and images/attachments (served
- * from authenticated Graph URLs) are not downloaded yet. See the summary for follow-up work.
+ * Still a first pass: images/attachments (served from authenticated Graph URLs) are not downloaded
+ * yet, so embedded media will not render. See the summary for follow-up work.
  */
 
 import { sanitize } from "@triliumnext/core";
@@ -52,32 +51,49 @@ function convertTodoTags(scope: HTMLElement) {
  */
 function convertInlineFormatting(scope: HTMLElement) {
     for (const el of scope.querySelectorAll("[style]")) {
-        const style = el.getAttribute("style") ?? "";
+        const style = parseStyle(el.getAttribute("style") ?? "");
+        const weight = style.get("font-weight");
+        const decorations = (style.get("text-decoration") ?? "").split(/\s+/);
+
         const open: string[] = [];
         const close: string[] = [];
+        const wrap = (tag: string) => {
+            open.push(`<${tag}>`);
+            close.unshift(`</${tag}>`);
+        };
 
-        if (/font-weight\s*:\s*bold/i.test(style)) {
-            open.push("<strong>");
-            close.unshift("</strong>");
+        if (weight === "bold" || Number(weight) >= 600) {
+            wrap("strong");
         }
-        if (/font-style\s*:\s*italic/i.test(style)) {
-            open.push("<em>");
-            close.unshift("</em>");
+        if (style.get("font-style") === "italic") {
+            wrap("em");
         }
-        if (/text-decoration\s*:[^;]*underline/i.test(style)) {
-            open.push("<u>");
-            close.unshift("</u>");
+        if (decorations.includes("underline")) {
+            wrap("u");
         }
         // Trilium's editor represents strikethrough as <del> (see ckeditor5 StrikethroughAsDel), not <s>.
-        if (/text-decoration\s*:[^;]*line-through/i.test(style)) {
-            open.push("<del>");
-            close.unshift("</del>");
+        if (decorations.includes("line-through")) {
+            wrap("del");
         }
 
         if (open.length > 0) {
             el.set_content(`${open.join("")}${el.innerHTML}${close.join("")}`);
         }
     }
+}
+
+/** Parses an inline `style` attribute into a property→value map (both lowercased). */
+function parseStyle(style: string): Map<string, string> {
+    const declarations = new Map<string, string>();
+    for (const declaration of style.split(";")) {
+        const separator = declaration.indexOf(":");
+        if (separator > 0) {
+            const property = declaration.slice(0, separator).trim().toLowerCase();
+            const value = declaration.slice(separator + 1).trim().toLowerCase();
+            declarations.set(property, value);
+        }
+    }
+    return declarations;
 }
 
 /** Drops list items that hold nothing but whitespace/<br> (OneNote's "exited the list" remnant). */
