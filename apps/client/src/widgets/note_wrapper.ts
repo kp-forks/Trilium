@@ -113,11 +113,11 @@ export default class NoteWrapperWidget extends FlexContainer<BasicWidget> {
 }
 
 /**
- * Whether a note should occupy the full available content width. Some note types are always
- * full width by nature (e.g. canvas, collections, media), while regular notes opt in via the
- * `fullContentWidth` label. Exported as a pure function for unit testing.
+ * Whether a note is full width purely because of its type (e.g. canvas, collections, media),
+ * irrespective of the `fullContentWidth` label. For these notes the label has no effect, so the
+ * UI toggle is hidden. Exported as a pure function for unit testing.
  */
-export function isFullWidthNote(note: FNote) {
+export function isAlwaysFullWidthByType(note: FNote) {
     if (["code", "image", "mermaid", "book", "render", "canvas", "webView", "noteMap", "mindMap", "spreadsheet"].includes(note.type)) {
         return true;
     }
@@ -130,5 +130,14 @@ export function isFullWidthNote(note: FNote) {
         return true;
     }
 
-    return !!note?.isLabelTruthy("fullContentWidth");
+    return false;
+}
+
+/**
+ * Whether a note should occupy the full available content width. Some note types are always
+ * full width by nature (see {@link isAlwaysFullWidthByType}), while regular notes opt in via the
+ * `fullContentWidth` label. Exported as a pure function for unit testing.
+ */
+export function isFullWidthNote(note: FNote) {
+    return isAlwaysFullWidthByType(note) || !!note?.isLabelTruthy("fullContentWidth");
 }

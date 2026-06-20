@@ -1,7 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import { buildNote } from "../test/easy-froca";
-import { isFullWidthNote } from "./note_wrapper";
+import { isAlwaysFullWidthByType, isFullWidthNote } from "./note_wrapper";
+
+describe("isAlwaysFullWidthByType", () => {
+    it("is false for a regular text note regardless of the fullContentWidth label", () => {
+        expect(isAlwaysFullWidthByType(buildNote({ title: "Plain", type: "text" }))).toBe(false);
+        expect(isAlwaysFullWidthByType(buildNote({ title: "Wide", type: "text", "#fullContentWidth": "" }))).toBe(false);
+    });
+
+    it("is true for layout-heavy types, media/PDF files and non-list/grid searches", () => {
+        expect(isAlwaysFullWidthByType(buildNote({ title: "Canvas", type: "canvas" }))).toBe(true);
+
+        const pdf = buildNote({ title: "PDF", type: "file" });
+        pdf.mime = "application/pdf";
+        expect(isAlwaysFullWidthByType(pdf)).toBe(true);
+
+        expect(isAlwaysFullWidthByType(buildNote({ title: "Calendar", type: "search", "#viewType": "calendar" }))).toBe(true);
+        expect(isAlwaysFullWidthByType(buildNote({ title: "List", type: "search", "#viewType": "list" }))).toBe(false);
+    });
+});
 
 describe("isFullWidthNote", () => {
     it("opts a regular text note into full width via the fullContentWidth label", () => {
