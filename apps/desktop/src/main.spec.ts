@@ -193,6 +193,7 @@ vi.mock("./services/auto_launch", () => ({
     wasLaunchedHidden: () => h.wasLaunchedHidden()
 }));
 vi.mock("./services/shell", () => ({ setupShellHandlers: vi.fn() }));
+vi.mock("./services/onenote", () => ({ setupOneNoteHandlers: vi.fn() }));
 vi.mock("./services/security_settings", () => ({
     getSecuritySettings: () => h.securitySettings,
     registerSecurityIpcHandlers: vi.fn()

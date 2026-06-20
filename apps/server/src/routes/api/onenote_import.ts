@@ -14,6 +14,8 @@
 import { becca, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
+import { isInternalElectronRequest } from "../../services/electron_request.js";
+import { getDesktopSession, type OneNoteTokenSession, setDesktopSession } from "../../services/import/onenote/desktop_session.js";
 import graph from "../../services/import/onenote/graph.js";
 import importer, { type SectionSelection } from "../../services/import/onenote/importer.js";
 import oauth from "../../services/import/onenote/oauth.js";
@@ -62,12 +64,12 @@ async function callback(req: Request, res: Response) {
 }
 
 function getStatus(req: Request) {
-    const session = req.session.oneNoteImport;
+    const session = tokenStore(req).read();
     return { connected: !!session?.accessToken, account: session?.account ?? null };
 }
 
-function disconnect(req: Request) {
-    delete req.session.oneNoteImport;
+async function disconnect(req: Request) {
+    await tokenStore(req).clear();
     return {};
 }
 
@@ -108,7 +110,8 @@ function getRedirectUri(req: Request): string {
 
 /** Returns a usable access token, transparently refreshing it when expired, or null if disconnected. */
 async function getValidAccessToken(req: Request): Promise<string | null> {
-    const session = req.session.oneNoteImport;
+    const store = tokenStore(req);
+    const session = store.read();
     if (!session?.accessToken) {
         return null;
     }
@@ -120,13 +123,50 @@ async function getValidAccessToken(req: Request): Promise<string | null> {
 
     if (session.refreshToken) {
         const tokens = await oauth.refreshAccessToken({ clientId: oauth.getClientId(), refreshToken: session.refreshToken });
-        session.accessToken = tokens.access_token;
-        session.refreshToken = tokens.refresh_token ?? session.refreshToken;
-        session.expiresAt = Date.now() + tokens.expires_in * 1000;
-        await saveSession(req);
+        await store.write({
+            accessToken: tokens.access_token,
+            refreshToken: tokens.refresh_token ?? session.refreshToken,
+            expiresAt: Date.now() + tokens.expires_in * 1000
+        });
+        return tokens.access_token;
     }
 
     return session.accessToken;
+}
+
+interface TokenStore {
+    read(): OneNoteTokenSession | undefined;
+    /** Merges `data` into the stored token, preserving fields (e.g. the account) not being updated. */
+    write(data: OneNoteTokenSession): Promise<void>;
+    clear(): Promise<void>;
+}
+
+/**
+ * Picks where the connected Graph token lives. Desktop renderer requests arrive over the
+ * `trilium-app://` protocol dispatch (tagged as internal-electron) and use the process-wide
+ * {@link getDesktopSession} singleton, because their OAuth callback was handled out-of-band by the
+ * main process and never touched this session. Every other request keeps the token in its own
+ * express-session, the same browser that completed the callback.
+ */
+function tokenStore(req: Request): TokenStore {
+    if (isInternalElectronRequest(req)) {
+        return {
+            read: () => getDesktopSession() ?? undefined,
+            write: async (data) => setDesktopSession({ ...getDesktopSession(), ...data }),
+            clear: async () => setDesktopSession(null)
+        };
+    }
+    return {
+        read: () => req.session.oneNoteImport,
+        write: async (data) => {
+            req.session.oneNoteImport = { ...req.session.oneNoteImport, ...data };
+            await saveSession(req);
+        },
+        clear: async () => {
+            delete req.session.oneNoteImport;
+            await saveSession(req);
+        }
+    };
 }
 
 function saveSession(req: Request): Promise<void> {

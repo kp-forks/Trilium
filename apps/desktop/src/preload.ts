@@ -1,4 +1,4 @@
-import type { ElectronApi, ElectronContextMenuParams, RendererStartupMetric } from "@triliumnext/commons";
+import type { ElectronApi, ElectronContextMenuParams, OneNoteLoginResult, RendererStartupMetric } from "@triliumnext/commons";
 import { contextBridge, ipcRenderer, webFrame } from "electron";
 
 contextBridge.exposeInMainWorld("electronApi", {
@@ -260,6 +260,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         setLanAccessEnabled(enabled: boolean): Promise<boolean> {
             return ipcRenderer.invoke("security-set-lan-access", enabled);
+        }
+    },
+
+    onenote: {
+        login(): Promise<OneNoteLoginResult> {
+            return ipcRenderer.invoke("onenote-login");
         }
     }
 } satisfies ElectronApi);

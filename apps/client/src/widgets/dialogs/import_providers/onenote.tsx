@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteNotebook, type OneNoteSectionGroup } from "../../../services/onenote_import.js";
+import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteContainer, type OneNoteNotebook, orderedChildren } from "../../../services/onenote_import.js";
 import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
 import Button from "../../react/Button.js";
@@ -51,12 +51,27 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
 
     const connect = useCallback(async () => {
         try {
-            const { authUrl } = await onenoteImport.getAuthUrl();
-            if (isElectron()) {
-                window.electronApi?.shell.openExternal(authUrl);
-            } else {
-                window.open(authUrl, "_blank", "noopener,noreferrer");
+            // Desktop runs the whole OAuth flow in the main process via a loopback redirect (the
+            // browser-callback-into-session approach can't bridge Electron's split sessions), so the
+            // sign-in resolves directly rather than being polled for.
+            if (isElectron() && window.electronApi) {
+                setPhase("connecting");
+                const result = await window.electronApi.onenote.login();
+                if (!result.connected) {
+                    if (result.error) {
+                        toast.showError(result.error);
+                    }
+                    setPhase("disconnected");
+                    return;
+                }
+                setAccount(result.account ?? null);
+                await loadNotebooks();
+                setPhase("ready");
+                return;
             }
+
+            const { authUrl } = await onenoteImport.getAuthUrl();
+            window.open(authUrl, "_blank", "noopener,noreferrer");
 
             setPhase("connecting");
             stopPolling();
@@ -140,6 +155,10 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                 : (
                     <>
                         <p>{t("onenote_import.select_sections")}</p>
+                        <p className="onenote-order-hint">
+                            <span className="bx bx-info-circle" />
+                            {t("onenote_import.order_hint")}
+                        </p>
                         <div className="onenote-notebooks">
                             {notebooks.map((notebook) => (
                                 <div className="onenote-notebook" key={notebook.id}>
@@ -171,29 +190,31 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
 }
 
 /** Renders a notebook's (or section group's) sections as checkboxes and recurses into nested section
- *  groups, so the OneNote folder structure is mirrored in the picker. */
+ *  groups. Sections and groups are interleaved in creation-date order so the picker mirrors the OneNote
+ *  left rail (which the API can't reproduce exactly — see the order caveat above the list). */
 function SectionTree({ container, selectedIds, onToggle }: {
-    container: OneNoteNotebook | OneNoteSectionGroup;
+    container: OneNoteContainer;
     selectedIds: Set<string>;
     onToggle: (id: string, checked: boolean) => void;
 }) {
     return (
         <>
-            {container.sections.map((section) => (
-                <FormCheckbox
-                    key={section.id}
-                    name={`onenote-section-${section.id}`}
-                    label={section.title}
-                    currentValue={selectedIds.has(section.id)}
-                    onChange={(checked) => onToggle(section.id, checked)}
-                />
-            ))}
-            {container.sectionGroups.map((group) => (
-                <div className="onenote-section-group" key={group.id}>
-                    <span className="onenote-section-group-title">{group.title}</span>
-                    <SectionTree container={group} selectedIds={selectedIds} onToggle={onToggle} />
-                </div>
-            ))}
+            {orderedChildren(container).map((child) => (child.type === "section"
+                ? (
+                    <FormCheckbox
+                        key={child.section.id}
+                        name={`onenote-section-${child.section.id}`}
+                        label={child.section.title}
+                        currentValue={selectedIds.has(child.section.id)}
+                        onChange={(checked) => onToggle(child.section.id, checked)}
+                    />
+                )
+                : (
+                    <div className="onenote-section-group" key={child.group.id}>
+                        <span className="onenote-section-group-title">{child.group.title}</span>
+                        <SectionTree container={child.group} selectedIds={selectedIds} onToggle={onToggle} />
+                    </div>
+                )))}
         </>
     );
 }

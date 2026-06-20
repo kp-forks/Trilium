@@ -188,7 +188,7 @@ function register(app: express.Application) {
     // The OAuth `state` validated against the session is what guards it.
     asyncRoute(GET, "/api/onenote-import/callback", [], onenoteImportRoute.callback);
     apiRoute(GET, "/api/onenote-import/status", onenoteImportRoute.getStatus);
-    apiRoute(PST, "/api/onenote-import/disconnect", onenoteImportRoute.disconnect);
+    asyncApiRoute(PST, "/api/onenote-import/disconnect", onenoteImportRoute.disconnect);
     asyncApiRoute(GET, "/api/onenote-import/notebooks", onenoteImportRoute.getNotebooks);
     asyncApiRoute(PST, "/api/onenote-import/import", onenoteImportRoute.runImport);
 
