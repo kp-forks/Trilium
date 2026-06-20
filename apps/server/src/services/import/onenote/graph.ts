@@ -5,9 +5,26 @@
  * Graph reference: https://learn.microsoft.com/en-us/graph/api/resources/onenote-api-overview
  */
 
+import { safeFetch } from "../../safe_fetch.js";
 import { extractPageId } from "./links.js";
 
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
+
+// safeFetch's default 5s timeout is too tight for the importer: page content and binary resources can
+// be large and slow. Allow a generous per-request budget instead.
+const GRAPH_TIMEOUT_MS = 60_000;
+
+/**
+ * Fetches a Microsoft Graph URL through {@link safeFetch} so the request is hardened against SSRF —
+ * pagination (`@odata.nextLink`) and resource URLs come from Graph responses and page HTML, so they
+ * must not be trusted to point at the public Graph host. The bearer token is sent on every hop.
+ */
+function graphFetch(accessToken: string, url: string): Promise<Response> {
+    return safeFetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+        signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
+    });
+}
 
 export interface GraphAccount {
     name: string;
@@ -138,9 +155,7 @@ export async function listPages(accessToken: string, sectionId: string): Promise
  * back as plain HTML, which the parser handles by returning the whole body as `html`.
  */
 export async function getPageContent(accessToken: string, pageId: string): Promise<{ html: string; inkml: string }> {
-    const response = await fetch(`${GRAPH_BASE}/me/onenote/pages/${pageId}/content?includeInkML=true`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const response = await graphFetch(accessToken, `${GRAPH_BASE}/me/onenote/pages/${pageId}/content?includeInkML=true`);
     if (!response.ok) {
         throw new Error(`Failed to fetch OneNote page content (HTTP ${response.status})`);
     }
@@ -184,7 +199,7 @@ export function parsePageContent(raw: string): { html: string; inkml: string } {
  * API base. Returns the raw bytes plus the server-reported content type.
  */
 export async function getResource(accessToken: string, url: string): Promise<{ content: Uint8Array; contentType: string }> {
-    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    const response = await graphFetch(accessToken, url);
     if (!response.ok) {
         throw new Error(`Failed to fetch OneNote resource (HTTP ${response.status})`);
     }
@@ -231,9 +246,7 @@ interface RawPage {
 }
 
 async function graphGet<T>(accessToken: string, path: string): Promise<T> {
-    const response = await fetch(`${GRAPH_BASE}${path}`, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-    });
+    const response = await graphFetch(accessToken, `${GRAPH_BASE}${path}`);
     if (!response.ok) {
         throw new Error(`Microsoft Graph request failed: ${path} (HTTP ${response.status})`);
     }
@@ -246,7 +259,7 @@ async function graphGetAll<T>(accessToken: string, pathOrUrl: string): Promise<T
     let next: string | null = pathOrUrl.startsWith("http") ? pathOrUrl : `${GRAPH_BASE}${pathOrUrl}`;
 
     while (next) {
-        const response: Response = await fetch(next, { headers: { Authorization: `Bearer ${accessToken}` } });
+        const response: Response = await graphFetch(accessToken, next);
         if (!response.ok) {
             throw new Error(`Microsoft Graph request failed: ${pathOrUrl} (HTTP ${response.status})`);
         }
