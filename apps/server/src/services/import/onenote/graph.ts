@@ -5,6 +5,8 @@
  * Graph reference: https://learn.microsoft.com/en-us/graph/api/resources/onenote-api-overview
  */
 
+import { getLog } from "@triliumnext/core";
+
 import { safeFetch } from "../../safe_fetch.js";
 import { extractPageId } from "./links.js";
 
@@ -42,7 +44,9 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
 
         // Drain the throttled response so its connection is released before we wait and retry.
         await response.body?.cancel();
-        await delay(retryDelayMs(response.headers.get("Retry-After"), attempt));
+        const waitMs = retryDelayMs(response.headers.get("Retry-After"), attempt);
+        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1}/${MAX_RETRIES} in ${waitMs}ms`);
+        await delay(waitMs);
     }
 }
 
@@ -235,7 +239,9 @@ export async function getResource(accessToken: string, url: string): Promise<{ c
         throw new Error(`Failed to fetch OneNote resource (HTTP ${response.status})`);
     }
     const buffer = new Uint8Array(await response.arrayBuffer());
-    return { content: buffer, contentType: response.headers.get("content-type") ?? "application/octet-stream" };
+    const contentType = response.headers.get("content-type") ?? "application/octet-stream";
+    getLog().info(`OneNote import: downloaded resource (${contentType}, ${buffer.length} bytes) from ${url}`);
+    return { content: buffer, contentType };
 }
 
 interface RawSection {

@@ -110,7 +110,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
             for (const page of pages) {
                 const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
                 const html = converter.convertPageHtml(rawHtml);
-                const resources = await downloadPageResources(accessToken, html);
+                const resources = await downloadPageResources(accessToken, page.title, html);
                 fetchedPages.push({ title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
                 taskContext.increaseProgressCount();
             }
@@ -310,7 +310,7 @@ function renderInkFigure(note: BNote, svg: string): string {
  * downloads each once. Failures are logged and skipped so one missing resource doesn't abort the whole
  * import; the reference is simply left untouched.
  */
-async function downloadPageResources(accessToken: string, html: string): Promise<DownloadedResource[]> {
+async function downloadPageResources(accessToken: string, pageTitle: string, html: string): Promise<DownloadedResource[]> {
     const root = parse(html);
 
     const refs = new Map<string, Omit<DownloadedResource, "content">>();
@@ -328,11 +328,19 @@ async function downloadPageResources(accessToken: string, html: string): Promise
         }
     }
 
+    if (refs.size === 0) {
+        return [];
+    }
+
+    const all = Array.from(refs.values());
+    const imageCount = all.filter((ref) => ref.kind === "image").length;
+    getLog().info(`OneNote import: page '${pageTitle}' references ${all.length} resource(s) (${imageCount} image(s), ${all.length - imageCount} attachment(s)); downloading with concurrency ${RESOURCE_DOWNLOAD_CONCURRENCY}`);
+
     // Downloads are independent stateless GETs, so fetch them concurrently — but with a bounded pool,
     // not all at once: an image-heavy page (hundreds of images) would otherwise open hundreds of
     // simultaneous connections, triggering Graph throttling (429) and a large memory spike, which in
     // practice dropped most images and left the note nearly empty. A failed download is skipped.
-    const resources = await mapWithConcurrency(Array.from(refs.values()), RESOURCE_DOWNLOAD_CONCURRENCY, async (ref) => {
+    const downloaded = await mapWithConcurrency(all, RESOURCE_DOWNLOAD_CONCURRENCY, async (ref) => {
         try {
             const { content, contentType } = await graph.getResource(accessToken, ref.url);
             return { ...ref, mime: ref.mime || contentType, content };
@@ -341,7 +349,12 @@ async function downloadPageResources(accessToken: string, html: string): Promise
             return null;
         }
     });
-    return resources.filter((resource): resource is DownloadedResource => resource !== null);
+
+    const resources = downloaded.filter((resource): resource is DownloadedResource => resource !== null);
+    const failed = all.length - resources.length;
+    const totalBytes = resources.reduce((sum, resource) => sum + resource.content.length, 0);
+    getLog().info(`OneNote import: page '${pageTitle}' downloaded ${resources.length}/${all.length} resource(s) (${Math.round(totalBytes / 1024)} KiB)${failed > 0 ? `; ${failed} failed and were skipped` : ""}`);
+    return resources;
 }
 
 /** Caps how many page resources (images, attachments) are downloaded from Graph at once. */
