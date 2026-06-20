@@ -191,6 +191,27 @@ const LISTS_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): a table with visible borders and one with hidden borders
+// (border:0px). OneNote carries borders as a `border` shorthand + border-collapse.
+const TABLE_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <table style="border:1px solid;border-collapse:collapse">
+                <tr><td style="background-color:#d8d8d8;border:1px solid">A</td><td style="border:1px solid">B</td></tr>
+                <tr><td style="border:1px solid">1</td><td style="border:1px solid">Content</td></tr>
+            </table>
+        </div>
+        <div style="position:absolute;left:211px;top:382px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">Hidden borders</p>
+            <br />
+            <table style="border:0px">
+                <tr><td style="background-color:#d8d8d8;border:0px">A</td><td style="border:0px">B</td></tr>
+                <tr><td style="border:0px">1</td><td style="border:0px">Content</td></tr>
+            </table>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -250,6 +271,30 @@ describe("convertPageHtml", () => {
         expect(root.querySelectorAll("li").every((li) => !(li.getAttribute("style") ?? "").includes("list-style-type"))).toBe(true);
         expect(root.querySelectorAll("li p")).toHaveLength(0);
         expect(out).toContain("Normal bullet");
+    });
+
+    it("drops visible table borders and maps OneNote's hidden (0px) borders to transparent", () => {
+        const out = converter.convertPageHtml(TABLE_SAMPLE);
+        const root = parse(out);
+        const tables = root.querySelectorAll("table");
+
+        // Visible-border table: border shorthand / collapse dropped (CKEditor draws default borders).
+        expect(tables[0].getAttribute("style") ?? "").not.toContain("border");
+        // Hidden-border table: border:0px -> transparent border.
+        expect(tables[1].getAttribute("style")).toContain("border-color:transparent");
+        expect(tables[1].getAttribute("style")).toContain("border-style:solid");
+
+        const visibleCells = tables[0].querySelectorAll("td");
+        expect(visibleCells[0].getAttribute("style")).toContain("background-color:#d8d8d8");
+        expect(visibleCells[0].getAttribute("style") ?? "").not.toContain("border");
+
+        const hiddenCells = tables[1].querySelectorAll("td");
+        expect(hiddenCells[0].getAttribute("style")).toContain("background-color:#d8d8d8");
+        expect(hiddenCells[0].getAttribute("style")).toContain("border-color:transparent");
+        expect(hiddenCells[1].getAttribute("style")).toContain("border-color:transparent");
+
+        expect(out).not.toContain("border:0px");
+        expect(out).not.toContain("border-collapse");
     });
 
     it("converts OneNote to-do tags into a Trilium task list", () => {

@@ -48,6 +48,7 @@ export function convertPageHtml(rawHtml: string): string {
     normalizeNamedColors(scope);
     unwrapListItemParagraphs(scope);
     normalizeListMarkers(scope);
+normalizeTableBorders(scope);
     removeEmptyListItems(scope);
     removeBlockLevelBreaks(scope);
 
@@ -265,6 +266,34 @@ function normalizeListMarkers(scope: HTMLElement) {
             } else {
                 li.setAttribute("style", serializeStyle(style));
             }
+        }
+    }
+}
+
+/**
+ * OneNote carries cell/table borders as a `border` shorthand and `border-collapse`, which the
+ * sanitizer drops. Visible borders are left to CKEditor's default table styling, but a zero-width /
+ * none border must be made explicit, so map `border:0px` to `border-color:transparent` (the CKEditor
+ * representation of a hidden border), keeping any background-color.
+ */
+function normalizeTableBorders(scope: HTMLElement) {
+    for (const el of scope.querySelectorAll("table, td, th")) {
+        const style = parseStyle(el.getAttribute("style") ?? "");
+        const border = style.get("border");
+        style.delete("border");
+        style.delete("border-collapse");
+
+        if (border !== undefined && /^0(px|pt|em)?$|\bnone\b|\bhidden\b/.test(border)) {
+            style.set("border-color", "transparent");
+            if (el.tagName?.toLowerCase() === "table") {
+                style.set("border-style", "solid");
+            }
+        }
+
+        if (style.size === 0) {
+            el.removeAttribute("style");
+        } else {
+            el.setAttribute("style", serializeStyle(style));
         }
     }
 }
