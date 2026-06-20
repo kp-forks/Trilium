@@ -69,7 +69,6 @@
     "opml_version_2": "OPML v2.0 - sallii myös HTML:n",
     "export": "Vie",
     "choose_export_type": "Valitse ensin viennin tyyppi",
-    "export_status": "Viennin tila",
     "export_in_progress": "Vienti käynnissä: {{progressCount}}",
     "export_finished_successfully": "Vienti valmistui onnistuneesti.",
     "format_pdf": "PDF - tulostukseen ja jakamiseen."

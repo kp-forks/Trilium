@@ -139,7 +139,6 @@
     "export_type_single": "Seulement cette note sans ses descendants",
     "export": "Exporter",
     "choose_export_type": "Choisissez d'abord le type d'export",
-    "export_status": "Statut d'exportation",
     "export_in_progress": "Exportation en cours : {{progressCount}}",
     "export_finished_successfully": "L'exportation s'est terminée avec succès.",
     "format_pdf": "PDF - pour l'impression ou le partage de documents.",
@@ -1074,9 +1073,7 @@
     "protecting-finished-successfully": "La protection de la note s'est terminée avec succès.",
     "unprotecting-finished-successfully": "La protection de la note a été retirée avec succès.",
     "protecting-in-progress": "Protection en cours : {{count}}",
-    "unprotecting-in-progress-count": "Retrait de la protection en cours : {{count}}",
-    "protecting-title": "Statut de la protection",
-    "unprotecting-title": "Statut de la non-protection"
+    "unprotecting-in-progress-count": "Retrait de la protection en cours : {{count}}"
   },
   "relation_map": {
     "remove_note": "Supprimer la note",
@@ -1755,7 +1752,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Impossible de déplacer les notes ici.",
-    "delete-status": "Etat de la suppression",
     "delete-notes-in-progress": "Suppression des notes en cours : {{count}}",
     "delete-finished-successfully": "Suppression terminée avec succès.",
     "undeleting-notes-in-progress": "Restauration des notes en cours : {{count}}",

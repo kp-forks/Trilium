@@ -119,7 +119,6 @@
     "export_type_single": "केवल यह नोट, इसके वंशजों के बिना",
     "export": "एक्सपोर्ट करें",
     "choose_export_type": "कृपया पहले एक्सपोर्ट का प्रकार चुनें",
-    "export_status": "एक्सपोर्ट की स्थिति",
     "export_in_progress": "एक्सपोर्ट हो रहा है: {{progressCount}}",
     "export_finished_successfully": "एक्सपोर्ट सफलतापूर्वक पूरा हुआ।",
     "format_pdf": "PDF - प्रिंट करने या शेयर करने के लिए।",
@@ -1007,9 +1006,7 @@
     "protecting-finished-successfully": "प्रोटेक्ट करना सफलतापूर्वक पूरा हुआ।",
     "unprotecting-finished-successfully": "अन-प्रोटेक्ट करना सफलतापूर्वक पूरा हुआ।",
     "protecting-in-progress": "प्रोटेक्ट हो रहा है: {{count}}",
-    "unprotecting-in-progress-count": "अन-प्रोटेक्ट हो रहा है: {{count}}",
-    "protecting-title": "प्रोटेक्ट स्टेटस",
-    "unprotecting-title": "अन-प्रोटेक्ट स्टेटस"
+    "unprotecting-in-progress-count": "अन-प्रोटेक्ट हो रहा है: {{count}}"
   },
   "relation_map": {
     "remove_note": "नोट हटाएं",
@@ -1660,7 +1657,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "यहाँ नोट नहीं ला सकते।",
-    "delete-status": "डिलीट स्टेटस",
     "delete-notes-in-progress": "नोट डिलीट हो रहे हैं: {{count}}",
     "delete-finished-successfully": "सफलता से डिलीट हो गया।",
     "undeleting-notes-in-progress": "नोट्स वापस लाए जा रहे हैं: {{count}}",

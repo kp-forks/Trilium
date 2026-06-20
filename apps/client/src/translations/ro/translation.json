@@ -586,7 +586,6 @@
     "export_finished_successfully": "Export finalizat cu succes.",
     "export_in_progress": "Export în curs: {{progressCount}}",
     "export_note_title": "Exportă notița",
-    "export_status": "Starea exportului",
     "export_type_single": "Doar această notiță fără descendenții ei",
     "export_type_subtree": "Această notiță și toți descendenții ei",
     "format_html_zip": "HTML în arhivă ZIP - recomandat deoarece păstrează toată formatarea.",
@@ -1102,8 +1101,6 @@
     "wrong_password": "Parolă greșită.",
     "protecting-finished-successfully": "Protejarea a avut succes.",
     "protecting-in-progress": "Protejare în curs: {{count}}",
-    "protecting-title": "Stare protejare",
-    "unprotecting-title": "Stare deprotejare",
     "unprotecting-finished-successfully": "Deprotejarea a avut succes.",
     "unprotecting-in-progress-count": "Deprotejare în curs: {{count}}"
   },
@@ -1746,7 +1743,6 @@
     "cannot-move-notes-here": "Nu se pot muta notițe aici.",
     "delete-finished-successfully": "Ștergerea a avut succes.",
     "delete-notes-in-progress": "Ștergere în curs: {{count}}",
-    "delete-status": "Starea ștergerii",
     "undeleting-notes-finished-successfully": "Restaurarea notițelor a avut succes.",
     "undeleting-notes-in-progress": "Restaurare notițe în curs: {{count}}"
   },

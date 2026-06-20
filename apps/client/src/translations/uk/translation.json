@@ -123,8 +123,7 @@
     "undeleting-notes-in-progress": "Відновлюємо нотатки: {{count}}",
     "delete-notes-in-progress": "Видаляємо нотатки: {{count}}",
     "delete-finished-successfully": "Нотатки вдало видалено.",
-    "cannot-move-notes-here": "Неможливо перемістити нотатки сюди.",
-    "delete-status": "Видалити статус"
+    "cannot-move-notes-here": "Неможливо перемістити нотатки сюди."
   },
   "launcher_context_menu": {
     "add-spacer": "Додати розділювач",
@@ -201,7 +200,6 @@
     "export_type_single": "Тільки ця нотатка без її нащадків",
     "export": "Експорт",
     "choose_export_type": "Спочатку виберіть тип експорту",
-    "export_status": "Статус експорту",
     "export_in_progress": "Триває експорт: {{progressCount}}",
     "export_finished_successfully": "Експорт успішно завершено.",
     "format_pdf": "PDF – для друку або спільного використання.",
@@ -1089,9 +1087,7 @@
     "protecting-finished-successfully": "Захист успішно завершено.",
     "unprotecting-finished-successfully": "Зняття захисту успішно завершено.",
     "protecting-in-progress": "Триває захист: {{count}}",
-    "unprotecting-in-progress-count": "Триває зняття захисту: {{count}}",
-    "protecting-title": "Статус захисту",
-    "unprotecting-title": "Статус зняття захисту"
+    "unprotecting-in-progress-count": "Триває зняття захисту: {{count}}"
   },
   "relation_map": {
     "remove_note": "Видалити нотатку",

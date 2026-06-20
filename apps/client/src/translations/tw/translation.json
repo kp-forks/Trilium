@@ -137,7 +137,6 @@
     "export_type_single": "僅此筆記，不包括子筆記",
     "export": "匯出",
     "choose_export_type": "請先選擇匯出類型",
-    "export_status": "匯出狀態",
     "export_in_progress": "正在匯出：{{progressCount}}",
     "export_finished_successfully": "成功匯出。",
     "format_html": "HTML - 推薦，因為它保留了所有格式",
@@ -1057,9 +1056,7 @@
     "protecting-finished-successfully": "已成功完成保護操作。",
     "unprotecting-finished-successfully": "已成功解除保護操作。",
     "protecting-in-progress": "保護進行中：{{count}}",
-    "unprotecting-in-progress-count": "解除保護進行中：{{count}}",
-    "protecting-title": "保護狀態",
-    "unprotecting-title": "解除保護狀態"
+    "unprotecting-in-progress-count": "解除保護進行中：{{count}}"
   },
   "relation_map": {
     "remove_note": "刪除筆記",
@@ -1714,7 +1711,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "無法將筆記移動至這裡。",
-    "delete-status": "刪除狀態",
     "delete-notes-in-progress": "正在刪除筆記：{{count}}",
     "delete-finished-successfully": "成功刪除。",
     "undeleting-notes-in-progress": "正在還原刪除的筆記：{{count}}",

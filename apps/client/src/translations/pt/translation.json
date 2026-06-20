@@ -103,7 +103,6 @@
     "export_type_single": "Apenas esta nota, sem os seus descendentes",
     "export": "Exportar",
     "choose_export_type": "Por favor, escolha primeiro o tipo de exportação",
-    "export_status": "Estado da exportação",
     "export_in_progress": "Exportação em andamento: {{progressCount}}",
     "export_finished_successfully": "Exportação concluída com sucesso.",
     "format_pdf": "PDF – para impressão ou compartilhamento.",
@@ -1006,9 +1005,7 @@
     "protecting-finished-successfully": "A proteção foi finalizada com sucesso.",
     "unprotecting-finished-successfully": "A remoção da proteção foi finalizada com sucesso.",
     "protecting-in-progress": "Proteções em andamento: {{count}}",
-    "unprotecting-in-progress-count": "Remoções de proteção em andamento: {{count}}",
-    "protecting-title": "Estado da proteção",
-    "unprotecting-title": "Estado da remoção de proteção"
+    "unprotecting-in-progress-count": "Remoções de proteção em andamento: {{count}}"
   },
   "relation_map": {
     "remove_note": "Remover nota",
@@ -1626,7 +1623,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Não é possível mover notas para cá.",
-    "delete-status": "Apagar estado",
     "delete-notes-in-progress": "Apagar notas em andamento: {{count}}",
     "delete-finished-successfully": "Apagar concluído com sucesso.",
     "undeleting-notes-in-progress": "Restauração de notas em andamento: {{count}}",

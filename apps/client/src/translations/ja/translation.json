@@ -313,7 +313,6 @@
     "export_type_single": "このノートのみで、子孫ノートは含まない",
     "export": "エクスポート",
     "choose_export_type": "最初にエクスポートタイプを選択してください",
-    "export_status": "エクスポート状況",
     "export_in_progress": "エクスポート処理中: {{progressCount}}",
     "export_finished_successfully": "エクスポートが正常に完了しました。",
     "format_pdf": "PDF - 印刷または共有目的に。",
@@ -1822,9 +1821,7 @@
     "protecting-finished-successfully": "保護が正常に完了しました。",
     "unprotecting-finished-successfully": "保護の解除が正常に完了しました。",
     "protecting-in-progress": "保護中: {{count}}",
-    "unprotecting-in-progress-count": "保護解除中: {{count}}",
-    "protecting-title": "保護の状態",
-    "unprotecting-title": "保護解除の状態"
+    "unprotecting-in-progress-count": "保護解除中: {{count}}"
   },
   "consistency_checks": {
     "find_and_fix_button": "問題を修正",
@@ -1958,7 +1955,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "ここにノートを移動することはできません。",
-    "delete-status": "ステータスを削除",
     "delete-notes-in-progress": "削除進行中のノート: {{count}}",
     "delete-finished-successfully": "削除が正常に完了しました。",
     "undeleting-notes-in-progress": "削除済みのノートを復元中: {{count}}",

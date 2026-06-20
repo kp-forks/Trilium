@@ -172,7 +172,6 @@
     "export_type_single": "An nóta seo amháin gan a shliocht",
     "export": "Easpórtáil",
     "choose_export_type": "Roghnaigh cineál onnmhairithe ar dtús le do thoil",
-    "export_status": "Stádas onnmhairithe",
     "export_in_progress": "Easpórtáil ar siúl: {{progressCount}}",
     "export_finished_successfully": "Críochnaíodh an easpórtáil go rathúil.",
     "format_pdf": "PDF - le haghaidh priontála nó comhroinnte.",
@@ -1083,9 +1082,7 @@
     "protecting-finished-successfully": "Críochnaíodh an chosaint go rathúil.",
     "unprotecting-finished-successfully": "Críochnaíodh an díchosaint go rathúil.",
     "protecting-in-progress": "Cosaint ar siúl: {{count}}",
-    "unprotecting-in-progress-count": "Díchosaint ar siúl: {{count}}",
-    "protecting-title": "Stádas cosanta",
-    "unprotecting-title": "Stádas díchosanta"
+    "unprotecting-in-progress-count": "Díchosaint ar siúl: {{count}}"
   },
   "relation_map": {
     "remove_note": "Bain nóta",
@@ -1827,7 +1824,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Ní féidir nótaí a bhogadh anseo.",
-    "delete-status": "Stádas scriosta",
     "delete-notes-in-progress": "Scrios nótaí atá ar siúl: {{count}}",
     "delete-finished-successfully": "Scriosadh críochnaithe go rathúil.",
     "undeleting-notes-in-progress": "Nótaí á n-athscriosadh ar siúl: {{count}}",

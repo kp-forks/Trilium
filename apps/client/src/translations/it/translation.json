@@ -135,7 +135,6 @@
   "export": {
     "close": "Chiudi",
     "export_note_title": "Esporta la nota",
-    "export_status": "Stato dell'esportazione",
     "export": "Esporta",
     "choose_export_type": "Scegli prima il tipo di esportazione, per favore",
     "export_in_progress": "Esportazione in corso: {{progressCount}}",
@@ -1463,9 +1462,7 @@
     "protecting-finished-successfully": "Protezione completata con successo.",
     "unprotecting-finished-successfully": "Rimozione della protezione completata con successo.",
     "protecting-in-progress": "Protezione in corso: {{count}}",
-    "unprotecting-in-progress-count": "Rimozione della protezione in corso: {{count}}",
-    "protecting-title": "Stato di protezione",
-    "unprotecting-title": "Stato non protetto"
+    "unprotecting-in-progress-count": "Rimozione della protezione in corso: {{count}}"
   },
   "relation_map": {
     "remove_note": "Rimuovi nota",
@@ -1915,7 +1912,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Impossibile spostare le note qui.",
-    "delete-status": "Elimina stato",
     "delete-notes-in-progress": "Eliminazione note in corso: {{count}}",
     "delete-finished-successfully": "Eliminazione completata con successo.",
     "undeleting-notes-in-progress": "Ripristino delle note in corso: {{count}}",

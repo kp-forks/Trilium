@@ -142,7 +142,6 @@
     "export_type_single": "Hanya catatan ini tanpa turunannya",
     "export": "Ekspor",
     "choose_export_type": "Silakan pilih jenis ekspor terlebih dahulu",
-    "export_status": "Status ekspor",
     "export_in_progress": "Ekspor sedang berlangsung: {{progressCount}}",
     "export_finished_successfully": "Ekspor selesai dengan sukses.",
     "format_pdf": "PDF - untuk keperluan cetak atau berbagi.",
@@ -1191,9 +1190,7 @@
     "protecting-finished-successfully": "Proteksi selesai dengan sukses.",
     "unprotecting-finished-successfully": "Membuka proteksi selesai dengan sukses.",
     "protecting-in-progress": "Proteksi sedang berlangsung: {{count}}",
-    "unprotecting-in-progress-count": "Pembukaan proteksi sedang berlangsung: {{count}}",
-    "protecting-title": "Status proteksi",
-    "unprotecting-title": "Status pembukaan proteksi"
+    "unprotecting-in-progress-count": "Pembukaan proteksi sedang berlangsung: {{count}}"
   },
   "relation_map": {
     "remove_note": "Hapus catatan",
@@ -2023,7 +2020,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Tidak dapat memindahkan catatan ke sini.",
-    "delete-status": "Status penghapusan",
     "delete-notes-in-progress": "Penghapusan catatan sedang berlangsung: {{count}}",
     "delete-finished-successfully": "Penghapusan selesai dengan sukses.",
     "undeleting-notes-in-progress": "Pemulihan catatan sedang berlangsung: {{count}}",

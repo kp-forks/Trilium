@@ -630,7 +630,6 @@
     "close": "غلق",
     "export": "تصدير",
     "export_note_title": "تصدير الملاحظة",
-    "export_status": "حالة التصدير",
     "export_finished_successfully": "اكتمل التصدير بنجاح.",
     "export_in_progress": "جار التصدير: {{progressCount}}",
     "choose_export_type": "اختر نوع التصدير اولا من فضلك",
@@ -1559,8 +1558,6 @@
   },
   "protected_session": {
     "wrong_password": "كلمة المرور خاطئة",
-    "protecting-title": "الحالة المحمية",
-    "unprotecting-title": "الحالة الغير محمية",
     "protecting-finished-successfully": "تم الحماية بنجاح.",
     "unprotecting-finished-successfully": "تم ازالة الحماية بنجاح.",
     "start_session_button": "البدء بالجلسة المحمية",
@@ -1693,7 +1690,6 @@
     "save-named-revision-message": "أدخل اسمًا لهذا الإصدار (اتركه فارغًا لعدم تسمية الإصدار):"
   },
   "branches": {
-    "delete-status": "حالة الحذف",
     "delete-finished-successfully": "تم الحذف بنجاح.",
     "cannot-move-notes-here": "لايمكن نقل الملاحظات الى هنا.",
     "undeleting-notes-finished-successfully": "تم استرجاع الملاحظات بنجاح.",

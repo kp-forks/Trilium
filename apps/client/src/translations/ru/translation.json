@@ -287,7 +287,6 @@
     "export_type_single": "Только эта заметка без ее потомков",
     "export": "Экспорт",
     "choose_export_type": "Сначала выберите тип экспорта",
-    "export_status": "Статус экспорта",
     "export_in_progress": "Экспорт: {{progressCount}}",
     "export_finished_successfully": "Экспорт завершился успешно.",
     "format_pdf": "PDF - для печати или обмена.",
@@ -1662,8 +1661,6 @@
   },
   "protected_session": {
     "wrong_password": "Неверный пароль.",
-    "protecting-title": "Статус защиты",
-    "unprotecting-title": "Статус снятия защиты",
     "protecting-finished-successfully": "Защита успешно завершена.",
     "unprotecting-finished-successfully": "Снятие защиты успешно завершено.",
     "start_session_button": "Начать защищённый сеанс",
@@ -1923,7 +1920,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Невозможно переместить заметки сюда.",
-    "delete-status": "Статус удаления",
     "delete-finished-successfully": "Удаление успешно завершено.",
     "undeleting-notes-finished-successfully": "Восстановление заметок успешно завершено.",
     "delete-notes-in-progress": "Удаление заметок в процессе: {{count}}",

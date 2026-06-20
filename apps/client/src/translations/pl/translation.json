@@ -112,7 +112,6 @@
     "export_type_single": "Tylko ta notatka (bez elementów podrzędnych)",
     "export": "Eksportuj",
     "choose_export_type": "Proszę najpierw wybrać typ eksportu",
-    "export_status": "Status eksportu",
     "export_in_progress": "Eksport w toku: {{progressCount}}",
     "export_finished_successfully": "Eksport zakończony pomyślnie.",
     "format_pdf": "PDF - do druku lub udostępniania.",
@@ -1258,9 +1257,7 @@
     "protecting-finished-successfully": "Ochrona zakończona pomyślnie.",
     "unprotecting-finished-successfully": "Zdejmowanie ochrony zakończone pomyślnie.",
     "protecting-in-progress": "Ochrona w toku: {{count}}",
-    "unprotecting-in-progress-count": "Zdejmowanie ochrony w toku: {{count}}",
-    "protecting-title": "Status ochrony",
-    "unprotecting-title": "Status zdejmowania ochrony"
+    "unprotecting-in-progress-count": "Zdejmowanie ochrony w toku: {{count}}"
   },
   "relation_map": {
     "remove_note": "Usuń notatkę",
@@ -1888,7 +1885,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Nie można przenieść notatek tutaj.",
-    "delete-status": "Status usuwania",
     "delete-notes-in-progress": "Usuwanie notatek w toku: {{count}}",
     "delete-finished-successfully": "Usuwanie zakończone pomyślnie.",
     "undeleting-notes-in-progress": "Przywracanie notatek w toku: {{count}}",
