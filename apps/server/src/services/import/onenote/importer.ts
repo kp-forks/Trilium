@@ -20,6 +20,8 @@ export interface SectionSelection {
 interface FetchedPage {
     title: string;
     html: string;
+    /** The unmodified HTML returned by the Graph API, kept only when debug mode is on. */
+    rawHtml: string;
 }
 
 interface FetchedSection {
@@ -28,7 +30,7 @@ interface FetchedSection {
     pages: FetchedPage[];
 }
 
-export async function importSelection({ accessToken, parentNoteId, sections, taskId }: { accessToken: string; parentNoteId: string; sections: SectionSelection[]; taskId: string }): Promise<string> {
+export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false }: { accessToken: string; parentNoteId: string; sections: SectionSelection[]; taskId: string; debug?: boolean }): Promise<string> {
     const taskContext = TaskContext.getInstance(taskId, "importNotes", { safeImport: true });
 
     // Phase 1: pull everything over the network first, so note creation can run in a single
@@ -39,21 +41,21 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
         const fetchedPages: FetchedPage[] = [];
         for (const page of pages) {
             const rawHtml = await graph.getPageContent(accessToken, page.id);
-            fetchedPages.push({ title: page.title, html: converter.convertPageHtml(rawHtml) });
+            fetchedPages.push({ title: page.title, html: converter.convertPageHtml(rawHtml), rawHtml });
             taskContext.increaseProgressCount();
         }
         fetched.push({ title: section.title, notebookTitle: section.notebookTitle, pages: fetchedPages });
     }
 
     // Phase 2: create the note tree.
-    const rootNoteId = sql.transactional(() => createNotes(parentNoteId, fetched));
+    const rootNoteId = sql.transactional(() => createNotes(parentNoteId, fetched, debug));
 
     taskContext.taskSucceeded({ parentNoteId, importedNoteId: rootNoteId });
 
     return rootNoteId;
 }
 
-function createNotes(parentNoteId: string, sections: FetchedSection[]): string {
+function createNotes(parentNoteId: string, sections: FetchedSection[], debug: boolean): string {
     const parentNote = becca.getNoteOrThrow(parentNoteId);
     const isProtected = parentNote.isProtected && protectedSession.isProtectedSessionAvailable();
 
@@ -74,7 +76,7 @@ function createNotes(parentNoteId: string, sections: FetchedSection[]): string {
         const sectionNote = createFolder(notebookNoteId, section.title);
 
         for (const page of section.pages) {
-            noteService.createNewNote({
+            const { note: pageNote } = noteService.createNewNote({
                 parentNoteId: sectionNote.noteId,
                 title: page.title,
                 content: page.html,
@@ -82,6 +84,17 @@ function createNotes(parentNoteId: string, sections: FetchedSection[]): string {
                 mime: "text/html",
                 isProtected
             });
+
+            // Debug aid: keep the unmodified Graph HTML alongside the converted note so the two can
+            // be compared when diagnosing conversion issues.
+            if (debug) {
+                pageNote.saveAttachment({
+                    role: "file",
+                    mime: "text/html",
+                    title: "OneNote source.html",
+                    content: page.rawHtml
+                });
+            }
         }
     }
 

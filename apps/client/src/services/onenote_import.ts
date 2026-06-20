@@ -44,7 +44,7 @@ function getNotebooks() {
     return server.get<{ notebooks: OneNoteNotebook[] }>("onenote-import/notebooks");
 }
 
-function runImport(payload: { parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string }) {
+function runImport(payload: { parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean }) {
     return server.post<{ noteId: string }>("onenote-import/import", payload);
 }
 

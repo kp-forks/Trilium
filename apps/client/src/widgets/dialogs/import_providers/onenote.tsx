@@ -16,6 +16,7 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
     const [account, setAccount] = useState<OneNoteAccount | null>(null);
     const [notebooks, setNotebooks] = useState<OneNoteNotebook[]>([]);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [debug, setDebug] = useState(false);
     const [importing, setImporting] = useState(false);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -111,14 +112,14 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
 
         setImporting(true);
         try {
-            await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10) });
+            await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug });
             toast.showMessage(t("onenote_import.import_started"));
             closeDialog();
         } catch (e) {
             toast.showError(e instanceof Error ? e.message : String(e));
             setImporting(false);
         }
-    }, [notebooks, selectedIds, parentNoteId, closeDialog]);
+    }, [notebooks, selectedIds, parentNoteId, debug, closeDialog]);
 
     if (phase === "checking") {
         return <div className="onenote-panel"><LoadingSpinner /></div>;
@@ -167,6 +168,13 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                 )}
 
             <div className="onenote-actions">
+                <FormCheckbox
+                    name="onenote-debug"
+                    label={t("onenote_import.attach_source")}
+                    hint={t("onenote_import.attach_source_hint")}
+                    currentValue={debug}
+                    onChange={setDebug}
+                />
                 <Button
                     text={t("onenote_import.import")}
                     kind="primary"

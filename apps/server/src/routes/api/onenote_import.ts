@@ -93,7 +93,7 @@ async function runImport(req: Request) {
         return [401, "Not connected to OneNote."];
     }
 
-    const { parentNoteId, sections, taskId } = req.body as { parentNoteId: string; sections: SectionSelection[]; taskId: string };
+    const { parentNoteId, sections, taskId, debug } = req.body as { parentNoteId: string; sections: SectionSelection[]; taskId: string; debug?: boolean };
     if (!parentNoteId || !taskId) {
         throw new ValidationError("parentNoteId and taskId are required.");
     }
@@ -102,7 +102,7 @@ async function runImport(req: Request) {
     }
     becca.getNoteOrThrow(parentNoteId);
 
-    const noteId = await importer.importSelection({ accessToken, parentNoteId, sections, taskId });
+    const noteId = await importer.importSelection({ accessToken, parentNoteId, sections, taskId, debug: !!debug });
     return { noteId };
 }
 
