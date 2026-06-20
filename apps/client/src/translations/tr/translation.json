@@ -68,7 +68,6 @@
     "export_type_single": "Yalnızca bu not, alt öğeleri olmadan",
     "export": "Dışa aktar",
     "choose_export_type": "Lütfen önce dışa aktarma türünü seçin",
-    "export_status": "Dışa aktarma durumu",
     "export_in_progress": "Dışa aktarma devam ediyor: {{progressCount}}",
     "export_finished_successfully": "Dışa aktarma başarıyla tamamlandı.",
     "format_pdf": "PDF - yazdırma veya paylaşım için.",
@@ -98,7 +97,6 @@
       "placeholder": "Her satıra bir tane gelecek şekilde HTML etiketlerini girin",
       "reset_button": "Varsayılan Listeye Sıfırla"
     },
-    "import-status": "İçe aktarma durumu",
     "in-progress": "İçe aktarma işlemi devam ediyor: {{progress}}",
     "successful": "İçe aktarma başarıyla tamamlandı."
   },

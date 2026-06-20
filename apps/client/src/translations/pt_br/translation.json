@@ -138,7 +138,6 @@
     "export_type_single": "Apenas esta nota, sem seus descendentes",
     "export": "Exportar",
     "choose_export_type": "Por favor, escolha primeiro o tipo de exportação",
-    "export_status": "Status da exportação",
     "export_in_progress": "Exportação em andamento: {{progressCount}}",
     "export_finished_successfully": "Exportação concluída com sucesso.",
     "format_pdf": "PDF – para impressão ou compartilhamento.",
@@ -222,7 +221,6 @@
       "placeholder": "Digite as tags HTML, uma por linha",
       "reset_button": "Redefinir para lista padrão"
     },
-    "import-status": "Status da importação",
     "in-progress": "Importação em andamento: {{progress}}",
     "successful": "Importação concluída com sucesso.",
     "importZipRecommendation": "Ao importar um arquivo ZIP, a hierarquia de notas refletirá a estrutura de subdiretórios dentro do arquivo."
@@ -1106,8 +1104,6 @@
     "unprotecting-finished-successfully": "A remoção da proteção foi finalizada com sucesso.",
     "protecting-in-progress": "Proteções em andamento: {{count}}",
     "unprotecting-in-progress-count": "Remoções de proteção em andamento: {{count}}",
-    "protecting-title": "Estado da proteção",
-    "unprotecting-title": "Estado da remoção de proteção",
     "start_session_button": "Iniciar sessão protegida"
   },
   "relation_map": {
@@ -1573,7 +1569,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Não é possível mover notas para cá.",
-    "delete-status": "Remover estado",
     "delete-notes-in-progress": "Exclusão de notas em andamento: {{count}}",
     "delete-finished-successfully": "Exclusão concluída com sucesso.",
     "undeleting-notes-in-progress": "Restauração de notas em andamento: {{count}}",

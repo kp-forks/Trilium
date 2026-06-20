@@ -91,7 +91,6 @@
     "export_type_single": "Pouze tato poznámka bez jejích potomků",
     "export": "Exportovat",
     "choose_export_type": "Nejprve vyberte typ exportu",
-    "export_status": "Stav exportu",
     "export_in_progress": "Export probíhá: {{progressCount}}",
     "export_finished_successfully": "Export byl úspěšně dokončen.",
     "format_pdf": "PDF – pro tisk nebo sdílení.",
@@ -193,7 +192,6 @@
       "placeholder": "Zadejte HTML tagy, jeden na řádek",
       "reset_button": "Obnovit do výchozího seznamu"
     },
-    "import-status": "Stav importu",
     "in-progress": "Import probíhá: {{progress}}",
     "successful": "Import byl úspěšně dokončen."
   },
@@ -1030,9 +1028,7 @@
     "protecting-finished-successfully": "Ochrana proběhla úspěšně.",
     "unprotecting-finished-successfully": "Ochrana byla úspěšně zrušena.",
     "protecting-in-progress": "Probíhá ochrana: {{count}}",
-    "unprotecting-in-progress-count": "Probíhá odchrana: {{count}}",
-    "protecting-title": "Stav ochrany",
-    "unprotecting-title": "Stav odchrany"
+    "unprotecting-in-progress-count": "Probíhá odchrana: {{count}}"
   },
   "relation_map": {
     "remove_note": "Odstranit poznámku",
@@ -1749,7 +1745,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Poznámky sem nelze přesunout.",
-    "delete-status": "Stav mazání",
     "delete-notes-in-progress": "Probíhá mazání poznámek: {{count}}",
     "delete-finished-successfully": "Mazání proběhlo úspěšně.",
     "undeleting-notes-in-progress": "Probíhá obnovování poznámek: {{count}}",

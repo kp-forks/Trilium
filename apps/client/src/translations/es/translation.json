@@ -137,7 +137,6 @@
     "export_type_single": "Sólo esta nota sin sus descendientes",
     "export": "Exportar",
     "choose_export_type": "Por favor, elija primero el tipo de exportación",
-    "export_status": "Estado de exportación",
     "export_in_progress": "Exportación en curso: {{progressCount}}",
     "export_finished_successfully": "La exportación finalizó exitosamente.",
     "format_pdf": "PDF - para propósitos de impresión o compartición.",
@@ -221,7 +220,6 @@
       "placeholder": "Ingrese las etiquetas HTML, una por línea",
       "reset_button": "Restablecer a lista por defecto"
     },
-    "import-status": "Estado de importación",
     "in-progress": "Importación en progreso: {{progress}}",
     "successful": "Importación finalizada exitosamente.",
     "importZipRecommendation": "Al importar un archivo ZIP, la jerarquía de notas reflejará la estructura de subdirectorios dentro del archivo comprimido."
@@ -1069,9 +1067,7 @@
     "protecting-finished-successfully": "La protección finalizó exitosamente.",
     "unprotecting-finished-successfully": "La desprotección finalizó exitosamente.",
     "protecting-in-progress": "Protección en progreso: {{count}}",
-    "unprotecting-in-progress-count": "Desprotección en progreso: {{count}}",
-    "protecting-title": "Estado de protección",
-    "unprotecting-title": "Estado de desprotección"
+    "unprotecting-in-progress-count": "Desprotección en progreso: {{count}}"
   },
   "relation_map": {
     "remove_note": "Quitar nota",
@@ -1767,7 +1763,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "No se pueden mover notas aquí.",
-    "delete-status": "Estado de eliminación",
     "delete-notes-in-progress": "Eliminación de notas en progreso: {{count}}",
     "delete-finished-successfully": "La eliminación finalizó exitosamente.",
     "undeleting-notes-in-progress": "Recuperación de notas en progreso: {{count}}",

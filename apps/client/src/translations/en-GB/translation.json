@@ -191,7 +191,6 @@
     "export_type_single": "Only this note without its descendants",
     "export": "Export",
     "choose_export_type": "Choose export type first please",
-    "export_status": "Export status",
     "export_in_progress": "Export in progress: {{progressCount}}",
     "export_finished_successfully": "Export finished successfully.",
     "format_pdf": "PDF - for printing or sharing purposes.",

@@ -91,7 +91,6 @@
     "export_type_single": "Samo ovu belešku bez njenih potomaka",
     "export": "Izvoz",
     "choose_export_type": "Molimo vas da prvo izaberete tip izvoza",
-    "export_status": "Status izvoza",
     "export_in_progress": "Izvoz u toku: {{progressCount}}",
     "export_finished_successfully": "Izvoz je uspešno završen.",
     "format_pdf": "PDF - za namene štampanja ili deljenja."
@@ -171,7 +170,6 @@
       "placeholder": "Unesite HTML oznake, po jednu u svaki red",
       "reset_button": "Vrati na podrazumevanu listu"
     },
-    "import-status": "Status uvoza",
     "in-progress": "Uvoz u toku: {{progress}}",
     "successful": "Uvoz je uspešno završen."
   },

@@ -420,6 +420,8 @@
     "backend-scripting": "バックエンドスクリプトの実行",
     "backend-scripting-warning": "バックエンドスクリプトは、ファイルシステムやネットワークを含むサーバーへのフルアクセス権限を持ちます。",
     "sql-console": "SQL コンソール",
-    "sql-console-warning": "SQL コンソールを使用すると、データベースに対して任意の SQL クエリを実行できます。"
+    "sql-console-warning": "SQL コンソールを使用すると、データベースに対して任意の SQL クエリを実行できます。",
+    "lan-access": "ネットワークアクセス",
+    "lan-access-warning": "ローカルネットワーク上の他のデバイスが、この Trilium インスタンスに接続できるようになります。"
   }
 }

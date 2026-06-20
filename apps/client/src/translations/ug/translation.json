@@ -130,7 +130,6 @@
     "export_type_single": "تارماقلىرىنى ئۆز ئىچىگە ئالمايدۇ، پەقەت مۇشۇ خاتىرىنىڭ ئۆزىلا",
     "export": "چىقىرىش",
     "choose_export_type": "ئالدى بىلەن چىقىرىش تۈرىنى تاللاڭ",
-    "export_status": "چىقىرىش ھالىتى",
     "export_in_progress": "چىقىرىلىۋاتىدۇ: {{progressCount}}",
     "export_finished_successfully": "چىقىرىش مۇۋەپپەقىيەتلىك تاماملاندى.",
     "format_pdf": "PDF - بېسىپ چىقىرىش ياكى ھەمبەھرلەش مەقسىتىدە ئىشلىتىلىدۇ.",
@@ -209,7 +208,6 @@
       "placeholder": "ھەر بىر قۇرغا بىر HTML بەلگىسىدىن كىرگۈزۈڭ",
       "reset_button": "ئەسلىدىكى تىزىملىككە ئەسلىگە قايتۇرۇش"
     },
-    "import-status": "كىرگۈزۈش ھالىتى",
     "in-progress": "ئەكىرىلىۋاتىدۇ: {{progress}}",
     "successful": "كىرگۈزۈش مۇۋەپپەقىيەتلىك تاماملاندى.",
     "explodeArchives": "<code>.zip</code>、<code>.enex</code> ۋە<code>.opml</code> ئارخىپ ھۆججەتلىرىنىڭ مەزمۇنىنى ئوقۇش.",
@@ -1067,9 +1065,7 @@
     "protecting-finished-successfully": "قوغداش مۇۋەپپەقىيەتلىك تاماملاندى.",
     "unprotecting-finished-successfully": "قوغداشنى بىكار قىلىش تاماملاندى.",
     "protecting-in-progress": "قوغداش ئېلىپ بېرىلىۋاتىدۇ: {{count}}",
-    "unprotecting-in-progress-count": "قوغداشنى بىكار قىلىش ئېلىپ بېرىلىۋاتىدۇ: {{count}}",
-    "protecting-title": "قوغدىلىش ھالىتى",
-    "unprotecting-title": "قوغداشنى بىكار قىلىش ھالىتى"
+    "unprotecting-in-progress-count": "قوغداشنى بىكار قىلىش ئېلىپ بېرىلىۋاتىدۇ: {{count}}"
   },
   "relation_map": {
     "remove_note": "خاتىرىنى ئۆچۈرۈش",

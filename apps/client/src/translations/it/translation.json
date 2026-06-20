@@ -135,7 +135,6 @@
   "export": {
     "close": "Chiudi",
     "export_note_title": "Esporta la nota",
-    "export_status": "Stato dell'esportazione",
     "export": "Esporta",
     "choose_export_type": "Scegli prima il tipo di esportazione, per favore",
     "export_in_progress": "Esportazione in corso: {{progressCount}}",
@@ -723,7 +722,6 @@
       "placeholder": "Inserisci i tag HTML, uno per riga",
       "reset_button": "Ripristina elenco predefinito"
     },
-    "import-status": "Stato importazione",
     "in-progress": "Importazione in corso: {{progress}}",
     "successful": "Importazione completata con successo.",
     "shrinkImagesTooltip": "<p>Se selezioni questa opzione, Trilium tenterà di ridurre le immagini importate tramite ridimensionamento e ottimizzazione, il che potrebbe influire sulla qualità percepita dell’immagine. Se non selezionata, le immagini verranno importate senza modifiche.</p><p>Questo non si applica alle importazioni <code>.zip</code> con metadati, poiché si presume che questi file siano già ottimizzati.</p>",
@@ -1464,9 +1462,7 @@
     "protecting-finished-successfully": "Protezione completata con successo.",
     "unprotecting-finished-successfully": "Rimozione della protezione completata con successo.",
     "protecting-in-progress": "Protezione in corso: {{count}}",
-    "unprotecting-in-progress-count": "Rimozione della protezione in corso: {{count}}",
-    "protecting-title": "Stato di protezione",
-    "unprotecting-title": "Stato non protetto"
+    "unprotecting-in-progress-count": "Rimozione della protezione in corso: {{count}}"
   },
   "relation_map": {
     "remove_note": "Rimuovi nota",
@@ -1916,7 +1912,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Impossibile spostare le note qui.",
-    "delete-status": "Elimina stato",
     "delete-notes-in-progress": "Eliminazione note in corso: {{count}}",
     "delete-finished-successfully": "Eliminazione completata con successo.",
     "undeleting-notes-in-progress": "Ripristino delle note in corso: {{count}}",

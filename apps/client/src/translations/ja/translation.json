@@ -313,7 +313,6 @@
     "export_type_single": "このノートのみで、子孫ノートは含まない",
     "export": "エクスポート",
     "choose_export_type": "最初にエクスポートタイプを選択してください",
-    "export_status": "エクスポート状況",
     "export_in_progress": "エクスポート処理中: {{progressCount}}",
     "export_finished_successfully": "エクスポートが正常に完了しました。",
     "format_pdf": "PDF - 印刷または共有目的に。",
@@ -396,7 +395,6 @@
       "placeholder": "HTMLタグを1行に1つ入力",
       "reset_button": "リストをデフォルトにリセット"
     },
-    "import-status": "インポート状況",
     "in-progress": "インポート中: {{progress}}",
     "successful": "インポートは正常に終了しました。",
     "explodeArchives": "<code>.zip</code>, <code>.enex</code> および <code>.opml</code> アーカイブの内容を読み取ります。",
@@ -1823,9 +1821,7 @@
     "protecting-finished-successfully": "保護が正常に完了しました。",
     "unprotecting-finished-successfully": "保護の解除が正常に完了しました。",
     "protecting-in-progress": "保護中: {{count}}",
-    "unprotecting-in-progress-count": "保護解除中: {{count}}",
-    "protecting-title": "保護の状態",
-    "unprotecting-title": "保護解除の状態"
+    "unprotecting-in-progress-count": "保護解除中: {{count}}"
   },
   "consistency_checks": {
     "find_and_fix_button": "問題を修正",
@@ -1959,7 +1955,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "ここにノートを移動することはできません。",
-    "delete-status": "ステータスを削除",
     "delete-notes-in-progress": "削除進行中のノート: {{count}}",
     "delete-finished-successfully": "削除が正常に完了しました。",
     "undeleting-notes-in-progress": "削除済みのノートを復元中: {{count}}",
@@ -2394,7 +2389,8 @@
     "play-mode-title": "プレイモード: {{mode}}",
     "play-mode-once": "1回再生",
     "play-mode-loop": "ループ",
-    "play-mode-next": "次を再生"
+    "play-mode-next": "次を再生",
+    "seek": "シーク（左右矢印キー）"
   },
   "mermaid": {
     "placeholder": "マーメイド図の内容を入力するか、以下のサンプル図のいずれかを使用してください。",
@@ -2774,7 +2770,10 @@
     "language": "言語",
     "continue": "続行",
     "your-ip-addresses": "このデバイスのアドレス",
-    "sync-in-progress-banner": "ノートのサイズによっては、同期に時間がかかる場合があります。同期が完了するまで、他のアプリケーションに切り替えないでください。"
+    "sync-in-progress-banner": "ノートのサイズによっては、同期に時間がかかる場合があります。同期が完了するまで、他のアプリケーションに切り替えないでください。",
+    "sync-from-desktop-unreachable-title": "このデバイスには他のデバイスからアクセスできません",
+    "sync-from-desktop-unreachable-description": "同期を行うには、もう一方のデスクトップがネットワーク経由でこのデスクトップに接続する必要があります。セキュリティ上の理由から、このデスクトップアプリはこのコンピューターからの接続のみを受け付けるようになっており、現時点では他のデスクトップからは接続できません。以下でネットワークアクセスを許可してください — Trilium が再起動して適用されます。",
+    "sync-from-desktop-allow-access": "ネットワークアクセスを許可して再起動"
   },
   "text-editor": {
     "checkbox-tooltip": "右クリックでさらに多くのタスクの状態を表示\n{{shortcut}} を押すと、状態を順に切り替え",
@@ -2830,7 +2829,11 @@
     "server_config_hint": "config.ini ファイルに以下を追加してください:",
     "server_env_hint": "または、以下の環境変数を設定してください:",
     "restart_required": "この変更を有効にするには、再起動が必要です。",
-    "restart_now": "今すぐアプリケーションを再起動する"
+    "restart_now": "今すぐアプリケーションを再起動する",
+    "lan_access_title": "ネットワークアクセス",
+    "lan_access_section_description": "デフォルトでは、デスクトップアプリはこのコンピューターからの接続のみを許可しています。他のデバイスから接続（例：別のデバイスからの同期など）できるようにするには、ローカルネットワークからのアクセスを許可してください。— この設定は、信頼できるネットワークでのみ有効にしてください。",
+    "lan_access_label": "他のデバイスからの接続を許可",
+    "lan_access_description": "サーバーを localhost だけでなく、すべてのネットワークインターフェースにバインドします。"
   },
   "snippet_badge": {
     "label": "{{type}} スニペット",
@@ -2873,5 +2876,8 @@
     "launch_on_startup_description": "コンピューターにログインしたときに Trilium を自動的に起動します。",
     "hide_on_auto_start": "トレイに最小化して起動",
     "hide_on_auto_start_description": "ログイン時に自動的に起動する場合、ウィンドウを開くのではなく、最小化して起動します。スタートアップ時に起動とトレイアイコンが有効になっている必要があります。"
+  },
+  "full_content_width_switch": {
+    "title": "全幅"
   }
 }

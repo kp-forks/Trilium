@@ -138,7 +138,6 @@
     "export_type_single": "Nur diese Notiz ohne ihre Unternotizen",
     "export": "Export",
     "choose_export_type": "Bitte wählen Sie zuerst den Exporttyp aus",
-    "export_status": "Exportstatus",
     "export_in_progress": "Export läuft: {{progressCount}}",
     "export_finished_successfully": "Der Export wurde erfolgreich abgeschlossen.",
     "format_pdf": "PDF - für Ausdrucke oder Teilen.",
@@ -222,7 +221,6 @@
       "placeholder": "HTML tags eintragen, pro Zeile nur einer pro Zeile",
       "reset_button": "Zur Standardliste zurücksetzen"
     },
-    "import-status": "Importstatus",
     "in-progress": "Import läuft: {{progress}}",
     "successful": "Import erfolgreich abgeschlossen.",
     "importZipRecommendation": "Beim Import einer ZIP-Datei wird die Notizhierarchie aus der Ordnerstruktur im Archiv übernommen.",
@@ -1065,9 +1063,7 @@
     "protecting-finished-successfully": "Geschützt erfolgreich beendet.",
     "unprotecting-finished-successfully": "Ungeschützt erfolgreich beendet.",
     "protecting-in-progress": "Schützen läuft: {{count}}",
-    "unprotecting-in-progress-count": "Entschützen läuft: {{count}}",
-    "protecting-title": "Geschützt-Status",
-    "unprotecting-title": "Ungeschützt-Status"
+    "unprotecting-in-progress-count": "Entschützen läuft: {{count}}"
   },
   "relation_map": {
     "remove_note": "Notiz entfernen",
@@ -1780,7 +1776,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Notizen können hier nicht verschoben werden.",
-    "delete-status": "Löschstatus",
     "delete-notes-in-progress": "Löschen von Notizen in Bearbeitung: {{count}}",
     "delete-finished-successfully": "Löschen erfolgreich abgeschlossen.",
     "undeleting-notes-in-progress": "Wiederherstellen von Notizen in Bearbeitung: {{count}}",
