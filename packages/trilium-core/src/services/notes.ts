@@ -443,6 +443,13 @@ export function checkImageAttachments(note: BNote, content: string) {
     const attachments = note.getAttachments();
 
     for (const attachment of attachments) {
+        // Only attachments that are meant to be embedded in the note content (images, files) are
+        // auto-scheduled for erasure when no longer referenced. Other roles (e.g. "viewConfig",
+        // "importSource") are managed explicitly by their owners and must not be cleaned up here.
+        if (attachment.role !== "image" && attachment.role !== "file") {
+            continue;
+        }
+
         const attachmentInContent = attachment.attachmentId && foundAttachmentIds.has(attachment.attachmentId);
 
         if (attachment.utcDateScheduledForErasureSince && attachmentInContent) {

@@ -124,14 +124,14 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
             // converted note so the two can be compared when diagnosing conversion issues.
             if (debug) {
                 pageNote.saveAttachment({
-                    role: "file",
+                    role: "importSource",
                     mime: "text/html",
                     title: "OneNote source.html",
                     content: page.rawHtml
                 });
                 if (page.rawInkml) {
                     pageNote.saveAttachment({
-                        role: "file",
+                        role: "importSource",
                         mime: "application/inkml+xml",
                         title: "OneNote ink.inkml",
                         content: page.rawInkml

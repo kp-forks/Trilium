@@ -146,7 +146,10 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     const imageViewerWrapper = useRef<HTMLDivElement>(null);
     const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
-    const supportsOcr = attachment.role === "image" || attachment.role === "file";
+    // "importSource" attachments (e.g. OneNote debug source) behave like ordinary files for
+    // preview, OCR and link-copying purposes.
+    const isFileLike = attachment.role === "file" || attachment.role === "importSource";
+    const supportsOcr = attachment.role === "image" || isFileLike;
 
     // Image attachments opened in full detail get the interactive zoom/pan viewer; everything
     // else is rendered imperatively via the content renderer.
@@ -161,7 +164,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
                 });
         }
 
-        if (attachment.role === "file") {
+        if (isFileLike) {
             attachment.getBlob().then(blob => setTextContent(blob?.content ?? null));
         }
 
@@ -186,7 +189,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
         if (attachment.role === "image") {
             const $img = refToJQuerySelector(isZoomableImage ? imageViewerWrapper : contentWrapper).find("img");
             if ($img.length) image.copyImageReferenceToClipboard($img.parent());
-        } else if (attachment.role === "file") {
+        } else if (isFileLike) {
             const $link = await link.createLink(attachment.ownerId, {
                 referenceLink: true,
                 viewScope: {
