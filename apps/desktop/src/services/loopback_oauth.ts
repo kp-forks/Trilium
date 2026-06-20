@@ -87,7 +87,16 @@ function startLoopbackServer(expectedState: string): Promise<Loopback> {
         server.listen(0, "localhost", () => {
             const address = server.address();
             const port = typeof address === "object" && address ? address.port : 0;
-            resolveServer({ port, waitForCode: guardedWaitForCode, close: () => server.close() });
+            resolveServer({
+                port,
+                waitForCode: guardedWaitForCode,
+                // Clear the timeout here too: if the flow errors before waitForCode settles (e.g.
+                // openExternal throws), the finally-block close() must not leave the timer pending.
+                close: () => {
+                    server.close();
+                    clearTimeout(timeout);
+                }
+            });
         });
     });
 }

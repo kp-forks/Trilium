@@ -328,16 +328,20 @@ async function downloadPageResources(accessToken: string, html: string): Promise
         }
     }
 
-    const resources: DownloadedResource[] = [];
-    for (const ref of refs.values()) {
-        try {
-            const { content, contentType } = await graph.getResource(accessToken, ref.url);
-            resources.push({ ...ref, mime: ref.mime || contentType, content });
-        } catch (e: unknown) {
-            getLog().error(`OneNote import: could not download resource ${ref.url}: ${e instanceof Error ? e.message : e}`);
-        }
-    }
-    return resources;
+    // Downloads are independent stateless GETs, so fetch them in parallel — image-heavy pages would
+    // otherwise stall on a long sequential chain. A failed download drops to null and is filtered out.
+    const resources = await Promise.all(
+        Array.from(refs.values()).map(async (ref) => {
+            try {
+                const { content, contentType } = await graph.getResource(accessToken, ref.url);
+                return { ...ref, mime: ref.mime || contentType, content };
+            } catch (e: unknown) {
+                getLog().error(`OneNote import: could not download resource ${ref.url}: ${e instanceof Error ? e.message : e}`);
+                return null;
+            }
+        })
+    );
+    return resources.filter((resource): resource is DownloadedResource => resource !== null);
 }
 
 /**

@@ -88,7 +88,15 @@ async function postToken(config: OAuthProviderConfig, body: Record<string, strin
         body: new URLSearchParams(body).toString()
     });
 
-    const json = await response.json();
+    // The token endpoint may return a non-JSON error (e.g. a reverse proxy's HTML 502/500 page); parse
+    // the text ourselves so that surfaces as the HTTP status rather than an opaque JSON SyntaxError.
+    const text = await response.text();
+    let json: Partial<TokenResponse> & { error?: string; error_description?: string };
+    try {
+        json = JSON.parse(text);
+    } catch {
+        throw new Error(`OAuth token request failed: HTTP ${response.status}`);
+    }
     if (!response.ok || !json.access_token) {
         const detail = json.error_description || json.error || `HTTP ${response.status}`;
         throw new Error(`OAuth token request failed: ${detail}`);

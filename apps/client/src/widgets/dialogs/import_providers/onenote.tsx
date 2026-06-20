@@ -46,6 +46,9 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
             } else {
                 setPhase("disconnected");
             }
+        }).catch((e) => {
+            toast.showError(e instanceof Error ? e.message : String(e));
+            setPhase("disconnected");
         });
         return stopPolling;
     }, [loadNotebooks, stopPolling]);
@@ -77,12 +80,17 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
             setPhase("connecting");
             stopPolling();
             pollRef.current = setInterval(async () => {
-                const status = await onenoteImport.getStatus();
-                if (status.connected) {
-                    stopPolling();
-                    setAccount(status.account);
-                    await loadNotebooks();
-                    setPhase("ready");
+                try {
+                    const status = await onenoteImport.getStatus();
+                    if (status.connected) {
+                        stopPolling();
+                        setAccount(status.account);
+                        await loadNotebooks();
+                        setPhase("ready");
+                    }
+                } catch (e) {
+                    // A transient poll failure shouldn't surface a toast on every tick; keep polling.
+                    console.error("Failed to poll OneNote status:", e);
                 }
             }, 2000);
         } catch (e) {
