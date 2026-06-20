@@ -4,6 +4,7 @@ import { t } from "../../../services/i18n.js";
 import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteContainer, type OneNoteNotebook, orderedChildren } from "../../../services/onenote_import.js";
 import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
+import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
@@ -11,7 +12,7 @@ import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 type Phase = "checking" | "disconnected" | "connecting" | "ready";
 
-function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
+function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
     const [phase, setPhase] = useState<Phase>("checking");
     const [account, setAccount] = useState<OneNoteAccount | null>(null);
     const [notebooks, setNotebooks] = useState<OneNoteNotebook[]>([]);
@@ -128,6 +129,38 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
         }
     }, [notebooks, selectedIds, parentNoteId, debug, closeDialog]);
 
+    // Keep the latest import handler in a ref so the footer effect below depends only on the values the
+    // footer actually shows (all primitives), never on doImport's identity. Depending on doImport — which
+    // changes on every selection — would re-push a new footer to the parent on each keystroke, and since
+    // the parent re-renders us back, that closes an infinite update loop.
+    const doImportRef = useRef(doImport);
+    doImportRef.current = doImport;
+
+    // Surface the primary actions in the dialog's pinned footer once notebooks are loaded; the other
+    // phases (and unmounting, below) clear it so the picker and connect screens show no footer.
+    const importDisabled = selectedIds.size === 0;
+    useEffect(() => {
+        setFooter(phase !== "ready" ? null : (
+            <>
+                <FormCheckbox
+                    name="onenote-debug"
+                    label={t("onenote_import.attach_source")}
+                    hint={t("onenote_import.attach_source_hint")}
+                    currentValue={debug}
+                    onChange={setDebug}
+                />
+                <Button
+                    text={t("onenote_import.import")}
+                    kind="primary"
+                    disabled={importDisabled}
+                    onClick={() => void doImportRef.current()}
+                />
+            </>
+        ));
+    }, [phase, debug, importDisabled, setFooter]);
+
+    useEffect(() => () => setFooter(null), [setFooter]);
+
     if (phase === "checking") {
         return <div className="onenote-panel"><LoadingSpinner /></div>;
     }
@@ -155,10 +188,6 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                 : (
                     <>
                         <p>{t("onenote_import.select_sections")}</p>
-                        <p className="onenote-order-hint">
-                            <span className="bx bx-info-circle" />
-                            {t("onenote_import.order_hint")}
-                        </p>
                         <div className="onenote-notebooks">
                             {notebooks.map((notebook) => (
                                 <div className="onenote-notebook" key={notebook.id}>
@@ -167,24 +196,11 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                                 </div>
                             ))}
                         </div>
+                        <ExtendedAdmonition type="note" icon="bx bx-info-circle" title={t("onenote_import.order_hint_title")}>
+                            {t("onenote_import.order_hint")}
+                        </ExtendedAdmonition>
                     </>
                 )}
-
-            <div className="onenote-actions">
-                <FormCheckbox
-                    name="onenote-debug"
-                    label={t("onenote_import.attach_source")}
-                    hint={t("onenote_import.attach_source_hint")}
-                    currentValue={debug}
-                    onChange={setDebug}
-                />
-                <Button
-                    text={t("onenote_import.import")}
-                    kind="primary"
-                    disabled={selectedIds.size === 0}
-                    onClick={doImport}
-                />
-            </div>
         </div>
     );
 }

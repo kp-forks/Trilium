@@ -92,18 +92,27 @@ export default {
     runImport
 };
 
+export type OneNoteContainer = OneNoteNotebook | OneNoteSectionGroup;
+
+/** A container's direct child in the OneNote left rail — either a section or a (nested) section group. */
+export type OneNoteChild = { type: "section"; section: OneNoteSection } | { type: "group"; group: OneNoteSectionGroup };
+
 /**
  * Flattens the selected sections out of the notebook tree, tagging each with its notebook and the
  * section-group path (notebook root → the section's immediate group) the server needs to recreate the
- * folder nesting. Sections are emitted in tree order; section groups contribute structure only and are
- * never selectable themselves.
+ * folder nesting. Children are visited in OneNote rail order (see orderedChildren), so the resulting
+ * note tree is created in that order; section groups contribute structure only and are never selectable.
  */
 export function buildSectionSelections(notebooks: OneNoteNotebook[], selectedIds: Set<string>): OneNoteSectionSelection[] {
     const selections: OneNoteSectionSelection[] = [];
 
-    const visit = (container: OneNoteNotebook | OneNoteSectionGroup, notebook: OneNoteNotebook, groupPath: OneNoteFolderRef[]) => {
-        for (const section of container.sections) {
-            if (selectedIds.has(section.id)) {
+    const visit = (container: OneNoteContainer, notebook: OneNoteNotebook, groupPath: OneNoteFolderRef[]) => {
+        for (const child of orderedChildren(container)) {
+            if (child.type === "group") {
+                const { group } = child;
+                visit(group, notebook, [...groupPath, { id: group.id, title: group.title, createdDateTime: group.createdDateTime, lastModifiedDateTime: group.lastModifiedDateTime }]);
+            } else if (selectedIds.has(child.section.id)) {
+                const { section } = child;
                 selections.push({
                     id: section.id,
                     title: section.title,
@@ -117,9 +126,6 @@ export function buildSectionSelections(notebooks: OneNoteNotebook[], selectedIds
                 });
             }
         }
-        for (const group of container.sectionGroups) {
-            visit(group, notebook, [...groupPath, { id: group.id, title: group.title, createdDateTime: group.createdDateTime, lastModifiedDateTime: group.lastModifiedDateTime }]);
-        }
     };
 
     for (const notebook of notebooks) {
@@ -127,4 +133,24 @@ export function buildSectionSelections(notebooks: OneNoteNotebook[], selectedIds
     }
 
     return selections;
+}
+
+/**
+ * Returns a container's direct children — its sections and section groups — interleaved into a single
+ * list ordered by creation date. OneNote shows sections and groups intermixed in one ordered rail but
+ * the Graph API exposes no ordering field for them, so creation date is a best-effort approximation
+ * (see the order caveat shown in the picker). Pages keep their exact order (they do carry one).
+ */
+export function orderedChildren(container: OneNoteContainer): OneNoteChild[] {
+    const children: OneNoteChild[] = [
+        ...container.sections.map((section): OneNoteChild => ({ type: "section", section })),
+        ...container.sectionGroups.map((group): OneNoteChild => ({ type: "group", group }))
+    ];
+    // ISO-8601 timestamps sort lexicographically = chronologically; the sort is stable, so children
+    // sharing a timestamp keep the API's alphabetical order as a tiebreak.
+    return children.sort((a, b) => orderKey(a).localeCompare(orderKey(b)));
+}
+
+function orderKey(child: OneNoteChild): string {
+    return (child.type === "section" ? child.section.createdDateTime : child.group.createdDateTime) ?? "";
 }

@@ -1,6 +1,7 @@
 import "./import_provider.css";
 
-import { useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
+import { useCallback, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n.js";
 import Button from "../react/Button.js";
@@ -17,15 +18,21 @@ import { importProviders } from "./import_providers/index.js";
 export default function ImportProviderDialog() {
     const [parentNoteId, setParentNoteId] = useState<string>();
     const [providerId, setProviderId] = useState<string>();
+    const [footer, setFooter] = useState<ComponentChildren>(null);
     const [shown, setShown] = useState(false);
 
     useTriliumEvent("showImportProviderDialog", ({ noteId }) => {
         setParentNoteId(noteId);
         setProviderId(undefined);
+        setFooter(null);
         setShown(true);
     });
 
     const provider = importProviders.find((p) => p.id === providerId);
+
+    // Stable so the chosen provider's panel can safely memoize on it (an inline arrow would change every
+    // render, defeating the panel's useCallback/useEffect dependencies).
+    const closeDialog = useCallback(() => setShown(false), []);
 
     return (
         <Modal
@@ -33,7 +40,9 @@ export default function ImportProviderDialog() {
             size="lg"
             scrollable
             title={provider ? provider.name : t("import_provider.title")}
-            header={provider && <Button text={t("import_provider.back")} kind="lowProfile" size="small" icon="bx-arrow-back" onClick={() => setProviderId(undefined)} />}
+            header={provider && <Button text={t("import_provider.back")} kind="lowProfile" size="small" icon="bx-arrow-back" onClick={() => { setProviderId(undefined); setFooter(null); }} />}
+            footer={footer}
+            footerAlignment="between"
             onHidden={() => setShown(false)}
             show={shown}
         >
@@ -52,7 +61,7 @@ export default function ImportProviderDialog() {
                 </div>
             )}
 
-            {provider && parentNoteId && <provider.Panel parentNoteId={parentNoteId} closeDialog={() => setShown(false)} />}
+            {provider && parentNoteId && <provider.Panel parentNoteId={parentNoteId} closeDialog={closeDialog} setFooter={setFooter} />}
         </Modal>
     );
 }
