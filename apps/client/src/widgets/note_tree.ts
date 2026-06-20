@@ -470,9 +470,10 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                 // preventing the automatic makeVisible/scrollIntoView call on direct tree interaction.
                 // Restored after the current task via setTimeout so only this activation is affected.
                 if (!this.treeScrollFollowNavigation) {
-                    this.tree.options.activeVisible = false;
+                    const prevActiveVisible = data.tree.options.activeVisible;
+                    data.tree.options.activeVisible = false;
                     setTimeout(() => {
-                        this.tree.options.activeVisible = true;
+                        data.tree.options.activeVisible = prevActiveVisible;
                     }, 0);
                 }
 
