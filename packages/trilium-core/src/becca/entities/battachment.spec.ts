@@ -112,9 +112,12 @@ describe("BAttachment (real DB)", () => {
         it("hasStringContent reflects the mime via isStringNote", () => {
             const stringAtt = new BAttachment(baseRow({ mime: "text/plain", title: "s" }));
             const binaryAtt = new BAttachment(baseRow({ mime: "image/png", role: "image", title: "b" }));
+            // InkML is UTF-8 XML, so it must be served as string content for the attachment preview to work.
+            const inkmlAtt = new BAttachment(baseRow({ mime: "application/inkml+xml", role: "importSource", title: "ink" }));
 
             expect(stringAtt.hasStringContent()).toBe(true);
             expect(binaryAtt.hasStringContent()).toBe(false);
+            expect(inkmlAtt.hasStringContent()).toBe(true);
         });
 
         it("getFileName uses 'image' for image role and 'file' otherwise", () => {
