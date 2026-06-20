@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { resolveSubpageParents } from "./importer.js";
+import { mapWithConcurrency, resolveSubpageParents } from "./importer.js";
 
 describe("resolveSubpageParents", () => {
     it("keeps top-level pages directly under the section", () => {
@@ -27,5 +27,32 @@ describe("resolveSubpageParents", () => {
         // Leading subpage with no parent, and a level jump that skips level 1.
         expect(resolveSubpageParents([1, 0])).toEqual([-1, -1]);
         expect(resolveSubpageParents([0, 2])).toEqual([-1, -1]);
+    });
+});
+
+describe("mapWithConcurrency", () => {
+    it("returns results in input order regardless of completion order", async () => {
+        // Later items resolve sooner, so order can only be preserved by index, not completion.
+        const out = await mapWithConcurrency([30, 20, 10], 3, (ms) => new Promise<number>((resolve) => setTimeout(() => resolve(ms), ms)));
+        expect(out).toEqual([30, 20, 10]);
+    });
+
+    it("never runs more than `limit` workers at once", async () => {
+        let inFlight = 0;
+        let peak = 0;
+        const work = async () => {
+            inFlight++;
+            peak = Math.max(peak, inFlight);
+            await new Promise((resolve) => setTimeout(resolve, 5));
+            inFlight--;
+            return null;
+        };
+
+        await mapWithConcurrency(Array.from({ length: 20 }), 4, work);
+        expect(peak).toBeLessThanOrEqual(4);
+    });
+
+    it("handles an empty list", async () => {
+        expect(await mapWithConcurrency([], 4, async (x) => x)).toEqual([]);
     });
 });

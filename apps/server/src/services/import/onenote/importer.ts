@@ -328,20 +328,42 @@ async function downloadPageResources(accessToken: string, html: string): Promise
         }
     }
 
-    // Downloads are independent stateless GETs, so fetch them in parallel — image-heavy pages would
-    // otherwise stall on a long sequential chain. A failed download drops to null and is filtered out.
-    const resources = await Promise.all(
-        Array.from(refs.values()).map(async (ref) => {
-            try {
-                const { content, contentType } = await graph.getResource(accessToken, ref.url);
-                return { ...ref, mime: ref.mime || contentType, content };
-            } catch (e: unknown) {
-                getLog().error(`OneNote import: could not download resource ${ref.url}: ${e instanceof Error ? e.message : e}`);
-                return null;
-            }
-        })
-    );
+    // Downloads are independent stateless GETs, so fetch them concurrently — but with a bounded pool,
+    // not all at once: an image-heavy page (hundreds of images) would otherwise open hundreds of
+    // simultaneous connections, triggering Graph throttling (429) and a large memory spike, which in
+    // practice dropped most images and left the note nearly empty. A failed download is skipped.
+    const resources = await mapWithConcurrency(Array.from(refs.values()), RESOURCE_DOWNLOAD_CONCURRENCY, async (ref) => {
+        try {
+            const { content, contentType } = await graph.getResource(accessToken, ref.url);
+            return { ...ref, mime: ref.mime || contentType, content };
+        } catch (e: unknown) {
+            getLog().error(`OneNote import: could not download resource ${ref.url}: ${e instanceof Error ? e.message : e}`);
+            return null;
+        }
+    });
     return resources.filter((resource): resource is DownloadedResource => resource !== null);
+}
+
+/** Caps how many page resources (images, attachments) are downloaded from Graph at once. */
+const RESOURCE_DOWNLOAD_CONCURRENCY = 6;
+
+/**
+ * Maps `items` through `worker` with at most `limit` invocations in flight at once, preserving input
+ * order in the result. A small fixed pool of workers each pulls the next item until the list is drained.
+ */
+export async function mapWithConcurrency<T, R>(items: T[], limit: number, worker: (item: T) => Promise<R>): Promise<R[]> {
+    const results = new Array<R>(items.length);
+    let next = 0;
+
+    const runWorker = async () => {
+        while (next < items.length) {
+            const index = next++;
+            results[index] = await worker(items[index]);
+        }
+    };
+
+    await Promise.all(Array.from({ length: Math.min(limit, items.length) }, runWorker));
+    return results;
 }
 
 /**

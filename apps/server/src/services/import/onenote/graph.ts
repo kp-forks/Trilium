@@ -14,16 +14,47 @@ const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 // be large and slow. Allow a generous per-request budget instead.
 const GRAPH_TIMEOUT_MS = 60_000;
 
+// Graph throttles aggressively under load (HTTP 429, occasionally 503). Retry those a few times,
+// honouring the Retry-After header when present, before giving up — otherwise a large import would
+// silently drop most of its pages/resources the moment Graph starts throttling.
+const MAX_RETRIES = 5;
+const DEFAULT_RETRY_DELAY_MS = 2000;
+const MAX_RETRY_DELAY_MS = 30_000;
+
 /**
  * Fetches a Microsoft Graph URL through {@link safeFetch} so the request is hardened against SSRF —
  * pagination (`@odata.nextLink`) and resource URLs come from Graph responses and page HTML, so they
  * must not be trusted to point at the public Graph host. The bearer token is sent on every hop.
+ *
+ * Retries on throttling (429/503): Graph returns a Retry-After header we honour, falling back to an
+ * exponential backoff when it is absent.
  */
-function graphFetch(accessToken: string, url: string): Promise<Response> {
-    return safeFetch(url, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
-    });
+async function graphFetch(accessToken: string, url: string): Promise<Response> {
+    for (let attempt = 0; ; attempt++) {
+        const response = await safeFetch(url, {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
+        });
+
+        if ((response.status !== 429 && response.status !== 503) || attempt >= MAX_RETRIES) {
+            return response;
+        }
+
+        // Drain the throttled response so its connection is released before we wait and retry.
+        await response.body?.cancel();
+        await delay(retryDelayMs(response.headers.get("Retry-After"), attempt));
+    }
+}
+
+/** Resolves the wait before a throttling retry: the Retry-After header (seconds), else exponential backoff. */
+export function retryDelayMs(retryAfter: string | null, attempt: number): number {
+    const headerSeconds = retryAfter ? Number(retryAfter) : NaN;
+    const delayMs = Number.isFinite(headerSeconds) ? headerSeconds * 1000 : DEFAULT_RETRY_DELAY_MS * 2 ** attempt;
+    return Math.min(delayMs, MAX_RETRY_DELAY_MS);
+}
+
+function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export interface GraphAccount {
