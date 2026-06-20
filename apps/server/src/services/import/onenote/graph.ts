@@ -68,15 +68,68 @@ export async function listPages(accessToken: string, sectionId: string): Promise
     }));
 }
 
-/** Returns the raw HTML body of a page (a full HTML document as produced by the OneNote API). */
-export async function getPageContent(accessToken: string, pageId: string): Promise<string> {
-    const response = await fetch(`${GRAPH_BASE}/me/onenote/pages/${pageId}/content`, {
+/**
+ * Returns a page's content, split into its HTML body and (optional) InkML.
+ *
+ * We request `includeInkML=true` so handwriting/drawings — which the default HTML output drops,
+ * leaving only `<!-- InkNode is not supported -->` comments — come back as a separate InkML part. With
+ * that flag the response is a MIME multipart envelope (one `text/html` part, one
+ * `application/inkml+xml` part), which parsePageContent splits apart. Pages without ink may still come
+ * back as plain HTML, which the parser handles by returning the whole body as `html`.
+ */
+export async function getPageContent(accessToken: string, pageId: string): Promise<{ html: string; inkml: string }> {
+    const response = await fetch(`${GRAPH_BASE}/me/onenote/pages/${pageId}/content?includeInkML=true`, {
         headers: { Authorization: `Bearer ${accessToken}` }
     });
     if (!response.ok) {
         throw new Error(`Failed to fetch OneNote page content (HTTP ${response.status})`);
     }
-    return response.text();
+    return parsePageContent(await response.text());
+}
+
+/**
+ * Splits a OneNote page response into its HTML and InkML parts. A page fetched with
+ * `includeInkML=true` comes back as a MIME multipart body whose first line is the boundary; each part
+ * carries header lines (including `Content-Type`), then a blank line, then the body. A non-multipart
+ * response (no leading `--` boundary) is returned verbatim as the HTML part.
+ */
+export function parsePageContent(raw: string): { html: string; inkml: string } {
+    const normalized = raw.replace(/\r\n/g, "\n");
+    const boundary = normalized.slice(0, normalized.indexOf("\n")).trim();
+    if (!boundary.startsWith("--")) {
+        return { html: raw.trim(), inkml: "" };
+    }
+
+    let html = "";
+    let inkml = "";
+    for (const part of normalized.split(boundary)) {
+        const separator = part.indexOf("\n\n");
+        if (separator < 0) {
+            continue;
+        }
+        const headers = part.slice(0, separator).toLowerCase();
+        const body = part.slice(separator + 2).trim();
+        if (headers.includes("text/html")) {
+            html = body;
+        } else if (headers.includes("application/inkml+xml")) {
+            inkml = body;
+        }
+    }
+    return { html, inkml };
+}
+
+/**
+ * Downloads a binary resource (image or file attachment) referenced from page HTML. The URL is an
+ * absolute Graph `…/resources/{id}/$value` link, so it is fetched directly rather than relative to the
+ * API base. Returns the raw bytes plus the server-reported content type.
+ */
+export async function getResource(accessToken: string, url: string): Promise<{ content: Uint8Array; contentType: string }> {
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (!response.ok) {
+        throw new Error(`Failed to fetch OneNote resource (HTTP ${response.status})`);
+    }
+    const buffer = new Uint8Array(await response.arrayBuffer());
+    return { content: buffer, contentType: response.headers.get("content-type") ?? "application/octet-stream" };
 }
 
 interface RawNotebook {
@@ -125,5 +178,6 @@ export default {
     getAccount,
     listNotebooks,
     listPages,
-    getPageContent
+    getPageContent,
+    getResource
 };

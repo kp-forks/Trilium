@@ -21,8 +21,15 @@
  * No fetch option recovers it; the only indentation Graph keeps is list nesting (ol/ul/li).
  */
 
-import { sanitize } from "@triliumnext/core";
+import { sanitize, utils } from "@triliumnext/core";
 import { HTMLElement, parse } from "node-html-parser";
+
+/**
+ * The marker class the importer keys on to find OneNote file attachments (see importer.ts). The href
+ * carries the Graph resource URL (a placeholder the importer swaps for a local attachment link) and
+ * `data-mime` the original content type.
+ */
+export const ONENOTE_ATTACHMENT_CLASS = "onenote-attachment";
 
 /** Block containers whose direct <br> children are spacing artifacts rather than soft breaks. */
 const BLOCK_CONTAINERS = new Set(["body", "div", "section", "article", "blockquote", "td", "th", "ol", "ul", "dl"]);
@@ -99,6 +106,7 @@ export function convertPageHtml(rawHtml: string): string {
     const scope = root.querySelector("body") ?? root;
 
     sortPositionedOutlines(scope);
+    convertResourceReferences(scope);
     convertTags(scope);
     convertInlineFormatting(scope);
     normalizeNamedColors(scope);
@@ -132,6 +140,38 @@ function sortPositionedOutlines(scope: HTMLElement) {
     for (const outline of sorted) {
         outline.remove();
         scope.appendChild(outline);
+    }
+}
+
+/**
+ * OneNote references binary resources by authenticated Graph URLs that Trilium can't load directly
+ * (e.g. `…/onenote/resources/{id}/$value`). Normalize them into a form the importer can recognize and
+ * rewrite once the bytes are downloaded:
+ *  - file attachments arrive as `<object data-attachment="name" type="mime" data="url">`, a tag the
+ *    sanitizer drops entirely; turn each into an `<a class="onenote-attachment">` carrying the URL
+ *    (href), mime (data-mime) and filename (text);
+ *  - images keep their (display-resolution) `src` but shed OneNote's extra `data-*` URLs — chiefly the
+ *    full-resolution variant, a second authenticated URL that would never load.
+ * The importer downloads each URL and swaps in a local attachment reference (see importer.ts).
+ */
+function convertResourceReferences(scope: HTMLElement) {
+    for (const object of scope.querySelectorAll("object[data-attachment]")) {
+        const url = object.getAttribute("data") ?? "";
+        const name = object.getAttribute("data-attachment") || "attachment";
+        const mime = object.getAttribute("type") || "application/octet-stream";
+        object.insertAdjacentHTML(
+            "beforebegin",
+            `<a class="${ONENOTE_ATTACHMENT_CLASS}" data-mime="${utils.escapeHtml(mime)}" href="${utils.escapeHtml(url)}">${utils.escapeHtml(name)}</a>`
+        );
+        object.remove();
+    }
+
+    for (const img of scope.querySelectorAll("img")) {
+        for (const attr of Object.keys(img.attributes)) {
+            if (attr.startsWith("data-")) {
+                img.removeAttribute(attr);
+            }
+        }
     }
 }
 

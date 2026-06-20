@@ -198,6 +198,22 @@ const ALIGNMENT_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): an inline image and a file attachment, both served from
+// authenticated Graph `/resources/{id}/$value` URLs. The image carries an extra full-resolution
+// `data-fullres-src`; the attachment is an <object> the sanitizer would otherwise drop entirely.
+const RESOURCE_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <object data-attachment="HelloWorld.txt" type="text/plain" data="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-aaa!1-BBB!sccc/$value" />
+            <br />
+        </div>
+        <div style="position:absolute;left:569px;top:116px;width:624px">
+            <img width="480" height="441" src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-ddd!1-BBB!sccc/$value" data-src-type="image/png" data-fullres-src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-eee!1-BBB!sccc/$value" data-fullres-src-type="image/png" />
+            <br />
+        </div>
+    </body>
+</html>`;
+
 // Real OneNote source (debug-captured): OneNote puts the list marker type on each <li> and wraps
 // item text in a margin-0 <p>. The marker type belongs on the <ul>/<ol> (CKEditor's representation),
 // and OneNote's lower-alpha/upper-alpha map to CKEditor's lower-latin/upper-latin.
@@ -399,6 +415,26 @@ describe("convertPageHtml", () => {
 
         // The decorative-only paragraph stays a <p>, prefixed with both emoji.
         expect(out).toContain("🎬📚 Movie and book");
+    });
+
+    it("normalizes OneNote resource references so the importer can rewrite them", () => {
+        const out = converter.convertPageHtml(RESOURCE_SAMPLE);
+        const root = parse(out);
+
+        // The <object> attachment (which the sanitizer would drop) becomes a marker anchor carrying the
+        // Graph URL, mime and filename.
+        const anchor = root.querySelector("a.onenote-attachment");
+        expect(anchor?.getAttribute("href")).toContain("/resources/0-aaa!1-BBB!sccc/$value");
+        expect(anchor?.getAttribute("data-mime")).toBe("text/plain");
+        expect(anchor?.textContent).toBe("HelloWorld.txt");
+        expect(out).not.toContain("<object");
+
+        // The image keeps its display-resolution src but sheds the extra full-resolution data-* URLs.
+        const img = root.querySelector("img");
+        expect(img?.getAttribute("src")).toContain("/resources/0-ddd!1-BBB!sccc/$value");
+        expect(out).not.toContain("data-fullres-src");
+        expect(out).not.toContain("data-src-type");
+        expect(out).not.toContain("0-eee"); // the full-resolution resource id is gone
     });
 
     it("converts inline-style formatting (bold/italic/underline) to semantic tags", () => {
