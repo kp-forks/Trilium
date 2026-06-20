@@ -84,11 +84,37 @@ function convertInlineFormatting(scope: HTMLElement) {
         if (decorations.includes("line-through")) {
             wrap("del");
         }
+        // OneNote's "Code" style is just a Consolas font; map it to an inline <code> element.
+        if ((style.get("font-family") ?? "").includes("consolas")) {
+            wrap("code");
+        }
+        // OneNote's "Title" style is an oversized font; map it to CKEditor's "huge" font-size class.
+        const sizeClass = fontSizeClass(style.get("font-size"), el);
+        if (sizeClass) {
+            open.push(`<span class="${sizeClass}">`);
+            close.unshift("</span>");
+        }
 
         if (open.length > 0) {
             el.set_content(`${open.join("")}${el.innerHTML}${close.join("")}`);
         }
     }
+}
+
+/**
+ * Maps an oversized OneNote font-size to CKEditor's "huge" size class (the Title style is 20pt on an
+ * 11pt base). Headings are skipped — their level already conveys size. Returns null otherwise.
+ */
+function fontSizeClass(value: string | undefined, el: HTMLElement): string | null {
+    if (!value || /^h[1-6]$/.test(el.tagName?.toLowerCase() ?? "")) {
+        return null;
+    }
+    const match = value.match(/^([\d.]+)\s*(pt|px)?$/);
+    if (!match) {
+        return null;
+    }
+    const points = match[2] === "px" ? parseFloat(match[1]) * 0.75 : parseFloat(match[1]);
+    return points >= 18 ? "text-huge" : null;
 }
 
 /** Parses an inline `style` attribute into a property→value map (both lowercased). */

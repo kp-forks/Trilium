@@ -83,6 +83,26 @@ const HIGHLIGHT_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): named styles are mostly real tags (h1-h6, cite) plus inline
+// styling. The sanitizer demotes a contiguous heading run by one level (h1 is reserved for the note
+// title), and font-style:italic is handled by convertInlineFormatting.
+const STYLES_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <h1 style="font-size:16pt;color:#1e4e79;margin-top:0pt;margin-bottom:0pt">Heading 1</h1>
+            <h2 style="font-size:14pt;color:#2e75b5;margin-top:0pt;margin-bottom:0pt">Heading 2</h2>
+            <h3 style="font-size:12pt;color:#1f3763;margin-top:0pt;margin-bottom:0pt">Heading 3</h3>
+            <h4 style="font-size:12pt;color:#2f5496;font-style:italic;margin-top:0pt;margin-bottom:0pt">Heading 4</h4>
+            <h5 style="color:#2e75b5;margin-top:0pt;margin-bottom:0pt">Heading 5</h5>
+            <h6 style="color:#2e75b5;font-style:italic;margin-top:0pt;margin-bottom:0pt">Heading 6</h6>
+            <cite style="font-size:9pt;color:#595959;margin-top:0pt;margin-bottom:0pt">Citation</cite>
+            <p style="color:#595959;font-style:italic;margin-top:0pt;margin-bottom:0pt">Quote</p>
+            <p style="font-family:Calibri Light;font-size:20pt;margin-top:0pt;margin-bottom:0pt">Title</p>
+            <p style="font-family:Consolas;margin-top:0pt;margin-bottom:0pt">Code</p>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -146,5 +166,26 @@ describe("convertPageHtml", () => {
         expect(out).toContain("background-color:#c0c0c0"); // silver
         expect(out).toContain("Yellow");
         expect(out).toContain("Magenta");
+    });
+
+    it("keeps OneNote heading styles (level-shifted), cite, italic and font colors", () => {
+        const out = converter.convertPageHtml(STYLES_SAMPLE);
+        const root = parse(out);
+
+        // Headings survive but shift down one level (h1 reserved for the note title).
+        expect(root.querySelectorAll("h2")[0]?.textContent).toContain("Heading 1");
+        expect(root.querySelectorAll("h3")[0]?.textContent).toContain("Heading 2");
+        // Italic headings/quote get an <em> wrap; heading colors (hex) survive.
+        expect(out).toContain("<em>Heading 4</em>");
+        expect(out).toContain("<em>Quote</em>");
+        expect(out).toContain("#1e4e79");
+        // <cite> is allowlisted and kept.
+        expect(root.querySelector("cite")?.textContent).toContain("Citation");
+    });
+
+    it("maps the Title style to text-huge and the Code style to <code>", () => {
+        const out = converter.convertPageHtml(STYLES_SAMPLE);
+        expect(out).toContain(`<span class="text-huge">Title</span>`);
+        expect(out).toContain("<code>Code</code>");
     });
 });
