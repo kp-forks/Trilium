@@ -33,8 +33,8 @@ const LIST_STYLE_MAP = new Map<string, string>([["lower-alpha", "lower-latin"], 
 /**
  * OneNote's checkbox-style note tags — the ones it renders with a tick box and that carry a
  * `:completed` status (see https://learn.microsoft.com/en-us/graph/onenote-note-tags). Each becomes a
- * CKEditor task-list item, checked when its status is `completed`. Every other built-in tag is purely
- * decorative and rendered as an emoji prefix instead (TAG_EMOJI).
+ * CKEditor task-list item, checked when its status is `completed`. The ones that mean more than a bare
+ * to-do (priorities, discussions, meetings, requests) also keep an inner emoji from TAG_EMOJI.
  */
 const CHECKBOX_TAGS = new Set<string>([
     "to-do",
@@ -49,9 +49,10 @@ const CHECKBOX_TAGS = new Set<string>([
 ]);
 
 /**
- * OneNote's decorative (non-checkbox) note tags mapped to a representative emoji, keyed on the tag
- * *shape* (the part before any `:status`). Covers the full built-in vocabulary; a shape not listed
- * here (e.g. a user's custom tag) simply renders with no prefix.
+ * OneNote's note tags mapped to a representative emoji, keyed on the tag *shape* (the part before any
+ * `:status`). Decorative tags render as the emoji alone; checkbox tags (CHECKBOX_TAGS) render as a task
+ * item with the emoji prefixed inside it — except plain `to-do`, which is a bare checkbox with no
+ * emoji. A shape not listed here (e.g. a user's custom tag) simply renders with no prefix.
  */
 const TAG_EMOJI = new Map<string, string>([
     ["important", "⭐"],
@@ -73,7 +74,16 @@ const TAG_EMOJI = new Map<string, string>([
     ["book-to-read", "📚"],
     ["music-to-listen-to", "🎵"],
     ["project-a", "🅰️"],
-    ["project-b", "🅱️"]
+    ["project-b", "🅱️"],
+    // Checkbox tags that carry meaning beyond a bare to-do; `to-do` itself stays emoji-less.
+    ["to-do-priority-1", "1️⃣"],
+    ["to-do-priority-2", "2️⃣"],
+    ["discuss-with-person-a", "💬"],
+    ["discuss-with-person-b", "💬"],
+    ["discuss-with-manager", "🗣️"],
+    ["schedule-meeting", "📅"],
+    ["call-back", "📲"],
+    ["client-request", "📋"]
 ]);
 
 /** OneNote's highlight/font palette uses the 16 basic CSS color names; map them to hex (see below). */
@@ -131,15 +141,17 @@ function sortPositionedOutlines(scope: HTMLElement) {
  *
  * Checkbox-style tags (CHECKBOX_TAGS — `to-do` and its priority/discussion/meeting siblings) become a
  * CKEditor task list, checked when their status is `completed`; runs of consecutive ones collapse into
- * one list, matching the structure Trilium's TodoList plugin produces. Every other tag is decorative,
- * so we prefix its paragraph with a representative emoji (TAG_EMOJI). A paragraph can carry both
- * (e.g. `to-do,important`): it becomes a task item whose text is emoji-prefixed.
+ * one list, matching the structure Trilium's TodoList plugin produces. The emoji prefix (TAG_EMOJI) is
+ * orthogonal: it applies to decorative tags and to the meaningful checkbox tags alike, so e.g. a
+ * `discuss-with-manager` paragraph becomes a task item reading "🗣️ …" while bare `to-do` stays a plain
+ * checkbox. A paragraph can carry several comma-separated tags (e.g. `to-do,important`), in which case
+ * its emojis stack and a single checkbox tag still turns it into a task item.
  */
 function convertTags(scope: HTMLElement) {
     const tagged = scope.querySelectorAll("p[data-tag]");
 
-    // Prefix each tagged paragraph's decorative-tag emoji in place, and record whether it is a
-    // checkbox paragraph (and if so, whether it's completed) so adjacent ones can be grouped.
+    // Prefix each tagged paragraph's emoji in place, and record whether it is a checkbox paragraph
+    // (and if so, whether it's completed) so adjacent ones can be grouped.
     const completedByCheckbox = new Map<HTMLElement, boolean>();
     for (const p of tagged) {
         const tags = (p.getAttribute("data-tag") ?? "").split(",").map((entry) => {

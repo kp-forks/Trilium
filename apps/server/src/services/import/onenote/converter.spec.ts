@@ -363,7 +363,11 @@ describe("convertPageHtml", () => {
         expect(root.querySelectorAll(`input[type="checkbox"]`)).toHaveLength(4);
         // Only the schedule-meeting:completed item is checked.
         expect(root.querySelectorAll("input[checked]")).toHaveLength(1);
-        expect(out).toContain("Client Request");
+        // Each meaningful checkbox tag keeps an inner emoji alongside the checkbox.
+        expect(out).toContain("1️⃣ Priority 1");
+        expect(out).toContain("📅 Schedule meeting");
+        expect(out).toContain("🗣️ Discuss with Manager");
+        expect(out).toContain("📋 Client Request");
         // The raw data-tag attribute is consumed, not left on the output.
         expect(out).not.toContain("data-tag");
     });
