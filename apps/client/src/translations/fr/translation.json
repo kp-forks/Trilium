@@ -226,7 +226,9 @@
     "in-progress": "Importation en cours : {{progress}}",
     "successful": "Importation terminée avec succès.",
     "importZipRecommendation": "Lors de l'importation d'un fichier ZIP, la hiérarchie des notes reflétera la structure des sous-répertoires au sein de l'archive.",
-    "spreadsheetImportedAsSpreadsheet": "Importer les fichiers CSV et Excel sous forme de feuilles de calcul modifiables plutôt que de fichiers"
+    "spreadsheetImportedAsSpreadsheet": "Importer les fichiers CSV et Excel sous forme de feuilles de calcul modifiables plutôt que de fichiers",
+    "starting": "Importation…",
+    "in-progress-with-total": "Importation {{progress}} de {{total}}"
   },
   "include_note": {
     "dialog_title": "Inclure une note",
@@ -720,7 +722,8 @@
     "print_or_export_to_pdf": "Imprimer/exporter en PDF...",
     "save_named_revision": "Enregistrer une révision nommée…",
     "word_wrap_on": "Activé",
-    "word_wrap_off": "Désactivé"
+    "word_wrap_off": "Désactivé",
+    "import_from_service": "Importation depuis un service…"
   },
   "onclick_button": {
     "no_click_handler": "Le widget bouton '{{componentId}}' n'a pas de gestionnaire de clic défini"
@@ -824,7 +827,8 @@
     "open_all_confirm_one": "Cela ouvrira {{count}} note dans un nouvel onglet. Continuer ?",
     "open_all_confirm_many": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
     "open_all_confirm_other": "Cela ouvrira {{count}} notes dans de nouveaux onglets. Continuer ?",
-    "open_all_in_tabs": "Tout ouvrir"
+    "open_all_in_tabs": "Tout ouvrir",
+    "dashboard": "Tableau de bord"
   },
   "edited_notes": {
     "no_edited_notes_found": "Aucune note modifiée ce jour-là...",
@@ -2777,5 +2781,17 @@
     "type_text": "Texte",
     "type_code": "Code",
     "tooltip": "Un élément réutilisable de texte ou de code, conçu pour être inséré dans l'éditeur (depuis le menu des extraits dans la barre d'outils, ou via une commande slash)."
+  },
+  "import_provider": {
+    "title": "Importer depuis un service",
+    "choose_provider": "Choisisez un service pour importer :"
+  },
+  "onenote_import": {
+    "connecting": "En attente de la connexion de se compléter…",
+    "connected_as": "Connecté comme {{name}}",
+    "disconnect": "Déconnecter",
+    "load_failed": "N'a pas pu charger vos cahiers OneNote.",
+    "no_notebooks": "Pas de cahiers n'ont été trouvé dans ce compte.",
+    "select_sections": "Selectionner les sections à importer :"
   }
 }
