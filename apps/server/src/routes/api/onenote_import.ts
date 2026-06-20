@@ -18,17 +18,17 @@ import { isInternalElectronRequest } from "../../services/electron_request.js";
 import { getDesktopSession, type OneNoteTokenSession, setDesktopSession } from "../../services/import/onenote/desktop_session.js";
 import graph from "../../services/import/onenote/graph.js";
 import importer, { type SectionSelection } from "../../services/import/onenote/importer.js";
-import oauth from "../../services/import/onenote/oauth.js";
+import { ONENOTE_OAUTH } from "../../services/import/onenote/oauth.js";
+import oauth from "../../services/oauth/oauth.js";
 
 function getAuthUrl(req: Request) {
-    const clientId = oauth.getClientId();
     const { verifier, challenge } = oauth.generatePkce();
     const state = oauth.generateState();
     const redirectUri = getRedirectUri(req);
 
     req.session.oneNoteImport = { verifier, state, redirectUri };
 
-    return { authUrl: oauth.buildAuthorizationUrl({ clientId, redirectUri, state, challenge }) };
+    return { authUrl: oauth.buildAuthorizationUrl(ONENOTE_OAUTH, { redirectUri, state, challenge }) };
 }
 
 async function callback(req: Request, res: Response) {
@@ -45,8 +45,7 @@ async function callback(req: Request, res: Response) {
             return sendHtml(res, "Sign-in could not be completed (invalid or expired state). Please close this window and try again.");
         }
 
-        const clientId = oauth.getClientId();
-        const tokens = await oauth.exchangeCodeForToken({ clientId, code, verifier: pending.verifier, redirectUri: pending.redirectUri });
+        const tokens = await oauth.exchangeCodeForToken(ONENOTE_OAUTH, { code, verifier: pending.verifier, redirectUri: pending.redirectUri });
         const account = await graph.getAccount(tokens.access_token);
 
         req.session.oneNoteImport = {
@@ -122,7 +121,7 @@ async function getValidAccessToken(req: Request): Promise<string | null> {
     }
 
     if (session.refreshToken) {
-        const tokens = await oauth.refreshAccessToken({ clientId: oauth.getClientId(), refreshToken: session.refreshToken });
+        const tokens = await oauth.refreshAccessToken(ONENOTE_OAUTH, { refreshToken: session.refreshToken });
         await store.write({
             accessToken: tokens.access_token,
             refreshToken: tokens.refresh_token ?? session.refreshToken,
