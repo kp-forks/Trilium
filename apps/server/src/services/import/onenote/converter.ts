@@ -30,6 +30,52 @@ const BLOCK_CONTAINERS = new Set(["body", "div", "section", "article", "blockquo
 /** OneNote uses the CSS alpha keywords; CKEditor (and the sanitizer) use the latin equivalents. */
 const LIST_STYLE_MAP = new Map<string, string>([["lower-alpha", "lower-latin"], ["upper-alpha", "upper-latin"]]);
 
+/**
+ * OneNote's checkbox-style note tags — the ones it renders with a tick box and that carry a
+ * `:completed` status (see https://learn.microsoft.com/en-us/graph/onenote-note-tags). Each becomes a
+ * CKEditor task-list item, checked when its status is `completed`. Every other built-in tag is purely
+ * decorative and rendered as an emoji prefix instead (TAG_EMOJI).
+ */
+const CHECKBOX_TAGS = new Set<string>([
+    "to-do",
+    "to-do-priority-1",
+    "to-do-priority-2",
+    "discuss-with-person-a",
+    "discuss-with-person-b",
+    "discuss-with-manager",
+    "schedule-meeting",
+    "call-back",
+    "client-request"
+]);
+
+/**
+ * OneNote's decorative (non-checkbox) note tags mapped to a representative emoji, keyed on the tag
+ * *shape* (the part before any `:status`). Covers the full built-in vocabulary; a shape not listed
+ * here (e.g. a user's custom tag) simply renders with no prefix.
+ */
+const TAG_EMOJI = new Map<string, string>([
+    ["important", "⭐"],
+    ["critical", "❗"],
+    ["question", "❓"],
+    ["highlight", "🖍️"],
+    ["definition", "📖"],
+    ["remember-for-later", "📌"],
+    ["remember-for-blog", "✍️"],
+    ["idea", "💡"],
+    ["password", "🔑"],
+    ["contact", "👤"],
+    ["address", "🏠"],
+    ["phone-number", "📞"],
+    ["web-site-to-visit", "🌐"],
+    ["source-for-article", "📰"],
+    ["send-in-email", "📧"],
+    ["movie-to-see", "🎬"],
+    ["book-to-read", "📚"],
+    ["music-to-listen-to", "🎵"],
+    ["project-a", "🅰️"],
+    ["project-b", "🅱️"]
+]);
+
 /** OneNote's highlight/font palette uses the 16 basic CSS color names; map them to hex (see below). */
 const NAMED_COLORS = new Map<string, string>([
     ["yellow", "#ffff00"], ["lime", "#00ff00"], ["aqua", "#00ffff"], ["fuchsia", "#ff00ff"],
@@ -43,12 +89,12 @@ export function convertPageHtml(rawHtml: string): string {
     const scope = root.querySelector("body") ?? root;
 
     sortPositionedOutlines(scope);
-    convertTodoTags(scope);
+    convertTags(scope);
     convertInlineFormatting(scope);
     normalizeNamedColors(scope);
     unwrapListItemParagraphs(scope);
     normalizeListMarkers(scope);
-normalizeTableBorders(scope);
+    normalizeTableBorders(scope);
     removeEmptyListItems(scope);
     removeBlockLevelBreaks(scope);
 
@@ -80,19 +126,45 @@ function sortPositionedOutlines(scope: HTMLElement) {
 }
 
 /**
- * OneNote marks checkboxes as `<p data-tag="to-do">` / `"to-do:completed"` paragraphs. Group runs of
- * consecutive to-do paragraphs into a single CKEditor task list (<ul class="todo-list">…), matching
- * the structure Trilium's TodoList editor plugin produces — completed items use a checked checkbox.
+ * OneNote represents note tags as a `data-tag` attribute on a <p> — a comma-separated list of
+ * `shape[:status]` values (e.g. `to-do:completed`, `important`, `movie-to-see,book-to-read`).
+ *
+ * Checkbox-style tags (CHECKBOX_TAGS — `to-do` and its priority/discussion/meeting siblings) become a
+ * CKEditor task list, checked when their status is `completed`; runs of consecutive ones collapse into
+ * one list, matching the structure Trilium's TodoList plugin produces. Every other tag is decorative,
+ * so we prefix its paragraph with a representative emoji (TAG_EMOJI). A paragraph can carry both
+ * (e.g. `to-do,important`): it becomes a task item whose text is emoji-prefixed.
  */
-function convertTodoTags(scope: HTMLElement) {
-    const todos = scope.querySelectorAll("p[data-tag]").filter((el) => {
-        const tag = el.getAttribute("data-tag");
-        return tag === "to-do" || tag === "to-do:completed";
-    });
+function convertTags(scope: HTMLElement) {
+    const tagged = scope.querySelectorAll("p[data-tag]");
 
-    // Collect adjacent to-do paragraphs so each run becomes one list.
+    // Prefix each tagged paragraph's decorative-tag emoji in place, and record whether it is a
+    // checkbox paragraph (and if so, whether it's completed) so adjacent ones can be grouped.
+    const completedByCheckbox = new Map<HTMLElement, boolean>();
+    for (const p of tagged) {
+        const tags = (p.getAttribute("data-tag") ?? "").split(",").map((entry) => {
+            const [shape, status] = entry.trim().split(":");
+            return { shape, status };
+        });
+        p.removeAttribute("data-tag");
+
+        const emojis = tags.map((tag) => TAG_EMOJI.get(tag.shape)).filter((emoji): emoji is string => Boolean(emoji));
+        if (emojis.length > 0) {
+            p.set_content(`${emojis.join("")} ${p.innerHTML}`);
+        }
+
+        const checkbox = tags.find((tag) => CHECKBOX_TAGS.has(tag.shape));
+        if (checkbox) {
+            completedByCheckbox.set(p, checkbox.status === "completed");
+        }
+    }
+
+    // Collect adjacent checkbox paragraphs so each run becomes one list.
     const runs: HTMLElement[][] = [];
-    for (const p of todos) {
+    for (const p of tagged) {
+        if (!completedByCheckbox.has(p)) {
+            continue;
+        }
         const currentRun = runs[runs.length - 1];
         if (currentRun && currentRun[currentRun.length - 1].nextElementSibling === p) {
             currentRun.push(p);
@@ -103,7 +175,7 @@ function convertTodoTags(scope: HTMLElement) {
 
     for (const run of runs) {
         const items = run.map((p) => {
-            const checked = p.getAttribute("data-tag") === "to-do:completed" ? ` checked="checked"` : "";
+            const checked = completedByCheckbox.get(p) ? ` checked="checked"` : "";
             return `<li><label class="todo-list__label"><input type="checkbox"${checked}><span class="todo-list__label__description">${p.innerHTML}</span></label></li>`;
         });
         run[0].insertAdjacentHTML("beforebegin", `<ul class="todo-list">${items.join("")}</ul>`);

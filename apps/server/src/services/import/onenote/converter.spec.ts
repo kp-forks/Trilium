@@ -140,6 +140,45 @@ const TAGS_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (web-OneNote Graph export): the decorative (non-checkbox) note tags. Each is a
+// paragraph carrying a `data-tag` that OneNote renders as an icon — we render it as an emoji prefix.
+const EMOJI_TAGS_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p data-tag="important" style="margin-top:0pt;margin-bottom:0pt">Important</p>
+            <p data-tag="question" style="margin-top:0pt;margin-bottom:0pt">Question</p>
+            <p data-tag="idea" style="margin-top:0pt;margin-bottom:0pt">Idea</p>
+            <p data-tag="password" style="margin-top:0pt;margin-bottom:0pt">Password</p>
+            <p data-tag="phone-number" style="margin-top:0pt;margin-bottom:0pt">Phone number</p>
+        </div>
+    </body>
+</html>`;
+
+// Real OneNote source (web-OneNote Graph export): checkbox note tags other than plain to-do
+// (priorities, discussions, meetings, client requests). All render as task-list items, and the
+// `:completed` status checks the box.
+const CHECKBOX_TAGS_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p data-tag="to-do-priority-1" style="margin-top:0pt;margin-bottom:0pt">Priority 1</p>
+            <p data-tag="schedule-meeting:completed" style="margin-top:0pt;margin-bottom:0pt">Schedule meeting</p>
+            <p data-tag="discuss-with-manager" style="margin-top:0pt;margin-bottom:0pt">Discuss with Manager</p>
+            <p data-tag="client-request" style="margin-top:0pt;margin-bottom:0pt">Client Request</p>
+        </div>
+    </body>
+</html>`;
+
+// Real OneNote source (web-OneNote Graph export): a paragraph can carry several comma-separated tags
+// at once — a checkbox tag combined with decorative ones, or several decorative ones together.
+const MULTI_TAGS_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p data-tag="to-do,important,question" style="margin-top:0pt;margin-bottom:0pt">Todo plus star plus question</p>
+            <p data-tag="movie-to-see,book-to-read" style="margin-top:0pt;margin-bottom:0pt">Movie and book</p>
+        </div>
+    </body>
+</html>`;
+
 // Real OneNote source (debug-captured): a free-form page with four absolutely-positioned text boxes
 // whose document order differs from their visual (top-to-bottom) reading order.
 const ALIGNMENT_SAMPLE = `<html lang="en-US">
@@ -313,6 +352,49 @@ describe("convertPageHtml", () => {
         expect(out).toContain("Completed todo");
         expect(out).not.toContain("[ ]");
         expect(out).not.toContain("[x]");
+    });
+
+    it("treats every checkbox-style tag (priority/meeting/discussion/request) as a task item", () => {
+        const out = converter.convertPageHtml(CHECKBOX_TAGS_SAMPLE);
+        const root = parse(out);
+
+        // All four checkbox-style tags collapse into a single task list with one item each.
+        expect(root.querySelectorAll("ul.todo-list")).toHaveLength(1);
+        expect(root.querySelectorAll(`input[type="checkbox"]`)).toHaveLength(4);
+        // Only the schedule-meeting:completed item is checked.
+        expect(root.querySelectorAll("input[checked]")).toHaveLength(1);
+        expect(out).toContain("Client Request");
+        // The raw data-tag attribute is consumed, not left on the output.
+        expect(out).not.toContain("data-tag");
+    });
+
+    it("renders decorative tags as an emoji prefix, leaving the paragraph in place", () => {
+        const out = converter.convertPageHtml(EMOJI_TAGS_SAMPLE);
+        const root = parse(out);
+
+        // No checkbox tags here, so nothing becomes a task list.
+        expect(root.querySelectorAll("ul.todo-list")).toHaveLength(0);
+        expect(root.querySelectorAll("p")).toHaveLength(5);
+        expect(out).toContain("⭐ Important");
+        expect(out).toContain("❓ Question");
+        expect(out).toContain("💡 Idea");
+        expect(out).toContain("🔑 Password");
+        expect(out).toContain("📞 Phone number");
+        expect(out).not.toContain("data-tag");
+    });
+
+    it("supports multiple comma-separated tags on one paragraph", () => {
+        const out = converter.convertPageHtml(MULTI_TAGS_SAMPLE);
+        const root = parse(out);
+
+        // The checkbox tag turns its paragraph into a task item, prefixed with the decorative emoji.
+        expect(root.querySelectorAll("ul.todo-list")).toHaveLength(1);
+        expect(root.querySelectorAll(`input[type="checkbox"]`)).toHaveLength(1);
+        expect(root.querySelectorAll("input[checked]")).toHaveLength(0);
+        expect(out).toContain("⭐❓ Todo plus star plus question");
+
+        // The decorative-only paragraph stays a <p>, prefixed with both emoji.
+        expect(out).toContain("🎬📚 Movie and book");
     });
 
     it("converts inline-style formatting (bold/italic/underline) to semantic tags", () => {
