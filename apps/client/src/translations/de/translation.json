@@ -224,7 +224,9 @@
     "in-progress": "Import läuft: {{progress}}",
     "successful": "Import erfolgreich abgeschlossen.",
     "importZipRecommendation": "Beim Import einer ZIP-Datei wird die Notizhierarchie aus der Ordnerstruktur im Archiv übernommen.",
-    "spreadsheetImportedAsSpreadsheet": "CSV- und Excel-Dateien als bearbeitbare Tabellen statt als Dateien importieren"
+    "spreadsheetImportedAsSpreadsheet": "CSV- und Excel-Dateien als bearbeitbare Tabellen statt als Dateien importieren",
+    "starting": "Wird importiert…",
+    "in-progress-with-total": "Importiere {{progress}} von {{total}}"
   },
   "include_note": {
     "dialog_title": "Notiz beifügen",
@@ -715,7 +717,8 @@
     "word_wrap_off": "Aus",
     "print_or_export_to_pdf": "Drucken/als PDF exportieren...",
     "save_named_revision": "Benannte Revision speichern...",
-    "word_wrap_auto_description": "Der globalen Einstellung folgen"
+    "word_wrap_auto_description": "Der globalen Einstellung folgen",
+    "import_from_service": "Von einem Dienst importieren…"
   },
   "onclick_button": {
     "no_click_handler": "Das Schaltflächen-Widget „{{componentId}}“ hat keinen definierten Klick-Handler"
@@ -1945,7 +1948,7 @@
     "recovery_keys_regenerate": "Wiederherstellungscodes erneut generieren",
     "oauth_title": "OpenID Connect",
     "oauth_description": "OpenID Connect ermöglicht die Anmeldung über ein Konto eines anderen Dienstes, beispielsweise Google, um Ihre Identität zu bestätigen. Der Standardaussteller ist Google, Sie können jedoch jeden anderen OpenID-Connect-Anbieter verwenden. Weitere Informationen finden Sie <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">hier</a>. Befolgen Sie diese <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">Anweisungen</a>, um OpenID Connect über Google einzurichten.",
-    "oauth_missing_vars": "Noch festzulegen: {{-variables}}",
+    "oauth_missing_vars": "Noch zu konfigurieren: {{-variables}}",
     "oauth_user_account": "Kontoname",
     "oauth_user_email": "E-Mail-Adresse",
     "oauth_user_not_logged_in": "Nicht eingeloggt!",
@@ -1993,10 +1996,33 @@
     "recovery_keys_dot_available": "Verfügbar",
     "recovery_keys_dot_used": "Verwendet am {{- date}}",
     "oauth_status_not_configured": "Nicht konfiguriert",
-    "oauth_not_configured_hint": "Ermöglichen Sie die Anmeldung über ein Konto eines anderen Dienstes, z. B. Google. Richten Sie OpenID Connect auf dem Server ein, um es als Anmeldemethode zu aktivieren.",
+    "oauth_not_configured_hint": "OpenID Connect muss zunächst über die config.ini oder Umgebungsvariablen eingerichtet werden.",
     "oauth_how_to_enable": "Aktivierung",
     "oauth_server_config_hint": "Fügen Sie Folgendes in Ihre config.ini-Datei ein und starten Sie die Anwendung neu:",
-    "oauth_server_env_hint": "Oder setzen Sie folgende Umgebungsvariablen:"
+    "oauth_server_env_hint": "Oder setzen Sie folgende Umgebungsvariablen:",
+    "totp_status_active": "Aktiv",
+    "totp_status_inactive": "Inaktiv",
+    "oauth_status_connected": "Verbunden",
+    "oauth_status_not_connected": "Nicht verbunden",
+    "oauth_not_configured_title": "OpenID Connect einrichten",
+    "oauth_provider": "Anbieter",
+    "oauth_provider_url": "Aussteller-URL",
+    "oauth_provider_unknown": "Unbekannter Anbieter",
+    "oauth_not_enrolled_title": "Kein Konto verknüpft",
+    "oauth_not_enrolled_hint": "OpenID Connect ist konfiguriert, aber es ist noch kein Konto verknüpft.",
+    "oauth_not_enrolled_details_label": "Was bedeutet das?",
+    "oauth_not_enrolled_details": "Solange kein Konto verknüpft ist, ist OpenID Connect nicht aktiv und Sie melden sich weiterhin mit Ihrem Passwort an. Verknüpfen Sie Ihr Konto unten, um es zu aktivieren.",
+    "oauth_connect_label": "Konto verknüpfen",
+    "oauth_connect_description": "Melden Sie sich einmalig bei Ihrem Anbieter an, um Ihr Konto zu verknüpfen. Danach kann sich nur dieses Konto anmelden.",
+    "oauth_connect_button": "Konto verknüpfen",
+    "oauth_disconnect_label": "Kontoverbindung trennen",
+    "oauth_disconnect_description": "Verknüpftes Konto lösen. Die Anmeldung erfolgt wieder über Ihr Passwort bis ein neues Konto verknüpft wird.",
+    "oauth_disconnect_button": "Trennen",
+    "oauth_disconnect_confirm": "Möchten Sie dieses Konto wirklich trennen? Die Anmeldung erfolgt wieder über Ihr Passwort bis ein neues Konto verknüpft wird.",
+    "oauth_disconnected": "{{account}} wurde von {{provider}} getrennt.",
+    "oauth_connect_success": "Als {{account}} mit {{provider}} verbunden.",
+    "oauth_connect_success_generic": "Konto erfolgreich verknüpft.",
+    "oauth_account_unknown": "Ihr Konto"
   },
   "share": {
     "title": "Freigabe",
@@ -2387,7 +2413,12 @@
     "previous-video": "Vorheriges Video: {{- title}}",
     "next-video": "Nächstes Video: {{- title}}",
     "previous-audio": "Vorherige Audiodatei: {{- title}}",
-    "next-audio": "Nächste Audiodatei: {{- title}}"
+    "next-audio": "Nächste Audiodatei: {{- title}}",
+    "seek": "Springen (Pfeil links/rechts)",
+    "play-mode-title": "Wiedergabemodus: {{mode}}",
+    "play-mode-once": "Einmal abspielen",
+    "play-mode-loop": "Wiederholen",
+    "play-mode-next": "Nächstes abspielen"
   },
   "mermaid": {
     "placeholder": "Geben den Inhalt des Mermaid-Diagramms ein oder verwenden eine der folgenden Beispieldiagramme.",
@@ -2768,7 +2799,10 @@
     "button-finish-setup": "Einrichtung abschließen",
     "create-new-document-options-empty-description": "Mit einer leeren Wissensbasis starten. Demo-Notizen können später importiert werden.",
     "create-new-document-title": "Wissensbasis wird vorbereitet",
-    "dismiss-error": "Fehler schließen"
+    "dismiss-error": "Fehler schließen",
+    "sync-from-desktop-unreachable-title": "Dieses Gerät ist für andere Geräte nicht erreichbar",
+    "sync-from-desktop-unreachable-description": "Zur Synchronisierung muss sich der andere Desktop über das Netzwerk mit diesem verbinden. Aus Sicherheitsgründen akzeptiert diese Desktop-App nur Verbindungen von diesem Computer, sodass der andere Desktop sie noch nicht erreichen kann. Erlauben Sie unten den Netzwerkzugriff — Trilium wird neu gestartet, um die Einstellung anzuwenden.",
+    "sync-from-desktop-allow-access": "Netzwerkzugriff erlauben und neu starten"
   },
   "text-editor": {
     "checkbox-tooltip": "Rechtsklick für weitere Aufgabenzustände.\n{{shortcut}} drücken, um zwischen den Zuständen zu wechseln.",
@@ -2836,7 +2870,11 @@
     "server_config_hint": "Fügen Sie Folgendes in Ihre config.ini-Datei ein:",
     "server_env_hint": "Oder setzen Sie folgende Umgebungsvariable:",
     "restart_required": "Ein Neustart ist erforderlich.",
-    "restart_now": "Anwendung jetzt neu starten"
+    "restart_now": "Anwendung jetzt neu starten",
+    "lan_access_title": "Netzwerkzugriff",
+    "lan_access_section_description": "Standardmäßig akzeptiert die Desktop-App nur Verbindungen von diesem Computer. Erlauben Sie den Zugriff aus Ihrem lokalen Netzwerk, damit andere Geräte sich verbinden können — zum Beispiel zur Synchronisierung. Aktivieren Sie dies nur in vertrauenswürdigen Netzwerken.",
+    "lan_access_label": "Verbindungen von anderen Geräten erlauben",
+    "lan_access_description": "Server an alle Netzwerkschnittstellen statt nur an localhost binden."
   },
   "snippet_badge": {
     "label": "{{type}} Snippet",
@@ -2867,5 +2905,30 @@
     "refresh-widget": "Aktualisieren",
     "remove-widget": "Vom Dashboard entfernen",
     "empty-hint": "Jede untergeordnete Notiz wird zu einem Widget. Ziehen Sie eine Notiz aus der Baumstruktur hierher oder erstellen Sie eine neue."
+  },
+  "import_provider": {
+    "title": "Von einem Dienst importieren",
+    "choose_provider": "Wählen Sie einen Dienst zum Importieren:",
+    "back": "Zurück"
+  },
+  "onenote_import": {
+    "name": "Microsoft OneNote",
+    "description": "Notizbücher, Abschnitte und Seiten aus Ihrem OneNote-Konto importieren.",
+    "connect_description": "Melden Sie sich mit Ihrem Microsoft-Konto an, um Ihre OneNote-Notizbücher zu importieren.",
+    "connect": "Mit Microsoft anmelden",
+    "connecting": "Warte auf Abschluss der Anmeldung…",
+    "connected_as": "Verbunden als {{name}}",
+    "disconnect": "Trennen",
+    "load_failed": "Ihre OneNote-Notizbücher konnten nicht geladen werden.",
+    "no_notebooks": "In diesem Konto wurden keine Notizbücher gefunden.",
+    "select_sections": "Wählen Sie die zu importierenden Abschnitte:",
+    "order_hint_title": "Ungefähre Abschnittsreihenfolge",
+    "order_hint": "OneNote enthält die ursprüngliche Reihenfolge nicht in den Importdaten, daher werden Abschnitte und Gruppen nach Erstellungsdatum sortiert und stimmen möglicherweise nicht mit der Darstellung in OneNote überein.",
+    "import": "Auswahl importieren",
+    "attach_source": "Original-HTML anhängen (Debug)",
+    "attach_source_hint": "Speichert das unveränderte OneNote-HTML jeder Seite als Anhang der importierten Notiz, um es mit dem konvertierten Ergebnis zu vergleichen."
+  },
+  "full_content_width_switch": {
+    "title": "Volle Breite"
   }
 }
