@@ -3,7 +3,13 @@
 // without this side-effect import the progress/finished toasts would never appear.
 import "./import.js";
 
+import type { OneNoteFolderRef, OneNoteNotebook, OneNoteSection, OneNoteSectionGroup, OneNoteSectionSelection } from "@triliumnext/commons";
+
 import server from "./server.js";
+
+// The notebook/section/selection types are shared with the server; re-export them so existing callers
+// (the import dialog, tests) keep importing them from this service.
+export type { OneNoteFolderRef, OneNoteNotebook, OneNoteSection, OneNoteSectionGroup, OneNoteSectionSelection };
 
 export interface OneNoteAccount {
     name: string;
@@ -13,52 +19,6 @@ export interface OneNoteAccount {
 export interface OneNoteStatus {
     connected: boolean;
     account: OneNoteAccount | null;
-}
-
-export interface OneNoteSection {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-}
-
-export interface OneNoteSectionGroup {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-    sections: OneNoteSection[];
-    sectionGroups: OneNoteSectionGroup[];
-}
-
-export interface OneNoteNotebook {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-    sections: OneNoteSection[];
-    sectionGroups: OneNoteSectionGroup[];
-}
-
-/** Mirrors `OneNoteFolderRef` on the server. */
-export interface OneNoteFolderRef {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-}
-
-/** Mirrors `SectionSelection` on the server. */
-export interface OneNoteSectionSelection {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-    groupPath: OneNoteFolderRef[];
-    notebookId: string;
-    notebookTitle: string;
-    notebookCreatedDateTime?: string;
-    notebookLastModifiedDateTime?: string;
 }
 
 function getAuthUrl() {

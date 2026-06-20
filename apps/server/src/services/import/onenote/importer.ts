@@ -5,6 +5,7 @@
  * client-side import toasts apply unchanged.
  */
 
+import type { OneNoteFolderRef, OneNoteSectionSelection } from "@triliumnext/commons";
 import { becca, binary_utils, type BNote, date_utils, getLog, imageService, note_service as noteService, protected_session as protectedSession, TaskContext } from "@triliumnext/core";
 import { t } from "i18next";
 import { parse } from "node-html-parser";
@@ -14,31 +15,6 @@ import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
 import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
-
-/** A section group on the path from the notebook down to a selected section, recreated as a folder. */
-export interface OneNoteFolderRef {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-}
-
-export interface SectionSelection {
-    id: string;
-    title: string;
-    /** OneNote's section creation timestamp (ISO 8601), preserved on the imported section folder. */
-    createdDateTime?: string;
-    /** OneNote's section last-modified timestamp (ISO 8601), preserved on the imported section folder. */
-    lastModifiedDateTime?: string;
-    /** Section groups from the notebook root down to this section's immediate group (empty if none). */
-    groupPath: OneNoteFolderRef[];
-    notebookId: string;
-    notebookTitle: string;
-    /** OneNote's notebook creation timestamp (ISO 8601), preserved on the imported notebook folder. */
-    notebookCreatedDateTime?: string;
-    /** OneNote's notebook last-modified timestamp (ISO 8601), preserved on the imported notebook folder. */
-    notebookLastModifiedDateTime?: string;
-}
 
 interface FetchedPage {
     title: string;
@@ -89,7 +65,7 @@ interface FetchedSection {
  * reported over the WebSocket via the "importNotes" TaskContext, so this never throws to the caller:
  * any error is caught and surfaced as a task error toast instead.
  */
-export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false }: { accessToken: string; parentNoteId: string; sections: SectionSelection[]; taskId: string; debug?: boolean }): Promise<void> {
+export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false }: { accessToken: string; parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean }): Promise<void> {
     const taskContext = TaskContext.getInstance(taskId, "importNotes", { safeImport: true });
 
     try {
@@ -98,7 +74,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
 
         // Enumerate every selected section's pages up front so the total page count is known before
         // any content is fetched — this lets the client show a real progress bar rather than a bare count.
-        const sectionPages: { section: SectionSelection; pages: OneNotePage[] }[] = [];
+        const sectionPages: { section: OneNoteSectionSelection; pages: OneNotePage[] }[] = [];
         for (const section of sections) {
             sectionPages.push({ section, pages: await graph.listPages(accessToken, section.id) });
         }

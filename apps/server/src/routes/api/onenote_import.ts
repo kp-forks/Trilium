@@ -11,13 +11,14 @@
  *   5. POST /api/onenote-import/import    -> { noteId }
  */
 
+import type { OneNoteSectionSelection } from "@triliumnext/commons";
 import { becca, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import { isInternalElectronRequest } from "../../services/electron_request.js";
 import { getDesktopSession, type OneNoteTokenSession, setDesktopSession } from "../../services/import/onenote/desktop_session.js";
 import graph from "../../services/import/onenote/graph.js";
-import importer, { type SectionSelection } from "../../services/import/onenote/importer.js";
+import importer from "../../services/import/onenote/importer.js";
 import { ONENOTE_OAUTH } from "../../services/import/onenote/oauth.js";
 import oauth from "../../services/oauth/oauth.js";
 
@@ -86,7 +87,7 @@ async function runImport(req: Request) {
         return [401, "Not connected to OneNote."];
     }
 
-    const { parentNoteId, sections, taskId, debug } = req.body as { parentNoteId: string; sections: SectionSelection[]; taskId: string; debug?: boolean };
+    const { parentNoteId, sections, taskId, debug } = req.body as { parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean };
     if (!parentNoteId || !taskId) {
         throw new ValidationError("parentNoteId and taskId are required.");
     }

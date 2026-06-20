@@ -5,6 +5,7 @@
  * Graph reference: https://learn.microsoft.com/en-us/graph/api/resources/onenote-api-overview
  */
 
+import type { OneNoteNotebook, OneNoteSection, OneNoteSectionGroup } from "@triliumnext/commons";
 import { getLog } from "@triliumnext/core";
 
 import { safeFetch } from "../../safe_fetch.js";
@@ -76,31 +77,6 @@ function delay(ms: number): Promise<void> {
 export interface GraphAccount {
     name: string;
     email: string;
-}
-
-export interface OneNoteSection {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-}
-
-export interface OneNoteSectionGroup {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-    sections: OneNoteSection[];
-    sectionGroups: OneNoteSectionGroup[];
-}
-
-export interface OneNoteNotebook {
-    id: string;
-    title: string;
-    createdDateTime?: string;
-    lastModifiedDateTime?: string;
-    sections: OneNoteSection[];
-    sectionGroups: OneNoteSectionGroup[];
 }
 
 export interface OneNotePage {
