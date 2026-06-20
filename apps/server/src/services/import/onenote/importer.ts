@@ -10,7 +10,7 @@ import { parse } from "node-html-parser";
 
 import sql from "../../sql.js";
 import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
-import graph from "./graph.js";
+import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 
 export interface SectionSelection {
@@ -53,9 +53,17 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
 
     // Phase 1: pull everything over the network first, so note creation can run in a single
     // synchronous transaction afterwards.
-    const fetched: FetchedSection[] = [];
+
+    // Enumerate every selected section's pages up front so the total page count is known before
+    // any content is fetched — this lets the client show a real progress bar rather than a bare count.
+    const sectionPages: { section: SectionSelection; pages: OneNotePage[] }[] = [];
     for (const section of sections) {
-        const pages = await graph.listPages(accessToken, section.id);
+        sectionPages.push({ section, pages: await graph.listPages(accessToken, section.id) });
+    }
+    taskContext.setTotalCount(sectionPages.reduce((total, entry) => total + entry.pages.length, 0));
+
+    const fetched: FetchedSection[] = [];
+    for (const { section, pages } of sectionPages) {
         const fetchedPages: FetchedPage[] = [];
         for (const page of pages) {
             const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);

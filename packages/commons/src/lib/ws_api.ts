@@ -70,7 +70,9 @@ type TaskDefinition<T extends TaskType> = {
     taskId: string;
     taskType: T;
     data: TaskData<T>,
-    progressCount: number
+    progressCount: number;
+    /** Total expected units of work, when known up front; lets the client show a progress bar. */
+    totalCount?: number;
 } | {
     type: "taskError",
     taskId: string;

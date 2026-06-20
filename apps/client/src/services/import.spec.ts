@@ -146,12 +146,18 @@ describe("importNotes ws handler", () => {
         expect(toastService.showError).toHaveBeenCalledWith("nope");
     });
 
-    it("shows a persistent progress toast on taskProgressCount", async () => {
+    it("shows a persistent count-only progress toast when no total is reported", async () => {
         await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 3 } as any);
         expect(toastService.showPersistent).toHaveBeenCalledTimes(1);
         const toast = (toastService.showPersistent as any).mock.calls[0][0];
         expect(toast.id).toBe("t2");
-        expect(toast.icon).toBe("plus");
+        expect(toast.progress).toBeUndefined();
+    });
+
+    it("shows a progress-bar toast when a total is reported", async () => {
+        await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 3, totalCount: 12 } as any);
+        const toast = (toastService.showPersistent as any).mock.calls[0][0];
+        expect(toast.progress).toBe(3 / 12);
     });
 
     it("shows a success toast and navigates to the imported note when one is returned", async () => {
