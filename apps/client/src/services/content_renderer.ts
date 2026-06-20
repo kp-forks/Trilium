@@ -449,6 +449,11 @@ function getRenderingType(entity: FNote | FAttachment) {
         type = entity.type;
     } else if ("role" in entity) {
         type = entity.role;
+        // "importSource" attachments (e.g. the OneNote debug source HTML/InkML) are plain files kept
+        // for reference; render them exactly like a "file" role.
+        if (type === "importSource") {
+            type = "file";
+        }
     }
 
     const mime = "mime" in entity && entity.mime;

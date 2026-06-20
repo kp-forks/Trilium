@@ -29,6 +29,7 @@ import llmSpecialNotesRoute from "./api/llm_special_notes.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
 import ocrRoute from "./api/ocr.js";
+import onenoteImportRoute from "./api/onenote_import.js";
 import recoveryCodes from './api/recovery_codes.js';
 import senderRoute from "./api/sender.js";
 import systemInfoRoute from "./api/system_info.js";
@@ -181,6 +182,15 @@ function register(app: express.Application) {
 
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
     asyncApiRoute(GET, "/api/link-embed/metadata", linkEmbedRoute.getMetadata);
+
+    apiRoute(GET, "/api/onenote-import/auth-url", onenoteImportRoute.getAuthUrl);
+    // Plain GET (no CSRF/auth headers): this is a top-level browser redirect back from Microsoft.
+    // The OAuth `state` validated against the session is what guards it.
+    asyncRoute(GET, "/api/onenote-import/callback", [], onenoteImportRoute.callback);
+    apiRoute(GET, "/api/onenote-import/status", onenoteImportRoute.getStatus);
+    asyncApiRoute(PST, "/api/onenote-import/disconnect", onenoteImportRoute.disconnect);
+    asyncApiRoute(GET, "/api/onenote-import/notebooks", onenoteImportRoute.getNotebooks);
+    asyncApiRoute(PST, "/api/onenote-import/import", onenoteImportRoute.runImport);
 
     shareRoutes.register(router);
 

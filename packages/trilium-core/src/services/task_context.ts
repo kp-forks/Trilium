@@ -10,6 +10,7 @@ class TaskContext<T extends TaskType> {
     private taskId: string;
     private taskType: TaskType;
     private progressCount: number;
+    private totalCount: number | null;
     private lastSentCountTs: number;
     data: TaskData<T>;
     noteDeletionHandlerTriggered: boolean;
@@ -19,6 +20,7 @@ class TaskContext<T extends TaskType> {
         this.taskType = taskType;
         this.data = data;
         this.noteDeletionHandlerTriggered = false;
+        this.totalCount = null;
 
         // progressCount is meant to represent just some progress - to indicate the task is not stuck
         this.progressCount = -1; // we're incrementing immediately
@@ -39,6 +41,15 @@ class TaskContext<T extends TaskType> {
         return taskContexts[taskId];
     }
 
+    /**
+     * Sets the total expected units of work, so progress messages can carry a denominator and the
+     * client can show a progress bar instead of a bare count. Optional — tasks that don't know their
+     * total up front simply never call this.
+     */
+    setTotalCount(totalCount: number) {
+        this.totalCount = totalCount;
+    }
+
     increaseProgressCount() {
         this.progressCount++;
 
@@ -50,7 +61,8 @@ class TaskContext<T extends TaskType> {
                 taskId: this.taskId,
                 taskType: this.taskType,
                 data: this.data,
-                progressCount: this.progressCount
+                progressCount: this.progressCount,
+                ...(this.totalCount !== null ? { totalCount: this.totalCount } : {})
             } as WebSocketMessage);
         }
     }

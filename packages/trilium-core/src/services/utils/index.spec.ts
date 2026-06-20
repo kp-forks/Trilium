@@ -281,6 +281,11 @@ describe("#isStringNote", () => {
             "w/ non-string note type (file), but mime type starting with 'text/', it should return true",
             [ "file", "text/html" ],
             true
+        ],
+        [
+            "w/ 'undefined' note type and the InkML mime type, it should return true",
+            [ undefined, "application/inkml+xml" ],
+            true
         ]
     ];
 

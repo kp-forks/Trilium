@@ -653,6 +653,9 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
 
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
+    // count of entries the processing pass will handle, used as the progress denominator so the
+    // client can show a progress bar ("X of N") instead of a bare running count
+    let entriesToProcess = 0;
 
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
@@ -660,6 +663,8 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         if (isMacOSMetadata(filePath)) {
             return;
         }
+
+        entriesToProcess++;
 
         // make sure that the meta file is loaded before the rest of the files is processed.
         if (filePath === "!!!meta.json") {
@@ -674,6 +679,9 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     }, filenameEncoding);
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
+
+    // the processing pass increments progress once per entry; expose the total so the client shows a bar
+    taskContext.setTotalCount(entriesToProcess);
 
     await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
@@ -690,6 +698,10 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
 
         taskContext.increaseProgressCount();
     }, filenameEncoding);
+
+    // post-processing increments progress once per created note (a subset of the entries, now known
+    // exactly), so widen the total accordingly to keep the count accurate and let the bar reach 100%
+    taskContext.setTotalCount(entriesToProcess + createdNoteIds.size);
 
     for (const noteId of createdNoteIds) {
         const note = becca.getNote(noteId);

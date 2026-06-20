@@ -212,6 +212,40 @@ describe("processNoteContent", () => {
         expect(sheet.cellData[0][1].v).toBe(42);
     });
 
+    it("reports a progress total that the running count lands exactly on (bar reaches 100%)", async () => {
+        // fresh task id -> a new TaskContext whose constructor increment happens before we spy
+        const taskContext = TaskContext.getInstance("import-progress-total", "importNotes", { textImportedAsText: true });
+        const setTotalSpy = vi.spyOn(taskContext, "setTotalCount");
+        const increaseSpy = vi.spyOn(taskContext, "increaseProgressCount");
+
+        const zipBuffer = await createZipBuffer({
+            "a.txt": "first",
+            "b.txt": "second",
+            "sub/c.txt": "third"
+        });
+
+        await new Promise<void>((resolve, reject) => {
+            getContext().init(async () => {
+                const rootNote = becca.getNote("root");
+                if (!rootNote) {
+                    reject(new Error("missing root note"));
+                    return;
+                }
+                await zip.importZip(taskContext, zipBuffer, rootNote as BNote);
+                resolve();
+            });
+        });
+
+        // the total is set twice: an initial estimate after the scan pass, then widened to the exact
+        // value once the created-note count is known
+        expect(setTotalSpy).toHaveBeenCalledTimes(2);
+
+        const finalTotal = setTotalSpy.mock.calls.at(-1)?.[0];
+        // the constructor's first increment isn't captured by the spy, but it brought progressCount from
+        // -1 to 0, so the final progressCount equals the number of captured increments
+        expect(finalTotal).toBe(increaseSpy.mock.calls.length);
+    });
+
     it("imports a CSV entry as a plain file note when the spreadsheet option is off", async () => {
         const zipBuffer = await createZipBuffer({ "csv_as_file_sample.csv": "a,b\r\n1,2" });
         const { rootNote } = await testImportBuffer(zipBuffer, "import-csv-off", { spreadsheetImportedAsSpreadsheet: false });

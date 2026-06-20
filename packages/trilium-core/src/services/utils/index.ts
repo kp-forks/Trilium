@@ -14,7 +14,7 @@ export function isWindows() { return getPlatform().isWindows; }
 
 // render and book are string note in the sense that they are expected to contain empty string
 const STRING_NOTE_TYPES = new Set(["text", "code", "relationMap", "search", "render", "book", "mermaid", "canvas", "webView"]);
-const STRING_MIME_TYPES = new Set(["application/javascript", "application/x-javascript", "application/json", "application/x-sql", "image/svg+xml"]);
+const STRING_MIME_TYPES = new Set(["application/javascript", "application/x-javascript", "application/json", "application/x-sql", "image/svg+xml", "application/inkml+xml"]);
 
 export function hash(text: string) {
     return encodeBase64(getCrypto().createHash("sha1", text.normalize()));

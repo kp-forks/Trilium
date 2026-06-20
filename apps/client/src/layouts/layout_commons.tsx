@@ -25,6 +25,7 @@ export function applyModals(rootContainer: RootContainer) {
         .child(<LazyDialog triggerEvents={["cloneNoteIdsTo"]} loader={() => import("../widgets/dialogs/clone_to.js")} />)
         .child(<LazyDialog triggerEvents={["moveBranchIdsTo"]} loader={() => import("../widgets/dialogs/move_to.js")} />)
         .child(<LazyDialog triggerEvents={["showImportDialog"]} loader={() => import("../widgets/dialogs/import.js")} />)
+        .child(<LazyDialog triggerEvents={["showImportProviderDialog"]} loader={() => import("../widgets/dialogs/import_provider.js")} />)
         .child(<LazyDialog triggerEvents={["showExportDialog"]} loader={() => import("../widgets/dialogs/export.js")} />)
         .child(<LazyDialog triggerEvents={["showPasteMarkdownDialog"]} loader={() => import("../widgets/dialogs/markdown_import.js")} />)
         .child(<LazyDialog triggerEvents={["showProtectedSessionPasswordDialog"]} loader={() => import("../widgets/dialogs/protected_session_password.js")} />)

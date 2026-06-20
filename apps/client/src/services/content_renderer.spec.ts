@@ -620,6 +620,11 @@ describe("getRenderingType detection", () => {
         expect((await getRenderedContent(att)).type).toBe("image");
     });
 
+    it("renders an importSource attachment like a file", async () => {
+        const att = buildAttachment({ role: "importSource", mime: "text/html" });
+        expect((await getRenderedContent(att)).type).toBe("file");
+    });
+
     it("returns the raw role for an attachment with an unhandled role (no rendering branch)", async () => {
         const att = buildAttachment({ role: "unknownRole" });
         const { type, $renderedContent } = await getRenderedContent(att);

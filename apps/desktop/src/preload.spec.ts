@@ -604,4 +604,13 @@ describe("preload script", () => {
             expect(ipcRendererInvoked).toContainEqual({ channel: "security-set-lan-access", args: [true] });
         });
     });
+
+    describe("onenote", () => {
+        const onenote = () => getGroup("onenote");
+
+        it("login invokes the corresponding IPC channel", async () => {
+            await onenote().login();
+            expect(ipcRendererInvoked).toContainEqual({ channel: "onenote-login", args: [] });
+        });
+    });
 });

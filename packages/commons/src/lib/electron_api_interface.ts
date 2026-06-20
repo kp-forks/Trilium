@@ -491,6 +491,26 @@ export interface ElectronSecurityApi {
     setLanAccessEnabled(enabled: boolean): Promise<boolean>;
 }
 
+/** Outcome of a {@link ElectronOneNoteApi.login} attempt. */
+export interface OneNoteLoginResult {
+    /** True if sign-in completed and a Microsoft Graph token was stored. */
+    connected: boolean;
+    /** The connected Microsoft account, present when `connected` is true. */
+    account?: { name: string; email: string };
+    /** A human-readable failure reason when `connected` is false (absent on user cancellation). */
+    error?: string;
+}
+
+/** Desktop-only OneNote importer sign-in, driven from the main process via a loopback OAuth redirect. */
+export interface ElectronOneNoteApi {
+    /**
+     * Runs the Microsoft delegated-Graph OAuth flow: opens the system browser, captures the redirect
+     * on a throwaway loopback server, exchanges the code, and stores the token process-side. Resolves
+     * once the desktop session is connected (or with `connected: false` on failure/timeout).
+     */
+    login(): Promise<OneNoteLoginResult>;
+}
+
 /**
  * The complete surface exposed to the renderer as `window.electronApi` via
  * `contextBridge`. The renderer must access Electron-only functionality through
@@ -523,4 +543,6 @@ export interface ElectronApi {
     ws: ElectronWsApi;
     /** Security settings (backend scripting, SQL console) stored outside the DB. */
     security: ElectronSecurityApi;
+    /** OneNote importer sign-in via a loopback OAuth redirect (desktop only). */
+    onenote: ElectronOneNoteApi;
 }

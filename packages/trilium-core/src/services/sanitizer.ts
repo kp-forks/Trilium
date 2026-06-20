@@ -58,7 +58,8 @@ export function sanitizeHtml(dirtyHtml: string) {
                 "background-color": colorRegex,
                 "margin-left": sizeRegex,
                 "padding-left": sizeRegex,
-                "text-align": [/^\s*(left|center|right|justify)\s*$/]
+                "text-align": [/^\s*(left|center|right|justify)\s*$/],
+                "list-style-type": [/^\s*(disc|circle|square|decimal|decimal-leading-zero|lower-latin|upper-latin|lower-alpha|upper-alpha|lower-roman|upper-roman|none)\s*$/]
             },
             figure: {
                 float: [/^\s*(left|right|none)\s*$/],
@@ -71,13 +72,17 @@ export function sanitizeHtml(dirtyHtml: string) {
                 height: sizeRegex
             },
             table: {
-                "border-color": colorRegex,
+                "border-color": [...colorRegex, /^\s*transparent\s*$/],
                 "border-style": [/^\s*(none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset)\s*$/]
             },
             td: {
+                "border-color": [...colorRegex, /^\s*transparent\s*$/],
                 border: [
                     /^\s*\d+(?:px|em|%)\s*(none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset)\s*(#(0x)?[0-9a-fA-F]+|rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)|hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\))\s*$/
                 ]
+            },
+            th: {
+                "border-color": [...colorRegex, /^\s*transparent\s*$/]
             },
             col: {
                 width: sizeRegex

@@ -61,9 +61,34 @@ export async function uploadFiles(entityType: string, parentNoteId: string, file
 function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
     return {
         id,
-        title: t("import.import-status"),
         message,
         icon: "plus"
+    };
+}
+
+/**
+ * Builds the persistent "import in progress" toast:
+ *  - a total is known    → "Importing X of N" with a progress bar;
+ *  - some progress, no total → a bare running count;
+ *  - nothing counted yet (count 0, no total) → a generic indeterminate message, since "in progress: 0"
+ *    is meaningless while the importer is still working out how much there is to do.
+ */
+function makeProgressToast(taskId: string, progressCount: number, totalCount?: number): ToastOptionsWithRequiredId {
+    const hasTotal = typeof totalCount === "number" && totalCount > 0;
+    let message: string;
+    if (hasTotal) {
+        message = t("import.in-progress-with-total", { progress: progressCount, total: totalCount });
+    } else if (progressCount > 0) {
+        message = t("import.in-progress", { progress: progressCount });
+    } else {
+        message = t("import.starting");
+    }
+
+    return {
+        id: taskId,
+        icon: "bx bx-loader-circle bx-spin",
+        message,
+        ...(hasTotal ? { progress: progressCount / totalCount } : {})
     };
 }
 
@@ -76,7 +101,7 @@ ws.subscribeToMessages(async (message) => {
         toastService.closePersistent(message.taskId);
         toastService.showError(message.message);
     } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeToast(message.taskId, t("import.in-progress", { progress: message.progressCount })));
+        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("import.successful"));
         toast.timeout = 5000;
@@ -98,7 +123,7 @@ ws.subscribeToMessages(async (message: WebSocketMessage) => {
         toastService.closePersistent(message.taskId);
         toastService.showError(message.message);
     } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeToast(message.taskId, t("import.in-progress", { progress: message.progressCount })));
+        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("import.successful"));
         toast.timeout = 5000;

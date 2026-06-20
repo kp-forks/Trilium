@@ -136,6 +136,7 @@ export type CommandMappings = {
     showConfirmDialog: ConfirmWithMessageOptions;
     showRecentChanges: CommandData & { ancestorNoteId: string };
     showImportDialog: CommandData & { noteId: string };
+    showImportProviderDialog: CommandData & { noteId: string };
     openNewNoteSplit: NoteCommandData;
     openInWindow: NoteCommandData;
     openInPopup: CommandData & { noteIdOrPath: string; };

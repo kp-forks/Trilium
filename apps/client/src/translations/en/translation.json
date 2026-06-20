@@ -224,9 +224,32 @@
       "placeholder": "Enter HTML tags, one per line",
       "reset_button": "Reset to Default List"
     },
-    "import-status": "Import status",
+    "starting": "Importing…",
     "in-progress": "Import in progress: {{progress}}",
+    "in-progress-with-total": "Importing {{progress}} of {{total}}",
     "successful": "Import finished successfully."
+  },
+  "import_provider": {
+    "title": "Import from a service",
+    "choose_provider": "Choose a service to import from:",
+    "back": "Back"
+  },
+  "onenote_import": {
+    "name": "Microsoft OneNote",
+    "description": "Import notebooks, sections and pages from your OneNote account.",
+    "connect_description": "Sign in with your Microsoft account to import your OneNote notebooks.",
+    "connect": "Sign in with Microsoft",
+    "connecting": "Waiting for sign-in to complete…",
+    "connected_as": "Connected as {{name}}",
+    "disconnect": "Disconnect",
+    "load_failed": "Could not load your OneNote notebooks.",
+    "no_notebooks": "No notebooks were found in this account.",
+    "select_sections": "Select the sections to import:",
+    "order_hint_title": "Approximate section order",
+    "order_hint": "OneNote doesn't include the original ordering in the import data, so sections and groups are sorted by creation date and may not match how they appear in OneNote.",
+    "import": "Import selected",
+    "attach_source": "Attach original HTML (debug)",
+    "attach_source_hint": "Saves each page's unmodified OneNote HTML as an attachment on the imported note, for comparing against the converted result."
   },
   "include_note": {
     "dialog_title": "Include note",
@@ -808,6 +831,7 @@
     "open_note_custom": "Open note custom",
     "open_note_on_server": "Open note on server",
     "import_files": "Import files",
+    "import_from_service": "Import from a service…",
     "export_note": "Export note",
     "delete_note": "Delete note",
     "print_note": "Print note...",

@@ -96,6 +96,21 @@ describe("TaskContext", () => {
 
             expect(sendMessageToAllClients).not.toHaveBeenCalled();
         });
+
+        it("includes the total once set, and omits it until then", () => {
+            vi.useFakeTimers();
+            vi.setSystemTime(1_000);
+
+            const ctx = new TaskContext("total-1", "importNotes", importData);
+            // The constructor's first message has no total yet.
+            expect(sendMessageToAllClients).toHaveBeenLastCalledWith(expect.not.objectContaining({ totalCount: expect.anything() }));
+
+            ctx.setTotalCount(10);
+            vi.setSystemTime(1_300);
+            ctx.increaseProgressCount();
+
+            expect(sendMessageToAllClients).toHaveBeenLastCalledWith(expect.objectContaining({ progressCount: 1, totalCount: 10 }));
+        });
     });
 
     describe("reportError", () => {

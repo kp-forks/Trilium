@@ -1,50 +1,67 @@
 # OneNote
-**This page describes a method to migrate via EverNote Legacy, but this app is no longer available/working.**
+> [!NOTE]
+> This import mechanism was introduced in Trilium v0.104.0.
 
-## Prep Onenote notes for best compatibility
+Trilium allows importing from OneNote. Currently the only mechanism supported is via the Microsoft Graph API which requires you to authenticate in a browser in order for the notes to be obtained by Trilium.
 
-*   Remove Onenote Tags and replace with Emoji if possible (Onenote Tags will get imported into trilium as an image which clutters the Trilium tree somewhat)
-*   Make sure to use Onenote headings where applicable (These will be carried over correctly into Trilium)
-*   Remove extra whitespace in Onenote (Whitespace seems to be more noticible in Trilium, so removing it now will make it look nicer in trilium)
-*   If possible, try to avoid very long Onenote pages. Trilium works best with shorter concise pages with any number of sub or (sub-sub...) pages.
-*   Make sure numbered lists don't have unusual spaces between items in the list (Sometimes the numbered list will start at 1 again in Trilum if there is an extra space in the list in OneNote).
+## Import process
 
-## Migration Procedure
+1.  In the <a class="reference-link" href="../UI%20Elements/Note%20Tree.md">Note Tree</a>, select a note where to place the imported notes.
+2.  From <a class="reference-link" href="../UI%20Elements/Note%20buttons.md">Note buttons</a>, select _Import from a service…_
+3.  Select _Microsoft OneNote_ as the provider to import from.
+4.  Press the _Connect_ button, you will be redirected to Microsoft's authentication screen where you can log into your account.
+5.  After the connection is successful, you should be able to see a list of sections that can be imported. Simply check the ones to import and press the _Import selected_ button.
+6.  Wait for the import to finish.
 
-### Import into Evernote from OneNote:
+## Supported features
 
-*   Install [Evernote Legacy](https://web.archive.org/web/20230327110646/https://help.evernote.com/hc/en-us/articles/360052560314). Current versions of Evernote do not have this functionality. (Requires Evernote account, but import works without internet connection - be sure to NOT sync notes to Evernote!).
-*   In evernote navigate to File > Import > Onenote > Notebook > Section > OK
+The following features are preserved by Trilium during the import process:
 
-If exporting all sections at a time, they will not be grouped in folders - they will all be added to a single folder, but the order will be kept, so you can re-group into folders after importing to Trilium
+*   Basic formatting (bold, italic, underline, strikethrough, subscript, super script, inline code, font sizes, headings, colors, highlights).
+    *   Black-colored text is intentionally stripped to allow it to work in dark themes.
+*   <a class="reference-link" href="../../Note%20Types/Text/Lists.md">Lists</a> with different bullet types.
+*   <a class="reference-link" href="../../Note%20Types/Text/Tables.md">Tables</a>
+*   Images and <a class="reference-link" href="../Notes/Attachments.md">Attachments</a>.
+*   To do lists
+*   Hand-drawing is preserved and displayed as an SVG image (however there are some
+*   Links between other imported pages are converted to <a class="reference-link" href="../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> if the text of the link matches the name of the page, or plain links otherwise. If the pages are not part of the import, the original `onenote:` link is kept.
+*   Tags (apart from to-do lists) are mildly preserved by converting them to emojis. This loses their searchability. Since Trilium has no concept of inline attributes or badges, this is considered a middle-ground.
 
-### Export from Evernote
+Regarding the note structure:
 
-*   Right click on the created notebook in Evernote and choose "Export Notes…"
-*   Use the default export format of .enex
+*   The order of the pages within a section is maintained.
+*   Sub-pages and section groups are maintained by nesting notes in a hierarchical structure.
+*   Creation and modification of both notes and sections is preserved. The order of section or section groups is not preserved (see limitations).
 
-### Cleanup enex file (optional)
+## Limitations
 
-*   If the Onenote header (that is at the top of each Onenote page) is not desired, you can use the following regex to remove them in a text editor like VsCode:
-    
-    Find (using regex): `.<div.*><h1` Replace with: `<h1`
+### Regarding OneNote's freehand structure
 
-### Import into Trilium
+OneNote is fundamentally different to Trilium in structure because it allows freehand drawing to coexist with text, and text boxes can be placed anywhere in the document (e.g. a common use case is to have columns). Trilium has a document flow mechanism for <a class="reference-link" href="../../Note%20Types/Text.md">Text</a> notes which means that it can't be freely positioned.
 
-*   In Trilium, right click on the root node and choose Import (all default options should be fine).
-*   Select the .enex file exported from Evernote
-*   Be patient. Large .enex files may take a few minutes to process
-*   Repeat import for each .enex file
+To cope with this difference, Trilium will flatten the text structure into normal paragraphs. The paragraphs will be ordered visually based on the original position of the text boxes, but their horizontal position will not be preserved. Parallel text such as columns may appear interleaved which can cause problems.
 
-## Other importing notes:
+In addition, drawing in OneNote can be interleaved with text boxes. Text notes in Trilium do not allow for this feature, so all drawing will appear at the end. For some use cases (diagrams, for example) this will work fine, but if you have highlights or other text-dependent drawings they will appear out of order.
 
-*   Centered text in Onenote will be left-justified after importing into Trilium
-*   Internal onenote links will obviously be broken, but the link still exists so you can do a search in Trilium to find all onenote:// links and then re-link to the proper Trilium page (there is no way to link to a paragraph in trilium, so it's good to keep trilium pages short so links point to a small chunk of information instead of a massive note)
-*   Text colors, highlights, and formatting generally carries over well
-*   Revision history will be lost, but any new revisions will be tracked in Trilium
-*   The structure of notes are not maintained exactly, so if you had sub-notes in Onenote, you may have to re-arrange the notes accordingly (This is easy since the order of the notes is preserved).
-*   Evernote tags are created for each "section" in OneNote and these tags are carried over to Trilium as attributes
-    *   If the tags are not desired, you can turn them off in the Evernote export options.
-*   If the "Created with OneNote" text is not desired, do a find/replace in the enex files before importing to Trilium
-*   Some links will be disabled (not clickable) when importing from enex.
-*   Files, screenshots, and attachments are all preserved (This is the only one-note export option that seems to preserve all of these).
+> [!NOTE]
+> There are plans to support drawing-heavy notes that interleave with text boxes by converting them to a <a class="reference-link" href="../../Note%20Types/Canvas.md">Canvas</a> instead.
+
+## Other limitations
+
+The following are known limitations due to how the information comes from the import (Microsoft Graph API), which means that they cannot be fixed.
+
+*   The order of the sections (and section groups) is not available, the sections are ordered by creation date instead.
+*   Revision history.
+*   Paragraph indentation.
+*   Section colors.
+
+## Reporting issues
+
+When importing notes, you might find that some text is not rendered properly or the structure is not properly maintained. As long as this issue is not a fundamental issue (like the issue with freehand text not being preserved exactly), it's a good idea to [report it](../../Troubleshooting/Reporting%20issues.md).
+
+When reporting, make sure that you provide the following information:
+
+*   Import again the section, checking the debug checkbox before importing. This preserves the original document (and the hand-drawing data if any) as it came through from OneNote's cloud API so that it can be used for comparison.
+*   Export only the affected page as ZIP, making sure not to accidentally expose any sensitive information.
+*   Take screenshots of how the note looked like in OneNote and how it ends up in Trilium.
+*   Attach the ZIP and the screenshots to the issue report.

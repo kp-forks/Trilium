@@ -316,6 +316,9 @@
   "content_renderer": {
     "note-cannot-be-displayed": "This note type cannot be displayed."
   },
+  "onenote_import": {
+    "root-title": "OneNote import"
+  },
   "pdf": {
     "export_filter": "PDF Document (*.pdf)",
     "unable-to-export-message": "The current note could not be exported as a PDF.",

@@ -100,6 +100,17 @@ describe("checkImageAttachments", () => {
             expect(att.utcDateScheduledForErasureSince).toBeTruthy();
         });
 
+        it("leaves non-embeddable roles untouched even when unreferenced", () => {
+            const note = buildNote({ title: "Test", attachments: [{ title: "OneNote source.html", role: "importSource", mime: "text/html" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, "<p>No images here</p>");
+
+            expect(att.save).not.toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeFalsy();
+        });
+
         it("cancels erasure when attachment is re-referenced", () => {
             const note = buildNote({ title: "Test", attachments: [{ title: "test.png", role: "image", mime: "image/png" }] });
             mockAttachmentSaves(note);
