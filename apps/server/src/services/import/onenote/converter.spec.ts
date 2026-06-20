@@ -1,7 +1,15 @@
+import { SANITIZER_DEFAULT_ALLOWED_TAGS } from "@triliumnext/commons";
+import { cls, options as optionService } from "@triliumnext/core";
 import { parse } from "node-html-parser";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import converter from "./converter.js";
+
+beforeAll(() => {
+    // The shared fixture DB predates `<u>` being allowlisted; align the sanitizer's allowed tags with
+    // the current default so the test asserts the end result a fresh install would store.
+    cls.init(() => optionService.setOption("allowedHtmlTags", JSON.stringify(SANITIZER_DEFAULT_ALLOWED_TAGS)));
+});
 
 // A representative OneNote page as returned by the Graph API: margin-0 paragraphs, a numbered and
 // two bulleted lists, a trailing empty list item, and bare block-level <br> elements that OneNote
@@ -33,6 +41,22 @@ const SAMPLE = `<html lang="en-US">
                 <li>Subject 1</li>
                 <li>Subject 2</li>
             </ul>
+        </div>
+    </body>
+</html>`;
+
+// Real OneNote source (debug-captured): bold/italic/underline are carried as inline styles on
+// <span>, individually and combined on a single span.
+const FORMATTING_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:54px;top:134px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">Normal text.</p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-weight:bold">Bold text.</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-style:italic">Italic text.</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="text-decoration:underline">Under line text.</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-weight:bold;font-style:italic">Bold and italic text.</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-weight:bold;text-decoration:underline">Bold and underline text</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-weight:bold;font-style:italic;text-decoration:underline">Bold, italic and underline text</span></p>
         </div>
     </body>
 </html>`;
@@ -72,5 +96,15 @@ describe("convertPageHtml", () => {
         const out = converter.convertPageHtml(`<body><p data-tag="to-do:completed">done</p><p data-tag="to-do">todo</p></body>`);
         expect(out).toContain("[x] done");
         expect(out).toContain("[ ] todo");
+    });
+
+    it("converts inline-style formatting (bold/italic/underline) to semantic tags", () => {
+        const out = converter.convertPageHtml(FORMATTING_SAMPLE);
+        expect(out).toContain("<strong>Bold text.</strong>");
+        expect(out).toContain("<em>Italic text.</em>");
+        expect(out).toContain("<u>Under line text.</u>");
+        expect(out).toContain("<strong><em>Bold and italic text.</em></strong>");
+        expect(out).toContain("<strong><u>Bold and underline text</u></strong>");
+        expect(out).toContain("<strong><em><u>Bold, italic and underline text</u></em></strong>");
     });
 });

@@ -26,6 +26,7 @@ export function convertPageHtml(rawHtml: string): string {
     const scope = root.querySelector("body") ?? root;
 
     convertTodoTags(scope);
+    convertInlineFormatting(scope);
     removeEmptyListItems(scope);
     removeBlockLevelBreaks(scope);
 
@@ -39,6 +40,36 @@ function convertTodoTags(scope: HTMLElement) {
         if (tag === "to-do" || tag === "to-do:completed") {
             const checkbox = tag === "to-do:completed" ? "[x]" : "[ ]";
             el.set_content(`${checkbox} ${el.innerHTML}`);
+        }
+    }
+}
+
+/**
+ * OneNote carries bold/italic/underline as inline styles (`font-weight:bold`, `font-style:italic`,
+ * `text-decoration:underline`), which the sanitizer strips. Wrap the styled element's content in the
+ * equivalent semantic tags (which survive sanitization) so the formatting is preserved.
+ */
+function convertInlineFormatting(scope: HTMLElement) {
+    for (const el of scope.querySelectorAll("[style]")) {
+        const style = el.getAttribute("style") ?? "";
+        const open: string[] = [];
+        const close: string[] = [];
+
+        if (/font-weight\s*:\s*bold/i.test(style)) {
+            open.push("<strong>");
+            close.unshift("</strong>");
+        }
+        if (/font-style\s*:\s*italic/i.test(style)) {
+            open.push("<em>");
+            close.unshift("</em>");
+        }
+        if (/text-decoration\s*:[^;]*underline/i.test(style)) {
+            open.push("<u>");
+            close.unshift("</u>");
+        }
+
+        if (open.length > 0) {
+            el.set_content(`${open.join("")}${el.innerHTML}${close.join("")}`);
         }
     }
 }
