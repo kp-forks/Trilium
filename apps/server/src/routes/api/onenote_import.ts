@@ -130,7 +130,9 @@ async function getValidAccessToken(req: Request): Promise<string | null> {
         return tokens.access_token;
     }
 
-    return session.accessToken;
+    // Expired with no refresh token: force a clean reconnect rather than handing back a stale token
+    // that would fail mid-import with a confusing Graph 401.
+    return null;
 }
 
 interface TokenStore {

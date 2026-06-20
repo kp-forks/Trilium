@@ -81,6 +81,9 @@ export function sanitizeHtml(dirtyHtml: string) {
                     /^\s*\d+(?:px|em|%)\s*(none|hidden|dotted|dashed|solid|double|groove|ridge|inset|outset)\s*(#(0x)?[0-9a-fA-F]+|rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)|hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\))\s*$/
                 ]
             },
+            th: {
+                "border-color": [...colorRegex, /^\s*transparent\s*$/]
+            },
             col: {
                 width: sizeRegex
             }
