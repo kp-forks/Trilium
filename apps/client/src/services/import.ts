@@ -61,7 +61,6 @@ export async function uploadFiles(entityType: string, parentNoteId: string, file
 function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
     return {
         id,
-        title: t("import.import-status"),
         message,
         icon: "plus"
     };
@@ -75,7 +74,6 @@ function makeProgressToast(taskId: string, progressCount: number, totalCount?: n
     const hasTotal = typeof totalCount === "number" && totalCount > 0;
     return {
         id: taskId,
-        title: t("import.import-status"),
         icon: "bx bx-loader-circle bx-spin",
         message: hasTotal
             ? t("import.in-progress-with-total", { progress: progressCount, total: totalCount })
