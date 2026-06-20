@@ -43,22 +43,45 @@ export async function getAccount(accessToken: string): Promise<GraphAccount> {
 }
 
 /**
- * Returns the notebooks with their sections. Sections nested inside section groups are flattened
- * into the owning notebook with a "Group / Section" title — good enough for a first import pass.
+ * Returns the notebooks with all of their sections, including those nested inside section groups
+ * (flattened with a "Group / Subgroup / Section" title). Section groups nest arbitrarily and the
+ * notebooks endpoint only reliably $expands one level of them, so instead of a deep nested $expand we
+ * walk each section group's `sectionGroupsUrl` recursively (see collectSectionGroupSections).
  */
 export async function listNotebooks(accessToken: string): Promise<OneNoteNotebook[]> {
-    const url = "/me/onenote/notebooks?$select=id,displayName&$expand=sections($select=id,displayName),sectionGroups($expand=sections($select=id,displayName))&$orderby=displayName";
-    const raw = await graphGetAll<RawNotebook>(accessToken, url);
+    const url = "/me/onenote/notebooks?$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName)&$orderby=displayName";
+    const notebooks = await graphGetAll<RawNotebook>(accessToken, url);
 
-    return raw.map((notebook) => {
+    const result: OneNoteNotebook[] = [];
+    for (const notebook of notebooks) {
         const sections: OneNoteSection[] = (notebook.sections ?? []).map((s) => ({ id: s.id, title: s.displayName }));
-        for (const group of notebook.sectionGroups ?? []) {
-            for (const s of group.sections ?? []) {
-                sections.push({ id: s.id, title: `${group.displayName} / ${s.displayName}` });
-            }
+        await collectSectionGroupSections(accessToken, notebook.sectionGroupsUrl, "", sections);
+        result.push({ id: notebook.id, title: notebook.displayName, sections });
+    }
+    return result;
+}
+
+/**
+ * Recursively walks the section groups under `sectionGroupsUrl` (a notebook's or section group's link),
+ * appending every section to `out` with a "Group / Subgroup / Section" title. Following the link at each
+ * level handles arbitrarily nested section groups, which a single one-level $expand misses entirely.
+ */
+async function collectSectionGroupSections(accessToken: string, sectionGroupsUrl: string | undefined, prefix: string, out: OneNoteSection[]) {
+    if (!sectionGroupsUrl) {
+        return;
+    }
+    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName)");
+    for (const group of await graphGetAll<RawSectionGroup>(accessToken, url)) {
+        const path = prefix ? `${prefix} / ${group.displayName}` : group.displayName;
+        for (const section of group.sections ?? []) {
+            out.push({ id: section.id, title: `${path} / ${section.displayName}` });
         }
-        return { id: notebook.id, title: notebook.displayName, sections };
-    });
+        await collectSectionGroupSections(accessToken, group.sectionGroupsUrl, path, out);
+    }
+}
+
+function appendQuery(url: string, query: string): string {
+    return url.includes("?") ? `${url}&${query}` : `${url}?${query}`;
 }
 
 export async function listPages(accessToken: string, sectionId: string): Promise<OneNotePage[]> {
@@ -142,8 +165,15 @@ export async function getResource(accessToken: string, url: string): Promise<{ c
 interface RawNotebook {
     id: string;
     displayName: string;
+    sectionGroupsUrl?: string;
     sections?: { id: string; displayName: string }[];
-    sectionGroups?: { displayName: string; sections?: { id: string; displayName: string }[] }[];
+}
+
+interface RawSectionGroup {
+    id: string;
+    displayName: string;
+    sectionGroupsUrl?: string;
+    sections?: { id: string; displayName: string }[];
 }
 
 interface RawPage {
@@ -165,14 +195,14 @@ async function graphGet<T>(accessToken: string, path: string): Promise<T> {
 }
 
 /** GETs a Graph collection endpoint, following @odata.nextLink pagination. */
-async function graphGetAll<T>(accessToken: string, path: string): Promise<T[]> {
+async function graphGetAll<T>(accessToken: string, pathOrUrl: string): Promise<T[]> {
     const results: T[] = [];
-    let next: string | null = `${GRAPH_BASE}${path}`;
+    let next: string | null = pathOrUrl.startsWith("http") ? pathOrUrl : `${GRAPH_BASE}${pathOrUrl}`;
 
     while (next) {
         const response: Response = await fetch(next, { headers: { Authorization: `Bearer ${accessToken}` } });
         if (!response.ok) {
-            throw new Error(`Microsoft Graph request failed: ${path} (HTTP ${response.status})`);
+            throw new Error(`Microsoft Graph request failed: ${pathOrUrl} (HTTP ${response.status})`);
         }
         const json = (await response.json()) as { value?: T[]; "@odata.nextLink"?: string };
         results.push(...(json.value ?? []));
