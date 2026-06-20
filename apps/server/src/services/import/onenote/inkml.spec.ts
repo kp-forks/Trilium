@@ -1,7 +1,13 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
 import { describe, expect, it } from "vitest";
 
 import { parsePageContent } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
+
+const FIXTURES_DIR = join(dirname(fileURLToPath(import.meta.url)), "fixtures");
 
 /** A minimal OneNote-style InkML document with one red brush and a multi-point trace. */
 const INKML = `<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML">
@@ -56,6 +62,26 @@ describe("inkmlToSvg", () => {
         expect(inkmlToSvg("")).toBeNull();
         expect(inkmlToSvg("   ")).toBeNull();
         expect(inkmlToSvg(`<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML"></inkml:ink>`)).toBeNull();
+    });
+
+    it("converts a real OneNote ink export (curly-brace brush ids, traceGroup, himetric coords)", () => {
+        const svg = inkmlToSvg(readFileSync(join(FIXTURES_DIR, "sample.inkml"), "utf-8")) ?? "";
+
+        // One <path> per <trace>, each resolving its brush color despite the `#{guid}{n}` brushRef ids.
+        expect((svg.match(/<path/g) ?? []).length).toBe(42);
+        for (const color of ["#404040", "#1353BA", "#167D1D", "#C62938", "#904C15", "#FAF320"]) {
+            expect(svg).toContain(`stroke="${color}"`);
+        }
+
+        // Highlighter strokes (transparency 0.496, rectangle tip) render translucent and use the
+        // larger height as their thickness rather than the thin pen-style width.
+        expect(svg).toContain(`opacity="0.50"`);
+        expect(svg).toContain(`stroke="#FAF320" stroke-width="1000"`);
+
+        // The displayed size is capped while the true himetric coordinate space stays in the viewBox.
+        const dims = svg.match(/width="(\d+)" height="(\d+)" viewBox="0 0 (\d+) (\d+)"/);
+        expect(Number(dims?.[1])).toBeLessThanOrEqual(800);
+        expect(Number(dims?.[3])).toBeGreaterThan(20000);
     });
 });
 

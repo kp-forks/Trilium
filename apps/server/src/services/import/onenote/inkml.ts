@@ -27,6 +27,7 @@ const MAX_DISPLAY_SIZE = 800;
 interface Brush {
     color: string;
     width: number;
+    height: number;
     transparency: number;
 }
 
@@ -35,7 +36,16 @@ interface Trace {
     brush: Brush;
 }
 
-const DEFAULT_BRUSH: Brush = { color: "#000000", width: 70, transparency: 0 };
+const DEFAULT_BRUSH: Brush = { color: "#000000", width: 70, height: 70, transparency: 0 };
+
+/**
+ * The on-screen stroke thickness. Pens carry equal width/height, but highlighters (rectangle tip)
+ * carry a small width and a large height — so taking the larger dimension renders highlighters as the
+ * wide swath they are rather than a thin pen line.
+ */
+function strokeWidth(brush: Brush): number {
+    return Math.max(brush.width, brush.height);
+}
 
 export function inkmlToSvg(inkml: string): string | null {
     if (!inkml || inkml.trim().length === 0) {
@@ -94,6 +104,8 @@ function parseBrushes(root: HTMLElement): Map<string, Brush> {
                 brush.color = value;
             } else if (name === "width") {
                 brush.width = Number.parseFloat(value) || brush.width;
+            } else if (name === "height") {
+                brush.height = Number.parseFloat(value) || brush.height;
             } else if (name === "transparency") {
                 brush.transparency = Number.parseFloat(value) || 0;
             }
@@ -153,7 +165,8 @@ function boundingBox(traces: Trace[]): { minX: number; minY: number; maxX: numbe
 }
 
 function traceToSvg(trace: Trace, minX: number, minY: number): string[] {
-    const { color, width, transparency } = trace.brush;
+    const { color, transparency } = trace.brush;
+    const width = strokeWidth(trace.brush);
     const opacity = 1 - transparency;
     const opacityAttr = opacity < 1 ? ` opacity="${opacity.toFixed(2)}"` : "";
     const point = (coord: number[]) => [coord[0] - minX + PADDING, coord[1] - minY + PADDING];
