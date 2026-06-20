@@ -21,12 +21,22 @@ export interface OneNoteSection {
     lastModifiedDateTime?: string;
 }
 
+export interface OneNoteSectionGroup {
+    id: string;
+    title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
+    sections: OneNoteSection[];
+    sectionGroups: OneNoteSectionGroup[];
+}
+
 export interface OneNoteNotebook {
     id: string;
     title: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
     sections: OneNoteSection[];
+    sectionGroups: OneNoteSectionGroup[];
 }
 
 export interface OneNotePage {
@@ -49,8 +59,9 @@ export async function getAccount(accessToken: string): Promise<GraphAccount> {
 }
 
 /**
- * Returns the notebooks with all of their sections, including those nested inside section groups
- * (flattened with a "Group / Subgroup / Section" title).
+ * Returns the notebooks with their direct sections and a tree of section groups — each group carrying
+ * its own sections and nested groups — mirroring the OneNote structure so the importer can recreate it
+ * as nested folders.
  *
  * The initial call expands each notebook's sections and whether it has any section groups, so the
  * common case (no section groups) is a single round-trip. Only notebooks/groups that actually contain
@@ -62,38 +73,40 @@ export async function listNotebooks(accessToken: string): Promise<OneNoteNoteboo
     const notebooks = await graphGetAll<RawNotebook>(accessToken, url);
 
     return Promise.all(
-        notebooks.map(async (notebook) => {
-            const direct = (notebook.sections ?? []).map((s) => ({ id: s.id, title: s.displayName, createdDateTime: s.createdDateTime, lastModifiedDateTime: s.lastModifiedDateTime }));
-            const grouped = notebook.sectionGroups?.length && notebook.sectionGroupsUrl ? await sectionsFromSectionGroups(accessToken, notebook.sectionGroupsUrl, "") : [];
-            return {
-                id: notebook.id,
-                title: notebook.displayName,
-                createdDateTime: notebook.createdDateTime,
-                lastModifiedDateTime: notebook.lastModifiedDateTime,
-                sections: [...direct, ...grouped]
-            };
-        })
+        notebooks.map(async (notebook) => ({
+            id: notebook.id,
+            title: notebook.displayName,
+            createdDateTime: notebook.createdDateTime,
+            lastModifiedDateTime: notebook.lastModifiedDateTime,
+            sections: mapSections(notebook.sections),
+            sectionGroups: notebook.sectionGroups?.length && notebook.sectionGroupsUrl ? await fetchSectionGroups(accessToken, notebook.sectionGroupsUrl) : []
+        }))
     );
 }
 
 /**
- * Fetches the section groups under `sectionGroupsUrl` (a notebook's or section group's link) and
- * returns their sections, recursing into nested groups. Sibling groups are fetched in parallel, and a
- * further round-trip happens only for groups that actually have children.
+ * Fetches the section groups under `sectionGroupsUrl` (a notebook's or section group's link) as a tree,
+ * each group carrying its own sections and nested groups. Sibling groups are fetched in parallel, and a
+ * further round-trip happens only for groups that actually have nested groups.
  */
-async function sectionsFromSectionGroups(accessToken: string, sectionGroupsUrl: string, prefix: string): Promise<OneNoteSection[]> {
-    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName,createdDateTime,lastModifiedDateTime),sectionGroups($select=id)");
+async function fetchSectionGroups(accessToken: string, sectionGroupsUrl: string): Promise<OneNoteSectionGroup[]> {
+    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,createdDateTime,lastModifiedDateTime,sectionGroupsUrl&$expand=sections($select=id,displayName,createdDateTime,lastModifiedDateTime),sectionGroups($select=id)");
     const groups = await graphGetAll<RawSectionGroup>(accessToken, url);
 
-    const perGroup = await Promise.all(
-        groups.map(async (group) => {
-            const path = prefix ? `${prefix} / ${group.displayName}` : group.displayName;
-            const direct = (group.sections ?? []).map((s) => ({ id: s.id, title: `${path} / ${s.displayName}`, createdDateTime: s.createdDateTime, lastModifiedDateTime: s.lastModifiedDateTime }));
-            const nested = group.sectionGroups?.length && group.sectionGroupsUrl ? await sectionsFromSectionGroups(accessToken, group.sectionGroupsUrl, path) : [];
-            return [...direct, ...nested];
-        })
+    return Promise.all(
+        groups.map(async (group) => ({
+            id: group.id,
+            title: group.displayName,
+            createdDateTime: group.createdDateTime,
+            lastModifiedDateTime: group.lastModifiedDateTime,
+            sections: mapSections(group.sections),
+            sectionGroups: group.sectionGroups?.length && group.sectionGroupsUrl ? await fetchSectionGroups(accessToken, group.sectionGroupsUrl) : []
+        }))
     );
-    return perGroup.flat();
+}
+
+function mapSections(raw: RawSection[] | undefined): OneNoteSection[] {
+    return (raw ?? []).map((s) => ({ id: s.id, title: s.displayName, createdDateTime: s.createdDateTime, lastModifiedDateTime: s.lastModifiedDateTime }));
 }
 
 function appendQuery(url: string, query: string): string {
@@ -179,13 +192,20 @@ export async function getResource(accessToken: string, url: string): Promise<{ c
     return { content: buffer, contentType: response.headers.get("content-type") ?? "application/octet-stream" };
 }
 
+interface RawSection {
+    id: string;
+    displayName: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
+}
+
 interface RawNotebook {
     id: string;
     displayName: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
     sectionGroupsUrl?: string;
-    sections?: { id: string; displayName: string; createdDateTime?: string; lastModifiedDateTime?: string }[];
+    sections?: RawSection[];
     /** id-only, requested just to detect whether the notebook has section groups to follow. */
     sectionGroups?: { id: string }[];
 }
@@ -193,8 +213,10 @@ interface RawNotebook {
 interface RawSectionGroup {
     id: string;
     displayName: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
     sectionGroupsUrl?: string;
-    sections?: { id: string; displayName: string; createdDateTime?: string; lastModifiedDateTime?: string }[];
+    sections?: RawSection[];
     /** id-only, requested just to detect whether the group has nested section groups to follow. */
     sectionGroups?: { id: string }[];
 }

@@ -15,6 +15,14 @@ import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
 
+/** A section group on the path from the notebook down to a selected section, recreated as a folder. */
+export interface OneNoteFolderRef {
+    id: string;
+    title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
+}
+
 export interface SectionSelection {
     id: string;
     title: string;
@@ -22,6 +30,8 @@ export interface SectionSelection {
     createdDateTime?: string;
     /** OneNote's section last-modified timestamp (ISO 8601), preserved on the imported section folder. */
     lastModifiedDateTime?: string;
+    /** Section groups from the notebook root down to this section's immediate group (empty if none). */
+    groupPath: OneNoteFolderRef[];
     notebookId: string;
     notebookTitle: string;
     /** OneNote's notebook creation timestamp (ISO 8601), preserved on the imported notebook folder. */
@@ -65,6 +75,7 @@ interface FetchedSection {
     title: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
+    groupPath: OneNoteFolderRef[];
     notebookId: string;
     notebookTitle: string;
     notebookCreatedDateTime?: string;
@@ -107,6 +118,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
                 title: section.title,
                 createdDateTime: section.createdDateTime,
                 lastModifiedDateTime: section.lastModifiedDateTime,
+                groupPath: section.groupPath,
                 notebookId: section.notebookId,
                 notebookTitle: section.notebookTitle,
                 notebookCreatedDateTime: section.notebookCreatedDateTime,
@@ -140,20 +152,32 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
     const createdPages: { note: BNote; original: string; content: string; page: FetchedPage }[] = [];
     const targetByPageId = new Map<string, LinkTarget>();
 
-    // Group selected sections under a note per notebook so the original hierarchy is preserved. Keyed by
-    // the OneNote notebook id rather than the title, so notebooks that happen to share a title stay apart.
-    const notebookNotes = new Map<string, string>();
+    // Recreate the OneNote hierarchy as folder notes: a folder per notebook, then a folder per section
+    // group on the path down to the section, then the section itself. Folders are keyed by their OneNote
+    // id (globally unique) so a notebook/group shared by several selected sections is created once, and
+    // notebooks/groups that happen to share a title stay apart.
+    const folderNotes = new Map<string, string>();
+
+    const ensureFolder = (parentId: string, ref: OneNoteFolderRef, iconClass: string) => {
+        let noteId = folderNotes.get(ref.id);
+        if (!noteId) {
+            const folder = createFolder(parentId, ref.title);
+            folder.addLabel("iconClass", iconClass);
+            applyOriginalDates(folder, ref.createdDateTime, ref.lastModifiedDateTime);
+            noteId = folder.noteId;
+            folderNotes.set(ref.id, noteId);
+        }
+        return noteId;
+    };
+
     for (const section of sections) {
-        let notebookNoteId = notebookNotes.get(section.notebookId);
-        if (!notebookNoteId) {
-            const notebookNote = createFolder(rootNote.noteId, section.notebookTitle);
-            notebookNote.addLabel("iconClass", "bx bx-book");
-            applyOriginalDates(notebookNote, section.notebookCreatedDateTime, section.notebookLastModifiedDateTime);
-            notebookNoteId = notebookNote.noteId;
-            notebookNotes.set(section.notebookId, notebookNoteId);
+        const notebookRef: OneNoteFolderRef = { id: section.notebookId, title: section.notebookTitle, createdDateTime: section.notebookCreatedDateTime, lastModifiedDateTime: section.notebookLastModifiedDateTime };
+        let containerNoteId = ensureFolder(rootNote.noteId, notebookRef, "bx bx-book");
+        for (const group of section.groupPath) {
+            containerNoteId = ensureFolder(containerNoteId, group, "bx bx-folder");
         }
 
-        const sectionNote = createFolder(notebookNoteId, section.title);
+        const sectionNote = createFolder(containerNoteId, section.title);
         applyOriginalDates(sectionNote, section.createdDateTime, section.lastModifiedDateTime);
 
         // OneNote pages carry an indentation level (subpages); preserve it by parenting each page under

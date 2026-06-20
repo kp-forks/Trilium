@@ -22,12 +22,30 @@ export interface OneNoteSection {
     lastModifiedDateTime?: string;
 }
 
+export interface OneNoteSectionGroup {
+    id: string;
+    title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
+    sections: OneNoteSection[];
+    sectionGroups: OneNoteSectionGroup[];
+}
+
 export interface OneNoteNotebook {
     id: string;
     title: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
     sections: OneNoteSection[];
+    sectionGroups: OneNoteSectionGroup[];
+}
+
+/** Mirrors `OneNoteFolderRef` on the server. */
+export interface OneNoteFolderRef {
+    id: string;
+    title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
 }
 
 /** Mirrors `SectionSelection` on the server. */
@@ -36,6 +54,7 @@ export interface OneNoteSectionSelection {
     title: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
+    groupPath: OneNoteFolderRef[];
     notebookId: string;
     notebookTitle: string;
     notebookCreatedDateTime?: string;
@@ -72,3 +91,40 @@ export default {
     getNotebooks,
     runImport
 };
+
+/**
+ * Flattens the selected sections out of the notebook tree, tagging each with its notebook and the
+ * section-group path (notebook root → the section's immediate group) the server needs to recreate the
+ * folder nesting. Sections are emitted in tree order; section groups contribute structure only and are
+ * never selectable themselves.
+ */
+export function buildSectionSelections(notebooks: OneNoteNotebook[], selectedIds: Set<string>): OneNoteSectionSelection[] {
+    const selections: OneNoteSectionSelection[] = [];
+
+    const visit = (container: OneNoteNotebook | OneNoteSectionGroup, notebook: OneNoteNotebook, groupPath: OneNoteFolderRef[]) => {
+        for (const section of container.sections) {
+            if (selectedIds.has(section.id)) {
+                selections.push({
+                    id: section.id,
+                    title: section.title,
+                    createdDateTime: section.createdDateTime,
+                    lastModifiedDateTime: section.lastModifiedDateTime,
+                    groupPath,
+                    notebookId: notebook.id,
+                    notebookTitle: notebook.title,
+                    notebookCreatedDateTime: notebook.createdDateTime,
+                    notebookLastModifiedDateTime: notebook.lastModifiedDateTime
+                });
+            }
+        }
+        for (const group of container.sectionGroups) {
+            visit(group, notebook, [...groupPath, { id: group.id, title: group.title, createdDateTime: group.createdDateTime, lastModifiedDateTime: group.lastModifiedDateTime }]);
+        }
+    };
+
+    for (const notebook of notebooks) {
+        visit(notebook, notebook, []);
+    }
+
+    return selections;
+}

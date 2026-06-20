@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import onenoteImport, { type OneNoteAccount, type OneNoteNotebook, type OneNoteSectionSelection } from "../../../services/onenote_import.js";
+import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteNotebook, type OneNoteSectionGroup } from "../../../services/onenote_import.js";
 import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
 import Button from "../../react/Button.js";
@@ -97,23 +97,7 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
     }, []);
 
     const doImport = useCallback(async () => {
-        const sections: OneNoteSectionSelection[] = [];
-        for (const notebook of notebooks) {
-            for (const section of notebook.sections) {
-                if (selectedIds.has(section.id)) {
-                    sections.push({
-                        id: section.id,
-                        title: section.title,
-                        createdDateTime: section.createdDateTime,
-                        lastModifiedDateTime: section.lastModifiedDateTime,
-                        notebookId: notebook.id,
-                        notebookTitle: notebook.title,
-                        notebookCreatedDateTime: notebook.createdDateTime,
-                        notebookLastModifiedDateTime: notebook.lastModifiedDateTime
-                    });
-                }
-            }
-        }
+        const sections = buildSectionSelections(notebooks, selectedIds);
         if (!sections.length) {
             return;
         }
@@ -160,15 +144,7 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                             {notebooks.map((notebook) => (
                                 <div className="onenote-notebook" key={notebook.id}>
                                     <strong>{notebook.title}</strong>
-                                    {notebook.sections.map((section) => (
-                                        <FormCheckbox
-                                            key={section.id}
-                                            name={`onenote-section-${section.id}`}
-                                            label={section.title}
-                                            currentValue={selectedIds.has(section.id)}
-                                            onChange={(checked) => toggleSection(section.id, checked)}
-                                        />
-                                    ))}
+                                    <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
                                 </div>
                             ))}
                         </div>
@@ -191,6 +167,34 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
                 />
             </div>
         </div>
+    );
+}
+
+/** Renders a notebook's (or section group's) sections as checkboxes and recurses into nested section
+ *  groups, so the OneNote folder structure is mirrored in the picker. */
+function SectionTree({ container, selectedIds, onToggle }: {
+    container: OneNoteNotebook | OneNoteSectionGroup;
+    selectedIds: Set<string>;
+    onToggle: (id: string, checked: boolean) => void;
+}) {
+    return (
+        <>
+            {container.sections.map((section) => (
+                <FormCheckbox
+                    key={section.id}
+                    name={`onenote-section-${section.id}`}
+                    label={section.title}
+                    currentValue={selectedIds.has(section.id)}
+                    onChange={(checked) => onToggle(section.id, checked)}
+                />
+            ))}
+            {container.sectionGroups.map((group) => (
+                <div className="onenote-section-group" key={group.id}>
+                    <span className="onenote-section-group-title">{group.title}</span>
+                    <SectionTree container={group} selectedIds={selectedIds} onToggle={onToggle} />
+                </div>
+            ))}
+        </>
     );
 }
 
