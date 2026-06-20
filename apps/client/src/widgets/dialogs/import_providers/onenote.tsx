@@ -101,7 +101,14 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
         for (const notebook of notebooks) {
             for (const section of notebook.sections) {
                 if (selectedIds.has(section.id)) {
-                    sections.push({ id: section.id, title: section.title, notebookTitle: notebook.title });
+                    sections.push({
+                        id: section.id,
+                        title: section.title,
+                        notebookId: notebook.id,
+                        notebookTitle: notebook.title,
+                        notebookCreatedDateTime: notebook.createdDateTime,
+                        notebookLastModifiedDateTime: notebook.lastModifiedDateTime
+                    });
                 }
             }
         }
@@ -109,8 +116,9 @@ function OneNotePanel({ parentNoteId, closeDialog }: ImportProviderPanelProps) {
             return;
         }
 
-        // Close immediately and let the shared import toasts report progress and completion. The
-        // server request stays open for the whole import, so we don't await before closing.
+        // Close immediately and let the shared import toasts report progress, completion and any error.
+        // The request returns as soon as the server accepts it (the import runs in the background), so
+        // the only errors caught here are upfront ones like a lost connection or an invalid selection.
         closeDialog();
         try {
             await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug });

@@ -94,8 +94,12 @@ async function runImport(req: Request) {
     }
     becca.getNoteOrThrow(parentNoteId);
 
-    const noteId = await importer.importSelection({ accessToken, parentNoteId, sections, taskId, debug: !!debug });
-    return { noteId };
+    // Fire-and-forget: a large notebook can take far longer than the client's HTTP request timeout, so
+    // we return immediately and let the import report progress, completion and any error over the
+    // WebSocket (taskType "importNotes"). importSelection catches and reports its own failures, so the
+    // detached promise never rejects.
+    void importer.importSelection({ accessToken, parentNoteId, sections, taskId, debug: !!debug });
+    return {};
 }
 
 function getRedirectUri(req: Request): string {

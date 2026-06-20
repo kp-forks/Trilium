@@ -23,6 +23,8 @@ export interface OneNoteSection {
 export interface OneNoteNotebook {
     id: string;
     title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
     sections: OneNoteSection[];
 }
 
@@ -30,7 +32,10 @@ export interface OneNoteNotebook {
 export interface OneNoteSectionSelection {
     id: string;
     title: string;
+    notebookId: string;
     notebookTitle: string;
+    notebookCreatedDateTime?: string;
+    notebookLastModifiedDateTime?: string;
 }
 
 function getAuthUrl() {
@@ -49,8 +54,11 @@ function getNotebooks() {
     return server.get<{ notebooks: OneNoteNotebook[] }>("onenote-import/notebooks");
 }
 
+// Kicks off the import and returns as soon as the server has accepted it. The import itself runs in the
+// background on the server; progress, completion (navigation to the imported note) and any error all
+// arrive over the WebSocket via the shared "importNotes" toast handlers in import.ts.
 function runImport(payload: { parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean }) {
-    return server.post<{ noteId: string }>("onenote-import/import", payload);
+    return server.post<void>("onenote-import/import", payload);
 }
 
 export default {

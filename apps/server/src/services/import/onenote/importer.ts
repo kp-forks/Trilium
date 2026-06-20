@@ -5,7 +5,7 @@
  * client-side import toasts apply unchanged.
  */
 
-import { becca, binary_utils, type BNote, getLog, imageService, note_service as noteService, protected_session as protectedSession, TaskContext } from "@triliumnext/core";
+import { becca, binary_utils, type BNote, date_utils, getLog, imageService, note_service as noteService, protected_session as protectedSession, TaskContext } from "@triliumnext/core";
 import { parse } from "node-html-parser";
 
 import sql from "../../sql.js";
@@ -17,7 +17,12 @@ import { type LinkTarget, rewritePageLinks } from "./links.js";
 export interface SectionSelection {
     id: string;
     title: string;
+    notebookId: string;
     notebookTitle: string;
+    /** OneNote's notebook creation timestamp (ISO 8601), preserved on the imported notebook folder. */
+    notebookCreatedDateTime?: string;
+    /** OneNote's notebook last-modified timestamp (ISO 8601), preserved on the imported notebook folder. */
+    notebookLastModifiedDateTime?: string;
 }
 
 interface FetchedPage {
@@ -51,43 +56,62 @@ interface DownloadedResource {
 
 interface FetchedSection {
     title: string;
+    notebookId: string;
     notebookTitle: string;
+    notebookCreatedDateTime?: string;
+    notebookLastModifiedDateTime?: string;
     pages: FetchedPage[];
 }
 
-export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false }: { accessToken: string; parentNoteId: string; sections: SectionSelection[]; taskId: string; debug?: boolean }): Promise<string> {
+/**
+ * Runs the whole import in the background — the caller does not await it, because a large notebook can
+ * take far longer than the client's HTTP request timeout. Progress, completion and failure are all
+ * reported over the WebSocket via the "importNotes" TaskContext, so this never throws to the caller:
+ * any error is caught and surfaced as a task error toast instead.
+ */
+export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false }: { accessToken: string; parentNoteId: string; sections: SectionSelection[]; taskId: string; debug?: boolean }): Promise<void> {
     const taskContext = TaskContext.getInstance(taskId, "importNotes", { safeImport: true });
 
-    // Phase 1: pull everything over the network first, so note creation can run in a single
-    // synchronous transaction afterwards.
+    try {
+        // Phase 1: pull everything over the network first, so note creation can run in a single
+        // synchronous transaction afterwards.
 
-    // Enumerate every selected section's pages up front so the total page count is known before
-    // any content is fetched — this lets the client show a real progress bar rather than a bare count.
-    const sectionPages: { section: SectionSelection; pages: OneNotePage[] }[] = [];
-    for (const section of sections) {
-        sectionPages.push({ section, pages: await graph.listPages(accessToken, section.id) });
-    }
-    taskContext.setTotalCount(sectionPages.reduce((total, entry) => total + entry.pages.length, 0));
-
-    const fetched: FetchedSection[] = [];
-    for (const { section, pages } of sectionPages) {
-        const fetchedPages: FetchedPage[] = [];
-        for (const page of pages) {
-            const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
-            const html = converter.convertPageHtml(rawHtml);
-            const resources = await downloadPageResources(accessToken, html);
-            fetchedPages.push({ title: page.title, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
-            taskContext.increaseProgressCount();
+        // Enumerate every selected section's pages up front so the total page count is known before
+        // any content is fetched — this lets the client show a real progress bar rather than a bare count.
+        const sectionPages: { section: SectionSelection; pages: OneNotePage[] }[] = [];
+        for (const section of sections) {
+            sectionPages.push({ section, pages: await graph.listPages(accessToken, section.id) });
         }
-        fetched.push({ title: section.title, notebookTitle: section.notebookTitle, pages: fetchedPages });
+        taskContext.setTotalCount(sectionPages.reduce((total, entry) => total + entry.pages.length, 0));
+
+        const fetched: FetchedSection[] = [];
+        for (const { section, pages } of sectionPages) {
+            const fetchedPages: FetchedPage[] = [];
+            for (const page of pages) {
+                const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
+                const html = converter.convertPageHtml(rawHtml);
+                const resources = await downloadPageResources(accessToken, html);
+                fetchedPages.push({ title: page.title, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                taskContext.increaseProgressCount();
+            }
+            fetched.push({
+                title: section.title,
+                notebookId: section.notebookId,
+                notebookTitle: section.notebookTitle,
+                notebookCreatedDateTime: section.notebookCreatedDateTime,
+                notebookLastModifiedDateTime: section.notebookLastModifiedDateTime,
+                pages: fetchedPages
+            });
+        }
+
+        // Phase 2: create the note tree.
+        const rootNoteId = sql.transactional(() => createNotes(parentNoteId, fetched, debug));
+
+        taskContext.taskSucceeded({ parentNoteId, importedNoteId: rootNoteId });
+    } catch (e: unknown) {
+        getLog().error(`OneNote import failed: ${e instanceof Error ? (e.stack ?? e.message) : e}`);
+        taskContext.reportError(e instanceof Error ? e.message : String(e));
     }
-
-    // Phase 2: create the note tree.
-    const rootNoteId = sql.transactional(() => createNotes(parentNoteId, fetched, debug));
-
-    taskContext.taskSucceeded({ parentNoteId, importedNoteId: rootNoteId });
-
-    return rootNoteId;
 }
 
 function createNotes(parentNoteId: string, sections: FetchedSection[], debug: boolean): string {
@@ -104,13 +128,17 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
     const createdPages: { note: BNote; original: string; content: string; page: FetchedPage }[] = [];
     const targetByPageId = new Map<string, LinkTarget>();
 
-    // Group selected sections under a note per notebook so the original hierarchy is preserved.
+    // Group selected sections under a note per notebook so the original hierarchy is preserved. Keyed by
+    // the OneNote notebook id rather than the title, so notebooks that happen to share a title stay apart.
     const notebookNotes = new Map<string, string>();
     for (const section of sections) {
-        let notebookNoteId = notebookNotes.get(section.notebookTitle);
+        let notebookNoteId = notebookNotes.get(section.notebookId);
         if (!notebookNoteId) {
-            notebookNoteId = createFolder(rootNote.noteId, section.notebookTitle).noteId;
-            notebookNotes.set(section.notebookTitle, notebookNoteId);
+            const notebookNote = createFolder(rootNote.noteId, section.notebookTitle);
+            notebookNote.addLabel("iconClass", "bx bx-book");
+            applyOriginalDates(notebookNote, section.notebookCreatedDateTime, section.notebookLastModifiedDateTime);
+            notebookNoteId = notebookNote.noteId;
+            notebookNotes.set(section.notebookId, notebookNoteId);
         }
 
         const sectionNote = createFolder(notebookNoteId, section.title);
@@ -174,14 +202,22 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
 
         // Preserve OneNote's original timestamps. Must run after setContent, whose save would otherwise
         // re-stamp the modification date with "now".
-        const utcDateCreated = toUtcDbDate(page.createdDateTime);
-        const utcDateModified = toUtcDbDate(page.lastModifiedDateTime) ?? utcDateCreated;
-        if (utcDateCreated || utcDateModified) {
-            note.setDateCreatedAndModified(utcDateCreated, utcDateModified);
-        }
+        applyOriginalDates(note, page.createdDateTime, page.lastModifiedDateTime);
     }
 
     return rootNote.noteId;
+}
+
+/**
+ * Applies OneNote's original created/modified timestamps (ISO 8601) to an imported note, falling back
+ * to the creation date when the modification date is absent. A no-op when neither is available.
+ */
+function applyOriginalDates(note: BNote, createdDateTime?: string, lastModifiedDateTime?: string) {
+    const utcDateCreated = toUtcDbDate(createdDateTime);
+    const utcDateModified = toUtcDbDate(lastModifiedDateTime) ?? utcDateCreated;
+    if (utcDateCreated || utcDateModified) {
+        note.setDateCreatedAndModified(utcDateCreated, utcDateModified);
+    }
 }
 
 /** Converts a Graph ISO 8601 timestamp to Trilium's UTC DB format, or undefined if absent/unparseable. */

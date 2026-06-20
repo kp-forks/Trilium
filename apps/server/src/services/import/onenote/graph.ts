@@ -22,6 +22,8 @@ export interface OneNoteSection {
 export interface OneNoteNotebook {
     id: string;
     title: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
     sections: OneNoteSection[];
 }
 
@@ -44,40 +46,50 @@ export async function getAccount(accessToken: string): Promise<GraphAccount> {
 
 /**
  * Returns the notebooks with all of their sections, including those nested inside section groups
- * (flattened with a "Group / Subgroup / Section" title). Section groups nest arbitrarily and the
- * notebooks endpoint only reliably $expands one level of them, so instead of a deep nested $expand we
- * walk each section group's `sectionGroupsUrl` recursively (see collectSectionGroupSections).
+ * (flattened with a "Group / Subgroup / Section" title).
+ *
+ * The initial call expands each notebook's sections and whether it has any section groups, so the
+ * common case (no section groups) is a single round-trip. Only notebooks/groups that actually contain
+ * section groups follow their `sectionGroupsUrl`, and those follow-up requests run in parallel —
+ * section groups nest arbitrarily and the notebooks endpoint won't $expand them more than one level.
  */
 export async function listNotebooks(accessToken: string): Promise<OneNoteNotebook[]> {
-    const url = "/me/onenote/notebooks?$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName)&$orderby=displayName";
+    const url = "/me/onenote/notebooks?$select=id,displayName,createdDateTime,lastModifiedDateTime,sectionGroupsUrl&$expand=sections($select=id,displayName),sectionGroups($select=id)&$orderby=displayName";
     const notebooks = await graphGetAll<RawNotebook>(accessToken, url);
 
-    const result: OneNoteNotebook[] = [];
-    for (const notebook of notebooks) {
-        const sections: OneNoteSection[] = (notebook.sections ?? []).map((s) => ({ id: s.id, title: s.displayName }));
-        await collectSectionGroupSections(accessToken, notebook.sectionGroupsUrl, "", sections);
-        result.push({ id: notebook.id, title: notebook.displayName, sections });
-    }
-    return result;
+    return Promise.all(
+        notebooks.map(async (notebook) => {
+            const direct = (notebook.sections ?? []).map((s) => ({ id: s.id, title: s.displayName }));
+            const grouped = notebook.sectionGroups?.length && notebook.sectionGroupsUrl ? await sectionsFromSectionGroups(accessToken, notebook.sectionGroupsUrl, "") : [];
+            return {
+                id: notebook.id,
+                title: notebook.displayName,
+                createdDateTime: notebook.createdDateTime,
+                lastModifiedDateTime: notebook.lastModifiedDateTime,
+                sections: [...direct, ...grouped]
+            };
+        })
+    );
 }
 
 /**
- * Recursively walks the section groups under `sectionGroupsUrl` (a notebook's or section group's link),
- * appending every section to `out` with a "Group / Subgroup / Section" title. Following the link at each
- * level handles arbitrarily nested section groups, which a single one-level $expand misses entirely.
+ * Fetches the section groups under `sectionGroupsUrl` (a notebook's or section group's link) and
+ * returns their sections, recursing into nested groups. Sibling groups are fetched in parallel, and a
+ * further round-trip happens only for groups that actually have children.
  */
-async function collectSectionGroupSections(accessToken: string, sectionGroupsUrl: string | undefined, prefix: string, out: OneNoteSection[]) {
-    if (!sectionGroupsUrl) {
-        return;
-    }
-    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName)");
-    for (const group of await graphGetAll<RawSectionGroup>(accessToken, url)) {
-        const path = prefix ? `${prefix} / ${group.displayName}` : group.displayName;
-        for (const section of group.sections ?? []) {
-            out.push({ id: section.id, title: `${path} / ${section.displayName}` });
-        }
-        await collectSectionGroupSections(accessToken, group.sectionGroupsUrl, path, out);
-    }
+async function sectionsFromSectionGroups(accessToken: string, sectionGroupsUrl: string, prefix: string): Promise<OneNoteSection[]> {
+    const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,sectionGroupsUrl&$expand=sections($select=id,displayName),sectionGroups($select=id)");
+    const groups = await graphGetAll<RawSectionGroup>(accessToken, url);
+
+    const perGroup = await Promise.all(
+        groups.map(async (group) => {
+            const path = prefix ? `${prefix} / ${group.displayName}` : group.displayName;
+            const direct = (group.sections ?? []).map((s) => ({ id: s.id, title: `${path} / ${s.displayName}` }));
+            const nested = group.sectionGroups?.length && group.sectionGroupsUrl ? await sectionsFromSectionGroups(accessToken, group.sectionGroupsUrl, path) : [];
+            return [...direct, ...nested];
+        })
+    );
+    return perGroup.flat();
 }
 
 function appendQuery(url: string, query: string): string {
@@ -165,8 +177,12 @@ export async function getResource(accessToken: string, url: string): Promise<{ c
 interface RawNotebook {
     id: string;
     displayName: string;
+    createdDateTime?: string;
+    lastModifiedDateTime?: string;
     sectionGroupsUrl?: string;
     sections?: { id: string; displayName: string }[];
+    /** id-only, requested just to detect whether the notebook has section groups to follow. */
+    sectionGroups?: { id: string }[];
 }
 
 interface RawSectionGroup {
@@ -174,6 +190,8 @@ interface RawSectionGroup {
     displayName: string;
     sectionGroupsUrl?: string;
     sections?: { id: string; displayName: string }[];
+    /** id-only, requested just to detect whether the group has nested section groups to follow. */
+    sectionGroups?: { id: string }[];
 }
 
 interface RawPage {
