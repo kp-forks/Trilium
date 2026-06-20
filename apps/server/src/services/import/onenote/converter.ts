@@ -20,12 +20,21 @@ import { HTMLElement, parse } from "node-html-parser";
 /** Block containers whose direct <br> children are spacing artifacts rather than soft breaks. */
 const BLOCK_CONTAINERS = new Set(["body", "div", "section", "article", "blockquote", "td", "th", "ol", "ul", "dl"]);
 
+/** OneNote's highlight/font palette uses the 16 basic CSS color names; map them to hex (see below). */
+const NAMED_COLORS = new Map<string, string>([
+    ["yellow", "#ffff00"], ["lime", "#00ff00"], ["aqua", "#00ffff"], ["fuchsia", "#ff00ff"],
+    ["blue", "#0000ff"], ["red", "#ff0000"], ["navy", "#000080"], ["teal", "#008080"],
+    ["green", "#008000"], ["purple", "#800080"], ["maroon", "#800000"], ["olive", "#808000"],
+    ["gray", "#808080"], ["silver", "#c0c0c0"], ["black", "#000000"], ["white", "#ffffff"]
+]);
+
 export function convertPageHtml(rawHtml: string): string {
     const root = parse(rawHtml);
     const scope = root.querySelector("body") ?? root;
 
     convertTodoTags(scope);
     convertInlineFormatting(scope);
+    normalizeNamedColors(scope);
     removeEmptyListItems(scope);
     removeBlockLevelBreaks(scope);
 
@@ -94,6 +103,32 @@ function parseStyle(style: string): Map<string, string> {
         }
     }
     return declarations;
+}
+
+/**
+ * Rewrites CSS named color/background-color values (e.g. `yellow`) to hex so they pass the sanitizer's
+ * color allowlist (which only permits hex/rgb/hsl). The styles stay as <span style="color|
+ * background-color"> — the representation Trilium's FontColor / FontBackgroundColor editor plugins use.
+ */
+function normalizeNamedColors(scope: HTMLElement) {
+    for (const el of scope.querySelectorAll("[style]")) {
+        const style = parseStyle(el.getAttribute("style") ?? "");
+        let changed = false;
+        for (const property of ["color", "background-color"]) {
+            const hex = NAMED_COLORS.get(style.get(property) ?? "");
+            if (hex) {
+                style.set(property, hex);
+                changed = true;
+            }
+        }
+        if (changed) {
+            el.setAttribute("style", serializeStyle(style));
+        }
+    }
+}
+
+function serializeStyle(style: Map<string, string>): string {
+    return [...style].map(([property, value]) => `${property}:${value}`).join(";");
 }
 
 /** Drops list items that hold nothing but whitespace/<br> (OneNote's "exited the list" remnant). */

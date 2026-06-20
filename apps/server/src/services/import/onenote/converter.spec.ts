@@ -71,6 +71,18 @@ const SUPERSCRIPT_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): highlight and font color use CSS *named* colors, which the
+// sanitizer's colorRegex (hex/rgb/hsl only) would otherwise strip.
+const HIGHLIGHT_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="background-color:yellow">Yellow</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:white;background-color:fuchsia">Magenta</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:black;background-color:silver">Light Gray</span></p>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -123,5 +135,16 @@ describe("convertPageHtml", () => {
         expect(out).toContain("<sub>sub</sub>");
         expect(out).toContain("<sup>sup</sup>");
         expect(out).toContain("<del>strikethrough</del>");
+    });
+
+    it("maps OneNote named highlight/font colors to hex so they survive sanitization", () => {
+        const out = converter.convertPageHtml(HIGHLIGHT_SAMPLE);
+        expect(out).toContain("background-color:#ffff00"); // yellow
+        expect(out).toContain("color:#ffffff"); // white
+        expect(out).toContain("background-color:#ff00ff"); // fuchsia
+        expect(out).toContain("color:#000000"); // black
+        expect(out).toContain("background-color:#c0c0c0"); // silver
+        expect(out).toContain("Yellow");
+        expect(out).toContain("Magenta");
     });
 });
