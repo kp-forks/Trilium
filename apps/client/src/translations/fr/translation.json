@@ -1041,7 +1041,10 @@
   "book": {
     "no_children_help": "Cette collection ne contient pas de notes enfants, il n'y a donc rien à afficher.",
     "drag_locked_title": "Edition verrouillée",
-    "drag_locked_message": "Le glisser-déposer n'est pas autorisé car l'édition de cette collection est verrouillé."
+    "drag_locked_message": "Le glisser-déposer n'est pas autorisé car l'édition de cette collection est verrouillé.",
+    "archived_notes_hidden_one": "Une note archivée a été copiée ici mais reste cachée jusqu'à que vous activez \"Voir les notes archivées\".",
+    "archived_notes_hidden_many": "{{count}} notes archivées ont été copiées mais reste cachées jusqu'à que vous activez \"Voir les notes archivées\".",
+    "archived_notes_hidden_other": "{{count}} notes archivées ont été copiées mais reste cachées jusqu'à que vous activez \"Voir les notes archivées\"."
   },
   "editable_code": {
     "placeholder": "Saisir le contenu de votre note de code ici..."
@@ -1275,7 +1278,8 @@
     "erase_unused_attachments_now": "Effacer immédiatement les pièces jointes inutilisées",
     "unused_attachments_erased": "Les pièces jointes inutilisées ont été effacées.",
     "description": "Les pièces jointes qui ne sont plus référencées par aucune note sont considérées comme inutilisées et peuvent être automatiquement effacées après un certain délai.",
-    "erase_attachments_after_description": "Délai avant l'effacement définitif des pièces jointes inutilisées."
+    "erase_attachments_after_description": "Délai avant l'effacement définitif des pièces jointes inutilisées.",
+    "erase_now_button": "Supprimer maintenant"
   },
   "network_connections": {
     "network_connections_title": "Réseau",
@@ -1414,7 +1418,8 @@
     "delete_token": "Supprimer/désactiver ce token",
     "rename_token_title": "Renommer le jeton",
     "rename_token_message": "Veuillez saisir le nom du nouveau jeton",
-    "delete_token_confirmation": "Êtes-vous sûr de vouloir supprimer le jeton ETAPI « {{name}} » ?"
+    "delete_token_confirmation": "Êtes-vous sûr de vouloir supprimer le jeton ETAPI « {{name}} » ?",
+    "no_tokens": "Il n'y a pas encore de jetons."
   },
   "options_widget": {
     "options_status": "Statut des options",
@@ -1451,7 +1456,11 @@
     "reload_app": "Recharger l'application pour appliquer les modifications",
     "set_all_to_default": "Réinitialiser aux valeurs par défaut",
     "confirm_reset": "Voulez-vous vraiment réinitialiser tous les raccourcis clavier par défaut ?",
-    "no_results": "Aucun raccourci correspondant à '{{filter}}'"
+    "no_results": "Aucun raccourci correspondant à '{{filter}}'",
+    "modified_from_default": "Ce raccourci a été changé de son paramètre défaut.",
+    "remove_shortcut": "Enlever ce raccourci",
+    "press_keys": "Appuyer sur des touches…",
+    "recording_toast": "Appuyer sur une combinaison de touches pour l'assigner, ou Echap pour annuler."
   },
   "spellcheck": {
     "title": "Vérification orthographique",
@@ -1907,7 +1916,31 @@
     "oauth_description": "OpenID est un moyen standardisé de vous connecter à des sites web avec un compte d'un autre service, comme Google, afin de vérifier votre identité. L'émetteur par défaut est Google, mais vous pouvez le modifier pour n'importe quel autre fournisseur OpenID. Consultez <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">ici</a> pour plus d'informations. Suivez ces <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">instructions</a> pour configurer un service OpenID via Google.",
     "oauth_missing_vars": "Paramètres manquants : {{-variables}}",
     "oauth_user_account": "Compte utilisateur: ",
-    "oauth_user_not_logged_in": "Pas connecté !"
+    "oauth_user_not_logged_in": "Pas connecté !",
+    "signin_local": "Mot de passe local (optionnel avec l'authentification à 2 facteurs)",
+    "totp_setup_description": "Génère un code basé sur le temps d'une application d'authentification comme votre second facteur. Vous allez scanner un QR code et confirmer un code pour finir.",
+    "totp_enroll_step1_title": "1. Ajouter le compte à votre application d'authentification",
+    "totp_enroll_step2_title": "2. Entrer le code de vérification",
+    "totp_enroll_scan": "Scanner ce QR code :",
+    "totp_enroll_secret_label": "Ne peut pas le scanner ? Entre ce code manuellement",
+    "totp_enroll_code_label": "Code de vérification",
+    "totp_enroll_code_placeholder": "000000",
+    "totp_enroll_verify": "Vérifier & continuer",
+    "totp_enroll_cancel": "Annuler",
+    "totp_enroll_invalid_code": "Ce code ne correspond pas. Vérifiez si l'horloge de votre appareil est correct et entrez le dernier code.",
+    "totp_section_title": "Authentification à 2 facteurs",
+    "totp_status_active": "Actif",
+    "totp_status_inactive": "Inactif",
+    "totp_remove_label": "Enlever l'authentification à 2 facteurs",
+    "recovery_keys_remaining": "{{remaining}} de {{total}} restant. Ne peut pas être revu, seulement remplacé.",
+    "oauth_status_connected": "Connecté",
+    "oauth_status_not_connected": "Non Connecté",
+    "oauth_status_not_configured": "Non configuré",
+    "oauth_not_enrolled_title": "Pas de compte connecté",
+    "oauth_connect_label": "Connecter un compte",
+    "oauth_disconnect_label": "Déconnecter du compte",
+    "oauth_connect_button": "Se connecter au compte",
+    "oauth_account_unknown": "votre compte"
   },
   "modal": {
     "close": "Fermer",
@@ -2151,7 +2184,11 @@
     "previous-video": "Vidéo précédente : {{- title}}",
     "next-video": "Vidéo suivante : {{- title}}",
     "previous-audio": "Audio précédent : {{- title}}",
-    "next-audio": "Audio suivant : {{- title}}"
+    "next-audio": "Audio suivant : {{- title}}",
+    "play-mode-title": "Jouer le mode : {{mode}}",
+    "play-mode-once": "Jouer une fois",
+    "play-mode-loop": "Boucle",
+    "play-mode-next": "Jouer le prochain"
   },
   "render": {
     "setup_title": "Afficher du HTML personnalisé ou Preact JSX dans cette note",
@@ -2770,7 +2807,10 @@
     "server_config_hint": "Ajoutez la ligne suivante à votre fichier config.ini :",
     "server_env_hint": "Ou définissez la variable d'environnement suivante :",
     "restart_required": "Un redémarrage est nécessaire pour appliquer ce changement.",
-    "restart_now": "Redémarrer l'application maintenant"
+    "restart_now": "Redémarrer l'application maintenant",
+    "lan_access_title": "Accès réseau",
+    "lan_access_section_description": "Par défault l'application d'ordinateur accepte seulement les connections de cet ordinateur. Autoriser l'accès depuis votre réseau local pour que les autres appareils puissent s'y connecter — par exemple pour synchroniser depuis un autre appareil. Seulement activé sur les réseaux vous faites confiance.",
+    "lan_access_label": "Autoriser les connections des autres appareils"
   },
   "snippet_badge": {
     "label": "Extrait {{type}}",
@@ -2788,6 +2828,21 @@
     "disconnect": "Déconnecter",
     "load_failed": "N'a pas pu charger vos cahiers OneNote.",
     "no_notebooks": "Pas de cahiers n'ont été trouvé dans ce compte.",
-    "select_sections": "Selectionner les sections à importer :"
+    "select_sections": "Selectionner les sections à importer :",
+    "name": "OneNote",
+    "description": "Importer des cahiers, sections et pages de votre compte OneNote.",
+    "connect_description": "Connectez-vous avec votre compte Microsoft pour importer vos cahiers OneNote.",
+    "connect": "Connectez-vous avec Microsoft"
+  },
+  "split_editor": {
+    "show_details": "Montrer les détails"
+  },
+  "desktop": {
+    "web_placeholder": "Ces options s'appliquent seulement pour les constructions d'ordinateurs."
+  },
+  "startup": {
+    "title": "Démarrage",
+    "launch_on_startup": "Lancer au démarrage",
+    "launch_on_startup_description": "Ouvrir Trilium automatiquement quand vous vous connectez dans votre ordinateur."
   }
 }
