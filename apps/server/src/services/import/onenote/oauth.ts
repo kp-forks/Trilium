@@ -6,10 +6,10 @@
  * the Trilium user (OIDC), whereas this one authorizes the app to call the Graph API on the user's
  * behalf and therefore needs to keep (and refresh) the resulting access/refresh tokens.
  *
- * It is a PUBLIC client (no client secret), so PKCE is mandatory. Register an app of type
- * "Mobile and desktop applications" in the Microsoft Entra admin center, allow personal + work/school
- * accounts, add the redirect URI shown in the dialog, grant delegated Graph permissions
- * (Notes.Read, User.Read, offline_access), and expose its client id via TRILIUM_ONENOTE_CLIENT_ID.
+ * It is a PUBLIC client (no client secret), so PKCE is mandatory. The backing app registration is of
+ * type "Mobile and desktop applications" in the Microsoft Entra admin center, allows personal +
+ * work/school accounts, and grants delegated Graph permissions (Notes.Read, User.Read,
+ * offline_access). Its client id is a public identifier (see getClientId), so it is hardcoded.
  */
 
 import { createHash, randomBytes } from "node:crypto";
@@ -35,9 +35,13 @@ export interface Pkce {
     challenge: string;
 }
 
-/** The public client id of the registered Microsoft Entra app, or null if not configured. */
-export function getClientId(): string | null {
-    return process.env.TRILIUM_ONENOTE_CLIENT_ID || null;
+/**
+ * The public client id of the registered Microsoft Entra app. A public-client (PKCE) client id is not
+ * a secret — the flow is protected by PKCE, not by hiding this value — so it is hardcoded, the same
+ * way other open-source apps (e.g. Obsidian's OneNote importer) ship theirs.
+ */
+export function getClientId(): string {
+    return "47e34695-b922-4c23-8519-303fa39284c8";
 }
 
 export function generatePkce(): Pkce {

@@ -20,10 +20,6 @@ import oauth from "../../services/import/onenote/oauth.js";
 
 function getAuthUrl(req: Request) {
     const clientId = oauth.getClientId();
-    if (!clientId) {
-        return [400, "OneNote import is not configured. Set the TRILIUM_ONENOTE_CLIENT_ID environment variable to the client id of a registered Microsoft Entra application."];
-    }
-
     const { verifier, challenge } = oauth.generatePkce();
     const state = oauth.generateState();
     const redirectUri = getRedirectUri(req);
@@ -48,10 +44,6 @@ async function callback(req: Request, res: Response) {
         }
 
         const clientId = oauth.getClientId();
-        if (!clientId) {
-            return sendHtml(res, "OneNote import is not configured on the server.");
-        }
-
         const tokens = await oauth.exchangeCodeForToken({ clientId, code, verifier: pending.verifier, redirectUri: pending.redirectUri });
         const account = await graph.getAccount(tokens.access_token);
 
@@ -122,9 +114,8 @@ async function getValidAccessToken(req: Request): Promise<string | null> {
         return session.accessToken;
     }
 
-    const clientId = oauth.getClientId();
-    if (session.refreshToken && clientId) {
-        const tokens = await oauth.refreshAccessToken({ clientId, refreshToken: session.refreshToken });
+    if (session.refreshToken) {
+        const tokens = await oauth.refreshAccessToken({ clientId: oauth.getClientId(), refreshToken: session.refreshToken });
         session.accessToken = tokens.access_token;
         session.refreshToken = tokens.refresh_token ?? session.refreshToken;
         session.expiresAt = Date.now() + tokens.expires_in * 1000;
