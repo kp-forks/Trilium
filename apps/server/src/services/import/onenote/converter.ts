@@ -32,6 +32,7 @@ export function convertPageHtml(rawHtml: string): string {
     const root = parse(rawHtml);
     const scope = root.querySelector("body") ?? root;
 
+    sortPositionedOutlines(scope);
     convertTodoTags(scope);
     convertInlineFormatting(scope);
     normalizeNamedColors(scope);
@@ -39,6 +40,30 @@ export function convertPageHtml(rawHtml: string): string {
     removeBlockLevelBreaks(scope);
 
     return sanitize.sanitizeHtml(scope.innerHTML);
+}
+
+/**
+ * A OneNote page is a free-form canvas of absolutely-positioned text boxes (the top-level outline
+ * <div>s). Their document order need not match their visual order, so reorder them top-to-bottom then
+ * left-to-right to linearize the page into a sensible reading order. A no-op for the common
+ * single-outline page.
+ */
+function sortPositionedOutlines(scope: HTMLElement) {
+    const outlines = scope.childNodes.filter(
+        (node): node is HTMLElement =>
+            node instanceof HTMLElement && node.tagName?.toLowerCase() === "div" && parseStyle(node.getAttribute("style") ?? "").has("position")
+    );
+    if (outlines.length < 2) {
+        return;
+    }
+
+    const coord = (el: HTMLElement, property: string) => parseFloat(parseStyle(el.getAttribute("style") ?? "").get(property) ?? "") || 0;
+    const sorted = [...outlines].sort((a, b) => coord(a, "top") - coord(b, "top") || coord(a, "left") - coord(b, "left"));
+
+    for (const outline of sorted) {
+        outline.remove();
+        scope.appendChild(outline);
+    }
 }
 
 /**

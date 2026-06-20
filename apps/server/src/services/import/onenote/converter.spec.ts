@@ -116,6 +116,25 @@ const TAGS_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): a free-form page with four absolutely-positioned text boxes
+// whose document order differs from their visual (top-to-bottom) reading order.
+const ALIGNMENT_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:512px;top:210px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">The quick</p>
+        </div>
+        <div style="position:absolute;left:318px;top:333px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">Brown fox</p>
+        </div>
+        <div style="position:absolute;left:579px;top:441px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">Jumps over the lazy dog</p>
+        </div>
+        <div style="position:absolute;left:222px;top:277px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">And then it jumps again.</p>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -145,6 +164,17 @@ describe("convertPageHtml", () => {
     it("keeps genuine soft line breaks inside a paragraph", () => {
         const out = converter.convertPageHtml(`<body><p>line one<br />line two</p></body>`);
         expect(parse(out).querySelectorAll("br")).toHaveLength(1);
+    });
+
+    it("orders absolutely-positioned text boxes by position (top, then left)", () => {
+        const out = converter.convertPageHtml(ALIGNMENT_SAMPLE);
+        const paragraphs = parse(out).querySelectorAll("p").map((p) => p.textContent.trim());
+        expect(paragraphs).toEqual([
+            "The quick",
+            "And then it jumps again.",
+            "Brown fox",
+            "Jumps over the lazy dog"
+        ]);
     });
 
     it("converts OneNote to-do tags into a Trilium task list", () => {
