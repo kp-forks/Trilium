@@ -61,6 +61,16 @@ const FORMATTING_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): subscript/superscript are real <sub>/<sup> tags, while
+// strikethrough is carried as a text-decoration inline style.
+const SUPERSCRIPT_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">Normal <sub>sub</sub> <sup>sup</sup> <span style="text-decoration:line-through">strikethrough</span></p>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -106,5 +116,12 @@ describe("convertPageHtml", () => {
         expect(out).toContain("<strong><em>Bold and italic text.</em></strong>");
         expect(out).toContain("<strong><u>Bold and underline text</u></strong>");
         expect(out).toContain("<strong><em><u>Bold, italic and underline text</u></em></strong>");
+    });
+
+    it("preserves superscript/subscript and converts strikethrough", () => {
+        const out = converter.convertPageHtml(SUPERSCRIPT_SAMPLE);
+        expect(out).toContain("<sub>sub</sub>");
+        expect(out).toContain("<sup>sup</sup>");
+        expect(out).toContain("<del>strikethrough</del>");
     });
 });

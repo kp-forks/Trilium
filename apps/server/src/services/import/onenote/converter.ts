@@ -45,9 +45,10 @@ function convertTodoTags(scope: HTMLElement) {
 }
 
 /**
- * OneNote carries bold/italic/underline as inline styles (`font-weight:bold`, `font-style:italic`,
- * `text-decoration:underline`), which the sanitizer strips. Wrap the styled element's content in the
- * equivalent semantic tags (which survive sanitization) so the formatting is preserved.
+ * OneNote carries bold/italic/underline/strikethrough as inline styles (`font-weight:bold`,
+ * `font-style:italic`, `text-decoration:underline`/`line-through`), which the sanitizer strips. Wrap
+ * the styled element's content in the equivalent semantic tags (which survive sanitization) so the
+ * formatting is preserved.
  */
 function convertInlineFormatting(scope: HTMLElement) {
     for (const el of scope.querySelectorAll("[style]")) {
@@ -66,6 +67,11 @@ function convertInlineFormatting(scope: HTMLElement) {
         if (/text-decoration\s*:[^;]*underline/i.test(style)) {
             open.push("<u>");
             close.unshift("</u>");
+        }
+        // Trilium's editor represents strikethrough as <del> (see ckeditor5 StrikethroughAsDel), not <s>.
+        if (/text-decoration\s*:[^;]*line-through/i.test(style)) {
+            open.push("<del>");
+            close.unshift("</del>");
         }
 
         if (open.length > 0) {
