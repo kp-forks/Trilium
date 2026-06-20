@@ -137,7 +137,6 @@ ws.subscribeToMessages(async (message) => {
     function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
         return {
             id,
-            title: t("export.export_status"),
             message,
             icon: "export"
         };

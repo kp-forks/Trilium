@@ -138,7 +138,6 @@
     "export_type_single": "Only this note without its descendants",
     "export": "Export",
     "choose_export_type": "Choose export type first please",
-    "export_status": "Export status",
     "export_in_progress": "Export in progress: {{progressCount}}",
     "export_finished_successfully": "Export finished successfully.",
     "format_pdf": "PDF - for printing or sharing purposes.",
@@ -1242,9 +1241,7 @@
     "protecting-finished-successfully": "Protecting finished successfully.",
     "unprotecting-finished-successfully": "Unprotecting finished successfully.",
     "protecting-in-progress": "Protecting in progress: {{count}}",
-    "unprotecting-in-progress-count": "Unprotecting in progress: {{count}}",
-    "protecting-title": "Protecting status",
-    "unprotecting-title": "Unprotecting status"
+    "unprotecting-in-progress-count": "Unprotecting in progress: {{count}}"
   },
   "relation_map": {
     "remove_note": "Remove note",
@@ -2201,7 +2198,6 @@
   },
   "branches": {
     "cannot-move-notes-here": "Cannot move notes here.",
-    "delete-status": "Delete status",
     "delete-notes-in-progress": "Delete notes in progress: {{count}}",
     "delete-finished-successfully": "Delete finished successfully.",
     "undeleting-notes-in-progress": "Undeleting notes in progress: {{count}}",
