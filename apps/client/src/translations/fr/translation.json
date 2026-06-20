@@ -223,7 +223,6 @@
       "placeholder": "Saisir les balises HTML, une par ligne",
       "reset_button": "Réinitialiser à la liste par défaut"
     },
-    "import-status": "Statut de l'importation",
     "in-progress": "Importation en cours : {{progress}}",
     "successful": "Importation terminée avec succès.",
     "importZipRecommendation": "Lors de l'importation d'un fichier ZIP, la hiérarchie des notes reflétera la structure des sous-répertoires au sein de l'archive.",

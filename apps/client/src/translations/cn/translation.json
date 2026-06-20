@@ -221,7 +221,6 @@
       "placeholder": "输入 HTML 标签，每行一个",
       "reset_button": "重置为默认列表"
     },
-    "import-status": "导入状态",
     "in-progress": "导入进行中：{{progress}}",
     "successful": "导入成功完成。",
     "importZipRecommendation": "导入 ZIP 文件时，笔记层级将反映压缩文件内的子目录结构。",

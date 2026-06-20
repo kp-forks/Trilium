@@ -425,7 +425,6 @@
     "options": "Opcje",
     "shrinkImages": "Zmniejsz obrazy",
     "safeImport": "Bezpieczny import",
-    "import-status": "Status importu",
     "in-progress": "Import w toku: {{progress}}",
     "successful": "Import zakończony pomyślnie.",
     "safeImportTooltip": "Pliki eksportu <code>.zip</code> Trilium mogą zawierać skrypty wykonywalne, które mogą mieć szkodliwe działanie. Bezpieczny import dezaktywuje automatyczne wykonywanie wszystkich zaimportowanych skryptów. Odznacz \"Bezpieczny import\" tylko wtedy, gdy importowane archiwum ma zawierać skrypty i całkowicie ufasz zawartości pliku importu.",

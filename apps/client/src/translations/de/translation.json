@@ -222,7 +222,6 @@
       "placeholder": "HTML tags eintragen, pro Zeile nur einer pro Zeile",
       "reset_button": "Zur Standardliste zurücksetzen"
     },
-    "import-status": "Importstatus",
     "in-progress": "Import läuft: {{progress}}",
     "successful": "Import erfolgreich abgeschlossen.",
     "importZipRecommendation": "Beim Import einer ZIP-Datei wird die Notizhierarchie aus der Ordnerstruktur im Archiv übernommen.",

@@ -193,7 +193,6 @@
       "placeholder": "Zadejte HTML tagy, jeden na řádek",
       "reset_button": "Obnovit do výchozího seznamu"
     },
-    "import-status": "Stav importu",
     "in-progress": "Import probíhá: {{progress}}",
     "successful": "Import byl úspěšně dokončen."
   },

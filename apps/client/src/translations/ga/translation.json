@@ -257,7 +257,6 @@
       "placeholder": "Cuir isteach clibeanna HTML, ceann amháin in aghaidh na líne",
       "reset_button": "Athshocraigh go dtí an Liosta Réamhshocraithe"
     },
-    "import-status": "Stádas allmhairithe",
     "in-progress": "Iompórtáil ar siúl: {{progress}}",
     "successful": "Críochnaíodh an t-allmhairiú go rathúil.",
     "spreadsheetImportedAsSpreadsheet": "Iompórtáil comhaid CSV agus Excel mar scarbhileoga in-eagarthóireachta seachas comhaid"

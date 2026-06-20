@@ -396,7 +396,6 @@
       "placeholder": "HTMLタグを1行に1つ入力",
       "reset_button": "リストをデフォルトにリセット"
     },
-    "import-status": "インポート状況",
     "in-progress": "インポート中: {{progress}}",
     "successful": "インポートは正常に終了しました。",
     "explodeArchives": "<code>.zip</code>, <code>.enex</code> および <code>.opml</code> アーカイブの内容を読み取ります。",

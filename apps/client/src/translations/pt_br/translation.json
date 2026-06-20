@@ -222,7 +222,6 @@
       "placeholder": "Digite as tags HTML, uma por linha",
       "reset_button": "Redefinir para lista padrão"
     },
-    "import-status": "Status da importação",
     "in-progress": "Importação em andamento: {{progress}}",
     "successful": "Importação concluída com sucesso.",
     "importZipRecommendation": "Ao importar um arquivo ZIP, a hierarquia de notas refletirá a estrutura de subdiretórios dentro do arquivo."

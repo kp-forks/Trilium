@@ -222,7 +222,6 @@
       "placeholder": "輸入 HTML 標籤，每行一個",
       "reset_button": "重設為預設列表"
     },
-    "import-status": "匯入狀態",
     "in-progress": "正在匯入：{{progress}}",
     "successful": "匯入成功。",
     "importZipRecommendation": "匯入 ZIP 檔案時，筆記層級將反映壓縮檔內的子目錄結構。"

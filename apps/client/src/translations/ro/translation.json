@@ -825,7 +825,6 @@
     "shrinkImagesTooltip": "<p>Dacă bifați această opțiune, Trilium va încerca să micșoreze imaginea importată prin scalarea și importarea ei, aspect ce poate afecta calitatea aparentă a imaginii. Dacă nu este bifat, imaginile vor fi importate fără nicio modificare.</p><p>Acest lucru nu se aplică la importuri de tip <code>.zip</code> cu metainformații deoarece se asumă că aceste fișiere sunt deja optimizate.</p>",
     "textImportedAsText": "Importă HTML, Markdown și TXT ca notițe de tip text dacă este neclar din metainformații",
     "failed": "Eroare la importare: {{message}}.",
-    "import-status": "Starea importului",
     "in-progress": "Import în curs: {{progress}}",
     "successful": "Import finalizat cu succes.",
     "html_import_tags": {

@@ -228,7 +228,6 @@
       "placeholder": "Masukkan tag HTML, satu per baris",
       "reset_button": "Atur Ulang ke Daftar Default"
     },
-    "import-status": "Status impor",
     "in-progress": "Impor sedang berlangsung: {{progress}}",
     "successful": "Impor selesai dengan sukses."
   },

@@ -221,7 +221,6 @@
       "placeholder": "Ingrese las etiquetas HTML, una por línea",
       "reset_button": "Restablecer a lista por defecto"
     },
-    "import-status": "Estado de importación",
     "in-progress": "Importación en progreso: {{progress}}",
     "successful": "Importación finalizada exitosamente.",
     "importZipRecommendation": "Al importar un archivo ZIP, la jerarquía de notas reflejará la estructura de subdirectorios dentro del archivo comprimido."

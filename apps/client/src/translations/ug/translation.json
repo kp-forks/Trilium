@@ -209,7 +209,6 @@
       "placeholder": "ھەر بىر قۇرغا بىر HTML بەلگىسىدىن كىرگۈزۈڭ",
       "reset_button": "ئەسلىدىكى تىزىملىككە ئەسلىگە قايتۇرۇش"
     },
-    "import-status": "كىرگۈزۈش ھالىتى",
     "in-progress": "ئەكىرىلىۋاتىدۇ: {{progress}}",
     "successful": "كىرگۈزۈش مۇۋەپپەقىيەتلىك تاماملاندى.",
     "explodeArchives": "<code>.zip</code>、<code>.enex</code> ۋە<code>.opml</code> ئارخىپ ھۆججەتلىرىنىڭ مەزمۇنىنى ئوقۇش.",

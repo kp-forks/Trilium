@@ -706,7 +706,6 @@
     "import": "استيراد",
     "safeImport": "أستيراد آمن",
     "shrinkImages": "تقليل حجم الصور",
-    "import-status": "حالة الاستبراد",
     "importIntoNote": "استيراد الى الملاحظة",
     "chooseImportFile": "اختر ملف الاستيراد",
     "failed": "فشل الاستيراد: {{messege}}.",

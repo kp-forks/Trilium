@@ -98,7 +98,6 @@
       "placeholder": "Her satıra bir tane gelecek şekilde HTML etiketlerini girin",
       "reset_button": "Varsayılan Listeye Sıfırla"
     },
-    "import-status": "İçe aktarma durumu",
     "in-progress": "İçe aktarma işlemi devam ediyor: {{progress}}",
     "successful": "İçe aktarma başarıyla tamamlandı."
   },

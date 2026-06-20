@@ -115,7 +115,6 @@
       "title": "HTML Tuonnin Tunnisteet",
       "placeholder": "Lisää HTML tunnisteet, yksi per rivi"
     },
-    "import-status": "Tuonnin tila",
     "in-progress": "Tuonti vaiheessa: {{progress}}",
     "successful": "Tuonti valmistui onnistuneesti."
   },
