@@ -103,6 +103,30 @@ const STYLES_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): the full font-size scale, from 8pt up to 72pt on an 11pt
+// base. OneNote carries each size as a `font-size:Npt` inline style on a <span>.
+const FONT_SIZES_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:131px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:8pt">Smallest (8)</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:9pt">Still small (9)</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:10pt">Size 10</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt">Size 11</p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:12pt">Size 12</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:14pt">Size 14</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:16pt">Size 16</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:18pt">Size 18</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:20pt">Size 20</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:24pt">Size 24</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:26pt">Size 26</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:28pt">Size 28</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:36pt">Size 36</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:48pt">Size 48</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="font-size:72pt">Size 72</span></p>
+        </div>
+    </body>
+</html>`;
+
 // Real OneNote source (debug-captured): to-do items are paragraphs tagged with data-tag="to-do" /
 // "to-do:completed", not list markup.
 const TAGS_SAMPLE = `<html lang="en-US">
@@ -238,9 +262,30 @@ describe("convertPageHtml", () => {
         expect(root.querySelector("cite")?.textContent).toContain("Citation");
     });
 
-    it("maps the Title style to text-huge and the Code style to <code>", () => {
+    it("maps OneNote font sizes onto CKEditor's tiny/small/big/huge scale", () => {
+        const out = converter.convertPageHtml(FONT_SIZES_SAMPLE);
+
+        // 8pt -> tiny, 9-10pt -> small.
+        expect(out).toContain(`<span class="text-tiny">Smallest (8)</span>`);
+        expect(out).toContain(`<span class="text-small">Still small (9)</span>`);
+        expect(out).toContain(`<span class="text-small">Size 10</span>`);
+
+        // 11-16pt stay at the base size (no size class wrap).
+        expect(out).toContain("Size 11");
+        for (const text of ["Size 11", "Size 12", "Size 14", "Size 16"]) {
+            expect(out).not.toMatch(new RegExp(`text-\\w+">${text}<`));
+        }
+
+        // 18-26pt -> big, 28pt and up -> huge.
+        expect(out).toContain(`<span class="text-big">Size 18</span>`);
+        expect(out).toContain(`<span class="text-big">Size 26</span>`);
+        expect(out).toContain(`<span class="text-huge">Size 28</span>`);
+        expect(out).toContain(`<span class="text-huge">Size 72</span>`);
+    });
+
+    it("maps the 20pt Title style to text-big and the Code style to <code>", () => {
         const out = converter.convertPageHtml(STYLES_SAMPLE);
-        expect(out).toContain(`<span class="text-huge">Title</span>`);
+        expect(out).toContain(`<span class="text-big">Title</span>`);
         expect(out).toContain("<code>Code</code>");
     });
 });

@@ -134,7 +134,7 @@ function convertInlineFormatting(scope: HTMLElement) {
         if ((style.get("font-family") ?? "").includes("consolas")) {
             wrap("code");
         }
-        // OneNote's "Title" style is an oversized font; map it to CKEditor's "huge" font-size class.
+        // OneNote carries explicit point sizes; map them onto CKEditor's tiny/small/big/huge scale.
         const sizeClass = fontSizeClass(style.get("font-size"), el);
         if (sizeClass) {
             open.push(`<span class="${sizeClass}">`);
@@ -148,8 +148,9 @@ function convertInlineFormatting(scope: HTMLElement) {
 }
 
 /**
- * Maps an oversized OneNote font-size to CKEditor's "huge" size class (the Title style is 20pt on an
- * 11pt base). Headings are skipped — their level already conveys size. Returns null otherwise.
+ * Maps an OneNote font-size onto CKEditor's named size scale, relative to the 11pt OneNote base:
+ * ≤8pt → tiny, 9-10pt → small, 11-16pt → base (null), 18-26pt → big, ≥28pt → huge. Headings are
+ * skipped — their level already conveys size. Returns null for the base band and unparseable values.
  */
 function fontSizeClass(value: string | undefined, el: HTMLElement): string | null {
     if (!value || /^h[1-6]$/.test(el.tagName?.toLowerCase() ?? "")) {
@@ -160,7 +161,16 @@ function fontSizeClass(value: string | undefined, el: HTMLElement): string | nul
         return null;
     }
     const points = match[2] === "px" ? parseFloat(match[1]) * 0.75 : parseFloat(match[1]);
-    return points >= 18 ? "text-huge" : null;
+    if (points < 9) {
+        return "text-tiny";
+    }
+    if (points < 11) {
+        return "text-small";
+    }
+    if (points < 18) {
+        return null;
+    }
+    return points < 28 ? "text-big" : "text-huge";
 }
 
 /** Parses an inline `style` attribute into a property→value map (both lowercased). */
