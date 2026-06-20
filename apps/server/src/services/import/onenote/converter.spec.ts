@@ -159,6 +159,38 @@ const ALIGNMENT_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): OneNote puts the list marker type on each <li> and wraps
+// item text in a margin-0 <p>. The marker type belongs on the <ul>/<ol> (CKEditor's representation),
+// and OneNote's lower-alpha/upper-alpha map to CKEditor's lower-latin/upper-latin.
+const LISTS_SAMPLE = `<html lang="en-US">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt">Normal:</p>
+            <br />
+            <ul>
+                <li><p style="margin-top:0pt;margin-bottom:0pt">Normal bullet</p>
+                <ul>
+                    <li style="list-style-type:circle"><p style="margin-top:0pt;margin-bottom:0pt">Sub-bullet</p></li>
+                </ul>
+                </li>
+            </ul>
+            <p style="margin-top:0pt;margin-bottom:0pt">Hollow:</p>
+            <ul>
+                <li style="list-style-type:circle">Hollow</li>
+            </ul>
+            <p style="margin-top:0pt;margin-bottom:0pt">Alpha:</p>
+            <ol>
+                <li value="1" style="list-style-type:lower-alpha">A</li>
+                <li style="list-style-type:lower-alpha">B</li>
+            </ol>
+            <p style="margin-top:0pt;margin-bottom:0pt">Roman:</p>
+            <ol>
+                <li value="1" style="list-style-type:upper-roman">A</li>
+            </ol>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -199,6 +231,25 @@ describe("convertPageHtml", () => {
             "Brown fox",
             "Jumps over the lazy dog"
         ]);
+    });
+
+    it("moves OneNote list marker types from <li> onto the list, mapping alpha to latin", () => {
+        const out = converter.convertPageHtml(LISTS_SAMPLE);
+        const root = parse(out);
+        const uls = root.querySelectorAll("ul"); // [Normal-top, Normal-nested, Hollow]
+        const ols = root.querySelectorAll("ol"); // [Alpha, Roman]
+
+        // Top-level list takes its marker from the first item; nested list drops it; default = no style.
+        expect(uls[0].getAttribute("style") ?? "").not.toContain("list-style-type"); // Normal (default)
+        expect(uls[1].getAttribute("style") ?? "").not.toContain("list-style-type"); // nested → dropped
+        expect(uls[2].getAttribute("style")).toContain("list-style-type:circle"); // Hollow
+        expect(ols[0].getAttribute("style")).toContain("list-style-type:lower-latin"); // lower-alpha → latin
+        expect(ols[1].getAttribute("style")).toContain("list-style-type:upper-roman");
+
+        // The per-item markers and the wrapping <p> are gone.
+        expect(root.querySelectorAll("li").every((li) => !(li.getAttribute("style") ?? "").includes("list-style-type"))).toBe(true);
+        expect(root.querySelectorAll("li p")).toHaveLength(0);
+        expect(out).toContain("Normal bullet");
     });
 
     it("converts OneNote to-do tags into a Trilium task list", () => {

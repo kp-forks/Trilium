@@ -12,6 +12,13 @@
  *
  * Still a first pass: images/attachments (served from authenticated Graph URLs) are not downloaded
  * yet, so embedded media will not render. See the summary for follow-up work.
+ *
+ * Known unrecoverable loss: paragraph indentation is not preserved. `margin-left`/`text-indent`/
+ * `padding-left` are not in the OneNote API's supported output-style set (only background-color,
+ * color, font-family, font-size, font-style, font-weight, text-decoration and text-align survive —
+ * see https://learn.microsoft.com/en-us/graph/onenote-input-output-html), so Graph emits every
+ * paragraph with identical `margin-top:0pt;margin-bottom:0pt` and the indent level never reaches us.
+ * No fetch option recovers it; the only indentation Graph keeps is list nesting (ol/ul/li).
  */
 
 import { sanitize } from "@triliumnext/core";
@@ -19,6 +26,9 @@ import { HTMLElement, parse } from "node-html-parser";
 
 /** Block containers whose direct <br> children are spacing artifacts rather than soft breaks. */
 const BLOCK_CONTAINERS = new Set(["body", "div", "section", "article", "blockquote", "td", "th", "ol", "ul", "dl"]);
+
+/** OneNote uses the CSS alpha keywords; CKEditor (and the sanitizer) use the latin equivalents. */
+const LIST_STYLE_MAP = new Map<string, string>([["lower-alpha", "lower-latin"], ["upper-alpha", "upper-latin"]]);
 
 /** OneNote's highlight/font palette uses the 16 basic CSS color names; map them to hex (see below). */
 const NAMED_COLORS = new Map<string, string>([
@@ -36,6 +46,8 @@ export function convertPageHtml(rawHtml: string): string {
     convertTodoTags(scope);
     convertInlineFormatting(scope);
     normalizeNamedColors(scope);
+    unwrapListItemParagraphs(scope);
+    normalizeListMarkers(scope);
     removeEmptyListItems(scope);
     removeBlockLevelBreaks(scope);
 
@@ -211,6 +223,50 @@ function normalizeNamedColors(scope: HTMLElement) {
 
 function serializeStyle(style: Map<string, string>): string {
     return [...style].map(([property, value]) => `${property}:${value}`).join(";");
+}
+
+/** Unwraps OneNote's margin-0 <p> wrappers inside <li> so item text sits directly in the <li>. */
+function unwrapListItemParagraphs(scope: HTMLElement) {
+    for (const li of scope.querySelectorAll("li")) {
+        for (const child of [...li.childNodes]) {
+            if (child instanceof HTMLElement && child.tagName?.toLowerCase() === "p") {
+                child.insertAdjacentHTML("beforebegin", child.innerHTML);
+                child.remove();
+            }
+        }
+    }
+}
+
+/**
+ * OneNote puts the list marker type on every <li> (e.g. list-style-type:circle / lower-alpha). CKEditor
+ * instead carries it once on the <ul>/<ol>, so move the first item's marker onto the (top-level) list,
+ * mapping lower-alpha/upper-alpha to CKEditor's lower-latin/upper-latin, and strip it from all items.
+ * Nested lists keep the default marker.
+ */
+function normalizeListMarkers(scope: HTMLElement) {
+    for (const list of scope.querySelectorAll("ul, ol")) {
+        const parent = list.parentNode;
+        const nested = parent instanceof HTMLElement && parent.tagName?.toLowerCase() === "li";
+        if (nested) {
+            continue;
+        }
+        const firstItem = list.childNodes.find((node): node is HTMLElement => node instanceof HTMLElement && node.tagName?.toLowerCase() === "li");
+        const marker = firstItem && parseStyle(firstItem.getAttribute("style") ?? "").get("list-style-type");
+        if (marker) {
+            list.setAttribute("style", `list-style-type:${LIST_STYLE_MAP.get(marker) ?? marker};`);
+        }
+    }
+
+    for (const li of scope.querySelectorAll("li")) {
+        const style = parseStyle(li.getAttribute("style") ?? "");
+        if (style.delete("list-style-type")) {
+            if (style.size === 0) {
+                li.removeAttribute("style");
+            } else {
+                li.setAttribute("style", serializeStyle(style));
+            }
+        }
+    }
 }
 
 /** Drops list items that hold nothing but whitespace/<br> (OneNote's "exited the list" remnant). */
