@@ -34,6 +34,8 @@ export interface OneNotePage {
     title: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
+    /** OneNote's indentation level in the page list: 0 for a top-level page, 1+ for a subpage. */
+    level: number;
     /** The page-id GUID OneNote uses in `onenote:` links to this page; used to resolve cross-page links. */
     pageId?: string;
 }
@@ -101,13 +103,14 @@ function appendQuery(url: string, query: string): string {
 export async function listPages(accessToken: string, sectionId: string): Promise<OneNotePage[]> {
     // `links` carries the page's own `onenote:` client URL, from which we recover the page-id GUID that
     // cross-page links reference (see links.ts).
-    const url = `/me/onenote/sections/${sectionId}/pages?$select=id,title,createdDateTime,lastModifiedDateTime,links&$orderby=order&pagelevel=true`;
+    const url = `/me/onenote/sections/${sectionId}/pages?$select=id,title,createdDateTime,lastModifiedDateTime,level,links&$orderby=order&pagelevel=true`;
     const raw = await graphGetAll<RawPage>(accessToken, url);
     return raw.map((p) => ({
         id: p.id,
         title: p.title || "Untitled",
         createdDateTime: p.createdDateTime,
         lastModifiedDateTime: p.lastModifiedDateTime,
+        level: p.level ?? 0,
         pageId: extractPageId(p.links?.oneNoteClientUrl?.href) ?? undefined
     }));
 }
@@ -201,6 +204,7 @@ interface RawPage {
     title?: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
+    level?: number;
     links?: { oneNoteClientUrl?: { href?: string } };
 }
 

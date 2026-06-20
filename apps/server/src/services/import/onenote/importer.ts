@@ -32,6 +32,8 @@ export interface SectionSelection {
 
 interface FetchedPage {
     title: string;
+    /** OneNote's indentation level in the page list: 0 for a top-level page, 1+ for a subpage. */
+    level: number;
     /** The OneNote page-id GUID, used to resolve cross-page links to the note created for this page. */
     pageId?: string;
     html: string;
@@ -98,7 +100,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
                 const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
                 const html = converter.convertPageHtml(rawHtml);
                 const resources = await downloadPageResources(accessToken, html);
-                fetchedPages.push({ title: page.title, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                fetchedPages.push({ title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
                 taskContext.increaseProgressCount();
             }
             fetched.push({
@@ -154,15 +156,23 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
         const sectionNote = createFolder(notebookNoteId, section.title);
         applyOriginalDates(sectionNote, section.createdDateTime, section.lastModifiedDateTime);
 
-        for (const page of section.pages) {
+        // OneNote pages carry an indentation level (subpages); preserve it by parenting each page under
+        // its OneNote parent page rather than flattening every page under the section. Pages arrive in
+        // display order (depth-first), so a page's parent always precedes it and already has a note.
+        const parentIndexByPage = resolveSubpageParents(section.pages.map((p) => p.level));
+        const pageNoteIds: string[] = [];
+
+        for (const [index, page] of section.pages.entries()) {
+            const parentIndex = parentIndexByPage[index];
             const { note: pageNote } = noteService.createNewNote({
-                parentNoteId: sectionNote.noteId,
+                parentNoteId: parentIndex >= 0 ? (pageNoteIds[parentIndex] ?? sectionNote.noteId) : sectionNote.noteId,
                 title: page.title,
                 content: page.html,
                 type: "text",
                 mime: "text/html",
                 isProtected
             });
+            pageNoteIds[index] = pageNote.noteId;
 
             // Resources and ink both need the page note to exist (attachments hang off it), so build
             // the per-page content now: swap Graph URLs for local attachment references, then append
@@ -217,6 +227,25 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
     }
 
     return rootNote.noteId;
+}
+
+/**
+ * Maps OneNote's flat, display-ordered page list (each page tagged with an indentation `level`) to a
+ * parent-child tree. Returns, for each page, the index of its parent page — the nearest preceding page
+ * exactly one level shallower — or -1 when the page is top-level and belongs directly under the section.
+ *
+ * OneNote orders pages depth-first, so a subpage always follows its parent; we track the most recent
+ * page seen at each level and discard deeper levels once we step back out, so siblings resolve to the
+ * same parent. A subpage whose expected parent level is missing (malformed input) falls back to -1.
+ */
+export function resolveSubpageParents(levels: number[]): number[] {
+    const lastIndexAtLevel: number[] = [];
+    return levels.map((level, index) => {
+        const parentIndex = level > 0 ? (lastIndexAtLevel[level - 1] ?? -1) : -1;
+        lastIndexAtLevel[level] = index;
+        lastIndexAtLevel.length = level + 1;
+        return parentIndex;
+    });
 }
 
 /**
