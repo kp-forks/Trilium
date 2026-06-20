@@ -21,6 +21,7 @@ import ws from "../../services/ws";
 import ClosePaneButton from "../buttons/close_pane_button";
 import CreatePaneButton from "../buttons/create_pane_button";
 import MovePaneButton from "../buttons/move_pane_button";
+import { isAlwaysFullWidthByType } from "../note_wrapper";
 import ActionButton from "../react/ActionButton";
 import Dropdown from "../react/Dropdown";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListHeader, FormListItem, FormListToggleableItem } from "../react/FormList";
@@ -234,6 +235,7 @@ function NoteBasicProperties({ note, focus }: {
     const [ isBookmarked, setIsBookmarked ] = useNoteBookmarkState(note);
     const [ isShared, switchShareState ] = useShareState(note);
     const [ isTemplate, setIsTemplate ] = useNoteLabelBoolean(note, "template");
+    const [ isFullContentWidth, setIsFullContentWidth ] = useNoteLabelBoolean(note, "fullContentWidth");
     const isProtected = useNoteProperty(note, "isProtected");
 
     useEffect(() => {
@@ -275,6 +277,13 @@ function NoteBasicProperties({ note, focus }: {
             helpPage="KC1HB96bqqHX"
             disabled={note?.noteId.startsWith("_options")}
         />
+        {!isAlwaysFullWidthByType(note) &&
+            <FormListToggleableItem
+                icon="bx bx-expand-horizontal"
+                title={t("full_content_width_switch.title")}
+                currentValue={isFullContentWidth} onChange={setIsFullContentWidth}
+            />
+        }
     </>;
 }
 
