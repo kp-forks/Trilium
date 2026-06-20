@@ -160,6 +160,15 @@ describe("importNotes ws handler", () => {
         expect(toast.progress).toBe(3 / 12);
     });
 
+    it("shows a generic 'starting' message (no bar) before anything is counted", async () => {
+        const tSpy = vi.spyOn(i18n, "t").mockImplementation(((key: string) => key) as typeof i18n.t);
+        await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 0 } as any);
+        const toast = (toastService.showPersistent as any).mock.calls[0][0];
+        expect(toast.progress).toBeUndefined();
+        expect(toast.message).toBe("import.starting");
+        tSpy.mockRestore();
+    });
+
     it("shows a success toast and navigates to the imported note when one is returned", async () => {
         await handler()({
             type: "taskSucceeded",

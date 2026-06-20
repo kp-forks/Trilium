@@ -67,17 +67,27 @@ function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
 }
 
 /**
- * Builds the persistent "import in progress" toast. When the task reported a total up front, it shows
- * an "X of N" message with a progress bar; otherwise it falls back to a bare running count.
+ * Builds the persistent "import in progress" toast:
+ *  - a total is known    → "Importing X of N" with a progress bar;
+ *  - some progress, no total → a bare running count;
+ *  - nothing counted yet (count 0, no total) → a generic indeterminate message, since "in progress: 0"
+ *    is meaningless while the importer is still working out how much there is to do.
  */
 function makeProgressToast(taskId: string, progressCount: number, totalCount?: number): ToastOptionsWithRequiredId {
     const hasTotal = typeof totalCount === "number" && totalCount > 0;
+    let message: string;
+    if (hasTotal) {
+        message = t("import.in-progress-with-total", { progress: progressCount, total: totalCount });
+    } else if (progressCount > 0) {
+        message = t("import.in-progress", { progress: progressCount });
+    } else {
+        message = t("import.starting");
+    }
+
     return {
         id: taskId,
         icon: "bx bx-loader-circle bx-spin",
-        message: hasTotal
-            ? t("import.in-progress-with-total", { progress: progressCount, total: totalCount })
-            : t("import.in-progress", { progress: progressCount }),
+        message,
         ...(hasTotal ? { progress: progressCount / totalCount } : {})
     };
 }

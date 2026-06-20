@@ -224,6 +224,7 @@
       "placeholder": "Enter HTML tags, one per line",
       "reset_button": "Reset to Default List"
     },
+    "starting": "Importing…",
     "in-progress": "Import in progress: {{progress}}",
     "in-progress-with-total": "Importing {{progress}} of {{total}}",
     "successful": "Import finished successfully."
