@@ -1,38 +1,65 @@
 /**
  * Converts a OneNote page (a full HTML document returned by the Graph API) into the HTML body that
- * Trilium stores for a text note.
+ * Trilium stores for a text note: structural normalization followed by sanitization.
  *
- * This is a deliberately minimal first pass: it extracts the document body and sanitizes it. The
- * Obsidian importer additionally rebuilds code blocks from Consolas-styled spans, converts MathML to
- * LaTeX, downloads attachments, and rasterizes ink to SVG — all of which are good future additions
- * but out of scope for this prototype. The OneNote "to-do" tags are converted here because they map
- * cleanly onto Trilium task-list checkboxes and are cheap to handle.
+ * Background on the normalization: OneNote's content model is paragraph-based (each Enter is a new
+ * <p>), but paragraphs render with zero spacing, and OneNote leans on bare <br> elements — including
+ * at the BLOCK level, as siblings of <p>/<ol>/<ul> — to create vertical gaps. CKEditor has no place
+ * for a block-level <br> (a soft break only lives inside a block) and provides its own inter-block
+ * spacing, so importing OneNote's <br>-based spacing verbatim produces doubled gaps and stray empty
+ * bullets. We therefore drop block-level <br> spacing and empty list items while preserving genuine
+ * in-paragraph soft breaks.
  *
- * NOTE: images and file attachments are referenced via authenticated Graph URLs and are NOT yet
- * downloaded, so embedded media will not render after import. See the summary for follow-up work.
+ * Still a first pass: text formatting carried as inline styles (e.g. font-weight:bold) is currently
+ * dropped by the sanitizer rather than converted to semantic tags, and images/attachments (served
+ * from authenticated Graph URLs) are not downloaded yet. See the summary for follow-up work.
  */
 
 import { sanitize } from "@triliumnext/core";
-import { parse } from "node-html-parser";
+import { HTMLElement, parse } from "node-html-parser";
+
+/** Block containers whose direct <br> children are spacing artifacts rather than soft breaks. */
+const BLOCK_CONTAINERS = new Set(["body", "div", "section", "article", "blockquote", "td", "th", "ol", "ul", "dl"]);
 
 export function convertPageHtml(rawHtml: string): string {
     const root = parse(rawHtml);
+    const scope = root.querySelector("body") ?? root;
 
-    convertTodoTags(root);
+    convertTodoTags(scope);
+    removeEmptyListItems(scope);
+    removeBlockLevelBreaks(scope);
 
-    const body = root.querySelector("body");
-    const inner = body ? body.innerHTML : rawHtml;
-
-    return sanitize.sanitizeHtml(inner);
+    return sanitize.sanitizeHtml(scope.innerHTML);
 }
 
 /** OneNote marks checkboxes with `data-tag="to-do"` / `"to-do:completed"`; render them as task items. */
-function convertTodoTags(root: ReturnType<typeof parse>) {
-    for (const el of root.querySelectorAll("[data-tag]")) {
+function convertTodoTags(scope: HTMLElement) {
+    for (const el of scope.querySelectorAll("[data-tag]")) {
         const tag = el.getAttribute("data-tag");
         if (tag === "to-do" || tag === "to-do:completed") {
             const checkbox = tag === "to-do:completed" ? "[x]" : "[ ]";
             el.set_content(`${checkbox} ${el.innerHTML}`);
+        }
+    }
+}
+
+/** Drops list items that hold nothing but whitespace/<br> (OneNote's "exited the list" remnant). */
+function removeEmptyListItems(scope: HTMLElement) {
+    for (const li of scope.querySelectorAll("li")) {
+        const hasText = li.textContent.trim().length > 0;
+        const hasNonBreakElement = li.querySelectorAll("*").some((el) => el.tagName?.toLowerCase() !== "br");
+        if (!hasText && !hasNonBreakElement) {
+            li.remove();
+        }
+    }
+}
+
+/** Removes <br> elements used as block-level spacing; soft breaks inside <p>/<span>/etc. are kept. */
+function removeBlockLevelBreaks(scope: HTMLElement) {
+    for (const br of scope.querySelectorAll("br")) {
+        const parent = br.parentNode;
+        if (parent instanceof HTMLElement && BLOCK_CONTAINERS.has(parent.tagName?.toLowerCase() ?? "")) {
+            br.remove();
         }
     }
 }
