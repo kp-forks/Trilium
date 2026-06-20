@@ -357,8 +357,12 @@ async function downloadPageResources(accessToken: string, pageTitle: string, htm
     return resources;
 }
 
-/** Caps how many page resources (images, attachments) are downloaded from Graph at once. */
-const RESOURCE_DOWNLOAD_CONCURRENCY = 6;
+/**
+ * Caps how many page resources (images, attachments) are downloaded from Graph at once. Kept low
+ * because the OneNote API throttles aggressively; the shared throttle gate in graph.ts handles bursts
+ * beyond this, but a smaller pool means fewer 429s to recover from in the first place.
+ */
+const RESOURCE_DOWNLOAD_CONCURRENCY = 4;
 
 /**
  * Maps `items` through `worker` with at most `limit` invocations in flight at once, preserving input

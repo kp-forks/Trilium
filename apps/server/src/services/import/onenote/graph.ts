@@ -16,23 +16,34 @@ const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 // be large and slow. Allow a generous per-request budget instead.
 const GRAPH_TIMEOUT_MS = 60_000;
 
-// Graph throttles aggressively under load (HTTP 429, occasionally 503). Retry those a few times,
-// honouring the Retry-After header when present, before giving up — otherwise a large import would
-// silently drop most of its pages/resources the moment Graph starts throttling.
-const MAX_RETRIES = 5;
+// Graph throttles aggressively under load (HTTP 429, occasionally 503). Retry those, honouring the
+// Retry-After header when present and falling back to exponential backoff, before giving up —
+// otherwise a large import would silently drop most of its pages/resources once throttling kicks in.
+const MAX_RETRIES = 8;
 const DEFAULT_RETRY_DELAY_MS = 2000;
 const MAX_RETRY_DELAY_MS = 30_000;
+
+// Shared throttle gate. Graph throttles per app/tenant, so a 429 on one request means every other
+// in-flight and subsequent request is being throttled too. Rather than each request independently
+// retrying — which just keeps hammering Graph and prolongs the throttle — a 429 pushes back a shared
+// "don't send until" timestamp that ALL requests wait on, so the whole pool backs off together.
+let throttledUntilMs = 0;
 
 /**
  * Fetches a Microsoft Graph URL through {@link safeFetch} so the request is hardened against SSRF —
  * pagination (`@odata.nextLink`) and resource URLs come from Graph responses and page HTML, so they
  * must not be trusted to point at the public Graph host. The bearer token is sent on every hop.
  *
- * Retries on throttling (429/503): Graph returns a Retry-After header we honour, falling back to an
- * exponential backoff when it is absent.
+ * Retries on throttling (429/503) via the shared {@link throttledUntilMs} gate, so concurrent
+ * requests pause together instead of dog-piling the throttle.
  */
 async function graphFetch(accessToken: string, url: string): Promise<Response> {
     for (let attempt = 0; ; attempt++) {
+        const gateWaitMs = throttledUntilMs - Date.now();
+        if (gateWaitMs > 0) {
+            await delay(gateWaitMs);
+        }
+
         const response = await safeFetch(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
             signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
@@ -42,11 +53,14 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
             return response;
         }
 
-        // Drain the throttled response so its connection is released before we wait and retry.
+        // Drain the throttled response so its connection is released before we back off.
         await response.body?.cancel();
+
+        // Extend the shared gate (Math.max: simultaneous 429s converge on one window rather than
+        // stacking). The wait itself happens at the top of the next iteration, shared across the pool.
         const waitMs = retryDelayMs(response.headers.get("Retry-After"), attempt);
-        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1}/${MAX_RETRIES} in ${waitMs}ms`);
-        await delay(waitMs);
+        throttledUntilMs = Math.max(throttledUntilMs, Date.now() + waitMs);
+        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1}/${MAX_RETRIES} after ${waitMs}ms`);
     }
 }
 
