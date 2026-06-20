@@ -12,7 +12,7 @@ import sql from "../../sql.js";
 import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
 import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
-import { rewritePageLinks } from "./links.js";
+import { type LinkTarget, rewritePageLinks } from "./links.js";
 
 export interface SectionSelection {
     id: string;
@@ -33,6 +33,10 @@ interface FetchedPage {
     inkSvg: string | null;
     /** Binary resources (images, file attachments) referenced by the page, downloaded up front. */
     resources: DownloadedResource[];
+    /** OneNote's page creation timestamp (ISO 8601), preserved on the imported note. */
+    createdDateTime?: string;
+    /** OneNote's last-modified timestamp (ISO 8601), preserved on the imported note. */
+    lastModifiedDateTime?: string;
 }
 
 interface DownloadedResource {
@@ -72,7 +76,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
             const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
             const html = converter.convertPageHtml(rawHtml);
             const resources = await downloadPageResources(accessToken, html);
-            fetchedPages.push({ title: page.title, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources });
+            fetchedPages.push({ title: page.title, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
             taskContext.increaseProgressCount();
         }
         fetched.push({ title: section.title, notebookTitle: section.notebookTitle, pages: fetchedPages });
@@ -96,9 +100,9 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
     const rootNote = createFolder(parentNoteId, "OneNote import");
 
     // Created page notes with their content-so-far (resources/ink applied), plus a map from each
-    // page's OneNote page-id GUID to the note created for it — both feed the link-resolution pass.
-    const createdPages: { note: BNote; original: string; content: string }[] = [];
-    const noteIdByPageId = new Map<string, string>();
+    // page's OneNote page-id GUID to its imported note (and title) — both feed the link-resolution pass.
+    const createdPages: { note: BNote; original: string; content: string; page: FetchedPage }[] = [];
+    const targetByPageId = new Map<string, LinkTarget>();
 
     // Group selected sections under a note per notebook so the original hierarchy is preserved.
     const notebookNotes = new Map<string, string>();
@@ -133,9 +137,9 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
                 content += renderInkFigure(pageNote, page.inkSvg);
             }
 
-            createdPages.push({ note: pageNote, original: page.html, content });
+            createdPages.push({ note: pageNote, original: page.html, content, page });
             if (page.pageId) {
-                noteIdByPageId.set(page.pageId, pageNote.noteId);
+                targetByPageId.set(page.pageId, { noteId: pageNote.noteId, title: page.title });
             }
 
             // Debug aid: keep the unmodified Graph HTML (and InkML, when present) alongside the
@@ -161,15 +165,32 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
 
     // Second pass: now that every page has a note, resolve cross-page `onenote:` links and persist the
     // final content. Done once per page (rather than re-saving for resources, then again for links).
-    for (const { note, original, content } of createdPages) {
-        const finalContent = rewritePageLinks(content, (pageId) => noteIdByPageId.get(pageId) ?? null);
+    for (const { note, original, content, page } of createdPages) {
+        const finalContent = rewritePageLinks(content, (pageId) => targetByPageId.get(pageId) ?? null);
         if (finalContent !== original) {
             note.setContent(finalContent);
             void noteService.asyncPostProcessContent(note, finalContent);
         }
+
+        // Preserve OneNote's original timestamps. Must run after setContent, whose save would otherwise
+        // re-stamp the modification date with "now".
+        const utcDateCreated = toUtcDbDate(page.createdDateTime);
+        const utcDateModified = toUtcDbDate(page.lastModifiedDateTime) ?? utcDateCreated;
+        if (utcDateCreated || utcDateModified) {
+            note.setDateCreatedAndModified(utcDateCreated, utcDateModified);
+        }
     }
 
     return rootNote.noteId;
+}
+
+/** Converts a Graph ISO 8601 timestamp to Trilium's UTC DB format, or undefined if absent/unparseable. */
+function toUtcDbDate(isoDateTime: string | undefined): string | undefined {
+    if (!isoDateTime) {
+        return undefined;
+    }
+    const date = new Date(isoDateTime);
+    return Number.isNaN(date.getTime()) ? undefined : date_utils.utcDateTimeStr(date);
 }
 
 /**
