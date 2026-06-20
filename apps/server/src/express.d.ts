@@ -44,5 +44,19 @@ export declare module "express-session" {
          * after the post-enrollment redirect lands on the app root.
          */
         ssoJustEnrolled?: true;
+        /**
+         * Transient state for the OneNote importer's delegated-Graph OAuth flow. During sign-in it
+         * holds the PKCE verifier + state + redirect URI; after a successful callback it holds the
+         * access/refresh tokens and the connected account. Session-scoped only — never synced.
+         */
+        oneNoteImport?: {
+            verifier?: string;
+            state?: string;
+            redirectUri?: string;
+            accessToken?: string;
+            refreshToken?: string;
+            expiresAt?: number;
+            account?: { name: string; email: string };
+        };
     }
 }

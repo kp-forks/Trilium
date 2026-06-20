@@ -228,6 +228,25 @@
     "in-progress": "Import in progress: {{progress}}",
     "successful": "Import finished successfully."
   },
+  "import_provider": {
+    "title": "Import from a service",
+    "choose_provider": "Choose a service to import from:",
+    "back": "Back"
+  },
+  "onenote_import": {
+    "name": "Microsoft OneNote",
+    "description": "Import notebooks, sections and pages from your OneNote account.",
+    "connect_description": "Sign in with your Microsoft account to import your OneNote notebooks.",
+    "connect": "Sign in with Microsoft",
+    "connecting": "Waiting for sign-in to complete…",
+    "connected_as": "Connected as {{name}}",
+    "disconnect": "Disconnect",
+    "load_failed": "Could not load your OneNote notebooks.",
+    "no_notebooks": "No notebooks were found in this account.",
+    "select_sections": "Select the sections to import:",
+    "import": "Import selected",
+    "import_started": "OneNote import started…"
+  },
   "include_note": {
     "dialog_title": "Include note",
     "label_note": "Note",
@@ -808,6 +827,7 @@
     "open_note_custom": "Open note custom",
     "open_note_on_server": "Open note on server",
     "import_files": "Import files",
+    "import_from_service": "Import from a service…",
     "export_note": "Export note",
     "delete_note": "Delete note",
     "print_note": "Print note...",
