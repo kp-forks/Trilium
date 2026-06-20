@@ -1,21 +1,16 @@
 import { describe, expect, it } from "vitest";
 
-import { retryDelayMs } from "./graph.js";
+import { backoffDelayMs } from "./graph.js";
 
-describe("retryDelayMs", () => {
-    it("honours a numeric Retry-After header (seconds → ms)", () => {
-        expect(retryDelayMs("3", 0)).toBe(3000);
-    });
-
-    it("falls back to exponential backoff when the header is absent or non-numeric", () => {
-        expect(retryDelayMs(null, 0)).toBe(2000);
-        expect(retryDelayMs(null, 1)).toBe(4000);
-        expect(retryDelayMs("soon", 2)).toBe(8000);
+describe("backoffDelayMs", () => {
+    it("doubles the delay with each attempt", () => {
+        expect(backoffDelayMs(0)).toBe(2000);
+        expect(backoffDelayMs(1)).toBe(4000);
+        expect(backoffDelayMs(2)).toBe(8000);
+        expect(backoffDelayMs(3)).toBe(16000);
     });
 
     it("caps the delay at the maximum", () => {
-        // Both a huge Retry-After and a far-out backoff attempt clamp to the 30s ceiling.
-        expect(retryDelayMs("3600", 0)).toBe(30_000);
-        expect(retryDelayMs(null, 10)).toBe(30_000);
+        expect(backoffDelayMs(10)).toBe(30_000);
     });
 });

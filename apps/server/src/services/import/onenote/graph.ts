@@ -16,11 +16,11 @@ const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 // be large and slow. Allow a generous per-request budget instead.
 const GRAPH_TIMEOUT_MS = 60_000;
 
-// Graph throttles aggressively under load (HTTP 429, occasionally 503). Retry those, honouring the
-// Retry-After header when present and falling back to exponential backoff, before giving up —
-// otherwise a large import would silently drop most of its pages/resources once throttling kicks in.
+// Graph throttles aggressively under load (HTTP 429, occasionally 503). OneNote's 429s carry no
+// Retry-After header, so retry with exponential backoff before giving up — otherwise a large import
+// would silently drop most of its pages/resources once throttling kicks in.
 const MAX_RETRIES = 8;
-const DEFAULT_RETRY_DELAY_MS = 2000;
+const BASE_RETRY_DELAY_MS = 2000;
 const MAX_RETRY_DELAY_MS = 30_000;
 
 // Shared throttle gate. Graph throttles per app/tenant, so a 429 on one request means every other
@@ -58,17 +58,15 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
 
         // Extend the shared gate (Math.max: simultaneous 429s converge on one window rather than
         // stacking). The wait itself happens at the top of the next iteration, shared across the pool.
-        const waitMs = retryDelayMs(response.headers.get("Retry-After"), attempt);
+        const waitMs = backoffDelayMs(attempt);
         throttledUntilMs = Math.max(throttledUntilMs, Date.now() + waitMs);
         getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1}/${MAX_RETRIES} after ${waitMs}ms`);
     }
 }
 
-/** Resolves the wait before a throttling retry: the Retry-After header (seconds), else exponential backoff. */
-export function retryDelayMs(retryAfter: string | null, attempt: number): number {
-    const headerSeconds = retryAfter ? Number(retryAfter) : NaN;
-    const delayMs = Number.isFinite(headerSeconds) ? headerSeconds * 1000 : DEFAULT_RETRY_DELAY_MS * 2 ** attempt;
-    return Math.min(delayMs, MAX_RETRY_DELAY_MS);
+/** Exponential backoff before a throttling retry, capped at {@link MAX_RETRY_DELAY_MS}. */
+export function backoffDelayMs(attempt: number): number {
+    return Math.min(BASE_RETRY_DELAY_MS * 2 ** attempt, MAX_RETRY_DELAY_MS);
 }
 
 function delay(ms: number): Promise<void> {
