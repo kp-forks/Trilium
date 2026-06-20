@@ -12,6 +12,7 @@ interface FakeWindow {
 interface SecuritySettings {
     backendScriptingEnabled?: boolean;
     sqlConsoleEnabled?: boolean;
+    allowLanAccess?: boolean;
 }
 
 // A tiny real deferred so the core/server init promises behave like the real thing.
@@ -549,6 +550,16 @@ describe("security settings override", () => {
         };
         expect(config.Security.backendScriptingEnabled).toBe(true);
         expect(config.Security.sqlConsoleEnabled).toBe(true);
+    });
+
+    it("applies the allowLanAccess override", async () => {
+        h.securitySettings = { allowLanAccess: true };
+        const { main } = await importMain();
+        await main();
+        const config = (await import("@triliumnext/server/src/services/config.js")).default as {
+            Security: { allowLanAccess?: boolean };
+        };
+        expect(config.Security.allowLanAccess).toBe(true);
     });
 });
 

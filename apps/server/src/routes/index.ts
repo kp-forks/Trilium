@@ -67,10 +67,18 @@ export function bootstrap(req: Request, res: Response) {
     const nativeTitleBarVisible = options.nativeTitleBarVisible === "true";
     const iconPacks = iconPackService.getIconPacks();
 
+    // One-shot: consume the enrollment flag set by the OIDC afterCallback so the client toasts the
+    // successful connection exactly once after the post-enrollment redirect.
+    const oauthJustEnrolled = req.session.ssoJustEnrolled === true;
+    if (oauthJustEnrolled) {
+        delete req.session.ssoJustEnrolled;
+    }
+
     res.send({
         ...commonItems,
         dbInitialized: true,
         csrfToken,
+        oauthJustEnrolled,
         platform: process.platform,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"

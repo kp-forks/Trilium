@@ -69,8 +69,10 @@ export async function main() {
         process.exit(0);
     }
 
-    // Adds debug features like hotkeys for triggering dev tools and reload
-    electronDebug();
+    // Adds debug features like hotkeys for triggering dev tools and reload.
+    // `showDevTools: false` prevents DevTools from auto-opening on every window
+    // in dev mode — the hotkeys (F12, Ctrl/Cmd+R) remain available.
+    electronDebug({ showDevTools: false });
     electronDl({ saveAs: true });
 
     // needed for excalidraw export https://github.com/zadam/trilium/issues/4271
@@ -165,6 +167,11 @@ export async function main() {
     }
     if (securitySettings.sqlConsoleEnabled !== undefined) {
         config.Security.sqlConsoleEnabled = securitySettings.sqlConsoleEnabled;
+    }
+    // Applied before the server (and host.ts) load below, so getHost() picks up
+    // the desktop LAN-access choice on this boot.
+    if (securitySettings.allowLanAccess !== undefined) {
+        config.Security.allowLanAccess = securitySettings.allowLanAccess;
     }
 
     const dbProvider = new BetterSqlite3Provider();

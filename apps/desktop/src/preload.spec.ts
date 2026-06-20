@@ -369,6 +369,22 @@ describe("preload script", () => {
             ipcRendererSyncResults.set("get-available-spellchecker-languages:undefined", ["en-US", "de-DE"]);
             expect(spell().getAvailableSpellCheckerLanguages()).toEqual(["en-US", "de-DE"]);
         });
+
+        it("setSpellCheckerLanguages sends correct IPC message", () => {
+            spell().setSpellCheckerLanguages(["en-US", "fr"]);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-spellchecker-languages",
+                args: [["en-US", "fr"]]
+            });
+        });
+
+        it("setSpellCheckerEnabled sends correct IPC message", () => {
+            spell().setSpellCheckerEnabled(false);
+            expect(ipcRendererSent).toContainEqual({
+                channel: "set-spellchecker-enabled",
+                args: [false]
+            });
+        });
     });
 
     describe("systemIntegration", () => {
@@ -581,6 +597,11 @@ describe("preload script", () => {
         it("setSqlConsoleEnabled invokes the corresponding IPC channel", async () => {
             await security().setSqlConsoleEnabled(false);
             expect(ipcRendererInvoked).toContainEqual({ channel: "security-set-sql-console", args: [false] });
+        });
+
+        it("setLanAccessEnabled invokes the corresponding IPC channel", async () => {
+            await security().setLanAccessEnabled(true);
+            expect(ipcRendererInvoked).toContainEqual({ channel: "security-set-lan-access", args: [true] });
         });
     });
 });

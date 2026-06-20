@@ -9,8 +9,8 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@vitest/browser": "4.1.8",
-    "vitest": "4.1.8",
+    "@vitest/browser": "4.1.9",
+    "vitest": "4.1.9",
     "webdriverio": "9.28.0"
   },
   "dependencies": {

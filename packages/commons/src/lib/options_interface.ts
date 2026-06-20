@@ -90,13 +90,11 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     customDateTimeFormat: string;
 
     // Multi-Factor Authentication
-    mfaEnabled: boolean;
     mfaMethod: string;
     totpEncryptionSalt: string;
     totpEncryptedSecret: string;
     totpVerificationHash: string;
     encryptedRecoveryCodes: boolean;
-    userSubjectIdentifierSaved: boolean;
     recoveryCodeInitialVector: string;
     recoveryCodeSecurityKey: string;
     recoveryCodesEncrypted: string;
@@ -148,6 +146,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     databaseReadonly: boolean;
     backendScriptingEnabled: boolean;
     sqlConsoleEnabled: boolean;
+    allowLanAccess: boolean;
     hasUserBackendScripts: boolean;
     isPasswordSet: boolean;
     overrideThemeFonts: boolean;

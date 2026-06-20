@@ -38,6 +38,7 @@ interface FakeSession {
     clearCache: ReturnType<typeof vi.fn>;
     availableSpellCheckerLanguages: string[];
     setSpellCheckerLanguages: ReturnType<typeof vi.fn>;
+    setSpellCheckerEnabled: ReturnType<typeof vi.fn>;
 }
 
 class FakeWebContents {
@@ -61,7 +62,8 @@ class FakeWebContents {
     public session: FakeSession = state.sharedSession ?? {
         clearCache: vi.fn(() => Promise.resolve()),
         availableSpellCheckerLanguages: ["en-US", "de"],
-        setSpellCheckerLanguages: vi.fn()
+        setSpellCheckerLanguages: vi.fn(),
+        setSpellCheckerEnabled: vi.fn()
     };
     public navigationHistory = {
         canGoBack: vi.fn(() => true),
@@ -480,11 +482,20 @@ describe("window service", () => {
             expect(true).toBe(true);
         });
 
-        it("does not set up spellcheck when disabled", async () => {
+        it("applies the disabled spell-check state to the session", async () => {
             state.optionBools = { spellCheckEnabled: false };
             await windowService.createExtraWindow("#y");
             const wc = state.windows[state.windows.length - 1].webContents;
-            expect(wc.session.setSpellCheckerLanguages).not.toHaveBeenCalled();
+            // The subsystem is always attached (webPreferences.spellcheck: true); the
+            // option drives the runtime enabled state instead of window creation.
+            expect(wc.session.setSpellCheckerEnabled).toHaveBeenCalledWith(false);
+        });
+
+        it("applies the enabled spell-check state to the session", async () => {
+            state.optionBools = { spellCheckEnabled: true };
+            await windowService.createExtraWindow("#z");
+            const wc = state.windows[state.windows.length - 1].webContents;
+            expect(wc.session.setSpellCheckerEnabled).toHaveBeenCalledWith(true);
         });
 
         it("loads spellcheck languages once per session", async () => {
@@ -512,7 +523,8 @@ describe("window service", () => {
             const shared = {
                 clearCache: vi.fn(() => Promise.resolve()),
                 availableSpellCheckerLanguages: ["en-US"],
-                setSpellCheckerLanguages: vi.fn()
+                setSpellCheckerLanguages: vi.fn(),
+                setSpellCheckerEnabled: vi.fn()
             };
             state.sharedSession = shared;
 
@@ -730,6 +742,22 @@ describe("window service", () => {
             const ev = makeEvent();
             fireOn("get-available-spellchecker-languages", ev);
             expect(ev.returnValue).toEqual(["en-US", "de"]);
+        });
+
+        it("set-spellchecker-languages applies the codes to every open window's session", () => {
+            new FakeBrowserWindow();
+            fireOn("set-spellchecker-languages", makeEvent(), ["en-US", "fr"]);
+            for (const win of state.windows) {
+                expect(win.webContents.session.setSpellCheckerLanguages).toHaveBeenCalledWith(["en-US", "fr"]);
+            }
+        });
+
+        it("set-spellchecker-enabled applies the state to every open window's session", () => {
+            new FakeBrowserWindow();
+            fireOn("set-spellchecker-enabled", makeEvent(), false);
+            for (const win of state.windows) {
+                expect(win.webContents.session.setSpellCheckerEnabled).toHaveBeenCalledWith(false);
+            }
         });
 
         it("title bar / material / vibrancy / button position setters", () => {

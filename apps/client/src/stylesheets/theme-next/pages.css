@@ -36,9 +36,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #fff;
-    color: #757575;
-    border: 1px solid #ddd;
+    background-color: var(--main-background-color);
+    color: var(--main-text-color);
+    border: 1px solid var(--main-border-color);
     border-radius: 4px;
     padding: 10px 20px;
     font-size: 14px;
@@ -49,7 +49,7 @@
     transition: background-color 0.3s;
 }
 .google-login-btn:hover {
-    background-color: #f5f5f5;
+    background-color: var(--hover-item-background-color);
 }
 .google-login-btn img {
     margin-inline-end: 10px;
@@ -159,11 +159,6 @@
     visibility: hidden;
 }
 
-/* Create a gap at the top of the option pages */
-.note-detail-content-widget-content.options>*:first-child {
-    margin-top: var(--options-first-item-top-margin, 1em);
-}
-
 /* Create a gap at the bottom of option pages */
 .note-detail-content-widget-content.options::after {
     display: block;
@@ -207,12 +202,9 @@ body.desktop .options-section:not(.tn-no-card) {
     padding-bottom: var(--default-padding);
 }
 
-.options-section:not(.tn-no-card) h4 {
+.options-section h4 {
     text-transform: uppercase;
     letter-spacing: .4pt;
-}
-
-.options-section:not(.tn-no-card) h4 {
     font-size: var(--options-title-font-size);
     font-weight: 600;
     color: var(--launcher-pane-text-color);
@@ -300,36 +292,11 @@ body.desktop .options-section:not(.tn-no-card) {
 /* Shortcuts */
 
 .note-detail-content-widget-content:has(.shortcuts-options-section) {
-    /* Allow the card to extend on the full width of the parent */
+    /* Allow the cards to extend on the full width of the parent */
     --options-card-max-width: 100%;
-
-    /* Remove top padding for the options page */
-    --options-title-offset: 0px;
-    --options-title-font-size: 0px;
 
     /* Remove the top margin of the first item */
     --options-first-item-top-margin: 0;
-}
-
-.shortcuts-options-section h4 {
-    display: none;
-}
-
-/* Group heading */
-.shortcuts-options-section .separator {
-    padding-top: 2em;
-    padding-bottom: 1em;
-    background: transparent !important;
-    font-weight: 500;
-}
-
-/* Simulates the underline for group headings */
-.shortcuts-options-section .separator::after {
-    content: "";
-    display: block;
-    width: 100%;
-    height: 2px;
-    background: currentColor;
 }
 
 /* ETAPI */

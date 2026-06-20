@@ -17,6 +17,7 @@ import FormText from "../../react/FormText";
 import FormTextBox, { FormTextBoxWithUnit } from "../../react/FormTextBox";
 import { useColorScheme, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { getHtml } from "../../react/RawHtml";
+import OptionsPageHeader from "./components/OptionsPageHeader";
 import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import RadioWithIllustration from "./components/RadioWithIllustration";
@@ -29,6 +30,7 @@ const isNewLayout = isExperimentalFeatureEnabled("new-layout");
 export default function TextNoteSettings() {
     return (
         <>
+            <OptionsPageHeader />
             <FormattingToolbar />
             <EditorFeatures />
             <Editor />

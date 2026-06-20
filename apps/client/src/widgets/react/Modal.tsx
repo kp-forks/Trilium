@@ -8,6 +8,7 @@ import { openDialog } from "../../services/dialog";
 import { t } from "../../services/i18n";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import { useSyncedRef } from "./hooks";
+import { ContainerVisibilityContext } from "./react_utils";
 
 interface CustomTitleBarButton {
     title: string;
@@ -161,7 +162,7 @@ export default function Modal({ children, className, size, title, customTitleBar
 
     return (
         <div className={`modal fade mx-auto ${className}`} tabIndex={-1} style={dialogStyle} role="dialog" ref={modalRef}>
-            {(show || keepInDom) && <div className={clsx("modal-dialog", `modal-${size}`, {"modal-dialog-scrollable": scrollable, "modal-dialog-full-page-on-mobile": isFullPageOnMobile, "modal-content-with-sidebar": sidebar})} style={documentStyle} role="document">
+            {(show || keepInDom) && <ContainerVisibilityContext.Provider value={show}><div className={clsx("modal-dialog", `modal-${size}`, {"modal-dialog-scrollable": scrollable, "modal-dialog-full-page-on-mobile": isFullPageOnMobile, "modal-content-with-sidebar": sidebar})} style={documentStyle} role="document">
                 <div className={clsx("modal-content", sidebar && "modal-content-with-sidebar")}>
                     {sidebar && <div className="modal-sidebar">
                         {title && !hideSidebarHeader && <div className="modal-sidebar-header">
@@ -211,7 +212,7 @@ export default function Modal({ children, className, size, title, customTitleBar
                         )}
                     </ModalMain>
                 </div>
-            </div>}
+            </div></ContainerVisibilityContext.Provider>}
         </div>
     );
 }

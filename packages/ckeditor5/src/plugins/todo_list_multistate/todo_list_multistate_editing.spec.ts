@@ -4,6 +4,7 @@ import { _setModelData as setModelData, ClassicEditor, Essentials, keyCodes, Lis
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../../test/editor-kit.js";
+import TodoListUncheckOnEnter from "../todo_list_uncheck_on_enter.js";
 import TodoListMultistateEditing, { getActiveTaskStates, getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
 
 const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";
@@ -18,7 +19,9 @@ const CUSTOM_STATES: TaskStateDef[] = [
 const TODO_FIXTURE = '<paragraph listIndent="0" listItemId="t-a" listType="todo">Task[]</paragraph>';
 
 async function createEditor(config: Record<string, unknown> = {}): Promise<ClassicEditor> {
-    return await createTestEditor([Essentials, Paragraph, List, TodoList, TodoListMultistateEditing], config);
+    // TodoListUncheckOnEnter ships alongside multistate in the real build; include it so the
+    // Enter-reset behavior is exercised end to end.
+    return await createTestEditor([Essentials, Paragraph, List, TodoList, TodoListUncheckOnEnter, TodoListMultistateEditing], config);
 }
 
 function getBlock(editor: ClassicEditor, index: number): ModelElement {
@@ -241,6 +244,37 @@ describe("TodoListMultistateEditing", () => {
             });
             expect(getBlock(editor, 0).hasAttribute(TASK_STATE_ATTRIBUTE)).toBe(false);
             expect(getBlock(editor, 0).getAttribute(TODO_LIST_CHECKED_ATTRIBUTE)).toBe(true);
+        });
+
+        it("Enter on a checked/custom-state row starts the new row unchecked with no state (#10084)", () => {
+            // A native completed (checked) row: pressing Enter must not carry the check over.
+            setModelData(editor.model,
+                '<paragraph listIndent="0" listItemId="t-a" listType="todo" todoListChecked="true">Task[]</paragraph>');
+            editor.execute("enter");
+            const newNative = getBlock(editor, 1);
+            expect(newNative.getAttribute("listType")).toBe("todo");
+            expect(newNative.hasAttribute(TODO_LIST_CHECKED_ATTRIBUTE)).toBe(false);
+            expect(newNative.hasAttribute(TASK_STATE_ATTRIBUTE)).toBe(false);
+
+            // A custom completed state ('review', isCompleted: true) must not carry the state
+            // or the (post-fixer-forced) checkbox over to the new row.
+            setModelData(editor.model, TODO_FIXTURE);
+            editor.execute("setTaskState", { state: "review" });
+            editor.execute("enter");
+            const newCustom = getBlock(editor, 1);
+            expect(newCustom.hasAttribute(TASK_STATE_ATTRIBUTE)).toBe(false);
+            expect(newCustom.hasAttribute(TODO_LIST_CHECKED_ATTRIBUTE)).toBe(false);
+
+            // The original row keeps its state.
+            expect(getBlock(editor, 0).getAttribute(TASK_STATE_ATTRIBUTE)).toBe("review");
+            expect(getBlock(editor, 0).getAttribute(TODO_LIST_CHECKED_ATTRIBUTE)).toBe(true);
+        });
+
+        it("Enter outside a todo list leaves the new block untouched", () => {
+            // The afterExecute reset only applies to todo blocks.
+            setModelData(editor.model, "<paragraph>Hello[]</paragraph>");
+            editor.execute("enter");
+            expect(getBlock(editor, 1).getAttribute("listType")).toBe(undefined);
         });
 
         it("post-fixer leaves a cleared (unknown) state alone instead of forcing the checkbox", () => {

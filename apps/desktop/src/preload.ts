@@ -152,6 +152,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         getAvailableSpellCheckerLanguages(): string[] {
             return ipcRenderer.sendSync("get-available-spellchecker-languages");
+        },
+        setSpellCheckerLanguages(languageCodes: string[]) {
+            ipcRenderer.send("set-spellchecker-languages", languageCodes);
+        },
+        setSpellCheckerEnabled(enabled: boolean) {
+            ipcRenderer.send("set-spellchecker-enabled", enabled);
         }
     },
 
@@ -251,6 +257,9 @@ contextBridge.exposeInMainWorld("electronApi", {
         },
         setSqlConsoleEnabled(enabled: boolean): Promise<boolean> {
             return ipcRenderer.invoke("security-set-sql-console", enabled);
+        },
+        setLanAccessEnabled(enabled: boolean): Promise<boolean> {
+            return ipcRenderer.invoke("security-set-lan-access", enabled);
         }
     }
 } satisfies ElectronApi);

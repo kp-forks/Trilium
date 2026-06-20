@@ -10,7 +10,7 @@ import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import { isElectron, isMobile, reloadFrontendApp, restartDesktopApp } from "../../../services/utils";
 import { VerticalLayoutIcon } from "../../buttons/global_menu";
-import { ButtonGroup } from "../../react/Button";
+import Button, { ButtonGroup } from "../../react/Button";
 import Dropdown from "../../react/Dropdown";
 import FormList, { FormListHeader, FormListItem } from "../../react/FormList";
 import { FormTextBoxWithUnit } from "../../react/FormTextBox";
@@ -18,7 +18,8 @@ import { useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import Modal from "../../react/Modal";
 import Slider from "../../react/Slider";
-import OptionsRow, { OptionsRowWithButton, OptionsRowWithToggle } from "./components/OptionsRow";
+import OptionsPageHeader from "./components/OptionsPageHeader";
+import OptionsRow, { OptionsRowWithToggle } from "./components/OptionsRow";
 import OptionsSection from "./components/OptionsSection";
 import PlatformIndicator from "./components/PlatformIndicator";
 import RadioWithIllustration from "./components/RadioWithIllustration";
@@ -125,6 +126,7 @@ const FONT_FAMILIES: FontGroup[] = [
 export default function AppearanceSettings() {
     return (
         <>
+            <OptionsPageHeader />
             <UserInterface />
             <Fonts />
             {isElectron() && <ElectronIntegration /> }
@@ -622,11 +624,14 @@ function ElectronIntegration() {
                 disabled={nativeTitleBarVisible || !backgroundEffectsSupported}
             />
 
-            <OptionsRowWithButton
-                label={t("electron_integration.restart-app-button")}
-                icon="bx bx-refresh"
-                onClick={restartDesktopApp}
-            />
+            <OptionsRow name="restart-app" centered>
+                <Button
+                    name="restart-app-button"
+                    text={t("electron_integration.restart-app-button")}
+                    icon="bx-refresh"
+                    onClick={restartDesktopApp}
+                />
+            </OptionsRow>
         </OptionsSection>
     );
 }

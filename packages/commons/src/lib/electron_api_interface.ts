@@ -340,6 +340,19 @@ export interface ElectronSpellcheckApi {
 
     /** Returns the BCP-47 language tags Chromium can spell-check on this platform. */
     getAvailableSpellCheckerLanguages(): string[];
+
+    /**
+     * Applies the spell-check language list to every open window's session
+     * immediately, without an application restart. No-op on macOS, where the OS
+     * spell checker auto-detects the language.
+     */
+    setSpellCheckerLanguages(languageCodes: string[]): void;
+
+    /**
+     * Enables or disables the built-in spell checker on every open window's
+     * session immediately, without an application restart.
+     */
+    setSpellCheckerEnabled(enabled: boolean): void;
 }
 
 /** OS integration controls — system tray and autostart / launch-on-login. */
@@ -468,6 +481,14 @@ export interface ElectronSecurityApi {
 
     /** Requests a change to the SQL console setting. Same flow as above. */
     setSqlConsoleEnabled(enabled: boolean): Promise<boolean>;
+
+    /**
+     * Requests enabling/disabling LAN access. When enabled, the desktop binds
+     * its TCP listener to all interfaces (instead of loopback) so other devices
+     * can reach it — e.g. to sync from another device. Same confirmation +
+     * restart flow as above.
+     */
+    setLanAccessEnabled(enabled: boolean): Promise<boolean>;
 }
 
 /**

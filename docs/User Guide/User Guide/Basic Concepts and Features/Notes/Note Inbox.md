@@ -4,7 +4,7 @@ The inbox is the default destination for quickly captured notes. When a note is 
 ## Where the inbox is used
 
 *   The _New note_ button in the <a class="reference-link" href="../UI%20Elements/Launch%20Bar.md">Launch Bar</a>.
-*   The global _Create note into inbox_ shortcut (default <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">Alt</kbd>+<kbd spellcheck="false">P</kbd>).
+*   The global _Create note into inbox_ shortcut (default <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>P</kbd>).
 *   The _New note_ action in the [tray icon menu](../../Installation%20%26%20Setup/Desktop%20Installation/Tray%20icon%20%26%20automatic%20startup.md).
 *   The <a class="reference-link" href="../../Installation%20%26%20Setup/Web%20Clipper.md">Web Clipper</a> extension.
 

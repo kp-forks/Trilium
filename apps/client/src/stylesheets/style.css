@@ -2655,6 +2655,23 @@ footer.webview-footer button {
     transition: opacity 200ms ease;
 }
 
+/*
+ * Empty to-do item caret fix.
+ *
+ * CKEditor's default to-do list theme spaces the checkbox from the text using a
+ * negative `margin-right: -15px` on the checkbox, which leaves the (still empty)
+ * description as a zero-width inline box. Some engines (notably Electron/Chromium,
+ * see upstream https://github.com/ckeditor/ckeditor5/issues/9141) cannot place the
+ * caret inside such an empty inline box, so it collapses onto the checkbox with
+ * no leading margin. Giving the empty description a real inline-block box lets the
+ * caret land at the normal text offset. The filler <br> is only present while the
+ * item is empty, so this reverts automatically as soon as the user types.
+ */
+.ck-editor__editable.ck-content ul.todo-list li span.todo-list__label__description:has(> br[data-cke-filler="true"]) {
+    display: inline-block;
+    min-width: 1px;
+}
+
 .ck-content ul.todo-list li:has(> span.todo-list__label input[type="checkbox"]:checked) > span.todo-list__label span.todo-list__label__description {
     text-decoration: line-through;
     opacity: 0.6;

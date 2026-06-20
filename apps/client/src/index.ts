@@ -1,5 +1,5 @@
 import { createFontStylesheetLink } from "./services/font";
-import { buildThemeStylesheetRefs, createStylesheetLink, getThemeStyle, StylesheetRef } from "./services/theme";
+import { buildThemeStylesheetRefs, createStylesheetLink, getThemeStyle, initThemeChangeNotifier, StylesheetRef } from "./services/theme";
 
 async function bootstrap() {
     showSplash();
@@ -9,6 +9,7 @@ async function bootstrap() {
         loadBootstrapCss()
     ]);
     loadStylesheets();
+    initThemeChangeNotifier();
     loadIcons();
     setBodyAttributes();
     await loadScripts();

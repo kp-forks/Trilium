@@ -663,7 +663,7 @@ function RevisionContent({ noteContent, revisionItem, fullRevision, showDiff }: 
                     //Base64 of other format images may be embedded in svg
                     const encodedSVG = encodeURIComponent(content as string);
                     return <img
-                        src={`data:${fullRevision.mime};utf8,${encodedSVG}`}
+                        src={`data:${fullRevision.mime},${encodedSVG}`}
                         style={IMAGE_STYLE} />;
                 }
                 default: {
@@ -697,7 +697,9 @@ function RevisionContentText({ content }: { content: string | Uint8Array | undef
             // KaTeX is heavy, so the math service is only loaded when there are formulas to render.
             void import("../../services/math").then(({ renderMathInElement }) => {
                 if (contentRef.current) {
-                    renderMathInElement(contentRef.current, { trust: true });
+                    // throwOnError: false renders invalid formulas as an inline red error
+                    // instead of throwing and logging to the console.
+                    renderMathInElement(contentRef.current, { trust: true, throwOnError: false });
                 }
             });
         }

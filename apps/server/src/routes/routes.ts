@@ -66,15 +66,18 @@ function register(app: express.Application) {
 
 
     apiRoute(GET, '/api/totp/generate', totp.generateSecret);
+    apiRoute(PST, '/api/totp/verify', totp.verifySecret);
+    apiRoute(PST, '/api/totp/enable', totp.enableSecret);
     apiRoute(GET, '/api/totp/status', totp.getTOTPStatus);
     apiRoute(GET, '/api/totp/get', totp.getSecret);
+    apiRoute(PST, '/api/totp/reset', totp.resetTOTP);
 
     apiRoute(GET, '/api/oauth/status', openID.getOAuthStatus);
     asyncApiRoute(GET, '/api/oauth/validate', openID.isTokenValid);
+    apiRoute(PST, '/api/oauth/disconnect', openID.clearSavedUser);
 
-    apiRoute(PST, '/api/totp_recovery/set', recoveryCodes.setRecoveryCodes);
     apiRoute(PST, '/api/totp_recovery/verify', recoveryCodes.verifyRecoveryCode);
-    apiRoute(GET, '/api/totp_recovery/generate', recoveryCodes.generateRecoveryCodes);
+    apiRoute(PST, '/api/totp_recovery/regenerate', recoveryCodes.regenerateRecoveryCodes);
     apiRoute(GET, '/api/totp_recovery/enabled', recoveryCodes.checkForRecoveryKeys);
     apiRoute(GET, '/api/totp_recovery/used', recoveryCodes.getUsedRecoveryCodes);
 
@@ -124,6 +127,7 @@ function register(app: express.Application) {
 
     apiRoute(GET, "/api/metrics", metricsRoute.getMetrics);
     apiRoute(GET, "/api/system-checks", systemInfoRoute.systemChecks);
+    apiRoute(GET, "/api/network-addresses", systemInfoRoute.getNetworkAddresses);
 
     // docker health check
     route(GET, "/api/health-check", [], () => ({ status: "ok" }), apiResultHandler);
