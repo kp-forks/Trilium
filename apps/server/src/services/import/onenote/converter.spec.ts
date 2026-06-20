@@ -459,10 +459,40 @@ describe("convertPageHtml", () => {
         expect(out).toContain("background-color:#ffff00"); // yellow
         expect(out).toContain("color:#ffffff"); // white
         expect(out).toContain("background-color:#ff00ff"); // fuchsia
-        expect(out).toContain("color:#000000"); // black
-        expect(out).toContain("background-color:#c0c0c0"); // silver
+        expect(out).not.toContain("color:#000000"); // black is the default color and is stripped (see below)
+        expect(out).toContain("background-color:#c0c0c0"); // silver kept even though its text was black
         expect(out).toContain("Yellow");
         expect(out).toContain("Magenta");
+        expect(out).toContain("Light Gray");
+    });
+
+    // OneNote stamps an explicit color:#000000 (its automatic color, since a page is a white canvas) on
+    // essentially every run of body text. Kept verbatim it overrides the theme foreground and renders as
+    // unreadable black-on-dark under a dark theme, so default black is treated as "automatic" and dropped.
+    it("strips OneNote's default black text color so text inherits the theme foreground", () => {
+        const sample = `<html><body><div style="position:absolute;left:48px;top:115px;width:624px">
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:#000000">Default body text</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:#000000"><strong>Bold black</strong></span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:black">Named black</span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:#7030a0"><strong>Purple</strong></span></p>
+            <p style="margin-top:0pt;margin-bottom:0pt"><span style="color:#000000;background-color:#ffff00">Black on yellow</span></p>
+        </div></body></html>`;
+        const out = converter.convertPageHtml(sample);
+
+        // No black color survives, in either hex or named form.
+        expect(out).not.toContain("color:#000000");
+        expect(out).not.toContain("color:black");
+
+        // The now-attribute-less spans are unwrapped, leaving the text (and its formatting) directly.
+        expect(out).toContain("Default body text");
+        expect(out).toContain("<strong>Bold black</strong>");
+        expect(out).toContain("Named black");
+
+        // Deliberate non-black colors are untouched.
+        expect(out).toContain("color:#7030a0");
+        // A span that also carries a highlight keeps the highlight but loses the black text color.
+        expect(out).toContain("background-color:#ffff00");
+        expect(out).toContain("Black on yellow");
     });
 
     it("keeps OneNote heading styles (level-shifted), cite, italic and font colors", () => {

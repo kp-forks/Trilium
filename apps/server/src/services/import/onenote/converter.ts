@@ -110,6 +110,7 @@ export function convertPageHtml(rawHtml: string): string {
     convertTags(scope);
     convertInlineFormatting(scope);
     normalizeNamedColors(scope);
+    removeDefaultTextColor(scope);
     unwrapListItemParagraphs(scope);
     normalizeListMarkers(scope);
     normalizeTableBorders(scope);
@@ -348,6 +349,39 @@ function normalizeNamedColors(scope: HTMLElement) {
 
 function serializeStyle(style: Map<string, string>): string {
     return [...style].map(([property, value]) => `${property}:${value}`).join(";");
+}
+
+/** OneNote's automatic/default text color in the forms it can reach us in (named black already mapped to hex). */
+const DEFAULT_TEXT_COLORS = new Set(["#000000", "#000", "black"]);
+
+/**
+ * OneNote treats a page as a white canvas, so it stamps an explicit `color:#000000` (its automatic
+ * text color) on essentially every run of body text. Preserved verbatim, that hard black overrides the
+ * note's theme-inherited foreground and renders as unreadable black-on-dark under a dark theme. Treat
+ * default black as "automatic" and strip it so the text inherits the theme color — identical under a
+ * light theme, where the default already is black. A span left with no other styling is unwrapped so we
+ * don't leave bare `<span>` noise behind; deliberately colored non-black text and background-colors
+ * (e.g. highlights) are untouched. Runs after normalizeNamedColors so `color:black` has become hex.
+ */
+function removeDefaultTextColor(scope: HTMLElement) {
+    for (const el of scope.querySelectorAll("[style]")) {
+        const style = parseStyle(el.getAttribute("style") ?? "");
+        if (!DEFAULT_TEXT_COLORS.has(style.get("color") ?? "")) {
+            continue;
+        }
+        style.delete("color");
+
+        if (style.size > 0) {
+            el.setAttribute("style", serializeStyle(style));
+            continue;
+        }
+
+        el.removeAttribute("style");
+        if (el.tagName?.toLowerCase() === "span") {
+            el.insertAdjacentHTML("beforebegin", el.innerHTML);
+            el.remove();
+        }
+    }
 }
 
 /** Unwraps OneNote's margin-0 <p> wrappers inside <li> so item text sits directly in the <li>. */
