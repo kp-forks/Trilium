@@ -1,9 +1,7 @@
 import type { AttributeType } from "@triliumnext/commons";
-import { dayjs } from "@triliumnext/commons";
 import sax from "sax";
 
 import type BNote from "../../becca/entities/bnote.js";
-import date_utils from "../utils/date.js";
 import * as utils from "../utils/index.js";
 import imageService from "../image.js";
 import { getLog } from "../log.js";
@@ -14,7 +12,6 @@ import { escapeHtml, md5 } from "../utils/index.js";
 import { decodeBase64 } from "../utils/binary.js";
 import type { File } from "./common.js";
 import { sanitizeHtml } from "../sanitizer.js";
-import { getSql } from "../sql/index.js";
 
 /**
  * date format is e.g. 20181121T193703Z or 2013-04-14T16:19:00.000Z (Mac evernote, see #3496)
@@ -230,32 +227,6 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         }
     };
 
-    const sql = getSql();
-
-    function updateDates(note: BNote, utcDateCreated?: string, utcDateModified?: string) {
-        // it's difficult to force custom dateCreated and dateModified to Note entity, so we do it post-creation with SQL
-        const dateCreated = formatDateTimeToLocalDbFormat(utcDateCreated, false);
-        const dateModified = formatDateTimeToLocalDbFormat(utcDateModified, false);
-        sql.execute(
-            `
-                UPDATE notes
-                SET dateCreated = ?,
-                    utcDateCreated = ?,
-                    dateModified = ?,
-                    utcDateModified = ?
-                WHERE noteId = ?`,
-            [dateCreated, utcDateCreated, dateModified, utcDateModified, note.noteId]
-        );
-
-        sql.execute(
-            `
-                UPDATE blobs
-                SET utcDateModified = ?
-                WHERE blobId = ?`,
-            [utcDateModified, note.blobId]
-        );
-    }
-
     function saveNote() {
         // make a copy because stream continues with the next call and note gets overwritten
         let { title, content, attributes, resources, utcDateCreated, utcDateModified } = note;
@@ -361,7 +332,7 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
 
         noteService.asyncPostProcessContent(noteEntity, content);
 
-        updateDates(noteEntity, utcDateCreated, utcDateModified);
+        noteEntity.setDateCreatedAndModified(utcDateCreated, utcDateModified);
     }
 
     parser.onclosetag = (tag) => {
@@ -387,23 +358,6 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
     parser.close();
 
     return rootNote;
-}
-
-function formatDateTimeToLocalDbFormat(
-    utcDateFromEnex: Date | string | null | undefined,
-    keepUtc: boolean
-): string | undefined {
-    if (!utcDateFromEnex) {
-        return undefined;
-    }
-
-    const parsedDate = dayjs(utcDateFromEnex);
-
-    if (!parsedDate.isValid()) {
-        return undefined;
-    }
-
-    return (keepUtc ? parsedDate.utc() : parsedDate).format(date_utils.LOCAL_DATETIME_FORMAT);
 }
 
 export default { importEnex };
