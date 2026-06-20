@@ -138,6 +138,12 @@ const TPL = /*html*/`
                       title="${t("note_tree.automatically-collapse-notes-title")}"></span>
             </label>
         </div>
+        <div class="form-check">
+            <label class="form-check-label tn-checkbox">
+                <input class="form-check-input scroll-follow-navigation" type="checkbox" value="">
+                ${t("note_tree.scroll-follow-navigation")}
+            </label>
+        </div>
 
         <br/>
 
@@ -197,6 +203,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     private $saveTreeSettingsButton!: JQuery<HTMLElement>;
     private $hideArchivedNotesCheckbox!: JQuery<HTMLElement>;
     private $autoCollapseNoteTree!: JQuery<HTMLElement>;
+    private $scrollFollowNavigationCheckbox!: JQuery<HTMLElement>;
     private treeName: "main";
     private autoCollapseTimeoutId?: Timeout;
     private lastFilteredHoistedNotePath?: string | null;
@@ -261,6 +268,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$treeSettingsPopup = this.$widget.find(".tree-settings-popup");
         this.$hideArchivedNotesCheckbox = this.$treeSettingsPopup.find(".hide-archived-notes");
         this.$autoCollapseNoteTree = this.$treeSettingsPopup.find(".auto-collapse-note-tree");
+        this.$scrollFollowNavigationCheckbox = this.$treeSettingsPopup.find(".scroll-follow-navigation");
 
         this.$treeSettingsButton = this.$widget.find(".tree-settings-button");
         this.$treeSettingsButton.on("click", (e) => {
@@ -271,6 +279,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
             this.$hideArchivedNotesCheckbox.prop("checked", this.hideArchivedNotes);
             this.$autoCollapseNoteTree.prop("checked", this.autoCollapseNoteTree);
+            this.$scrollFollowNavigationCheckbox.prop("checked", this.treeScrollFollowNavigation);
 
             const top = this.$treeActions[0].offsetTop - (this.$treeSettingsPopup.outerHeight() ?? 0);
             const left = Math.max(0, this.$treeActions[0].offsetLeft - (this.$treeSettingsPopup.outerWidth() ?? 0) + (this.$treeActions.outerWidth() ?? 0));
@@ -295,6 +304,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$saveTreeSettingsButton.on("click", async () => {
             await this.setHideArchivedNotes(this.$hideArchivedNotesCheckbox.prop("checked"));
             await this.setAutoCollapseNoteTree(this.$autoCollapseNoteTree.prop("checked"));
+            await this.setTreeScrollFollowNavigation(this.$scrollFollowNavigationCheckbox.prop("checked"));
 
             this.$treeSettingsPopup.hide();
 
@@ -352,6 +362,14 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
     async setAutoCollapseNoteTree(val: string) {
         await options.save("autoCollapseNoteTree", val.toString());
+    }
+
+    get treeScrollFollowNavigation() {
+        return options.is("treeScrollFollowNavigation");
+    }
+
+    async setTreeScrollFollowNavigation(val: boolean) {
+        await options.save("treeScrollFollowNavigation", val.toString());
     }
 
     initFancyTree() {
@@ -429,7 +447,9 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
                 return true;
             },
-            beforeActivate: (event, { node }) => {
+            beforeActivate: (event, data) => {
+                const { node } = data;
+
                 // hidden subtree is hidden hackily - we want it to be present in the tree so that we can switch to it
                 // without reloading the whole tree, but we want it to be hidden when hoisted to root. FancyTree allows
                 // filtering the display only by ascendant - i.e. if the root is visible, all the descendants are as well.
@@ -440,11 +460,23 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     // if we're hoisted in hidden subtree, we want to avoid crossing to "visible" tree,
                     // which could happen via UP key from hidden root
 
-                    return node.data.noteId !== "root";
+                    if (node.data.noteId === "root") return false;
+                } else {
+                    // we're not hoisted to hidden subtree, the only way to cross is via DOWN key to the hidden root
+                    if (node.data.noteId === "_hidden") return false;
                 }
 
-                // we're not hoisted to hidden subtree, the only way to cross is via DOWN key to the hidden root
-                return node.data.noteId !== "_hidden";
+                // Synchronously disable fancytree's activeVisible before it checks it in nodeSetActive,
+                // preventing the automatic makeVisible/scrollIntoView call on direct tree interaction.
+                // Restored after the current task via setTimeout so only this activation is affected.
+                if (!this.treeScrollFollowNavigation) {
+                    this.tree.options.activeVisible = false;
+                    setTimeout(() => {
+                        this.tree.options.activeVisible = true;
+                    }, 0);
+                }
+
+                return true;
             },
             activate: async (event, data) => {
                 // click event won't propagate so let's close context menu manually
@@ -1141,8 +1173,11 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                     await this.expandToNote(this.noteContext.notePath);
                 }
 
-                newActiveNode.setActive(true, { noEvents: true, noFocus: !oldActiveNodeFocused });
-                newActiveNode.makeVisible({ scrollIntoView: true });
+                newActiveNode.setActive(true, {
+                    noEvents: true,
+                    noFocus: !oldActiveNodeFocused,
+                    scrollIntoView: this.treeScrollFollowNavigation,
+                });
             }
         }
 

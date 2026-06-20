@@ -2068,6 +2068,7 @@
     "hide-archived-notes": "Hide archived notes",
     "automatically-collapse-notes": "Automatically collapse notes",
     "automatically-collapse-notes-title": "Notes will be collapsed after period of inactivity to declutter the tree.",
+    "scroll-follow-navigation": "Scroll tree to follow navigation",
     "save-changes": "Save & apply changes",
     "auto-collapsing-notes-after-inactivity": "Auto collapsing notes after inactivity...",
     "saved-search-note-refreshed": "Saved search note refreshed.",
