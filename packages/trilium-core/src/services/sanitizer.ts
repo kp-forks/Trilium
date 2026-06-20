@@ -58,7 +58,8 @@ export function sanitizeHtml(dirtyHtml: string) {
                 "background-color": colorRegex,
                 "margin-left": sizeRegex,
                 "padding-left": sizeRegex,
-                "text-align": [/^\s*(left|center|right|justify)\s*$/]
+                "text-align": [/^\s*(left|center|right|justify)\s*$/],
+                "list-style-type": [/^\s*(disc|circle|square|decimal|decimal-leading-zero|lower-latin|upper-latin|lower-alpha|upper-alpha|lower-roman|upper-roman|none)\s*$/]
             },
             figure: {
                 float: [/^\s*(left|right|none)\s*$/],
