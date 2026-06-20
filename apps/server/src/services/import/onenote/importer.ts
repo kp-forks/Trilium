@@ -5,13 +5,14 @@
  * client-side import toasts apply unchanged.
  */
 
-import { becca, type BNote, binary_utils, getLog, imageService, note_service as noteService, protected_session as protectedSession, TaskContext } from "@triliumnext/core";
+import { becca, binary_utils, type BNote, getLog, imageService, note_service as noteService, protected_session as protectedSession, TaskContext } from "@triliumnext/core";
 import { parse } from "node-html-parser";
 
 import sql from "../../sql.js";
 import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
 import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
+import { rewritePageLinks } from "./links.js";
 
 export interface SectionSelection {
     id: string;
@@ -21,6 +22,8 @@ export interface SectionSelection {
 
 interface FetchedPage {
     title: string;
+    /** The OneNote page-id GUID, used to resolve cross-page links to the note created for this page. */
+    pageId?: string;
     html: string;
     /** The unmodified HTML returned by the Graph API, kept only when debug mode is on. */
     rawHtml: string;
@@ -69,7 +72,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
             const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
             const html = converter.convertPageHtml(rawHtml);
             const resources = await downloadPageResources(accessToken, html);
-            fetchedPages.push({ title: page.title, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources });
+            fetchedPages.push({ title: page.title, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources });
             taskContext.increaseProgressCount();
         }
         fetched.push({ title: section.title, notebookTitle: section.notebookTitle, pages: fetchedPages });
@@ -91,6 +94,11 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
         noteService.createNewNote({ parentNoteId: parentId, title, content: "", type: "text", mime: "text/html", isProtected }).note;
 
     const rootNote = createFolder(parentNoteId, "OneNote import");
+
+    // Created page notes with their content-so-far (resources/ink applied), plus a map from each
+    // page's OneNote page-id GUID to the note created for it — both feed the link-resolution pass.
+    const createdPages: { note: BNote; original: string; content: string }[] = [];
+    const noteIdByPageId = new Map<string, string>();
 
     // Group selected sections under a note per notebook so the original hierarchy is preserved.
     const notebookNotes = new Map<string, string>();
@@ -114,8 +122,9 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
             });
 
             // Resources and ink both need the page note to exist (attachments hang off it), so build
-            // the final content once: swap Graph URLs for local attachment references, then append the
-            // page's handwriting/drawing as an inline SVG image.
+            // the per-page content now: swap Graph URLs for local attachment references, then append
+            // the page's handwriting/drawing as an inline SVG image. Cross-page links are deferred to a
+            // second pass below, once every page has a note to point at.
             let content = page.html;
             if (page.resources.length > 0) {
                 content = rewritePageResources(pageNote, content, page.resources);
@@ -123,9 +132,10 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
             if (page.inkSvg) {
                 content += renderInkFigure(pageNote, page.inkSvg);
             }
-            if (content !== page.html) {
-                pageNote.setContent(content);
-                void noteService.asyncPostProcessContent(pageNote, content);
+
+            createdPages.push({ note: pageNote, original: page.html, content });
+            if (page.pageId) {
+                noteIdByPageId.set(page.pageId, pageNote.noteId);
             }
 
             // Debug aid: keep the unmodified Graph HTML (and InkML, when present) alongside the
@@ -146,6 +156,16 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
                     });
                 }
             }
+        }
+    }
+
+    // Second pass: now that every page has a note, resolve cross-page `onenote:` links and persist the
+    // final content. Done once per page (rather than re-saving for resources, then again for links).
+    for (const { note, original, content } of createdPages) {
+        const finalContent = rewritePageLinks(content, (pageId) => noteIdByPageId.get(pageId) ?? null);
+        if (finalContent !== original) {
+            note.setContent(finalContent);
+            void noteService.asyncPostProcessContent(note, finalContent);
         }
     }
 

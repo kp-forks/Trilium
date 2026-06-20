@@ -5,6 +5,8 @@
  * Graph reference: https://learn.microsoft.com/en-us/graph/api/resources/onenote-api-overview
  */
 
+import { extractPageId } from "./links.js";
+
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
 export interface GraphAccount {
@@ -28,6 +30,8 @@ export interface OneNotePage {
     title: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
+    /** The page-id GUID OneNote uses in `onenote:` links to this page; used to resolve cross-page links. */
+    pageId?: string;
 }
 
 export async function getAccount(accessToken: string): Promise<GraphAccount> {
@@ -58,13 +62,16 @@ export async function listNotebooks(accessToken: string): Promise<OneNoteNoteboo
 }
 
 export async function listPages(accessToken: string, sectionId: string): Promise<OneNotePage[]> {
-    const url = `/me/onenote/sections/${sectionId}/pages?$select=id,title,createdDateTime,lastModifiedDateTime&$orderby=order&pagelevel=true`;
+    // `links` carries the page's own `onenote:` client URL, from which we recover the page-id GUID that
+    // cross-page links reference (see links.ts).
+    const url = `/me/onenote/sections/${sectionId}/pages?$select=id,title,createdDateTime,lastModifiedDateTime,links&$orderby=order&pagelevel=true`;
     const raw = await graphGetAll<RawPage>(accessToken, url);
     return raw.map((p) => ({
         id: p.id,
         title: p.title || "Untitled",
         createdDateTime: p.createdDateTime,
-        lastModifiedDateTime: p.lastModifiedDateTime
+        lastModifiedDateTime: p.lastModifiedDateTime,
+        pageId: extractPageId(p.links?.oneNoteClientUrl?.href) ?? undefined
     }));
 }
 
@@ -144,6 +151,7 @@ interface RawPage {
     title?: string;
     createdDateTime?: string;
     lastModifiedDateTime?: string;
+    links?: { oneNoteClientUrl?: { href?: string } };
 }
 
 async function graphGet<T>(accessToken: string, path: string): Promise<T> {
