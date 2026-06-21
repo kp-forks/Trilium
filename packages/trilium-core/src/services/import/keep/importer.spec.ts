@@ -56,6 +56,31 @@ describe("Google Keep importer — parseNote", () => {
         );
     });
 
+    it("prefers the rich-text body, converting basic formatting (textContentHtml over textContent)", () => {
+        const json = JSON.stringify({
+            textContent: "Bold",
+            textContentHtml: `<p dir="ltr" style="line-height:1.38;"><span style="font-weight:700;">Bold</span></p>`
+        });
+
+        const note = parseNote("note.json", json);
+
+        expect(note?.content).toBe("<p><strong>Bold</strong></p>");
+    });
+
+    it("prefers a checklist item's rich-text (textHtml over text)", () => {
+        const json = JSON.stringify({
+            listContent: [{ text: "done", textHtml: `<p><span style="font-style:italic;">done</span></p>`, isChecked: true }]
+        });
+
+        const note = parseNote("list.json", json);
+
+        expect(note?.content).toBe(
+            `<ul class="todo-list">` +
+                `<li><label class="todo-list__label"><input type="checkbox" checked="checked" disabled="disabled"><span class="todo-list__label__description"><i>done</i></span></label></li>` +
+                `</ul>`
+        );
+    });
+
     it("uses distinct created/modified timestamps when both are present", () => {
         const json = JSON.stringify({
             textContent: "x",

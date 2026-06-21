@@ -18,22 +18,28 @@ import { t } from "i18next";
 import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
+import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
 import { getZipProvider } from "../../zip_provider.js";
+import { convertKeepHtml, convertKeepHtmlInline } from "./converter.js";
 
 /** A checklist row in a Keep note (`listContent`). */
 interface KeepListItem {
     text?: string;
+    /** Rich-text (basic formatting) variant of `text`; preferred when present. */
+    textHtml?: string;
     isChecked?: boolean;
 }
 
 /** The subset of a Keep Takeout note JSON this iteration reads. */
 interface KeepNote {
     title?: string;
-    /** Body of a plain-text note. */
+    /** Plain-text body of a text note; fallback when `textContentHtml` is absent. */
     textContent?: string;
-    /** Body of a checklist note; mutually exclusive with `textContent`. */
+    /** Rich-text (basic formatting) body of a text note; preferred when present. */
+    textContentHtml?: string;
+    /** Body of a checklist note; mutually exclusive with the text fields. */
     listContent?: KeepListItem[];
     /** Creation/last-edit timestamps, in microseconds since the Unix epoch. */
     createdTimestampUsec?: number;
@@ -99,7 +105,11 @@ export function parseNote(path: string, json: string): ParsedNote | null {
     };
 }
 
-/** Builds a note's body HTML from its plain-text or checklist content (whichever is present). */
+/**
+ * Builds a note's body HTML from its checklist or text content (whichever is present). For both, Keep's
+ * rich-text variant (`textHtml`/`textContentHtml`, basic bold/italic/underline formatting) is preferred,
+ * falling back to the plain-text field. The result is sanitized downstream, in {@link createNotes}.
+ */
 function buildContent(note: KeepNote): string {
     if (note.listContent?.length) {
         const items = note.listContent
@@ -107,9 +117,14 @@ function buildContent(note: KeepNote): string {
             .map((item) => {
                 // Match the canonical CKEditor task-list serialization (checked before disabled).
                 const attributes = item.isChecked ? ` checked="checked" disabled="disabled"` : ` disabled="disabled"`;
-                return `<li><label class="todo-list__label"><input type="checkbox"${attributes}><span class="todo-list__label__description">${escapeHtml(item.text ?? "")}</span></label></li>`;
+                const label = item.textHtml ? convertKeepHtmlInline(item.textHtml) : escapeHtml(item.text ?? "");
+                return `<li><label class="todo-list__label"><input type="checkbox"${attributes}><span class="todo-list__label__description">${label}</span></label></li>`;
             });
         return items.length ? `<ul class="todo-list">${items.join("")}</ul>` : "";
+    }
+
+    if (note.textContentHtml) {
+        return convertKeepHtml(note.textContentHtml);
     }
 
     if (note.textContent) {
@@ -136,7 +151,9 @@ function createNotes(importRootNote: BNote, notes: ParsedNote[], taskContext: Ta
         const { note } = noteService.createNewNote({
             parentNoteId: rootNote.noteId,
             title: parsed.title,
-            content: parsed.content,
+            // Keep's exported HTML is external content; sanitize before persisting (this also demotes the
+            // `<h1>` Keep uses for its top heading level, which Trilium reserves for the note title).
+            content: sanitizeHtml(parsed.content),
             type: "text",
             mime: "text/html",
             isProtected
