@@ -6786,20 +6786,6 @@
                                     "position": 30
                                 },
                                 {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "syuSEKf2rUGr",
-                                    "isInheritable": false,
-                                    "position": 40
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "GnhlmrATVqcH",
-                                    "isInheritable": false,
-                                    "position": 50
-                                },
-                                {
                                     "type": "label",
                                     "name": "iconClass",
                                     "value": "bx bx-import",
@@ -6812,6 +6798,13 @@
                                     "value": "import-export",
                                     "isInheritable": false,
                                     "position": 20
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "ckZ2uNWQmVeX",
+                                    "isInheritable": false,
+                                    "position": 40
                                 }
                             ],
                             "format": "markdown",
@@ -6935,195 +6928,426 @@
                                 },
                                 {
                                     "isClone": false,
-                                    "noteId": "syuSEKf2rUGr",
+                                    "noteId": "ckZ2uNWQmVeX",
                                     "notePath": [
                                         "pOsGYCXsbNQG",
                                         "gh7bpGYxajRS",
                                         "mHbBMPDPkVV5",
-                                        "syuSEKf2rUGr"
+                                        "ckZ2uNWQmVeX"
                                     ],
-                                    "title": "Evernote",
-                                    "notePosition": 20,
+                                    "title": "Importing data from other applications",
+                                    "notePosition": 40,
                                     "prefix": null,
                                     "isExpanded": false,
                                     "type": "text",
-                                    "mime": "text/markdown",
+                                    "mime": "text/html",
                                     "attributes": [
                                         {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "Gr6xFaF6ioJ5",
-                                            "isInheritable": false,
-                                            "position": 10
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "WOcw2SLH6tbX",
-                                            "isInheritable": false,
-                                            "position": 20
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "wy8So3yZZlH9",
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bx-import",
                                             "isInheritable": false,
                                             "position": 30
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "dj3j8dG4th4l",
-                                            "isInheritable": false,
-                                            "position": 40
                                         },
                                         {
                                             "type": "label",
                                             "name": "shareAlias",
-                                            "value": "evernote",
+                                            "value": "import-from-apps",
                                             "isInheritable": false,
-                                            "position": 10
-                                        },
-                                        {
-                                            "type": "label",
-                                            "name": "iconClass",
-                                            "value": "bx bx-window-open",
-                                            "isInheritable": false,
-                                            "position": 30
+                                            "position": 40
                                         }
                                     ],
                                     "format": "markdown",
-                                    "dataFileName": "Evernote.md",
                                     "attachments": [],
-                                    "dirFileName": "Evernote",
+                                    "dirFileName": "Importing data from other applications",
                                     "children": [
                                         {
                                             "isClone": false,
-                                            "noteId": "dj3j8dG4th4l",
+                                            "noteId": "GnhlmrATVqcH",
                                             "notePath": [
                                                 "pOsGYCXsbNQG",
                                                 "gh7bpGYxajRS",
                                                 "mHbBMPDPkVV5",
-                                                "syuSEKf2rUGr",
-                                                "dj3j8dG4th4l"
+                                                "ckZ2uNWQmVeX",
+                                                "GnhlmrATVqcH"
                                             ],
-                                            "title": "Process internal links by title",
+                                            "title": "Microsoft OneNote",
                                             "notePosition": 10,
                                             "prefix": null,
                                             "isExpanded": false,
-                                            "type": "code",
-                                            "mime": "application/javascript;env=frontend",
+                                            "type": "text",
+                                            "mime": "text/markdown",
                                             "attributes": [
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "oPVyFC7WL2Lp",
+                                                    "isInheritable": false,
+                                                    "position": 10
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "8YBEPzcpUgxw",
+                                                    "isInheritable": false,
+                                                    "position": 20
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "S6Xx8QIWTV66",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "NdowYOC1GFKS",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "0vhv7lsOLy82",
+                                                    "isInheritable": false,
+                                                    "position": 50
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "hrZ1D00cLbal",
+                                                    "isInheritable": false,
+                                                    "position": 60
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "iPIMuisry3hd",
+                                                    "isInheritable": false,
+                                                    "position": 70
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "grjYqerjn243",
+                                                    "isInheritable": false,
+                                                    "position": 80
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "wy8So3yZZlH9",
+                                                    "isInheritable": false,
+                                                    "position": 90
+                                                },
                                                 {
                                                     "type": "label",
                                                     "name": "shareAlias",
-                                                    "value": "internal-links.js",
+                                                    "value": "onenote",
+                                                    "isInheritable": false,
+                                                    "position": 10
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bx-window-open",
                                                     "isInheritable": false,
                                                     "position": 30
                                                 }
                                             ],
-                                            "dataFileName": "Process internal links by titl.js",
+                                            "format": "markdown",
+                                            "dataFileName": "Microsoft OneNote.md",
                                             "attachments": []
+                                        },
+                                        {
+                                            "isClone": false,
+                                            "noteId": "Y5mKeJ6dsCld",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "gh7bpGYxajRS",
+                                                "mHbBMPDPkVV5",
+                                                "ckZ2uNWQmVeX",
+                                                "Y5mKeJ6dsCld"
+                                            ],
+                                            "title": "Notion",
+                                            "notePosition": 20,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "notion",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "oPVyFC7WL2Lp",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "8YBEPzcpUgxw",
+                                                    "isInheritable": false,
+                                                    "position": 50
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "S6Xx8QIWTV66",
+                                                    "isInheritable": false,
+                                                    "position": 60
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "hrZ1D00cLbal",
+                                                    "isInheritable": false,
+                                                    "position": 70
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "NwBbFdNZ9h7O",
+                                                    "isInheritable": false,
+                                                    "position": 80
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "GTwFsgaA0lCt",
+                                                    "isInheritable": false,
+                                                    "position": 90
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "YfYAtQBcfo5V",
+                                                    "isInheritable": false,
+                                                    "position": 100
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "UmgZAfcltxkS",
+                                                    "isInheritable": false,
+                                                    "position": 110
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "QxEyIjRBizuC",
+                                                    "isInheritable": false,
+                                                    "position": 120
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "mT0HEkOsz6i1",
+                                                    "isInheritable": false,
+                                                    "position": 130
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "0vhv7lsOLy82",
+                                                    "isInheritable": false,
+                                                    "position": 140
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "s1aBHPd79XYj",
+                                                    "isInheritable": false,
+                                                    "position": 150
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "wy8So3yZZlH9",
+                                                    "isInheritable": false,
+                                                    "position": 160
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Notion.md",
+                                            "attachments": []
+                                        },
+                                        {
+                                            "isClone": false,
+                                            "noteId": "nhQVuO4zvIxi",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "gh7bpGYxajRS",
+                                                "mHbBMPDPkVV5",
+                                                "ckZ2uNWQmVeX",
+                                                "nhQVuO4zvIxi"
+                                            ],
+                                            "title": "Google Keep",
+                                            "notePosition": 30,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "keep",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "oPVyFC7WL2Lp",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "8YBEPzcpUgxw",
+                                                    "isInheritable": false,
+                                                    "position": 50
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "p9kXRFAkwN4o",
+                                                    "isInheritable": false,
+                                                    "position": 60
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "mT0HEkOsz6i1",
+                                                    "isInheritable": false,
+                                                    "position": 70
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "0vhv7lsOLy82",
+                                                    "isInheritable": false,
+                                                    "position": 80
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "wy8So3yZZlH9",
+                                                    "isInheritable": false,
+                                                    "position": 90
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Google Keep.md",
+                                            "attachments": []
+                                        },
+                                        {
+                                            "isClone": false,
+                                            "noteId": "syuSEKf2rUGr",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "gh7bpGYxajRS",
+                                                "mHbBMPDPkVV5",
+                                                "ckZ2uNWQmVeX",
+                                                "syuSEKf2rUGr"
+                                            ],
+                                            "title": "Evernote",
+                                            "notePosition": 40,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/markdown",
+                                            "attributes": [
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "Gr6xFaF6ioJ5",
+                                                    "isInheritable": false,
+                                                    "position": 10
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "WOcw2SLH6tbX",
+                                                    "isInheritable": false,
+                                                    "position": 20
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "wy8So3yZZlH9",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "dj3j8dG4th4l",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "evernote",
+                                                    "isInheritable": false,
+                                                    "position": 10
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bx-window-open",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Evernote.md",
+                                            "attachments": [],
+                                            "dirFileName": "Evernote",
+                                            "children": [
+                                                {
+                                                    "isClone": false,
+                                                    "noteId": "dj3j8dG4th4l",
+                                                    "notePath": [
+                                                        "pOsGYCXsbNQG",
+                                                        "gh7bpGYxajRS",
+                                                        "mHbBMPDPkVV5",
+                                                        "ckZ2uNWQmVeX",
+                                                        "syuSEKf2rUGr",
+                                                        "dj3j8dG4th4l"
+                                                    ],
+                                                    "title": "Process internal links by title",
+                                                    "notePosition": 10,
+                                                    "prefix": null,
+                                                    "isExpanded": false,
+                                                    "type": "code",
+                                                    "mime": "application/javascript;env=frontend",
+                                                    "attributes": [
+                                                        {
+                                                            "type": "label",
+                                                            "name": "shareAlias",
+                                                            "value": "internal-links.js",
+                                                            "isInheritable": false,
+                                                            "position": 30
+                                                        }
+                                                    ],
+                                                    "dataFileName": "Process internal links by titl.js",
+                                                    "attachments": []
+                                                }
+                                            ]
                                         }
                                     ]
-                                },
-                                {
-                                    "isClone": false,
-                                    "noteId": "GnhlmrATVqcH",
-                                    "notePath": [
-                                        "pOsGYCXsbNQG",
-                                        "gh7bpGYxajRS",
-                                        "mHbBMPDPkVV5",
-                                        "GnhlmrATVqcH"
-                                    ],
-                                    "title": "OneNote",
-                                    "notePosition": 30,
-                                    "prefix": null,
-                                    "isExpanded": false,
-                                    "type": "text",
-                                    "mime": "text/markdown",
-                                    "attributes": [
-                                        {
-                                            "type": "label",
-                                            "name": "shareAlias",
-                                            "value": "onenote",
-                                            "isInheritable": false,
-                                            "position": 10
-                                        },
-                                        {
-                                            "type": "label",
-                                            "name": "iconClass",
-                                            "value": "bx bx-window-open",
-                                            "isInheritable": false,
-                                            "position": 30
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "oPVyFC7WL2Lp",
-                                            "isInheritable": false,
-                                            "position": 40
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "8YBEPzcpUgxw",
-                                            "isInheritable": false,
-                                            "position": 50
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "NdowYOC1GFKS",
-                                            "isInheritable": false,
-                                            "position": 60
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "S6Xx8QIWTV66",
-                                            "isInheritable": false,
-                                            "position": 70
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "0vhv7lsOLy82",
-                                            "isInheritable": false,
-                                            "position": 80
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "iPIMuisry3hd",
-                                            "isInheritable": false,
-                                            "position": 90
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "grjYqerjn243",
-                                            "isInheritable": false,
-                                            "position": 100
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "wy8So3yZZlH9",
-                                            "isInheritable": false,
-                                            "position": 110
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "hrZ1D00cLbal",
-                                            "isInheritable": false,
-                                            "position": 120
-                                        }
-                                    ],
-                                    "format": "markdown",
-                                    "dataFileName": "OneNote.md",
-                                    "attachments": []
                                 }
                             ]
                         },

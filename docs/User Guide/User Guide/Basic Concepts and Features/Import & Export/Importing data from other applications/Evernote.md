@@ -21,7 +21,7 @@ Once you have your ENEX files, do the following to import them in Trilium:
 A non-exhaustive list of what the importer preserves:
 
 *   Attachments
-*   The hierarchy of headings (these are shifted to start with H2 because H1 is reserved for note title, see [Headings](../../Note%20Types/Text/General%20formatting.md))
+*   The hierarchy of headings (these are shifted to start with H2 because H1 is reserved for note title, see [Headings](../../../Note%20Types/Text/General%20formatting.md))
 *   Tables
 *   Bulleted lists
 *   Numbered lists
@@ -37,9 +37,9 @@ However, we do not guarantee that all of your formatting will be imported 100% c
 
 ## Limitations
 
-*   The size limit of one import is 250Mb. If the total size of your files is larger, you can increase the [upload limit](../../Installation%20%26%20Setup/Server%20Installation.md), or divide your files, and run the import as many times as necessary.
+*   The size limit of one import is 250Mb. If the total size of your files is larger, you can increase the [upload limit](../../../Installation%20%26%20Setup/Server%20Installation.md), or divide your files, and run the import as many times as necessary.
 *   All resources (except for images) are created as notes’ attachments.
-*   If you have HTML inside ENEX files, the HTML formatting may be broken or lost after import in Trilium. See <a class="reference-link" href="../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
+*   If you have HTML inside ENEX files, the HTML formatting may be broken or lost after import in Trilium. See <a class="reference-link" href="../../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
 
 ### Internal links
 
@@ -57,4 +57,4 @@ The script does the following:
 The script has the following limitations:
 
 *   It will not fix links to anchors and links to notes that you renamed in Evernote after you created the links.
-*   Some note titles might not be well identified, even if they exist. This is especially the case if the note title contains some special characters. Should this be problematic, consider <a class="reference-link" href="../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
+*   Some note titles might not be well identified, even if they exist. This is especially the case if the note title contains some special characters. Should this be problematic, consider <a class="reference-link" href="../../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
