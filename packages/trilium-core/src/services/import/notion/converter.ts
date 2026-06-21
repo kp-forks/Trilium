@@ -5,7 +5,8 @@
  * match what CKEditor expects. This module applies a pipeline of transforms to bridge the two. It runs
  * before sanitization, so it may emit any markup the sanitizer subsequently allows.
  *
- * Each feature is a small, independently-tested transform; {@link convertNotionHtml} chains them.
+ * Each feature is a small, independently-tested transform; {@link convertNotionHtml} chains them. The
+ * transforms below are ordered to match that pipeline, each grouped in its own `#region`.
  */
 
 import { HTMLElement, parse } from "node-html-parser";
@@ -23,77 +24,7 @@ export function convertNotionHtml(html: string): string {
     return root.toString();
 }
 
-/**
- * Notion tables are `<table class="simple-table">` with Notion-specific classes, ids and pixel widths on
- * every element, and the `<tr>`s wrapped in `display:contents` divs (already removed by the time this
- * runs). Rewrite each into Trilium's canonical form: strip the Notion attributes, mark header cells with
- * `scope` (col in the head, row in the body), and wrap the table in `<figure class="table">`.
- */
-function convertTables(root: HTMLElement) {
-    for (const table of root.querySelectorAll("table.simple-table")) {
-        stripTableAttributes(table);
-        for (const th of table.querySelectorAll("thead th")) {
-            th.setAttribute("scope", "col");
-        }
-        for (const th of table.querySelectorAll("tbody th")) {
-            th.setAttribute("scope", "row");
-        }
-        table.insertAdjacentHTML("beforebegin", `<figure class="table">${table.toString()}</figure>`);
-        table.remove();
-    }
-}
-
-/** Removes Notion's class/id/style from the table and every cell/row/section, keeping colspan/rowspan. */
-function stripTableAttributes(table: HTMLElement) {
-    const strip = (el: HTMLElement) => {
-        el.removeAttribute("class");
-        el.removeAttribute("id");
-        el.removeAttribute("style");
-    };
-    strip(table);
-    for (const tag of ["thead", "tbody", "tr", "th", "td"]) {
-        for (const el of table.querySelectorAll(tag)) {
-            strip(el);
-        }
-    }
-}
-
-/**
- * Notion bookmark cards are `<figure><a class="bookmark source" href="…"><div class="bookmark-info">…`,
- * carrying a title, description and favicon. Trilium has the equivalent link-embed, so rewrite each into
- * `<section class="link-embed" data-…>` (an open-graph embed). Optional fields are only emitted when the
- * bookmark provides them.
- */
-function convertBookmarks(root: HTMLElement) {
-    for (const figure of root.querySelectorAll("figure")) {
-        const url = figure.querySelector("a.bookmark")?.getAttribute("href");
-        if (!url) {
-            continue;
-        }
-
-        const section = parse(`<section></section>`).querySelector("section");
-        if (!section) {
-            continue;
-        }
-        section.setAttribute("class", "link-embed");
-        section.setAttribute("data-url", url);
-        section.setAttribute("data-embed-type", "opengraph");
-
-        const optional: Record<string, string | undefined> = {
-            "data-title": figure.querySelector(".bookmark-title")?.textContent?.trim(),
-            "data-description": figure.querySelector(".bookmark-description")?.textContent?.trim(),
-            "data-favicon": figure.querySelector("img.bookmark-icon")?.getAttribute("src")
-        };
-        for (const [key, value] of Object.entries(optional)) {
-            if (value) {
-                section.setAttribute(key, value);
-            }
-        }
-
-        figure.replaceWith(section);
-    }
-}
-
+// #region Math
 /**
  * Notion renders each equation with KaTeX, preceded by a `<style>@import …katex…</style>` whose text
  * would otherwise survive sanitization as visible junk. Drop those style blocks and replace each inline
@@ -116,7 +47,9 @@ function convertMath(root: HTMLElement) {
         token.remove();
     }
 }
+// #endregion
 
+// #region Date mentions
 /**
  * Notion prefixes its inline date mentions with "@" (e.g. `<time>@June 21, 2026</time>`). Strip it so the
  * imported text reads naturally, mirroring how the importer already handles property-row date metadata.
@@ -129,82 +62,9 @@ function stripDatePrefixes(root: HTMLElement) {
         }
     }
 }
+// #endregion
 
-/** Notion's default callout icon; it maps 1:1 to a "tip" admonition, so the emoji itself is redundant. */
-const DEFAULT_CALLOUT_EMOJI = "💡";
-
-/**
- * Notion callouts are `<figure class="callout">` with an icon div (`<span class="icon">…</span>`) and a
- * content div. Trilium has admonitions, so rewrite each into `<aside class="admonition <type>">`. The
- * default light-bulb maps to a "tip" (the icon is implied, so it's dropped); any other emoji maps to a
- * neutral "note" with the emoji preserved at the start of the content so the information isn't lost.
- *
- * Runs after wrapper-stripping so the content is already clean, and in reverse document order so a nested
- * callout is converted before the callout that contains it.
- */
-function convertCallouts(root: HTMLElement) {
-    for (const figure of [...root.querySelectorAll("figure.callout")].reverse()) {
-        const divs = directChildren(figure, "div");
-        const iconDiv = divs.find((div) => (div.getAttribute("style") ?? "").includes("font-size"));
-        const contentDiv = divs.find((div) => (div.getAttribute("style") ?? "").replace(/\s/g, "").includes("width:100%")) ?? divs[divs.length - 1];
-
-        const emoji = iconDiv?.querySelector("span.icon")?.textContent?.trim() ?? "";
-        const type = emoji === DEFAULT_CALLOUT_EMOJI ? "tip" : "note";
-        if (type === "note" && emoji && contentDiv) {
-            prependEmoji(contentDiv, emoji);
-        }
-
-        figure.insertAdjacentHTML("beforebegin", `<aside class="admonition ${type}">${contentDiv?.innerHTML ?? ""}</aside>`);
-        figure.remove();
-    }
-}
-
-/** Prepends the callout's emoji to its content: into the first paragraph, or as a leading one otherwise. */
-function prependEmoji(contentDiv: HTMLElement, emoji: string) {
-    const first = directChild(contentDiv, () => true);
-    if (first && isTag(first, "p")) {
-        first.set_content(`${emoji} ${first.innerHTML}`);
-    } else {
-        contentDiv.insertAdjacentHTML("afterbegin", `<p>${emoji}</p>`);
-    }
-}
-
-/**
- * Trilium has no list-based toggle; its collapsible block is a bare `<details>`
- * (data view `<details class="trilium-collapsible">`). Notion exports each toggle as
- * `<ul class="toggle"><li><details>…</details></li></ul>`, so drop the list wrapper, hoisting the
- * `<details>` in its place and tagging it with Trilium's collapsible class. Only the toggle's own
- * top-level `<details>` is hoisted; a nested toggle is handled when the loop reaches its own `ul.toggle`,
- * which keeps it nested. Notion's native `open` attribute is preserved so the published/share view
- * reflects the exported expanded/collapsed state (the in-app editor always loads toggles collapsed, and
- * the sanitizer is configured to keep `open` on `details`).
- */
-function convertToggles(root: HTMLElement) {
-    for (const ul of root.querySelectorAll("ul.toggle")) {
-        const detailsList = directChildren(ul, "li").flatMap((li) => directChildren(li, "details"));
-        for (const details of detailsList) {
-            const existing = details.getAttribute("class");
-            details.setAttribute("class", existing ? `${existing} trilium-collapsible` : "trilium-collapsible");
-        }
-        ul.replaceWith(...detailsList);
-    }
-}
-
-/**
- * Notion wraps almost every block in a `<div style="display:contents">`, a layout no-op that survives
- * sanitization and would otherwise leave the imported note littered with meaningless block wrappers.
- * Hoist each such div's children in its place; nested wrappers flatten too (querySelectorAll visits the
- * outer first, and the inner stays a live, reparented node). Other divs (callouts, `.indented`, …) are
- * left untouched.
- */
-function unwrapDisplayContents(root: HTMLElement) {
-    for (const div of root.querySelectorAll("div")) {
-        if (isDisplayContents(div)) {
-            div.replaceWith(...div.childNodes);
-        }
-    }
-}
-
+// #region To-do lists
 /**
  * Notion renders every to-do item as its own `<ul class="to-do-list">` (each wrapped in a
  * `display:contents` `<div>`), whose `<li>` holds a `<div class="checkbox checkbox-on|off">`, a
@@ -303,12 +163,170 @@ function todoUl(node: HTMLElement): HTMLElement | null {
     return null;
 }
 
-function isDisplayContents(node: HTMLElement): boolean {
-    return isTag(node, "div") && (node.getAttribute("style") ?? "").replace(/\s/g, "").includes("display:contents");
-}
-
 function isTodoUl(node: HTMLElement): boolean {
     return isTag(node, "ul") && node.classList.contains("to-do-list");
+}
+// #endregion
+
+// #region Toggles
+/**
+ * Trilium has no list-based toggle; its collapsible block is a bare `<details>`
+ * (data view `<details class="trilium-collapsible">`). Notion exports each toggle as
+ * `<ul class="toggle"><li><details>…</details></li></ul>`, so drop the list wrapper, hoisting the
+ * `<details>` in its place and tagging it with Trilium's collapsible class. Only the toggle's own
+ * top-level `<details>` is hoisted; a nested toggle is handled when the loop reaches its own `ul.toggle`,
+ * which keeps it nested. Notion's native `open` attribute is preserved so the published/share view
+ * reflects the exported expanded/collapsed state (the in-app editor always loads toggles collapsed, and
+ * the sanitizer is configured to keep `open` on `details`).
+ */
+function convertToggles(root: HTMLElement) {
+    for (const ul of root.querySelectorAll("ul.toggle")) {
+        const detailsList = directChildren(ul, "li").flatMap((li) => directChildren(li, "details"));
+        for (const details of detailsList) {
+            const existing = details.getAttribute("class");
+            details.setAttribute("class", existing ? `${existing} trilium-collapsible` : "trilium-collapsible");
+        }
+        ul.replaceWith(...detailsList);
+    }
+}
+// #endregion
+
+// #region display:contents wrappers
+/**
+ * Notion wraps almost every block in a `<div style="display:contents">`, a layout no-op that survives
+ * sanitization and would otherwise leave the imported note littered with meaningless block wrappers.
+ * Hoist each such div's children in its place; nested wrappers flatten too (querySelectorAll visits the
+ * outer first, and the inner stays a live, reparented node). Other divs (callouts, `.indented`, …) are
+ * left untouched.
+ */
+function unwrapDisplayContents(root: HTMLElement) {
+    for (const div of root.querySelectorAll("div")) {
+        if (isDisplayContents(div)) {
+            div.replaceWith(...div.childNodes);
+        }
+    }
+}
+// #endregion
+
+// #region Tables
+/**
+ * Notion tables are `<table class="simple-table">` with Notion-specific classes, ids and pixel widths on
+ * every element, and the `<tr>`s wrapped in `display:contents` divs (already removed by the time this
+ * runs). Rewrite each into Trilium's canonical form: strip the Notion attributes, mark header cells with
+ * `scope` (col in the head, row in the body), and wrap the table in `<figure class="table">`.
+ */
+function convertTables(root: HTMLElement) {
+    for (const table of root.querySelectorAll("table.simple-table")) {
+        stripTableAttributes(table);
+        for (const th of table.querySelectorAll("thead th")) {
+            th.setAttribute("scope", "col");
+        }
+        for (const th of table.querySelectorAll("tbody th")) {
+            th.setAttribute("scope", "row");
+        }
+        table.insertAdjacentHTML("beforebegin", `<figure class="table">${table.toString()}</figure>`);
+        table.remove();
+    }
+}
+
+/** Removes Notion's class/id/style from the table and every cell/row/section, keeping colspan/rowspan. */
+function stripTableAttributes(table: HTMLElement) {
+    const strip = (el: HTMLElement) => {
+        el.removeAttribute("class");
+        el.removeAttribute("id");
+        el.removeAttribute("style");
+    };
+    strip(table);
+    for (const tag of ["thead", "tbody", "tr", "th", "td"]) {
+        for (const el of table.querySelectorAll(tag)) {
+            strip(el);
+        }
+    }
+}
+// #endregion
+
+// #region Callouts
+/** Notion's default callout icon; it maps 1:1 to a "tip" admonition, so the emoji itself is redundant. */
+const DEFAULT_CALLOUT_EMOJI = "💡";
+
+/**
+ * Notion callouts are `<figure class="callout">` with an icon div (`<span class="icon">…</span>`) and a
+ * content div. Trilium has admonitions, so rewrite each into `<aside class="admonition <type>">`. The
+ * default light-bulb maps to a "tip" (the icon is implied, so it's dropped); any other emoji maps to a
+ * neutral "note" with the emoji preserved at the start of the content so the information isn't lost.
+ *
+ * Runs after wrapper-stripping so the content is already clean, and in reverse document order so a nested
+ * callout is converted before the callout that contains it.
+ */
+function convertCallouts(root: HTMLElement) {
+    for (const figure of [...root.querySelectorAll("figure.callout")].reverse()) {
+        const divs = directChildren(figure, "div");
+        const iconDiv = divs.find((div) => (div.getAttribute("style") ?? "").includes("font-size"));
+        const contentDiv = divs.find((div) => (div.getAttribute("style") ?? "").replace(/\s/g, "").includes("width:100%")) ?? divs[divs.length - 1];
+
+        const emoji = iconDiv?.querySelector("span.icon")?.textContent?.trim() ?? "";
+        const type = emoji === DEFAULT_CALLOUT_EMOJI ? "tip" : "note";
+        if (type === "note" && emoji && contentDiv) {
+            prependEmoji(contentDiv, emoji);
+        }
+
+        figure.insertAdjacentHTML("beforebegin", `<aside class="admonition ${type}">${contentDiv?.innerHTML ?? ""}</aside>`);
+        figure.remove();
+    }
+}
+
+/** Prepends the callout's emoji to its content: into the first paragraph, or as a leading one otherwise. */
+function prependEmoji(contentDiv: HTMLElement, emoji: string) {
+    const first = directChild(contentDiv, () => true);
+    if (first && isTag(first, "p")) {
+        first.set_content(`${emoji} ${first.innerHTML}`);
+    } else {
+        contentDiv.insertAdjacentHTML("afterbegin", `<p>${emoji}</p>`);
+    }
+}
+// #endregion
+
+// #region Bookmarks
+/**
+ * Notion bookmark cards are `<figure><a class="bookmark source" href="…"><div class="bookmark-info">…`,
+ * carrying a title, description and favicon. Trilium has the equivalent link-embed, so rewrite each into
+ * `<section class="link-embed" data-…>` (an open-graph embed). Optional fields are only emitted when the
+ * bookmark provides them.
+ */
+function convertBookmarks(root: HTMLElement) {
+    for (const figure of root.querySelectorAll("figure")) {
+        const url = figure.querySelector("a.bookmark")?.getAttribute("href");
+        if (!url) {
+            continue;
+        }
+
+        const section = parse(`<section></section>`).querySelector("section");
+        if (!section) {
+            continue;
+        }
+        section.setAttribute("class", "link-embed");
+        section.setAttribute("data-url", url);
+        section.setAttribute("data-embed-type", "opengraph");
+
+        const optional: Record<string, string | undefined> = {
+            "data-title": figure.querySelector(".bookmark-title")?.textContent?.trim(),
+            "data-description": figure.querySelector(".bookmark-description")?.textContent?.trim(),
+            "data-favicon": figure.querySelector("img.bookmark-icon")?.getAttribute("src")
+        };
+        for (const [key, value] of Object.entries(optional)) {
+            if (value) {
+                section.setAttribute(key, value);
+            }
+        }
+
+        figure.replaceWith(section);
+    }
+}
+// #endregion
+
+// #region Shared helpers
+function isDisplayContents(node: HTMLElement): boolean {
+    return isTag(node, "div") && (node.getAttribute("style") ?? "").replace(/\s/g, "").includes("display:contents");
 }
 
 function isTag(node: HTMLElement, tag: string): boolean {
@@ -327,3 +345,4 @@ function directChild(parent: HTMLElement, predicate: (node: HTMLElement) => bool
 function directChildren(parent: HTMLElement, tag: string): HTMLElement[] {
     return parent.childNodes.filter((node): node is HTMLElement => node instanceof HTMLElement && isTag(node, tag));
 }
+// #endregion
