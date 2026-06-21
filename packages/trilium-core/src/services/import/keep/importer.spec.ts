@@ -21,12 +21,19 @@ describe("Google Keep importer — parseNote", () => {
         });
     });
 
-    it("falls back to the (timestamp) filename for an untitled note", () => {
+    it("derives a readable local-time title from the timestamp filename for an untitled note", () => {
         const json = JSON.stringify({ title: "", textContent: "Dsaa" });
 
         const note = parseNote("2025-11-13T23_39_37.236+02_00.json", json);
 
-        expect(note?.title).toBe("2025-11-13T23_39_37.236+02_00");
+        // Reformatted to local wall-clock time (the offset is already baked into the filename).
+        expect(note?.title).toBe("2025-11-13 23:39:37");
+    });
+
+    it("uses a non-timestamp filename as-is for the title", () => {
+        const note = parseNote("Shopping list.json", JSON.stringify({ title: "", textContent: "milk" }));
+
+        expect(note?.title).toBe("Shopping list");
     });
 
     it("renders a multi-line body as one paragraph per line, escaping HTML", () => {

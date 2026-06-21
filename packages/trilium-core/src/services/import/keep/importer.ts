@@ -97,9 +97,9 @@ export function parseNote(path: string, json: string): ParsedNote | null {
         return null;
     }
 
-    // Untitled Keep notes export with an empty `title`; their filename is the note's timestamp, which at
-    // least keeps them distinguishable.
-    const title = note.title?.trim() || removeExtension(baseName(path)) || "Untitled";
+    // Untitled Keep notes export with an empty `title`; fall back to a readable title derived from the
+    // timestamp filename.
+    const title = note.title?.trim() || formatUntitledTitle(removeExtension(baseName(path)));
 
     return {
         title,
@@ -210,6 +210,21 @@ function usecToUtc(usec: number | undefined): string | undefined {
     }
     const date = new Date(usec / 1000);
     return Number.isNaN(date.getTime()) ? undefined : dateUtils.utcDateTimeStr(date);
+}
+
+/**
+ * Builds a readable title for an untitled note from its filename. Keep names untitled notes by their
+ * timestamp with the local-time offset baked in (e.g. "2026-06-21T11_14_14.438+03_00"); reformat that to
+ * "2026-06-21 11:14:14" — the digits before the offset are already local, so no conversion is needed.
+ * Non-timestamp names are returned as-is, and an empty name falls back to "Untitled".
+ */
+function formatUntitledTitle(name: string): string {
+    const match = name.match(/^(\d{4}-\d{2}-\d{2})T(\d{2})_(\d{2})_(\d{2})/);
+    if (match) {
+        const [, date, hour, minute, second] = match;
+        return `${date} ${hour}:${minute}:${second}`;
+    }
+    return name || "Untitled";
 }
 
 function escapeHtml(text: string): string {
