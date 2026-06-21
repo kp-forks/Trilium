@@ -17,9 +17,45 @@ export function convertNotionHtml(html: string): string {
     convertTodoLists(root);
     convertToggles(root);
     unwrapDisplayContents(root);
+    convertTables(root);
     convertCallouts(root);
     convertBookmarks(root);
     return root.toString();
+}
+
+/**
+ * Notion tables are `<table class="simple-table">` with Notion-specific classes, ids and pixel widths on
+ * every element, and the `<tr>`s wrapped in `display:contents` divs (already removed by the time this
+ * runs). Rewrite each into Trilium's canonical form: strip the Notion attributes, mark header cells with
+ * `scope` (col in the head, row in the body), and wrap the table in `<figure class="table">`.
+ */
+function convertTables(root: HTMLElement) {
+    for (const table of root.querySelectorAll("table.simple-table")) {
+        stripTableAttributes(table);
+        for (const th of table.querySelectorAll("thead th")) {
+            th.setAttribute("scope", "col");
+        }
+        for (const th of table.querySelectorAll("tbody th")) {
+            th.setAttribute("scope", "row");
+        }
+        table.insertAdjacentHTML("beforebegin", `<figure class="table">${table.toString()}</figure>`);
+        table.remove();
+    }
+}
+
+/** Removes Notion's class/id/style from the table and every cell/row/section, keeping colspan/rowspan. */
+function stripTableAttributes(table: HTMLElement) {
+    const strip = (el: HTMLElement) => {
+        el.removeAttribute("class");
+        el.removeAttribute("id");
+        el.removeAttribute("style");
+    };
+    strip(table);
+    for (const tag of ["thead", "tbody", "tr", "th", "td"]) {
+        for (const el of table.querySelectorAll(tag)) {
+            strip(el);
+        }
+    }
 }
 
 /**

@@ -167,6 +167,15 @@ describe("convertNotionHtml — bookmarks", () => {
     });
 });
 
+describe("convertNotionHtml — tables", () => {
+    it("rewrites a Notion simple-table into a canonical figure.table with scoped headers", () => {
+        const input = `<div style="display:contents" dir="ltr"><table id="386c5eca" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="r0"><th id="?Hr:" class="simple-table-header-color simple-table-header" style="width:239.7px">Column 1</th><th id="SDzW" class="simple-table-header-color simple-table-header" style="width:239.7px">Column 2</th><th id="q@CU" class="simple-table-header-color simple-table-header" style="width:239.7px">Column 3</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="r1"><th id="?Hr:" class="simple-table-header-color simple-table-header" style="width:239.7px">Row 1</th><td id="SDzW" class="" style="width:239.7px">A</td><td id="q@CU" class="" style="width:239.7px">B</td></tr></div><div style="display:contents" dir="ltr"><tr id="r2"><th id="?Hr:" class="simple-table-header-color simple-table-header" style="width:239.7px">Row 2</th><td id="SDzW" class="" style="width:239.7px">C</td><td id="q@CU" class="" style="width:239.7px">D</td></tr></div></tbody></table></div>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<figure class="table"><table><thead><tr><th scope="col">Column 1</th><th scope="col">Column 2</th><th scope="col">Column 3</th></tr></thead><tbody><tr><th scope="row">Row 1</th><td>A</td><td>B</td></tr><tr><th scope="row">Row 2</th><td>C</td><td>D</td></tr></tbody></table></figure>`
+        );
+    });
+});
+
 describe("convertNotionHtml — date mentions", () => {
     it("strips the @ prefix Notion puts on inline <time> date mentions", () => {
         expect(convertNotionHtml(`<p><time>@June 21, 2026</time></p>`)).toBe(`<p><time>June 21, 2026</time></p>`);
