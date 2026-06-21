@@ -48,32 +48,42 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
 }
 
 /**
- * Reads the zip once: HTML entries become parsed pages; every other file (images, attachments) is kept
- * by its normalized path so page content can later reference it. The `index.html` summary is skipped.
+ * Reads the zip: HTML entries become parsed pages; every other file (images, attachments) is kept by its
+ * normalized path so page content can later reference it. The `index.html` summary is skipped.
+ *
+ * A Notion workspace export wraps its content in one (or more) nested zips at the archive root — the part
+ * you'd otherwise have to extract by hand — so root-level `.zip` entries are descended into. Nested zips
+ * sitting inside a page folder are treated as ordinary attachments, not export structure.
  */
 async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array> }> {
     const provider = getZipProvider();
-    const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
-
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
-    await provider.readZipFile(fileBuffer, async (entry, readContent) => {
-        const path = entry.fileName;
-        if (isDirectory(path)) {
-            return;
-        }
-        if (path.toLowerCase().endsWith(".html")) {
-            if (baseName(path) === "index.html") {
+
+    const readArchive = async (buffer: Uint8Array): Promise<void> => {
+        const filenameEncoding = await provider.detectFilenameEncoding(buffer);
+        await provider.readZipFile(buffer, async (entry, readContent) => {
+            const path = entry.fileName;
+            if (isDirectory(path)) {
                 return;
             }
-            const parsed = parsePage(path, new TextDecoder().decode(await readContent()));
-            if (parsed) {
-                pages.push(parsed);
+            if (path.toLowerCase().endsWith(".zip") && !path.includes("/")) {
+                await readArchive(await readContent());
+            } else if (path.toLowerCase().endsWith(".html")) {
+                if (baseName(path) === "index.html") {
+                    return;
+                }
+                const parsed = parsePage(path, new TextDecoder().decode(await readContent()));
+                if (parsed) {
+                    pages.push(parsed);
+                }
+            } else {
+                resources.set(normalizePath(path), await readContent());
             }
-        } else {
-            resources.set(normalizePath(path), await readContent());
-        }
-    }, filenameEncoding);
+        }, filenameEncoding);
+    };
+
+    await readArchive(fileBuffer);
 
     return { pages, resources };
 }
