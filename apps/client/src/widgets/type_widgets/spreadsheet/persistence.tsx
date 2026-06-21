@@ -3,6 +3,7 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
+import server from "../../../services/server";
 import { randomString } from "../../../services/utils";
 import { SavedData, useEditorSpacedUpdate } from "../../react/hooks";
 
@@ -26,6 +27,12 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
     // applied yet. getData() waits for that pending recalc before serializing, so a
     // save can't persist pre-recalc (stale) formula results.
     const recalcPending = useRef(false);
+    // Maps an inserted image's base64 source to the attachment URL it was uploaded to, so each image
+    // is uploaded once and reused across the repeated saves of one editing session. Reset on load.
+    const uploadedImageUrls = useRef<Map<string, string>>(new Map());
+    // Base64 images already present in the loaded content. Left as-is on save (we only convert newly
+    // inserted images to attachments — existing notes are not migrated).
+    const preexistingImageSources = useRef<Set<string>>(new Set());
 
     function saveViewState(univerAPI: FUniver): SpreadsheetViewState {
         const state: SpreadsheetViewState = {};
@@ -88,6 +95,12 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
                 console.error("Failed to parse spreadsheet content", e);
             }
         }
+
+        // Snapshot the base64 images already in the loaded content so the save-time upload leaves them
+        // untouched (only newly inserted images become attachments), and start the per-session
+        // base64 -> attachment-URL map fresh for this workbook.
+        preexistingImageSources.current = collectBase64DrawingSources(workbookData);
+        uploadedImageUrls.current = new Map();
 
         // Always assign a fresh unit id. The persisted id is reused verbatim, but the
         // new workbook is created below BEFORE the old one is disposed, so a stale or
@@ -165,11 +178,7 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
             }
 
             const saved = workbook.save();
-
-            const content = {
-                version: 1,
-                workbook: slimWorkbookData(saved)
-            };
+            const slimmed = slimWorkbookData(saved);
 
             const attachments: SavedData["attachments"] = [];
             const canvasEl = containerRef.current?.querySelector<HTMLCanvasElement>("canvas[id]");
@@ -185,6 +194,21 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
                     encoding: "base64"
                 });
             }
+
+            // Upload newly inserted base64 images as attachments and rewrite their workbook sources
+            // to the returned api/attachments/... URLs (mutates `slimmed`) so they no longer bloat
+            // the note content. Existing base64 images are left in place (see preexistingImageSources).
+            await uploadNewDrawingImages(
+                slimmed,
+                preexistingImageSources.current,
+                uploadedImageUrls.current,
+                (source) => uploadDrawingImage(note.noteId, source)
+            );
+
+            const content = {
+                version: 1,
+                workbook: slimmed
+            };
 
             return {
                 content: JSON.stringify(content),
@@ -276,4 +300,157 @@ export function slimWorkbookData(workbookData: IWorkbookData): Partial<IWorkbook
         );
     }
     return slimmed;
+}
+
+/** Univer's resource key under which the sheet drawing (image) layer is serialized in the workbook. */
+const DRAWING_RESOURCE_NAME = "SHEET_DRAWING_PLUGIN";
+
+/**
+ * Uploads newly inserted base64 images in a saved workbook as Trilium attachments and rewrites their
+ * drawing-resource `source` from the inline data URL to the returned `api/attachments/...` URL (with
+ * `imageSourceType` switched to `URL`), so images live as attachments instead of bloating the note
+ * content.
+ *
+ * - `preexisting` holds base64 sources already in the loaded content; those are left untouched so
+ *   existing notes are not migrated.
+ * - `uploadedUrls` caches each base64 source's resulting URL, so an image is uploaded once and
+ *   reused across the session's repeated saves rather than re-uploaded each time.
+ * - `upload` performs the actual upload and resolves to the attachment URL, or `null` on failure
+ *   (in which case the image is left as base64 so it still persists and renders).
+ *
+ * Mutates `workbookData` (re-serializing the drawing resource) when any source changed.
+ */
+export async function uploadNewDrawingImages(
+    workbookData: Partial<IWorkbookData>,
+    preexisting: ReadonlySet<string>,
+    uploadedUrls: Map<string, string>,
+    upload: (source: string) => Promise<string | null>
+): Promise<void> {
+    const targets: { node: Record<string, unknown>; source: string }[] = [];
+    const walked = forEachBase64DrawingImage(workbookData, (node, source) => {
+        if (!preexisting.has(source)) {
+            targets.push({ node, source });
+        }
+    });
+    if (!walked || targets.length === 0) return;
+
+    let mutated = false;
+    for (const { node, source } of targets) {
+        let url = uploadedUrls.get(source);
+        if (!url) {
+            const uploaded = await upload(source);
+            if (!uploaded) continue; // upload failed — leave as base64 so it still persists/renders
+            url = uploaded;
+            uploadedUrls.set(source, url);
+        }
+        node.source = url;
+        node.imageSourceType = "URL";
+        mutated = true;
+    }
+
+    if (mutated) {
+        walked.resource.data = JSON.stringify(walked.drawingData);
+    }
+}
+
+/**
+ * Uploads a base64 image to the note as an attachment via the standard attachment-upload endpoint
+ * (the server assigns the id and returns the reference URL). Resolves to the URL, or `null` on
+ * failure.
+ */
+async function uploadDrawingImage(noteId: string, source: string): Promise<string | null> {
+    const file = dataUrlToImageFile(source);
+    if (!file) return null;
+
+    try {
+        const response = await server.upload(`notes/${noteId}/attachments/upload`, file, undefined, "POST") as { uploaded?: boolean; url?: string };
+        return response?.uploaded && response.url ? response.url : null;
+    } catch (e) {
+        console.error("Failed to upload spreadsheet image", e);
+        return null;
+    }
+}
+
+/** Decodes a `data:<mime>;base64,<data>` URL into a {@link File} for upload. */
+function dataUrlToImageFile(dataUrl: string): File | null {
+    const parsed = parseImageDataUrl(dataUrl);
+    if (!parsed) return null;
+
+    const binary = atob(parsed.base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return new File([ bytes ], `image.${parsed.ext}`, { type: parsed.mime });
+}
+
+/** Collects the base64 image sources currently present in a workbook's drawing resource. */
+export function collectBase64DrawingSources(workbookData: Partial<IWorkbookData>): Set<string> {
+    const sources = new Set<string>();
+    forEachBase64DrawingImage(workbookData, (_node, source) => sources.add(source));
+    return sources;
+}
+
+interface DrawingResource {
+    resource: { name: string; data: string };
+    drawingData: unknown;
+}
+
+/**
+ * Walks the drawing resource of a saved workbook, invoking `callback` for every base64 image node
+ * (an object with `imageSourceType === "BASE64"` and a `data:` `source`). The callback may mutate
+ * the node in place. Returns the parsed drawing data and its resource so callers can re-serialize
+ * after mutating, or `null` when there is no drawing resource / it fails to parse.
+ */
+function forEachBase64DrawingImage(
+    workbookData: Partial<IWorkbookData>,
+    callback: (node: Record<string, unknown>, source: string) => void
+): DrawingResource | null {
+    const resource = workbookData.resources?.find((r) => r.name === DRAWING_RESOURCE_NAME);
+    if (!resource?.data) return null;
+
+    let drawingData: unknown;
+    try {
+        drawingData = JSON.parse(resource.data);
+    } catch {
+        return null;
+    }
+
+    const visit = (value: unknown) => {
+        if (Array.isArray(value)) {
+            value.forEach(visit);
+            return;
+        }
+        if (!value || typeof value !== "object") return;
+
+        const node = value as Record<string, unknown>;
+        if (node.imageSourceType === "BASE64" && typeof node.source === "string" && node.source.startsWith("data:")) {
+            callback(node, node.source);
+            return;
+        }
+        for (const key of Object.keys(node)) {
+            visit(node[key]);
+        }
+    };
+    visit(drawingData);
+
+    return { resource, drawingData };
+}
+
+interface ParsedImageDataUrl {
+    mime: string;
+    base64: string;
+    ext: string;
+}
+
+/** Splits a `data:<mime>;base64,<data>` URL into its mime, raw base64 and a file extension. */
+function parseImageDataUrl(dataUrl: string): ParsedImageDataUrl | null {
+    const match = /^data:([^;,]+);base64,(.*)$/.exec(dataUrl);
+    if (!match) return null;
+
+    const mime = match[1];
+    const base64 = match[2];
+    const subtype = mime.split("/")[1] ?? "png";
+    const ext = subtype === "svg+xml" ? "svg" : (subtype.replace(/[^a-z0-9]/gi, "") || "png");
+    return { mime, base64, ext };
 }
