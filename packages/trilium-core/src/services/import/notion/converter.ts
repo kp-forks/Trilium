@@ -24,6 +24,7 @@ export function convertNotionHtml(html: string): string {
     convertCodeBlocks(root);
     convertCallouts(root);
     convertBookmarks(root);
+    convertLinkToPage(root);
     return root.toString();
 }
 
@@ -377,6 +378,24 @@ function convertBookmarks(root: HTMLElement) {
         }
 
         figure.replaceWith(section);
+    }
+}
+// #endregion
+
+// #region Link-to-page blocks
+/**
+ * Notion's "link to page" block is `<figure class="link-to-page"><a href="…page.html">Title</a></figure>`.
+ * Reduce it to a paragraph holding the link; the href still points at the target page's exported file,
+ * which the importer resolves to a Trilium internal/reference link once every page has a note.
+ */
+function convertLinkToPage(root: HTMLElement) {
+    for (const figure of root.querySelectorAll("figure.link-to-page")) {
+        const anchor = figure.querySelector("a");
+        if (!anchor) {
+            continue;
+        }
+        figure.insertAdjacentHTML("beforebegin", `<p>${anchor.toString()}</p>`);
+        figure.remove();
     }
 }
 // #endregion

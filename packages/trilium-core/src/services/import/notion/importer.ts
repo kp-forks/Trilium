@@ -117,8 +117,12 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     rootNote.addLabel("iconClass", "bx bx-import");
 
     const noteIdByPageId = new Map<string, string>();
+    const targetByPageId = new Map<string, LinkTarget>();
+    const created: { note: BNote; content: string; page: ParsedPage }[] = [];
     const ordered = [...pages].sort((a, b) => a.parentIds.length - b.parentIds.length);
 
+    // First pass: create every note (so cross-page links can resolve in the second pass) and save its
+    // referenced images as attachments. Content is only rewritten/saved once, in the second pass.
     for (const page of ordered) {
         const parentPageId = page.parentIds[page.parentIds.length - 1];
         const targetParentId = (parentPageId && noteIdByPageId.get(parentPageId)) || rootNote.noteId;
@@ -132,12 +136,19 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
             isProtected
         });
         noteIdByPageId.set(page.id, note.noteId);
+        targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
 
-        // Save referenced images as attachments and point their <img> at them. Done after creation, since
-        // attachments hang off the note; re-saves the content only when an image was actually rewritten.
-        const rewritten = rewriteImages(note, page.content, page.path, resources);
-        if (rewritten !== page.content) {
-            note.setContent(rewritten);
+        // Attachments hang off the note, so this must run after creation; it returns the content with the
+        // <img> srcs pointing at the saved attachments.
+        created.push({ note, content: rewriteImages(note, page.content, page.path, resources), page });
+        taskContext.increaseProgressCount();
+    }
+
+    // Second pass: now that every page has a note, resolve cross-page links and persist the final content.
+    for (const { note, content, page } of created) {
+        const finalContent = rewriteLinks(content, (notionId) => targetByPageId.get(notionId) ?? null);
+        if (finalContent !== page.content) {
+            note.setContent(finalContent);
         }
 
         // Preserve Notion's original timestamps. Must run after the content save above, which would
@@ -145,8 +156,6 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         if (page.utcDateCreated || page.utcDateModified) {
             note.setDateCreatedAndModified(page.utcDateCreated, page.utcDateModified ?? page.utcDateCreated);
         }
-
-        taskContext.increaseProgressCount();
     }
 
     return rootNote;
@@ -179,6 +188,61 @@ function rewriteImages(note: BNote, content: string, pagePath: string, resources
     }
 
     return changed ? root.toString() : content;
+}
+
+/** A resolved import target: the note created for a Notion page, plus that page's title. */
+export interface LinkTarget {
+    noteId: string;
+    title: string;
+}
+
+/**
+ * Resolves Notion page-to-page links. Notion exports an internal link as an `<a>` whose href points at
+ * the target page's exported HTML file (e.g. `Folder/Subpage 386c…cd5.html`), with the 32-hex Notion id
+ * embedded in the filename. Rewrites each link whose target was imported to `#root/<noteId>`; when the
+ * link text is the target page's title it becomes a Trilium reference link (the live-title chip),
+ * otherwise the original text is kept on a plain internal link. External/unresolved links are untouched.
+ */
+export function rewriteLinks(html: string, resolve: (notionId: string) => LinkTarget | null): string {
+    const root = parse(html);
+    let changed = false;
+
+    for (const anchor of root.querySelectorAll("a")) {
+        const notionId = internalPageId(anchor.getAttribute("href"));
+        if (!notionId) {
+            continue;
+        }
+        const target = resolve(notionId);
+        if (!target) {
+            continue;
+        }
+
+        anchor.setAttribute("href", `#root/${target.noteId}`);
+        if (anchor.textContent.trim() === target.title.trim()) {
+            anchor.setAttribute("class", "reference-link");
+        }
+        changed = true;
+    }
+
+    return changed ? root.toString() : html;
+}
+
+/** Extracts the target page's Notion id from an internal `.html` link href, or null if it isn't one. */
+function internalPageId(href: string | undefined): string | null {
+    if (!href) {
+        return null;
+    }
+    let decoded = href;
+    try {
+        decoded = decodeURIComponent(href);
+    } catch {
+        // Leave malformed percent-encoding as-is rather than throwing.
+    }
+    const path = decoded.split(/[?#]/)[0];
+    if (!path.toLowerCase().endsWith(".html")) {
+        return null;
+    }
+    return getNotionId(decoded) ?? null;
 }
 
 /**
