@@ -55,6 +55,14 @@ describe("convertNotionHtml — to-do nesting and merging", () => {
         const input = `${wrap(off("A"))}<p>Sep</p>${wrap(off("B"))}`;
         expect(convertNotionHtml(input)).toBe(`${list(item("A"))}<p>Sep</p>${list(item("B"))}`);
     });
+
+    it("converts to-do lists nested inside other blocks (e.g. a toggle's <details>)", () => {
+        const toggle = (summary: string, body: string) => `<ul class="toggle"><li><details open=""><summary>${summary}</summary>${body}</details></li></ul>`;
+        const input = toggle("The quick brownie", wrap(off("The quick brown", wrap(off("fox jumps")))));
+        expect(convertNotionHtml(input)).toBe(
+            `<details class="trilium-collapsible"><summary>The quick brownie</summary>${list(item("The quick brown", { nested: list(item("fox jumps")) }))}</details>`
+        );
+    });
 });
 
 describe("convertNotionHtml — display:contents wrappers", () => {

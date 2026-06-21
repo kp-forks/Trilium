@@ -71,6 +71,16 @@ function convertTodoLists(container: HTMLElement) {
             block.remove();
         }
     }
+
+    // To-do lists can also sit inside other blocks — a toggle's <details>, a callout, a list item, a
+    // table cell — which the run pass above (limited to `container`'s direct children) doesn't reach.
+    // Recurse into the remaining element children so those are converted in place too. The just-built
+    // `todo-list`s are visited harmlessly: they hold no `to-do-list` markup for the run pass to match.
+    for (const child of container.childNodes) {
+        if (child instanceof HTMLElement) {
+            convertTodoLists(child);
+        }
+    }
 }
 
 interface TodoBlock {
