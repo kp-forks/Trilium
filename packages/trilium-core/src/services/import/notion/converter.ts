@@ -13,7 +13,23 @@ import { HTMLElement, parse } from "node-html-parser";
 export function convertNotionHtml(html: string): string {
     const root = parse(html);
     convertTodoLists(root);
+    unwrapDisplayContents(root);
     return root.toString();
+}
+
+/**
+ * Notion wraps almost every block in a `<div style="display:contents">`, a layout no-op that survives
+ * sanitization and would otherwise leave the imported note littered with meaningless block wrappers.
+ * Hoist each such div's children in its place; nested wrappers flatten too (querySelectorAll visits the
+ * outer first, and the inner stays a live, reparented node). Other divs (callouts, `.indented`, …) are
+ * left untouched.
+ */
+function unwrapDisplayContents(root: HTMLElement) {
+    for (const div of root.querySelectorAll("div")) {
+        if (isDisplayContents(div)) {
+            div.replaceWith(...div.childNodes);
+        }
+    }
 }
 
 /**
@@ -95,13 +111,17 @@ function todoUl(node: HTMLElement): HTMLElement | null {
     if (isTodoUl(node)) {
         return node;
     }
-    if (isTag(node, "div") && (node.getAttribute("style") ?? "").replace(/\s/g, "").includes("display:contents")) {
+    if (isDisplayContents(node)) {
         const elements = node.childNodes.filter((child): child is HTMLElement => child instanceof HTMLElement);
         if (elements.length === 1 && isTodoUl(elements[0])) {
             return elements[0];
         }
     }
     return null;
+}
+
+function isDisplayContents(node: HTMLElement): boolean {
+    return isTag(node, "div") && (node.getAttribute("style") ?? "").replace(/\s/g, "").includes("display:contents");
 }
 
 function isTodoUl(node: HTMLElement): boolean {

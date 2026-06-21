@@ -56,3 +56,24 @@ describe("convertNotionHtml — to-do nesting and merging", () => {
         expect(convertNotionHtml(input)).toBe(`${list(item("A"))}<p>Sep</p>${list(item("B"))}`);
     });
 });
+
+describe("convertNotionHtml — display:contents wrappers", () => {
+    it("unwraps the display:contents div Notion puts around each block", () => {
+        expect(convertNotionHtml(`<div style="display:contents" dir="auto"><p id="x">A</p></div>`)).toBe(`<p id="x">A</p>`);
+    });
+
+    it("unwraps several wrapped blocks", () => {
+        const input = `<div style="display:contents" dir="auto"><h1>A</h1></div><div style="display:contents" dir="auto"><p>B</p></div>`;
+        expect(convertNotionHtml(input)).toBe(`<h1>A</h1><p>B</p>`);
+    });
+
+    it("flattens nested display:contents wrappers", () => {
+        const input = `<div style="display:contents"><div style="display:contents"><p>A</p></div></div>`;
+        expect(convertNotionHtml(input)).toBe(`<p>A</p>`);
+    });
+
+    it("leaves meaningful divs intact", () => {
+        const input = `<figure class="callout"><div style="font-size:1.5em"><span class="icon">x</span></div><div style="width:100%">body</div></figure>`;
+        expect(convertNotionHtml(input)).toBe(input);
+    });
+});
