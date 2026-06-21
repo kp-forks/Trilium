@@ -333,13 +333,23 @@ function convertCallouts(root: HTMLElement) {
     }
 }
 
-/** Prepends the callout's emoji to its content: into the first paragraph, or as a leading one otherwise. */
+/** Block-level tags a callout's content may open with; an emoji can't be merged inline into these. */
+const CALLOUT_BLOCK_TAGS = new Set(["p", "h1", "h2", "h3", "h4", "h5", "h6", "ul", "ol", "blockquote", "pre", "figure", "table", "aside", "details"]);
+
+/**
+ * Prepends the callout's emoji to its content. Notion's callout body is usually a run of inline content
+ * (raw text, `<strong>`, `<br>`…) with no wrapping paragraph, so the emoji is merged inline so it shares
+ * the first line. When the body instead opens with a paragraph the emoji goes inside it; when it opens
+ * with another block element (e.g. a heading) the emoji becomes its own leading paragraph.
+ */
 function prependEmoji(contentDiv: HTMLElement, emoji: string) {
-    const first = directChild(contentDiv, () => true);
-    if (first && isTag(first, "p")) {
-        first.set_content(`${emoji} ${first.innerHTML}`);
-    } else {
+    const firstEl = contentDiv.childNodes[0] instanceof HTMLElement ? contentDiv.childNodes[0] : null;
+    if (firstEl && isTag(firstEl, "p")) {
+        firstEl.set_content(`${emoji} ${firstEl.innerHTML}`);
+    } else if (firstEl && CALLOUT_BLOCK_TAGS.has(firstEl.tagName?.toLowerCase())) {
         contentDiv.insertAdjacentHTML("afterbegin", `<p>${emoji}</p>`);
+    } else {
+        contentDiv.insertAdjacentHTML("afterbegin", `${emoji} `);
     }
 }
 // #endregion

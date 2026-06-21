@@ -138,6 +138,14 @@ describe("convertNotionHtml — callouts", () => {
             `<aside class="admonition note"><p>♻️</p><h2>Heading body</h2></aside>`
         );
     });
+
+    it("merges the emoji inline when the callout body is unwrapped inline content (Notion's usual shape)", () => {
+        // Real Notion callouts hold raw text/inline markup with no wrapping <p>, so the emoji must share
+        // the first line rather than sit on its own line above it.
+        expect(convertNotionHtml(callout("📚", `The modern <strong>day</strong> reading list.`))).toBe(
+            `<aside class="admonition note">📚 The modern <strong>day</strong> reading list.</aside>`
+        );
+    });
 });
 
 describe("convertNotionHtml — math", () => {
