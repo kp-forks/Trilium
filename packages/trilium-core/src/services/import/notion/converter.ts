@@ -379,7 +379,8 @@ function convertBookmarks(root: HTMLElement) {
         const optional: Record<string, string | undefined> = {
             "data-title": figure.querySelector(".bookmark-title")?.textContent?.trim(),
             "data-description": figure.querySelector(".bookmark-description")?.textContent?.trim(),
-            "data-favicon": figure.querySelector("img.bookmark-icon")?.getAttribute("src")
+            "data-favicon": figure.querySelector("img.bookmark-icon")?.getAttribute("src"),
+            "data-image": figure.querySelector("img.bookmark-image")?.getAttribute("src")
         };
         for (const [key, value] of Object.entries(optional)) {
             if (value) {

@@ -160,10 +160,10 @@ describe("convertNotionHtml — math", () => {
 });
 
 describe("convertNotionHtml — bookmarks", () => {
-    it("converts a Notion bookmark card to a Trilium link-embed, keeping the favicon", () => {
-        const input = `<div style="display:contents" dir="ltr"><figure id="386c5eca"><a href="https://triliumnotes.org/" class="bookmark source"><div class="bookmark-info"><div class="bookmark-text"><div class="bookmark-title">Trilium Notes</div><div class="bookmark-description">Trilium is an open-source solution for note-taking and personal knowledge bases. Use it locally or sync with your own server to access notes anywhere.</div></div><div class="bookmark-href"><img src="https://triliumnotes.org/assets/favicon-BI5VJBD3.ico" class="icon bookmark-icon"/>https://triliumnotes.org/</div></div></a></figure></div>`;
+    it("converts a Notion bookmark card to a Trilium link-embed, keeping the favicon and preview image", () => {
+        const input = `<div style="display:contents" dir="ltr"><figure id="386c5eca"><a href="https://triliumnotes.org/" class="bookmark source"><div class="bookmark-info"><div class="bookmark-text"><div class="bookmark-title">Trilium Notes</div><div class="bookmark-description">Trilium is an open-source solution for note-taking and personal knowledge bases. Use it locally or sync with your own server to access notes anywhere.</div></div><div class="bookmark-href"><img src="https://triliumnotes.org/assets/favicon-BI5VJBD3.ico" class="icon bookmark-icon"/>https://triliumnotes.org/</div></div><img src="https://triliumnotes.org/assets/preview.jpg" class="bookmark-image"/></a></figure></div>`;
         expect(convertNotionHtml(input)).toBe(
-            `<section class="link-embed" data-url="https://triliumnotes.org/" data-embed-type="opengraph" data-title="Trilium Notes" data-description="Trilium is an open-source solution for note-taking and personal knowledge bases. Use it locally or sync with your own server to access notes anywhere." data-favicon="https://triliumnotes.org/assets/favicon-BI5VJBD3.ico"></section>`
+            `<section class="link-embed" data-url="https://triliumnotes.org/" data-embed-type="opengraph" data-title="Trilium Notes" data-description="Trilium is an open-source solution for note-taking and personal knowledge bases. Use it locally or sync with your own server to access notes anywhere." data-favicon="https://triliumnotes.org/assets/favicon-BI5VJBD3.ico" data-image="https://triliumnotes.org/assets/preview.jpg"></section>`
         );
     });
 
