@@ -399,7 +399,9 @@
     "successful": "インポートは正常に終了しました。",
     "explodeArchives": "<code>.zip</code>, <code>.enex</code> および <code>.opml</code> アーカイブの内容を読み取ります。",
     "importZipRecommendation": "ZIP ファイルをインポートすると、ノートの階層はアーカイブ内のサブディレクトリ構造を反映します。",
-    "spreadsheetImportedAsSpreadsheet": "CSV ファイルや Excel ファイルを、ファイルとしてではなく編集可能なスプレッドシートとしてインポートする"
+    "spreadsheetImportedAsSpreadsheet": "CSV ファイルや Excel ファイルを、ファイルとしてではなく編集可能なスプレッドシートとしてインポートする",
+    "starting": "インポート中…",
+    "in-progress-with-total": "{{total}} 件中 {{progress}} 件をインポート中"
   },
   "password_not_set": {
     "title": "パスワードが設定されていない",
@@ -534,7 +536,8 @@
     "word_wrap_on": "オン",
     "word_wrap_off": "オフ",
     "save_named_revision": "名前を付けて変更履歴を保存...",
-    "print_or_export_to_pdf": "印刷 / PDF へのエクスポート..."
+    "print_or_export_to_pdf": "印刷 / PDF へのエクスポート...",
+    "import_from_service": "サービスからインポート…"
   },
   "command_palette": {
     "export_note_title": "ノートをエクスポート",
@@ -2879,5 +2882,27 @@
   },
   "full_content_width_switch": {
     "title": "全幅"
+  },
+  "import_provider": {
+    "title": "サービスからインポート",
+    "choose_provider": "インポート元のサービスを選択してください:",
+    "back": "戻る"
+  },
+  "onenote_import": {
+    "name": "Microsoft OneNote",
+    "description": "OneNote アカウントからノートブック、セクション、ページをインポートします。",
+    "connect_description": "Microsoft アカウントでサインインして、OneNote ノートブックをインポートしてください。",
+    "connect": "Microsoft でサインイン",
+    "connecting": "サインインが完了するまでお待ちください…",
+    "connected_as": "{{name}} として接続されました",
+    "disconnect": "接続を解除",
+    "load_failed": "OneNote ノートブックを読み込めませんでした。",
+    "no_notebooks": "このアカウントにはノートブックが見つかりませんでした。",
+    "select_sections": "インポートするセクションを選択:",
+    "order_hint_title": "セクションの並び順",
+    "order_hint": "OneNote のインポートデータには元の並び順が含まれていないため、セクションとグループは作成日順に並べ替えられ、OneNote での表示と一致しない場合があります。",
+    "import": "選択した項目をインポート",
+    "attach_source": "元のHTMLを添付（デバッグ）",
+    "attach_source_hint": "変換後の結果と比較できるように、各ページの変更されていない OneNote の HTML をインポートされたノートに添付ファイルとして保存します。"
   }
 }
