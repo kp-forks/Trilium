@@ -175,6 +175,32 @@ describe("convertNotionHtml — bookmarks", () => {
     });
 });
 
+describe("convertNotionHtml — colors", () => {
+    it("maps a text-color mark to a span with an opaque color style", () => {
+        expect(convertNotionHtml(`<p><mark class="highlight-blue">Highlight</mark></p>`)).toBe(
+            `<p><span style="color:rgb(56, 125, 201)">Highlight</span></p>`
+        );
+    });
+
+    it("flattens a translucent background mark over white into a solid background-color", () => {
+        // gray_background is rgba(42, 28, 0, 0.07); over white that resolves to a light tint, not near-black.
+        expect(convertNotionHtml(`<p><mark class="highlight-gray_background">Highlight</mark></p>`)).toBe(
+            `<p><span style="background-color:rgb(240, 239, 237)">Highlight</span></p>`
+        );
+    });
+
+    it("drops the wrapper for default (uncolored) marks, keeping nested colored content", () => {
+        // Notion nests a background mark inside a default text-color mark; only the inner color survives.
+        expect(convertNotionHtml(`<p><mark class="highlight-default"><mark class="highlight-red_background">Highlight</mark></mark></p>`)).toBe(
+            `<p><span style="background-color:rgb(252, 233, 231)">Highlight</span></p>`
+        );
+    });
+
+    it("leaves a plain default mark as bare text", () => {
+        expect(convertNotionHtml(`<p><mark class="highlight-default">Plain</mark></p>`)).toBe(`<p>Plain</p>`);
+    });
+});
+
 describe("convertNotionHtml — tables", () => {
     it("rewrites a Notion simple-table into a canonical figure.table with scoped headers", () => {
         const input = `<div style="display:contents" dir="ltr"><table id="386c5eca" class="simple-table"><thead class="simple-table-header"><div style="display:contents" dir="ltr"><tr id="r0"><th id="?Hr:" class="simple-table-header-color simple-table-header" style="width:239.7px">Column 1</th><th id="SDzW" class="simple-table-header-color simple-table-header" style="width:239.7px">Column 2</th><th id="q@CU" class="simple-table-header-color simple-table-header" style="width:239.7px">Column 3</th></tr></div></thead><tbody><div style="display:contents" dir="ltr"><tr id="r1"><th id="?Hr:" class="simple-table-header-color simple-table-header" style="width:239.7px">Row 1</th><td id="SDzW" class="" style="width:239.7px">A</td><td id="q@CU" class="" style="width:239.7px">B</td></tr></div><div style="display:contents" dir="ltr"><tr id="r2"><th id="?Hr:" class="simple-table-header-color simple-table-header" style="width:239.7px">Row 2</th><td id="SDzW" class="" style="width:239.7px">C</td><td id="q@CU" class="" style="width:239.7px">D</td></tr></div></tbody></table></div>`;

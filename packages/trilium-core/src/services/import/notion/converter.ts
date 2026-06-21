@@ -24,6 +24,7 @@ export function convertNotionHtml(html: string): string {
     convertCodeBlocks(root);
     convertCallouts(root);
     convertBookmarks(root);
+    convertColors(root);
     convertLinkToPage(root);
     return root.toString();
 }
@@ -390,6 +391,73 @@ function convertBookmarks(root: HTMLElement) {
 
         figure.replaceWith(section);
     }
+}
+// #endregion
+
+// #region Colors
+/**
+ * Notion's fixed text/background palette, taken verbatim from the export's stylesheet (the `<style>` block
+ * isn't passed to this converter, so the values are inlined here). Text colors are opaque; background
+ * colors are translucent overlays that {@link flattenOverWhite} resolves to solid, sanitizer-safe colors.
+ */
+const NOTION_TEXT_COLORS: Record<string, string> = {
+    gray: "rgba(125, 122, 117, 1)",
+    brown: "rgba(159, 118, 90, 1)",
+    orange: "rgba(210, 123, 45, 1)",
+    yellow: "rgba(203, 148, 52, 1)",
+    teal: "rgba(80, 148, 110, 1)",
+    blue: "rgba(56, 125, 201, 1)",
+    purple: "rgba(154, 107, 180, 1)",
+    pink: "rgba(193, 76, 138, 1)",
+    red: "rgba(207, 81, 72, 1)"
+};
+const NOTION_BG_COLORS: Record<string, string> = {
+    gray: "rgba(42, 28, 0, 0.07)",
+    brown: "rgba(139, 46, 0, 0.086)",
+    orange: "rgba(224, 101, 1, 0.129)",
+    yellow: "rgba(211, 168, 0, 0.137)",
+    teal: "rgba(0, 100, 45, 0.09)",
+    blue: "rgba(0, 124, 215, 0.094)",
+    purple: "rgba(102, 0, 178, 0.078)",
+    pink: "rgba(197, 0, 93, 0.086)",
+    red: "rgba(223, 22, 0, 0.094)"
+};
+
+/**
+ * Notion encodes both text and background color as `<mark class="highlight-<color>[_background]">`. Those
+ * class names are meaningless to CKEditor (so every colored run collapses to the same default highlight),
+ * and `<mark>` itself is CKEditor's highlight marker. Rewrite each into a `<span>` carrying an inline
+ * `color`/`background-color` style — CKEditor's font-color form — dropping the wrapper for the `default`
+ * (uncolored) variants. Runs in reverse document order so nested marks are resolved innermost-first.
+ */
+function convertColors(root: HTMLElement) {
+    for (const mark of [...root.querySelectorAll("mark")].reverse()) {
+        const style = markStyle(mark.getAttribute("class") ?? "");
+        mark.insertAdjacentHTML("beforebegin", style ? `<span style="${style}">${mark.innerHTML}</span>` : mark.innerHTML);
+        mark.remove();
+    }
+}
+
+/** Maps a Notion `highlight-*` class to a CKEditor inline color style, or undefined for default/unknown. */
+function markStyle(className: string): string | undefined {
+    const match = className.match(/highlight-([a-z]+)(_background)?\b/);
+    if (!match || match[1] === "default") {
+        return undefined;
+    }
+    const [, name, isBackground] = match;
+    const rgba = isBackground ? NOTION_BG_COLORS[name] : NOTION_TEXT_COLORS[name];
+    return rgba ? `${isBackground ? "background-color" : "color"}:${flattenOverWhite(rgba)}` : undefined;
+}
+
+/** Blends an `rgba(r, g, b, a)` color over a white page into an opaque `rgb(r, g, b)` the sanitizer accepts. */
+function flattenOverWhite(rgba: string): string {
+    const match = rgba.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/);
+    if (!match) {
+        return rgba;
+    }
+    const alpha = match[4] === undefined ? 1 : Number(match[4]);
+    const blend = (channel: string) => Math.round(Number(channel) * alpha + 255 * (1 - alpha));
+    return `rgb(${blend(match[1])}, ${blend(match[2])}, ${blend(match[3])})`;
 }
 // #endregion
 
