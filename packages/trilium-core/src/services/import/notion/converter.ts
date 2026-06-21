@@ -31,11 +31,12 @@ export function convertNotionHtml(html: string): string {
 
 // #region Math
 /**
- * Notion renders each equation with KaTeX, preceded by a `<style>@import …katex…</style>` whose text
- * would otherwise survive sanitization as visible junk. Drop those style blocks and replace each inline
- * equation token (`span.notion-text-equation-token`) with Trilium's inline math span, recovering the
- * original LaTeX from the KaTeX `<annotation encoding="application/x-tex">`. (Block/display equations are
- * not in scope yet.)
+ * Notion renders each equation with KaTeX, preceded (or, for block equations, wrapped) by a
+ * `<style>@import …katex…</style>` whose text would otherwise survive sanitization as visible junk. Drop
+ * those style blocks, then recover the original LaTeX from each equation's KaTeX
+ * `<annotation encoding="application/x-tex">` and emit Trilium's math markup:
+ *  - inline equations (`span.notion-text-equation-token`) → inline math span, `\(…\)`;
+ *  - block equations (`figure.equation`) → a `<figure>` wrapping a display math span, `\[…\]`.
  */
 function convertMath(root: HTMLElement) {
     for (const style of root.querySelectorAll("style")) {
@@ -43,14 +44,28 @@ function convertMath(root: HTMLElement) {
     }
 
     for (const token of root.querySelectorAll("span.notion-text-equation-token")) {
-        const annotations = token.querySelectorAll("annotation");
-        const latex = (annotations.find((a) => a.getAttribute("encoding") === "application/x-tex") ?? annotations[0])?.textContent?.trim();
+        const latex = extractLatex(token);
         if (!latex) {
             continue;
         }
         token.insertAdjacentHTML("beforebegin", `<span class="math-tex">\\(${latex}\\)</span>`);
         token.remove();
     }
+
+    for (const figure of root.querySelectorAll("figure.equation")) {
+        const latex = extractLatex(figure);
+        if (!latex) {
+            continue;
+        }
+        figure.insertAdjacentHTML("beforebegin", `<figure><span class="math-tex">\\[${latex}\\]</span></figure>`);
+        figure.remove();
+    }
+}
+
+/** Recovers the original LaTeX from a KaTeX subtree via its `<annotation encoding="application/x-tex">`. */
+function extractLatex(el: HTMLElement): string | undefined {
+    const annotations = el.querySelectorAll("annotation");
+    return (annotations.find((a) => a.getAttribute("encoding") === "application/x-tex") ?? annotations[0])?.textContent?.trim();
 }
 // #endregion
 

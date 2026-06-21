@@ -154,6 +154,11 @@ describe("convertNotionHtml — math", () => {
         expect(convertNotionHtml(input)).toBe(`<p><span class="math-tex">\\(e=mc^2\\)</span></p>`);
     });
 
+    it("converts a block Notion equation to a Trilium display math-tex figure and drops the katex style import", () => {
+        const input = `<figure id="386c5eca-1b8b-8032-9922-d271e443683f" class="equation"><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>e</mi><mo>=</mo><mi>m</mi><msup><mi>c</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">e=mc^2</annotation></semantics></math></span><span class="katex-html" aria-hidden="true">e=mc2</span></span></span></div></figure>`;
+        expect(convertNotionHtml(input)).toBe(`<figure><span class="math-tex">\\[e=mc^2\\]</span></figure>`);
+    });
+
     it("removes a stray katex style block on its own", () => {
         expect(convertNotionHtml(`<p>Text<style>@import url('x')</style></p>`)).toBe(`<p>Text</p>`);
     });
