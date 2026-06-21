@@ -10,6 +10,7 @@ import type BNote from "../../becca/entities/bnote.js";
 import { ValidationError } from "../../errors.js";
 import * as cls from "../../services/context.js";
 import enexImportService from "../../services/import/enex.js";
+import keepImportService from "../../services/import/keep/importer.js";
 import notionImportService from "../../services/import/notion/importer.js";
 import opmlImportService from "../../services/import/opml.js";
 import singleImportService from "../../services/import/single.js";
@@ -60,6 +61,10 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
             // indistinguishable from a Trilium export without inspecting its contents. The Notion import
             // dialog tags the upload, so we route it to the Notion importer rather than the generic zip.
             note = await notionImportService.importNotion(taskContext, file.buffer, parentNote);
+        } else if (format === "keep" && typeof file.buffer !== "string") {
+            // Like Notion, a Google Keep (Takeout) export is just a `.zip` indistinguishable from a Trilium
+            // export by extension alone, so the Keep import dialog tags the upload to route it here.
+            note = await keepImportService.importKeep(taskContext, file.buffer, parentNote);
         } else if (extension === ".zip" && options.explodeArchives && typeof file.buffer !== "string") {
             note = await zipImportService.importZip(taskContext, file.buffer, parentNote);
         } else if (extension === ".opml" && options.explodeArchives) {

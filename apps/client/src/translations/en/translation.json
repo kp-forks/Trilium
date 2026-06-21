@@ -257,6 +257,13 @@
     "choose_file": "Notion export (.zip)",
     "import": "Import"
   },
+  "keep_import": {
+    "name": "Google Keep",
+    "description": "Import notes from a Google Keep export (.zip).",
+    "description_long": "In Google Takeout, export your Keep data as a .zip, then choose the resulting file here.",
+    "choose_file": "Google Keep export (.zip)",
+    "import": "Import"
+  },
   "evernote_import": {
     "name": "Evernote",
     "description": "Import notes from an Evernote export (.enex).",
