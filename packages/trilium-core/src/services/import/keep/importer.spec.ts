@@ -94,6 +94,17 @@ describe("Google Keep importer — parseNote", () => {
         expect(note?.utcDateModified).toBe("2026-06-21 08:14:14.353Z");
     });
 
+    it("maps a Keep palette colour to its hex for the #color label", () => {
+        expect(parseNote("n.json", JSON.stringify({ color: "GREEN" }))?.colorHex).toBe("#95d641");
+        expect(parseNote("n.json", JSON.stringify({ color: "CERULEAN" }))?.colorHex).toBe("#82b1ff");
+    });
+
+    it("leaves colour undefined for Keep's default, an unknown colour, or no colour", () => {
+        expect(parseNote("n.json", JSON.stringify({ color: "DEFAULT" }))?.colorHex).toBeUndefined();
+        expect(parseNote("n.json", JSON.stringify({ color: "MAGENTA" }))?.colorHex).toBeUndefined();
+        expect(parseNote("n.json", JSON.stringify({}))?.colorHex).toBeUndefined();
+    });
+
     it("leaves timestamps undefined and content empty for a bare note", () => {
         const note = parseNote("empty.json", JSON.stringify({}));
 

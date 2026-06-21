@@ -41,6 +41,8 @@ interface KeepNote {
     textContentHtml?: string;
     /** Body of a checklist note; mutually exclusive with the text fields. */
     listContent?: KeepListItem[];
+    /** Note background colour, one of Keep's named palette entries ("DEFAULT" for none). */
+    color?: string;
     /** Creation/last-edit timestamps, in microseconds since the Unix epoch. */
     createdTimestampUsec?: number;
     userEditedTimestampUsec?: number;
@@ -50,6 +52,8 @@ interface ParsedNote {
     title: string;
     /** Body HTML; empty when the note has neither text nor list content. */
     content: string;
+    /** Hex colour for Trilium's `#color` label, or undefined for Keep's default (no colour). */
+    colorHex?: string;
     utcDateCreated?: string;
     utcDateModified?: string;
 }
@@ -100,6 +104,7 @@ export function parseNote(path: string, json: string): ParsedNote | null {
     return {
         title,
         content: buildContent(note),
+        colorHex: keepColorToHex(note.color),
         utcDateCreated: usecToUtc(note.createdTimestampUsec),
         utcDateModified: usecToUtc(note.userEditedTimestampUsec)
     };
@@ -159,6 +164,10 @@ function createNotes(importRootNote: BNote, notes: ParsedNote[], taskContext: Ta
             isProtected
         });
 
+        if (parsed.colorHex) {
+            note.addLabel("color", parsed.colorHex);
+        }
+
         // Preserve Keep's original timestamps. Must run after createNewNote's content save, which would
         // otherwise re-stamp the modification date with "now".
         if (parsed.utcDateCreated || parsed.utcDateModified) {
@@ -169,6 +178,29 @@ function createNotes(importRootNote: BNote, notes: ParsedNote[], taskContext: Ta
     }
 
     return rootNote;
+}
+
+/**
+ * Keep's named note colours mapped to their exact palette hex (taken from the colour classes in Keep's own
+ * exported `.html`). "DEFAULT" (no colour) is intentionally absent.
+ */
+const KEEP_COLOR_HEX: Record<string, string> = {
+    RED: "#ff6d3f",
+    ORANGE: "#ff9b00",
+    YELLOW: "#ffda00",
+    GREEN: "#95d641",
+    TEAL: "#1ce8b5",
+    BLUE: "#3fc3ff",
+    CERULEAN: "#82b1ff",
+    PURPLE: "#b388ff",
+    PINK: "#f8bbd0",
+    BROWN: "#d7ccc8",
+    GRAY: "#b8c4c9"
+};
+
+/** Maps a Keep note colour to its Trilium `#color` hex, or undefined for the default/unknown/missing colour. */
+function keepColorToHex(color: string | undefined): string | undefined {
+    return color ? KEEP_COLOR_HEX[color.toUpperCase()] : undefined;
 }
 
 /** Converts a Keep microsecond-epoch timestamp to Trilium's UTC DB format, or undefined if absent/invalid. */
