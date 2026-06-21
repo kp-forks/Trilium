@@ -250,6 +250,13 @@
     "attach_source": "Attach original HTML (debug)",
     "attach_source_hint": "Saves each page's unmodified OneNote HTML as an attachment on the imported note, for comparing against the converted result."
   },
+  "notion_import": {
+    "name": "Notion",
+    "description": "Import pages from a Notion HTML export (.zip).",
+    "description_long": "In Notion, export your workspace or a page as HTML with subpages included, then choose the resulting .zip file here.",
+    "choose_file": "Notion export (.zip)",
+    "import": "Import"
+  },
   "include_note": {
     "dialog_title": "Include note",
     "label_note": "Note",

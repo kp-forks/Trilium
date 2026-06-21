@@ -17,25 +17,25 @@ import etapiSpecialNoteRoutes from "../etapi/special_notes.js";
 import auth from "../services/auth.js";
 import openID from '../services/open_id.js';
 import { isElectron } from "../services/utils.js";
-
 import shareRoutes from "../share/routes.js";
 import clipperRoute from "./api/clipper.js";
 import databaseRoute from "./api/database.js";
 import etapiTokensApiRoutes from "./api/etapi_tokens.js";
 import filesRoute from "./api/files.js";
 import fontsRoute from "./api/fonts.js";
+// API routes
+import linkEmbedRoute from "./api/link_embed.js";
 import llmChatRoute from "./api/llm_chat.js";
 import llmSpecialNotesRoute from "./api/llm_special_notes.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
+import notionImportRoute from "./api/notion_import.js";
 import ocrRoute from "./api/ocr.js";
 import onenoteImportRoute from "./api/onenote_import.js";
 import recoveryCodes from './api/recovery_codes.js';
 import senderRoute from "./api/sender.js";
 import systemInfoRoute from "./api/system_info.js";
 import totp from './api/totp.js';
-// API routes
-import linkEmbedRoute from "./api/link_embed.js";
 import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
 import * as indexRoute from "./index.js";
 import loginRoute from "./login.js";
@@ -191,6 +191,10 @@ function register(app: express.Application) {
     asyncApiRoute(PST, "/api/onenote-import/disconnect", onenoteImportRoute.disconnect);
     asyncApiRoute(GET, "/api/onenote-import/notebooks", onenoteImportRoute.getNotebooks);
     asyncApiRoute(PST, "/api/onenote-import/import", onenoteImportRoute.runImport);
+
+    // Notion importer: a multipart upload of the export zip (vs OneNote's API), so it needs the upload
+    // middleware + CSRF guard rather than the plain JSON `apiRoute` helper.
+    route(PST, "/api/notion-import/import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], notionImportRoute.runImport, apiResultHandler);
 
     shareRoutes.register(router);
 
