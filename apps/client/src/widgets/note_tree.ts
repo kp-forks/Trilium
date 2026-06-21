@@ -140,8 +140,10 @@ const TPL = /*html*/`
         </div>
         <div class="form-check">
             <label class="form-check-label tn-checkbox">
-                <input class="form-check-input scroll-follow-navigation" type="checkbox" value="">
-                ${t("note_tree.scroll-follow-navigation")}
+                <input class="form-check-input follow-active-note" type="checkbox" value="">
+                ${t("note_tree.follow-active-note")}
+                <span class="bx bx-info-circle"
+                      title="${t("note_tree.follow-active-note-title")}"></span>
             </label>
         </div>
 
@@ -203,7 +205,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
     private $saveTreeSettingsButton!: JQuery<HTMLElement>;
     private $hideArchivedNotesCheckbox!: JQuery<HTMLElement>;
     private $autoCollapseNoteTree!: JQuery<HTMLElement>;
-    private $scrollFollowNavigationCheckbox!: JQuery<HTMLElement>;
+    private $followActiveNoteCheckbox!: JQuery<HTMLElement>;
     private treeName: "main";
     private autoCollapseTimeoutId?: Timeout;
     private lastFilteredHoistedNotePath?: string | null;
@@ -268,7 +270,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$treeSettingsPopup = this.$widget.find(".tree-settings-popup");
         this.$hideArchivedNotesCheckbox = this.$treeSettingsPopup.find(".hide-archived-notes");
         this.$autoCollapseNoteTree = this.$treeSettingsPopup.find(".auto-collapse-note-tree");
-        this.$scrollFollowNavigationCheckbox = this.$treeSettingsPopup.find(".scroll-follow-navigation");
+        this.$followActiveNoteCheckbox = this.$treeSettingsPopup.find(".follow-active-note");
 
         this.$treeSettingsButton = this.$widget.find(".tree-settings-button");
         this.$treeSettingsButton.on("click", (e) => {
@@ -279,7 +281,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
             this.$hideArchivedNotesCheckbox.prop("checked", this.hideArchivedNotes);
             this.$autoCollapseNoteTree.prop("checked", this.autoCollapseNoteTree);
-            this.$scrollFollowNavigationCheckbox.prop("checked", this.treeScrollFollowNavigation);
+            this.$followActiveNoteCheckbox.prop("checked", this.treeScrollFollowNavigation);
 
             const top = this.$treeActions[0].offsetTop - (this.$treeSettingsPopup.outerHeight() ?? 0);
             const left = Math.max(0, this.$treeActions[0].offsetLeft - (this.$treeSettingsPopup.outerWidth() ?? 0) + (this.$treeActions.outerWidth() ?? 0));
@@ -304,7 +306,7 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         this.$saveTreeSettingsButton.on("click", async () => {
             await this.setHideArchivedNotes(this.$hideArchivedNotesCheckbox.prop("checked"));
             await this.setAutoCollapseNoteTree(this.$autoCollapseNoteTree.prop("checked"));
-            await this.setTreeScrollFollowNavigation(this.$scrollFollowNavigationCheckbox.prop("checked"));
+            await this.setTreeScrollFollowNavigation(this.$followActiveNoteCheckbox.prop("checked"));
 
             this.$treeSettingsPopup.hide();
 
@@ -1170,8 +1172,16 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             }
 
             if (newActiveNode) {
-                if (!newActiveNode.isVisible() && this.noteContext?.notePath) {
+                if (this.treeScrollFollowNavigation && !newActiveNode.isVisible() && this.noteContext?.notePath) {
                     await this.expandToNote(this.noteContext.notePath);
+                }
+
+                if (!this.treeScrollFollowNavigation) {
+                    const prevActiveVisible = this.tree.options.activeVisible;
+                    this.tree.options.activeVisible = false;
+                    setTimeout(() => {
+                        this.tree.options.activeVisible = prevActiveVisible;
+                    }, 0);
                 }
 
                 newActiveNode.setActive(true, {
