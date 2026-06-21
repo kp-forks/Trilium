@@ -379,8 +379,8 @@ importers:
         specifier: 3.6.2
         version: 3.6.2
       tabulator-tables:
-        specifier: 6.5.0
-        version: 6.5.0
+        specifier: 6.5.1
+        version: 6.5.1
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: 5.0.2
@@ -986,8 +986,8 @@ importers:
         specifier: 3.6.2
         version: 3.6.2
       tabulator-tables:
-        specifier: 6.5.0
-        version: 6.5.0
+        specifier: 6.5.1
+        version: 6.5.1
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: 5.0.2
@@ -13030,8 +13030,8 @@ packages:
     resolution: {integrity: sha512-9kY+CygyYM6j02t5YFHbNz2FN5QmYGv9zAjVp4lCDjlCw7amdckXlEt/bjMhUIfj4ThGRE4gCUH5+yGnNuPo5A==}
     engines: {node: '>=10.0.0'}
 
-  tabulator-tables@6.5.0:
-    resolution: {integrity: sha512-n0S4rvb2tGJnVBXoiB8ns1liGfSz+sgniG5a92vEY+Wqj3R4L2LB+bF29OeWmEJwo4KAsdhfeknW2S92s/mvMw==}
+  tabulator-tables@6.5.1:
+    resolution: {integrity: sha512-hTbw97QbUmh33d/87xdPFQUdm+1W2+l0WQuafYvqw95tEjC4o0sMLMd/Ie7KJ5u7/QlfpM03ZCqjw3TuEiPrdw==}
 
   tailwind-merge@2.6.0:
     resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
@@ -28761,7 +28761,7 @@ snapshots:
       string-width: 4.2.3
       strip-ansi: 6.0.1
 
-  tabulator-tables@6.5.0: {}
+  tabulator-tables@6.5.1: {}
 
   tailwind-merge@2.6.0: {}
 
