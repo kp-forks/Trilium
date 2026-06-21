@@ -13,8 +13,29 @@ import { HTMLElement, parse } from "node-html-parser";
 export function convertNotionHtml(html: string): string {
     const root = parse(html);
     convertTodoLists(root);
+    convertToggles(root);
     unwrapDisplayContents(root);
     return root.toString();
+}
+
+/**
+ * Trilium has no list-based toggle; its collapsible block is a bare `<details>`
+ * (data view `<details class="trilium-collapsible">`). Notion exports each toggle as
+ * `<ul class="toggle"><li><details>…</details></li></ul>`, so drop the list wrapper, hoisting the
+ * `<details>` in its place and tagging it with Trilium's collapsible class. Only the toggle's own
+ * top-level `<details>` is hoisted; a nested toggle is handled when the loop reaches its own `ul.toggle`,
+ * which keeps it nested. The native `open` attribute is dropped (the sanitizer strips it anyway).
+ */
+function convertToggles(root: HTMLElement) {
+    for (const ul of root.querySelectorAll("ul.toggle")) {
+        const detailsList = directChildren(ul, "li").flatMap((li) => directChildren(li, "details"));
+        for (const details of detailsList) {
+            const existing = details.getAttribute("class");
+            details.setAttribute("class", existing ? `${existing} trilium-collapsible` : "trilium-collapsible");
+            details.removeAttribute("open");
+        }
+        ul.replaceWith(...detailsList);
+    }
 }
 
 /**
