@@ -250,6 +250,27 @@
     "attach_source": "Attach original HTML (debug)",
     "attach_source_hint": "Saves each page's unmodified OneNote HTML as an attachment on the imported note, for comparing against the converted result."
   },
+  "notion_import": {
+    "name": "Notion",
+    "description": "Import pages from a Notion HTML export (.zip).",
+    "description_long": "In Notion, export your workspace or a page as HTML with subpages included, then choose the resulting .zip file here.",
+    "choose_file": "Notion export (.zip)",
+    "import": "Import"
+  },
+  "keep_import": {
+    "name": "Google Keep",
+    "description": "Import notes from a Google Keep export (.zip).",
+    "description_long": "In Google Takeout, export your Keep data as a .zip, then choose the resulting file here.",
+    "choose_file": "Google Keep export (.zip)",
+    "import": "Import"
+  },
+  "evernote_import": {
+    "name": "Evernote",
+    "description": "Import notes from an Evernote export (.enex).",
+    "description_long": "In Evernote, export a notebook (or up to 100 notes at a time) as an ENEX file, then choose one or more .enex files here. Each file is imported as a separate notebook.",
+    "choose_file": "Evernote export (.enex)",
+    "import": "Import"
+  },
   "include_note": {
     "dialog_title": "Include note",
     "label_note": "Note",
@@ -2319,6 +2340,7 @@
     "create-child-note-title": "Create a new child note and add it to the map",
     "create-child-note-text": "Add marker",
     "create-child-note-instruction": "Click on the map to create a new note at that location or press Escape to dismiss.",
+    "create-child-note-toast-title": "New note",
     "unable-to-load-map": "Unable to load map."
   },
   "geo-map-context": {

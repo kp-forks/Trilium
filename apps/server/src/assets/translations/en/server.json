@@ -319,6 +319,12 @@
   "onenote_import": {
     "root-title": "OneNote import"
   },
+  "notion_import": {
+    "root-title": "Notion import"
+  },
+  "keep_import": {
+    "root-title": "Google Keep import"
+  },
   "pdf": {
     "export_filter": "PDF Document (*.pdf)",
     "unable-to-export-message": "The current note could not be exported as a PDF.",

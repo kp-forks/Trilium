@@ -1,4 +1,4 @@
-# OneNote
+# Microsoft OneNote
 > [!NOTE]
 > This import mechanism was introduced in Trilium v0.104.0.
 
@@ -6,8 +6,8 @@ Trilium allows importing from OneNote. Currently the only mechanism supported is
 
 ## Import process
 
-1.  In the <a class="reference-link" href="../UI%20Elements/Note%20Tree.md">Note Tree</a>, select a note where to place the imported notes.
-2.  From <a class="reference-link" href="../UI%20Elements/Note%20buttons.md">Note buttons</a>, select _Import from a service…_
+1.  In the <a class="reference-link" href="../../UI%20Elements/Note%20Tree.md">Note Tree</a>, select a note where to place the imported notes.
+2.  From <a class="reference-link" href="../../UI%20Elements/Note%20buttons.md">Note buttons</a>, select _Import from a service…_
 3.  Select _Microsoft OneNote_ as the provider to import from.
 4.  Press the _Connect_ button, you will be redirected to Microsoft's authentication screen where you can log into your account.
 5.  After the connection is successful, you should be able to see a list of sections that can be imported. Simply check the ones to import and press the _Import selected_ button.
@@ -19,12 +19,12 @@ The following features are preserved by Trilium during the import process:
 
 *   Basic formatting (bold, italic, underline, strikethrough, subscript, super script, inline code, font sizes, headings, colors, highlights).
     *   Black-colored text is intentionally stripped to allow it to work in dark themes.
-*   <a class="reference-link" href="../../Note%20Types/Text/Lists.md">Lists</a> with different bullet types.
-*   <a class="reference-link" href="../../Note%20Types/Text/Tables.md">Tables</a>
-*   Images and <a class="reference-link" href="../Notes/Attachments.md">Attachments</a>.
-*   To do lists
+*   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a> with different bullet types.
+*   <a class="reference-link" href="../../../Note%20Types/Text/Tables.md">Tables</a>
+*   Images and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a>.
+*   To-do lists
 *   Hand-drawing is preserved and displayed as an SVG image (however there are some
-*   Links between other imported pages are converted to <a class="reference-link" href="../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> if the text of the link matches the name of the page, or plain links otherwise. If the pages are not part of the import, the original `onenote:` link is kept.
+*   Links between other imported pages are converted to <a class="reference-link" href="../../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> if the text of the link matches the name of the page, or plain links otherwise. If the pages are not part of the import, the original `onenote:` link is kept.
 *   Tags (apart from to-do lists) are mildly preserved by converting them to emojis. This loses their searchability. Since Trilium has no concept of inline attributes or badges, this is considered a middle-ground.
 
 Regarding the note structure:
@@ -37,14 +37,14 @@ Regarding the note structure:
 
 ### Regarding OneNote's freehand structure
 
-OneNote is fundamentally different to Trilium in structure because it allows freehand drawing to coexist with text, and text boxes can be placed anywhere in the document (e.g. a common use case is to have columns). Trilium has a document flow mechanism for <a class="reference-link" href="../../Note%20Types/Text.md">Text</a> notes which means that it can't be freely positioned.
+OneNote is fundamentally different to Trilium in structure because it allows freehand drawing to coexist with text, and text boxes can be placed anywhere in the document (e.g. a common use case is to have columns). Trilium has a document flow mechanism for <a class="reference-link" href="../../../Note%20Types/Text.md">Text</a> notes which means that it can't be freely positioned.
 
 To cope with this difference, Trilium will flatten the text structure into normal paragraphs. The paragraphs will be ordered visually based on the original position of the text boxes, but their horizontal position will not be preserved. Parallel text such as columns may appear interleaved which can cause problems.
 
 In addition, drawing in OneNote can be interleaved with text boxes. Text notes in Trilium do not allow for this feature, so all drawing will appear at the end. For some use cases (diagrams, for example) this will work fine, but if you have highlights or other text-dependent drawings they will appear out of order.
 
 > [!NOTE]
-> There are plans to support drawing-heavy notes that interleave with text boxes by converting them to a <a class="reference-link" href="../../Note%20Types/Canvas.md">Canvas</a> instead.
+> There are plans to support drawing-heavy notes that interleave with text boxes by converting them to a <a class="reference-link" href="../../../Note%20Types/Canvas.md">Canvas</a> instead.
 
 ## Other limitations
 
@@ -57,7 +57,7 @@ The following are known limitations due to how the information comes from the im
 
 ## Reporting issues
 
-When importing notes, you might find that some text is not rendered properly or the structure is not properly maintained. As long as this issue is not a fundamental issue (like the issue with freehand text not being preserved exactly), it's a good idea to [report it](../../Troubleshooting/Reporting%20issues.md).
+When importing notes, you might find that some text is not rendered properly or the structure is not properly maintained. As long as this issue is not a fundamental issue (like the issue with freehand text not being preserved exactly), it's a good idea to [report it](../../../Troubleshooting/Reporting%20issues.md).
 
 When reporting, make sure that you provide the following information:
 

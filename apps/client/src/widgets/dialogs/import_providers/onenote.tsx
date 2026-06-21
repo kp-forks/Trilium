@@ -8,6 +8,7 @@ import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
+import iconUrl from "./icons/onenote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 type Phase = "checking" | "disconnected" | "connecting" | "ready";
@@ -246,7 +247,7 @@ function SectionTree({ container, selectedIds, onToggle }: {
 const provider: ImportProvider = {
     id: "onenote",
     name: t("onenote_import.name"),
-    icon: "bx bxl-microsoft",
+    iconUrl,
     description: t("onenote_import.description"),
     Panel: OneNotePanel
 };

@@ -18,8 +18,8 @@ export interface ImportProvider {
     id: string;
     /** Human-readable name shown in the provider picker. */
     name: string;
-    /** Boxicons class, e.g. `"bx bxl-microsoft"`. */
-    icon: string;
+    /** URL of the provider's logo (an imported SVG, e.g. `import iconUrl from "./icons/notion.svg?url"`). Rendered monochrome via a CSS mask so it adapts to the theme. */
+    iconUrl: string;
     /** One-line description shown under the name. */
     description: string;
     /** The component rendered once this provider is chosen; it drives its own multi-step flow. */

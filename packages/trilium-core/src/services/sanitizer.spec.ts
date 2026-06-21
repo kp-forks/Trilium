@@ -58,6 +58,16 @@ describe("sanitize", () => {
         expect(sanitizeHtml(dirty)).toBe(dirty);
     });
 
+    it("keeps the open attribute on <details> (collapsible state from imports)", () => {
+        const dirty = `<details open class="trilium-collapsible"><summary>T</summary><p>body</p></details>`;
+        expect(sanitizeHtml(dirty)).toBe(dirty);
+    });
+
+    it("keeps the scope attribute on table header cells", () => {
+        const dirty = `<table><thead><tr><th scope="col">C</th></tr></thead><tbody><tr><th scope="row">R</th><td>A</td></tr></tbody></table>`;
+        expect(sanitizeHtml(dirty)).toBe(dirty);
+    });
+
     describe("bookmark anchors", () => {
         it("preserves id attribute on empty <a> tags (CKEditor bookmarks)", () => {
             const dirty = `<a id="my-bookmark"></a>`;

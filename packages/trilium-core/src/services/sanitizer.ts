@@ -46,10 +46,13 @@ export function sanitizeHtml(dirtyHtml: string) {
             a: ["id"],
             h2: ["id"],
             li: ["id"],
+            // Collapsible blocks: keep the native open/closed state (e.g. preserved from a Notion import)
+            // so the published/share view, which renders this HTML directly, reflects it.
+            details: ["open"],
             input: ["type", "checked"],
             img: ["width", "height"],
             td: ["colspan", "rowspan"],
-            th: ["colspan", "rowspan"],
+            th: ["colspan", "rowspan", "scope"],
             code: [ "spellcheck" ]
         },
         allowedStyles: {

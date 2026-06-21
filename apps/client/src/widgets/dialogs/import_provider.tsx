@@ -6,7 +6,6 @@ import { useCallback, useState } from "preact/hooks";
 import { t } from "../../services/i18n.js";
 import Button from "../react/Button.js";
 import { useTriliumEvent } from "../react/hooks.js";
-import Icon from "../react/Icon.js";
 import Modal from "../react/Modal.js";
 import { importProviders } from "./import_providers/index.js";
 
@@ -51,7 +50,7 @@ export default function ImportProviderDialog() {
                     <p>{t("import_provider.choose_provider")}</p>
                     {importProviders.map((p) => (
                         <button type="button" className="import-provider-card" key={p.id} onClick={() => setProviderId(p.id)}>
-                            <Icon icon={p.icon} />
+                            <span className="import-provider-card-icon" style={{ "--provider-icon": `url("${p.iconUrl}")` }} />
                             <span className="import-provider-card-text">
                                 <span className="import-provider-card-name">{p.name}</span>
                                 <span className="import-provider-card-description">{p.description}</span>
