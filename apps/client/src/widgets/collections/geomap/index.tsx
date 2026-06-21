@@ -80,7 +80,7 @@ export default function GeoView({ note, noteIds, viewConfig, saveConfig }: ViewM
         toast.showPersistent({
             icon: "plus",
             id: "geo-new-note",
-            title: "New note",
+            title: t("geo-map.create-child-note-toast-title"),
             message: t("geo-map.create-child-note-instruction")
         });
 

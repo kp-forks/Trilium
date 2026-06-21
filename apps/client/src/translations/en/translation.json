@@ -2319,6 +2319,7 @@
     "create-child-note-title": "Create a new child note and add it to the map",
     "create-child-note-text": "Add marker",
     "create-child-note-instruction": "Click on the map to create a new note at that location or press Escape to dismiss.",
+    "create-child-note-toast-title": "New note",
     "unable-to-load-map": "Unable to load map."
   },
   "geo-map-context": {
