@@ -23,6 +23,7 @@ import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
 import { getZipProvider } from "../../zip_provider.js";
+import mimeService from "../mime.js";
 import { convertNotionHtml } from "./converter.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
 
@@ -179,8 +180,9 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
 
         // Attachments hang off the note, so this must run after creation; it returns the content with the
-        // <img> srcs pointing at the saved attachments.
-        created.push({ note, content: rewriteImages(note, page.content, page.path, resources), page });
+        // <img> srcs and file links pointing at the saved attachments.
+        const withImages = rewriteImages(note, page.content, page.path, resources);
+        created.push({ note, content: rewriteAttachments(note, withImages, page.path, resources), page });
         taskContext.increaseProgressCount();
     }
 
@@ -225,6 +227,41 @@ function rewriteImages(note: BNote, content: string, pagePath: string, resources
             img.setAttribute("src", `api/attachments/${attachmentId}/image/${encodeURIComponent(title)}`);
             changed = true;
         }
+    }
+
+    return changed ? root.toString() : content;
+}
+
+/**
+ * Saves each in-zip file a page attaches (`<a class="notion-attachment">`, produced by the converter) as a
+ * `role:"file"` attachment on `note`, and rewrites the anchor into a Trilium attachment reference-link
+ * (the same shape the ENEX importer and CKEditor use). Anchors whose file isn't bundled lose the marker
+ * class and stay plain links. Returns the (possibly unchanged) content.
+ */
+function rewriteAttachments(note: BNote, content: string, pagePath: string, resources: Map<string, Uint8Array>): string {
+    const root = parse(content);
+    let changed = false;
+
+    for (const anchor of root.querySelectorAll("a.notion-attachment")) {
+        anchor.removeAttribute("class");
+        changed = true;
+
+        const href = anchor.getAttribute("href");
+        const resourcePath = href ? resolveResourcePath(pagePath, href) : "";
+        const bytes = resources.get(resourcePath);
+        if (!bytes) {
+            continue;
+        }
+
+        const title = anchor.textContent.trim() || baseName(resourcePath);
+        const attachment = note.saveAttachment({
+            role: "file",
+            mime: mimeService.getMime(baseName(resourcePath)) || "application/octet-stream",
+            title,
+            content: bytes
+        });
+        anchor.setAttribute("href", `#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}`);
+        anchor.setAttribute("class", "reference-link");
     }
 
     return changed ? root.toString() : content;

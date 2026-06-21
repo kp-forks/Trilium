@@ -82,6 +82,25 @@ describe("Notion importer — integration", () => {
         expect(fortyFive[0].getChildNotes().map((note) => note.title)).toEqual(["Brown fox"]);
     });
 
+    it("saves a referenced file as a role:file attachment and links to it from the content", async () => {
+        // Notion exports a file block as <figure><div class="source"><a href="<file>">name</a></figure>,
+        // with the file bundled in the zip alongside the page.
+        const attachmentFigure = `<figure id="386c5eca-1b8b-808b-84d3-cea5b6510570"><div class="source"><a href="Notes/demo.rtf">demo.rtf</a></div></figure>`;
+        const importRoot = await importNotion({
+            "Notes 386c5eca1b8b80439520cad27a0d2749.html": `<html><head><title>Notes</title></head><body><div id="386c5eca1b8b80439520cad27a0d2749" class="page"><div class="page-body"><div style="display:contents" dir="ltr">${attachmentFigure}</div></div></div></body></html>`,
+            "Notes/demo.rtf": "{\\rtf1 hello}"
+        });
+
+        const notes = importRoot.getChildNotes().find((note) => note.title === "Notes");
+        if (!notes) {
+            throw new Error("imported 'Notes' page not found");
+        }
+        const attachment = notes.getAttachmentsByRole("file").find((a) => a.title === "demo.rtf");
+        expect(attachment).toBeDefined();
+        expect(notes.getContent()).toContain(`href="#root/${notes.noteId}?viewMode=attachments&attachmentId=${attachment?.attachmentId}"`);
+        expect(notes.getContent()).toContain(`class="reference-link"`);
+    });
+
     it("recurses into a root-level nested export zip (the part Notion makes you extract)", async () => {
         const innerZip = await createZipBuffer({ "Inner page 386c5eca1b8b80439520cad27a0d2749.html": pageHtml("Inner page") });
         const importRoot = await importNotion({ "Export-Part-1.zip": innerZip });

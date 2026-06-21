@@ -21,6 +21,7 @@ export function convertNotionHtml(html: string): string {
     unwrapDisplayContents(root);
     convertTables(root);
     convertImages(root);
+    convertAttachments(root);
     convertCodeBlocks(root);
     convertCallouts(root);
     convertBookmarks(root);
@@ -281,6 +282,27 @@ function convertImages(root: HTMLElement) {
         img.removeAttribute("style");
         figure.removeAttribute("id");
         figure.set_content(img.toString());
+    }
+}
+// #endregion
+
+// #region Attachments
+/**
+ * Notion file blocks are `<figure><div class="source"><a href="…file">name</a></div></figure>`, where the
+ * href is a zip-relative path to the bundled file. Reduce each to a paragraph holding a marked anchor
+ * (`<a class="notion-attachment" href="…">`); the importer resolves that file from the zip, saves it as a
+ * `role:"file"` attachment on the note and rewrites the anchor into a Trilium attachment reference-link.
+ * The marker distinguishes it from page links and bookmarks (whose `source` class sits on the `<a>` itself).
+ */
+function convertAttachments(root: HTMLElement) {
+    for (const figure of root.querySelectorAll("figure")) {
+        const anchor = figure.querySelector("div.source a");
+        if (!anchor) {
+            continue;
+        }
+        anchor.setAttribute("class", "notion-attachment");
+        figure.insertAdjacentHTML("beforebegin", `<p>${anchor.toString()}</p>`);
+        figure.remove();
     }
 }
 // #endregion

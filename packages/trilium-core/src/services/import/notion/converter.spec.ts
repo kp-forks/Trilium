@@ -230,6 +230,22 @@ describe("convertNotionHtml — images", () => {
     });
 });
 
+describe("convertNotionHtml — attachments", () => {
+    it("rewrites a Notion file block into a marked anchor for the importer to bind", () => {
+        const input = `<div style="display:contents" dir="ltr"><figure id="386c5eca"><div class="source"><a href="Attachment%20test/demo.rtf">demo.rtf</a></div></figure></div>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<p><a href="Attachment%20test/demo.rtf" class="notion-attachment">demo.rtf</a></p>`
+        );
+    });
+
+    it("does not touch a bookmark card (its source class is on the anchor, not a wrapping div)", () => {
+        const input = `<figure><a href="https://example.com/" class="bookmark source"><div class="bookmark-info"><div class="bookmark-text"><div class="bookmark-title">Example</div></div></div></a></figure>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<section class="link-embed" data-url="https://example.com/" data-embed-type="opengraph" data-title="Example"></section>`
+        );
+    });
+});
+
 describe("convertNotionHtml — code blocks", () => {
     it("maps a known Notion code language to Trilium's mime class and drops the Prism includes", () => {
         const input = `<div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script><pre id="386c5eca" class="code code-wrap"><code class="language-c" style="white-space:pre-wrap;word-break:break-all">void main() {}</code></pre></div>`;
