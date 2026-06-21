@@ -122,6 +122,9 @@ function buildContent(note: KeepNote): string {
             .map((item) => {
                 // Match the canonical CKEditor task-list serialization (checked before disabled).
                 const attributes = item.isChecked ? ` checked="checked" disabled="disabled"` : ` disabled="disabled"`;
+                // The `?? ""` fallback is unreachable: items with neither `text` nor `textHtml` are removed by
+                // the filter above, so reaching the `escapeHtml` branch (textHtml falsy) implies `text` is set.
+                /* v8 ignore next */
                 const label = item.textHtml ? convertKeepHtmlInline(item.textHtml) : escapeHtml(item.text ?? "");
                 return `<li><label class="todo-list__label"><input type="checkbox"${attributes}><span class="todo-list__label__description">${label}</span></label></li>`;
             });
@@ -147,6 +150,9 @@ function buildContent(note: KeepNote): string {
  * every note is parented directly under that root. Returns the root.
  */
 function createNotes(importRootNote: BNote, notes: ParsedNote[], taskContext: TaskContext<"importNotes">): BNote {
+    // The protected-session branch requires importing into a protected root with an active protected session,
+    // which the import harness/tests don't exercise.
+    /* v8 ignore next */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("keep_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
@@ -236,6 +242,9 @@ function isDirectory(path: string): boolean {
 }
 
 function baseName(path: string): string {
+    // The `?? path` fallback is unreachable: String.prototype.split always returns a non-empty array, so
+    // `pop()` here is at worst "" (never undefined).
+    /* v8 ignore next */
     return path.split("/").pop() ?? path;
 }
 

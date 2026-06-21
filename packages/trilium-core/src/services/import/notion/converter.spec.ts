@@ -109,6 +109,13 @@ describe("convertNotionHtml — toggles", () => {
         );
     });
 
+    it("appends the collapsible class to a <details> that already has a class", () => {
+        const input = `<ul class="toggle"><li><details class="existing"><summary>Title</summary></details></li></ul>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<details class="existing trilium-collapsible"><summary>Title</summary></details>`
+        );
+    });
+
     it("keeps a nested toggle nested rather than flattening it", () => {
         const input = `<ul class="toggle"><li><details open=""><summary>Outer</summary><div style="display:contents"><ul class="toggle"><li><details open=""><summary>Inner</summary></details></li></ul></div></details></li></ul>`;
         expect(convertNotionHtml(input)).toBe(
@@ -288,5 +295,117 @@ describe("convertNotionHtml — date mentions", () => {
 
     it("leaves date text without an @ untouched", () => {
         expect(convertNotionHtml(`<p><time>June 21, 2026</time></p>`)).toBe(`<p><time>June 21, 2026</time></p>`);
+    });
+});
+
+describe("convertNotionHtml — math edge cases", () => {
+    it("leaves an inline equation token with no annotation alone (no math-tex span)", () => {
+        const input = `<p><span class="notion-text-equation-token"><span class="katex"><span class="katex-html">e=mc2</span></span></span></p>`;
+        const output = convertNotionHtml(input);
+        expect(output).not.toContain("math-tex");
+        expect(output).toBe(input);
+    });
+
+    it("leaves a block equation figure with no annotation alone (no math-tex figure)", () => {
+        const input = `<figure class="equation"><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-html">e=mc2</span></span></span></div></figure>`;
+        const output = convertNotionHtml(input);
+        expect(output).not.toContain("math-tex");
+        expect(output).toBe(input);
+    });
+
+    it("falls back to the first annotation when none is encoded as application/x-tex", () => {
+        const input = `<p><span class="notion-text-equation-token"><span class="katex"><math><semantics><annotation encoding="application/x-llamapun">e = mc^2</annotation></semantics></math></span></span></p>`;
+        expect(convertNotionHtml(input)).toBe(`<p><span class="math-tex">\\(e = mc^2\\)</span></p>`);
+    });
+});
+
+describe("convertNotionHtml — to-do edge cases", () => {
+    it("does not merge to-do items separated by a non-whitespace text node", () => {
+        const wrap = (text: string) => `<ul class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">${text}</span></li></ul>`;
+        const list = (text: string) => `<ul class="todo-list"><li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">${text}</span></label></li></ul>`;
+        const input = `${wrap("A")}separator${wrap("B")}`;
+        expect(convertNotionHtml(input)).toBe(`${list("A")}separator${list("B")}`);
+    });
+
+    it("merges to-do items separated only by whitespace text nodes", () => {
+        const wrap = (text: string) => `<ul class="to-do-list"><li><div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">${text}</span></li></ul>`;
+        const item = (text: string) => `<li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">${text}</span></label></li>`;
+        const input = `${wrap("A")}\n   \n${wrap("B")}`;
+        // Whitespace between the wrappers does not break the run, so both items merge into one list.
+        expect(convertNotionHtml(input)).toContain(`<ul class="todo-list">${item("A")}${item("B")}</ul>`);
+    });
+
+    it("defaults to unchecked and an empty label when the checkbox and label spans are missing", () => {
+        const input = `<ul class="to-do-list"><li></li></ul>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<ul class="todo-list"><li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description"></span></label></li></ul>`
+        );
+    });
+
+    it("builds an item without a checkbox div but with a label span", () => {
+        const input = `<ul class="to-do-list"><li><span class="to-do-children-unchecked">No checkbox</span></li></ul>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<ul class="todo-list"><li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">No checkbox</span></label></li></ul>`
+        );
+    });
+});
+
+describe("convertNotionHtml — images edge cases", () => {
+    it("leaves an image figure with no <img> inside untouched", () => {
+        const input = `<figure class="image"><figcaption>No image here</figcaption></figure>`;
+        expect(convertNotionHtml(input)).toBe(input);
+    });
+});
+
+describe("convertNotionHtml — code block edge cases", () => {
+    it("leaves a <pre> with no <code> inside untouched (apart from id/class)", () => {
+        const input = `<pre class="code">plain text, no code element</pre>`;
+        expect(convertNotionHtml(input)).toBe(input);
+    });
+});
+
+describe("convertNotionHtml — callout edge cases", () => {
+    it("falls back to the last div for content when no width:100% div is present and there is no icon div", () => {
+        // With no icon div the emoji is empty, which is not the default light-bulb, so it maps to a note;
+        // an empty emoji means nothing is prepended to the content.
+        const input = `<figure class="callout"><div>Just the body, no icon div.</div></figure>`;
+        expect(convertNotionHtml(input)).toBe(`<aside class="admonition note">Just the body, no icon div.</aside>`);
+    });
+
+    it("produces an empty admonition when the callout has no div children at all", () => {
+        const input = `<figure class="callout"><span class="icon">💡</span></figure>`;
+        expect(convertNotionHtml(input)).toBe(`<aside class="admonition note"></aside>`);
+    });
+
+    it("maps a callout with an empty icon to a tip (empty emoji is not the default light-bulb but nothing is prepended)", () => {
+        const input = `<figure class="callout"><div style="font-size:1.5em"><span class="icon"></span></div><div style="width:100%"><p>Body</p></div></figure>`;
+        expect(convertNotionHtml(input)).toBe(`<aside class="admonition note"><p>Body</p></aside>`);
+    });
+});
+
+describe("convertNotionHtml — color edge cases", () => {
+    it("unwraps a default highlight mark to plain inner HTML", () => {
+        expect(convertNotionHtml(`<p><mark class="highlight-default">Plain <strong>text</strong></mark></p>`)).toBe(
+            `<p>Plain <strong>text</strong></p>`
+        );
+    });
+
+    it("unwraps a mark whose class is not a recognized highlight class", () => {
+        expect(convertNotionHtml(`<p><mark class="something-else">Body</mark></p>`)).toBe(`<p>Body</p>`);
+    });
+
+    it("unwraps a mark with no class attribute at all", () => {
+        expect(convertNotionHtml(`<p><mark>Body</mark></p>`)).toBe(`<p>Body</p>`);
+    });
+
+    it("unwraps a mark with an unknown color name not in the palette", () => {
+        expect(convertNotionHtml(`<p><mark class="highlight-chartreuse">Body</mark></p>`)).toBe(`<p>Body</p>`);
+    });
+});
+
+describe("convertNotionHtml — link-to-page edge cases", () => {
+    it("leaves a link-to-page figure with no anchor untouched", () => {
+        const input = `<figure class="link-to-page"><span>No link here</span></figure>`;
+        expect(convertNotionHtml(input)).toBe(input);
     });
 });

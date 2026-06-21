@@ -153,6 +153,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
  * Pages are created shallowest-first, so a parent's note exists before its children. Returns the root.
  */
 function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">): BNote {
+    /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
@@ -223,6 +224,7 @@ function rewriteImages(note: BNote, content: string, pagePath: string, resources
             continue;
         }
         const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, bytes, baseName(resourcePath), false);
+        /* v8 ignore next -- saveImageToAttachment always returns the id of the attachment it just created, so this guard is never false in practice */
         if (attachmentId) {
             img.setAttribute("src", `api/attachments/${attachmentId}/image/${encodeURIComponent(title)}`);
             changed = true;
@@ -423,6 +425,7 @@ function isDirectory(path: string): boolean {
 }
 
 function baseName(path: string): string {
+    /* v8 ignore next -- String.split always yields at least one element (""), so pop() is never undefined and the `?? path` fallback is unreachable */
     return path.split("/").pop() ?? path;
 }
 

@@ -37,6 +37,14 @@ describe("Google Keep converter — convertKeepHtml", () => {
     it("unwraps a plain span entirely, keeping only its text", () => {
         expect(convertKeepHtml(`<p>${span("plain", "font-weight:400;")}</p>`)).toBe("<p>plain</p>");
     });
+
+    it("treats the `font-weight:bold` keyword (no numeric weight) as bold", () => {
+        expect(convertKeepHtml(`<p>${span("bold keyword", "font-weight:bold;")}</p>`)).toBe("<p><strong>bold keyword</strong></p>");
+    });
+
+    it("unwraps a span that has no style attribute at all", () => {
+        expect(convertKeepHtml(`<p><span>no style</span></p>`)).toBe("<p>no style</p>");
+    });
 });
 
 describe("Google Keep converter — convertKeepHtmlInline", () => {
@@ -50,5 +58,13 @@ describe("Google Keep converter — convertKeepHtmlInline", () => {
         const html = `<p>${span("done", "font-weight:700;")}</p>`;
 
         expect(convertKeepHtmlInline(html)).toBe("<strong>done</strong>");
+    });
+
+    it("falls back to the cleaned markup when the fragment is not a single element", () => {
+        const html =
+            `<p dir="ltr" style="line-height:1.38;">${span("first", "font-weight:400;")}</p>` +
+            `<p dir="ltr" style="line-height:1.38;">${span("second", "font-weight:700;")}</p>`;
+
+        expect(convertKeepHtmlInline(html)).toBe("<p>first</p><p><strong>second</strong></p>");
     });
 });

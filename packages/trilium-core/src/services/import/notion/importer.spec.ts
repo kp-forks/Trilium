@@ -17,6 +17,11 @@ describe("resolveResourcePath", () => {
         expect(resolveResourcePath("a/b/Page.html", "../c/img%20with%20space.png"))
             .toBe("a/c/img with space.png");
     });
+
+    it("does not throw on a malformed percent-encoded src and returns it", () => {
+        expect(() => resolveResourcePath("Page.html", "%E0%A4%A.png")).not.toThrow();
+        expect(resolveResourcePath("Page.html", "%E0%A4%A.png")).toBe("%E0%A4%A.png");
+    });
 });
 
 describe("rewriteLinks", () => {
@@ -48,6 +53,18 @@ describe("rewriteLinks", () => {
     it("ignores a 32-hex id that appears only in the query/hash, not the page path", () => {
         // The path ('Page.html') carries no id; the id only appears in a query parameter.
         const input = `<p><a href="Page.html?ref=386c5eca1b8b802a90d8d891c7e62cd5">x</a></p>`;
+        expect(rewriteLinks(input, resolveSubpage)).toBe(input);
+    });
+
+    it("leaves an anchor without an href untouched", () => {
+        const input = `<p><a>plain</a></p>`;
+        expect(rewriteLinks(input, resolveSubpage)).toBe(input);
+    });
+
+    it("does not throw on a malformed percent-encoded href", () => {
+        const input = `<p><a href="%E0%A4%A.html">broken</a></p>`;
+        expect(() => rewriteLinks(input, resolveSubpage)).not.toThrow();
+        // Malformed encoding can't carry a resolvable id, so the link is left as-is.
         expect(rewriteLinks(input, resolveSubpage)).toBe(input);
     });
 });
@@ -85,5 +102,15 @@ describe("firstChildNotionId", () => {
     it("does not pick up a 32-hex id on a nested (non-direct) element", () => {
         expect(firstChildNotionId(bodyOf(`<div class="page"><p id="386c5eca1b8b80439520cad27a0d2749">x</p></div>`)))
             .toBeUndefined();
+    });
+
+    it("returns undefined for a null body", () => {
+        expect(firstChildNotionId(null)).toBeUndefined();
+    });
+
+    it("skips non-element child nodes when locating the page wrapper", () => {
+        // The body opens with a text node before the id-bearing wrapper; the text node must be skipped.
+        expect(firstChildNotionId(bodyOf(`leading text<div id="386c5eca1b8b80439520cad27a0d2749">x</div>`)))
+            .toBe("386c5eca1b8b80439520cad27a0d2749");
     });
 });

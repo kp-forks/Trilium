@@ -417,6 +417,7 @@ function convertBookmarks(root: HTMLElement) {
         }
 
         const section = parse(`<section></section>`).querySelector("section");
+        /* v8 ignore next 3 -- defensive: parsing a literal "<section>" always yields a matching element */
         if (!section) {
             continue;
         }
@@ -499,9 +500,11 @@ function markStyle(className: string): string | undefined {
 /** Blends an `rgba(r, g, b, a)` color over a white page into an opaque `rgb(r, g, b)` the sanitizer accepts. */
 function flattenOverWhite(rgba: string): string {
     const match = rgba.match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+)\s*)?\)/);
+    /* v8 ignore next 3 -- unreachable: only fed well-formed rgba() values from the inlined Notion palette */
     if (!match) {
         return rgba;
     }
+    /* v8 ignore next -- the Notion palette always specifies an alpha, so the no-alpha branch is unreachable */
     const alpha = match[4] === undefined ? 1 : Number(match[4]);
     const blend = (channel: string) => Math.round(Number(channel) * alpha + 255 * (1 - alpha));
     return `rgb(${blend(match[1])}, ${blend(match[2])}, ${blend(match[3])})`;

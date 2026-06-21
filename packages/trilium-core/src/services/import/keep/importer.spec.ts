@@ -137,4 +137,41 @@ describe("Google Keep importer — parseNote", () => {
     it("skips a malformed JSON entry rather than throwing", () => {
         expect(parseNote("broken.json", "{ not valid json")).toBeNull();
     });
+
+    it("leaves the date undefined when the timestamp overflows to an Invalid Date", () => {
+        // A timestamp so large that new Date(usec / 1000) is an Invalid Date (NaN time).
+        const note = parseNote("n.json", JSON.stringify({ createdTimestampUsec: 9e18 }));
+
+        expect(note?.utcDateCreated).toBeUndefined();
+    });
+
+    it("falls back to \"Untitled\" when an untitled note's filename strips to empty", () => {
+        const note = parseNote(".json", JSON.stringify({}));
+
+        expect(note?.title).toBe("Untitled");
+    });
+
+    it("yields empty content when a checklist has only empty/filtered-out items", () => {
+        const note = parseNote("list.json", JSON.stringify({ listContent: [{ text: "" }] }));
+
+        expect(note?.content).toBe("");
+    });
+
+    it("renders a checklist mixing a rich-text item and a plain-text item", () => {
+        const json = JSON.stringify({
+            listContent: [
+                { textHtml: `<p><span style="font-weight:700;">rich</span></p>`, isChecked: false },
+                { text: "plain", isChecked: true }
+            ]
+        });
+
+        const note = parseNote("list.json", json);
+
+        expect(note?.content).toBe(
+            `<ul class="todo-list">` +
+                `<li><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description"><strong>rich</strong></span></label></li>` +
+                `<li><label class="todo-list__label"><input type="checkbox" checked="checked" disabled="disabled"><span class="todo-list__label__description">plain</span></label></li>` +
+                `</ul>`
+        );
+    });
 });
