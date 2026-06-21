@@ -33,6 +33,23 @@ describe("slimWorkbookData", () => {
         ]);
     });
 
+    it("keeps the drawing resource carrying an inline base64 image, but drops it when empty", () => {
+        // Images are stored as base64 inside the SHEET_DRAWING_PLUGIN resource, so slimming must
+        // preserve a populated drawing resource (otherwise inserted images would vanish on save)
+        // while still discarding the empty "{}" the plugin emits for a sheet with no drawings.
+        const drawingData = "{\"sheet1\":{\"data\":{\"img1\":{\"source\":\"data:image/png;base64,iVBORw0KGgo=\"}}}}";
+        const result = slimWorkbookData(makeWorkbook({
+            resources: [
+                { name: "SHEET_DRAWING_PLUGIN", data: drawingData },
+                { name: "SHEET_NOTE_PLUGIN", data: "{}" }
+            ]
+        }));
+
+        expect(result.resources).toEqual([
+            { name: "SHEET_DRAWING_PLUGIN", data: drawingData }
+        ]);
+    });
+
     it("leaves an all-empty resource list as an empty array and tolerates absent resources", () => {
         expect(slimWorkbookData(makeWorkbook({
             resources: [

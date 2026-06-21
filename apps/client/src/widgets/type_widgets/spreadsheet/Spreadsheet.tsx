@@ -1,5 +1,6 @@
 import "./Spreadsheet.css";
 import "@univerjs/preset-sheets-core/lib/index.css";
+import "@univerjs/preset-sheets-drawing/lib/index.css";
 import "@univerjs/preset-sheets-sort/lib/index.css";
 import "@univerjs/preset-sheets-conditional-formatting/lib/index.css";
 import "@univerjs/preset-sheets-find-replace/lib/index.css";
@@ -12,6 +13,7 @@ import { DEFAULT_STYLES } from '@univerjs/core';
 import { UniverSheetsConditionalFormattingPreset } from '@univerjs/preset-sheets-conditional-formatting';
 import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
 import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-validation';
+import { UniverSheetsDrawingPreset } from '@univerjs/preset-sheets-drawing';
 import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
 import { UniverSheetsHyperLinkPreset } from '@univerjs/preset-sheets-hyper-link';
@@ -243,6 +245,11 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                         "sheet.command.set-range-font-family": { hidden: true },
                     },
                 }),
+                // Floating images stored inline as base64 in the workbook's SHEET_DRAWING_PLUGIN
+                // resource (Univer's default ImageIoService), so they persist through the normal
+                // content save path. The insert-image toolbar button is hidden in read-only mode
+                // (toolbar is disabled above); the preset stays registered so existing images render.
+                UniverSheetsDrawingPreset(),
                 UniverSheetsFindReplacePreset(),
                 UniverSheetsNotePreset(),
                 UniverSheetsFilterPreset(),
