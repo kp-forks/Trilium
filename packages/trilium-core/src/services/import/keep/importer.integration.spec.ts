@@ -28,7 +28,7 @@ async function importSingleNote(files: Record<string, string>): Promise<BNote> {
     const taskContext = TaskContext.getInstance("keep-integration", "importNotes", { safeImport: true });
 
     return new Promise<BNote>((resolve, reject) => {
-        getContext().init(async () => {
+        void getContext().init(async () => {
             try {
                 const root = becca.getNoteOrThrow("root");
                 const importRoot = await keepImporter.importKeep(taskContext, new Uint8Array(buffer), root);
@@ -55,6 +55,20 @@ describe("Google Keep importer — integration", () => {
         // The dates must survive createNewNote's "now" stamp (beforeSaving), which setDateCreatedAndModified
         // overrides afterwards.
         expect(note.utcDateCreated).toBe("2025-11-13 21:39:26.429Z");
+        expect(note.utcDateModified).toBe("2026-06-21 08:14:14.353Z");
+    });
+
+    it("falls the creation date back to the modification date when only the latter is present", async () => {
+        const note = await importSingleNote({
+            "Takeout/Keep/note.json": JSON.stringify({
+                title: "Edited only",
+                textContent: "hi",
+                userEditedTimestampUsec: 1782029654353000 // 2026-06-21 08:14:14.353Z
+            })
+        });
+
+        // No created timestamp: rather than leaving the "now" stamp, the modification date is used for both.
+        expect(note.utcDateCreated).toBe("2026-06-21 08:14:14.353Z");
         expect(note.utcDateModified).toBe("2026-06-21 08:14:14.353Z");
     });
 });

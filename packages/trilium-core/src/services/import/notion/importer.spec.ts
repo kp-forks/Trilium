@@ -1,6 +1,7 @@
+import { parse } from "node-html-parser";
 import { describe, expect, it } from "vitest";
 
-import { type LinkTarget, resolveResourcePath, rewriteLinks } from "./importer.js";
+import { firstChildNotionId, type LinkTarget, resolveResourcePath, rewriteLinks } from "./importer.js";
 
 describe("resolveResourcePath", () => {
     it("resolves an image path relative to the page's directory in the zip", () => {
@@ -42,5 +43,25 @@ describe("rewriteLinks", () => {
 
         const unknown = `<p><a href="Other%20ffffffffffffffffffffffffffffffff.html">Other</a></p>`;
         expect(rewriteLinks(unknown, resolveSubpage)).toBe(unknown);
+    });
+
+    it("ignores a 32-hex id that appears only in the query/hash, not the page path", () => {
+        // The path ('Page.html') carries no id; the id only appears in a query parameter.
+        const input = `<p><a href="Page.html?ref=386c5eca1b8b802a90d8d891c7e62cd5">x</a></p>`;
+        expect(rewriteLinks(input, resolveSubpage)).toBe(input);
+    });
+});
+
+describe("firstChildNotionId", () => {
+    const bodyOf = (inner: string) => parse(`<body>${inner}</body>`).querySelector("body");
+
+    it("returns the id of body's direct page-wrapper child", () => {
+        expect(firstChildNotionId(bodyOf(`<div id="386c5eca1b8b80439520cad27a0d2749" class="page"><p>x</p></div>`)))
+            .toBe("386c5eca1b8b80439520cad27a0d2749");
+    });
+
+    it("does not pick up a 32-hex id on a nested (non-direct) element", () => {
+        expect(firstChildNotionId(bodyOf(`<div class="page"><p id="386c5eca1b8b80439520cad27a0d2749">x</p></div>`)))
+            .toBeUndefined();
     });
 });

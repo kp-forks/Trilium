@@ -74,6 +74,22 @@ describe("Google Keep importer — parseNote", () => {
         expect(note?.content).toBe("<p><strong>Bold</strong></p>");
     });
 
+    it("keeps a checklist item that has only rich text (textHtml, no plain text field)", () => {
+        const json = JSON.stringify({
+            listContent: [{ textHtml: `<p><span style="font-weight:700;">bold item</span></p>`, isChecked: false }]
+        });
+
+        const note = parseNote("list.json", json);
+
+        expect(note?.content).toContain(`<span class="todo-list__label__description"><strong>bold item</strong></span>`);
+    });
+
+    it("treats an epoch (0) timestamp as a real date, not a missing one", () => {
+        const note = parseNote("n.json", JSON.stringify({ createdTimestampUsec: 0 }));
+
+        expect(note?.utcDateCreated).toBe("1970-01-01 00:00:00.000Z");
+    });
+
     it("prefers a checklist item's rich-text (textHtml over text)", () => {
         const json = JSON.stringify({
             listContent: [{ text: "done", textHtml: `<p><span style="font-style:italic;">done</span></p>`, isChecked: true }]

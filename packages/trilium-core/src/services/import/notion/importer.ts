@@ -13,7 +13,7 @@
  */
 
 import { t } from "i18next";
-import { type HTMLElement, parse } from "node-html-parser";
+import { HTMLElement, parse } from "node-html-parser";
 
 import type BNote from "../../../becca/entities/bnote.js";
 import imageService from "../../image.js";
@@ -51,24 +51,29 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
  * Reads the zip: HTML entries become parsed pages; every other file (images, attachments) is kept by its
  * normalized path so page content can later reference it. The `index.html` summary is skipped.
  *
- * A Notion workspace export wraps its content in one (or more) nested zips at the archive root — the part
- * you'd otherwise have to extract by hand — so root-level `.zip` entries are descended into. Nested zips
- * sitting inside a page folder are treated as ordinary attachments, not export structure.
+ * A Notion workspace export wraps its content in a nested zip at the archive root — the part you'd
+ * otherwise have to extract by hand — so export-level `.zip` entries are descended into. A zip is
+ * "export-level" when no ancestor folder carries a Notion id; a zip inside a page folder (which does) is
+ * a user's attachment and kept as-is. Recursion is depth-bounded as a guard against pathological archives.
  */
+const MAX_NESTED_ZIP_DEPTH = 2;
+
 async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array> }> {
     const provider = getZipProvider();
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
 
-    const readArchive = async (buffer: Uint8Array): Promise<void> => {
+    const readArchive = async (buffer: Uint8Array, depth: number): Promise<void> => {
         const filenameEncoding = await provider.detectFilenameEncoding(buffer);
         await provider.readZipFile(buffer, async (entry, readContent) => {
             const path = entry.fileName;
             if (isDirectory(path)) {
                 return;
             }
-            if (path.toLowerCase().endsWith(".zip") && !path.includes("/")) {
-                await readArchive(await readContent());
+            if (path.toLowerCase().endsWith(".zip") && parseParentIds(path).length === 0) {
+                if (depth < MAX_NESTED_ZIP_DEPTH) {
+                    await readArchive(await readContent(), depth + 1);
+                }
             } else if (path.toLowerCase().endsWith(".html")) {
                 if (baseName(path) === "index.html") {
                     return;
@@ -83,7 +88,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
         }, filenameEncoding);
     };
 
-    await readArchive(fileBuffer);
+    await readArchive(fileBuffer, 0);
 
     return { pages, resources };
 }
@@ -164,7 +169,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         // Preserve Notion's original timestamps. Must run after the content save above, which would
         // otherwise re-stamp the modification date with "now".
         if (page.utcDateCreated || page.utcDateModified) {
-            note.setDateCreatedAndModified(page.utcDateCreated, page.utcDateModified ?? page.utcDateCreated);
+            note.setDateCreatedAndModified(page.utcDateCreated ?? page.utcDateModified, page.utcDateModified ?? page.utcDateCreated);
         }
     }
 
@@ -252,7 +257,8 @@ function internalPageId(href: string | undefined): string | null {
     if (!path.toLowerCase().endsWith(".html")) {
         return null;
     }
-    return getNotionId(decoded) ?? null;
+    // Match against the path only: a 32-hex sequence in a query/hash must not be mistaken for the page id.
+    return getNotionId(path) ?? null;
 }
 
 /**
@@ -287,15 +293,20 @@ function normalizePath(path: string): string {
     return parts.join("/");
 }
 
-/** Returns the Notion id of the first child element of `body` that carries one (Notion's page wrapper). */
-function firstChildNotionId(body: HTMLElement | null): string | undefined {
+/**
+ * Returns the Notion id of `body`'s page-wrapper child. Only `body`'s direct children are considered: a
+ * nested block whose id happens to match the 32-hex pattern must not be taken for the page id.
+ */
+export function firstChildNotionId(body: HTMLElement | null): string | undefined {
     if (!body) {
         return undefined;
     }
-    for (const child of body.querySelectorAll("*")) {
-        const id = getNotionId(child.getAttribute("id") ?? "");
-        if (id) {
-            return id;
+    for (const child of body.childNodes) {
+        if (child instanceof HTMLElement) {
+            const id = getNotionId(child.getAttribute("id") ?? "");
+            if (id) {
+                return id;
+            }
         }
     }
     return undefined;

@@ -49,4 +49,19 @@ describe("Notion importer — integration", () => {
 
         expect(importRoot.getChildNotes().map((note) => note.title)).toContain("Inner page");
     });
+
+    it("descends into a nested export zip even when it sits inside a top-level wrapper folder", async () => {
+        const innerZip = await createZipBuffer({ "Inner page 386c5eca1b8b80439520cad27a0d2749.html": pageHtml("Wrapped page") });
+        const importRoot = await importNotion({ "My Export/Export-Part-1.zip": innerZip });
+
+        expect(importRoot.getChildNotes().map((note) => note.title)).toContain("Wrapped page");
+    });
+
+    it("descends through two levels of nested export zips", async () => {
+        const innermost = await createZipBuffer({ "Inner page 386c5eca1b8b80439520cad27a0d2749.html": pageHtml("Deep page") });
+        const middle = await createZipBuffer({ "Export-Part-1.zip": innermost });
+        const importRoot = await importNotion({ "Export.zip": middle });
+
+        expect(importRoot.getChildNotes().map((note) => note.title)).toContain("Deep page");
+    });
 });

@@ -118,7 +118,7 @@ export function parseNote(path: string, json: string): ParsedNote | null {
 function buildContent(note: KeepNote): string {
     if (note.listContent?.length) {
         const items = note.listContent
-            .filter((item) => item.text)
+            .filter((item) => item.text || item.textHtml)
             .map((item) => {
                 // Match the canonical CKEditor task-list serialization (checked before disabled).
                 const attributes = item.isChecked ? ` checked="checked" disabled="disabled"` : ` disabled="disabled"`;
@@ -171,7 +171,7 @@ function createNotes(importRootNote: BNote, notes: ParsedNote[], taskContext: Ta
         // Preserve Keep's original timestamps. Must run after createNewNote's content save, which would
         // otherwise re-stamp the modification date with "now".
         if (parsed.utcDateCreated || parsed.utcDateModified) {
-            note.setDateCreatedAndModified(parsed.utcDateCreated, parsed.utcDateModified ?? parsed.utcDateCreated);
+            note.setDateCreatedAndModified(parsed.utcDateCreated ?? parsed.utcDateModified, parsed.utcDateModified ?? parsed.utcDateCreated);
         }
 
         taskContext.increaseProgressCount();
@@ -205,7 +205,7 @@ function keepColorToHex(color: string | undefined): string | undefined {
 
 /** Converts a Keep microsecond-epoch timestamp to Trilium's UTC DB format, or undefined if absent/invalid. */
 function usecToUtc(usec: number | undefined): string | undefined {
-    if (!usec) {
+    if (usec == null) {
         return undefined;
     }
     const date = new Date(usec / 1000);
