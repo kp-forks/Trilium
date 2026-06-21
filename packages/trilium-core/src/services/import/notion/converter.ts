@@ -24,7 +24,9 @@ export function convertNotionHtml(html: string): string {
  * `<ul class="toggle"><li><details>…</details></li></ul>`, so drop the list wrapper, hoisting the
  * `<details>` in its place and tagging it with Trilium's collapsible class. Only the toggle's own
  * top-level `<details>` is hoisted; a nested toggle is handled when the loop reaches its own `ul.toggle`,
- * which keeps it nested. The native `open` attribute is dropped (the sanitizer strips it anyway).
+ * which keeps it nested. Notion's native `open` attribute is preserved so the published/share view
+ * reflects the exported expanded/collapsed state (the in-app editor always loads toggles collapsed, and
+ * the sanitizer is configured to keep `open` on `details`).
  */
 function convertToggles(root: HTMLElement) {
     for (const ul of root.querySelectorAll("ul.toggle")) {
@@ -32,7 +34,6 @@ function convertToggles(root: HTMLElement) {
         for (const details of detailsList) {
             const existing = details.getAttribute("class");
             details.setAttribute("class", existing ? `${existing} trilium-collapsible` : "trilium-collapsible");
-            details.removeAttribute("open");
         }
         ul.replaceWith(...detailsList);
     }
