@@ -24,6 +24,14 @@ You can also move notes using the familiar cut and paste functions available in 
 
 See <a class="reference-link" href="Note%20Tree/Note%20tree%20contextual%20menu.md">Note tree contextual menu</a> for more information.
 
+## Tree Settings
+
+Click the tree icon in the tree toolbar to open the tree settings popup. It contains the following options:
+
+*   **Hide archived notes**: When enabled, archived notes are not shown in the tree.
+*   **Automatically collapse notes**: When enabled, notes are collapsed after a period of inactivity to keep the tree tidy.
+*   **Follow active note**: When enabled (default), the tree automatically scrolls and expands parent nodes to keep the currently active note visible. When disabled, the tree is fully detached from navigation — only the background highlight of the active note is updated, but the tree viewport and its expanded/collapsed state are never changed by navigation. Use the crosshair button to manually jump the tree to the active note at any time.
+
 ## Keyboard shortcuts
 
 The note tree comes with multiple keyboard shortcuts to make editing faster, consult the dedicated <a class="reference-link" href="Note%20Tree/Keyboard%20shortcuts.md">Keyboard shortcuts</a> section.
