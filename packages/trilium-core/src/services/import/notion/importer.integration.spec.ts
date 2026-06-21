@@ -56,6 +56,32 @@ describe("Notion importer — integration", () => {
         expect(examples?.getChildNotes().map((note) => note.title).sort()).toEqual(["Hello world", "Quick Note"]);
     });
 
+    it("groups a CSV-only database's rows under a container note, instead of orphaning them to the root", async () => {
+        // A Notion inline/linked database exports as a `.csv` with no sibling `.html`; its rows live in a
+        // folder named after the database. Nothing owns that folder, so without a container they'd be flat.
+        const importRoot = await importNotion({
+            "Reading List 08d361c59a9940c2a9d7237a4e6cd09a.html": pageHtml("Reading List", "08d361c59a9940c2a9d7237a4e6cd09a"),
+            "Reading List/Media 0a556b01dd9c4b70bbba51bf2ee0409b.csv": "Title,Author\nx,y",
+            "Reading List/Media/Bon Appetit 4f195d8c55fb44f4b94a063e643b0297.html": pageHtml("Bon Appetit", "4f195d8c55fb44f4b94a063e643b0297")
+        });
+
+        const readingList = importRoot.getChildNotes().find((note) => note.title === "Reading List");
+        const media = readingList?.getChildNotes().find((note) => note.title === "Media");
+        expect(media?.getChildNotes().map((note) => note.title)).toEqual(["Bon Appetit"]);
+    });
+
+    it("does not create a duplicate container when the database also has its own page", async () => {
+        const importRoot = await importNotion({
+            "45 cff419ddfc69457aad14bd0381cf0172.html": pageHtml("45", "cff419ddfc69457aad14bd0381cf0172"),
+            "45 cff419ddfc69457aad14bd0381cf0172.csv": "a,b\n1,2",
+            "45/Brown fox 4731219279d04d78aca408c0a60c4263.html": pageHtml("Brown fox", "4731219279d04d78aca408c0a60c4263")
+        });
+
+        const fortyFive = importRoot.getChildNotes().filter((note) => note.title === "45");
+        expect(fortyFive.length).toBe(1);
+        expect(fortyFive[0].getChildNotes().map((note) => note.title)).toEqual(["Brown fox"]);
+    });
+
     it("recurses into a root-level nested export zip (the part Notion makes you extract)", async () => {
         const innerZip = await createZipBuffer({ "Inner page 386c5eca1b8b80439520cad27a0d2749.html": pageHtml("Inner page") });
         const importRoot = await importNotion({ "Export-Part-1.zip": innerZip });

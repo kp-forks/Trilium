@@ -39,10 +39,34 @@ interface ParsedPage {
 }
 
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { pages, resources } = await parseZip(fileBuffer);
+    const { pages, resources, csvPaths } = await parseZip(fileBuffer);
+    addDatabaseContainers(pages, csvPaths);
     taskContext.setTotalCount(pages.length);
 
     return createNotes(importRootNote, pages, resources, taskContext);
+}
+
+/**
+ * A Notion inline/linked database exports as a `<Name> <id>.csv` with no matching `.html` page, while its
+ * rows are `.html` files in a sibling `<Name>/` folder — so nothing owns that folder and the rows would
+ * orphan to the import root. Synthesize an (empty) container page for each such database, named after it,
+ * so its rows nest under it. A database that also has its own page is left to that page (no duplicate).
+ */
+function addDatabaseContainers(pages: ParsedPage[], csvPaths: string[]) {
+    const owned = new Set(pages.map((page) => ownedFolderKey(page.path)));
+    for (const csvPath of csvPaths) {
+        const key = ownedFolderKey(csvPath);
+        if (owned.has(key)) {
+            continue;
+        }
+        owned.add(key);
+        pages.push({
+            id: getNotionId(baseName(csvPath)) ?? "",
+            title: stripNotionId(removeExtension(baseName(csvPath))) || "Database",
+            path: csvPath,
+            content: ""
+        });
+    }
 }
 
 /**
@@ -55,10 +79,11 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
  */
 const MAX_NESTED_ZIP_DEPTH = 2;
 
-async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array> }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[] }> {
     const provider = getZipProvider();
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
+    const csvPaths: string[] = [];
 
     const readArchive = async (buffer: Uint8Array, depth: number): Promise<void> => {
         const filenameEncoding = await provider.detectFilenameEncoding(buffer);
@@ -79,6 +104,9 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                 if (parsed) {
                     pages.push(parsed);
                 }
+            } else if (path.toLowerCase().endsWith(".csv")) {
+                // Notion databases export as CSVs; we only need the path to reconstruct the hierarchy.
+                csvPaths.push(path);
             } else {
                 resources.set(normalizePath(path), await readContent());
             }
@@ -87,7 +115,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
 
     await readArchive(fileBuffer, 0);
 
-    return { pages, resources };
+    return { pages, resources, csvPaths };
 }
 
 function parsePage(path: string, html: string): ParsedPage | null {
