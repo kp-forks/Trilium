@@ -9,6 +9,7 @@
  * transforms below are ordered to match that pipeline, each grouped in its own `#region`.
  */
 
+import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 import { HTMLElement, parse } from "node-html-parser";
 
 export function convertNotionHtml(html: string): string {
@@ -20,6 +21,7 @@ export function convertNotionHtml(html: string): string {
     unwrapDisplayContents(root);
     convertTables(root);
     convertImages(root);
+    convertCodeBlocks(root);
     convertCallouts(root);
     convertBookmarks(root);
     return root.toString();
@@ -262,6 +264,40 @@ function convertImages(root: HTMLElement) {
         img.removeAttribute("style");
         figure.removeAttribute("id");
         figure.set_content(img.toString());
+    }
+}
+// #endregion
+
+// #region Code blocks
+/**
+ * Notion code blocks ship as `<pre class="code"><code class="language-<prism>">…</code></pre>`, preceded
+ * by Prism `<script>`/`<link>` CDN includes. Drop the includes and reduce each block to Trilium's
+ * canonical `<pre><code class="language-<mime>">`. The Prism language id is mapped to Trilium's
+ * mime-based class via the shared dictionary; unknown or unlabelled languages fall back to auto-detection.
+ */
+function convertCodeBlocks(root: HTMLElement) {
+    for (const tag of ["script", "link"]) {
+        for (const el of root.querySelectorAll(tag)) {
+            el.remove();
+        }
+    }
+
+    for (const pre of root.querySelectorAll("pre")) {
+        // node-html-parser treats a <pre>'s content as raw text, so re-parse it to reach the <code>.
+        const inner = parse(pre.innerHTML);
+        const code = inner.querySelector("code");
+        if (!code) {
+            continue;
+        }
+        const prismLanguage = (code.getAttribute("class") ?? "").match(/language-(\S+)/)?.[1];
+        const mime = prismLanguage ? getMimeTypeFromMarkdownName(prismLanguage) : undefined;
+        const language = mime ? normalizeMimeTypeForCKEditor(mime.mime) : MIME_TYPE_AUTO;
+
+        code.removeAttribute("style");
+        code.setAttribute("class", `language-${language}`);
+        pre.removeAttribute("id");
+        pre.removeAttribute("class");
+        pre.set_content(inner.toString());
     }
 }
 // #endregion

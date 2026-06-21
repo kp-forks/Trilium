@@ -191,6 +191,25 @@ describe("convertNotionHtml — images", () => {
     });
 });
 
+describe("convertNotionHtml — code blocks", () => {
+    it("maps a known Notion code language to Trilium's mime class and drops the Prism includes", () => {
+        const input = `<div style="display:contents" dir="auto"><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script><pre id="386c5eca" class="code code-wrap"><code class="language-c" style="white-space:pre-wrap;word-break:break-all">void main() {}</code></pre></div>`;
+        expect(convertNotionHtml(input)).toBe(`<pre><code class="language-text-x-csrc">void main() {}</code></pre>`);
+    });
+
+    it("falls back to auto-detect for an unknown language", () => {
+        expect(convertNotionHtml(`<pre class="code"><code class="language-nonexistentlang">x</code></pre>`)).toBe(
+            `<pre><code class="language-text-x-trilium-auto">x</code></pre>`
+        );
+    });
+
+    it("falls back to auto-detect for an unlabelled code block", () => {
+        expect(convertNotionHtml(`<pre class="code"><code>x</code></pre>`)).toBe(
+            `<pre><code class="language-text-x-trilium-auto">x</code></pre>`
+        );
+    });
+});
+
 describe("convertNotionHtml — date mentions", () => {
     it("strips the @ prefix Notion puts on inline <time> date mentions", () => {
         expect(convertNotionHtml(`<p><time>@June 21, 2026</time></p>`)).toBe(`<p><time>June 21, 2026</time></p>`);
