@@ -22,6 +22,7 @@ import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
 import { getZipProvider } from "../../zip_provider.js";
+import { convertNotionHtml } from "./converter.js";
 import { getNotionId, parseParentIds, stripNotionId } from "./notion_id.js";
 
 interface ParsedPage {
@@ -83,7 +84,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
     const title = root.querySelector("title")?.textContent?.trim() || stripNotionId(removeExtension(baseName(path))) || "Untitled";
 
     const pageBody = root.querySelector(".page-body");
-    const content = pageBody ? sanitizeHtml(pageBody.innerHTML) : "";
+    const content = pageBody ? sanitizeHtml(convertNotionHtml(pageBody.innerHTML)) : "";
 
     return {
         id,
