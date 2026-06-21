@@ -15,7 +15,47 @@ export function convertNotionHtml(html: string): string {
     convertTodoLists(root);
     convertToggles(root);
     unwrapDisplayContents(root);
+    convertCallouts(root);
     return root.toString();
+}
+
+/** Notion's default callout icon; it maps 1:1 to a "tip" admonition, so the emoji itself is redundant. */
+const DEFAULT_CALLOUT_EMOJI = "💡";
+
+/**
+ * Notion callouts are `<figure class="callout">` with an icon div (`<span class="icon">…</span>`) and a
+ * content div. Trilium has admonitions, so rewrite each into `<aside class="admonition <type>">`. The
+ * default light-bulb maps to a "tip" (the icon is implied, so it's dropped); any other emoji maps to a
+ * neutral "note" with the emoji preserved at the start of the content so the information isn't lost.
+ *
+ * Runs after wrapper-stripping so the content is already clean, and in reverse document order so a nested
+ * callout is converted before the callout that contains it.
+ */
+function convertCallouts(root: HTMLElement) {
+    for (const figure of [...root.querySelectorAll("figure.callout")].reverse()) {
+        const divs = directChildren(figure, "div");
+        const iconDiv = divs.find((div) => (div.getAttribute("style") ?? "").includes("font-size"));
+        const contentDiv = divs.find((div) => (div.getAttribute("style") ?? "").replace(/\s/g, "").includes("width:100%")) ?? divs[divs.length - 1];
+
+        const emoji = iconDiv?.querySelector("span.icon")?.textContent?.trim() ?? "";
+        const type = emoji === DEFAULT_CALLOUT_EMOJI ? "tip" : "note";
+        if (type === "note" && emoji && contentDiv) {
+            prependEmoji(contentDiv, emoji);
+        }
+
+        figure.insertAdjacentHTML("beforebegin", `<aside class="admonition ${type}">${contentDiv?.innerHTML ?? ""}</aside>`);
+        figure.remove();
+    }
+}
+
+/** Prepends the callout's emoji to its content: into the first paragraph, or as a leading one otherwise. */
+function prependEmoji(contentDiv: HTMLElement, emoji: string) {
+    const first = directChild(contentDiv, () => true);
+    if (first && isTag(first, "p")) {
+        first.set_content(`${emoji} ${first.innerHTML}`);
+    } else {
+        contentDiv.insertAdjacentHTML("afterbegin", `<p>${emoji}</p>`);
+    }
 }
 
 /**

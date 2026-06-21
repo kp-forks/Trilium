@@ -80,8 +80,8 @@ describe("convertNotionHtml — display:contents wrappers", () => {
         expect(convertNotionHtml(input)).toBe(`<p>A</p>`);
     });
 
-    it("leaves meaningful divs intact", () => {
-        const input = `<figure class="callout"><div style="font-size:1.5em"><span class="icon">x</span></div><div style="width:100%">body</div></figure>`;
+    it("leaves meaningful (non display:contents) divs intact", () => {
+        const input = `<section><div style="font-size:1.5em"><span class="icon">x</span></div><div style="width:100%">body</div></section>`;
         expect(convertNotionHtml(input)).toBe(input);
     });
 });
@@ -113,6 +113,29 @@ describe("convertNotionHtml — toggles", () => {
         const input = `<ul class="toggle"><li><details open=""><summary>Outer</summary><div style="display:contents"><ul class="toggle"><li><details open=""><summary>Inner</summary></details></li></ul></div></details></li></ul>`;
         expect(convertNotionHtml(input)).toBe(
             `<details open class="trilium-collapsible"><summary>Outer</summary><details open class="trilium-collapsible"><summary>Inner</summary></details></details>`
+        );
+    });
+});
+
+describe("convertNotionHtml — callouts", () => {
+    const callout = (emoji: string, body: string) =>
+        `<div style="display:contents" dir="ltr"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="386c5eca"><div style="font-size:1.5em"><span class="icon">${emoji}</span></div><div style="width:100%"><div style="display:contents" dir="auto">${body}</div></div></figure></div>`;
+
+    it("maps the default light-bulb callout to a tip admonition, dropping the redundant icon", () => {
+        expect(convertNotionHtml(callout("💡", `<p>Callout with default icon.</p>`))).toBe(
+            `<aside class="admonition tip"><p>Callout with default icon.</p></aside>`
+        );
+    });
+
+    it("maps a non-default emoji callout to a note admonition, preserving the emoji in the content", () => {
+        expect(convertNotionHtml(callout("♻️", `<p>Callout with custom emoji.</p>`))).toBe(
+            `<aside class="admonition note"><p>♻️ Callout with custom emoji.</p></aside>`
+        );
+    });
+
+    it("preserves a non-default emoji as a leading paragraph when the content doesn't start with one", () => {
+        expect(convertNotionHtml(callout("♻️", `<h2>Heading body</h2>`))).toBe(
+            `<aside class="admonition note"><p>♻️</p><h2>Heading body</h2></aside>`
         );
     });
 });
