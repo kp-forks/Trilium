@@ -7,15 +7,21 @@
  * and original timestamps — copying each page's body HTML across roughly as-is. Faithful HTML cleanup,
  * link rewriting, images/attachments and database (CSV) handling are deliberately deferred.
  *
- * Like the OneNote importer, it runs in the background and reports progress, completion and failure over
- * the WebSocket via an "importNotes" TaskContext, so it never throws to the caller.
+ * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
+ * `format=notion`, so progress, completion and failure are reported by that dispatcher's TaskContext —
+ * this service just builds the tree and returns its root note, like the zip/enex importers.
  */
 
-import { becca, date_utils, getLog, getZipProvider, note_service as noteService, protected_session as protectedSession, sanitize, TaskContext } from "@triliumnext/core";
 import { t } from "i18next";
 import { type HTMLElement, parse } from "node-html-parser";
 
-import sql from "../../sql.js";
+import type BNote from "../../../becca/entities/bnote.js";
+import noteService from "../../notes.js";
+import protectedSessionService from "../../protected_session.js";
+import { sanitizeHtml } from "../../sanitizer.js";
+import type TaskContext from "../../task_context.js";
+import dateUtils from "../../utils/date.js";
+import { getZipProvider } from "../../zip_provider.js";
 import { getNotionId, parseParentIds, stripNotionId } from "./notion_id.js";
 
 interface ParsedPage {
@@ -32,20 +38,11 @@ interface ParsedPage {
     utcDateModified?: string;
 }
 
-export async function importZip({ fileBuffer, parentNoteId, taskId }: { fileBuffer: Uint8Array; parentNoteId: string; taskId: string }): Promise<void> {
-    const taskContext = TaskContext.getInstance(taskId, "importNotes", { safeImport: true });
+async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
+    const pages = await parsePages(fileBuffer);
+    taskContext.setTotalCount(pages.length);
 
-    try {
-        const pages = await parsePages(fileBuffer);
-        taskContext.setTotalCount(pages.length);
-
-        const rootNoteId = sql.transactional(() => createNotes(parentNoteId, pages, taskContext));
-
-        taskContext.taskSucceeded({ parentNoteId, importedNoteId: rootNoteId });
-    } catch (e: unknown) {
-        getLog().error(`Notion import failed: ${e instanceof Error ? (e.stack ?? e.message) : e}`);
-        taskContext.reportError(e instanceof Error ? e.message : String(e));
-    }
+    return createNotes(importRootNote, pages, taskContext);
 }
 
 /** Reads every page (.html entry) out of the zip, parsing its title, ancestry, dates and body HTML. */
@@ -86,7 +83,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
     const title = root.querySelector("title")?.textContent?.trim() || stripNotionId(removeExtension(baseName(path))) || "Untitled";
 
     const pageBody = root.querySelector(".page-body");
-    const content = pageBody ? sanitize.sanitizeHtml(pageBody.innerHTML) : "";
+    const content = pageBody ? sanitizeHtml(pageBody.innerHTML) : "";
 
     return {
         id,
@@ -100,15 +97,14 @@ function parsePage(path: string, html: string): ParsedPage | null {
 }
 
 /**
- * Creates the note tree. Pages are created shallowest-first so a page's parent always exists before it;
- * each page is parented under the note created for its immediate-parent id, or under the import root when
- * it has no (resolvable) parent. Returns the import root's note id.
+ * Creates the note tree under a fresh "Notion import" root. Pages are created shallowest-first so a
+ * page's parent always exists before it; each page is parented under the note created for its
+ * immediate-parent id, or under the import root when it has no (resolvable) parent. Returns that root.
  */
-function createNotes(parentNoteId: string, pages: ParsedPage[], taskContext: TaskContext<"importNotes">): string {
-    const parentNote = becca.getNoteOrThrow(parentNoteId);
-    const isProtected = parentNote.isProtected && protectedSession.isProtectedSessionAvailable();
+function createNotes(importRootNote: BNote, pages: ParsedPage[], taskContext: TaskContext<"importNotes">): BNote {
+    const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
-    const rootNote = noteService.createNewNote({ parentNoteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
+    const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
     const noteIdByPageId = new Map<string, string>();
@@ -137,7 +133,7 @@ function createNotes(parentNoteId: string, pages: ParsedPage[], taskContext: Tas
         taskContext.increaseProgressCount();
     }
 
-    return rootNote.noteId;
+    return rootNote;
 }
 
 /** Returns the Notion id of the first child element of `body` that carries one (Notion's page wrapper). */
@@ -165,7 +161,7 @@ function extractDate(root: HTMLElement, rowClass: string): string | undefined {
         return undefined;
     }
     const date = new Date(text);
-    return Number.isNaN(date.getTime()) ? undefined : date_utils.utcDateTimeStr(date);
+    return Number.isNaN(date.getTime()) ? undefined : dateUtils.utcDateTimeStr(date);
 }
 
 function isDirectory(path: string): boolean {
@@ -180,4 +176,4 @@ function removeExtension(name: string): string {
     return name.replace(/\.[^.]+$/, "");
 }
 
-export default { importZip };
+export default { importNotion };

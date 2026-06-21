@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import notionImport from "../../../services/notion_import.js";
-import toast from "../../../services/toast.js";
+import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import FormFileUpload from "../../react/FormFileUpload.js";
 import FormGroup from "../../react/FormGroup.js";
@@ -18,15 +17,13 @@ function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPan
             return;
         }
 
-        // Close immediately and let the shared import toasts report progress, completion and any error.
-        // The request returns as soon as the server accepts it (the import runs in the background), so the
-        // only errors caught here are upfront ones like an upload failure.
+        // Close immediately and let the shared import toasts (registered in import.ts) report progress,
+        // completion and any error. `format: "notion"` routes the upload to the Notion importer on the
+        // shared file-import endpoint, overriding the .zip extension's default (the generic zip importer).
+        // uploadFiles surfaces any upload error via its own toast; swallow the rejection so this void-ed
+        // call doesn't raise an unhandled rejection.
         closeDialog();
-        try {
-            await notionImport.runImport({ parentNoteId, file });
-        } catch (e) {
-            toast.showError(e instanceof Error ? e.message : String(e));
-        }
+        await importService.uploadFiles("notes", parentNoteId, [file], { format: "notion", safeImport: "true", shrinkImages: "false" }).catch(() => {});
     }, [file, parentNoteId, closeDialog]);
 
     // Keep the latest import handler in a ref so the footer effect depends only on `file` being present,

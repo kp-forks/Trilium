@@ -29,7 +29,6 @@ import llmChatRoute from "./api/llm_chat.js";
 import llmSpecialNotesRoute from "./api/llm_special_notes.js";
 import loginApiRoute from "./api/login.js";
 import metricsRoute from "./api/metrics.js";
-import notionImportRoute from "./api/notion_import.js";
 import ocrRoute from "./api/ocr.js";
 import onenoteImportRoute from "./api/onenote_import.js";
 import recoveryCodes from './api/recovery_codes.js';
@@ -191,10 +190,6 @@ function register(app: express.Application) {
     asyncApiRoute(PST, "/api/onenote-import/disconnect", onenoteImportRoute.disconnect);
     asyncApiRoute(GET, "/api/onenote-import/notebooks", onenoteImportRoute.getNotebooks);
     asyncApiRoute(PST, "/api/onenote-import/import", onenoteImportRoute.runImport);
-
-    // Notion importer: a multipart upload of the export zip (vs OneNote's API), so it needs the upload
-    // middleware + CSRF guard rather than the plain JSON `apiRoute` helper.
-    route(PST, "/api/notion-import/import", [auth.checkApiAuthOrElectron, uploadMiddlewareWithErrorHandling, csrfMiddleware], notionImportRoute.runImport, apiResultHandler);
 
     shareRoutes.register(router);
 

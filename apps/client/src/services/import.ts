@@ -9,6 +9,8 @@ import { WebSocketMessage } from "@triliumnext/commons";
 type BooleanLike = boolean | "true" | "false";
 
 export interface UploadFilesOptions {
+    /** Routes the upload to a specific importer (e.g. "notion"), overriding extension-based detection. */
+    format?: string;
     safeImport?: BooleanLike;
     shrinkImages: BooleanLike;
     textImportedAsText?: BooleanLike;
