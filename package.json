@@ -70,7 +70,7 @@
     "eslint-config-preact": "2.0.0",
     "eslint-plugin-playwright": "2.10.4",
     "eslint-plugin-simple-import-sort": "13.0.0",
-    "happy-dom": "20.10.5",
+    "happy-dom": "20.10.6",
     "http-server": "14.1.1",
     "jiti": "2.7.0",
     "js-yaml": "4.2.0",
