@@ -257,6 +257,13 @@
     "choose_file": "Notion export (.zip)",
     "import": "Import"
   },
+  "evernote_import": {
+    "name": "Evernote",
+    "description": "Import notes from an Evernote export (.enex).",
+    "description_long": "In Evernote, export a notebook (or up to 100 notes at a time) as an ENEX file, then choose one or more .enex files here. Each file is imported as a separate notebook.",
+    "choose_file": "Evernote export (.enex)",
+    "import": "Import"
+  },
   "include_note": {
     "dialog_title": "Include note",
     "label_note": "Note",
