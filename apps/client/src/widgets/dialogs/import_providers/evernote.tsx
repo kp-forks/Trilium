@@ -5,6 +5,7 @@ import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import FormFileUpload from "../../react/FormFileUpload.js";
 import FormGroup from "../../react/FormGroup.js";
+import iconUrl from "./icons/evernote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
@@ -59,7 +60,7 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
 const provider: ImportProvider = {
     id: "evernote",
     name: t("evernote_import.name"),
-    icon: "bx bx-import",
+    iconUrl,
     description: t("evernote_import.description"),
     Panel: EvernotePanel
 };

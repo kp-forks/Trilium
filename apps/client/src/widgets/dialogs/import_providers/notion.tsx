@@ -5,6 +5,7 @@ import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import FormFileUpload from "../../react/FormFileUpload.js";
 import FormGroup from "../../react/FormGroup.js";
+import iconUrl from "./icons/notion.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
@@ -58,7 +59,7 @@ function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPan
 const provider: ImportProvider = {
     id: "notion",
     name: t("notion_import.name"),
-    icon: "bx bxs-file-archive",
+    iconUrl,
     description: t("notion_import.description"),
     Panel: NotionPanel
 };

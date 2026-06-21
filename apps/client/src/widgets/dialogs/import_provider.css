@@ -22,8 +22,13 @@
         border-color: var(--main-text-color);
     }
 
-    .import-provider-card .tn-icon {
-        font-size: 1.8em;
+    .import-provider-card-icon {
+        flex-shrink: 0;
+        width: 1.8em;
+        height: 1.8em;
+        background-color: currentColor;
+        -webkit-mask: var(--provider-icon) center / contain no-repeat;
+        mask: var(--provider-icon) center / contain no-repeat;
     }
 
     .import-provider-card-text {

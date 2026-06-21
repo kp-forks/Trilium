@@ -5,6 +5,7 @@ import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import FormFileUpload from "../../react/FormFileUpload.js";
 import FormGroup from "../../react/FormGroup.js";
+import iconUrl from "./icons/keep.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
@@ -58,7 +59,7 @@ function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanel
 const provider: ImportProvider = {
     id: "keep",
     name: t("keep_import.name"),
-    icon: "bx bxs-file-archive",
+    iconUrl,
     description: t("keep_import.description"),
     Panel: KeepPanel
 };
