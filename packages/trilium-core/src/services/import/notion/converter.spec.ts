@@ -150,3 +150,19 @@ describe("convertNotionHtml — math", () => {
         expect(convertNotionHtml(`<p>Text<style>@import url('x')</style></p>`)).toBe(`<p>Text</p>`);
     });
 });
+
+describe("convertNotionHtml — bookmarks", () => {
+    it("converts a Notion bookmark card to a Trilium link-embed, keeping the favicon", () => {
+        const input = `<div style="display:contents" dir="ltr"><figure id="386c5eca"><a href="https://triliumnotes.org/" class="bookmark source"><div class="bookmark-info"><div class="bookmark-text"><div class="bookmark-title">Trilium Notes</div><div class="bookmark-description">Trilium is an open-source solution for note-taking and personal knowledge bases. Use it locally or sync with your own server to access notes anywhere.</div></div><div class="bookmark-href"><img src="https://triliumnotes.org/assets/favicon-BI5VJBD3.ico" class="icon bookmark-icon"/>https://triliumnotes.org/</div></div></a></figure></div>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<section class="link-embed" data-url="https://triliumnotes.org/" data-embed-type="opengraph" data-title="Trilium Notes" data-description="Trilium is an open-source solution for note-taking and personal knowledge bases. Use it locally or sync with your own server to access notes anywhere." data-favicon="https://triliumnotes.org/assets/favicon-BI5VJBD3.ico"></section>`
+        );
+    });
+
+    it("omits optional attributes that the bookmark doesn't provide", () => {
+        const input = `<figure><a href="https://example.com/" class="bookmark source"><div class="bookmark-info"><div class="bookmark-text"><div class="bookmark-title">Example</div></div></div></a></figure>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<section class="link-embed" data-url="https://example.com/" data-embed-type="opengraph" data-title="Example"></section>`
+        );
+    });
+});

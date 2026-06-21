@@ -17,7 +17,44 @@ export function convertNotionHtml(html: string): string {
     convertToggles(root);
     unwrapDisplayContents(root);
     convertCallouts(root);
+    convertBookmarks(root);
     return root.toString();
+}
+
+/**
+ * Notion bookmark cards are `<figure><a class="bookmark source" href="…"><div class="bookmark-info">…`,
+ * carrying a title, description and favicon. Trilium has the equivalent link-embed, so rewrite each into
+ * `<section class="link-embed" data-…>` (an open-graph embed). Optional fields are only emitted when the
+ * bookmark provides them.
+ */
+function convertBookmarks(root: HTMLElement) {
+    for (const figure of root.querySelectorAll("figure")) {
+        const url = figure.querySelector("a.bookmark")?.getAttribute("href");
+        if (!url) {
+            continue;
+        }
+
+        const section = parse(`<section></section>`).querySelector("section");
+        if (!section) {
+            continue;
+        }
+        section.setAttribute("class", "link-embed");
+        section.setAttribute("data-url", url);
+        section.setAttribute("data-embed-type", "opengraph");
+
+        const optional: Record<string, string | undefined> = {
+            "data-title": figure.querySelector(".bookmark-title")?.textContent?.trim(),
+            "data-description": figure.querySelector(".bookmark-description")?.textContent?.trim(),
+            "data-favicon": figure.querySelector("img.bookmark-icon")?.getAttribute("src")
+        };
+        for (const [key, value] of Object.entries(optional)) {
+            if (value) {
+                section.setAttribute(key, value);
+            }
+        }
+
+        figure.replaceWith(section);
+    }
 }
 
 /**
