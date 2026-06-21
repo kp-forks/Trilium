@@ -27,3 +27,32 @@ describe("convertNotionHtml — to-do lists", () => {
         expect(convertNotionHtml(input)).toBe(`<p id="x">Hello</p>`);
     });
 });
+
+describe("convertNotionHtml — to-do nesting and merging", () => {
+    // Each Notion to-do item is its own <ul class="to-do-list"> wrapped in a display:contents <div>;
+    // a parent's children live in its <div class="indented">, each again its own wrapped single-item list.
+    const wrap = (ulInner: string) => `<div style="display:contents" dir="auto"><ul class="to-do-list"><li>${ulInner}</li></ul></div>`;
+    const off = (text: string, indented = "") => `<div class="checkbox checkbox-off"></div> <span class="to-do-children-unchecked">${text}</span><div class="indented">${indented}</div>`;
+    const on = (text: string, indented = "") => `<div class="checkbox checkbox-on"></div> <span class="to-do-children-checked">${text}</span><div class="indented">${indented}</div>`;
+
+    const item = (text: string, opts: { checked?: boolean; nested?: string } = {}) =>
+        `<li><label class="todo-list__label"><input type="checkbox"${opts.checked ? ` checked="checked"` : ""} disabled="disabled"><span class="todo-list__label__description">${text}</span></label>${opts.nested ?? ""}</li>`;
+    const list = (...items: string[]) => `<ul class="todo-list">${items.join("")}</ul>`;
+
+    it("nests a parent's sub-items into a single nested todo-list inside its <li>", () => {
+        const input = wrap(off("Parent", wrap(off("Child 1")) + wrap(on("Child 2"))));
+        expect(convertNotionHtml(input)).toBe(
+            list(item("Parent", { nested: list(item("Child 1"), item("Child 2", { checked: true })) }))
+        );
+    });
+
+    it("merges adjacent top-level to-do items into one list", () => {
+        const input = wrap(off("A")) + wrap(on("B"));
+        expect(convertNotionHtml(input)).toBe(list(item("A"), item("B", { checked: true })));
+    });
+
+    it("does not merge to-do items separated by other content", () => {
+        const input = `${wrap(off("A"))}<p>Sep</p>${wrap(off("B"))}`;
+        expect(convertNotionHtml(input)).toBe(`${list(item("A"))}<p>Sep</p>${list(item("B"))}`);
+    });
+});
