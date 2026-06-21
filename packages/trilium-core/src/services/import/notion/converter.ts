@@ -307,15 +307,25 @@ function convertCodeBlocks(root: HTMLElement) {
             continue;
         }
         const prismLanguage = (code.getAttribute("class") ?? "").match(/language-(\S+)/)?.[1];
-        const mime = prismLanguage ? getMimeTypeFromMarkdownName(prismLanguage) : undefined;
-        const language = mime ? normalizeMimeTypeForCKEditor(mime.mime) : MIME_TYPE_AUTO;
 
         code.removeAttribute("style");
-        code.setAttribute("class", `language-${language}`);
+        code.setAttribute("class", `language-${resolveCodeLanguage(prismLanguage)}`);
         pre.removeAttribute("id");
         pre.removeAttribute("class");
         pre.set_content(inner.toString());
     }
+}
+
+/** Resolves a Notion/Prism language id to the class Trilium expects on a code block. */
+function resolveCodeLanguage(prismLanguage: string | undefined): string {
+    // Mermaid isn't in the MIME dictionary, but Trilium's mermaid rendering keys off `language-mermaid`,
+    // so preserve it verbatim (mirroring the shared markdown renderer). Everything else maps to its CKEditor
+    // mime class, falling back to auto-detection when the language is unknown or absent.
+    if (prismLanguage === "mermaid") {
+        return "mermaid";
+    }
+    const mime = prismLanguage ? getMimeTypeFromMarkdownName(prismLanguage) : undefined;
+    return mime ? normalizeMimeTypeForCKEditor(mime.mime) : MIME_TYPE_AUTO;
 }
 // #endregion
 

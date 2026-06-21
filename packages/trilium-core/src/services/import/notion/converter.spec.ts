@@ -247,6 +247,13 @@ describe("convertNotionHtml — code blocks", () => {
             `<pre><code class="language-text-x-trilium-auto">x</code></pre>`
         );
     });
+
+    it("preserves a mermaid code block as language-mermaid (not a mime) so Trilium renders the diagram", () => {
+        const input = `<pre id="386c5eca" class="code code-wrap"><code class="language-mermaid" style="white-space:pre-wrap;word-break:break-all">graph TD
+  Mermaid --&gt; Diagram</code></pre>`;
+        expect(convertNotionHtml(input)).toBe(`<pre><code class="language-mermaid">graph TD
+  Mermaid --&gt; Diagram</code></pre>`);
+    });
 });
 
 describe("convertNotionHtml — link-to-page blocks", () => {
