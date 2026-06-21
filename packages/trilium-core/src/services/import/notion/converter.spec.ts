@@ -176,6 +176,21 @@ describe("convertNotionHtml — tables", () => {
     });
 });
 
+describe("convertNotionHtml — images", () => {
+    it("normalizes a Notion image figure into a canonical figure>img (src left for the importer to rewrite)", () => {
+        const input = `<div style="display:contents" dir="ltr"><figure id="386c5eca" class="image"><a href="Formatting%20test/Screenshot.png"><img style="width:463.98px" src="Formatting%20test/Screenshot.png"/></a></figure></div>`;
+        expect(convertNotionHtml(input)).toBe(
+            `<figure class="image"><img src="Formatting%20test/Screenshot.png"></figure>`
+        );
+    });
+
+    it("leaves a plain figure>img untouched apart from dropping inline sizing", () => {
+        expect(convertNotionHtml(`<figure class="image"><img src="x.png" style="width:10px"></figure>`)).toBe(
+            `<figure class="image"><img src="x.png"></figure>`
+        );
+    });
+});
+
 describe("convertNotionHtml — date mentions", () => {
     it("strips the @ prefix Notion puts on inline <time> date mentions", () => {
         expect(convertNotionHtml(`<p><time>@June 21, 2026</time></p>`)).toBe(`<p><time>June 21, 2026</time></p>`);

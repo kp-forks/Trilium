@@ -19,6 +19,7 @@ export function convertNotionHtml(html: string): string {
     convertToggles(root);
     unwrapDisplayContents(root);
     convertTables(root);
+    convertImages(root);
     convertCallouts(root);
     convertBookmarks(root);
     return root.toString();
@@ -241,6 +242,26 @@ function stripTableAttributes(table: HTMLElement) {
         for (const el of table.querySelectorAll(tag)) {
             strip(el);
         }
+    }
+}
+// #endregion
+
+// #region Images
+/**
+ * Notion image blocks are `<figure class="image"><a href="…"><img src="…"></a></figure>`, where the
+ * `<a>` is a self-link to the file and the `<img>` carries an inline pixel width. Reduce each to Trilium's
+ * canonical `<figure class="image"><img src="…"></figure>` (unwrap the link, drop the sizing and the
+ * Notion id). The `src` still points at the zip-relative path; the importer rewrites it to an attachment.
+ */
+function convertImages(root: HTMLElement) {
+    for (const figure of root.querySelectorAll("figure.image")) {
+        const img = figure.querySelector("img");
+        if (!img) {
+            continue;
+        }
+        img.removeAttribute("style");
+        figure.removeAttribute("id");
+        figure.set_content(img.toString());
     }
 }
 // #endregion

@@ -16,6 +16,7 @@ import { t } from "i18next";
 import { type HTMLElement, parse } from "node-html-parser";
 
 import type BNote from "../../../becca/entities/bnote.js";
+import imageService from "../../image.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import { sanitizeHtml } from "../../sanitizer.js";
@@ -40,34 +41,41 @@ interface ParsedPage {
 }
 
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const pages = await parsePages(fileBuffer);
+    const { pages, resources } = await parseZip(fileBuffer);
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, taskContext);
+    return createNotes(importRootNote, pages, resources, taskContext);
 }
 
-/** Reads every page (.html entry) out of the zip, parsing its title, ancestry, dates and body HTML. */
-async function parsePages(fileBuffer: Uint8Array): Promise<ParsedPage[]> {
+/**
+ * Reads the zip once: HTML entries become parsed pages; every other file (images, attachments) is kept
+ * by its normalized path so page content can later reference it. The `index.html` summary is skipped.
+ */
+async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array> }> {
     const provider = getZipProvider();
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     const pages: ParsedPage[] = [];
+    const resources = new Map<string, Uint8Array>();
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
         const path = entry.fileName;
-        // Notion exports the page body as HTML; everything else (images, the per-database CSV, the
-        // summary index.html) is deferred to a later iteration.
-        if (!path.toLowerCase().endsWith(".html") || isDirectory(path) || baseName(path) === "index.html") {
+        if (isDirectory(path)) {
             return;
         }
-
-        const html = new TextDecoder().decode(await readContent());
-        const parsed = parsePage(path, html);
-        if (parsed) {
-            pages.push(parsed);
+        if (path.toLowerCase().endsWith(".html")) {
+            if (baseName(path) === "index.html") {
+                return;
+            }
+            const parsed = parsePage(path, new TextDecoder().decode(await readContent()));
+            if (parsed) {
+                pages.push(parsed);
+            }
+        } else {
+            resources.set(normalizePath(path), await readContent());
         }
     }, filenameEncoding);
 
-    return pages;
+    return { pages, resources };
 }
 
 function parsePage(path: string, html: string): ParsedPage | null {
@@ -102,7 +110,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
  * page's parent always exists before it; each page is parented under the note created for its
  * immediate-parent id, or under the import root when it has no (resolvable) parent. Returns that root.
  */
-function createNotes(importRootNote: BNote, pages: ParsedPage[], taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">): BNote {
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
@@ -125,7 +133,14 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], taskContext: Ta
         });
         noteIdByPageId.set(page.id, note.noteId);
 
-        // Preserve Notion's original timestamps. Must run after createNewNote's content save, which would
+        // Save referenced images as attachments and point their <img> at them. Done after creation, since
+        // attachments hang off the note; re-saves the content only when an image was actually rewritten.
+        const rewritten = rewriteImages(note, page.content, page.path, resources);
+        if (rewritten !== page.content) {
+            note.setContent(rewritten);
+        }
+
+        // Preserve Notion's original timestamps. Must run after the content save above, which would
         // otherwise re-stamp the modification date with "now".
         if (page.utcDateCreated || page.utcDateModified) {
             note.setDateCreatedAndModified(page.utcDateCreated, page.utcDateModified ?? page.utcDateCreated);
@@ -135,6 +150,67 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], taskContext: Ta
     }
 
     return rootNote;
+}
+
+/**
+ * Saves each in-zip image a page references as an attachment on `note` and rewrites the `<img src>` to
+ * point at it. References that don't resolve to a bundled file (e.g. external image URLs) are left as-is.
+ * Returns the (possibly unchanged) content.
+ */
+function rewriteImages(note: BNote, content: string, pagePath: string, resources: Map<string, Uint8Array>): string {
+    const root = parse(content);
+    let changed = false;
+
+    for (const img of root.querySelectorAll("img")) {
+        const src = img.getAttribute("src");
+        if (!src) {
+            continue;
+        }
+        const resourcePath = resolveResourcePath(pagePath, src);
+        const bytes = resources.get(resourcePath);
+        if (!bytes) {
+            continue;
+        }
+        const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, bytes, baseName(resourcePath), false);
+        if (attachmentId) {
+            img.setAttribute("src", `api/attachments/${attachmentId}/image/${encodeURIComponent(title)}`);
+            changed = true;
+        }
+    }
+
+    return changed ? root.toString() : content;
+}
+
+/**
+ * Resolves an `<img src>` (zip-relative, percent-encoded) against the page's directory in the zip,
+ * returning a normalized path that matches the keys collected in {@link parseZip}.
+ */
+export function resolveResourcePath(pagePath: string, src: string): string {
+    let decoded = src;
+    try {
+        decoded = decodeURIComponent(src);
+    } catch {
+        // Leave malformed percent-encoding as-is rather than throwing.
+    }
+    const lastSlash = pagePath.lastIndexOf("/");
+    const baseDir = lastSlash >= 0 ? pagePath.slice(0, lastSlash) : "";
+    return normalizePath(baseDir ? `${baseDir}/${decoded}` : decoded);
+}
+
+/** Collapses `.`/`..` segments in a forward-slash zip path and drops empty segments. */
+function normalizePath(path: string): string {
+    const parts: string[] = [];
+    for (const segment of path.split("/")) {
+        if (segment === "" || segment === ".") {
+            continue;
+        }
+        if (segment === "..") {
+            parts.pop();
+        } else {
+            parts.push(segment);
+        }
+    }
+    return parts.join("/");
 }
 
 /** Returns the Notion id of the first child element of `body` that carries one (Notion's page wrapper). */
