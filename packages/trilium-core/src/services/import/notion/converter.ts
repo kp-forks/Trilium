@@ -13,6 +13,7 @@ import { HTMLElement, parse } from "node-html-parser";
 export function convertNotionHtml(html: string): string {
     const root = parse(html);
     convertMath(root);
+    stripDatePrefixes(root);
     convertTodoLists(root);
     convertToggles(root);
     unwrapDisplayContents(root);
@@ -77,6 +78,19 @@ function convertMath(root: HTMLElement) {
         }
         token.insertAdjacentHTML("beforebegin", `<span class="math-tex">\\(${latex}\\)</span>`);
         token.remove();
+    }
+}
+
+/**
+ * Notion prefixes its inline date mentions with "@" (e.g. `<time>@June 21, 2026</time>`). Strip it so the
+ * imported text reads naturally, mirroring how the importer already handles property-row date metadata.
+ */
+function stripDatePrefixes(root: HTMLElement) {
+    for (const time of root.querySelectorAll("time")) {
+        const text = time.textContent;
+        if (text?.includes("@")) {
+            time.set_content(text.replace(/@/g, ""));
+        }
     }
 }
 

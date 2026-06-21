@@ -166,3 +166,13 @@ describe("convertNotionHtml — bookmarks", () => {
         );
     });
 });
+
+describe("convertNotionHtml — date mentions", () => {
+    it("strips the @ prefix Notion puts on inline <time> date mentions", () => {
+        expect(convertNotionHtml(`<p><time>@June 21, 2026</time></p>`)).toBe(`<p><time>June 21, 2026</time></p>`);
+    });
+
+    it("leaves date text without an @ untouched", () => {
+        expect(convertNotionHtml(`<p><time>June 21, 2026</time></p>`)).toBe(`<p><time>June 21, 2026</time></p>`);
+    });
+});
