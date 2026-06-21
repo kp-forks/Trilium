@@ -1177,10 +1177,9 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
                 }
 
                 if (!this.treeScrollFollowNavigation) {
-                    const prevActiveVisible = this.tree.options.activeVisible;
                     this.tree.options.activeVisible = false;
                     setTimeout(() => {
-                        this.tree.options.activeVisible = prevActiveVisible;
+                        this.tree.options.activeVisible = true;
                     }, 0);
                 }
 
