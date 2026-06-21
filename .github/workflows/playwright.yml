@@ -63,7 +63,7 @@ jobs:
       TRILIUM_DATA_DIR: "${{ github.workspace }}/apps/server/spec/db"
       TRILIUM_INTEGRATION_TEST: memory
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -130,7 +130,7 @@ jobs:
       TRILIUM_DOCKER: 1
       TRILIUM_PORT: 8082
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
