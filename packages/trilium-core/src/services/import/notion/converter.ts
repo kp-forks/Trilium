@@ -12,11 +12,35 @@ import { HTMLElement, parse } from "node-html-parser";
 
 export function convertNotionHtml(html: string): string {
     const root = parse(html);
+    convertMath(root);
     convertTodoLists(root);
     convertToggles(root);
     unwrapDisplayContents(root);
     convertCallouts(root);
     return root.toString();
+}
+
+/**
+ * Notion renders each equation with KaTeX, preceded by a `<style>@import …katex…</style>` whose text
+ * would otherwise survive sanitization as visible junk. Drop those style blocks and replace each inline
+ * equation token (`span.notion-text-equation-token`) with Trilium's inline math span, recovering the
+ * original LaTeX from the KaTeX `<annotation encoding="application/x-tex">`. (Block/display equations are
+ * not in scope yet.)
+ */
+function convertMath(root: HTMLElement) {
+    for (const style of root.querySelectorAll("style")) {
+        style.remove();
+    }
+
+    for (const token of root.querySelectorAll("span.notion-text-equation-token")) {
+        const annotations = token.querySelectorAll("annotation");
+        const latex = (annotations.find((a) => a.getAttribute("encoding") === "application/x-tex") ?? annotations[0])?.textContent?.trim();
+        if (!latex) {
+            continue;
+        }
+        token.insertAdjacentHTML("beforebegin", `<span class="math-tex">\\(${latex}\\)</span>`);
+        token.remove();
+    }
 }
 
 /** Notion's default callout icon; it maps 1:1 to a "tip" admonition, so the emoji itself is redundant. */
