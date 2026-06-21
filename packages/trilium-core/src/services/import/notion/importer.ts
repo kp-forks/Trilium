@@ -24,16 +24,14 @@ import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
 import { getZipProvider } from "../../zip_provider.js";
 import { convertNotionHtml } from "./converter.js";
-import { getNotionId, parseParentIds, stripNotionId } from "./notion_id.js";
+import { getNotionId, stripNotionId } from "./notion_id.js";
 
 interface ParsedPage {
-    /** The page's own Notion id, used to resolve child pages and (later) internal links to it. */
+    /** The page's own Notion id, used to resolve cross-page links pointing at it. */
     id: string;
     title: string;
-    /** Path of the .html entry inside the zip; retained for diagnostics. */
+    /** Path of the .html entry inside the zip; drives both image resolution and folder-based parenting. */
     path: string;
-    /** Notion ids of ancestor pages (outermost first); the last is this page's immediate parent. */
-    parentIds: string[];
     /** The page's body HTML, sanitized; empty when the body could not be located. */
     content: string;
     utcDateCreated?: string;
@@ -52,9 +50,8 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
  * normalized path so page content can later reference it. The `index.html` summary is skipped.
  *
  * A Notion workspace export wraps its content in a nested zip at the archive root — the part you'd
- * otherwise have to extract by hand — so export-level `.zip` entries are descended into. A zip is
- * "export-level" when no ancestor folder carries a Notion id; a zip inside a page folder (which does) is
- * a user's attachment and kept as-is. Recursion is depth-bounded as a guard against pathological archives.
+ * otherwise have to extract by hand — so root-level `.zip` entries are descended into. A zip nested inside
+ * a folder is a user's attachment and kept as-is. Recursion is depth-bounded against pathological archives.
  */
 const MAX_NESTED_ZIP_DEPTH = 2;
 
@@ -70,7 +67,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
             if (isDirectory(path)) {
                 return;
             }
-            if (path.toLowerCase().endsWith(".zip") && parseParentIds(path).length === 0) {
+            if (path.toLowerCase().endsWith(".zip") && !path.includes("/")) {
                 if (depth < MAX_NESTED_ZIP_DEPTH) {
                     await readArchive(await readContent(), depth + 1);
                 }
@@ -113,7 +110,6 @@ function parsePage(path: string, html: string): ParsedPage | null {
         id,
         title,
         path,
-        parentIds: parseParentIds(path),
         content,
         utcDateCreated: extractDate(root, "property-row-created_time"),
         utcDateModified: extractDate(root, "property-row-last_edited_time")
@@ -121,9 +117,11 @@ function parsePage(path: string, html: string): ParsedPage | null {
 }
 
 /**
- * Creates the note tree under a fresh "Notion import" root. Pages are created shallowest-first so a
- * page's parent always exists before it; each page is parented under the note created for its
- * immediate-parent id, or under the import root when it has no (resolvable) parent. Returns that root.
+ * Creates the note tree under a fresh "Notion import" root. Notion encodes the hierarchy through the
+ * folder structure: a page `Title <id>.html` keeps its children in a sibling folder named after its title
+ * (no id, e.g. `Title/`). So each page is parented under whichever page "owns" its containing folder —
+ * matched on a normalized, id-stripped folder path so it works whether or not the folders carry ids.
+ * Pages are created shallowest-first, so a parent's note exists before its children. Returns the root.
  */
 function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">): BNote {
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
@@ -131,16 +129,15 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
-    const noteIdByPageId = new Map<string, string>();
+    const noteIdByFolder = new Map<string, string>();
     const targetByPageId = new Map<string, LinkTarget>();
     const created: { note: BNote; content: string; page: ParsedPage }[] = [];
-    const ordered = [...pages].sort((a, b) => a.parentIds.length - b.parentIds.length);
+    const ordered = [...pages].sort((a, b) => folderDepth(a.path) - folderDepth(b.path));
 
     // First pass: create every note (so cross-page links can resolve in the second pass) and save its
     // referenced images as attachments. Content is only rewritten/saved once, in the second pass.
     for (const page of ordered) {
-        const parentPageId = page.parentIds[page.parentIds.length - 1];
-        const targetParentId = (parentPageId && noteIdByPageId.get(parentPageId)) || rootNote.noteId;
+        const targetParentId = noteIdByFolder.get(parentFolderKey(page.path)) ?? rootNote.noteId;
 
         const { note } = noteService.createNewNote({
             parentNoteId: targetParentId,
@@ -150,7 +147,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
             mime: "text/html",
             isProtected
         });
-        noteIdByPageId.set(page.id, note.noteId);
+        noteIdByFolder.set(ownedFolderKey(page.path), note.noteId);
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
 
         // Attachments hang off the note, so this must run after creation; it returns the content with the
@@ -291,6 +288,36 @@ function normalizePath(path: string): string {
         }
     }
     return parts.join("/");
+}
+
+/** Folder depth of a page path — pages are created shallowest-first so parents precede their children. */
+function folderDepth(path: string): number {
+    return path.split("/").length;
+}
+
+/**
+ * The folder a page's children live in: its directory plus its own title (the file's id and extension
+ * dropped). Keyed against {@link parentFolderKey} to attach children to their parent.
+ */
+export function ownedFolderKey(path: string): string {
+    const title = stripNotionId(removeExtension(baseName(path)));
+    const dir = dirname(path);
+    return folderKey(dir ? `${dir}/${title}` : title);
+}
+
+/** A page's containing folder (its path's directory), normalized for matching against an owned folder. */
+export function parentFolderKey(path: string): string {
+    return folderKey(dirname(path));
+}
+
+/** Strips the Notion id from each segment so a title-only folder (`Title`) and a page (`Title <id>`) match. */
+function folderKey(folderPath: string): string {
+    return folderPath.split("/").map((segment) => stripNotionId(segment)).join("/");
+}
+
+function dirname(path: string): string {
+    const lastSlash = path.lastIndexOf("/");
+    return lastSlash >= 0 ? path.slice(0, lastSlash) : "";
 }
 
 /**

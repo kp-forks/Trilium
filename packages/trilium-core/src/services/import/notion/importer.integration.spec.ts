@@ -39,22 +39,28 @@ async function importNotion(files: Record<string, string | Buffer>): Promise<BNo
     });
 }
 
-const pageHtml = (title: string) =>
-    `<html><head><title>${title}</title></head><body><div id="386c5eca1b8b80439520cad27a0d2749" class="page"><div class="page-body"><p>Hello</p></div></div></body></html>`;
+const pageHtml = (title: string, id = "386c5eca1b8b80439520cad27a0d2749") =>
+    `<html><head><title>${title}</title></head><body><div id="${id}" class="page"><div class="page-body"><p>Hello</p></div></div></body></html>`;
 
 describe("Notion importer — integration", () => {
+    it("nests child pages under the parent named by their containing folder", async () => {
+        // Notion names the children folder by title only ("Examples"), while the page file keeps its id.
+        const importRoot = await importNotion({
+            "Examples 579da56a22844fb9a769e27d53067adc.html": pageHtml("Examples", "579da56a22844fb9a769e27d53067adc"),
+            "Examples/Hello world 2c6c5eca1b8b80f7b9eaf4f396b755dc.html": pageHtml("Hello world", "2c6c5eca1b8b80f7b9eaf4f396b755dc"),
+            "Examples/Quick Note 3aa38acf20c74649b4370fab0195b882.html": pageHtml("Quick Note", "3aa38acf20c74649b4370fab0195b882")
+        });
+
+        const examples = importRoot.getChildNotes().find((note) => note.title === "Examples");
+        expect(importRoot.getChildNotes().map((note) => note.title)).toEqual(["Examples"]);
+        expect(examples?.getChildNotes().map((note) => note.title).sort()).toEqual(["Hello world", "Quick Note"]);
+    });
+
     it("recurses into a root-level nested export zip (the part Notion makes you extract)", async () => {
         const innerZip = await createZipBuffer({ "Inner page 386c5eca1b8b80439520cad27a0d2749.html": pageHtml("Inner page") });
         const importRoot = await importNotion({ "Export-Part-1.zip": innerZip });
 
         expect(importRoot.getChildNotes().map((note) => note.title)).toContain("Inner page");
-    });
-
-    it("descends into a nested export zip even when it sits inside a top-level wrapper folder", async () => {
-        const innerZip = await createZipBuffer({ "Inner page 386c5eca1b8b80439520cad27a0d2749.html": pageHtml("Wrapped page") });
-        const importRoot = await importNotion({ "My Export/Export-Part-1.zip": innerZip });
-
-        expect(importRoot.getChildNotes().map((note) => note.title)).toContain("Wrapped page");
     });
 
     it("descends through two levels of nested export zips", async () => {

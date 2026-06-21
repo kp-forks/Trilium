@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getNotionId, parseParentIds, stripNotionId } from "./notion_id.js";
+import { getNotionId, stripNotionId } from "./notion_id.js";
 
 const ID = "1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d";
 
@@ -30,22 +30,5 @@ describe("stripNotionId", () => {
 
     it("leaves names without an id untouched", () => {
         expect(stripNotionId("Workspace")).toBe("Workspace");
-    });
-});
-
-describe("parseParentIds", () => {
-    it("returns the ids of ancestor folders, outermost first", () => {
-        const parentId = "0000000000000000000000000000aaaa";
-        const grandParentId = "0000000000000000000000000000bbbb";
-        expect(parseParentIds(`Export/Grandparent ${grandParentId}/Parent ${parentId}/Child ${ID}.html`))
-            .toEqual([grandParentId, parentId]);
-    });
-
-    it("drops folder segments that carry no id (e.g. the workspace root)", () => {
-        expect(parseParentIds(`Export/Child ${ID}.html`)).toEqual([]);
-    });
-
-    it("returns an empty array for a top-level file", () => {
-        expect(parseParentIds(`Child ${ID}.html`)).toEqual([]);
     });
 });

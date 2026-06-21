@@ -1,7 +1,7 @@
 import { parse } from "node-html-parser";
 import { describe, expect, it } from "vitest";
 
-import { firstChildNotionId, type LinkTarget, resolveResourcePath, rewriteLinks } from "./importer.js";
+import { firstChildNotionId, type LinkTarget, ownedFolderKey, parentFolderKey, resolveResourcePath, rewriteLinks } from "./importer.js";
 
 describe("resolveResourcePath", () => {
     it("resolves an image path relative to the page's directory in the zip", () => {
@@ -49,6 +49,28 @@ describe("rewriteLinks", () => {
         // The path ('Page.html') carries no id; the id only appears in a query parameter.
         const input = `<p><a href="Page.html?ref=386c5eca1b8b802a90d8d891c7e62cd5">x</a></p>`;
         expect(rewriteLinks(input, resolveSubpage)).toBe(input);
+    });
+});
+
+describe("folder-based parenting keys", () => {
+    // Notion names a page's children folder by title only (no id), while the page file keeps its id.
+    const wrapper = "Export-21e2de27-9565-4851-8e2b-604e20bd0418";
+
+    it("matches a child's containing folder to the parent page that owns it (title-only folder)", () => {
+        const parent = `${wrapper}/45 cff419ddfc69457aad14bd0381cf0172.html`;
+        const child = `${wrapper}/45/Brown fox 4731219279d04d78aca408c0a60c4263.html`;
+        expect(ownedFolderKey(parent)).toBe("Export/45");
+        expect(parentFolderKey(child)).toBe(ownedFolderKey(parent));
+    });
+
+    it("also matches when the folder itself carries an id", () => {
+        const parent = `Parent ${"a".repeat(32)}.html`;
+        const child = `Parent ${"a".repeat(32)}/Child ${"b".repeat(32)}.html`;
+        expect(parentFolderKey(child)).toBe(ownedFolderKey(parent));
+    });
+
+    it("leaves a top-level page with no owning folder", () => {
+        expect(parentFolderKey("45 cff419ddfc69457aad14bd0381cf0172.html")).toBe("");
     });
 });
 
