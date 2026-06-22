@@ -1543,8 +1543,9 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
         }
 
         const hoistedNotePath = await treeService.resolveNotePath(this.noteContext.hoistedNoteId);
+        const hoistChanged = this.lastFilteredHoistedNotePath !== hoistedNotePath;
 
-        if (!forceUpdate && this.lastFilteredHoistedNotePath === hoistedNotePath) {
+        if (!forceUpdate && !hoistChanged) {
             // Hoisting did not change, so skip the expensive re-filter (avoids flickering on
             // simple note changes with large subtrees). The hidden-node class must still be
             // reapplied — the <li> may have been recreated by a lazy reload (e.g. via
@@ -1577,6 +1578,16 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             if (node && node.data.noteId === this.noteContext.hoistedNoteId){
                 this.setExpanded(node.data.branchId, true);
             }
+        }
+
+        // Re-applying the filter (clearFilter / filterBranches) rebuilds the visible node set and
+        // resets the tree's scroll position to the top. When the hoisted note actually changed —
+        // e.g. switching between tabs belonging to different workspaces — bring the active note
+        // back into view so the tree doesn't jump to the top. We deliberately skip this when the
+        // hoist is unchanged (frequent forceUpdate re-filters during editing/sync) to avoid
+        // yanking the tree away from wherever the user scrolled.
+        if (hoistChanged) {
+            this.getActiveNode()?.makeVisible({ scrollIntoView: true });
         }
     }
 
