@@ -2723,13 +2723,6 @@
                                             "mime": "text/html",
                                             "attributes": [
                                                 {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "ivYnonVFBxbQ",
-                                                    "isInheritable": false,
-                                                    "position": 10
-                                                },
-                                                {
                                                     "type": "label",
                                                     "name": "iconClass",
                                                     "value": "bx bx-list-plus",
@@ -2742,18 +2735,41 @@
                                                     "value": "multiple-selection",
                                                     "isInheritable": false,
                                                     "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "oPVyFC7WL2Lp",
+                                                    "isInheritable": false,
+                                                    "position": 40
                                                 }
                                             ],
                                             "format": "markdown",
                                             "dataFileName": "Multiple selection.md",
                                             "attachments": [
                                                 {
+                                                    "attachmentId": "c6b9zmTA3IzP",
+                                                    "title": "image.png",
+                                                    "role": "image",
+                                                    "mime": "image/png",
+                                                    "position": 10,
+                                                    "dataFileName": "Multiple selection_image.png"
+                                                },
+                                                {
                                                     "attachmentId": "puanbWdFSfUM",
                                                     "title": "image.png",
                                                     "role": "image",
                                                     "mime": "image/jpg",
                                                     "position": 10,
-                                                    "dataFileName": "Multiple selection_image.png"
+                                                    "dataFileName": "1_Multiple selection_image.png"
+                                                },
+                                                {
+                                                    "attachmentId": "xZnYDX7rv0rW",
+                                                    "title": "image.png",
+                                                    "role": "image",
+                                                    "mime": "image/png",
+                                                    "position": 10,
+                                                    "dataFileName": "2_Multiple selection_image.png"
                                                 }
                                             ]
                                         },
