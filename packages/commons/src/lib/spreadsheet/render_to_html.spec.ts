@@ -1403,6 +1403,40 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("top:100px");
     });
 
+    it("extends the grid down to cover a floating image below the data rows", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 0, top: 0, width: 50, height: 240 })
+            ])
+        );
+        // Default 24px rows: the image bottom at 240px reaches row 9, so 10 rows are emitted.
+        const rowCount = (html.match(/<tr/g) ?? []).length;
+        expect(rowCount).toBe(10);
+    });
+
+    it("extends the grid right to cover a floating image beyond the data columns", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 0, top: 0, width: 200, height: 10 })
+            ])
+        );
+        // Default 88px columns: the image right edge at 200px reaches column 2, so 3 columns emit.
+        const colCount = (html.match(/<col /g) ?? []).length;
+        expect(colCount).toBe(3);
+    });
+
+    it("does not shrink the grid when a floating image fits within the data bounds", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings(
+                [urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 0, top: 0, width: 50, height: 10 })],
+                { cellData: { "5": { "0": { v: "x" } } } }
+            )
+        );
+        // Data extends to row 5 (6 rows); the small image must not reduce that.
+        const rowCount = (html.match(/<tr/g) ?? []).length;
+        expect(rowCount).toBe(6);
+    });
+
     it("preserves floating image z-order", () => {
         const html = renderSpreadsheetToHtml(
             workbookWithFloatingDrawings([

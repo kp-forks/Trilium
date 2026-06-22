@@ -22,8 +22,8 @@ import {
     type ICellData,
     isFiniteNumber,
     type IRange,
+    type ISheetDrawing,
     type IStyleData,
-    type IWorkbookData,
     type IWorksheetData,
     parseWorkbookData,
     resolveCellStyle,
@@ -57,8 +57,9 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
         if (visibleSheets.length > 1) {
             parts.push(`<h3>${escapeHtml(sheet.name)}</h3>`);
         }
-        const table = renderSheet(sheet, workbook.styles ?? {});
-        parts.push(wrapWithFloatingImages(workbook, sheet, table));
+        const drawings = getFloatingDrawings(workbook, sheet.id);
+        const table = renderSheet(sheet, workbook.styles ?? {}, drawings);
+        parts.push(wrapWithFloatingImages(table, drawings));
     }
 
     return parts.join("\n");
@@ -74,8 +75,7 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
  * float below the table so they don't overlap following content. Returns the table unchanged when
  * the sheet has no renderable floating images.
  */
-function wrapWithFloatingImages(workbook: IWorkbookData, sheet: IWorksheetData, tableHtml: string): string {
-    const drawings = getFloatingDrawings(workbook, sheet.id);
+function wrapWithFloatingImages(tableHtml: string, drawings: ISheetDrawing[]): string {
     if (drawings.length === 0) return tableHtml;
 
     const images: string[] = [];
@@ -147,21 +147,63 @@ function toFinite(value: number | undefined): number {
     return isFiniteNumber(value) ? value : 0;
 }
 
+/**
+ * Grows a sheet's max row/column to enclose its renderable floating images. Univer anchors images
+ * in absolute px from A1, so an image can reach below or to the right of the last populated cell;
+ * extending the bounds makes the grid render enough empty rows/columns to contain it, matching the
+ * editor. Unsafe or transform-less drawings are ignored. Returns the bounds unchanged otherwise.
+ */
+function extendBoundsForDrawings(sheet: IWorksheetData, maxRow: number, maxCol: number, drawings: ISheetDrawing[]): { maxRow: number; maxCol: number } {
+    let bottomPx = 0;
+    let rightPx = 0;
+    for (const drawing of drawings) {
+        if (!drawing.transform || !sanitizeImageSource(drawing.source)) continue;
+        bottomPx = Math.max(bottomPx, toFinite(drawing.transform.top) + toFinite(drawing.transform.height));
+        rightPx = Math.max(rightPx, toFinite(drawing.transform.left) + toFinite(drawing.transform.width));
+    }
+    if (bottomPx <= 0 && rightPx <= 0) return { maxRow, maxCol };
+
+    return {
+        maxRow: Math.max(maxRow, trackIndexAtPx(bottomPx, sheet.defaultRowHeight ?? 24, sheet.rowCount, (i) => sheet.rowData?.[i])),
+        maxCol: Math.max(maxCol, trackIndexAtPx(rightPx, sheet.defaultColumnWidth ?? 88, sheet.columnCount, (i) => sheet.columnData?.[i]))
+    };
+}
+
+/**
+ * Returns the 0-based index of the last row/column needed to reach `targetPx` from the sheet
+ * origin, walking the per-track sizes (`h`/`w`, hidden tracks contributing 0) and falling back to
+ * `defaultSize`. Bounded by `count` (or a large cap) so a zero/degenerate size can't loop forever.
+ */
+function trackIndexAtPx(targetPx: number, defaultSize: number, count: number | undefined, meta: (index: number) => { hd?: number; h?: number; w?: number } | undefined): number {
+    if (targetPx <= 0 || defaultSize <= 0) return 0;
+    const cap = isFiniteNumber(count) && count > 0 ? count : 100000;
+    let cumulative = 0;
+    let index = 0;
+    while (cumulative < targetPx && index < cap) {
+        const track = meta(index);
+        const size = track?.h ?? track?.w;
+        cumulative += track?.hd ? 0 : (isFiniteNumber(size) ? size : defaultSize);
+        index++;
+    }
+    return index - 1;
+}
+
 // #endregion
 
-function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | null>): string {
+function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | null>, drawings: ISheetDrawing[]): string {
     const { cellData, mergeData = [], columnData = {}, rowData = {} } = sheet;
 
-    // Determine the actual bounds (only cells with data).
+    // Determine the actual bounds (only cells with data), then extend them to cover any floating
+    // images that reach past the data so the grid encloses them like the editor does.
     const bounds = computeBounds(cellData, mergeData);
-    if (!bounds) {
+    const { maxRow, maxCol } = extendBoundsForDrawings(sheet, bounds?.maxRow ?? -1, bounds?.maxCol ?? -1, drawings);
+    if (maxRow < 0 || maxCol < 0) {
         return "<p>Empty sheet.</p>";
     }
 
     // Render from the sheet origin (A1), not the first populated cell: Univer positions floating
     // images in absolute px from A1, and emitting the leading empty rows/columns keeps the grid in
     // step with the editor so those images line up. Only trailing empty rows/columns are trimmed.
-    const { maxRow, maxCol } = bounds;
     const minRow = 0;
     const minCol = 0;
 
