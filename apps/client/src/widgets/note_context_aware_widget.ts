@@ -118,7 +118,7 @@ class NoteContextAwareWidget extends BasicWidget {
     }
 
     async noteTypeMimeChangedEvent({ noteId }: EventData<"noteTypeMimeChanged">) {
-        if (this.isNote(noteId)) {
+        if (this.isNote(noteId)) {console.log(1011111111)
             await this.refresh();
         }
     }
