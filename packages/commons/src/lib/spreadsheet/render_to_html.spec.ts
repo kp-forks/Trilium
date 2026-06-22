@@ -1173,6 +1173,227 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("--spreadsheet-gridline-color:transparent");
     });
 
+    // Builds a workbook whose single sheet carries floating drawings in the
+    // SHEET_DRAWING_PLUGIN resource (Univer's z-ordered floating images).
+    function workbookWithFloatingDrawings(
+        drawings: Array<Record<string, unknown> & { drawingId: string }>,
+        opts: { cellData?: unknown; rowData?: unknown; columnData?: unknown } = {}
+    ): string {
+        const sheetId = "s1";
+        const data: Record<string, unknown> = {};
+        for (const d of drawings) data[d.drawingId] = d;
+        const order = drawings.map((d) => d.drawingId);
+        return JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: [sheetId],
+                styles: {},
+                sheets: {
+                    [sheetId]: {
+                        id: sheetId,
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 1000,
+                        columnCount: 20,
+                        defaultColumnWidth: 88,
+                        defaultRowHeight: 24,
+                        mergeData: [],
+                        cellData: opts.cellData ?? { "0": { "0": { v: "anchor" } } },
+                        rowData: opts.rowData ?? {},
+                        columnData: opts.columnData ?? {}
+                    }
+                },
+                resources: [
+                    { name: "SHEET_DRAWING_PLUGIN", data: JSON.stringify({ [sheetId]: { data, order } }) },
+                    { name: "SHEET_DATA_VALIDATION_PLUGIN", data: JSON.stringify({ [sheetId]: [] }) }
+                ]
+            }
+        });
+    }
+
+    const urlDrawing = (id: string, source: string, transform: Record<string, number>) => ({
+        drawingId: id,
+        unitId: "u",
+        subUnitId: "s1",
+        drawingType: 0,
+        imageSourceType: "URL",
+        source,
+        transform
+    });
+
+    // #region Cell images (cellData[r][c].p.drawings)
+
+    it("renders a cell image embedded in a cell's rich-text document", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                p: {
+                    drawings: {
+                        d1: {
+                            drawingId: "d1",
+                            imageSourceType: "URL",
+                            source: "api/attachments/NyhtJbXR6Qxh/image/image.png",
+                            transform: { width: 113, height: 96.72268495835375 }
+                        }
+                    },
+                    drawingsOrder: ["d1"]
+                }
+            })
+        );
+        expect(html).toContain('<img class="spreadsheet-cell-image"');
+        expect(html).toContain('src="api/attachments/NyhtJbXR6Qxh/image/image.png"');
+        // The image lives inside a table cell, not a floating wrapper.
+        expect(html).toContain("<td");
+        expect(html).not.toContain("spreadsheet-sheet");
+        // Dimensions come from the drawing transform, rounded to 2 decimals.
+        expect(html).toContain("width:113px");
+        expect(html).toContain("height:96.72px");
+    });
+
+    it("renders a base64 cell image", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                p: {
+                    drawings: {
+                        d1: {
+                            drawingId: "d1",
+                            imageSourceType: "BASE64",
+                            source: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==",
+                            transform: { width: 10, height: 10 }
+                        }
+                    },
+                    drawingsOrder: ["d1"]
+                }
+            })
+        );
+        expect(html).toContain('src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg=="');
+    });
+
+    it("renders multiple cell images in drawingsOrder", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                p: {
+                    drawings: {
+                        first: { drawingId: "first", source: "api/attachments/AAAAAAAAAAAA/image/a.png", transform: { width: 5, height: 5 } },
+                        second: { drawingId: "second", source: "api/attachments/BBBBBBBBBBBB/image/b.png", transform: { width: 5, height: 5 } }
+                    },
+                    drawingsOrder: ["first", "second"]
+                }
+            })
+        );
+        expect(html.indexOf("AAAAAAAAAAAA")).toBeLessThan(html.indexOf("BBBBBBBBBBBB"));
+    });
+
+    it("skips a cell image with an unsafe source", () => {
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({
+                p: {
+                    drawings: {
+                        d1: { drawingId: "d1", source: "javascript:alert(1)", transform: { width: 10, height: 10 } },
+                        d2: { drawingId: "d2", source: "http://evil.example/x.png", transform: { width: 10, height: 10 } }
+                    },
+                    drawingsOrder: ["d1", "d2"]
+                }
+            })
+        );
+        expect(html).not.toContain("<img");
+        expect(html).not.toContain("javascript:");
+        expect(html).not.toContain("evil.example");
+    });
+
+    // #endregion
+
+    // #region Floating images (SHEET_DRAWING_PLUGIN resource)
+
+    it("renders a floating image absolutely positioned in a per-sheet wrapper", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 50, top: 60, width: 100, height: 80 })
+            ])
+        );
+        expect(html).toContain('<div class="spreadsheet-sheet"');
+        expect(html).toContain("position:relative");
+        expect(html).toContain('<img class="spreadsheet-floating-image"');
+        expect(html).toContain('src="api/attachments/cgN4jEBCA1Kn/image/image.png"');
+        expect(html).toContain("position:absolute");
+        // Anchor cell is at (0,0), so the origin offset is zero.
+        expect(html).toContain("left:50px");
+        expect(html).toContain("top:60px");
+        expect(html).toContain("width:100px");
+        expect(html).toContain("height:80px");
+    });
+
+    it("offsets a floating image by the trimmed table origin", () => {
+        // Data only at row 2, col 1 -> the table is trimmed; origin is the px distance
+        // from A1 to that corner: 2 default rows (48px) down, 1 default col (88px) right.
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings(
+                [urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 200, top: 100, width: 50, height: 40 })],
+                { cellData: { "2": { "1": { v: "x" } } } }
+            )
+        );
+        expect(html).toContain("left:112px"); // 200 - 88
+        expect(html).toContain("top:52px"); // 100 - 48
+    });
+
+    it("preserves floating image z-order", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", "api/attachments/AAAAAAAAAAAA/image/a.png", { left: 0, top: 0, width: 10, height: 10 }),
+                urlDrawing("img2", "api/attachments/BBBBBBBBBBBB/image/b.png", { left: 0, top: 0, width: 10, height: 10 })
+            ])
+        );
+        expect(html.indexOf("AAAAAAAAAAAA")).toBeLessThan(html.indexOf("BBBBBBBBBBBB"));
+    });
+
+    it("renders a base64 floating image", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                { drawingId: "img1", imageSourceType: "BASE64", source: "data:image/jpeg;base64,/9j/4AAQSk==", transform: { left: 0, top: 0, width: 10, height: 10 } }
+            ])
+        );
+        expect(html).toContain('src="data:image/jpeg;base64,/9j/4AAQSk=="');
+    });
+
+    it("rounds fractional floating-image coordinates to two decimals", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 262.3, top: 458.1, width: 549.4, height: 148.555 })
+            ])
+        );
+        expect(html).toContain("width:549.4px");
+        expect(html).toContain("height:148.56px");
+    });
+
+    it("does not wrap the sheet when all floating drawings have unsafe sources", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                { drawingId: "img1", imageSourceType: "URL", source: "http://evil.example/x.png", transform: { left: 0, top: 0, width: 10, height: 10 } }
+            ])
+        );
+        expect(html).not.toContain("spreadsheet-sheet");
+        expect(html).not.toContain("<img");
+        expect(html).not.toContain("evil.example");
+    });
+
+    it("does not add a floating wrapper to a sheet without drawings", () => {
+        const html = renderSpreadsheetToHtml(singleCellWorkbook({ v: "x" }));
+        expect(html).not.toContain("spreadsheet-sheet");
+        expect(html).not.toContain("<img");
+    });
+
+    it("escapes a quote in an attachment-image source", () => {
+        // A crafted source that passes the prefix check but carries an attribute-breaking quote.
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", 'api/attachments/AAAAAAAAAAAA/image/"onerror=alert(1).png', { left: 0, top: 0, width: 10, height: 10 })
+            ])
+        );
+        expect(html).not.toContain('"onerror=alert(1)');
+        expect(html).toContain("&quot;onerror");
+    });
+
+    // #endregion
+
     it("extends bounds to cover a merge range that exceeds the cell data", () => {
         const input = JSON.stringify({
             version: 1,

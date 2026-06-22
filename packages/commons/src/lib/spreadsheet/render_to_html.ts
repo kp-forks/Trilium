@@ -15,6 +15,7 @@ import { format as formatNumfmt, formatColor as formatNumfmtColor } from "numfmt
 import {
     BorderStyle,
     computeBounds,
+    getFloatingDrawings,
     getVisibleSheets,
     HorizontalAlign,
     type IBorderStyleData,
@@ -22,6 +23,7 @@ import {
     isFiniteNumber,
     type IRange,
     type IStyleData,
+    type IWorkbookData,
     type IWorksheetData,
     parseWorkbookData,
     resolveCellStyle,
@@ -54,11 +56,125 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
         if (visibleSheets.length > 1) {
             parts.push(`<h3>${escapeHtml(sheet.name)}</h3>`);
         }
-        parts.push(renderSheet(sheet, workbook.styles ?? {}));
+        const table = renderSheet(sheet, workbook.styles ?? {});
+        parts.push(wrapWithFloatingImages(workbook, sheet, table));
     }
 
     return parts.join("\n");
 }
+
+// #region Images
+
+/**
+ * Wraps a rendered sheet table in a positioned container carrying the sheet's floating images,
+ * each placed absolutely. Univer stores a floating image's `transform.left`/`top` in px from the
+ * sheet origin (A1), but the table is trimmed to populated cells, so positions are shifted by the
+ * px distance from A1 to the trimmed top-left corner. The container's `min-height` is stretched to
+ * contain images that float below the table so they don't overlap following content. Returns the
+ * table unchanged when the sheet has no renderable floating images.
+ */
+function wrapWithFloatingImages(workbook: IWorkbookData, sheet: IWorksheetData, tableHtml: string): string {
+    const drawings = getFloatingDrawings(workbook, sheet.id);
+    if (drawings.length === 0) return tableHtml;
+
+    const bounds = computeBounds(sheet.cellData, sheet.mergeData ?? []);
+    const originX = bounds ? sumColumnWidths(sheet, 0, bounds.minCol) : 0;
+    const originY = bounds ? sumRowHeights(sheet, 0, bounds.minRow) : 0;
+
+    const images: string[] = [];
+    let maxBottom = 0;
+    for (const drawing of drawings) {
+        const src = sanitizeImageSource(drawing.source);
+        if (!src || !drawing.transform) continue;
+
+        const left = toFinite(drawing.transform.left) - originX;
+        const top = toFinite(drawing.transform.top) - originY;
+        const width = toFinite(drawing.transform.width);
+        const height = toFinite(drawing.transform.height);
+        maxBottom = Math.max(maxBottom, top + height);
+
+        images.push(
+            `<img class="spreadsheet-floating-image" style="position:absolute;left:${px(left)}px;top:${px(top)}px;width:${px(width)}px;height:${px(height)}px" src="${escapeHtml(src)}" alt="">`
+        );
+    }
+
+    if (images.length === 0) return tableHtml;
+
+    return `<div class="spreadsheet-sheet" style="position:relative;min-height:${px(maxBottom)}px">\n${tableHtml}\n${images.join("\n")}\n</div>`;
+}
+
+/** Renders the images embedded in a cell's rich-text document (`cell.p.drawings`), in order. */
+function renderCellImages(cell: ICellData): string {
+    const doc = cell.p;
+    const drawings = doc?.drawings;
+    if (!drawings) return "";
+
+    const order = Array.isArray(doc?.drawingsOrder) ? doc.drawingsOrder : Object.keys(drawings);
+    const images: string[] = [];
+    for (const id of order) {
+        const drawing = drawings[id];
+        const src = drawing ? sanitizeImageSource(drawing.source) : null;
+        if (!drawing || !src) continue;
+
+        const dims: string[] = [];
+        if (isFiniteNumber(drawing.transform?.width)) dims.push(`width:${px(drawing.transform.width)}px`);
+        if (isFiniteNumber(drawing.transform?.height)) dims.push(`height:${px(drawing.transform.height)}px`);
+        const style = dims.length ? ` style="${dims.join(";")}"` : "";
+
+        images.push(`<img class="spreadsheet-cell-image"${style} src="${escapeHtml(src)}" alt="">`);
+    }
+    return images.join("");
+}
+
+function sumRowHeights(sheet: IWorksheetData, fromRow: number, toRowExclusive: number): number {
+    const rowData = sheet.rowData ?? {};
+    const defaultHeight = sheet.defaultRowHeight ?? 24;
+    let sum = 0;
+    for (let row = fromRow; row < toRowExclusive; row++) {
+        const meta = rowData[row];
+        if (meta?.hd) continue;
+        sum += isFiniteNumber(meta?.h) ? meta.h : defaultHeight;
+    }
+    return sum;
+}
+
+function sumColumnWidths(sheet: IWorksheetData, fromCol: number, toColExclusive: number): number {
+    const columnData = sheet.columnData ?? {};
+    const defaultWidth = sheet.defaultColumnWidth ?? 88;
+    let sum = 0;
+    for (let col = fromCol; col < toColExclusive; col++) {
+        const meta = columnData[col];
+        if (meta?.hd) continue;
+        sum += isFiniteNumber(meta?.w) ? meta.w : defaultWidth;
+    }
+    return sum;
+}
+
+/**
+ * Validates an image source for inclusion in shared/exported HTML. Accepts only the relative
+ * attachment-image URL Trilium emits (`api/attachments/<id>/image/...`, served by both the app
+ * and the share view) and inline `data:image/...` URLs. Anything else (`javascript:`, remote
+ * `http(s)`, etc.) returns `null` so the image is dropped. The returned value is still escaped
+ * before being placed in an attribute.
+ */
+function sanitizeImageSource(source: string | null | undefined): string | null {
+    if (typeof source !== "string") return null;
+    const trimmed = source.trim();
+    if (/^api\/attachments\/[a-zA-Z0-9_]+\/image\//.test(trimmed)) return trimmed;
+    if (/^data:image\/(?:png|jpe?g|gif|webp|bmp|svg\+xml)[;,]/i.test(trimmed)) return trimmed;
+    return null;
+}
+
+/** Rounds a px measurement to 2 decimals and renders it without a trailing `.00`. */
+function px(value: number): string {
+    return String(Math.round(value * 100) / 100);
+}
+
+function toFinite(value: number | undefined): number {
+    return isFiniteNumber(value) ? value : 0;
+}
+
+// #endregion
 
 function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | null>): string {
     const { cellData, mergeData = [], columnData = {}, rowData = {} } = sheet;
@@ -106,7 +222,7 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
             const cell = cellData[row]?.[col];
             const cellStyle = resolveCellStyle(cell?.s, styles);
             const cssText = buildCssText(cellStyle, cell);
-            const value = formatCellValue(cell, cellStyle);
+            const value = formatCellValue(cell, cellStyle) + (cell ? renderCellImages(cell) : "");
 
             const attrs: string[] = [];
             // Cells with a background fill carry `has-fill` so the stylesheet can suppress

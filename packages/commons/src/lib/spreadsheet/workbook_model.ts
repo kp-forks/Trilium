@@ -24,6 +24,13 @@ export interface IWorkbookData {
     name?: string;
     styles?: Record<string, IStyleData | null>;
     sheets: Record<string, IWorksheetData>;
+    /** Plugin payloads (e.g. floating drawings); each `data` is itself a JSON string. */
+    resources?: IResource[];
+}
+
+export interface IResource {
+    name: string;
+    data: string;
 }
 
 export interface IWorksheetData {
@@ -49,6 +56,28 @@ export interface ICellData {
     t?: number | null;
     s?: IStyleData | string | null;
     f?: string | null;
+    /** Rich-text document payload; carries images anchored inside the cell. */
+    p?: ICellDocumentData | null;
+}
+
+export interface ICellDocumentData {
+    drawings?: Record<string, ISheetDrawing>;
+    drawingsOrder?: string[];
+}
+
+export interface ISheetDrawing {
+    drawingId?: string;
+    imageSourceType?: string;
+    source?: string;
+    transform?: IDrawingTransform | null;
+}
+
+/** A drawing's absolute box. `left`/`top` are px from the sheet origin (A1); cell images omit them. */
+export interface IDrawingTransform {
+    left?: number;
+    top?: number;
+    width?: number;
+    height?: number;
 }
 
 export interface IStyleData {
@@ -249,4 +278,32 @@ export function computeBounds(cellData: CellMatrix, mergeData: IRange[] = []): B
 /** Checks that a value is a finite number (guards against stringified payloads from JSON). */
 export function isFiniteNumber(v: unknown): v is number {
     return typeof v === "number" && Number.isFinite(v);
+}
+
+/** Univer stores floating sheet images (drawings) under this workbook resource. */
+export const SHEET_DRAWING_RESOURCE = "SHEET_DRAWING_PLUGIN";
+
+/**
+ * Extracts the floating drawings for one sheet from the `SHEET_DRAWING_PLUGIN` resource, in
+ * their stored z-order. The resource `data` is itself a JSON string keyed by sheet id:
+ * `{ [sheetId]: { data: { [drawingId]: drawing }, order: string[] } }`. Returns an empty array
+ * when the resource is absent, unparseable, or carries no drawings for the sheet.
+ */
+export function getFloatingDrawings(workbook: IWorkbookData, sheetId: string): ISheetDrawing[] {
+    const resource = workbook.resources?.find((r) => r.name === SHEET_DRAWING_RESOURCE);
+    if (!resource?.data) return [];
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(resource.data);
+    } catch {
+        return [];
+    }
+
+    const sheetEntry = (parsed as Record<string, { data?: Record<string, ISheetDrawing>; order?: string[] }> | null)?.[sheetId];
+    const data = sheetEntry?.data;
+    if (!data) return [];
+
+    const order = Array.isArray(sheetEntry?.order) ? sheetEntry.order : Object.keys(data);
+    return order.map((id) => data[id]).filter((d): d is ISheetDrawing => Boolean(d));
 }
