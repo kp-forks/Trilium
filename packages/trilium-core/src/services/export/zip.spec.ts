@@ -281,6 +281,24 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             expect(entries[attFileName]).toBeDefined();
         });
 
+        it("keeps the extension on very long multi-byte titles within the 255-byte limit", async () => {
+            // A title of 3-byte CJK characters long enough that, once the upstream
+            // 255-byte sanitize cap fills the base, appending the extension would
+            // push past 255 bytes. The extension must survive and the whole name
+            // must stay within the filesystem's 255-byte limit.
+            const cjkTitle = "汉".repeat(120);
+            const { note } = createNote("root", { title: cjkTitle, content: "<h2>Heading</h2>" });
+            const branch = note.getParentBranches()[0];
+
+            const { entries } = await exportSubtree(branch, "markdown");
+            const rootMeta = parseMeta(entries).files[0];
+
+            const name = rootMeta.dataFileName ?? "";
+            expect(name.endsWith(".md")).toBe(true);
+            expect(Buffer.byteLength(name, "utf-8")).toBeLessThanOrEqual(255);
+            expect(entries[name]).toBeDefined();
+        });
+
         it("emits a .clone data file when the same note appears twice in the subtree", async () => {
             const { note: parent } = createNote("root", { title: "CloneHolder", content: "" });
             const { note: folderA } = createNote(parent.noteId, { title: "FolderA", content: "" });

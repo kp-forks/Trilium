@@ -47,6 +47,27 @@ export function encodeUtf8(string: string | Uint8Array) {
     return utf8Encoder.encode(unwrapStringOrBuffer(string));
 }
 
+/**
+ * Truncates a string so that its UTF-8 encoding does not exceed `maxBytes`,
+ * without ever splitting a multi-byte character (the cut is moved back to the
+ * nearest character boundary). Returns the input unchanged when it already fits.
+ */
+export function truncateUtf8Bytes(text: string, maxBytes: number): string {
+    const encoded = encodeUtf8(text);
+    if (encoded.length <= maxBytes) {
+        return text;
+    }
+
+    // UTF-8 continuation bytes match 0b10xxxxxx (0x80–0xBF); back up while the
+    // cut would land inside a multi-byte sequence so we never emit a partial char.
+    let end = Math.max(0, maxBytes);
+    while (end > 0 && (encoded[end] & 0xc0) === 0x80) {
+        end--;
+    }
+
+    return decodeUtf8(encoded.slice(0, end));
+}
+
 export function unwrapStringOrBuffer(stringOrBuffer: string | Uint8Array) {
     if (typeof stringOrBuffer === "string") {
         return stringOrBuffer;
