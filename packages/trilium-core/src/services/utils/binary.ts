@@ -1,5 +1,4 @@
 import chardet from "chardet";
-import stripBom from "strip-bom";
 
 const utf8Decoder = new TextDecoder("utf-8");
 const utf8Encoder = new TextEncoder();
@@ -61,6 +60,15 @@ export function wrapStringOrBuffer(stringOrBuffer: string | Uint8Array) {
     } else {
         return stringOrBuffer;
     }
+}
+
+/**
+ * Strips a leading byte order mark (U+FEFF) from a string, if present. A
+ * buffer-to-string conversion translates a UTF-8 BOM (EF BB BF) into the same
+ * U+FEFF code point, so this covers both UTF-8 and UTF-16 BOMs.
+ */
+export function stripBom(text: string): string {
+    return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
 }
 
 /**
