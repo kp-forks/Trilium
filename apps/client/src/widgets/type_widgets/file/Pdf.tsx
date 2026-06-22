@@ -188,8 +188,13 @@ export default function PdfPreview({ note, blob, componentId, noteContext }: {
         };
     }, [ note, historyConfig, componentId, blob, noteContext, isReadOnly, spacedUpdate ]);
 
-    useTriliumEvent("customDownload", ({ ntxId }) => {
+    useTriliumEvent("customDownload", async ({ ntxId }) => {
         if (ntxId !== noteContext.ntxId) return;
+
+        // Flush any pending in-viewer edits (e.g. annotations) to the server before
+        // downloading, so the file reflects the latest state and not just the last
+        // debounced auto-save. No-op for read-only PDFs, which have nothing to save.
+        await spacedUpdate.updateNowIfNecessary();
 
         const url = `${open.getUrlForDownload(`api/notes/${note.noteId}/download`)}?${Date.now()}`;
         open.download(url);
