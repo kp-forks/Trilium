@@ -79,6 +79,21 @@ export interface ISheetDrawing {
     imageSourceType?: string;
     source?: string;
     transform?: IDrawingTransform | null;
+    /** Cell-anchored extent (top-left/bottom-right), used by the XLSX emitter's two-cell anchor. */
+    sheetTransform?: ISheetDrawingAnchor | null;
+}
+
+export interface ISheetDrawingAnchor {
+    from?: IDrawingCellAnchor;
+    to?: IDrawingCellAnchor;
+}
+
+/** A drawing corner anchored to a cell plus a px offset into it (`row`/`column` are 0-based). */
+export interface IDrawingCellAnchor {
+    row?: number;
+    rowOffset?: number;
+    column?: number;
+    columnOffset?: number;
 }
 
 /** A drawing's absolute box. `left`/`top` are px from the sheet origin (A1); cell images omit them. */
