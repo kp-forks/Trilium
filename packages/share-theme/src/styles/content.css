@@ -145,6 +145,8 @@ body.type-webView {
    Univer drawing transform, relative to the trimmed table origin). */
 .spreadsheet-sheet {
     position: relative;
+    font-size: 11pt;
+    line-height: 1.2;
 }
 
 .spreadsheet-floating-image {
