@@ -1245,7 +1245,7 @@ describe("renderSpreadsheetToHtml", () => {
     // SHEET_DRAWING_PLUGIN resource (Univer's z-ordered floating images).
     function workbookWithFloatingDrawings(
         drawings: Array<Record<string, unknown> & { drawingId: string }>,
-        opts: { cellData?: unknown; rowData?: unknown; columnData?: unknown } = {}
+        opts: { cellData?: unknown; rowData?: unknown; columnData?: unknown; sheetExtra?: Record<string, unknown> } = {}
     ): string {
         const sheetId = "s1";
         const data: Record<string, unknown> = {};
@@ -1268,7 +1268,8 @@ describe("renderSpreadsheetToHtml", () => {
                         mergeData: [],
                         cellData: opts.cellData ?? { "0": { "0": { v: "anchor" } } },
                         rowData: opts.rowData ?? {},
-                        columnData: opts.columnData ?? {}
+                        columnData: opts.columnData ?? {},
+                        ...(opts.sheetExtra ?? {})
                     }
                 },
                 resources: [
@@ -1445,6 +1446,30 @@ describe("renderSpreadsheetToHtml", () => {
             ])
         );
         expect(html.indexOf("AAAAAAAAAAAA")).toBeLessThan(html.indexOf("BBBBBBBBBBBB"));
+    });
+
+    it("shifts floating images by the row/column header sizes (Univer transforms include headers)", () => {
+        // Univer measures transform.left/top from the viewport corner, including the row header
+        // (width 46) and column header (height 20). The HTML grid has no headers, so subtract them.
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings(
+                [urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 77, top: 208.8, width: 100, height: 80 })],
+                { sheetExtra: { rowHeader: { width: 46, hidden: 0 }, columnHeader: { height: 20, hidden: 0 } } }
+            )
+        );
+        expect(html).toContain("left:31px"); // 77 - 46
+        expect(html).toContain("top:188.8px"); // 208.8 - 20
+    });
+
+    it("does not subtract header sizes when the headers are hidden", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings(
+                [urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 77, top: 208.8, width: 100, height: 80 })],
+                { sheetExtra: { rowHeader: { width: 46, hidden: 1 }, columnHeader: { height: 20, hidden: 1 } } }
+            )
+        );
+        expect(html).toContain("left:77px");
+        expect(html).toContain("top:208.8px");
     });
 
     it("renders a base64 floating image", () => {

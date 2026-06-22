@@ -47,6 +47,15 @@ export interface IWorksheetData {
     columnData?: Record<number, IColumnData>;
     showGridlines?: number;
     gridlinesColor?: string | null;
+    rowHeader?: ISheetHeader;
+    columnHeader?: ISheetHeader;
+}
+
+/** The row-number / column-letter gutters. Univer's drawing transforms are offset by their size. */
+export interface ISheetHeader {
+    width?: number;
+    height?: number;
+    hidden?: number;
 }
 
 export type CellMatrix = Record<number, Record<number, ICellData>>;

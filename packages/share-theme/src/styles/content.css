@@ -140,13 +140,21 @@ body.type-webView {
     border: 1px solid var(--spreadsheet-gridline-color, var(--background-highlight));
 }
 
-/* A sheet that has floating images is wrapped in a positioned container; the images are
-   emitted as absolutely-positioned <img> with inline left/top/width/height (computed from the
-   Univer drawing transform, relative to the trimmed table origin). */
+/* A sheet that has floating images is wrapped in a positioned container; the images are emitted as
+   absolutely-positioned <img> with inline left/top/width/height in the grid's content coordinates
+   (the Univer transform, with the row/column header sizes removed). */
 .spreadsheet-sheet {
     position: relative;
     font-size: 11pt;
     line-height: 1.2;
+    /* Carry the table's top spacing on the wrapper so the table's top edge sits exactly at the
+       wrapper origin — the images are positioned absolutely from there, so any table margin would
+       shift them vertically out of alignment with the grid. */
+    margin-top: 1em;
+}
+
+.spreadsheet-sheet .spreadsheet-table {
+    margin-top: 0;
 }
 
 /* Images embedded inside a cell flow with the cell content. */

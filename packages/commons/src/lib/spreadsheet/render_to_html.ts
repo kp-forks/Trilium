@@ -57,9 +57,9 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
         if (visibleSheets.length > 1) {
             parts.push(`<h3>${escapeHtml(sheet.name)}</h3>`);
         }
-        const drawings = getFloatingDrawings(workbook, sheet.id);
-        const table = renderSheet(sheet, workbook.styles ?? {}, drawings);
-        parts.push(wrapWithFloatingImages(table, drawings));
+        const images = placeFloatingImages(sheet, getFloatingDrawings(workbook, sheet.id));
+        const table = renderSheet(sheet, workbook.styles ?? {}, images);
+        parts.push(wrapWithFloatingImages(table, images));
     }
 
     return parts.join("\n");
@@ -67,37 +67,61 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
 
 // #region Images
 
-/**
- * Wraps a rendered sheet table in a positioned container carrying the sheet's floating images, each
- * placed absolutely. Univer stores a floating image's `transform.left`/`top` in px from the sheet
- * origin (A1); the table is also rendered from A1 (leading empty rows/columns included), so those
- * coordinates apply directly. The container's `min-height` is stretched to contain images that
- * float below the table so they don't overlap following content. Returns the table unchanged when
- * the sheet has no renderable floating images.
- */
-function wrapWithFloatingImages(tableHtml: string, drawings: ISheetDrawing[]): string {
-    if (drawings.length === 0) return tableHtml;
+/** A floating image resolved to its content-space box (header offsets removed), ready to emit. */
+interface PlacedImage {
+    src: string;
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+}
 
-    const images: string[] = [];
-    let maxBottom = 0;
+/**
+ * Resolves a sheet's floating drawings to renderable boxes in the grid's content coordinate space.
+ * Univer measures `transform.left`/`top` from the viewport corner, *including* the row and column
+ * headers; the HTML grid has no headers, so the header sizes are subtracted to land on A1. Drawings
+ * with an unsafe source or no transform are dropped.
+ */
+function placeFloatingImages(sheet: IWorksheetData, drawings: ISheetDrawing[]): PlacedImage[] {
+    const headerWidth = sheet.rowHeader?.hidden ? 0 : (isFiniteNumber(sheet.rowHeader?.width) ? sheet.rowHeader.width : 0);
+    const headerHeight = sheet.columnHeader?.hidden ? 0 : (isFiniteNumber(sheet.columnHeader?.height) ? sheet.columnHeader.height : 0);
+
+    const placed: PlacedImage[] = [];
     for (const drawing of drawings) {
         const src = sanitizeImageSource(drawing.source);
         if (!src || !drawing.transform) continue;
 
-        const left = toFinite(drawing.transform.left);
-        const top = toFinite(drawing.transform.top);
-        const width = toFinite(drawing.transform.width);
-        const height = toFinite(drawing.transform.height);
-        maxBottom = Math.max(maxBottom, top + height);
+        placed.push({
+            src,
+            left: toFinite(drawing.transform.left) - headerWidth,
+            top: toFinite(drawing.transform.top) - headerHeight,
+            width: toFinite(drawing.transform.width),
+            height: toFinite(drawing.transform.height)
+        });
+    }
+    return placed;
+}
 
-        images.push(
-            `<img class="spreadsheet-floating-image" style="position:absolute;left:${px(left)}px;top:${px(top)}px;width:${px(width)}px;height:${px(height)}px" src="${escapeHtml(src)}" alt="">`
+/**
+ * Wraps a rendered sheet table in a positioned container carrying the sheet's floating images, each
+ * placed absolutely at its content-space coordinates (the table is rendered from A1 with no header
+ * gutter, so those coordinates apply directly). The container's `min-height` is stretched to contain
+ * images that float below the table so they don't overlap following content. Returns the table
+ * unchanged when the sheet has no renderable floating images.
+ */
+function wrapWithFloatingImages(tableHtml: string, images: PlacedImage[]): string {
+    if (images.length === 0) return tableHtml;
+
+    let maxBottom = 0;
+    const tags: string[] = [];
+    for (const image of images) {
+        maxBottom = Math.max(maxBottom, image.top + image.height);
+        tags.push(
+            `<img class="spreadsheet-floating-image" style="position:absolute;left:${px(image.left)}px;top:${px(image.top)}px;width:${px(image.width)}px;height:${px(image.height)}px" src="${escapeHtml(image.src)}" alt="">`
         );
     }
 
-    if (images.length === 0) return tableHtml;
-
-    return `<div class="spreadsheet-sheet" style="position:relative;min-height:${px(maxBottom)}px">\n${tableHtml}\n${images.join("\n")}\n</div>`;
+    return `<div class="spreadsheet-sheet" style="position:relative;min-height:${px(maxBottom)}px">\n${tableHtml}\n${tags.join("\n")}\n</div>`;
 }
 
 /** Renders the images embedded in a cell's rich-text document (`cell.p.drawings`), in order. */
@@ -148,18 +172,17 @@ function toFinite(value: number | undefined): number {
 }
 
 /**
- * Grows a sheet's max row/column to enclose its renderable floating images. Univer anchors images
- * in absolute px from A1, so an image can reach below or to the right of the last populated cell;
- * extending the bounds makes the grid render enough empty rows/columns to contain it, matching the
- * editor. Unsafe or transform-less drawings are ignored. Returns the bounds unchanged otherwise.
+ * Grows a sheet's max row/column to enclose its floating images. An image placed in content space
+ * can reach below or to the right of the last populated cell; extending the bounds makes the grid
+ * render enough empty rows/columns to contain it, matching the editor. Returns the bounds unchanged
+ * when no image reaches past them.
  */
-function extendBoundsForDrawings(sheet: IWorksheetData, maxRow: number, maxCol: number, drawings: ISheetDrawing[]): { maxRow: number; maxCol: number } {
+function extendBoundsForImages(sheet: IWorksheetData, maxRow: number, maxCol: number, images: PlacedImage[]): { maxRow: number; maxCol: number } {
     let bottomPx = 0;
     let rightPx = 0;
-    for (const drawing of drawings) {
-        if (!drawing.transform || !sanitizeImageSource(drawing.source)) continue;
-        bottomPx = Math.max(bottomPx, toFinite(drawing.transform.top) + toFinite(drawing.transform.height));
-        rightPx = Math.max(rightPx, toFinite(drawing.transform.left) + toFinite(drawing.transform.width));
+    for (const image of images) {
+        bottomPx = Math.max(bottomPx, image.top + image.height);
+        rightPx = Math.max(rightPx, image.left + image.width);
     }
     if (bottomPx <= 0 && rightPx <= 0) return { maxRow, maxCol };
 
@@ -190,13 +213,13 @@ function trackIndexAtPx(targetPx: number, defaultSize: number, count: number | u
 
 // #endregion
 
-function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | null>, drawings: ISheetDrawing[]): string {
+function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | null>, images: PlacedImage[]): string {
     const { cellData, mergeData = [], columnData = {}, rowData = {} } = sheet;
 
     // Determine the actual bounds (only cells with data), then extend them to cover any floating
     // images that reach past the data so the grid encloses them like the editor does.
     const bounds = computeBounds(cellData, mergeData);
-    const { maxRow, maxCol } = extendBoundsForDrawings(sheet, bounds?.maxRow ?? -1, bounds?.maxCol ?? -1, drawings);
+    const { maxRow, maxCol } = extendBoundsForImages(sheet, bounds?.maxRow ?? -1, bounds?.maxCol ?? -1, images);
     if (maxRow < 0 || maxCol < 0) {
         return "<p>Empty sheet.</p>";
     }
