@@ -7,6 +7,7 @@ import {
     encodeBase64,
     encodeUtf8,
     processStringOrBuffer,
+    stripBom,
     truncateUtf8Bytes,
     unwrapStringOrBuffer,
     wrapStringOrBuffer
@@ -134,6 +135,23 @@ describe("binary utils", () => {
         it("preserves raw binary bytes through a buffer round-trip", () => {
             const bytes = new Uint8Array([0, 255, 128, 1, 254]);
             expect(Array.from(decodeBase64(encodeBase64(bytes)))).toEqual([0, 255, 128, 1, 254]);
+        });
+    });
+
+    describe("stripBom", () => {
+        const BOM = String.fromCharCode(0xfeff);
+
+        it("strips a single leading BOM (U+FEFF), leaving the remainder intact", () => {
+            expect(stripBom(BOM + "hello")).toBe("hello");
+            // only the first code point is removed, so a second BOM survives
+            expect(stripBom(BOM + BOM + "x")).toBe(BOM + "x");
+        });
+
+        it("returns the string unchanged when there is no leading BOM", () => {
+            expect(stripBom("hello")).toBe("hello");
+            expect(stripBom("")).toBe("");
+            // a BOM that is not at the start is preserved
+            expect(stripBom("a" + BOM + "b")).toBe("a" + BOM + "b");
         });
     });
 
