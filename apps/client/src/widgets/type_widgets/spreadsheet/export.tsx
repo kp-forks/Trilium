@@ -118,11 +118,16 @@ async function resolveSpreadsheetImage(source: string): Promise<ResolvedImage | 
         const dataUrl = source.startsWith("data:") ? source : await fetchAsDataUrl(source);
         if (!dataUrl) return null;
 
-        const match = /^data:([^;,]+)(?:;[^,]*)*;base64,(.*)$/s.exec(dataUrl);
-        if (!match) return null;
+        // Parse `data:<mime>;base64,<payload>` with plain string ops — a regex with a nested
+        // quantifier over the `;` parameters can backtrack exponentially (ReDoS).
+        const comma = dataUrl.indexOf(",");
+        if (comma < 0) return null;
+        const header = dataUrl.slice(0, comma);
+        if (!/;base64$/i.test(header)) return null; // only base64 payloads
 
-        const extension = imageExtensionForMime(match[1]);
-        return extension ? { base64: match[2], extension } : null;
+        const mime = header.slice("data:".length).split(";")[0];
+        const extension = imageExtensionForMime(mime);
+        return extension ? { base64: dataUrl.slice(comma + 1), extension } : null;
     } catch {
         return null;
     }

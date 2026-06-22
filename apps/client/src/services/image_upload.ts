@@ -27,7 +27,12 @@ export function dataUrlToImageFile(dataUrl: string): File | null {
     const parsed = parseImageDataUrl(dataUrl);
     if (!parsed) return null;
 
-    const binary = atob(parsed.base64);
+    let binary: string;
+    try {
+        binary = atob(parsed.base64);
+    } catch {
+        return null; // malformed base64 — atob throws a DOMException
+    }
     const bytes = new Uint8Array(binary.length);
     for (let i = 0; i < binary.length; i++) {
         bytes[i] = binary.charCodeAt(i);

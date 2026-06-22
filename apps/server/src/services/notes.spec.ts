@@ -41,6 +41,12 @@ describe("collectCanvasImageFileIds", () => {
         expect(collectCanvasImageFileIds("not json")).toEqual(new Set());
         expect(collectCanvasImageFileIds(JSON.stringify({}))).toEqual(new Set());
     });
+
+    it("returns an empty set when the JSON shape is unexpected (null / non-array elements)", () => {
+        expect(collectCanvasImageFileIds(JSON.stringify(null))).toEqual(new Set());
+        expect(collectCanvasImageFileIds(JSON.stringify({ elements: 5 }))).toEqual(new Set());
+        expect(collectCanvasImageFileIds(JSON.stringify({ elements: "oops" }))).toEqual(new Set());
+    });
 });
 
 describe("findBookmarks", () => {

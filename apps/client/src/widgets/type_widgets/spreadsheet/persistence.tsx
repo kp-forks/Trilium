@@ -1,3 +1,4 @@
+import { SHEET_DRAWING_RESOURCE } from "@triliumnext/commons/src/lib/spreadsheet/workbook_model";
 import { CommandType, FUniver, IDisposable, IWorkbookData, LocaleType } from "@univerjs/presets";
 import { MutableRef, useEffect, useRef } from "preact/hooks";
 
@@ -302,9 +303,6 @@ export function slimWorkbookData(workbookData: IWorkbookData): Partial<IWorkbook
     return slimmed;
 }
 
-/** Univer's resource key under which the sheet drawing (image) layer is serialized in the workbook. */
-const DRAWING_RESOURCE_NAME = "SHEET_DRAWING_PLUGIN";
-
 /**
  * Uploads newly inserted base64 images in a saved workbook as Trilium attachments and rewrites their
  * drawing-resource `source` from the inline data URL to the returned `api/attachments/...` URL (with
@@ -415,7 +413,7 @@ function forEachBase64DrawingImage(
     }
 
     // Floating images: serialized in the SHEET_DRAWING_PLUGIN resource.
-    const resource = workbookData.resources?.find((r) => r.name === DRAWING_RESOURCE_NAME);
+    const resource = workbookData.resources?.find((r) => r.name === SHEET_DRAWING_RESOURCE);
     if (!resource?.data) return null;
 
     let drawingData: unknown;

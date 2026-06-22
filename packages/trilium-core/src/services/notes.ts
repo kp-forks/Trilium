@@ -558,8 +558,9 @@ export function collectCanvasImageFileIds(content: string): Set<string> {
 
     try {
         const parsed = JSON.parse(content) as { elements?: { fileId?: string }[] };
-        for (const element of parsed.elements ?? []) {
-            if (element.fileId) {
+        const elements = Array.isArray(parsed?.elements) ? parsed.elements : [];
+        for (const element of elements) {
+            if (element?.fileId) {
                 fileIds.add(element.fileId);
             }
         }

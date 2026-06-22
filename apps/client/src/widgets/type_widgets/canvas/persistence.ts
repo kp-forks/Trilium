@@ -46,6 +46,11 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
     // its attachment for deletion (mirrors the library-item cleanup above).
     const persistedImageFileIds = useRef<Set<string>>(new Set());
 
+    // The note being loaded by the latest onContentChange. Async loads below capture the id they
+    // started for and bail if the user switched notes before they resolved, so a stale load can't
+    // inject the previous note's images or overwrite the new note's owned-fileId set.
+    const activeNoteIdRef = useRef<string | null>(null);
+
     const appStateToCompare = useRef<Partial<ImportantAppState>>({});
 
     const spacedUpdate = useEditorSpacedUpdate({
@@ -59,6 +64,10 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
             libraryCache.current = [];
             attachmentMetadata.current = [];
             persistedImageFileIds.current = new Set();
+
+            // The note this load run belongs to; async results below are ignored if it's superseded.
+            const loadedNoteId = note.noteId;
+            activeNoteIdRef.current = loadedNoteId;
 
             // load saved content into excalidraw canvas
             let content: CanvasContent = {
@@ -80,6 +89,7 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
             // data URLs and inject them so elements referencing those fileIds render. Legacy notes
             // that still carry inline images in `content.files` were already loaded by loadData().
             loadImageAttachments(note).then(({ files, metadata }) => {
+                if (activeNoteIdRef.current !== loadedNoteId) return; // note switched mid-load
                 if (files.length > 0) {
                     api.addFiles(files);
                 }
@@ -91,6 +101,7 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
 
             // load the library state
             loadLibrary(note).then(({ libraryItems, metadata }) => {
+                if (activeNoteIdRef.current !== loadedNoteId) return; // note switched mid-load
                 // Update the library and save to independent variables
                 api.updateLibrary({ libraryItems, merge: false });
 

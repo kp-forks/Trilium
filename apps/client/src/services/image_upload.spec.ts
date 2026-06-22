@@ -35,6 +35,11 @@ describe("dataUrlToImageFile", () => {
     it("returns null when the input is not a base64 data URL", () => {
         expect(dataUrlToImageFile("https://example.com/a.png")).toBeNull();
     });
+
+    it("returns null for a malformed base64 payload instead of throwing", () => {
+        // atob throws a DOMException on invalid base64; the decode must be guarded.
+        expect(dataUrlToImageFile("data:image/png;base64,@@@not-base64@@@")).toBeNull();
+    });
 });
 
 describe("uploadImageAttachment", () => {
