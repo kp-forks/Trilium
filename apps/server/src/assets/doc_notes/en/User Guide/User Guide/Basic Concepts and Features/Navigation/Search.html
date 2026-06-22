@@ -42,8 +42,7 @@
     the search configuration pane.</li>
   <li>The <em>Search &amp; Execute actions</em> button is only relevant if at
     least one action has been added (as described in the section below).</li>
-  <li
- >The <em>Save to note</em> will create a new note with the search configuration.
+  <li>The <em>Save to note</em> will create a new note with the search configuration.
     For more information, see&nbsp;<a class="reference-link" href="#root/_help_m523cpzocqaD">Saved Search</a>.</li>
 </ol>
 <h2>Search options</h2>
@@ -51,8 +50,7 @@
 <ul>
   <li>For each search option selected, the search configuration will update
     to reveal the entry. Each search option will have its own configuration.</li>
-  <li
- >To remove a search option, simply press the X button to the right of it.</li>
+  <li>To remove a search option, simply press the X button to the right of it.</li>
 </ul>
 <p>The options available are:</p>
 <ol>
@@ -66,9 +64,8 @@
     <ol>
       <li>The search will not look into the content of the notes, but it will still
         look into note titles and attributes, relations (based on the search query).</li>
-      <li
-     >This method can speed up the search considerably for large <a href="#root/_help_wX4HbRucYSDD">databases</a>.</li>
-  </ol>
+      <li>This method can speed up the search considerably for large <a href="#root/_help_wX4HbRucYSDD">databases</a>.</li>
+    </ol>
   </li>
   <li>Include archived
     <ol>
@@ -80,10 +77,9 @@
     <ol>
       <li>Allows changing the criteria for ordering the results, for example to
         order by creation date or alphabetically instead of by relevancy (default).</li>
-      <li
-     >It's also possible to change the order (ascending or descending) of the
+      <li>It's also possible to change the order (ascending or descending) of the
         results.</li>
-  </ol>
+    </ol>
   </li>
   <li>Limit
     <ol>
@@ -97,11 +93,10 @@
       <li>This will print additional information in the server log (see&nbsp;
         <a
         class="reference-link" href="#root/_help_qzNzp9LYQyPT">Error logs</a>), regarding how the search expression was parsed.</li>
-      <li
-     >This function is especially useful after understanding the search functionality
+      <li>This function is especially useful after understanding the search functionality
         in detail, in order to determine why a complex search query is not working
         as expected.</li>
-  </ol>
+    </ol>
   </li>
   <li>Action
     <ol>
@@ -131,34 +126,30 @@
     Find notes containing "rings" or "tolkien" in their content.</li>
   <li><code spellcheck="false">towers #book</code>: Combine full-text and attribute
     search to find notes containing "towers" and having the "book" label.</li>
-  <li
- ><code spellcheck="false">towers #book or #author</code>: Search for notes
+  <li><code spellcheck="false">towers #book or #author</code>: Search for notes
     containing "towers" and having either the "book" or "author" label.</li>
-    <li
-   ><code spellcheck="false">towers #!book</code>: Search for notes containing
-      "towers" and not having the "book" label.</li>
-      <li><code spellcheck="false">#book #publicationYear = 1954</code>: Find notes
-        with the "book" label and "publicationYear" set to 1954.</li>
-      <li><code spellcheck="false">#genre *=* fan</code>: Find notes with the "genre"
-        label containing the substring "fan". Additional operators include
-        <code
-        spellcheck="false">*=*</code>for "contains", <code spellcheck="false">=*</code> for "starts
-          with", <code spellcheck="false">*=</code> for "ends with", and <code spellcheck="false">!=</code> for
-          "is not equal to".</li>
-      <li><code spellcheck="false">#book #publicationYear &gt;= 1950 #publicationYear &lt; 1960</code>:
-        Use numeric operators to find all books published in the 1950s.</li>
-      <li
-     ><code spellcheck="false">#dateNote &gt;= TODAY-30</code>: Find notes with
-        the "dateNote" label within the last 30 days. Supported date values include
-        NOW +- seconds, TODAY +- days, MONTH +- months, YEAR +- years.</li>
-        <li
-       ><code spellcheck="false">~author.title *=* Tolkien</code>: Find notes
-          related to an author whose title contains "Tolkien".</li>
-          <li><code spellcheck="false">#publicationYear %= '19[0-9]{2}'</code>: Use
-            the '%=' operator to match a regular expression (regex). This feature has
-            been available since Trilium 0.52.</li>
-          <li><code spellcheck="false">note.content %= '\\d{2}:\\d{2} (PM|AM)'</code>:
-            Find notes that mention a time. Backslashes in a regex must be escaped.</li>
+  <li><code spellcheck="false">towers #!book</code>: Search for notes containing
+    "towers" and not having the "book" label.</li>
+  <li><code spellcheck="false">#book #publicationYear = 1954</code>: Find notes
+    with the "book" label and "publicationYear" set to 1954.</li>
+  <li><code spellcheck="false">#genre *=* fan</code>: Find notes with the "genre"
+    label containing the substring "fan". Additional operators include
+    <code
+    spellcheck="false">*=*</code>for "contains", <code spellcheck="false">=*</code> for "starts
+      with", <code spellcheck="false">*=</code> for "ends with", and <code spellcheck="false">!=</code> for
+      "is not equal to".</li>
+  <li><code spellcheck="false">#book #publicationYear &gt;= 1950 #publicationYear &lt; 1960</code>:
+    Use numeric operators to find all books published in the 1950s.</li>
+  <li><code spellcheck="false">#dateNote &gt;= TODAY-30</code>: Find notes with
+    the "dateNote" label within the last 30 days. Supported date values include
+    NOW +- seconds, TODAY +- days, MONTH +- months, YEAR +- years.</li>
+  <li><code spellcheck="false">~author.title *=* Tolkien</code>: Find notes
+    related to an author whose title contains "Tolkien".</li>
+  <li><code spellcheck="false">#publicationYear %= '19[0-9]{2}'</code>: Use
+    the '%=' operator to match a regular expression (regex). This feature has
+    been available since Trilium 0.52.</li>
+  <li><code spellcheck="false">note.content %= '\\d{2}:\\d{2} (PM|AM)'</code>:
+    Find notes that mention a time. Backslashes in a regex must be escaped.</li>
 </ul>
 <h3>Fuzzy Search</h3>
 <p>Trilium supports fuzzy search operators that find results with typos or
@@ -177,12 +168,10 @@
 </p>
 <ul>
   <li>Fuzzy search requires at least 3 characters in the search term</li>
-  <li
- >Maximum edit distance is 2 characters (number of character changes needed)</li>
-    <li
-   >Diacritics are normalized (e.g., "café" matches "cafe")</li>
-      <li>Fuzzy matches work best for finding content with minor typos or spelling
-        variations</li>
+  <li>Maximum edit distance is 2 characters (number of character changes needed)</li>
+  <li>Diacritics are normalized (e.g., "café" matches "cafe")</li>
+  <li>Fuzzy matches work best for finding content with minor typos or spelling
+    variations</li>
 </ul>
 <h3>Advanced Use Cases</h3>
 <ul>
@@ -283,13 +272,11 @@
 <h3>Progressive Search Behavior</h3>
 <ul>
   <li><strong>Speed</strong>: Most searches complete using only exact matching</li>
-  <li
- ><strong>Ordering</strong>: Exact matches appear before fuzzy matches</li>
-    <li
-   ><strong>Fallback</strong>: Fuzzy matching activates when exact matches
-      return fewer than 5 results</li>
-      <li><strong>Identification</strong>: Results indicate whether they are exact
-        or fuzzy matches</li>
+  <li><strong>Ordering</strong>: Exact matches appear before fuzzy matches</li>
+  <li><strong>Fallback</strong>: Fuzzy matching activates when exact matches
+    return fewer than 5 results</li>
+  <li><strong>Identification</strong>: Results indicate whether they are exact
+    or fuzzy matches</li>
 </ul>
 <h3>Search Performance</h3>
 <p>Search system specifications:</p>
@@ -337,43 +324,42 @@
 </p>
 <h2>Search Configuration</h2>
 <h3>Parameters</h3>
-<figure class="table">
-  <table>
-    <thead>
-      <tr>
-        <th>Parameter</th>
-        <th>Value</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code spellcheck="false">MIN_FUZZY_TOKEN_LENGTH</code>
-        </td>
-        <td>3</td>
-        <td>Minimum characters for fuzzy matching</td>
-      </tr>
-      <tr>
-        <td><code spellcheck="false">MAX_EDIT_DISTANCE</code>
-        </td>
-        <td>2</td>
-        <td>Maximum character changes allowed</td>
-      </tr>
-      <tr>
-        <td><code spellcheck="false">RESULT_SUFFICIENCY_THRESHOLD</code>
-        </td>
-        <td>5</td>
-        <td>Minimum exact results before fuzzy fallback</td>
-      </tr>
-      <tr>
-        <td><code spellcheck="false">MAX_CONTENT_SIZE</code>
-        </td>
-        <td>10MB</td>
-        <td>Maximum note content size for search processing</td>
-      </tr>
-    </tbody>
-  </table>
-</figure>
+<table>
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Value</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code spellcheck="false">MIN_FUZZY_TOKEN_LENGTH</code>
+      </td>
+      <td>3</td>
+      <td>Minimum characters for fuzzy matching</td>
+    </tr>
+    <tr>
+      <td><code spellcheck="false">MAX_EDIT_DISTANCE</code>
+      </td>
+      <td>2</td>
+      <td>Maximum character changes allowed</td>
+    </tr>
+    <tr>
+      <td><code spellcheck="false">RESULT_SUFFICIENCY_THRESHOLD</code>
+      </td>
+      <td>5</td>
+      <td>Minimum exact results before fuzzy fallback</td>
+    </tr>
+    <tr>
+      <td><code spellcheck="false">MAX_CONTENT_SIZE</code>
+      </td>
+      <td>10MB</td>
+      <td>Maximum note content size for search processing</td>
+    </tr>
+  </tbody>
+</table>
+
 <h3>Limits</h3>
 <ul>
   <li>Searched note content is limited to 10MB per note to prevent performance

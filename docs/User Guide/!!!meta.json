@@ -2723,6 +2723,13 @@
                                             "mime": "text/html",
                                             "attributes": [
                                                 {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "oPVyFC7WL2Lp",
+                                                    "isInheritable": false,
+                                                    "position": 10
+                                                },
+                                                {
                                                     "type": "label",
                                                     "name": "iconClass",
                                                     "value": "bx bx-list-plus",
@@ -2735,13 +2742,6 @@
                                                     "value": "multiple-selection",
                                                     "isInheritable": false,
                                                     "position": 30
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "oPVyFC7WL2Lp",
-                                                    "isInheritable": false,
-                                                    "position": 40
                                                 }
                                             ],
                                             "format": "markdown",
