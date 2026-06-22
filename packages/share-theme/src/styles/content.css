@@ -149,10 +149,6 @@ body.type-webView {
     line-height: 1.2;
 }
 
-.spreadsheet-floating-image {
-    object-fit: contain;
-}
-
 /* Images embedded inside a cell flow with the cell content. */
 .spreadsheet-cell-image {
     display: block;
