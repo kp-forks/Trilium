@@ -24,6 +24,7 @@ interface UniverLocaleSource {
  */
 export const SPREADSHEET_PRESET_PACKAGES = [
     "@univerjs/preset-sheets-core",
+    "@univerjs/preset-sheets-drawing",
     "@univerjs/preset-sheets-find-replace",
     "@univerjs/preset-sheets-note",
     "@univerjs/preset-sheets-filter",
@@ -42,6 +43,7 @@ const ENGLISH_LOCALE: UniverLocaleSource = {
     type: LocaleType.EN_US,
     load: () => Promise.all([
         import('@univerjs/preset-sheets-core/locales/en-US'),
+        import('@univerjs/preset-sheets-drawing/locales/en-US'),
         import('@univerjs/preset-sheets-find-replace/locales/en-US'),
         import('@univerjs/preset-sheets-note/locales/en-US'),
         import('@univerjs/preset-sheets-filter/locales/en-US'),
@@ -70,6 +72,7 @@ export const UNIVER_LOCALES: Record<DISPLAYABLE_LOCALE_IDS, UniverLocaleSource |
         type: LocaleType.ZH_CN,
         load: () => Promise.all([
             import('@univerjs/preset-sheets-core/locales/zh-CN'),
+            import('@univerjs/preset-sheets-drawing/locales/zh-CN'),
             import('@univerjs/preset-sheets-find-replace/locales/zh-CN'),
             import('@univerjs/preset-sheets-note/locales/zh-CN'),
             import('@univerjs/preset-sheets-filter/locales/zh-CN'),
@@ -89,6 +92,7 @@ export const UNIVER_LOCALES: Record<DISPLAYABLE_LOCALE_IDS, UniverLocaleSource |
         type: LocaleType.ES_ES,
         load: () => Promise.all([
             import('@univerjs/preset-sheets-core/locales/es-ES'),
+            import('@univerjs/preset-sheets-drawing/locales/es-ES'),
             import('@univerjs/preset-sheets-find-replace/locales/es-ES'),
             import('@univerjs/preset-sheets-note/locales/es-ES'),
             import('@univerjs/preset-sheets-filter/locales/es-ES'),
@@ -102,6 +106,7 @@ export const UNIVER_LOCALES: Record<DISPLAYABLE_LOCALE_IDS, UniverLocaleSource |
         type: LocaleType.FR_FR,
         load: () => Promise.all([
             import('@univerjs/preset-sheets-core/locales/fr-FR'),
+            import('@univerjs/preset-sheets-drawing/locales/fr-FR'),
             import('@univerjs/preset-sheets-find-replace/locales/fr-FR'),
             import('@univerjs/preset-sheets-note/locales/fr-FR'),
             import('@univerjs/preset-sheets-filter/locales/fr-FR'),
@@ -119,6 +124,7 @@ export const UNIVER_LOCALES: Record<DISPLAYABLE_LOCALE_IDS, UniverLocaleSource |
         type: LocaleType.JA_JP,
         load: () => Promise.all([
             import('@univerjs/preset-sheets-core/locales/ja-JP'),
+            import('@univerjs/preset-sheets-drawing/locales/ja-JP'),
             import('@univerjs/preset-sheets-find-replace/locales/ja-JP'),
             import('@univerjs/preset-sheets-note/locales/ja-JP'),
             import('@univerjs/preset-sheets-filter/locales/ja-JP'),
@@ -136,6 +142,7 @@ export const UNIVER_LOCALES: Record<DISPLAYABLE_LOCALE_IDS, UniverLocaleSource |
         type: LocaleType.RU_RU,
         load: () => Promise.all([
             import('@univerjs/preset-sheets-core/locales/ru-RU'),
+            import('@univerjs/preset-sheets-drawing/locales/ru-RU'),
             import('@univerjs/preset-sheets-find-replace/locales/ru-RU'),
             import('@univerjs/preset-sheets-note/locales/ru-RU'),
             import('@univerjs/preset-sheets-filter/locales/ru-RU'),
@@ -149,6 +156,7 @@ export const UNIVER_LOCALES: Record<DISPLAYABLE_LOCALE_IDS, UniverLocaleSource |
         type: LocaleType.ZH_TW,
         load: () => Promise.all([
             import('@univerjs/preset-sheets-core/locales/zh-TW'),
+            import('@univerjs/preset-sheets-drawing/locales/zh-TW'),
             import('@univerjs/preset-sheets-find-replace/locales/zh-TW'),
             import('@univerjs/preset-sheets-note/locales/zh-TW'),
             import('@univerjs/preset-sheets-filter/locales/zh-TW'),

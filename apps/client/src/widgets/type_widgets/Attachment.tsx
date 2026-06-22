@@ -146,6 +146,10 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     const imageViewerWrapper = useRef<HTMLDivElement>(null);
     const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
+    // Tracked in state so the deletion warning reacts to entity reloads. The FAttachment is mutated
+    // in place by froca, so reading it directly during render wouldn't re-render an image attachment
+    // (whose title/content don't change when only the erasure schedule does).
+    const [ scheduledForErasureSince, setScheduledForErasureSince ] = useState(attachment.utcDateScheduledForErasureSince);
     // "importSource" attachments (e.g. OneNote debug source) behave like ordinary files for
     // preview, OCR and link-copying purposes.
     const isFileLike = attachment.role === "file" || attachment.role === "importSource";
@@ -169,6 +173,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
         }
 
         setTitle(attachment.title);
+        setScheduledForErasureSince(attachment.utcDateScheduledForErasureSince);
     }
 
     useEffect(refresh, [ attachment, isZoomableImage ]);
@@ -208,7 +213,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
 
     return (
         <div className="attachment-detail-widget">
-            <div className={`attachment-detail-wrapper ${isFullDetail ? "full-detail" : "list-view"} ${attachment.utcDateScheduledForErasureSince ? "scheduled-for-deletion" : ""}`}>
+            <div className={`attachment-detail-wrapper ${isFullDetail ? "full-detail" : "list-view"} ${scheduledForErasureSince ? "scheduled-for-deletion" : ""}`}>
                 <div className="attachment-title-line">
                     <AttachmentActions
                         attachment={attachment}
@@ -240,7 +245,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
                     <div style="flex: 1 1;" />
                 </div>
 
-                {attachment.utcDateScheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={attachment.utcDateScheduledForErasureSince} />}
+                {scheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={scheduledForErasureSince} />}
                 {textContent && <TextPreview content={textContent} />}
                 {isZoomableImage ? (
                     <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">

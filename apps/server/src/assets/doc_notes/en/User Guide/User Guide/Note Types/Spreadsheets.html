@@ -24,19 +24,23 @@
   <li>Microsoft Excel (.xlsx)
     <ul>
       <li>Preserves basic formatting (fonts, sizes, borders, backgrounds).</li>
-      <li>Formulas are preserved, but note that not all Excel functions are supported
+      <li
+     >Formulas are preserved, but note that not all Excel functions are supported
         and vice-versa with Univer.</li>
-      <li>Supports multi-sheets natively.</li>
+  <li>Images (cell-bound or floating), without preserving rotation.</li>
+  <li
+ >Supports multi-sheets natively.</li>
     </ul>
-  </li>
-  <li>Comma-Separated Values (.csv)
-    <ul>
-      <li>Since it's a text-based format, any formatting is lost.</li>
-      <li>Formulas are evaluated and turned into their final value instead.</li>
-      <li>Multi-sheets spreadsheets are exported as a single ZIP containing a CSV
-        file per sheet.</li>
+    </li>
+    <li>Comma-Separated Values (.csv)
+      <ul>
+        <li>Since it's a text-based format, any formatting is lost.</li>
+        <li>Formulas are evaluated and turned into their final value instead.</li>
+        <li
+       >Multi-sheets spreadsheets are exported as a single ZIP containing a CSV
+          file per sheet.</li>
     </ul>
-  </li>
+    </li>
 </ul>
 <p>Both <a href="#root/_help_mHbBMPDPkVV5">import and export</a> are supported, as
   follows:</p>
@@ -48,10 +52,11 @@
       <li>To avoid this behavior (e.g. to import a .xlsx file as an actual&nbsp;
         <a
         class="reference-link" href="#root/_help_W8vYD3Q1zjCR">File</a>), uncheck the corresponding option in the <a href="#root/_help_mHbBMPDPkVV5">Import dialog</a>.</li>
-      <li>Multiple files can be imported at the same time, including a mixture of
+      <li
+     >Multiple files can be imported at the same time, including a mixture of
         .csv and .xlsx files. Folder structure can be preserved by using a .zip
         file.</li>
-    </ul>
+  </ul>
   </li>
   <li>Unlike importing, exporting is on a per-note basis:
     <ul>
@@ -78,6 +83,15 @@
 <h2>Supported features</h2>
 <p>The spreadsheet has support for the following features:</p>
 <ul>
+  <li>Since v0.104.0, images that can be either inside a cell or floating above.
+    <ul>
+      <li>The images are saved as&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_0vhv7lsOLy82">Attachments</a>&nbsp;for
+        performance reasons.</li>
+      <li>The image upload respects the same compression settings as text&nbsp;
+        <a
+        class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">Images</a>.</li>
+    </ul>
+  </li>
   <li>Filtering</li>
   <li>Sorting</li>
   <li>Data validation</li>
@@ -93,8 +107,12 @@
   a best-effort HTML rendering of the spreadsheet is done:</p>
 <ul>
   <li>Preserves basic formatting.</li>
-  <li>Since v0.104.0, properly formats numbers and dates.</li>
-  <li>Cells with formulas display the i</li>
+  <li>Cells with formulas display the precalculated value instead of the formula.</li>
+</ul>
+<p>Since v0.104.0:</p>
+<ul>
+  <li>Numbers and dates are properly formatted.</li>
+  <li>Images are shown inside a cell or floating above, including rotation.</li>
 </ul>
 <p>For more advanced use cases, this will most likely not work as intended.
   Feel free to <a href="#root/_help_wy8So3yZZlH9">report issues</a>, but keep in
@@ -113,11 +131,13 @@
   yet:</p>
 <ul>
   <li>Trilium-specific formulas (e.g. to obtain the title of a note).</li>
-  <li>User-defined formulas</li>
-  <li>Cross-workbook calculation</li>
+  <li
+ >User-defined formulas</li>
+    <li>Cross-workbook calculation</li>
 </ul>
 <p>If you would like us to work on these features, consider <a href="https://triliumnotes.org/en/support-us">supporting us</a>.</p>
 <h3>Mobile support</h3>
-<p>There is no dedicated mobile support.</p>
-<p>Mobile support is currently experimental in Univer and when it becomes
-  stable, we could potentially integrate it into Trilium as well.</p>
+<p>Versions prior to v0.104.0 have no dedicated mobile support, which means
+  that the interaction is difficult without a mouse and keyboard. Starting
+  with v0.104.0 we integrate Univer's mobile plugin, which introduces feature
+  such as drag to pan which makes the interface more usable on mobile.</p>

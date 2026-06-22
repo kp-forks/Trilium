@@ -29,8 +29,10 @@ import {
     type IRange,
     type IRowData,
     type IStyleData,
+    type IWorkbookData,
     type IWorksheetData,
     type PersistedData,
+    SHEET_DRAWING_RESOURCE,
     VerticalAlign,
     WrapStrategy
 } from "./workbook_model.js";
@@ -58,23 +60,29 @@ export async function parseXlsxToWorkbook(input: ArrayBuffer | Uint8Array): Prom
 
     const sheetOrder: string[] = [];
     const sheets: Record<string, IWorksheetData> = {};
+    const drawingsBySheet: Record<string, SheetDrawings> = {};
 
     wb.eachSheet((ws, sheetIndex) => {
         // Deterministic ids keyed off position; the workbook id/locale are reassigned on load
         // (see persistence.tsx) and sheet view state keys off this id, so stability is all we need.
         const id = `sheet-${sheetIndex}`;
         sheetOrder.push(id);
-        sheets[id] = readSheet(ws, id);
+        const sheet = readSheet(ws, id);
+        sheets[id] = sheet;
+
+        const drawings = readImages(wb, ws, sheet, id);
+        if (drawings) drawingsBySheet[id] = drawings;
     });
 
-    return {
-        version: 1,
-        workbook: {
-            sheetOrder,
-            styles: {},
-            sheets
-        }
-    };
+    const workbook: IWorkbookData = { sheetOrder, styles: {}, sheets };
+
+    // Floating images go in the SHEET_DRAWING_PLUGIN resource (a JSON string keyed by sheet id),
+    // the same shape the editor persists; Univer reconciles the drawing unitId on load.
+    if (Object.keys(drawingsBySheet).length > 0) {
+        workbook.resources = [{ name: SHEET_DRAWING_RESOURCE, data: JSON.stringify(drawingsBySheet) }];
+    }
+
+    return { version: 1, workbook };
 }
 
 function readSheet(ws: ExcelJS.Worksheet, id: string): IWorksheetData {
@@ -95,7 +103,11 @@ function readSheet(ws: ExcelJS.Worksheet, id: string): IWorksheetData {
         columnCount: Math.max(DEFAULT_COLUMN_COUNT, maxCol + 1),
         // exceljs reports a hidden sheet as state "hidden"/"veryHidden".
         hidden: ws.state && ws.state !== "visible" ? 1 : 0,
-        showGridlines: ws.views?.[0]?.showGridLines === false ? 0 : 1
+        showGridlines: ws.views?.[0]?.showGridLines === false ? 0 : 1,
+        // Record Univer's default header gutters so the share renderer's image-offset subtraction
+        // matches the offset baked into each drawing's transform (see HEADER_WIDTH/HEIGHT below).
+        rowHeader: { width: HEADER_WIDTH, hidden: 0 },
+        columnHeader: { height: HEADER_HEIGHT, hidden: 0 }
     };
 
     if (isFiniteNumber(ws.properties?.defaultColWidth)) {
@@ -108,6 +120,194 @@ function readSheet(ws: ExcelJS.Worksheet, id: string): IWorksheetData {
 
     return sheet;
 }
+
+// #region Images
+
+/** Univer's default header gutter sizes (px); drawing transforms are measured including them. */
+const HEADER_WIDTH = 46;
+const HEADER_HEIGHT = 20;
+
+interface SheetDrawings {
+    data: Record<string, object>;
+    order: string[];
+}
+
+interface CellAnchor {
+    row: number;
+    rowOffset: number;
+    column: number;
+    columnOffset: number;
+}
+
+/**
+ * Reads a worksheet's floating images into Univer drawings. Each image's bytes (from exceljs media)
+ * become an inline base64 `data:` URL, and its exceljs cell anchor inverts into Univer's
+ * `sheetTransform` from/to plus an absolute `transform`. Returns null when the sheet has no
+ * embeddable images. Unsupported formats (anything but png/jpeg/gif) are skipped.
+ */
+function readImages(wb: ExcelJS.Workbook, ws: ExcelJS.Worksheet, sheet: IWorksheetData, sheetId: string): SheetDrawings | null {
+    const images = ws.getImages();
+    if (images.length === 0) return null;
+
+    const data: Record<string, object> = {};
+    const order: string[] = [];
+    images.forEach((image, index) => {
+        const drawing = buildDrawing(wb, sheet, sheetId, image, index);
+        if (!drawing) return;
+        data[drawing.drawingId] = drawing;
+        order.push(drawing.drawingId);
+    });
+
+    return order.length > 0 ? { data, order } : null;
+}
+
+function buildDrawing(wb: ExcelJS.Workbook, sheet: IWorksheetData, sheetId: string, image: ReturnType<ExcelJS.Worksheet["getImages"]>[number], index: number): { drawingId: string } & Record<string, unknown> | null {
+    const source = mediaToDataUrl(wb.getImage(Number(image.imageId)));
+    if (!source) return null;
+
+    const box = anchorToBox(sheet, image.range);
+    if (!box) return null;
+
+    // Univer keeps the orientation fields on every transform; imports are always upright.
+    const orientation = { angle: 0, flipX: false, flipY: false, skewX: 0, skewY: 0 };
+    const cellAnchor = { from: box.from, to: box.to, ...orientation };
+
+    return {
+        // The unitId is reconciled against the loaded workbook, so a placeholder is fine.
+        unitId: "imported",
+        subUnitId: sheetId,
+        drawingId: `image-${sheetId}-${index}`,
+        drawingType: 0,
+        imageSourceType: "BASE64",
+        source,
+        // The transform is in viewport space (includes the header gutters), matching the editor.
+        transform: { left: box.left + HEADER_WIDTH, top: box.top + HEADER_HEIGHT, width: box.width, height: box.height, ...orientation },
+        sheetTransform: cellAnchor,
+        axisAlignSheetTransform: cellAnchor
+    };
+}
+
+/** Converts an exceljs media entry to a base64 `data:` URL, or null for an unsupported format. */
+function mediaToDataUrl(media: { extension?: string; buffer?: Uint8Array | ArrayBuffer } | undefined): string | null {
+    const mime = imageMime(media?.extension);
+    if (!mime || !media?.buffer) return null;
+    const bytes = media.buffer instanceof Uint8Array ? media.buffer : new Uint8Array(media.buffer);
+    return `data:${mime};base64,${bytesToBase64(bytes)}`;
+}
+
+function imageMime(extension: string | undefined): string | null {
+    switch ((extension ?? "").toLowerCase()) {
+        case "png": return "image/png";
+        case "jpeg":
+        case "jpg": return "image/jpeg";
+        case "gif": return "image/gif";
+        default: return null;
+    }
+}
+
+/**
+ * Inverts an exceljs image range into Univer's content-space box: the `from`/`to` cell anchors plus
+ * the absolute `left`/`top`/`width`/`height`. The top-left comes from `tl`; the bottom-right from
+ * `br` (two-cell anchor) or `tl + ext` (one-cell anchor).
+ */
+function anchorToBox(sheet: IWorksheetData, range: ExcelJS.ImageRange): { from: CellAnchor; to: CellAnchor; left: number; top: number; width: number; height: number } | null {
+    const tl = range?.tl as { col: number; row: number } | undefined;
+    if (!tl) return null;
+
+    const left = colPointPx(sheet, tl.col);
+    const top = rowPointPx(sheet, tl.row);
+
+    const br = range.br as { col: number; row: number } | undefined;
+    const ext = (range as { ext?: { width: number; height: number } }).ext;
+
+    let to: CellAnchor;
+    let right: number;
+    let bottom: number;
+    if (br) {
+        to = pointToAnchor(sheet, br.col, br.row);
+        right = colPointPx(sheet, br.col);
+        bottom = rowPointPx(sheet, br.row);
+    } else if (ext) {
+        right = left + ext.width;
+        bottom = top + ext.height;
+        to = pxToAnchor(sheet, right, bottom);
+    } else {
+        return null;
+    }
+
+    return { from: pointToAnchor(sheet, tl.col, tl.row), to, left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) };
+}
+
+/** A fractional `{col, row}` point → Univer cell anchor (index + px offset into that cell). */
+function pointToAnchor(sheet: IWorksheetData, col: number, row: number): CellAnchor {
+    const column = Math.floor(col);
+    const rowIndex = Math.floor(row);
+    return {
+        row: rowIndex,
+        rowOffset: (row - rowIndex) * rowHeightPx(sheet, rowIndex),
+        column,
+        columnOffset: (col - column) * columnWidthPx(sheet, column)
+    };
+}
+
+/** An absolute px point → Univer cell anchor, walking the per-track sizes to find the cell. */
+function pxToAnchor(sheet: IWorksheetData, x: number, y: number): CellAnchor {
+    const [column, columnOffset] = trackAtPx(x, (c) => columnWidthPx(sheet, c));
+    const [row, rowOffset] = trackAtPx(y, (r) => rowHeightPx(sheet, r));
+    return { row, rowOffset, column, columnOffset };
+}
+
+function trackAtPx(target: number, sizeOf: (index: number) => number): [number, number] {
+    if (target <= 0) return [0, 0];
+    let cumulative = 0;
+    for (let index = 0; index < 100_000; index++) {
+        const size = sizeOf(index);
+        if (size <= 0) continue;
+        if (cumulative + size > target) return [index, target - cumulative];
+        cumulative += size;
+    }
+    return [0, 0];
+}
+
+/** Absolute x of a fractional column point (content space, no header gutter). */
+function colPointPx(sheet: IWorksheetData, col: number): number {
+    const column = Math.floor(col);
+    let sum = 0;
+    for (let c = 0; c < column; c++) sum += columnWidthPx(sheet, c);
+    return sum + (col - column) * columnWidthPx(sheet, column);
+}
+
+function rowPointPx(sheet: IWorksheetData, row: number): number {
+    const rowIndex = Math.floor(row);
+    let sum = 0;
+    for (let r = 0; r < rowIndex; r++) sum += rowHeightPx(sheet, r);
+    return sum + (row - rowIndex) * rowHeightPx(sheet, rowIndex);
+}
+
+function columnWidthPx(sheet: IWorksheetData, col: number): number {
+    const w = sheet.columnData?.[col]?.w;
+    return isFiniteNumber(w) ? w : (sheet.defaultColumnWidth ?? 88);
+}
+
+function rowHeightPx(sheet: IWorksheetData, row: number): number {
+    const h = sheet.rowData?.[row]?.h;
+    return isFiniteNumber(h) ? h : (sheet.defaultRowHeight ?? 24);
+}
+
+/** Base64-encodes raw bytes in both Node (server import) and the browser. */
+function bytesToBase64(bytes: Uint8Array): string {
+    if (typeof Buffer !== "undefined") {
+        return Buffer.from(bytes).toString("base64");
+    }
+    let binary = "";
+    const CHUNK = 0x8000;
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(binary);
+}
+
+// #endregion
 
 function readCells(ws: ExcelJS.Worksheet): Record<number, Record<number, ICellData>> {
     const cellData: Record<number, Record<number, ICellData>> = {};

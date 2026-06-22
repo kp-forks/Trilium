@@ -467,6 +467,87 @@ describe("parseXlsxToWorkbook", () => {
     });
 });
 
+describe("parseXlsxToWorkbook images", () => {
+    // 1x1 transparent PNG.
+    const PNG = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
+    async function parseBuilt(build: (wb: ExcelJS.Workbook) => void): Promise<Awaited<ReturnType<typeof parseXlsxToWorkbook>>["workbook"]> {
+        const wb = new ExcelJS.Workbook();
+        build(wb);
+        const buffer = await wb.xlsx.writeBuffer();
+        return (await parseXlsxToWorkbook(buffer as ArrayBuffer)).workbook;
+    }
+
+    // Reads the SHEET_DRAWING_PLUGIN resource for a sheet back into a typed shape.
+    function drawingsOf(workbook: { sheetOrder: string[]; resources?: { name: string; data: string }[] }, sheetIndex = 0) {
+        const resource = workbook.resources?.find((r) => r.name === "SHEET_DRAWING_PLUGIN");
+        if (!resource) return null;
+        const parsed = JSON.parse(resource.data) as Record<string, { data: Record<string, any>; order: string[] }>;
+        return parsed[workbook.sheetOrder[sheetIndex]] ?? null;
+    }
+
+    it("imports a two-cell floating image as a base64 drawing with from/to anchors", async () => {
+        const workbook = await parseBuilt((wb) => {
+            const ws = wb.addWorksheet("S");
+            ws.getCell("A1").value = "x";
+            const id = wb.addImage({ base64: PNG, extension: "png" });
+            ws.addImage(id, { tl: { col: 1, row: 2 }, br: { col: 3, row: 5 }, editAs: "twoCell" } as unknown as ExcelJS.ImageRange);
+        });
+
+        const drawings = drawingsOf(workbook);
+        expect(drawings?.order.length).toBe(1);
+        const drawing = drawings?.data[drawings.order[0]];
+        expect(drawing.imageSourceType).toBe("BASE64");
+        expect(drawing.source).toMatch(/^data:image\/png;base64,/);
+        expect(drawing.sheetTransform.from).toMatchObject({ column: 1, row: 2, columnOffset: 0, rowOffset: 0 });
+        expect(drawing.sheetTransform.to).toMatchObject({ column: 3, row: 5 });
+        expect(drawing.transform.width).toBeGreaterThan(0);
+        expect(drawing.transform.height).toBeGreaterThan(0);
+    });
+
+    it("imports a one-cell (ext) image using the extent for the drawing size", async () => {
+        const workbook = await parseBuilt((wb) => {
+            const ws = wb.addWorksheet("S");
+            const id = wb.addImage({ base64: PNG, extension: "png" });
+            ws.addImage(id, { tl: { col: 0, row: 0 }, ext: { width: 120, height: 90 } });
+        });
+
+        const drawing = drawingsOf(workbook)?.data[drawingsOf(workbook)!.order[0]];
+        expect(drawing.transform.width).toBe(120);
+        expect(drawing.transform.height).toBe(90);
+        expect(drawing.sheetTransform.from).toMatchObject({ column: 0, row: 0 });
+    });
+
+    it("preserves multiple images in order", async () => {
+        const workbook = await parseBuilt((wb) => {
+            const ws = wb.addWorksheet("S");
+            const a = wb.addImage({ base64: PNG, extension: "png" });
+            const b = wb.addImage({ base64: PNG, extension: "png" });
+            ws.addImage(a, { tl: { col: 0, row: 0 }, ext: { width: 10, height: 10 } });
+            ws.addImage(b, { tl: { col: 2, row: 2 }, ext: { width: 10, height: 10 } });
+        });
+        expect(drawingsOf(workbook)?.order.length).toBe(2);
+    });
+
+    it("emits no drawing resource for a sheet without images", async () => {
+        const workbook = await parseBuilt((wb) => {
+            wb.addWorksheet("S").getCell("A1").value = "x";
+        });
+        expect(workbook.resources).toBeUndefined();
+    });
+
+    it("records the default header sizes so the baked-in image offset cancels in the share view", async () => {
+        // buildDrawing adds the header gutters into transform.left/top; the share renderer subtracts
+        // them back by reading these fields, so they must be present (and match) on imported sheets.
+        const workbook = await parseBuilt((wb) => {
+            wb.addWorksheet("S").getCell("A1").value = "x";
+        });
+        const sheet = workbook.sheets[workbook.sheetOrder[0]];
+        expect(sheet.rowHeader).toEqual({ width: 46, hidden: 0 });
+        expect(sheet.columnHeader).toEqual({ height: 20, hidden: 0 });
+    });
+});
+
 describe("toArrayBuffer", () => {
     it("copies a Node Buffer view into a tightly-sized ArrayBuffer, not the whole backing", () => {
         // Buffer.prototype.slice returns a VIEW over the same backing (unlike

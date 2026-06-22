@@ -1,5 +1,6 @@
 import "./Spreadsheet.css";
 import "@univerjs/preset-sheets-core/lib/index.css";
+import "@univerjs/preset-sheets-drawing/lib/index.css";
 import "@univerjs/preset-sheets-sort/lib/index.css";
 import "@univerjs/preset-sheets-conditional-formatting/lib/index.css";
 import "@univerjs/preset-sheets-find-replace/lib/index.css";
@@ -8,11 +9,12 @@ import "@univerjs/preset-sheets-filter/lib/index.css";
 import "@univerjs/preset-sheets-hyper-link/lib/index.css";
 import "@univerjs/preset-sheets-data-validation/lib/index.css";
 
-import { DEFAULT_STYLES } from '@univerjs/core';
-import { UniverSheetsConditionalFormattingPreset } from '@univerjs/preset-sheets-conditional-formatting';
-import { UniverSheetsCorePreset } from '@univerjs/preset-sheets-core';
-import { UniverSheetsDataValidationPreset } from '@univerjs/preset-sheets-data-validation';
-import { UniverSheetsFilterPreset } from '@univerjs/preset-sheets-filter';
+import { DEFAULT_STYLES, type Plugin, type PluginCtor } from '@univerjs/core';
+import { UniverSheetsConditionalFormattingMobileUIPlugin, UniverSheetsConditionalFormattingPreset, UniverSheetsConditionalFormattingUIPlugin } from '@univerjs/preset-sheets-conditional-formatting';
+import { UniverMobileUIPlugin, UniverSheetsCorePreset, UniverSheetsMobileUIPlugin, UniverSheetsUIPlugin, UniverUIPlugin } from '@univerjs/preset-sheets-core';
+import { UniverSheetsDataValidationMobileUIPlugin, UniverSheetsDataValidationPreset, UniverSheetsDataValidationUIPlugin } from '@univerjs/preset-sheets-data-validation';
+import { UniverSheetsDrawingPreset } from '@univerjs/preset-sheets-drawing';
+import { UniverSheetsFilterMobileUIPlugin, UniverSheetsFilterPreset, UniverSheetsFilterUIPlugin } from '@univerjs/preset-sheets-filter';
 import { UniverSheetsFindReplacePreset } from '@univerjs/preset-sheets-find-replace';
 import { UniverSheetsHyperLinkPreset } from '@univerjs/preset-sheets-hyper-link';
 import { UniverSheetsNotePreset } from '@univerjs/preset-sheets-note';
@@ -24,6 +26,7 @@ import { MutableRef, useEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context";
 import { t } from "../../../services/i18n";
+import { isMobile } from "../../../services/utils";
 import { useColorScheme, useEffectiveReadOnly, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
 import useSpreadsheetExport from "./export";
@@ -212,17 +215,7 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
             DEFAULT_STYLES.ff = ff;
         }
 
-        const { univerAPI } = createUniver({
-            // Inherit the spreadsheet language (and locale-dependent defaults such as the currency
-            // symbol) from Trilium's UI language instead of hardcoding US English.
-            locale: locale.type,
-            locales: {
-                [locale.type]: mergeLocales(
-                    locale.data,
-                    readOnly ? buildReadOnlyLocaleOverrides() : {},
-                ),
-            },
-            presets: [
+        const presets = [
                 UniverSheetsCorePreset({
                     container: containerRef.current,
                     toolbar: !readOnly,
@@ -243,6 +236,11 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                         "sheet.command.set-range-font-family": { hidden: true },
                     },
                 }),
+                // Floating images stored inline as base64 in the workbook's SHEET_DRAWING_PLUGIN
+                // resource (Univer's default ImageIoService), so they persist through the normal
+                // content save path. The insert-image toolbar button is hidden in read-only mode
+                // (toolbar is disabled above); the preset stays registered so existing images render.
+                UniverSheetsDrawingPreset(),
                 UniverSheetsFindReplacePreset(),
                 UniverSheetsNotePreset(),
                 UniverSheetsFilterPreset(),
@@ -250,7 +248,22 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
                 UniverSheetsDataValidationPreset(),
                 UniverSheetsConditionalFormattingPreset(),
                 UniverSheetsHyperLinkPreset()
-            ]
+            ];
+
+        const { univerAPI } = createUniver({
+            // Inherit the spreadsheet language (and locale-dependent defaults such as the currency
+            // symbol) from Trilium's UI language instead of hardcoding US English.
+            locale: locale.type,
+            locales: {
+                [locale.type]: mergeLocales(
+                    locale.data,
+                    readOnly ? buildReadOnlyLocaleOverrides() : {},
+                ),
+            },
+            // Univer ships no "mobile preset" — the presets above register the desktop UI shells.
+            // On Trilium's mobile layout, swap those shells for their touch-optimised variants
+            // (see toMobilePresets); the remaining feature plugins are platform-agnostic.
+            presets: isMobile() ? toMobilePresets(presets) : presets,
         });
         if (readOnly) {
             univerAPI.addEvent(univerAPI.Event.LifeCycleChanged, ({ stage }) => {
@@ -267,6 +280,38 @@ function useInitializeSpreadsheet(containerRef: MutableRef<HTMLDivElement | null
         apiRef.current = univerAPI;
         return () => univerAPI.dispose();
     }, [ apiRef, containerRef, readOnly, locale ]);
+}
+
+type PluginEntry = PluginCtor<Plugin> | [PluginCtor<Plugin>, ConstructorParameters<PluginCtor<Plugin>>[0]];
+interface UniverPreset { plugins: PluginEntry[]; }
+
+// Desktop UI shell plugins (registered by the presets) mapped to their touch-optimised
+// counterparts. Only these five Univer plugins ship a mobile variant; every other plugin
+// the presets register is platform-agnostic and is left untouched.
+const DESKTOP_TO_MOBILE_UI = new Map<PluginCtor<Plugin>, PluginCtor<Plugin>>([
+    [UniverUIPlugin, UniverMobileUIPlugin],
+    [UniverSheetsUIPlugin, UniverSheetsMobileUIPlugin],
+    [UniverSheetsConditionalFormattingUIPlugin, UniverSheetsConditionalFormattingMobileUIPlugin],
+    [UniverSheetsDataValidationUIPlugin, UniverSheetsDataValidationMobileUIPlugin],
+    [UniverSheetsFilterUIPlugin, UniverSheetsFilterMobileUIPlugin],
+]);
+
+/**
+ * Rewrite a list of Univer presets so their desktop UI shells are replaced by the mobile
+ * equivalents, preserving each plugin's configuration. A preset is just a `{ plugins }` data
+ * object whose entries are either a plugin constructor or a `[constructor, options]` tuple, so
+ * we can swap the constructor in place without re-running the preset factories.
+ */
+function toMobilePresets(presets: UniverPreset[]): UniverPreset[] {
+    return presets.map((preset) => ({
+        ...preset,
+        plugins: preset.plugins.map((entry) => {
+            const [ctor, options] = Array.isArray(entry) ? entry : [entry, undefined];
+            const mobileCtor = DESKTOP_TO_MOBILE_UI.get(ctor);
+            if (!mobileCtor) return entry;
+            return options === undefined ? mobileCtor : [mobileCtor, options];
+        }),
+    }));
 }
 
 function useDarkMode(apiRef: MutableRef<FUniver | undefined>) {

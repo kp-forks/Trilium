@@ -266,6 +266,9 @@ importers:
       '@univerjs/preset-sheets-data-validation':
         specifier: 0.24.0
         version: 0.24.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rxjs@7.8.2)
+      '@univerjs/preset-sheets-drawing':
+        specifier: 0.24.0
+        version: 0.24.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rxjs@7.8.2)
       '@univerjs/preset-sheets-filter':
         specifier: 0.24.0
         version: 0.24.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rxjs@7.8.2)
