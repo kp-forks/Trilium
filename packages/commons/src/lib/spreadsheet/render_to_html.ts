@@ -27,7 +27,8 @@ import {
     type IWorksheetData,
     parseWorkbookData,
     resolveCellStyle,
-    VerticalAlign
+    VerticalAlign,
+    WrapStrategy
 } from "./workbook_model.js";
 
 /**
@@ -190,17 +191,22 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
     // Build a set of cells that are hidden by merges (non-origin cells).
     const mergeMap = buildMergeMap(mergeData, minRow, maxRow, minCol, maxCol);
 
-    const lines: string[] = [];
-    lines.push(buildTableTag(sheet));
-
-    // Colgroup for column widths.
+    // Visible column widths, reused for the colgroup and the table's fixed total width.
     const defaultWidth = sheet.defaultColumnWidth ?? 88;
-    lines.push("<colgroup>");
+    const colWidths: number[] = [];
     for (let col = minCol; col <= maxCol; col++) {
         const colMeta = columnData[col];
         if (colMeta?.hd) continue;
-        const width = isFiniteNumber(colMeta?.w) ? colMeta.w : defaultWidth;
-        lines.push(`<col style="width:${width}px">`);
+        colWidths.push(isFiniteNumber(colMeta?.w) ? colMeta.w : defaultWidth);
+    }
+    const totalWidth = colWidths.reduce((sum, w) => sum + w, 0);
+
+    const lines: string[] = [];
+    lines.push(buildTableTag(sheet, totalWidth));
+
+    lines.push("<colgroup>");
+    for (const width of colWidths) {
+        lines.push(`<col style="width:${px(width)}px">`);
     }
     lines.push("</colgroup>");
 
@@ -251,18 +257,21 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
  * stylesheet can draw a light border on every cell; explicit per-cell borders from the
  * data are emitted inline and override those on the sides they define.
  */
-function buildTableTag(sheet: IWorksheetData): string {
+function buildTableTag(sheet: IWorksheetData, totalWidth: number): string {
     // Default to shown (matching the editor) unless explicitly disabled.
     const showGridlines = sheet.showGridlines !== 0;
-    if (!showGridlines) {
-        return '<table class="spreadsheet-table">';
-    }
+    const className = showGridlines ? "spreadsheet-table show-gridlines" : "spreadsheet-table";
 
-    let style = "";
-    if (sheet.gridlinesColor) {
-        style = ` style="--spreadsheet-gridline-color:${sanitizeCssColor(sheet.gridlinesColor)}"`;
+    const styles: string[] = [];
+    if (showGridlines && sheet.gridlinesColor) {
+        styles.push(`--spreadsheet-gridline-color:${sanitizeCssColor(sheet.gridlinesColor)}`);
     }
-    return `<table class="spreadsheet-table show-gridlines"${style}>`;
+    // An explicit width is required for `table-layout: fixed` (the stylesheet) to honour the
+    // column widths, so cell text overflows into empty neighbours like a spreadsheet instead of
+    // wrapping and growing rows — which would shift the absolutely-positioned floating images.
+    styles.push(`width:${px(totalWidth)}px`);
+
+    return `<table class="${className}" style="${styles.join(";")}">`;
 }
 
 // #region Merge handling
@@ -341,6 +350,13 @@ function buildCssText(style: IStyleData | null, cell?: ICellData): string {
     if (style.vt != null) {
         const valign = verticalAlignToCss(style.vt);
         if (valign) parts.push(`vertical-align:${valign}`);
+    }
+
+    // Cells default to nowrap (overflow into empty neighbours, like the editor); a cell with the
+    // WRAP strategy opts back into normal wrapping so its text breaks within the column width.
+    if (style.tb === WrapStrategy.WRAP) {
+        parts.push("white-space:normal");
+        parts.push("overflow-wrap:break-word");
     }
 
     if (style.bd) {

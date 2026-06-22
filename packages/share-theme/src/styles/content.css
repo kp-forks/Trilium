@@ -108,10 +108,19 @@ body.type-webView {
     border-collapse: collapse;
     width: auto;
     margin-top: 1em;
+    /* Honour the per-column widths emitted in the colgroup (and the explicit table width) so the
+       grid keeps the editor's geometry. Without this, a cell wider than its column would stretch
+       the column and break the alignment of the absolutely-positioned floating images. */
+    table-layout: fixed;
 }
 
 .spreadsheet-table td {
     padding: 2px 4px;
+    /* Match the spreadsheet: long text overflows into empty neighbouring cells rather than
+       wrapping, which keeps every row at its declared height. Wrapping would grow rows and push
+       the floating images (positioned in absolute px) out of alignment with the grid. */
+    white-space: nowrap;
+    overflow: visible;
 }
 
 /* When the source sheet has gridlines enabled, draw a light 1px line on every cell edge.

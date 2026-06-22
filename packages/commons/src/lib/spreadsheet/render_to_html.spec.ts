@@ -625,6 +625,47 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("<td>x</td>");
     });
 
+    it("wraps a cell whose style enables the wrap strategy", () => {
+        // Univer WrapStrategy.WRAP === 3. Cells default to nowrap (overflow) via the stylesheet;
+        // a wrapping cell must opt back into normal wrapping inline.
+        const html = renderSpreadsheetToHtml(
+            singleCellWorkbook({ v: "This is a cell with line-wrapping", t: 1, s: { tb: 3 } })
+        );
+        expect(html).toContain("white-space:normal");
+        expect(html).toContain("overflow-wrap:break-word");
+    });
+
+    it("wraps a cell via a referenced style that enables wrapping", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: { wrapStyle: { tb: 3 } },
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        mergeData: [],
+                        cellData: { "0": { "0": { v: "wrapped", s: "wrapStyle" } } },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+        const html = renderSpreadsheetToHtml(input);
+        expect(html).toContain("white-space:normal");
+    });
+
+    it("does not emit wrap styling for a non-wrapping (overflow) cell", () => {
+        // WrapStrategy.OVERFLOW === 1 -> the cell keeps the default nowrap/overflow behaviour.
+        const html = renderSpreadsheetToHtml(singleCellWorkbook({ v: "plain", s: { tb: 1 } }));
+        expect(html).not.toContain("white-space:normal");
+    });
+
     it("renders all vertical alignment values", () => {
         const top = renderSpreadsheetToHtml(singleCellWorkbook({ v: "t", s: { vt: 1 } }));
         const middle = renderSpreadsheetToHtml(singleCellWorkbook({ v: "m", s: { vt: 2 } }));
@@ -1095,7 +1136,34 @@ describe("renderSpreadsheetToHtml", () => {
         const html = renderSpreadsheetToHtml(
             singleCellWorkbook({ v: "x" }, { showGridlines: 1 })
         );
-        expect(html).toContain('<table class="spreadsheet-table show-gridlines">');
+        expect(html).toContain('<table class="spreadsheet-table show-gridlines" style="width:88px">');
+    });
+
+    it("emits an explicit fixed table width summing the visible column widths", () => {
+        const input = JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {},
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 10,
+                        columnCount: 5,
+                        defaultColumnWidth: 88,
+                        mergeData: [],
+                        cellData: { "0": { "0": { v: "a" }, "1": { v: "b" } } },
+                        rowData: {},
+                        columnData: { "0": { w: 120 } }
+                    }
+                }
+            }
+        });
+        const html = renderSpreadsheetToHtml(input);
+        // Column 0 is 120, column 1 falls back to the default 88 -> 208.
+        expect(html).toContain('style="width:208px"');
     });
 
     it("marks a filled cell with has-fill so gridlines can be suppressed under the fill", () => {
@@ -1147,7 +1215,7 @@ describe("renderSpreadsheetToHtml", () => {
         const html = renderSpreadsheetToHtml(
             singleCellWorkbook({ v: "x" }, { showGridlines: 0 })
         );
-        expect(html).toContain('<table class="spreadsheet-table">');
+        expect(html).toContain('<table class="spreadsheet-table" style="width:88px">');
         expect(html).not.toContain("show-gridlines");
     });
 
