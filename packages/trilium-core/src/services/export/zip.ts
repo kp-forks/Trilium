@@ -66,17 +66,6 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             fileName = "note";
         }
 
-        // Crop fileName to avoid its length exceeding 30 and prevent cutting into the extension.
-        if (fileName.length > 30) {
-            // We use regex to match the extension to preserve multiple dots in extensions (e.g. .tar.gz).
-            const match = fileName.match(/(\.[a-zA-Z0-9_.!#-]+)$/);
-            const ext = match ? match[0] : "";
-            // Crop the extension if extension length exceeds 30
-            const croppedExt = ext.slice(-30);
-            // Crop the file name section and append the cropped extension
-            fileName = fileName.slice(0, 30 - croppedExt.length) + croppedExt;
-        }
-
         const existingExtension = extname(fileName).toLowerCase();
         const newExtension = provider.mapExtension(type, mime, existingExtension, format);
 
@@ -85,6 +74,11 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             fileName += `.${newExtension}`;
         }
 
+        // sanitize() strips illegal filename characters and truncates to the 255-byte
+        // filesystem limit (byte-aware, via truncate-utf8-bytes). This keeps long
+        // titles and attachment names intact instead of hard-capping them at 30
+        // characters, while still guarding against over-long / unsafe names.
+        fileName = sanitize(fileName);
 
         return getUniqueFilename(existingFileNames, fileName);
     }
