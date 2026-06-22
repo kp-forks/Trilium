@@ -332,7 +332,9 @@ export async function uploadNewDrawingImages(
             targets.push({ node, source });
         }
     });
-    if (!walked || targets.length === 0) return;
+    // `walked` may be null when there are only cell-embedded images (no drawing resource); those are
+    // mutated in place and need no re-serialization, so only `targets` gates whether there's work.
+    if (targets.length === 0) return;
 
     let mutated = false;
     for (const { node, source } of targets) {
@@ -348,7 +350,9 @@ export async function uploadNewDrawingImages(
         mutated = true;
     }
 
-    if (mutated) {
+    // Re-serialize the drawing resource if it carried any mutated node. Cell-embedded images live in
+    // the workbook object and are already mutated in place, so they need no re-serialization.
+    if (mutated && walked) {
         walked.resource.data = JSON.stringify(walked.drawingData);
     }
 }
@@ -366,25 +370,22 @@ interface DrawingResource {
 }
 
 /**
- * Walks the drawing resource of a saved workbook, invoking `callback` for every base64 image node
- * (an object with `imageSourceType === "BASE64"` and a `data:` `source`). The callback may mutate
- * the node in place. Returns the parsed drawing data and its resource so callers can re-serialize
- * after mutating, or `null` when there is no drawing resource / it fails to parse.
+ * Walks every base64 image node of a saved workbook, invoking `callback` for each (an object with
+ * `imageSourceType === "BASE64"` and a `data:` `source`). The callback may mutate the node in place.
+ *
+ * Two locations carry images:
+ * - **Floating images** are serialized in the `SHEET_DRAWING_PLUGIN` resource (a JSON string); the
+ *   returned `{ resource, drawingData }` lets callers re-serialize after mutating.
+ * - **Cell-embedded images** live directly in the workbook object under
+ *   `sheets[*].cellData[row][col].p.drawings`; mutating those nodes in place is enough — they need
+ *   no re-serialization, which is why this returns `null` when only cell images are present.
+ *
+ * Returns `null` when there is no (parsable) drawing resource, regardless of cell images.
  */
 function forEachBase64DrawingImage(
     workbookData: Partial<IWorkbookData>,
     callback: (node: Record<string, unknown>, source: string) => void
 ): DrawingResource | null {
-    const resource = workbookData.resources?.find((r) => r.name === DRAWING_RESOURCE_NAME);
-    if (!resource?.data) return null;
-
-    let drawingData: unknown;
-    try {
-        drawingData = JSON.parse(resource.data);
-    } catch {
-        return null;
-    }
-
     const visit = (value: unknown) => {
         if (Array.isArray(value)) {
             value.forEach(visit);
@@ -401,6 +402,28 @@ function forEachBase64DrawingImage(
             visit(node[key]);
         }
     };
+
+    // Cell-embedded images: sheets[*].cellData[row][col].p.drawings (live objects, mutated in place).
+    for (const sheet of Object.values(workbookData.sheets ?? {})) {
+        for (const row of Object.values(sheet?.cellData ?? {})) {
+            if (!row || typeof row !== "object") continue;
+            for (const cell of Object.values(row)) {
+                const drawings = (cell as { p?: { drawings?: unknown } } | undefined)?.p?.drawings;
+                if (drawings) visit(drawings);
+            }
+        }
+    }
+
+    // Floating images: serialized in the SHEET_DRAWING_PLUGIN resource.
+    const resource = workbookData.resources?.find((r) => r.name === DRAWING_RESOURCE_NAME);
+    if (!resource?.data) return null;
+
+    let drawingData: unknown;
+    try {
+        drawingData = JSON.parse(resource.data);
+    } catch {
+        return null;
+    }
     visit(drawingData);
 
     return { resource, drawingData };

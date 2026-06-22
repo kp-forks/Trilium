@@ -19,6 +19,27 @@ function readDrawing(workbook: IWorkbookData) {
     return JSON.parse(workbook.resources?.[0]?.data ?? "{}")["sheet-1"].data;
 }
 
+/**
+ * Builds a workbook holding the given drawing nodes inside a single cell's rich-text document
+ * (`sheets["sheet-1"].cellData[2][1].p.drawings`), as Univer stores cell-embedded (in-cell) images.
+ */
+function cellDrawingWorkbook(drawings: Record<string, { imageSourceType: string; source: string }>) {
+    return makeWorkbook({
+        sheets: {
+            "sheet-1": {
+                cellData: {
+                    2: { 1: { p: { drawings } } }
+                }
+            }
+        } as unknown as IWorkbookData["sheets"]
+    });
+}
+
+function readCellDrawings(workbook: IWorkbookData) {
+    const sheet = workbook.sheets?.["sheet-1"] as { cellData?: Record<string, Record<string, { p?: { drawings?: Record<string, { imageSourceType: string; source: string }> } }>> } | undefined;
+    return sheet?.cellData?.["2"]?.["1"]?.p?.drawings ?? {};
+}
+
 describe("slimWorkbookData", () => {
     it("drops the top-level workbook id and locale (both reassigned on load)", () => {
         const result = slimWorkbookData(makeWorkbook({ id: "abc123", locale: LocaleType.ZH_CN, name: "Sheet" }));
@@ -143,6 +164,46 @@ describe("uploadNewDrawingImages", () => {
         await uploadNewDrawingImages(workbook, new Set(), new Map(), upload("api/attachments/x/image/x.png"));
         expect(workbook.resources).toBeUndefined();
     });
+
+    it("uploads a base64 image embedded in a cell and rewrites it in place", async () => {
+        const workbook = cellDrawingWorkbook({
+            d1: { imageSourceType: "BASE64", source: "data:image/png;base64,EEEE" },
+            // An already-URL cell image must be left alone.
+            d2: { imageSourceType: "URL", source: "api/attachments/existing/image/existing.png" }
+        });
+
+        const uploaded: string[] = [];
+        await uploadNewDrawingImages(workbook, new Set(), new Map(), async (source) => {
+            uploaded.push(source);
+            return "api/attachments/cell1/image/image.png";
+        });
+
+        expect(uploaded).toEqual([ "data:image/png;base64,EEEE" ]);
+        const drawings = readCellDrawings(workbook);
+        expect(drawings.d1).toEqual({ imageSourceType: "URL", source: "api/attachments/cell1/image/image.png" });
+        expect(drawings.d2.source).toBe("api/attachments/existing/image/existing.png");
+    });
+
+    it("uploads cell images even when there is no floating-image drawing resource", async () => {
+        // Cell drawings live directly in the workbook (not in a SHEET_DRAWING_PLUGIN resource), so a
+        // workbook with only cell images and no resource must still trigger uploads.
+        const workbook = cellDrawingWorkbook({ d1: { imageSourceType: "BASE64", source: "data:image/png;base64,FFFF" } });
+
+        await uploadNewDrawingImages(workbook, new Set(), new Map(), upload("api/attachments/cell2/image/image.png"));
+
+        expect(readCellDrawings(workbook).d1).toEqual({ imageSourceType: "URL", source: "api/attachments/cell2/image/image.png" });
+    });
+
+    it("leaves a preexisting cell image as base64, uploading nothing", async () => {
+        const source = "data:image/png;base64,GGGG";
+        const workbook = cellDrawingWorkbook({ d1: { imageSourceType: "BASE64", source } });
+
+        await uploadNewDrawingImages(workbook, new Set([ source ]), new Map(), async () => {
+            throw new Error("should not upload a preexisting image");
+        });
+
+        expect(readCellDrawings(workbook).d1).toEqual({ imageSourceType: "BASE64", source });
+    });
 });
 
 describe("collectBase64DrawingSources", () => {
@@ -156,5 +217,14 @@ describe("collectBase64DrawingSources", () => {
 
         expect(collectBase64DrawingSources(workbook)).toEqual(new Set([ "data:image/png;base64,DDDD" ]));
         expect(collectBase64DrawingSources(makeWorkbook({}))).toEqual(new Set());
+    });
+
+    it("includes base64 sources from cell-embedded drawings", () => {
+        const workbook = cellDrawingWorkbook({
+            x: { imageSourceType: "BASE64", source: "data:image/png;base64,HHHH" },
+            y: { imageSourceType: "URL", source: "api/attachments/z/image/z.png" }
+        });
+
+        expect(collectBase64DrawingSources(workbook)).toEqual(new Set([ "data:image/png;base64,HHHH" ]));
     });
 });
