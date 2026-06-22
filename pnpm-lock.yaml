@@ -1584,21 +1584,12 @@ importers:
       '@triliumnext/ckeditor5':
         specifier: workspace:*
         version: link:../ckeditor5
-      '@typescript-eslint/eslint-plugin':
-        specifier: 8.61.1
-        version: 8.61.1(@typescript-eslint/parser@8.61.1(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3))(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3)
-      '@typescript-eslint/parser':
-        specifier: 8.61.1
-        version: 8.61.1(eslint@10.5.0(jiti@2.7.0))(typescript@6.0.3)
       dotenv:
         specifier: 17.4.2
         version: 17.4.2
       esbuild:
         specifier: 0.28.1
         version: 0.28.1
-      eslint:
-        specifier: 10.5.0
-        version: 10.5.0(jiti@2.7.0)
       highlight.js:
         specifier: 11.11.1
         version: 11.11.1
