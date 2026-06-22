@@ -423,29 +423,44 @@ function protectNote(note: BNote, protect: boolean) {
  */
 const SPREADSHEET_PREVIEW_ATTACHMENT_TITLE = "spreadsheet-export.png";
 
+/**
+ * Title of the canvas SVG export image. Like the spreadsheet thumbnail, it is the note's rendered
+ * preview (looked up by title, not referenced from the scene JSON), so it must be exempt from the
+ * orphan-erasure scheduling below.
+ */
+const CANVAS_EXPORT_ATTACHMENT_TITLE = "canvas-export.svg";
+
 export function checkImageAttachments(note: BNote, content: string) {
+    // Canvas references images by the Excalidraw fileId stored as the attachment *title* in its
+    // scene JSON, so orphans are detected by title; every other type references them by attachmentId
+    // embedded in the content (an image URL or attachment link).
+    const isCanvas = note.type === "canvas";
     const foundAttachmentIds = new Set<string>();
-    let match;
+    const foundCanvasFileIds = isCanvas ? collectCanvasImageFileIds(content) : new Set<string>();
 
-    // Spreadsheet content is JSON storing inline images as bare `api/attachments/{id}/image/...`
-    // URLs (no `src="..."` wrapper), so it scans with the same loose pattern as Markdown.
-    const patterns = (note.isMarkdown() || note.type === "spreadsheet")
-        ? [
-            // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
-            /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
-            // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
-            /attachmentId=([a-zA-Z0-9_]+)/g
-        ]
-        : [
-            // <img src="api/attachments/{id}/image/...">
-            /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
-            // <a href="...attachmentId={id}">
-            /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g
-        ];
+    if (!isCanvas) {
+        let match;
 
-    for (const pattern of patterns) {
-        while ((match = pattern.exec(content))) {
-        foundAttachmentIds.add(match[1]);
+        // Spreadsheet content is JSON storing inline images as bare `api/attachments/{id}/image/...`
+        // URLs (no `src="..."` wrapper), so it scans with the same loose pattern as Markdown.
+        const patterns = (note.isMarkdown() || note.type === "spreadsheet")
+            ? [
+                // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
+                /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+                // [...](#root/{noteId}?viewMode=attachments&attachmentId={id})
+                /attachmentId=([a-zA-Z0-9_]+)/g
+            ]
+            : [
+                // <img src="api/attachments/{id}/image/...">
+                /src="[^"]*api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
+                // <a href="...attachmentId={id}">
+                /href="[^"]+attachmentId=([a-zA-Z0-9_]+)/g
+            ];
+
+        for (const pattern of patterns) {
+            while ((match = pattern.exec(content))) {
+            foundAttachmentIds.add(match[1]);
+            }
         }
     }
 
@@ -465,7 +480,14 @@ export function checkImageAttachments(note: BNote, content: string) {
             continue;
         }
 
-        const attachmentInContent = attachment.attachmentId && foundAttachmentIds.has(attachment.attachmentId);
+        // Likewise for the canvas SVG export preview.
+        if (isCanvas && attachment.title === CANVAS_EXPORT_ATTACHMENT_TITLE) {
+            continue;
+        }
+
+        const attachmentInContent = isCanvas
+            ? foundCanvasFileIds.has(attachment.title)
+            : !!attachment.attachmentId && foundAttachmentIds.has(attachment.attachmentId);
 
         if (attachment.utcDateScheduledForErasureSince && attachmentInContent) {
             attachment.utcDateScheduledForErasureSince = null;
@@ -474,6 +496,12 @@ export function checkImageAttachments(note: BNote, content: string) {
             attachment.utcDateScheduledForErasureSince = date_utils.utcNowDateTime();
             attachment.save();
         }
+    }
+
+    // Canvas references images by title, not by attachmentId, so the foreign-attachment copy step
+    // (which keys off attachmentIds found in the content) does not apply.
+    if (isCanvas) {
+        return { forceFrontendReload: false, content };
     }
 
     const existingAttachmentIds = new Set<string | undefined>(attachments.map((att) => att.attachmentId));
@@ -517,6 +545,29 @@ export function checkImageAttachments(note: BNote, content: string) {
         forceFrontendReload: unknownAttachments.length > 0,
         content
     };
+}
+
+/**
+ * Collects the Excalidraw `fileId`s referenced by a canvas note's scene JSON. Canvas images are
+ * stored as attachments titled with these fileIds, so the set identifies which image attachments are
+ * still in use (the persisted scene contains only non-deleted elements). Returns an empty set for
+ * malformed content rather than throwing, so a save is never blocked.
+ */
+export function collectCanvasImageFileIds(content: string): Set<string> {
+    const fileIds = new Set<string>();
+
+    try {
+        const parsed = JSON.parse(content) as { elements?: { fileId?: string }[] };
+        for (const element of parsed.elements ?? []) {
+            if (element.fileId) {
+                fileIds.add(element.fileId);
+            }
+        }
+    } catch {
+        // Malformed content (e.g. note type just changed) — treat as referencing nothing.
+    }
+
+    return fileIds;
 }
 
 function findImageLinks(content: string, foundLinks: FoundLink[]) {
@@ -907,7 +958,7 @@ function saveAttachments(note: BNote, content: string) {
 
 
 export function saveLinks(note: BNote, content: string | Uint8Array) {
-    if ((note.type !== "text" && note.type !== "relationMap" && note.type !== "llmChat" && note.type !== "spreadsheet" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
+    if ((note.type !== "text" && note.type !== "relationMap" && note.type !== "llmChat" && note.type !== "spreadsheet" && note.type !== "canvas" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,
             content
@@ -935,6 +986,11 @@ export function saveLinks(note: BNote, content: string | Uint8Array) {
         // Spreadsheet images are stored as attachments referenced from the workbook JSON; scan for
         // orphans (inserted-then-removed images) so they get scheduled for erasure. There are no
         // Trilium internal links to extract from spreadsheet content.
+        ({ forceFrontendReload, content } = checkImageAttachments(note, content));
+    } else if (note.type === "canvas" && typeof content === "string") {
+        // Canvas images are stored as attachments titled with the Excalidraw fileId referenced from
+        // the scene JSON; scan for orphans (inserted-then-removed images) so they get scheduled for
+        // erasure. There are no Trilium internal links to extract from canvas content.
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);

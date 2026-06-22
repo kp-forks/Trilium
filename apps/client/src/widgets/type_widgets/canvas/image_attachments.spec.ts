@@ -2,7 +2,7 @@ import { BinaryFileData } from "@excalidraw/excalidraw/types";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type FNote from "../../../entities/fnote";
-import { buildNewImageAttachments, findOrphanImageAttachments, loadImageAttachments } from "./image_attachments";
+import { buildNewImageAttachments, loadImageAttachments } from "./image_attachments";
 
 function file(dataURL: string, mimeType = "image/png"): BinaryFileData {
     return { id: "x", dataURL, mimeType, created: 0 } as BinaryFileData;
@@ -52,32 +52,6 @@ describe("buildNewImageAttachments", () => {
         expect(attachments).toEqual([
             { role: "image", title: "legacy", mime: "image/png", content: "iVBORw0KGgoAAAA=", position: 10, encoding: "base64" }
         ]);
-    });
-});
-
-describe("findOrphanImageAttachments", () => {
-    it("splits loaded attachments into removed (orphan) and still-referenced (remaining)", () => {
-        const loaded = [
-            { fileId: "a", attachmentId: "att-a" },
-            { fileId: "b", attachmentId: "att-b" },
-            { fileId: "c", attachmentId: "att-c" }
-        ];
-
-        const { orphans, remaining } = findOrphanImageAttachments(loaded, new Set([ "a", "c" ]));
-
-        expect(orphans).toEqual([ { fileId: "b", attachmentId: "att-b" } ]);
-        expect(remaining).toEqual([
-            { fileId: "a", attachmentId: "att-a" },
-            { fileId: "c", attachmentId: "att-c" }
-        ]);
-    });
-
-    it("returns no orphans when every loaded image is still on the canvas", () => {
-        const loaded = [ { fileId: "a", attachmentId: "att-a" } ];
-        const { orphans, remaining } = findOrphanImageAttachments(loaded, new Set([ "a" ]));
-
-        expect(orphans).toEqual([]);
-        expect(remaining).toEqual(loaded);
     });
 });
 

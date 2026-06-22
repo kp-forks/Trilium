@@ -26,7 +26,7 @@ export const CANVAS_EXPORT_TITLE = "canvas-export.svg";
  * data URL, since Excalidraw renders only from inline data URLs (it has no external-URL provider).
  */
 export async function loadImageAttachments(note: FNote): Promise<{ files: BinaryFileData[]; metadata: ImageAttachmentMetadata[] }> {
-    const attachments = (await note.getAttachmentsByRole(IMAGE_ROLE)).filter((attachment) => attachment.title !== CANVAS_EXPORT_TITLE);
+    const attachments = await getCanvasImageAttachments(note);
 
     const files: BinaryFileData[] = [];
     const metadata: ImageAttachmentMetadata[] = [];
@@ -83,18 +83,12 @@ export function buildNewImageAttachments(activeFiles: Record<string, BinaryFileD
 }
 
 /**
- * Partitions previously-loaded image attachments into those whose image is gone from the canvas
- * (`orphans`, to be deleted) and those still referenced (`remaining`).
+ * Returns the note's `image`-role attachments that back canvas images (i.e. excluding the SVG
+ * export), used to reload images on open. Orphan cleanup of removed images is handled server-side
+ * (saveLinks/checkImageAttachments scanning the scene JSON), not here.
  */
-export function findOrphanImageAttachments(loaded: readonly ImageAttachmentMetadata[], activeFileIds: ReadonlySet<string>) {
-    const orphans: ImageAttachmentMetadata[] = [];
-    const remaining: ImageAttachmentMetadata[] = [];
-
-    for (const entry of loaded) {
-        (activeFileIds.has(entry.fileId) ? remaining : orphans).push(entry);
-    }
-
-    return { orphans, remaining };
+async function getCanvasImageAttachments(note: FNote) {
+    return (await note.getAttachmentsByRole(IMAGE_ROLE)).filter((attachment) => attachment.title !== CANVAS_EXPORT_TITLE);
 }
 
 /** Reads a blob as a base64 `data:` URL. */

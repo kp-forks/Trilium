@@ -8,7 +8,7 @@ import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import server from "../../../services/server";
 import { SavedData, useEditorSpacedUpdate } from "../../react/hooks";
-import { buildNewImageAttachments, CANVAS_EXPORT_TITLE, findOrphanImageAttachments, IMAGE_ROLE, ImageAttachmentMetadata, loadImageAttachments } from "./image_attachments";
+import { buildNewImageAttachments, CANVAS_EXPORT_TITLE, IMAGE_ROLE, loadImageAttachments } from "./image_attachments";
 
 interface AttachmentMetadata {
     title: string;
@@ -41,11 +41,9 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
     const libraryCache = useRef<LibraryItem[]>([]);
     const attachmentMetadata = useRef<AttachmentMetadata[]>([]);
 
-    // Image attachments present at load (fileId -> attachmentId), used to delete attachments whose
-    // image was removed from the canvas this session (mirrors the library-item cleanup above).
-    const loadedImageAttachments = useRef<ImageAttachmentMetadata[]>([]);
-    // fileIds already persisted as attachments (loaded at start + uploaded this session), so each
-    // image is written once rather than re-encoded into every save.
+    // fileIds of images this session owns as attachments (loaded at start + uploaded this session).
+    // Drives both skip-reupload and orphan cleanup: an owned fileId no longer on the canvas marks
+    // its attachment for deletion (mirrors the library-item cleanup above).
     const persistedImageFileIds = useRef<Set<string>>(new Set());
 
     const appStateToCompare = useRef<Partial<ImportantAppState>>({});
@@ -60,7 +58,6 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
 
             libraryCache.current = [];
             attachmentMetadata.current = [];
-            loadedImageAttachments.current = [];
             persistedImageFileIds.current = new Set();
 
             // load saved content into excalidraw canvas
@@ -86,7 +83,6 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
                 if (files.length > 0) {
                     api.addFiles(files);
                 }
-                loadedImageAttachments.current = metadata;
                 persistedImageFileIds.current = new Set(metadata.map((m) => m.fileId));
             });
 
@@ -109,20 +105,14 @@ export default function useCanvasPersistence(note: FNote, noteContext: NoteConte
             const { content, svg, activeFiles } = await getData(api, appStateToCompare);
             const attachments: SavedData["attachments"] = [{ role: IMAGE_ROLE, title: CANVAS_EXPORT_TITLE, mime: "image/svg+xml", content: svg, position: 0 }];
 
-            // Persist newly inserted images as attachments and drop the ones whose image was removed.
-            // `content` carries only the fileId references (see getData), so the bytes live here.
-            const activeFileIds = new Set(Object.keys(activeFiles));
+            // Persist newly inserted images as attachments. `content` carries only the fileId
+            // references (see getData), so the bytes live here. Removed images are not deleted from
+            // the client: the server's saveLinks/checkImageAttachments scans the saved scene JSON and
+            // schedules now-unreferenced image attachments for erasure (same as the spreadsheet).
             for (const attachment of buildNewImageAttachments(activeFiles, persistedImageFileIds.current)) {
                 attachments.push(attachment);
                 persistedImageFileIds.current.add(attachment.title);
             }
-
-            const { orphans, remaining } = findOrphanImageAttachments(loadedImageAttachments.current, activeFileIds);
-            for (const { attachmentId, fileId } of orphans) {
-                await server.remove(`attachments/${attachmentId}`);
-                persistedImageFileIds.current.delete(fileId);
-            }
-            loadedImageAttachments.current = remaining;
 
             // libraryChanged is unset in dataSaved()
             if (libraryChanged.current) {
