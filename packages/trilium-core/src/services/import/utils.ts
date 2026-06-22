@@ -1,4 +1,4 @@
-import { demoteHeadings } from "@triliumnext/commons/src/lib/heading_demotion.js";
+import { demoteHeadings } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 
 import { unescapeHtml } from "../utils";
 
