@@ -3,7 +3,7 @@ import { MutableRef, useEffect, useRef } from "preact/hooks";
 
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
-import server from "../../../services/server";
+import { uploadImageAttachment } from "../../../services/image_upload";
 import { randomString } from "../../../services/utils";
 import { SavedData, useEditorSpacedUpdate } from "../../react/hooks";
 
@@ -202,7 +202,7 @@ export default function usePersistence(note: FNote, noteContext: NoteContext | n
                 slimmed,
                 preexistingImageSources.current,
                 uploadedImageUrls.current,
-                (source) => uploadDrawingImage(note.noteId, source)
+                (source) => uploadImageAttachment(note.noteId, source)
             );
 
             const content = {
@@ -353,37 +353,6 @@ export async function uploadNewDrawingImages(
     }
 }
 
-/**
- * Uploads a base64 image to the note as an attachment via the standard attachment-upload endpoint
- * (the server assigns the id and returns the reference URL). Resolves to the URL, or `null` on
- * failure.
- */
-async function uploadDrawingImage(noteId: string, source: string): Promise<string | null> {
-    const file = dataUrlToImageFile(source);
-    if (!file) return null;
-
-    try {
-        const response = await server.upload(`notes/${noteId}/attachments/upload`, file, undefined, "POST") as { uploaded?: boolean; url?: string };
-        return response?.uploaded && response.url ? response.url : null;
-    } catch (e) {
-        console.error("Failed to upload spreadsheet image", e);
-        return null;
-    }
-}
-
-/** Decodes a `data:<mime>;base64,<data>` URL into a {@link File} for upload. */
-function dataUrlToImageFile(dataUrl: string): File | null {
-    const parsed = parseImageDataUrl(dataUrl);
-    if (!parsed) return null;
-
-    const binary = atob(parsed.base64);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-        bytes[i] = binary.charCodeAt(i);
-    }
-    return new File([ bytes ], `image.${parsed.ext}`, { type: parsed.mime });
-}
-
 /** Collects the base64 image sources currently present in a workbook's drawing resource. */
 export function collectBase64DrawingSources(workbookData: Partial<IWorkbookData>): Set<string> {
     const sources = new Set<string>();
@@ -435,22 +404,4 @@ function forEachBase64DrawingImage(
     visit(drawingData);
 
     return { resource, drawingData };
-}
-
-interface ParsedImageDataUrl {
-    mime: string;
-    base64: string;
-    ext: string;
-}
-
-/** Splits a `data:<mime>;base64,<data>` URL into its mime, raw base64 and a file extension. */
-function parseImageDataUrl(dataUrl: string): ParsedImageDataUrl | null {
-    const match = /^data:([^;,]+);base64,(.*)$/.exec(dataUrl);
-    if (!match) return null;
-
-    const mime = match[1];
-    const base64 = match[2];
-    const subtype = mime.split("/")[1] ?? "png";
-    const ext = subtype === "svg+xml" ? "svg" : (subtype.replace(/[^a-z0-9]/gi, "") || "png");
-    return { mime, base64, ext };
 }
