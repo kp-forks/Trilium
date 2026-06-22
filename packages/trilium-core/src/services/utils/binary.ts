@@ -68,7 +68,7 @@ export function wrapStringOrBuffer(stringOrBuffer: string | Uint8Array) {
  * U+FEFF code point, so this covers both UTF-8 and UTF-16 BOMs.
  */
 export function stripBom(text: string): string {
-    return text.charCodeAt(0) === 0xfeff ? text.slice(1) : text;
+    return text.startsWith("\uFEFF") ? text.slice(1) : text;
 }
 
 /**
