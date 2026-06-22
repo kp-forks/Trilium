@@ -103,7 +103,11 @@ function readSheet(ws: ExcelJS.Worksheet, id: string): IWorksheetData {
         columnCount: Math.max(DEFAULT_COLUMN_COUNT, maxCol + 1),
         // exceljs reports a hidden sheet as state "hidden"/"veryHidden".
         hidden: ws.state && ws.state !== "visible" ? 1 : 0,
-        showGridlines: ws.views?.[0]?.showGridLines === false ? 0 : 1
+        showGridlines: ws.views?.[0]?.showGridLines === false ? 0 : 1,
+        // Record Univer's default header gutters so the share renderer's image-offset subtraction
+        // matches the offset baked into each drawing's transform (see HEADER_WIDTH/HEIGHT below).
+        rowHeader: { width: HEADER_WIDTH, hidden: 0 },
+        columnHeader: { height: HEADER_HEIGHT, hidden: 0 }
     };
 
     if (isFiniteNumber(ws.properties?.defaultColWidth)) {

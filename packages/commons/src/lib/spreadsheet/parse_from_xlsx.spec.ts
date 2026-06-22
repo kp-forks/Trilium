@@ -535,6 +535,17 @@ describe("parseXlsxToWorkbook images", () => {
         });
         expect(workbook.resources).toBeUndefined();
     });
+
+    it("records the default header sizes so the baked-in image offset cancels in the share view", async () => {
+        // buildDrawing adds the header gutters into transform.left/top; the share renderer subtracts
+        // them back by reading these fields, so they must be present (and match) on imported sheets.
+        const workbook = await parseBuilt((wb) => {
+            wb.addWorksheet("S").getCell("A1").value = "x";
+        });
+        const sheet = workbook.sheets[workbook.sheetOrder[0]];
+        expect(sheet.rowHeader).toEqual({ width: 46, hidden: 0 });
+        expect(sheet.columnHeader).toEqual({ height: 20, hidden: 0 });
+    });
 });
 
 describe("toArrayBuffer", () => {
