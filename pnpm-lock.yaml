@@ -629,9 +629,6 @@ importers:
       i18next:
         specifier: 26.3.1
         version: 26.3.1(typescript@6.0.3)
-      i18next-fs-backend:
-        specifier: 2.6.6
-        version: 2.6.6
       ipaddr.js:
         specifier: ^2.4.0
         version: 2.4.0
@@ -729,9 +726,6 @@ importers:
       csrf-csrf:
         specifier: 4.0.3
         version: 4.0.3
-      debug:
-        specifier: 4.4.3
-        version: 4.4.3
       ejs:
         specifier: 6.0.1
         version: 6.0.1
@@ -762,6 +756,9 @@ importers:
       https-proxy-agent:
         specifier: 9.1.0
         version: 9.1.0
+      i18next-fs-backend:
+        specifier: 2.6.6
+        version: 2.6.6
       image-type:
         specifier: 6.1.0
         version: 6.1.0
