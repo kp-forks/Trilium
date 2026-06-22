@@ -11987,9 +11987,23 @@
                                 {
                                     "type": "relation",
                                     "name": "internalLink",
-                                    "value": "R9pX4DGra2Vt",
+                                    "value": "0vhv7lsOLy82",
                                     "isInheritable": false,
                                     "position": 90
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "mT0HEkOsz6i1",
+                                    "isInheritable": false,
+                                    "position": 100
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "R9pX4DGra2Vt",
+                                    "isInheritable": false,
+                                    "position": 110
                                 },
                                 {
                                     "type": "label",
@@ -11997,20 +12011,6 @@
                                     "value": "bx bx-table",
                                     "isInheritable": false,
                                     "position": 30
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "0vhv7lsOLy82",
-                                    "isInheritable": false,
-                                    "position": 100
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "mT0HEkOsz6i1",
-                                    "isInheritable": false,
-                                    "position": 110
                                 }
                             ],
                             "format": "markdown",
