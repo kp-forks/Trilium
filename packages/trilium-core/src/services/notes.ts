@@ -416,11 +416,20 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
+/**
+ * Title of the spreadsheet preview image. Unlike the inline drawing images, this attachment is not
+ * referenced from the note content — it is the note's rendered thumbnail, looked up by title by the
+ * image endpoint — so it must be exempt from the orphan-erasure scheduling below.
+ */
+const SPREADSHEET_PREVIEW_ATTACHMENT_TITLE = "spreadsheet-export.png";
+
 export function checkImageAttachments(note: BNote, content: string) {
     const foundAttachmentIds = new Set<string>();
     let match;
 
-    const patterns = note.isMarkdown()
+    // Spreadsheet content is JSON storing inline images as bare `api/attachments/{id}/image/...`
+    // URLs (no `src="..."` wrapper), so it scans with the same loose pattern as Markdown.
+    const patterns = (note.isMarkdown() || note.type === "spreadsheet")
         ? [
             // ![...](api/attachments/{id}/image/...) or similar markdown image syntax
             /api\/attachments\/([a-zA-Z0-9_]+)\/image/g,
@@ -447,6 +456,12 @@ export function checkImageAttachments(note: BNote, content: string) {
         // auto-scheduled for erasure when no longer referenced. Other roles (e.g. "viewConfig",
         // "importSource") are managed explicitly by their owners and must not be cleaned up here.
         if (attachment.role !== "image" && attachment.role !== "file") {
+            continue;
+        }
+
+        // The spreadsheet preview thumbnail is never referenced from the content, so leave it alone
+        // (otherwise it would be scheduled for erasure on every save).
+        if (note.type === "spreadsheet" && attachment.title === SPREADSHEET_PREVIEW_ATTACHMENT_TITLE) {
             continue;
         }
 
@@ -892,7 +907,7 @@ function saveAttachments(note: BNote, content: string) {
 
 
 export function saveLinks(note: BNote, content: string | Uint8Array) {
-    if ((note.type !== "text" && note.type !== "relationMap" && note.type !== "llmChat" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
+    if ((note.type !== "text" && note.type !== "relationMap" && note.type !== "llmChat" && note.type !== "spreadsheet" && !note.isMarkdown()) || (note.isProtected && !protectedSessionService.isProtectedSessionAvailable())) {
         return {
             forceFrontendReload: false,
             content
@@ -915,6 +930,11 @@ export function saveLinks(note: BNote, content: string | Uint8Array) {
     } else if (note.isMarkdown() && typeof content === "string") {
         findMarkdownImageLinks(content, foundLinks);
         findMarkdownInternalLinks(content, foundLinks);
+        ({ forceFrontendReload, content } = checkImageAttachments(note, content));
+    } else if (note.type === "spreadsheet" && typeof content === "string") {
+        // Spreadsheet images are stored as attachments referenced from the workbook JSON; scan for
+        // orphans (inserted-then-removed images) so they get scheduled for erasure. There are no
+        // Trilium internal links to extract from spreadsheet content.
         ({ forceFrontendReload, content } = checkImageAttachments(note, content));
     } else if (note.type === "relationMap" && typeof content === "string") {
         findRelationMapLinks(content, foundLinks);

@@ -204,6 +204,66 @@ describe("checkImageAttachments", () => {
         });
     });
 
+    describe("Spreadsheet content", () => {
+        /** Wraps a drawing source URL into the JSON shape a spreadsheet note persists. */
+        function spreadsheetContent(source: string) {
+            return JSON.stringify({
+                version: 1,
+                workbook: {
+                    resources: [{
+                        name: "SHEET_DRAWING_PLUGIN",
+                        data: JSON.stringify({ "sheet-1": { data: { img1: { imageSourceType: "URL", source } }, order: ["img1"] } })
+                    }]
+                }
+            });
+        }
+
+        it("keeps an attachment referenced by the workbook drawing source alive", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "image.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, spreadsheetContent(`api/attachments/${att.attachmentId}/image/image.png`));
+
+            expect(att.save).not.toHaveBeenCalled();
+        });
+
+        it("schedules an inserted-then-removed image for erasure", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "image.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, spreadsheetContent("api/attachments/someOtherId/image/image.png"));
+
+            expect(att.save).toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeTruthy();
+        });
+
+        it("never schedules the preview thumbnail for erasure even though it is unreferenced", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "spreadsheet-export.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [thumbnail] = note.getAttachments();
+
+            // Content with no drawing images at all — the thumbnail is the only "image" attachment.
+            checkImageAttachments(note, JSON.stringify({ version: 1, workbook: { resources: [] } }));
+
+            expect(thumbnail.save).not.toHaveBeenCalled();
+            expect(thumbnail.utcDateScheduledForErasureSince).toBeFalsy();
+        });
+
+        it("cancels erasure when the image is re-referenced", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "image.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+            att.utcDateScheduledForErasureSince = "2025-01-01 00:00:00.000Z";
+
+            checkImageAttachments(note, spreadsheetContent(`api/attachments/${att.attachmentId}/image/image.png`));
+
+            expect(att.save).toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeNull();
+        });
+    });
+
     describe("foreign attachment copying", () => {
         it("replaces foreign attachment IDs in HTML content", () => {
             const note = buildNote({ title: "Test" });
