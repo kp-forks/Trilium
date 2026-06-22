@@ -1390,17 +1390,17 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("height:80px");
     });
 
-    it("offsets a floating image by the trimmed table origin", () => {
-        // Data only at row 2, col 1 -> the table is trimmed; origin is the px distance
-        // from A1 to that corner: 2 default rows (48px) down, 1 default col (88px) right.
+    it("positions a floating image at its absolute sheet coordinates regardless of where data starts", () => {
+        // Data only at row 2, col 1. Because the grid is rendered from the sheet origin (A1),
+        // the floating image keeps the absolute transform coordinates Univer stored (no offset).
         const html = renderSpreadsheetToHtml(
             workbookWithFloatingDrawings(
                 [urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 200, top: 100, width: 50, height: 40 })],
                 { cellData: { "2": { "1": { v: "x" } } } }
             )
         );
-        expect(html).toContain("left:112px"); // 200 - 88
-        expect(html).toContain("top:52px"); // 100 - 48
+        expect(html).toContain("left:200px");
+        expect(html).toContain("top:100px");
     });
 
     it("preserves floating image z-order", () => {
@@ -1461,6 +1461,47 @@ describe("renderSpreadsheetToHtml", () => {
     });
 
     // #endregion
+
+    // Wraps a single value placed at an arbitrary (row, col) into a complete workbook payload.
+    function cellAtWorkbook(row: number, col: number): string {
+        return JSON.stringify({
+            version: 1,
+            workbook: {
+                sheetOrder: ["s1"],
+                styles: {},
+                sheets: {
+                    s1: {
+                        id: "s1",
+                        name: "Sheet1",
+                        hidden: 0,
+                        rowCount: 1000,
+                        columnCount: 20,
+                        defaultColumnWidth: 88,
+                        defaultRowHeight: 24,
+                        mergeData: [],
+                        cellData: { [row]: { [col]: { v: "x" } } },
+                        rowData: {},
+                        columnData: {}
+                    }
+                }
+            }
+        });
+    }
+
+    it("renders leading empty rows so the grid starts at the sheet origin", () => {
+        // Data only at row 2 -> rows 0 and 1 must still be emitted (empty) so the grid keeps the
+        // editor's geometry and absolutely-positioned floating images line up.
+        const html = renderSpreadsheetToHtml(cellAtWorkbook(2, 0));
+        const rowCount = (html.match(/<tr/g) ?? []).length;
+        expect(rowCount).toBe(3);
+    });
+
+    it("renders leading empty columns so the grid starts at the sheet origin", () => {
+        // Data only at column 2 -> columns 0 and 1 must still be emitted.
+        const html = renderSpreadsheetToHtml(cellAtWorkbook(0, 2));
+        const colCount = (html.match(/<col /g) ?? []).length;
+        expect(colCount).toBe(3);
+    });
 
     it("extends bounds to cover a merge range that exceeds the cell data", () => {
         const input = JSON.stringify({

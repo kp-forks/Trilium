@@ -67,20 +67,16 @@ export function renderSpreadsheetToHtml(jsonContent: string): string {
 // #region Images
 
 /**
- * Wraps a rendered sheet table in a positioned container carrying the sheet's floating images,
- * each placed absolutely. Univer stores a floating image's `transform.left`/`top` in px from the
- * sheet origin (A1), but the table is trimmed to populated cells, so positions are shifted by the
- * px distance from A1 to the trimmed top-left corner. The container's `min-height` is stretched to
- * contain images that float below the table so they don't overlap following content. Returns the
- * table unchanged when the sheet has no renderable floating images.
+ * Wraps a rendered sheet table in a positioned container carrying the sheet's floating images, each
+ * placed absolutely. Univer stores a floating image's `transform.left`/`top` in px from the sheet
+ * origin (A1); the table is also rendered from A1 (leading empty rows/columns included), so those
+ * coordinates apply directly. The container's `min-height` is stretched to contain images that
+ * float below the table so they don't overlap following content. Returns the table unchanged when
+ * the sheet has no renderable floating images.
  */
 function wrapWithFloatingImages(workbook: IWorkbookData, sheet: IWorksheetData, tableHtml: string): string {
     const drawings = getFloatingDrawings(workbook, sheet.id);
     if (drawings.length === 0) return tableHtml;
-
-    const bounds = computeBounds(sheet.cellData, sheet.mergeData ?? []);
-    const originX = bounds ? sumColumnWidths(sheet, 0, bounds.minCol) : 0;
-    const originY = bounds ? sumRowHeights(sheet, 0, bounds.minRow) : 0;
 
     const images: string[] = [];
     let maxBottom = 0;
@@ -88,8 +84,8 @@ function wrapWithFloatingImages(workbook: IWorkbookData, sheet: IWorksheetData, 
         const src = sanitizeImageSource(drawing.source);
         if (!src || !drawing.transform) continue;
 
-        const left = toFinite(drawing.transform.left) - originX;
-        const top = toFinite(drawing.transform.top) - originY;
+        const left = toFinite(drawing.transform.left);
+        const top = toFinite(drawing.transform.top);
         const width = toFinite(drawing.transform.width);
         const height = toFinite(drawing.transform.height);
         maxBottom = Math.max(maxBottom, top + height);
@@ -127,30 +123,6 @@ function renderCellImages(cell: ICellData): string {
     return images.join("");
 }
 
-function sumRowHeights(sheet: IWorksheetData, fromRow: number, toRowExclusive: number): number {
-    const rowData = sheet.rowData ?? {};
-    const defaultHeight = sheet.defaultRowHeight ?? 24;
-    let sum = 0;
-    for (let row = fromRow; row < toRowExclusive; row++) {
-        const meta = rowData[row];
-        if (meta?.hd) continue;
-        sum += isFiniteNumber(meta?.h) ? meta.h : defaultHeight;
-    }
-    return sum;
-}
-
-function sumColumnWidths(sheet: IWorksheetData, fromCol: number, toColExclusive: number): number {
-    const columnData = sheet.columnData ?? {};
-    const defaultWidth = sheet.defaultColumnWidth ?? 88;
-    let sum = 0;
-    for (let col = fromCol; col < toColExclusive; col++) {
-        const meta = columnData[col];
-        if (meta?.hd) continue;
-        sum += isFiniteNumber(meta?.w) ? meta.w : defaultWidth;
-    }
-    return sum;
-}
-
 /**
  * Validates an image source for inclusion in shared/exported HTML. Accepts only the relative
  * attachment-image URL Trilium emits (`api/attachments/<id>/image/...`, served by both the app
@@ -186,7 +158,12 @@ function renderSheet(sheet: IWorksheetData, styles: Record<string, IStyleData | 
         return "<p>Empty sheet.</p>";
     }
 
-    const { minRow, maxRow, minCol, maxCol } = bounds;
+    // Render from the sheet origin (A1), not the first populated cell: Univer positions floating
+    // images in absolute px from A1, and emitting the leading empty rows/columns keeps the grid in
+    // step with the editor so those images line up. Only trailing empty rows/columns are trimmed.
+    const { maxRow, maxCol } = bounds;
+    const minRow = 0;
+    const minCol = 0;
 
     // Build a set of cells that are hidden by merges (non-origin cells).
     const mergeMap = buildMergeMap(mergeData, minRow, maxRow, minCol, maxCol);
