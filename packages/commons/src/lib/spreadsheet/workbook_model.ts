@@ -102,6 +102,10 @@ export interface IDrawingTransform {
     top?: number;
     width?: number;
     height?: number;
+    /** Clockwise rotation in degrees, applied around the box centre. */
+    angle?: number;
+    flipX?: boolean;
+    flipY?: boolean;
 }
 
 export interface IStyleData {

@@ -74,6 +74,8 @@ interface PlacedImage {
     top: number;
     width: number;
     height: number;
+    /** CSS `transform` value for rotation/flip, or "" when the image is upright and unflipped. */
+    transform: string;
 }
 
 /**
@@ -96,10 +98,26 @@ function placeFloatingImages(sheet: IWorksheetData, drawings: ISheetDrawing[]): 
             left: toFinite(drawing.transform.left) - headerWidth,
             top: toFinite(drawing.transform.top) - headerHeight,
             width: toFinite(drawing.transform.width),
-            height: toFinite(drawing.transform.height)
+            height: toFinite(drawing.transform.height),
+            transform: cssTransform(drawing.transform)
         });
     }
     return placed;
+}
+
+/**
+ * Builds the CSS `transform` for a drawing's rotation/flip, around the default centre origin (which
+ * matches Univer). Flips are applied before the rotation (so they read in the image's own axes), and
+ * an upright, unflipped image yields "" so no transform is emitted.
+ */
+function cssTransform(transform: NonNullable<ISheetDrawing["transform"]>): string {
+    const parts: string[] = [];
+    if (isFiniteNumber(transform.angle) && transform.angle % 360 !== 0) {
+        parts.push(`rotate(${px(transform.angle)}deg)`);
+    }
+    if (transform.flipX) parts.push("scaleX(-1)");
+    if (transform.flipY) parts.push("scaleY(-1)");
+    return parts.join(" ");
 }
 
 /**
@@ -116,8 +134,9 @@ function wrapWithFloatingImages(tableHtml: string, images: PlacedImage[]): strin
     const tags: string[] = [];
     for (const image of images) {
         maxBottom = Math.max(maxBottom, image.top + image.height);
+        const transform = image.transform ? `;transform:${image.transform}` : "";
         tags.push(
-            `<img class="spreadsheet-floating-image" style="position:absolute;left:${px(image.left)}px;top:${px(image.top)}px;width:${px(image.width)}px;height:${px(image.height)}px" src="${escapeHtml(image.src)}" alt="">`
+            `<img class="spreadsheet-floating-image" style="position:absolute;left:${px(image.left)}px;top:${px(image.top)}px;width:${px(image.width)}px;height:${px(image.height)}px${transform}" src="${escapeHtml(image.src)}" alt="">`
         );
     }
 

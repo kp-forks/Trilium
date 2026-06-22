@@ -1472,6 +1472,43 @@ describe("renderSpreadsheetToHtml", () => {
         expect(html).toContain("top:208.8px");
     });
 
+    it("rotates a floating image by its transform angle", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                { drawingId: "img1", imageSourceType: "URL", source: "api/attachments/cgN4jEBCA1Kn/image/image.png", transform: { left: 0, top: 0, width: 50, height: 50, angle: 45 } }
+            ])
+        );
+        expect(html).toContain("transform:rotate(45deg)");
+    });
+
+    it("flips a floating image horizontally and vertically", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                { drawingId: "img1", source: "api/attachments/cgN4jEBCA1Kn/image/image.png", transform: { left: 0, top: 0, width: 50, height: 50, flipX: true, flipY: true } }
+            ])
+        );
+        expect(html).toContain("scaleX(-1)");
+        expect(html).toContain("scaleY(-1)");
+    });
+
+    it("combines rotation and flip (flip first, then rotate)", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                { drawingId: "img1", source: "api/attachments/cgN4jEBCA1Kn/image/image.png", transform: { left: 0, top: 0, width: 50, height: 50, angle: 90, flipX: true } }
+            ])
+        );
+        expect(html).toContain("transform:rotate(90deg) scaleX(-1)");
+    });
+
+    it("does not emit a transform for an unrotated, unflipped image", () => {
+        const html = renderSpreadsheetToHtml(
+            workbookWithFloatingDrawings([
+                urlDrawing("img1", "api/attachments/cgN4jEBCA1Kn/image/image.png", { left: 0, top: 0, width: 50, height: 50 })
+            ])
+        );
+        expect(html).not.toContain("transform:");
+    });
+
     it("renders a base64 floating image", () => {
         const html = renderSpreadsheetToHtml(
             workbookWithFloatingDrawings([
