@@ -128,6 +128,20 @@ describe("renderToHtml", () => {
             const html = render("## sub heading", "irrelevant");
             expect(html).toBe("<h2>sub heading</h2>");
         });
+
+        it("shifts the whole hierarchy down one level when a content <h1> remains (#8383)", () => {
+            // A leading <h1> demoted to <h2> while leaving a sibling <h2> as <h2> would
+            // collapse two distinct levels; instead the hierarchy shifts down so nesting
+            // is preserved (and clamps at <h6>).
+            expect(render("# A\n\n## B\n\n### C", "X")).toBe("<h2>A</h2><h3>B</h3><h4>C</h4>");
+            expect(render("# A\n\n###### Deep", "X")).toBe("<h2>A</h2><h6>Deep</h6>");
+        });
+
+        it("does not shift when the title is stripped and the content already starts at <h2>", () => {
+            // The common case: the leading <h1> equals the title and is removed, leaving
+            // content that already begins at <h2> — nothing else should move.
+            expect(render("# Title\n\n## A\n\n### B", "Title")).toBe("<h2>A</h2><h3>B</h3>");
+        });
     });
 
     describe("paragraphs", () => {
