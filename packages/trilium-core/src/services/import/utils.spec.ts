@@ -110,6 +110,16 @@ describe("#handleH1", () => {
             "w/ headings deeper than <h2>, the shift should clamp at <h6>",
             ["<h1>A</h1><h2>B</h2><h6>C</h6>", "Title"],
             "<h2>A</h2><h3>B</h3><h6>C</h6>"
+        ],
+        [
+            "w/ a content <h1> containing inline markup, it should still be demoted and shifted",
+            ["<h1>Chapter <em>One</em></h1><h2>Intro</h2>", "Doc"],
+            "<h2>Chapter <em>One</em></h2><h3>Intro</h3>"
+        ],
+        [
+            "w/ a content <h1> carrying attributes, the attributes should be preserved on the demoted <h2>",
+            [`<h1 id="top">Main</h1><h2>Sub</h2>`, "Doc"],
+            `<h2 id="top">Main</h2><h3>Sub</h3>`
         ]
     ];
 
