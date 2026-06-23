@@ -85,13 +85,15 @@ function onDropdownMenuKeyDown(e: KeyboardEvent) {
 
     const target = e.target as HTMLElement;
 
-    // Let inputs/textareas rendered inside the list handle their own typing.
-    if (target.closest("input, textarea, select")) {
+    const dropdownItem = target.closest(".dropdown-item") as HTMLElement | null;
+    if (!dropdownItem || dropdownItem.classList.contains("disabled")) {
         return;
     }
 
-    const dropdownItem = target.closest(".dropdown-item") as HTMLElement | null;
-    if (!dropdownItem || dropdownItem.classList.contains("disabled")) {
+    // Let interactive elements nested inside the item (inputs, buttons, links, anything
+    // focusable) handle their own Enter/Space instead of hijacking it for the parent item.
+    const interactive = target.closest("input, textarea, select, button, a, [tabindex]");
+    if (interactive && interactive !== dropdownItem) {
         return;
     }
 
