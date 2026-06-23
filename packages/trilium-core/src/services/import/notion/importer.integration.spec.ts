@@ -565,6 +565,29 @@ describe("Notion importer — integration", () => {
         expect(definitions.map((attr) => attr.position)).toEqual([10, 20, 30]);
     });
 
+    it("imports a checkbox column as a boolean label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const onId = "388c5eca1b8b80929a78da7c68154bd7";
+        const offId = "388c5eca1b8b80e5903ef480b0523eb1";
+        // Notion renders a checkbox as <div class="checkbox checkbox-on|off">.
+        const checkbox = (state: string) => `<table class="properties"><tbody><tr class="property-row property-row-checkbox"><th><span class="icon property-icon"><img src="x.svg"/></span>Checkbox</th><td><div class="checkbox checkbox-${state}"></div></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/On 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>On</title></head><body><div id="${onId}">${checkbox("on")}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/Off 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Off</title></head><body><div id="${offId}">${checkbox("off")}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Checkbox")?.value).toBe("promoted,single,boolean,alias=Checkbox");
+        const on = db?.getChildNotes().find((n) => n.title === "On");
+        const off = db?.getChildNotes().find((n) => n.title === "Off");
+        expect(on?.getOwnedLabelValue("Checkbox")).toBe("true");
+        expect(off?.getOwnedLabelValue("Checkbox")).toBe("false");
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";

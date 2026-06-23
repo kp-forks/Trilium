@@ -569,7 +569,8 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  *  - `text` / `select` / `status`: the cell's text → one single-valued property;
  *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property;
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
- *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column.
+ *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
+ *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label.
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
  * (dates handled separately by extractDate) fall through untouched.
@@ -607,6 +608,12 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
             }
         } else if (type === "date") {
             properties.push(...parseDateProperties(name, cell));
+        } else if (type === "checkbox") {
+            const checkbox = cell.querySelector("div.checkbox");
+            if (checkbox) {
+                const value = checkbox.classList.contains("checkbox-on") ? "true" : "false";
+                properties.push({ name, value, labelType: "boolean", multiplicity: "single" });
+            }
         }
     }
     return properties;
