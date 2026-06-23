@@ -566,11 +566,12 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  * Reads a page's database properties from its Notion properties table. Each column is a
  * `<tr class="property-row property-row-<type>">` whose `<th>` holds the column name (after an icon span,
  * which carries no text) and `<td>` the value. Handled so far:
- *  - `text` / `select` / `status`: the cell's text → one single-valued property;
+ *  - `text` / `select` / `status` / `place`: the cell's text → one single-valued property;
  *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property;
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
- *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label.
+ *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label;
+ *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property.
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
  * (dates handled separately by extractDate) fall through untouched.
@@ -585,8 +586,8 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
         }
 
         const type = row.getAttribute("class")?.match(/property-row-(\w+)/)?.[1];
-        if (type === "text" || type === "select" || type === "status") {
-            // `select`/`status` are a single chosen option; their cell text is the whole value (a status'
+        if (type === "text" || type === "select" || type === "status" || type === "place") {
+            // `select`/`status`/`place` resolve to plain text: the cell text is the whole value (a status'
             // leading `<div class="status-dot">` carries no text), so they take the free-text single path.
             const value = cell.textContent?.trim();
             if (value) {
@@ -613,6 +614,16 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
             if (checkbox) {
                 const value = checkbox.classList.contains("checkbox-on") ? "true" : "false";
                 properties.push({ name, value, labelType: "boolean", multiplicity: "single" });
+            }
+        } else if (type === "person") {
+            // A person column can list several users; each is a `<span class="user">` whose leading avatar
+            // (`.user-icon`, e.g. an initial) would otherwise bleed into the name, so drop it first.
+            for (const user of cell.querySelectorAll("span.user")) {
+                user.querySelector(".user-icon")?.remove();
+                const value = user.textContent?.trim();
+                if (value) {
+                    properties.push({ name, value, labelType: "text", multiplicity: "multi" });
+                }
             }
         }
     }

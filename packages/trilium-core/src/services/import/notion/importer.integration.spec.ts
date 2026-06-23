@@ -588,6 +588,45 @@ describe("Notion importer — integration", () => {
         expect(off?.getOwnedLabelValue("Checkbox")).toBe("false");
     });
 
+    it("imports a place column as a single-valued text label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-place"><th><span class="icon property-icon"><img src="x.svg"/></span>Place</th><td>Rotterdam, South Holland, Netherlands</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Place")?.value).toBe("promoted,single,text,alias=Place");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // The comma-bearing value is stored verbatim (it's a label value, not part of the definition).
+        expect(row?.getOwnedLabelValue("Place")).toBe("Rotterdam, South Holland, Netherlands");
+    });
+
+    it("imports a person column as multi-valued labels, stripping the avatar initial", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Real markup: each person is a <span class="user"> whose .user-icon holds an avatar initial.
+        const user = (initial: string, fullName: string) =>
+            `<span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">${initial}</span></span>${fullName}</span>`;
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-person"><th><span class="icon property-icon"><img src="x.svg"/></span>Person</th><td>${user("E", "Elian Doran")}, ${user("A", "Ada Lovelace")}</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Person")?.value).toBe("promoted,multi,text,alias=Person");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // The avatar initials ("E", "A") are dropped, leaving just the names, one label per person.
+        expect(row?.getOwnedLabels("Person").map((l) => l.value)).toEqual(["Elian Doran", "Ada Lovelace"]);
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
