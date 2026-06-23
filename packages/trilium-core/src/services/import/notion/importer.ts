@@ -29,15 +29,18 @@ import mimeService from "../mime.js";
 import { convertNotionHtml } from "./converter.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
 
-/** A database column value lifted from a page's Notion properties table, destined for a Trilium label. */
+/** A database column value lifted from a page's Notion properties table, destined for a Trilium attribute. */
 interface NotionProperty {
-    /** The column name, taken verbatim from the property row's `<th>` (sanitized only when made a label). */
+    /** The column name, taken verbatim from the property row's `<th>` (sanitized only when made an attribute). */
     name: string;
+    /** A label's final value, or — for a relation — the target page's Notion id (resolved to a note on import). */
     value: string;
-    /** Trilium promoted-attribute type the column's definition uses (e.g. "text"). */
-    labelType: LabelType;
+    /** Trilium promoted-attribute type for a label column; omitted for a relation (it has no value type). */
+    labelType?: LabelType;
     /** Whether the column holds one value or many (e.g. multi-select); sets the definition's multiplicity. */
     multiplicity: Multiplicity;
+    /** Set for a relation column: its `value` is a target Notion id, mapped to a `~relation` in the second pass. */
+    kind?: "relation";
 }
 
 interface ParsedPage {
@@ -239,9 +242,12 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         noteByFolder.set(ownedFolderKey(page.path), note);
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
 
-        // Carry the page's Notion database properties over as Trilium labels (e.g. a "Text column" → #Text_column).
-        for (const { name, value } of page.properties) {
-            note.addLabel(sanitizeAttributeName(name), value);
+        // Carry the page's Notion database properties over as Trilium attributes (e.g. a "Text column" →
+        // #Text_column). Relations are deferred to the second pass, once every target note exists.
+        for (const property of page.properties) {
+            if (property.kind !== "relation") {
+                note.addLabel(sanitizeAttributeName(property.name), property.value);
+            }
         }
 
         // Attachments hang off the note, so this must run after creation; it returns the content with the
@@ -259,6 +265,17 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         const finalContent = rewriteLinks(content, (notionId) => targetByPageId.get(notionId) ?? null);
         if (finalContent !== page.content) {
             note.setContent(finalContent);
+        }
+
+        // Relation columns become Trilium relations: resolve each target's Notion id to its note, dropping
+        // any target that wasn't part of this import.
+        for (const property of page.properties) {
+            if (property.kind === "relation") {
+                const target = targetByPageId.get(property.value);
+                if (target) {
+                    note.addRelation(sanitizeAttributeName(property.name), target.noteId);
+                }
+            }
         }
 
         // Preserve Notion's original timestamps. Must run after the content save above, which would
@@ -315,7 +332,9 @@ function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<string, BNo
         let position = 0;
         for (const property of orderColumns([...schema.values()], csvColumnsByFolder.get(folderKey))) {
             position += 10;
-            container.addAttribute("label", `label:${sanitizeAttributeName(property.name)}`, buildPromotedDefinition(property), true, position);
+            // A definition is always a label, but its name is `relation:<x>` for a relation column, `label:<x>` otherwise.
+            const definitionName = `${property.kind === "relation" ? "relation" : "label"}:${sanitizeAttributeName(property.name)}`;
+            container.addAttribute("label", definitionName, buildPromotedDefinition(property), true, position);
         }
     }
 }
@@ -357,7 +376,9 @@ function buildPromotedDefinition({ name, labelType, multiplicity }: NotionProper
     // The alias keeps the original (pretty) column name in the UI while the attribute name stays sanitized.
     // The definition is comma/`=`-delimited, so neutralize those characters in the alias to avoid corrupting it.
     const alias = name.replace(/[,=]/g, " ").trim();
-    return `promoted,${multiplicity},${labelType},alias=${alias}`;
+    // A relation has no value type; a label carries one (text/date/url/boolean/…).
+    const type = labelType ? `${labelType},` : "";
+    return `promoted,${multiplicity},${type}alias=${alias}`;
 }
 
 /**
@@ -571,7 +592,8 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
  *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label;
- *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property.
+ *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property;
+ *  - `relation`: each linked page's `<a>` href → a multi-valued relation, resolved to a note in the second pass.
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
  * (dates handled separately by extractDate) fall through untouched.
@@ -623,6 +645,15 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
                 const value = user.textContent?.trim();
                 if (value) {
                     properties.push({ name, value, labelType: "text", multiplicity: "multi" });
+                }
+            }
+        } else if (type === "relation") {
+            // Each linked page is an `<a>` whose href carries the target's Notion id; the second pass resolves
+            // it to a note and adds a `~relation` (targets outside the import are dropped there).
+            for (const anchor of cell.querySelectorAll("a")) {
+                const targetId = internalPageId(anchor.getAttribute("href"));
+                if (targetId) {
+                    properties.push({ name, value: targetId, multiplicity: "multi", kind: "relation" });
                 }
             }
         }

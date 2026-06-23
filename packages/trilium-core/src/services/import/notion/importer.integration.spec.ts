@@ -627,6 +627,40 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabels("Person").map((l) => l.value)).toEqual(["Elian Doran", "Ada Lovelace"]);
     });
 
+    it("maps a relation column to real Trilium relations, resolving links and dropping un-imported targets", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const fooId = "388c5eca1b8b80929a78da7c68154bd7";
+        const barId = "388c5eca1b8b80e5903ef480b0523eb1";
+        const bazId = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
+        const ghostId = "386c5eca1b8b80439520cad27a0d2749"; // referenced but not imported
+        const link = (title: string, id: string) => `<a href="${title}%20${id}.html">${title}</a>`;
+        const relation = (links: string) =>
+            `<table class="properties"><tbody><tr class="property-row property-row-relation"><th><span class="icon property-icon"><img src="x.svg"/></span>Related</th><td>${links}</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            // Foo → Bar, Baz and an un-imported Ghost; Bar → itself.
+            [`DB/Foo ${fooId}.html`]:
+                `<html><head><title>Foo</title></head><body><div id="${fooId}">${relation(`${link("Bar", barId)}, ${link("Baz", bazId)}, ${link("Ghost", ghostId)}`)}<div class="page-body"><p>x</p></div></div></body></html>`,
+            [`DB/Bar ${barId}.html`]:
+                `<html><head><title>Bar</title></head><body><div id="${barId}">${relation(link("Bar", barId))}<div class="page-body"><p>y</p></div></div></body></html>`,
+            [`DB/Baz ${bazId}.html`]:
+                `<html><head><title>Baz</title></head><body><div id="${bazId}"><div class="page-body"><p>z</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // A relation column becomes a `relation:` promoted definition (multi, and carrying no value type).
+        expect(db?.getOwnedLabel("relation:Related")?.value).toBe("promoted,multi,alias=Related");
+
+        const foo = db?.getChildNotes().find((n) => n.title === "Foo");
+        const bar = db?.getChildNotes().find((n) => n.title === "Bar");
+        const baz = db?.getChildNotes().find((n) => n.title === "Baz");
+        // Foo relates to the real Bar and Baz notes; the un-imported Ghost target is dropped.
+        expect(foo?.getOwnedRelations("Related").map((r) => r.value)).toEqual([bar?.noteId, baz?.noteId]);
+        // A self-reference resolves to the note itself.
+        expect(bar?.getOwnedRelations("Related").map((r) => r.value)).toEqual([bar?.noteId]);
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
