@@ -1,7 +1,9 @@
 import { parse } from "node-html-parser";
 import { describe, expect, it } from "vitest";
 
-import { firstChildNotionId, type LinkTarget, ownedFolderKey, parentFolderKey, resolveResourcePath, rewriteLinks } from "./importer.js";
+import { rewriteLinks } from "./importer.js";
+import type { LinkTarget } from "./model.js";
+import { firstChildNotionId, ownedFolderKey, parentFolderKey, resolveResourcePath } from "./paths.js";
 
 describe("resolveResourcePath", () => {
     it("resolves an image path relative to the page's directory in the zip", () => {
