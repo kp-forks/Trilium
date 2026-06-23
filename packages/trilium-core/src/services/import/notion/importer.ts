@@ -13,6 +13,7 @@
  */
 
 import { dayjs, type LabelType, type Multiplicity } from "@triliumnext/commons";
+import { parseCsv } from "@triliumnext/commons/src/lib/csv.js";
 import { t } from "i18next";
 import { HTMLElement, parse } from "node-html-parser";
 
@@ -134,8 +135,8 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                 // A Notion database exports as a CSV: its path reconstructs the hierarchy (a database with no
                 // own page), and its header row lists every column in the database's order.
                 csvPaths.push(path);
-                const columns = parseCsvHeader(new TextDecoder().decode(await readContent()));
-                csvColumnsByFolder.set(ownedFolderKey(path), columns.map((column) => sanitizeAttributeName(column)));
+                const [header = []] = parseCsv(new TextDecoder().decode(await readContent()));
+                csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => sanitizeAttributeName(column)));
             } else {
                 resources.set(normalizePath(path), await readContent());
             }
@@ -145,42 +146,6 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
     await readArchive(fileBuffer, 0);
 
     return { pages, resources, csvPaths, csvColumnsByFolder };
-}
-
-/**
- * Parses the column names from a CSV export's header row, handling double-quoted fields (which may contain
- * commas or escaped `""` quotes) and a leading UTF-8 BOM. Only the header row is needed for column order.
- */
-function parseCsvHeader(content: string): string[] {
-    const text = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
-    const header = text.split(/\r?\n/, 1)[0] ?? "";
-    const columns: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < header.length; i++) {
-        const char = header[i];
-        if (inQuotes) {
-            if (char === '"' && header[i + 1] === '"') {
-                current += '"';
-                i++;
-            } else if (char === '"') {
-                inQuotes = false;
-            } else {
-                current += char;
-            }
-        } else if (char === '"') {
-            inQuotes = true;
-        } else if (char === ",") {
-            columns.push(current);
-            current = "";
-        } else {
-            current += char;
-        }
-    }
-    columns.push(current);
-
-    return columns;
 }
 
 function parsePage(path: string, html: string): ParsedPage | null {
