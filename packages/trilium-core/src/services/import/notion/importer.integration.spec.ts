@@ -411,6 +411,24 @@ describe("Notion importer — integration", () => {
         expect(empty?.getLabelValue("label:Multi_select")).toBe("promoted,multi,text,alias=Multi-select");
     });
 
+    it("imports a select column as a single-valued text label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Notion renders a single-select value as one <span class="selected-value"> in the cell.
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-select"><th><span class="icon property-icon"><img src="x.svg"/></span>Select column</th><td><span class="selected-value select-value-color-gray">First</span></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Select_column")?.value).toBe("promoted,single,text,alias=Select column");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("Select_column")).toBe("First");
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";

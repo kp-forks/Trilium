@@ -482,7 +482,7 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  * Reads a page's database properties from its Notion properties table. Each column is a
  * `<tr class="property-row property-row-<type>">` whose `<th>` holds the column name (after an icon span,
  * which carries no text) and `<td>` the value. Handled so far:
- *  - `text`: the cell's text → one single-valued property;
+ *  - `text` / `select`: the cell's text → one single-valued property;
  *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property.
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
@@ -498,7 +498,9 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
         }
 
         const type = row.getAttribute("class")?.match(/property-row-(\w+)/)?.[1];
-        if (type === "text") {
+        if (type === "text" || type === "select") {
+            // `select` is a single chosen option (one `<span class="selected-value">`); its cell text is the
+            // whole value, so it takes the same single-valued path as a free-text column.
             const value = cell.textContent?.trim();
             if (value) {
                 properties.push({ name, value, labelType: "text", multiplicity: "single" });
