@@ -55,12 +55,12 @@ interface ParsedPage {
 }
 
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { pages, resources, csvPaths } = await parseZip(fileBuffer);
+    const { pages, resources, csvPaths, csvColumnsByFolder } = await parseZip(fileBuffer);
     addDatabaseContainers(pages, csvPaths);
     reconcileDateColumns(pages);
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, resources, taskContext);
+    return createNotes(importRootNote, pages, resources, taskContext, csvColumnsByFolder);
 }
 
 /**
@@ -97,11 +97,13 @@ function addDatabaseContainers(pages: ParsedPage[], csvPaths: string[]) {
  */
 const MAX_NESTED_ZIP_DEPTH = 2;
 
-async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[] }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]> }> {
     const provider = getZipProvider();
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
     const csvPaths: string[] = [];
+    // Database folder key → its columns (sanitized), in the CSV export's order — the authoritative column order.
+    const csvColumnsByFolder = new Map<string, string[]>();
 
     const readArchive = async (buffer: Uint8Array, depth: number): Promise<void> => {
         const filenameEncoding = await provider.detectFilenameEncoding(buffer);
@@ -123,8 +125,11 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                     pages.push(parsed);
                 }
             } else if (path.toLowerCase().endsWith(".csv")) {
-                // Notion databases export as CSVs; we only need the path to reconstruct the hierarchy.
+                // A Notion database exports as a CSV: its path reconstructs the hierarchy (a database with no
+                // own page), and its header row lists every column in the database's order.
                 csvPaths.push(path);
+                const columns = parseCsvHeader(new TextDecoder().decode(await readContent()));
+                csvColumnsByFolder.set(ownedFolderKey(path), columns.map((column) => sanitizeAttributeName(column)));
             } else {
                 resources.set(normalizePath(path), await readContent());
             }
@@ -133,7 +138,43 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
 
     await readArchive(fileBuffer, 0);
 
-    return { pages, resources, csvPaths };
+    return { pages, resources, csvPaths, csvColumnsByFolder };
+}
+
+/**
+ * Parses the column names from a CSV export's header row, handling double-quoted fields (which may contain
+ * commas or escaped `""` quotes) and a leading UTF-8 BOM. Only the header row is needed for column order.
+ */
+function parseCsvHeader(content: string): string[] {
+    const text = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+    const header = text.split(/\r?\n/, 1)[0] ?? "";
+    const columns: string[] = [];
+    let current = "";
+    let inQuotes = false;
+
+    for (let i = 0; i < header.length; i++) {
+        const char = header[i];
+        if (inQuotes) {
+            if (char === '"' && header[i + 1] === '"') {
+                current += '"';
+                i++;
+            } else if (char === '"') {
+                inQuotes = false;
+            } else {
+                current += char;
+            }
+        } else if (char === '"') {
+            inQuotes = true;
+        } else if (char === ",") {
+            columns.push(current);
+            current = "";
+        } else {
+            current += char;
+        }
+    }
+    columns.push(current);
+
+    return columns;
 }
 
 function parsePage(path: string, html: string): ParsedPage | null {
@@ -170,7 +211,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
  * matched on a normalized, id-stripped folder path so it works whether or not the folders carry ids.
  * Pages are created shallowest-first, so a parent's note exists before its children. Returns the root.
  */
-function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">, csvColumnsByFolder: Map<string, string[]>): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
@@ -211,7 +252,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     }
 
     // Now that every container and its rows exist, define the database schema once per container.
-    applyDatabaseSchemas(pages, noteByFolder);
+    applyDatabaseSchemas(pages, noteByFolder, csvColumnsByFolder);
 
     // Second pass: now that every page has a note, resolve cross-page links and persist the final content.
     for (const { note, content, page } of created) {
@@ -238,21 +279,22 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
  *
  * A row's container is its parent note, looked up by the same folder key that drives parenting. Each
  * container's schema is the union of its rows' property columns — a column present on only one row still
- * defines the field for the whole database — keeping the first occurrence's type/multiplicity.
+ * defines the field for the whole database — keeping the first occurrence's type/multiplicity, and emitted
+ * in the database's CSV column order ({@link orderColumns}).
  */
-function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<string, BNote>) {
-    const schemaByContainer = new Map<BNote, Map<string, NotionProperty>>();
+function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<string, BNote>, csvColumnsByFolder: Map<string, string[]>) {
+    const schemaByFolder = new Map<string, Map<string, NotionProperty>>();
 
     for (const page of pages) {
-        const container = noteByFolder.get(parentFolderKey(page.path));
-        if (!container || page.properties.length === 0) {
+        const folderKey = parentFolderKey(page.path);
+        if (!noteByFolder.has(folderKey) || page.properties.length === 0) {
             continue;
         }
 
-        let schema = schemaByContainer.get(container);
+        let schema = schemaByFolder.get(folderKey);
         if (!schema) {
             schema = new Map();
-            schemaByContainer.set(container, schema);
+            schemaByFolder.set(folderKey, schema);
         }
         for (const property of page.properties) {
             const labelName = sanitizeAttributeName(property.name);
@@ -262,11 +304,52 @@ function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<string, BNo
         }
     }
 
-    for (const [container, schema] of schemaByContainer) {
-        for (const [labelName, property] of schema) {
-            container.addLabel(`label:${labelName}`, buildPromotedDefinition(property), true);
+    for (const [folderKey, schema] of schemaByFolder) {
+        const container = noteByFolder.get(folderKey);
+        /* v8 ignore next 3 -- every folderKey here passed the noteByFolder.has guard above */
+        if (!container) {
+            continue;
+        }
+        // Assign an increasing position so the columns keep the CSV order in the promoted-attributes UI:
+        // it sorts definitions by position, and equal positions don't sort deterministically.
+        let position = 0;
+        for (const property of orderColumns([...schema.values()], csvColumnsByFolder.get(folderKey))) {
+            position += 10;
+            container.addAttribute("label", `label:${sanitizeAttributeName(property.name)}`, buildPromotedDefinition(property), true, position);
         }
     }
+}
+
+/**
+ * Orders a database's columns by the CSV export's column order (the authoritative Notion order, including
+ * columns empty on every row). Columns absent from the CSV keep their discovery order at the end; a
+ * synthesized `<name> end` column (from a date range) is slotted right after its base column.
+ */
+function orderColumns(properties: NotionProperty[], csvColumns: string[] | undefined): NotionProperty[] {
+    if (!csvColumns) {
+        return properties;
+    }
+
+    const indexByColumn = new Map(csvColumns.map((name, index) => [name, index] as const));
+    const sortKey = (property: NotionProperty): [number, number] => {
+        const own = indexByColumn.get(sanitizeAttributeName(property.name));
+        if (own !== undefined) {
+            return [own, 0];
+        }
+        // A synthesized "<name> end" column isn't in the CSV; place it just after its base column.
+        if (property.name.endsWith(" end")) {
+            const base = indexByColumn.get(sanitizeAttributeName(property.name.slice(0, -" end".length)));
+            if (base !== undefined) {
+                return [base, 1];
+            }
+        }
+        return [Number.MAX_SAFE_INTEGER, 0];
+    };
+
+    return properties
+        .map((property, index) => ({ property, index, key: sortKey(property) }))
+        .sort((a, b) => a.key[0] - b.key[0] || a.key[1] - b.key[1] || a.index - b.index)
+        .map((entry) => entry.property);
 }
 
 /** Builds a promoted-attribute definition value (e.g. `promoted,single,text,alias=Text column`). */

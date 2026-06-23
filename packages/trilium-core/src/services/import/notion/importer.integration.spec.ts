@@ -541,6 +541,30 @@ describe("Notion importer — integration", () => {
         expect(noTime?.getOwnedLabelValue("Date")).toBe("2026-06-24T00:00");
     });
 
+    it("orders the promoted definitions by the CSV column order, not row discovery order", async () => {
+        // The CSV header is the authoritative column order: Zeta, Alpha, Mu.
+        const csv = "Name,Zeta,Alpha,Mu\nRow1,,a,m\nRow2,z,,\n";
+        const row1Id = "388c5eca1b8b80929a78da7c68154bd7";
+        const row2Id = "388c5eca1b8b80e5903ef480b0523eb1";
+        const textCol = (col: string, val: string) => `<tr class="property-row property-row-text"><th>${col}</th><td>${val}</td></tr>`;
+        const props = (rows: string) => `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "My DB 388c5eca1b8b8078a20fd18330d81306.csv": csv,
+            // Row1 (discovered first) has Alpha + Mu but not Zeta; Row2 has Zeta.
+            "My DB/Row1 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row1</title></head><body><div id="${row1Id}">${props(textCol("Alpha", "a") + textCol("Mu", "m"))}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "My DB/Row2 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Row2</title></head><body><div id="${row2Id}">${props(textCol("Zeta", "z"))}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "My DB");
+        const definitions = db?.getOwnedAttributes("label").filter((attr) => attr.name.startsWith("label:")) ?? [];
+        // CSV order (Zeta, Alpha, Mu) wins, even though Alpha/Mu were discovered before Zeta.
+        expect(definitions.map((attr) => attr.name)).toEqual(["label:Zeta", "label:Alpha", "label:Mu"]);
+        // Increasing positions keep that order in the promoted-attributes UI (which sorts defs by position).
+        expect(definitions.map((attr) => attr.position)).toEqual([10, 20, 30]);
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
