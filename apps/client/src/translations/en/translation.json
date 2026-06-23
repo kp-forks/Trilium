@@ -1233,7 +1233,7 @@
     "pause": "Pause (Space)",
     "seek": "Seek (Left/Right arrow keys)",
     "back-10s": "Back 10s (Left arrow key)",
-    "forward-30s": "Forward 30s",
+    "forward-10s": "Forward 10s (Right arrow key)",
     "previous-video": "Previous video: {{- title}}",
     "next-video": "Next video: {{- title}}",
     "previous-audio": "Previous audio: {{- title}}",
