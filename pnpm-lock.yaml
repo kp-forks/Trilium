@@ -1568,6 +1568,9 @@ importers:
 
   packages/share-theme:
     dependencies:
+      '@triliumnext/commons':
+        specifier: workspace:*
+        version: link:../commons
       fuse.js:
         specifier: 7.4.2
         version: 7.4.2
