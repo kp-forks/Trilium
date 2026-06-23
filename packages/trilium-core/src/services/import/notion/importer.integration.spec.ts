@@ -313,6 +313,42 @@ describe("Notion importer — integration", () => {
         expect(undated?.utcDateCreated.startsWith("2024-01-02")).toBe(false);
     });
 
+    it("imports a page's text property as a Trilium label", async () => {
+        const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
+        // Real Notion markup: the <th> leads with an icon span (no text) before the column name.
+        const propertyTable =
+            `<table class="properties"><tbody>` +
+            `<tr class="property-row property-row-text"><th><span class="icon property-icon"><img src="x.svg"/></span>Text column</th><td>Basic text</td></tr>` +
+            `</tbody></table>`;
+        const importRoot = await importNotion({
+            "Texty 2c6c5eca1b8b80f7b9eaf4f396b755dc.html":
+                `<html><head><title>Texty</title></head><body><div id="${id}">${propertyTable}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Texty");
+        // The column name is sanitized (space → underscore, case preserved); the value is kept verbatim.
+        expect(note?.getOwnedLabelValue("Text_column")).toBe("Basic text");
+    });
+
+    it("sanitizes illegal characters in a text property's name and skips blank values", async () => {
+        const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
+        const propertyTable =
+            `<table class="properties"><tbody>` +
+            `<tr class="property-row property-row-text"><th>Sub-title (v2)</th><td>Hello world</td></tr>` +
+            `<tr class="property-row property-row-text"><th>Empty</th><td></td></tr>` +
+            `</tbody></table>`;
+        const importRoot = await importNotion({
+            "Mixed 2c6c5eca1b8b80f7b9eaf4f396b755dc.html":
+                `<html><head><title>Mixed</title></head><body><div id="${id}">${propertyTable}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Mixed");
+        // Every char outside [\p{L}\p{N}_:] becomes an underscore: "Sub-title (v2)" → "Sub_title__v2_".
+        expect(note?.getOwnedLabelValue("Sub_title__v2_")).toBe("Hello world");
+        // The blank-valued row contributes no label.
+        expect(note?.hasOwnedLabel("Empty")).toBe(false);
+    });
+
     it("saves a bundled image as an attachment and rewrites its src; leaves external/srcless images alone", async () => {
         const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
         const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);

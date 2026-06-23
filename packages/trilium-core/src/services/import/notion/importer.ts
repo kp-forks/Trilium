@@ -22,10 +22,18 @@ import protectedSessionService from "../../protected_session.js";
 import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
+import { sanitizeAttributeName } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
 import mimeService from "../mime.js";
 import { convertNotionHtml } from "./converter.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
+
+/** A database column value lifted from a page's Notion properties table, destined for a Trilium label. */
+interface NotionProperty {
+    /** The column name, taken verbatim from the property row's `<th>` (sanitized only when made a label). */
+    name: string;
+    value: string;
+}
 
 interface ParsedPage {
     /** The page's own Notion id, used to resolve cross-page links pointing at it. */
@@ -35,6 +43,8 @@ interface ParsedPage {
     path: string;
     /** The page's body HTML, sanitized; empty when the body could not be located. */
     content: string;
+    /** Database properties from the page's Notion properties table, mapped to Trilium labels on import. */
+    properties: NotionProperty[];
     utcDateCreated?: string;
     utcDateModified?: string;
 }
@@ -65,7 +75,8 @@ function addDatabaseContainers(pages: ParsedPage[], csvPaths: string[]) {
             id: getNotionId(baseName(csvPath)) ?? "",
             title: stripNotionId(removeExtension(baseName(csvPath))) || "Database",
             path: csvPath,
-            content: ""
+            content: "",
+            properties: []
         });
     }
 }
@@ -140,6 +151,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
         title,
         path,
         content,
+        properties: extractProperties(root),
         utcDateCreated: extractDate(root, "property-row-created_time"),
         utcDateModified: extractDate(root, "property-row-last_edited_time")
     };
@@ -179,6 +191,11 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         });
         noteIdByFolder.set(ownedFolderKey(page.path), note.noteId);
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
+
+        // Carry the page's Notion database properties over as Trilium labels (e.g. a "Text column" → #Text_column).
+        for (const { name, value } of page.properties) {
+            note.addLabel(sanitizeAttributeName(name), value);
+        }
 
         // Attachments hang off the note, so this must run after creation; it returns the content with the
         // <img> srcs and file links pointing at the saved attachments.
@@ -404,6 +421,25 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
         }
     }
     return undefined;
+}
+
+/**
+ * Reads a page's database properties from its Notion properties table. Each column is a
+ * `<tr class="property-row property-row-<type>">` whose `<th>` holds the column name (after an icon span,
+ * which carries no text) and `<td>` the value. This first cut handles only plain text columns
+ * (`property-row-text`); the importer turns each `{ name, value }` into a Trilium label. Rows with a blank
+ * name or value are skipped — Notion already omits empty cells per page, so this is just defensive.
+ */
+function extractProperties(root: HTMLElement): NotionProperty[] {
+    const properties: NotionProperty[] = [];
+    for (const row of root.querySelectorAll("table.properties tr.property-row-text")) {
+        const name = row.querySelector("th")?.textContent?.trim();
+        const value = row.querySelector("td")?.textContent?.trim();
+        if (name && value) {
+            properties.push({ name, value });
+        }
+    }
+    return properties;
 }
 
 /**
