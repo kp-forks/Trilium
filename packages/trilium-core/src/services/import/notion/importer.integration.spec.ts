@@ -447,6 +447,36 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Status_column")).toBe("Another in progress");
     });
 
+    it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // All three render as <a class="url-value">; email/phone hrefs are bare addresses.
+        const props =
+            `<table class="properties"><tbody>` +
+            `<tr class="property-row property-row-url"><th><span class="icon property-icon"><img src="x.svg"/></span>URL</th><td><a href="https://triliumnotes.org" class="url-value">https://triliumnotes.org</a></td></tr>` +
+            `<tr class="property-row property-row-email"><th><span class="icon property-icon"><img src="y.svg"/></span>Email</th><td><a href="test@acme.org" class="url-value">test@acme.org</a></td></tr>` +
+            `<tr class="property-row property-row-phone_number"><th><span class="icon property-icon"><img src="z.svg"/></span>Phone</th><td><a href="12345678" class="url-value">12345678</a></td></tr>` +
+            `</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // Each column gets a url-typed definition.
+        expect(db?.getOwnedLabel("label:URL")?.value).toBe("promoted,single,url,alias=URL");
+        expect(db?.getOwnedLabel("label:Email")?.value).toBe("promoted,single,url,alias=Email");
+        expect(db?.getOwnedLabel("label:Phone")?.value).toBe("promoted,single,url,alias=Phone");
+
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("URL")).toBe("https://triliumnotes.org");
+        // Email/phone are stored as clickable mailto:/tel: links.
+        expect(row?.getOwnedLabelValue("Email")).toBe("mailto:test@acme.org");
+        expect(row?.getOwnedLabelValue("Phone")).toBe("tel:12345678");
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";

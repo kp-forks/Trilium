@@ -483,7 +483,8 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  * `<tr class="property-row property-row-<type>">` whose `<th>` holds the column name (after an icon span,
  * which carries no text) and `<td>` the value. Handled so far:
  *  - `text` / `select` / `status`: the cell's text → one single-valued property;
- *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property.
+ *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property;
+ *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`).
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
  * (dates handled separately by extractDate) fall through untouched.
@@ -512,9 +513,27 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
                     properties.push({ name, value, labelType: "text", multiplicity: "multi" });
                 }
             }
+        } else if (type === "url" || type === "email" || type === "phone_number") {
+            // All three render as `<a class="url-value">`; the href is the canonical value. Email/phone hrefs
+            // are bare addresses, so give them a `mailto:`/`tel:` scheme to stay clickable as url labels.
+            const href = cell.querySelector("a")?.getAttribute("href")?.trim();
+            if (href) {
+                properties.push({ name, value: toUrlValue(type, href), labelType: "url", multiplicity: "single" });
+            }
         }
     }
     return properties;
+}
+
+/** Gives an email/phone href a clickable scheme (`mailto:`/`tel:`); a plain url href is returned as-is. */
+function toUrlValue(type: string, href: string): string {
+    if (type === "email") {
+        return href.startsWith("mailto:") ? href : `mailto:${href}`;
+    }
+    if (type === "phone_number") {
+        return href.startsWith("tel:") ? href : `tel:${href}`;
+    }
+    return href;
 }
 
 /**
