@@ -10,7 +10,7 @@ import AbstractBeccaEntity from "./abstract_becca_entity.js";
 import type BBranch from "./bbranch.js";
 import type BNote from "./bnote.js";
 import { getSql } from "../../services/sql/index.js";
-import { formatDownloadTitle, isStringNote, replaceAll } from "../../services/utils";
+import { escapeRegExp, formatDownloadTitle, isStringNote, replaceAll } from "../../services/utils";
 
 const attachmentRoleToNoteTypeMapping = {
     image: "image",
@@ -202,7 +202,7 @@ class BAttachment extends AbstractBeccaEntity<BAttachment> {
             // may be HTML-encoded as `&amp;`), which we collapse to a plain note link `#root/{noteId}`.
             if (attachmentId) {
                 fixedContent = fixedContent.replace(
-                    new RegExp(`href="[^"]*attachmentId=${attachmentId}"`, "g"),
+                    new RegExp(`href="[^"]*attachmentId=${escapeRegExp(attachmentId)}[^"]*"`, "g"),
                     `href="#root/${note.noteId}"`
                 );
             }
