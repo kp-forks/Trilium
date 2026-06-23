@@ -155,15 +155,17 @@ describe("Auth", () => {
             expect(res.redirectedTo).toBe("login");
         });
 
-        it("checkAuth honours redirectBareDomain: 404 when no shareRoot, else redirects to share", () => {
+        it("checkAuth honours redirectBareDomain: redirects to share when a shareRoot exists, else to login", () => {
             vi.spyOn(totp, "isTotpEnabled").mockReturnValue(false);
             vi.spyOn(openID, "isOpenIDEnabled").mockReturnValue(false);
             cls.init(() => options.setOption("redirectBareDomain", "true"));
 
+            // No shareRoot configured: fall back to login instead of a 404 dead-end (#7869).
             const labelSpy = vi.spyOn(attributes, "getNotesWithLabel").mockReturnValue([]);
-            const res404 = makeRes();
-            auth.checkAuth(makeReq({ session: { loggedIn: false } }), res404 as never, vi.fn());
-            expect(res404.statusCode).toBe(404);
+            const resLogin = makeRes();
+            auth.checkAuth(makeReq({ session: { loggedIn: false } }), resLogin as never, vi.fn());
+            expect(resLogin.redirectedTo).toBe("login");
+            expect(resLogin.statusCode).not.toBe(404);
 
             labelSpy.mockReturnValue([{ noteId: "x" } as never]);
             const resShare = makeRes();

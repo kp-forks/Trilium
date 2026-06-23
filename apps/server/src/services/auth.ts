@@ -36,14 +36,16 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
         const hasRedirectBareDomain = options.getOptionOrNull("redirectBareDomain") === "true";
 
         if (hasRedirectBareDomain) {
-            // Check if any note has the #shareRoot label
+            // Only redirect to the share page when a share root is actually configured.
+            // Otherwise (e.g. the owner's session expired before they set one up) fall back
+            // to the login page rather than stranding the user on a 404. See #7869.
             const shareRootNotes = attributes.getNotesWithLabel("shareRoot");
-            if (shareRootNotes.length === 0) {
-                res.status(404).json({ message: "Share root not found. Please set up a note with #shareRoot label first." });
+            if (shareRootNotes.length > 0) {
+                res.redirect("share");
                 return;
             }
         }
-        res.redirect(hasRedirectBareDomain ? "share" : "login");
+        res.redirect("login");
     } else if (currentTotpStatus !== lastAuthState.totpEnabled || currentSsoStatus !== lastAuthState.ssoEnabled) {
         req.session.destroy((err) => {
             if (err) console.error('Error destroying session:', err);
