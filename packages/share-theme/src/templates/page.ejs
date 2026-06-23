@@ -204,6 +204,12 @@ content = content.replaceAll(headingRe, (...match) => {
                 <% if (hasTree) { %>
                     <%- include("prev_next", { note: note, subRoot: subRoot }) %>
                 <% } %>
+
+                <% if (showLoginInShareTheme && !isStatic) { %>
+                    <div class="login">
+                        <a href="../login" class="login-link"><%= t("share_theme.login") %></a>
+                    </div>
+                <% } %>
             </footer>
         </div>
         <%
