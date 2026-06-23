@@ -64,10 +64,10 @@
   सेटअप](https://docs.triliumnotes.org/user-guide/setup/server/installation/docker)
 - [TriliumNext को अपग्रेड
   करना](https://docs.triliumnotes.org/user-guide/setup/upgrading)
-- [Basic Concepts and
-  Features](https://docs.triliumnotes.org/user-guide/concepts/notes)
-- [Patterns of Personal Knowledge
-  Base](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
+- [बुनियादी कॉन्सेप्ट्स और
+  फीचर्स](https://docs.triliumnotes.org/user-guide/concepts/notes)
+- [व्यक्तिगत नॉलेज बेस के
+  पैटर्न्स](https://docs.triliumnotes.org/user-guide/misc/patterns-of-personal-knowledge)
 
 ## 🎁 खासियतें
 
@@ -86,12 +86,13 @@
   नेविगेशन](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-navigation),
   फुल टेक्स्ट सर्च और [नोट
   होइस्टिंग](https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting)
-* Seamless [note
-  versioning](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
-* Note
-  [attributes](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
-  can be used for note organization, querying and advanced
-  [scripting](https://docs.triliumnotes.org/user-guide/scripts)
+* निर्बाध [नोट
+  वर्ज़निंग](https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions)
+* नोट
+  [एट्रीब्यूट्स](https://docs.triliumnotes.org/user-guide/advanced-usage/attributes)
+  का उपयोग नोट्स ऑर्गेनाइज़ करने, क्वेरी करने और एडवांस्ड
+  [स्क्रिप्टिंग](https://docs.triliumnotes.org/user-guide/scripts) के लिए किया
+  जा सकता है
 * UI available in English, German, Spanish, French, Romanian, and Chinese
   (simplified and traditional)
 * Direct [OpenID and TOTP
