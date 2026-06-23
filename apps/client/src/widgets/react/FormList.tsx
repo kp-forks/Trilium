@@ -65,12 +65,38 @@ export default function FormList({ children, onSelect, style, fullHeight, wrappe
                     if (value && onSelect) {
                         onSelect(value);
                     }
-                }}>
+                }} onKeyDown={onDropdownMenuKeyDown}>
                     {children}
                 </div>
             </div>
         </div>
     );
+}
+
+/**
+ * Activates the currently focused list item on Enter/Space, so the list is keyboard-operable
+ * and not mouse-only. The focused item is "clicked" to reuse the existing item- and list-level
+ * click handlers (e.g. {@link FormList}'s `onSelect`, toggle items).
+ */
+function onDropdownMenuKeyDown(e: KeyboardEvent) {
+    if (e.key !== "Enter" && e.key !== " ") {
+        return;
+    }
+
+    const target = e.target as HTMLElement;
+
+    // Let inputs/textareas rendered inside the list handle their own typing.
+    if (target.closest("input, textarea, select")) {
+        return;
+    }
+
+    const dropdownItem = target.closest(".dropdown-item") as HTMLElement | null;
+    if (!dropdownItem || dropdownItem.classList.contains("disabled")) {
+        return;
+    }
+
+    e.preventDefault();
+    dropdownItem.click();
 }
 
 export interface FormListBadge {
