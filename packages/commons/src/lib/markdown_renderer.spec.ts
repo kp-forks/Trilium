@@ -321,6 +321,19 @@ describe("renderToHtml", () => {
         });
     });
 
+    describe("tables (CustomMarkdownRenderer.table)", () => {
+        it("wraps a table in <figure class=\"table\"> to match CKEditor's structure (#10270)", () => {
+            const html = render("| a | b |\n|---|---|\n| c | d |");
+            expect(html).toContain('<figure class="table">');
+            expect(html).toContain("</figure>");
+            // The wrapper hugs the table with no stray whitespace between them.
+            expect(html).toContain('<figure class="table"><table>');
+            expect(html).toContain("</table></figure>");
+            expect(html).toContain("<th>a</th>");
+            expect(html).toContain("<td>c</td>");
+        });
+    });
+
     describe("blockquotes / admonitions (CustomMarkdownRenderer.blockquote)", () => {
         it("renders a [!NOTE] admonition", () => {
             expect(render("> [!NOTE]\n> body")).toBe('<aside class="admonition note"><p>body</p></aside>');

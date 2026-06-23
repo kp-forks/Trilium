@@ -387,6 +387,15 @@ export class CustomMarkdownRenderer extends Renderer {
         return super.image(token).replace(` alt=""`, "");
     }
 
+    override table(token: Tokens.Table): string {
+        // CKEditor wraps every table in `<figure class="table">`, and its content CSS
+        // (`.ck-content .table`) styles that wrapper rather than a bare `<table>`. Without
+        // it, imported tables render unstyled in read-only mode until the note is opened in
+        // the editor — which re-wraps them on save (#10270). Emit the wrapper here so
+        // imported markdown matches CKEditor's structure up front.
+        return `<figure class="table">${super.table(token).trimEnd()}</figure>`;
+    }
+
     override blockquote({ tokens }: Tokens.Blockquote): string {
         const body = this.parser.parse(tokens);
 
