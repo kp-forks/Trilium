@@ -317,7 +317,7 @@ function AttachmentActions({ attachment, copyAttachmentReferenceToClipboard, onS
                     onClick={() => open.downloadAttachment(attachment.attachmentId)}
                 >{t("attachments_actions.download")}</FormListItem>
                 <FormListItem
-                    icon="bx bx-directions"
+                    icon="bx bx-copy"
                     onClick={copyAttachmentReferenceToClipboard}
                 >{t("attachments_actions.copy_link_to_clipboard")}</FormListItem>
                 {onShowOcr && (
