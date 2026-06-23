@@ -39,8 +39,11 @@ interface NotionProperty {
     labelType?: LabelType;
     /** Whether the column holds one value or many (e.g. multi-select); sets the definition's multiplicity. */
     multiplicity: Multiplicity;
-    /** Set for a relation column: its `value` is a target Notion id, mapped to a `~relation` in the second pass. */
-    kind?: "relation";
+    /**
+     * For a relation column, `value` is a target Notion id mapped to a `~relation` in the second pass; for a
+     * file column, `value` is a zip-relative href saved as a `role:"file"` attachment. A plain label has neither.
+     */
+    kind?: "relation" | "file";
 }
 
 interface ParsedPage {
@@ -243,9 +246,11 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
 
         // Carry the page's Notion database properties over as Trilium attributes (e.g. a "Text column" →
-        // #Text_column). Relations are deferred to the second pass, once every target note exists.
+        // #Text_column). File columns become attachments; relations are deferred to the second pass.
         for (const property of page.properties) {
-            if (property.kind !== "relation") {
+            if (property.kind === "file") {
+                saveFileAttachment(note, property.value, page.path, resources);
+            } else if (property.kind !== "relation") {
                 note.addLabel(sanitizeAttributeName(property.name), property.value);
             }
         }
@@ -314,6 +319,9 @@ function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<string, BNo
             schemaByFolder.set(folderKey, schema);
         }
         for (const property of page.properties) {
+            if (property.kind === "file") {
+                continue; // files become attachments, not promoted definitions
+            }
             const labelName = sanitizeAttributeName(property.name);
             if (!schema.has(labelName)) {
                 schema.set(labelName, property);
@@ -444,6 +452,27 @@ function rewriteAttachments(note: BNote, content: string, pagePath: string, reso
     }
 
     return changed ? root.toString() : content;
+}
+
+/**
+ * Saves a File-property reference as a `role:"file"` attachment on `note`. `href` is the value of one
+ * `<a>` in the file cell; it's resolved against the zip the same way page content is, so only files bundled
+ * in the export attach — an external link (or a missing file) is silently skipped.
+ */
+function saveFileAttachment(note: BNote, href: string, pagePath: string, resources: Map<string, Uint8Array>) {
+    const resourcePath = resolveResourcePath(pagePath, href);
+    const bytes = resources.get(resourcePath);
+    if (!bytes) {
+        return;
+    }
+
+    const title = baseName(resourcePath);
+    note.saveAttachment({
+        role: "file",
+        mime: mimeService.getMime(title) || "application/octet-stream",
+        title,
+        content: bytes
+    });
 }
 
 /** A resolved import target: the note created for a Notion page, plus that page's title. */
@@ -593,7 +622,8 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
  *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label;
  *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property;
- *  - `relation`: each linked page's `<a>` href → a multi-valued relation, resolved to a note in the second pass.
+ *  - `relation`: each linked page's `<a>` href → a multi-valued relation, resolved to a note in the second pass;
+ *  - `file`: each `<a>` href → a `role:"file"` attachment on the note (no promoted definition — it's content).
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
  * (dates handled separately by extractDate) fall through untouched.
@@ -654,6 +684,14 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
                 const targetId = internalPageId(anchor.getAttribute("href"));
                 if (targetId) {
                     properties.push({ name, value: targetId, multiplicity: "multi", kind: "relation" });
+                }
+            }
+        } else if (type === "file") {
+            // Each `<a>` href points at a bundled file; the first pass saves it as a `role:"file"` attachment.
+            for (const anchor of cell.querySelectorAll("a")) {
+                const href = anchor.getAttribute("href");
+                if (href) {
+                    properties.push({ name, value: href, multiplicity: "multi", kind: "file" });
                 }
             }
         }

@@ -661,6 +661,28 @@ describe("Notion importer — integration", () => {
         expect(bar?.getOwnedRelations("Related").map((r) => r.value)).toEqual([bar?.noteId]);
     });
 
+    it("saves a file column's bundled files as role:file attachments, skipping external links and adding no definition", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A file cell links a bundled file plus an external URL that isn't in the zip.
+        const fileCell = `<table class="properties"><tbody><tr class="property-row property-row-file"><th><span class="icon property-icon"><img src="x.svg"/></span>Files &amp; media</th><td><span><a href="report.pdf">report.pdf</a></span><span><a href="https://example.com/external.pdf">external.pdf</a></span></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${fileCell}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/report.pdf": "%PDF-1.4 fake"
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // The bundled file becomes a role:file attachment; the external link (not in the zip) is skipped.
+        expect(row?.getAttachmentsByRole("file").map((a) => a.title)).toEqual(["report.pdf"]);
+        // A file column is content, not metadata — no promoted definition and no value label.
+        expect(db?.getOwnedLabel("label:Files___media")).toBeFalsy();
+        expect(row?.getOwnedLabels("Files___media")).toHaveLength(0);
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
