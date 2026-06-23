@@ -91,6 +91,26 @@ describe("extractCodeBlocks", () => {
         const hasFencedBlock = values.some((v) => v.includes("print('hello')"));
         expect(hasFencedBlock).toBe(true);
     });
+
+    it("should extract a fenced code block nested in a blockquote, prefixes and all (#10268)", () => {
+        const input = [ "> ```", "> echo ${VAR} ${VAR2}", "> ```" ].join("\n");
+        const { processedText, placeholderMap } = extractCodeBlocks(input);
+
+        expect(placeholderMap.size).toBe(1);
+        expect(processedText).not.toContain("```");
+        // The whole block, including the `> ` prefixes, is captured verbatim so the
+        // blockquote still renders after restoration.
+        expect([...placeholderMap.values()][0]).toBe(input);
+    });
+
+    it("should extract a fenced code block in a doubly-nested blockquote", () => {
+        const input = [ "> > ```", "> > $ $", "> > ```" ].join("\n");
+        const { processedText, placeholderMap } = extractCodeBlocks(input);
+
+        expect(placeholderMap.size).toBe(1);
+        expect(processedText).not.toContain("```");
+        expect([...placeholderMap.values()][0]).toBe(input);
+    });
 });
 
 describe("renderToHtml", () => {
@@ -400,6 +420,16 @@ describe("renderToHtml", () => {
             expect(render("$e=mc^2$$")).toBe("<p>$e=mc^2$$</p>");
             expect(render("$$$x$$")).toBe("<p>$$$x$$</p>");
             expect(render("$$e=mc^2$")).not.toContain("math-tex");
+        });
+
+        it("does not treat dollars in a blockquoted code block as formulas (#10268)", () => {
+            // The fence lines carry a `> ` prefix, so the code block must still be shielded
+            // from formula extraction — otherwise `${VAR} ${VAR2}` is mangled into a math span.
+            const html = render([ "> ```", "> echo ${VAR} ${VAR2}", "> ```" ].join("\n"));
+            expect(html).toContain("echo ${VAR} ${VAR2}");
+            expect(html).not.toContain("math-tex");
+            expect(html).not.toContain("FORMULA");
+            expect(html).toContain("<blockquote>");
         });
     });
 
