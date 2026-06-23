@@ -57,13 +57,19 @@ interface ParsedPage {
     content: string;
     /** Database properties from the page's Notion properties table, mapped to Trilium labels on import. */
     properties: NotionProperty[];
+    /**
+     * Whether this page is a Notion database (collection) rather than an ordinary page. Set by
+     * {@link resolveDatabaseContainers}: such a page's body is the rendered collection table — dropped on
+     * import, since a collection note is empty — and it is the note its database's rows nest under.
+     */
+    isDatabase?: boolean;
     utcDateCreated?: string;
     utcDateModified?: string;
 }
 
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
     const { pages, resources, csvPaths, csvColumnsByFolder } = await parseZip(fileBuffer);
-    addDatabaseContainers(pages, csvPaths);
+    resolveDatabaseContainers(pages, csvPaths);
     reconcileDateColumns(pages);
     taskContext.setTotalCount(pages.length);
 
@@ -71,13 +77,30 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
 }
 
 /**
- * A Notion inline/linked database exports as a `<Name> <id>.csv` with no matching `.html` page, while its
- * rows are `.html` files in a sibling `<Name>/` folder — so nothing owns that folder and the rows would
- * orphan to the import root. Synthesize an (empty) container page for each such database, named after it,
- * so its rows nest under it. A database that also has its own page is left to that page (no duplicate).
+ * Identifies which pages are Notion databases (collections) and ensures each has an empty container note.
+ *
+ * A Notion database always exports a `<Name> <id>.csv`; its rows are `.html` files in a sibling `<Name>/`
+ * folder. Whether the database also has its own `<Name> <id>.html` page decides how its container is found:
+ *  - With an own page (its `ownedFolderKey` matches the CSV's), that page's body is the rendered collection
+ *    table, not real content — so flag it as a database and clear its body, since a collection note is empty.
+ *  - Without one, nothing owns the rows' folder and they'd orphan to the import root — so synthesize an
+ *    empty container page named after the database in its place.
+ * Either way the database page ends up flagged {@link ParsedPage.isDatabase} and empty, ready to become a
+ * Trilium collection, with its rows nested beneath it.
  */
-function addDatabaseContainers(pages: ParsedPage[], csvPaths: string[]) {
+function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[]) {
+    const databaseKeys = new Set(csvPaths.map((csvPath) => ownedFolderKey(csvPath)));
     const owned = new Set(pages.map((page) => ownedFolderKey(page.path)));
+
+    // A database with its own page: its body is the collection table, so drop it and flag the page.
+    for (const page of pages) {
+        if (databaseKeys.has(ownedFolderKey(page.path))) {
+            page.isDatabase = true;
+            page.content = "";
+        }
+    }
+
+    // A database with no own page: synthesize an empty container so its rows don't orphan to the root.
     for (const csvPath of csvPaths) {
         const key = ownedFolderKey(csvPath);
         if (owned.has(key)) {
@@ -89,7 +112,8 @@ function addDatabaseContainers(pages: ParsedPage[], csvPaths: string[]) {
             title: stripNotionId(removeExtension(baseName(csvPath))) || "Database",
             path: csvPath,
             content: "",
-            properties: []
+            properties: [],
+            isDatabase: true
         });
     }
 }

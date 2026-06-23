@@ -82,6 +82,21 @@ describe("Notion importer — integration", () => {
         expect(fortyFive[0].getChildNotes().map((note) => note.title)).toEqual(["Brown fox"]);
     });
 
+    it("imports a database's own page as an empty container, dropping its rendered collection table", async () => {
+        // A Notion database page's body is the rendered collection table, not real content — a collection
+        // note is empty (its data lives in the row notes), so the table must not be carried over as content.
+        const collectionBody = `<div class="collection-content-wrapper"><table class="collection-content"><thead><tr><th>Name</th><th>Select column</th></tr></thead><tbody><tr id="388c5eca1b8b80929a78da7c68154bd7"><td class="cell-title"><a href="My%20basic%20database/Foo%20388c5eca1b8b80929a78da7c68154bd7.html">Foo</a></td><td><span class="selected-value">First</span></td></tr></tbody></table></div>`;
+        const importRoot = await importNotion({
+            "My basic database 388c5eca1b8b8078a20fd18330d81306.html": `<html><head><title>My basic database</title></head><body><div id="388c5eca1b8b8078a20fd18330d81306" class="page"><div class="page-body">${collectionBody}</div></div></body></html>`,
+            "My basic database 388c5eca1b8b8078a20fd18330d81306.csv": "Name,Select column\nFoo,First",
+            "My basic database/Foo 388c5eca1b8b80929a78da7c68154bd7.html": pageHtml("Foo", "388c5eca1b8b80929a78da7c68154bd7")
+        });
+
+        const database = importRoot.getChildNotes().find((note) => note.title === "My basic database");
+        expect(database?.getContent()).toBe("");
+        expect(database?.getChildNotes().map((note) => note.title)).toEqual(["Foo"]);
+    });
+
     it("saves a referenced file as a role:file attachment and links to it from the content", async () => {
         // Notion exports a file block as <figure><div class="source"><a href="<file>">name</a></figure>,
         // with the file bundled in the zip alongside the page.
