@@ -481,17 +481,35 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
 /**
  * Reads a page's database properties from its Notion properties table. Each column is a
  * `<tr class="property-row property-row-<type>">` whose `<th>` holds the column name (after an icon span,
- * which carries no text) and `<td>` the value. This first cut handles only plain text columns
- * (`property-row-text`); the importer turns each `{ name, value }` into a Trilium label. Rows with a blank
- * name or value are skipped — Notion already omits empty cells per page, so this is just defensive.
+ * which carries no text) and `<td>` the value. Handled so far:
+ *  - `text`: the cell's text → one single-valued property;
+ *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property.
+ * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
+ * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
+ * (dates handled separately by extractDate) fall through untouched.
  */
 function extractProperties(root: HTMLElement): NotionProperty[] {
     const properties: NotionProperty[] = [];
-    for (const row of root.querySelectorAll("table.properties tr.property-row-text")) {
+    for (const row of root.querySelectorAll("table.properties tr.property-row")) {
         const name = row.querySelector("th")?.textContent?.trim();
-        const value = row.querySelector("td")?.textContent?.trim();
-        if (name && value) {
-            properties.push({ name, value, labelType: "text", multiplicity: "single" });
+        const cell = row.querySelector("td");
+        if (!name || !cell) {
+            continue;
+        }
+
+        const type = row.getAttribute("class")?.match(/property-row-(\w+)/)?.[1];
+        if (type === "text") {
+            const value = cell.textContent?.trim();
+            if (value) {
+                properties.push({ name, value, labelType: "text", multiplicity: "single" });
+            }
+        } else if (type === "multi_select") {
+            for (const option of cell.querySelectorAll("span.selected-value")) {
+                const value = option.textContent?.trim();
+                if (value) {
+                    properties.push({ name, value, labelType: "text", multiplicity: "multi" });
+                }
+            }
         }
     }
     return properties;

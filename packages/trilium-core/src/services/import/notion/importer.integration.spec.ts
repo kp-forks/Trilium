@@ -382,6 +382,35 @@ describe("Notion importer — integration", () => {
         expect(bar?.getOwnedLabelValue("Text_column")).toBeNull();
     });
 
+    it("imports a multi-select column as multi-valued labels with a `multi` definition", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const fullId = "388c5eca1b8b80929a78da7c68154bd7";
+        const emptyId = "388c5eca1b8b80e5903ef480b0523eb1";
+        // Real markup: one <span class="selected-value"> per option; an unset multi-select is an empty <td>.
+        const multi = (options: string) =>
+            `<table class="properties"><tbody><tr class="property-row property-row-multi_select"><th><span class="icon property-icon"><img src="x.svg"/></span>Multi-select</th><td>${options}</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Full 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Full</title></head><body><div id="${fullId}">${multi(`<span class="selected-value">c</span><span class="selected-value">d</span><span class="selected-value">e</span>`)}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/Empty 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Empty</title></head><body><div id="${emptyId}">${multi("")}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // The column is defined once on the container as a multi-valued promoted attribute.
+        expect(db?.getOwnedLabel("label:Multi_select")?.value).toBe("promoted,multi,text,alias=Multi-select");
+
+        const full = db?.getChildNotes().find((n) => n.title === "Full");
+        const empty = db?.getChildNotes().find((n) => n.title === "Empty");
+        // Each selected option becomes its own label, preserving order.
+        expect(full?.getOwnedLabels("Multi_select").map((l) => l.value)).toEqual(["c", "d", "e"]);
+        // An unset multi-select contributes no value labels, but still inherits the (multi) definition.
+        expect(empty?.getOwnedLabels("Multi_select")).toHaveLength(0);
+        expect(empty?.getLabelValue("label:Multi_select")).toBe("promoted,multi,text,alias=Multi-select");
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
