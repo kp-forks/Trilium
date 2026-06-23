@@ -12,7 +12,7 @@
  * this service just builds the tree and returns its root note, like the zip/enex importers.
  */
 
-import type { LabelType, Multiplicity } from "@triliumnext/commons";
+import { dayjs, type LabelType, type Multiplicity } from "@triliumnext/commons";
 import { t } from "i18next";
 import { HTMLElement, parse } from "node-html-parser";
 
@@ -57,6 +57,7 @@ interface ParsedPage {
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
     const { pages, resources, csvPaths } = await parseZip(fileBuffer);
     addDatabaseContainers(pages, csvPaths);
+    reconcileDateColumns(pages);
     taskContext.setTotalCount(pages.length);
 
     return createNotes(importRootNote, pages, resources, taskContext);
@@ -484,7 +485,8 @@ export function firstChildNotionId(body: HTMLElement | null): string | undefined
  * which carries no text) and `<td>` the value. Handled so far:
  *  - `text` / `select` / `status`: the cell's text → one single-valued property;
  *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property;
- *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`).
+ *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
+ *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column.
  * The importer turns each `{ name, value }` into a Trilium label; blank names/values are skipped (Notion
  * sometimes emits an empty cell, e.g. an unset multi-select, which should contribute no label). Other types
  * (dates handled separately by extractDate) fall through untouched.
@@ -520,6 +522,8 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
             if (href) {
                 properties.push({ name, value: toUrlValue(type, href), labelType: "url", multiplicity: "single" });
             }
+        } else if (type === "date") {
+            properties.push(...parseDateProperties(name, cell));
         }
     }
     return properties;
@@ -534,6 +538,80 @@ function toUrlValue(type: string, href: string): string {
         return href.startsWith("tel:") ? href : `tel:${href}`;
     }
     return href;
+}
+
+/**
+ * Parses a Notion date column. The value is one `<time>`; a date range joins its start and end with an
+ * arrow, which becomes two columns: the original (start) and a separate `<name> end` (end).
+ */
+function parseDateProperties(name: string, cell: HTMLElement): NotionProperty[] {
+    const text = cell.querySelector("time")?.textContent;
+    if (!text) {
+        return [];
+    }
+
+    const [start, end] = text.split("→").map((part) => part.trim());
+    return [toDateProperty(name, start), toDateProperty(`${name} end`, end)].filter((p): p is NotionProperty => p !== undefined);
+}
+
+/**
+ * Turns one date string into a property. A clock time is present only when the column's "include time"
+ * option is on, which selects a `datetime` label (local `YYYY-MM-DDTHH:mm`) over a plain `date`
+ * (`YYYY-MM-DD`) — the formats the promoted date / datetime-local inputs round-trip. dayjs formats in local
+ * time, matching the wall-clock of Notion's timezone-less string. (Mixed date/date-time columns are then
+ * reconciled to a single type by {@link reconcileDateColumns}.)
+ */
+function toDateProperty(name: string, text: string | undefined): NotionProperty | undefined {
+    if (!text) {
+        return undefined;
+    }
+
+    const date = new Date(text);
+    if (Number.isNaN(date.getTime())) {
+        return undefined;
+    }
+
+    const hasTime = /\d{1,2}:\d{2}/.test(text);
+    return hasTime
+        ? { name, value: dayjs(date).format("YYYY-MM-DD[T]HH:mm"), labelType: "datetime", multiplicity: "single" }
+        : { name, value: dayjs(date).format("YYYY-MM-DD"), labelType: "date", multiplicity: "single" };
+}
+
+/**
+ * Notion's "include time" is toggled per date value, so one date column can mix dates and date-times. A
+ * Trilium promoted attribute has a single type, so resolve each date column (scoped to its database, keyed
+ * by sanitized name) to `datetime` if *any* of its values carries a time, then normalize every value to
+ * that type — a time-less value in a datetime column gets midnight (`T00:00`) so it stays valid for the
+ * `datetime-local` input. Mutates the parsed pages in place before notes (and their labels) are created.
+ */
+function reconcileDateColumns(pages: ParsedPage[]) {
+    const columnsWithTime = new Set<string>();
+    for (const page of pages) {
+        for (const property of page.properties) {
+            if (property.labelType === "datetime") {
+                columnsWithTime.add(dateColumnKey(page.path, property.name));
+            }
+        }
+    }
+
+    for (const page of pages) {
+        for (const property of page.properties) {
+            const isDateColumn = property.labelType === "date" || property.labelType === "datetime";
+            if (isDateColumn && columnsWithTime.has(dateColumnKey(page.path, property.name))) {
+                property.labelType = "datetime";
+                if (!property.value.includes("T")) {
+                    property.value = `${property.value}T00:00`;
+                }
+            }
+        }
+    }
+}
+
+/** Identifies a date column within its database: the row's container folder plus the sanitized column name. */
+function dateColumnKey(path: string, name: string): string {
+    // A space separates the parts unambiguously: a sanitized attribute name never contains a space, so the
+    // text after the last space is always the column name and everything before it is the container folder.
+    return `${parentFolderKey(path)} ${sanitizeAttributeName(name)}`;
 }
 
 /**

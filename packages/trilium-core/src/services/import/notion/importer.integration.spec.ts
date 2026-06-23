@@ -477,6 +477,70 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Phone")).toBe("tel:12345678");
     });
 
+    it("imports a dated column with a clock time as a datetime label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-date"><th><span class="icon property-icon"><img src="x.svg"/></span>Date</th><td><time>June 23, 2026 7:00 PM</time></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Date")?.value).toBe("promoted,single,datetime,alias=Date");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // Local datetime-local format; "7:00 PM" → 19:00 (parse-local + format-local is timezone-independent).
+        expect(row?.getOwnedLabelValue("Date")).toBe("2026-06-23T19:00");
+    });
+
+    it("splits a timeless date range into separate start and end date columns", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A date range joins start and end with an arrow (U+2192).
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-date"><th><span class="icon property-icon"><img src="x.svg"/></span>Date</th><td><time>June 24, 2026 → June 30, 2026</time></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // The range becomes two date columns: the original (start) and a separate "<name> end".
+        expect(db?.getOwnedLabel("label:Date")?.value).toBe("promoted,single,date,alias=Date");
+        expect(db?.getOwnedLabel("label:Date_end")?.value).toBe("promoted,single,date,alias=Date end");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("Date")).toBe("2026-06-24");
+        expect(row?.getOwnedLabelValue("Date_end")).toBe("2026-06-30");
+    });
+
+    it("normalizes a date column that mixes dates and date-times to datetime", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const withTimeId = "388c5eca1b8b80929a78da7c68154bd7";
+        const noTimeId = "388c5eca1b8b80e5903ef480b0523eb1";
+        const dateRow = (time: string) =>
+            `<table class="properties"><tbody><tr class="property-row property-row-date"><th><span class="icon property-icon"><img src="x.svg"/></span>Date</th><td><time>${time}</time></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/WithTime 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>WithTime</title></head><body><div id="${withTimeId}">${dateRow("June 23, 2026 7:00 PM")}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/NoTime 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>NoTime</title></head><body><div id="${noTimeId}">${dateRow("June 24, 2026")}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // One row uses a time, so the whole column becomes datetime.
+        expect(db?.getOwnedLabel("label:Date")?.value).toBe("promoted,single,datetime,alias=Date");
+        const withTime = db?.getChildNotes().find((n) => n.title === "WithTime");
+        const noTime = db?.getChildNotes().find((n) => n.title === "NoTime");
+        expect(withTime?.getOwnedLabelValue("Date")).toBe("2026-06-23T19:00");
+        // The time-less value is normalized to midnight so it stays valid for the datetime-local input.
+        expect(noTime?.getOwnedLabelValue("Date")).toBe("2026-06-24T00:00");
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
