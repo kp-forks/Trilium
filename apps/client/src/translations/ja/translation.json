@@ -1345,7 +1345,9 @@
     "subtree-hidden-tooltip_other": "{{count}} 個の子ノートがツリーで非表示になっています",
     "subtree-hidden-moved-title": "{{title}} に追加されました",
     "subtree-hidden-moved-description-collection": "このコレクションはツリー内の子ノートを非表示にします。",
-    "subtree-hidden-moved-description-other": "このノートのツリーでは子ノートは非表示になっています。"
+    "subtree-hidden-moved-description-other": "このノートのツリーでは子ノートは非表示になっています。",
+    "follow-active-note": "アクティブなノートに追従",
+    "follow-active-note-title": "ツリーをスクロールし、親ノードを展開してアクティブなノートを表示します。無効にすると、ツリーは固定されたままとなり、背景のハイライトのみが更新されます。"
   },
   "bulk_actions": {
     "bulk_actions": "一括操作",
