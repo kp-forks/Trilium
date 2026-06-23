@@ -41,9 +41,8 @@
 ## ⏬ डाउनलोड कीजिए
 - [लेटेस्ट रिलीज़](https://github.com/TriliumNext/Trilium/releases/latest) –
   स्थिर (stable) वर्ज़न, अधिकांश यूज़र्स के लिए अनुशंसित।
-- [Nightly build](https://github.com/TriliumNext/Trilium/releases/tag/nightly) –
-  unstable development version, updated daily with the latest features and
-  fixes.
+- [नाइटली बिल्ड](https://github.com/TriliumNext/Trilium/releases/tag/nightly) –
+  अनस्टेबल डेवलपमेंट वर्ज़न, जो नए फीचर्स और फिक्सेस के साथ रोज़ अपडेट होता है।
 
 ## 📚 डॉक्यूमेंटेशन
 
@@ -56,8 +55,7 @@
   देखें
 - **इन-ऐप हेल्प**: उसी डॉक्यूमेंटेशन को सीधे ऐप में एक्सेस करने के लिए ट्रिलियम
   के अंदर `F1` दबाएँ
-- **GitHub**: Navigate through the [User Guide](./User%20Guide/User%20Guide/) in
-  this repository
+- **GitHub**: इस रिपॉजिटरी में [यूज़र गाइड](./User%20Guide/User%20Guide/) देखें
 
 ### Quick Links
 - [Getting Started Guide](https://docs.triliumnotes.org/)
