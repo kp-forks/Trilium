@@ -718,7 +718,7 @@
     "download": "Download",
     "rename_attachment": "Rename attachment",
     "upload_new_revision": "Upload new revision",
-    "copy_link_to_clipboard": "Copy link to clipboard",
+    "copy_link_to_clipboard": "Copy reference to clipboard",
     "convert_attachment_into_note": "Convert attachment into note",
     "delete_attachment": "Delete attachment",
     "upload_success": "New attachment revision has been uploaded.",
@@ -1233,7 +1233,7 @@
     "pause": "Pause (Space)",
     "seek": "Seek (Left/Right arrow keys)",
     "back-10s": "Back 10s (Left arrow key)",
-    "forward-30s": "Forward 30s",
+    "forward-10s": "Forward 10s (Right arrow key)",
     "previous-video": "Previous video: {{- title}}",
     "next-video": "Next video: {{- title}}",
     "previous-audio": "Previous audio: {{- title}}",
@@ -1887,7 +1887,7 @@
     "will_be_deleted_soon": "This attachment will be automatically deleted soon",
     "deletion_reason": ", because the attachment is not linked in the note's content. To prevent deletion, add the attachment link back into the content or convert the attachment into note.",
     "role_and_size": "Role: {{role}}, size: {{size}}, MIME: {{- mimeType}}",
-    "link_copied": "Attachment link copied to clipboard.",
+    "link_copied": "Attachment reference copied to clipboard.",
     "unrecognized_role": "Unrecognized attachment role '{{role}}'."
   },
   "bookmark_switch": {

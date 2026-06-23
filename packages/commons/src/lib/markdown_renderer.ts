@@ -249,8 +249,13 @@ export function extractCodeBlocks(text: string): { processedText: string; placeh
     let id = 0;
     const timestamp = Date.now();
 
+    // `(?:>[ \t]*)*` allows blockquote prefixes on the fence lines so that fenced
+    // code blocks nested in a blockquote (`> ``` `) are still shielded. Otherwise their
+    // contents leak into formula extraction, which mangles `$…$` runs like `${VAR}` (#10268).
+    // The whole match is restored verbatim before marked parses, so the prefixes are
+    // preserved and the blockquote still renders correctly.
     text = text
-        .replace(/^[ \t]*```[^\n]*\n[\s\S]*?^[ \t]*```[ \t]*$/gm, (m) => {
+        .replace(/^[ \t]*(?:>[ \t]*)*```[^\n]*\n[\s\S]*?^[ \t]*(?:>[ \t]*)*```[ \t]*$/gm, (m) => {
             const key = `<!--CODE_BLOCK_${timestamp}_${id++}-->`;
             codeMap.set(key, m);
             return key;
@@ -385,6 +390,15 @@ export class CustomMarkdownRenderer extends Renderer {
 
     override image(token: Tokens.Image): string {
         return super.image(token).replace(` alt=""`, "");
+    }
+
+    override table(token: Tokens.Table): string {
+        // CKEditor wraps every table in `<figure class="table">`, and its content CSS
+        // (`.ck-content .table`) styles that wrapper rather than a bare `<table>`. Without
+        // it, imported tables render unstyled in read-only mode until the note is opened in
+        // the editor — which re-wraps them on save (#10270). Emit the wrapper here so
+        // imported markdown matches CKEditor's structure up front.
+        return `<figure class="table">${super.table(token).trimEnd()}</figure>`;
     }
 
     override blockquote({ tokens }: Tokens.Blockquote): string {
