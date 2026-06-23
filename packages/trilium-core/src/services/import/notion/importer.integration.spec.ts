@@ -429,6 +429,24 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Select_column")).toBe("First");
     });
 
+    it("imports a status column as a single-valued text label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A status value sits in a <span class="status-value"> after an empty <div class="status-dot">.
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-status"><th><span class="icon property-icon"><img src="x.svg"/></span>Status column</th><td><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>Another in progress</span></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Status_column")?.value).toBe("promoted,single,text,alias=Status column");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("Status_column")).toBe("Another in progress");
+    });
+
     it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
