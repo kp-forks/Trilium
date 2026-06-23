@@ -12,6 +12,7 @@
  * this service just builds the tree and returns its root note, like the zip/enex importers.
  */
 
+import type { LabelType, Multiplicity } from "@triliumnext/commons";
 import { t } from "i18next";
 import { HTMLElement, parse } from "node-html-parser";
 
@@ -33,6 +34,10 @@ interface NotionProperty {
     /** The column name, taken verbatim from the property row's `<th>` (sanitized only when made a label). */
     name: string;
     value: string;
+    /** Trilium promoted-attribute type the column's definition uses (e.g. "text"). */
+    labelType: LabelType;
+    /** Whether the column holds one value or many (e.g. multi-select); sets the definition's multiplicity. */
+    multiplicity: Multiplicity;
 }
 
 interface ParsedPage {
@@ -171,7 +176,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
-    const noteIdByFolder = new Map<string, string>();
+    const noteByFolder = new Map<string, BNote>();
     const targetByPageId = new Map<string, LinkTarget>();
     const created: { note: BNote; content: string; page: ParsedPage }[] = [];
     const ordered = [...pages].sort((a, b) => folderDepth(a.path) - folderDepth(b.path));
@@ -179,7 +184,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     // First pass: create every note (so cross-page links can resolve in the second pass) and save its
     // referenced images as attachments. Content is only rewritten/saved once, in the second pass.
     for (const page of ordered) {
-        const targetParentId = noteIdByFolder.get(parentFolderKey(page.path)) ?? rootNote.noteId;
+        const targetParentId = noteByFolder.get(parentFolderKey(page.path))?.noteId ?? rootNote.noteId;
 
         const { note } = noteService.createNewNote({
             parentNoteId: targetParentId,
@@ -189,7 +194,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
             mime: "text/html",
             isProtected
         });
-        noteIdByFolder.set(ownedFolderKey(page.path), note.noteId);
+        noteByFolder.set(ownedFolderKey(page.path), note);
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
 
         // Carry the page's Notion database properties over as Trilium labels (e.g. a "Text column" → #Text_column).
@@ -203,6 +208,9 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         created.push({ note, content: rewriteAttachments(note, withImages, page.path, resources), page });
         taskContext.increaseProgressCount();
     }
+
+    // Now that every container and its rows exist, define the database schema once per container.
+    applyDatabaseSchemas(pages, noteByFolder);
 
     // Second pass: now that every page has a note, resolve cross-page links and persist the final content.
     for (const { note, content, page } of created) {
@@ -219,6 +227,53 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     }
 
     return rootNote;
+}
+
+/**
+ * A Notion database's columns are a schema shared by every row, so each column becomes a single
+ * *inheritable* promoted-attribute definition on the row's container note (the database) — not a copy on
+ * each row. Rows carry only the values (added in the first pass) and inherit the definition, so a row with
+ * no value shows the field empty, mirroring how a Notion property added from any row appears on all of them.
+ *
+ * A row's container is its parent note, looked up by the same folder key that drives parenting. Each
+ * container's schema is the union of its rows' property columns — a column present on only one row still
+ * defines the field for the whole database — keeping the first occurrence's type/multiplicity.
+ */
+function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<string, BNote>) {
+    const schemaByContainer = new Map<BNote, Map<string, NotionProperty>>();
+
+    for (const page of pages) {
+        const container = noteByFolder.get(parentFolderKey(page.path));
+        if (!container || page.properties.length === 0) {
+            continue;
+        }
+
+        let schema = schemaByContainer.get(container);
+        if (!schema) {
+            schema = new Map();
+            schemaByContainer.set(container, schema);
+        }
+        for (const property of page.properties) {
+            const labelName = sanitizeAttributeName(property.name);
+            if (!schema.has(labelName)) {
+                schema.set(labelName, property);
+            }
+        }
+    }
+
+    for (const [container, schema] of schemaByContainer) {
+        for (const [labelName, property] of schema) {
+            container.addLabel(`label:${labelName}`, buildPromotedDefinition(property), true);
+        }
+    }
+}
+
+/** Builds a promoted-attribute definition value (e.g. `promoted,single,text,alias=Text column`). */
+function buildPromotedDefinition({ name, labelType, multiplicity }: NotionProperty): string {
+    // The alias keeps the original (pretty) column name in the UI while the attribute name stays sanitized.
+    // The definition is comma/`=`-delimited, so neutralize those characters in the alias to avoid corrupting it.
+    const alias = name.replace(/[,=]/g, " ").trim();
+    return `promoted,${multiplicity},${labelType},alias=${alias}`;
 }
 
 /**
@@ -436,7 +491,7 @@ function extractProperties(root: HTMLElement): NotionProperty[] {
         const name = row.querySelector("th")?.textContent?.trim();
         const value = row.querySelector("td")?.textContent?.trim();
         if (name && value) {
-            properties.push({ name, value });
+            properties.push({ name, value, labelType: "text", multiplicity: "single" });
         }
     }
     return properties;

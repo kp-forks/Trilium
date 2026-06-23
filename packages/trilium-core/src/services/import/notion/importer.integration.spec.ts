@@ -349,6 +349,55 @@ describe("Notion importer — integration", () => {
         expect(note?.hasOwnedLabel("Empty")).toBe(false);
     });
 
+    it("defines text columns as inheritable promoted attributes on the container, inherited by every row", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const fooId = "388c5eca1b8b80929a78da7c68154bd7";
+        const barId = "388c5eca1b8b80e5903ef480b0523eb1";
+        const props = (rows: string) => `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "My DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>My DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "My DB/Foo 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Foo</title></head><body><div id="${fooId}">${props(`<tr class="property-row property-row-text"><th><span class="icon property-icon"><img src="x.svg"/></span>Text column</th><td>Basic text</td></tr>`)}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "My DB/Bar 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Bar</title></head><body><div id="${barId}">${props(`<tr class="property-row property-row-text"><th>Other note</th><td>Hi</td></tr>`)}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "My DB");
+        // The container owns one inheritable definition per column seen across all rows (the schema union).
+        const textDef = db?.getOwnedLabel("label:Text_column");
+        expect(textDef?.value).toBe("promoted,single,text,alias=Text column");
+        expect(textDef?.isInheritable).toBe(true);
+        expect(db?.getOwnedLabel("label:Other_note")?.value).toBe("promoted,single,text,alias=Other note");
+
+        const foo = db?.getChildNotes().find((n) => n.title === "Foo");
+        const bar = db?.getChildNotes().find((n) => n.title === "Bar");
+        // Each row inherits the whole schema (including a column it has no value for) without owning a copy.
+        expect(foo?.getOwnedLabel("label:Other_note")).toBeNull();
+        expect(foo?.getLabelValue("label:Other_note")).toBe("promoted,single,text,alias=Other note");
+        // Only the row that had the value owns it; the other inherits an empty field.
+        expect(foo?.getOwnedLabelValue("Text_column")).toBe("Basic text");
+        expect(foo?.getOwnedLabelValue("Other_note")).toBeNull();
+        expect(bar?.getOwnedLabelValue("Other_note")).toBe("Hi");
+        expect(bar?.getOwnedLabelValue("Text_column")).toBeNull();
+    });
+
+    it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-text"><th>Weight, kg</th><td>5</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // The comma in "Weight, kg" becomes a space in the alias, so the definition keeps exactly four tokens.
+        expect(db?.getOwnedLabel("label:Weight__kg")?.value).toBe("promoted,single,text,alias=Weight  kg");
+    });
+
     it("saves a bundled image as an attachment and rewrites its src; leaves external/srcless images alone", async () => {
         const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
         const pngBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
