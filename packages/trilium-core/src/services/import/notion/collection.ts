@@ -72,6 +72,7 @@ export function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
  *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label;
+ *  - `formula`: inferred from the rendered cell shape — checkbox → boolean, else numeric text → number, else text;
  *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property;
  *  - `relation`: each linked page's `<a>` href → a multi-valued relation, resolved to a note in the second pass;
  *  - `file`: each `<a>` href → a `role:"file"` attachment on the note (no promoted definition — it's content).
@@ -125,11 +126,12 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
         } else if (type === "date") {
             properties.push(...parseDateProperties(name, cell));
         } else if (type === "checkbox") {
-            const checkbox = cell.querySelector("div.checkbox");
-            if (checkbox) {
-                const value = checkbox.classList.contains("checkbox-on") ? "true" : "false";
-                properties.push({ name, value, labelType: "boolean", multiplicity: "single" });
+            const property = toBooleanProperty(name, cell);
+            if (property) {
+                properties.push(property);
             }
+        } else if (type === "formula") {
+            properties.push(...extractFormula(name, cell));
         } else if (type === "person") {
             // A person column can list several users; each is a `<span class="user">` whose leading avatar
             // (`.user-icon`, e.g. an initial) would otherwise bleed into the name, so drop it first.
@@ -175,6 +177,53 @@ function toNumberValue(text: string | null | undefined): string | undefined {
     }
     const normalized = trimmed.replace(/[^\d.-]/g, "");
     return normalized !== "" && Number.isFinite(Number(normalized)) ? normalized : trimmed;
+}
+
+/** Reads a Notion checkbox cell (`<div class="checkbox checkbox-on|off">`) as a `true`/`false` boolean label. */
+function toBooleanProperty(name: string, cell: HTMLElement): NotionProperty | undefined {
+    const checkbox = cell.querySelector("div.checkbox");
+    if (!checkbox) {
+        return undefined;
+    }
+    const value = checkbox.classList.contains("checkbox-on") ? "true" : "false";
+    return { name, value, labelType: "boolean", multiplicity: "single" };
+}
+
+/**
+ * Reads a Notion formula column. A formula's result has no type signal on the row (the class is always
+ * `property-row-formula`), so the Trilium type is inferred from the cell's shape — the only evidence the
+ * export gives. A boolean result renders as a checkbox widget (→ a `boolean` label); every other result is
+ * plain text, which becomes a `number` label when it's purely numeric and a `text` label otherwise. Notion
+ * renders a *date* formula as plain text too (e.g. `June 24, 2026`, with no `<time>` wrapper, unlike a native
+ * date column), so it lands in the text case — preserved verbatim, not typed as a Trilium date. Every value is
+ * a snapshot: Trilium has no formula engine, so it reflects the export and won't recompute.
+ */
+function extractFormula(name: string, cell: HTMLElement): NotionProperty[] {
+    const boolean = toBooleanProperty(name, cell);
+    if (boolean) {
+        return [boolean];
+    }
+    const text = cell.textContent?.trim();
+    if (!text) {
+        return [];
+    }
+    const number = numericFormulaValue(text);
+    return [number !== undefined
+        ? { name, value: number, labelType: "number", multiplicity: "single" }
+        : { name, value: text, labelType: "text", multiplicity: "single" }];
+}
+
+/**
+ * Returns a formula's text result as a bare number, or `undefined` when it isn't numeric. A real number has no
+ * letters or date/time separators (so `June 24, 2026` and `06/24/2026` stay text); grouping separators and a
+ * currency/percent symbol are stripped before the value is required to be a plain number.
+ */
+function numericFormulaValue(text: string): string | undefined {
+    if (/[\p{L}\/:]/u.test(text)) {
+        return undefined;
+    }
+    const core = text.replace(/[^\d.+-]/g, "");
+    return /^[+-]?(\d+\.?\d*|\.\d+)$/.test(core) ? core : undefined;
 }
 
 /** Gives an email/phone href a clickable scheme (`mailto:`/`tel:`); a plain url href is returned as-is. */

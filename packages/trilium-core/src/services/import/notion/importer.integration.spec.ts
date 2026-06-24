@@ -528,6 +528,33 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Key")).toBe("TASK-1");
     });
 
+    it("imports a formula column by its rendered shape: number, boolean (checkbox), or text (incl. a date formula)", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A formula has no type signal on the row — Notion renders the computed value with the matching widget.
+        // A number stays bare text, a boolean is a checkbox, and a date renders as plain text (no <time> wrapper).
+        const rows =
+            `<tr class="property-row property-row-formula"><th><span class="icon property-icon"><img src="x.svg"/></span>Number formula</th><td>15</td></tr>` +
+            `<tr class="property-row property-row-formula"><th>Bool formula</th><td><div class="checkbox checkbox-on"></div></td></tr>` +
+            `<tr class="property-row property-row-formula"><th>Date formula</th><td>June 24, 2026</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Number_formula")?.value).toBe("promoted,single,number,alias=Number formula");
+        expect(db?.getOwnedLabel("label:Bool_formula")?.value).toBe("promoted,single,boolean,alias=Bool formula");
+        expect(db?.getOwnedLabel("label:Date_formula")?.value).toBe("promoted,single,text,alias=Date formula");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("Number_formula")).toBe("15");
+        expect(row?.getOwnedLabelValue("Bool_formula")).toBe("true");
+        expect(row?.getOwnedLabelValue("Date_formula")).toBe("June 24, 2026");
+    });
+
     it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
