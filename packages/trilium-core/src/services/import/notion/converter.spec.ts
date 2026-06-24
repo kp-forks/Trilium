@@ -160,6 +160,15 @@ describe("convertNotionHtml — toggle headings", () => {
     });
 });
 
+describe("convertNotionHtml — table of contents", () => {
+    it("drops Notion's table-of-contents nav, keeping the surrounding content (Trilium generates its own)", () => {
+        const toc = `<nav class="block-color-gray table_of_contents"><div class="table_of_contents-item table_of_contents-indent-0"><a class="table_of_contents-link" href="#389c5eca-1b8b-805d-81d3-c56b2184de54">Heading 1</a></div></nav>`;
+        expect(convertNotionHtml(`${toc}<h2 id="389c5eca-1b8b-805d-81d3-c56b2184de54">Heading 1</h2><p>Body</p>`)).toBe(
+            `<h2 id="389c5eca-1b8b-805d-81d3-c56b2184de54">Heading 1</h2><p>Body</p>`
+        );
+    });
+});
+
 describe("convertNotionHtml — callouts", () => {
     const callout = (emoji: string, body: string) =>
         `<div style="display:contents" dir="ltr"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="386c5eca"><div style="font-size:1.5em"><span class="icon">${emoji}</span></div><div style="width:100%"><div style="display:contents" dir="auto">${body}</div></div></figure></div>`;

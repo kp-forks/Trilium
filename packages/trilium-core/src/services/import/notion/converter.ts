@@ -19,6 +19,7 @@ export function convertNotionHtml(html: string): string {
     convertTodoLists(root);
     convertToggles(root);
     convertToggleHeadings(root);
+    dropTableOfContents(root);
     unwrapDisplayContents(root);
     convertTables(root);
     convertImages(root);
@@ -255,6 +256,20 @@ const TOGGLE_HEADING_TAGS: Record<string, string> = {
 function toggleHeadingTag(summary: HTMLElement): string | undefined {
     const fontSize = summary.getAttribute("style")?.match(/font-size:\s*([\d.]+em)/)?.[1];
     return fontSize ? TOGGLE_HEADING_TAGS[fontSize] : undefined;
+}
+// #endregion
+
+// #region Table of contents
+/**
+ * Drops Notion's table-of-contents block (`<nav class="table_of_contents">`). It's a generated artifact, not
+ * authored content, and Trilium renders its own table of contents from the note's headings — in both the app
+ * and the shared view — so the imported one would only be a stale, duplicate list whose `#block-id` anchor
+ * links don't resolve in Trilium anyway.
+ */
+function dropTableOfContents(root: HTMLElement) {
+    for (const nav of root.querySelectorAll("nav.table_of_contents")) {
+        nav.remove();
+    }
 }
 // #endregion
 
