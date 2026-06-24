@@ -84,7 +84,9 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                 // own page), and its header row lists every column in the database's order.
                 csvPaths.push(path);
                 const [header = []] = parseCsv(new TextDecoder().decode(await readContent()));
-                csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => sanitizeAttributeName(column)));
+                // Trim before sanitizing so a padded CSV header (`Name, Age , …`) still matches the HTML
+                // property `<th>` text, which is trimmed on extraction.
+                csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => sanitizeAttributeName(column.trim())));
             } else {
                 resources.set(normalizePath(path), await readContent());
             }

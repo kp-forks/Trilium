@@ -373,8 +373,9 @@ function orderColumns(properties: NotionProperty[], csvColumns: string[] | undef
 /** Builds a promoted-attribute definition value (e.g. `promoted,single,text,alias=Text column`). */
 function buildPromotedDefinition({ name, labelType, multiplicity }: NotionProperty): string {
     // The alias keeps the original (pretty) column name in the UI while the attribute name stays sanitized.
-    // The definition is comma/`=`-delimited, so neutralize those characters in the alias to avoid corrupting it.
-    const alias = name.replace(/[,=]/g, " ").trim();
+    // The definition is a single-line, comma/`=`-delimited string, so neutralize those delimiters and any
+    // control character (e.g. a stray newline) in the alias to avoid corrupting it.
+    const alias = name.replace(/[\x00-\x1f,=]/g, " ").trim();
     // A relation has no value type; a label carries one (text/date/url/boolean/…).
     const type = labelType ? `${labelType},` : "";
     return `promoted,${multiplicity},${type}alias=${alias}`;

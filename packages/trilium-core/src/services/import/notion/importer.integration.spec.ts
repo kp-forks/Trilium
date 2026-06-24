@@ -557,8 +557,9 @@ describe("Notion importer — integration", () => {
     });
 
     it("orders the promoted definitions by the CSV column order, not row discovery order", async () => {
-        // The CSV header is the authoritative column order: Zeta, Alpha, Mu.
-        const csv = "Name,Zeta,Alpha,Mu\nRow1,,a,m\nRow2,z,,\n";
+        // The CSV header is the authoritative column order: Zeta, Alpha, Mu (with stray padding around some
+        // names, which must be trimmed to match the trimmed HTML property headers).
+        const csv = "Name, Zeta , Alpha,Mu\nRow1,,a,m\nRow2,z,,\n";
         const row1Id = "388c5eca1b8b80929a78da7c68154bd7";
         const row2Id = "388c5eca1b8b80e5903ef480b0523eb1";
         const textCol = (col: string, val: string) => `<tr class="property-row property-row-text"><th>${col}</th><td>${val}</td></tr>`;
@@ -698,10 +699,11 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabels("Files___media")).toHaveLength(0);
     });
 
-    it("neutralizes commas in a column name so the alias can't corrupt the definition", async () => {
+    it("neutralizes commas and control characters in a column name so the alias can't corrupt the definition", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
-        const props = `<table class="properties"><tbody><tr class="property-row property-row-text"><th>Weight, kg</th><td>5</td></tr></tbody></table>`;
+        // The name carries a comma and a newline — both would break the single-line, comma-delimited definition.
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-text"><th>Weight,\nkg</th><td>5</td></tr></tbody></table>`;
         const importRoot = await importNotion({
             "DB 388c5eca1b8b8078a20fd18330d81306.html":
                 `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
@@ -710,7 +712,7 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        // The comma in "Weight, kg" becomes a space in the alias, so the definition keeps exactly four tokens.
+        // Both the comma and the newline become spaces, so the definition stays one line of four tokens.
         expect(db?.getOwnedLabel("label:Weight__kg")?.value).toBe("promoted,single,text,alias=Weight  kg");
     });
 
