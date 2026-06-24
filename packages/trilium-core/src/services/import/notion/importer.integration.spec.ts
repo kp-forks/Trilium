@@ -67,6 +67,9 @@ describe("Notion importer — integration", () => {
 
         const readingList = importRoot.getChildNotes().find((note) => note.title === "Reading List");
         const media = readingList?.getChildNotes().find((note) => note.title === "Media");
+        // The synthesized container is itself a table collection, like a database that has its own page.
+        expect(media?.type).toBe("book");
+        expect(media?.getLabelValue("viewType")).toBe("table");
         expect(media?.getChildNotes().map((note) => note.title)).toEqual(["Bon Appetit"]);
     });
 
@@ -80,6 +83,24 @@ describe("Notion importer — integration", () => {
         const fortyFive = importRoot.getChildNotes().filter((note) => note.title === "45");
         expect(fortyFive.length).toBe(1);
         expect(fortyFive[0].getChildNotes().map((note) => note.title)).toEqual(["Brown fox"]);
+    });
+
+    it("imports a database's own page as an empty table collection, dropping its rendered collection table", async () => {
+        // A Notion database page's body is the rendered collection table, not real content — a Trilium
+        // collection note is empty (its data lives in the row notes), so the table must not become content.
+        // The database becomes a `book` with #viewType=table, the only view a Notion export preserves.
+        const collectionBody = `<div class="collection-content-wrapper"><table class="collection-content"><thead><tr><th>Name</th><th>Select column</th></tr></thead><tbody><tr id="388c5eca1b8b80929a78da7c68154bd7"><td class="cell-title"><a href="My%20basic%20database/Foo%20388c5eca1b8b80929a78da7c68154bd7.html">Foo</a></td><td><span class="selected-value">First</span></td></tr></tbody></table></div>`;
+        const importRoot = await importNotion({
+            "My basic database 388c5eca1b8b8078a20fd18330d81306.html": `<html><head><title>My basic database</title></head><body><div id="388c5eca1b8b8078a20fd18330d81306" class="page"><div class="page-body">${collectionBody}</div></div></body></html>`,
+            "My basic database 388c5eca1b8b8078a20fd18330d81306.csv": "Name,Select column\nFoo,First",
+            "My basic database/Foo 388c5eca1b8b80929a78da7c68154bd7.html": pageHtml("Foo", "388c5eca1b8b80929a78da7c68154bd7")
+        });
+
+        const database = importRoot.getChildNotes().find((note) => note.title === "My basic database");
+        expect(database?.type).toBe("book");
+        expect(database?.getLabelValue("viewType")).toBe("table");
+        expect(database?.getContent()).toBe("");
+        expect(database?.getChildNotes().map((note) => note.title)).toEqual(["Foo"]);
     });
 
     it("saves a referenced file as a role:file attachment and links to it from the content", async () => {
@@ -311,6 +332,536 @@ describe("Notion importer — integration", () => {
         // No timestamps were applied, so the note keeps a fresh (recent) creation date, not 2024.
         const undated = importRoot.getChildNotes().find((note) => note.title === "Undated");
         expect(undated?.utcDateCreated.startsWith("2024-01-02")).toBe(false);
+    });
+
+    it("imports a page's text property as a Trilium label", async () => {
+        const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
+        // Real Notion markup: the <th> leads with an icon span (no text) before the column name.
+        const propertyTable =
+            `<table class="properties"><tbody>` +
+            `<tr class="property-row property-row-text"><th><span class="icon property-icon"><img src="x.svg"/></span>Text column</th><td>Basic text</td></tr>` +
+            `</tbody></table>`;
+        const importRoot = await importNotion({
+            "Texty 2c6c5eca1b8b80f7b9eaf4f396b755dc.html":
+                `<html><head><title>Texty</title></head><body><div id="${id}">${propertyTable}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Texty");
+        // The column name is sanitized (space → underscore, case preserved); the value is kept verbatim.
+        expect(note?.getOwnedLabelValue("textColumn")).toBe("Basic text");
+    });
+
+    it("derives a camelCase attribute name from a text property's name and skips blank values", async () => {
+        const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
+        const propertyTable =
+            `<table class="properties"><tbody>` +
+            `<tr class="property-row property-row-text"><th>Sub-title (v2)</th><td>Hello world</td></tr>` +
+            `<tr class="property-row property-row-text"><th>Empty</th><td></td></tr>` +
+            `</tbody></table>`;
+        const importRoot = await importNotion({
+            "Mixed 2c6c5eca1b8b80f7b9eaf4f396b755dc.html":
+                `<html><head><title>Mixed</title></head><body><div id="${id}">${propertyTable}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Mixed");
+        // The name is split into alphanumeric words and camelCased: "Sub-title (v2)" → "subTitleV2".
+        expect(note?.getOwnedLabelValue("subTitleV2")).toBe("Hello world");
+        // The blank-valued row contributes no label.
+        expect(note?.hasOwnedLabel("empty")).toBe(false);
+    });
+
+    it("defines text columns as inheritable promoted attributes on the container, inherited by every row", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const fooId = "388c5eca1b8b80929a78da7c68154bd7";
+        const barId = "388c5eca1b8b80e5903ef480b0523eb1";
+        const props = (rows: string) => `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "My DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>My DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "My DB/Foo 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Foo</title></head><body><div id="${fooId}">${props(`<tr class="property-row property-row-text"><th><span class="icon property-icon"><img src="x.svg"/></span>Text column</th><td>Basic text</td></tr>`)}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "My DB/Bar 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Bar</title></head><body><div id="${barId}">${props(`<tr class="property-row property-row-text"><th>Other note</th><td>Hi</td></tr>`)}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "My DB");
+        // The container owns one inheritable definition per column seen across all rows (the schema union).
+        const textDef = db?.getOwnedLabel("label:textColumn");
+        expect(textDef?.value).toBe("promoted,single,text,alias=Text column");
+        expect(textDef?.isInheritable).toBe(true);
+        expect(db?.getOwnedLabel("label:otherNote")?.value).toBe("promoted,single,text,alias=Other note");
+
+        const foo = db?.getChildNotes().find((n) => n.title === "Foo");
+        const bar = db?.getChildNotes().find((n) => n.title === "Bar");
+        // Each row inherits the whole schema (including a column it has no value for) without owning a copy.
+        expect(foo?.getOwnedLabel("label:otherNote")).toBeNull();
+        expect(foo?.getLabelValue("label:otherNote")).toBe("promoted,single,text,alias=Other note");
+        // Only the row that had the value owns it; the other inherits an empty field.
+        expect(foo?.getOwnedLabelValue("textColumn")).toBe("Basic text");
+        expect(foo?.getOwnedLabelValue("otherNote")).toBeNull();
+        expect(bar?.getOwnedLabelValue("otherNote")).toBe("Hi");
+        expect(bar?.getOwnedLabelValue("textColumn")).toBeNull();
+    });
+
+    it("imports a multi-select column as multi-valued labels with a `multi` definition", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const fullId = "388c5eca1b8b80929a78da7c68154bd7";
+        const emptyId = "388c5eca1b8b80e5903ef480b0523eb1";
+        // Real markup: one <span class="selected-value"> per option; an unset multi-select is an empty <td>.
+        const multi = (options: string) =>
+            `<table class="properties"><tbody><tr class="property-row property-row-multi_select"><th><span class="icon property-icon"><img src="x.svg"/></span>Multi-select</th><td>${options}</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Full 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Full</title></head><body><div id="${fullId}">${multi(`<span class="selected-value">c</span><span class="selected-value">d</span><span class="selected-value">e</span>`)}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/Empty 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Empty</title></head><body><div id="${emptyId}">${multi("")}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // The column is defined once on the container as a multi-valued promoted attribute.
+        expect(db?.getOwnedLabel("label:multiSelect")?.value).toBe("promoted,multi,text,alias=Multi-select");
+
+        const full = db?.getChildNotes().find((n) => n.title === "Full");
+        const empty = db?.getChildNotes().find((n) => n.title === "Empty");
+        // Each selected option becomes its own label, preserving order.
+        expect(full?.getOwnedLabels("multiSelect").map((l) => l.value)).toEqual(["c", "d", "e"]);
+        // An unset multi-select contributes no value labels, but still inherits the (multi) definition.
+        expect(empty?.getOwnedLabels("multiSelect")).toHaveLength(0);
+        expect(empty?.getLabelValue("label:multiSelect")).toBe("promoted,multi,text,alias=Multi-select");
+    });
+
+    it("imports a select column as a single-valued text label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Notion renders a single-select value as one <span class="selected-value"> in the cell.
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-select"><th><span class="icon property-icon"><img src="x.svg"/></span>Select column</th><td><span class="selected-value select-value-color-gray">First</span></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:selectColumn")?.value).toBe("promoted,single,text,alias=Select column");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("selectColumn")).toBe("First");
+    });
+
+    it("imports a status column as a single-valued text label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A status value sits in a <span class="status-value"> after an empty <div class="status-dot">.
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-status"><th><span class="icon property-icon"><img src="x.svg"/></span>Status column</th><td><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>Another in progress</span></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:statusColumn")?.value).toBe("promoted,single,text,alias=Status column");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("statusColumn")).toBe("Another in progress");
+    });
+
+    it("imports number columns as number-typed labels, normalizing formatted values and inheriting the schema", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const firstId = "388c5eca1b8b80929a78da7c68154bd7";
+        const secondId = "388c5eca1b8b80deb7f9ede99b0b2036";
+        // A number cell holds the *formatted* display (commas, currency, percent), which the importer
+        // normalizes to a bare number. Notion drops the property row entirely when a number is empty, so
+        // "Second" carries no number rows at all — yet still inherits the column definitions from the container.
+        const numberRows =
+            `<tr class="property-row property-row-number"><th><span class="icon property-icon"><img src="x.svg"/></span>A</th><td>12</td></tr>` +
+            `<tr class="property-row property-row-number"><th>B</th><td>$1,200.50</td></tr>` +
+            `<tr class="property-row property-row-number"><th>C</th><td>25%</td></tr>`;
+        const props = `<table class="properties"><tbody>${numberRows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/First 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>First</title></head><body><div id="${firstId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/Second 388c5eca1b8b80deb7f9ede99b0b2036.html":
+                `<html><head><title>Second</title></head><body><div id="${secondId}"><div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:a")?.value).toBe("promoted,single,number,alias=A");
+        expect(db?.getOwnedLabel("label:b")?.value).toBe("promoted,single,number,alias=B");
+
+        const first = db?.getChildNotes().find((n) => n.title === "First");
+        expect(first?.getOwnedLabelValue("a")).toBe("12");
+        expect(first?.getOwnedLabelValue("b")).toBe("1200.50"); // "$1,200.50" → bare number
+        expect(first?.getOwnedLabelValue("c")).toBe("25"); // "25%" → bare number
+
+        // "Second" has no number values of its own, but inherits the column definitions from the container.
+        const second = db?.getChildNotes().find((n) => n.title === "Second");
+        expect(second?.getOwnedLabelValue("a")).toBeNull();
+        expect(second?.getLabelValue("label:a")).toBe("promoted,single,number,alias=A");
+    });
+
+    it("imports an auto-increment ID column as a number label, keeping a prefixed ID as text", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Notion's ID is an integer counter (a bare number), but a configured prefix turns it into an
+        // identifier like "TASK-1" that must stay verbatim. Both render as a property-row-auto_increment_id.
+        const rows =
+            `<tr class="property-row property-row-auto_increment_id"><th><span class="icon property-icon"><img src="x.svg"/></span>ID</th><td>1</td></tr>` +
+            `<tr class="property-row property-row-auto_increment_id"><th>Key</th><td>TASK-1</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:id")?.value).toBe("promoted,single,number,alias=ID");
+        expect(db?.getOwnedLabel("label:key")?.value).toBe("promoted,single,text,alias=Key");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("id")).toBe("1");
+        expect(row?.getOwnedLabelValue("key")).toBe("TASK-1");
+    });
+
+    it("imports a formula column by its rendered shape: number, boolean (checkbox), or text (incl. a date formula)", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A formula has no type signal on the row — Notion renders the computed value with the matching widget.
+        // A number stays bare text, a boolean is a checkbox, and a date renders as plain text (no <time> wrapper).
+        const rows =
+            `<tr class="property-row property-row-formula"><th><span class="icon property-icon"><img src="x.svg"/></span>Number formula</th><td>15</td></tr>` +
+            `<tr class="property-row property-row-formula"><th>Bool formula</th><td><div class="checkbox checkbox-on"></div></td></tr>` +
+            `<tr class="property-row property-row-formula"><th>Date formula</th><td>June 24, 2026</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:numberFormula")?.value).toBe("promoted,single,number,alias=Number formula");
+        expect(db?.getOwnedLabel("label:boolFormula")?.value).toBe("promoted,single,boolean,alias=Bool formula");
+        expect(db?.getOwnedLabel("label:dateFormula")?.value).toBe("promoted,single,text,alias=Date formula");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("numberFormula")).toBe("15");
+        expect(row?.getOwnedLabelValue("boolFormula")).toBe("true");
+        expect(row?.getOwnedLabelValue("dateFormula")).toBe("June 24, 2026");
+    });
+
+    it("imports a rollup column by its rendered shape, like a formula (text title, numeric aggregate)", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A rollup is computed and untyped on the row (property-row-rollup); a relation-title rollup is plain
+        // text, a count/sum aggregate is a bare number — inferred from the cell shape, same as a formula.
+        const rows =
+            `<tr class="property-row property-row-rollup"><th><span class="icon property-icon"><img src="x.svg"/></span>Titles</th><td>First</td></tr>` +
+            `<tr class="property-row property-row-rollup"><th>Count</th><td>2</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:titles")?.value).toBe("promoted,single,text,alias=Titles");
+        expect(db?.getOwnedLabel("label:count")?.value).toBe("promoted,single,number,alias=Count");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("titles")).toBe("First");
+        expect(row?.getOwnedLabelValue("count")).toBe("2");
+    });
+
+    it("imports created-by and last-edited-by as single-valued text labels of the user name", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Both render like a person cell: a <span class="user"> with a leading avatar (an initial) to strip.
+        const user = `<span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">E</span></span>Elian Doran</span>`;
+        const rows =
+            `<tr class="property-row property-row-created_by"><th><span class="icon property-icon"><img src="x.svg"/></span>Created by</th><td>${user}</td></tr>` +
+            `<tr class="property-row property-row-last_edited_by"><th>Last edited by</th><td>${user}</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:createdBy")?.value).toBe("promoted,single,text,alias=Created by");
+        expect(db?.getOwnedLabel("label:lastEditedBy")?.value).toBe("promoted,single,text,alias=Last edited by");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("createdBy")).toBe("Elian Doran");
+        expect(row?.getOwnedLabelValue("lastEditedBy")).toBe("Elian Doran");
+    });
+
+    it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // All three render as <a class="url-value">; email/phone hrefs are bare addresses.
+        const props =
+            `<table class="properties"><tbody>` +
+            `<tr class="property-row property-row-url"><th><span class="icon property-icon"><img src="x.svg"/></span>URL</th><td><a href="https://triliumnotes.org" class="url-value">https://triliumnotes.org</a></td></tr>` +
+            `<tr class="property-row property-row-email"><th><span class="icon property-icon"><img src="y.svg"/></span>Email</th><td><a href="test@acme.org" class="url-value">test@acme.org</a></td></tr>` +
+            `<tr class="property-row property-row-phone_number"><th><span class="icon property-icon"><img src="z.svg"/></span>Phone</th><td><a href="12345678" class="url-value">12345678</a></td></tr>` +
+            `</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // Each column gets a url-typed definition.
+        expect(db?.getOwnedLabel("label:url")?.value).toBe("promoted,single,url,alias=URL");
+        expect(db?.getOwnedLabel("label:email")?.value).toBe("promoted,single,url,alias=Email");
+        expect(db?.getOwnedLabel("label:phone")?.value).toBe("promoted,single,url,alias=Phone");
+
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
+        // Email/phone are stored as clickable mailto:/tel: links.
+        expect(row?.getOwnedLabelValue("email")).toBe("mailto:test@acme.org");
+        expect(row?.getOwnedLabelValue("phone")).toBe("tel:12345678");
+    });
+
+    it("imports a dated column with a clock time as a datetime label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-date"><th><span class="icon property-icon"><img src="x.svg"/></span>Date</th><td><time>June 23, 2026 7:00 PM</time></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:date")?.value).toBe("promoted,single,datetime,alias=Date");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // Local datetime-local format; "7:00 PM" → 19:00 (parse-local + format-local is timezone-independent).
+        expect(row?.getOwnedLabelValue("date")).toBe("2026-06-23T19:00");
+    });
+
+    it("splits a timeless date range into separate start and end date columns", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A date range joins start and end with an arrow (U+2192).
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-date"><th><span class="icon property-icon"><img src="x.svg"/></span>Date</th><td><time>June 24, 2026 → June 30, 2026</time></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // The range becomes two date columns: the original (start) and a separate "<name> end".
+        expect(db?.getOwnedLabel("label:date")?.value).toBe("promoted,single,date,alias=Date");
+        expect(db?.getOwnedLabel("label:dateEnd")?.value).toBe("promoted,single,date,alias=Date end");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("date")).toBe("2026-06-24");
+        expect(row?.getOwnedLabelValue("dateEnd")).toBe("2026-06-30");
+    });
+
+    it("normalizes a date column that mixes dates and date-times to datetime", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const withTimeId = "388c5eca1b8b80929a78da7c68154bd7";
+        const noTimeId = "388c5eca1b8b80e5903ef480b0523eb1";
+        const dateRow = (time: string) =>
+            `<table class="properties"><tbody><tr class="property-row property-row-date"><th><span class="icon property-icon"><img src="x.svg"/></span>Date</th><td><time>${time}</time></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/WithTime 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>WithTime</title></head><body><div id="${withTimeId}">${dateRow("June 23, 2026 7:00 PM")}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/NoTime 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>NoTime</title></head><body><div id="${noTimeId}">${dateRow("June 24, 2026")}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // One row uses a time, so the whole column becomes datetime.
+        expect(db?.getOwnedLabel("label:date")?.value).toBe("promoted,single,datetime,alias=Date");
+        const withTime = db?.getChildNotes().find((n) => n.title === "WithTime");
+        const noTime = db?.getChildNotes().find((n) => n.title === "NoTime");
+        expect(withTime?.getOwnedLabelValue("date")).toBe("2026-06-23T19:00");
+        // The time-less value is normalized to midnight so it stays valid for the datetime-local input.
+        expect(noTime?.getOwnedLabelValue("date")).toBe("2026-06-24T00:00");
+    });
+
+    it("orders the promoted definitions by the CSV column order, not row discovery order", async () => {
+        // The CSV header is the authoritative column order: Zeta, Alpha, Mu (with stray padding around some
+        // names, which must be trimmed to match the trimmed HTML property headers).
+        const csv = "Name, Zeta , Alpha,Mu\nRow1,,a,m\nRow2,z,,\n";
+        const row1Id = "388c5eca1b8b80929a78da7c68154bd7";
+        const row2Id = "388c5eca1b8b80e5903ef480b0523eb1";
+        const textCol = (col: string, val: string) => `<tr class="property-row property-row-text"><th>${col}</th><td>${val}</td></tr>`;
+        const props = (rows: string) => `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "My DB 388c5eca1b8b8078a20fd18330d81306.csv": csv,
+            // Row1 (discovered first) has Alpha + Mu but not Zeta; Row2 has Zeta.
+            "My DB/Row1 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row1</title></head><body><div id="${row1Id}">${props(textCol("Alpha", "a") + textCol("Mu", "m"))}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "My DB/Row2 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Row2</title></head><body><div id="${row2Id}">${props(textCol("Zeta", "z"))}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "My DB");
+        const definitions = db?.getOwnedAttributes("label").filter((attr) => attr.name.startsWith("label:")) ?? [];
+        // CSV order (Zeta, Alpha, Mu) wins, even though Alpha/Mu were discovered before Zeta.
+        expect(definitions.map((attr) => attr.name)).toEqual(["label:zeta", "label:alpha", "label:mu"]);
+        // Increasing positions keep that order in the promoted-attributes UI (which sorts defs by position).
+        expect(definitions.map((attr) => attr.position)).toEqual([10, 20, 30]);
+    });
+
+    it("imports a checkbox column as a boolean label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const onId = "388c5eca1b8b80929a78da7c68154bd7";
+        const offId = "388c5eca1b8b80e5903ef480b0523eb1";
+        // Notion renders a checkbox as <div class="checkbox checkbox-on|off">.
+        const checkbox = (state: string) => `<table class="properties"><tbody><tr class="property-row property-row-checkbox"><th><span class="icon property-icon"><img src="x.svg"/></span>Checkbox</th><td><div class="checkbox checkbox-${state}"></div></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/On 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>On</title></head><body><div id="${onId}">${checkbox("on")}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/Off 388c5eca1b8b80e5903ef480b0523eb1.html":
+                `<html><head><title>Off</title></head><body><div id="${offId}">${checkbox("off")}<div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:checkbox")?.value).toBe("promoted,single,boolean,alias=Checkbox");
+        const on = db?.getChildNotes().find((n) => n.title === "On");
+        const off = db?.getChildNotes().find((n) => n.title === "Off");
+        expect(on?.getOwnedLabelValue("checkbox")).toBe("true");
+        expect(off?.getOwnedLabelValue("checkbox")).toBe("false");
+    });
+
+    it("imports a place column as a single-valued text label", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-place"><th><span class="icon property-icon"><img src="x.svg"/></span>Place</th><td>Rotterdam, South Holland, Netherlands</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:place")?.value).toBe("promoted,single,text,alias=Place");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // The comma-bearing value is stored verbatim (it's a label value, not part of the definition).
+        expect(row?.getOwnedLabelValue("place")).toBe("Rotterdam, South Holland, Netherlands");
+    });
+
+    it("imports a person column as multi-valued labels, stripping the avatar initial", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Real markup: each person is a <span class="user"> whose .user-icon holds an avatar initial.
+        const user = (initial: string, fullName: string) =>
+            `<span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">${initial}</span></span>${fullName}</span>`;
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-person"><th><span class="icon property-icon"><img src="x.svg"/></span>Person</th><td>${user("E", "Elian Doran")}, ${user("A", "Ada Lovelace")}</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:person")?.value).toBe("promoted,multi,text,alias=Person");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // The avatar initials ("E", "A") are dropped, leaving just the names, one label per person.
+        expect(row?.getOwnedLabels("person").map((l) => l.value)).toEqual(["Elian Doran", "Ada Lovelace"]);
+    });
+
+    it("maps a relation column to real Trilium relations, resolving links and dropping un-imported targets", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const fooId = "388c5eca1b8b80929a78da7c68154bd7";
+        const barId = "388c5eca1b8b80e5903ef480b0523eb1";
+        const bazId = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
+        const ghostId = "386c5eca1b8b80439520cad27a0d2749"; // referenced but not imported
+        const link = (title: string, id: string) => `<a href="${title}%20${id}.html">${title}</a>`;
+        const relation = (links: string) =>
+            `<table class="properties"><tbody><tr class="property-row property-row-relation"><th><span class="icon property-icon"><img src="x.svg"/></span>Related</th><td>${links}</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            // Foo → Bar, Baz and an un-imported Ghost; Bar → itself.
+            [`DB/Foo ${fooId}.html`]:
+                `<html><head><title>Foo</title></head><body><div id="${fooId}">${relation(`${link("Bar", barId)}, ${link("Baz", bazId)}, ${link("Ghost", ghostId)}`)}<div class="page-body"><p>x</p></div></div></body></html>`,
+            [`DB/Bar ${barId}.html`]:
+                `<html><head><title>Bar</title></head><body><div id="${barId}">${relation(link("Bar", barId))}<div class="page-body"><p>y</p></div></div></body></html>`,
+            [`DB/Baz ${bazId}.html`]:
+                `<html><head><title>Baz</title></head><body><div id="${bazId}"><div class="page-body"><p>z</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // A relation column becomes a `relation:` promoted definition (multi, and carrying no value type).
+        expect(db?.getOwnedLabel("relation:related")?.value).toBe("promoted,multi,alias=Related");
+
+        const foo = db?.getChildNotes().find((n) => n.title === "Foo");
+        const bar = db?.getChildNotes().find((n) => n.title === "Bar");
+        const baz = db?.getChildNotes().find((n) => n.title === "Baz");
+        // Foo relates to the real Bar and Baz notes; the un-imported Ghost target is dropped.
+        expect(foo?.getOwnedRelations("related").map((r) => r.value)).toEqual([bar?.noteId, baz?.noteId]);
+        // A self-reference resolves to the note itself.
+        expect(bar?.getOwnedRelations("related").map((r) => r.value)).toEqual([bar?.noteId]);
+    });
+
+    it("saves a file column's bundled files as role:file attachments, skipping external links and adding no definition", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A file cell links a bundled file plus an external URL that isn't in the zip.
+        const fileCell = `<table class="properties"><tbody><tr class="property-row property-row-file"><th><span class="icon property-icon"><img src="x.svg"/></span>Files &amp; media</th><td><span><a href="report.pdf">report.pdf</a></span><span><a href="https://example.com/external.pdf">external.pdf</a></span></td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${fileCell}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/report.pdf": "%PDF-1.4 fake"
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        // The bundled file becomes a role:file attachment; the external link (not in the zip) is skipped.
+        const attachment = row?.getAttachmentsByRole("file").find((a) => a.title === "report.pdf");
+        expect(row?.getAttachmentsByRole("file").map((a) => a.title)).toEqual(["report.pdf"]);
+        // The bundled file is also a reference-link prepended before the original body; the external one,
+        // having no attachment, contributes no link (so there's exactly one).
+        const content = String(row?.getContent() ?? "");
+        expect(content).toContain(`<a class="reference-link" href="#root/${row?.noteId}?viewMode=attachments&attachmentId=${attachment?.attachmentId}">report.pdf</a>`);
+        expect(content.match(/reference-link/g)).toHaveLength(1);
+        expect(content.indexOf("reference-link")).toBeLessThan(content.indexOf("<p>x</p>"));
+        // A file column is content, not metadata — no promoted definition and no value label.
+        expect(db?.getOwnedLabel("label:filesMedia")).toBeFalsy();
+        expect(row?.getOwnedLabels("filesMedia")).toHaveLength(0);
+    });
+
+    it("neutralizes commas and control characters in a column name so the alias can't corrupt the definition", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // The name carries a comma and a newline — both would break the single-line, comma-delimited definition.
+        const props = `<table class="properties"><tbody><tr class="property-row property-row-text"><th>Weight,\nkg</th><td>5</td></tr></tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        // Both the comma and the newline become spaces, so the definition stays one line of four tokens.
+        expect(db?.getOwnedLabel("label:weightKg")?.value).toBe("promoted,single,text,alias=Weight  kg");
     });
 
     it("saves a bundled image as an attachment and rewrites its src; leaves external/srcless images alone", async () => {
