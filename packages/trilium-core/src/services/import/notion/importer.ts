@@ -149,16 +149,23 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
     for (const page of ordered) {
         const targetParentId = noteByFolder.get(parentFolderKey(page.path))?.noteId ?? rootNote.noteId;
 
+        // A Notion database imports as a Trilium table collection: an (empty) `book` whose rows are its
+        // children and whose columns are the promoted-attribute definitions added below. `table` is the
+        // only view the export preserves — every Notion database exports as a rendered table regardless of
+        // its actual view (board/calendar/…), so that information is gone and table is the faithful mapping.
         const { note } = noteService.createNewNote({
             parentNoteId: targetParentId,
             title: page.title,
             content: page.content,
-            type: "text",
-            mime: "text/html",
+            type: page.isDatabase ? "book" : "text",
+            mime: page.isDatabase ? "" : "text/html",
             isProtected
         });
         noteByFolder.set(ownedFolderKey(page.path), note);
         targetByPageId.set(page.id, { noteId: note.noteId, title: page.title });
+        if (page.isDatabase) {
+            note.addLabel("viewType", "table");
+        }
 
         // Carry the page's own database property values over (file columns become attachments, the rest
         // labels); relations are deferred to the second pass, once every target note exists.
