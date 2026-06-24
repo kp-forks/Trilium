@@ -555,6 +555,30 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Date_formula")).toBe("June 24, 2026");
     });
 
+    it("imports a rollup column by its rendered shape, like a formula (text title, numeric aggregate)", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // A rollup is computed and untyped on the row (property-row-rollup); a relation-title rollup is plain
+        // text, a count/sum aggregate is a bare number — inferred from the cell shape, same as a formula.
+        const rows =
+            `<tr class="property-row property-row-rollup"><th><span class="icon property-icon"><img src="x.svg"/></span>Titles</th><td>First</td></tr>` +
+            `<tr class="property-row property-row-rollup"><th>Count</th><td>2</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Titles")?.value).toBe("promoted,single,text,alias=Titles");
+        expect(db?.getOwnedLabel("label:Count")?.value).toBe("promoted,single,number,alias=Count");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("Titles")).toBe("First");
+        expect(row?.getOwnedLabelValue("Count")).toBe("2");
+    });
+
     it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";

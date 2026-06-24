@@ -72,7 +72,8 @@ export function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
  *  - `checkbox`: `checkbox-on`/`checkbox-off` → a `true`/`false` boolean label;
- *  - `formula`: inferred from the rendered cell shape — checkbox → boolean, else numeric text → number, else text;
+ *  - `formula` / `rollup`: a computed value with no type signal, inferred from the rendered cell shape —
+ *    checkbox → boolean, else numeric text → number, else text (a multi-value rollup collapses to one text value);
  *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property;
  *  - `relation`: each linked page's `<a>` href → a multi-valued relation, resolved to a note in the second pass;
  *  - `file`: each `<a>` href → a `role:"file"` attachment on the note (no promoted definition — it's content).
@@ -130,8 +131,8 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
             if (property) {
                 properties.push(property);
             }
-        } else if (type === "formula") {
-            properties.push(...extractFormula(name, cell));
+        } else if (type === "formula" || type === "rollup") {
+            properties.push(...extractComputedValue(name, cell));
         } else if (type === "person") {
             // A person column can list several users; each is a `<span class="user">` whose leading avatar
             // (`.user-icon`, e.g. an initial) would otherwise bleed into the name, so drop it first.
@@ -190,15 +191,17 @@ function toBooleanProperty(name: string, cell: HTMLElement): NotionProperty | un
 }
 
 /**
- * Reads a Notion formula column. A formula's result has no type signal on the row (the class is always
- * `property-row-formula`), so the Trilium type is inferred from the cell's shape — the only evidence the
- * export gives. A boolean result renders as a checkbox widget (→ a `boolean` label); every other result is
- * plain text, which becomes a `number` label when it's purely numeric and a `text` label otherwise. Notion
- * renders a *date* formula as plain text too (e.g. `June 24, 2026`, with no `<time>` wrapper, unlike a native
- * date column), so it lands in the text case — preserved verbatim, not typed as a Trilium date. Every value is
- * a snapshot: Trilium has no formula engine, so it reflects the export and won't recompute.
+ * Reads a Notion computed column — a `formula` or a `rollup`. Neither carries a type signal on its row (the
+ * class is always `property-row-formula`/`-rollup`), so the Trilium type is inferred from the cell's shape —
+ * the only evidence the export gives. A boolean result renders as a checkbox widget (→ a `boolean` label);
+ * every other result is plain text, which becomes a `number` label when it's purely numeric and a `text` label
+ * otherwise. Notion renders a *date* result as plain text too (e.g. `June 24, 2026`, with no `<time>` wrapper,
+ * unlike a native date column), so it lands in the text case — preserved verbatim, not typed as a Trilium
+ * date. Every value is a snapshot: Trilium has no formula/rollup engine, so it reflects the export and won't
+ * recompute. A multi-value rollup (e.g. "show original" over a multi-relation) collapses to a single text
+ * value here, since the multi-value markup hasn't been sampled.
  */
-function extractFormula(name: string, cell: HTMLElement): NotionProperty[] {
+function extractComputedValue(name: string, cell: HTMLElement): NotionProperty[] {
     const boolean = toBooleanProperty(name, cell);
     if (boolean) {
         return [boolean];
