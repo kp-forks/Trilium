@@ -211,6 +211,40 @@ describe("convertNotionHtml — list fragmentation", () => {
     });
 });
 
+describe("convertNotionHtml — columns", () => {
+    // Notion column layouts are a <div class="column-list"> of <div class="column" style="width:N%"> divs,
+    // each wrapping its content in display:contents. They render as a single-row borderless table.
+    const dc = (inner: string) => `<div style="display:contents" dir="auto">${inner}</div>`;
+    const column = (width: string, text: string) =>
+        dc(`<div style="width:${width}" class="column">${dc(`<p class="">${text}</p>`)}</div>`);
+    const columnList = (...cols: string[]) => dc(`<div id="x" class="column-list">${cols.join("")}</div>`);
+
+    it("renders a two-column layout as a borderless table with per-cell widths", () => {
+        const input = columnList(column("50%", "First column"), column("50%", "Second column"));
+        expect(convertNotionHtml(input)).toBe(
+            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>` +
+            `<td style="border-color:transparent;width:50%;">First column</td>` +
+            `<td style="border-color:transparent;width:50%;">Second column</td>` +
+            `</tr></tbody></table></figure>`
+        );
+    });
+
+    it("rounds an awkward column width to two decimals", () => {
+        const input = columnList(
+            column("33.33333333333333%", "First column"),
+            column("33.33333333333333%", "Second column"),
+            column("33.33333333333333%", "Third column")
+        );
+        expect(convertNotionHtml(input)).toBe(
+            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>` +
+            `<td style="border-color:transparent;width:33.33%;">First column</td>` +
+            `<td style="border-color:transparent;width:33.33%;">Second column</td>` +
+            `<td style="border-color:transparent;width:33.33%;">Third column</td>` +
+            `</tr></tbody></table></figure>`
+        );
+    });
+});
+
 describe("convertNotionHtml — callouts", () => {
     const callout = (emoji: string, body: string) =>
         `<div style="display:contents" dir="ltr"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="386c5eca"><div style="font-size:1.5em"><span class="icon">${emoji}</span></div><div style="width:100%"><div style="display:contents" dir="auto">${body}</div></div></figure></div>`;

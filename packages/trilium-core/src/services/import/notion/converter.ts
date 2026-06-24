@@ -22,6 +22,7 @@ export function convertNotionHtml(html: string): string {
     dropTableOfContents(root);
     unwrapDisplayContents(root);
     mergeFragmentedLists(root);
+    convertColumns(root);
     convertTables(root);
     convertImages(root);
     convertAttachments(root);
@@ -322,6 +323,48 @@ function mergeFragmentedLists(root: HTMLElement) {
 function isMergeableList(el: HTMLElement): boolean {
     return (isTag(el, "ul") && el.classList.contains("bulleted-list"))
         || (isTag(el, "ol") && el.classList.contains("numbered-list"));
+}
+// #endregion
+
+// #region Columns
+/**
+ * Notion column layouts (`<div class="column-list">` of `<div class="column" style="width:N%">`) have no
+ * Trilium/CKEditor equivalent, so render them as a single-row borderless table — one `<td>` per column,
+ * carrying that column's width. Both the table and every cell get `border-color:transparent` so the result
+ * reads as side-by-side content rather than a grid, and the width is rounded to two decimals to match
+ * CKEditor's column widths. A column whose only block is a `<p>` is unwrapped, so a one-paragraph column
+ * becomes a plain cell. (Nested column lists aren't flattened yet — an inner list is left in its cell.)
+ */
+function convertColumns(root: HTMLElement) {
+    for (const columnList of root.querySelectorAll("div.column-list")) {
+        if (!columnList.parentNode) {
+            continue; // a nested list already removed together with its parent
+        }
+        const columns = directChildren(columnList, "div").filter((column) => column.classList.contains("column"));
+        const evenWidth = `${Math.round((100 / columns.length) * 100) / 100}%`;
+        const cells = columns
+            .map((column) => `<td style="border-color:transparent;width:${columnWidth(column) ?? evenWidth};">${cellContent(column)}</td>`)
+            .join("");
+        columnList.insertAdjacentHTML("beforebegin",
+            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>${cells}</tr></tbody></table></figure>`);
+        columnList.remove();
+    }
+}
+
+/** A Notion column's width (`style="width:N%"`) rounded to two decimals (`33.33333%` → `33.33%`). */
+function columnWidth(column: HTMLElement): string | undefined {
+    const raw = column.getAttribute("style")?.match(/width:\s*([\d.]+)%/)?.[1];
+    return raw !== undefined ? `${Math.round(parseFloat(raw) * 100) / 100}%` : undefined;
+}
+
+/** A column's cell content: a sole `<p>`'s inner HTML (so a one-paragraph column is a plain cell), else all of it. */
+function cellContent(column: HTMLElement): string {
+    const elements = column.childNodes.filter((node): node is HTMLElement => node instanceof HTMLElement);
+    const [only] = elements;
+    if (elements.length === 1 && only && isTag(only, "p")) {
+        return only.innerHTML;
+    }
+    return column.innerHTML;
 }
 // #endregion
 
