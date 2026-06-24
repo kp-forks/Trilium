@@ -348,10 +348,10 @@ describe("Notion importer — integration", () => {
 
         const note = importRoot.getChildNotes().find((n) => n.title === "Texty");
         // The column name is sanitized (space → underscore, case preserved); the value is kept verbatim.
-        expect(note?.getOwnedLabelValue("Text_column")).toBe("Basic text");
+        expect(note?.getOwnedLabelValue("textColumn")).toBe("Basic text");
     });
 
-    it("sanitizes illegal characters in a text property's name and skips blank values", async () => {
+    it("derives a camelCase attribute name from a text property's name and skips blank values", async () => {
         const id = "2c6c5eca1b8b80f7b9eaf4f396b755dc";
         const propertyTable =
             `<table class="properties"><tbody>` +
@@ -364,10 +364,10 @@ describe("Notion importer — integration", () => {
         });
 
         const note = importRoot.getChildNotes().find((n) => n.title === "Mixed");
-        // Every char outside [\p{L}\p{N}_:] becomes an underscore: "Sub-title (v2)" → "Sub_title__v2_".
-        expect(note?.getOwnedLabelValue("Sub_title__v2_")).toBe("Hello world");
+        // The name is split into alphanumeric words and camelCased: "Sub-title (v2)" → "subTitleV2".
+        expect(note?.getOwnedLabelValue("subTitleV2")).toBe("Hello world");
         // The blank-valued row contributes no label.
-        expect(note?.hasOwnedLabel("Empty")).toBe(false);
+        expect(note?.hasOwnedLabel("empty")).toBe(false);
     });
 
     it("defines text columns as inheritable promoted attributes on the container, inherited by every row", async () => {
@@ -386,21 +386,21 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "My DB");
         // The container owns one inheritable definition per column seen across all rows (the schema union).
-        const textDef = db?.getOwnedLabel("label:Text_column");
+        const textDef = db?.getOwnedLabel("label:textColumn");
         expect(textDef?.value).toBe("promoted,single,text,alias=Text column");
         expect(textDef?.isInheritable).toBe(true);
-        expect(db?.getOwnedLabel("label:Other_note")?.value).toBe("promoted,single,text,alias=Other note");
+        expect(db?.getOwnedLabel("label:otherNote")?.value).toBe("promoted,single,text,alias=Other note");
 
         const foo = db?.getChildNotes().find((n) => n.title === "Foo");
         const bar = db?.getChildNotes().find((n) => n.title === "Bar");
         // Each row inherits the whole schema (including a column it has no value for) without owning a copy.
-        expect(foo?.getOwnedLabel("label:Other_note")).toBeNull();
-        expect(foo?.getLabelValue("label:Other_note")).toBe("promoted,single,text,alias=Other note");
+        expect(foo?.getOwnedLabel("label:otherNote")).toBeNull();
+        expect(foo?.getLabelValue("label:otherNote")).toBe("promoted,single,text,alias=Other note");
         // Only the row that had the value owns it; the other inherits an empty field.
-        expect(foo?.getOwnedLabelValue("Text_column")).toBe("Basic text");
-        expect(foo?.getOwnedLabelValue("Other_note")).toBeNull();
-        expect(bar?.getOwnedLabelValue("Other_note")).toBe("Hi");
-        expect(bar?.getOwnedLabelValue("Text_column")).toBeNull();
+        expect(foo?.getOwnedLabelValue("textColumn")).toBe("Basic text");
+        expect(foo?.getOwnedLabelValue("otherNote")).toBeNull();
+        expect(bar?.getOwnedLabelValue("otherNote")).toBe("Hi");
+        expect(bar?.getOwnedLabelValue("textColumn")).toBeNull();
     });
 
     it("imports a multi-select column as multi-valued labels with a `multi` definition", async () => {
@@ -421,15 +421,15 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         // The column is defined once on the container as a multi-valued promoted attribute.
-        expect(db?.getOwnedLabel("label:Multi_select")?.value).toBe("promoted,multi,text,alias=Multi-select");
+        expect(db?.getOwnedLabel("label:multiSelect")?.value).toBe("promoted,multi,text,alias=Multi-select");
 
         const full = db?.getChildNotes().find((n) => n.title === "Full");
         const empty = db?.getChildNotes().find((n) => n.title === "Empty");
         // Each selected option becomes its own label, preserving order.
-        expect(full?.getOwnedLabels("Multi_select").map((l) => l.value)).toEqual(["c", "d", "e"]);
+        expect(full?.getOwnedLabels("multiSelect").map((l) => l.value)).toEqual(["c", "d", "e"]);
         // An unset multi-select contributes no value labels, but still inherits the (multi) definition.
-        expect(empty?.getOwnedLabels("Multi_select")).toHaveLength(0);
-        expect(empty?.getLabelValue("label:Multi_select")).toBe("promoted,multi,text,alias=Multi-select");
+        expect(empty?.getOwnedLabels("multiSelect")).toHaveLength(0);
+        expect(empty?.getLabelValue("label:multiSelect")).toBe("promoted,multi,text,alias=Multi-select");
     });
 
     it("imports a select column as a single-valued text label", async () => {
@@ -445,9 +445,9 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Select_column")?.value).toBe("promoted,single,text,alias=Select column");
+        expect(db?.getOwnedLabel("label:selectColumn")?.value).toBe("promoted,single,text,alias=Select column");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("Select_column")).toBe("First");
+        expect(row?.getOwnedLabelValue("selectColumn")).toBe("First");
     });
 
     it("imports a status column as a single-valued text label", async () => {
@@ -463,9 +463,9 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Status_column")?.value).toBe("promoted,single,text,alias=Status column");
+        expect(db?.getOwnedLabel("label:statusColumn")?.value).toBe("promoted,single,text,alias=Status column");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("Status_column")).toBe("Another in progress");
+        expect(row?.getOwnedLabelValue("statusColumn")).toBe("Another in progress");
     });
 
     it("imports number columns as number-typed labels, normalizing formatted values and inheriting the schema", async () => {
@@ -490,18 +490,18 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:A")?.value).toBe("promoted,single,number,alias=A");
-        expect(db?.getOwnedLabel("label:B")?.value).toBe("promoted,single,number,alias=B");
+        expect(db?.getOwnedLabel("label:a")?.value).toBe("promoted,single,number,alias=A");
+        expect(db?.getOwnedLabel("label:b")?.value).toBe("promoted,single,number,alias=B");
 
         const first = db?.getChildNotes().find((n) => n.title === "First");
-        expect(first?.getOwnedLabelValue("A")).toBe("12");
-        expect(first?.getOwnedLabelValue("B")).toBe("1200.50"); // "$1,200.50" → bare number
-        expect(first?.getOwnedLabelValue("C")).toBe("25"); // "25%" → bare number
+        expect(first?.getOwnedLabelValue("a")).toBe("12");
+        expect(first?.getOwnedLabelValue("b")).toBe("1200.50"); // "$1,200.50" → bare number
+        expect(first?.getOwnedLabelValue("c")).toBe("25"); // "25%" → bare number
 
         // "Second" has no number values of its own, but inherits the column definitions from the container.
         const second = db?.getChildNotes().find((n) => n.title === "Second");
-        expect(second?.getOwnedLabelValue("A")).toBeNull();
-        expect(second?.getLabelValue("label:A")).toBe("promoted,single,number,alias=A");
+        expect(second?.getOwnedLabelValue("a")).toBeNull();
+        expect(second?.getLabelValue("label:a")).toBe("promoted,single,number,alias=A");
     });
 
     it("imports an auto-increment ID column as a number label, keeping a prefixed ID as text", async () => {
@@ -521,11 +521,11 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:ID")?.value).toBe("promoted,single,number,alias=ID");
-        expect(db?.getOwnedLabel("label:Key")?.value).toBe("promoted,single,text,alias=Key");
+        expect(db?.getOwnedLabel("label:id")?.value).toBe("promoted,single,number,alias=ID");
+        expect(db?.getOwnedLabel("label:key")?.value).toBe("promoted,single,text,alias=Key");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("ID")).toBe("1");
-        expect(row?.getOwnedLabelValue("Key")).toBe("TASK-1");
+        expect(row?.getOwnedLabelValue("id")).toBe("1");
+        expect(row?.getOwnedLabelValue("key")).toBe("TASK-1");
     });
 
     it("imports a formula column by its rendered shape: number, boolean (checkbox), or text (incl. a date formula)", async () => {
@@ -546,13 +546,13 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Number_formula")?.value).toBe("promoted,single,number,alias=Number formula");
-        expect(db?.getOwnedLabel("label:Bool_formula")?.value).toBe("promoted,single,boolean,alias=Bool formula");
-        expect(db?.getOwnedLabel("label:Date_formula")?.value).toBe("promoted,single,text,alias=Date formula");
+        expect(db?.getOwnedLabel("label:numberFormula")?.value).toBe("promoted,single,number,alias=Number formula");
+        expect(db?.getOwnedLabel("label:boolFormula")?.value).toBe("promoted,single,boolean,alias=Bool formula");
+        expect(db?.getOwnedLabel("label:dateFormula")?.value).toBe("promoted,single,text,alias=Date formula");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("Number_formula")).toBe("15");
-        expect(row?.getOwnedLabelValue("Bool_formula")).toBe("true");
-        expect(row?.getOwnedLabelValue("Date_formula")).toBe("June 24, 2026");
+        expect(row?.getOwnedLabelValue("numberFormula")).toBe("15");
+        expect(row?.getOwnedLabelValue("boolFormula")).toBe("true");
+        expect(row?.getOwnedLabelValue("dateFormula")).toBe("June 24, 2026");
     });
 
     it("imports a rollup column by its rendered shape, like a formula (text title, numeric aggregate)", async () => {
@@ -572,11 +572,11 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Titles")?.value).toBe("promoted,single,text,alias=Titles");
-        expect(db?.getOwnedLabel("label:Count")?.value).toBe("promoted,single,number,alias=Count");
+        expect(db?.getOwnedLabel("label:titles")?.value).toBe("promoted,single,text,alias=Titles");
+        expect(db?.getOwnedLabel("label:count")?.value).toBe("promoted,single,number,alias=Count");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("Titles")).toBe("First");
-        expect(row?.getOwnedLabelValue("Count")).toBe("2");
+        expect(row?.getOwnedLabelValue("titles")).toBe("First");
+        expect(row?.getOwnedLabelValue("count")).toBe("2");
     });
 
     it("imports created-by and last-edited-by as single-valued text labels of the user name", async () => {
@@ -596,11 +596,11 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Created_by")?.value).toBe("promoted,single,text,alias=Created by");
-        expect(db?.getOwnedLabel("label:Last_edited_by")?.value).toBe("promoted,single,text,alias=Last edited by");
+        expect(db?.getOwnedLabel("label:createdBy")?.value).toBe("promoted,single,text,alias=Created by");
+        expect(db?.getOwnedLabel("label:lastEditedBy")?.value).toBe("promoted,single,text,alias=Last edited by");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("Created_by")).toBe("Elian Doran");
-        expect(row?.getOwnedLabelValue("Last_edited_by")).toBe("Elian Doran");
+        expect(row?.getOwnedLabelValue("createdBy")).toBe("Elian Doran");
+        expect(row?.getOwnedLabelValue("lastEditedBy")).toBe("Elian Doran");
     });
 
     it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
@@ -622,15 +622,15 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         // Each column gets a url-typed definition.
-        expect(db?.getOwnedLabel("label:URL")?.value).toBe("promoted,single,url,alias=URL");
-        expect(db?.getOwnedLabel("label:Email")?.value).toBe("promoted,single,url,alias=Email");
-        expect(db?.getOwnedLabel("label:Phone")?.value).toBe("promoted,single,url,alias=Phone");
+        expect(db?.getOwnedLabel("label:url")?.value).toBe("promoted,single,url,alias=URL");
+        expect(db?.getOwnedLabel("label:email")?.value).toBe("promoted,single,url,alias=Email");
+        expect(db?.getOwnedLabel("label:phone")?.value).toBe("promoted,single,url,alias=Phone");
 
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("URL")).toBe("https://triliumnotes.org");
+        expect(row?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
         // Email/phone are stored as clickable mailto:/tel: links.
-        expect(row?.getOwnedLabelValue("Email")).toBe("mailto:test@acme.org");
-        expect(row?.getOwnedLabelValue("Phone")).toBe("tel:12345678");
+        expect(row?.getOwnedLabelValue("email")).toBe("mailto:test@acme.org");
+        expect(row?.getOwnedLabelValue("phone")).toBe("tel:12345678");
     });
 
     it("imports a dated column with a clock time as a datetime label", async () => {
@@ -645,10 +645,10 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Date")?.value).toBe("promoted,single,datetime,alias=Date");
+        expect(db?.getOwnedLabel("label:date")?.value).toBe("promoted,single,datetime,alias=Date");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
         // Local datetime-local format; "7:00 PM" → 19:00 (parse-local + format-local is timezone-independent).
-        expect(row?.getOwnedLabelValue("Date")).toBe("2026-06-23T19:00");
+        expect(row?.getOwnedLabelValue("date")).toBe("2026-06-23T19:00");
     });
 
     it("splits a timeless date range into separate start and end date columns", async () => {
@@ -665,11 +665,11 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         // The range becomes two date columns: the original (start) and a separate "<name> end".
-        expect(db?.getOwnedLabel("label:Date")?.value).toBe("promoted,single,date,alias=Date");
-        expect(db?.getOwnedLabel("label:Date_end")?.value).toBe("promoted,single,date,alias=Date end");
+        expect(db?.getOwnedLabel("label:date")?.value).toBe("promoted,single,date,alias=Date");
+        expect(db?.getOwnedLabel("label:dateEnd")?.value).toBe("promoted,single,date,alias=Date end");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
-        expect(row?.getOwnedLabelValue("Date")).toBe("2026-06-24");
-        expect(row?.getOwnedLabelValue("Date_end")).toBe("2026-06-30");
+        expect(row?.getOwnedLabelValue("date")).toBe("2026-06-24");
+        expect(row?.getOwnedLabelValue("dateEnd")).toBe("2026-06-30");
     });
 
     it("normalizes a date column that mixes dates and date-times to datetime", async () => {
@@ -689,12 +689,12 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         // One row uses a time, so the whole column becomes datetime.
-        expect(db?.getOwnedLabel("label:Date")?.value).toBe("promoted,single,datetime,alias=Date");
+        expect(db?.getOwnedLabel("label:date")?.value).toBe("promoted,single,datetime,alias=Date");
         const withTime = db?.getChildNotes().find((n) => n.title === "WithTime");
         const noTime = db?.getChildNotes().find((n) => n.title === "NoTime");
-        expect(withTime?.getOwnedLabelValue("Date")).toBe("2026-06-23T19:00");
+        expect(withTime?.getOwnedLabelValue("date")).toBe("2026-06-23T19:00");
         // The time-less value is normalized to midnight so it stays valid for the datetime-local input.
-        expect(noTime?.getOwnedLabelValue("Date")).toBe("2026-06-24T00:00");
+        expect(noTime?.getOwnedLabelValue("date")).toBe("2026-06-24T00:00");
     });
 
     it("orders the promoted definitions by the CSV column order, not row discovery order", async () => {
@@ -717,7 +717,7 @@ describe("Notion importer — integration", () => {
         const db = importRoot.getChildNotes().find((n) => n.title === "My DB");
         const definitions = db?.getOwnedAttributes("label").filter((attr) => attr.name.startsWith("label:")) ?? [];
         // CSV order (Zeta, Alpha, Mu) wins, even though Alpha/Mu were discovered before Zeta.
-        expect(definitions.map((attr) => attr.name)).toEqual(["label:Zeta", "label:Alpha", "label:Mu"]);
+        expect(definitions.map((attr) => attr.name)).toEqual(["label:zeta", "label:alpha", "label:mu"]);
         // Increasing positions keep that order in the promoted-attributes UI (which sorts defs by position).
         expect(definitions.map((attr) => attr.position)).toEqual([10, 20, 30]);
     });
@@ -738,11 +738,11 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Checkbox")?.value).toBe("promoted,single,boolean,alias=Checkbox");
+        expect(db?.getOwnedLabel("label:checkbox")?.value).toBe("promoted,single,boolean,alias=Checkbox");
         const on = db?.getChildNotes().find((n) => n.title === "On");
         const off = db?.getChildNotes().find((n) => n.title === "Off");
-        expect(on?.getOwnedLabelValue("Checkbox")).toBe("true");
-        expect(off?.getOwnedLabelValue("Checkbox")).toBe("false");
+        expect(on?.getOwnedLabelValue("checkbox")).toBe("true");
+        expect(off?.getOwnedLabelValue("checkbox")).toBe("false");
     });
 
     it("imports a place column as a single-valued text label", async () => {
@@ -757,10 +757,10 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Place")?.value).toBe("promoted,single,text,alias=Place");
+        expect(db?.getOwnedLabel("label:place")?.value).toBe("promoted,single,text,alias=Place");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
         // The comma-bearing value is stored verbatim (it's a label value, not part of the definition).
-        expect(row?.getOwnedLabelValue("Place")).toBe("Rotterdam, South Holland, Netherlands");
+        expect(row?.getOwnedLabelValue("place")).toBe("Rotterdam, South Holland, Netherlands");
     });
 
     it("imports a person column as multi-valued labels, stripping the avatar initial", async () => {
@@ -778,10 +778,10 @@ describe("Notion importer — integration", () => {
         });
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
-        expect(db?.getOwnedLabel("label:Person")?.value).toBe("promoted,multi,text,alias=Person");
+        expect(db?.getOwnedLabel("label:person")?.value).toBe("promoted,multi,text,alias=Person");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
         // The avatar initials ("E", "A") are dropped, leaving just the names, one label per person.
-        expect(row?.getOwnedLabels("Person").map((l) => l.value)).toEqual(["Elian Doran", "Ada Lovelace"]);
+        expect(row?.getOwnedLabels("person").map((l) => l.value)).toEqual(["Elian Doran", "Ada Lovelace"]);
     });
 
     it("maps a relation column to real Trilium relations, resolving links and dropping un-imported targets", async () => {
@@ -807,15 +807,15 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         // A relation column becomes a `relation:` promoted definition (multi, and carrying no value type).
-        expect(db?.getOwnedLabel("relation:Related")?.value).toBe("promoted,multi,alias=Related");
+        expect(db?.getOwnedLabel("relation:related")?.value).toBe("promoted,multi,alias=Related");
 
         const foo = db?.getChildNotes().find((n) => n.title === "Foo");
         const bar = db?.getChildNotes().find((n) => n.title === "Bar");
         const baz = db?.getChildNotes().find((n) => n.title === "Baz");
         // Foo relates to the real Bar and Baz notes; the un-imported Ghost target is dropped.
-        expect(foo?.getOwnedRelations("Related").map((r) => r.value)).toEqual([bar?.noteId, baz?.noteId]);
+        expect(foo?.getOwnedRelations("related").map((r) => r.value)).toEqual([bar?.noteId, baz?.noteId]);
         // A self-reference resolves to the note itself.
-        expect(bar?.getOwnedRelations("Related").map((r) => r.value)).toEqual([bar?.noteId]);
+        expect(bar?.getOwnedRelations("related").map((r) => r.value)).toEqual([bar?.noteId]);
     });
 
     it("saves a file column's bundled files as role:file attachments, skipping external links and adding no definition", async () => {
@@ -843,8 +843,8 @@ describe("Notion importer — integration", () => {
         expect(content.match(/reference-link/g)).toHaveLength(1);
         expect(content.indexOf("reference-link")).toBeLessThan(content.indexOf("<p>x</p>"));
         // A file column is content, not metadata — no promoted definition and no value label.
-        expect(db?.getOwnedLabel("label:Files___media")).toBeFalsy();
-        expect(row?.getOwnedLabels("Files___media")).toHaveLength(0);
+        expect(db?.getOwnedLabel("label:filesMedia")).toBeFalsy();
+        expect(row?.getOwnedLabels("filesMedia")).toHaveLength(0);
     });
 
     it("neutralizes commas and control characters in a column name so the alias can't corrupt the definition", async () => {
@@ -861,7 +861,7 @@ describe("Notion importer — integration", () => {
 
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         // Both the comma and the newline become spaces, so the definition stays one line of four tokens.
-        expect(db?.getOwnedLabel("label:Weight__kg")?.value).toBe("promoted,single,text,alias=Weight  kg");
+        expect(db?.getOwnedLabel("label:weightKg")?.value).toBe("promoted,single,text,alias=Weight  kg");
     });
 
     it("saves a bundled image as an attachment and rewrites its src; leaves external/srcless images alone", async () => {

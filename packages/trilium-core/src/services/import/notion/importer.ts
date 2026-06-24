@@ -24,10 +24,9 @@ import protectedSessionService from "../../protected_session.js";
 import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
-import { sanitizeAttributeName } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
 import mimeService from "../mime.js";
-import { applyDatabaseSchemas, applyOwnedProperties, applyRelationProperties, extractProperties, reconcileDateColumns, resolveDatabaseContainers } from "./collection.js";
+import { applyDatabaseSchemas, applyOwnedProperties, applyRelationProperties, extractProperties, reconcileDateColumns, resolveDatabaseContainers, toAttributeName } from "./collection.js";
 import { convertNotionHtml } from "./converter.js";
 import type { LinkTarget, ParsedPage } from "./model.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
@@ -86,7 +85,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                 const [header = []] = parseCsv(new TextDecoder().decode(await readContent()));
                 // Trim before sanitizing so a padded CSV header (`Name, Age , …`) still matches the HTML
                 // property `<th>` text, which is trimmed on extraction.
-                csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => sanitizeAttributeName(column.trim())));
+                csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => toAttributeName(column.trim())));
             } else {
                 resources.set(normalizePath(path), await readContent());
             }

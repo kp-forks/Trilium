@@ -13,7 +13,7 @@ import { dayjs } from "@triliumnext/commons";
 import type { HTMLElement } from "node-html-parser";
 
 import type BNote from "../../../becca/entities/bnote.js";
-import { escapeHtml, sanitizeAttributeName } from "../../utils/index.js";
+import { escapeHtml } from "../../utils/index.js";
 import mimeService from "../mime.js";
 import type { LinkTarget, NotionProperty, ParsedPage } from "./model.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
@@ -165,6 +165,26 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
         }
     }
     return properties;
+}
+
+/**
+ * Converts a Notion column name to a Trilium attribute name in camelCase (e.g. `Last edited by` →
+ * `lastEditedBy`, `Multi-select` → `multiSelect`, `URL` → `url`). The name is split into alphanumeric words on
+ * every other character; the first word is lower-cased and each following word title-cased, so the result is
+ * always a valid attribute name (only letters and digits). A name with no alphanumeric content falls back to
+ * `unnamed`. The original column name is kept verbatim as the promoted-attribute alias (see
+ * {@link buildPromotedDefinition}), so its spacing and casing still show in the UI.
+ */
+export function toAttributeName(name: string): string {
+    const words = name.match(/[\p{L}\p{N}]+/gu);
+    if (!words) {
+        return "unnamed";
+    }
+    return words
+        .map((word, index) => index === 0
+            ? word.toLowerCase()
+            : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join("");
 }
 
 /**
@@ -330,7 +350,7 @@ export function reconcileDateColumns(pages: ParsedPage[]) {
 function dateColumnKey(path: string, name: string): string {
     // A space separates the parts unambiguously: a sanitized attribute name never contains a space, so the
     // text after the last space is always the column name and everything before it is the container folder.
-    return `${parentFolderKey(path)} ${sanitizeAttributeName(name)}`;
+    return `${parentFolderKey(path)} ${toAttributeName(name)}`;
 }
 
 /**
@@ -351,7 +371,7 @@ export function applyOwnedProperties(note: BNote, page: ParsedPage, resources: M
                 fileLinks.push(`<p>${attachmentReferenceLink(note.noteId, attachment.attachmentId, attachment.title)}</p>`);
             }
         } else if (property.kind !== "relation") {
-            note.addLabel(sanitizeAttributeName(property.name), property.value);
+            note.addLabel(toAttributeName(property.name), property.value);
         }
     }
     return fileLinks.join("");
@@ -366,7 +386,7 @@ export function applyRelationProperties(note: BNote, page: ParsedPage, resolve: 
         if (property.kind === "relation") {
             const target = resolve(property.value);
             if (target) {
-                note.addRelation(sanitizeAttributeName(property.name), target.noteId);
+                note.addRelation(toAttributeName(property.name), target.noteId);
             }
         }
     }
@@ -429,7 +449,7 @@ export function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<stri
             if (property.kind === "file") {
                 continue; // files become attachments, not promoted definitions
             }
-            const labelName = sanitizeAttributeName(property.name);
+            const labelName = toAttributeName(property.name);
             if (!schema.has(labelName)) {
                 schema.set(labelName, property);
             }
@@ -448,7 +468,7 @@ export function applyDatabaseSchemas(pages: ParsedPage[], noteByFolder: Map<stri
         for (const property of orderColumns([...schema.values()], csvColumnsByFolder.get(folderKey))) {
             position += 10;
             // A definition is always a label, but its name is `relation:<x>` for a relation column, `label:<x>` otherwise.
-            const definitionName = `${property.kind === "relation" ? "relation" : "label"}:${sanitizeAttributeName(property.name)}`;
+            const definitionName = `${property.kind === "relation" ? "relation" : "label"}:${toAttributeName(property.name)}`;
             container.addAttribute("label", definitionName, buildPromotedDefinition(property), true, position);
         }
     }
@@ -466,13 +486,13 @@ function orderColumns(properties: NotionProperty[], csvColumns: string[] | undef
 
     const indexByColumn = new Map(csvColumns.map((name, index) => [name, index] as const));
     const sortKey = (property: NotionProperty): [number, number] => {
-        const own = indexByColumn.get(sanitizeAttributeName(property.name));
+        const own = indexByColumn.get(toAttributeName(property.name));
         if (own !== undefined) {
             return [own, 0];
         }
         // A synthesized "<name> end" column isn't in the CSV; place it just after its base column.
         if (property.name.endsWith(" end")) {
-            const base = indexByColumn.get(sanitizeAttributeName(property.name.slice(0, -" end".length)));
+            const base = indexByColumn.get(toAttributeName(property.name.slice(0, -" end".length)));
             if (base !== undefined) {
                 return [base, 1];
             }
