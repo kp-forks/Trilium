@@ -735,7 +735,14 @@ describe("Notion importer — integration", () => {
         const db = importRoot.getChildNotes().find((n) => n.title === "DB");
         const row = db?.getChildNotes().find((n) => n.title === "Row");
         // The bundled file becomes a role:file attachment; the external link (not in the zip) is skipped.
+        const attachment = row?.getAttachmentsByRole("file").find((a) => a.title === "report.pdf");
         expect(row?.getAttachmentsByRole("file").map((a) => a.title)).toEqual(["report.pdf"]);
+        // The bundled file is also a reference-link prepended before the original body; the external one,
+        // having no attachment, contributes no link (so there's exactly one).
+        const content = String(row?.getContent() ?? "");
+        expect(content).toContain(`<a class="reference-link" href="#root/${row?.noteId}?viewMode=attachments&attachmentId=${attachment?.attachmentId}">report.pdf</a>`);
+        expect(content.match(/reference-link/g)).toHaveLength(1);
+        expect(content.indexOf("reference-link")).toBeLessThan(content.indexOf("<p>x</p>"));
         // A file column is content, not metadata — no promoted definition and no value label.
         expect(db?.getOwnedLabel("label:Files___media")).toBeFalsy();
         expect(row?.getOwnedLabels("Files___media")).toHaveLength(0);

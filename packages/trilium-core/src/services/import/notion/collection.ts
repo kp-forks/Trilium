@@ -13,7 +13,7 @@ import { dayjs } from "@triliumnext/commons";
 import type { HTMLElement } from "node-html-parser";
 
 import type BNote from "../../../becca/entities/bnote.js";
-import { sanitizeAttributeName } from "../../utils/index.js";
+import { escapeHtml, sanitizeAttributeName } from "../../utils/index.js";
 import mimeService from "../mime.js";
 import type { LinkTarget, NotionProperty, ParsedPage } from "./model.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
@@ -257,15 +257,24 @@ function dateColumnKey(path: string, name: string): string {
  * Applies a page's own property values to its note: file columns become `role:"file"` attachments, every
  * other (non-relation) column becomes a label. Relations are deferred to {@link applyRelationProperties},
  * which runs once every target note exists.
+ *
+ * Returns HTML to prepend to the note's body: one reference-link paragraph per bundled file, so a file
+ * column's files are reachable from the row's content, not only from its attachments list. Empty when the
+ * row attaches no bundled file.
  */
-export function applyOwnedProperties(note: BNote, page: ParsedPage, resources: Map<string, Uint8Array>) {
+export function applyOwnedProperties(note: BNote, page: ParsedPage, resources: Map<string, Uint8Array>): string {
+    const fileLinks: string[] = [];
     for (const property of page.properties) {
         if (property.kind === "file") {
-            saveFileAttachment(note, property.value, page.path, resources);
+            const attachment = saveFileAttachment(note, property.value, page.path, resources);
+            if (attachment?.attachmentId) {
+                fileLinks.push(`<p>${attachmentReferenceLink(note.noteId, attachment.attachmentId, attachment.title)}</p>`);
+            }
         } else if (property.kind !== "relation") {
             note.addLabel(sanitizeAttributeName(property.name), property.value);
         }
     }
+    return fileLinks.join("");
 }
 
 /**
@@ -284,24 +293,30 @@ export function applyRelationProperties(note: BNote, page: ParsedPage, resolve: 
 }
 
 /**
- * Saves a File-property reference as a `role:"file"` attachment on `note`. `href` is the value of one
- * `<a>` in the file cell; it's resolved against the zip the same way page content is, so only files bundled
- * in the export attach — an external link (or a missing file) is silently skipped.
+ * Saves a File-property reference as a `role:"file"` attachment on `note` and returns it (or `undefined` if
+ * the file isn't bundled). `href` is the value of one `<a>` in the file cell; it's resolved against the zip
+ * the same way page content is, so only files bundled in the export attach — an external link (or a missing
+ * file) is silently skipped.
  */
 function saveFileAttachment(note: BNote, href: string, pagePath: string, resources: Map<string, Uint8Array>) {
     const resourcePath = resolveResourcePath(pagePath, href);
     const bytes = resources.get(resourcePath);
     if (!bytes) {
-        return;
+        return undefined;
     }
 
     const title = baseName(resourcePath);
-    note.saveAttachment({
+    return note.saveAttachment({
         role: "file",
         mime: mimeService.getMime(title) || "application/octet-stream",
         title,
         content: bytes
     });
+}
+
+/** Builds a Trilium attachment reference-link (the chip CKEditor renders) — the shape rewriteAttachments produces. */
+function attachmentReferenceLink(noteId: string, attachmentId: string, title: string): string {
+    return `<a class="reference-link" href="#root/${noteId}?viewMode=attachments&attachmentId=${attachmentId}">${escapeHtml(title)}</a>`;
 }
 
 /**

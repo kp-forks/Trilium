@@ -168,12 +168,14 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
         }
 
         // Carry the page's own database property values over (file columns become attachments, the rest
-        // labels); relations are deferred to the second pass, once every target note exists.
-        applyOwnedProperties(note, page, resources);
+        // labels); relations are deferred to the second pass, once every target note exists. A file column
+        // also returns reference-links, prepended to the body so its files are reachable from the content.
+        const fileLinks = applyOwnedProperties(note, page, resources);
+        const body = fileLinks + page.content;
 
         // Attachments hang off the note, so this must run after creation; it returns the content with the
         // <img> srcs and file links pointing at the saved attachments.
-        const withImages = rewriteImages(note, page.content, page.path, resources);
+        const withImages = rewriteImages(note, body, page.path, resources);
         created.push({ note, content: rewriteAttachments(note, withImages, page.path, resources), page });
         taskContext.increaseProgressCount();
     }
