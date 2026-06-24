@@ -75,6 +75,7 @@ export function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[
  *  - `formula` / `rollup`: a computed value with no type signal, inferred from the rendered cell shape —
  *    checkbox → boolean, else numeric text → number, else text (a multi-value rollup collapses to one text value);
  *  - `person`: each `<span class="user">` name (its avatar stripped) → an entry of a multi-valued property;
+ *  - `created_by` / `last_edited_by`: the single `<span class="user">` name → one single-valued text property;
  *  - `relation`: each linked page's `<a>` href → a multi-valued relation, resolved to a note in the second pass;
  *  - `file`: each `<a>` href → a `role:"file"` attachment on the note (no promoted definition — it's content).
  * Blank names/values are skipped (Notion sometimes emits an empty cell, e.g. an unset multi-select, which
@@ -134,14 +135,15 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
         } else if (type === "formula" || type === "rollup") {
             properties.push(...extractComputedValue(name, cell));
         } else if (type === "person") {
-            // A person column can list several users; each is a `<span class="user">` whose leading avatar
-            // (`.user-icon`, e.g. an initial) would otherwise bleed into the name, so drop it first.
-            for (const user of cell.querySelectorAll("span.user")) {
-                user.querySelector(".user-icon")?.remove();
-                const value = user.textContent?.trim();
-                if (value) {
-                    properties.push({ name, value, labelType: "text", multiplicity: "multi" });
-                }
+            // A person column can list several users, so each name is its own multi-valued entry.
+            for (const value of extractUserNames(cell)) {
+                properties.push({ name, value, labelType: "text", multiplicity: "multi" });
+            }
+        } else if (type === "created_by" || type === "last_edited_by") {
+            // Creator / last-editor metadata is rendered like a person cell but is always a single user.
+            const [value] = extractUserNames(cell);
+            if (value) {
+                properties.push({ name, value, labelType: "text", multiplicity: "single" });
             }
         } else if (type === "relation") {
             // Each linked page is an `<a>` whose href carries the target's Notion id; the second pass resolves
@@ -178,6 +180,23 @@ function toNumberValue(text: string | null | undefined): string | undefined {
     }
     const normalized = trimmed.replace(/[^\d.-]/g, "");
     return normalized !== "" && Number.isFinite(Number(normalized)) ? normalized : trimmed;
+}
+
+/**
+ * Reads the user names from a Notion people cell (`person`, `created_by`, `last_edited_by`). Each user is a
+ * `<span class="user">` whose leading avatar (`.user-icon`, e.g. an initial) would otherwise bleed into the
+ * name, so it's dropped first. Blank entries are skipped.
+ */
+function extractUserNames(cell: HTMLElement): string[] {
+    const names: string[] = [];
+    for (const user of cell.querySelectorAll("span.user")) {
+        user.querySelector(".user-icon")?.remove();
+        const name = user.textContent?.trim();
+        if (name) {
+            names.push(name);
+        }
+    }
+    return names;
 }
 
 /** Reads a Notion checkbox cell (`<div class="checkbox checkbox-on|off">`) as a `true`/`false` boolean label. */

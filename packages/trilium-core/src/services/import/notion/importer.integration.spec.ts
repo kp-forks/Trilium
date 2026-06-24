@@ -579,6 +579,30 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Count")).toBe("2");
     });
 
+    it("imports created-by and last-edited-by as single-valued text labels of the user name", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Both render like a person cell: a <span class="user"> with a leading avatar (an initial) to strip.
+        const user = `<span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">E</span></span>Elian Doran</span>`;
+        const rows =
+            `<tr class="property-row property-row-created_by"><th><span class="icon property-icon"><img src="x.svg"/></span>Created by</th><td>${user}</td></tr>` +
+            `<tr class="property-row property-row-last_edited_by"><th>Last edited by</th><td>${user}</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:Created_by")?.value).toBe("promoted,single,text,alias=Created by");
+        expect(db?.getOwnedLabel("label:Last_edited_by")?.value).toBe("promoted,single,text,alias=Last edited by");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("Created_by")).toBe("Elian Doran");
+        expect(row?.getOwnedLabelValue("Last_edited_by")).toBe("Elian Doran");
+    });
+
     it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
