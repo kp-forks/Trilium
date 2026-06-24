@@ -243,6 +243,22 @@ describe("convertNotionHtml — columns", () => {
             `</tr></tbody></table></figure>`
         );
     });
+
+    it("flattens a nested column list into one row, splitting the wrapper's width across the inner columns", () => {
+        // The 50% wrapper column holds a 3-column list (each 100%, i.e. equal) plus an empty trailing
+        // paragraph; the inner columns collapse into the row at 50% ÷ 3 = 16.67% each, the empty <p> dropped.
+        const inner = dc(`<div class="column-list">${column("100%", "1") + column("100%", "2") + column("100%", "3")}</div>`);
+        const wrapper = dc(`<div style="width:50%" class="column">${inner}${dc(`<p class=""></p>`)}</div>`);
+        const input = dc(`<div id="x" class="column-list">${wrapper}${column("50%", "2/2")}</div>`);
+        expect(convertNotionHtml(input)).toBe(
+            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>` +
+            `<td style="border-color:transparent;width:16.67%;">1</td>` +
+            `<td style="border-color:transparent;width:16.67%;">2</td>` +
+            `<td style="border-color:transparent;width:16.67%;">3</td>` +
+            `<td style="border-color:transparent;width:50%;">2/2</td>` +
+            `</tr></tbody></table></figure>`
+        );
+    });
 });
 
 describe("convertNotionHtml — callouts", () => {

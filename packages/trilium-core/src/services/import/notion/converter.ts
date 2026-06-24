@@ -338,12 +338,10 @@ function isMergeableList(el: HTMLElement): boolean {
 function convertColumns(root: HTMLElement) {
     for (const columnList of root.querySelectorAll("div.column-list")) {
         if (!columnList.parentNode) {
-            continue; // a nested list already removed together with its parent
+            continue; // a nested list, already flattened into its parent
         }
-        const columns = directChildren(columnList, "div").filter((column) => column.classList.contains("column"));
-        const evenWidth = `${Math.round((100 / columns.length) * 100) / 100}%`;
-        const cells = columns
-            .map((column) => `<td style="border-color:transparent;width:${columnWidth(column) ?? evenWidth};">${cellContent(column)}</td>`)
+        const cells = flattenColumns(columnList, 100)
+            .map(({ width, content }) => `<td style="border-color:transparent;width:${round2(width)}%;">${content}</td>`)
             .join("");
         columnList.insertAdjacentHTML("beforebegin",
             `<figure class="table"><table style="border-color:transparent;"><tbody><tr>${cells}</tr></tbody></table></figure>`);
@@ -351,10 +349,39 @@ function convertColumns(root: HTMLElement) {
     }
 }
 
-/** A Notion column's width (`style="width:N%"`) rounded to two decimals (`33.33333%` → `33.33%`). */
-function columnWidth(column: HTMLElement): string | undefined {
+/**
+ * Flattens a column list (and any nested column lists) into the leaf cells of one row. Each column takes its
+ * share of `parentWidth` in proportion to its width among its siblings; a column that just wraps a nested
+ * column list contributes that list's columns instead — scaled by the wrapper's share — so Notion's nested
+ * columns collapse into the same row rather than becoming a table-in-a-cell.
+ */
+function flattenColumns(columnList: HTMLElement, parentWidth: number): { width: number; content: string }[] {
+    const columns = directChildren(columnList, "div").filter((column) => column.classList.contains("column"));
+    const widths = columns.map((column) => columnWidthValue(column) ?? 100 / columns.length);
+    const total = widths.reduce((sum, width) => sum + width, 0) || 1;
+
+    const leaves: { width: number; content: string }[] = [];
+    for (const [index, column] of columns.entries()) {
+        const share = parentWidth * ((widths[index] ?? 0) / total);
+        const nested = directChild(column, (node) => node.classList.contains("column-list"));
+        if (nested) {
+            leaves.push(...flattenColumns(nested, share));
+        } else {
+            leaves.push({ width: share, content: cellContent(column) });
+        }
+    }
+    return leaves;
+}
+
+/** A Notion column's numeric width (`style="width:N%"` → `N`), or undefined when it has none. */
+function columnWidthValue(column: HTMLElement): number | undefined {
     const raw = column.getAttribute("style")?.match(/width:\s*([\d.]+)%/)?.[1];
-    return raw !== undefined ? `${Math.round(parseFloat(raw) * 100) / 100}%` : undefined;
+    return raw !== undefined ? parseFloat(raw) : undefined;
+}
+
+/** Rounds to at most two decimals (`16.6667` → `16.67`, `50` → `50`). */
+function round2(value: number): number {
+    return Math.round(value * 100) / 100;
 }
 
 /** A column's cell content: a sole `<p>`'s inner HTML (so a one-paragraph column is a plain cell), else all of it. */
