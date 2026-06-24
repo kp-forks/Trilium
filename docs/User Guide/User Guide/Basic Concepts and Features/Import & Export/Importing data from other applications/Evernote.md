@@ -45,7 +45,7 @@ However, we do not guarantee that all of your formatting will be imported 100% c
 
 The importer cannot transform Evernote internal links into Trilium internal links because Evernote internal note IDs are not preserved in ENEX files.
 
-If you want to restore the internal links in Trilium after you import all of your ENEX files, you can use or adapt this custom script: <a class="reference-link" href="Evernote/Process%20internal%20links%20by%20titl.js">Process internal links by title</a>
+If you want to restore the internal links in Trilium after you import all of your ENEX files, you can use or adapt this custom script: <a class="reference-link" href="Evernote/Process%20internal%20links%20by%20title.js">Process internal links by title</a>
 
 The script does the following:
 

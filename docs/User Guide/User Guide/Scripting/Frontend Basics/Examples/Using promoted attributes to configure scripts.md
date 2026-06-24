@@ -1,7 +1,7 @@
 # Using promoted attributes to configure scripts
 A good use case of promoted attributes is to easily define the various parameters a script might need, for example an input and output note if it's processing data, or a checkbox to define a particular change in behavior for the script.
 
-![](Using%20promoted%20attributes%20.png)
+![](Using%20promoted%20attributes%20to%20configure%20scripts_image.png)
 
 ## Using check boxes to toggle flags
 
