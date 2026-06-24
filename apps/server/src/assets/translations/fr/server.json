@@ -426,12 +426,12 @@
     "lan-access-warning": "D'autres appareils de votre réseau local pourront se connecter à cette instance Trilium."
   },
   "onenote_import": {
-    "root-title": "Import OneNote"
+    "root-title": "Importation OneNote"
   },
   "notion_import": {
-    "root-title": "Import Notion"
+    "root-title": "Importation Notion"
   },
   "keep_import": {
-    "root-title": "Import Google Keep"
+    "root-title": "Importation Google Keep"
   }
 }

@@ -413,7 +413,7 @@
     "share_index": "la note avec ce label listera toutes les racines des notes partagées",
     "display_relations": "noms des relations délimités par des virgules qui doivent être affichés. Tous les autres seront masqués.",
     "hide_relations": "noms de relations délimités par des virgules qui doivent être masqués. Tous les autres seront affichés.",
-    "title_template": "titre par défaut des notes créées en tant qu'enfants de cette note. La valeur est évaluée sous forme de chaîne JavaScrip \n                                                et peut ainsi être enrichi de contenu dynamique via les variables injectées <code>now</code> et <code>parentNote</code>. Exemples :\n                                                \n                                                <ul>\n                                                        <li><code>Œuvres littéraires de ${parentNote.getLabelValue('authorName')}</code></li>\n                                                        <li><code>Connectez-vous pour ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                                                </ul>\n                                                \n                                                Consultez le <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">wiki avec plus de détails</a>, la documentation sur l'API pour <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> et <a href=\"https://day.js.org/docs/en/display/format\">maintenant</a> pour plus de détails.",
+    "title_template": "titre par défaut des notes créées en tant qu'enfants de cette note. La valeur est évaluée sous forme de chaîne JavaScript \n                                                et peut ainsi être enrichi de contenu dynamique via les variables injectées <code>now</code> et <code>parentNote</code>. Exemples :\n                                                \n                                                <ul>\n                                                        <li><code>Œuvres littéraires de ${parentNote.getLabelValue('authorName')}</code></li>\n                                                        <li><code>Connectez-vous pour ${now.format('YYYY-MM-DD HH:mm:ss')}</code></li>\n                                                </ul>\n                                                \n                                                Consultez le <a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">wiki avec plus de détails</a>, la documentation sur l'API pour <a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> et <a href=\"https://day.js.org/docs/en/display/format\">maintenant</a> pour plus de détails.",
     "template": "Cette note apparaîtra parmi les modèles disponibles lors de la création d'une nouvelle note",
     "toc": "<code>#toc</code> ou <code>#toc=show</code> forcera l'affichage de la table des matières, <code>#toc=hide</code> force qu'elle soit masquée. Si le label n'existe pas, le paramètre global est utilisé",
     "color": "définit la couleur de la note dans l'arborescence des notes, les liens, etc. Utilisez n'importe quelle valeur de couleur CSS valide comme « rouge » ou #a13d5f",
@@ -1949,7 +1949,7 @@
     "recovery_keys_no_key_set": "Aucun code de récupération défini",
     "recovery_keys_regenerate": "Régénérer les codes de récupération",
     "oauth_title": "Connexion OpenID",
-    "oauth_description": "OpenID Connect vous permet de vous connecter à l'aide d'un compte provenant d'un autre service, tel que Google, pour vérifier votre identité. Google est le fournisseur par défaut, mais vous pouvez le remplacer par tout autre fournisseur OpenID Connect. Consultez <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">here</a> pour plus d'informations. Suivez <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">instructions</a> pour configurer un service OpenID Connect via Google.",
+    "oauth_description": "OpenID Connect vous permet de vous connecter à l'aide d'un compte provenant d'un autre service, tel que Google, pour vérifier votre identité. Google est le fournisseur par défaut, mais vous pouvez le remplacer par tout autre fournisseur OpenID Connect. Consultez <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">ici</a> pour plus d'informations. Suivez ces <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">instructions</a> pour configurer un service OpenID Connect via Google.",
     "oauth_missing_vars": "À configurer : {{-variables}}",
     "oauth_user_account": "Nom du compte",
     "oauth_user_not_logged_in": "Pas connecté !",
@@ -2953,21 +2953,21 @@
     "description": "Importer des pages depuis une exportation HTML Notion (.zip).",
     "description_long": "Dans Notion, exportez votre espace de travail ou une page au format HTML en incluant les sous-pages, puis sélectionnez le fichier .zip obtenu ici.",
     "choose_file": "Export Notion (.zip)",
-    "import": "Import"
+    "import": "Importer"
   },
   "keep_import": {
     "name": "Google Keep",
     "description": "Importer des notes à partir d'un export Google Keep (.zip).",
     "description_long": "Dans Google Takeout, exportez vos données Keep au format .zip, puis sélectionnez le fichier obtenu ici.",
     "choose_file": "Export Google Keep (.zip)",
-    "import": "Import"
+    "import": "Importer"
   },
   "evernote_import": {
     "name": "Evernote",
     "description": "Importer des notes depuis un export Evernote (.enex).",
     "description_long": "Dans Evernote, exportez un carnet de notes (ou jusqu'à 100 notes à la fois) sous forme de fichier ENEX, puis sélectionnez un ou plusieurs fichiers .enex ici. Chaque fichier est importé en tant que carnet de notes distinct.",
     "choose_file": "Export Evernote (.enex)",
-    "import": "Import"
+    "import": "Importer"
   },
   "options": {
     "title": "Options",
