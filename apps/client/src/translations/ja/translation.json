@@ -714,7 +714,7 @@
     "open_custom": "プログラムから開く",
     "open_custom_title": "ファイルを外部アプリケーションで開き、変更を監視します。その後、変更されたバージョンをTriliumにアップロードできるようになります。",
     "rename_attachment": "添付ファイルの名前を変更",
-    "copy_link_to_clipboard": "リンクをクリップボードにコピー",
+    "copy_link_to_clipboard": "参照先をクリップボードにコピー",
     "convert_attachment_into_note": "添付ファイルをノートに変換",
     "delete_attachment": "添付ファイルを削除",
     "open_externally_detail_page": "添付ファイルを外部で開くは、詳細ページからのみ可能です。まず添付ファイル詳細をクリックしてから、再度操作を行ってください。",
@@ -2198,7 +2198,7 @@
     "will_be_deleted_soon": "この添付ファイルはすぐに自動的に削除されます",
     "deletion_reason": "、添付ファイルがノートのコンテンツにリンクされていないためです。削除されないようにするには、添付ファイルのリンクをコンテンツに再度追加するか、添付ファイルをノートに変換してください。",
     "role_and_size": "ロール: {{role}},サイズ: {{size}}, MIME: {{- mimeType}}",
-    "link_copied": "添付ファイルのリンクをクリップボードにコピーしました。",
+    "link_copied": "添付ファイルの参照先をクリップボードにコピーしました。",
     "unrecognized_role": "添付ファイルのロール「{{role}}」は認識されません。"
   },
   "presentation_view": {
@@ -2395,7 +2395,8 @@
     "play-mode-once": "1回再生",
     "play-mode-loop": "ループ",
     "play-mode-next": "次を再生",
-    "seek": "シーク（左右矢印キー）"
+    "seek": "シーク（左右矢印キー）",
+    "forward-10s": "10 秒進む (右矢印キー)"
   },
   "mermaid": {
     "placeholder": "マーメイド図の内容を入力するか、以下のサンプル図のいずれかを使用してください。",
