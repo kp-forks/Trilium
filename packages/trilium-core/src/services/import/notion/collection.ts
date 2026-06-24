@@ -67,6 +67,7 @@ export function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[
  * which carries no text) and `<td>` the value. Handled so far:
  *  - `text` / `select` / `status` / `place`: the cell's text → one single-valued property;
  *  - `number`: the cell's text, normalized to a bare number → one single-valued `number` label;
+ *  - `auto_increment_id`: a bare integer → a `number` label, a prefixed id (e.g. `TASK-1`) → a `text` label;
  *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property;
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
@@ -98,6 +99,14 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
             const value = toNumberValue(cell.textContent);
             if (value !== undefined) {
                 properties.push({ name, value, labelType: "number", multiplicity: "single" });
+            }
+        } else if (type === "auto_increment_id") {
+            // Notion's ID is an integer counter, but a configured prefix turns it into an identifier like
+            // "TASK-1"; keep a bare integer as a `number` label and a prefixed id verbatim as `text`.
+            const value = cell.textContent?.trim();
+            if (value) {
+                const labelType = /^\d+$/.test(value) ? "number" : "text";
+                properties.push({ name, value, labelType, multiplicity: "single" });
             }
         } else if (type === "multi_select") {
             for (const option of cell.querySelectorAll("span.selected-value")) {

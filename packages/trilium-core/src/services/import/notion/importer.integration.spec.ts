@@ -504,6 +504,30 @@ describe("Notion importer — integration", () => {
         expect(second?.getLabelValue("label:A")).toBe("promoted,single,number,alias=A");
     });
 
+    it("imports an auto-increment ID column as a number label, keeping a prefixed ID as text", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const rowId = "388c5eca1b8b80929a78da7c68154bd7";
+        // Notion's ID is an integer counter (a bare number), but a configured prefix turns it into an
+        // identifier like "TASK-1" that must stay verbatim. Both render as a property-row-auto_increment_id.
+        const rows =
+            `<tr class="property-row property-row-auto_increment_id"><th><span class="icon property-icon"><img src="x.svg"/></span>ID</th><td>1</td></tr>` +
+            `<tr class="property-row property-row-auto_increment_id"><th>Key</th><td>TASK-1</td></tr>`;
+        const props = `<table class="properties"><tbody>${rows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/Row 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>Row</title></head><body><div id="${rowId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:ID")?.value).toBe("promoted,single,number,alias=ID");
+        expect(db?.getOwnedLabel("label:Key")?.value).toBe("promoted,single,text,alias=Key");
+        const row = db?.getChildNotes().find((n) => n.title === "Row");
+        expect(row?.getOwnedLabelValue("ID")).toBe("1");
+        expect(row?.getOwnedLabelValue("Key")).toBe("TASK-1");
+    });
+
     it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";
