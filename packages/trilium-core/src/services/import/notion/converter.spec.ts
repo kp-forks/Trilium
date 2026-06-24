@@ -169,6 +169,48 @@ describe("convertNotionHtml — table of contents", () => {
     });
 });
 
+describe("convertNotionHtml — list fragmentation", () => {
+    // Notion exports each list item as its own single-item <ul>/<ol> (wrapped in a display:contents <div>),
+    // and fragments nested lists the same way; consecutive same-kind fragments must merge into one clean list.
+    const dc = (inner: string) => `<div style="display:contents" dir="auto">${inner}</div>`;
+
+    it("merges fragmented bullet items into a single list, including nested sublists", () => {
+        const nested =
+            dc(`<ul class="bulleted-list"><li style="list-style-type:circle">Nested 1</li></ul>`) +
+            dc(`<ul class="bulleted-list"><li style="list-style-type:circle">Nested 2</li></ul>`);
+        const input =
+            dc(`<ul class="bulleted-list"><li style="list-style-type:disc">Item 1</li></ul>`) +
+            dc(`<ul class="bulleted-list"><li style="list-style-type:disc">Item 2${nested}</li></ul>`);
+        expect(convertNotionHtml(input)).toBe(
+            `<ul><li style="list-style-type:disc">Item 1</li><li style="list-style-type:disc">Item 2<ul><li style="list-style-type:circle">Nested 1</li><li style="list-style-type:circle">Nested 2</li></ul></li></ul>`
+        );
+    });
+
+    it("merges fragmented numbered items into a single list, dropping per-fragment start/type", () => {
+        const nested =
+            dc(`<ol type="a" class="numbered-list" start="1"><li>A</li></ol>`) +
+            dc(`<ol type="a" class="numbered-list" start="2"><li>B</li></ol>`);
+        const input =
+            dc(`<ol type="1" class="numbered-list" start="1"><li>One</li></ol>`) +
+            dc(`<ol type="1" class="numbered-list" start="2"><li>Two</li></ol>`) +
+            dc(`<ol type="1" class="numbered-list" start="3"><li>Three${nested}</li></ol>`);
+        expect(convertNotionHtml(input)).toBe(
+            `<ol><li>One</li><li>Two</li><li>Three<ol><li>A</li><li>B</li></ol></li></ol>`
+        );
+    });
+
+    it("does not merge lists separated by other content or of a different type", () => {
+        const input =
+            dc(`<ul class="bulleted-list"><li>A</li></ul>`) +
+            dc(`<p>break</p>`) +
+            dc(`<ul class="bulleted-list"><li>B</li></ul>`) +
+            dc(`<ol class="numbered-list" start="1"><li>C</li></ol>`);
+        expect(convertNotionHtml(input)).toBe(
+            `<ul><li>A</li></ul><p>break</p><ul><li>B</li></ul><ol><li>C</li></ol>`
+        );
+    });
+});
+
 describe("convertNotionHtml — callouts", () => {
     const callout = (emoji: string, body: string) =>
         `<div style="display:contents" dir="ltr"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="386c5eca"><div style="font-size:1.5em"><span class="icon">${emoji}</span></div><div style="width:100%"><div style="display:contents" dir="auto">${body}</div></div></figure></div>`;

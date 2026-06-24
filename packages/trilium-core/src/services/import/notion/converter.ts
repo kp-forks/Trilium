@@ -21,6 +21,7 @@ export function convertNotionHtml(html: string): string {
     convertToggleHeadings(root);
     dropTableOfContents(root);
     unwrapDisplayContents(root);
+    mergeFragmentedLists(root);
     convertTables(root);
     convertImages(root);
     convertAttachments(root);
@@ -287,6 +288,40 @@ function unwrapDisplayContents(root: HTMLElement) {
             div.replaceWith(...div.childNodes);
         }
     }
+}
+// #endregion
+
+// #region List fragmentation
+/**
+ * Notion exports each list item as its own single-item `<ul>`/`<ol>` (so a three-item list is three lists),
+ * and fragments nested lists the same way. Merge each fragment into its previous sibling of the same kind —
+ * `bulleted-list` with `bulleted-list`, `numbered-list` with `numbered-list` — so a run of fragments becomes
+ * one list; document order makes the first fragment accumulate the rest, and nested fragments merge once the
+ * outer merge has reparented them. Any other element between two lists keeps them apart (so a paragraph splits
+ * a run), and a list never merges across types. The surviving lists are then stripped of Notion's list class
+ * and the `start`/`type`/`id` fragmentation artifacts, leaving clean `<ul>`/`<ol>`.
+ */
+function mergeFragmentedLists(root: HTMLElement) {
+    for (const list of root.querySelectorAll("ul.bulleted-list, ol.numbered-list")) {
+        const prev = list.previousElementSibling;
+        if (prev && prev.tagName === list.tagName && isMergeableList(prev)) {
+            for (const item of [...list.childNodes]) {
+                prev.appendChild(item);
+            }
+            list.remove();
+        }
+    }
+    for (const list of root.querySelectorAll("ul.bulleted-list, ol.numbered-list")) {
+        for (const attr of ["class", "start", "type", "id"]) {
+            list.removeAttribute(attr);
+        }
+    }
+}
+
+/** A Notion bulleted/numbered list — the kinds Notion fragments one item per list, to be merged back together. */
+function isMergeableList(el: HTMLElement): boolean {
+    return (isTag(el, "ul") && el.classList.contains("bulleted-list"))
+        || (isTag(el, "ol") && el.classList.contains("numbered-list"));
 }
 // #endregion
 
