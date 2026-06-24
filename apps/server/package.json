@@ -57,7 +57,6 @@
     "@types/express-session": "1.19.0",
     "@types/html": "1.0.4",
     "@types/ini": "4.1.1",
-    "@types/js-yaml": "4.0.9",
     "@types/multer": "2.1.0",
     "@types/safe-compare": "1.1.2",
     "@types/serve-favicon": "2.5.7",
