@@ -259,6 +259,29 @@ describe("convertNotionHtml — columns", () => {
             `</tr></tbody></table></figure>`
         );
     });
+
+    it("keeps a column with loose content and a nested list as one cell (nested table inside), not losing content", () => {
+        // Left column is a pure wrapper (flattens); the right column has loose content "2/2" plus a nested
+        // list, so it stays a single cell carrying the paragraph and the nested columns as a nested table.
+        const nestedA = dc(`<div class="column-list">${column("100%", "1") + column("100%", "2") + column("100%", "3")}</div>`);
+        const wrapper = dc(`<div style="width:50%" class="column">${nestedA}${dc(`<p class=""></p>`)}</div>`);
+        const nestedB = dc(`<div class="column-list">${column("100%", "the") + column("100%", "quick") + column("100%", "brown")}</div>`);
+        const mixed = dc(`<div style="width:50%" class="column">${dc(`<p class="">2/2</p>`)}${nestedB}</div>`);
+        const input = dc(`<div id="x" class="column-list">${wrapper}${mixed}</div>`);
+        expect(convertNotionHtml(input)).toBe(
+            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>` +
+            `<td style="border-color:transparent;width:16.67%;">1</td>` +
+            `<td style="border-color:transparent;width:16.67%;">2</td>` +
+            `<td style="border-color:transparent;width:16.67%;">3</td>` +
+            `<td style="border-color:transparent;width:50%;"><p class="">2/2</p>` +
+            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>` +
+            `<td style="border-color:transparent;width:33.33%;">the</td>` +
+            `<td style="border-color:transparent;width:33.33%;">quick</td>` +
+            `<td style="border-color:transparent;width:33.33%;">brown</td>` +
+            `</tr></tbody></table></figure></td>` +
+            `</tr></tbody></table></figure>`
+        );
+    });
 });
 
 describe("convertNotionHtml — callouts", () => {

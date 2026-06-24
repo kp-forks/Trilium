@@ -329,31 +329,36 @@ function isMergeableList(el: HTMLElement): boolean {
 // #region Columns
 /**
  * Notion column layouts (`<div class="column-list">` of `<div class="column" style="width:N%">`) have no
- * Trilium/CKEditor equivalent, so render them as a single-row borderless table — one `<td>` per column,
+ * Trilium/CKEditor equivalent, so render each as a single-row borderless table — one `<td>` per column,
  * carrying that column's width. Both the table and every cell get `border-color:transparent` so the result
  * reads as side-by-side content rather than a grid, and the width is rounded to two decimals to match
- * CKEditor's column widths. A column whose only block is a `<p>` is unwrapped, so a one-paragraph column
- * becomes a plain cell. (Nested column lists aren't flattened yet — an inner list is left in its cell.)
+ * CKEditor's column widths. A column that is just a wrapper around a nested column list is flattened (its
+ * inner columns join the same row, scaled by the wrapper's share); a column that mixes loose content with a
+ * nested list stays one cell, the inner list becoming a nested table inside it so no content is lost.
  */
 function convertColumns(root: HTMLElement) {
     for (const columnList of root.querySelectorAll("div.column-list")) {
         if (!columnList.parentNode) {
-            continue; // a nested list, already flattened into its parent
+            continue; // a nested list, already rendered as part of its parent
         }
-        const cells = flattenColumns(columnList, 100)
-            .map(({ width, content }) => `<td style="border-color:transparent;width:${round2(width)}%;">${content}</td>`)
-            .join("");
-        columnList.insertAdjacentHTML("beforebegin",
-            `<figure class="table"><table style="border-color:transparent;"><tbody><tr>${cells}</tr></tbody></table></figure>`);
+        columnList.insertAdjacentHTML("beforebegin", columnListToFigure(columnList));
         columnList.remove();
     }
 }
 
+/** Renders a column list as the borderless single-row table figure CKEditor stores tables in. */
+function columnListToFigure(columnList: HTMLElement): string {
+    const cells = flattenColumns(columnList, 100)
+        .map(({ width, content }) => `<td style="border-color:transparent;width:${round2(width)}%;">${content}</td>`)
+        .join("");
+    return `<figure class="table"><table style="border-color:transparent;"><tbody><tr>${cells}</tr></tbody></table></figure>`;
+}
+
 /**
- * Flattens a column list (and any nested column lists) into the leaf cells of one row. Each column takes its
- * share of `parentWidth` in proportion to its width among its siblings; a column that just wraps a nested
- * column list contributes that list's columns instead — scaled by the wrapper's share — so Notion's nested
- * columns collapse into the same row rather than becoming a table-in-a-cell.
+ * Flattens a column list into the leaf cells of one row. Each column takes its share of `parentWidth` in
+ * proportion to its width among its siblings; a pure wrapper column ({@link pureWrapperList}) contributes its
+ * nested list's columns instead — scaled by the wrapper's share — so nested columns collapse into the same
+ * row. Every other column is one cell ({@link cellContent}).
  */
 function flattenColumns(columnList: HTMLElement, parentWidth: number): { width: number; content: string }[] {
     const columns = directChildren(columnList, "div").filter((column) => column.classList.contains("column"));
@@ -363,14 +368,21 @@ function flattenColumns(columnList: HTMLElement, parentWidth: number): { width: 
     const leaves: { width: number; content: string }[] = [];
     for (const [index, column] of columns.entries()) {
         const share = parentWidth * ((widths[index] ?? 0) / total);
-        const nested = directChild(column, (node) => node.classList.contains("column-list"));
-        if (nested) {
-            leaves.push(...flattenColumns(nested, share));
+        const wrapped = pureWrapperList(column);
+        if (wrapped) {
+            leaves.push(...flattenColumns(wrapped, share));
         } else {
             leaves.push({ width: share, content: cellContent(column) });
         }
     }
     return leaves;
+}
+
+/** The nested column list a column merely wraps (its sole child apart from empty spacer paragraphs), else null. */
+function pureWrapperList(column: HTMLElement): HTMLElement | null {
+    const meaningful = column.childNodes.filter((node): node is HTMLElement => node instanceof HTMLElement && !isEmptyParagraph(node));
+    const [only] = meaningful;
+    return meaningful.length === 1 && only && only.classList.contains("column-list") ? only : null;
 }
 
 /** A Notion column's numeric width (`style="width:N%"` → `N`), or undefined when it has none. */
@@ -384,14 +396,25 @@ function round2(value: number): number {
     return Math.round(value * 100) / 100;
 }
 
-/** A column's cell content: a sole `<p>`'s inner HTML (so a one-paragraph column is a plain cell), else all of it. */
+/** True for an empty `<p>` (Notion's layout spacers), which shouldn't count as a column's real content. */
+function isEmptyParagraph(node: HTMLElement): boolean {
+    return isTag(node, "p") && (node.textContent ?? "").trim() === "";
+}
+
+/**
+ * A column's cell content: a sole `<p>` is unwrapped (so a one-paragraph column is a plain cell); otherwise
+ * the column's content is kept as-is, except a nested column list is turned into a nested table so a mixed
+ * column (loose content plus a nested list) keeps both.
+ */
 function cellContent(column: HTMLElement): string {
     const elements = column.childNodes.filter((node): node is HTMLElement => node instanceof HTMLElement);
     const [only] = elements;
     if (elements.length === 1 && only && isTag(only, "p")) {
         return only.innerHTML;
     }
-    return column.innerHTML;
+    return column.childNodes
+        .map((node) => (node instanceof HTMLElement && node.classList.contains("column-list") ? columnListToFigure(node) : node.toString()))
+        .join("");
 }
 // #endregion
 
