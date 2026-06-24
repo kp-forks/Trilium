@@ -124,6 +124,42 @@ describe("convertNotionHtml — toggles", () => {
     });
 });
 
+describe("convertNotionHtml — toggle headings", () => {
+    // A toggle heading exports as a bare <details> (no ul.toggle wrapper) whose <summary> font-size encodes
+    // the level; Notion nests its body in a `.indented` div and wraps blocks in display:contents.
+    const toggleHeading = (size: string, title: string, body: string) =>
+        `<div style="display:contents" dir="auto"><details open=""><summary style="font-weight:600;font-size:${size};line-height:1.3;margin:0">${title}</summary><div class="indented"><div style="display:contents" dir="auto">${body}</div></div></details></div>`;
+
+    it("flattens a toggle heading into a plain heading, hoisting its body out of the `.indented` wrapper", () => {
+        expect(convertNotionHtml(toggleHeading("1.875em", "Section A", "<p>Content goes here.</p>"))).toBe(
+            `<h2>Section A</h2><p>Content goes here.</p>`
+        );
+    });
+
+    it("maps each Notion toggle-heading size to the matching (shifted) heading level", () => {
+        const input =
+            toggleHeading("1.875em", "L1", "<p>a</p>") +
+            toggleHeading("1.5em", "L2", "<p>b</p>") +
+            toggleHeading("1.25em", "L3", "<p>c</p>") +
+            toggleHeading("1.125em", "L4", "<p>d</p>");
+        expect(convertNotionHtml(input)).toBe(
+            `<h2>L1</h2><p>a</p><h3>L2</h3><p>b</p><h4>L3</h4><p>c</p><h5>L4</h5><p>d</p>`
+        );
+    });
+
+    it("preserves inline formatting in the heading title and handles an empty body", () => {
+        expect(convertNotionHtml(toggleHeading("1.5em", "A <strong>bold</strong> title", ""))).toBe(
+            `<h3>A <strong>bold</strong> title</h3>`
+        );
+    });
+
+    it("leaves a regular list toggle as a collapsible (its summary has no heading font-size)", () => {
+        expect(convertNotionHtml(`<ul class="toggle"><li><details open=""><summary>Plain</summary><div style="display:contents"><p>x</p></div></details></li></ul>`)).toBe(
+            `<details open class="trilium-collapsible"><summary>Plain</summary><p>x</p></details>`
+        );
+    });
+});
+
 describe("convertNotionHtml — callouts", () => {
     const callout = (emoji: string, body: string) =>
         `<div style="display:contents" dir="ltr"><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="386c5eca"><div style="font-size:1.5em"><span class="icon">${emoji}</span></div><div style="width:100%"><div style="display:contents" dir="auto">${body}</div></div></figure></div>`;

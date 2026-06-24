@@ -18,6 +18,7 @@ export function convertNotionHtml(html: string): string {
     stripDatePrefixes(root);
     convertTodoLists(root);
     convertToggles(root);
+    convertToggleHeadings(root);
     unwrapDisplayContents(root);
     convertTables(root);
     convertImages(root);
@@ -209,6 +210,51 @@ function convertToggles(root: HTMLElement) {
         }
         ul.replaceWith(...detailsList);
     }
+}
+// #endregion
+
+// #region Toggle headings
+/**
+ * A Notion *toggle heading* is a collapsible whose title is a heading. Unlike a list toggle it exports as a
+ * bare `<details>` (no `ul.toggle` wrapper) whose `<summary>` carries the heading's font-size — the only
+ * signal of its level. Trilium's collapsible can't hold a heading in its summary, so flatten each toggle
+ * heading into a plain heading: emit an `<hN>` from the summary, then hoist the toggle's body in its place
+ * (dropping the `.indented` wrapper Notion nests it in). The level is shifted down one to match how Notion
+ * exports ordinary headings — its content "Heading 1" is `<h2>` because the page title takes `<h1>` — so a
+ * toggle heading lands at the same level as the equivalent plain heading.
+ */
+function convertToggleHeadings(root: HTMLElement) {
+    for (const details of root.querySelectorAll("details")) {
+        const summary = directChild(details, (node) => isTag(node, "summary"));
+        const tag = summary ? toggleHeadingTag(summary) : undefined;
+        if (!summary || !tag) {
+            continue;
+        }
+
+        // Unwrap the `.indented` body wrapper so the toggle's content lands at the heading's level, not nested.
+        for (const child of [...details.childNodes]) {
+            if (child instanceof HTMLElement && child.classList.contains("indented")) {
+                child.replaceWith(...child.childNodes);
+            }
+        }
+        details.insertAdjacentHTML("beforebegin", `<${tag}>${summary.innerHTML.trim()}</${tag}>`);
+        summary.remove();
+        details.replaceWith(...details.childNodes);
+    }
+}
+
+/** Notion toggle-heading summary font-sizes, mapped to the Trilium heading tag (shifted to match plain headings). */
+const TOGGLE_HEADING_TAGS: Record<string, string> = {
+    "1.875em": "h2",
+    "1.5em": "h3",
+    "1.25em": "h4",
+    "1.125em": "h5"
+};
+
+/** The heading tag a toggle heading's summary encodes via its font-size, or undefined if it isn't a heading. */
+function toggleHeadingTag(summary: HTMLElement): string | undefined {
+    const fontSize = summary.getAttribute("style")?.match(/font-size:\s*([\d.]+em)/)?.[1];
+    return fontSize ? TOGGLE_HEADING_TAGS[fontSize] : undefined;
 }
 // #endregion
 
