@@ -468,6 +468,42 @@ describe("Notion importer — integration", () => {
         expect(row?.getOwnedLabelValue("Status_column")).toBe("Another in progress");
     });
 
+    it("imports number columns as number-typed labels, normalizing formatted values and inheriting the schema", async () => {
+        const dbId = "388c5eca1b8b8078a20fd18330d81306";
+        const firstId = "388c5eca1b8b80929a78da7c68154bd7";
+        const secondId = "388c5eca1b8b80deb7f9ede99b0b2036";
+        // A number cell holds the *formatted* display (commas, currency, percent), which the importer
+        // normalizes to a bare number. Notion drops the property row entirely when a number is empty, so
+        // "Second" carries no number rows at all — yet still inherits the column definitions from the container.
+        const numberRows =
+            `<tr class="property-row property-row-number"><th><span class="icon property-icon"><img src="x.svg"/></span>A</th><td>12</td></tr>` +
+            `<tr class="property-row property-row-number"><th>B</th><td>$1,200.50</td></tr>` +
+            `<tr class="property-row property-row-number"><th>C</th><td>25%</td></tr>`;
+        const props = `<table class="properties"><tbody>${numberRows}</tbody></table>`;
+        const importRoot = await importNotion({
+            "DB 388c5eca1b8b8078a20fd18330d81306.html":
+                `<html><head><title>DB</title></head><body><div id="${dbId}"><div class="page-body"></div></div></body></html>`,
+            "DB/First 388c5eca1b8b80929a78da7c68154bd7.html":
+                `<html><head><title>First</title></head><body><div id="${firstId}">${props}<div class="page-body"><p>x</p></div></div></body></html>`,
+            "DB/Second 388c5eca1b8b80deb7f9ede99b0b2036.html":
+                `<html><head><title>Second</title></head><body><div id="${secondId}"><div class="page-body"><p>y</p></div></div></body></html>`
+        });
+
+        const db = importRoot.getChildNotes().find((n) => n.title === "DB");
+        expect(db?.getOwnedLabel("label:A")?.value).toBe("promoted,single,number,alias=A");
+        expect(db?.getOwnedLabel("label:B")?.value).toBe("promoted,single,number,alias=B");
+
+        const first = db?.getChildNotes().find((n) => n.title === "First");
+        expect(first?.getOwnedLabelValue("A")).toBe("12");
+        expect(first?.getOwnedLabelValue("B")).toBe("1200.50"); // "$1,200.50" → bare number
+        expect(first?.getOwnedLabelValue("C")).toBe("25"); // "25%" → bare number
+
+        // "Second" has no number values of its own, but inherits the column definitions from the container.
+        const second = db?.getChildNotes().find((n) => n.title === "Second");
+        expect(second?.getOwnedLabelValue("A")).toBeNull();
+        expect(second?.getLabelValue("label:A")).toBe("promoted,single,number,alias=A");
+    });
+
     it("imports url, email and phone columns as url-typed labels (mailto:/tel: schemes)", async () => {
         const dbId = "388c5eca1b8b8078a20fd18330d81306";
         const rowId = "388c5eca1b8b80929a78da7c68154bd7";

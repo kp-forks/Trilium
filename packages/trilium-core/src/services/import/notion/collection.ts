@@ -66,6 +66,7 @@ export function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[
  * `<tr class="property-row property-row-<type>">` whose `<th>` holds the column name (after an icon span,
  * which carries no text) and `<td>` the value. Handled so far:
  *  - `text` / `select` / `status` / `place`: the cell's text → one single-valued property;
+ *  - `number`: the cell's text, normalized to a bare number → one single-valued `number` label;
  *  - `multi_select`: each `<span class="selected-value">` option → one entry of a multi-valued property;
  *  - `url` / `email` / `phone_number`: the anchor's href → one single-valued url-typed property (email gets `mailto:`, phone `tel:`);
  *  - `date`: the `<time>` value → a `date`/`datetime` label; a range adds a separate `<name> end` column;
@@ -92,6 +93,11 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
             const value = cell.textContent?.trim();
             if (value) {
                 properties.push({ name, value, labelType: "text", multiplicity: "single" });
+            }
+        } else if (type === "number") {
+            const value = toNumberValue(cell.textContent);
+            if (value !== undefined) {
+                properties.push({ name, value, labelType: "number", multiplicity: "single" });
             }
         } else if (type === "multi_select") {
             for (const option of cell.querySelectorAll("span.selected-value")) {
@@ -145,6 +151,21 @@ export function extractProperties(root: HTMLElement): NotionProperty[] {
         }
     }
     return properties;
+}
+
+/**
+ * Normalizes a Notion number cell to a bare numeric string Trilium's `number` input accepts. Notion renders
+ * the *formatted* value (e.g. `1,200`, `$12.00`, `12%`), so strip everything but digits, a decimal point and a
+ * sign; the cleaned value is used only when it parses as a finite number, otherwise the trimmed original is
+ * kept so an unexpectedly non-numeric cell still imports rather than vanishing. A blank cell yields nothing.
+ */
+function toNumberValue(text: string | null | undefined): string | undefined {
+    const trimmed = text?.trim();
+    if (!trimmed) {
+        return undefined;
+    }
+    const normalized = trimmed.replace(/[^\d.-]/g, "");
+    return normalized !== "" && Number.isFinite(Number(normalized)) ? normalized : trimmed;
 }
 
 /** Gives an email/phone href a clickable scheme (`mailto:`/`tel:`); a plain url href is returned as-is. */
