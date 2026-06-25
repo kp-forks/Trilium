@@ -47,12 +47,25 @@ describe("isPage", () => {
 });
 
 describe("parseObject", () => {
-    it("takes the title from details.name and emits each text block as a paragraph, ignoring style", () => {
-        const result = parseObject(page("My Page", [textBlock("b1", "First"), textBlock("b2", "Second", "Header1")]));
+    it("takes the title from details.name and emits non-heading text blocks as paragraphs", () => {
+        // Numbered/Marked/Quote/Code etc. are all flattened to <p> for now (only headings get their own tag).
+        const result = parseObject(page("My Page", [textBlock("b1", "First"), textBlock("b2", "Second", "Numbered")]));
         expect(result.id).toBe("obj");
         expect(result.title).toBe("My Page");
-        // Header1 still becomes a plain <p> — no formatting in this version.
         expect(result.content).toBe("<p>First</p><p>Second</p>");
+    });
+
+    it("maps Anytype's three heading styles to Trilium's top heading levels (h2/h3/h4)", () => {
+        // Labels and order taken from the "Formatting test" page: Header1/2/3 are Title/Heading/Subheading.
+        const result = parseObject(
+            page("Headings", [
+                textBlock("b1", "Regular text", "Paragraph"),
+                textBlock("b2", "Title", "Header1"),
+                textBlock("b3", "Heading", "Header2"),
+                textBlock("b4", "Subheading", "Header3")
+            ])
+        );
+        expect(result.content).toBe("<p>Regular text</p><h2>Title</h2><h3>Heading</h3><h4>Subheading</h4>");
     });
 
     it("walks nested blocks in document order (parent text before its children)", () => {

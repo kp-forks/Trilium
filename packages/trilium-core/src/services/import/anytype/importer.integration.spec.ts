@@ -117,6 +117,30 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(children[0]?.getContent() ?? "")).toBe("<p>Regular text</p>");
     });
 
+    it("maps heading styles to h2/h3/h4 end-to-end (modeled on the 'Formatting test' page)", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "fmt", childrenIds: ["header", "fmt-1", "fmt-2", "fmt-3", "fmt-4"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "fmt-1", text: { text: "Regular text", style: "Paragraph" } },
+                        { id: "fmt-2", text: { text: "Title", style: "Header1" } },
+                        { id: "fmt-3", text: { text: "Heading", style: "Header2" } },
+                        { id: "fmt-4", text: { text: "Subheading", style: "Header3" } }
+                    ],
+                    details: { id: "fmt", name: "Formatting test", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/fmt.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Formatting test");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Regular text</p><h2>Title</h2><h3>Heading</h3><h4>Subheading</h4>");
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })

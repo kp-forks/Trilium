@@ -90,10 +90,11 @@ export function parseObject(snapshot: AnytypeSnapshot): ParsedObject {
 }
 
 /**
- * Walks the block tree from the root in document order, emitting each non-empty text block as a `<p>`. The
- * `header` subtree (title/description/featuredRelations chrome) is skipped, as are the structural Title and
- * Description styles wherever they appear. Formatting (marks), links and other block kinds are ignored for
- * now — only the text is pulled out.
+ * Walks the block tree from the root in document order, wrapping each non-empty text block in a tag chosen
+ * by its style (headings → `<h2>`/`<h3>`/`<h4>`, everything else → `<p>`). The `header` subtree
+ * (title/description/featuredRelations chrome) is skipped, as are the structural Title and Description
+ * styles wherever they appear. Formatting (marks), links and other block kinds are ignored for now — only
+ * the text is pulled out.
  */
 function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
     const byId = new Map<string, AnytypeBlock>();
@@ -106,7 +107,7 @@ function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
         return "";
     }
 
-    const paragraphs: string[] = [];
+    const parts: string[] = [];
     const visited = new Set<string>();
 
     const walk = (id: string) => {
@@ -124,7 +125,8 @@ function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
         const text = block.text?.text?.trim();
         const style = block.text?.style;
         if (text && style !== "Title" && style !== "Description") {
-            paragraphs.push(`<p>${escapeHtml(text)}</p>`);
+            const tag = tagForStyle(style);
+            parts.push(`<${tag}>${escapeHtml(text)}</${tag}>`);
         }
 
         for (const childId of block.childrenIds ?? []) {
@@ -137,7 +139,26 @@ function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
         walk(childId);
     }
 
-    return paragraphs.join("");
+    return parts.join("");
+}
+
+/**
+ * Maps an Anytype text-block style to the Trilium tag it becomes. Anytype's three in-body heading levels
+ * (UI-labelled Title / Heading / Subheading) map to Trilium's top three heading levels: Trilium reserves
+ * `<h1>` for the note title, so its body headings start at `<h2>`. Every other style (paragraphs, lists,
+ * quotes, code, …) is flattened to a paragraph for now.
+ */
+function tagForStyle(style: string | undefined): string {
+    switch (style) {
+        case "Header1":
+            return "h2";
+        case "Header2":
+            return "h3";
+        case "Header3":
+            return "h4";
+        default:
+            return "p";
+    }
 }
 
 function escapeHtml(text: string): string {
