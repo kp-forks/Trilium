@@ -164,6 +164,35 @@ describe("lists", () => {
     });
 });
 
+describe("toggles", () => {
+    it("converts a Toggle to a collapsible block, nesting its children as the collapsed body", () => {
+        const doc = listDoc(
+            ["t1", "p1"],
+            [
+                { id: "t1", text: { text: "Summary", style: "Toggle", marks: { marks: [mark(0, 7, "Bold")] } }, childrenIds: ["t1a"] },
+                { id: "t1a", text: { text: "Hidden", style: "Paragraph", marks: { marks: [] } } },
+                { id: "p1", text: { text: "After", style: "Paragraph", marks: { marks: [] } } }
+            ]
+        );
+        expect(parseObject(doc).content).toBe(
+            '<details class="trilium-collapsible"><summary><strong>Summary</strong></summary><p>Hidden</p></details><p>After</p>'
+        );
+    });
+
+    it("converts toggle headings to normal headings (h2/h3/h4), keeping their content", () => {
+        const doc = listDoc(
+            ["th1", "th2", "th3"],
+            [
+                { id: "th1", text: { text: "T1", style: "ToggleHeader1", marks: { marks: [] } }, childrenIds: ["th1a"] },
+                { id: "th1a", text: { text: "Body", style: "Paragraph", marks: { marks: [] } } },
+                { id: "th2", text: { text: "T2", style: "ToggleHeader2", marks: { marks: [] } } },
+                { id: "th3", text: { text: "T3", style: "ToggleHeader3", marks: { marks: [] } } }
+            ]
+        );
+        expect(parseObject(doc).content).toBe("<h2>T1</h2><p>Body</p><h3>T2</h3><h4>T3</h4>");
+    });
+});
+
 describe("renderInlineText", () => {
     it("returns escaped plain text when there are no marks", () => {
         expect(renderInlineText("a < b & c > d", [])).toBe("a &lt; b &amp; c &gt; d");

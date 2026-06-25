@@ -5,9 +5,10 @@
  * instead — not handled here), alongside sibling `relations/`, `types/`, `templates/` and `relationsOptions/`
  * folders. This importer reads the *pages* (basic note-like objects) and converts each text block to HTML:
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
- * code blocks (with the language preserved as the Trilium MIME) and bullet/numbered/task lists (grouped
- * and nested). Links, relations, types and collections are still deferred, and every page lands as a flat
- * child of a fresh "Anytype import" root (no hierarchy yet).
+ * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
+ * nested) and toggles (normal toggles → collapsible blocks; toggle headings → plain headings). Links,
+ * relations, types and collections are still deferred, and every page lands as a flat child of a fresh
+ * "Anytype import" root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -169,6 +170,14 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
         // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
         const rawText = block.text?.text ?? "";
         const style = block.text?.style;
+        const marks = block.text?.marks?.marks ?? [];
+
+        if (style === "Toggle") {
+            // A normal toggle becomes a Trilium collapsible block: its label is the summary, its children
+            // the collapsed body. (Toggle *headings* fall through to a normal heading below, via tagForStyle.)
+            return `<details class="trilium-collapsible"><summary>${renderInlineText(rawText, marks)}</summary>${renderSequence(block.childrenIds ?? [])}</details>`;
+        }
+
         let html = "";
         if (rawText.trim() && style !== "Title" && style !== "Description") {
             if (style === "Code") {
@@ -176,10 +185,10 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
                 html = renderCodeBlock(rawText, block.fields?.lang);
             } else {
                 const tag = tagForStyle(style);
-                html = `<${tag}>${renderInlineText(rawText, block.text?.marks?.marks ?? [])}</${tag}>`;
+                html = `<${tag}>${renderInlineText(rawText, marks)}</${tag}>`;
             }
         }
-        // A non-list block's children (rare — e.g. a toggle's contents) follow it as flattened siblings.
+        // A non-list block's children (e.g. a toggle heading's collapsed content) follow as flattened siblings.
         return html + renderSequence(block.childrenIds ?? []);
     }
 
@@ -205,16 +214,20 @@ function listKind(block: AnytypeBlock): ListKind | null {
 /**
  * Maps an Anytype text-block style to the Trilium tag it becomes. Anytype's three in-body heading levels
  * (UI-labelled Title / Heading / Subheading) map to Trilium's top three heading levels: Trilium reserves
- * `<h1>` for the note title, so its body headings start at `<h2>`. Every other non-list style (paragraphs,
- * quotes, callouts, toggles, …) is flattened to a paragraph for now.
+ * `<h1>` for the note title, so its body headings start at `<h2>`. Toggle headings collapse to the same
+ * plain headings (their toggle nature is dropped). Every other non-list style (paragraphs, quotes,
+ * callouts, …) is flattened to a paragraph for now.
  */
 function tagForStyle(style: string | undefined): string {
     switch (style) {
         case "Header1":
+        case "ToggleHeader1":
             return "h2";
         case "Header2":
+        case "ToggleHeader2":
             return "h3";
         case "Header3":
+        case "ToggleHeader3":
             return "h4";
         default:
             return "p";

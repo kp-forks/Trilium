@@ -263,6 +263,28 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(note?.getContent() ?? "")).toBe("<ol><li>One<ol><li>One-A</li></ol></li><li>Two</li></ol>");
     });
 
+    it("imports a toggle as a collapsible block end-to-end", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "tog", childrenIds: ["header", "t1"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "t1", text: { text: "Toggle", style: "Toggle" }, childrenIds: ["t1a"] },
+                        { id: "t1a", text: { text: "Inside", style: "Paragraph" }, childrenIds: [] }
+                    ],
+                    details: { id: "tog", name: "Toggles", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/tog.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Toggles");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe('<details class="trilium-collapsible"><summary>Toggle</summary><p>Inside</p></details>');
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })
