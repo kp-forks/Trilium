@@ -55,6 +55,7 @@ export function resolveDatabaseContainers(pages: ParsedPage[], csvPaths: string[
             title: stripNotionId(removeExtension(baseName(csvPath))) || "Database",
             path: csvPath,
             content: "",
+            linkedPageIds: [],
             properties: [],
             isDatabase: true
         });

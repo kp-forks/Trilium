@@ -33,13 +33,29 @@ import { getNotionId, stripNotionId } from "./notion_id.js";
 import { baseName, firstChildNotionId, folderDepth, internalPageId, isDirectory, normalizePath, ownedFolderKey, parentFolderKey, removeExtension, resolveResourcePath } from "./paths.js";
 
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount } = await parseZip(fileBuffer);
+    const { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount, csvRowTitles } = await parseZip(fileBuffer);
     if (pages.length === 0 && markdownFileCount > 0) {
         // The user exported from Notion as "Markdown & CSV", but this importer only understands the HTML
         // export — it reconstructs databases by correlating each `.csv` with the surrounding `.html` pages,
         // which a Markdown export doesn't have. Fail with actionable guidance rather than silently producing
         // an empty tree (or orphaning every page as a `.md` attachment).
         throw new Error(t("notion_import.markdown-export-unsupported"));
+    }
+    // Notion's "Create folders for subpages" export option, when disabled, drops every page to the archive
+    // root with no per-page folders. Cross-page links survive (they carry the page id), but the folder
+    // structure is the only thing that conveys nesting and database-row membership — so the hierarchy would
+    // silently collapse. Detect it (every page at the root, yet a page still references another imported page
+    // as a subpage) and fail with guidance. A single-page export has no such references and is never caught.
+    if (pages.length > 1 && pages.every((page) => !page.path.includes("/"))) {
+        const pageIds = new Set(pages.map((page) => page.id));
+        const hasFlattenedSubpage = pages.some((page) => page.linkedPageIds.some((id) => id !== page.id && pageIds.has(id)));
+        // A flattened database: its row pages sit at the root with titles matching the CSV's first column,
+        // rather than nesting under the database. A folders-on database keeps its rows in folders, so it
+        // never reaches here (some page would carry a "/"); an empty database has no row titles to match.
+        const hasFlattenedDatabaseRow = pages.some((page) => csvRowTitles.has(page.title));
+        if (hasFlattenedSubpage || hasFlattenedDatabaseRow) {
+            throw new Error(t("notion_import.subpage-folders-disabled"));
+        }
     }
     resolveDatabaseContainers(pages, csvPaths);
     reconcileDateColumns(pages);
@@ -58,7 +74,7 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
  */
 const MAX_NESTED_ZIP_DEPTH = 2;
 
-async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]>; markdownFileCount: number }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]>; markdownFileCount: number; csvRowTitles: Set<string> }> {
     const provider = getZipProvider();
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
@@ -68,6 +84,9 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
     // Notion's "Markdown & CSV" export emits pages as `.md`; the HTML export this importer is built around
     // never does. Counting them lets importNotion detect that wrong export format and fail with guidance.
     let markdownFileCount = 0;
+    // Title of every database row (a CSV's first column), used to detect a "Create folders for subpages"-
+    // disabled export, where row pages are flattened to the root instead of nesting under the database.
+    const csvRowTitles = new Set<string>();
 
     const readArchive = async (buffer: Uint8Array, depth: number): Promise<void> => {
         const filenameEncoding = await provider.detectFilenameEncoding(buffer);
@@ -92,10 +111,18 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                 // A Notion database exports as a CSV: its path reconstructs the hierarchy (a database with no
                 // own page), and its header row lists every column in the database's order.
                 csvPaths.push(path);
-                const [header = []] = parseCsv(new TextDecoder().decode(await readContent()));
+                const [header = [], ...rows] = parseCsv(new TextDecoder().decode(await readContent()));
                 // Trim before sanitizing so a padded CSV header (`Name, Age , …`) still matches the HTML
                 // property `<th>` text, which is trimmed on extraction.
                 csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => toAttributeName(column.trim())));
+                // The first column is each row's title; collect them so a flattened database (rows at the
+                // root, matching these titles, rather than nested under the database) can be detected.
+                for (const row of rows) {
+                    const rowTitle = row[0]?.trim();
+                    if (rowTitle) {
+                        csvRowTitles.add(rowTitle);
+                    }
+                }
             } else {
                 // Keep the file as a resource so a genuine `.md` attachment inside an HTML export survives,
                 // but tally markdown pages so the wrong export format can be detected.
@@ -109,7 +136,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
 
     await readArchive(fileBuffer, 0);
 
-    return { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount };
+    return { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount, csvRowTitles };
 }
 
 function parsePage(path: string, html: string): ParsedPage | null {
@@ -128,11 +155,23 @@ function parsePage(path: string, html: string): ParsedPage | null {
     const pageBody = root.querySelector(".page-body");
     const content = pageBody ? sanitizeHtml(convertNotionHtml(pageBody.innerHTML)) : "";
 
+    // Capture subpage references from the raw HTML (before conversion rewrites them): a `link-to-page` block
+    // is a child page or explicit page link, and a collection table's cells link to the database's rows.
+    // Inline page mentions are deliberately excluded — only these structural references signal nesting.
+    const linkedPageIds: string[] = [];
+    for (const anchor of root.querySelectorAll("figure.link-to-page a, .collection-content a")) {
+        const linkedId = internalPageId(anchor.getAttribute("href"));
+        if (linkedId) {
+            linkedPageIds.push(linkedId);
+        }
+    }
+
     return {
         id,
         title,
         path,
         content,
+        linkedPageIds,
         properties: extractProperties(root),
         utcDateCreated: extractDate(root, "property-row-created_time"),
         utcDateModified: extractDate(root, "property-row-last_edited_time")
