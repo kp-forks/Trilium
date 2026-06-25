@@ -228,9 +228,14 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         editor.focus();
     });
 
-    useTriliumEvent("focusOnDetail", ({ ntxId: eventNtxId }) => {
+    useTriliumEvent("focusOnDetail", ({ ntxId: eventNtxId, insertNewlineAtTop }) => {
         if (eventNtxId !== ntxId) return;
-        codeEditorRef.current?.focus();
+        const editor = codeEditorRef.current;
+        if (!editor) return;
+        if (insertNewlineAtTop) {
+            editor.insertBlankLineAtTop();
+        }
+        editor.focus();
     });
 
     return <CodeMirror
