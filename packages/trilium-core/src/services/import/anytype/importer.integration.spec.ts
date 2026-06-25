@@ -285,6 +285,28 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(note?.getContent() ?? "")).toBe('<details class="trilium-collapsible"><summary>Toggle</summary><p>Inside</p></details>');
     });
 
+    it("imports a divider as <hr> end-to-end", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "div", childrenIds: ["header", "p1", "d1"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "p1", text: { text: "Above", style: "Paragraph" } },
+                        { id: "d1", div: { style: "Dots" } }
+                    ],
+                    details: { id: "div", name: "Divider", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/div.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Divider");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Above</p><hr>");
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })

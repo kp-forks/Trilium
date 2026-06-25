@@ -164,6 +164,21 @@ describe("lists", () => {
     });
 });
 
+describe("dividers", () => {
+    it("converts Line and Dots divider blocks to <hr>", () => {
+        const doc = listDoc(
+            ["p1", "d1", "d2", "p2"],
+            [
+                { id: "p1", text: { text: "Above", style: "Paragraph", marks: { marks: [] } } },
+                { id: "d1", div: { style: "Line" } },
+                { id: "d2", div: { style: "Dots" } },
+                { id: "p2", text: { text: "Below", style: "Paragraph", marks: { marks: [] } } }
+            ]
+        );
+        expect(parseObject(doc).content).toBe("<p>Above</p><hr><hr><p>Below</p>");
+    });
+});
+
 describe("toggles", () => {
     it("converts a Toggle to a collapsible block, nesting its children as the collapsed body", () => {
         const doc = listDoc(

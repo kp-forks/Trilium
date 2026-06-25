@@ -6,9 +6,9 @@
  * folders. This importer reads the *pages* (basic note-like objects) and converts each text block to HTML:
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
- * nested) and toggles (normal toggles → collapsible blocks; toggle headings → plain headings). Links,
- * relations, types and collections are still deferred, and every page lands as a flat child of a fresh
- * "Anytype import" root (no hierarchy yet).
+ * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings) and dividers
+ * (→ `<hr>`). Links, relations, types and collections are still deferred, and every page lands as a flat
+ * child of a fresh "Anytype import" root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -167,6 +167,11 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
     }
 
     function renderLeaf(block: AnytypeBlock): string {
+        // A divider block (Line or Dots) — both become a horizontal rule.
+        if (block.div) {
+            return "<hr>";
+        }
+
         // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
         const rawText = block.text?.text ?? "";
         const style = block.text?.style;
@@ -455,6 +460,10 @@ export interface AnytypeBlock {
     /** Per-block extras. For a `Code`-style text block, `lang` holds the PrismJS language id. */
     fields?: {
         lang?: string;
+    };
+    /** A divider block (`style` is "Line" or "Dots"); both become a horizontal rule. */
+    div?: {
+        style?: string;
     };
 }
 
