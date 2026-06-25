@@ -53,26 +53,21 @@ describe("rewriteCollectionIncludes", () => {
     const resolveDatabase = (notionId: string): LinkTarget | null =>
         notionId === dbId ? { noteId: "dbNote123", title: "Database title" } : null;
 
-    // The full-export inline-database shape: a div linking to the separately-exported CSV.
-    const block = (id: string) =>
-        `<div class="collection-content"><h4 class="collection-title">Database title</h4>` +
-        `<a href="Inline%20database%20test/Database%20title%20${id}.csv"><code>x</code></a></div>`;
-
-    it("replaces an inline-database CSV reference with an include-note for the imported collection", () => {
-        const input = `<p>Before</p>${block(dbId)}<p>After</p>`;
-        expect(rewriteCollectionIncludes(input, resolveDatabase)).toBe(
-            `<p>Before</p><section class="include-note" data-note-id="dbNote123" data-box-size="medium">&nbsp;</section><p>After</p>`
-        );
+    it("resolves an inline-database placeholder to the imported collection note's id", () => {
+        const input = `<p>Before</p><section class="include-note" data-notion-id="${dbId}" data-box-size="medium">&nbsp;</section><p>After</p>`;
+        const output = rewriteCollectionIncludes(input, resolveDatabase);
+        expect(output).toContain(`data-note-id="dbNote123"`);
+        expect(output).toContain(`data-box-size="medium"`);
+        expect(output).not.toContain("data-notion-id");
     });
 
-    it("leaves the block untouched when the referenced database wasn't imported", () => {
-        const input = block("ffffffffffffffffffffffffffffffff");
+    it("drops a placeholder whose database wasn't imported", () => {
+        const input = `<p>x</p><section class="include-note" data-notion-id="ffffffffffffffffffffffffffffffff">&nbsp;</section>`;
+        expect(rewriteCollectionIncludes(input, resolveDatabase)).toBe(`<p>x</p>`);
+    });
+
+    it("leaves an ordinary include-note (no placeholder id) untouched", () => {
+        const input = `<section class="include-note" data-note-id="abc">&nbsp;</section>`;
         expect(rewriteCollectionIncludes(input, resolveDatabase)).toBe(input);
-    });
-
-    it("ignores a rendered collection table (the partial-export shape)", () => {
-        // A partial export inlines the actual rows as a <table>, which has no CSV to resolve and is kept.
-        const table = `<table class="collection-content"><tbody><tr><td>Foo</td></tr></tbody></table>`;
-        expect(rewriteCollectionIncludes(table, resolveDatabase)).toBe(table);
     });
 });

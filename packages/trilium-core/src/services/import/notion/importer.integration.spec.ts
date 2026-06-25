@@ -141,17 +141,12 @@ describe("Notion importer — integration", () => {
         expect(importRoot.getChildNotes().map((note) => note.title).sort()).toEqual(["Page A", "Page B"]);
     });
 
-    it("embeds a full-export inline database as an include-note pointing at the imported collection", async () => {
-        // A workspace ("database-wide") export renders an inline database as a link to its separately-exported
-        // CSV (not a table). The database is imported as a child collection; the link must become an
-        // include-note embedding it, rather than a dangling reference to a `.csv` file.
+    // Both Notion export shapes of an inline database — a full/workspace export's link to the separately-
+    // exported CSV, and a partial export's rendered table — must resolve to an include-note embedding the
+    // imported collection. Each shares the same CSV + rows; only the in-page `collectionBlock` differs.
+    const expectInlineDatabaseEmbedded = async (collectionBlock: string) => {
         const pageId = "38ac5eca1b8b8075b965f506658aeb1f";
         const dbId = "38ac5eca1b8b808babeaf10c0980fa5b";
-        // Faithful to the real export: the block is wrapped in a display:contents div and carries the
-        // database id on the (sanitizer-stripped) div id, with the resolvable id living in the .csv href.
-        const collectionBlock =
-            `<div style="display:contents" dir="ltr"><div id="38ac5eca-1b8b-808b-abea-f10c0980fa5b" class="collection-content"><h4 class="collection-title">Database title</h4>` +
-            `<a href="Inline%20database%20test/Database%20title%20${dbId}.csv"><code>Inline database test/Database title ${dbId}.csv</code></a></div></div>`;
         const importRoot = await importNotion({
             [`Inline database test ${pageId}.html`]:
                 `<html><head><title>Inline database test</title></head><body><div id="${pageId}"><div class="page-body"><p>Before</p>${collectionBlock}<p>After</p></div></div></body></html>`,
@@ -165,11 +160,32 @@ describe("Notion importer — integration", () => {
         // The database imported as a table collection with its rows nested under it.
         expect(database?.type).toBe("book");
         expect(database?.getChildNotes().map((note) => note.title).sort()).toEqual(["First", "Second"]);
-        // The page body embeds that collection inline and no longer references the raw CSV.
-        const content = page?.getContent();
-        expect(content).toContain(`<section class="include-note" data-note-id="${database?.noteId}" data-box-size="medium">`);
+        // The page body embeds that collection inline and no longer references the raw CSV or the table.
+        const content = page?.getContent() ?? "";
+        expect(content).toContain(`class="include-note"`);
+        expect(content).toContain(`data-note-id="${database?.noteId}"`);
+        expect(content).toContain(`data-box-size="medium"`);
+        expect(content).not.toContain("data-notion-id");
         expect(content).not.toContain(".csv");
         expect(content).not.toContain("collection-content");
+    };
+
+    it("embeds a full-export inline database (CSV link) as an include-note for the imported collection", async () => {
+        const dbId = "38ac5eca1b8b808babeaf10c0980fa5b";
+        await expectInlineDatabaseEmbedded(
+            `<div style="display:contents" dir="ltr"><div id="38ac5eca-1b8b-808b-abea-f10c0980fa5b" class="collection-content"><h4 class="collection-title">Database title</h4>` +
+            `<a href="Inline%20database%20test/Database%20title%20${dbId}.csv"><code>Inline database test/Database title ${dbId}.csv</code></a></div></div>`
+        );
+    });
+
+    it("embeds a partial-export inline database (rendered table) as an include-note for the imported collection", async () => {
+        await expectInlineDatabaseEmbedded(
+            `<div style="display:contents" dir="ltr"><div id="38ac5eca-1b8b-808b-abea-f10c0980fa5b" class="collection-content"><h4 class="collection-title">Database title</h4>` +
+            `<div class="collection-content-wrapper"><table class="collection-content"><thead><tr><th>Name</th></tr></thead><tbody>` +
+            `<tr id="38ac5eca-1b8b-8069-afb5-c9fe40e53c42"><td class="cell-title"><a href="Inline%20database%20test/Database%20title/First%2038ac5eca1b8b8069afb5c9fe40e53c42.html">First</a></td></tr>` +
+            `<tr id="38ac5eca-1b8b-8025-bf73-d86d81713eb3"><td class="cell-title"><a href="Inline%20database%20test/Database%20title/Second%2038ac5eca1b8b8025bf73d86d81713eb3.html">Second</a></td></tr>` +
+            `</tbody></table></div></div></div>`
+        );
     });
 
     it("groups a CSV-only database's rows under a container note, instead of orphaning them to the root", async () => {

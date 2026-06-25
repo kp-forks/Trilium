@@ -353,50 +353,33 @@ export function rewriteLinks(html: string, resolve: (notionId: string) => LinkTa
 }
 
 /**
- * Replaces a full-export inline-database reference with a Trilium include-note embedding the imported
- * collection. Notion's workspace ("database-wide") export renders an inline database not as a table but as
- * `<div class="collection-content"><h4 class="collection-title">Name</h4><a href="…<id>.csv">…</a></div>` —
- * a bare link to the separately-exported CSV. That database is imported as a collection note (built from its
- * CSV plus rows folder), so resolve it from the id in the `.csv` href and embed it inline, dropping the link.
- * A partial export inlines the rendered `<table class="collection-content">` instead, which is left untouched.
+ * Resolves the inline-database include-note placeholders the converter emits — `<section class="include-note"
+ * data-notion-id="…">` — to the imported collection note. Notion renders an inline database inside a page as
+ * a rendered table (a partial export) or a bare link to its separately-exported CSV (a full/workspace
+ * export); the converter normalizes both to this placeholder carrying the database's Notion id. The database
+ * itself is imported as a collection note (built from its CSV plus rows folder), so swap that id for the
+ * note's id. A placeholder whose database wasn't imported is dropped rather than left as a dangling include.
  */
 export function rewriteCollectionIncludes(html: string, resolve: (notionId: string) => LinkTarget | null): string {
     const root = parse(html);
     let changed = false;
 
-    for (const block of root.querySelectorAll("div.collection-content")) {
-        const notionId = collectionCsvId(block);
-        const target = notionId ? resolve(notionId) : null;
-        if (!target) {
+    for (const section of root.querySelectorAll("section.include-note")) {
+        const notionId = section.getAttribute("data-notion-id");
+        if (!notionId) {
             continue;
         }
-
-        block.insertAdjacentHTML("beforebegin", `<section class="include-note" data-note-id="${target.noteId}" data-box-size="medium">&nbsp;</section>`);
-        block.remove();
+        section.removeAttribute("data-notion-id");
+        const target = resolve(notionId);
+        if (target) {
+            section.setAttribute("data-note-id", target.noteId);
+        } else {
+            section.remove();
+        }
         changed = true;
     }
 
     return changed ? root.toString() : html;
-}
-
-/** The Notion id of the `.csv` an inline-database `collection-content` block links to, or null. */
-function collectionCsvId(block: HTMLElement): string | null {
-    for (const anchor of block.querySelectorAll("a")) {
-        const href = anchor.getAttribute("href");
-        if (!href) {
-            continue;
-        }
-        let path = href;
-        try {
-            path = decodeURIComponent(href);
-        } catch {
-            // Leave malformed percent-encoding as-is rather than throwing.
-        }
-        if (path.split(/[?#]/)[0].toLowerCase().endsWith(".csv")) {
-            return getNotionId(path) ?? null;
-        }
-    }
-    return null;
 }
 
 /**
