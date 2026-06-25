@@ -264,6 +264,13 @@
     "choose_file": "Google Keep export (.zip)",
     "import": "Import"
   },
+  "anytype_import": {
+    "name": "Anytype",
+    "description": "Import pages from an Anytype JSON export (.zip).",
+    "description_long": "In Anytype, export your space using the \"Any-Block\" format with \"JSON\" selected, then choose the resulting .zip file here. Only pages and their text are imported for now.",
+    "choose_file": "Anytype export (.zip)",
+    "import": "Import"
+  },
   "evernote_import": {
     "name": "Evernote",
     "description": "Import notes from an Evernote export (.enex).",
