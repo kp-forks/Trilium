@@ -181,6 +181,42 @@ describe("Anytype importer — integration", () => {
         );
     });
 
+    it("applies text and background colours end-to-end, giving a highlight without a text colour readable default text", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "clr", childrenIds: ["header", "clr-1"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        {
+                            id: "clr-1",
+                            text: {
+                                text: "Grey Red",
+                                style: "Paragraph",
+                                marks: {
+                                    marks: [
+                                        // "Grey" is highlighted only (no text colour) — the third-row case.
+                                        { range: { from: 0, to: 4 }, type: "BackgroundColor", param: "grey" },
+                                        { range: { from: 5, to: 8 }, type: "TextColor", param: "red" }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    details: { id: "clr", name: "Colours", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/clr.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Colours");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe(
+            '<p><span style="color:#252525;background-color:#e3e3e3">Grey</span> <span style="color:#e2400c">Red</span></p>'
+        );
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })

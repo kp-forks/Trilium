@@ -48,8 +48,35 @@ describe("renderInlineText", () => {
         );
     });
 
-    it("ignores unsupported mark types, keeping their text as plain (escaped) content", () => {
-        expect(renderInlineText("Grey", [mark(0, 4, "TextColor", "grey")])).toBe("Grey");
+    it("maps TextColor to a colour span and a BackgroundColor highlight to a colour + background span", () => {
+        expect(renderInlineText("Red", [mark(0, 3, "TextColor", "red")])).toBe('<span style="color:#e2400c">Red</span>');
+        // A highlight with no explicit text colour gets Anytype's default dark text (#252525) so it stays
+        // readable on dark themes — otherwise the theme-default white text is invisible on the pale highlight.
+        expect(renderInlineText("Red", [mark(0, 3, "BackgroundColor", "red")])).toBe(
+            '<span style="color:#252525;background-color:#fcd1c3">Red</span>'
+        );
+    });
+
+    it("combines co-occurring text + background colour into one span, nested inside structural marks", () => {
+        // An explicit text colour wins over the highlight default, and both fold into a single span.
+        expect(renderInlineText("Red", [mark(0, 3, "TextColor", "red"), mark(0, 3, "BackgroundColor", "red")])).toBe(
+            '<span style="color:#e2400c;background-color:#fcd1c3">Red</span>'
+        );
+        // A structural mark stays outermost; the colour span nests inside it.
+        expect(renderInlineText("Red", [mark(0, 3, "Bold"), mark(0, 3, "TextColor", "red")])).toBe(
+            '<strong><span style="color:#e2400c">Red</span></strong>'
+        );
+    });
+
+    it("colours each word independently across a palette line (as the page exports it)", () => {
+        expect(renderInlineText("Grey Red", [mark(0, 4, "TextColor", "grey"), mark(5, 8, "TextColor", "red")])).toBe(
+            '<span style="color:#8c9ea5">Grey</span> <span style="color:#e2400c">Red</span>'
+        );
+    });
+
+    it("ignores an unknown colour name and genuinely unsupported mark types", () => {
+        expect(renderInlineText("x", [mark(0, 1, "TextColor", "chartreuse")])).toBe("x");
+        expect(renderInlineText("@bob", [mark(0, 4, "Mention", "someObjectId")])).toBe("@bob");
     });
 
     it("escapes HTML inside a marked range", () => {
