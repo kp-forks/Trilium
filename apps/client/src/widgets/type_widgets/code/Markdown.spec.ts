@@ -132,6 +132,23 @@ describe("renderWithSourceLines", () => {
         expect(result).toContain("<p>After the break</p>");
     });
 
+    it("renders the /table skeleton as a table without swallowing following content", () => {
+        // Mirrors the GFM table the `/table` slash command inserts (note the trailing blank line),
+        // which must terminate the table block so following text renders as its own paragraph.
+        const src = [
+            "| Column 1 | Column 2 |",
+            "| -------- | -------- |",
+            "|          |          |",
+            "",
+            "After the table"
+        ].join("\n");
+
+        const result = html(src);
+        expect(result).toContain("<table>");
+        expect(result).toContain("<th>Column 1</th>");
+        expect(result).toContain("<p>After the table</p>");
+    });
+
     it("renders [[wikilinks]] with hash-router hrefs so the preview navigates correctly", () => {
         const result = html("See [[abc123]] for details.");
         expect(result).toContain('class="reference-link"');

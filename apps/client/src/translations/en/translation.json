@@ -312,13 +312,15 @@
     "mermaid_template": "Insert a \"{{name}}\" Mermaid diagram",
     "collapsible": "Insert a collapsible block",
     "page_break": "Insert a page break (for printing)",
+    "table": "Insert a table",
     "admonition": "Insert {{type}} admonition",
     "todo": "Insert a \"{{title}}\" task item",
     "todo_nonstandard": "Insert a \"{{title}}\" task item (non-standard)",
     "placeholders": {
       "math": "equation",
       "collapsible_summary": "Summary",
-      "collapsible_details": "Details"
+      "collapsible_details": "Details",
+      "table_column": "Column {{number}}"
     }
   },
   "slash_commands": {

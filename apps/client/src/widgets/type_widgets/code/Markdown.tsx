@@ -668,6 +668,26 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 });
                             }
                         },
+                        {
+                            label: "/table",
+                            detail: t("markdown_slash_commands.table"),
+                            apply(view, _completion, from, to) {
+                                // GFM table skeleton. The trailing blank line terminates the table block
+                                // so following text isn't absorbed into it (see page break above).
+                                const header = t("markdown_slash_commands.placeholders.table_column", { number: 1 });
+                                const table = [
+                                    `| ${header} | ${t("markdown_slash_commands.placeholders.table_column", { number: 2 })} |`,
+                                    `| -------- | -------- |`,
+                                    `|          |          |`
+                                ].join("\n");
+                                // Select the first header cell so the user can type the first column name.
+                                const anchor = from + 2; // skip the leading "| "
+                                view.dispatch({
+                                    changes: { from, to, insert: `${table}\n\n` },
+                                    selection: { anchor, head: anchor + header.length }
+                                });
+                            }
+                        },
                         ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
                             label: `/${admonitionType}`,
                             detail: t("markdown_slash_commands.admonition", { type: admonitionType }),
