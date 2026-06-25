@@ -653,6 +653,21 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                                 });
                             }
                         },
+                        {
+                            label: "/page-break",
+                            detail: t("markdown_slash_commands.page_break"),
+                            apply(view, _completion, from, to) {
+                                // No native markdown syntax — round-trips through the
+                                // importer as raw HTML and drives the print/PDF page break (see print.css).
+                                // The trailing blank line terminates the raw-HTML block; without it the
+                                // text on the next line is swallowed into the <div> and never rendered.
+                                const insert = `<div class="page-break"></div>\n\n`;
+                                view.dispatch({
+                                    changes: { from, to, insert },
+                                    selection: { anchor: from + insert.length }
+                                });
+                            }
+                        },
                         ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
                             label: `/${admonitionType}`,
                             detail: t("markdown_slash_commands.admonition", { type: admonitionType }),

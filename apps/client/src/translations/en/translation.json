@@ -311,6 +311,7 @@
     "mermaid": "Insert a Mermaid diagram",
     "mermaid_template": "Insert a \"{{name}}\" Mermaid diagram",
     "collapsible": "Insert a collapsible block",
+    "page_break": "Insert a page break (for printing)",
     "admonition": "Insert {{type}} admonition",
     "todo": "Insert a \"{{title}}\" task item",
     "todo_nonstandard": "Insert a \"{{title}}\" task item (non-standard)",

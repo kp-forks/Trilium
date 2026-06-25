@@ -122,6 +122,16 @@ describe("renderWithSourceLines", () => {
         expect(result).toContain("Details");
     });
 
+    it("renders the /page-break template as a page-break div without swallowing following content", () => {
+        // Mirrors the markdown the `/page-break` slash command inserts (note the trailing blank line).
+        // The renderer must keep the `page-break` class through DOMPurify so print.css can drive the
+        // page break, and the blank line must terminate the raw-HTML block so following text still
+        // renders as markdown instead of being absorbed into the <div>.
+        const result = html('<div class="page-break"></div>\n\nAfter the break');
+        expect(result).toContain('class="page-break"');
+        expect(result).toContain("<p>After the break</p>");
+    });
+
     it("renders [[wikilinks]] with hash-router hrefs so the preview navigates correctly", () => {
         const result = html("See [[abc123]] for details.");
         expect(result).toContain('class="reference-link"');
