@@ -56,6 +56,30 @@ describe("Notion importer — integration", () => {
         expect(examples?.getChildNotes().map((note) => note.title).sort()).toEqual(["Hello world", "Quick Note"]);
     });
 
+    it("rejects a Notion 'Markdown & CSV' export, guiding the user to re-export as HTML", async () => {
+        // A Markdown export has no `.html` pages — pages are `.md` and databases are `.csv`. This importer
+        // only understands the HTML export, so it must fail loudly rather than building an empty tree or
+        // orphaning every page as a `.md` attachment.
+        await expect(
+            importNotion({
+                "Workout tracker 644acbf2ec344e1eae705a8b33d186b3.md":
+                    "# Workout tracker\n\n[Workout Schedule](workout%20tracker/Workout%20Schedule%20644acbf2ec344e1eae705a8b33d186b3.csv)",
+                "workout tracker/Workout Schedule 644acbf2ec344e1eae705a8b33d186b3.csv": "Name,Day\nSquats,Monday"
+            })
+        ).rejects.toThrow(/re-export.*HTML/i);
+    });
+
+    it("still imports an HTML export that happens to bundle a `.md` attachment", async () => {
+        // A stray `.md` file (a real attachment) inside a valid HTML export must not trip the guard:
+        // the export has `.html` pages, so it's clearly the right format.
+        const importRoot = await importNotion({
+            "Notes 2c6c5eca1b8b80f7b9eaf4f396b755dc.html": pageHtml("Notes", "2c6c5eca1b8b80f7b9eaf4f396b755dc"),
+            "Notes/readme.md": "# bundled attachment"
+        });
+
+        expect(importRoot.getChildNotes().map((note) => note.title)).toEqual(["Notes"]);
+    });
+
     it("groups a CSV-only database's rows under a container note, instead of orphaning them to the root", async () => {
         // A Notion inline/linked database exports as a `.csv` with no sibling `.html`; its rows live in a
         // folder named after the database. Nothing owns that folder, so without a container they'd be flat.

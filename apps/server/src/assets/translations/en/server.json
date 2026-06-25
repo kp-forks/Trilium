@@ -320,7 +320,8 @@
     "root-title": "OneNote import"
   },
   "notion_import": {
-    "root-title": "Notion import"
+    "root-title": "Notion import",
+    "markdown-export-unsupported": "This looks like a Notion \"Markdown & CSV\" export, which Trilium cannot import. Please re-export your Notion workspace using the \"HTML\" export format and import that instead."
   },
   "keep_import": {
     "root-title": "Google Keep import"

@@ -33,7 +33,14 @@ import { getNotionId, stripNotionId } from "./notion_id.js";
 import { baseName, firstChildNotionId, folderDepth, internalPageId, isDirectory, normalizePath, ownedFolderKey, parentFolderKey, removeExtension, resolveResourcePath } from "./paths.js";
 
 async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { pages, resources, csvPaths, csvColumnsByFolder } = await parseZip(fileBuffer);
+    const { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount } = await parseZip(fileBuffer);
+    if (pages.length === 0 && markdownFileCount > 0) {
+        // The user exported from Notion as "Markdown & CSV", but this importer only understands the HTML
+        // export — it reconstructs databases by correlating each `.csv` with the surrounding `.html` pages,
+        // which a Markdown export doesn't have. Fail with actionable guidance rather than silently producing
+        // an empty tree (or orphaning every page as a `.md` attachment).
+        throw new Error(t("notion_import.markdown-export-unsupported"));
+    }
     resolveDatabaseContainers(pages, csvPaths);
     reconcileDateColumns(pages);
     taskContext.setTotalCount(pages.length);
@@ -51,13 +58,16 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
  */
 const MAX_NESTED_ZIP_DEPTH = 2;
 
-async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]> }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]>; markdownFileCount: number }> {
     const provider = getZipProvider();
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
     const csvPaths: string[] = [];
     // Database folder key → its columns (sanitized), in the CSV export's order — the authoritative column order.
     const csvColumnsByFolder = new Map<string, string[]>();
+    // Notion's "Markdown & CSV" export emits pages as `.md`; the HTML export this importer is built around
+    // never does. Counting them lets importNotion detect that wrong export format and fail with guidance.
+    let markdownFileCount = 0;
 
     const readArchive = async (buffer: Uint8Array, depth: number): Promise<void> => {
         const filenameEncoding = await provider.detectFilenameEncoding(buffer);
@@ -87,6 +97,11 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
                 // property `<th>` text, which is trimmed on extraction.
                 csvColumnsByFolder.set(ownedFolderKey(path), header.map((column) => toAttributeName(column.trim())));
             } else {
+                // Keep the file as a resource so a genuine `.md` attachment inside an HTML export survives,
+                // but tally markdown pages so the wrong export format can be detected.
+                if (path.toLowerCase().endsWith(".md")) {
+                    markdownFileCount++;
+                }
                 resources.set(normalizePath(path), await readContent());
             }
         }, filenameEncoding);
@@ -94,7 +109,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
 
     await readArchive(fileBuffer, 0);
 
-    return { pages, resources, csvPaths, csvColumnsByFolder };
+    return { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount };
 }
 
 function parsePage(path: string, html: string): ParsedPage | null {
