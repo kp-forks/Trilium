@@ -91,10 +91,14 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         editor.editing.view.focus();
     });
 
-    useTriliumEvent("focusOnDetail", async ({ ntxId: eventNtxId }) => {
+    useTriliumEvent("focusOnDetail", async ({ ntxId: eventNtxId, insertNewlineAtTop }) => {
         if (eventNtxId !== ntxId) return;
-        const editor = await waitForEditor();
-        editor?.editing.view.focus();
+        const editor = await waitForEditor() as CKTextEditor | undefined;
+        if (!editor) return;
+        if (insertNewlineAtTop) {
+            placeCursorInNewTopParagraph(editor);
+        }
+        editor.editing.view.focus();
     });
 
     useLegacyImperativeHandlers({
@@ -289,6 +293,28 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             />}
         </>
     );
+}
+
+/**
+ * Inserts an empty paragraph at the very top of the document and places the cursor in it, giving the
+ * Notion-like behavior when pressing Enter in the note title. If the first block is already an empty
+ * paragraph, the cursor is placed in it rather than stacking another empty paragraph.
+ */
+function placeCursorInNewTopParagraph(editor: CKTextEditor) {
+    editor.model.change((writer) => {
+        const root = editor.model.document.getRoot();
+        if (!root) return;
+
+        const firstChild = root.getChild(0);
+        if (firstChild?.is("element", "paragraph") && firstChild.isEmpty) {
+            writer.setSelection(firstChild, "in");
+            return;
+        }
+
+        const paragraph = writer.createElement("paragraph");
+        writer.insert(paragraph, root, 0);
+        writer.setSelection(paragraph, "in");
+    });
 }
 
 function useTemplates() {
