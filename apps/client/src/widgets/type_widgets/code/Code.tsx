@@ -234,6 +234,10 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         if (!editor) return;
         if (insertNewlineAtTop) {
             editor.insertBlankLineAtTop();
+            // The code editor itself is `overflow: hidden`; the surrounding `.scrolling-container`
+            // scrolls (together with the inline title), so CodeMirror's own scrollIntoView can't
+            // reveal the new top line. Scroll that container to the top once the line has rendered.
+            requestAnimationFrame(() => editor.dom.closest(".scrolling-container")?.scrollTo({ top: 0 }));
         }
         editor.focus();
     });

@@ -289,7 +289,9 @@ export default class CodeMirror extends EditorView {
         const firstLineEmpty = this.state.doc.line(1).length === 0;
         this.dispatch({
             ...(firstLineEmpty ? {} : { changes: { from: 0, insert: "\n" } }),
-            selection: EditorSelection.cursor(0)
+            selection: EditorSelection.cursor(0),
+            // Reveal the new top line — the cursor may have been at the bottom of a long note.
+            scrollIntoView: true
         });
     }
 
