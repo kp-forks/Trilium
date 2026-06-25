@@ -1,8 +1,9 @@
 import "./Markdown.css";
 import "./MarkdownCommons.css";
 
-import { autocompletion } from "@codemirror/autocomplete";
+import { autocompletion, type Completion, type CompletionContext, type CompletionResult } from "@codemirror/autocomplete";
 import { syntaxTree } from "@codemirror/language";
+import type { EditorState } from "@codemirror/state";
 import type { SyntaxNode } from "@lezer/common";
 import VanillaCodeMirror from "@triliumnext/codemirror";
 import { isAnchorState, type TaskStateDef } from "@triliumnext/commons";
@@ -18,6 +19,7 @@ import FNote from "../../../entities/fnote";
 import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import keyboard_actions from "../../../services/keyboard_actions";
+import mime_types from "../../../services/mime_types";
 import note_create from "../../../services/note_create";
 import options from "../../../services/options";
 import server from "../../../services/server";
@@ -722,12 +724,62 @@ function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], e
                         ...buildSnippetCompletions(snippetsRef.current.filter((snippet) => snippet.noteId !== noteRef.current.noteId))
                     ]
                 };
-            }],
+            }, codeFenceCompletionSource],
             activateOnTyping: true
         });
 
         editorView.setNamedExtension("slashCommands", ext);
     }, [editorView]);
+}
+
+/**
+ * Parses the text of a line up to the cursor to detect a fenced code block opener being typed
+ * (e.g. "```", "```py", or an indented "    ```js"). Returns the offset within the line where the
+ * language token starts (right after the run of backticks) and the partial language already typed,
+ * or `null` when the text isn't a fence opener. Pure helper, unit-tested.
+ */
+export function parseCodeFencePrefix(lineBeforeCursor: string): { langStart: number; typed: string } | null {
+    const match = /^(\s*)(`{3,})([A-Za-z0-9+#._-]*)$/.exec(lineBeforeCursor);
+    if (!match) return null;
+    return { langStart: match[1].length + match[2].length, typed: match[3] };
+}
+
+/**
+ * Whether the fence on the line starting at `lineFrom` closes an already-open code block rather than
+ * opening a new one. A bare ``` is both opener and closer in Markdown, so language completions are
+ * only offered on openers: inside a `FencedCode` node that began on an earlier line, the ``` closes it.
+ */
+export function isClosingFence(state: EditorState, lineFrom: number): boolean {
+    for (let node: SyntaxNode | null = syntaxTree(state).resolveInner(lineFrom, 1); node; node = node.parent) {
+        if (node.name === "FencedCode") return node.from < lineFrom;
+    }
+    return false;
+}
+
+/** Builds the fence-language completions from the user's enabled code-note languages. */
+function buildCodeFenceOptions(): Completion[] {
+    const seen = new Set<string>();
+    const options: Completion[] = [];
+    for (const mimeType of mime_types.getMimeTypes()) {
+        const code = mimeType.mdLanguageCode;
+        if (!mimeType.enabled || !code || seen.has(code)) continue;
+        seen.add(code);
+        options.push({ label: code, detail: mimeType.title });
+    }
+    return options;
+}
+
+/**
+ * Completion source for code-fence languages: triggers only right after a ``` fence opener and lists
+ * the user's enabled languages. Returns `null` everywhere else, so it never pollutes the slash menu.
+ */
+function codeFenceCompletionSource(context: CompletionContext): CompletionResult | null {
+    const line = context.state.doc.lineAt(context.pos);
+    const parsed = parseCodeFencePrefix(line.text.slice(0, context.pos - line.from));
+    if (!parsed || isClosingFence(context.state, line.from)) return null;
+
+    const options = buildCodeFenceOptions();
+    return options.length ? { from: line.from + parsed.langStart, options } : null;
 }
 //#endregion
 
