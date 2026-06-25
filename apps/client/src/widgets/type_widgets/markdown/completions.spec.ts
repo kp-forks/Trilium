@@ -3,7 +3,7 @@ import { ensureSyntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
 import { describe, expect, it } from "vitest";
 
-import { buildTaskItemInsert, isClosingFence, parseCodeFencePrefix } from "./markdown_completions.js";
+import { buildTaskItemInsert, isClosingFence, parseCodeFencePrefix } from "./completions.js";
 
 describe("buildTaskItemInsert", () => {
     it("prepends a bullet when not already in a list item", () => {

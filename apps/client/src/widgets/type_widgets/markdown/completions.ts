@@ -10,10 +10,10 @@ import type FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import mime_types from "../../../services/mime_types";
 import { getTaskStateDefinitions } from "../../../services/task_states";
+import { buildSnippetCompletions, SLASH_COMMAND_REGEX, useCodeSnippets } from "../code/snippets";
 import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams";
 import type { TypeWidgetProps } from "../type_widget";
-import { uploadImageAndInsert } from "./markdown_editor_utils";
-import { buildSnippetCompletions, SLASH_COMMAND_REGEX, useCodeSnippets } from "./snippets";
+import { uploadImageAndInsert } from "./editor_utils";
 
 /**
  * Adds `/`-triggered autocomplete to the CodeMirror editor.

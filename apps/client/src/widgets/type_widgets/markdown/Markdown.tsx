@@ -22,8 +22,8 @@ import { useLegacyImperativeHandlers, useTriliumEvent } from "../../react/hooks"
 import SplitEditor from "../helpers/SplitEditor";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
-import { useSlashCommands } from "./markdown_completions";
-import { insertText, replaceSelection, uploadImageAndInsert } from "./markdown_editor_utils";
+import { useSlashCommands } from "./completions";
+import { insertText, replaceSelection, uploadImageAndInsert } from "./editor_utils";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
