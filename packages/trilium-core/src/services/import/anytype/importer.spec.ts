@@ -31,6 +31,16 @@ function mark(from: number, to: number, type: string, param?: string): AnytypeMa
     return { range: { from, to }, type, param };
 }
 
+/** A list item (Marked/Numbered/Checkbox) with optional nested children, checked state and marks. */
+function listItem(id: string, style: string, text: string, childrenIds: string[] = [], checked = false, marks: AnytypeMark[] = []): AnytypeBlock {
+    return { id, text: { text, style, marks: { marks }, checked }, childrenIds };
+}
+
+/** A page whose root's direct children are `rootChildIds`; `blocks` supplies those plus any nested blocks. */
+function listDoc(rootChildIds: string[], blocks: AnytypeBlock[]): AnytypeSnapshot {
+    return snapshot([{ id: "obj", childrenIds: rootChildIds }, ...blocks], { id: "obj", name: "List" });
+}
+
 describe("isPage", () => {
     it("accepts a basic-layout Page and rejects sets and system objects", () => {
         expect(isPage(page("A page", []))).toBe(true);
@@ -52,9 +62,9 @@ describe("isPage", () => {
 });
 
 describe("parseObject", () => {
-    it("takes the title from details.name and emits non-heading text blocks as paragraphs", () => {
-        // Numbered/Marked/Quote etc. are all flattened to <p> for now (only headings get their own tag).
-        const result = parseObject(page("My Page", [textBlock("b1", "First"), textBlock("b2", "Second", "Numbered")]));
+    it("takes the title from details.name and flattens non-heading, non-list styles to paragraphs", () => {
+        // Quote/Callout/Toggle etc. are all flattened to <p> for now (headings and lists are handled).
+        const result = parseObject(page("My Page", [textBlock("b1", "First"), textBlock("b2", "Second", "Quote")]));
         expect(result.id).toBe("obj");
         expect(result.title).toBe("My Page");
         expect(result.content).toBe("<p>First</p><p>Second</p>");
@@ -103,6 +113,54 @@ describe("parseObject", () => {
     it("falls back to 'Untitled' when the page has no name", () => {
         expect(parseObject(page("", [textBlock("b1", "body")])).title).toBe("Untitled");
         expect(parseObject(page("   ", [])).title).toBe("Untitled");
+    });
+});
+
+describe("lists", () => {
+    it("groups consecutive Marked items into one <ul>", () => {
+        const doc = listDoc(["m1", "m2"], [listItem("m1", "Marked", "One"), listItem("m2", "Marked", "Two")]);
+        expect(parseObject(doc).content).toBe("<ul><li>One</li><li>Two</li></ul>");
+    });
+
+    it("renders Numbered items as an <ol>", () => {
+        const doc = listDoc(["n1", "n2"], [listItem("n1", "Numbered", "One"), listItem("n2", "Numbered", "Two")]);
+        expect(parseObject(doc).content).toBe("<ol><li>One</li><li>Two</li></ol>");
+    });
+
+    it("renders Checkbox items as a CKEditor todo-list carrying the checked state", () => {
+        const doc = listDoc(["c1", "c2"], [listItem("c1", "Checkbox", "Todo", [], false), listItem("c2", "Checkbox", "Done", [], true)]);
+        expect(parseObject(doc).content).toBe(
+            '<ul class="todo-list">' +
+                '<li><label class="todo-list__label"><input type="checkbox"disabled="disabled"><span class="todo-list__label__description">Todo</span></label></li>' +
+                '<li><label class="todo-list__label"><input type="checkbox"checked="checked" disabled="disabled"><span class="todo-list__label__description">Done</span></label></li>' +
+                "</ul>"
+        );
+    });
+
+    it("nests child list items inside the parent <li>", () => {
+        const doc = listDoc(
+            ["m1", "m2"],
+            [listItem("m1", "Marked", "One", ["m1a"]), listItem("m1a", "Marked", "One-A"), listItem("m2", "Marked", "Two")]
+        );
+        expect(parseObject(doc).content).toBe("<ul><li>One<ul><li>One-A</li></ul></li><li>Two</li></ul>");
+    });
+
+    it("starts a new list when the type changes or a non-list block interrupts", () => {
+        const doc = listDoc(
+            ["m1", "n1", "p1", "m2"],
+            [
+                listItem("m1", "Marked", "Bullet"),
+                listItem("n1", "Numbered", "Number"),
+                { id: "p1", text: { text: "Para", style: "Paragraph", marks: { marks: [] } } },
+                listItem("m2", "Marked", "Again")
+            ]
+        );
+        expect(parseObject(doc).content).toBe("<ul><li>Bullet</li></ul><ol><li>Number</li></ol><p>Para</p><ul><li>Again</li></ul>");
+    });
+
+    it("applies inline marks inside list items", () => {
+        const doc = listDoc(["m1"], [listItem("m1", "Marked", "Bold item", [], false, [mark(0, 4, "Bold")])]);
+        expect(parseObject(doc).content).toBe("<ul><li><strong>Bold</strong> item</li></ul>");
     });
 });
 

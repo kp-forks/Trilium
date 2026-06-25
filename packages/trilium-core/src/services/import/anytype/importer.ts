@@ -4,10 +4,10 @@
  * Anytype exports each object as a single `objects/<cid>.pb.json` file (the protobuf export uses `.pb`
  * instead — not handled here), alongside sibling `relations/`, `types/`, `templates/` and `relationsOptions/`
  * folders. This importer reads the *pages* (basic note-like objects) and converts each text block to HTML:
- * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours) and
- * code blocks (with the language preserved as the Trilium MIME). Lists, links, relations, types and
- * collections are still deferred, and every page lands as a flat child of a fresh "Anytype import" root
- * (no hierarchy yet).
+ * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
+ * code blocks (with the language preserved as the Trilium MIME) and bullet/numbered/task lists (grouped
+ * and nested). Links, relations, types and collections are still deferred, and every page lands as a flat
+ * child of a fresh "Anytype import" root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -92,10 +92,11 @@ export function parseObject(snapshot: AnytypeSnapshot): ParsedObject {
 }
 
 /**
- * Walks the block tree from the root in document order, converting each non-empty text block to HTML: a
- * code block becomes `<pre><code>`, a heading becomes `<h2>`/`<h3>`/`<h4>`, and everything else a `<p>`,
- * with inline marks applied. The `header` subtree (title/description/featuredRelations chrome) is skipped,
- * as are the structural Title and Description styles wherever they appear.
+ * Converts the page's block tree to HTML. A sequence of sibling blocks is rendered in document order, with
+ * consecutive list items of the same kind grouped into a single `<ul>`/`<ol>`/todo-list and a list item's
+ * children nested inside its `<li>`. Other blocks become a code block, a heading (`<h2>`/`<h3>`/`<h4>`) or
+ * a `<p>`, with inline marks applied. The `header` subtree (title/description/featuredRelations chrome) is
+ * skipped, as are the structural Title and Description styles wherever they appear.
  */
 function extractContent(blocks: AnytypeBlock[], rootId: string): string {
     const byId = new Map<string, AnytypeBlock>();
@@ -108,52 +109,104 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
         return "";
     }
 
-    const parts: string[] = [];
     const visited = new Set<string>();
 
-    const walk = (id: string) => {
-        // The header holds title/description chrome, not body content; cycle-guard everything else.
-        if (id === "header" || visited.has(id)) {
-            return;
-        }
-        visited.add(id);
+    // Renders a run of sibling ids, grouping consecutive same-kind list items into one list. The header
+    // chrome and already-visited blocks (a node reachable twice) are skipped.
+    function renderSequence(ids: string[]): string {
+        const parts: string[] = [];
+        let i = 0;
+        while (i < ids.length) {
+            const id = ids[i];
+            const block = id === "header" || visited.has(id) ? undefined : byId.get(id);
+            if (!block) {
+                i++;
+                continue;
+            }
 
-        const block = byId.get(id);
-        if (!block) {
-            return;
+            const kind = listKind(block);
+            if (kind) {
+                const run: AnytypeBlock[] = [];
+                while (i < ids.length) {
+                    const candidate = visited.has(ids[i]) ? undefined : byId.get(ids[i]);
+                    if (!candidate || listKind(candidate) !== kind) {
+                        break;
+                    }
+                    visited.add(ids[i]);
+                    run.push(candidate);
+                    i++;
+                }
+                parts.push(renderList(kind, run));
+            } else {
+                visited.add(id);
+                parts.push(renderLeaf(block));
+                i++;
+            }
         }
+        return parts.join("");
+    }
 
+    function renderList(kind: ListKind, items: AnytypeBlock[]): string {
+        const body = items.map((item) => renderItem(kind, item)).join("");
+        if (kind === "task") {
+            return `<ul class="todo-list">${body}</ul>`;
+        }
+        return kind === "ol" ? `<ol>${body}</ol>` : `<ul>${body}</ul>`;
+    }
+
+    function renderItem(kind: ListKind, item: AnytypeBlock): string {
+        const text = renderInlineText(item.text?.text ?? "", item.text?.marks?.marks ?? []);
+        const nested = renderSequence(item.childrenIds ?? []);
+        if (kind === "task") {
+            // CKEditor's read-only todo-list markup (matches the markdown importer's checkbox output).
+            const checkbox = `<input type="checkbox"${item.text?.checked ? 'checked="checked" ' : ""}disabled="disabled">`;
+            return `<li><label class="todo-list__label">${checkbox}<span class="todo-list__label__description">${text}</span></label>${nested}</li>`;
+        }
+        return `<li>${text}${nested}</li>`;
+    }
+
+    function renderLeaf(block: AnytypeBlock): string {
         // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
         const rawText = block.text?.text ?? "";
         const style = block.text?.style;
+        let html = "";
         if (rawText.trim() && style !== "Title" && style !== "Description") {
             if (style === "Code") {
                 // A code block is literal: no inline marks, and its language is preserved as the MIME.
-                parts.push(renderCodeBlock(rawText, block.fields?.lang));
+                html = renderCodeBlock(rawText, block.fields?.lang);
             } else {
                 const tag = tagForStyle(style);
-                parts.push(`<${tag}>${renderInlineText(rawText, block.text?.marks?.marks ?? [])}</${tag}>`);
+                html = `<${tag}>${renderInlineText(rawText, block.text?.marks?.marks ?? [])}</${tag}>`;
             }
         }
-
-        for (const childId of block.childrenIds ?? []) {
-            walk(childId);
-        }
-    };
-
-    // The root block is the page container and carries no text of its own — start from its children.
-    for (const childId of root.childrenIds ?? []) {
-        walk(childId);
+        // A non-list block's children (rare — e.g. a toggle's contents) follow it as flattened siblings.
+        return html + renderSequence(block.childrenIds ?? []);
     }
 
-    return parts.join("");
+    // The root block is the page container and carries no text of its own — start from its children.
+    return renderSequence(root.childrenIds ?? []);
+}
+
+/** The kind of list a block belongs to (bullet/ordered/task), or null when it isn't a list item. */
+type ListKind = "ul" | "ol" | "task";
+function listKind(block: AnytypeBlock): ListKind | null {
+    switch (block.text?.style) {
+        case "Marked":
+            return "ul";
+        case "Numbered":
+            return "ol";
+        case "Checkbox":
+            return "task";
+        default:
+            return null;
+    }
 }
 
 /**
  * Maps an Anytype text-block style to the Trilium tag it becomes. Anytype's three in-body heading levels
  * (UI-labelled Title / Heading / Subheading) map to Trilium's top three heading levels: Trilium reserves
- * `<h1>` for the note title, so its body headings start at `<h2>`. Every other style (paragraphs, lists,
- * quotes, …) is flattened to a paragraph for now.
+ * `<h1>` for the note title, so its body headings start at `<h2>`. Every other non-list style (paragraphs,
+ * quotes, callouts, toggles, …) is flattened to a paragraph for now.
  */
 function tagForStyle(style: string | undefined): string {
     switch (style) {
@@ -367,14 +420,16 @@ export interface AnytypeMark {
     param?: string;
 }
 
-/** The text payload of a text block: its `text`, `style` (Paragraph, Header1, Code, …) and a `marks.marks`
- * list of inline formatting spans over `text`. */
+/** The text payload of a text block: its `text`, `style` (Paragraph, Header1, Marked, Checkbox, Code, …),
+ * a `marks.marks` list of inline formatting spans over `text`, and (for `Checkbox` items) `checked`. */
 export interface AnytypeText {
     text?: string;
     style?: string;
     marks?: {
         marks?: AnytypeMark[];
     };
+    /** Whether a `Checkbox`-style list item is ticked. */
+    checked?: boolean;
 }
 
 /** A single block in an object's `snapshot.data.blocks`. Non-text blocks (links, dividers, dataviews, …)

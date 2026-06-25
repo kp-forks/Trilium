@@ -240,6 +240,29 @@ describe("Anytype importer — integration", () => {
         );
     });
 
+    it("imports nested lists end-to-end (grouping consecutive items, nesting children)", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "list", childrenIds: ["header", "n1", "n2"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "n1", text: { text: "One", style: "Numbered" }, childrenIds: ["n1a"] },
+                        { id: "n1a", text: { text: "One-A", style: "Numbered" }, childrenIds: [] },
+                        { id: "n2", text: { text: "Two", style: "Numbered" }, childrenIds: [] }
+                    ],
+                    details: { id: "list", name: "Lists", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/list.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Lists");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<ol><li>One<ol><li>One-A</li></ol></li><li>Two</li></ol>");
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })
