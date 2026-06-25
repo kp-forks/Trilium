@@ -141,6 +141,37 @@ describe("Notion importer — integration", () => {
         expect(importRoot.getChildNotes().map((note) => note.title).sort()).toEqual(["Page A", "Page B"]);
     });
 
+    it("embeds a full-export inline database as an include-note pointing at the imported collection", async () => {
+        // A workspace ("database-wide") export renders an inline database as a link to its separately-exported
+        // CSV (not a table). The database is imported as a child collection; the link must become an
+        // include-note embedding it, rather than a dangling reference to a `.csv` file.
+        const pageId = "38ac5eca1b8b8075b965f506658aeb1f";
+        const dbId = "38ac5eca1b8b808babeaf10c0980fa5b";
+        // Faithful to the real export: the block is wrapped in a display:contents div and carries the
+        // database id on the (sanitizer-stripped) div id, with the resolvable id living in the .csv href.
+        const collectionBlock =
+            `<div style="display:contents" dir="ltr"><div id="38ac5eca-1b8b-808b-abea-f10c0980fa5b" class="collection-content"><h4 class="collection-title">Database title</h4>` +
+            `<a href="Inline%20database%20test/Database%20title%20${dbId}.csv"><code>Inline database test/Database title ${dbId}.csv</code></a></div></div>`;
+        const importRoot = await importNotion({
+            [`Inline database test ${pageId}.html`]:
+                `<html><head><title>Inline database test</title></head><body><div id="${pageId}"><div class="page-body"><p>Before</p>${collectionBlock}<p>After</p></div></div></body></html>`,
+            [`Inline database test/Database title ${dbId}.csv`]: "Name\nFirst\nSecond",
+            [`Inline database test/Database title/First 38ac5eca1b8b8069afb5c9fe40e53c42.html`]: pageHtml("First", "38ac5eca1b8b8069afb5c9fe40e53c42"),
+            [`Inline database test/Database title/Second 38ac5eca1b8b8025bf73d86d81713eb3.html`]: pageHtml("Second", "38ac5eca1b8b8025bf73d86d81713eb3")
+        });
+
+        const page = importRoot.getChildNotes().find((note) => note.title === "Inline database test");
+        const database = page?.getChildNotes().find((note) => note.title === "Database title");
+        // The database imported as a table collection with its rows nested under it.
+        expect(database?.type).toBe("book");
+        expect(database?.getChildNotes().map((note) => note.title).sort()).toEqual(["First", "Second"]);
+        // The page body embeds that collection inline and no longer references the raw CSV.
+        const content = page?.getContent();
+        expect(content).toContain(`<section class="include-note" data-note-id="${database?.noteId}" data-box-size="medium">`);
+        expect(content).not.toContain(".csv");
+        expect(content).not.toContain("collection-content");
+    });
+
     it("groups a CSV-only database's rows under a container note, instead of orphaning them to the root", async () => {
         // A Notion inline/linked database exports as a `.csv` with no sibling `.html`; its rows live in a
         // folder named after the database. Nothing owns that folder, so without a container they'd be flat.
