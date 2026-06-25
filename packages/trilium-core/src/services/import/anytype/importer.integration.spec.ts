@@ -217,6 +217,29 @@ describe("Anytype importer — integration", () => {
         );
     });
 
+    it("imports a Code block as a code block with its language preserved (from the 'Formatting test' page)", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "code", childrenIds: ["header", "code-1"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "code-1", fields: { lang: "clike" }, text: { text: "void main() {\n\tprintf(\"Hello world.\\n\");\n}", style: "Code" } }
+                    ],
+                    details: { id: "code", name: "Code", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/code.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Code");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe(
+            '<pre><code class="language-text-x-csrc">void main() {\n\tprintf("Hello world.\\n");\n}</code></pre>'
+        );
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })

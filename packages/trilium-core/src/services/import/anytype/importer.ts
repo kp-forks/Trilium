@@ -3,25 +3,26 @@
  *
  * Anytype exports each object as a single `objects/<cid>.pb.json` file (the protobuf export uses `.pb`
  * instead — not handled here), alongside sibling `relations/`, `types/`, `templates/` and `relationsOptions/`
- * folders. This first version is deliberately minimal: it imports only *pages* (basic note-like objects) and
- * their plain text, dropping inline formatting, links, relations, types and collections. Every imported page
- * lands as a flat child of a fresh "Anytype import" root; hierarchy, formatting and structured data are left
- * for later iterations.
+ * folders. This importer reads the *pages* (basic note-like objects) and converts each text block to HTML:
+ * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours) and
+ * code blocks (with the language preserved as the Trilium MIME). Lists, links, relations, types and
+ * collections are still deferred, and every page lands as a flat child of a fresh "Anytype import" root
+ * (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
  * this service just builds the tree and returns its root note, like the zip/notion importers.
  */
 
+import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons/src/lib/mime_type.js";
 import { t } from "i18next";
 
 import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
+import { escapeHtml } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
-import { renderInlineText } from "./marks.js";
-import type { AnytypeBlock, AnytypeSnapshot, ParsedObject } from "./model.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
     const snapshots = await parseZip(fileBuffer);
@@ -79,24 +80,24 @@ export function isPage(snapshot: AnytypeSnapshot): boolean {
     return layout === 0;
 }
 
-/** Reduces a page snapshot to the title and plain-text body needed to create a note. */
+/** Reduces a page snapshot to the title and body HTML needed to create a note. */
 export function parseObject(snapshot: AnytypeSnapshot): ParsedObject {
     const data = snapshot.snapshot?.data;
     const details = data?.details ?? {};
     const id = details.id ?? "";
     const title = (details.name ?? "").trim() || "Untitled";
-    const content = extractTextContent(data?.blocks ?? [], id);
+    const content = extractContent(data?.blocks ?? [], id);
 
     return { id, title, content };
 }
 
 /**
- * Walks the block tree from the root in document order, wrapping each non-empty text block in a tag chosen
- * by its style (headings → `<h2>`/`<h3>`/`<h4>`, everything else → `<p>`) with its inline marks applied.
- * The `header` subtree (title/description/featuredRelations chrome) is skipped, as are the structural Title
- * and Description styles wherever they appear. Links and other block kinds are ignored for now.
+ * Walks the block tree from the root in document order, converting each non-empty text block to HTML: a
+ * code block becomes `<pre><code>`, a heading becomes `<h2>`/`<h3>`/`<h4>`, and everything else a `<p>`,
+ * with inline marks applied. The `header` subtree (title/description/featuredRelations chrome) is skipped,
+ * as are the structural Title and Description styles wherever they appear.
  */
-function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
+function extractContent(blocks: AnytypeBlock[], rootId: string): string {
     const byId = new Map<string, AnytypeBlock>();
     for (const block of blocks) {
         byId.set(block.id, block);
@@ -126,9 +127,13 @@ function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
         const rawText = block.text?.text ?? "";
         const style = block.text?.style;
         if (rawText.trim() && style !== "Title" && style !== "Description") {
-            const tag = tagForStyle(style);
-            const inner = renderInlineText(rawText, block.text?.marks?.marks ?? []);
-            parts.push(`<${tag}>${inner}</${tag}>`);
+            if (style === "Code") {
+                // A code block is literal: no inline marks, and its language is preserved as the MIME.
+                parts.push(renderCodeBlock(rawText, block.fields?.lang));
+            } else {
+                const tag = tagForStyle(style);
+                parts.push(`<${tag}>${renderInlineText(rawText, block.text?.marks?.marks ?? [])}</${tag}>`);
+            }
         }
 
         for (const childId of block.childrenIds ?? []) {
@@ -148,7 +153,7 @@ function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
  * Maps an Anytype text-block style to the Trilium tag it becomes. Anytype's three in-body heading levels
  * (UI-labelled Title / Heading / Subheading) map to Trilium's top three heading levels: Trilium reserves
  * `<h1>` for the note title, so its body headings start at `<h2>`. Every other style (paragraphs, lists,
- * quotes, code, …) is flattened to a paragraph for now.
+ * quotes, …) is flattened to a paragraph for now.
  */
 function tagForStyle(style: string | undefined): string {
     switch (style) {
@@ -162,6 +167,172 @@ function tagForStyle(style: string | undefined): string {
             return "p";
     }
 }
+
+// #region Inline marks
+const MARK_TAGS: Record<string, string> = {
+    Bold: "strong",
+    Italic: "em",
+    Underscored: "u",
+    Strikethrough: "s",
+    Keyboard: "code"
+};
+
+// Anytype's system colour palette (`--color-tag-*` / `--color-bg-tag-*`); marks carry the name in `param`.
+// Backgrounds are already opaque, so no flatten-over-white step is needed (unlike Notion's translucent set).
+const TEXT_COLORS: Record<string, string> = {
+    grey: "#8c9ea5", yellow: "#b2a616", orange: "#d3720d", red: "#e2400c", pink: "#ca1b8e",
+    purple: "#9e30c4", blue: "#3e58eb", ice: "#1c8bca", teal: "#0caaa3", lime: "#64b90f"
+};
+const BG_COLORS: Record<string, string> = {
+    grey: "#e3e3e3", yellow: "#f4eb91", orange: "#fcdc9c", red: "#fcd1c3", pink: "#f8c2e5",
+    purple: "#e8d0f1", blue: "#cbd2fa", ice: "#b2dff9", teal: "#a9ebe6", lime: "#c5efa3"
+};
+
+// Anytype's default (light-theme) text colour. A highlight (background) without an explicit text colour is
+// paired with this so the text stays readable on the pale highlight regardless of the Trilium theme —
+// otherwise a dark theme's default white text would be invisible on it.
+const DEFAULT_TEXT_COLOR = "#252525";
+
+// Outer-to-inner nesting order for the structural marks that cover the same segment — fixed so output is
+// deterministic. Colours are handled separately (folded into a single inner span).
+const MARK_ORDER = ["Bold", "Italic", "Underscored", "Strikethrough", "Keyboard"];
+
+interface AppliedMark {
+    type: string;
+    param: string;
+    from: number;
+    to: number;
+}
+
+/**
+ * Converts a text block's inline marks into HTML. Anytype encodes formatting as a flat list of marks, each
+ * a `[from, to)` character range (UTF-16 offsets) with a type — and marks may overlap freely. We turn that
+ * into valid nested HTML by splitting the text at every mark boundary, so no segment straddles a mark edge,
+ * then wrapping each segment in the tags whose range fully covers it. Adjacent segments always differ in
+ * their active set (a boundary is only created where a mark starts or ends), so output is clean without a
+ * merge pass. Links, mentions and emoji are ignored, leaving their text as plain (escaped) content.
+ */
+export function renderInlineText(text: string, marks: AnytypeMark[]): string {
+    const length = text.length;
+
+    // Keep only marks we render (known structural kind, or a known colour name), with offsets clamped to
+    // the text and empty/reversed ranges dropped.
+    const applicable: AppliedMark[] = [];
+    for (const mark of marks) {
+        const param = mark.param ?? "";
+        if (mark.type === undefined || !isRenderable(mark.type, param)) {
+            continue;
+        }
+        const from = Math.max(0, Math.min(length, mark.range?.from ?? 0));
+        const to = Math.max(0, Math.min(length, mark.range?.to ?? 0));
+        if (from < to) {
+            applicable.push({ type: mark.type, param, from, to });
+        }
+    }
+
+    if (applicable.length === 0) {
+        return escapeHtml(text);
+    }
+
+    // Split at every mark boundary so each segment is uniformly covered (or not) by each mark.
+    const boundaries = new Set<number>([0, length]);
+    for (const mark of applicable) {
+        boundaries.add(mark.from);
+        boundaries.add(mark.to);
+    }
+    const points = [...boundaries].sort((a, b) => a - b);
+
+    let html = "";
+    for (let i = 0; i < points.length - 1; i++) {
+        const start = points[i];
+        const end = points[i + 1];
+        const covering = applicable.filter((mark) => mark.from <= start && mark.to >= end);
+        html += wrapSegment(escapeHtml(text.slice(start, end)), covering);
+    }
+
+    return html;
+}
+
+/** Whether a mark is rendered: a known structural kind, or a colour with a known palette name. */
+function isRenderable(type: string, param: string): boolean {
+    if (type in MARK_TAGS) {
+        return true;
+    }
+    if (type === "TextColor") {
+        return param in TEXT_COLORS;
+    }
+    if (type === "BackgroundColor") {
+        return param in BG_COLORS;
+    }
+    return false;
+}
+
+/**
+ * Wraps one segment in the tags of the marks that fully cover it. Text and background colour fold into a
+ * single innermost `<span>` (a highlight without a text colour gets the default dark text); the structural
+ * marks then nest around it, Bold outermost per {@link MARK_ORDER}.
+ */
+function wrapSegment(segment: string, covering: AppliedMark[]): string {
+    const textColor = paletteValue(covering, "TextColor", TEXT_COLORS);
+    const bgColor = paletteValue(covering, "BackgroundColor", BG_COLORS);
+
+    const styleParts: string[] = [];
+    if (textColor) {
+        styleParts.push(`color:${textColor}`);
+    } else if (bgColor) {
+        styleParts.push(`color:${DEFAULT_TEXT_COLOR}`);
+    }
+    if (bgColor) {
+        styleParts.push(`background-color:${bgColor}`);
+    }
+    let html = styleParts.length > 0 ? `<span style="${styleParts.join(";")}">${segment}</span>` : segment;
+
+    const structural = covering.filter((mark) => mark.type in MARK_TAGS).sort((a, b) => MARK_ORDER.indexOf(a.type) - MARK_ORDER.indexOf(b.type));
+    for (let i = structural.length - 1; i >= 0; i--) {
+        const tag = MARK_TAGS[structural[i].type];
+        html = `<${tag}>${html}</${tag}>`;
+    }
+
+    return html;
+}
+
+/** The palette value for the segment's mark of the given colour type, or undefined if none covers it. */
+function paletteValue(covering: AppliedMark[], type: string, palette: Record<string, string>): string | undefined {
+    const mark = covering.find((candidate) => candidate.type === type);
+    return mark ? palette[mark.param] : undefined;
+}
+// #endregion
+
+// #region Code blocks
+// PrismJS language ids Anytype uses that don't line up with a Trilium markdown language code. Most ids
+// (javascript, python, go, rust, …) match directly; only the mismatches need listing here. `clike` is
+// PrismJS's generic C-family base, mapped to plain C as the closest concrete language.
+const LANGUAGE_ALIASES: Record<string, string> = {
+    clike: "c"
+};
+
+/**
+ * Renders an Anytype `Code`-style block as a Trilium/CKEditor code block. Anytype tags the block with a
+ * PrismJS language id in `fields.lang`; we map that to a Trilium MIME and emit it as the CKEditor
+ * code-block language class (`language-<normalized-mime>`), the same shape the markdown importer produces.
+ * Quotes are left literal (matching the markdown importer), and an unknown language falls back to
+ * auto-detect.
+ */
+export function renderCodeBlock(text: string, lang: string | undefined): string {
+    return `<pre><code class="language-${codeLanguage(lang)}">${escapeHtml(text).replace(/&quot;/g, '"')}</code></pre>`;
+}
+
+/** The CKEditor code-block language class value for an Anytype language id, or auto-detect when unknown. */
+function codeLanguage(lang: string | undefined): string {
+    if (lang) {
+        const mimeDefinition = getMimeTypeFromMarkdownName(LANGUAGE_ALIASES[lang] ?? lang);
+        if (mimeDefinition) {
+            return normalizeMimeTypeForCKEditor(mimeDefinition.mime);
+        }
+    }
+    return MIME_TYPE_AUTO;
+}
+// #endregion
 
 /** Creates a fresh "Anytype import" root and a flat child note per page. */
 function createNotes(importRootNote: BNote, pages: ParsedObject[], taskContext: TaskContext<"importNotes">): BNote {
@@ -178,5 +349,79 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], taskContext: 
 
     return rootNote;
 }
+
+// #region Export model
+/** A `[from, to)` character range a mark applies to. Offsets are UTF-16 code units (Anytype's editor is
+ * JS/Electron), so they line up with JavaScript string indexing. */
+export interface AnytypeMarkRange {
+    from?: number;
+    to?: number;
+}
+
+/** An inline formatting span over a text block's `text`. `type` is the kind (Bold, Italic, Strikethrough,
+ * Underscored, Keyboard, TextColor, …); `param` carries extra data for some kinds (a colour name, a link
+ * URL). Marks may overlap freely and are not pre-sorted. */
+export interface AnytypeMark {
+    range?: AnytypeMarkRange;
+    type?: string;
+    param?: string;
+}
+
+/** The text payload of a text block: its `text`, `style` (Paragraph, Header1, Code, …) and a `marks.marks`
+ * list of inline formatting spans over `text`. */
+export interface AnytypeText {
+    text?: string;
+    style?: string;
+    marks?: {
+        marks?: AnytypeMark[];
+    };
+}
+
+/** A single block in an object's `snapshot.data.blocks`. Non-text blocks (links, dividers, dataviews, …)
+ * carry other keys this importer doesn't read yet; only `id`, `childrenIds`, `text` and (for code blocks)
+ * `fields.lang` are needed to pull out the page's content in document order. */
+export interface AnytypeBlock {
+    id: string;
+    childrenIds?: string[];
+    text?: AnytypeText;
+    /** Per-block extras. For a `Code`-style text block, `lang` holds the PrismJS language id. */
+    fields?: {
+        lang?: string;
+    };
+}
+
+/** The object's `snapshot.data.details` — its metadata map. `layout` distinguishes a basic page (0) from
+ * a set/collection (3) and other system layouts; `name` is the title; `id` matches the root block's id.
+ * `layout` is omitted when it's the default (0), so `resolvedLayout` (always present) is the reliable
+ * source of the effective layout. */
+export interface AnytypeDetails {
+    id?: string;
+    name?: string;
+    layout?: number;
+    resolvedLayout?: number;
+}
+
+/** One exported object file: `sbType` is the smartblock kind ("Page", "Participant", "Workspace", …) and
+ * `snapshot.data` holds the blocks and details. */
+export interface AnytypeSnapshot {
+    sbType?: string;
+    snapshot?: {
+        data?: {
+            blocks?: AnytypeBlock[];
+            details?: AnytypeDetails;
+            objectTypes?: string[];
+        };
+    };
+}
+
+/** A page parsed down to what the importer needs to create a Trilium note. */
+export interface ParsedObject {
+    /** The object's id (the root block's id); used later to resolve cross-object links. */
+    id: string;
+    title: string;
+    /** Body HTML built from the page's blocks. */
+    content: string;
+}
+// #endregion
 
 export default { importAnytype };
