@@ -141,6 +141,46 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Regular text</p><h2>Title</h2><h3>Heading</h3><h4>Subheading</h4>");
     });
 
+    it("applies inline marks end-to-end (verbatim from the 'Formatting test' page)", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "fmt", childrenIds: ["header", "fmt-1"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        {
+                            id: "fmt-1",
+                            text: {
+                                text: "Bold Italic Strikethrough Underline Bold Italic Underline",
+                                style: "Paragraph",
+                                marks: {
+                                    marks: [
+                                        { range: { from: 12, to: 25 }, type: "Strikethrough" },
+                                        { range: { from: 5, to: 11 }, type: "Italic" },
+                                        { range: { from: 36, to: 57 }, type: "Italic" },
+                                        { range: { from: 0, to: 4 }, type: "Bold" },
+                                        { range: { from: 36, to: 57 }, type: "Bold" },
+                                        { range: { from: 26, to: 35 }, type: "Underscored" },
+                                        { range: { from: 36, to: 57 }, type: "Underscored" }
+                                    ]
+                                }
+                            }
+                        }
+                    ],
+                    details: { id: "fmt", name: "Formatting test", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/fmt.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Formatting test");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe(
+            "<p><strong>Bold</strong> <em>Italic</em> <s>Strikethrough</s> <u>Underline</u> <strong><em><u>Bold Italic Underline</u></em></strong></p>"
+        );
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })

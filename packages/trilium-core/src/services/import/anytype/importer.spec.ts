@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 
 import { isPage, parseObject } from "./importer.js";
-import type { AnytypeBlock, AnytypeSnapshot } from "./model.js";
+import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot } from "./model.js";
 
 /** Wraps blocks + details into the export's snapshot shape. */
 function snapshot(blocks: AnytypeBlock[], details: { id?: string; name?: string; layout?: number; resolvedLayout?: number }, sbType = "Page"): AnytypeSnapshot {
     return { sbType, snapshot: { data: { blocks, details } } };
 }
 
-/** A text block with the given style (defaults to Paragraph) and optional children. */
-function textBlock(id: string, text: string, style = "Paragraph", childrenIds: string[] = []): AnytypeBlock {
-    return { id, text: { text, style }, childrenIds };
+/** A text block with the given style (defaults to Paragraph), optional children and optional marks. */
+function textBlock(id: string, text: string, style = "Paragraph", childrenIds: string[] = [], marks: AnytypeMark[] = []): AnytypeBlock {
+    return { id, text: { text, style, marks: { marks } }, childrenIds };
 }
 
 /** A typical page: a root block pointing at the header chrome plus the given content block ids. */
@@ -66,6 +66,11 @@ describe("parseObject", () => {
             ])
         );
         expect(result.content).toBe("<p>Regular text</p><h2>Title</h2><h3>Heading</h3><h4>Subheading</h4>");
+    });
+
+    it("applies inline marks inside the block's tag", () => {
+        const result = parseObject(page("Marks", [textBlock("b1", "Bold text", "Paragraph", [], [{ range: { from: 0, to: 4 }, type: "Bold" }])]));
+        expect(result.content).toBe("<p><strong>Bold</strong> text</p>");
     });
 
     it("walks nested blocks in document order (parent text before its children)", () => {

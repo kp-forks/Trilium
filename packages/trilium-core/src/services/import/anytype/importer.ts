@@ -20,6 +20,7 @@ import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
 import { getZipProvider } from "../../zip_provider.js";
+import { renderInlineText } from "./marks.js";
 import type { AnytypeBlock, AnytypeSnapshot, ParsedObject } from "./model.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
@@ -91,10 +92,9 @@ export function parseObject(snapshot: AnytypeSnapshot): ParsedObject {
 
 /**
  * Walks the block tree from the root in document order, wrapping each non-empty text block in a tag chosen
- * by its style (headings → `<h2>`/`<h3>`/`<h4>`, everything else → `<p>`). The `header` subtree
- * (title/description/featuredRelations chrome) is skipped, as are the structural Title and Description
- * styles wherever they appear. Formatting (marks), links and other block kinds are ignored for now — only
- * the text is pulled out.
+ * by its style (headings → `<h2>`/`<h3>`/`<h4>`, everything else → `<p>`) with its inline marks applied.
+ * The `header` subtree (title/description/featuredRelations chrome) is skipped, as are the structural Title
+ * and Description styles wherever they appear. Links and other block kinds are ignored for now.
  */
 function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
     const byId = new Map<string, AnytypeBlock>();
@@ -122,11 +122,13 @@ function extractTextContent(blocks: AnytypeBlock[], rootId: string): string {
             return;
         }
 
-        const text = block.text?.text?.trim();
+        // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
+        const rawText = block.text?.text ?? "";
         const style = block.text?.style;
-        if (text && style !== "Title" && style !== "Description") {
+        if (rawText.trim() && style !== "Title" && style !== "Description") {
             const tag = tagForStyle(style);
-            parts.push(`<${tag}>${escapeHtml(text)}</${tag}>`);
+            const inner = renderInlineText(rawText, block.text?.marks?.marks ?? []);
+            parts.push(`<${tag}>${inner}</${tag}>`);
         }
 
         for (const childId of block.childrenIds ?? []) {
@@ -159,10 +161,6 @@ function tagForStyle(style: string | undefined): string {
         default:
             return "p";
     }
-}
-
-function escapeHtml(text: string): string {
-    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /** Creates a fresh "Anytype import" root and a flat child note per page. */

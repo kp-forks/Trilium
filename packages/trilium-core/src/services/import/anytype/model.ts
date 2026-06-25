@@ -6,11 +6,30 @@
  * minimally (or not at all) for now and will be filled in as the importer is extended.
  */
 
-/** The text payload of a text block. Anytype has many `style`s (Paragraph, Header1, Numbered, …); the
- * basic importer ignores them and emits every non-empty text block as a plain paragraph. */
+/** A `[from, to)` character range a mark applies to. Offsets are UTF-16 code units (Anytype's editor is
+ * JS/Electron), so they line up with JavaScript string indexing. */
+export interface AnytypeMarkRange {
+    from?: number;
+    to?: number;
+}
+
+/** An inline formatting span over a text block's `text`. `type` is the kind (Bold, Italic, Strikethrough,
+ * Underscored, Keyboard, TextColor, …); `param` carries extra data for some kinds (a colour name, a link
+ * URL). Marks may overlap freely and are not pre-sorted. */
+export interface AnytypeMark {
+    range?: AnytypeMarkRange;
+    type?: string;
+    param?: string;
+}
+
+/** The text payload of a text block. Anytype has many `style`s (Paragraph, Header1, Numbered, …) and a
+ * `marks.marks` list of inline formatting spans over `text`. */
 export interface AnytypeText {
     text?: string;
     style?: string;
+    marks?: {
+        marks?: AnytypeMark[];
+    };
 }
 
 /** A single block in an object's `snapshot.data.blocks`. Non-text blocks (links, dividers, dataviews, …)
