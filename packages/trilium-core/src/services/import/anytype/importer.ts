@@ -6,9 +6,9 @@
  * folders. This importer reads the *pages* (basic note-like objects) and converts each text block to HTML:
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
- * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings) and dividers
- * (→ `<hr>`). Links, relations, types and collections are still deferred, and every page lands as a flat
- * child of a fresh "Anytype import" root (no hierarchy yet).
+ * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
+ * (→ admonitions) and dividers (→ `<hr>`). Links, relations, types and collections are still deferred,
+ * and every page lands as a flat child of a fresh "Anytype import" root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -181,6 +181,17 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
             // A normal toggle becomes a Trilium collapsible block: its label is the summary, its children
             // the collapsed body. (Toggle *headings* fall through to a normal heading below, via tagForStyle.)
             return `<details class="trilium-collapsible"><summary>${renderInlineText(rawText, marks)}</summary>${renderSequence(block.childrenIds ?? [])}</details>`;
+        }
+
+        if (style === "Callout") {
+            // A callout becomes a Trilium admonition. Following the Notion importer: the default icon (no
+            // custom emoji) maps to a "tip" with the icon dropped; any custom emoji maps to a "note" with
+            // the emoji kept at the start of the body (admonitions have no per-block icon).
+            const emoji = block.text?.iconEmoji ?? "";
+            const type = emoji ? "note" : "tip";
+            const lead = [emoji, renderInlineText(rawText, marks)].filter(Boolean).join(" ");
+            const firstPara = lead ? `<p>${lead}</p>` : "";
+            return `<aside class="admonition ${type}">${firstPara}${renderSequence(block.childrenIds ?? [])}</aside>`;
         }
 
         let html = "";
@@ -438,8 +449,8 @@ export interface AnytypeMark {
     param?: string;
 }
 
-/** The text payload of a text block: its `text`, `style` (Paragraph, Header1, Marked, Checkbox, Code, …),
- * a `marks.marks` list of inline formatting spans over `text`, and (for `Checkbox` items) `checked`. */
+/** The text payload of a text block: its `text`, `style` (Paragraph, Header1, Marked, Checkbox, Callout, …),
+ * a `marks.marks` list of inline formatting spans over `text`, and per-style extras (`checked`, `iconEmoji`). */
 export interface AnytypeText {
     text?: string;
     style?: string;
@@ -448,6 +459,8 @@ export interface AnytypeText {
     };
     /** Whether a `Checkbox`-style list item is ticked. */
     checked?: boolean;
+    /** A `Callout`'s icon; empty for the default icon, otherwise a custom emoji. */
+    iconEmoji?: string;
 }
 
 /** A single block in an object's `snapshot.data.blocks`. Non-text blocks (links, dividers, dataviews, …)

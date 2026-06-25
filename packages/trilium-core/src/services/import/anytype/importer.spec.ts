@@ -164,6 +164,29 @@ describe("lists", () => {
     });
 });
 
+describe("callouts", () => {
+    it("converts a default-icon callout to a tip admonition (icon implied, dropped)", () => {
+        const doc = listDoc(["c1"], [{ id: "c1", text: { text: "Heads up", style: "Callout", marks: { marks: [] }, iconEmoji: "" } }]);
+        expect(parseObject(doc).content).toBe('<aside class="admonition tip"><p>Heads up</p></aside>');
+    });
+
+    it("converts a custom-emoji callout to a note admonition, keeping the emoji at the start", () => {
+        const doc = listDoc(["c1"], [{ id: "c1", text: { text: "Foggy", style: "Callout", marks: { marks: [] }, iconEmoji: "😶‍🌫️" } }]);
+        expect(parseObject(doc).content).toBe('<aside class="admonition note"><p>😶‍🌫️ Foggy</p></aside>');
+    });
+
+    it("applies inline marks in the callout body and renders child blocks inside the aside", () => {
+        const doc = listDoc(
+            ["c1"],
+            [
+                { id: "c1", text: { text: "Bold note", style: "Callout", marks: { marks: [mark(0, 4, "Bold")] }, iconEmoji: "" }, childrenIds: ["c1a"] },
+                { id: "c1a", text: { text: "More", style: "Paragraph", marks: { marks: [] } } }
+            ]
+        );
+        expect(parseObject(doc).content).toBe('<aside class="admonition tip"><p><strong>Bold</strong> note</p><p>More</p></aside>');
+    });
+});
+
 describe("dividers", () => {
     it("converts Line and Dots divider blocks to <hr>", () => {
         const doc = listDoc(

@@ -307,6 +307,31 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Above</p><hr>");
     });
 
+    it("imports callouts as admonitions end-to-end, with Notion-style emoji handling", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "co", childrenIds: ["header", "c1", "c2"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "c1", text: { text: "Callout with default icon", style: "Callout", iconEmoji: "" } },
+                        { id: "c2", text: { text: "Callout with custom emoji", style: "Callout", iconEmoji: "😶‍🌫️" } }
+                    ],
+                    details: { id: "co", name: "Callouts", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/co.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Callouts");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe(
+            '<aside class="admonition tip"><p>Callout with default icon</p></aside>' +
+                '<aside class="admonition note"><p>😶‍🌫️ Callout with custom emoji</p></aside>'
+        );
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })
