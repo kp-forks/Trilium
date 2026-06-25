@@ -4,7 +4,7 @@ import { isPage, parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeSnapshot } from "./model.js";
 
 /** Wraps blocks + details into the export's snapshot shape. */
-function snapshot(blocks: AnytypeBlock[], details: { id?: string; name?: string; layout?: number }, sbType = "Page"): AnytypeSnapshot {
+function snapshot(blocks: AnytypeBlock[], details: { id?: string; name?: string; layout?: number; resolvedLayout?: number }, sbType = "Page"): AnytypeSnapshot {
     return { sbType, snapshot: { data: { blocks, details } } };
 }
 
@@ -34,6 +34,15 @@ describe("isPage", () => {
         // Non-page smartblocks (participant, workspace, …) are excluded regardless of layout.
         expect(isPage(snapshot([], { id: "p", name: "Someone", layout: 19 }, "Participant"))).toBe(false);
         expect(isPage(snapshot([], { id: "w", layout: 10 }, "Workspace"))).toBe(false);
+    });
+
+    it("accepts a basic page that omits `layout` (single-object exports), falling back to resolvedLayout", () => {
+        // Anytype drops `layout` when it's the default, carrying the value in resolvedLayout instead.
+        expect(isPage(snapshot([], { id: "p", name: "Solo page", resolvedLayout: 0 }))).toBe(true);
+        // With neither field present, a Page still defaults to basic.
+        expect(isPage(snapshot([], { id: "p", name: "Bare page" }))).toBe(true);
+        // resolvedLayout still excludes a set whose `layout` is likewise omitted.
+        expect(isPage(snapshot([], { id: "s", name: "Solo set", resolvedLayout: 3 }))).toBe(false);
     });
 });
 

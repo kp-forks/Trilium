@@ -64,9 +64,18 @@ function isObjectEntry(fileName: string): boolean {
  * Whether a snapshot is a page we should import. A page is a `Page` smartblock with the basic layout (0);
  * this excludes sets/collections (layout 3) and system objects like the participant, workspace and
  * dashboard widget. Conservative on purpose — other content layouts can be admitted as the importer grows.
+ *
+ * Anytype omits `layout` when it's the default (Basic = 0) — a single-object export of a basic page has no
+ * `layout` field at all — so we fall back to `resolvedLayout` (always present) and treat a wholly missing
+ * value as basic. Sets and other non-page layouts are still excluded by their non-zero value.
  */
 export function isPage(snapshot: AnytypeSnapshot): boolean {
-    return snapshot.sbType === "Page" && snapshot.snapshot?.data?.details?.layout === 0;
+    if (snapshot.sbType !== "Page") {
+        return false;
+    }
+    const details = snapshot.snapshot?.data?.details;
+    const layout = details?.layout ?? details?.resolvedLayout ?? 0;
+    return layout === 0;
 }
 
 /** Reduces a page snapshot to the title and plain-text body needed to create a note. */

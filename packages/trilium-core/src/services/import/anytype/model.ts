@@ -23,11 +23,14 @@ export interface AnytypeBlock {
 }
 
 /** The object's `snapshot.data.details` — its metadata map. `layout` distinguishes a basic page (0) from
- * a set/collection (3) and other system layouts; `name` is the title; `id` matches the root block's id. */
+ * a set/collection (3) and other system layouts; `name` is the title; `id` matches the root block's id.
+ * `layout` is omitted when it's the default (0), so `resolvedLayout` (always present) is the reliable
+ * source of the effective layout. */
 export interface AnytypeDetails {
     id?: string;
     name?: string;
     layout?: number;
+    resolvedLayout?: number;
 }
 
 /** One exported object file: `sbType` is the smartblock kind ("Page", "Participant", "Workspace", …) and

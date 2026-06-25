@@ -93,6 +93,30 @@ describe("Anytype importer — integration", () => {
         expect(importRoot.getChildNotes().map((note) => note.title)).toEqual(["Real Page"]);
     });
 
+    it("imports a single basic page whose export omits `layout` (only resolvedLayout is set)", async () => {
+        // A single-object export of a basic page drops the default `layout` field entirely, with backslash
+        // path separators on Windows — both must still resolve to one imported page with its text.
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "solo", childrenIds: ["header", "solo-b0"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "solo-b0", text: { text: "Regular text", style: "Paragraph" } }
+                    ],
+                    details: { id: "solo", name: "Formatting test", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects\\solo.pb.json": page });
+
+        const children = importRoot.getChildNotes();
+        expect(children.map((note) => note.title)).toEqual(["Formatting test"]);
+        expect(decodeUtf8(children[0]?.getContent() ?? "")).toBe("<p>Regular text</p>");
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })
