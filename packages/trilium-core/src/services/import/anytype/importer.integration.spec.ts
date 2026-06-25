@@ -332,6 +332,27 @@ describe("Anytype importer — integration", () => {
         );
     });
 
+    it("imports a Quote (Highlight) block as a blockquote end-to-end", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "q", childrenIds: ["header", "q1"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "q1", text: { text: "Highlighted that looks like a blockquote.", style: "Quote" } }
+                    ],
+                    details: { id: "q", name: "Quote", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/q.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Quote");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<blockquote><p>Highlighted that looks like a blockquote.</p></blockquote>");
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })

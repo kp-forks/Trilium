@@ -62,9 +62,9 @@ describe("isPage", () => {
 });
 
 describe("parseObject", () => {
-    it("takes the title from details.name and flattens non-heading, non-list styles to paragraphs", () => {
-        // Quote/Callout/Toggle etc. are all flattened to <p> for now (headings and lists are handled).
-        const result = parseObject(page("My Page", [textBlock("b1", "First"), textBlock("b2", "Second", "Quote")]));
+    it("takes the title from details.name and falls back to a paragraph for an unrecognised style", () => {
+        // Paragraph and any style we don't specially handle render as a plain <p>.
+        const result = parseObject(page("My Page", [textBlock("b1", "First"), textBlock("b2", "Second", "FutureStyle")]));
         expect(result.id).toBe("obj");
         expect(result.title).toBe("My Page");
         expect(result.content).toBe("<p>First</p><p>Second</p>");
@@ -161,6 +161,24 @@ describe("lists", () => {
     it("applies inline marks inside list items", () => {
         const doc = listDoc(["m1"], [listItem("m1", "Marked", "Bold item", [], false, [mark(0, 4, "Bold")])]);
         expect(parseObject(doc).content).toBe("<ul><li><strong>Bold</strong> item</li></ul>");
+    });
+});
+
+describe("quotes", () => {
+    it("converts a Quote (Anytype's Highlight block) to a blockquote", () => {
+        const doc = listDoc(["q1"], [{ id: "q1", text: { text: "A quote", style: "Quote", marks: { marks: [] } } }]);
+        expect(parseObject(doc).content).toBe("<blockquote><p>A quote</p></blockquote>");
+    });
+
+    it("applies inline marks and renders child blocks inside the blockquote", () => {
+        const doc = listDoc(
+            ["q1"],
+            [
+                { id: "q1", text: { text: "Bold quote", style: "Quote", marks: { marks: [mark(0, 4, "Bold")] } }, childrenIds: ["q1a"] },
+                { id: "q1a", text: { text: "More", style: "Paragraph", marks: { marks: [] } } }
+            ]
+        );
+        expect(parseObject(doc).content).toBe("<blockquote><p><strong>Bold</strong> quote</p><p>More</p></blockquote>");
     });
 });
 

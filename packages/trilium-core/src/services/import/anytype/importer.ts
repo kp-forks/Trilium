@@ -7,8 +7,9 @@
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
  * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
- * (→ admonitions) and dividers (→ `<hr>`). Links, relations, types and collections are still deferred,
- * and every page lands as a flat child of a fresh "Anytype import" root (no hierarchy yet).
+ * (→ admonitions), quotes/highlights (→ `<blockquote>`) and dividers (→ `<hr>`). Links, relations, types
+ * and collections are still deferred, and every page lands as a flat child of a fresh "Anytype import"
+ * root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -181,6 +182,12 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
             // A normal toggle becomes a Trilium collapsible block: its label is the summary, its children
             // the collapsed body. (Toggle *headings* fall through to a normal heading below, via tagForStyle.)
             return `<details class="trilium-collapsible"><summary>${renderInlineText(rawText, marks)}</summary>${renderSequence(block.childrenIds ?? [])}</details>`;
+        }
+
+        if (style === "Quote") {
+            // Anytype's Highlight block (internal style "Quote") → a blockquote; its background tint is dropped.
+            const firstPara = rawText.trim() ? `<p>${renderInlineText(rawText, marks)}</p>` : "";
+            return `<blockquote>${firstPara}${renderSequence(block.childrenIds ?? [])}</blockquote>`;
         }
 
         if (style === "Callout") {
