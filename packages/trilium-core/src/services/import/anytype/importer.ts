@@ -9,8 +9,9 @@
  * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
  * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`) and cross-page links
  * (Anytype's block-level "link to object" → a Trilium reference link plus an `internalLink` relation, so
- * backlinks resolve). Relations, types and collections are still deferred, and every page lands as a flat
- * child of a fresh "Anytype import" root (no hierarchy yet).
+ * backlinks resolve). Each page keeps its original creation and modification timestamps. Relations, types
+ * and collections are still deferred, and every page lands as a flat child of a fresh "Anytype import"
+ * root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -24,6 +25,7 @@ import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
+import date_utils from "../../utils/date.js";
 import { escapeHtml, newEntityId } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
 
@@ -110,12 +112,31 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
     const title = pageTitle(details);
     const { html, linkTargetIds } = extractContent(data?.blocks ?? [], id, resolveLink);
 
-    return { id, title, content: html, linkTargetIds };
+    return {
+        id,
+        title,
+        content: html,
+        linkTargetIds,
+        dateCreated: anytypeDate(details.createdDate),
+        dateModified: anytypeDate(details.lastModifiedDate)
+    };
 }
 
 /** The note title for a page: its trimmed `details.name`, or "Untitled" when blank. */
 function pageTitle(details: AnytypeDetails | undefined): string {
     return (details?.name ?? "").trim() || "Untitled";
+}
+
+/**
+ * Converts an Anytype detail date (a Unix timestamp in *seconds*) to a Trilium UTC datetime string, or
+ * undefined for a missing or non-positive value — system objects export `0`, which would otherwise become
+ * a 1970 date.
+ */
+export function anytypeDate(seconds: number | undefined): string | undefined {
+    if (typeof seconds !== "number" || !Number.isFinite(seconds) || seconds <= 0) {
+        return undefined;
+    }
+    return date_utils.utcDateTimeStr(new Date(seconds * 1000));
 }
 
 /**
@@ -478,7 +499,16 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
 
     const notesByPageId = new Map<string, BNote>();
     for (const page of pages) {
-        const { note } = noteService.createNewNote({ noteId: targets.get(page.id)?.noteId, parentNoteId: rootNote.noteId, title: page.title, content: page.content, type: "text", mime: "text/html", isProtected });
+        const { note } = noteService.createNewNote({ noteId: targets.get(page.id)?.noteId, parentNoteId: rootNote.noteId, title: page.title, content: page.content, type: "text", mime: "text/html", isProtected, utcDateCreated: page.dateCreated });
+
+        // Restore the original timestamps (note creation stamps "modified" — and the blob — with now). A
+        // date-less page is left untouched, keeping its import-time dates. When only one date is present we
+        // fall back like the ENEX importer: modified defaults to created.
+        if (page.dateCreated || page.dateModified) {
+            const dateCreated = page.dateCreated ?? note.utcDateCreated;
+            note.setDateCreatedAndModified(dateCreated, page.dateModified ?? dateCreated);
+        }
+
         notesByPageId.set(page.id, note);
         taskContext.increaseProgressCount();
     }
@@ -556,6 +586,10 @@ export interface AnytypeDetails {
     name?: string;
     layout?: number;
     resolvedLayout?: number;
+    /** Page creation time as a Unix timestamp in seconds. Omitted/`0` for system objects. */
+    createdDate?: number;
+    /** Page last-modification time as a Unix timestamp in seconds. */
+    lastModifiedDate?: number;
 }
 
 /** One exported object file: `sbType` is the smartblock kind ("Page", "Participant", "Workspace", …) and
@@ -580,6 +614,10 @@ export interface ParsedObject {
     content: string;
     /** De-duplicated Trilium note ids this page links to, for recording `internalLink` relations. */
     linkTargetIds: string[];
+    /** Creation time as a Trilium UTC datetime string (from Anytype's `createdDate`), if available. */
+    dateCreated?: string;
+    /** Last-modification time as a Trilium UTC datetime string (from `lastModifiedDate`), if available. */
+    dateModified?: string;
 }
 
 /** The imported note a linked-to Anytype object resolved to: its Trilium id and (fallback) title. */

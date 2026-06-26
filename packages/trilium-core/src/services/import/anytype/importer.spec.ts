@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { isPage, parseObject, renderCodeBlock, renderInlineText } from "./importer.js";
+import { anytypeDate, isPage, parseObject, renderCodeBlock, renderInlineText } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, LinkResolver } from "./importer.js";
 
 /** Wraps blocks + details into the export's snapshot shape. */
-function snapshot(blocks: AnytypeBlock[], details: { id?: string; name?: string; layout?: number; resolvedLayout?: number }, sbType = "Page"): AnytypeSnapshot {
+function snapshot(
+    blocks: AnytypeBlock[],
+    details: { id?: string; name?: string; layout?: number; resolvedLayout?: number; createdDate?: number; lastModifiedDate?: number },
+    sbType = "Page"
+): AnytypeSnapshot {
     return { sbType, snapshot: { data: { blocks, details } } };
 }
 
@@ -290,6 +294,33 @@ describe("links", () => {
         const result = parseObject(doc);
         expect(result.content).toBe("<p>Body</p>");
         expect(result.linkTargetIds).toEqual([]);
+    });
+});
+
+describe("dates", () => {
+    it("converts an Anytype detail timestamp (Unix seconds) to a Trilium UTC datetime string", () => {
+        // Verbatim createdDate from the "Article 6 Electronic Contracts" page.
+        expect(anytypeDate(1735632037)).toBe("2024-12-31 08:00:37.000Z");
+    });
+
+    it("treats a missing or non-positive timestamp as absent (system objects export 0)", () => {
+        expect(anytypeDate(undefined)).toBeUndefined();
+        expect(anytypeDate(0)).toBeUndefined();
+        expect(anytypeDate(-5)).toBeUndefined();
+        expect(anytypeDate(Number.NaN)).toBeUndefined();
+    });
+
+    it("carries a page's created and modified dates through parseObject", () => {
+        const doc = snapshot([{ id: "obj", childrenIds: [] }], { id: "obj", name: "Dated", createdDate: 1735632037, lastModifiedDate: 1735632353 });
+        const result = parseObject(doc);
+        expect(result.dateCreated).toBe("2024-12-31 08:00:37.000Z");
+        expect(result.dateModified).toBe("2024-12-31 08:05:53.000Z");
+    });
+
+    it("leaves both dates undefined when the page carries none", () => {
+        const result = parseObject(page("Undated", [textBlock("b1", "body")]));
+        expect(result.dateCreated).toBeUndefined();
+        expect(result.dateModified).toBeUndefined();
     });
 });
 

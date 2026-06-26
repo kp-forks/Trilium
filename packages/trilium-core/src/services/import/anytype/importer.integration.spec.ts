@@ -417,6 +417,38 @@ describe("Anytype importer — integration", () => {
         expect(note?.getRelations().filter((r) => r.name === "internalLink")).toHaveLength(0);
     });
 
+    it("preserves a page's created and modified dates from Anytype's detail timestamps", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "d", childrenIds: ["header", "d-b0"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "d-b0", text: { text: "Body", style: "Paragraph" } }
+                    ],
+                    // Verbatim timestamps from the "Article 6 Electronic Contracts" page (Unix seconds).
+                    details: { id: "d", name: "Dated", resolvedLayout: 0, createdDate: 1735632037, lastModifiedDate: 1735632353 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/d.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Dated");
+        expect(note?.utcDateCreated).toBe("2024-12-31 08:00:37.000Z");
+        expect(note?.utcDateModified).toBe("2024-12-31 08:05:53.000Z");
+    });
+
+    it("leaves a page with no Anytype dates with valid import-time dates", async () => {
+        const importRoot = await importAnytype({ "objects/p.pb.json": pageObject("p", "Undated", ["Body"]) });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Undated");
+        // Untouched: a date-less page keeps the import-time timestamps, still in the valid UTC format.
+        expect(note?.utcDateCreated).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+        expect(note?.utcDateModified).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })
