@@ -9,6 +9,8 @@ import toastService, { type ToastOptionsWithRequiredId } from "../../services/to
 import tree from "../../services/tree";
 import utils, { isStandalone } from "../../services/utils";
 import ws from "../../services/ws";
+import { ExtendedAdmonition } from "../react/Admonition";
+import { Badge } from "../react/Badge";
 import Button, { ButtonGroup } from "../react/Button";
 import { Card, CardSection } from "../react/Card";
 import { useTriliumEvent } from "../react/hooks";
@@ -26,6 +28,7 @@ interface ExportFormat {
     name: string;
     description: string;
     icon: string;
+    recommended?: boolean;
 }
 
 export default function ExportDialog() {
@@ -33,7 +36,6 @@ export default function ExportDialog() {
     const [ exportType, setExportType ] = useState<"subtree" | "single">("subtree");
     const [ subtreeFormat, setSubtreeFormat ] = useState("html");
     const [ singleFormat, setSingleFormat ] = useState("html");
-    const [ opmlVersion, setOpmlVersion ] = useState("2.0");
     const [ shown, setShown ] = useState(false);
 
     useTriliumEvent("showExportDialog", async ({ notePath, defaultType }) => {
@@ -67,8 +69,7 @@ export default function ExportDialog() {
                     return;
                 }
 
-                const version = (selectedFormat === "opml" ? opmlVersion : "1.0");
-                exportBranch(opts.branchId, exportType, selectedFormat, version);
+                exportBranch(opts.branchId, exportType, selectedFormat);
                 setShown(false);
             }}
             onHidden={() => setShown(false)}
@@ -93,29 +94,26 @@ export default function ExportDialog() {
                     <SelectableCardGrid columns={2}>
                         {formats.map((format) => (
                             <SelectableCard
-                                key={format.value} icon={format.icon} title={format.name} description={format.description}
+                                key={format.value} icon={format.icon}
+                                title={format.recommended
+                                    ? <span className="export-format-heading">{format.name}<Badge text={t("export.recommended")} className="export-recommended-badge" outline /></span>
+                                    : format.name}
+                                description={format.description}
                                 selected={selectedFormat === format.value} onSelect={() => setSelectedFormat(format.value)}
                             />
                         ))}
                     </SelectableCardGrid>
-
-                    {selectedFormat === "opml" && (
-                        <ButtonGroup className="opml-versions" size="sm">
-                            <button type="button" className={`btn btn-secondary ${opmlVersion === "1.0" ? "active" : ""}`} onClick={() => setOpmlVersion("1.0")}>
-                                {t("export.opml_version_1")}
-                            </button>
-                            <button type="button" className={`btn btn-secondary ${opmlVersion === "2.0" ? "active" : ""}`} onClick={() => setOpmlVersion("2.0")}>
-                                {t("export.opml_version_2")}
-                            </button>
-                        </ButtonGroup>
-                    )}
                 </CardSection>
             </Card>
+
+            <ExtendedAdmonition type="note" icon="bx bx-info-circle">
+                {exportResultText(exportType, selectedFormat)}
+            </ExtendedAdmonition>
         </Modal>
     );
 }
 
-const HTML_FORMAT: ExportFormat = { value: "html", name: t("export.format_html_name"), description: t("export.format_html_description"), icon: "bx bxl-html5" };
+const HTML_FORMAT: ExportFormat = { value: "html", name: t("export.format_html_name"), description: t("export.format_html_description"), icon: "bx bxl-html5", recommended: true };
 const MARKDOWN_FORMAT: ExportFormat = { value: "markdown", name: t("export.format_markdown_name"), description: t("export.format_markdown_description"), icon: "bx bxl-markdown" };
 const SHARE_FORMAT: ExportFormat = { value: "share", name: t("export.format_share_name"), description: t("export.format_share_description"), icon: "bx bx-globe" };
 const OPML_FORMAT: ExportFormat = { value: "opml", name: t("export.format_opml_name"), description: t("export.format_opml_description"), icon: "bx bx-list-ul" };
@@ -124,9 +122,23 @@ const OPML_FORMAT: ExportFormat = { value: "opml", name: t("export.format_opml_n
 const subtreeFormats: ExportFormat[] = [HTML_FORMAT, MARKDOWN_FORMAT, ...(isStandalone ? [] : [SHARE_FORMAT]), OPML_FORMAT];
 const singleFormats: ExportFormat[] = [HTML_FORMAT, MARKDOWN_FORMAT];
 
-function exportBranch(branchId: string, type: string, format: string, version: string) {
+// One-line summary of what the chosen export actually produces, shown in the dialog's result admonition.
+function exportResultText(exportType: "subtree" | "single", format: string) {
+    if (format === "opml") {
+        return t("export.result_opml");
+    }
+    if (format === "share") {
+        return t("export.result_share");
+    }
+    if (exportType === "single") {
+        return format === "markdown" ? t("export.result_single_markdown") : t("export.result_single_html");
+    }
+    return format === "markdown" ? t("export.result_subtree_markdown") : t("export.result_subtree_html");
+}
+
+function exportBranch(branchId: string, type: string, format: string) {
     const taskId = utils.randomString(10);
-    const url = open.getUrlForDownload(`api/branches/${branchId}/export/${type}/${format}/${version}/${taskId}`);
+    const url = open.getUrlForDownload(`api/branches/${branchId}/export/${type}/${format}/${taskId}`);
     open.download(url);
 }
 

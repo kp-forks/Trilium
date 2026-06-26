@@ -17,7 +17,14 @@
         flex: 1;
     }
 
-    .opml-versions {
-        margin-top: 0.75em;
+    /* Format name + "Recommended" badge sitting inline on the tile. */
+    .export-format-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+    }
+
+    .export-recommended-badge {
+        --color: var(--link-color, var(--main-text-color));
     }
 }
