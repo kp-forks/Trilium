@@ -69,8 +69,10 @@ function relationObject(key: string, name: string, format: number, includeTime =
 
 /** A collection page: a dataview block flagged `isCollection`, its members in `details.links`, and one
  * visible view column per supplied relation key. A collection's `resolvedLayout` is the collection layout
- * (14), not the basic-page 0 — so the importer must admit it via its `isCollection` flag, not the layout. */
-function collectionObject(id: string, name: string, memberIds: string[], columnKeys: string[]): string {
+ * (14), not the basic-page 0 — so the importer must admit it via its `isCollection` flag, not the layout.
+ * `viewType` is the Anytype view layout (Table/List/Gallery/Calendar/Kanban); omitted defaults to Table.
+ * `groupRelationKey` is the relation a Kanban groups by / a Calendar dates events from. */
+function collectionObject(id: string, name: string, memberIds: string[], columnKeys: string[], viewType?: string, groupRelationKey?: string): string {
     return JSON.stringify({
         sbType: "Page",
         snapshot: {
@@ -79,7 +81,7 @@ function collectionObject(id: string, name: string, memberIds: string[], columnK
                     { id, childrenIds: ["header", "dataview"] },
                     { id: "header", childrenIds: ["title"] },
                     { id: "title", text: { text: "", style: "Title" } },
-                    { id: "dataview", dataview: { isCollection: true, views: [{ relations: columnKeys.map((key) => ({ key, isVisible: true })) }] } }
+                    { id: "dataview", dataview: { isCollection: true, views: [{ type: viewType, groupRelationKey, relations: columnKeys.map((key) => ({ key, isVisible: true })) }] } }
                 ],
                 details: { id, name, resolvedLayout: 14, links: memberIds }
             }
@@ -532,6 +534,67 @@ describe("Anytype importer — integration", () => {
         const byEmail = rows.find((n) => n.getOwnedLabelValue("email"));
         expect(byUrl?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
         expect(byEmail?.getOwnedLabelValue("email")).toBe("mailto:contact@acme.com");
+    });
+
+    it("maps each Anytype view layout to the matching Trilium collection view type", async () => {
+        // The first view's layout (Gallery/List/Kanban/Calendar) drives the book's #viewType; Table/unknown → table.
+        const layouts: [string | undefined, string][] = [
+            ["Gallery", "grid"],
+            ["List", "list"],
+            ["Kanban", "board"],
+            ["Calendar", "calendar"],
+            ["Table", "table"]
+        ];
+        for (const [anytypeLayout, triliumView] of layouts) {
+            const importRoot = await importAnytype({
+                "objects/coll.pb.json": collectionObject("coll", `${anytypeLayout} collection`, [], [], anytypeLayout)
+            });
+            const collection = importRoot.getChildNotes()[0];
+            expect(collection.type).toBe("book");
+            expect(collection.getOwnedLabelValue("viewType")).toBe(triliumView);
+        }
+    });
+
+    it("maps a Kanban collection's group relation to #board:groupBy", async () => {
+        // Verbatim from the "Kanban collection": grouped by the system "Tag" relation (key "tag", format 11).
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Kanban collection", [], [], "Kanban", "tag"),
+            "relations/tag.pb.json": relationObject("tag", "Tag", 11)
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.getOwnedLabelValue("viewType")).toBe("board");
+        // The board groups its cards by the attribute the Tag relation resolves to.
+        expect(collection.getOwnedLabelValue("board:groupBy")).toBe("tag");
+    });
+
+    it("maps a Calendar collection's date relation to #calendar:startDate, dating its members", async () => {
+        // Verbatim from the Calendar collection: grouped by the custom "myDate" relation (format 4 date),
+        // whose value each member carries as an epoch.
+        const dateKey = "6a3e3660cafa6953a4661c94";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Calendar collection", ["m1"], [], "Calendar", dateKey),
+            "objects/m1.pb.json": memberObject("m1", { [dateKey]: 1782118800 }),
+            "relations/mydate.pb.json": relationObject(dateKey, "myDate", 4)
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.getOwnedLabelValue("viewType")).toBe("calendar");
+        // The calendar reads each event's date from the attribute the myDate relation resolves to. The config
+        // must be *inheritable* because the calendar resolves it per member (off the child, not the collection).
+        const startDateLabel = collection.getOwnedAttributes().find((a) => a.name === "calendar:startDate");
+        expect(startDateLabel?.value).toBe("mydate");
+        expect(startDateLabel?.isInheritable).toBe(true);
+
+        // ...so the member both inherits the config and carries its own date under that attribute (local YYYY-MM-DD).
+        const day = (() => {
+            const d = new Date(1782118800 * 1000);
+            const pad = (n: number) => String(n).padStart(2, "0");
+            return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        })();
+        const member = collection.getChildNotes()[0];
+        expect(member.getLabelValue("calendar:startDate")).toBe("mydate"); // inherited from the collection
+        expect(member.getOwnedLabelValue("mydate")).toBe(day);
     });
 
     it("imports date, date-time and checkbox columns with correctly typed definitions and values", async () => {

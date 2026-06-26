@@ -58,10 +58,15 @@ export interface AnytypeBlock {
         style?: string;
     };
     /** A dataview block — a set (query) or collection (manual list). `isCollection` distinguishes the two;
-     * `views[].relations` is the ordered, per-column display config (a column's `key` is a `relationKey`). */
+     * `views[]` are its views (the first is the active one): `type` is the layout (Table/List/Gallery/
+     * Calendar/Kanban), `groupRelationKey` is the relation the view organizes by (a Kanban's grouping
+     * column, a Calendar's date field — empty for layouts that don't group) and `relations` the ordered,
+     * per-column display config (a column's `key` is a `relationKey`). */
     dataview?: {
         isCollection?: boolean;
         views?: {
+            type?: string;
+            groupRelationKey?: string;
             relations?: {
                 key?: string;
                 isVisible?: boolean;
@@ -186,9 +191,17 @@ export interface ParsedColumn {
     multiplicity: Multiplicity;
 }
 
-/** A collection's table schema and membership. `memberIds` are Anytype object ids (its `details.links`);
- * `columns` are the visible, supported columns from its dataview, in order. */
+/** The Trilium collection view types an Anytype dataview layout maps to. */
+export type CollectionViewType = "table" | "list" | "grid" | "calendar" | "board";
+
+/** A collection's view type, table schema and membership. `viewType` is the Trilium view its Anytype
+ * layout maps to; `memberIds` are Anytype object ids (its `details.links`); `columns` are the visible,
+ * supported columns from its dataview, in order. `groupByAttribute` is the Trilium attribute name the
+ * view's `groupRelationKey` resolved to — driving `#board:groupBy` for a board or `#calendar:startDate`
+ * for a calendar; absent when the view doesn't group by a (resolvable) relation. */
 export interface ParsedCollection {
+    viewType: CollectionViewType;
+    groupByAttribute?: string;
     memberIds: string[];
     columns: ParsedColumn[];
 }

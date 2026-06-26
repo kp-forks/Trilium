@@ -11,10 +11,11 @@
  * (Anytype's block-level "link to object" → a Trilium reference link plus an `internalLink` relation, so
  * backlinks resolve). Each page keeps its original creation and modification timestamps.
  *
- * Collections and their properties are handled in {@link ./collection.js}: a collection becomes a `book`
- * with a `table` view whose columns are promoted-attribute definitions, its members nest beneath it, and an
- * object's custom relations become labels / file attachments. Pages without a collection land as flat
- * children of a fresh "Anytype import" root. Types and templates are still deferred.
+ * Collections and their properties are handled in {@link ./collection.js}: a collection becomes a `book` in
+ * its mapped view (table / list / grid / calendar / board) whose columns are promoted-attribute definitions,
+ * its members nest beneath it, and an object's custom relations become labels / file attachments. Pages
+ * without a collection land as flat children of a fresh "Anytype import" root. Types and templates are still
+ * deferred.
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -32,7 +33,7 @@ import date_utils from "../../utils/date.js";
 import { newEntityId } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
-import { applyFiles, applyProperties, applyTableView, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties, synthesizeColumns } from "./collection.js";
+import { applyCollectionView, applyFiles, applyProperties, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties, synthesizeColumns } from "./collection.js";
 import { extractContent } from "./content.js";
 import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedColumn, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
 
@@ -260,7 +261,7 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
         ? noteService.createNewNote({ parentNoteId: importRootNote.noteId, title, content: "", type: "book", mime: "", isProtected }).note
         : noteService.createNewNote({ parentNoteId: importRootNote.noteId, title, content: "", type: "text", mime: "text/html", isProtected }).note;
     if (rootColumns) {
-        applyTableView(rootNote, rootColumns);
+        applyCollectionView(rootNote, "table", rootColumns);
     }
     rootNote.addLabel("iconClass", "bx bx-import");
 

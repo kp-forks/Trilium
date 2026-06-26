@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { synthesizeColumns } from "./collection.js";
+import { mapViewType, synthesizeColumns } from "./collection.js";
 import { isCollectionObject, isPage, parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, RelationInfo } from "./model.js";
 
@@ -187,9 +187,39 @@ describe("collection properties", () => {
             const doc = snapshot([{ id: "obj", childrenIds: ["dv"] }, dv], { id: "obj", name: "My collection", links: ["m1", "m2"] });
             const result = parseObject(doc, undefined, rels);
             expect(result.collection).toEqual({
+                viewType: "table", // no view layout given → defaults to table
                 memberIds: ["m1", "m2"],
                 columns: [{ name: "url", labelType: "url", alias: "URL", multiplicity: "single" }]
             });
+        });
+
+        it("maps the first view's layout to a Trilium view type", () => {
+            const collection = (type?: string) => {
+                const dv: AnytypeBlock = { id: "dv", childrenIds: [], dataview: { isCollection: true, views: [{ type, relations: [] }] } };
+                const doc = snapshot([{ id: "obj", childrenIds: ["dv"] }, dv], { id: "obj", name: "C", links: [] });
+                return parseObject(doc, undefined, rels).collection?.viewType;
+            };
+            expect(collection("Gallery")).toBe("grid");
+            expect(collection("List")).toBe("list");
+            expect(collection("Kanban")).toBe("board");
+            expect(collection("Calendar")).toBe("calendar");
+            expect(collection("Table")).toBe("table");
+            expect(collection(undefined)).toBe("table");
+        });
+
+        it("resolves the view's groupRelationKey to the grouping attribute, ignoring an empty or unknown key", () => {
+            const groupBy = (groupRelationKey?: string) => {
+                const dv: AnytypeBlock = { id: "dv", childrenIds: [], dataview: { isCollection: true, views: [{ type: "Kanban", groupRelationKey, relations: [] }] } };
+                const doc = snapshot([{ id: "obj", childrenIds: ["dv"] }, dv], { id: "obj", name: "C", links: [] });
+                return parseObject(doc, undefined, rels).collection?.groupByAttribute;
+            };
+            // The key resolves to its relation's attribute name (the same one members carry the value under).
+            expect(groupBy("6a3e29e8cafa6953a4661c17")).toBe("selectProperty");
+            expect(groupBy("6a3e330acafa6953a4661c6b")).toBe("date");
+            // A non-grouping view (empty key) and a key with no relation in the export contribute nothing.
+            expect(groupBy("")).toBeUndefined();
+            expect(groupBy("6a3e0000cafa6953a4661cff")).toBeUndefined();
+            expect(groupBy(undefined)).toBeUndefined();
         });
 
         it("carries each column's multiplicity (multi for a multi-select)", () => {
@@ -210,6 +240,19 @@ describe("collection properties", () => {
 
         it("leaves collection undefined for a regular (non-dataview) page", () => {
             expect(parseObject(page("Plain", [textBlock("b1", "body")]), undefined, rels).collection).toBeUndefined();
+        });
+    });
+
+    describe("mapViewType", () => {
+        it("maps each Anytype layout to its Trilium view, defaulting unknown layouts to table", () => {
+            expect(mapViewType("Table")).toBe("table");
+            expect(mapViewType("List")).toBe("list");
+            expect(mapViewType("Gallery")).toBe("grid");
+            expect(mapViewType("Calendar")).toBe("calendar");
+            expect(mapViewType("Kanban")).toBe("board");
+            // A layout with no Trilium equivalent (e.g. Graph) and a missing layout both fall back to table.
+            expect(mapViewType("Graph")).toBe("table");
+            expect(mapViewType(undefined)).toBe("table");
         });
     });
 

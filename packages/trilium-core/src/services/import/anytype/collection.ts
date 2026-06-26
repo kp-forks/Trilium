@@ -19,7 +19,7 @@ import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
 import { basename } from "../../utils/path.js";
 import { applyUrlScheme, attachmentReferenceLink, buildPromotedDefinition, saveFileAttachment, toAttributeName } from "../collection_utils.js";
-import type { AnytypeBlock, AnytypeDetails, AnytypeSnapshot, FileObjectInfo, Multiplicity, ParsedCollection, ParsedColumn, ParsedObject, ParsedProperty, PropertyLabelType, RelationInfo } from "./model.js";
+import type { AnytypeBlock, AnytypeDetails, AnytypeSnapshot, CollectionViewType, FileObjectInfo, Multiplicity, ParsedCollection, ParsedColumn, ParsedObject, ParsedProperty, PropertyLabelType, RelationInfo } from "./model.js";
 
 /** Normalizes a zip entry / file path to forward slashes and lower case (Windows exports use backslashes),
  * so a file property's `source` matches the key its bytes were stored under. */
@@ -175,8 +175,44 @@ export function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails,
         return undefined;
     }
 
-    const visibleKeys = (dataview.views?.[0]?.relations ?? []).filter((relation) => relation.isVisible).map((relation) => relation.key);
-    return { memberIds: details.links ?? [], columns: columnsFromKeys(visibleKeys, relations) };
+    const view = dataview.views?.[0];
+    const visibleKeys = (view?.relations ?? []).filter((relation) => relation.isVisible).map((relation) => relation.key);
+    return {
+        viewType: mapViewType(view?.type),
+        groupByAttribute: resolveGroupAttribute(view?.groupRelationKey, relations),
+        memberIds: details.links ?? [],
+        columns: columnsFromKeys(visibleKeys, relations)
+    };
+}
+
+/** Maps an Anytype dataview layout to the closest Trilium collection view (unknown layouts → a table). */
+export function mapViewType(type: string | undefined): CollectionViewType {
+    switch (type) {
+        case "List":
+            return "list";
+        case "Gallery":
+            return "grid";
+        case "Calendar":
+            return "calendar";
+        case "Kanban":
+            return "board";
+        default: // Table, and any layout without a Trilium equivalent (e.g. Graph)
+            return "table";
+    }
+}
+
+/**
+ * Resolves a view's `groupRelationKey` (a Kanban's grouping relation, a Calendar's date relation) to the
+ * Trilium attribute name its members carry the value under — the same `toAttributeName(relation.name)` the
+ * property mapping uses, so `#board:groupBy` / `#calendar:startDate` lines up with the members' labels.
+ * Returns undefined when the view doesn't group (empty key) or the relation isn't in the export.
+ */
+function resolveGroupAttribute(groupRelationKey: string | undefined, relations: Map<string, RelationInfo>): string | undefined {
+    if (!groupRelationKey) {
+        return undefined;
+    }
+    const info = relations.get(groupRelationKey);
+    return info ? toAttributeName(info.name) : undefined;
 }
 
 /**
@@ -249,24 +285,36 @@ function formatPropertyValue(raw: unknown, labelType: PropertyLabelType, scheme:
 }
 
 /**
- * Creates a collection's container note: an empty `book` with a `table` view whose columns are the
- * collection's supported properties, each an *inheritable* promoted-attribute definition (so the table
- * renders the column and every member row inherits the field, showing its own value or blank). Mirrors the
- * Notion importer's database mapping.
+ * Creates a collection's container note: an empty `book` in the collection's mapped view (table / list /
+ * grid / calendar / board), whose columns are the collection's supported properties, each an *inheritable*
+ * promoted-attribute definition (so the table renders the column and every member row inherits the field,
+ * showing its own value or blank). Mirrors the Notion importer's database mapping.
  */
 export function createCollectionNote(parentNoteId: string, page: ParsedObject, collection: ParsedCollection, noteId: string | undefined, isProtected: boolean | undefined): BNote {
     const { note } = noteService.createNewNote({ noteId, parentNoteId, title: page.title, content: "", type: "book", mime: "", isProtected, utcDateCreated: page.dateCreated });
-    applyTableView(note, collection.columns);
+    applyCollectionView(note, collection.viewType, collection.columns, collection.groupByAttribute);
     return note;
 }
 
 /**
- * Turns `note` into a `table`-view collection whose columns are the given properties, each an *inheritable*
- * promoted-attribute definition (so the table renders the column and every child row inherits the field,
- * showing its own value or blank). Used for both an imported collection and a collection-scoped export's root.
+ * Turns `note` into a collection of the given view type, carrying `columns` as *inheritable* promoted-
+ * attribute definitions (so a table renders them as columns and every child row inherits the field, showing
+ * its own value or blank). Used for both an imported collection and a collection-scoped export's root.
+ *
+ * `groupByAttribute` is the member field a board groups its cards by (`#board:groupBy`) or a calendar reads
+ * each event's date from (`#calendar:startDate`); other view types don't organize by a field and ignore it.
  */
-export function applyTableView(note: BNote, columns: ParsedColumn[]) {
-    note.addLabel("viewType", "table");
+export function applyCollectionView(note: BNote, viewType: CollectionViewType, columns: ParsedColumn[], groupByAttribute?: string) {
+    note.addLabel("viewType", viewType);
+
+    if (groupByAttribute && viewType === "board") {
+        // The board reads its grouping field from the collection note itself, so a plain (owned) label is enough.
+        note.addLabel("board:groupBy", groupByAttribute);
+    } else if (groupByAttribute && viewType === "calendar") {
+        // The calendar resolves each event's date field per *member* (getCustomisableLabel reads `calendar:startDate`
+        // off the child), so this must be inheritable for the members to pick up which attribute holds their date.
+        note.addLabel("calendar:startDate", groupByAttribute, true);
+    }
 
     // Increasing positions keep the columns in their stored order (the promoted-attributes UI sorts by
     // position, and equal positions aren't ordered deterministically).
