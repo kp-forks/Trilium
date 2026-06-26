@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { isPage, parseObject, renderCodeBlock, renderInlineText } from "./importer.js";
-import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot } from "./importer.js";
+import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, LinkResolver } from "./importer.js";
 
 /** Wraps blocks + details into the export's snapshot shape. */
 function snapshot(blocks: AnytypeBlock[], details: { id?: string; name?: string; layout?: number; resolvedLayout?: number }, sbType = "Page"): AnytypeSnapshot {
@@ -246,6 +246,50 @@ describe("toggles", () => {
             ]
         );
         expect(parseObject(doc).content).toBe("<h2>T1</h2><p>Body</p><h3>T2</h3><h4>T3</h4>");
+    });
+});
+
+describe("links", () => {
+    /** A block-level "link to object" pointing at the target object's id (CID). */
+    const linkBlock = (id: string, targetCid: string): AnytypeBlock => ({ id, link: { targetBlockId: targetCid, style: "Page" }, childrenIds: [] });
+
+    it("renders a link to an imported page as a reference link and records the resolved target", () => {
+        const doc = listDoc(["l1"], [linkBlock("l1", "target-cid")]);
+        const resolve: LinkResolver = (cid) => (cid === "target-cid" ? { noteId: "noteB", title: "Target Page" } : undefined);
+
+        const result = parseObject(doc, resolve);
+        expect(result.content).toBe('<p><a class="reference-link" href="#root/noteB">Target Page</a></p>');
+        // The resolved target id is surfaced so the importer can create the internalLink relation.
+        expect(result.linkTargetIds).toEqual(["noteB"]);
+    });
+
+    it("drops a link whose target wasn't imported (a set, or an object missing from the export)", () => {
+        const doc = listDoc(["l1"], [linkBlock("l1", "missing-cid")]);
+
+        const result = parseObject(doc, () => undefined);
+        expect(result.content).toBe("");
+        expect(result.linkTargetIds).toEqual([]);
+    });
+
+    it("escapes the target title and de-duplicates repeated links to the same page", () => {
+        const doc = listDoc(["l1", "l2"], [linkBlock("l1", "t"), linkBlock("l2", "t")]);
+        const resolve: LinkResolver = () => ({ noteId: "n", title: "A & B <x>" });
+
+        const result = parseObject(doc, resolve);
+        expect(result.content).toBe(
+            '<p><a class="reference-link" href="#root/n">A &amp; B &lt;x&gt;</a></p>' +
+                '<p><a class="reference-link" href="#root/n">A &amp; B &lt;x&gt;</a></p>'
+        );
+        // Both links point at the same note, so only one relation should be recorded.
+        expect(result.linkTargetIds).toEqual(["n"]);
+    });
+
+    it("ignores link blocks when no resolver is supplied (parsing a page in isolation)", () => {
+        const doc = listDoc(["p1", "l1"], [{ id: "p1", text: { text: "Body", style: "Paragraph", marks: { marks: [] } } }, linkBlock("l1", "t")]);
+
+        const result = parseObject(doc);
+        expect(result.content).toBe("<p>Body</p>");
+        expect(result.linkTargetIds).toEqual([]);
     });
 });
 

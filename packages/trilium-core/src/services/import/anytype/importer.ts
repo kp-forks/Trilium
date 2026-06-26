@@ -7,9 +7,10 @@
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
  * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
- * (→ admonitions), quotes/highlights (→ `<blockquote>`) and dividers (→ `<hr>`). Links, relations, types
- * and collections are still deferred, and every page lands as a flat child of a fresh "Anytype import"
- * root (no hierarchy yet).
+ * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`) and cross-page links
+ * (Anytype's block-level "link to object" → a Trilium reference link plus an `internalLink` relation, so
+ * backlinks resolve). Relations, types and collections are still deferred, and every page lands as a flat
+ * child of a fresh "Anytype import" root (no hierarchy yet).
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=anytype`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -23,15 +24,30 @@ import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
-import { escapeHtml } from "../../utils/index.js";
+import { escapeHtml, newEntityId } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
     const snapshots = await parseZip(fileBuffer);
-    const pages = snapshots.filter(isPage).map(parseObject);
+    const pageSnapshots = snapshots.filter(isPage);
+
+    // Assign each page its Trilium note id up front so cross-page links resolve even when they point at a
+    // page that hasn't been created yet (links routinely point forward in the export). The note is later
+    // created with this forced id, keeping the reference link's href and the real note in sync.
+    const targets = new Map<string, ResolvedLink>();
+    for (const snapshot of pageSnapshots) {
+        const details = snapshot.snapshot?.data?.details;
+        const cid = details?.id;
+        if (cid) {
+            targets.set(cid, { noteId: newEntityId(), title: pageTitle(details) });
+        }
+    }
+    const resolveLink: LinkResolver = (cid) => targets.get(cid);
+
+    const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink));
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, taskContext);
+    return createNotes(importRootNote, pages, targets, taskContext);
 }
 
 /**
@@ -82,25 +98,36 @@ export function isPage(snapshot: AnytypeSnapshot): boolean {
     return layout === 0;
 }
 
-/** Reduces a page snapshot to the title and body HTML needed to create a note. */
-export function parseObject(snapshot: AnytypeSnapshot): ParsedObject {
+/**
+ * Reduces a page snapshot to the title, body HTML and outgoing link targets needed to create a note.
+ * `resolveLink` maps a linked object's id to the Trilium note it became; without one (parsing a page in
+ * isolation) link blocks are dropped, since they can't be pointed anywhere yet.
+ */
+export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver = () => undefined): ParsedObject {
     const data = snapshot.snapshot?.data;
     const details = data?.details ?? {};
     const id = details.id ?? "";
-    const title = (details.name ?? "").trim() || "Untitled";
-    const content = extractContent(data?.blocks ?? [], id);
+    const title = pageTitle(details);
+    const { html, linkTargetIds } = extractContent(data?.blocks ?? [], id, resolveLink);
 
-    return { id, title, content };
+    return { id, title, content: html, linkTargetIds };
+}
+
+/** The note title for a page: its trimmed `details.name`, or "Untitled" when blank. */
+function pageTitle(details: AnytypeDetails | undefined): string {
+    return (details?.name ?? "").trim() || "Untitled";
 }
 
 /**
  * Converts the page's block tree to HTML. A sequence of sibling blocks is rendered in document order, with
  * consecutive list items of the same kind grouped into a single `<ul>`/`<ol>`/todo-list and a list item's
- * children nested inside its `<li>`. Other blocks become a code block, a heading (`<h2>`/`<h3>`/`<h4>`) or
- * a `<p>`, with inline marks applied. The `header` subtree (title/description/featuredRelations chrome) is
- * skipped, as are the structural Title and Description styles wherever they appear.
+ * children nested inside its `<li>`. Other blocks become a code block, a heading (`<h2>`/`<h3>`/`<h4>`), a
+ * cross-page reference link or a `<p>`, with inline marks applied. The `header` subtree
+ * (title/description/featuredRelations chrome) is skipped, as are the structural Title and Description
+ * styles wherever they appear. The de-duplicated Trilium ids of every linked-to page are returned
+ * alongside the HTML so the caller can record the `internalLink` relations.
  */
-function extractContent(blocks: AnytypeBlock[], rootId: string): string {
+function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLink: LinkResolver): { html: string; linkTargetIds: string[] } {
     const byId = new Map<string, AnytypeBlock>();
     for (const block of blocks) {
         byId.set(block.id, block);
@@ -108,10 +135,11 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
 
     const root = (rootId ? byId.get(rootId) : undefined) ?? blocks[0];
     if (!root) {
-        return "";
+        return { html: "", linkTargetIds: [] };
     }
 
     const visited = new Set<string>();
+    const linkTargetIds = new Set<string>();
 
     // Renders a run of sibling ids, grouping consecutive same-kind list items into one list. The header
     // chrome and already-visited blocks (a node reachable twice) are skipped.
@@ -173,6 +201,17 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
             return "<hr>";
         }
 
+        // A block-level "link to object" → a reference link to the imported target note. An unresolved
+        // target (a set, or an object missing from the export) is dropped, along with its relation.
+        if (block.link) {
+            const target = block.link.targetBlockId ? resolveLink(block.link.targetBlockId) : undefined;
+            if (!target) {
+                return "";
+            }
+            linkTargetIds.add(target.noteId);
+            return `<p><a class="reference-link" href="#root/${target.noteId}">${escapeHtml(target.title)}</a></p>`;
+        }
+
         // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
         const rawText = block.text?.text ?? "";
         const style = block.text?.style;
@@ -216,7 +255,8 @@ function extractContent(blocks: AnytypeBlock[], rootId: string): string {
     }
 
     // The root block is the page container and carries no text of its own — start from its children.
-    return renderSequence(root.childrenIds ?? []);
+    const html = renderSequence(root.childrenIds ?? []);
+    return { html, linkTargetIds: [...linkTargetIds] };
 }
 
 /** The kind of list a block belongs to (bullet/ordered/task), or null when it isn't a list item. */
@@ -423,17 +463,31 @@ function codeLanguage(lang: string | undefined): string {
 }
 // #endregion
 
-/** Creates a fresh "Anytype import" root and a flat child note per page. */
-function createNotes(importRootNote: BNote, pages: ParsedObject[], taskContext: TaskContext<"importNotes">): BNote {
+/**
+ * Creates a fresh "Anytype import" root and a flat child note per page. Each note is created with the id
+ * pre-assigned in {@link importAnytype} (`targets`), so the reference links already baked into the content
+ * point at the real notes. Once every page exists, each page's outgoing links are recorded as
+ * `internalLink` relations, which Trilium uses for backlink detection ("what links here").
+ */
+function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("anytype_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
+    const notesByPageId = new Map<string, BNote>();
     for (const page of pages) {
-        noteService.createNewNote({ parentNoteId: rootNote.noteId, title: page.title, content: page.content, type: "text", mime: "text/html", isProtected });
+        const { note } = noteService.createNewNote({ noteId: targets.get(page.id)?.noteId, parentNoteId: rootNote.noteId, title: page.title, content: page.content, type: "text", mime: "text/html", isProtected });
+        notesByPageId.set(page.id, note);
         taskContext.increaseProgressCount();
+    }
+
+    for (const page of pages) {
+        const sourceNote = notesByPageId.get(page.id);
+        for (const targetNoteId of page.linkTargetIds) {
+            sourceNote?.addRelation("internalLink", targetNoteId);
+        }
     }
 
     return rootNote;
@@ -470,9 +524,9 @@ export interface AnytypeText {
     iconEmoji?: string;
 }
 
-/** A single block in an object's `snapshot.data.blocks`. Non-text blocks (links, dividers, dataviews, …)
- * carry other keys this importer doesn't read yet; only `id`, `childrenIds`, `text` and (for code blocks)
- * `fields.lang` are needed to pull out the page's content in document order. */
+/** A single block in an object's `snapshot.data.blocks`. Non-text blocks (dividers, dataviews, …) carry
+ * other keys this importer doesn't read yet; only `id`, `childrenIds`, `text`, `div`, `link` and (for code
+ * blocks) `fields.lang` are needed to pull out the page's content in document order. */
 export interface AnytypeBlock {
     id: string;
     childrenIds?: string[];
@@ -483,6 +537,12 @@ export interface AnytypeBlock {
     };
     /** A divider block (`style` is "Line" or "Dots"); both become a horizontal rule. */
     div?: {
+        style?: string;
+    };
+    /** A block-level "link to object". `targetBlockId` is the linked object's id (CID); `style` is "Page"
+     * for a page link. Rendered as a reference link to the imported target note. */
+    link?: {
+        targetBlockId?: string;
         style?: string;
     };
 }
@@ -518,7 +578,19 @@ export interface ParsedObject {
     title: string;
     /** Body HTML built from the page's blocks. */
     content: string;
+    /** De-duplicated Trilium note ids this page links to, for recording `internalLink` relations. */
+    linkTargetIds: string[];
 }
+
+/** The imported note a linked-to Anytype object resolved to: its Trilium id and (fallback) title. */
+export interface ResolvedLink {
+    noteId: string;
+    title: string;
+}
+
+/** Resolves an Anytype object id (CID) to the Trilium note it was imported as, or undefined when the
+ * target wasn't imported (a set/collection, or an object missing from the export). */
+export type LinkResolver = (targetCid: string) => ResolvedLink | undefined;
 // #endregion
 
 export default { importAnytype };

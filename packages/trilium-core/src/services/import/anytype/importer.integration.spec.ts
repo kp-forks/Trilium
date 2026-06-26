@@ -353,6 +353,70 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(note?.getContent() ?? "")).toBe("<blockquote><p>Highlighted that looks like a blockquote.</p></blockquote>");
     });
 
+    it("renders a cross-page link as a reference link and records an internalLink relation for backlinks", async () => {
+        // "Source" links to "Target" via a block-level link-to-object (Anytype's `link.targetBlockId`).
+        const source = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "src", childrenIds: ["header", "src-link"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "src-link", link: { targetBlockId: "tgt", style: "Page" } }
+                    ],
+                    details: { id: "src", name: "Source", resolvedLayout: 0 }
+                }
+            }
+        });
+        const target = pageObject("tgt", "Target", ["I am linked"]);
+
+        const importRoot = await importAnytype({
+            "objects/source.pb.json": source,
+            "objects/target.pb.json": target
+        });
+
+        const sourceNote = importRoot.getChildNotes().find((n) => n.title === "Source");
+        const targetNote = importRoot.getChildNotes().find((n) => n.title === "Target");
+        expect(sourceNote).toBeDefined();
+        expect(targetNote).toBeDefined();
+
+        // The link block resolves to a reference link pointing at the target note's id.
+        expect(decodeUtf8(sourceNote?.getContent() ?? "")).toBe(`<p><a class="reference-link" href="#root/${targetNote?.noteId}">Target</a></p>`);
+
+        // The internalLink relation drives backlink detection ("what links here").
+        const internalLinks = sourceNote?.getRelations().filter((r) => r.name === "internalLink") ?? [];
+        expect(internalLinks.map((r) => r.value)).toEqual([targetNote?.noteId]);
+        // And the target sees the backlink from the source.
+        const backlinks = targetNote?.getTargetRelations().filter((r) => r.name === "internalLink") ?? [];
+        expect(backlinks.map((r) => r.noteId)).toEqual([sourceNote?.noteId]);
+    });
+
+    it("drops a link to an object that wasn't imported, leaving no dangling relation", async () => {
+        // The link points at "ghost", which is not present in the export.
+        const source = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "src", childrenIds: ["header", "src-p", "src-link"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "src-p", text: { text: "Body", style: "Paragraph" } },
+                        { id: "src-link", link: { targetBlockId: "ghost", style: "Page" } }
+                    ],
+                    details: { id: "src", name: "Lonely", resolvedLayout: 0 }
+                }
+            }
+        });
+
+        const importRoot = await importAnytype({ "objects/source.pb.json": source });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Lonely");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Body</p>");
+        expect(note?.getRelations().filter((r) => r.name === "internalLink")).toHaveLength(0);
+    });
+
     it("produces an empty root when the export has no pages", async () => {
         const importRoot = await importAnytype({
             "types/type1.pb.json": JSON.stringify({ sbType: "STType", snapshot: { data: { details: { id: "type1", name: "Article" } } } })
