@@ -239,6 +239,8 @@
   "file_upload": {
     "drop_or_browse_single": "Drag and drop a file here, or click to browse",
     "drop_or_browse_multiple": "Drag and drop files here, or click to browse",
+    "browse_single": "Tap to choose a file",
+    "browse_multiple": "Tap to choose files",
     "selected_one": "{{count}} file selected",
     "selected_other": "{{count}} files selected"
   },

@@ -3,6 +3,7 @@ import "./FileDropZone.css";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n";
+import { isMobile } from "../../services/utils";
 
 export interface FileDropZoneProps {
     name?: string;
@@ -86,7 +87,9 @@ export default function FileDropZone({ name, onChange, multiple, accept }: FileD
             ) : (
                 <div className="file-drop-zone-prompt">
                     <span className="bx bx-cloud-upload file-drop-zone-icon" />
-                    <span>{multiple ? t("file_upload.drop_or_browse_multiple") : t("file_upload.drop_or_browse_single")}</span>
+                    <span>{isMobile()
+                        ? (multiple ? t("file_upload.browse_multiple") : t("file_upload.browse_single"))
+                        : (multiple ? t("file_upload.drop_or_browse_multiple") : t("file_upload.drop_or_browse_single"))}</span>
                 </div>
             )}
         </label>

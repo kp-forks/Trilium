@@ -4,6 +4,11 @@
     gap: 0.75em;
 }
 
+/* The grid columns get cramped on a phone — stack the cards into single-column rows instead. */
+body.mobile .selectable-card-grid {
+    grid-template-columns: 1fr;
+}
+
 .selectable-card {
     display: flex;
     align-items: center;
