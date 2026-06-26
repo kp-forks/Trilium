@@ -3,6 +3,16 @@
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 0.75em;
+    }
+
+    /* Local file import is grouped on its own, full-width, beneath the service grid. */
+    .import-provider-local {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75em;
+        margin-top: 1em;
+        padding-top: 1em;
+        border-top: 1px solid var(--main-border-color);
         margin-bottom: 1.5em;
     }
 
@@ -36,6 +46,13 @@
         background-color: currentColor;
         -webkit-mask: var(--provider-icon) center / contain no-repeat;
         mask: var(--provider-icon) center / contain no-repeat;
+    }
+
+    /* Boxicons-based card icon (used by providers that supply `icon` instead of `iconUrl`). */
+    .import-provider-card-bxicon {
+        flex-shrink: 0;
+        font-size: 1.5em;
+        line-height: 1;
     }
 
     .import-provider-card-text {

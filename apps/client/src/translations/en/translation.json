@@ -201,6 +201,8 @@
   },
   "import": {
     "importIntoNote": "Import into note",
+    "cardName": "Files & other formats",
+    "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, images and more",
     "chooseImportFile": "Choose import file",
     "importDescription": "Content of the selected file(s) will be imported as child note(s) into",
     "importZipRecommendation": "When importing a ZIP file, the note hierarchy will reflect the subdirectory structure within the archive.",
@@ -229,7 +231,6 @@
     "successful": "Import finished successfully."
   },
   "import_provider": {
-    "title": "Import from a service",
     "choose_provider": "Choose a service above to import from."
   },
   "onenote_import": {
@@ -860,7 +861,6 @@
     "open_note_custom": "Open note custom",
     "open_note_on_server": "Open note on server",
     "import_files": "Import files",
-    "import_from_service": "Import from a service…",
     "export_note": "Export note",
     "delete_note": "Delete note",
     "print_note": "Print note...",
