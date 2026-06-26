@@ -61,6 +61,48 @@ function pageObject(id: string, name: string, paragraphs: string[], opts: { layo
     });
 }
 
+/** A relation-definition file (relations/<x>.pb.json): names and types a custom property by its key. */
+function relationObject(key: string, name: string, format: number): string {
+    return JSON.stringify({ sbType: "STRelation", snapshot: { data: { details: { id: `rel-${key}`, relationKey: key, name, relationFormat: format } } } });
+}
+
+/** A collection page: a dataview block flagged `isCollection`, its members in `details.links`, and one
+ * visible view column per supplied relation key. A collection's `resolvedLayout` is the collection layout
+ * (14), not the basic-page 0 — so the importer must admit it via its `isCollection` flag, not the layout. */
+function collectionObject(id: string, name: string, memberIds: string[], columnKeys: string[]): string {
+    return JSON.stringify({
+        sbType: "Page",
+        snapshot: {
+            data: {
+                blocks: [
+                    { id, childrenIds: ["header", "dataview"] },
+                    { id: "header", childrenIds: ["title"] },
+                    { id: "title", text: { text: "", style: "Title" } },
+                    { id: "dataview", dataview: { isCollection: true, views: [{ relations: columnKeys.map((key) => ({ key, isVisible: true })) }] } }
+                ],
+                details: { id, name, resolvedLayout: 14, links: memberIds }
+            }
+        }
+    });
+}
+
+/** A title-less "row" object whose content is its custom property values (keyed by relation key). */
+function memberObject(id: string, props: Record<string, unknown>): string {
+    return JSON.stringify({
+        sbType: "Page",
+        snapshot: {
+            data: {
+                blocks: [
+                    { id, childrenIds: ["header"] },
+                    { id: "header", childrenIds: ["title"] },
+                    { id: "title", text: { text: "", style: "Title" } }
+                ],
+                details: { id, name: "", resolvedLayout: 0, ...props }
+            }
+        }
+    });
+}
+
 describe("Anytype importer — integration", () => {
     it("imports each page as a flat child of an 'Anytype import' root, with its text content", async () => {
         const importRoot = await importAnytype({
@@ -447,6 +489,38 @@ describe("Anytype importer — integration", () => {
         // Untouched: a date-less page keeps the import-time timestamps, still in the valid UTC format.
         expect(note?.utcDateCreated).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z$/);
         expect(note?.utcDateModified).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    });
+
+    it("imports a collection as a book/table whose columns are promoted definitions and members are rows", async () => {
+        // Verbatim relation keys from "My custom collection": URL (format 7), Email (format 8).
+        const urlKey = "6a3e335dcafa6953a4661c74";
+        const emailKey = "6a3e336dcafa6953a4661c75";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "My custom collection", ["m1", "m2"], [urlKey, emailKey]),
+            "objects/m1.pb.json": memberObject("m1", { [urlKey]: "https://triliumnotes.org" }),
+            "objects/m2.pb.json": memberObject("m2", { [emailKey]: "contact@acme.com" }),
+            "relations/url.pb.json": relationObject(urlKey, "URL", 7),
+            "relations/email.pb.json": relationObject(emailKey, "Email", 8)
+        });
+
+        // The collection becomes a table-view book; only it lands at the root (members nest beneath it).
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["My custom collection"]);
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.type).toBe("book");
+        expect(collection.getOwnedLabelValue("viewType")).toBe("table");
+
+        // Each visible column is a single-valued promoted definition, in the view's order.
+        expect(collection.getOwnedAttributes().filter((a) => a.name.startsWith("label:")).map((a) => a.name)).toEqual(["label:url", "label:email"]);
+        expect(collection.getOwnedLabelValue("label:url")).toBe("promoted,single,url,alias=URL");
+        expect(collection.getOwnedLabelValue("label:email")).toBe("promoted,single,url,alias=Email");
+
+        // Members are the table rows, carrying their own values; email gets a clickable mailto: scheme.
+        const rows = collection.getChildNotes();
+        expect(rows.map((n) => n.title).sort()).toEqual(["Untitled", "Untitled"]);
+        const byUrl = rows.find((n) => n.getOwnedLabelValue("url"));
+        const byEmail = rows.find((n) => n.getOwnedLabelValue("email"));
+        expect(byUrl?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
+        expect(byEmail?.getOwnedLabelValue("email")).toBe("mailto:contact@acme.com");
     });
 
     it("produces an empty root when the export has no pages", async () => {

@@ -22,6 +22,7 @@ import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEdit
 import { t } from "i18next";
 
 import type BNote from "../../../becca/entities/bnote.js";
+import cloningService from "../../cloning.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
@@ -30,8 +31,11 @@ import { escapeHtml, newEntityId } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const snapshots = await parseZip(fileBuffer);
-    const pageSnapshots = snapshots.filter(isPage);
+    const { objects, relations } = await parseZip(fileBuffer);
+    const relationMap = buildRelationMap(relations);
+    // Import basic pages and collections (a collection carries the collection layout, so isPage rejects it);
+    // query sets and system objects stay out.
+    const pageSnapshots = objects.filter((snapshot) => isPage(snapshot) || isCollectionObject(snapshot));
 
     // Assign each page its Trilium note id up front so cross-page links resolve even when they point at a
     // page that hasn't been created yet (links routinely point forward in the export). The note is later
@@ -46,40 +50,64 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     }
     const resolveLink: LinkResolver = (cid) => targets.get(cid);
 
-    const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink));
+    const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap));
     taskContext.setTotalCount(pages.length);
 
     return createNotes(importRootNote, pages, targets, taskContext);
 }
 
 /**
- * Reads every `objects/*.pb.json` entry as a parsed Anytype snapshot. Sibling folders (relations, types, …)
- * and the protobuf `.pb` files are ignored for now. A malformed entry is skipped rather than failing the
- * whole import.
+ * Reads the export's `objects/*.pb.json` (page/collection snapshots) and `relations/*.pb.json` (property
+ * definitions). The relation definitions name and type the custom properties carried as values on objects.
+ * Other sibling folders (types, templates, …) and the protobuf `.pb` files are ignored for now. A malformed
+ * entry is skipped rather than failing the whole import.
  */
-async function parseZip(fileBuffer: Uint8Array): Promise<AnytypeSnapshot[]> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[] }> {
     const provider = getZipProvider();
-    const snapshots: AnytypeSnapshot[] = [];
+    const objects: AnytypeSnapshot[] = [];
+    const relations: AnytypeSnapshot[] = [];
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
-        if (!isObjectEntry(entry.fileName)) {
+        const bucket = isObjectEntry(entry.fileName) ? objects : isRelationEntry(entry.fileName) ? relations : undefined;
+        if (!bucket) {
             return;
         }
         try {
-            snapshots.push(JSON.parse(new TextDecoder().decode(await readContent())) as AnytypeSnapshot);
+            bucket.push(JSON.parse(new TextDecoder().decode(await readContent())) as AnytypeSnapshot);
         } catch {
-            // A non-JSON or truncated entry under objects/ isn't a page we can import — skip it.
+            // A non-JSON or truncated entry isn't something we can import — skip it.
         }
     }, filenameEncoding);
 
-    return snapshots;
+    return { objects, relations };
 }
 
 /** True for entries that are JSON object files under the export's `objects/` folder. */
 function isObjectEntry(fileName: string): boolean {
+    return isJsonEntryUnder(fileName, "objects/");
+}
+
+/** True for entries that are JSON relation-definition files under the export's `relations/` folder. */
+function isRelationEntry(fileName: string): boolean {
+    return isJsonEntryUnder(fileName, "relations/");
+}
+
+function isJsonEntryUnder(fileName: string, folder: string): boolean {
     const normalized = fileName.replace(/\\/g, "/").toLowerCase();
-    return normalized.startsWith("objects/") && normalized.endsWith(".pb.json");
+    return normalized.startsWith(folder) && normalized.endsWith(".pb.json");
+}
+
+/** Indexes the relation definitions by their `relationKey` (the key under which objects carry the value). */
+function buildRelationMap(relations: AnytypeSnapshot[]): Map<string, RelationInfo> {
+    const map = new Map<string, RelationInfo>();
+    for (const snapshot of relations) {
+        const details = snapshot.snapshot?.data?.details;
+        if (details?.relationKey) {
+            map.set(details.relationKey, { name: details.name ?? "", format: details.relationFormat ?? -1 });
+        }
+    }
+    return map;
 }
 
 /**
@@ -101,11 +129,24 @@ export function isPage(snapshot: AnytypeSnapshot): boolean {
 }
 
 /**
- * Reduces a page snapshot to the title, body HTML and outgoing link targets needed to create a note.
- * `resolveLink` maps a linked object's id to the Trilium note it became; without one (parsing a page in
- * isolation) link blocks are dropped, since they can't be pointed anywhere yet.
+ * Whether a snapshot is a collection — a `Page` smartblock with a dataview block flagged `isCollection`.
+ * A collection's `resolvedLayout` is the collection layout (14), not the basic 0, so {@link isPage} excludes
+ * it; it's admitted by this flag instead. Query *sets* (a dataview with `isCollection` false) stay excluded.
  */
-export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver = () => undefined): ParsedObject {
+export function isCollectionObject(snapshot: AnytypeSnapshot): boolean {
+    if (snapshot.sbType !== "Page") {
+        return false;
+    }
+    return (snapshot.snapshot?.data?.blocks ?? []).some((block) => block.dataview?.isCollection);
+}
+
+/**
+ * Reduces a page snapshot to the title, body HTML, outgoing link targets, property values and (for a
+ * collection) its table schema and membership. `resolveLink` maps a linked object's id to the Trilium note
+ * it became; without one (parsing a page in isolation) link blocks are dropped. `relations` names and types
+ * the custom properties; without it (or for system fields) properties are skipped.
+ */
+export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver = () => undefined, relations: Map<string, RelationInfo> = new Map()): ParsedObject {
     const data = snapshot.snapshot?.data;
     const details = data?.details ?? {};
     const id = details.id ?? "";
@@ -118,7 +159,9 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
         content: html,
         linkTargetIds,
         dateCreated: anytypeDate(details.createdDate),
-        dateModified: anytypeDate(details.lastModifiedDate)
+        dateModified: anytypeDate(details.lastModifiedDate),
+        properties: parseProperties(details, relations),
+        collection: parseCollection(data?.blocks ?? [], details, relations)
     };
 }
 
@@ -126,6 +169,132 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
 function pageTitle(details: AnytypeDetails | undefined): string {
     return (details?.name ?? "").trim() || "Untitled";
 }
+
+// #region Collection properties
+/**
+ * The five property formats imported so far, mapped to a Trilium label type. Email and phone keep their
+ * value clickable with a `mailto:`/`tel:` scheme (the same convention as the Notion importer). Other Anytype
+ * formats (select, multi-select, date, file, checkbox, …) are deferred.
+ */
+const PROPERTY_FORMATS: Record<number, { labelType: PropertyLabelType; scheme?: string }> = {
+    0: { labelType: "text" }, // longtext
+    1: { labelType: "text" }, // shorttext
+    2: { labelType: "number" }, // number
+    7: { labelType: "url" }, // url
+    8: { labelType: "url", scheme: "mailto:" }, // email
+    9: { labelType: "url", scheme: "tel:" } // phone
+};
+
+/** A custom (user-defined) relation key is a hex id; system relations (name, type, createdDate, …) are
+ * plain words, and must not be imported as properties. */
+function isCustomRelationKey(key: string): boolean {
+    return /^[0-9a-f]{16,}$/.test(key);
+}
+
+/**
+ * Reads an object's custom property values as `{ attributeName, value }` pairs. Only the supported formats
+ * (see {@link PROPERTY_FORMATS}) of user-defined relations are taken; unset values are dropped, and email /
+ * phone values gain a `mailto:`/`tel:` scheme so they stay clickable as url labels.
+ */
+function parseProperties(details: AnytypeDetails, relations: Map<string, RelationInfo>): ParsedProperty[] {
+    const properties: ParsedProperty[] = [];
+    for (const [key, raw] of Object.entries(details as Record<string, unknown>)) {
+        if (!isCustomRelationKey(key)) {
+            continue;
+        }
+        const info = relations.get(key);
+        const mapping = info ? PROPERTY_FORMATS[info.format] : undefined;
+        if (!info || !mapping) {
+            continue;
+        }
+        const value = formatPropertyValue(raw, mapping.labelType, mapping.scheme);
+        if (value !== undefined) {
+            properties.push({ name: toAttributeName(info.name), value });
+        }
+    }
+    return properties;
+}
+
+/**
+ * Reads a collection's table schema and membership, or undefined when the page isn't a collection. The
+ * members are its `details.links`; the columns are the *visible*, supported, custom relations of its first
+ * dataview view, in their stored order, de-duplicated by attribute name.
+ */
+function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails, relations: Map<string, RelationInfo>): ParsedCollection | undefined {
+    const dataview = blocks.find((block) => block.dataview)?.dataview;
+    if (!dataview?.isCollection) {
+        return undefined;
+    }
+
+    const columns: ParsedColumn[] = [];
+    const seen = new Set<string>();
+    for (const relation of dataview.views?.[0]?.relations ?? []) {
+        const key = relation.key;
+        if (!relation.isVisible || !key || !isCustomRelationKey(key)) {
+            continue;
+        }
+        const info = relations.get(key);
+        const mapping = info ? PROPERTY_FORMATS[info.format] : undefined;
+        if (!info || !mapping) {
+            continue;
+        }
+        const name = toAttributeName(info.name);
+        if (!seen.has(name)) {
+            seen.add(name);
+            columns.push({ name, labelType: mapping.labelType, alias: info.name });
+        }
+    }
+
+    return { memberIds: details.links ?? [], columns };
+}
+
+/**
+ * Converts a property value to its Trilium label string, or undefined when it should be dropped. A number is
+ * stringified (and a non-numeric value rejected); a text/url value is trimmed-checked for emptiness; an
+ * email/phone value is given its `mailto:`/`tel:` scheme unless it already carries one.
+ */
+function formatPropertyValue(raw: unknown, labelType: PropertyLabelType, scheme: string | undefined): string | undefined {
+    if (raw === null || raw === undefined) {
+        return undefined;
+    }
+    if (labelType === "number") {
+        const num = typeof raw === "number" ? raw : Number(String(raw));
+        return Number.isFinite(num) ? String(num) : undefined;
+    }
+    const value = typeof raw === "string" ? raw : String(raw);
+    if (!value.trim()) {
+        return undefined;
+    }
+    if (scheme) {
+        return value.startsWith(scheme) ? value : `${scheme}${value}`;
+    }
+    return value;
+}
+
+/**
+ * Converts an Anytype property name to a camelCase Trilium attribute name (e.g. `Text property` →
+ * `textProperty`, `URL` → `url`, `Date & Time` → `dateTime`). The original name is kept as the promoted
+ * alias (see {@link buildColumnDefinition}). A name with no alphanumeric content falls back to `unnamed`.
+ */
+export function toAttributeName(name: string): string {
+    const words = name.match(/[\p{L}\p{N}]+/gu);
+    if (!words) {
+        return "unnamed";
+    }
+    return words.map((word, index) => (index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())).join("");
+}
+
+/**
+ * Builds a single-valued promoted-attribute definition for a collection column (e.g.
+ * `promoted,single,url,alias=URL`). The original column name is kept verbatim as the alias so its spacing
+ * and casing still show in the UI; commas, equals and control characters are neutralized so they can't
+ * corrupt the comma/`=`-delimited definition string.
+ */
+export function buildColumnDefinition(labelType: PropertyLabelType, alias: string): string {
+    const safeAlias = alias.replace(/[\x00-\x1f,=]/g, " ").trim();
+    return `promoted,single,${labelType},alias=${safeAlias}`;
+}
+// #endregion
 
 /**
  * Converts an Anytype detail date (a Unix timestamp in *seconds*) to a Trilium UTC datetime string, or
@@ -485,10 +654,13 @@ function codeLanguage(lang: string | undefined): string {
 // #endregion
 
 /**
- * Creates a fresh "Anytype import" root and a flat child note per page. Each note is created with the id
- * pre-assigned in {@link importAnytype} (`targets`), so the reference links already baked into the content
- * point at the real notes. Once every page exists, each page's outgoing links are recorded as
- * `internalLink` relations, which Trilium uses for backlink detection ("what links here").
+ * Creates a fresh "Anytype import" root and the page notes beneath it. A collection becomes a `book` with a
+ * `table` view and one promoted-attribute definition per column; a regular page becomes a `text` note. Each
+ * note is created with the id pre-assigned in {@link importAnytype} (`targets`), so the reference links
+ * already baked into the content point at the real notes, and carries its own property values as labels. A
+ * collection's members are parented under it (their first collection) — a member in further collections is
+ * cloned into each. Once every page exists, each page's outgoing links are recorded as `internalLink`
+ * relations, which Trilium uses for backlink detection ("what links here").
  */
 function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
@@ -497,20 +669,50 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("anytype_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
-    const notesByPageId = new Map<string, BNote>();
+    // Each member's primary parent is the first collection that lists it (a collection itself stays at the
+    // root, so it's never reparented — it's cloned into an owning collection by the membership pass below).
+    const collectionPageIds = new Set(pages.filter((page) => page.collection).map((page) => page.id));
+    const primaryCollectionByMember = new Map<string, string>();
     for (const page of pages) {
-        const { note } = noteService.createNewNote({ noteId: targets.get(page.id)?.noteId, parentNoteId: rootNote.noteId, title: page.title, content: page.content, type: "text", mime: "text/html", isProtected, utcDateCreated: page.dateCreated });
+        for (const memberId of page.collection?.memberIds ?? []) {
+            if (!collectionPageIds.has(memberId) && !primaryCollectionByMember.has(memberId)) {
+                primaryCollectionByMember.set(memberId, page.id);
+            }
+        }
+    }
 
-        // Restore the original timestamps (note creation stamps "modified" — and the blob — with now). A
-        // date-less page is left untouched, keeping its import-time dates. When only one date is present we
-        // fall back like the ENEX importer: modified defaults to created.
-        if (page.dateCreated || page.dateModified) {
-            const dateCreated = page.dateCreated ?? note.utcDateCreated;
-            note.setDateCreatedAndModified(dateCreated, page.dateModified ?? dateCreated);
+    // Create collections before regular pages so a member can be parented under its collection.
+    const notesByPageId = new Map<string, BNote>();
+    const ordered = [...pages].sort((a, b) => (a.collection ? 0 : 1) - (b.collection ? 0 : 1));
+    for (const page of ordered) {
+        const noteId = targets.get(page.id)?.noteId;
+        let note: BNote;
+        if (page.collection) {
+            note = createCollectionNote(rootNote.noteId, page, page.collection, noteId, isProtected);
+        } else {
+            const primaryCollectionId = primaryCollectionByMember.get(page.id);
+            const parentNoteId = (primaryCollectionId ? notesByPageId.get(primaryCollectionId)?.noteId : undefined) ?? rootNote.noteId;
+            ({ note } = noteService.createNewNote({ noteId, parentNoteId, title: page.title, content: page.content, type: "text", mime: "text/html", isProtected, utcDateCreated: page.dateCreated }));
         }
 
+        applyProperties(note, page.properties);
+        applyDates(note, page);
         notesByPageId.set(page.id, note);
         taskContext.increaseProgressCount();
+    }
+
+    // Membership: clone a member into every collection that isn't already its (primary) parent.
+    for (const page of pages) {
+        const collectionNote = page.collection ? notesByPageId.get(page.id) : undefined;
+        for (const memberId of page.collection?.memberIds ?? []) {
+            if (primaryCollectionByMember.get(memberId) === page.id) {
+                continue;
+            }
+            const memberNote = notesByPageId.get(memberId);
+            if (memberNote && collectionNote) {
+                cloningService.cloneNoteToParentNote(memberNote.noteId, collectionNote.noteId);
+            }
+        }
     }
 
     for (const page of pages) {
@@ -521,6 +723,45 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
     }
 
     return rootNote;
+}
+
+/**
+ * Creates a collection's container note: an empty `book` with a `table` view whose columns are the
+ * collection's supported properties, each an *inheritable* promoted-attribute definition (so the table
+ * renders the column and every member row inherits the field, showing its own value or blank). Mirrors the
+ * Notion importer's database mapping.
+ */
+function createCollectionNote(parentNoteId: string, page: ParsedObject, collection: ParsedCollection, noteId: string | undefined, isProtected: boolean | undefined): BNote {
+    const { note } = noteService.createNewNote({ noteId, parentNoteId, title: page.title, content: "", type: "book", mime: "", isProtected, utcDateCreated: page.dateCreated });
+    note.addLabel("viewType", "table");
+
+    // Increasing positions keep the columns in their Anytype view order (the promoted-attributes UI sorts by
+    // position, and equal positions aren't ordered deterministically).
+    let position = 0;
+    for (const column of collection.columns) {
+        position += 10;
+        note.addAttribute("label", `label:${column.name}`, buildColumnDefinition(column.labelType, column.alias), true, position);
+    }
+    return note;
+}
+
+/** Applies a page's custom property values to its note as labels. */
+function applyProperties(note: BNote, properties: ParsedProperty[]) {
+    for (const property of properties) {
+        note.addLabel(property.name, property.value);
+    }
+}
+
+/**
+ * Restores a page's original timestamps (note creation stamps "modified" — and the blob — with now). A
+ * date-less page is left untouched, keeping its import-time dates. When only one date is present we fall back
+ * like the ENEX importer: modified defaults to created.
+ */
+function applyDates(note: BNote, page: ParsedObject) {
+    if (page.dateCreated || page.dateModified) {
+        const dateCreated = page.dateCreated ?? note.utcDateCreated;
+        note.setDateCreatedAndModified(dateCreated, page.dateModified ?? dateCreated);
+    }
 }
 
 // #region Export model
@@ -575,12 +816,24 @@ export interface AnytypeBlock {
         targetBlockId?: string;
         style?: string;
     };
+    /** A dataview block — a set (query) or collection (manual list). `isCollection` distinguishes the two;
+     * `views[].relations` is the ordered, per-column display config (a column's `key` is a `relationKey`). */
+    dataview?: {
+        isCollection?: boolean;
+        views?: {
+            relations?: {
+                key?: string;
+                isVisible?: boolean;
+            }[];
+        }[];
+    };
 }
 
 /** The object's `snapshot.data.details` — its metadata map. `layout` distinguishes a basic page (0) from
  * a set/collection (3) and other system layouts; `name` is the title; `id` matches the root block's id.
  * `layout` is omitted when it's the default (0), so `resolvedLayout` (always present) is the reliable
- * source of the effective layout. */
+ * source of the effective layout. Custom property values are carried under their relation's hex
+ * `relationKey`, hence the index signature. */
 export interface AnytypeDetails {
     id?: string;
     name?: string;
@@ -590,6 +843,13 @@ export interface AnytypeDetails {
     createdDate?: number;
     /** Page last-modification time as a Unix timestamp in seconds. */
     lastModifiedDate?: number;
+    /** Outgoing object links; for a collection, this is its membership. */
+    links?: string[];
+    /** On a relation-definition object: the key objects carry the value under, and the format code. */
+    relationKey?: string;
+    relationFormat?: number;
+    /** A custom property value, keyed by its relation's hex `relationKey`. */
+    [key: string]: unknown;
 }
 
 /** One exported object file: `sbType` is the smartblock kind ("Page", "Participant", "Workspace", …) and
@@ -618,6 +878,10 @@ export interface ParsedObject {
     dateCreated?: string;
     /** Last-modification time as a Trilium UTC datetime string (from `lastModifiedDate`), if available. */
     dateModified?: string;
+    /** The object's custom property values, applied to its note as labels. */
+    properties: ParsedProperty[];
+    /** Present when the object is a collection: its table schema and membership. */
+    collection?: ParsedCollection;
 }
 
 /** The imported note a linked-to Anytype object resolved to: its Trilium id and (fallback) title. */
@@ -629,6 +893,35 @@ export interface ResolvedLink {
 /** Resolves an Anytype object id (CID) to the Trilium note it was imported as, or undefined when the
  * target wasn't imported (a set/collection, or an object missing from the export). */
 export type LinkResolver = (targetCid: string) => ResolvedLink | undefined;
+
+/** A relation definition resolved from the `relations/` folder: its display name and Anytype format code. */
+export interface RelationInfo {
+    name: string;
+    format: number;
+}
+
+/** The Trilium label types a supported Anytype property maps to (email/phone reuse `url`). */
+export type PropertyLabelType = "text" | "number" | "url";
+
+/** One custom property value on an object: the Trilium attribute name and its (already formatted) value. */
+export interface ParsedProperty {
+    name: string;
+    value: string;
+}
+
+/** One collection table column: its attribute name, Trilium label type and original (alias) name. */
+export interface ParsedColumn {
+    name: string;
+    labelType: PropertyLabelType;
+    alias: string;
+}
+
+/** A collection's table schema and membership. `memberIds` are Anytype object ids (its `details.links`);
+ * `columns` are the visible, supported columns from its dataview, in order. */
+export interface ParsedCollection {
+    memberIds: string[];
+    columns: ParsedColumn[];
+}
 // #endregion
 
 export default { importAnytype };
