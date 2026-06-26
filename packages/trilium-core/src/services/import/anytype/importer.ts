@@ -38,13 +38,26 @@ import { extractContent } from "./content.js";
 import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedColumn, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
-    const { objects, relations, options, fileObjects, files } = await parseZip(fileBuffer);
+    const { objects, relations, options, fileObjects, files, protobufObjectCount, markdownFileCount } = await parseZip(fileBuffer);
     const relationMap = buildRelationMap(relations);
     const optionMap = buildOptionMap(options);
     const fileObjectMap = buildFileObjectMap(fileObjects);
     // Import basic pages and collections (a collection carries the collection layout, so isPage rejects it);
     // query sets and system objects stay out.
     const pageSnapshots = objects.filter((snapshot) => isPage(snapshot) || isCollectionObject(snapshot));
+
+    // Anytype offers three export shapes; this importer only understands the JSON "Any-Block" one
+    // (`objects/*.pb.json`). The Protobuf variant ships binary `objects/*.pb`, the Markdown variant ships
+    // `*.md` files — neither yields a JSON object, so they'd otherwise import as an empty tree. When no JSON
+    // page was found but those files were, fail with guidance to re-export as JSON (mirrors the Notion importer).
+    if (pageSnapshots.length === 0) {
+        if (protobufObjectCount > 0) {
+            throw new Error(t("anytype_import.protobuf-export-unsupported"));
+        }
+        if (markdownFileCount > 0) {
+            throw new Error(t("anytype_import.markdown-export-unsupported"));
+        }
+    }
 
     // A collection-scoped export omits the collection itself (Anytype doesn't export the wrapper), so its
     // name and column schema are lost. Recover them: name the import root from the zip and make it a `table`
@@ -78,22 +91,35 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
  * definitions), `relationsOptions/*.pb.json` (select / multi-select option values), `filesObjects/*.pb.json`
  * (file metadata) and the raw bytes under `files/` (keyed by normalized path). The relation definitions name
  * and type the custom properties; the options resolve a select value's option id to its name; the file
- * objects + bytes back the file properties. Other sibling folders (types, templates, …) and the protobuf
- * `.pb` files are ignored for now. A malformed entry is skipped rather than failing the import.
+ * objects + bytes back the file properties. Other sibling folders (types, templates, …) are ignored for now.
+ * A malformed entry is skipped rather than failing the import. The wrong-format `objects/*.pb` (Protobuf) and
+ * `*.md` (Markdown) entries are merely counted, so the caller can fail with guidance instead of importing an
+ * empty tree.
  */
-async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[]; fileObjects: AnytypeSnapshot[]; files: Map<string, Uint8Array> }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[]; fileObjects: AnytypeSnapshot[]; files: Map<string, Uint8Array>; protobufObjectCount: number; markdownFileCount: number }> {
     const provider = getZipProvider();
     const objects: AnytypeSnapshot[] = [];
     const relations: AnytypeSnapshot[] = [];
     const options: AnytypeSnapshot[] = [];
     const fileObjects: AnytypeSnapshot[] = [];
     const files = new Map<string, Uint8Array>();
+    let protobufObjectCount = 0;
+    let markdownFileCount = 0;
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
         // Raw bytes under files/ are kept as-is (they back file-property attachments), not parsed as JSON.
         if (isFileEntry(entry.fileName)) {
             files.set(normalizePath(entry.fileName), await readContent());
+            return;
+        }
+        // Tally the other-export-format files (so importAnytype can reject them with guidance), then skip them.
+        if (isProtobufObjectEntry(entry.fileName)) {
+            protobufObjectCount++;
+            return;
+        }
+        if (isMarkdownEntry(entry.fileName)) {
+            markdownFileCount++;
             return;
         }
         const bucket = isObjectEntry(entry.fileName) ? objects
@@ -110,7 +136,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnaps
         }
     }, filenameEncoding);
 
-    return { objects, relations, options, fileObjects, files };
+    return { objects, relations, options, fileObjects, files, protobufObjectCount, markdownFileCount };
 }
 
 /** True for entries that are JSON object files under the export's `objects/` folder. */
@@ -136,6 +162,17 @@ function isFileObjectEntry(fileName: string): boolean {
 /** True for entries that are raw files under the export's `files/` folder (the bytes a file property links). */
 function isFileEntry(fileName: string): boolean {
     return normalizePath(fileName).startsWith("files/");
+}
+
+/** True for an Anytype *Protobuf* export's binary object (`objects/*.pb`) — the JSON export uses `.pb.json`. */
+function isProtobufObjectEntry(fileName: string): boolean {
+    const normalized = normalizePath(fileName);
+    return normalized.startsWith("objects/") && normalized.endsWith(".pb");
+}
+
+/** True for an Anytype *Markdown* export's page file (a top-level `*.md`). */
+function isMarkdownEntry(fileName: string): boolean {
+    return normalizePath(fileName).endsWith(".md");
 }
 
 function isJsonEntryUnder(fileName: string, folder: string): boolean {

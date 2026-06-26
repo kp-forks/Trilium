@@ -772,4 +772,28 @@ describe("Anytype importer — integration", () => {
         expect(importRoot.title).toBe("Anytype import");
         expect(importRoot.getChildNotes()).toHaveLength(0);
     });
+
+    it("rejects an Anytype Protobuf export (binary objects/*.pb), guiding the user to re-export as JSON", async () => {
+        // The Protobuf variant ships binary `objects/*.pb` (not the `.pb.json` this importer reads).
+        await expect(
+            importAnytype({ "objects/bafyreiabc.pb": "binary protobuf bytes, not JSON" }, "My space.zip")
+        ).rejects.toThrow(/Protobuf.*re-export.*JSON/is);
+    });
+
+    it("rejects an Anytype Markdown export (*.md files), guiding the user to re-export as JSON", async () => {
+        // The Markdown variant ships one `*.md` per page, with no `objects/` JSON at all.
+        await expect(
+            importAnytype({ "article-1.md": "# Article 1\n\nbody", "article-2.md": "# Article 2" }, "My space.zip")
+        ).rejects.toThrow(/Markdown.*re-export.*JSON/is);
+    });
+
+    it("imports a valid JSON export even if it carries a stray markdown file (the guard only fires with zero pages)", async () => {
+        // A real page is present, so the wrong-format detection must not trip on an incidental `.md` entry.
+        const importRoot = await importAnytype({
+            "objects/p1.pb.json": pageObject("p1", "Real page", ["body"]),
+            "notes.md": "# stray markdown"
+        });
+
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Real page"]);
+    });
 });

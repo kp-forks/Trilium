@@ -328,7 +328,9 @@
     "root-title": "Google Keep import"
   },
   "anytype_import": {
-    "root-title": "Anytype import"
+    "root-title": "Anytype import",
+    "protobuf-export-unsupported": "This looks like an Anytype \"Protobuf\" export, which Trilium cannot import. Please re-export your Anytype space using the \"Any-Block\" format with \"JSON\" selected and import that instead.",
+    "markdown-export-unsupported": "This looks like an Anytype \"Markdown\" export, which Trilium cannot import. Please re-export your Anytype space using the \"Any-Block\" format with \"JSON\" selected and import that instead."
   },
   "pdf": {
     "export_filter": "PDF Document (*.pdf)",
