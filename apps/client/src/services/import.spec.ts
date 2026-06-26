@@ -102,18 +102,23 @@ describe("uploadFiles", () => {
         // the test env, so t() returns the key and never interpolates). We assert
         // the call args/structure rather than a human-readable translated string.
         const tSpy = vi.spyOn(i18n, "t");
+        vi.useFakeTimers();
         try {
             ($ as any).ajax = vi.fn(async (opts: any) => {
                 opts.error({ responseText: "boom" });
                 return {};
             });
             await uploadFiles("notes", "p1", ["a"], { shrinkImages: false });
+            // The error toast is deferred (so a WebSocket taskError can claim the taskId first and
+            // win), so the fallback only fires after IMPORT_ERROR_FALLBACK_DELAY — flush it first.
+            vi.runOnlyPendingTimers();
             expect(toastService.showError).toHaveBeenCalledTimes(1);
             // The xhr.responseText ("boom") must be forwarded into the message
             // interpolation, not dropped or replaced with the whole xhr object.
             expect(tSpy).toHaveBeenCalledWith("import.failed", { message: "boom" });
         } finally {
             tSpy.mockRestore();
+            vi.useRealTimers();
         }
     });
 
