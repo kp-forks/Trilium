@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { toAttributeName } from "./collection.js";
+import { buildPromotedDefinition, toAttributeName } from "./collection_utils.js";
 
 describe("toAttributeName", () => {
     it("camelCases a multi-word name, lower-casing the first word", () => {
@@ -36,9 +36,34 @@ describe("toAttributeName", () => {
         expect(toAttributeName("Café date")).toBe("caféDate");
     });
 
+    it("camelCases names with mixed separators and an ampersand", () => {
+        expect(toAttributeName("Text property")).toBe("textProperty");
+        expect(toAttributeName("Number prop")).toBe("numberProp");
+        expect(toAttributeName("Date & Time")).toBe("dateTime");
+    });
+
     it("falls back to 'unnamed' when there is no alphanumeric content", () => {
         expect(toAttributeName("")).toBe("unnamed");
         expect(toAttributeName("()")).toBe("unnamed");
         expect(toAttributeName("   ")).toBe("unnamed");
+    });
+});
+
+describe("buildPromotedDefinition", () => {
+    it("builds a single-valued promoted definition keeping the original name as the alias", () => {
+        expect(buildPromotedDefinition({ alias: "URL", labelType: "url", multiplicity: "single" })).toBe("promoted,single,url,alias=URL");
+        expect(buildPromotedDefinition({ alias: "Text property", labelType: "text", multiplicity: "single" })).toBe("promoted,single,text,alias=Text property");
+    });
+
+    it("neutralizes commas, equals and control chars in the alias so the definition can't be corrupted", () => {
+        expect(buildPromotedDefinition({ alias: "a,b=c", labelType: "text", multiplicity: "single" })).toBe("promoted,single,text,alias=a b c");
+    });
+
+    it("emits the column's multiplicity (multi for a multi-select)", () => {
+        expect(buildPromotedDefinition({ alias: "Multi-select", labelType: "text", multiplicity: "multi" })).toBe("promoted,multi,text,alias=Multi-select");
+    });
+
+    it("omits the value type for a relation column (no labelType)", () => {
+        expect(buildPromotedDefinition({ alias: "Related", multiplicity: "multi" })).toBe("promoted,multi,alias=Related");
     });
 });

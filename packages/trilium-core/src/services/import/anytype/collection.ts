@@ -17,9 +17,8 @@ import { dayjs } from "@triliumnext/commons";
 
 import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
-import { escapeHtml } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
-import mimeService from "../mime.js";
+import { applyUrlScheme, attachmentReferenceLink, buildPromotedDefinition, saveFileAttachment, toAttributeName } from "../collection_utils.js";
 import type { AnytypeBlock, AnytypeDetails, AnytypeSnapshot, FileObjectInfo, Multiplicity, ParsedCollection, ParsedColumn, ParsedObject, ParsedProperty, PropertyLabelType, RelationInfo } from "./model.js";
 
 /** Normalizes a zip entry / file path to forward slashes and lower case (Windows exports use backslashes),
@@ -233,34 +232,7 @@ function formatPropertyValue(raw: unknown, labelType: PropertyLabelType, scheme:
     if (!value.trim()) {
         return undefined;
     }
-    if (scheme) {
-        return value.startsWith(scheme) ? value : `${scheme}${value}`;
-    }
-    return value;
-}
-
-/**
- * Converts an Anytype property name to a camelCase Trilium attribute name (e.g. `Text property` →
- * `textProperty`, `URL` → `url`, `Date & Time` → `dateTime`). The original name is kept as the promoted
- * alias (see {@link buildColumnDefinition}). A name with no alphanumeric content falls back to `unnamed`.
- */
-export function toAttributeName(name: string): string {
-    const words = name.match(/[\p{L}\p{N}]+/gu);
-    if (!words) {
-        return "unnamed";
-    }
-    return words.map((word, index) => (index === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())).join("");
-}
-
-/**
- * Builds a promoted-attribute definition for a collection column (e.g. `promoted,single,url,alias=URL`, or
- * `promoted,multi,text,alias=Multi-select`). The original column name is kept verbatim as the alias so its
- * spacing and casing still show in the UI; commas, equals and control characters are neutralized so they
- * can't corrupt the comma/`=`-delimited definition string.
- */
-export function buildColumnDefinition(labelType: PropertyLabelType, alias: string, multiplicity: Multiplicity = "single"): string {
-    const safeAlias = alias.replace(/[\x00-\x1f,=]/g, " ").trim();
-    return `promoted,${multiplicity},${labelType},alias=${safeAlias}`;
+    return scheme ? applyUrlScheme(value, scheme) : value;
 }
 
 /**
@@ -278,7 +250,7 @@ export function createCollectionNote(parentNoteId: string, page: ParsedObject, c
     let position = 0;
     for (const column of collection.columns) {
         position += 10;
-        note.addAttribute("label", `label:${column.name}`, buildColumnDefinition(column.labelType, column.alias, column.multiplicity), true, position);
+        note.addAttribute("label", `label:${column.name}`, buildPromotedDefinition({ alias: column.alias, labelType: column.labelType, multiplicity: column.multiplicity }), true, position);
     }
     return note;
 }
@@ -303,14 +275,9 @@ export function applyFiles(note: BNote, page: ParsedObject, fileObjects: Map<str
         if (!info || !bytes) {
             continue;
         }
-        const attachment = note.saveAttachment({
-            role: "file",
-            mime: info.mime || mimeService.getMime(info.title) || "application/octet-stream",
-            title: info.title,
-            content: bytes
-        });
+        const attachment = saveFileAttachment(note, info.title, bytes, info.mime);
         if (attachment.attachmentId) {
-            fileLinks.push(`<p><a class="reference-link" href="#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}">${escapeHtml(info.title)}</a></p>`);
+            fileLinks.push(`<p>${attachmentReferenceLink(note.noteId, attachment.attachmentId, info.title)}</p>`);
         }
     }
 

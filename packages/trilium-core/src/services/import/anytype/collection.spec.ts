@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 
-import { buildColumnDefinition, toAttributeName } from "./collection.js";
 import { isCollectionObject, isPage, parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, RelationInfo } from "./model.js";
 
@@ -69,31 +68,6 @@ describe("collection properties", () => {
         ["opt-first", "first"],
         ["opt-second", "second"]
     ]);
-
-    describe("toAttributeName", () => {
-        it("camel-cases a column name into a valid attribute name", () => {
-            expect(toAttributeName("URL")).toBe("url");
-            expect(toAttributeName("Text property")).toBe("textProperty");
-            expect(toAttributeName("Number prop")).toBe("numberProp");
-            expect(toAttributeName("Date & Time")).toBe("dateTime");
-            expect(toAttributeName("   ")).toBe("unnamed");
-        });
-    });
-
-    describe("buildColumnDefinition", () => {
-        it("builds a single-valued promoted definition keeping the original name as the alias", () => {
-            expect(buildColumnDefinition("url", "URL")).toBe("promoted,single,url,alias=URL");
-            expect(buildColumnDefinition("text", "Text property")).toBe("promoted,single,text,alias=Text property");
-        });
-
-        it("neutralizes commas, equals and control chars in the alias so the definition can't be corrupted", () => {
-            expect(buildColumnDefinition("text", "a,b=c")).toBe("promoted,single,text,alias=a b c");
-        });
-
-        it("emits the column's multiplicity (multi for a multi-select)", () => {
-            expect(buildColumnDefinition("text", "Multi-select", "multi")).toBe("promoted,multi,text,alias=Multi-select");
-        });
-    });
 
     describe("parseObject — property values", () => {
         it("maps supported property values to labels, schemes email/phone with mailto:/tel:", () => {
