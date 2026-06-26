@@ -2,27 +2,25 @@ import "./RightPaneToggleHandle.css";
 
 import { Tooltip } from "bootstrap";
 import clsx from "clsx";
-import { useCallback, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useMemo, useRef } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import { t } from "../../services/i18n";
-import options from "../../services/options";
-import { useStaticTooltip, useTriliumEvent } from "../react/hooks";
+import { useStaticTooltip } from "../react/hooks";
 
 // Gap (px) between the handle and its tooltip, so the tooltip can't overlap the handle.
 const TOOLTIP_MARGIN_PX = 8;
 
-export default function RightPaneToggleHandle() {
+interface RightPaneToggleHandleProps {
+    /** Owned and persisted by RightPanelContainer; this component only reflects it. */
+    rightPaneVisible: boolean;
+}
+
+export default function RightPaneToggleHandle({ rightPaneVisible }: RightPaneToggleHandleProps) {
     const buttonRef = useRef<HTMLButtonElement>(null);
     // Pointer's vertical position captured once on hover; null until the mouse enters
     // (e.g. on keyboard focus) so the tooltip falls back to the handle's centre.
     const pointerY = useRef<number | null>(null);
-    const [ rightPaneVisible, setRightPaneVisible ] = useState(options.is("rightPaneVisible"));
-
-    // Mirror the state so the arrow direction stays in sync; RightPanelContainer owns persistence.
-    useTriliumEvent("toggleRightPane", useCallback(() => {
-        setRightPaneVisible(current => !current);
-    }, []));
 
     const handleClick = useCallback(() => {
         appContext.triggerCommand("toggleRightPane");
@@ -60,6 +58,7 @@ export default function RightPaneToggleHandle() {
                 rightPaneVisible ? "right-pane-toggle-handle-action-collapse" : "right-pane-toggle-handle-action-expand"
             )}
             onMouseEnter={(e) => { pointerY.current = e.clientY; }}
+            onMouseLeave={() => { pointerY.current = null; }}
             onClick={handleClick}
         />
     );

@@ -49,7 +49,7 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
         <>
             {/* Absolutely positioned in a reserved gutter on the viewport's right edge, so it
                 stays put regardless of the panel's open/collapsed state (see RightPanelContainer.css). */}
-            <RightPaneToggleHandle />
+            <RightPaneToggleHandle rightPaneVisible={rightPaneVisible} />
             <div id="right-pane">
                 {rightPaneVisible && (
                     items.length > 0 ? (
