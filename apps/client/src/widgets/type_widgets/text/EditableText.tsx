@@ -319,7 +319,13 @@ function placeCursorInNewTopParagraph(editor: CKTextEditor) {
     // The scrolling container scrolls, not the editor itself, and the inline title may have scrolled
     // out of view (e.g. the cursor was at the bottom of a long note), so the selection change alone
     // won't move the viewport. Explicitly reveal the new top paragraph once it has rendered.
-    requestAnimationFrame(() => editor.editing.view.scrollToTheSelection());
+    requestAnimationFrame(() => {
+        // The editor may have been destroyed while waiting for the frame (e.g. the user navigated
+        // away from the note), in which case `editing` is nulled — bail out instead of throwing.
+        if (editor.editing?.view) {
+            editor.editing.view.scrollToTheSelection();
+        }
+    });
 }
 
 function useTemplates() {
