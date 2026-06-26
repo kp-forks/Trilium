@@ -14,21 +14,19 @@
     align-items: center;
     justify-content: center;
     border: 0;
-    border-left: 1px solid transparent;
     border-bottom: 1px solid var(--status-bar-border-color);
     background: transparent;
     padding: 0;
     font-size: 16px;
     cursor: pointer;
+    color: var(--muted-text-color);
 
     &.right-pane-toggle-handle-action-expand {
         background: var(--note-split-background-color, var(--main-background-color));
-        border-left-color: var(--main-border-color);
     }
 
     &.right-pane-toggle-handle-action-collapse {
         background: var(--right-pane-background-color);
-        border-right-color: var(--main-border-color);
     }
 
     &:hover {

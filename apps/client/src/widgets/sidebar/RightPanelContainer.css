@@ -5,7 +5,8 @@
 body.experimental-feature-new-layout #vertical-main-container {
     --right-pane-handle-width: 12px;
     position: relative;
-    padding-inline-end: var(--right-pane-handle-width);
+    /* +2px leaves a small gap between the panel (and #center-pane) and the handle. */
+    padding-inline-end: calc(var(--right-pane-handle-width) + 2px);
 }
 
 body.experimental-feature-new-layout #right-pane {
