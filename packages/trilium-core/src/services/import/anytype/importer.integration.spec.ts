@@ -295,6 +295,48 @@ describe("Anytype importer — integration", () => {
         );
     });
 
+    it("imports a Mermaid diagram and a table end-to-end (from the 'More formatting' page)", async () => {
+        // A latex/Mermaid block and a table (TableColumns + TableRows layouts; cells keyed `${rowId}-${columnId}`).
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "mmd", "tbl"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "mmd", latex: { text: "stateDiagram-v2\n    [*] --> Still\n", processor: "Mermaid" } },
+                        { id: "tbl", table: {}, childrenIds: ["cols", "rows"] },
+                        { id: "cols", layout: { style: "TableColumns" }, childrenIds: ["c1", "c2", "c3"] },
+                        { id: "c1", tableColumn: {}, childrenIds: [] },
+                        { id: "c2", tableColumn: {}, childrenIds: [] },
+                        { id: "c3", tableColumn: {}, childrenIds: [] },
+                        { id: "rows", layout: { style: "TableRows" }, childrenIds: ["r1", "r2"] },
+                        { id: "r1", tableRow: {}, childrenIds: ["r1-c1", "r1-c2", "r1-c3"] },
+                        { id: "r1-c1", text: { text: "A" } },
+                        { id: "r1-c2", text: { text: "B" } },
+                        { id: "r1-c3", text: { text: "C" } },
+                        { id: "r2", tableRow: {}, childrenIds: ["r2-c1", "r2-c2", "r2-c3"] },
+                        { id: "r2-c1", text: { text: "1" } },
+                        { id: "r2-c2", text: { text: "2" } },
+                        { id: "r2-c3", text: { text: "3" } }
+                    ],
+                    details: { id: "pg", name: "More formatting", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/fmt.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "More formatting");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe(
+            '<pre><code class="language-mermaid">stateDiagram-v2\n    [*] --&gt; Still\n</code></pre>' +
+                '<figure class="table"><table><tbody>' +
+                "<tr><td>A</td><td>B</td><td>C</td></tr>" +
+                "<tr><td>1</td><td>2</td><td>3</td></tr>" +
+                "</tbody></table></figure>"
+        );
+    });
+
     it("imports nested lists end-to-end (grouping consecutive items, nesting children)", async () => {
         const page = JSON.stringify({
             sbType: "Page",

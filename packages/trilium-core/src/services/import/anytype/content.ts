@@ -4,10 +4,11 @@
  * An object's `snapshot.data.blocks` is a flat list joined into a tree by each block's `childrenIds`.
  * {@link extractContent} walks that tree from the root in document order and converts each block to HTML —
  * headings (`<h2>`/`<h3>`/`<h4>`), bullet/numbered/task lists (grouped and nested), toggles, callouts,
- * quotes, dividers and cross-page reference links — applying inline marks ({@link renderInlineText}) and
- * rendering code blocks ({@link renderCodeBlock}). It returns the HTML plus the Trilium ids of every
- * linked-to page (for the `internalLink` relations). The structure importer (importer.ts) owns object
- * selection and the note tree; it calls into here. Mirrors the Notion importer's `converter.ts`.
+ * quotes, dividers, tables ({@link renderTable}), Mermaid diagrams / LaTeX math ({@link renderLatexBlock})
+ * and cross-page reference links — applying inline marks ({@link renderInlineText}) and rendering code
+ * blocks ({@link renderCodeBlock}). It returns the HTML plus the Trilium ids of every linked-to page (for
+ * the `internalLink` relations). The structure importer (importer.ts) owns object selection and the note
+ * tree; it calls into here. Mirrors the Notion importer's `converter.ts`.
  */
 
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons/src/lib/mime_type.js";
@@ -107,6 +108,17 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             }
             linkTargetIds.add(target.noteId);
             return `<p><a class="reference-link" href="#root/${target.noteId}">${escapeHtml(target.title)}</a></p>`;
+        }
+
+        // A LaTeX block — a Mermaid diagram or LaTeX math.
+        if (block.latex) {
+            return renderLatexBlock(block.latex.text ?? "", block.latex.processor);
+        }
+
+        // A table block: render its columns/rows/cells subtree directly. Returning here skips the generic
+        // child walk below, which would otherwise emit every cell's text as a stray paragraph after the table.
+        if (block.table) {
+            return renderTable(block, byId);
         }
 
         // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
@@ -357,5 +369,75 @@ function codeLanguage(lang: string | undefined): string {
         }
     }
     return MIME_TYPE_AUTO;
+}
+// #endregion
+
+// #region LaTeX & Mermaid
+/**
+ * Renders an Anytype `latex` block. With the `Mermaid` processor it becomes a `language-mermaid` code block —
+ * Trilium's mermaid rendering keys off that class (the same convention the Notion importer uses), and the
+ * browser decodes the escaped diagram text back when reading it. Any other processor is treated as LaTeX
+ * math, emitted as a CKEditor display-math span (`<span class="math-tex">\[ … \]</span>`). Empty text is dropped.
+ */
+export function renderLatexBlock(text: string, processor: string | undefined): string {
+    if (!text.trim()) {
+        return "";
+    }
+    const escaped = escapeHtml(text).replace(/&quot;/g, '"');
+    if (processor === "Mermaid") {
+        return `<pre><code class="language-mermaid">${escaped}</code></pre>`;
+    }
+    return `<span class="math-tex">\\[ ${escaped} \\]</span>`;
+}
+// #endregion
+
+// #region Tables
+/**
+ * Renders an Anytype table block to Trilium/CKEditor table HTML. An Anytype table's two children are a
+ * `TableColumns` layout (its ordered column ids) and a `TableRows` layout (its rows); each row's cells are
+ * text blocks whose id is `${rowId}-${columnId}`, and a row omits its empty cells. We walk the columns in
+ * order and, for each row, place that column's cell (blank when absent) so the grid stays aligned. A row
+ * flagged `isHeader` becomes `<th scope="col">` in a `<thead>`; the rest are `<td>` in the `<tbody>`. The
+ * table is wrapped in `<figure class="table">`, the shape CKEditor stores (mirroring the Notion importer).
+ */
+export function renderTable(table: AnytypeBlock, byId: Map<string, AnytypeBlock>): string {
+    const [colsLayoutId, rowsLayoutId] = table.childrenIds ?? [];
+    const columnIds = (colsLayoutId ? byId.get(colsLayoutId)?.childrenIds : undefined) ?? [];
+    const rowIds = (rowsLayoutId ? byId.get(rowsLayoutId)?.childrenIds : undefined) ?? [];
+    if (columnIds.length === 0 || rowIds.length === 0) {
+        return "";
+    }
+
+    const headRows: string[] = [];
+    const bodyRows: string[] = [];
+    for (const rowId of rowIds) {
+        const row = byId.get(rowId);
+        if (!row) {
+            continue;
+        }
+        const isHeader = !!row.tableRow?.isHeader;
+        // Index this row's cells by their column-id suffix (cell id = `${rowId}-${columnId}`).
+        const cellByColumn = new Map<string, AnytypeBlock>();
+        for (const cellId of row.childrenIds ?? []) {
+            const cell = byId.get(cellId);
+            if (cell && cellId.startsWith(`${rowId}-`)) {
+                cellByColumn.set(cellId.slice(rowId.length + 1), cell);
+            }
+        }
+        const tag = isHeader ? "th" : "td";
+        const scope = isHeader ? ' scope="col"' : "";
+        const cells = columnIds
+            .map((columnId) => {
+                const cell = cellByColumn.get(columnId);
+                const content = cell ? renderInlineText(cell.text?.text ?? "", cell.text?.marks?.marks ?? []) : "";
+                return `<${tag}${scope}>${content}</${tag}>`;
+            })
+            .join("");
+        (isHeader ? headRows : bodyRows).push(`<tr>${cells}</tr>`);
+    }
+
+    const thead = headRows.length > 0 ? `<thead>${headRows.join("")}</thead>` : "";
+    const tbody = bodyRows.length > 0 ? `<tbody>${bodyRows.join("")}</tbody>` : "";
+    return `<figure class="table"><table>${thead}${tbody}</table></figure>`;
 }
 // #endregion

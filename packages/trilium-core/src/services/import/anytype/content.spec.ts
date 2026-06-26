@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderCodeBlock, renderInlineText } from "./content.js";
+import { renderCodeBlock, renderInlineText, renderLatexBlock, renderTable } from "./content.js";
 import { parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, LinkResolver } from "./model.js";
 
@@ -305,5 +305,89 @@ describe("renderCodeBlock", () => {
 
     it("escapes HTML and keeps quotes literal, preserving newlines and tabs", () => {
         expect(renderCodeBlock('a<b & c>\n\t"q"', "clike")).toBe('<pre><code class="language-text-x-csrc">a&lt;b &amp; c&gt;\n\t"q"</code></pre>');
+    });
+});
+
+describe("renderLatexBlock", () => {
+    it("renders a Mermaid block as a language-mermaid code block, escaping the diagram (the browser decodes it back)", () => {
+        // Verbatim Mermaid from the "More formatting" page; `-->` must be HTML-escaped to stay valid markup.
+        expect(renderLatexBlock("stateDiagram-v2\n    [*] --> Still\n", "Mermaid")).toBe(
+            '<pre><code class="language-mermaid">stateDiagram-v2\n    [*] --&gt; Still\n</code></pre>'
+        );
+    });
+
+    it("renders any non-Mermaid latex as CKEditor display math, keeping quotes literal", () => {
+        expect(renderLatexBlock("E = mc^2", undefined)).toBe('<span class="math-tex">\\[ E = mc^2 \\]</span>');
+        expect(renderLatexBlock("a < b & c", "Latex")).toBe('<span class="math-tex">\\[ a &lt; b &amp; c \\]</span>');
+    });
+
+    it("drops an empty latex block", () => {
+        expect(renderLatexBlock("   ", "Mermaid")).toBe("");
+        expect(renderLatexBlock("", undefined)).toBe("");
+    });
+});
+
+describe("tables", () => {
+    /** A table-cell text block, addressed by `${rowId}-${columnId}`. */
+    const cell = (rowId: string, columnId: string, text: string): AnytypeBlock => ({ id: `${rowId}-${columnId}`, text: { text, marks: { marks: [] } }, childrenIds: [] });
+
+    /**
+     * Builds a page whose only content is a table: a `table` block with a `TableColumns` and a `TableRows`
+     * layout, `columns` column ids, and `rows` of `[rowId, isHeader, cellTextByColumn]`. A column omitted
+     * from a row's map models an empty (un-exported) cell.
+     */
+    function tableDoc(columns: string[], rows: [string, boolean, Record<string, string>][]): AnytypeSnapshot {
+        const blocks: AnytypeBlock[] = [
+            { id: "obj", childrenIds: ["tbl"] },
+            { id: "tbl", table: {}, childrenIds: ["cols", "rows"] },
+            { id: "cols", childrenIds: columns },
+            ...columns.map((id): AnytypeBlock => ({ id, childrenIds: [] })),
+            { id: "rows", childrenIds: rows.map(([rowId]) => rowId) }
+        ];
+        for (const [rowId, isHeader, cellsByColumn] of rows) {
+            const cellIds = Object.keys(cellsByColumn).map((columnId) => `${rowId}-${columnId}`);
+            blocks.push({ id: rowId, tableRow: { isHeader }, childrenIds: cellIds });
+            for (const [columnId, text] of Object.entries(cellsByColumn)) {
+                blocks.push(cell(rowId, columnId, text));
+            }
+        }
+        return snapshot(blocks, { id: "obj", name: "Tables" });
+    }
+
+    it("renders a header row in <thead> (th scope=col) and body rows in <tbody> (td), in column order", () => {
+        const doc = tableDoc(
+            ["c1", "c2"],
+            [
+                ["r1", true, { c1: "A", c2: "B" }],
+                ["r2", false, { c1: "1", c2: "2" }]
+            ]
+        );
+        expect(parseObject(doc).content).toBe(
+            '<figure class="table"><table>' +
+                '<thead><tr><th scope="col">A</th><th scope="col">B</th></tr></thead>' +
+                "<tbody><tr><td>1</td><td>2</td></tr></tbody>" +
+                "</table></figure>"
+        );
+    });
+
+    it("renders a header-less table as all <td> rows (matching the real export), applying inline marks in cells", () => {
+        const doc = tableDoc(["c1", "c2", "c3"], [["r1", false, { c1: "A", c2: "B", c3: "C" }]]);
+        const result = parseObject(doc);
+        expect(result.content).toBe('<figure class="table"><table><tbody><tr><td>A</td><td>B</td><td>C</td></tr></tbody></table></figure>');
+    });
+
+    it("fills an omitted (empty) cell with a blank td, keeping the grid aligned to the columns", () => {
+        // r1 carries no cell for c2 — a row drops its empty cells, so column order must backfill it.
+        const doc = tableDoc(["c1", "c2"], [["r1", false, { c1: "only" }]]);
+        expect(parseObject(doc).content).toBe('<figure class="table"><table><tbody><tr><td>only</td><td></td></tr></tbody></table></figure>');
+    });
+
+    it("renderTable returns empty for a table with no columns or no rows", () => {
+        const byId = new Map<string, AnytypeBlock>([
+            ["tbl", { id: "tbl", table: {}, childrenIds: ["cols", "rows"] }],
+            ["cols", { id: "cols", childrenIds: [] }],
+            ["rows", { id: "rows", childrenIds: [] }]
+        ]);
+        expect(renderTable(byId.get("tbl") ?? { id: "x" }, byId)).toBe("");
     });
 });

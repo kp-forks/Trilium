@@ -57,6 +57,19 @@ export interface AnytypeBlock {
         targetBlockId?: string;
         style?: string;
     };
+    /** A "latex" block — Anytype's embed for code-rendered diagrams and math. `processor` picks the renderer
+     * ("Mermaid" for a Mermaid diagram; otherwise the `text` is LaTeX math). */
+    latex?: {
+        text?: string;
+        processor?: string;
+    };
+    /** A table block (an empty marker object). Its two children are a `TableColumns` and a `TableRows`
+     * layout block; each row's cells are text blocks whose id is `${rowId}-${columnId}`. */
+    table?: Record<string, unknown>;
+    /** A table-row block (child of the `TableRows` layout); `isHeader` marks a header row. */
+    tableRow?: {
+        isHeader?: boolean;
+    };
     /** A dataview block — a set (query) or collection (manual list). `isCollection` distinguishes the two;
      * `views[]` are its views (the first is the active one): `type` is the layout (Table/List/Gallery/
      * Calendar/Kanban), `groupRelationKey` is the relation the view organizes by (a Kanban's grouping
