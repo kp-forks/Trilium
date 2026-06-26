@@ -29,12 +29,15 @@ import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
 import date_utils from "../../utils/date.js";
 import { escapeHtml, newEntityId } from "../../utils/index.js";
+import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
+import mimeService from "../mime.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { objects, relations, options } = await parseZip(fileBuffer);
+    const { objects, relations, options, fileObjects, files } = await parseZip(fileBuffer);
     const relationMap = buildRelationMap(relations);
     const optionMap = buildOptionMap(options);
+    const fileObjectMap = buildFileObjectMap(fileObjects);
     // Import basic pages and collections (a collection carries the collection layout, so isPage rejects it);
     // query sets and system objects stay out.
     const pageSnapshots = objects.filter((snapshot) => isPage(snapshot) || isCollectionObject(snapshot));
@@ -55,25 +58,36 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap, optionMap));
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, targets, taskContext);
+    return createNotes(importRootNote, pages, targets, fileObjectMap, files, taskContext);
 }
 
 /**
  * Reads the export's `objects/*.pb.json` (page/collection snapshots), `relations/*.pb.json` (property
- * definitions) and `relationsOptions/*.pb.json` (select / multi-select option values). The relation
- * definitions name and type the custom properties carried as values on objects; the options resolve a
- * select value's option id to its display name. Other sibling folders (types, templates, …) and the
- * protobuf `.pb` files are ignored for now. A malformed entry is skipped rather than failing the import.
+ * definitions), `relationsOptions/*.pb.json` (select / multi-select option values), `filesObjects/*.pb.json`
+ * (file metadata) and the raw bytes under `files/` (keyed by normalized path). The relation definitions name
+ * and type the custom properties; the options resolve a select value's option id to its name; the file
+ * objects + bytes back the file properties. Other sibling folders (types, templates, …) and the protobuf
+ * `.pb` files are ignored for now. A malformed entry is skipped rather than failing the import.
  */
-async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[] }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[]; fileObjects: AnytypeSnapshot[]; files: Map<string, Uint8Array> }> {
     const provider = getZipProvider();
     const objects: AnytypeSnapshot[] = [];
     const relations: AnytypeSnapshot[] = [];
     const options: AnytypeSnapshot[] = [];
+    const fileObjects: AnytypeSnapshot[] = [];
+    const files = new Map<string, Uint8Array>();
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
-        const bucket = isObjectEntry(entry.fileName) ? objects : isRelationOptionEntry(entry.fileName) ? options : isRelationEntry(entry.fileName) ? relations : undefined;
+        // Raw bytes under files/ are kept as-is (they back file-property attachments), not parsed as JSON.
+        if (isFileEntry(entry.fileName)) {
+            files.set(normalizePath(entry.fileName), await readContent());
+            return;
+        }
+        const bucket = isObjectEntry(entry.fileName) ? objects
+            : isRelationOptionEntry(entry.fileName) ? options
+                : isFileObjectEntry(entry.fileName) ? fileObjects
+                    : isRelationEntry(entry.fileName) ? relations : undefined;
         if (!bucket) {
             return;
         }
@@ -84,7 +98,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnaps
         }
     }, filenameEncoding);
 
-    return { objects, relations, options };
+    return { objects, relations, options, fileObjects, files };
 }
 
 /** True for entries that are JSON object files under the export's `objects/` folder. */
@@ -102,9 +116,24 @@ function isRelationOptionEntry(fileName: string): boolean {
     return isJsonEntryUnder(fileName, "relationsoptions/");
 }
 
+/** True for entries that are JSON file-metadata files under the export's `filesObjects/` folder. */
+function isFileObjectEntry(fileName: string): boolean {
+    return isJsonEntryUnder(fileName, "filesobjects/");
+}
+
+/** True for entries that are raw files under the export's `files/` folder (the bytes a file property links). */
+function isFileEntry(fileName: string): boolean {
+    return normalizePath(fileName).startsWith("files/");
+}
+
 function isJsonEntryUnder(fileName: string, folder: string): boolean {
-    const normalized = fileName.replace(/\\/g, "/").toLowerCase();
+    const normalized = normalizePath(fileName);
     return normalized.startsWith(folder) && normalized.endsWith(".pb.json");
+}
+
+/** Normalizes a zip entry path to forward slashes and lower case (Windows exports use backslashes). */
+function normalizePath(fileName: string): string {
+    return fileName.replace(/\\/g, "/").toLowerCase();
 }
 
 /** Indexes the relation definitions by their `relationKey` (the key under which objects carry the value). */
@@ -127,6 +156,22 @@ function buildOptionMap(options: AnytypeSnapshot[]): Map<string, string> {
         if (details?.id) {
             map.set(details.id, details.name ?? "");
         }
+    }
+    return map;
+}
+
+/** Indexes the file objects by id, resolving each to the title, MIME and bytes-path a file property needs. */
+function buildFileObjectMap(fileObjects: AnytypeSnapshot[]): Map<string, FileObjectInfo> {
+    const map = new Map<string, FileObjectInfo>();
+    for (const snapshot of fileObjects) {
+        const details = snapshot.snapshot?.data?.details;
+        if (!details?.id) {
+            continue;
+        }
+        const source = details.source ?? "";
+        // The attachment title is the file's name: the source's base name, or the name + extension.
+        const title = basename(normalizePath(source)) || `${details.name ?? "file"}${details.fileExt ? `.${details.fileExt}` : ""}`;
+        map.set(details.id, { title, mime: details.fileMimeType ?? "", source });
     }
     return map;
 }
@@ -182,6 +227,7 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
         dateCreated: anytypeDate(details.createdDate),
         dateModified: anytypeDate(details.lastModifiedDate),
         properties: parseProperties(details, relations, options),
+        fileRefs: parseFiles(details, relations),
         collection: parseCollection(data?.blocks ?? [], details, relations)
     };
 }
@@ -192,6 +238,9 @@ function pageTitle(details: AnytypeDetails | undefined): string {
 }
 
 // #region Collection properties
+/** The Anytype relation format for a file/object value — handled as an attachment, not a label/column. */
+const FILE_FORMAT = 5;
+
 /**
  * Maps an Anytype relation to how its values import, or undefined for a format not yet supported (file, …).
  * Date and date-time share format 4, told apart by the relation's `includeTime` flag; email and phone reuse
@@ -264,6 +313,26 @@ function parseProperties(details: AnytypeDetails, relations: Map<string, Relatio
         }
     }
     return properties;
+}
+
+/**
+ * Reads an object's file-property values as a flat list of file-object ids (a file relation's value is a
+ * list of `FileObject` ids). They become `role:"file"` attachments at import time (see {@link createNotes}),
+ * not labels — the same as the Notion importer — so they're collected separately from {@link parseProperties}.
+ */
+function parseFiles(details: AnytypeDetails, relations: Map<string, RelationInfo>): string[] {
+    const refs: string[] = [];
+    for (const [key, raw] of Object.entries(details as Record<string, unknown>)) {
+        if (!isCustomRelationKey(key) || relations.get(key)?.format !== FILE_FORMAT) {
+            continue;
+        }
+        for (const fileId of Array.isArray(raw) ? raw : []) {
+            if (typeof fileId === "string") {
+                refs.push(fileId);
+            }
+        }
+    }
+    return refs;
 }
 
 /**
@@ -728,10 +797,11 @@ function codeLanguage(lang: string | undefined): string {
  * note is created with the id pre-assigned in {@link importAnytype} (`targets`), so the reference links
  * already baked into the content point at the real notes, and carries its own property values as labels. A
  * collection's members are parented under it (their first collection) — a member in further collections is
- * cloned into each. Once every page exists, each page's outgoing links are recorded as `internalLink`
- * relations, which Trilium uses for backlink detection ("what links here").
+ * cloned into each. File-property values become `role:"file"` attachments with a reference link prepended to
+ * the body. Once every page exists, each page's outgoing links are recorded as `internalLink` relations,
+ * which Trilium uses for backlink detection ("what links here").
  */
-function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
@@ -765,6 +835,7 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
         }
 
         applyProperties(note, page.properties);
+        applyFiles(note, page, fileObjects, files);
         applyDates(note, page);
         notesByPageId.set(page.id, note);
         taskContext.increaseProgressCount();
@@ -818,6 +889,36 @@ function createCollectionNote(parentNoteId: string, page: ParsedObject, collecti
 function applyProperties(note: BNote, properties: ParsedProperty[]) {
     for (const property of properties) {
         note.addLabel(property.name, property.value);
+    }
+}
+
+/**
+ * Saves each of a page's file-property files as a `role:"file"` attachment and prepends a reference link to
+ * the body — the same as the Notion importer, so the files are reachable from the note's content as well as
+ * its attachments list. A file object missing from the export (no metadata, or bytes absent) is skipped.
+ */
+function applyFiles(note: BNote, page: ParsedObject, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>) {
+    const fileLinks: string[] = [];
+    for (const fileId of page.fileRefs) {
+        const info = fileObjects.get(fileId);
+        const bytes = info ? files.get(normalizePath(info.source)) : undefined;
+        if (!info || !bytes) {
+            continue;
+        }
+        const attachment = note.saveAttachment({
+            role: "file",
+            mime: info.mime || mimeService.getMime(info.title) || "application/octet-stream",
+            title: info.title,
+            content: bytes
+        });
+        if (attachment.attachmentId) {
+            fileLinks.push(`<p><a class="reference-link" href="#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}">${escapeHtml(info.title)}</a></p>`);
+        }
+    }
+
+    if (fileLinks.length > 0) {
+        // The note already holds its body (page content, or "" for a collection); prepend the file links.
+        note.setContent(fileLinks.join("") + (page.collection ? "" : page.content));
     }
 }
 
@@ -919,6 +1020,11 @@ export interface AnytypeDetails {
     relationKey?: string;
     relationFormat?: number;
     relationFormatIncludeTime?: boolean;
+    /** On a `FileObject`: the display name, file extension, MIME type and the export path of the raw bytes
+     * (e.g. `files\name.ext`). */
+    fileExt?: string;
+    fileMimeType?: string;
+    source?: string;
     /** A custom property value, keyed by its relation's hex `relationKey`. */
     [key: string]: unknown;
 }
@@ -951,6 +1057,8 @@ export interface ParsedObject {
     dateModified?: string;
     /** The object's custom property values, applied to its note as labels. */
     properties: ParsedProperty[];
+    /** File-object ids from the object's file properties; resolved to `role:"file"` attachments at import. */
+    fileRefs: string[];
     /** Present when the object is a collection: its table schema and membership. */
     collection?: ParsedCollection;
 }
@@ -971,6 +1079,14 @@ export interface RelationInfo {
     name: string;
     format: number;
     includeTime?: boolean;
+}
+
+/** A file object resolved from the `filesObjects/` folder: the attachment title, MIME and the `files/` path
+ * its raw bytes live at. */
+export interface FileObjectInfo {
+    title: string;
+    mime: string;
+    source: string;
 }
 
 /** The Trilium label types a supported Anytype property maps to (email/phone reuse `url`). */

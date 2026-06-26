@@ -441,6 +441,14 @@ describe("collection properties", () => {
             expect(result.properties).toEqual([{ name: "multiSelect", value: "first" }]);
         });
 
+        it("collects a file property's values as file references, not labels", () => {
+            const details = { id: "obj", "6a3e3323cafa6953a4661c6f": ["file-cid-1", "file-cid-2"] };
+            const result = parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels);
+            // Files become attachments (resolved at import time), so they're surfaced separately, never as labels.
+            expect(result.fileRefs).toEqual(["file-cid-1", "file-cid-2"]);
+            expect(result.properties).toEqual([]);
+        });
+
         it("ignores system relations (non-hex keys), unset values and an existing scheme", () => {
             const details = {
                 id: "obj",

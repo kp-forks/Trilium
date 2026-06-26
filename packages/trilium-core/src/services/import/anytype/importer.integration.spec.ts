@@ -92,6 +92,11 @@ function optionObject(cid: string, name: string, relationKey: string): string {
     return JSON.stringify({ sbType: "STRelationOption", snapshot: { data: { details: { id: cid, name, relationKey } } } });
 }
 
+/** A file-metadata file (filesObjects/<x>.pb.json): resolves a file id to its name, type and bytes path. */
+function fileObjectJson(cid: string, name: string, fileExt: string, fileMimeType: string, source: string): string {
+    return JSON.stringify({ sbType: "FileObject", snapshot: { data: { details: { id: cid, name, fileExt, fileMimeType, source } } } });
+}
+
 /** A title-less "row" object whose content is its custom property values (keyed by relation key). */
 function memberObject(id: string, props: Record<string, unknown>): string {
     return JSON.stringify({
@@ -584,6 +589,35 @@ describe("Anytype importer — integration", () => {
         const row = collection.getChildNotes()[0];
         expect(row.getOwnedLabelValue("selectProperty")).toBe("Second");
         expect(row.getOwnedLabelValues("multiSelect")).toEqual(["first", "second"]);
+    });
+
+    it("imports a file property as a role:file attachment with a reference link in the body, not a column", async () => {
+        const fileKey = "6a3e3323cafa6953a4661c6f";
+        const fileCid = "bafyreifile";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Files", ["m1"], [fileKey]),
+            "objects/m1.pb.json": memberObject("m1", { [fileKey]: [fileCid] }),
+            "relations/file.pb.json": relationObject(fileKey, "File", 5),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "txt", "text/csv", "files\\log.txt"),
+            "files/log.txt": "hello,world\n1,2\n"
+        });
+
+        // A file property is never a column.
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.getOwnedAttributes().filter((a) => a.name.startsWith("label:"))).toHaveLength(0);
+
+        // The file is a role:"file" attachment, titled from the file's name, with its bytes preserved.
+        const row = collection.getChildNotes()[0];
+        const attachments = row.getAttachmentsByRole("file");
+        expect(attachments.map((a) => a.title)).toEqual(["log.txt"]);
+        expect(attachments[0].mime).toBe("text/csv");
+        expect(decodeUtf8(attachments[0].getContent() ?? "")).toBe("hello,world\n1,2\n");
+
+        // A reference link to the attachment is prepended to the body.
+        const content = decodeUtf8(row.getContent() ?? "");
+        expect(content).toContain(`class="reference-link"`);
+        expect(content).toContain(`href="#root/${row.noteId}?viewMode=attachments&attachmentId=${attachments[0].attachmentId}"`);
+        expect(content).toContain(">log.txt</a>");
     });
 
     it("produces an empty root when the export has no pages", async () => {
