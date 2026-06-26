@@ -80,6 +80,12 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
             {/* Absolutely positioned in a reserved gutter on the viewport's right edge, so it
                 stays put regardless of the panel's open/collapsed state (see RightPanelContainer.css). */}
             <RightPaneToggleHandle rightPaneVisible={visible} onToggle={toggleOverlay} />
+            {/* Visual dismiss cue and a physical layer over the content area (so presses over the
+                PDF iframe reach the document listener in useOverlayDismiss). Always rendered, toggled
+                via CSS, so the fragment's child list stays structurally stable: Split.js injects a
+                gutter among these siblings, and mounting/unmounting a Preact-managed sibling around
+                it corrupts reconciliation (insertBefore error). */}
+            <div class={mode === "overlay" ? "right-pane-overlay-backdrop active" : "right-pane-overlay-backdrop"} />
             <div id="right-pane" class={mode === "overlay" ? "overlay" : undefined} style={overlayStyle}>
                 {mode === "overlay" && (
                     <div class="right-pane-overlay-actions">
@@ -197,39 +203,27 @@ function useSplit(visible: boolean) {
     }, [ visible ]);
 }
 
-// Elements that should NOT dismiss the overlay when clicked/focused: the pane itself, the toggle
-// handle, and popups that sidebar content renders into portals outside #right-pane (dropdowns,
-// context menus, tooltips, modals). Tune this list as sidebar widgets add new popup roots.
-const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .dropdown-menu, .tooltip, .modal, .popover, .context-menu";
+// Clicks within these keep the overlay open: the pane, the toggle handle, and popups that sidebar
+// content renders into portals outside #right-pane (dropdowns, tooltips, modals). The backdrop is
+// intentionally NOT listed, so clicking the (covered) content area dismisses like other outside clicks.
+const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .dropdown-menu, .tooltip, .modal, .popover";
 
 /** Whether an event target lies within the overlay or an allowlisted popup (i.e. should keep it open). */
 export function isWithinOverlay(target: EventTarget | null): boolean {
     return target instanceof Element && target.closest(OVERLAY_KEEP_OPEN_SELECTOR) !== null;
 }
 
-/** While `active`, closes the overlay on an outside pointer press, focus move, or Escape. */
+/**
+ * While `active`, closes the overlay on an outside press or Escape. Presses over the content area
+ * (including the PDF iframe) land on the backdrop element and so reach this listener; presses on
+ * chrome the backdrop doesn't cover (tree, toolbar, tabs) are caught directly. Capture phase so a
+ * child's `stopPropagation` can't keep a stale overlay open.
+ */
 function useOverlayDismiss(active: boolean, onDismiss: () => void) {
     useEffect(() => {
         if (!active) return;
-
-        let blurTimer: ReturnType<typeof setTimeout> | undefined;
-
         const onPointerDown = (e: PointerEvent) => {
             if (!isWithinOverlay(e.target)) onDismiss();
-        };
-        const onFocusIn = (e: FocusEvent) => {
-            // Focus parked on <body> (e.g. after the handle blurs itself on open) isn't a real move-away.
-            if (e.target === document.body || isWithinOverlay(e.target)) return;
-            onDismiss();
-        };
-        const onWindowBlur = () => {
-            // Clicks inside an iframe (e.g. the PDF viewer) don't reach the parent's pointerdown,
-            // but they blur the window and move focus onto the <iframe> element. Read activeElement
-            // on the next tick (some browsers update it after the blur fires).
-            blurTimer = setTimeout(() => {
-                const active = document.activeElement;
-                if (active instanceof HTMLIFrameElement && !isWithinOverlay(active)) onDismiss();
-            });
         };
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
@@ -237,17 +231,11 @@ function useOverlayDismiss(active: boolean, onDismiss: () => void) {
                 document.querySelector<HTMLElement>(".right-pane-toggle-handle")?.focus();
             }
         };
-
         document.addEventListener("pointerdown", onPointerDown, true);
-        document.addEventListener("focusin", onFocusIn);
         document.addEventListener("keydown", onKeyDown);
-        window.addEventListener("blur", onWindowBlur);
         return () => {
             document.removeEventListener("pointerdown", onPointerDown, true);
-            document.removeEventListener("focusin", onFocusIn);
             document.removeEventListener("keydown", onKeyDown);
-            window.removeEventListener("blur", onWindowBlur);
-            if (blurTimer) clearTimeout(blurTimer);
         };
     }, [ active, onDismiss ]);
 }

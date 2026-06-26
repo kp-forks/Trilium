@@ -11,38 +11,33 @@ describe("isWithinOverlay", () => {
         document.body.innerHTML = html;
     }
 
-    it("treats the pane, the handle, and allowlisted popups as inside", () => {
+    it("keeps the overlay open for the pane, the handle, and allowlisted popups", () => {
         mount(`
             <div id="right-pane"><span class="toc-item">x</span></div>
             <button class="right-pane-toggle-handle"></button>
             <ul class="dropdown-menu"><li class="dropdown-item">y</li></ul>
             <div class="tooltip">t</div>
-            <div id="center-pane"><p class="editor">z</p></div>
         `);
 
-        const inside = [".toc-item", ".right-pane-toggle-handle", ".dropdown-item", ".tooltip"];
-        for (const selector of inside) {
+        for (const selector of [".toc-item", ".right-pane-toggle-handle", ".dropdown-item", ".tooltip"]) {
             expect(isWithinOverlay(document.querySelector(selector)), selector).toBe(true);
         }
     });
 
-    it("treats content outside the pane/popups as outside, and ignores non-elements", () => {
-        mount(`<div id="center-pane"><p class="editor">z</p></div>`);
+    it("dismisses for the backdrop, surrounding chrome, and non-elements", () => {
+        mount(`
+            <div class="right-pane-overlay-backdrop active"></div>
+            <div id="center-pane"><p class="editor">z</p></div>
+            <div class="tab-row-container"><span class="tab">t</span></div>
+            <div id="left-pane"><span class="tree-item">n</span></div>
+        `);
 
-        expect(isWithinOverlay(document.querySelector(".editor"))).toBe(false);
+        // The backdrop is deliberately outside the allowlist, so clicking the covered content dismisses.
+        for (const selector of [".right-pane-overlay-backdrop", ".editor", ".tab", ".tree-item"]) {
+            expect(isWithinOverlay(document.querySelector(selector)), selector).toBe(false);
+        }
         expect(isWithinOverlay(document.body)).toBe(false);
         expect(isWithinOverlay(null)).toBe(false);
         expect(isWithinOverlay(document)).toBe(false);
-    });
-
-    it("classifies a focused iframe by its location (the PDF-viewer dismiss path)", () => {
-        mount(`
-            <div id="center-pane"><iframe class="pdf-viewer"></iframe></div>
-            <div id="right-pane"><iframe class="sidebar-frame"></iframe></div>
-        `);
-
-        // Clicking the PDF viewer (center-pane iframe) should dismiss; a sidebar iframe should not.
-        expect(isWithinOverlay(document.querySelector(".pdf-viewer"))).toBe(false);
-        expect(isWithinOverlay(document.querySelector(".sidebar-frame"))).toBe(true);
     });
 });

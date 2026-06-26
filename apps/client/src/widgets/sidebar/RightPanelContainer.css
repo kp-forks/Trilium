@@ -29,6 +29,31 @@ body.experimental-feature-new-layout #right-pane.overlay {
     to { transform: translateX(0); opacity: 1; }
 }
 
+/* Backdrop behind the overlay: marks the content area as a click-to-dismiss zone and reliably
+   captures outside clicks (including over the PDF iframe, which swallows the parent's pointer
+   events). Sidebar popups (dropdowns, tooltips) render above it via their own z-index, so they
+   aren't dismissed. Sits left of the handle gutter so the handle stays interactive. */
+body.experimental-feature-new-layout .right-pane-overlay-backdrop {
+    /* Always in the DOM (see RightPanelContainer.tsx); shown only while the overlay is active. */
+    display: none;
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: 0;
+    inset-inline-end: var(--right-pane-handle-gutter);
+    z-index: 14;
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.experimental-feature-new-layout .right-pane-overlay-backdrop.active {
+    display: block;
+    animation: right-pane-backdrop-in 150ms ease;
+}
+
+@keyframes right-pane-backdrop-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Pin/close controls, shown only in overlay mode. */
 body.experimental-feature-new-layout #right-pane .right-pane-overlay-actions {
     position: absolute;
