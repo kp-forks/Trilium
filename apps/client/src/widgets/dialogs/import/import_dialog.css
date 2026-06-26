@@ -29,6 +29,15 @@
         color: var(--muted-text-color);
     }
 
+    /* Collapsed-by-default options: the section header toggles the option rows below. */
+    .import-options-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
     /* Some option descriptions carry rich HTML (e.g. multi-paragraph hints); keep them tight. */
     .option-row-description p {
         margin: 0;

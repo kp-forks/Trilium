@@ -22,6 +22,7 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
     const [codeImportedAsCode, setCodeImportedAsCode] = useState(true);
     const [spreadsheetImportedAsSpreadsheet, setSpreadsheetImportedAsSpreadsheet] = useState(true);
     const [replaceUnderscoresWithSpaces, setReplaceUnderscoresWithSpaces] = useState(true);
+    const [optionsShown, setOptionsShown] = useState(false);
 
     useEffect(() => {
         void tree.getNoteTitle(parentNoteId).then(setNoteTitle);
@@ -73,37 +74,43 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
                 </CardSection>
             </Card>
 
-            <Card heading={t("import.options")}>
-                <CardSection>
-                    <OptionsRowWithToggle
-                        name="safe-import" label={t("import.safeImport")} description={<RawHtml html={t("import.safeImportTooltip")} />}
-                        currentValue={safeImport} onChange={setSafeImport}
-                    />
-                    <OptionsRowWithToggle
-                        name="explode-archives" label={<RawHtml html={t("import.explodeArchives")} />} description={<RawHtml html={t("import.explodeArchivesTooltip")} />}
-                        currentValue={explodeArchives} onChange={setExplodeArchives}
-                    />
-                    <OptionsRowWithToggle
-                        name="shrink-images" label={t("import.shrinkImages")} description={<RawHtml html={t("import.shrinkImagesTooltip")} />}
-                        currentValue={compressImages && shrinkImages} onChange={setShrinkImages} disabled={!compressImages}
-                    />
-                    <OptionsRowWithToggle
-                        name="text-imported-as-text" label={t("import.textImportedAsText")}
-                        currentValue={textImportedAsText} onChange={setTextImportedAsText}
-                    />
-                    <OptionsRowWithToggle
-                        name="code-imported-as-code" label={<RawHtml html={t("import.codeImportedAsCode")} />}
-                        currentValue={codeImportedAsCode} onChange={setCodeImportedAsCode}
-                    />
-                    <OptionsRowWithToggle
-                        name="spreadsheet-imported-as-spreadsheet" label={t("import.spreadsheetImportedAsSpreadsheet")}
-                        currentValue={spreadsheetImportedAsSpreadsheet} onChange={setSpreadsheetImportedAsSpreadsheet}
-                    />
-                    <OptionsRowWithToggle
-                        name="replace-underscores-with-spaces" label={t("import.replaceUnderscoresWithSpaces")}
-                        currentValue={replaceUnderscoresWithSpaces} onChange={setReplaceUnderscoresWithSpaces}
-                    />
+            <Card>
+                <CardSection className="import-options-toggle" highlightOnHover onAction={() => setOptionsShown((shown) => !shown)}>
+                    <span className={`bx ${optionsShown ? "bx-chevron-down" : "bx-chevron-right"}`} />
+                    <span>{t("import.options")}</span>
                 </CardSection>
+                {optionsShown && (
+                    <CardSection>
+                        <OptionsRowWithToggle
+                            name="safe-import" label={t("import.safeImport")} description={<RawHtml html={t("import.safeImportTooltip")} />}
+                            currentValue={safeImport} onChange={setSafeImport}
+                        />
+                        <OptionsRowWithToggle
+                            name="explode-archives" label={<RawHtml html={t("import.explodeArchives")} />} description={<RawHtml html={t("import.explodeArchivesTooltip")} />}
+                            currentValue={explodeArchives} onChange={setExplodeArchives}
+                        />
+                        <OptionsRowWithToggle
+                            name="shrink-images" label={t("import.shrinkImages")} description={<RawHtml html={t("import.shrinkImagesTooltip")} />}
+                            currentValue={compressImages && shrinkImages} onChange={setShrinkImages} disabled={!compressImages}
+                        />
+                        <OptionsRowWithToggle
+                            name="text-imported-as-text" label={t("import.textImportedAsText")}
+                            currentValue={textImportedAsText} onChange={setTextImportedAsText}
+                        />
+                        <OptionsRowWithToggle
+                            name="code-imported-as-code" label={<RawHtml html={t("import.codeImportedAsCode")} />}
+                            currentValue={codeImportedAsCode} onChange={setCodeImportedAsCode}
+                        />
+                        <OptionsRowWithToggle
+                            name="spreadsheet-imported-as-spreadsheet" label={t("import.spreadsheetImportedAsSpreadsheet")}
+                            currentValue={spreadsheetImportedAsSpreadsheet} onChange={setSpreadsheetImportedAsSpreadsheet}
+                        />
+                        <OptionsRowWithToggle
+                            name="replace-underscores-with-spaces" label={t("import.replaceUnderscoresWithSpaces")}
+                            currentValue={replaceUnderscoresWithSpaces} onChange={setReplaceUnderscoresWithSpaces}
+                        />
+                    </CardSection>
+                )}
             </Card>
         </>
     );
