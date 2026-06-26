@@ -50,7 +50,7 @@ export default function RightPaneToggleHandle() {
         <button
             ref={buttonRef}
             class={clsx(
-                "right-pane-toggle-handle icon-action bx",
+                "right-pane-toggle-handle bx",
                 rightPaneVisible ? "bx-chevron-right" : "bx-chevron-left",
                 rightPaneVisible ? "right-pane-toggle-handle-action-collapse" : "right-pane-toggle-handle-action-expand"
             )}

@@ -1,29 +1,19 @@
-/* Minimal functional styling only — refine visuals later. */
-
-/* Always reserve the 12px handle strip on the left of the pane, even when it is
-   collapsed to no content, and give the handle a positioned ancestor to anchor to. */
-body.experimental-feature-new-layout #right-pane {
-    position: relative;
-    min-width: 12px;
-    padding-inline-start: 12px;
-}
-
-/* Doubled class to win specificity over the shared `.icon-action` button rules. */
-body.experimental-feature-new-layout #right-pane .right-pane-toggle-handle.right-pane-toggle-handle {
-    position: absolute;
-    inset-inline-start: 0; /* Inside the pane's left edge so `overflow: auto` does not clip it. */
-    top: 0;
-    width: 12px;
-    height: 100%;
-    z-index: 10;
+/* Minimal functional styling only — refine visuals later.
+   The handle is a flex sibling of #right-pane inside #vertical-main-container,
+   so it reserves its own 12px column and fully owns its background. */
+.right-pane-toggle-handle {
+    /* Inherited from #right-pane-wrapper (RightPanelContainer.css); fallback for safety. */
+    flex: 0 0 var(--right-pane-handle-width, 12px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
-    border-radius: 0;
+    border: 0;
+    background: transparent;
+    font-size: 16px;
     cursor: pointer;
 }
 
-body.experimental-feature-new-layout #right-pane .right-pane-toggle-handle.right-pane-toggle-handle:hover {
+.right-pane-toggle-handle:hover {
     background-color: var(--hover-item-background-color);
 }

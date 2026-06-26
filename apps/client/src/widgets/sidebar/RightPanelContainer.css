@@ -1,4 +1,19 @@
+/* Split target: lays out the toggle handle (fixed) next to the panel (filling).
+   When the pane is collapsed, Split sets no width, so the wrapper must not shrink past
+   the handle. `flex-shrink: 0` + a `min-width` of the handle width keep the handle strip
+   visible against #center-pane's growth. The handle (RightPaneToggleHandle.css) inherits
+   `--right-pane-handle-width`; keep `minSize` in RightPanelContainer.tsx in sync too. */
+body.experimental-feature-new-layout #right-pane-wrapper {
+    --right-pane-handle-width: 12px;
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    min-width: var(--right-pane-handle-width);
+}
+
 body.experimental-feature-new-layout #right-pane {
+    flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
 
