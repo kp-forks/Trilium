@@ -5,8 +5,8 @@
     justify-content: center;
     width: 100%;
     min-height: 8em;
-    padding: 1.5em;
-    border: 2px dashed var(--main-border-color);
+    padding: 0.5em 1.5em;
+    border: 1px solid var(--main-border-color);
     border-radius: 8px;
     background: var(--accented-background-color);
     cursor: pointer;
