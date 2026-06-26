@@ -201,6 +201,7 @@
   },
   "import": {
     "importIntoNote": "Import into note",
+    "import_from": "Import from",
     "cardName": "Files & other formats",
     "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, images and more",
     "chooseImportFile": "Choose import file",

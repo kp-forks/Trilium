@@ -6,6 +6,7 @@ import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
 import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
+import { Card, CardSection } from "../../react/Card.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
 import iconUrl from "./icons/onenote.svg?url";
@@ -169,46 +170,50 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     }, [phase, debug, importDisabled, setFooter]);
 
     if (phase === "checking") {
-        return <div className="onenote-panel"><LoadingSpinner /></div>;
+        return <Card><CardSection className="onenote-panel"><LoadingSpinner /></CardSection></Card>;
     }
 
     if (phase === "disconnected" || phase === "connecting") {
         return (
-            <div className="onenote-panel">
-                <p>{t("onenote_import.connect_description")}</p>
-                {phase === "connecting"
-                    ? <p className="onenote-status"><LoadingSpinner /> {t("onenote_import.connecting")}</p>
-                    : <Button text={t("onenote_import.connect")} kind="primary" icon="bxl-microsoft" onClick={connect} />}
-            </div>
+            <Card>
+                <CardSection className="onenote-panel">
+                    <p>{t("onenote_import.connect_description")}</p>
+                    {phase === "connecting"
+                        ? <p className="onenote-status"><LoadingSpinner /> {t("onenote_import.connecting")}</p>
+                        : <Button text={t("onenote_import.connect")} kind="primary" icon="bxl-microsoft" onClick={connect} />}
+                </CardSection>
+            </Card>
         );
     }
 
     return (
-        <div className="onenote-panel">
-            <div className="onenote-account">
-                <span>{t("onenote_import.connected_as", { name: account?.name ?? "" })}</span>
-                <Button text={t("onenote_import.disconnect")} kind="lowProfile" size="small" onClick={disconnect} />
-            </div>
+        <Card>
+            <CardSection className="onenote-panel">
+                <div className="onenote-account">
+                    <span>{t("onenote_import.connected_as", { name: account?.name ?? "" })}</span>
+                    <Button text={t("onenote_import.disconnect")} kind="lowProfile" size="small" onClick={disconnect} />
+                </div>
 
-            {notebooks.length === 0
-                ? <p>{t("onenote_import.no_notebooks")}</p>
-                : (
-                    <>
-                        <p>{t("onenote_import.select_sections")}</p>
-                        <div className="onenote-notebooks">
-                            {notebooks.map((notebook) => (
-                                <div className="onenote-notebook" key={notebook.id}>
-                                    <strong>{notebook.title}</strong>
-                                    <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
-                                </div>
-                            ))}
-                        </div>
-                        <ExtendedAdmonition type="note" icon="bx bx-info-circle" title={t("onenote_import.order_hint_title")}>
-                            {t("onenote_import.order_hint")}
-                        </ExtendedAdmonition>
-                    </>
-                )}
-        </div>
+                {notebooks.length === 0
+                    ? <p>{t("onenote_import.no_notebooks")}</p>
+                    : (
+                        <>
+                            <p>{t("onenote_import.select_sections")}</p>
+                            <div className="onenote-notebooks">
+                                {notebooks.map((notebook) => (
+                                    <div className="onenote-notebook" key={notebook.id}>
+                                        <strong>{notebook.title}</strong>
+                                        <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
+                                    </div>
+                                ))}
+                            </div>
+                            <ExtendedAdmonition type="note" icon="bx bx-info-circle" title={t("onenote_import.order_hint_title")}>
+                                {t("onenote_import.order_hint")}
+                            </ExtendedAdmonition>
+                        </>
+                    )}
+            </CardSection>
+        </Card>
     );
 }
 

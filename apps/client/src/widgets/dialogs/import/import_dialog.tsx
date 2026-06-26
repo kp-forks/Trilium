@@ -4,6 +4,7 @@ import type { ComponentChildren } from "preact";
 import { useCallback, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
+import { Card, CardSection } from "../../react/Card.js";
 import { useTriliumEvent } from "../../react/hooks.js";
 import Modal from "../../react/Modal.js";
 import { importProviders } from "./index.js";
@@ -45,25 +46,27 @@ export default function ImportDialog() {
             onHidden={() => setShown(false)}
             show={shown}
         >
-            <div className="import-provider-picker">
-                {serviceProviders.map((p) => (
-                    <ImportProviderCard key={p.id} provider={p} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
-                ))}
-            </div>
+            <Card heading={t("import.import_from")}>
+                <CardSection>
+                    <div className="import-provider-picker">
+                        {serviceProviders.map((p) => (
+                            <ImportProviderCard key={p.id} provider={p} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
+                        ))}
+                    </div>
 
-            {localProviders.length > 0 && (
-                <div className="import-provider-local">
-                    {localProviders.map((p) => (
-                        <ImportProviderCard key={p.id} provider={p} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
-                    ))}
-                </div>
-            )}
+                    {localProviders.length > 0 && (
+                        <div className="import-provider-local">
+                            {localProviders.map((p) => (
+                                <ImportProviderCard key={p.id} provider={p} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
+                            ))}
+                        </div>
+                    )}
+                </CardSection>
+            </Card>
 
-            <div className="import-provider-panel">
-                {provider && parentNoteId
-                    ? <provider.Panel key={provider.id} parentNoteId={parentNoteId} closeDialog={closeDialog} setFooter={setFooter} />
-                    : <p className="import-provider-hint">{t("import_provider.choose_provider")}</p>}
-            </div>
+            {provider && parentNoteId
+                ? <provider.Panel key={provider.id} parentNoteId={parentNoteId} closeDialog={closeDialog} setFooter={setFooter} />
+                : <p className="import-provider-hint">{t("import_provider.choose_provider")}</p>}
         </Modal>
     );
 }

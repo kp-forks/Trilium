@@ -4,11 +4,11 @@ import { t } from "../../../services/i18n.js";
 import importService, { type UploadFilesOptions } from "../../../services/import.js";
 import tree from "../../../services/tree.js";
 import Button from "../../react/Button.js";
+import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
-import FormCheckbox from "../../react/FormCheckbox.js";
-import FormGroup, { FormMultiGroup } from "../../react/FormGroup.js";
 import { useTriliumOptionBool } from "../../react/hooks.js";
 import RawHtml from "../../react/RawHtml.js";
+import { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
@@ -62,48 +62,50 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
     }, [files, setFooter]);
 
     return (
-        <div className="files-panel">
-            <FormGroup name="files" label={t("import.chooseImportFile")} description={
-                <>
-                    {t("import.importDescription")} <strong>{noteTitle}</strong>.<br />
-                    {t("import.importZipRecommendation")}
-                </>
-            }>
-                <FileDropZone multiple onChange={setFiles} />
-            </FormGroup>
+        <>
+            <Card heading={t("import.chooseImportFile")}>
+                <CardSection>
+                    <p className="import-files-description">
+                        {t("import.importDescription")} <strong>{noteTitle}</strong>.<br />
+                        {t("import.importZipRecommendation")}
+                    </p>
+                    <FileDropZone multiple onChange={setFiles} />
+                </CardSection>
+            </Card>
 
-            <FormMultiGroup label={t("import.options")}>
-                <FormCheckbox
-                    name="safe-import" hint={t("import.safeImportTooltip")} label={t("import.safeImport")}
-                    currentValue={safeImport} onChange={setSafeImport}
-                />
-                <FormCheckbox
-                    name="explode-archives" hint={t("import.explodeArchivesTooltip")} label={<RawHtml html={t("import.explodeArchives")} />}
-                    currentValue={explodeArchives} onChange={setExplodeArchives}
-                />
-                <FormCheckbox
-                    name="shrink-images" hint={t("import.shrinkImagesTooltip")} label={t("import.shrinkImages")}
-                    currentValue={compressImages && shrinkImages} onChange={setShrinkImages}
-                    disabled={!compressImages}
-                />
-                <FormCheckbox
-                    name="text-imported-as-text" label={t("import.textImportedAsText")}
-                    currentValue={textImportedAsText} onChange={setTextImportedAsText}
-                />
-                <FormCheckbox
-                    name="code-imported-as-code" label={<RawHtml html={t("import.codeImportedAsCode")} />}
-                    currentValue={codeImportedAsCode} onChange={setCodeImportedAsCode}
-                />
-                <FormCheckbox
-                    name="spreadsheet-imported-as-spreadsheet" label={t("import.spreadsheetImportedAsSpreadsheet")}
-                    currentValue={spreadsheetImportedAsSpreadsheet} onChange={setSpreadsheetImportedAsSpreadsheet}
-                />
-                <FormCheckbox
-                    name="replace-underscores-with-spaces" label={t("import.replaceUnderscoresWithSpaces")}
-                    currentValue={replaceUnderscoresWithSpaces} onChange={setReplaceUnderscoresWithSpaces}
-                />
-            </FormMultiGroup>
-        </div>
+            <Card heading={t("import.options")}>
+                <CardSection>
+                    <OptionsRowWithToggle
+                        name="safe-import" label={t("import.safeImport")} description={<RawHtml html={t("import.safeImportTooltip")} />}
+                        currentValue={safeImport} onChange={setSafeImport}
+                    />
+                    <OptionsRowWithToggle
+                        name="explode-archives" label={<RawHtml html={t("import.explodeArchives")} />} description={<RawHtml html={t("import.explodeArchivesTooltip")} />}
+                        currentValue={explodeArchives} onChange={setExplodeArchives}
+                    />
+                    <OptionsRowWithToggle
+                        name="shrink-images" label={t("import.shrinkImages")} description={<RawHtml html={t("import.shrinkImagesTooltip")} />}
+                        currentValue={compressImages && shrinkImages} onChange={setShrinkImages} disabled={!compressImages}
+                    />
+                    <OptionsRowWithToggle
+                        name="text-imported-as-text" label={t("import.textImportedAsText")}
+                        currentValue={textImportedAsText} onChange={setTextImportedAsText}
+                    />
+                    <OptionsRowWithToggle
+                        name="code-imported-as-code" label={<RawHtml html={t("import.codeImportedAsCode")} />}
+                        currentValue={codeImportedAsCode} onChange={setCodeImportedAsCode}
+                    />
+                    <OptionsRowWithToggle
+                        name="spreadsheet-imported-as-spreadsheet" label={t("import.spreadsheetImportedAsSpreadsheet")}
+                        currentValue={spreadsheetImportedAsSpreadsheet} onChange={setSpreadsheetImportedAsSpreadsheet}
+                    />
+                    <OptionsRowWithToggle
+                        name="replace-underscores-with-spaces" label={t("import.replaceUnderscoresWithSpaces")}
+                        currentValue={replaceUnderscoresWithSpaces} onChange={setReplaceUnderscoresWithSpaces}
+                    />
+                </CardSection>
+            </Card>
+        </>
     );
 }
 

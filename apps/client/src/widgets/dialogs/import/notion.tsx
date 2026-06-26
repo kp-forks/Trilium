@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
+import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
-import FormGroup from "../../react/FormGroup.js";
 import iconUrl from "./icons/notion.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
@@ -45,12 +45,12 @@ function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPan
     }, [file, setFooter]);
 
     return (
-        <div className="notion-panel">
-            <p>{t("notion_import.description_long")}</p>
-            <FormGroup name="notion-file" label={t("notion_import.choose_file")}>
+        <Card heading={t("notion_import.choose_file")}>
+            <CardSection>
+                <p className="import-files-description">{t("notion_import.description_long")}</p>
                 <FileDropZone onChange={onChange} />
-            </FormGroup>
-        </div>
+            </CardSection>
+        </Card>
     );
 }
 

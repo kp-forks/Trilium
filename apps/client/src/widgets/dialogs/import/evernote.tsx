@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
+import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
-import FormGroup from "../../react/FormGroup.js";
 import iconUrl from "./icons/evernote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
@@ -46,12 +46,12 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
     }, [files.length, setFooter]);
 
     return (
-        <div className="evernote-panel">
-            <p>{t("evernote_import.description_long")}</p>
-            <FormGroup name="evernote-file" label={t("evernote_import.choose_file")}>
+        <Card heading={t("evernote_import.choose_file")}>
+            <CardSection>
+                <p className="import-files-description">{t("evernote_import.description_long")}</p>
                 <FileDropZone multiple onChange={onChange} />
-            </FormGroup>
-        </div>
+            </CardSection>
+        </Card>
     );
 }
 
