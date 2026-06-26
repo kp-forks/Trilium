@@ -24,7 +24,7 @@ async function createZipBuffer(files: Record<string, string | Buffer>): Promise<
 }
 
 /** Runs the Anytype importer over `files` and returns the import root note. */
-async function importAnytype(files: Record<string, string | Buffer>): Promise<BNote> {
+async function importAnytype(files: Record<string, string | Buffer>, fileName?: string): Promise<BNote> {
     const buffer = await createZipBuffer(files);
     const taskContext = TaskContext.getInstance("anytype-integration", "importNotes", { safeImport: true });
 
@@ -32,7 +32,7 @@ async function importAnytype(files: Record<string, string | Buffer>): Promise<BN
         void getContext().init(async () => {
             try {
                 const root = becca.getNoteOrThrow("root");
-                resolve(await anytypeImporter.importAnytype(taskContext, new Uint8Array(buffer), root));
+                resolve(await anytypeImporter.importAnytype(taskContext, new Uint8Array(buffer), root, fileName));
             } catch (e) {
                 reject(e);
             }
@@ -618,6 +618,45 @@ describe("Anytype importer — integration", () => {
         expect(content).toContain(`class="reference-link"`);
         expect(content).toContain(`href="#root/${row.noteId}?viewMode=attachments&attachmentId=${attachments[0].attachmentId}"`);
         expect(content).toContain(">log.txt</a>");
+    });
+
+    it("imports a collection-scoped export (no wrapper) as a named table whose columns are synthesized from members", async () => {
+        // Exporting a single collection omits the collection object itself, so its members all carry the same
+        // absent createdInContext — the signal to recover the collection (name from the file, columns from members).
+        const ctx = "bafyreicollectioncontext";
+        const urlKey = "6a3e335dcafa6953a4661c74";
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": memberObject("m1", { createdInContext: ctx, [urlKey]: "https://triliumnotes.org" }),
+                "objects/m2.pb.json": memberObject("m2", { createdInContext: ctx }),
+                "relations/url.pb.json": relationObject(urlKey, "URL", 7)
+            },
+            "My custom collection.zip"
+        );
+
+        // The root *is* the collection: named from the zip, a table whose column is synthesized from the member.
+        expect(importRoot.title).toBe("My custom collection");
+        expect(importRoot.type).toBe("book");
+        expect(importRoot.getOwnedLabelValue("viewType")).toBe("table");
+        expect(importRoot.getOwnedLabelValue("label:url")).toBe("promoted,single,url,alias=URL");
+
+        // The members are its rows, carrying their own values.
+        const rows = importRoot.getChildNotes();
+        expect(rows).toHaveLength(2);
+        expect(rows.find((n) => n.getOwnedLabelValue("url"))?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
+    });
+
+    it("keeps the default 'Anytype import' text root for a regular multi-page export", async () => {
+        const importRoot = await importAnytype(
+            {
+                "objects/p1.pb.json": pageObject("p1", "Page one", ["body"]),
+                "objects/p2.pb.json": pageObject("p2", "Page two", ["body"])
+            },
+            "Some space export.zip"
+        );
+
+        expect(importRoot.title).toBe("Anytype import");
+        expect(importRoot.type).toBe("text");
     });
 
     it("produces an empty root when the export has no pages", async () => {

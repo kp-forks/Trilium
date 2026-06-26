@@ -30,12 +30,13 @@ import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
 import date_utils from "../../utils/date.js";
 import { newEntityId } from "../../utils/index.js";
+import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
-import { applyFiles, applyProperties, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties } from "./collection.js";
+import { applyFiles, applyProperties, applyTableView, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties, synthesizeColumns } from "./collection.js";
 import { extractContent } from "./content.js";
-import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
+import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedColumn, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
 
-async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
+async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
     const { objects, relations, options, fileObjects, files } = await parseZip(fileBuffer);
     const relationMap = buildRelationMap(relations);
     const optionMap = buildOptionMap(options);
@@ -43,6 +44,14 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     // Import basic pages and collections (a collection carries the collection layout, so isPage rejects it);
     // query sets and system objects stay out.
     const pageSnapshots = objects.filter((snapshot) => isPage(snapshot) || isCollectionObject(snapshot));
+
+    // A collection-scoped export omits the collection itself (Anytype doesn't export the wrapper), so its
+    // name and column schema are lost. Recover them: name the import root from the zip and make it a `table`
+    // collection whose columns are synthesized from the properties its member pages carry.
+    const objectIds = new Set(objects.map((snapshot) => snapshot.snapshot?.data?.details?.id).filter((id): id is string => !!id));
+    const collectionExport = !!fileName && isSingleCollectionExport(pageSnapshots, objectIds);
+    const rootTitle = collectionExport && fileName ? collectionTitleFromFileName(fileName) : undefined;
+    const rootColumns = collectionExport ? synthesizeColumns(pageSnapshots.map((snapshot) => snapshot.snapshot?.data?.details ?? {}), relationMap) : undefined;
 
     // Assign each page its Trilium note id up front so cross-page links resolve even when they point at a
     // page that hasn't been created yet (links routinely point forward in the export). The note is later
@@ -60,7 +69,7 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap, optionMap));
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, targets, fileObjectMap, files, taskContext);
+    return createNotes(importRootNote, pages, targets, fileObjectMap, files, rootTitle, rootColumns, taskContext);
 }
 
 /**
@@ -164,6 +173,30 @@ export function isCollectionObject(snapshot: AnytypeSnapshot): boolean {
 }
 
 /**
+ * Whether the export is a single collection's contents. Exporting just a collection (rather than the whole
+ * space) omits the collection object itself, so its name is lost and only its member objects ship — each
+ * created inside the same (now absent) collection. So: every imported page shares one `createdInContext` id
+ * that isn't itself present in the export. A regular export fails this (pages have varied or no context, and
+ * a full export keeps the collection wrapper). When true, the import root is named from the zip instead.
+ */
+export function isSingleCollectionExport(pageSnapshots: AnytypeSnapshot[], objectIds: Set<string>): boolean {
+    if (pageSnapshots.length === 0) {
+        return false;
+    }
+    const context = pageSnapshots[0].snapshot?.data?.details?.createdInContext;
+    if (!context || objectIds.has(context)) {
+        return false;
+    }
+    return pageSnapshots.every((snapshot) => snapshot.snapshot?.data?.details?.createdInContext === context);
+}
+
+/** The import-root title for a collection-scoped export: the export file's base name without its extension. */
+export function collectionTitleFromFileName(fileName: string): string {
+    const base = basename(fileName.replace(/\\/g, "/"));
+    return base.replace(/\.[^.]+$/, "").trim() || base;
+}
+
+/**
  * Reduces a page snapshot to the title, body HTML, outgoing link targets, property values and (for a
  * collection) its table schema and membership. `resolveLink` maps a linked object's id to the Trilium note
  * it became; without one (parsing a page in isolation) link blocks are dropped. `relations` names and types
@@ -216,11 +249,19 @@ export function anytypeDate(seconds: number | undefined): string | undefined {
  * the body. Once every page exists, each page's outgoing links are recorded as `internalLink` relations,
  * which Trilium uses for backlink detection ("what links here").
  */
-function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, rootTitle: string | undefined, rootColumns: ParsedColumn[] | undefined, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
 
-    const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("anytype_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
+    // A collection-scoped export's root *is* the collection: a `table`-view book carrying the synthesized
+    // columns, with the member pages as its rows. A normal export's root is a plain container.
+    const title = rootTitle ?? t("anytype_import.root-title");
+    const rootNote = rootColumns
+        ? noteService.createNewNote({ parentNoteId: importRootNote.noteId, title, content: "", type: "book", mime: "", isProtected }).note
+        : noteService.createNewNote({ parentNoteId: importRootNote.noteId, title, content: "", type: "text", mime: "text/html", isProtected }).note;
+    if (rootColumns) {
+        applyTableView(rootNote, rootColumns);
+    }
     rootNote.addLabel("iconClass", "bx bx-import");
 
     // Each member's primary parent is the first collection that lists it (a collection itself stays at the

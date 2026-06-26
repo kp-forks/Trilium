@@ -69,7 +69,7 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
         } else if (format === "anytype" && typeof file.buffer !== "string") {
             // An Anytype JSON export is likewise a plain `.zip`; the Anytype import dialog tags the upload so
             // it routes to the Anytype importer rather than the generic zip importer.
-            note = await anytypeImportService.importAnytype(taskContext, file.buffer, parentNote);
+            note = await anytypeImportService.importAnytype(taskContext, file.buffer, parentNote, file.originalname);
         } else if (extension === ".zip" && options.explodeArchives && typeof file.buffer !== "string") {
             note = await zipImportService.importZip(taskContext, file.buffer, parentNote);
         } else if (extension === ".opml" && options.explodeArchives) {

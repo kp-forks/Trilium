@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { anytypeDate, isPage, parseObject } from "./importer.js";
+import { anytypeDate, collectionTitleFromFileName, isPage, isSingleCollectionExport, parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot } from "./model.js";
 
 /** Wraps blocks + details into the export's snapshot shape. Details accepts arbitrary relation-key entries
@@ -135,5 +135,32 @@ describe("dates", () => {
         const result = parseObject(page("Undated", [textBlock("b1", "body")]));
         expect(result.dateCreated).toBeUndefined();
         expect(result.dateModified).toBeUndefined();
+    });
+});
+
+describe("single-collection export", () => {
+    /** A page created inside `ctx` (the collection's id). */
+    const member = (id: string, ctx?: string) => snapshot([{ id, childrenIds: [] }], { id, name: "", createdInContext: ctx });
+
+    it("detects an export whose pages all share one createdInContext that is itself absent", () => {
+        // A collection-scoped export ships only the members; the collection wrapper (their shared context) is gone.
+        const pages = [member("m1", "coll"), member("m2", "coll"), member("m3", "coll")];
+        expect(isSingleCollectionExport(pages, new Set(["m1", "m2", "m3"]))).toBe(true);
+    });
+
+    it("rejects when the shared context is present (a full export keeps the collection wrapper)", () => {
+        const pages = [member("m1", "coll"), member("m2", "coll")];
+        expect(isSingleCollectionExport(pages, new Set(["m1", "m2", "coll"]))).toBe(false);
+    });
+
+    it("rejects when the pages don't all share one context, when a page has none, and when there are no pages", () => {
+        expect(isSingleCollectionExport([member("m1", "coll"), member("m2", "other")], new Set(["m1", "m2"]))).toBe(false);
+        expect(isSingleCollectionExport([member("m1", "coll"), member("m2")], new Set(["m1", "m2"]))).toBe(false);
+        expect(isSingleCollectionExport([], new Set())).toBe(false);
+    });
+
+    it("derives the root title from the export file name, dropping the extension", () => {
+        expect(collectionTitleFromFileName("My custom collection.zip")).toBe("My custom collection");
+        expect(collectionTitleFromFileName("noext")).toBe("noext");
     });
 });

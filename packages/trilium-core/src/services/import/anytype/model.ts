@@ -86,6 +86,10 @@ export interface AnytypeDetails {
     lastModifiedDate?: number;
     /** Outgoing object links; for a collection, this is its membership. */
     links?: string[];
+    /** The id of the object (e.g. a collection) this object was created inside. A collection-scoped export
+     * omits the collection itself, so its members all point at the same absent id — the signal that the
+     * export is a single collection's contents. */
+    createdInContext?: string;
     /** On a relation-definition object: the key objects carry the value under, the format code, and (for a
      * date format) whether the value includes a time component. */
     relationKey?: string;

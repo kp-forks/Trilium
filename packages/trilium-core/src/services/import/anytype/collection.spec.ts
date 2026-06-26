@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { synthesizeColumns } from "./collection.js";
 import { isCollectionObject, isPage, parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, RelationInfo } from "./model.js";
 
@@ -209,6 +210,18 @@ describe("collection properties", () => {
 
         it("leaves collection undefined for a regular (non-dataview) page", () => {
             expect(parseObject(page("Plain", [textBlock("b1", "body")]), undefined, rels).collection).toBeUndefined();
+        });
+    });
+
+    describe("synthesizeColumns", () => {
+        it("builds the union of the members' supported custom-relation columns, de-duplicated, in first-seen order", () => {
+            // A collection-scoped export has no view, so the columns come from the properties the members carry.
+            const m1 = { id: "m1", "6a3e335dcafa6953a4661c74": "https://x" }; // URL
+            const m2 = { id: "m2", "6a3e336dcafa6953a4661c75": "a@b.com", "6a3e335dcafa6953a4661c74": "https://y" }; // Email + URL (already seen)
+            expect(synthesizeColumns([m1, m2], rels)).toEqual([
+                { name: "url", labelType: "url", alias: "URL", multiplicity: "single" },
+                { name: "email", labelType: "url", alias: "Email", multiplicity: "single" }
+            ]);
         });
     });
 });

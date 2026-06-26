@@ -175,11 +175,25 @@ export function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails,
         return undefined;
     }
 
+    const visibleKeys = (dataview.views?.[0]?.relations ?? []).filter((relation) => relation.isVisible).map((relation) => relation.key);
+    return { memberIds: details.links ?? [], columns: columnsFromKeys(visibleKeys, relations) };
+}
+
+/**
+ * Synthesizes a table schema for a collection-scoped export, whose collection wrapper (and therefore its
+ * view) wasn't exported — so there's no column list. The columns are the union of the supported custom
+ * relations actually carried by the member objects, in first-seen order, de-duplicated by attribute name.
+ */
+export function synthesizeColumns(memberDetails: AnytypeDetails[], relations: Map<string, RelationInfo>): ParsedColumn[] {
+    return columnsFromKeys(memberDetails.flatMap((details) => Object.keys(details)), relations);
+}
+
+/** Maps a list of relation keys to their (supported, custom) table columns, in order, de-duplicated by name. */
+function columnsFromKeys(keys: (string | undefined)[], relations: Map<string, RelationInfo>): ParsedColumn[] {
     const columns: ParsedColumn[] = [];
     const seen = new Set<string>();
-    for (const relation of dataview.views?.[0]?.relations ?? []) {
-        const key = relation.key;
-        if (!relation.isVisible || !key || !isCustomRelationKey(key)) {
+    for (const key of keys) {
+        if (!key || !isCustomRelationKey(key)) {
             continue;
         }
         const info = relations.get(key);
@@ -193,8 +207,7 @@ export function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails,
             columns.push({ name, labelType: mapping.labelType, alias: info.name, multiplicity: mapping.multiplicity });
         }
     }
-
-    return { memberIds: details.links ?? [], columns };
+    return columns;
 }
 
 /**
@@ -243,16 +256,25 @@ function formatPropertyValue(raw: unknown, labelType: PropertyLabelType, scheme:
  */
 export function createCollectionNote(parentNoteId: string, page: ParsedObject, collection: ParsedCollection, noteId: string | undefined, isProtected: boolean | undefined): BNote {
     const { note } = noteService.createNewNote({ noteId, parentNoteId, title: page.title, content: "", type: "book", mime: "", isProtected, utcDateCreated: page.dateCreated });
+    applyTableView(note, collection.columns);
+    return note;
+}
+
+/**
+ * Turns `note` into a `table`-view collection whose columns are the given properties, each an *inheritable*
+ * promoted-attribute definition (so the table renders the column and every child row inherits the field,
+ * showing its own value or blank). Used for both an imported collection and a collection-scoped export's root.
+ */
+export function applyTableView(note: BNote, columns: ParsedColumn[]) {
     note.addLabel("viewType", "table");
 
-    // Increasing positions keep the columns in their Anytype view order (the promoted-attributes UI sorts by
+    // Increasing positions keep the columns in their stored order (the promoted-attributes UI sorts by
     // position, and equal positions aren't ordered deterministically).
     let position = 0;
-    for (const column of collection.columns) {
+    for (const column of columns) {
         position += 10;
         note.addAttribute("label", `label:${column.name}`, buildPromotedDefinition({ alias: column.alias, labelType: column.labelType, multiplicity: column.multiplicity }), true, position);
     }
-    return note;
 }
 
 /** Applies a page's custom property values to its note as labels. */
