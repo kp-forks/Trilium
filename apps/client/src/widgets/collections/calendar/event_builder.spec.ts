@@ -113,6 +113,19 @@ describe("Building events", () => {
         expect(events[1]).toMatchObject({ title: "Note 2", start: "2025-05-07" });
     });
 
+    it("supports events without an end time", async () => {
+        const noteIds = buildNotes([
+            { title: "Note 1", "#startDate": "2025-05-05", "#endDate": "2025-05-05", "#startTime": "13:30" },
+        ]);
+        const events = await buildEvents(noteIds);
+
+        expect(events).toHaveLength(1);
+        expect(events[0]).toMatchObject({
+            title: "Note 1",
+            start: "2025-05-05T13:30:00",
+            end: "2025-05-05"
+        });
+    });
 });
 
 describe("Promoted attributes", () => {
