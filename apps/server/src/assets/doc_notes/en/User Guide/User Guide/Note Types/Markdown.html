@@ -32,68 +32,58 @@
 <p>The following features are supported by Trilium's Markdown format and
   will show up in the preview pane:</p>
 <ul>
-  <li>
-    <p>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).</p>
-  </li>
-  <li>
-    <p>Basic HTML is also supported (e.g. collapsible blocks using <code spellcheck="false">&lt;details&gt;</code> and
-      <code
-      spellcheck="false">&lt;summary&gt;</code>).</p>
-  </li>
-  <li>
-    <p>Code blocks with syntax highlight.</p>
-    <ul>
-      <li>The language must be specified for syntax highlight to be applied (e.g.
+  <li>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).</li>
+  <li
+ >Basic HTML is also supported (e.g. collapsible blocks using <code spellcheck="false">&lt;details&gt;</code> and
+    <code
+    spellcheck="false">&lt;summary&gt;</code>).</li>
+      <li>Code blocks with syntax highlight.
+        <ul>
+          <li>The language must be specified for syntax highlight to be applied (e.g.
+            <code
+            spellcheck="false">```js</code>).</li>
+          <li>Code blocks will respect the text wrapping from the&nbsp;<a class="reference-link"
+            href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;section in&nbsp;<a class="reference-link"
+            href="#root/_help_4TIF1oA4VQRO">Options</a>.</li>
+        </ul>
+      </li>
+      <li><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
+      </li>
+      <li><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(both
+        inline and block)</li>
+      <li><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
         <code
-        spellcheck="false">```js</code>).</li>
-      <li>Code blocks will respect the text wrapping from the&nbsp;<a class="reference-link"
-        href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;section in&nbsp;<a class="reference-link"
-        href="#root/_help_4TIF1oA4VQRO">Options</a>.</li>
-    </ul>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
-    </p>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(both
-      inline and block)</p>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
-      <code
-      spellcheck="false">```mermaid</code>
-    </p>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
-      built-in Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-html">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
+        spellcheck="false">```mermaid</code>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
+          built-in Markdown syntax, but HTML syntax works just fine):</p><pre><code class="language-text-html">&lt;section class="include-note" data-note-id="vJDjQm0VK8Na" data-box-size="expandable"&gt;
     &amp;nbsp;
 &lt;/section&gt;</code></pre>
-    <ul>
-      <li>These can also be quickly created via the <code spellcheck="false">/include</code> command
-        or via a dedicated keyboard shortcut (not assigned by default).</li>
-    </ul>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
-      its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
-      <a
-      class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_AgjCISero73a">Footnotes</a>&nbsp;are
-      also supported via the corresponding Markdown syntax:</p><pre><code class="language-text-x-trilium-auto">This is [^1], while this is [^2].
+        <ul>
+          <li>These can also be quickly created via the <code spellcheck="false">/include</code> command
+            or via a dedicated keyboard shortcut (not assigned by default).</li>
+        </ul>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;via
+          its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
+          <a
+          class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_AgjCISero73a">Footnotes</a>&nbsp;are
+          also supported via the corresponding Markdown syntax:</p><pre><code class="language-text-x-trilium-auto">This is [^1], while this is [^2].
 
 [^1]: the first footnote
 [^2]: the second footnote</code></pre>
-    <ul>
-      <li>These can also be quickly created using the <code spellcheck="false">/footnote</code> command.</li>
-    </ul>
-  </li>
-  <li>
-    <p>Page breaks for&nbsp;<a class="reference-link" href="#root/jdjRLhLV3TtI/yeqU0zo0ZQ83/_help_W0msUwLxm40d">Printing and exporting to PDF</a>:</p><pre><code class="language-text-x-trilium-auto">&lt;div class="page-break"&gt;&lt;/div&gt;</code></pre>
-  </li>
+        <ul>
+          <li>These can also be quickly created using the <code spellcheck="false">/footnote</code> command.</li>
+        </ul>
+      </li>
+      <li>
+        <p>Page breaks for&nbsp;<a class="reference-link" href="#root/jdjRLhLV3TtI/yeqU0zo0ZQ83/_help_W0msUwLxm40d">Printing and exporting to PDF</a>:</p><pre><code class="language-text-x-trilium-auto">&lt;div class="page-break"&gt;&lt;/div&gt;</code></pre>
+      </li>
 </ul>
 <h3>Links</h3>
 <p>Multiple types of links are supported:</p>
@@ -143,18 +133,55 @@
   <li>Drag &amp; drop directly into the editor area.</li>
   <li>Pasting an image from clipboard.</li>
   <li>Pasting a reference to another <a href="#root/_help_0vhv7lsOLy82">attachment</a> (e.g. <em>Copy reference to clipboard</em> button).</li>
-  <li>Use the <code spellcheck="false">/image</code> slash command.</li>
+  <li
+ >Use the <code spellcheck="false">/image</code> slash command.</li>
 </ul>
 <p>An image reference to an attachment looks like this:</p><pre><code class="language-text-x-trilium-auto">![Name.jpeg](api/attachments/z50RceuHXe9J/image/image)</code></pre>
-<h3>Slash commands</h3>
+<h3>Auto-completion</h3>
+<h4>Slash commands</h4>
 <p>Just like&nbsp;<a class="reference-link" href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;notes,
   Markdown notes support a selection of slash commands:</p>
 <ul>
-  <li>Creating <a href="#root/_help_NwBbFdNZ9h7O">admonitions</a> (e.g. <code spellcheck="false">/tip</code>)</li>
-  <li>Uploading images (<code spellcheck="false">/image</code>).</li>
   <li>Inserting the current date &amp; time (<code spellcheck="false">/date</code>).</li>
+  <li
+ ><a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_nBAXQFj20hS1">Including</a> another
+    note (<code spellcheck="false">/include</code>).</li>
+    <li>Uploading and inserting an image (<code spellcheck="false">/image</code>).</li>
+    <li
+   >Inserting a note link (<code spellcheck="false">/link</code>).</li>
+      <li
+     >Inserting a math equation block (<code spellcheck="false">/math</code>).</li>
+        <li
+       >Inserting a <a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_AgjCISero73a">footnote</a> (
+          <code
+          spellcheck="false">/footnote</code>).</li>
+            <li>Inserting a <a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_s1aBHPd79XYj">Mermaid</a> diagram
+              (<code spellcheck="false">/mermaid</code>), with one variant per sample
+              template (e.g. <code spellcheck="false">/mermaid:flowchart</code>).</li>
+            <li
+           >Inserting a collapsible block (<code spellcheck="false">/collapsible</code>).</li>
+              <li
+             >Inserting a page break for printing (<code spellcheck="false">/page-break</code>).</li>
+                <li
+               >Inserting a table (<code spellcheck="false">/table</code>).</li>
+                  <li>Creating admonitions (e.g. <code spellcheck="false">/tip</code>, <code spellcheck="false">/note</code>,
+                    <code
+                    spellcheck="false">/important</code>, <code spellcheck="false">/caution</code>, <code spellcheck="false">/warning</code>).</li>
+                  <li
+                 >Inserting task items (<code spellcheck="false">/todo:&lt;state&gt;</code>,
+                    e.g. <code spellcheck="false">/todo:done</code>), one per configured task
+                    state.</li>
+                    <li>Inserting code snippets (<code spellcheck="false">/snippet:&lt;name&gt;</code>)
+                      from your Markdown/plain-text snippet notes.</li>
 </ul>
-<p>Note that slash commands only work outside of inline&nbsp;</p>
+<p>Note that slash commands only work outside of code blocks and inline code.</p>
+<h4>Code block language auto-completion</h4>
+<p>Starting with v0.104.0, typing ``` to insert a code block will automatically
+  open a list of suggested language types which have syntax highlighting.</p>
+<p>The list of languages matches the one for&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_6f9hih2hXXZk">Code</a>&nbsp;notes
+  set in&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_4TIF1oA4VQRO">Options</a>,
+  it's not the full list of languages supported by Trilium.</p>
 <h3>Other features</h3>
 <ul>
   <li>The&nbsp;<a class="reference-link" href="#root/_help_BFvAtE74rbP6">Table of contents</a>&nbsp;will
@@ -177,7 +204,8 @@
 <ol>
   <li>Create a new note (e.g. in the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>)
     and select the type <em>Markdown</em>, just like all the other note types.</li>
-  <li>Create a note of type&nbsp;<a class="reference-link" href="#root/_help_6f9hih2hXXZk">Code</a>&nbsp;and
+  <li
+ >Create a note of type&nbsp;<a class="reference-link" href="#root/_help_6f9hih2hXXZk">Code</a>&nbsp;and
     select as the language either <em>Markdown</em> or <em>GitHub-Flavored Markdown</em>.
     This maintains compatibility with your existing notes prior to the introduction
     of this feature.</li>
