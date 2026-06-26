@@ -9,6 +9,9 @@ import { t } from "../../services/i18n";
 import options from "../../services/options";
 import { useStaticTooltip, useTriliumEvent } from "../react/hooks";
 
+// Gap (px) between the handle and its tooltip, so the tooltip can't overlap the handle.
+const TOOLTIP_MARGIN_PX = 8;
+
 export default function RightPaneToggleHandle() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     // Pointer's vertical position captured once on hover; null until the mouse enters
@@ -35,13 +38,15 @@ export default function RightPaneToggleHandle() {
     // Anchor the tooltip to the pointer's entry height rather than the centre of the
     // full-height handle, by shifting it along the cross axis. Not tracked: `pointerY`
     // is only updated on mouse enter, and the offset is recomputed from it on show.
+    // The `distance` (second value) keeps the tooltip clear of the handle so it can't
+    // overlap it and cause hover flicker.
     const tooltipConfig = useMemo(() => ({
         title: t("right_pane.toggle"),
         placement: "left" as const,
         offset: () => {
             const rect = buttonRef.current?.getBoundingClientRect();
-            if (!rect || pointerY.current === null) return [ 0, 0 ] as [number, number];
-            return [ pointerY.current - (rect.top + rect.height / 2), 0 ] as [number, number];
+            if (!rect || pointerY.current === null) return [ 0, TOOLTIP_MARGIN_PX ] as [number, number];
+            return [ pointerY.current - (rect.top + rect.height / 2), TOOLTIP_MARGIN_PX ] as [number, number];
         }
     }), []);
     useStaticTooltip(buttonRef, tooltipConfig);
