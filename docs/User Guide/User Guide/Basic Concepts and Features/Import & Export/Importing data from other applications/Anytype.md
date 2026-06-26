@@ -40,6 +40,9 @@ The following features are preserved by Trilium during the import process:
 *   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a> (numbered or bullet)
 *   To-do lists
 *   Toggle sections
+*   <a class="reference-link" href="../../../Note%20Types/Text/Tables.md">Tables</a>
+*   Inline <a class="reference-link" href="../../../Note%20Types/Mermaid%20Diagrams.md">Mermaid Diagrams</a>
+*   <a class="reference-link" href="../../../Note%20Types/Text/Math%20Equations.md">Math Equations</a>
 *   Highlight blocks are imported as block quotes.
 *   <a class="reference-link" href="../../../Note%20Types/Text/Developer-specific%20formatting/Code%20blocks.md">Code blocks</a>, with a best-effort attempt to restore the language.
 *   Links between other imported pages are converted to <a class="reference-link" href="../../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> if they are part of the same import.
