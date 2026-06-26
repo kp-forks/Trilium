@@ -26,9 +26,6 @@ import RightPanelWidget from "./RightPanelWidget";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
-const RIGHT_PANE_MIN_CONTENT_PX = 180;
-// Keep in sync with `--right-pane-handle-width` in RightPanelContainer.css.
-const HANDLE_WIDTH_PX = 12;
 
 interface RightPanelWidgetDefinition {
     el: VNode;
@@ -49,11 +46,9 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
     }, []));
 
     return (
-        <div id="right-pane-wrapper">
-            {/* The wrapper is the split target, so the resize gutter stays on the outer
-                boundary (between #center-pane and the wrapper). The handle is a sibling of
-                #right-pane — it owns its background and isn't clipped by the pane's overflow —
-                and sits just inside the gutter, against the panel. */}
+        <>
+            {/* Absolutely positioned in a reserved gutter on the viewport's right edge, so it
+                stays put regardless of the panel's open/collapsed state (see RightPanelContainer.css). */}
             <RightPaneToggleHandle />
             <div id="right-pane">
                 {rightPaneVisible && (
@@ -72,7 +67,7 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
                     )
                 )}
             </div>
-        </div>
+        </>
     );
 }
 
@@ -155,10 +150,10 @@ function useSplit(visible: boolean) {
 
         // We are intentionally omitting useTriliumOption to avoid re-render due to size change.
         const rightPaneWidth = Math.max(MIN_WIDTH_PERCENT, options.getInt("rightPaneWidth") ?? MIN_WIDTH_PERCENT);
-        const splitInstance = Split(["#center-pane", "#right-pane-wrapper"], {
+        const splitInstance = Split(["#center-pane", "#right-pane"], {
             sizes: [100 - rightPaneWidth, rightPaneWidth],
             gutterSize: DEFAULT_GUTTER_SIZE,
-            minSize: [300, RIGHT_PANE_MIN_CONTENT_PX + HANDLE_WIDTH_PX], // panel content + handle strip.
+            minSize: [300, 180],
             rtl: glob.isRtl,
             onDragEnd: (sizes) => options.save("rightPaneWidth", Math.round(sizes[1]))
         });
