@@ -61,9 +61,10 @@ function pageObject(id: string, name: string, paragraphs: string[], opts: { layo
     });
 }
 
-/** A relation-definition file (relations/<x>.pb.json): names and types a custom property by its key. */
-function relationObject(key: string, name: string, format: number): string {
-    return JSON.stringify({ sbType: "STRelation", snapshot: { data: { details: { id: `rel-${key}`, relationKey: key, name, relationFormat: format } } } });
+/** A relation-definition file (relations/<x>.pb.json): names and types a custom property by its key.
+ * `includeTime` distinguishes a date-time relation from a plain date (both are format 4). */
+function relationObject(key: string, name: string, format: number, includeTime = false): string {
+    return JSON.stringify({ sbType: "STRelation", snapshot: { data: { details: { id: `rel-${key}`, relationKey: key, name, relationFormat: format, relationFormatIncludeTime: includeTime } } } });
 }
 
 /** A collection page: a dataview block flagged `isCollection`, its members in `details.links`, and one
@@ -521,6 +522,39 @@ describe("Anytype importer — integration", () => {
         const byEmail = rows.find((n) => n.getOwnedLabelValue("email"));
         expect(byUrl?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
         expect(byEmail?.getOwnedLabelValue("email")).toBe("mailto:contact@acme.com");
+    });
+
+    it("imports date, date-time and checkbox columns with correctly typed definitions and values", async () => {
+        // Verbatim relation keys and member values from "My custom collection".
+        const dateKey = "6a3e330acafa6953a4661c6b";
+        const dateTimeKey = "6a3e3317cafa6953a4661c6e";
+        const checkboxKey = "6a3e3354cafa6953a4661c73";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Typed", ["m1"], [dateKey, dateTimeKey, checkboxKey]),
+            "objects/m1.pb.json": memberObject("m1", { [dateKey]: 1782461197, [dateTimeKey]: 1782461208, [checkboxKey]: true }),
+            "relations/date.pb.json": relationObject(dateKey, "Date", 4),
+            "relations/datetime.pb.json": relationObject(dateTimeKey, "Date & Time", 4, true),
+            "relations/checkbox.pb.json": relationObject(checkboxKey, "Checkbox", 6)
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        // A plain date, a date-time (includeTime) and a checkbox each map to their Trilium label type.
+        expect(collection.getOwnedLabelValue("label:date")).toBe("promoted,single,date,alias=Date");
+        expect(collection.getOwnedLabelValue("label:dateTime")).toBe("promoted,single,datetime,alias=Date & Time");
+        expect(collection.getOwnedLabelValue("label:checkbox")).toBe("promoted,single,boolean,alias=Checkbox");
+
+        // Dates are formatted in local time (computed here via native Date getters so the assertion holds in
+        // any timezone); the checkbox is a boolean.
+        const local = (epochSeconds: number, withTime = false) => {
+            const d = new Date(epochSeconds * 1000);
+            const pad = (n: number) => String(n).padStart(2, "0");
+            const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+            return withTime ? `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}` : date;
+        };
+        const row = collection.getChildNotes()[0];
+        expect(row.getOwnedLabelValue("date")).toBe(local(1782461197));
+        expect(row.getOwnedLabelValue("dateTime")).toBe(local(1782461208, true));
+        expect(row.getOwnedLabelValue("checkbox")).toBe("true");
     });
 
     it("produces an empty root when the export has no pages", async () => {

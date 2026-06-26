@@ -13,9 +13,18 @@ function snapshot(
     return { sbType, snapshot: { data: { blocks, details } } };
 }
 
-/** Builds a relation map (relationKey → name + format) from `[key, name, format]` triples. */
-function relationMap(entries: [string, string, number][]): Map<string, RelationInfo> {
-    return new Map(entries.map(([key, name, format]) => [key, { name, format }]));
+/** Builds a relation map (relationKey → info) from `[key, name, format, includeTime?]` tuples. */
+function relationMap(entries: [string, string, number, boolean?][]): Map<string, RelationInfo> {
+    return new Map(entries.map(([key, name, format, includeTime]) => [key, { name, format, includeTime }]));
+}
+
+/** The local-time `YYYY-MM-DD[THH:mm]` an epoch (seconds) should format to — computed via native Date
+ * getters so the assertion is timezone-independent (the importer uses dayjs local formatting). */
+function localDate(epochSeconds: number, withTime = false): string {
+    const d = new Date(epochSeconds * 1000);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const date = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    return withTime ? `${date}T${pad(d.getHours())}:${pad(d.getMinutes())}` : date;
 }
 
 /** A text block with the given style (defaults to Paragraph), optional children and optional marks. */
@@ -331,14 +340,17 @@ describe("dates", () => {
 });
 
 describe("collection properties", () => {
-    // The five supported property formats: 0 text, 2 number, 7 url, 8 email, 9 phone.
+    // Supported property formats: 0 text, 2 number, 4 date/date-time, 6 checkbox, 7 url, 8 email, 9 phone.
     const rels = relationMap([
         ["6a3e29d5cafa6953a4661c15", "Text property", 0],
         ["6a3e29e1cafa6953a4661c16", "Number prop", 2],
+        ["6a3e330acafa6953a4661c6b", "Date", 4, false], // date (no time)
+        ["6a3e3317cafa6953a4661c6e", "Date & Time", 4, true], // date-time (includeTime)
+        ["6a3e3354cafa6953a4661c73", "Checkbox", 6],
         ["6a3e335dcafa6953a4661c74", "URL", 7],
         ["6a3e336dcafa6953a4661c75", "Email", 8],
         ["6a3e337dcafa6953a4661c76", "Phone", 9],
-        ["6a3e3354cafa6953a4661c73", "Checkbox", 6] // an unsupported format (skipped for now)
+        ["6a3e3323cafa6953a4661c6f", "File", 5] // an unsupported format (skipped for now)
     ]);
 
     describe("toAttributeName", () => {
@@ -369,19 +381,30 @@ describe("collection properties", () => {
                 name: "Row",
                 "6a3e29d5cafa6953a4661c15": "hello",
                 "6a3e29e1cafa6953a4661c16": 42,
+                "6a3e330acafa6953a4661c6b": 1782461197, // Date (epoch seconds) → date only
+                "6a3e3317cafa6953a4661c6e": 1782461208, // Date & Time → datetime
+                "6a3e3354cafa6953a4661c73": true, // Checkbox → boolean
                 "6a3e335dcafa6953a4661c74": "https://triliumnotes.org",
                 "6a3e336dcafa6953a4661c75": "contact@acme.com",
                 "6a3e337dcafa6953a4661c76": "12345",
-                "6a3e3354cafa6953a4661c73": true // checkbox — unsupported, skipped
+                "6a3e3323cafa6953a4661c6f": ["log"] // File — unsupported, skipped
             };
             const result = parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels);
             expect(result.properties).toEqual([
                 { name: "textProperty", value: "hello" },
                 { name: "numberProp", value: "42" },
+                { name: "date", value: localDate(1782461197) },
+                { name: "dateTime", value: localDate(1782461208, true) },
+                { name: "checkbox", value: "true" },
                 { name: "url", value: "https://triliumnotes.org" },
                 { name: "email", value: "mailto:contact@acme.com" },
                 { name: "phone", value: "tel:12345" }
             ]);
+        });
+
+        it("renders a false checkbox as boolean false (an unset value, not present, contributes nothing)", () => {
+            const details = { id: "obj", "6a3e3354cafa6953a4661c73": false };
+            expect(parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels).properties).toEqual([{ name: "checkbox", value: "false" }]);
         });
 
         it("ignores system relations (non-hex keys), unset values and an existing scheme", () => {
@@ -429,8 +452,8 @@ describe("collection properties", () => {
                         {
                             relations: [
                                 { key: "6a3e335dcafa6953a4661c74", isVisible: true }, // URL → column
-                                { key: "name", isVisible: true }, // system column → excluded
-                                { key: "6a3e3354cafa6953a4661c73", isVisible: true }, // Checkbox unsupported → excluded
+                                { key: "name", isVisible: true }, // system column (non-hex key) → excluded
+                                { key: "6a3e3323cafa6953a4661c6f", isVisible: true }, // File (format 5) unsupported → excluded
                                 { key: "6a3e336dcafa6953a4661c75", isVisible: false } // Email hidden → excluded
                             ]
                         }

@@ -18,6 +18,7 @@
  * this service just builds the tree and returns its root note, like the zip/notion importers.
  */
 
+import { dayjs } from "@triliumnext/commons";
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons/src/lib/mime_type.js";
 import { t } from "i18next";
 
@@ -104,7 +105,7 @@ function buildRelationMap(relations: AnytypeSnapshot[]): Map<string, RelationInf
     for (const snapshot of relations) {
         const details = snapshot.snapshot?.data?.details;
         if (details?.relationKey) {
-            map.set(details.relationKey, { name: details.name ?? "", format: details.relationFormat ?? -1 });
+            map.set(details.relationKey, { name: details.name ?? "", format: details.relationFormat ?? -1, includeTime: !!details.relationFormatIncludeTime });
         }
     }
     return map;
@@ -172,18 +173,32 @@ function pageTitle(details: AnytypeDetails | undefined): string {
 
 // #region Collection properties
 /**
- * The five property formats imported so far, mapped to a Trilium label type. Email and phone keep their
- * value clickable with a `mailto:`/`tel:` scheme (the same convention as the Notion importer). Other Anytype
- * formats (select, multi-select, date, file, checkbox, …) are deferred.
+ * Maps an Anytype relation to the Trilium label type its values become, or undefined for a format not yet
+ * imported (select, multi-select, file, …). Date and date-time share format 4, told apart by the relation's
+ * `includeTime` flag; email and phone reuse the `url` type with a `mailto:`/`tel:` scheme (the same
+ * convention as the Notion importer).
  */
-const PROPERTY_FORMATS: Record<number, { labelType: PropertyLabelType; scheme?: string }> = {
-    0: { labelType: "text" }, // longtext
-    1: { labelType: "text" }, // shorttext
-    2: { labelType: "number" }, // number
-    7: { labelType: "url" }, // url
-    8: { labelType: "url", scheme: "mailto:" }, // email
-    9: { labelType: "url", scheme: "tel:" } // phone
-};
+function propertyMapping(info: RelationInfo): { labelType: PropertyLabelType; scheme?: string } | undefined {
+    switch (info.format) {
+        case 0: // longtext
+        case 1: // shorttext
+            return { labelType: "text" };
+        case 2: // number
+            return { labelType: "number" };
+        case 4: // date / date-time
+            return { labelType: info.includeTime ? "datetime" : "date" };
+        case 6: // checkbox
+            return { labelType: "boolean" };
+        case 7: // url
+            return { labelType: "url" };
+        case 8: // email
+            return { labelType: "url", scheme: "mailto:" };
+        case 9: // phone
+            return { labelType: "url", scheme: "tel:" };
+        default:
+            return undefined;
+    }
+}
 
 /** A custom (user-defined) relation key is a hex id; system relations (name, type, createdDate, …) are
  * plain words, and must not be imported as properties. */
@@ -193,7 +208,7 @@ function isCustomRelationKey(key: string): boolean {
 
 /**
  * Reads an object's custom property values as `{ attributeName, value }` pairs. Only the supported formats
- * (see {@link PROPERTY_FORMATS}) of user-defined relations are taken; unset values are dropped, and email /
+ * (see {@link propertyMapping}) of user-defined relations are taken; unset values are dropped, and email /
  * phone values gain a `mailto:`/`tel:` scheme so they stay clickable as url labels.
  */
 function parseProperties(details: AnytypeDetails, relations: Map<string, RelationInfo>): ParsedProperty[] {
@@ -203,7 +218,7 @@ function parseProperties(details: AnytypeDetails, relations: Map<string, Relatio
             continue;
         }
         const info = relations.get(key);
-        const mapping = info ? PROPERTY_FORMATS[info.format] : undefined;
+        const mapping = info ? propertyMapping(info) : undefined;
         if (!info || !mapping) {
             continue;
         }
@@ -234,7 +249,7 @@ function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails, relati
             continue;
         }
         const info = relations.get(key);
-        const mapping = info ? PROPERTY_FORMATS[info.format] : undefined;
+        const mapping = info ? propertyMapping(info) : undefined;
         if (!info || !mapping) {
             continue;
         }
@@ -249,13 +264,31 @@ function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails, relati
 }
 
 /**
- * Converts a property value to its Trilium label string, or undefined when it should be dropped. A number is
- * stringified (and a non-numeric value rejected); a text/url value is trimmed-checked for emptiness; an
- * email/phone value is given its `mailto:`/`tel:` scheme unless it already carries one.
+ * Converts a property value to its Trilium label string, or undefined when it should be dropped. A boolean
+ * becomes `"true"`/`"false"`; a date (Anytype stores an epoch in *seconds*) becomes a local `YYYY-MM-DD` or
+ * `YYYY-MM-DDTHH:mm` string the promoted date/datetime inputs round-trip; a number is stringified (a
+ * non-numeric value rejected); a text/url value is trimmed-checked for emptiness; an email/phone value is
+ * given its `mailto:`/`tel:` scheme unless it already carries one.
  */
 function formatPropertyValue(raw: unknown, labelType: PropertyLabelType, scheme: string | undefined): string | undefined {
     if (raw === null || raw === undefined) {
         return undefined;
+    }
+    if (labelType === "boolean") {
+        if (raw === true || raw === "true") {
+            return "true";
+        }
+        return raw === false || raw === "false" ? "false" : undefined;
+    }
+    if (labelType === "date" || labelType === "datetime") {
+        const seconds = typeof raw === "number" ? raw : Number(raw);
+        if (!Number.isFinite(seconds)) {
+            return undefined;
+        }
+        // Anytype stores the instant; format it in local time (like the Notion importer) so the date/time
+        // matches the wall-clock the user saw in Anytype, in the format the promoted date/datetime inputs use.
+        const local = dayjs(new Date(seconds * 1000));
+        return labelType === "datetime" ? local.format("YYYY-MM-DD[T]HH:mm") : local.format("YYYY-MM-DD");
     }
     if (labelType === "number") {
         const num = typeof raw === "number" ? raw : Number(String(raw));
@@ -845,9 +878,11 @@ export interface AnytypeDetails {
     lastModifiedDate?: number;
     /** Outgoing object links; for a collection, this is its membership. */
     links?: string[];
-    /** On a relation-definition object: the key objects carry the value under, and the format code. */
+    /** On a relation-definition object: the key objects carry the value under, the format code, and (for a
+     * date format) whether the value includes a time component. */
     relationKey?: string;
     relationFormat?: number;
+    relationFormatIncludeTime?: boolean;
     /** A custom property value, keyed by its relation's hex `relationKey`. */
     [key: string]: unknown;
 }
@@ -894,14 +929,16 @@ export interface ResolvedLink {
  * target wasn't imported (a set/collection, or an object missing from the export). */
 export type LinkResolver = (targetCid: string) => ResolvedLink | undefined;
 
-/** A relation definition resolved from the `relations/` folder: its display name and Anytype format code. */
+/** A relation definition resolved from the `relations/` folder: its display name, Anytype format code and
+ * (for date formats) whether the value carries a time component. */
 export interface RelationInfo {
     name: string;
     format: number;
+    includeTime?: boolean;
 }
 
 /** The Trilium label types a supported Anytype property maps to (email/phone reuse `url`). */
-export type PropertyLabelType = "text" | "number" | "url";
+export type PropertyLabelType = "text" | "number" | "url" | "date" | "datetime" | "boolean";
 
 /** One custom property value on an object: the Trilium attribute name and its (already formatted) value. */
 export interface ParsedProperty {
