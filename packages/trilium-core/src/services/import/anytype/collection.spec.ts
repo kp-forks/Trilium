@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import { buildColumnDefinition, toAttributeName } from "./collection.js";
-import type { RelationInfo } from "./collection.js";
 import { isCollectionObject, isPage, parseObject } from "./importer.js";
-import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot } from "./importer.js";
+import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, RelationInfo } from "./model.js";
 
 /** Wraps blocks + details into the export's snapshot shape. Details accepts arbitrary relation-key entries
  * (property values are keyed by the relation's hex `relationKey`). */

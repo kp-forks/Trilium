@@ -20,7 +20,7 @@ import noteService from "../../notes.js";
 import { escapeHtml } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
 import mimeService from "../mime.js";
-import type { AnytypeBlock, AnytypeDetails, AnytypeSnapshot, ParsedObject } from "./importer.js";
+import type { AnytypeBlock, AnytypeDetails, AnytypeSnapshot, FileObjectInfo, Multiplicity, ParsedCollection, ParsedColumn, ParsedObject, ParsedProperty, PropertyLabelType, RelationInfo } from "./model.js";
 
 /** Normalizes a zip entry / file path to forward slashes and lower case (Windows exports use backslashes),
  * so a file property's `source` matches the key its bytes were stored under. */
@@ -320,57 +320,12 @@ export function applyFiles(note: BNote, page: ParsedObject, fileObjects: Map<str
     }
 }
 
-// #region Model
-/** A relation definition resolved from the `relations/` folder: its display name, Anytype format code and
- * (for date formats) whether the value carries a time component. */
-export interface RelationInfo {
-    name: string;
-    format: number;
-    includeTime?: boolean;
-}
-
-/** A file object resolved from the `filesObjects/` folder: the attachment title, MIME and the `files/` path
- * its raw bytes live at. */
-export interface FileObjectInfo {
-    title: string;
-    mime: string;
-    source: string;
-}
-
-/** The Trilium label types a supported Anytype property maps to (email/phone reuse `url`). */
-export type PropertyLabelType = "text" | "number" | "url" | "date" | "datetime" | "boolean";
-
-/** Whether a property holds a single value or several (a multi-select). */
-export type Multiplicity = "single" | "multi";
-
 /** How a relation's values import: its Trilium label type, value count, an optional clickable scheme
  * (email/phone), and whether the value is option-backed (a select / multi-select, resolved via the options
- * map). */
+ * map). Internal to {@link propertyMapping}; the shared `Parsed*` shapes live in {@link ./model.js}. */
 interface PropertyMapping {
     labelType: PropertyLabelType;
     multiplicity: Multiplicity;
     scheme?: string;
     optionBacked?: boolean;
 }
-
-/** One custom property value on an object: the Trilium attribute name and its (already formatted) value. */
-export interface ParsedProperty {
-    name: string;
-    value: string;
-}
-
-/** One collection table column: its attribute name, Trilium label type, original (alias) name and value count. */
-export interface ParsedColumn {
-    name: string;
-    labelType: PropertyLabelType;
-    alias: string;
-    multiplicity: Multiplicity;
-}
-
-/** A collection's table schema and membership. `memberIds` are Anytype object ids (its `details.links`);
- * `columns` are the visible, supported columns from its dataview, in order. */
-export interface ParsedCollection {
-    memberIds: string[];
-    columns: ParsedColumn[];
-}
-// #endregion
