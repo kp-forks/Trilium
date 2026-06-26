@@ -8,8 +8,8 @@ import tree from "../../../services/tree.js";
 import { Card, CardSection } from "../../react/Card.js";
 import { useTriliumEvent } from "../../react/hooks.js";
 import Modal from "../../react/Modal.js";
+import SelectableCard, { SelectableCardGrid } from "../../react/SelectableCard.js";
 import { importProviders } from "./index.js";
-import type { ImportProvider } from "./types.js";
 
 /**
  * Unified import dialog. The top shows a picker of registered {@link importProviders} as selectable
@@ -59,16 +59,16 @@ export default function ImportDialog() {
         >
             <Card heading={t("import.import_from")}>
                 <CardSection>
-                    <div className="import-provider-picker">
+                    <SelectableCardGrid>
                         {serviceProviders.map((p) => (
-                            <ImportProviderCard key={p.id} provider={p} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
+                            <SelectableCard key={p.id} iconUrl={p.iconUrl} icon={p.icon} title={p.name} description={p.description} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
                         ))}
-                    </div>
+                    </SelectableCardGrid>
 
                     {localProviders.length > 0 && (
                         <div className="import-provider-local">
                             {localProviders.map((p) => (
-                                <ImportProviderCard key={p.id} provider={p} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
+                                <SelectableCard key={p.id} iconUrl={p.iconUrl} icon={p.icon} title={p.name} description={p.description} selected={p.id === providerId} onSelect={() => setProviderId(p.id)} />
                             ))}
                         </div>
                     )}
@@ -87,17 +87,3 @@ export default function ImportDialog() {
 const serviceProviders = importProviders.filter((p) => p.group !== "local");
 const localProviders = importProviders.filter((p) => p.group === "local");
 const defaultProviderId = (localProviders[0] ?? importProviders[0])?.id;
-
-function ImportProviderCard({ provider, selected, onSelect }: { provider: ImportProvider; selected: boolean; onSelect: () => void }) {
-    return (
-        <button type="button" className={`import-provider-card ${selected ? "selected" : ""}`} onClick={onSelect}>
-            {provider.iconUrl
-                ? <span className="import-provider-card-icon" style={{ "--provider-icon": `url("${provider.iconUrl}")` }} />
-                : <span className={`import-provider-card-bxicon ${provider.icon ?? ""}`} />}
-            <span className="import-provider-card-text">
-                <span className="import-provider-card-name">{provider.name}</span>
-                <span className="import-provider-card-description">{provider.description}</span>
-            </span>
-        </button>
-    );
-}

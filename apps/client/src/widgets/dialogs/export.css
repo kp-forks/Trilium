@@ -1,16 +1,23 @@
-.export-dialog form .form-check {
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
+.modal.export-dialog {
+    .tn-card {
+        margin-bottom: 1rem;
+    }
 
-.export-dialog form .format-choice {
-    padding-inline-start: 40px;
-}
+    .tn-card:last-child {
+        margin-bottom: 0;
+    }
 
-.export-dialog form .opml-versions {
-    padding-inline-start: 60px;
-}
+    /* Two-segment toggle that fills the card width. */
+    .export-type-group {
+        display: flex;
+        width: 100%;
+    }
 
-.export-dialog form .form-check-label {
-    padding: 2px;
+    .export-type-group .btn {
+        flex: 1;
+    }
+
+    .opml-versions {
+        margin-top: 0.75em;
+    }
 }

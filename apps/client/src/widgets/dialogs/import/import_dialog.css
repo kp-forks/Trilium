@@ -8,12 +8,6 @@
         margin-bottom: 0;
     }
 
-    .import-provider-picker {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 0.75em;
-    }
-
     /* Local file import is grouped on its own, full-width, beneath the service grid. */
     .import-provider-local {
         display: flex;
@@ -45,65 +39,6 @@
 
     .option-row-description p + p {
         margin-top: 0.4em;
-    }
-
-    .import-provider-card {
-        display: flex;
-        align-items: center;
-        gap: 0.75em;
-        width: 100%;
-        padding: 0.75em;
-        text-align: left;
-        border: 1px solid var(--main-border-color);
-        border-radius: 8px;
-        background: var(--accented-background-color);
-        cursor: pointer;
-    }
-
-    .import-provider-card:hover {
-        border-color: var(--main-text-color);
-    }
-
-    .import-provider-card.selected {
-        border-color: var(--main-text-color);
-        background: var(--active-item-background-color);
-        color: var(--active-item-text-color);
-    }
-
-    .import-provider-card-icon {
-        flex-shrink: 0;
-        width: 1.5em;
-        height: 1.5em;
-        background-color: currentColor;
-        -webkit-mask: var(--provider-icon) center / contain no-repeat;
-        mask: var(--provider-icon) center / contain no-repeat;
-    }
-
-    /* Boxicons-based card icon (used by providers that supply `icon` instead of `iconUrl`). */
-    .import-provider-card-bxicon {
-        flex-shrink: 0;
-        font-size: 1.5em;
-        line-height: 1;
-    }
-
-    .import-provider-card-text {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
-    }
-
-    .import-provider-card-name {
-        font-weight: bold;
-    }
-
-    .import-provider-card-description {
-        color: var(--muted-text-color);
-        font-size: 0.85em;
-    }
-
-    .import-provider-card.selected .import-provider-card-description {
-        color: inherit;
-        opacity: 0.8;
     }
 
     .import-provider-hint {
