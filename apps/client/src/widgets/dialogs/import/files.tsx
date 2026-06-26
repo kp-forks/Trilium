@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import importService, { type UploadFilesOptions } from "../../../services/import.js";
-import tree from "../../../services/tree.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
@@ -13,7 +12,6 @@ import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
     const [compressImages] = useTriliumOptionBool("compressImages");
-    const [noteTitle, setNoteTitle] = useState<string>();
     const [files, setFiles] = useState<FileList | null>(null);
     const [safeImport, setSafeImport] = useState(true);
     const [explodeArchives, setExplodeArchives] = useState(true);
@@ -23,10 +21,6 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
     const [spreadsheetImportedAsSpreadsheet, setSpreadsheetImportedAsSpreadsheet] = useState(true);
     const [replaceUnderscoresWithSpaces, setReplaceUnderscoresWithSpaces] = useState(true);
     const [optionsShown, setOptionsShown] = useState(false);
-
-    useEffect(() => {
-        void tree.getNoteTitle(parentNoteId).then(setNoteTitle);
-    }, [parentNoteId]);
 
     const doImport = useCallback(async () => {
         if (!files) {
@@ -66,10 +60,7 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
         <>
             <Card heading={t("import.chooseImportFile")}>
                 <CardSection>
-                    <p className="import-files-description">
-                        {t("import.importDescription")} <strong>{noteTitle}</strong>.<br />
-                        {t("import.importZipRecommendation")}
-                    </p>
+                    <p className="import-files-description">{t("import.importZipRecommendation")}</p>
                     <FileDropZone multiple onChange={setFiles} />
                 </CardSection>
             </Card>

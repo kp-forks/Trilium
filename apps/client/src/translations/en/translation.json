@@ -201,11 +201,11 @@
   },
   "import": {
     "importIntoNote": "Import into note",
+    "importIntoNoteNamed": "Import into {{- title}}",
     "import_from": "Import from",
     "cardName": "Files & other formats",
     "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, images and more",
     "chooseImportFile": "Choose import file",
-    "importDescription": "Content of the selected file(s) will be imported as child note(s) into",
     "importZipRecommendation": "When importing a ZIP file, the note hierarchy will reflect the subdirectory structure within the archive.",
     "options": "Options",
     "safeImportTooltip": "Trilium <code>.zip</code> exports can contain executable scripts. Safe import disables them; uncheck only if the archive is meant to run scripts and you trust its contents.",

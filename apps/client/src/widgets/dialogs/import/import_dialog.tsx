@@ -1,9 +1,10 @@
 import "./import_dialog.css";
 
 import type { ComponentChildren } from "preact";
-import { useCallback, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
+import tree from "../../../services/tree.js";
 import { Card, CardSection } from "../../react/Card.js";
 import { useTriliumEvent } from "../../react/hooks.js";
 import Modal from "../../react/Modal.js";
@@ -18,16 +19,26 @@ import type { ImportProvider } from "./types.js";
  */
 export default function ImportDialog() {
     const [parentNoteId, setParentNoteId] = useState<string>();
+    const [noteTitle, setNoteTitle] = useState<string>();
     const [providerId, setProviderId] = useState<string>();
     const [footer, setFooter] = useState<ComponentChildren>(null);
     const [shown, setShown] = useState(false);
 
     useTriliumEvent("showImportDialog", ({ noteId }) => {
         setParentNoteId(noteId);
+        setNoteTitle(undefined);
         setProviderId(defaultProviderId);
         setFooter(null);
         setShown(true);
     });
+
+    // Resolve the target note's title so it can be shown in the dialog title ("Import into <note>").
+    useEffect(() => {
+        if (!parentNoteId) {
+            return;
+        }
+        void tree.getNoteTitle(parentNoteId).then(setNoteTitle);
+    }, [parentNoteId]);
 
     const provider = importProviders.find((p) => p.id === providerId);
 
@@ -40,7 +51,7 @@ export default function ImportDialog() {
             className="import-provider-dialog"
             size="lg"
             scrollable
-            title={t("import.importIntoNote")}
+            title={noteTitle ? t("import.importIntoNoteNamed", { title: noteTitle }) : t("import.importIntoNote")}
             footer={footer}
             footerAlignment="between"
             onHidden={() => setShown(false)}
