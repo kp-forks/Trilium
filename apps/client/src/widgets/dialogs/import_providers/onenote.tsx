@@ -146,7 +146,7 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     doImportRef.current = doImport;
 
     // Surface the primary actions in the dialog's pinned footer once notebooks are loaded; the other
-    // phases (and unmounting, below) clear it so the picker and connect screens show no footer.
+    // phases set it to null so the connect screens show no footer.
     const importDisabled = selectedIds.size === 0;
     useEffect(() => {
         setFooter(phase !== "ready" ? null : (
@@ -167,8 +167,6 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
             </>
         ));
     }, [phase, debug, importDisabled, setFooter]);
-
-    useEffect(() => () => setFooter(null), [setFooter]);
 
     if (phase === "checking") {
         return <div className="onenote-panel"><LoadingSpinner /></div>;

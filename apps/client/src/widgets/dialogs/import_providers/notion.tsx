@@ -44,8 +44,6 @@ function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPan
         );
     }, [file, setFooter]);
 
-    useEffect(() => () => setFooter(null), [setFooter]);
-
     return (
         <div className="notion-panel">
             <p>{t("notion_import.description_long")}</p>

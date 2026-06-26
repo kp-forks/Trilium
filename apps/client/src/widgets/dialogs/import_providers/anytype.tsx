@@ -44,8 +44,6 @@ function AnytypePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
         );
     }, [file, setFooter]);
 
-    useEffect(() => () => setFooter(null), [setFooter]);
-
     return (
         <div className="anytype-panel">
             <p>{t("anytype_import.description_long")}</p>

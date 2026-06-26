@@ -44,8 +44,6 @@ function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanel
         );
     }, [file, setFooter]);
 
-    useEffect(() => () => setFooter(null), [setFooter]);
-
     return (
         <div className="keep-panel">
             <p>{t("keep_import.description_long")}</p>

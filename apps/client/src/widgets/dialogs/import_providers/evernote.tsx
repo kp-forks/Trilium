@@ -45,8 +45,6 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
         );
     }, [files.length, setFooter]);
 
-    useEffect(() => () => setFooter(null), [setFooter]);
-
     return (
         <div className="evernote-panel">
             <p>{t("evernote_import.description_long")}</p>
