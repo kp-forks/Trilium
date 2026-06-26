@@ -21,6 +21,7 @@ import PdfAnnotations from "./pdf/PdfAnnotations";
 import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
+import RightPaneToggleHandle from "./RightPaneToggleHandle";
 import RightPanelWidget from "./RightPanelWidget";
 import TableOfContents from "./TableOfContents";
 
@@ -45,23 +46,28 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
     }, []));
 
     return (
-        <div id="right-pane">
-            {rightPaneVisible && (
-                items.length > 0 ? (
-                    items
-                ) : (
-                    <NoItems
-                        icon="bx bx-sidebar"
-                        text={t("right_pane.empty_message")}
-                    >
-                        <Button
-                            text={t("right_pane.empty_button")}
-                            triggerCommand="toggleRightPane"
-                        />
-                    </NoItems>
-                )
-            )}
-        </div>
+        <>
+            {/* Absolutely positioned in a reserved gutter on the viewport's right edge, so it
+                stays put regardless of the panel's open/collapsed state (see RightPanelContainer.css). */}
+            <RightPaneToggleHandle rightPaneVisible={rightPaneVisible} />
+            <div id="right-pane">
+                {rightPaneVisible && (
+                    items.length > 0 ? (
+                        items
+                    ) : (
+                        <NoItems
+                            icon="bx bx-sidebar"
+                            text={t("right_pane.empty_message")}
+                        >
+                            <Button
+                                text={t("right_pane.empty_button")}
+                                triggerCommand="toggleRightPane"
+                            />
+                        </NoItems>
+                    )
+                )}
+            </div>
+        </>
     );
 }
 

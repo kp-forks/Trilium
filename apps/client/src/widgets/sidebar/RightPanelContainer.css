@@ -1,3 +1,14 @@
+/* Reserve a fixed-width gutter on the viewport's right edge for the toggle handle, which is
+   absolutely positioned within it (see RightPaneToggleHandle.css). Split sizes the panes
+   inside the padded content box, so they never sit under the handle, and the handle stays put
+   regardless of whether the panel is open. */
+body.experimental-feature-new-layout #vertical-main-container {
+    --right-pane-handle-width: 12px;
+    position: relative;
+    /* +4px leaves a small gap between the panel (and #center-pane) and the handle. */
+    padding-inline-end: calc(var(--right-pane-handle-width) + 4px);
+}
+
 body.experimental-feature-new-layout #right-pane {
     display: flex;
     flex-direction: column;
