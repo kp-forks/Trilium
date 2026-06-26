@@ -1,6 +1,7 @@
+import { Direction } from "@univerjs/core";
 import { describe, expect, it } from "vitest";
 
-import { isOutOfBoundsMove, type SelectionBounds } from "./navigation";
+import { isOutOfBoundsMove, type SelectionBounds, toNavigationDirection } from "./navigation";
 
 describe("isOutOfBoundsMove", () => {
     // A 10x10 sheet (rows/columns 0..9) with the selection on a single, interior cell.
@@ -49,5 +50,20 @@ describe("isOutOfBoundsMove", () => {
         const bottomRange = boundsAt(7, 0, { endRow: 9, endColumn: 2 });
         expect(isOutOfBoundsMove("down", bottomRange)).toBe(true);
         expect(isOutOfBoundsMove("up", bottomRange)).toBe(false);
+    });
+});
+
+describe("toNavigationDirection", () => {
+    it("maps each Univer arrow direction to its lowercase string", () => {
+        expect(toNavigationDirection(Direction.UP)).toBe("up");
+        expect(toNavigationDirection(Direction.DOWN)).toBe("down");
+        expect(toNavigationDirection(Direction.LEFT)).toBe("left");
+        expect(toNavigationDirection(Direction.RIGHT)).toBe("right");
+    });
+
+    it("returns undefined for any non-arrow direction", () => {
+        // Univer's Direction enum carries non-arrow members (and future values); anything
+        // outside the four arrows isn't a cell move, so it must not clamp.
+        expect(toNavigationDirection(99 as Direction)).toBeUndefined();
     });
 });

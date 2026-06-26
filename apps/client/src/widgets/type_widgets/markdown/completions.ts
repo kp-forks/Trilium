@@ -282,7 +282,7 @@ export function isClosingFence(state: EditorState, lineFrom: number): boolean {
 }
 
 /** Builds the fence-language completions from the user's enabled code-note languages. */
-function buildCodeFenceOptions(): Completion[] {
+export function buildCodeFenceOptions(): Completion[] {
     const seen = new Set<string>();
     const options: Completion[] = [];
     for (const mimeType of mime_types.getMimeTypes()) {
@@ -298,7 +298,7 @@ function buildCodeFenceOptions(): Completion[] {
  * Completion source for code-fence languages: triggers only right after a ``` fence opener and lists
  * the user's enabled languages. Returns `null` everywhere else, so it never pollutes the slash menu.
  */
-function codeFenceCompletionSource(context: CompletionContext): CompletionResult | null {
+export function codeFenceCompletionSource(context: CompletionContext): CompletionResult | null {
     const line = context.state.doc.lineAt(context.pos);
     const parsed = parseCodeFencePrefix(line.text.slice(0, context.pos - line.from));
     if (!parsed || isClosingFence(context.state, line.from)) return null;

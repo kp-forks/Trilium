@@ -151,6 +151,15 @@ describe("importNotes ws handler", () => {
         expect(toastService.showError).toHaveBeenCalledWith("nope");
     });
 
+    it("shows the error only once when the same task reports it twice (the WebSocket + fallback dedup)", async () => {
+        // A fresh taskId — the dedup guard is module-level state that survives clearAllMocks.
+        await handler()({ type: "taskError", taskType: "importNotes", taskId: "dedupT", message: "boom" } as any);
+        await handler()({ type: "taskError", taskType: "importNotes", taskId: "dedupT", message: "boom again" } as any);
+        // The second report for the same taskId is suppressed, so only the first toast shows.
+        expect(toastService.showError).toHaveBeenCalledTimes(1);
+        expect(toastService.showError).toHaveBeenCalledWith("boom");
+    });
+
     it("shows a persistent count-only progress toast when no total is reported", async () => {
         await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 3 } as any);
         expect(toastService.showPersistent).toHaveBeenCalledTimes(1);

@@ -92,7 +92,7 @@ export default function useClampEdgeNavigation(apiRef: MutableRef<FUniver | unde
     }, [ apiRef ]);
 }
 
-function toNavigationDirection(direction: Direction): NavigationDirection | undefined {
+export function toNavigationDirection(direction: Direction): NavigationDirection | undefined {
     switch (direction) {
         case Direction.UP:
             return "up";

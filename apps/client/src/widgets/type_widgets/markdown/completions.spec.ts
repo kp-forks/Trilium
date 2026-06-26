@@ -1,9 +1,12 @@
+import type { CompletionContext } from "@codemirror/autocomplete";
 import { markdown } from "@codemirror/lang-markdown";
 import { ensureSyntaxTree } from "@codemirror/language";
 import { EditorState } from "@codemirror/state";
-import { describe, expect, it } from "vitest";
+import type { MimeType } from "@triliumnext/commons";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { buildTaskItemInsert, isClosingFence, parseCodeFencePrefix } from "./completions.js";
+import mime_types from "../../../services/mime_types.js";
+import { buildCodeFenceOptions, buildTaskItemInsert, codeFenceCompletionSource, isClosingFence, parseCodeFencePrefix } from "./completions.js";
 
 describe("buildTaskItemInsert", () => {
     it("prepends a bullet when not already in a list item", () => {
@@ -74,5 +77,63 @@ describe("isClosingFence", () => {
         expect(check("just a paragraph", 1)).toBe(false);
         // Referencing lineStart keeps the helper used and documents the offset math.
         expect(lineStart("```js\ncode\n```", 3)).toBe(11);
+    });
+});
+
+describe("buildCodeFenceOptions", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    const mime = (over: Partial<MimeType>): MimeType => ({
+        title: "T", mime: "text/x", enabled: true, mdLanguageCode: "x", ...over
+    } as MimeType);
+
+    it("emits one option per enabled language, skipping disabled, code-less and duplicate entries", () => {
+        vi.spyOn(mime_types, "getMimeTypes").mockReturnValue([
+            mime({ mdLanguageCode: "js", title: "JavaScript" }),
+            mime({ mdLanguageCode: "py", title: "Python", enabled: false }),  // disabled → skipped
+            mime({ mdLanguageCode: undefined, title: "No code" }),            // no language code → skipped
+            mime({ mdLanguageCode: "js", title: "JS again" })                 // duplicate code → skipped
+        ]);
+
+        expect(buildCodeFenceOptions()).toEqual([{ label: "js", detail: "JavaScript" }]);
+    });
+});
+
+describe("codeFenceCompletionSource", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    function context(doc: string, pos: number): CompletionContext {
+        const state = EditorState.create({ doc, extensions: [ markdown() ] });
+        ensureSyntaxTree(state, doc.length);
+        return { state, pos } as CompletionContext;
+    }
+
+    function withLanguages(...codes: string[]) {
+        vi.spyOn(mime_types, "getMimeTypes").mockReturnValue(
+            codes.map((code) => ({ title: code, mime: `text/${code}`, enabled: true, mdLanguageCode: code }) as MimeType)
+        );
+    }
+
+    it("offers the enabled languages right after a fence opener, anchored at the language token", () => {
+        withLanguages("js", "py");
+        const result = codeFenceCompletionSource(context("```", 3));
+        expect(result?.from).toBe(3); // line.from (0) + langStart (3)
+        expect(result?.options.map((o) => o.label)).toEqual([ "js", "py" ]);
+    });
+
+    it("returns null when the line is not a fence opener", () => {
+        withLanguages("js");
+        expect(codeFenceCompletionSource(context("plain text", 5))).toBeNull();
+    });
+
+    it("returns null on a closing fence, so only openers get language completions", () => {
+        withLanguages("js");
+        // Cursor on the terminating ``` of `\`\`\`js\ncode\n\`\`\`` — line 3 starts at offset 11.
+        expect(codeFenceCompletionSource(context("```js\ncode\n```", 14))).toBeNull();
+    });
+
+    it("returns null on a valid opener when no languages are enabled", () => {
+        withLanguages(); // none enabled → no options
+        expect(codeFenceCompletionSource(context("```", 3))).toBeNull();
     });
 });
