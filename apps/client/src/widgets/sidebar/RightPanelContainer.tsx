@@ -21,6 +21,7 @@ import PdfAnnotations from "./pdf/PdfAnnotations";
 import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
+import RightPaneToggleHandle from "./RightPaneToggleHandle";
 import RightPanelWidget from "./RightPanelWidget";
 import TableOfContents from "./TableOfContents";
 
@@ -46,6 +47,7 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
 
     return (
         <div id="right-pane">
+            <RightPaneToggleHandle />
             {rightPaneVisible && (
                 items.length > 0 ? (
                     items
