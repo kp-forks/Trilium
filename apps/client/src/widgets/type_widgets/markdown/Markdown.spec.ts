@@ -4,7 +4,7 @@
 // sanitization-dependent specs under jsdom, which matches real-browser behavior.
 import { describe, expect, it } from "vitest";
 
-import { buildTaskItemInsert, renderWithSourceLines } from "./Markdown.js";
+import { renderWithSourceLines } from "./Markdown.js";
 
 describe("renderWithSourceLines", () => {
     function extractLines(src: string): number[] {
@@ -122,6 +122,33 @@ describe("renderWithSourceLines", () => {
         expect(result).toContain("Details");
     });
 
+    it("renders the /page-break template as a page-break div without swallowing following content", () => {
+        // Mirrors the markdown the `/page-break` slash command inserts (note the trailing blank line).
+        // The renderer must keep the `page-break` class through DOMPurify so print.css can drive the
+        // page break, and the blank line must terminate the raw-HTML block so following text still
+        // renders as markdown instead of being absorbed into the <div>.
+        const result = html('<div class="page-break"></div>\n\nAfter the break');
+        expect(result).toContain('class="page-break"');
+        expect(result).toContain("<p>After the break</p>");
+    });
+
+    it("renders the /table skeleton as a table without swallowing following content", () => {
+        // Mirrors the GFM table the `/table` slash command inserts (note the trailing blank line),
+        // which must terminate the table block so following text renders as its own paragraph.
+        const src = [
+            "| Column 1 | Column 2 |",
+            "| -------- | -------- |",
+            "|          |          |",
+            "",
+            "After the table"
+        ].join("\n");
+
+        const result = html(src);
+        expect(result).toContain("<table>");
+        expect(result).toContain("<th>Column 1</th>");
+        expect(result).toContain("<p>After the table</p>");
+    });
+
     it("renders [[wikilinks]] with hash-router hrefs so the preview navigates correctly", () => {
         const result = html("See [[abc123]] for details.");
         expect(result).toContain('class="reference-link"');
@@ -195,19 +222,5 @@ describe("renderWithSourceLines", () => {
             expect(h.text).not.toMatch(/onload/i);
             expect(h.text).not.toMatch(/javascript:/i);
         }
-    });
-});
-
-describe("buildTaskItemInsert", () => {
-    it("prepends a bullet when not already in a list item", () => {
-        expect(buildTaskItemInsert(" ", false)).toBe("- [ ] ");
-        expect(buildTaskItemInsert("x", false)).toBe("- [x] ");
-        expect(buildTaskItemInsert("/", false)).toBe("- [/] ");
-    });
-
-    it("reuses an existing '- ' bullet to avoid a doubled marker", () => {
-        expect(buildTaskItemInsert(" ", true)).toBe("[ ] ");
-        expect(buildTaskItemInsert("x", true)).toBe("[x] ");
-        expect(buildTaskItemInsert("/", true)).toBe("[/] ");
     });
 });

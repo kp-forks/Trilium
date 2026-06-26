@@ -1,37 +1,29 @@
 import "./Markdown.css";
 import "./MarkdownCommons.css";
 
-import { autocompletion } from "@codemirror/autocomplete";
-import { syntaxTree } from "@codemirror/language";
-import type { SyntaxNode } from "@lezer/common";
 import VanillaCodeMirror from "@triliumnext/codemirror";
-import { isAnchorState, type TaskStateDef } from "@triliumnext/commons";
 import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons/src/lib/markdown_renderer";
 import DOMPurify from "dompurify";
 import { Marked, type Tokens } from "marked";
 import { createContext } from "preact";
-import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useContext, useEffect, useMemo, useState } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
 import NoteContext from "../../../components/note_context";
 import FNote from "../../../entities/fnote";
 import froca from "../../../services/froca";
-import { t } from "../../../services/i18n";
 import keyboard_actions from "../../../services/keyboard_actions";
 import note_create from "../../../services/note_create";
 import options from "../../../services/options";
-import server from "../../../services/server";
 import { removeIndividualBinding } from "../../../services/shortcuts";
-import { getTaskStateDefinitions } from "../../../services/task_states";
-import toast from "../../../services/toast";
 import tree from "../../../services/tree";
 import utils, { isDesktop } from "../../../services/utils";
 import { useLegacyImperativeHandlers, useTriliumEvent } from "../../react/hooks";
 import SplitEditor from "../helpers/SplitEditor";
-import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText";
 import { TypeWidgetProps } from "../type_widget";
-import { buildSnippetCompletions, SLASH_COMMAND_REGEX, useCodeSnippets } from "./snippets";
+import { useSlashCommands } from "./completions";
+import { insertText, replaceSelection, uploadImageAndInsert } from "./editor_utils";
 
 const marked = new Marked({ breaks: true, gfm: true });
 
@@ -260,48 +252,6 @@ function useSyncedHighlight(view: VanillaCodeMirror | null, preview: HTMLDivElem
     }, [ view, preview, html ]);
 }
 
-/**
- * Uploads the image as a note attachment and inserts a markdown image reference at `pos` (or the cursor).
- * Mirrors CKEditor's image upload adapter: on failure, surfaces the server's error message as a
- * toast, falling back to a generic "Cannot upload" message for network errors.
- */
-async function uploadImageAndInsert(view: VanillaCodeMirror, note: FNote, file: File, pos?: number) {
-    let detail: string | undefined;
-    try {
-        const result = await server.upload(
-            `notes/${note.noteId}/attachments/upload`,
-            file, undefined, "POST"
-        ) as { uploaded?: boolean; url?: string; message?: string };
-        if (result?.uploaded && result.url) {
-            insertText(view, `![${file.name}](${result.url})`, pos);
-            return;
-        }
-        detail = result?.message;
-    } catch (e) {
-        detail = e instanceof Error ? e.message : undefined;
-    }
-
-    const base = t("markdown_editor.image_upload_failed", { name: file.name });
-    toast.showError(detail ? `${base} ${detail}` : base);
-}
-
-/** Inserts text at the given position (or cursor) and moves the cursor to the end of the inserted text. */
-function insertText(view: VanillaCodeMirror, text: string, pos?: number) {
-    const from = pos ?? view.state.selection.main.head;
-    view.dispatch({
-        changes: { from, insert: text },
-        selection: { anchor: from + text.length }
-    });
-}
-
-/** Replaces the selection range with text and moves the cursor to the end. */
-function replaceSelection(view: VanillaCodeMirror, text: string, from: number, to: number) {
-    view.dispatch({
-        changes: { from, to, insert: text },
-        selection: { anchor: from + text.length }
-    });
-}
-
 //#region Text commands
 /**
  * Handles text-detail commands for the Markdown editor:
@@ -483,215 +433,6 @@ function useMarkdownKeymap(editorView: VanillaCodeMirror | null) {
 
         editorView.contentDOM.addEventListener("keydown", onKeydown, true);
         return () => editorView.contentDOM.removeEventListener("keydown", onKeydown, true);
-    }, [editorView]);
-}
-//#endregion
-
-//#region Slash commands
-/**
- * Builds the markdown a `/todo:<state>` command inserts. Omits the leading `- `
- * bullet when the slash was typed right after an existing one (e.g. `- /todo:doing`),
- * so the existing bullet is reused instead of producing a doubled `- - [ ] ` marker.
- */
-export function buildTaskItemInsert(symbol: string, precededByBullet: boolean): string {
-    return `${precededByBullet ? "" : "- "}[${symbol}] `;
-}
-
-/**
- * Adds `/`-triggered autocomplete to the CodeMirror editor.
- * Typing `/` at the start of a line (or after whitespace) shows a menu of commands.
- */
-function useSlashCommands(parentComponent: TypeWidgetProps["parentComponent"], editorView: VanillaCodeMirror | null, note: FNote) {
-    // Held in refs so the slash-command closures always read the current note
-    // and parent component without re-registering the autocomplete extension —
-    // `appendConfig` would otherwise stack a duplicate extension on each switch.
-    const noteRef = useRef(note);
-    const parentRef = useRef(parentComponent);
-    // The user-configured todo task states (from the `_taskStates` subtree), loaded once.
-    // Read inside the autocomplete closure, so `/todo:*` commands reflect the current config.
-    const taskStatesRef = useRef<TaskStateDef[]>([]);
-    // Markdown snippets (#snippet code notes with a markdown MIME) plus generic plain-text snippets,
-    // inserted via `/snippet:<name>`. useCodeSnippets keeps the ref fresh so the menu reads the latest.
-    const snippetsRef = useCodeSnippets(
-        (candidate) => candidate.isMarkdown() || (candidate.type === "code" && candidate.mime === "text/plain"),
-        "markdown"
-    );
-    useEffect(() => { noteRef.current = note; }, [note]);
-    useEffect(() => { parentRef.current = parentComponent; }, [parentComponent]);
-    useEffect(() => { void getTaskStateDefinitions().then((states) => { taskStatesRef.current = states; }); }, []);
-
-    useEffect(() => {
-        if (!editorView) return;
-
-        const ext = autocompletion({
-            override: [(ctx) => {
-                // `:` and `-` are allowed so `/todo:<state>` (e.g. `/todo:in-progress`) matches as one token.
-                const match = ctx.matchBefore(SLASH_COMMAND_REGEX);
-                if (!match) return null;
-
-                // Suppress slash menu inside fenced/indented code blocks and inline code spans —
-                // a leading `/` there is part of the code, not a command trigger.
-                for (let node: SyntaxNode | null = syntaxTree(ctx.state).resolveInner(ctx.pos, -1); node; node = node.parent) {
-                    if (node.name.includes("Code")) return null;
-                }
-
-                return {
-                    from: match.from,
-                    options: [
-                        {
-                            label: "/date",
-                            detail: t("markdown_slash_commands.date"),
-                            apply(view, _completion, from, to) {
-                                view.dispatch({ changes: { from, to } });
-                                parentRef.current?.triggerCommand("insertDateTimeToText");
-                            }
-                        },
-                        {
-                            label: "/include",
-                            detail: t("markdown_slash_commands.include"),
-                            apply(view, _completion, from, to) {
-                                view.dispatch({ changes: { from, to } });
-                                parentRef.current?.triggerCommand("addIncludeNoteToText");
-                            }
-                        },
-                        {
-                            label: "/image",
-                            detail: t("markdown_slash_commands.image"),
-                            apply(view, _completion, from, to) {
-                                view.dispatch({ changes: { from, to } });
-                                const input = document.createElement("input");
-                                input.type = "file";
-                                input.accept = "image/*";
-                                input.addEventListener("change", () => {
-                                    const file = input.files?.[0];
-                                    if (file) uploadImageAndInsert(editorView, noteRef.current, file);
-                                });
-                                input.click();
-                            }
-                        },
-                        {
-                            label: "/link",
-                            detail: t("markdown_slash_commands.link"),
-                            apply(view, _completion, from, to) {
-                                view.dispatch({ changes: { from, to } });
-                                parentRef.current?.triggerCommand("addLinkToText");
-                            }
-                        },
-                        {
-                            label: "/math",
-                            detail: t("markdown_slash_commands.math"),
-                            apply(view, _completion, from, to) {
-                                const placeholder = `\\text{${t("markdown_slash_commands.placeholders.math")}}`;
-                                const template = `$$\n${placeholder}\n$$`;
-                                view.dispatch({
-                                    changes: { from, to, insert: template },
-                                    selection: { anchor: from + 3, head: from + 3 + placeholder.length }
-                                });
-                            }
-                        },
-                        {
-                            label: "/footnote",
-                            detail: t("markdown_slash_commands.footnote"),
-                            apply(view, _completion, from, to) {
-                                const doc = view.state.doc.toString();
-                                let maxFootnote = 0;
-                                for (const m of doc.matchAll(/\[\^(\d+)\]/g)) {
-                                    maxFootnote = Math.max(maxFootnote, parseInt(m[1], 10));
-                                }
-                                const n = maxFootnote + 1;
-                                const ref = `[^${n}]`;
-                                const def = `\n\n[^${n}]: `;
-                                const docEnd = view.state.doc.length;
-                                const newDocEnd = docEnd - (to - from) + ref.length + def.length;
-                                view.dispatch({
-                                    changes: [
-                                        { from, to, insert: ref },
-                                        { from: docEnd, insert: def }
-                                    ],
-                                    selection: { anchor: newDocEnd }
-                                });
-                            }
-                        },
-                        {
-                            label: "/mermaid",
-                            detail: t("markdown_slash_commands.mermaid"),
-                            apply(view, _completion, from, to) {
-                                const placeholder = "graph TD\n    A --> B";
-                                const template = `\`\`\`mermaid\n${placeholder}\n\`\`\``;
-                                view.dispatch({
-                                    changes: { from, to, insert: template },
-                                    selection: { anchor: from + 11, head: from + 11 + placeholder.length }
-                                });
-                            }
-                        },
-                        // One `/mermaid:<type>` per sample diagram (e.g. `/mermaid:flowchart`),
-                        // pre-filling the fenced block with that template's source.
-                        ...SAMPLE_DIAGRAMS.map((sample) => ({
-                            label: `/mermaid:${sample.name.toLowerCase().replace(/\s+/g, "-")}`,
-                            detail: t("markdown_slash_commands.mermaid_template", { name: sample.name }),
-                            apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
-                                const template = `\`\`\`mermaid\n${sample.content.trimEnd()}\n\`\`\``;
-                                view.dispatch({
-                                    changes: { from, to, insert: template },
-                                    selection: { anchor: from + 11 }
-                                });
-                            }
-                        })),
-                        {
-                            label: "/collapsible",
-                            detail: t("markdown_slash_commands.collapsible"),
-                            apply(view, _completion, from, to) {
-                                // No native markdown syntax — round-trips through the
-                                // importer as raw <details>/<summary> HTML (see markdown.ts).
-                                const placeholder = t("markdown_slash_commands.placeholders.collapsible_summary");
-                                const open = `<details class="trilium-collapsible">\n<summary>`;
-                                const close = `</summary>\n\n${t("markdown_slash_commands.placeholders.collapsible_details")}\n\n</details>`;
-                                const anchor = from + open.length;
-                                view.dispatch({
-                                    changes: { from, to, insert: open + placeholder + close },
-                                    selection: { anchor, head: anchor + placeholder.length }
-                                });
-                            }
-                        },
-                        ...["note", "tip", "important", "caution", "warning"].map((admonitionType) => ({
-                            label: `/${admonitionType}`,
-                            detail: t("markdown_slash_commands.admonition", { type: admonitionType }),
-                            apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
-                                const template = `> [!${admonitionType.toUpperCase()}]\n> `;
-                                view.dispatch({
-                                    changes: { from, to, insert: template },
-                                    selection: { anchor: from + template.length }
-                                });
-                            }
-                        })),
-                        // One `/todo:<state>` per configured task state that has a markdown marker —
-                        // the ` ` (unchecked) and `x` (checked) anchors are markers too, so both are covered.
-                        ...taskStatesRef.current
-                            .filter((state) => state.markdownSymbol)
-                            .map((state) => {
-                                // Anchors (`none`/`done`) are the standard `[ ]`/`[x]`; custom states
-                                // use non-standard markers (e.g. `[/]`), so flag those in the description.
-                                const detailKey = isAnchorState(state.name)
-                                    ? "markdown_slash_commands.todo"
-                                    : "markdown_slash_commands.todo_nonstandard";
-                                return {
-                                    label: `/todo:${state.name}`,
-                                    detail: t(detailKey, { title: state.title }),
-                                    apply(view: import("@codemirror/view").EditorView, _c: unknown, from: number, to: number) {
-                                        const precededByBullet = from >= 2 && view.state.doc.sliceString(from - 2, from) === "- ";
-                                        const insert = buildTaskItemInsert(state.markdownSymbol, precededByBullet);
-                                        view.dispatch({ changes: { from, to, insert } });
-                                    }
-                                };
-                            }),
-                        ...buildSnippetCompletions(snippetsRef.current.filter((snippet) => snippet.noteId !== noteRef.current.noteId))
-                    ]
-                };
-            }],
-            activateOnTyping: true
-        });
-
-        editorView.setNamedExtension("slashCommands", ext);
     }, [editorView]);
 }
 //#endregion

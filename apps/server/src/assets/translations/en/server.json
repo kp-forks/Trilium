@@ -320,10 +320,17 @@
     "root-title": "OneNote import"
   },
   "notion_import": {
-    "root-title": "Notion import"
+    "root-title": "Notion import",
+    "markdown-export-unsupported": "This looks like a Notion \"Markdown & CSV\" export, which Trilium cannot import. Please re-export your Notion workspace using the \"HTML\" export format and import that instead.",
+    "subpage-folders-disabled": "This Notion export was created without the \"Create folders for subpages\" option, so the page hierarchy cannot be reconstructed. Please re-export from Notion with \"Create folders for subpages\" enabled and import that instead."
   },
   "keep_import": {
     "root-title": "Google Keep import"
+  },
+  "anytype_import": {
+    "root-title": "Anytype import",
+    "protobuf-export-unsupported": "This looks like an Anytype \"Protobuf\" export, which Trilium cannot import. Please re-export your Anytype space using the \"Any-Block\" format with \"JSON\" selected and import that instead.",
+    "markdown-export-unsupported": "This looks like an Anytype \"Markdown\" export, which Trilium cannot import. Please re-export your Anytype space using the \"Any-Block\" format with \"JSON\" selected and import that instead."
   },
   "pdf": {
     "export_filter": "PDF Document (*.pdf)",

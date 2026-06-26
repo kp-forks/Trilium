@@ -3,8 +3,8 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
-import FormFileUpload from "../../react/FormFileUpload.js";
-import FormGroup from "../../react/FormGroup.js";
+import { Card, CardSection } from "../../react/Card.js";
+import FileDropZone from "../../react/FileDropZone.js";
 import iconUrl from "./icons/keep.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
@@ -44,15 +44,13 @@ function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanel
         );
     }, [file, setFooter]);
 
-    useEffect(() => () => setFooter(null), [setFooter]);
-
     return (
-        <div className="keep-panel">
-            <p>{t("keep_import.description_long")}</p>
-            <FormGroup name="keep-file" label={t("keep_import.choose_file")}>
-                <FormFileUpload onChange={onChange} />
-            </FormGroup>
-        </div>
+        <Card heading={t("keep_import.choose_file")}>
+            <CardSection>
+                <p className="import-files-description">{t("keep_import.description_long")}</p>
+                <FileDropZone onChange={onChange} />
+            </CardSection>
+        </Card>
     );
 }
 

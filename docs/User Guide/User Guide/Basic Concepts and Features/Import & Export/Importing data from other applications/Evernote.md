@@ -12,11 +12,10 @@ To export ENEX files from Evernote, you can use:
 
 Once you have your ENEX files, do the following to import them in Trilium:
 
-1.  In the Trilium note tree, right-click the note under which you want to import one or more of your ENEX files. The notes in the files will be imported as child notes of the selected note.
-2.  Click Import into note.
-3.  Choose your ENEX file or files and click Import.
-4.  During the import, you will see "Import in progress" message. If the import is successful, the message will change to “Import finished successfully” and then disappear.
-5.  We recommend you to check the imported notes and their attachments to verify that you haven’t lost any data.
+1.  In the <a class="reference-link" href="../../UI%20Elements/Note%20Tree.md">Note Tree</a>, right click and select _Import into note_.
+2.  In the _Import from_ section, select _EverNote_.
+3.  During the import, you will see "Import in progress" message. If the import is successful, the message will change to “Import finished successfully” and then disappear.
+4.  We recommend you to check the imported notes and their attachments to verify that you haven’t lost any data.
 
 A non-exhaustive list of what the importer preserves:
 

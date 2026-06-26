@@ -1,48 +1,50 @@
 .modal.import-provider-dialog {
-    .import-provider-picker {
+    /* Each region (provider picker, file upload, options) is its own card, like the delete dialog. */
+    .tn-card {
+        margin-bottom: 1rem;
+    }
+
+    .tn-card:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Local file import is grouped on its own, full-width, beneath the service grid. */
+    .import-provider-local {
         display: flex;
         flex-direction: column;
         gap: 0.75em;
+        margin-top: 1em;
+        padding-top: 1em;
+        border-top: 1px solid var(--main-border-color);
     }
 
-    .import-provider-card {
+    .import-files-description {
+        margin-bottom: 0.75em;
+        color: var(--muted-text-color);
+    }
+
+    /* Collapsed-by-default options: the section header toggles the option rows below. */
+    .import-options-toggle {
         display: flex;
         align-items: center;
-        gap: 1em;
-        width: 100%;
-        padding: 1em;
-        text-align: left;
-        border: 1px solid var(--main-border-color);
-        border-radius: 8px;
-        background: var(--accented-background-color);
+        gap: 0.5em;
         cursor: pointer;
+        font-weight: 600;
     }
 
-    .import-provider-card:hover {
-        border-color: var(--main-text-color);
+    /* Some option descriptions carry rich HTML (e.g. multi-paragraph hints); keep them tight. */
+    .option-row-description p {
+        margin: 0;
     }
 
-    .import-provider-card-icon {
-        flex-shrink: 0;
-        width: 1.8em;
-        height: 1.8em;
-        background-color: currentColor;
-        -webkit-mask: var(--provider-icon) center / contain no-repeat;
-        mask: var(--provider-icon) center / contain no-repeat;
+    .option-row-description p + p {
+        margin-top: 0.4em;
     }
 
-    .import-provider-card-text {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .import-provider-card-name {
-        font-weight: bold;
-    }
-
-    .import-provider-card-description {
+    .import-provider-hint {
         color: var(--muted-text-color);
-        font-size: 0.9em;
+        text-align: center;
+        margin: 1.5em 0;
     }
 
     .onenote-account {
