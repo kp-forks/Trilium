@@ -52,6 +52,8 @@ export default function RightPaneToggleHandle({ rightPaneVisible }: RightPaneTog
     return (
         <button
             ref={buttonRef}
+            type="button"
+            aria-label={t("right_pane.toggle")}
             class={clsx(
                 "right-pane-toggle-handle bx",
                 rightPaneVisible ? "bx-chevron-right" : "bx-chevron-left",
