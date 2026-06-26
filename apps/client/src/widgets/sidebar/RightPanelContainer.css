@@ -4,9 +4,39 @@
    regardless of whether the panel is open. */
 body.experimental-feature-new-layout #vertical-main-container {
     --right-pane-handle-width: 12px;
-    position: relative;
     /* +4px leaves a small gap between the panel (and #center-pane) and the handle. */
-    padding-inline-end: calc(var(--right-pane-handle-width) + 4px);
+    --right-pane-handle-gutter: calc(var(--right-pane-handle-width) + 4px);
+    position: relative;
+    padding-inline-end: var(--right-pane-handle-gutter);
+}
+
+/* Overlay mode: float the pane above the content (no Split, so the content never reflows).
+   Width is applied inline from the saved rightPaneWidth (see RightPanelContainer.tsx). */
+body.experimental-feature-new-layout #right-pane.overlay {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-end: var(--right-pane-handle-gutter);
+    /* Floor matching the docked Split minSize, so a small saved width can't make the overlay too thin. */
+    min-width: 180px;
+    z-index: 15;
+    border-inline-start: 1px solid var(--main-border-color);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.18);
+    animation: right-pane-overlay-in 150ms ease;
+}
+
+@keyframes right-pane-overlay-in {
+    from { transform: translateX(8px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+/* Pin/close controls, shown only in overlay mode. */
+body.experimental-feature-new-layout #right-pane .right-pane-overlay-actions {
+    position: absolute;
+    top: 4px;
+    inset-inline-end: 4px;
+    z-index: 1;
+    display: flex;
+    gap: 2px;
 }
 
 body.experimental-feature-new-layout #right-pane {

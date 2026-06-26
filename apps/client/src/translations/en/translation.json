@@ -2709,6 +2709,8 @@
     "empty_message": "Nothing to show for this note",
     "empty_button": "Hide the panel",
     "toggle": "Toggle right panel",
+    "dock": "Dock panel",
+    "close": "Close panel",
     "custom_widget_go_to_source": "Go to source code"
   },
   "print_preview": {

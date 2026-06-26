@@ -4,7 +4,6 @@ import { Tooltip } from "bootstrap";
 import clsx from "clsx";
 import { useCallback, useMemo, useRef } from "preact/hooks";
 
-import appContext from "../../components/app_context";
 import { t } from "../../services/i18n";
 import { useStaticTooltip } from "../react/hooks";
 
@@ -14,16 +13,18 @@ const TOOLTIP_MARGIN_PX = 8;
 interface RightPaneToggleHandleProps {
     /** Owned and persisted by RightPanelContainer; this component only reflects it. */
     rightPaneVisible: boolean;
+    /** Toggles the pane (opens it as an overlay, or closes it); owned by RightPanelContainer. */
+    onToggle: () => void;
 }
 
-export default function RightPaneToggleHandle({ rightPaneVisible }: RightPaneToggleHandleProps) {
+export default function RightPaneToggleHandle({ rightPaneVisible, onToggle }: RightPaneToggleHandleProps) {
     const buttonRef = useRef<HTMLButtonElement>(null);
     // Pointer's vertical position captured once on hover; null until the mouse enters
     // (e.g. on keyboard focus) so the tooltip falls back to the handle's centre.
     const pointerY = useRef<number | null>(null);
 
     const handleClick = useCallback(() => {
-        appContext.triggerCommand("toggleRightPane");
+        onToggle();
         // Reset Bootstrap's hover/focus trigger state. A click otherwise leaves the button
         // focused, which keeps the tooltip "stuck" and prevents it re-triggering on next hover.
         const button = buttonRef.current;
@@ -31,7 +32,7 @@ export default function RightPaneToggleHandle({ rightPaneVisible }: RightPaneTog
             Tooltip.getInstance(button)?.hide();
             button.blur();
         }
-    }, []);
+    }, [ onToggle ]);
 
     // Anchor the tooltip to the pointer's entry height rather than the centre of the
     // full-height handle, by shifting it along the cross axis. Not tracked: `pointerY`

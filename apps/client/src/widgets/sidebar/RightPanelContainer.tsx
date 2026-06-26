@@ -11,6 +11,7 @@ import { t } from "../../services/i18n";
 import options from "../../services/options";
 import { DEFAULT_GUTTER_SIZE } from "../../services/resizer";
 import { isStandalone } from "../../services/utils";
+import ActionButton from "../react/ActionButton";
 import Button from "../react/Button";
 import { useActiveNoteContext, useLegacyWidget, useNoteProperty, useTriliumEvent, useTriliumOptionBool, useTriliumOptionJson } from "../react/hooks";
 import LazyComponent from "../react/LazyComponent";
@@ -27,6 +28,13 @@ import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
 
+/**
+ * - `closed`: hidden. - `docked`: a flex pane that reflows the content (resizable via Split).
+ * - `overlay`: floats above the content without reflowing it; transient (closed on focus loss).
+ * Only the docked/closed distinction is persisted (`rightPaneVisible`); overlay is runtime-only.
+ */
+type RightPaneMode = "closed" | "overlay" | "docked";
+
 interface RightPanelWidgetDefinition {
     el: VNode;
     enabled: boolean;
@@ -34,24 +42,52 @@ interface RightPanelWidgetDefinition {
 }
 
 export default function RightPanelContainer({ widgetsByParent }: { widgetsByParent: WidgetsByParent }) {
-    const [ rightPaneVisible, setRightPaneVisible ] = useState(options.is("rightPaneVisible"));
-    const items = useItems(rightPaneVisible, widgetsByParent);
-    useSplit(rightPaneVisible);
-    useTriliumEvent("toggleRightPane", useCallback(() => {
-        setRightPaneVisible(current => {
-            const newValue = !current;
-            options.save("rightPaneVisible", newValue.toString());
-            return newValue;
+    const [ mode, setMode ] = useState<RightPaneMode>(() => options.is("rightPaneVisible") ? "docked" : "closed");
+    const visible = mode !== "closed";
+    const items = useItems(visible, widgetsByParent);
+    useSplit(mode === "docked");
+
+    // Persist only the docked/closed distinction; overlay is ephemeral, so it never writes the option.
+    const transition = useCallback((compute: (prev: RightPaneMode) => RightPaneMode) => {
+        setMode(prev => {
+            const next = compute(prev);
+            if ((prev === "docked") !== (next === "docked")) {
+                options.save("rightPaneVisible", (next === "docked").toString());
+            }
+            return next;
         });
-    }, []));
+    }, []);
+
+    const toggleOverlay = useCallback(() => transition(prev => prev === "closed" ? "overlay" : "closed"), [ transition ]);
+    const dock = useCallback(() => transition(() => "docked"), [ transition ]);
+    const close = useCallback(() => transition(() => "closed"), [ transition ]);
+
+    // Legacy entry points (tab-row toggle, empty-state button) open/close the *docked* pane.
+    useTriliumEvent("toggleRightPane", useCallback(() => {
+        transition(prev => prev === "closed" ? "docked" : "closed");
+    }, [ transition ]));
+
+    useOverlayDismiss(mode === "overlay", close);
+
+    // The overlay reuses the docked width but can't be sized by Split (the content pane isn't flexed),
+    // so it's applied as an inline width here — a genuinely computed value that can't live in CSS.
+    const overlayStyle = mode === "overlay"
+        ? { width: `${Math.max(MIN_WIDTH_PERCENT, options.getInt("rightPaneWidth") ?? MIN_WIDTH_PERCENT)}%` }
+        : undefined;
 
     return (
         <>
             {/* Absolutely positioned in a reserved gutter on the viewport's right edge, so it
                 stays put regardless of the panel's open/collapsed state (see RightPanelContainer.css). */}
-            <RightPaneToggleHandle rightPaneVisible={rightPaneVisible} />
-            <div id="right-pane">
-                {rightPaneVisible && (
+            <RightPaneToggleHandle rightPaneVisible={visible} onToggle={toggleOverlay} />
+            <div id="right-pane" class={mode === "overlay" ? "overlay" : undefined} style={overlayStyle}>
+                {mode === "overlay" && (
+                    <div class="right-pane-overlay-actions">
+                        <ActionButton icon="bx bx-pin" text={t("right_pane.dock")} onClick={dock} />
+                        <ActionButton icon="bx bx-x" text={t("right_pane.close")} onClick={close} />
+                    </div>
+                )}
+                {visible && (
                     items.length > 0 ? (
                         items
                     ) : (
@@ -159,6 +195,61 @@ function useSplit(visible: boolean) {
         });
         return () => splitInstance.destroy();
     }, [ visible ]);
+}
+
+// Elements that should NOT dismiss the overlay when clicked/focused: the pane itself, the toggle
+// handle, and popups that sidebar content renders into portals outside #right-pane (dropdowns,
+// context menus, tooltips, modals). Tune this list as sidebar widgets add new popup roots.
+const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .dropdown-menu, .tooltip, .modal, .popover, .context-menu";
+
+/** Whether an event target lies within the overlay or an allowlisted popup (i.e. should keep it open). */
+export function isWithinOverlay(target: EventTarget | null): boolean {
+    return target instanceof Element && target.closest(OVERLAY_KEEP_OPEN_SELECTOR) !== null;
+}
+
+/** While `active`, closes the overlay on an outside pointer press, focus move, or Escape. */
+function useOverlayDismiss(active: boolean, onDismiss: () => void) {
+    useEffect(() => {
+        if (!active) return;
+
+        let blurTimer: ReturnType<typeof setTimeout> | undefined;
+
+        const onPointerDown = (e: PointerEvent) => {
+            if (!isWithinOverlay(e.target)) onDismiss();
+        };
+        const onFocusIn = (e: FocusEvent) => {
+            // Focus parked on <body> (e.g. after the handle blurs itself on open) isn't a real move-away.
+            if (e.target === document.body || isWithinOverlay(e.target)) return;
+            onDismiss();
+        };
+        const onWindowBlur = () => {
+            // Clicks inside an iframe (e.g. the PDF viewer) don't reach the parent's pointerdown,
+            // but they blur the window and move focus onto the <iframe> element. Read activeElement
+            // on the next tick (some browsers update it after the blur fires).
+            blurTimer = setTimeout(() => {
+                const active = document.activeElement;
+                if (active instanceof HTMLIFrameElement && !isWithinOverlay(active)) onDismiss();
+            });
+        };
+        const onKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onDismiss();
+                document.querySelector<HTMLElement>(".right-pane-toggle-handle")?.focus();
+            }
+        };
+
+        document.addEventListener("pointerdown", onPointerDown, true);
+        document.addEventListener("focusin", onFocusIn);
+        document.addEventListener("keydown", onKeyDown);
+        window.addEventListener("blur", onWindowBlur);
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown, true);
+            document.removeEventListener("focusin", onFocusIn);
+            document.removeEventListener("keydown", onKeyDown);
+            window.removeEventListener("blur", onWindowBlur);
+            if (blurTimer) clearTimeout(blurTimer);
+        };
+    }, [ active, onDismiss ]);
 }
 
 function CustomLegacyWidget({ originalWidget }: { originalWidget: LegacyRightPanelWidget }) {
