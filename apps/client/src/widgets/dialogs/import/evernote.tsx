@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
-import FormFileUpload from "../../react/FormFileUpload.js";
+import FileDropZone from "../../react/FileDropZone.js";
 import FormGroup from "../../react/FormGroup.js";
 import iconUrl from "./icons/evernote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
@@ -49,7 +49,7 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
         <div className="evernote-panel">
             <p>{t("evernote_import.description_long")}</p>
             <FormGroup name="evernote-file" label={t("evernote_import.choose_file")}>
-                <FormFileUpload multiple onChange={onChange} />
+                <FileDropZone multiple onChange={onChange} />
             </FormGroup>
         </div>
     );

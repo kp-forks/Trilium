@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
-import FormFileUpload from "../../react/FormFileUpload.js";
+import FileDropZone from "../../react/FileDropZone.js";
 import FormGroup from "../../react/FormGroup.js";
 import iconUrl from "./icons/keep.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
@@ -48,7 +48,7 @@ function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanel
         <div className="keep-panel">
             <p>{t("keep_import.description_long")}</p>
             <FormGroup name="keep-file" label={t("keep_import.choose_file")}>
-                <FormFileUpload onChange={onChange} />
+                <FileDropZone onChange={onChange} />
             </FormGroup>
         </div>
     );

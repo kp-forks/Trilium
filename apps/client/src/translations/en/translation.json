@@ -230,6 +230,12 @@
     "in-progress-with-total": "Importing {{progress}} of {{total}}",
     "successful": "Import finished successfully."
   },
+  "file_upload": {
+    "drop_or_browse_single": "Drag and drop a file here, or click to browse",
+    "drop_or_browse_multiple": "Drag and drop files here, or click to browse",
+    "selected_one": "{{count}} file selected",
+    "selected_other": "{{count}} files selected"
+  },
   "import_provider": {
     "choose_provider": "Choose a service above to import from."
   },

@@ -4,8 +4,8 @@ import { t } from "../../../services/i18n.js";
 import importService, { type UploadFilesOptions } from "../../../services/import.js";
 import tree from "../../../services/tree.js";
 import Button from "../../react/Button.js";
+import FileDropZone from "../../react/FileDropZone.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
-import FormFileUpload from "../../react/FormFileUpload.js";
 import FormGroup, { FormMultiGroup } from "../../react/FormGroup.js";
 import { useTriliumOptionBool } from "../../react/hooks.js";
 import RawHtml from "../../react/RawHtml.js";
@@ -69,7 +69,7 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
                     {t("import.importZipRecommendation")}
                 </>
             }>
-                <FormFileUpload multiple onChange={setFiles} />
+                <FileDropZone multiple onChange={setFiles} />
             </FormGroup>
 
             <FormMultiGroup label={t("import.options")}>
