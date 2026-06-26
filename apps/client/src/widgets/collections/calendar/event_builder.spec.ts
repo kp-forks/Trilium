@@ -199,6 +199,28 @@ describe("Recurrence", () => {
         expect(events[0].end).toBeUndefined();
     });
 
+    it("supports recurrence spanning day boundary", async () => {
+        const noteIds = buildNotes([
+            {
+                title: "Recurring Event Spanning Day Boundary",
+                "#startDate": "2025-05-05",
+                "#startTime": "23:00",
+                "#endTime": "1:00",
+                "#recurrence": "FREQ=DAILY;COUNT=3"
+            }
+        ]);
+        const events = await buildEvents(noteIds);
+
+        expect(events).toHaveLength(1);
+        expect(events[0]).toMatchObject({
+            title: "Recurring Event Spanning Day Boundary",
+            start: "2025-05-05T23:00:00",
+            duration: "02:00"
+        });
+        expect(events[0].rrule).toContain("DTSTART:20250505T230000");
+        expect(events[0].end).toBeUndefined();
+    });
+
     it("supports recurrence with start and end time (duration calculated)", async () => {
         const noteIds = buildNotes([
             {
