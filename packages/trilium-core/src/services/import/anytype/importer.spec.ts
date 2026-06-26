@@ -340,17 +340,27 @@ describe("dates", () => {
 });
 
 describe("collection properties", () => {
-    // Supported property formats: 0 text, 2 number, 4 date/date-time, 6 checkbox, 7 url, 8 email, 9 phone.
+    // Supported formats: 0 text, 2 number, 3 select, 4 date/date-time, 6 checkbox, 7 url, 8 email, 9 phone, 11 multi-select.
     const rels = relationMap([
         ["6a3e29d5cafa6953a4661c15", "Text property", 0],
         ["6a3e29e1cafa6953a4661c16", "Number prop", 2],
+        ["6a3e29e8cafa6953a4661c17", "Select property", 3], // single-select (option-backed)
         ["6a3e330acafa6953a4661c6b", "Date", 4, false], // date (no time)
         ["6a3e3317cafa6953a4661c6e", "Date & Time", 4, true], // date-time (includeTime)
         ["6a3e3354cafa6953a4661c73", "Checkbox", 6],
         ["6a3e335dcafa6953a4661c74", "URL", 7],
         ["6a3e336dcafa6953a4661c75", "Email", 8],
         ["6a3e337dcafa6953a4661c76", "Phone", 9],
+        ["6a3e2a01cafa6953a4661c1c", "Multi-select", 11], // multi-select (option-backed)
         ["6a3e3323cafa6953a4661c6f", "File", 5] // an unsupported format (skipped for now)
+    ]);
+
+    // Maps a select/multi-select option id to its display name.
+    const options = new Map<string, string>([
+        ["opt-first-cap", "First"],
+        ["opt-second-cap", "Second"],
+        ["opt-first", "first"],
+        ["opt-second", "second"]
     ]);
 
     describe("toAttributeName", () => {
@@ -371,6 +381,10 @@ describe("collection properties", () => {
 
         it("neutralizes commas, equals and control chars in the alias so the definition can't be corrupted", () => {
             expect(buildColumnDefinition("text", "a,b=c")).toBe("promoted,single,text,alias=a b c");
+        });
+
+        it("emits the column's multiplicity (multi for a multi-select)", () => {
+            expect(buildColumnDefinition("text", "Multi-select", "multi")).toBe("promoted,multi,text,alias=Multi-select");
         });
     });
 
@@ -405,6 +419,26 @@ describe("collection properties", () => {
         it("renders a false checkbox as boolean false (an unset value, not present, contributes nothing)", () => {
             const details = { id: "obj", "6a3e3354cafa6953a4661c73": false };
             expect(parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels).properties).toEqual([{ name: "checkbox", value: "false" }]);
+        });
+
+        it("resolves select / multi-select option ids to text labels (a multi-select yields one label per option)", () => {
+            const details = {
+                id: "obj",
+                "6a3e29e8cafa6953a4661c17": ["opt-first-cap"], // Select → single value
+                "6a3e2a01cafa6953a4661c1c": ["opt-first", "opt-second"] // Multi-select → two values
+            };
+            const result = parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels, options);
+            expect(result.properties).toEqual([
+                { name: "selectProperty", value: "First" },
+                { name: "multiSelect", value: "first" },
+                { name: "multiSelect", value: "second" }
+            ]);
+        });
+
+        it("drops select / multi-select options that can't be resolved to a name", () => {
+            const details = { id: "obj", "6a3e2a01cafa6953a4661c1c": ["opt-first", "unknown-option"] };
+            const result = parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels, options);
+            expect(result.properties).toEqual([{ name: "multiSelect", value: "first" }]);
         });
 
         it("ignores system relations (non-hex keys), unset values and an existing scheme", () => {
@@ -464,8 +498,24 @@ describe("collection properties", () => {
             const result = parseObject(doc, undefined, rels);
             expect(result.collection).toEqual({
                 memberIds: ["m1", "m2"],
-                columns: [{ name: "url", labelType: "url", alias: "URL" }]
+                columns: [{ name: "url", labelType: "url", alias: "URL", multiplicity: "single" }]
             });
+        });
+
+        it("carries each column's multiplicity (multi for a multi-select)", () => {
+            const dv: AnytypeBlock = {
+                id: "dv",
+                childrenIds: [],
+                dataview: {
+                    isCollection: true,
+                    views: [{ relations: [{ key: "6a3e29e8cafa6953a4661c17", isVisible: true }, { key: "6a3e2a01cafa6953a4661c1c", isVisible: true }] }]
+                }
+            };
+            const doc = snapshot([{ id: "obj", childrenIds: ["dv"] }, dv], { id: "obj", name: "C", links: [] });
+            expect(parseObject(doc, undefined, rels).collection?.columns).toEqual([
+                { name: "selectProperty", labelType: "text", alias: "Select property", multiplicity: "single" },
+                { name: "multiSelect", labelType: "text", alias: "Multi-select", multiplicity: "multi" }
+            ]);
         });
 
         it("leaves collection undefined for a regular (non-dataview) page", () => {

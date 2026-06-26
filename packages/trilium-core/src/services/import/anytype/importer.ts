@@ -32,8 +32,9 @@ import { escapeHtml, newEntityId } from "../../utils/index.js";
 import { getZipProvider } from "../../zip_provider.js";
 
 async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { objects, relations } = await parseZip(fileBuffer);
+    const { objects, relations, options } = await parseZip(fileBuffer);
     const relationMap = buildRelationMap(relations);
+    const optionMap = buildOptionMap(options);
     // Import basic pages and collections (a collection carries the collection layout, so isPage rejects it);
     // query sets and system objects stay out.
     const pageSnapshots = objects.filter((snapshot) => isPage(snapshot) || isCollectionObject(snapshot));
@@ -51,26 +52,28 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     }
     const resolveLink: LinkResolver = (cid) => targets.get(cid);
 
-    const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap));
+    const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap, optionMap));
     taskContext.setTotalCount(pages.length);
 
     return createNotes(importRootNote, pages, targets, taskContext);
 }
 
 /**
- * Reads the export's `objects/*.pb.json` (page/collection snapshots) and `relations/*.pb.json` (property
- * definitions). The relation definitions name and type the custom properties carried as values on objects.
- * Other sibling folders (types, templates, …) and the protobuf `.pb` files are ignored for now. A malformed
- * entry is skipped rather than failing the whole import.
+ * Reads the export's `objects/*.pb.json` (page/collection snapshots), `relations/*.pb.json` (property
+ * definitions) and `relationsOptions/*.pb.json` (select / multi-select option values). The relation
+ * definitions name and type the custom properties carried as values on objects; the options resolve a
+ * select value's option id to its display name. Other sibling folders (types, templates, …) and the
+ * protobuf `.pb` files are ignored for now. A malformed entry is skipped rather than failing the import.
  */
-async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[] }> {
+async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[] }> {
     const provider = getZipProvider();
     const objects: AnytypeSnapshot[] = [];
     const relations: AnytypeSnapshot[] = [];
+    const options: AnytypeSnapshot[] = [];
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
-        const bucket = isObjectEntry(entry.fileName) ? objects : isRelationEntry(entry.fileName) ? relations : undefined;
+        const bucket = isObjectEntry(entry.fileName) ? objects : isRelationOptionEntry(entry.fileName) ? options : isRelationEntry(entry.fileName) ? relations : undefined;
         if (!bucket) {
             return;
         }
@@ -81,7 +84,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnaps
         }
     }, filenameEncoding);
 
-    return { objects, relations };
+    return { objects, relations, options };
 }
 
 /** True for entries that are JSON object files under the export's `objects/` folder. */
@@ -92,6 +95,11 @@ function isObjectEntry(fileName: string): boolean {
 /** True for entries that are JSON relation-definition files under the export's `relations/` folder. */
 function isRelationEntry(fileName: string): boolean {
     return isJsonEntryUnder(fileName, "relations/");
+}
+
+/** True for entries that are JSON option files under the export's `relationsOptions/` folder. */
+function isRelationOptionEntry(fileName: string): boolean {
+    return isJsonEntryUnder(fileName, "relationsoptions/");
 }
 
 function isJsonEntryUnder(fileName: string, folder: string): boolean {
@@ -106,6 +114,18 @@ function buildRelationMap(relations: AnytypeSnapshot[]): Map<string, RelationInf
         const details = snapshot.snapshot?.data?.details;
         if (details?.relationKey) {
             map.set(details.relationKey, { name: details.name ?? "", format: details.relationFormat ?? -1, includeTime: !!details.relationFormatIncludeTime });
+        }
+    }
+    return map;
+}
+
+/** Indexes the select / multi-select option values by id, so an object's stored option id resolves to its name. */
+function buildOptionMap(options: AnytypeSnapshot[]): Map<string, string> {
+    const map = new Map<string, string>();
+    for (const snapshot of options) {
+        const details = snapshot.snapshot?.data?.details;
+        if (details?.id) {
+            map.set(details.id, details.name ?? "");
         }
     }
     return map;
@@ -147,7 +167,7 @@ export function isCollectionObject(snapshot: AnytypeSnapshot): boolean {
  * it became; without one (parsing a page in isolation) link blocks are dropped. `relations` names and types
  * the custom properties; without it (or for system fields) properties are skipped.
  */
-export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver = () => undefined, relations: Map<string, RelationInfo> = new Map()): ParsedObject {
+export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver = () => undefined, relations: Map<string, RelationInfo> = new Map(), options: Map<string, string> = new Map()): ParsedObject {
     const data = snapshot.snapshot?.data;
     const details = data?.details ?? {};
     const id = details.id ?? "";
@@ -161,7 +181,7 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
         linkTargetIds,
         dateCreated: anytypeDate(details.createdDate),
         dateModified: anytypeDate(details.lastModifiedDate),
-        properties: parseProperties(details, relations),
+        properties: parseProperties(details, relations, options),
         collection: parseCollection(data?.blocks ?? [], details, relations)
     };
 }
@@ -173,28 +193,32 @@ function pageTitle(details: AnytypeDetails | undefined): string {
 
 // #region Collection properties
 /**
- * Maps an Anytype relation to the Trilium label type its values become, or undefined for a format not yet
- * imported (select, multi-select, file, …). Date and date-time share format 4, told apart by the relation's
- * `includeTime` flag; email and phone reuse the `url` type with a `mailto:`/`tel:` scheme (the same
- * convention as the Notion importer).
+ * Maps an Anytype relation to how its values import, or undefined for a format not yet supported (file, …).
+ * Date and date-time share format 4, told apart by the relation's `includeTime` flag; email and phone reuse
+ * the `url` type with a `mailto:`/`tel:` scheme. Select and multi-select are `optionBacked` (their value is
+ * a list of option ids resolved to names) and follow the Notion importer's single/multi text mapping.
  */
-function propertyMapping(info: RelationInfo): { labelType: PropertyLabelType; scheme?: string } | undefined {
+function propertyMapping(info: RelationInfo): PropertyMapping | undefined {
     switch (info.format) {
         case 0: // longtext
         case 1: // shorttext
-            return { labelType: "text" };
+            return { labelType: "text", multiplicity: "single" };
         case 2: // number
-            return { labelType: "number" };
+            return { labelType: "number", multiplicity: "single" };
+        case 3: // status / single-select
+            return { labelType: "text", multiplicity: "single", optionBacked: true };
         case 4: // date / date-time
-            return { labelType: info.includeTime ? "datetime" : "date" };
+            return { labelType: info.includeTime ? "datetime" : "date", multiplicity: "single" };
         case 6: // checkbox
-            return { labelType: "boolean" };
+            return { labelType: "boolean", multiplicity: "single" };
         case 7: // url
-            return { labelType: "url" };
+            return { labelType: "url", multiplicity: "single" };
         case 8: // email
-            return { labelType: "url", scheme: "mailto:" };
+            return { labelType: "url", scheme: "mailto:", multiplicity: "single" };
         case 9: // phone
-            return { labelType: "url", scheme: "tel:" };
+            return { labelType: "url", scheme: "tel:", multiplicity: "single" };
+        case 11: // tag / multi-select
+            return { labelType: "text", multiplicity: "multi", optionBacked: true };
         default:
             return undefined;
     }
@@ -209,9 +233,11 @@ function isCustomRelationKey(key: string): boolean {
 /**
  * Reads an object's custom property values as `{ attributeName, value }` pairs. Only the supported formats
  * (see {@link propertyMapping}) of user-defined relations are taken; unset values are dropped, and email /
- * phone values gain a `mailto:`/`tel:` scheme so they stay clickable as url labels.
+ * phone values gain a `mailto:`/`tel:` scheme so they stay clickable as url labels. A select / multi-select
+ * value is a list of option ids, each resolved to its display name via `options` (a multi-select yields one
+ * label per option; an unresolvable option is skipped).
  */
-function parseProperties(details: AnytypeDetails, relations: Map<string, RelationInfo>): ParsedProperty[] {
+function parseProperties(details: AnytypeDetails, relations: Map<string, RelationInfo>, options: Map<string, string>): ParsedProperty[] {
     const properties: ParsedProperty[] = [];
     for (const [key, raw] of Object.entries(details as Record<string, unknown>)) {
         if (!isCustomRelationKey(key)) {
@@ -222,9 +248,19 @@ function parseProperties(details: AnytypeDetails, relations: Map<string, Relatio
         if (!info || !mapping) {
             continue;
         }
-        const value = formatPropertyValue(raw, mapping.labelType, mapping.scheme);
-        if (value !== undefined) {
-            properties.push({ name: toAttributeName(info.name), value });
+        const name = toAttributeName(info.name);
+        if (mapping.optionBacked) {
+            for (const optionId of Array.isArray(raw) ? raw : []) {
+                const optionName = typeof optionId === "string" ? options.get(optionId) : undefined;
+                if (optionName && optionName.trim()) {
+                    properties.push({ name, value: optionName });
+                }
+            }
+        } else {
+            const value = formatPropertyValue(raw, mapping.labelType, mapping.scheme);
+            if (value !== undefined) {
+                properties.push({ name, value });
+            }
         }
     }
     return properties;
@@ -256,7 +292,7 @@ function parseCollection(blocks: AnytypeBlock[], details: AnytypeDetails, relati
         const name = toAttributeName(info.name);
         if (!seen.has(name)) {
             seen.add(name);
-            columns.push({ name, labelType: mapping.labelType, alias: info.name });
+            columns.push({ name, labelType: mapping.labelType, alias: info.name, multiplicity: mapping.multiplicity });
         }
     }
 
@@ -318,14 +354,14 @@ export function toAttributeName(name: string): string {
 }
 
 /**
- * Builds a single-valued promoted-attribute definition for a collection column (e.g.
- * `promoted,single,url,alias=URL`). The original column name is kept verbatim as the alias so its spacing
- * and casing still show in the UI; commas, equals and control characters are neutralized so they can't
- * corrupt the comma/`=`-delimited definition string.
+ * Builds a promoted-attribute definition for a collection column (e.g. `promoted,single,url,alias=URL`, or
+ * `promoted,multi,text,alias=Multi-select`). The original column name is kept verbatim as the alias so its
+ * spacing and casing still show in the UI; commas, equals and control characters are neutralized so they
+ * can't corrupt the comma/`=`-delimited definition string.
  */
-export function buildColumnDefinition(labelType: PropertyLabelType, alias: string): string {
+export function buildColumnDefinition(labelType: PropertyLabelType, alias: string, multiplicity: Multiplicity = "single"): string {
     const safeAlias = alias.replace(/[\x00-\x1f,=]/g, " ").trim();
-    return `promoted,single,${labelType},alias=${safeAlias}`;
+    return `promoted,${multiplicity},${labelType},alias=${safeAlias}`;
 }
 // #endregion
 
@@ -773,7 +809,7 @@ function createCollectionNote(parentNoteId: string, page: ParsedObject, collecti
     let position = 0;
     for (const column of collection.columns) {
         position += 10;
-        note.addAttribute("label", `label:${column.name}`, buildColumnDefinition(column.labelType, column.alias), true, position);
+        note.addAttribute("label", `label:${column.name}`, buildColumnDefinition(column.labelType, column.alias, column.multiplicity), true, position);
     }
     return note;
 }
@@ -940,17 +976,31 @@ export interface RelationInfo {
 /** The Trilium label types a supported Anytype property maps to (email/phone reuse `url`). */
 export type PropertyLabelType = "text" | "number" | "url" | "date" | "datetime" | "boolean";
 
+/** Whether a property holds a single value or several (a multi-select). */
+export type Multiplicity = "single" | "multi";
+
+/** How a relation's values import: its Trilium label type, value count, an optional clickable scheme
+ * (email/phone), and whether the value is option-backed (a select / multi-select, resolved via the options
+ * map). */
+interface PropertyMapping {
+    labelType: PropertyLabelType;
+    multiplicity: Multiplicity;
+    scheme?: string;
+    optionBacked?: boolean;
+}
+
 /** One custom property value on an object: the Trilium attribute name and its (already formatted) value. */
 export interface ParsedProperty {
     name: string;
     value: string;
 }
 
-/** One collection table column: its attribute name, Trilium label type and original (alias) name. */
+/** One collection table column: its attribute name, Trilium label type, original (alias) name and value count. */
 export interface ParsedColumn {
     name: string;
     labelType: PropertyLabelType;
     alias: string;
+    multiplicity: Multiplicity;
 }
 
 /** A collection's table schema and membership. `memberIds` are Anytype object ids (its `details.links`);

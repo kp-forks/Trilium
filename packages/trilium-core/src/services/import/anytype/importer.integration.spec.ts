@@ -87,6 +87,11 @@ function collectionObject(id: string, name: string, memberIds: string[], columnK
     });
 }
 
+/** A select / multi-select option-value file (relationsOptions/<x>.pb.json): resolves an option id to its name. */
+function optionObject(cid: string, name: string, relationKey: string): string {
+    return JSON.stringify({ sbType: "STRelationOption", snapshot: { data: { details: { id: cid, name, relationKey } } } });
+}
+
 /** A title-less "row" object whose content is its custom property values (keyed by relation key). */
 function memberObject(id: string, props: Record<string, unknown>): string {
     return JSON.stringify({
@@ -555,6 +560,30 @@ describe("Anytype importer — integration", () => {
         expect(row.getOwnedLabelValue("date")).toBe(local(1782461197));
         expect(row.getOwnedLabelValue("dateTime")).toBe(local(1782461208, true));
         expect(row.getOwnedLabelValue("checkbox")).toBe("true");
+    });
+
+    it("imports select and multi-select columns as single/multi text labels, resolving option names", async () => {
+        // Verbatim relation keys from "My custom collection": Select property (format 3), Multi-select (format 11).
+        const selectKey = "6a3e29e8cafa6953a4661c17";
+        const multiKey = "6a3e2a01cafa6953a4661c1c";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Tagged", ["m1"], [selectKey, multiKey]),
+            "objects/m1.pb.json": memberObject("m1", { [selectKey]: ["opt-second-cap"], [multiKey]: ["opt-first", "opt-second"] }),
+            "relations/select.pb.json": relationObject(selectKey, "Select property", 3),
+            "relations/multi.pb.json": relationObject(multiKey, "Multi-select", 11),
+            "relationsOptions/o1.pb.json": optionObject("opt-second-cap", "Second", selectKey),
+            "relationsOptions/o2.pb.json": optionObject("opt-first", "first", multiKey),
+            "relationsOptions/o3.pb.json": optionObject("opt-second", "second", multiKey)
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        // Single-select is a single text column; multi-select a multi text column.
+        expect(collection.getOwnedLabelValue("label:selectProperty")).toBe("promoted,single,text,alias=Select property");
+        expect(collection.getOwnedLabelValue("label:multiSelect")).toBe("promoted,multi,text,alias=Multi-select");
+
+        const row = collection.getChildNotes()[0];
+        expect(row.getOwnedLabelValue("selectProperty")).toBe("Second");
+        expect(row.getOwnedLabelValues("multiSelect")).toEqual(["first", "second"]);
     });
 
     it("produces an empty root when the export has no pages", async () => {
