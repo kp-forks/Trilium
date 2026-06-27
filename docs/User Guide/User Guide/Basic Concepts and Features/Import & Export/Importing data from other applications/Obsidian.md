@@ -30,6 +30,8 @@ The following features are preserved by Trilium during the import process:
 *   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a>
 *   To-do lists
 *   <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a>
+    *   Non-Markdown files in the Vault are treated as attachments by default if they are referenced by at least one note.
+    *   Otherwise, they will be imported as <a class="reference-link" href="../../../Note%20Types/File.md">File</a> notes.
 *   Transclusions are converted to <a class="reference-link" href="../../../Note%20Types/Text/Include%20Note.md">Include Note</a> or <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> (depending on type).
 *   <a class="reference-link" href="../../../Note%20Types/Text/Math%20Equations.md">Math Equations</a> (inline or block)
 *   <a class="reference-link" href="../../../Note%20Types/Text/Developer-specific%20formatting/Code%20blocks.md">Code blocks</a>, with a best-effort attempt to restore the language.
