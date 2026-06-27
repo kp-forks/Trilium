@@ -390,6 +390,15 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
 
     const content = typeof file.buffer === "string" ? file.buffer : new TextDecoder().decode(file.buffer);
 
+    // saveNote() increments progress once per note; count the note-opening tags up front so the client can
+    // render a progress bar instead of a bare count. The file is already in memory, so a cheap regex over
+    // the raw text gives the denominator without a second parse. `[\s>]` keeps it from matching
+    // `<note-attributes>` or `<en-note>`.
+    const totalNotes = (content.match(/<note[\s>]/g) ?? []).length;
+    if (totalNotes > 0) {
+        taskContext.setTotalCount(totalNotes);
+    }
+
     const CHUNK_SIZE = 64 * 1024;
     for (let i = 0; i < content.length; i += CHUNK_SIZE) {
         parser.write(content.slice(i, i + CHUNK_SIZE));

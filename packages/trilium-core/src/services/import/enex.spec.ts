@@ -1,7 +1,7 @@
 import fs from "fs";
 import { default as path, dirname } from "path";
 import { fileURLToPath } from "url";
-import { beforeAll, describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import becca from "../../becca/becca.js";
 import type BNote from "../../becca/entities/bnote.js";
@@ -17,7 +17,7 @@ async function testImport(fileName: string) {
     const sample = fs.readFileSync(path.join(scriptDir, "samples", fileName));
     const taskContext = TaskContext.getInstance("import-enex", "importNotes", {});
 
-    return new Promise<{ importedNote: BNote; rootNote: BNote }>((resolve, reject) => {
+    return new Promise<{ importedNote: BNote; rootNote: BNote; taskContext: TaskContext<"importNotes"> }>((resolve, reject) => {
         getContext().init(async () => {
             const rootNote = becca.getNote("root");
             if (!rootNote) {
@@ -32,7 +32,8 @@ async function testImport(fileName: string) {
             }, rootNote as BNote);
             resolve({
                 importedNote,
-                rootNote
+                rootNote,
+                taskContext
             });
         });
     });
@@ -87,6 +88,21 @@ describe("importEnex", () => {
         expect(test3).toBeTruthy();
         expect(test3!.getChildNotes()).toHaveLength(0);
         expect(test3!.getAttachmentsByRole("file")).toHaveLength(0);
+    });
+
+    it("reports the note count as the task total so the client shows a progress bar", async () => {
+        // setTotalCount drives the denominator of the progress bar; spy on the prototype before importing
+        // since the call happens inside importEnex. It should match the number of imported notes.
+        const setTotalCount = vi.spyOn(TaskContext.prototype, "setTotalCount");
+        try {
+            const { importedNote } = await testImport("File with attachments.enex");
+
+            const noteCount = importedNote.getChildNotes().length;
+            expect(noteCount).toBeGreaterThan(0);
+            expect(setTotalCount).toHaveBeenCalledWith(noteCount);
+        } finally {
+            setTotalCount.mockRestore();
+        }
     });
 
     it("converts Evernote's rich blocks (code, math, mermaid, tasks, callouts, toggles, checkboxes)", async () => {
