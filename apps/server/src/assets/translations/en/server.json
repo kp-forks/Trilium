@@ -53,7 +53,7 @@
     "toggle-link-map": "Toggle Link Map",
     "other": "Other",
     "toggle-right-pane": "Toggle the display of the right pane, which includes Table of Contents and Highlights",
-    "peek-right-pane": "Peek the right pane as a temporary overlay that floats over the content and closes when it loses focus",
+    "peek-right-pane": "Peek the right pane as a temporary panel that floats over the content and closes when it loses focus",
     "open-note-externally": "Open note as a file with default application",
     "render-active-note": "Render (re-render) active note",
     "run-active-note": "Run active JavaScript (frontend/backend) code note",

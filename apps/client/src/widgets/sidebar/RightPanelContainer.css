@@ -1,17 +1,17 @@
-/* Reserve a fixed-width gutter on the viewport's right edge for the toggle handle, which is
-   absolutely positioned within it (see RightPaneToggleHandle.css). Split sizes the panes
-   inside the padded content box, so they never sit under the handle, and the handle stays put
-   regardless of whether the panel is open. */
+/* Reserve a fixed-width gutter on the viewport's right edge for the peek button, which is
+   absolutely positioned within it (see RightPanePeekButton.css). Split sizes the panes
+   inside the padded content box, so they never sit under the button, and the button stays put
+   regardless of whether the right pane is open. */
 body.experimental-feature-new-layout #vertical-main-container {
-    --right-pane-handle-width: 12px;
-    /* +4px leaves a small gap between the panel (and #center-pane) and the handle. */
-    --right-pane-handle-gutter: calc(var(--right-pane-handle-width) + 4px);
+    --right-pane-peek-button-width: 12px;
+    /* +4px leaves a small gap between the right pane (and #center-pane) and the peek button. */
+    --right-pane-peek-button-gutter: calc(var(--right-pane-peek-button-width) + 4px);
     position: relative;
-    padding-inline-end: var(--right-pane-handle-gutter);
+    padding-inline-end: var(--right-pane-peek-button-gutter);
 }
 
 /* Persistent host wrapping the spacer + #right-pane (see RightPanelContainer.tsx), so #right-pane
-   never reparents between modes. A flex row: docked it fills with the pane (spacer hidden); overlay
+   never reparents between modes. A flex row: docked it fills with the pane (spacer hidden); peek
    it lays out [spacer | gutter | pane]. */
 body.experimental-feature-new-layout #right-pane-host {
     display: flex;
@@ -19,57 +19,57 @@ body.experimental-feature-new-layout #right-pane-host {
 }
 
 /* Docked: #right-pane fills the host (which Split sizes against #center-pane). */
-body.experimental-feature-new-layout #right-pane-host:not(.overlay) > #right-pane {
+body.experimental-feature-new-layout #right-pane-host:not(.peek) > #right-pane {
     flex: 1 1 0;
     min-width: 0;
 }
 
-/* When closing the overlay, the host goes in-flow a frame before Split.destroy (run in an effect)
-   removes its resize gutter. Keep any gutter inside a non-overlay host out of the flow so that
+/* When closing the peek, the host goes in-flow a frame before Split.destroy (run in an effect)
+   removes its resize gutter. Keep any gutter inside a non-peek host out of the flow so that
    lingering 5px gutter can't briefly widen the host and reflow the content. */
-body.experimental-feature-new-layout #right-pane-host:not(.overlay) > .gutter {
+body.experimental-feature-new-layout #right-pane-host:not(.peek) > .gutter {
     display: none;
 }
 
-/* Overlay: float the host above the content as an absolute layer, so the content never reflows. */
-body.experimental-feature-new-layout #right-pane-host.overlay {
+/* Peek: float the host above the content as an absolute layer, so the content never reflows. */
+body.experimental-feature-new-layout #right-pane-host.peek {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
-    inset-inline-end: var(--right-pane-handle-gutter);
+    inset-inline-end: var(--right-pane-peek-button-gutter);
     z-index: 15;
-    animation: right-pane-overlay-in 150ms ease;
+    animation: right-pane-peek-in 150ms ease;
 }
 
-@keyframes right-pane-overlay-in {
+@keyframes right-pane-peek-in {
     from { opacity: 0; }
     to { opacity: 1; }
 }
 
-/* Overlay: Split sizes the spacer and the pane via inline widths, so flex must not override them. */
-body.experimental-feature-new-layout #right-pane-host.overlay > .right-pane-overlay-spacer,
-body.experimental-feature-new-layout #right-pane-host.overlay > #right-pane {
+/* Peek: Split sizes the spacer and the pane via inline widths, so flex must not override them. */
+body.experimental-feature-new-layout #right-pane-host.peek > .right-pane-peek-spacer,
+body.experimental-feature-new-layout #right-pane-host.peek > #right-pane {
     flex: 0 0 auto;
 }
 
-body.experimental-feature-new-layout #right-pane-host.overlay > #right-pane {
+body.experimental-feature-new-layout #right-pane-host.peek > #right-pane {
     border-inline-start: 1px solid var(--main-border-color);
     box-shadow: -4px 0 12px rgba(0, 0, 0, 0.18);
 }
 
-/* The spacer is the left Split target and, in overlay mode, the faint click-to-dismiss backdrop
+/* The spacer is the left Split target and, in peek mode, the faint click-to-dismiss backdrop
    over the content (it also shields the PDF iframe during a resize drag). Hidden when docked. */
-body.experimental-feature-new-layout .right-pane-overlay-spacer {
+body.experimental-feature-new-layout .right-pane-peek-spacer {
     display: none;
 }
 
-body.experimental-feature-new-layout #right-pane-host.overlay > .right-pane-overlay-spacer {
+body.experimental-feature-new-layout #right-pane-host.peek > .right-pane-peek-spacer {
     display: block;
     min-width: 0;
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* Pin/close controls, shown whenever the pane is open (pin only in overlay mode). */
+/* Pin/close controls, shown whenever the pane is open (pin only in peek mode). */
 body.experimental-feature-new-layout #right-pane .right-pane-actions {
     position: absolute;
     top: 4px;

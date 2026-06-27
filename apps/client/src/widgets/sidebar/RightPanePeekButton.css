@@ -1,14 +1,14 @@
-/* The handle is absolutely positioned in a reserved gutter on the right edge of
+/* The peek button is absolutely positioned in a reserved gutter on the right edge of
    #vertical-main-container, so it stays fixed at the viewport's right side and fully
-   owns its background — independent of whether the panel is open or collapsed. */
-.right-pane-toggle-handle {
+   owns its background — independent of whether the right pane is open or collapsed. */
+.right-pane-peek-button {
     /* Pinned to the reserved gutter (see #vertical-main-container in RightPanelContainer.css);
-       width inherits --right-pane-handle-width, with a fallback for safety. */
+       width inherits --right-pane-peek-button-width, with a fallback for safety. */
     position: absolute;
     inset-inline-end: 0;
     top: 0;
     bottom: 0;
-    width: var(--right-pane-handle-width, 12px);
+    width: var(--right-pane-peek-button-width, 12px);
     z-index: 1;
     display: flex;
     align-items: center;
@@ -22,11 +22,11 @@
     color: var(--muted-text-color);
     transition: background 250ms ease-in, color 250ms ease-in;
 
-    &.right-pane-toggle-handle-action-expand {
+    &.right-pane-peek-button-action-expand {
         background: var(--note-split-background-color, var(--main-background-color));
     }
 
-    &.right-pane-toggle-handle-action-collapse {
+    &.right-pane-peek-button-action-collapse {
         background: var(--right-pane-background-color);
     }
 
