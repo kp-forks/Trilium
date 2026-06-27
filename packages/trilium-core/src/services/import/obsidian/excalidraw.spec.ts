@@ -68,9 +68,27 @@ describe("parseExcalidraw", () => {
         expect([...drawing.embeddedFiles]).toEqual([["abc123def456", "picture.png"]]);
     });
 
+    it("defaults missing elements and appState to empty in the canvas content", () => {
+        const drawing = parseExcalidraw(`## Drawing\n\`\`\`json\n${JSON.stringify({ type: "excalidraw" })}\n\`\`\``);
+        const content = drawing && JSON.parse(drawing.content);
+        expect(content).toMatchObject({ elements: [], appState: {}, files: {} });
+        expect(drawing?.embeddedFiles.size).toBe(0);
+    });
+
+    it("ignores scene elements that are null or carry no string fileId when collecting embeds", () => {
+        const scene = { ...SCENE, elements: [null, { id: "x", type: "rectangle" }, { id: "img", type: "image", fileId: 42 }] };
+        const embedded = "## Embedded Files\nabc123def456: [[picture.png]]\n";
+        const drawing = parseExcalidraw(compressedFile(scene, embedded));
+        expect(drawing?.embeddedFiles.size).toBe(0);
+    });
+
     it("returns null when there is no drawing block or the data is corrupt", () => {
         expect(parseExcalidraw("# Just a heading\nNo drawing here.")).toBeNull();
         expect(parseExcalidraw("## Drawing\n```compressed-json\nnot-valid-base64!!\n```")).toBeNull();
         expect(parseExcalidraw("## Drawing\n```json\n{ not json\n```")).toBeNull();
+        // A structurally-valid JSON that isn't an object (a bare number) is rejected too.
+        expect(parseExcalidraw("## Drawing\n```json\n42\n```")).toBeNull();
+        // An empty compressed-json block decompresses to nothing rather than throwing.
+        expect(parseExcalidraw("## Drawing\n```compressed-json\n\n```")).toBeNull();
     });
 });

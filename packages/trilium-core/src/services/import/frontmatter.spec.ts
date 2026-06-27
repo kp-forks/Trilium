@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractFrontmatter } from "./frontmatter.js";
+import { extractFrontmatter, parseFrontmatter } from "./frontmatter.js";
 
 describe("extractFrontmatter", () => {
     it("parses scalar properties into camelCased labels and strips the block from the body", () => {
@@ -21,9 +21,10 @@ describe("extractFrontmatter", () => {
     });
 
     it("stringifies booleans/numbers and keeps an empty property as an empty-valued label", () => {
-        const { attributes } = extractFrontmatter("---\nCheckbox prop: true\nNumber: 5\nfirst:\n---\n");
+        const { attributes } = extractFrontmatter("---\nCheckbox prop: true\nDisabled: false\nNumber: 5\nfirst:\n---\n");
         expect(attributes).toEqual([
             { name: "checkboxProp", value: "true" },
+            { name: "disabled", value: "false" },
             { name: "number", value: "5" },
             { name: "first", value: "" }
         ]);
@@ -59,5 +60,26 @@ describe("extractFrontmatter", () => {
         const { body, attributes } = extractFrontmatter(md);
         expect(body).toBe(md);
         expect(attributes).toEqual([]);
+    });
+
+    it("skips a nested-mapping property, which has no flat label representation", () => {
+        const { attributes } = extractFrontmatter("---\nscalar: kept\nnested:\n  a: 1\n  b: 2\n---\n");
+        expect(attributes).toEqual([{ name: "scalar", value: "kept" }]);
+    });
+});
+
+describe("parseFrontmatter", () => {
+    it("strips a structurally-valid non-mapping block (list/scalar) but yields no data", () => {
+        const list = parseFrontmatter("---\n- a\n- b\n---\nBody.");
+        expect(list).toEqual({ body: "Body.", data: {} });
+
+        const scalar = parseFrontmatter("---\njust a scalar\n---\nBody.");
+        expect(scalar).toEqual({ body: "Body.", data: {} });
+    });
+
+    it("returns the raw key/value mapping for a caller to type itself", () => {
+        const { body, data } = parseFrontmatter("---\nNumber: 5\nFlag: true\n---\nBody.");
+        expect(body).toBe("Body.");
+        expect(data).toEqual({ Number: 5, Flag: true });
     });
 });
