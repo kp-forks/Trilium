@@ -82,4 +82,33 @@ describe("Obsidian importer — integration", () => {
         // Only the Markdown note is imported; nothing else creates a note.
         expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Note"]);
     });
+
+    it("strips the wrapper folder and names the root after the vault when the outer folder is zipped", async () => {
+        // `.obsidian/` sits under "Test vault/", so that folder is the vault root and must be stripped.
+        const importRoot = await importObsidian({
+            "Test vault/Welcome.md": "Hi.",
+            "Test vault/Folder 1/First note.md": "Content goes here.",
+            "Test vault/.obsidian/app.json": "{}"
+        });
+
+        expect(importRoot.title).toBe("Test vault");
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Folder 1", "Welcome"]);
+        const folder1 = importRoot.getChildNotes().find((n) => n.title === "Folder 1");
+        expect(folder1?.getChildNotes().map((n) => n.title)).toEqual(["First note"]);
+    });
+
+    it("names the root from the zip filename when the vault contents are zipped directly", async () => {
+        // `.obsidian/` is at the zip root, so nothing is stripped; the name comes from the zip file.
+        const importRoot = await importObsidian({ "Welcome.md": "Hi.", ".obsidian/app.json": "{}" }, "My Vault.zip");
+
+        expect(importRoot.title).toBe("My Vault");
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Welcome"]);
+    });
+
+    it("falls back to stripping a single shared wrapper folder when there is no .obsidian", async () => {
+        const importRoot = await importObsidian({ "Wrapper/A.md": "a", "Wrapper/B.md": "b" });
+
+        expect(importRoot.title).toBe("Wrapper");
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["A", "B"]);
+    });
 });

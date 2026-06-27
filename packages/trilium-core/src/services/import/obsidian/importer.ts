@@ -6,6 +6,10 @@
  * container note holding its notes). The `.obsidian/` config folder and any other dot-prefixed entry are
  * skipped, and non-Markdown files (attachments, `.canvas`, `.base`, …) are dropped for now.
  *
+ * A vault can be zipped two ways — its *contents* (so `.obsidian/` sits at the zip root) or its *outer
+ * folder* (so everything is nested under `Vault name/`). The location of `.obsidian/` pins the true vault
+ * root either way, so the redundant wrapper folder is stripped and the import root is named after the vault.
+ *
  * Deferred to later passes (so they currently render as literal text or placeholder links): wikilinks
  * `[[…]]`, embeds `![[…]]`, frontmatter → labels, tags, callouts, highlights/comments, and attachments.
  *
@@ -26,51 +30,63 @@ import { getZipProvider } from "../../zip_provider.js";
 import markdownService from "../markdown.js";
 
 interface VaultNote {
-    /** The note's normalized POSIX path within the vault, e.g. `Folder 1/First note.md`. */
+    /** The note's vault-root-relative POSIX path, e.g. `Folder 1/First note.md` (the wrapper folder stripped). */
     path: string;
     title: string;
     markdown: string;
 }
 
-async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, _fileName?: string): Promise<BNote> {
-    const notes = await parseVault(fileBuffer);
+async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
+    const { notes, vaultRoot } = await parseVault(fileBuffer);
     taskContext.setTotalCount(notes.length);
 
-    return createNotes(importRootNote, notes, taskContext);
+    return createNotes(importRootNote, notes, vaultTitle(vaultRoot, fileName), taskContext);
 }
 
 /**
- * Reads the vault zip, collecting one {@link VaultNote} per Markdown file. The `.obsidian/` config folder
- * and any other dot-prefixed entry are skipped, as is every non-Markdown file (handled in later passes).
- * Sorted by path so the resulting tree is built (and ordered) deterministically.
+ * Reads the vault zip, collecting one {@link VaultNote} per Markdown file. The vault root is detected from the
+ * location of `.obsidian/` (see {@link detectVaultRoot}) and stripped from every note's path. The config
+ * folder and any other dot-prefixed entry are skipped, as is every non-Markdown file (handled in later
+ * passes). Sorted by path so the resulting tree is built (and ordered) deterministically.
  */
-async function parseVault(fileBuffer: Uint8Array): Promise<VaultNote[]> {
+async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; vaultRoot: string }> {
     const provider = getZipProvider();
-    const notes: VaultNote[] = [];
+    const allPaths: string[] = [];
+    const raw: { path: string; markdown: string }[] = [];
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
         const path = normalizePath(entry.fileName);
-        if (isDirectory(path) || isIgnored(path) || !isMarkdown(path)) {
+        if (isDirectory(path)) {
             return;
         }
-        notes.push({ path, title: noteTitle(path), markdown: decodeUtf8(await readContent()) });
+        allPaths.push(path);
+        if (isIgnored(path) || !isMarkdown(path)) {
+            return;
+        }
+        raw.push({ path, markdown: decodeUtf8(await readContent()) });
     }, filenameEncoding);
 
+    const vaultRoot = detectVaultRoot(allPaths);
+    const notes = raw.map(({ path, markdown }) => {
+        const relative = stripVaultRoot(path, vaultRoot);
+        return { path: relative, title: noteTitle(relative), markdown };
+    });
     notes.sort((a, b) => a.path.localeCompare(b.path));
-    return notes;
+
+    return { notes, vaultRoot };
 }
 
 /**
- * Builds the note tree under a fresh "Obsidian import" root. Each note is parented under the container note
- * for its folder (created on demand by {@link ensureFolder}, so a folder note exists before its children),
- * with its Markdown rendered to HTML. Returns the import root.
+ * Builds the note tree under a fresh import root named after the vault. Each note is parented under the
+ * container note for its folder (created on demand by {@link ensureFolder}, so a folder note exists before
+ * its children), with its Markdown rendered to HTML. Returns the import root.
  */
-function createNotes(importRootNote: BNote, notes: VaultNote[], taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, notes: VaultNote[], rootTitle: string, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = !!(importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable());
 
-    const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("obsidian_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
+    const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: rootTitle, content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
     // Folder path (POSIX) -> its container note. The empty path maps to the import root.
@@ -99,6 +115,58 @@ function ensureFolder(folderPath: string, rootNote: BNote, folderNotes: Map<stri
     const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: basename(folderPath), content: "", type: "text", mime: "text/html", isProtected });
     folderNotes.set(folderPath, note);
     return note;
+}
+
+/**
+ * Determines the vault root to strip from every entry. The `.obsidian/` config folder always sits at the
+ * true vault root, so the prefix before the *shallowest* `.obsidian/` is authoritative (empty when the
+ * contents were zipped directly). When there is no `.obsidian/` (a stripped or non-vault zip), fall back to a
+ * single wrapper folder shared by every entry; otherwise nothing is stripped.
+ */
+function detectVaultRoot(paths: string[]): string {
+    let obsidianRoot: string | undefined;
+    for (const path of paths) {
+        const segments = path.split("/");
+        const idx = segments.indexOf(".obsidian");
+        if (idx === -1) {
+            continue;
+        }
+        const prefix = idx === 0 ? "" : `${segments.slice(0, idx).join("/")}/`;
+        if (obsidianRoot === undefined || prefix.length < obsidianRoot.length) {
+            obsidianRoot = prefix;
+        }
+    }
+    if (obsidianRoot !== undefined) {
+        return obsidianRoot;
+    }
+
+    const first = paths[0]?.split("/")[0];
+    if (first && paths.every((path) => path.startsWith(`${first}/`))) {
+        return `${first}/`;
+    }
+    return "";
+}
+
+/** Strips the detected vault-root prefix from an entry path (a no-op when the root is the zip root). */
+function stripVaultRoot(path: string, vaultRoot: string): string {
+    return vaultRoot && path.startsWith(vaultRoot) ? path.slice(vaultRoot.length) : path;
+}
+
+/**
+ * The import root's title: the stripped wrapper folder's name when the vault was zipped as a subfolder, else
+ * the zip file's name (without extension), falling back to the generic "Obsidian import".
+ */
+function vaultTitle(vaultRoot: string, fileName?: string): string {
+    if (vaultRoot) {
+        return basename(vaultRoot.replace(/\/$/, "")) || t("obsidian_import.root-title");
+    }
+    if (fileName) {
+        const base = basename(normalizePath(fileName)).replace(/\.zip$/i, "").trim();
+        if (base) {
+            return base;
+        }
+    }
+    return t("obsidian_import.root-title");
 }
 
 /** The POSIX parent-folder path of `path` (everything before the last `/`), or `""` when at the vault root. */
