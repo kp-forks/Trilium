@@ -7,6 +7,7 @@ import { isElectron, randomString } from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
+import { useTriliumOptionBool } from "../../react/hooks.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
 import NoItems from "../../react/NoItems.js";
 import OptionsRow, { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
@@ -21,6 +22,8 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const [notebooks, setNotebooks] = useState<OneNoteNotebook[]>([]);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [debug, setDebug] = useState(false);
+    const [compressImages] = useTriliumOptionBool("compressImages");
+    const [shrinkImages, setShrinkImages] = useState(compressImages);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const stopPolling = useCallback(() => {
@@ -134,11 +137,11 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
         // the only errors caught here are upfront ones like a lost connection or an invalid selection.
         closeDialog();
         try {
-            await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug });
+            await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug, shrinkImages: compressImages && shrinkImages });
         } catch (e) {
             toast.showError(e instanceof Error ? e.message : String(e));
         }
-    }, [notebooks, selectedIds, parentNoteId, debug, closeDialog]);
+    }, [notebooks, selectedIds, parentNoteId, debug, compressImages, shrinkImages, closeDialog]);
 
     // Keep the latest import handler in a ref so the footer effect below depends only on the values the
     // footer actually shows (all primitives), never on doImport's identity. Depending on doImport — which
@@ -206,6 +209,14 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                                     ))}
                                 </div>
                             </OptionsRow>
+                            <OptionsRowWithToggle
+                                name="onenote-shrink-images"
+                                label={t("import.shrinkImages")}
+                                description={t("import.shrinkImagesProviderTooltip")}
+                                currentValue={compressImages && shrinkImages}
+                                onChange={setShrinkImages}
+                                disabled={!compressImages}
+                            />
                             <OptionsRowWithToggle
                                 name="onenote-debug"
                                 label={t("onenote_import.attach_source")}
