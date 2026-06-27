@@ -4,11 +4,11 @@ import { t } from "../../../services/i18n.js";
 import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteContainer, type OneNoteNotebook, orderedChildren } from "../../../services/onenote_import.js";
 import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
-import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
+import { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/onenote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
@@ -198,13 +198,10 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                                     </div>
                                 ))}
                             </div>
-                            <ExtendedAdmonition type="note" icon="bx bx-info-circle" title={t("onenote_import.order_hint_title")}>
-                                {t("onenote_import.order_hint")}
-                            </ExtendedAdmonition>
-                            <FormCheckbox
+                            <OptionsRowWithToggle
                                 name="onenote-debug"
                                 label={t("onenote_import.attach_source")}
-                                hint={t("onenote_import.attach_source_hint")}
+                                description={t("onenote_import.attach_source_hint")}
                                 currentValue={debug}
                                 onChange={setDebug}
                             />
