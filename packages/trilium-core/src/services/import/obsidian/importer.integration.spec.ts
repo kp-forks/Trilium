@@ -76,6 +76,16 @@ describe("Obsidian importer — integration", () => {
         expect(decodeUtf8(welcome?.getContent() ?? "")).toBe("<p>This is your new <em>vault</em>.</p>");
     });
 
+    it("renders an Obsidian callout (with fold marker and custom title) as an admonition", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "> [!success]- Nicely done\n> It worked."
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        expect(decodeUtf8(note?.getContent() ?? ""))
+            .toBe('<aside class="admonition tip"><p><strong>Nicely done</strong></p><p>It worked.</p></aside>');
+    });
+
     it("imports front matter properties as camelCased labels and strips the block from the note body", async () => {
         // Modeled on the vault's "Files with properties" note.
         const importRoot = await importObsidian({

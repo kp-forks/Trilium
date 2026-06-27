@@ -381,6 +381,56 @@ describe("renderToHtml", () => {
         it("renders a plain blockquote", () => {
             expect(render("> just quote")).toBe("<blockquote><p>just quote</p></blockquote>");
         });
+
+        it("matches the admonition type case-insensitively (Obsidian uses lowercase)", () => {
+            expect(render("> [!note]\n> body")).toBe('<aside class="admonition note"><p>body</p></aside>');
+        });
+
+        describe("Obsidian callouts (obsidian: true)", () => {
+            it("maps extended callout types to the nearest Trilium admonition type", () => {
+                const obsidian = { obsidian: true };
+                expect(render("> [!success]\n> done", "", obsidian))
+                    .toBe('<aside class="admonition tip"><p>done</p></aside>');
+                expect(render("> [!question]\n> q", "", obsidian))
+                    .toBe('<aside class="admonition tip"><p>q</p></aside>');
+                expect(render("> [!danger]\n> bad", "", obsidian))
+                    .toBe('<aside class="admonition caution"><p>bad</p></aside>');
+                expect(render("> [!info]\n> i", "", obsidian))
+                    .toBe('<aside class="admonition note"><p>i</p></aside>');
+                expect(render("> [!example]\n> e", "", obsidian))
+                    .toBe('<aside class="admonition important"><p>e</p></aside>');
+            });
+
+            it("renders an inline custom title as a bold lead paragraph", () => {
+                expect(render("> [!note] Custom Title\n> body", "", { obsidian: true }))
+                    .toBe('<aside class="admonition note"><p><strong>Custom Title</strong></p><p>body</p></aside>');
+            });
+
+            it("supports a title separated from the body by a blank line", () => {
+                expect(render("> [!tip] Heads up\n>\n> body", "", { obsidian: true }))
+                    .toBe('<aside class="admonition tip"><p><strong>Heads up</strong></p><p>body</p></aside>');
+            });
+
+            it("drops the fold marker (+/-) while keeping the title", () => {
+                expect(render("> [!note]- Folded\n> body", "", { obsidian: true }))
+                    .toBe('<aside class="admonition note"><p><strong>Folded</strong></p><p>body</p></aside>');
+                expect(render("> [!note]+\n> body", "", { obsidian: true }))
+                    .toBe('<aside class="admonition note"><p>body</p></aside>');
+            });
+
+            it("keeps an unknown callout type as a plain blockquote", () => {
+                const html = render("> [!frobnicate]\n> body", "", { obsidian: true });
+                expect(html).toContain("<blockquote>");
+                expect(html).not.toContain("admonition");
+            });
+        });
+
+        it("does not treat extended Obsidian callout types as admonitions without the obsidian flag", () => {
+            const html = render("> [!success]\n> x");
+            expect(html).toContain("<blockquote>");
+            expect(html).not.toContain("admonition");
+            expect(html).toContain("[!success]");
+        });
     });
 
     describe("formulas", () => {
