@@ -1,3 +1,14 @@
+:where(:root) {
+    --peek-pane-backdrop-color: rgba(0, 0, 0, 0.05);
+    --peek-pane-shadow-depth: 32px;
+    --peek-pane-shadow-color: rgba(0, 0, 0, 0.167);
+
+    --right-pane-peek-border-radius: 8px 0 0 8px;
+    --right-pane-peek-background: rgba(255, 255, 255, 0.904);
+    --right-pane-peek-backdrop-filter: blur(12px) saturate(1.5);
+    --right-pane-header-height: 30px;
+}
+
 /* Reserve a fixed-width gutter on the viewport's right edge for the peek button, which is
    absolutely positioned within it (see RightPanePeekButton.css). Split sizes the panes
    inside the padded content box, so they never sit under the button, and the button stays put
@@ -39,6 +50,7 @@ body.experimental-feature-new-layout #right-pane-host.peek {
     inset-inline-end: var(--right-pane-peek-button-gutter);
     z-index: 15;
     animation: right-pane-peek-in 150ms ease;
+    background: var(--peek-pane-backdrop-color);
 }
 
 @keyframes right-pane-peek-in {
@@ -53,8 +65,7 @@ body.experimental-feature-new-layout #right-pane-host.peek > #right-pane {
 }
 
 body.experimental-feature-new-layout #right-pane-host.peek > #right-pane {
-    border-inline-start: 1px solid var(--main-border-color);
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.18);
+    box-shadow: calc(-1 * var(--peek-pane-shadow-depth)) 0 var(--peek-pane-shadow-depth) calc(-1 * var(--peek-pane-shadow-depth)) var(--peek-pane-shadow-color) ;
 }
 
 /* The spacer is the left Split target and, in peek mode, the faint click-to-dismiss backdrop
@@ -66,22 +77,36 @@ body.experimental-feature-new-layout .right-pane-peek-spacer {
 body.experimental-feature-new-layout #right-pane-host.peek > .right-pane-peek-spacer {
     display: block;
     min-width: 0;
-    background: rgba(0, 0, 0, 0.05);
 }
 
 /* Pin/close controls, shown whenever the pane is open (pin only in peek mode). */
 body.experimental-feature-new-layout #right-pane .right-pane-actions {
+    --icon-button-size: 28px;
+    
     position: absolute;
-    top: 4px;
-    inset-inline-end: 4px;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--right-pane-header-height);
     z-index: 1;
     display: flex;
     gap: 2px;
+    align-items: center;
+    justify-content: flex-end;
+    border-bottom: 1px solid var(--main-border-color);
 }
 
 body.experimental-feature-new-layout #right-pane {
+    position: relative;
     display: flex;
     flex-direction: column;
+    padding-top: var(--right-pane-header-height);
+
+    &.right-pane-mode-peek {
+        background: var(--right-pane-peek-background);
+        backdrop-filter: var(--right-pane-peek-backdrop-filter);
+        border-radius: var(--right-pane-peek-border-radius);
+    }
 
     .card {
         margin-inline: 0;
