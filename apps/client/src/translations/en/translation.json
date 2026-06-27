@@ -254,7 +254,7 @@
   },
   "onenote_import": {
     "name": "Microsoft OneNote",
-    "description": "From your OneNote account",
+    "description": "Connects to your account",
     "connect_description": "Sign in with your Microsoft account to import your OneNote notebooks.",
     "connect": "Sign in with Microsoft",
     "connecting": "Waiting for sign-in to complete…",
@@ -792,7 +792,9 @@
     "year_previous": "Previous year",
     "year_next": "Next year",
     "list": "List",
-    "today": "Today"
+    "today": "Today",
+    "pin_date": "Pin the current date so the calendar always opens on this interval instead of today",
+    "unpin_date": "Unpin the date so the calendar opens on today's date again"
   },
   "close_pane_button": {
     "close_this_pane": "Close this pane"
