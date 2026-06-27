@@ -8,6 +8,7 @@ import type BNote from "../../../becca/entities/bnote.js";
 import { getContext } from "../../context.js";
 import TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
+import { getZipProvider } from "../../zip_provider.js";
 import obsidianImporter from "./importer.js";
 
 /** Builds an in-memory zip from a map of entry name -> contents, optionally stamping per-entry mtimes. */
@@ -28,6 +29,19 @@ async function createZipBuffer(files: Record<string, string | Buffer>, dates: Re
 function excalidrawFile(scene: object, embeddedFiles = ""): string {
     const compressed = LZString.compressToBase64(JSON.stringify(scene));
     return `---\nexcalidraw-plugin: parsed\ntags: [excalidraw]\n---\n# Excalidraw Data\n${embeddedFiles}%%\n## Drawing\n\`\`\`compressed-json\n${compressed}\n\`\`\`\n%%`;
+}
+
+/**
+ * Whether the active zip provider exposes per-entry modification times. The server reader (yauzl) does; the
+ * standalone/browser reader (fflate) doesn't, so date-preservation can't be asserted there.
+ */
+async function zipEntryMtimeSupported(): Promise<boolean> {
+    const buffer = await createZipBuffer({ "probe.txt": "x" }, { "probe.txt": new Date(2020, 0, 1) });
+    let supported = false;
+    await getZipProvider().readZipFile(new Uint8Array(buffer), async (entry) => {
+        supported = entry.lastModified instanceof Date;
+    });
+    return supported;
 }
 
 /** Runs the Obsidian importer over `files` and returns the import root note. */
@@ -159,7 +173,13 @@ describe("Obsidian importer — integration", () => {
         expect(note.getOwnedLabelValue("label:checkboxProp")).toBe("promoted,single,boolean,alias=Checkbox prop");
     });
 
-    it("preserves a note's modification date from its zip entry, with created falling back to it", async () => {
+    it("preserves a note's modification date from its zip entry, with created falling back to it", async (ctx) => {
+        // The standalone/browser zip provider (fflate) doesn't expose entry mtimes, so there's no date to
+        // preserve; the note keeps its import-time dates. Skip rather than assert provider-specific behavior.
+        if (!(await zipEntryMtimeSupported())) {
+            ctx.skip();
+        }
+
         const importRoot = await importObsidian({ "Note.md": "Body." }, undefined, { "Note.md": new Date(2020, 5, 15, 12, 30, 0) });
 
         const note = importRoot.getChildNotes().find((n) => n.title === "Note");
