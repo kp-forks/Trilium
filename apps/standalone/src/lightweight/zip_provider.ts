@@ -8,11 +8,13 @@ type ZipOutput = {
 };
 
 class BrowserZipArchive implements ZipArchive {
-    readonly #entries: Record<string, Uint8Array> = {};
+    readonly #entries: Record<string, Uint8Array | [Uint8Array, { level: 0 }]> = {};
     #destination: ZipOutput | null = null;
 
-    append(content: string | Uint8Array, options: { name: string }) {
-        this.#entries[options.name] = typeof content === "string" ? strToU8(content) : content;
+    append(content: string | Uint8Array, options: { name: string; store?: boolean }) {
+        const data = typeof content === "string" ? strToU8(content) : content;
+        // fflate honors a per-entry level; level 0 stores the entry uncompressed.
+        this.#entries[options.name] = options.store ? [data, { level: 0 }] : data;
     }
 
     waitForCapacity(): Promise<void> {
@@ -30,7 +32,7 @@ class BrowserZipArchive implements ZipArchive {
             throw new Error("ZIP output destination not set.");
         }
 
-        const content = zipSync(this.#entries, { level: 9 });
+        const content = zipSync(this.#entries, { level: 6 });
 
         if (typeof this.#destination.send === "function") {
             this.#destination.send(content);

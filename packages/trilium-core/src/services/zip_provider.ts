@@ -10,6 +10,13 @@ export interface ZipEntry {
 export interface ZipArchiveEntryOptions {
     name: string;
     date?: Date;
+    /**
+     * Store the entry uncompressed (ZIP STORE method) instead of deflating it.
+     * Set for already-compressed payloads (JPEG/PNG, video, PDFs, zip-based
+     * office docs…) where zlib spends CPU for ~0% size reduction. Providers that
+     * can't control per-entry compression may ignore it.
+     */
+    store?: boolean;
 }
 
 export interface ZipArchive {

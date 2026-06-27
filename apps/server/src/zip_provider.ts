@@ -1,4 +1,4 @@
-import type { FileStream, ZipArchive, ZipEntry, ZipProvider } from "@triliumnext/core/src/services/zip_provider.js";
+import type { FileStream, ZipArchive, ZipArchiveEntryOptions, ZipEntry, ZipProvider } from "@triliumnext/core/src/services/zip_provider.js";
 import { ZipArchive as ArchiverZip } from "archiver";
 import fs from "fs";
 import type { Stream } from "stream";
@@ -20,7 +20,10 @@ class NodejsZipArchive implements ZipArchive {
 
     constructor() {
         this.#archive = new ArchiverZip({
-            zlib: { level: 9 }
+            // Level 6 (zlib default) is the speed/ratio sweet spot; level 9 costs
+            // ~2x the CPU for <2% smaller output. Already-compressed entries skip
+            // deflate entirely via the per-entry `store` flag below.
+            zlib: { level: 6 }
         });
 
         // Fires as each queued entry finishes being written to the output.
@@ -34,7 +37,7 @@ class NodejsZipArchive implements ZipArchive {
         });
     }
 
-    append(content: string | Uint8Array, options: { name: string; date?: Date }) {
+    append(content: string | Uint8Array, options: ZipArchiveEntryOptions) {
         // Wrap the Uint8Array in a Buffer view sharing the same memory rather
         // than copying it (Buffer.from(uint8array) would allocate a full copy).
         // byteOffset/byteLength keep the view scoped to this slice, never the
@@ -43,6 +46,8 @@ class NodejsZipArchive implements ZipArchive {
         const size = typeof content === "string" ? Buffer.byteLength(content) : content.byteLength;
         this.#pendingSizes.push(size);
         this.#queuedBytes += size;
+        // `store` (and `date`) pass straight through: archiver preserves extra
+        // entry-data fields and zip-stream switches to the STORE method when set.
         this.#archive.append(payload, options);
     }
 

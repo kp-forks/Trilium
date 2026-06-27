@@ -347,7 +347,8 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
             archive.append(content as string | Uint8Array, {
                 name: filePathPrefix + noteMeta.dataFileName,
-                date: dateUtils.parseDateTime(note.utcDateModified)
+                date: dateUtils.parseDateTime(note.utcDateModified),
+                store: shouldStoreUncompressed(noteMeta.mime)
             });
 
             // Pace the synchronous tree walk against the archive's drain so the
@@ -370,7 +371,8 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
             archive.append(content, {
                 name: filePathPrefix + attachmentMeta.dataFileName,
-                date: dateUtils.parseDateTime(note.utcDateModified)
+                date: dateUtils.parseDateTime(note.utcDateModified),
+                store: shouldStoreUncompressed(attachmentMeta.mime)
             });
 
             await archive.waitForCapacity?.();
@@ -538,3 +540,55 @@ export default {
     exportToZipFile,
     exportBranchToZipFile
 };
+
+/**
+ * Whether a payload of the given MIME type is already compressed and should be
+ * stored uncompressed in a ZIP rather than re-deflated. Deflating these wastes
+ * CPU (often the export bottleneck) for negligible — sometimes negative — size
+ * change. Conservative: anything not known-compressed returns false and is
+ * compressed normally, so text/HTML/SVG/JSON/code all still deflate.
+ */
+export function shouldStoreUncompressed(mime: string | undefined | null): boolean {
+    if (!mime) {
+        return false;
+    }
+    const m = mime.toLowerCase().split(";")[0].trim();
+
+    // Codec-compressed media. PCM/AIFF are uncompressed, so let them deflate.
+    if (m.startsWith("video/")) {
+        return true;
+    }
+    if (m.startsWith("audio/")) {
+        return !UNCOMPRESSED_AUDIO.has(m);
+    }
+
+    return ALREADY_COMPRESSED.has(m) || isZipBasedContainer(m);
+}
+
+// Office / e-book / package formats that are ZIP containers under the hood.
+function isZipBasedContainer(mime: string): boolean {
+    return (
+        mime.startsWith("application/vnd.openxmlformats-officedocument.") || // docx/xlsx/pptx
+        mime.startsWith("application/vnd.oasis.opendocument.") ||            // odt/ods/odp
+        mime === "application/epub+zip" ||
+        mime === "application/java-archive" ||
+        mime === "application/vnd.android.package-archive"
+    );
+}
+
+const UNCOMPRESSED_AUDIO = new Set([
+    "audio/wav", "audio/x-wav", "audio/wave", "audio/aiff", "audio/x-aiff"
+]);
+
+const ALREADY_COMPRESSED = new Set([
+    // Raster images (SVG/BMP/ICO/TIFF deliberately excluded — they deflate well)
+    "image/jpeg", "image/png", "image/gif", "image/webp",
+    "image/avif", "image/heic", "image/heif", "image/jp2", "image/apng",
+    // Archives / compressed streams
+    "application/zip", "application/x-zip-compressed", "application/gzip",
+    "application/x-gzip", "application/x-bzip2", "application/x-xz",
+    "application/x-7z-compressed", "application/x-rar-compressed",
+    "application/x-apple-diskimage",
+    // Already-compressed documents / fonts
+    "application/pdf", "font/woff", "font/woff2"
+]);

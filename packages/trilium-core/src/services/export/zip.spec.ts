@@ -12,7 +12,7 @@ import noteService from "../notes.js";
 import sql_init from "../sql_init.js";
 import type { ZipArchive, ZipArchiveEntryOptions, ZipProvider } from "../zip_provider.js";
 import { getZipProvider, initZipProvider } from "../zip_provider.js";
-import zip from "./zip.js";
+import zip, { shouldStoreUncompressed } from "./zip.js";
 
 // happy-dom (standalone/WASM) exposes `window`; the Node server suite does not.
 const isBrowserRuntime = typeof window !== "undefined";
@@ -518,5 +518,41 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
                 )
             ).rejects.toThrow(/not found/);
         });
+    });
+});
+
+describe("shouldStoreUncompressed", () => {
+    it("stores already-compressed payloads uncompressed", () => {
+        for (const mime of [
+            "image/jpeg", "image/png", "image/gif", "image/webp", "image/avif",
+            "video/mp4", "video/webm", "audio/mpeg", "audio/ogg",
+            "application/pdf", "application/zip", "application/gzip",
+            "application/x-7z-compressed", "font/woff2",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // docx
+            "application/vnd.oasis.opendocument.spreadsheet", // ods
+            "application/epub+zip"
+        ]) {
+            expect(shouldStoreUncompressed(mime), mime).toBe(true);
+        }
+    });
+
+    it("compresses text and other deflate-friendly payloads", () => {
+        for (const mime of [
+            "text/html", "text/plain", "text/markdown", "application/json",
+            "application/xml", "application/javascript",
+            "image/svg+xml", "image/bmp", "image/x-icon", "image/tiff",
+            "audio/wav", "audio/x-wav", "audio/aiff"
+        ]) {
+            expect(shouldStoreUncompressed(mime), mime).toBe(false);
+        }
+    });
+
+    it("normalizes case and ignores parameters, and treats missing mime as compressible", () => {
+        expect(shouldStoreUncompressed("IMAGE/JPEG")).toBe(true);
+        expect(shouldStoreUncompressed("image/png; charset=binary")).toBe(true);
+        expect(shouldStoreUncompressed("  text/html ; charset=utf-8 ")).toBe(false);
+        expect(shouldStoreUncompressed(undefined)).toBe(false);
+        expect(shouldStoreUncompressed(null)).toBe(false);
+        expect(shouldStoreUncompressed("")).toBe(false);
     });
 });
