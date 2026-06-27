@@ -157,7 +157,11 @@ ws.subscribeToMessages(async (message) => {
         return {
             id,
             message,
-            icon: "export"
+            icon: "export",
+            // This toast replaces the in-progress one (same id), and showPersistent merges fields rather
+            // than swapping the object — so clear the progress explicitly, otherwise the finished bar
+            // lingers at 100%.
+            progress: undefined
         };
     }
 
@@ -169,7 +173,7 @@ ws.subscribeToMessages(async (message) => {
         toastService.closePersistent(message.taskId);
         toastService.showError(message.message);
     } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeToast(message.taskId, t("export.export_in_progress", { progressCount: message.progressCount })));
+        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("export.export_finished_successfully"));
         toast.timeout = 5000;
@@ -177,3 +181,20 @@ ws.subscribeToMessages(async (message) => {
         toastService.showPersistent(toast);
     }
 });
+
+/**
+ * Builds the persistent "export in progress" toast. The metadata-collection phase doesn't know the total
+ * up front, so it shows a bare running count; once the content-writing phase sets a total, the message
+ * switches to "Exporting X of N" with a progress bar.
+ */
+function makeProgressToast(taskId: string, progressCount: number, totalCount?: number): ToastOptionsWithRequiredId {
+    const hasTotal = typeof totalCount === "number" && totalCount > 0;
+    return {
+        id: taskId,
+        icon: "bx bx-loader-circle bx-spin",
+        message: hasTotal
+            ? t("export.export_in_progress_with_total", { progressCount, totalCount })
+            : t("export.export_in_progress", { progressCount }),
+        ...(hasTotal ? { progress: progressCount / totalCount } : {})
+    };
+}

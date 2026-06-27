@@ -50,6 +50,15 @@ class TaskContext<T extends TaskType> {
         this.totalCount = totalCount;
     }
 
+    /**
+     * Resets the running progress count back to zero. Useful for multi-phase tasks (e.g. zip export,
+     * which first walks the tree to build metadata and then walks it again to write content) so a later
+     * phase can drive a 0→100% progress bar from scratch instead of continuing the earlier phase's count.
+     */
+    resetProgressCount() {
+        this.progressCount = 0;
+    }
+
     increaseProgressCount() {
         this.progressCount++;
 

@@ -468,6 +468,11 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
     archive.append(metaFileJson, { name: "!!!meta.json" });
 
+    // The metadata pass above already drove the bare progress count. Reset it and seed the total with the
+    // number of notes about to be written so the content-writing pass renders a clean 0→100% progress bar.
+    taskContext.resetProgressCount();
+    taskContext.setTotalCount(countMetaNodes(rootMeta));
+
     await saveNote(rootMeta, "");
 
     provider.afterDone(rootMeta);
@@ -477,6 +482,14 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
     taskContext.taskSucceeded(null);
 }
 
+/** Counts the notes in a metadata tree — i.e. the number of `saveNote()` calls the content-writing pass will make. */
+function countMetaNodes(meta: NoteMeta): number {
+    let count = 1;
+    for (const child of meta.children || []) {
+        count += countMetaNodes(child);
+    }
+    return count;
+}
 
 async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath: string, zipExportOptions?: AdvancedExportOptions) {
     const { destination, waitForFinish } = getZipProvider().createFileStream(zipFilePath);
