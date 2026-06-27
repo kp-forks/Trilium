@@ -1,38 +1,57 @@
 # Evernote
 Trilium can import ENEX files, which are used by Evernote for backup/export. One ENEX file represents the content (notes and resources) of one notebook.
 
-## Export ENEX from Evernote
+## Import process
 
-To export ENEX files from Evernote, you can use:
+The first step is to export the data from Evernote:
 
-*   Evernote desktop application. See Evernote [documentation](https://help.evernote.com/hc/en-us/articles/209005557-Export-Notes-and-Notebooks-as-ENEX-or-HTML). Note that the limitation of this method is that you can only export 100 notes at a time or one notebook at a time.
-*   A third-party [evernote-backup](https://github.com/vzhd1701/evernote-backup) CLI tool. This tool can export all of your notebooks in bulk.
+*   To export a single notebook:
+    *   In the left sidebar, select _Notebooks_.
+    *   If you have a notebook stack, expand it.
+    *   Right click on a notebook and select _Export notebook_.
+    *   Make sure the following options are set:
+        *   File format is set to _ENEX format_.
+        *   All the options in _Export note attributes_ are checked.
+*   To export a bunch of notes (up to 100 notes):
+    *   In the left sidebar, select _Notes_.
+    *   In the list of notes, <kbd spellcheck="false">Ctrl</kbd>\-click individual notes to select them. Alternatively, click on a note and then <kbd spellcheck="false">Shift</kbd>\-click a more distant note to select all the notes in between.
+    *   At the bottom there should be a floating bar with some options. Select \[…\] → _Export._
+    *   Make sure the following options are set:
+        *   File format is set to _ENEX format_.
+        *   All the options in _Export note attributes_ are checked.
+*   To export a single note:
+    *   Select the note.
+    *   In the top-right, press the \[…\] button and select _Export_.
+    *   Make sure the following options are set:
+        *   File format is set to _ENEX format_.
+        *   All the options in _Export note attributes_ are checked.
 
-## Import ENEX in Trilium
+> [!TIP]
+> To export multiple notebooks in bulk, consider using a third-party CLI tool called [evernote-backup](https://github.com/vzhd1701/evernote-backup)
 
 Once you have your ENEX files, do the following to import them in Trilium:
 
 1.  In the <a class="reference-link" href="../../UI%20Elements/Note%20Tree.md">Note Tree</a>, right click and select _Import into note_.
-2.  In the _Import from_ section, select _EverNote_.
+2.  In the _Import from_ section, select _Evernote_.
 3.  During the import, you will see "Import in progress" message. If the import is successful, the message will change to “Import finished successfully” and then disappear.
 4.  We recommend you to check the imported notes and their attachments to verify that you haven’t lost any data.
 
-A non-exhaustive list of what the importer preserves:
+## Supported features
 
-*   Attachments
+The following features are preserved by Trilium during the import process:
+
+*   Basic formatting (bold, italic, underline, strikethrough, colors, highlights, superscript, subscript, text alignment, inline code).
 *   The hierarchy of headings (these are shifted to start with H2 because H1 is reserved for note title, see [Headings](../../../Note%20Types/Text/General%20formatting.md))
-*   Tables
-*   Bulleted lists
-*   Numbered lists
-*   Bold
-*   Italics
-*   Strikethrough
-*   Highlights
-*   Font colors
-*   Soft line breaks
+*   To-do lists. The new task format is collapsed to standard to-do lists
+*   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a> (with bullets or with numbers)
+*   <a class="reference-link" href="../../../Note%20Types/Text/Tables.md">Tables</a>
+*   Block quotes
+*   [Admonitions](../../../Note%20Types/Text/Block%20quotes%20%26%20admonitions.md) are preserved, including its emoji (added as part of the content).
+*   <a class="reference-link" href="../../../Note%20Types/Text/Developer-specific%20formatting/Code%20blocks.md">Code blocks</a>, with a best-effort attempt to restore the language.
+*   Inline <a class="reference-link" href="../../../Note%20Types/Mermaid%20Diagrams.md">Mermaid Diagrams</a>
+*   <a class="reference-link" href="../../../Note%20Types/Text/Math%20Equations.md">Math Equations</a>
+*   Toggle sections
 *   External links
-
-However, we do not guarantee that all of your formatting will be imported 100% correctly.
 
 ## Limitations
 
