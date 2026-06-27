@@ -133,19 +133,12 @@
     "export_note_title": "Ekspor catatan",
     "close": "Tutup",
     "export_type_subtree": "Catatan ini dan semua turunannya",
-    "format_html": "HTML - direkomendasikan karena mempertahankan seluruh format",
-    "format_html_zip": "HTML dalam arsip ZIP - ini direkomendasikan karena mempertahankan seluruh pemformatan.",
-    "format_markdown": "Markdown - mempertahankan sebagian besar pemformatan.",
-    "format_opml": "OPML - format pertukaran outliner untuk teks saja. Pemformatan, gambar, dan file tidak disertakan.",
-    "opml_version_1": "OPML v1.0 - hanya teks biasa",
-    "opml_version_2": "OPML v2.0 - juga mendukung HTML",
     "export_type_single": "Hanya catatan ini tanpa turunannya",
     "export": "Ekspor",
     "choose_export_type": "Silakan pilih jenis ekspor terlebih dahulu",
     "export_in_progress": "Ekspor sedang berlangsung: {{progressCount}}",
     "export_finished_successfully": "Ekspor selesai dengan sukses.",
-    "format_pdf": "PDF - untuk keperluan cetak atau berbagi.",
-    "share-format": "HTML untuk publikasi web - menggunakan tema yang sama dengan yang digunakan untuk catatan yang dibagikan, tetapi dapat dipublikasikan sebagai situs web statis."
+    "format_pdf": "PDF - untuk keperluan cetak atau berbagi."
   },
   "help": {
     "title": "Lembar contekan",
@@ -206,7 +199,6 @@
   "import": {
     "importIntoNote": "Impor ke dalam catatan",
     "chooseImportFile": "Pilih file impor",
-    "importDescription": "Isi file yang dipilih akan diimpor sebagai catatan anak ke dalam",
     "importZipRecommendation": "Saat mengimpor file ZIP, hierarki catatan akan mencerminkan struktur subdirektori di dalam arsip.",
     "options": "Opsi",
     "safeImportTooltip": "File ekspor Trilium <code>.zip</code> dapat berisi skrip yang dapat dieksekusi dan mungkin memiliki perilaku berbahaya. Impor aman akan menonaktifkan eksekusi otomatis semua skrip yang diimpor. Hapus centang \"Impor aman\" hanya jika arsip yang diimpor memang dimaksudkan berisi skrip yang dapat dieksekusi dan Anda sepenuhnya memercayai isi file impor tersebut.",
@@ -823,8 +815,7 @@
     "export_as_image": "Ekspor sebagai gambar",
     "export_as_image_png": "PNG (raster)",
     "export_as_image_svg": "SVG (vektor)",
-    "note_map": "Peta catatan",
-    "import_from_service": "Impor dari layanan…"
+    "note_map": "Peta catatan"
   },
   "onclick_button": {
     "no_click_handler": "Widget tombol '{{componentId}}' tidak memiliki click handler yang didefinisikan"
@@ -2869,9 +2860,7 @@
     "empty-hint": "Setiap catatan anak akan menjadi widget. Seret catatan ke sini dari pohon atau buat yang baru."
   },
   "import_provider": {
-    "title": "Impor dari layanan",
-    "choose_provider": "Pilih layanan untuk diimpor:",
-    "back": "Kembali"
+    "choose_provider": "Pilih layanan untuk diimpor:"
   },
   "onenote_import": {
     "name": "Microsoft OneNote",

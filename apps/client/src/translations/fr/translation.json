@@ -130,19 +130,12 @@
     "export_note_title": "Exporter la note",
     "close": "Fermer",
     "export_type_subtree": "Cette note et tous ses descendants",
-    "format_html": "HTML - recommandé car il conserve la mise en forme",
-    "format_html_zip": "HTML dans l'archive ZIP - recommandé car préserve la mise en forme.",
-    "format_markdown": "Markdown - préserve la majeure partie du formatage.",
-    "format_opml": "OPML - format d'échange pour les outlineurs, uniquement pour le texte. La mise en forme, les images et les fichiers ne sont pas inclus.",
-    "opml_version_1": "OPML v1.0 - texte brut uniquement",
-    "opml_version_2": "OPML v2.0 - HTML également autorisé",
     "export_type_single": "Seulement cette note sans ses descendants",
     "export": "Exporter",
     "choose_export_type": "Choisissez d'abord le type d'export",
     "export_in_progress": "Exportation en cours : {{progressCount}}",
     "export_finished_successfully": "L'exportation s'est terminée avec succès.",
-    "format_pdf": "PDF - pour l'impression ou le partage de documents.",
-    "share-format": "HTML pour la publication Web : utilise le même thème que celui utilisé pour les notes partagées, mais peut être publié sous forme de site Web statique."
+    "format_pdf": "PDF - pour l'impression ou le partage de documents."
   },
   "help": {
     "noteNavigation": "Navigation dans les notes",
@@ -203,7 +196,6 @@
   "import": {
     "importIntoNote": "Importer dans la note",
     "chooseImportFile": "Choisissez le fichier à importer",
-    "importDescription": "Le contenu du ou des fichiers sélectionnés sera importé en tant que note(s) enfant dans",
     "options": "Options",
     "safeImportTooltip": "Les fichiers d'exportation Trilium <code>.zip</code> peuvent contenir des scripts exécutables susceptibles de comporter un comportement nuisible. L'importation sécurisée désactivera l'exécution automatique de tous les scripts importés. Décochez \"Importation sécurisée\" uniquement si l'archive importée est censée contenir des scripts exécutables et que vous faites entièrement confiance au contenu du fichier d'importation.",
     "safeImport": "Importation sécurisée",
@@ -721,8 +713,7 @@
     "print_or_export_to_pdf": "Imprimer/exporter en PDF...",
     "save_named_revision": "Enregistrer une révision nommée…",
     "word_wrap_on": "Activé",
-    "word_wrap_off": "Désactivé",
-    "import_from_service": "Importation depuis un service…"
+    "word_wrap_off": "Désactivé"
   },
   "onclick_button": {
     "no_click_handler": "Le widget bouton '{{componentId}}' n'a pas de gestionnaire de clic défini"
@@ -2912,9 +2903,7 @@
     "tooltip": "Un élément réutilisable de texte ou de code, conçu pour être inséré dans l'éditeur (depuis le menu des extraits dans la barre d'outils, ou via une commande slash)."
   },
   "import_provider": {
-    "title": "Importer depuis un service",
-    "choose_provider": "Choisisez un service pour importer :",
-    "back": "Retour"
+    "choose_provider": "Choisisez un service pour importer :"
   },
   "onenote_import": {
     "connecting": "En attente de la connexion de se compléter…",
