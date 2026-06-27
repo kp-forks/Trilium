@@ -35,6 +35,7 @@ export function convertEnexContent(html: string, tasks: EnexTask[] = []): string
     convertCodeBlocks(root);
     convertFormulaBlocks(root);
     convertMermaidBlocks(root);
+    convertParagraphs(root);
     return root.toString();
 }
 
@@ -389,6 +390,45 @@ function resolveCodeLanguage(language: string | undefined): string {
     }
     const mime = getMimeTypeFromMarkdownName(language);
     return mime ? normalizeMimeTypeForCKEditor(mime.mime) : MIME_TYPE_AUTO;
+}
+// #endregion
+
+// #region Paragraphs
+/** Block-level tags a `<p>` can't contain — a `<div>` holding any of these is left as a div, not paragraph-ised. */
+const BLOCK_TAGS = new Set(["div", "p", "ul", "ol", "li", "table", "thead", "tbody", "tr", "td", "th", "figure", "pre", "blockquote", "aside", "details", "summary", "h1", "h2", "h3", "h4", "h5", "h6", "hr"]);
+
+/**
+ * Evernote wraps every line in a `<div>` rather than using paragraphs, so an imported note is otherwise a
+ * wall of `<div>`s (which CKEditor keeps verbatim, unlike the `<p>`-based output of the other importers).
+ * Runs last — once the special-block transforms have consumed their marker divs — to rewrite each remaining
+ * inline-content `<div>` into a `<p>`, keeping its attributes (e.g. `text-align`). An empty or `<br>`-only
+ * div (Evernote's blank line) becomes an empty paragraph; a div wrapping block content is left alone, since
+ * a paragraph can't hold block elements.
+ */
+function convertParagraphs(root: HTMLElement) {
+    for (const div of root.querySelectorAll("div")) {
+        // A `<li>`'s wrapping div is unwrapped to bare text by the list-workaround regexes that run after the
+        // converter, so leave it alone here rather than turning it into a `<li><p>…</p>` block list item.
+        if (isTag(div.parentNode, "li")) {
+            continue;
+        }
+        if (div.childNodes.some((node) => node instanceof HTMLElement && BLOCK_TAGS.has(node.tagName?.toLowerCase()))) {
+            continue;
+        }
+        const paragraph = isBlankLine(div) ? "<p>&nbsp;</p>" : `<p${attributeString(div)}>${div.innerHTML}</p>`;
+        div.insertAdjacentHTML("beforebegin", paragraph);
+        div.remove();
+    }
+}
+
+/** A blank line — an empty div, or one holding only a `<br>` — with no embedded image. */
+function isBlankLine(div: HTMLElement): boolean {
+    return (div.textContent ?? "").trim() === "" && div.querySelectorAll("img, en-media").length === 0;
+}
+
+/** The element's attributes as a leading-space string (`" style=…"`), or "" when it has none. */
+function attributeString(el: HTMLElement): string {
+    return el.rawAttrs ? ` ${el.rawAttrs}` : "";
 }
 // #endregion
 

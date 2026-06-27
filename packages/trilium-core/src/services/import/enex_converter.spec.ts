@@ -59,13 +59,13 @@ describe("convertEnexContent — legacy checkboxes (<en-todo>)", () => {
     it("starts a new list when a non-todo line interrupts the run", () => {
         const input = `<div><en-todo checked="false"/>A</div><div>Heading</div><div><en-todo checked="true"/>B</div>`;
         expect(convertEnexContent(input)).toBe(
-            `${todoList(todoItem("A"))}<div>Heading</div>${todoList(todoItem("B", { checked: true }))}`
+            `${todoList(todoItem("A"))}<p>Heading</p>${todoList(todoItem("B", { checked: true }))}`
         );
     });
 
     it("falls back to a unicode ballot box for an inline <en-todo> that isn't a line's checkbox", () => {
         const input = `<div>Mixed <en-todo checked="true"/>content</div>`;
-        expect(convertEnexContent(input)).toBe(`<div>Mixed ☑ content</div>`);
+        expect(convertEnexContent(input)).toBe(`<p>Mixed ☑ content</p>`);
     });
 });
 
@@ -157,12 +157,12 @@ describe("convertEnexContent — tasks (--en-task-group + <task> elements)", () 
 describe("convertEnexContent — admonitions (--en-callout)", () => {
     it("maps the default light-bulb callout to a tip admonition (emoji dropped)", () => {
         const input = `<div style="--en-callout:true; --en-emoji:💡;--en-requiredFeatures:&quot;[\\&quot;callout\\&quot;]&quot;;"><div>Callout with default icon.</div></div>`;
-        expect(convertEnexContent(input)).toBe(`<aside class="admonition tip"><div>Callout with default icon.</div></aside>`);
+        expect(convertEnexContent(input)).toBe(`<aside class="admonition tip"><p>Callout with default icon.</p></aside>`);
     });
 
     it("maps a custom-emoji callout to a note admonition with the emoji injected into the content", () => {
         const input = `<div style="--en-callout:true; --en-emoji:🤖;"><div>Callout with custom emoji.</div></div>`;
-        expect(convertEnexContent(input)).toBe(`<aside class="admonition note"><div>🤖 Callout with custom emoji.</div></aside>`);
+        expect(convertEnexContent(input)).toBe(`<aside class="admonition note"><p>🤖 Callout with custom emoji.</p></aside>`);
     });
 });
 
@@ -170,15 +170,44 @@ describe("convertEnexContent — toggles (--en-toggle)", () => {
     it("converts a collapsed toggle into a Trilium collapsible <details> (no open attribute)", () => {
         const input = `<div style="--en-toggle:true; --en-isCollapsed:true;"><div style="--en-toggleSummary:true;">Toggle goes here</div><div style="--en-toggleContent:true;"><div style="padding-left:40px;">Content goes here.</div><div style="padding-left:40px;"><br/></div></div></div>`;
         expect(convertEnexContent(input)).toBe(
-            `<details class="trilium-collapsible"><summary>Toggle goes here</summary><div style="padding-left:40px;">Content goes here.</div></details>`
+            `<details class="trilium-collapsible"><summary>Toggle goes here</summary><p style="padding-left:40px;">Content goes here.</p></details>`
         );
     });
 
     it("preserves an expanded toggle's open state", () => {
         const input = `<div style="--en-toggle:true; --en-isCollapsed:false;"><div style="--en-toggleSummary:true;">S</div><div style="--en-toggleContent:true;"><div>Body</div></div></div>`;
         expect(convertEnexContent(input)).toBe(
-            `<details class="trilium-collapsible" open><summary>S</summary><div>Body</div></details>`
+            `<details class="trilium-collapsible" open><summary>S</summary><p>Body</p></details>`
         );
+    });
+});
+
+describe("convertEnexContent — paragraphs (Evernote line-divs)", () => {
+    it("converts an inline-content div into a paragraph, preserving attributes", () => {
+        expect(convertEnexContent(`<div>Left align</div>`)).toBe(`<p>Left align</p>`);
+        expect(convertEnexContent(`<div style="text-align:right;">Right align</div>`)).toBe(`<p style="text-align:right;">Right align</p>`);
+    });
+
+    it("keeps inline formatting and links inside the paragraph", () => {
+        expect(convertEnexContent(`<div>A <b>bold</b> <a href="http://x.com">link</a></div>`)).toBe(`<p>A <b>bold</b> <a href="http://x.com">link</a></p>`);
+    });
+
+    it("turns an empty or <br>-only div into an empty paragraph", () => {
+        expect(convertEnexContent(`<div><br/></div>`)).toBe(`<p>&nbsp;</p>`);
+        expect(convertEnexContent(`<div></div>`)).toBe(`<p>&nbsp;</p>`);
+        expect(convertEnexContent(`<div style="text-align:center;"><br/></div>`)).toBe(`<p>&nbsp;</p>`);
+    });
+
+    it("converts a run of line-divs into separate paragraphs, preserving blank lines", () => {
+        expect(convertEnexContent(`<div>One</div><div><br/></div><div>Two</div>`)).toBe(`<p>One</p><p>&nbsp;</p><p>Two</p>`);
+    });
+
+    it("keeps an image line as a paragraph", () => {
+        expect(convertEnexContent(`<div><en-media hash="h" type="image/png"/></div>`)).toBe(`<p><en-media hash="h" type="image/png"></en-media></p>`);
+    });
+
+    it("leaves a div wrapping block content alone (a paragraph can't hold block elements)", () => {
+        expect(convertEnexContent(`<div><ul><li>x</li></ul></div>`)).toBe(`<div><ul><li>x</li></ul></div>`);
     });
 });
 
