@@ -45,7 +45,7 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
     const [ mode, setMode ] = useState<RightPaneMode>(() => options.is("rightPaneVisible") ? "docked" : "closed");
     const visible = mode !== "closed";
     const items = useItems(visible, widgetsByParent);
-    useSplit(mode === "docked");
+    useSplit(mode);
 
     // Apply a transition, persisting only when the docked/closed distinction changes
     // (overlay is ephemeral, so it never writes the option).
@@ -69,45 +69,43 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
 
     useOverlayDismiss(mode === "overlay", close);
 
-    // The overlay reuses the docked width but can't be sized by Split (the content pane isn't flexed),
-    // so it's applied as an inline width here — a genuinely computed value that can't live in CSS.
-    const overlayStyle = mode === "overlay"
-        ? { width: `${Math.max(MIN_WIDTH_PERCENT, options.getInt("rightPaneWidth") ?? MIN_WIDTH_PERCENT)}%` }
-        : undefined;
-
     return (
         <>
             {/* Absolutely positioned in a reserved gutter on the viewport's right edge, so it
                 stays put regardless of the panel's open/collapsed state (see RightPanelContainer.css). */}
             <RightPaneToggleHandle rightPaneVisible={visible} onToggle={toggleOverlay} />
-            {/* Visual dismiss cue and a physical layer over the content area (so presses over the
-                PDF iframe reach the document listener in useOverlayDismiss). Always rendered, toggled
-                via CSS, so the fragment's child list stays structurally stable: Split.js injects a
-                gutter among these siblings, and mounting/unmounting a Preact-managed sibling around
-                it corrupts reconciliation (insertBefore error). */}
-            <div class={mode === "overlay" ? "right-pane-overlay-backdrop active" : "right-pane-overlay-backdrop"} />
-            <div id="right-pane" class={mode === "overlay" ? "overlay" : undefined} style={overlayStyle}>
-                {mode === "overlay" && (
-                    <div class="right-pane-overlay-actions">
-                        <ActionButton icon="bx bx-pin" text={t("right_pane.dock")} onClick={dock} />
-                        <ActionButton icon="bx bx-x" text={t("right_pane.close")} onClick={close} />
-                    </div>
-                )}
-                {visible && (
-                    items.length > 0 ? (
-                        items
-                    ) : (
-                        <NoItems
-                            icon="bx bx-sidebar"
-                            text={t("right_pane.empty_message")}
-                        >
-                            <Button
-                                text={t("right_pane.empty_button")}
-                                triggerCommand="toggleRightPane"
-                            />
-                        </NoItems>
-                    )
-                )}
+            {/* Persistent host so #right-pane never reparents between modes (which would remount the
+                sidebar widgets). Docked: an in-flow flex child Split resizes against #center-pane.
+                Overlay: an absolute layer over the content where Split resizes the spacer vs the pane. */}
+            <div id="right-pane-host" class={mode === "overlay" ? "overlay" : undefined}>
+                {/* The spacer is both the left Split target and the dismiss backdrop in overlay mode:
+                    it covers the content (a click dismisses) and shields the PDF iframe so Split's
+                    drag tracking isn't interrupted. Always rendered + CSS-toggled to keep the host's
+                    child list structurally stable for Split's gutter injection. */}
+                <div class="right-pane-overlay-spacer" />
+                <div id="right-pane">
+                    {mode === "overlay" && (
+                        <div class="right-pane-overlay-actions">
+                            <ActionButton icon="bx bx-pin" text={t("right_pane.dock")} onClick={dock} />
+                            <ActionButton icon="bx bx-x" text={t("right_pane.close")} onClick={close} />
+                        </div>
+                    )}
+                    {visible && (
+                        items.length > 0 ? (
+                            items
+                        ) : (
+                            <NoItems
+                                icon="bx bx-sidebar"
+                                text={t("right_pane.empty_message")}
+                            >
+                                <Button
+                                    text={t("right_pane.empty_button")}
+                                    triggerCommand="toggleRightPane"
+                                />
+                            </NoItems>
+                        )
+                    )}
+                </div>
             </div>
         </>
     );
@@ -185,22 +183,34 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
         .map(e => e.el);
 }
 
-function useSplit(visible: boolean) {
-    // Split between right pane and the content pane.
+function useSplit(mode: RightPaneMode) {
     useEffect(() => {
-        if (!visible) return;
+        if (mode === "closed") return;
 
         // We are intentionally omitting useTriliumOption to avoid re-render due to size change.
         const rightPaneWidth = Math.max(MIN_WIDTH_PERCENT, options.getInt("rightPaneWidth") ?? MIN_WIDTH_PERCENT);
-        const splitInstance = Split(["#center-pane", "#right-pane"], {
-            sizes: [100 - rightPaneWidth, rightPaneWidth],
-            gutterSize: DEFAULT_GUTTER_SIZE,
-            minSize: [300, 180],
-            rtl: glob.isRtl,
-            onDragEnd: (sizes) => options.save("rightPaneWidth", Math.round(sizes[1]))
-        });
+        const saveWidth = (sizes: number[]) => options.save("rightPaneWidth", Math.round(sizes[1]));
+
+        // Docked: resize the host (and thus the content) against #center-pane.
+        // Overlay: resize the pane against the spacer inside the absolute host — the content (#center-pane)
+        // is untouched, so it never reflows.
+        const splitInstance = mode === "docked"
+            ? Split(["#center-pane", "#right-pane-host"], {
+                sizes: [100 - rightPaneWidth, rightPaneWidth],
+                gutterSize: DEFAULT_GUTTER_SIZE,
+                minSize: [300, 180],
+                rtl: glob.isRtl,
+                onDragEnd: saveWidth
+            })
+            : Split([".right-pane-overlay-spacer", "#right-pane"], {
+                sizes: [100 - rightPaneWidth, rightPaneWidth],
+                gutterSize: DEFAULT_GUTTER_SIZE,
+                minSize: [0, 180],
+                rtl: glob.isRtl,
+                onDragEnd: saveWidth
+            });
         return () => splitInstance.destroy();
-    }, [ visible ]);
+    }, [ mode ]);
 }
 
 type RightPaneAction = "toggleOverlay" | "toggleDocked" | "dock" | "close";
@@ -223,10 +233,10 @@ export function persistedRightPaneVisible(prev: RightPaneMode, next: RightPaneMo
     return (prev === "docked") !== (next === "docked") ? next === "docked" : null;
 }
 
-// Clicks within these keep the overlay open: the pane, the toggle handle, and popups that sidebar
-// content renders into portals outside #right-pane (dropdowns, tooltips, modals). The backdrop is
-// intentionally NOT listed, so clicking the (covered) content area dismisses like other outside clicks.
-const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .dropdown-menu, .tooltip, .modal, .popover";
+// Clicks within these keep the overlay open: the pane, the toggle handle, the resize gutter, and
+// popups that sidebar content renders into portals outside #right-pane (dropdowns, tooltips, modals).
+// The spacer/backdrop is intentionally NOT listed, so clicking the covered content area dismisses.
+const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .gutter, .dropdown-menu, .tooltip, .modal, .popover";
 
 /** Whether an event target lies within the overlay or an allowlisted popup (i.e. should keep it open). */
 export function isWithinOverlay(target: EventTarget | null): boolean {

@@ -10,48 +10,63 @@ body.experimental-feature-new-layout #vertical-main-container {
     padding-inline-end: var(--right-pane-handle-gutter);
 }
 
-/* Overlay mode: float the pane above the content (no Split, so the content never reflows).
-   Width is applied inline from the saved rightPaneWidth (see RightPanelContainer.tsx). */
-body.experimental-feature-new-layout #right-pane.overlay {
-    position: absolute;
-    inset-block: 0;
-    inset-inline-end: var(--right-pane-handle-gutter);
-    /* Floor matching the docked Split minSize, so a small saved width can't make the overlay too thin. */
-    min-width: 180px;
-    z-index: 15;
-    border-inline-start: 1px solid var(--main-border-color);
-    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.18);
-    animation: right-pane-overlay-in 150ms ease;
+/* Persistent host wrapping the spacer + #right-pane (see RightPanelContainer.tsx), so #right-pane
+   never reparents between modes. A flex row: docked it fills with the pane (spacer hidden); overlay
+   it lays out [spacer | gutter | pane]. */
+body.experimental-feature-new-layout #right-pane-host {
+    display: flex;
+    flex-direction: row;
 }
 
-@keyframes right-pane-overlay-in {
-    from { transform: translateX(8px); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+/* Docked: #right-pane fills the host (which Split sizes against #center-pane). */
+body.experimental-feature-new-layout #right-pane-host:not(.overlay) > #right-pane {
+    flex: 1 1 0;
+    min-width: 0;
 }
 
-/* Backdrop behind the overlay: marks the content area as a click-to-dismiss zone and reliably
-   captures outside clicks (including over the PDF iframe, which swallows the parent's pointer
-   events). Sidebar popups (dropdowns, tooltips) render above it via their own z-index, so they
-   aren't dismissed. Sits left of the handle gutter so the handle stays interactive. */
-body.experimental-feature-new-layout .right-pane-overlay-backdrop {
-    /* Always in the DOM (see RightPanelContainer.tsx); shown only while the overlay is active. */
+/* When closing the overlay, the host goes in-flow a frame before Split.destroy (run in an effect)
+   removes its resize gutter. Keep any gutter inside a non-overlay host out of the flow so that
+   lingering 5px gutter can't briefly widen the host and reflow the content. */
+body.experimental-feature-new-layout #right-pane-host:not(.overlay) > .gutter {
     display: none;
+}
+
+/* Overlay: float the host above the content as an absolute layer, so the content never reflows. */
+body.experimental-feature-new-layout #right-pane-host.overlay {
     position: absolute;
     inset-block: 0;
     inset-inline-start: 0;
     inset-inline-end: var(--right-pane-handle-gutter);
-    z-index: 14;
-    background: rgba(0, 0, 0, 0.05);
+    z-index: 15;
+    animation: right-pane-overlay-in 150ms ease;
 }
 
-body.experimental-feature-new-layout .right-pane-overlay-backdrop.active {
-    display: block;
-    animation: right-pane-backdrop-in 150ms ease;
-}
-
-@keyframes right-pane-backdrop-in {
+@keyframes right-pane-overlay-in {
     from { opacity: 0; }
     to { opacity: 1; }
+}
+
+/* Overlay: Split sizes the spacer and the pane via inline widths, so flex must not override them. */
+body.experimental-feature-new-layout #right-pane-host.overlay > .right-pane-overlay-spacer,
+body.experimental-feature-new-layout #right-pane-host.overlay > #right-pane {
+    flex: 0 0 auto;
+}
+
+body.experimental-feature-new-layout #right-pane-host.overlay > #right-pane {
+    border-inline-start: 1px solid var(--main-border-color);
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.18);
+}
+
+/* The spacer is the left Split target and, in overlay mode, the faint click-to-dismiss backdrop
+   over the content (it also shields the PDF iframe during a resize drag). Hidden when docked. */
+body.experimental-feature-new-layout .right-pane-overlay-spacer {
+    display: none;
+}
+
+body.experimental-feature-new-layout #right-pane-host.overlay > .right-pane-overlay-spacer {
+    display: block;
+    min-width: 0;
+    background: rgba(0, 0, 0, 0.05);
 }
 
 /* Pin/close controls, shown only in overlay mode. */
