@@ -102,6 +102,33 @@ function parseMeta(entries: Record<string, Buffer>): NoteMetaFile {
     return JSON.parse(entries["!!!meta.json"].toString("utf-8"));
 }
 
+/** A ZipProvider that delegates to `original` but records every archive operation into `events`. */
+function makeRecordingProvider(original: ZipProvider, events: string[]): ZipProvider {
+    return {
+        detectFilenameEncoding: (b) => original.detectFilenameEncoding(b),
+        readZipFile: (b, fn, enc) => original.readZipFile(b, fn, enc),
+        createFileStream: (p) => original.createFileStream(p),
+        createZipArchive() {
+            const real = original.createZipArchive();
+            const wrapper: ZipArchive = {
+                append(content: string | Uint8Array, options: ZipArchiveEntryOptions) {
+                    events.push(`append:${options.name}`);
+                    real.append(content, options);
+                },
+                pipe(dest: unknown) {
+                    events.push("pipe");
+                    real.pipe(dest);
+                },
+                finalize() {
+                    events.push("finalize");
+                    return real.finalize();
+                }
+            };
+            return wrapper;
+        }
+    };
+}
+
 // Gated to Node: these real-DB export tests rely on Node stream semantics.
 // The in-memory exportToZip tests pipe into a PassThrough and await its `end`
 // event, but the BrowserZipProvider.finalize() writes synchronously via
@@ -315,31 +342,7 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
 
             const events: string[] = [];
             const original = getZipProvider();
-            const spy: ZipProvider = {
-                detectFilenameEncoding: (b) => original.detectFilenameEncoding(b),
-                readZipFile: (b, fn, enc) => original.readZipFile(b, fn, enc),
-                createFileStream: (p) => original.createFileStream(p),
-                createZipArchive() {
-                    const real = original.createZipArchive();
-                    const wrapper: ZipArchive = {
-                        append(content: string | Uint8Array, options: ZipArchiveEntryOptions) {
-                            events.push(`append:${options.name}`);
-                            real.append(content, options);
-                        },
-                        pipe(dest: unknown) {
-                            events.push("pipe");
-                            real.pipe(dest);
-                        },
-                        finalize() {
-                            events.push("finalize");
-                            return real.finalize();
-                        }
-                    };
-                    return wrapper;
-                }
-            };
-
-            initZipProvider(spy);
+            initZipProvider(makeRecordingProvider(original, events));
             try {
                 const taskContext = (await import("../task_context.js")).default;
                 const ctx = new taskContext("no-progress-reporting", "export", null);
@@ -359,6 +362,42 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             // Content really was appended (note data + attachment), and finalize closes it.
             expect(events).toContain("append:!!!meta.json");
             expect(events[events.length - 1]).toBe("finalize");
+        });
+
+        it("flushes response headers before streaming so the desktop dispatcher streams instead of buffering", async () => {
+            // On desktop, exportToZip's `res` is a node-mocks-http mock that buffers
+            // the entire body unless the route calls res.flushHeaders() to commit a
+            // streaming response. The export must flush *before* piping any content.
+            const { note } = createNote("root", { title: "FlushFirst", content: "<p>x</p>" });
+            const branch = note.getParentBranches()[0];
+
+            const events: string[] = [];
+            const original = getZipProvider();
+
+            // A response that records flushHeaders, mirroring http.ServerResponse
+            // (and the desktop mock) which both expose the method.
+            class FlushRecordingResponse extends FakeResponse {
+                flushHeaders() {
+                    events.push("flushHeaders");
+                }
+            }
+
+            initZipProvider(makeRecordingProvider(original, events));
+            try {
+                const taskContext = (await import("../task_context.js")).default;
+                const ctx = new taskContext("no-progress-reporting", "export", null);
+                const res = new FlushRecordingResponse();
+                const done = collect(res);
+                await zip.exportToZip(ctx, branch, "html", res as unknown as Record<string, unknown>);
+                await done;
+            } finally {
+                initZipProvider(original);
+            }
+
+            // flushHeaders is called, and precedes the pipe so the streaming bridge
+            // commits before any body bytes are written.
+            expect(events).toContain("flushHeaders");
+            expect(events.indexOf("flushHeaders")).toBeLessThan(events.indexOf("pipe"));
         });
 
         it("keeps the extension on very long multi-byte titles within the 255-byte limit", async () => {
