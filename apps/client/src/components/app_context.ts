@@ -353,6 +353,7 @@ export type CommandMappings = {
     toggleRibbonTabNotePaths: CommandData;
     toggleRibbonTabSimilarNotes: CommandData;
     toggleRightPane: CommandData;
+    peekRightPane: CommandData;
     printActiveNote: CommandData;
     exportAsPdf: CommandData;
     showPrintPreview: PrintPreviewData;
