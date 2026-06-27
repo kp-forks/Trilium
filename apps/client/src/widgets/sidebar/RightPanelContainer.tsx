@@ -74,6 +74,8 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
 
     // Legacy entry points (tab-row toggle, empty-state button) open/close the *docked* pane.
     useTriliumEvent("toggleRightPane", useCallback(() => apply("toggleDocked"), [ apply ]));
+    // Keyboard shortcut: peek the pane as an overlay (same as clicking the handle).
+    useTriliumEvent("peekRightPane", useCallback(() => apply("toggleOverlay"), [ apply ]));
 
     useOverlayDismiss(mode === "overlay", close);
 
