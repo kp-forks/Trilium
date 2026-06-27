@@ -14,7 +14,12 @@ class NodejsZipArchive implements ZipArchive {
     }
 
     append(content: string | Uint8Array, options: { name: string; date?: Date }) {
-        this.#archive.append(typeof content === "string" ? content : Buffer.from(content), options);
+        // Wrap the Uint8Array in a Buffer view sharing the same memory rather
+        // than copying it (Buffer.from(uint8array) would allocate a full copy).
+        // byteOffset/byteLength keep the view scoped to this slice, never the
+        // surrounding backing buffer. archiver only reads, so sharing is safe.
+        const payload = typeof content === "string" ? content : Buffer.from(content.buffer, content.byteOffset, content.byteLength);
+        this.#archive.append(payload, options);
     }
 
     pipe(destination: unknown) {
