@@ -8,6 +8,7 @@ import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
+import NoItems from "../../react/NoItems.js";
 import OptionsRow, { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/onenote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
@@ -161,12 +162,18 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     }, [phase, importDisabled, setFooter]);
 
     if (phase === "checking") {
-        return <Card><CardSection className="onenote-panel"><LoadingSpinner /></CardSection></Card>;
+        return (
+            <Card heading={t("onenote_import.section_heading")}>
+                <CardSection className="onenote-panel">
+                    <NoItems icon="bx bx-loader-circle bx-spin" text={t("onenote_import.checking")} />
+                </CardSection>
+            </Card>
+        );
     }
 
     if (phase === "disconnected" || phase === "connecting") {
         return (
-            <Card>
+            <Card heading={t("onenote_import.section_heading")}>
                 <CardSection className="onenote-panel">
                     <p>{t("onenote_import.connect_description")}</p>
                     {phase === "connecting"
@@ -178,7 +185,7 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     }
 
     return (
-        <Card>
+        <Card heading={t("onenote_import.section_heading")}>
             <CardSection className="onenote-panel">
                 <div className="onenote-account">
                     <span>{t("onenote_import.connected_as", { name: account?.name ?? "" })}</span>
