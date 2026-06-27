@@ -281,6 +281,27 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             expect(entries[attFileName]).toBeDefined();
         });
 
+        it("round-trips binary attachment content byte-for-byte", async () => {
+            const { note } = createNote("root", { title: "BinaryAttachHost", content: "<p>host</p>" });
+            // Bytes that are not valid UTF-8 (0x00, 0xFF, lone 0x80 continuation byte)
+            // so any accidental string coercion in the export path would corrupt them.
+            const binaryContent = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff, 0x80, 0x01, 0xfe]);
+            getContext().init(() =>
+                note.saveAttachment({ role: "image", mime: "image/png", title: "pixel.png", content: binaryContent })
+            );
+            const branch = note.getParentBranches()[0];
+
+            const { entries } = await exportSubtree(branch, "html");
+            const rootMeta = parseMeta(entries).files[0];
+
+            const attMeta = (rootMeta.attachments ?? [])[0];
+            expect(attMeta).toBeDefined();
+            const attFileName = attMeta.dataFileName ?? "";
+            expect(entries[attFileName]).toBeDefined();
+            // The exported bytes must equal the stored bytes exactly.
+            expect(Buffer.compare(entries[attFileName], binaryContent)).toBe(0);
+        });
+
         it("keeps the extension on very long multi-byte titles within the 255-byte limit", async () => {
             // A title of 3-byte CJK characters long enough that, once the upstream
             // 255-byte sanitize cap fills the base, appending the extension would

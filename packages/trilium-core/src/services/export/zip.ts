@@ -359,9 +359,12 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             }
 
             const attachment = note.getAttachmentById(attachmentMeta.attachmentId);
+            // getContent() already returns a string or a Uint8Array; the binary
+            // case can be appended as-is (the zip provider handles the Buffer
+            // conversion), so avoid an extra full copy of the blob here.
             const content = attachment.getContent();
 
-            archive.append(typeof content === "string" ? content : new Uint8Array(content), {
+            archive.append(content, {
                 name: filePathPrefix + attachmentMeta.dataFileName,
                 date: dateUtils.parseDateTime(note.utcDateModified)
             });
