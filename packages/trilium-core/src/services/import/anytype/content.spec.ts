@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderCodeBlock, renderInlineText, renderLatexBlock, renderTable } from "./content.js";
+import { extractContent, renderCodeBlock, renderInlineText, renderLatexBlock, renderTable } from "./content.js";
 import { parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, LinkResolver } from "./model.js";
 
@@ -105,6 +105,11 @@ describe("callouts", () => {
         expect(parseObject(doc).content).toBe('<aside class="admonition note"><p>😶‍🌫️ Foggy</p></aside>');
     });
 
+    it("escapes the callout icon so a crafted iconEmoji can't inject markup", () => {
+        const doc = listDoc(["c1"], [{ id: "c1", text: { text: "Hi", style: "Callout", marks: { marks: [] }, iconEmoji: '<img src=x onerror="alert(1)">' } }]);
+        expect(parseObject(doc).content).toBe('<aside class="admonition note"><p>&lt;img src=x onerror=&quot;alert(1)&quot;&gt; Hi</p></aside>');
+    });
+
     it("applies inline marks in the callout body and renders child blocks inside the aside", () => {
         const doc = listDoc(
             ["c1"],
@@ -205,6 +210,58 @@ describe("links", () => {
     });
 });
 
+describe("inline files", () => {
+    /** A file/media block embedding a `FileObject` by its id. */
+    const fileBlock = (id: string, file: AnytypeBlock["file"]): AnytypeBlock => ({ id, file, childrenIds: [] });
+
+    it("renders an Image block as an image figure whose src is the target file id (resolved later by the importer)", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "Image", name: "shot.png", targetObjectId: "file-cid", state: "Done", style: "Embed" })]);
+        expect(parseObject(doc).content).toBe('<figure class="image"><img src="file-cid"></figure>');
+    });
+
+    it("renders a non-image file block as a marked anchor carrying the file name and target id", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "PDF", name: "report.pdf", targetObjectId: "pdf-cid", state: "Done", style: "Link" })]);
+        expect(parseObject(doc).content).toBe('<p><a class="anytype-file" href="pdf-cid">report.pdf</a></p>');
+    });
+
+    it("falls back to the target id as the link text when the file has no name", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "File", targetObjectId: "bare-cid" })]);
+        expect(parseObject(doc).content).toBe('<p><a class="anytype-file" href="bare-cid">bare-cid</a></p>');
+    });
+
+    it("escapes the file name in a non-image anchor", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "File", name: "a & b <x>.txt", targetObjectId: "c" })]);
+        expect(parseObject(doc).content).toBe('<p><a class="anytype-file" href="c">a &amp; b &lt;x&gt;.txt</a></p>');
+    });
+
+    it("drops a file block with no target (e.g. a still-uploading file)", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "Image", name: "pending.png", state: "Uploading" })]);
+        expect(parseObject(doc).content).toBe("");
+    });
+
+    it("surfaces the embedded file ids (so the importer knows which files a page references)", () => {
+        const doc = listDoc(
+            ["f1", "f2"],
+            [
+                fileBlock("f1", { type: "Image", name: "pic.png", targetObjectId: "img-cid" }),
+                fileBlock("f2", { type: "PDF", name: "doc.pdf", targetObjectId: "pdf-cid" })
+            ]
+        );
+        expect(parseObject(doc).inlineFileIds).toEqual(["img-cid", "pdf-cid"]);
+    });
+});
+
+describe("extractContent", () => {
+    it("returns empty output when the block tree has no resolvable root", () => {
+        expect(extractContent([], "missing", () => undefined)).toEqual({ html: "", linkTargetIds: [], fileTargetIds: [] });
+    });
+
+    it("ignores an inline mark of an unrenderable type, leaving the text plain", () => {
+        // Not a structural mark, a known colour, or a Mention — so it contributes no formatting.
+        expect(renderInlineText("x", [mark(0, 1, "Emoji")])).toBe("x");
+    });
+});
+
 describe("renderInlineText", () => {
     it("returns escaped plain text when there are no marks", () => {
         expect(renderInlineText("a < b & c > d", [])).toBe("a &lt; b &amp; c &gt; d");
@@ -285,6 +342,44 @@ describe("renderInlineText", () => {
         expect(renderInlineText("hi", [mark(0, 100, "Bold")])).toBe("<strong>hi</strong>");
         expect(renderInlineText("hi", [mark(1, 1, "Bold")])).toBe("hi");
         expect(renderInlineText("hi", [mark(2, 0, "Bold")])).toBe("hi");
+    });
+});
+
+describe("inline mentions", () => {
+    /** A resolver that maps any non-"missing" id to a note, so a Mention resolves unless it's "missing". */
+    const resolve: LinkResolver = (cid) => (cid === "missing" ? undefined : { noteId: `note-${cid}`, title: `Title ${cid}` });
+
+    it("wraps a resolved Mention span in a reference link and reports the target via onLink", () => {
+        const linked: string[] = [];
+        const html = renderInlineText("see X here", [mark(4, 5, "Mention", "abc")], resolve, (id) => linked.push(id));
+        expect(html).toBe('see <a class="reference-link" href="#root/note-abc">X</a> here');
+        expect(linked).toEqual(["note-abc"]);
+    });
+
+    it("leaves a Mention as plain text when its target wasn't imported, recording no link", () => {
+        const linked: string[] = [];
+        const html = renderInlineText("see X here", [mark(4, 5, "Mention", "missing")], resolve, (id) => linked.push(id));
+        expect(html).toBe("see X here");
+        expect(linked).toEqual([]);
+    });
+
+    it("leaves a Mention plain when no resolver is supplied (parsing in isolation)", () => {
+        expect(renderInlineText("see X", [mark(4, 5, "Mention", "abc")])).toBe("see X");
+    });
+
+    it("nests structural marks inside the mention anchor (anchor outermost)", () => {
+        const html = renderInlineText("bold link", [mark(5, 9, "Mention", "abc"), mark(5, 9, "Bold")], resolve);
+        expect(html).toBe('bold <a class="reference-link" href="#root/note-abc"><strong>link</strong></a>');
+    });
+
+    it("renders two mentions in one line, each its own reference link", () => {
+        // Mirrors the "Page with block and inline reference links" page: two mentions over one paragraph.
+        const linked: string[] = [];
+        const html = renderInlineText("Inline link: 2  Untitled ", [mark(13, 14, "Mention", "two"), mark(16, 24, "Mention", "one")], resolve, (id) => linked.push(id));
+        expect(html).toBe(
+            'Inline link: <a class="reference-link" href="#root/note-two">2</a>  <a class="reference-link" href="#root/note-one">Untitled</a> '
+        );
+        expect(linked).toEqual(["note-two", "note-one"]);
     });
 });
 
@@ -389,5 +484,16 @@ describe("tables", () => {
             ["rows", { id: "rows", childrenIds: [] }]
         ]);
         expect(renderTable(byId.get("tbl") ?? { id: "x" }, byId)).toBe("");
+    });
+
+    it("skips a row whose block is missing from the export", () => {
+        // The rows layout references "r-missing", for which no block exists — that row is dropped.
+        const byId = new Map<string, AnytypeBlock>([
+            ["tbl", { id: "tbl", table: {}, childrenIds: ["cols", "rows"] }],
+            ["cols", { id: "cols", childrenIds: ["c1"] }],
+            ["c1", { id: "c1", childrenIds: [] }],
+            ["rows", { id: "rows", childrenIds: ["r-missing"] }]
+        ]);
+        expect(renderTable(byId.get("tbl") ?? { id: "x" }, byId)).toBe('<figure class="table"><table></table></figure>');
     });
 });

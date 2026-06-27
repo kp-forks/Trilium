@@ -5,11 +5,15 @@ import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
+import { useTriliumOptionBool } from "../../react/hooks.js";
+import OptionsRow, { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/anytype.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function AnytypePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
     const [file, setFile] = useState<File | null>(null);
+    const [compressImages] = useTriliumOptionBool("compressImages");
+    const [shrinkImages, setShrinkImages] = useState(compressImages);
 
     const onChange = useCallback((files: FileList | null) => setFile(files?.[0] ?? null), []);
 
@@ -24,8 +28,8 @@ function AnytypePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
         // uploadFiles surfaces any upload error via its own toast; swallow the rejection so this void-ed
         // call doesn't raise an unhandled rejection.
         closeDialog();
-        await importService.uploadFiles("notes", parentNoteId, [file], { format: "anytype", safeImport: "true", shrinkImages: "false" }).catch(() => {});
-    }, [file, parentNoteId, closeDialog]);
+        await importService.uploadFiles("notes", parentNoteId, [file], { format: "anytype", safeImport: "true", shrinkImages: shrinkImages ? "true" : "false" }).catch(() => {});
+    }, [file, shrinkImages, parentNoteId, closeDialog]);
 
     // Keep the latest import handler in a ref so the footer effect depends only on `file` being present,
     // never on doImport's identity — otherwise re-pushing the footer on every change would loop with the
@@ -47,8 +51,17 @@ function AnytypePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     return (
         <Card heading={t("anytype_import.choose_file")}>
             <CardSection>
-                <p className="import-files-description">{t("anytype_import.description_long")}</p>
-                <FileDropZone onChange={onChange} />
+                <OptionsRow name="import-file" description={t("anytype_import.description_long")} stacked>
+                    <FileDropZone onChange={onChange} accept=".zip" />
+                </OptionsRow>
+                <OptionsRowWithToggle
+                    name="shrink-images"
+                    label={t("import.shrinkImages")}
+                    description={t("import.shrinkImagesProviderTooltip")}
+                    currentValue={compressImages && shrinkImages}
+                    onChange={setShrinkImages}
+                    disabled={!compressImages}
+                />
             </CardSection>
         </Card>
     );

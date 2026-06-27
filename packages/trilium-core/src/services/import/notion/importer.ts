@@ -189,6 +189,7 @@ function parsePage(path: string, html: string): ParsedPage | null {
 function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<string, Uint8Array>, taskContext: TaskContext<"importNotes">, csvColumnsByFolder: Map<string, string[]>): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
+    const shrinkImages = !!taskContext.data?.shrinkImages;
 
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: t("notion_import.root-title"), content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
@@ -229,7 +230,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
 
         // Attachments hang off the note, so this must run after creation; it returns the content with the
         // <img> srcs and file links pointing at the saved attachments.
-        const withImages = rewriteImages(note, body, page.path, resources);
+        const withImages = rewriteImages(note, body, page.path, resources, shrinkImages);
         created.push({ note, content: rewriteAttachments(note, withImages, page.path, resources), page });
         taskContext.increaseProgressCount();
     }
@@ -262,7 +263,7 @@ function createNotes(importRootNote: BNote, pages: ParsedPage[], resources: Map<
  * point at it. References that don't resolve to a bundled file (e.g. external image URLs) are left as-is.
  * Returns the (possibly unchanged) content.
  */
-function rewriteImages(note: BNote, content: string, pagePath: string, resources: Map<string, Uint8Array>): string {
+function rewriteImages(note: BNote, content: string, pagePath: string, resources: Map<string, Uint8Array>, shrinkImages: boolean): string {
     const root = parse(content);
     let changed = false;
 
@@ -276,7 +277,7 @@ function rewriteImages(note: BNote, content: string, pagePath: string, resources
         if (!bytes) {
             continue;
         }
-        const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, bytes, baseName(resourcePath), false);
+        const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, bytes, baseName(resourcePath), shrinkImages);
         /* v8 ignore next -- saveImageToAttachment always returns the id of the attachment it just created, so this guard is never false in practice */
         if (attachmentId) {
             img.setAttribute("src", `api/attachments/${attachmentId}/image/${encodeURIComponent(title)}`);

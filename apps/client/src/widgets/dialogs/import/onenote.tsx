@@ -4,11 +4,13 @@ import { t } from "../../../services/i18n.js";
 import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteContainer, type OneNoteNotebook, orderedChildren } from "../../../services/onenote_import.js";
 import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
-import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
+import { useTriliumOptionBool } from "../../react/hooks.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
+import NoItems from "../../react/NoItems.js";
+import OptionsRow, { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/onenote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
@@ -20,6 +22,8 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const [notebooks, setNotebooks] = useState<OneNoteNotebook[]>([]);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [debug, setDebug] = useState(false);
+    const [compressImages] = useTriliumOptionBool("compressImages");
+    const [shrinkImages, setShrinkImages] = useState(compressImages);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const stopPolling = useCallback(() => {
@@ -133,11 +137,11 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
         // the only errors caught here are upfront ones like a lost connection or an invalid selection.
         closeDialog();
         try {
-            await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug });
+            await onenoteImport.runImport({ parentNoteId, sections, taskId: randomString(10), debug, shrinkImages: compressImages && shrinkImages });
         } catch (e) {
             toast.showError(e instanceof Error ? e.message : String(e));
         }
-    }, [notebooks, selectedIds, parentNoteId, debug, closeDialog]);
+    }, [notebooks, selectedIds, parentNoteId, debug, compressImages, shrinkImages, closeDialog]);
 
     // Keep the latest import handler in a ref so the footer effect below depends only on the values the
     // footer actually shows (all primitives), never on doImport's identity. Depending on doImport — which
@@ -146,36 +150,33 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const doImportRef = useRef(doImport);
     doImportRef.current = doImport;
 
-    // Surface the primary actions in the dialog's pinned footer once notebooks are loaded; the other
+    // Surface the import button in the dialog's pinned footer once notebooks are loaded; the other
     // phases set it to null so the connect screens show no footer.
     const importDisabled = selectedIds.size === 0;
     useEffect(() => {
         setFooter(phase !== "ready" ? null : (
-            <>
-                <FormCheckbox
-                    name="onenote-debug"
-                    label={t("onenote_import.attach_source")}
-                    hint={t("onenote_import.attach_source_hint")}
-                    currentValue={debug}
-                    onChange={setDebug}
-                />
-                <Button
-                    text={t("onenote_import.import")}
-                    kind="primary"
-                    disabled={importDisabled}
-                    onClick={() => void doImportRef.current()}
-                />
-            </>
+            <Button
+                text={t("onenote_import.import")}
+                kind="primary"
+                disabled={importDisabled}
+                onClick={() => void doImportRef.current()}
+            />
         ));
-    }, [phase, debug, importDisabled, setFooter]);
+    }, [phase, importDisabled, setFooter]);
 
     if (phase === "checking") {
-        return <Card><CardSection className="onenote-panel"><LoadingSpinner /></CardSection></Card>;
+        return (
+            <Card heading={t("onenote_import.section_heading")}>
+                <CardSection className="onenote-panel">
+                    <NoItems icon="bx bx-loader-circle bx-spin" text={t("onenote_import.checking")} />
+                </CardSection>
+            </Card>
+        );
     }
 
     if (phase === "disconnected" || phase === "connecting") {
         return (
-            <Card>
+            <Card heading={t("onenote_import.section_heading")}>
                 <CardSection className="onenote-panel">
                     <p>{t("onenote_import.connect_description")}</p>
                     {phase === "connecting"
@@ -187,7 +188,7 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     }
 
     return (
-        <Card>
+        <Card heading={t("onenote_import.section_heading")}>
             <CardSection className="onenote-panel">
                 <div className="onenote-account">
                     <span>{t("onenote_import.connected_as", { name: account?.name ?? "" })}</span>
@@ -198,18 +199,31 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                     ? <p>{t("onenote_import.no_notebooks")}</p>
                     : (
                         <>
-                            <p>{t("onenote_import.select_sections")}</p>
-                            <div className="onenote-notebooks">
-                                {notebooks.map((notebook) => (
-                                    <div className="onenote-notebook" key={notebook.id}>
-                                        <strong>{notebook.title}</strong>
-                                        <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
-                                    </div>
-                                ))}
-                            </div>
-                            <ExtendedAdmonition type="note" icon="bx bx-info-circle" title={t("onenote_import.order_hint_title")}>
-                                {t("onenote_import.order_hint")}
-                            </ExtendedAdmonition>
+                            <OptionsRow name="onenote-sections" label={t("onenote_import.select_sections")} description={t("onenote_import.select_sections_hint")} stacked>
+                                <div className="onenote-notebooks">
+                                    {notebooks.map((notebook) => (
+                                        <div className="onenote-notebook" key={notebook.id}>
+                                            <strong>{notebook.title}</strong>
+                                            <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </OptionsRow>
+                            <OptionsRowWithToggle
+                                name="onenote-shrink-images"
+                                label={t("import.shrinkImages")}
+                                description={t("import.shrinkImagesProviderTooltip")}
+                                currentValue={compressImages && shrinkImages}
+                                onChange={setShrinkImages}
+                                disabled={!compressImages}
+                            />
+                            <OptionsRowWithToggle
+                                name="onenote-debug"
+                                label={t("onenote_import.attach_source")}
+                                description={t("onenote_import.attach_source_hint")}
+                                currentValue={debug}
+                                onChange={setDebug}
+                            />
                         </>
                     )}
             </CardSection>

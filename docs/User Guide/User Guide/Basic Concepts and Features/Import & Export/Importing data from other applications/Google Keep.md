@@ -34,6 +34,7 @@ Then in Trilium Notes:
 *   Note titles are maintained, if present.
     *   In Google Keep it's common for notes not to have a title, case in which the date and time of the note are used as a title.
 *   To-do lists
+*   <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a>.
 *   Creation and modification dates are preserved.
 
 ## Limitations
@@ -41,7 +42,6 @@ Then in Trilium Notes:
 Currently the following information is not imported:
 
 *   Labels are disregarded.
-*   <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a> are not imported.
 *   Pinned, archived or trashed state is not preserved, all notes are treated the same.
 
 ## Reporting issues

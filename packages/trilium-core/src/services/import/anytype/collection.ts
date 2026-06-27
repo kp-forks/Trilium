@@ -19,6 +19,7 @@ import type BNote from "../../../becca/entities/bnote.js";
 import noteService from "../../notes.js";
 import { basename } from "../../utils/path.js";
 import { applyUrlScheme, attachmentReferenceLink, buildPromotedDefinition, saveFileAttachment, toAttributeName } from "../collection_utils.js";
+import mimeService from "../mime.js";
 import type { AnytypeBlock, AnytypeDetails, AnytypeSnapshot, CollectionViewType, FileObjectInfo, Multiplicity, ParsedCollection, ParsedColumn, ParsedObject, ParsedProperty, PropertyLabelType, RelationInfo } from "./model.js";
 
 /** Normalizes a zip entry / file path to forward slashes and lower case (Windows exports use backslashes),
@@ -62,7 +63,10 @@ export function buildFileObjectMap(fileObjects: AnytypeSnapshot[]): Map<string, 
         const source = details.source ?? "";
         // The attachment title is the file's name: the source's base name, or the name + extension.
         const title = basename(normalizePath(source)) || `${details.name ?? "file"}${details.fileExt ? `.${details.fileExt}` : ""}`;
-        map.set(details.id, { title, mime: details.fileMimeType ?? "", source });
+        // Derive the MIME from the file name first (Anytype's own `fileMimeType` is unreliable — e.g. it tags
+        // a PDF as text/plain); fall back to Anytype's value only when the extension is unknown.
+        const mime = (mimeService.getMime(title) || details.fileMimeType) ?? "";
+        map.set(details.id, { title, mime, source });
     }
     return map;
 }

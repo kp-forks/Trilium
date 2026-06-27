@@ -514,6 +514,45 @@ describe("Anytype importer — integration", () => {
         expect(note?.getRelations().filter((r) => r.name === "internalLink")).toHaveLength(0);
     });
 
+    it("renders an inline mention as a reference link and records an internalLink relation for backlinks", async () => {
+        // "Source" mentions "Target" inline via a Mention mark (the target object's id in `param`), mirroring
+        // the "Page with block and inline reference links" page.
+        const source = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "src", childrenIds: ["header", "src-p"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "src-p", text: { text: "Inline link: Target here", style: "Paragraph", marks: { marks: [{ range: { from: 13, to: 19 }, type: "Mention", param: "tgt" }] } } }
+                    ],
+                    details: { id: "src", name: "Source", resolvedLayout: 0 }
+                }
+            }
+        });
+        const target = pageObject("tgt", "Target", ["I am linked"]);
+
+        const importRoot = await importAnytype({
+            "objects/source.pb.json": source,
+            "objects/target.pb.json": target
+        });
+
+        const sourceNote = importRoot.getChildNotes().find((n) => n.title === "Source");
+        const targetNote = importRoot.getChildNotes().find((n) => n.title === "Target");
+        expect(sourceNote).toBeDefined();
+        expect(targetNote).toBeDefined();
+
+        // The mention span becomes an inline reference link to the target note, the surrounding text intact.
+        expect(decodeUtf8(sourceNote?.getContent() ?? "")).toBe(`<p>Inline link: <a class="reference-link" href="#root/${targetNote?.noteId}">Target</a> here</p>`);
+
+        // ...and drives backlink detection just like a block-level link.
+        const internalLinks = sourceNote?.getRelations().filter((r) => r.name === "internalLink") ?? [];
+        expect(internalLinks.map((r) => r.value)).toEqual([targetNote?.noteId]);
+        const backlinks = targetNote?.getTargetRelations().filter((r) => r.name === "internalLink") ?? [];
+        expect(backlinks.map((r) => r.noteId)).toEqual([sourceNote?.noteId]);
+    });
+
     it("preserves a page's created and modified dates from Anytype's detail timestamps", async () => {
         const page = JSON.stringify({
             sbType: "Page",
@@ -703,18 +742,20 @@ describe("Anytype importer — integration", () => {
             "objects/coll.pb.json": collectionObject("coll", "Files", ["m1"], [fileKey]),
             "objects/m1.pb.json": memberObject("m1", { [fileKey]: [fileCid] }),
             "relations/file.pb.json": relationObject(fileKey, "File", 5),
-            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "txt", "text/csv", "files\\log.txt"),
-            "files/log.txt": "hello,world\n1,2\n"
+            // Anytype mis-tags the MIME (text/plain for a .csv); the importer derives it from the extension.
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "csv", "text/plain", "files\\log.csv"),
+            "files/log.csv": "hello,world\n1,2\n"
         });
 
         // A file property is never a column.
         const collection = importRoot.getChildNotes()[0];
         expect(collection.getOwnedAttributes().filter((a) => a.name.startsWith("label:"))).toHaveLength(0);
 
-        // The file is a role:"file" attachment, titled from the file's name, with its bytes preserved.
+        // The file is a role:"file" attachment, titled from the file's name, with its bytes preserved and its
+        // MIME derived from the extension (not Anytype's unreliable text/plain).
         const row = collection.getChildNotes()[0];
         const attachments = row.getAttachmentsByRole("file");
-        expect(attachments.map((a) => a.title)).toEqual(["log.txt"]);
+        expect(attachments.map((a) => a.title)).toEqual(["log.csv"]);
         expect(attachments[0].mime).toBe("text/csv");
         expect(decodeUtf8(attachments[0].getContent() ?? "")).toBe("hello,world\n1,2\n");
 
@@ -722,7 +763,216 @@ describe("Anytype importer — integration", () => {
         const content = decodeUtf8(row.getContent() ?? "");
         expect(content).toContain(`class="reference-link"`);
         expect(content).toContain(`href="#root/${row.noteId}?viewMode=attachments&attachmentId=${attachments[0].attachmentId}"`);
-        expect(content).toContain(">log.txt</a>");
+        expect(content).toContain(">log.csv</a>");
+    });
+
+    it("imports a file object that's a collection member as a file note under the collection", async () => {
+        // A file dropped into a collection is listed in its membership (details.links) as a FileObject id, not
+        // a page — so it must still become a (file) note beneath the collection rather than being dropped.
+        const fileCid = "bafyreifilemember";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Docs", [fileCid], []),
+            // Anytype records a wrong MIME for the PDF (verbatim from the real export: text/plain); the importer
+            // must derive application/pdf from the extension instead.
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "text/plain", "files\\report.pdf"),
+            "files/report.pdf": Buffer.from("%PDF-1.4 hi")
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.title).toBe("Docs");
+        const members = collection.getChildNotes();
+        expect(members.map((n) => n.title)).toEqual(["report.pdf"]);
+        const fileNote = members[0];
+        expect(fileNote.type).toBe("file");
+        expect(fileNote.mime).toBe("application/pdf");
+        expect(decodeUtf8(fileNote.getContent() ?? "")).toBe("%PDF-1.4 hi");
+        expect(fileNote.getOwnedLabelValue("originalFileName")).toBe("report.pdf");
+    });
+
+    it("skips a collection's file member whose bytes are missing from the export", async () => {
+        // The collection lists a FileObject as a member and its metadata ships, but the raw bytes under files/
+        // are absent — so no note can be created for it and it's left out rather than failing the import.
+        const fileCid = "bafyreimissingbytes";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Docs", [fileCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "application/pdf", "files\\report.pdf")
+            // No files/report.pdf entry — the bytes are missing.
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.title).toBe("Docs");
+        expect(collection.getChildNotes()).toHaveLength(0);
+    });
+
+    it("imports an image object that's a collection member as an image note", async () => {
+        const imgCid = "bafyreiimagemember";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Gallery", [imgCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(imgCid, "pic", "png", "image/png", "files\\pic.png"),
+            "files/pic.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png")
+        });
+
+        const members = importRoot.getChildNotes()[0].getChildNotes();
+        expect(members.map((n) => n.type)).toEqual(["image"]);
+        expect(members[0].title).toBe("pic.png");
+    });
+
+    it("clones a file member into every collection that lists it", async () => {
+        // The same file is a member of two collections — its primary parent is the first, and it's cloned into
+        // the second (same as a page member).
+        const fileCid = "bafyreisharedfile";
+        const importRoot = await importAnytype({
+            "objects/c1.pb.json": collectionObject("c1", "First", [fileCid], []),
+            "objects/c2.pb.json": collectionObject("c2", "Second", [fileCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "shared", "txt", "text/plain", "files\\shared.txt"),
+            "files/shared.txt": Buffer.from("shared bytes")
+        });
+
+        const collections = importRoot.getChildNotes();
+        expect(collections.map((n) => n.title).sort()).toEqual(["First", "Second"]);
+        // The very same note (one noteId) appears under both collections.
+        const firstMember = collections.find((n) => n.title === "First")?.getChildNotes()[0];
+        const secondMember = collections.find((n) => n.title === "Second")?.getChildNotes()[0];
+        expect(firstMember?.noteId).toBe(secondMember?.noteId);
+        expect(firstMember?.title).toBe("shared.txt");
+    });
+
+    it("imports an inline image block as a role:image attachment, rewriting the <img src> to point at it", async () => {
+        // An Image file block in the body references a FileObject (its `targetObjectId`), whose bytes ship under files/.
+        const imageCid = "bafyreiimage";
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "img"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "img", file: { type: "Image", name: "shot.png", mime: "image/png", targetObjectId: imageCid, state: "Done", style: "Embed" } }
+                    ],
+                    details: { id: "pg", name: "Page with image", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({
+            "objects/pg.pb.json": page,
+            "filesObjects/f1.pb.json": fileObjectJson(imageCid, "shot", "png", "image/png", "files\\shot.png"),
+            "files/shot.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png-bytes")
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Page with image");
+        // The image becomes a role:"image" attachment titled from the file's name.
+        const attachments = note?.getAttachmentsByRole("image") ?? [];
+        expect(attachments.map((a) => a.title)).toEqual(["shot.png"]);
+
+        // The <img src> is rewritten to the attachment URL (no bare file id left in the body).
+        const content = decodeUtf8(note?.getContent() ?? "");
+        expect(content).toContain(`<figure class="image"><img src="api/attachments/${attachments[0]?.attachmentId}/image/`);
+        expect(content).not.toContain(imageCid);
+    });
+
+    it("imports an inline non-image file block as a role:file attachment with a reference link in the body", async () => {
+        const fileCid = "bafyreipdf";
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "file"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "file", file: { type: "PDF", name: "report.pdf", mime: "application/pdf", targetObjectId: fileCid, state: "Done", style: "Link" } }
+                    ],
+                    details: { id: "pg", name: "Page with file", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({
+            "objects/pg.pb.json": page,
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "application/pdf", "files\\report.pdf"),
+            "files/report.pdf": Buffer.from("%PDF-1.4 fake")
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Page with file");
+        const attachments = note?.getAttachmentsByRole("file") ?? [];
+        expect(attachments.map((a) => a.title)).toEqual(["report.pdf"]);
+        expect(attachments[0]?.mime).toBe("application/pdf");
+
+        // The anchor is rewritten into a Trilium attachment reference-link.
+        const content = decodeUtf8(note?.getContent() ?? "");
+        expect(content).toContain(`class="reference-link"`);
+        expect(content).toContain(`href="#root/${note?.noteId}?viewMode=attachments&attachmentId=${attachments[0]?.attachmentId}"`);
+        expect(content).toContain(">report.pdf</a>");
+        expect(content).not.toContain("anytype-file");
+    });
+
+    it("drops an inline image whose bytes are missing from the export, leaving no broken <img>", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "p", "img"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "p", text: { text: "Body", style: "Paragraph" } },
+                        { id: "img", file: { type: "Image", name: "gone.png", targetObjectId: "bafyreimissing", state: "Done", style: "Embed" } }
+                    ],
+                    details: { id: "pg", name: "Missing image", resolvedLayout: 0 }
+                }
+            }
+        });
+        // No filesObjects/files entries for the referenced id.
+        const importRoot = await importAnytype({ "objects/pg.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Missing image");
+        expect(note?.getAttachmentsByRole("image")).toHaveLength(0);
+        const content = decodeUtf8(note?.getContent() ?? "");
+        // The broken figure is dropped; the rest of the body survives.
+        expect(content).toBe("<p>Body</p>");
+    });
+
+    it("strips the bare-id link of an inline non-image file whose bytes are missing, keeping its text", async () => {
+        // The anytype-file placeholder can't be resolved (no metadata/bytes), so its class and bare-id href are
+        // dropped, leaving the file name as plain (non-linking) text rather than a broken attachment link.
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "file"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "file", file: { type: "PDF", name: "gone.pdf", targetObjectId: "bafyreimissingfile", state: "Done", style: "Link" } }
+                    ],
+                    details: { id: "pg", name: "Missing file", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/pg.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Missing file");
+        expect(note?.getAttachmentsByRole("file")).toHaveLength(0);
+        const content = decodeUtf8(note?.getContent() ?? "");
+        expect(content).toBe("<p><a>gone.pdf</a></p>");
+    });
+
+    it("skips a file property whose file object's bytes are missing, leaving no attachment or link", async () => {
+        // The file property references a FileObject, but its bytes are absent — so no attachment is created and
+        // the body keeps no reference link to it.
+        const fileKey = "6a3e3323cafa6953a4661c6f";
+        const fileCid = "bafyreimissingprop";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Files", ["m1"], [fileKey]),
+            "objects/m1.pb.json": memberObject("m1", { [fileKey]: [fileCid] }),
+            "relations/file.pb.json": relationObject(fileKey, "File", 5),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "csv", "text/csv", "files\\log.csv")
+            // No files/log.csv entry — the bytes are missing.
+        });
+
+        const row = importRoot.getChildNotes()[0].getChildNotes()[0];
+        expect(row.getAttachmentsByRole("file")).toHaveLength(0);
+        expect(decodeUtf8(row.getContent() ?? "")).not.toContain("reference-link");
     });
 
     it("imports a collection-scoped export (no wrapper) as a named table whose columns are synthesized from members", async () => {
@@ -749,6 +999,96 @@ describe("Anytype importer — integration", () => {
         const rows = importRoot.getChildNotes();
         expect(rows).toHaveLength(2);
         expect(rows.find((n) => n.getOwnedLabelValue("url"))?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
+    });
+
+    it("imports a file member of a collection-scoped export (no membership list) as a file note under the root", async () => {
+        // Exporting just the collection drops the wrapper (so no `links` membership) and the file's own
+        // createdInContext points at where it was first added, not the collection — so the only signal the
+        // bundled, page-unreferenced file is a member is its presence. It still becomes a file note.
+        const ctx = "bafyreicollectioncontext";
+        const fileCid = "bafyreiscopedfile";
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": memberObject("m1", { createdInContext: ctx }),
+                "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "text/plain", "files\\report.pdf"),
+                "files/report.pdf": Buffer.from("%PDF-1.4 scoped")
+            },
+            "Ordered collection.zip"
+        );
+
+        expect(importRoot.title).toBe("Ordered collection");
+        const children = importRoot.getChildNotes();
+        // The page member (Untitled) plus the recovered file member.
+        expect(children.map((n) => n.title).sort()).toEqual(["Untitled", "report.pdf"]);
+        const fileNote = children.find((n) => n.type === "file");
+        expect(fileNote?.mime).toBe("application/pdf");
+        expect(decodeUtf8(fileNote?.getContent() ?? "")).toBe("%PDF-1.4 scoped");
+    });
+
+    it("does not duplicate a member page's inline file as a separate collection member", async () => {
+        // In a collection-scoped export the inline image's FileObject is bundled too; it must stay the page's
+        // inline attachment, not also surface as a sibling member note.
+        const ctx = "bafyreicollectioncontext";
+        const imgCid = "bafyreiinlineimg";
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "m1", childrenIds: ["header", "img"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "img", file: { type: "Image", name: "pic.png", targetObjectId: imgCid, state: "Done", style: "Embed" } }
+                    ],
+                    details: { id: "m1", name: "Has image", resolvedLayout: 0, createdInContext: ctx }
+                }
+            }
+        });
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": page,
+                "filesObjects/f1.pb.json": fileObjectJson(imgCid, "pic", "png", "image/png", "files\\pic.png"),
+                "files/pic.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png")
+            },
+            "Gallery.zip"
+        );
+
+        const children = importRoot.getChildNotes();
+        // Only the member page — the image is its inline attachment, not a separate member note.
+        expect(children.map((n) => n.title)).toEqual(["Has image"]);
+        expect(children[0].getAttachmentsByRole("image")).toHaveLength(1);
+    });
+
+    it("does not surface a file referenced only by an unimported object (a set) as a collection member", async () => {
+        // In a collection-scoped export the recovery treats page-unreferenced bundled files as members. A file
+        // referenced only by an object we don't import — here a set (layout 3) carrying it as a file property —
+        // is not a dropped-in member and must not surface as a stray file note.
+        const ctx = "bafyreicollectioncontext";
+        const fileKey = "6a3e3323cafa6953a4661c6f";
+        const fileCid = "bafyreisetfile";
+        const set = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [{ id: "set1", childrenIds: [] }],
+                    details: { id: "set1", name: "My Set", layout: 3, [fileKey]: [fileCid] }
+                }
+            }
+        });
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": memberObject("m1", { createdInContext: ctx }),
+                "objects/set1.pb.json": set,
+                "relations/file.pb.json": relationObject(fileKey, "File", 5),
+                "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "csv", "text/plain", "files\\log.csv"),
+                "files/log.csv": "hello,world\n1,2\n"
+            },
+            "Ordered collection.zip"
+        );
+
+        // Only the page member — the set's file is not a collection member, so it isn't recovered.
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Untitled"]);
+        expect(importRoot.getChildNotes().some((n) => n.type === "file")).toBe(false);
     });
 
     it("keeps the default 'Anytype import' text root for a regular multi-page export", async () => {
