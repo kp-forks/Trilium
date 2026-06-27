@@ -25,10 +25,16 @@ export interface ParsedFrontmatter {
     attributes: FrontmatterAttribute[];
 }
 
-export function extractFrontmatter(markdown: string): ParsedFrontmatter {
+/**
+ * Splits the leading front matter block off the body and returns the raw parsed YAML mapping (the un-mapped
+ * `key → value`, for callers that apply their own typing/semantics, e.g. the Obsidian importer). Returns an
+ * empty mapping when there's no block, when the YAML is malformed (the block is then left in the body), or
+ * when the block isn't a key/value mapping (a scalar/list block is stripped but yields no data).
+ */
+export function parseFrontmatter(markdown: string): { body: string; data: Record<string, unknown> } {
     const block = matchFrontmatter(markdown);
     if (!block) {
-        return { body: markdown, attributes: [] };
+        return { body: markdown, data: {} };
     }
 
     let data: unknown;
@@ -36,13 +42,14 @@ export function extractFrontmatter(markdown: string): ParsedFrontmatter {
         data = load(block.yaml);
     } catch {
         // Malformed YAML isn't something we can trust, so leave the note untouched — body and block alike.
-        return { body: markdown, attributes: [] };
+        return { body: markdown, data: {} };
     }
-    // A structurally-valid (possibly empty) block is stripped either way; only a key/value mapping yields
-    // attributes (a scalar/list block carries no named properties).
-    if (!isRecord(data)) {
-        return { body: block.body, attributes: [] };
-    }
+    // A structurally-valid (possibly empty) block is stripped either way; only a key/value mapping carries data.
+    return { body: block.body, data: isRecord(data) ? data : {} };
+}
+
+export function extractFrontmatter(markdown: string): ParsedFrontmatter {
+    const { body, data } = parseFrontmatter(markdown);
 
     const attributes: FrontmatterAttribute[] = [];
     for (const [key, value] of Object.entries(data)) {
@@ -51,7 +58,7 @@ export function extractFrontmatter(markdown: string): ParsedFrontmatter {
             attributes.push({ name, value: scalar });
         }
     }
-    return { body: block.body, attributes };
+    return { body, attributes };
 }
 
 /** Splits a leading `---\n…\n---` block (front matter must start at the very first line) from the body. */

@@ -125,6 +125,30 @@ describe("Obsidian importer — integration", () => {
         expect(note.getOwnedLabelValue("first")).toBe("First value");
     });
 
+    it("types front matter properties from .obsidian/types.json with per-note promoted definitions", async () => {
+        const importRoot = await importObsidian({
+            ".obsidian/types.json": JSON.stringify({ types: { "Date": "date", "Date Time": "datetime", "Number": "number", "Checkbox prop": "checkbox" } }),
+            "Note.md": "---\nDate: 2026-06-27\nDate Time: 2026-06-27T15:10:00\nNumber: 5\nCheckbox prop: true\n---\nBody."
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        if (!note) {
+            throw new Error("note was not imported");
+        }
+
+        // Values are formatted for their Trilium type (datetime loses its seconds).
+        expect(note.getOwnedLabelValue("date")).toBe("2026-06-27");
+        expect(note.getOwnedLabelValue("dateTime")).toBe("2026-06-27T15:10");
+        expect(note.getOwnedLabelValue("number")).toBe("5");
+        expect(note.getOwnedLabelValue("checkboxProp")).toBe("true");
+
+        // Each property gets a per-note promoted definition carrying the Trilium type and the original name as alias.
+        expect(note.getOwnedLabelValue("label:date")).toBe("promoted,single,date,alias=Date");
+        expect(note.getOwnedLabelValue("label:dateTime")).toBe("promoted,single,datetime,alias=Date Time");
+        expect(note.getOwnedLabelValue("label:number")).toBe("promoted,single,number,alias=Number");
+        expect(note.getOwnedLabelValue("label:checkboxProp")).toBe("promoted,single,boolean,alias=Checkbox prop");
+    });
+
     it("converts ==highlights== to a coloured span and %%comments%% to dropped HTML comments", async () => {
         const importRoot = await importObsidian({
             "Note.md": "A ==highlight== and a %%hidden%% comment."

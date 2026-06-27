@@ -17,10 +17,10 @@
  * Obsidian-specific inline syntax is handled during Markdown rendering (gated by the `obsidian` flag):
  * `==highlight==` becomes `<mark>` and `%% comment %%` becomes an HTML comment.
  *
- * Front matter is parsed generically (see {@link ../frontmatter.js}) into camelCased labels, then Obsidian's
- * special keys are applied (see {@link ./frontmatter.js}): tags become individual labels, aliases become
- * `#alias` labels, and cssclasses/publish/permalink are dropped. Property typing (date/number/checkbox via
- * `.obsidian/types.json`) and callouts are deferred to later passes.
+ * Front matter (parsed by {@link ../frontmatter.js}) becomes labels via {@link mapObsidianFrontmatter}: tags
+ * become individual labels, aliases become `#alias` labels, cssclasses/publish/permalink are dropped, and
+ * every other property becomes a value label plus a per-note promoted definition typed from
+ * `.obsidian/types.json` (date/datetime/number/checkbox, defaulting to text). Callouts are deferred.
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=obsidian`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -36,8 +36,8 @@ import type TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
-import { toAttributeName } from "../collection_utils.js";
-import { extractFrontmatter, type FrontmatterAttribute } from "../frontmatter.js";
+import { buildPromotedDefinition, toAttributeName } from "../collection_utils.js";
+import { type FrontmatterAttribute, parseFrontmatter } from "../frontmatter.js";
 import markdownService from "../markdown.js";
 import { applyAttachments, type AttachmentIndex, buildAttachmentIndex, isImageMime, resolveAttachment } from "./attachments.js";
 import { type ExcalidrawDrawing, isExcalidrawPath, parseExcalidraw } from "./excalidraw.js";
@@ -51,10 +51,10 @@ interface VaultNote {
 }
 
 async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
-    const { notes, attachments, vaultRoot } = await parseVault(fileBuffer);
+    const { notes, attachments, types, vaultRoot } = await parseVault(fileBuffer);
     taskContext.setTotalCount(notes.length);
 
-    return createNotes(importRootNote, notes, attachments, vaultTitle(vaultRoot, fileName), taskContext);
+    return createNotes(importRootNote, notes, attachments, types, vaultTitle(vaultRoot, fileName), taskContext);
 }
 
 /**
@@ -63,11 +63,12 @@ async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffe
  * folder and any other dot-prefixed entry are skipped, as is every non-Markdown file (handled in later
  * passes). Sorted by path so the resulting tree is built (and ordered) deterministically.
  */
-async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; attachments: Map<string, Uint8Array>; vaultRoot: string }> {
+async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; attachments: Map<string, Uint8Array>; types: Map<string, string>; vaultRoot: string }> {
     const provider = getZipProvider();
     const allPaths: string[] = [];
     const raw: { path: string; markdown: string }[] = [];
     const rawAttachments: { path: string; bytes: Uint8Array }[] = [];
+    let typesJson = "";
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
@@ -78,6 +79,10 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
         // Record every entry (including .obsidian/) so the vault root can be detected; only collect content
         // for the kept ones below.
         allPaths.push(path);
+        // The property-type registry lives under the otherwise-skipped .obsidian/ folder; capture it first.
+        if (isTypesJson(path)) {
+            typesJson = decodeUtf8(await readContent());
+        }
         if (isIgnored(path)) {
             return;
         }
@@ -101,7 +106,7 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
         attachments.set(stripVaultRoot(path, vaultRoot), bytes);
     }
 
-    return { notes, attachments, vaultRoot };
+    return { notes, attachments, types: parseTypesJson(typesJson), vaultRoot };
 }
 
 /**
@@ -109,7 +114,7 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
  * container note for its folder (created on demand by {@link ensureFolder}, so a folder note exists before
  * its children), with its Markdown rendered to HTML. Returns the import root.
  */
-function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map<string, Uint8Array>, rootTitle: string, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map<string, Uint8Array>, types: Map<string, string>, rootTitle: string, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = !!(importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable());
 
@@ -139,14 +144,14 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
             }
         }
 
-        const { body, attributes } = extractFrontmatter(vaultNote.markdown);
+        const { body, data } = parseFrontmatter(vaultNote.markdown);
         const rendered = markdownService.renderToHtml(body, vaultNote.title, { obsidian: true });
         const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: rendered, type: "text", mime: "text/html", isProtected });
 
-        // Front matter properties become labels (camelCased like the other importers), then Obsidian's special
-        // keys are applied: tags become individual labels, aliases become #alias labels, and
-        // cssclasses/publish/permalink are dropped. Property typing (date/number/checkbox) layers on later.
-        for (const attribute of toObsidianLabels(attributes)) {
+        // Front matter becomes labels: tags → individual labels, aliases → #alias labels,
+        // cssclasses/publish/permalink dropped, and every other property → a value label plus a per-note
+        // promoted definition typed from .obsidian/types.json (see mapObsidianFrontmatter).
+        for (const attribute of mapObsidianFrontmatter(data, types)) {
             note.addLabel(attribute.name, attribute.value);
         }
 
@@ -203,30 +208,106 @@ function createExcalidrawNote(parent: BNote, vaultNote: VaultNote, attachmentInd
 const DROPPED_FRONTMATTER_KEYS = new Set(["cssclasses", "publish", "permalink"]);
 
 /**
- * Applies Obsidian's special front matter property semantics on top of the generic parse: each `tags` value
- * becomes its own label (the sanitized tag as the name, e.g. `#book`), each `aliases` value becomes an
- * `#alias` label (the alternate name preserved), and `cssclasses`/`publish`/`permalink` are dropped
- * (presentation / publish-site metadata with no Trilium meaning). Every other property is left as-is.
+ * Maps a note's raw front matter (`key → value`) to Trilium labels, applying Obsidian's property semantics:
+ *  - `tags`    → each tag becomes its own label, the sanitized tag as the name (e.g. `#book`).
+ *  - `aliases` → each alias becomes an `#alias` label (the alternate name preserved).
+ *  - `cssclasses`/`publish`/`permalink` → dropped (presentation / publish-site metadata).
+ *  - any other property → a value label plus a per-note promoted definition (`#label:<name>`), typed from
+ *    `.obsidian/types.json` (`types`) — number/checkbox/date/datetime, defaulting to text; a list (or a
+ *    `multitext` property) becomes a multi-valued promoted attribute, and the original key is kept as the alias.
  */
-export function toObsidianLabels(attributes: FrontmatterAttribute[]): FrontmatterAttribute[] {
+export function mapObsidianFrontmatter(data: Record<string, unknown>, types: Map<string, string>): FrontmatterAttribute[] {
     const labels: FrontmatterAttribute[] = [];
-    for (const { name, value } of attributes) {
-        if (DROPPED_FRONTMATTER_KEYS.has(name)) {
+    for (const [key, rawValue] of Object.entries(data)) {
+        const lowerKey = key.toLowerCase();
+        if (DROPPED_FRONTMATTER_KEYS.has(lowerKey)) {
             continue;
         }
-        if (name === "tags") {
-            if (value.trim()) {
+        const values = toScalarValues(rawValue);
+        if (lowerKey === "tags") {
+            for (const value of values) {
                 labels.push({ name: toAttributeName(value), value: "" });
             }
-        } else if (name === "aliases") {
-            if (value.trim()) {
+            continue;
+        }
+        if (lowerKey === "aliases") {
+            for (const value of values) {
                 labels.push({ name: "alias", value });
             }
-        } else {
-            labels.push({ name, value });
+            continue;
         }
+        const obsidianType = types.get(key);
+        const name = toAttributeName(key);
+        for (const value of values) {
+            labels.push({ name, value: formatValue(value, obsidianType) });
+        }
+        const multiplicity = obsidianType === "multitext" || values.length > 1 ? "multi" : "single";
+        labels.push({ name: `label:${name}`, value: buildPromotedDefinition({ alias: key, labelType: triliumLabelType(obsidianType), multiplicity }) });
     }
     return labels;
+}
+
+/** Maps an Obsidian property type to the Trilium promoted-attribute label type (defaulting to text). */
+function triliumLabelType(obsidianType: string | undefined): string {
+    switch (obsidianType) {
+        case "number":
+            return "number";
+        case "checkbox":
+            return "boolean";
+        case "date":
+            return "date";
+        case "datetime":
+            return "datetime";
+        default:
+            return "text";
+    }
+}
+
+/** Reformats a value for its Trilium type — only datetime differs (Obsidian's seconds are trimmed). */
+function formatValue(value: string, obsidianType: string | undefined): string {
+    if (obsidianType === "datetime") {
+        return value.replace(/T(\d{2}:\d{2})(?::\d{2})?.*$/, "T$1");
+    }
+    return value;
+}
+
+/** Flattens a YAML value into its string label values (a list yields one per item); empty/blank are dropped. */
+function toScalarValues(value: unknown): string[] {
+    if (Array.isArray(value)) {
+        return value.flatMap(toScalarValues);
+    }
+    if (typeof value === "boolean") {
+        return [value ? "true" : "false"];
+    }
+    if (typeof value === "number") {
+        return [String(value)];
+    }
+    if (value instanceof Date) {
+        return [value.toISOString()];
+    }
+    return typeof value === "string" && value.trim() ? [value] : [];
+}
+
+/** Parses `.obsidian/types.json` into a `propertyName -> type` map (empty when missing or malformed). */
+function parseTypesJson(json: string): Map<string, string> {
+    const types = new Map<string, string>();
+    try {
+        const entries = (JSON.parse(json) as { types?: Record<string, unknown> })?.types;
+        for (const [key, value] of Object.entries(entries ?? {})) {
+            if (typeof value === "string") {
+                types.set(key, value);
+            }
+        }
+    } catch {
+        // No or invalid types.json — every property falls back to text.
+    }
+    return types;
+}
+
+/** True for the `.obsidian/types.json` property-type registry, at the zip root or under the vault wrapper. */
+function isTypesJson(path: string): boolean {
+    const lower = path.toLowerCase();
+    return lower === ".obsidian/types.json" || lower.endsWith("/.obsidian/types.json");
 }
 
 /** Returns (creating on demand, parents first) the container note for `folderPath`; the empty path is the root. */
