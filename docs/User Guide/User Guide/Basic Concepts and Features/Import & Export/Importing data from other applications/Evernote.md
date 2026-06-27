@@ -43,12 +43,13 @@ The following features are preserved by Trilium during the import process:
 *   Basic formatting (bold, italic, underline, strikethrough, colors, highlights, superscript, subscript, text alignment, inline code).
 *   The hierarchy of headings (these are shifted to start with H2 because H1 is reserved for note title, see [Headings](../../../Note%20Types/Text/General%20formatting.md))
 *   To-do lists. The new task format is collapsed to standard to-do lists
+*   <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a>
 *   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a> (with bullets or with numbers)
 *   <a class="reference-link" href="../../../Note%20Types/Text/Tables.md">Tables</a>
 *   Block quotes
 *   [Admonitions](../../../Note%20Types/Text/Block%20quotes%20%26%20admonitions.md) are preserved, including its emoji (added as part of the content).
 *   <a class="reference-link" href="../../../Note%20Types/Text/Developer-specific%20formatting/Code%20blocks.md">Code blocks</a>, with a best-effort attempt to restore the language.
-*   Inline <a class="reference-link" href="../../../Note%20Types/Mermaid%20Diagrams.md">Mermaid Diagrams</a>
+*   <a class="reference-link" href="../../../Note%20Types/Mermaid%20Diagrams.md">Mermaid Diagrams</a>
 *   <a class="reference-link" href="../../../Note%20Types/Text/Math%20Equations.md">Math Equations</a>
 *   Toggle sections
 *   External links
