@@ -742,18 +742,20 @@ describe("Anytype importer — integration", () => {
             "objects/coll.pb.json": collectionObject("coll", "Files", ["m1"], [fileKey]),
             "objects/m1.pb.json": memberObject("m1", { [fileKey]: [fileCid] }),
             "relations/file.pb.json": relationObject(fileKey, "File", 5),
-            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "txt", "text/csv", "files\\log.txt"),
-            "files/log.txt": "hello,world\n1,2\n"
+            // Anytype mis-tags the MIME (text/plain for a .csv); the importer derives it from the extension.
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "csv", "text/plain", "files\\log.csv"),
+            "files/log.csv": "hello,world\n1,2\n"
         });
 
         // A file property is never a column.
         const collection = importRoot.getChildNotes()[0];
         expect(collection.getOwnedAttributes().filter((a) => a.name.startsWith("label:"))).toHaveLength(0);
 
-        // The file is a role:"file" attachment, titled from the file's name, with its bytes preserved.
+        // The file is a role:"file" attachment, titled from the file's name, with its bytes preserved and its
+        // MIME derived from the extension (not Anytype's unreliable text/plain).
         const row = collection.getChildNotes()[0];
         const attachments = row.getAttachmentsByRole("file");
-        expect(attachments.map((a) => a.title)).toEqual(["log.txt"]);
+        expect(attachments.map((a) => a.title)).toEqual(["log.csv"]);
         expect(attachments[0].mime).toBe("text/csv");
         expect(decodeUtf8(attachments[0].getContent() ?? "")).toBe("hello,world\n1,2\n");
 
@@ -761,7 +763,7 @@ describe("Anytype importer — integration", () => {
         const content = decodeUtf8(row.getContent() ?? "");
         expect(content).toContain(`class="reference-link"`);
         expect(content).toContain(`href="#root/${row.noteId}?viewMode=attachments&attachmentId=${attachments[0].attachmentId}"`);
-        expect(content).toContain(">log.txt</a>");
+        expect(content).toContain(">log.csv</a>");
     });
 
     it("imports a file object that's a collection member as a file note under the collection", async () => {
@@ -770,7 +772,9 @@ describe("Anytype importer — integration", () => {
         const fileCid = "bafyreifilemember";
         const importRoot = await importAnytype({
             "objects/coll.pb.json": collectionObject("coll", "Docs", [fileCid], []),
-            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "application/pdf", "files\\report.pdf"),
+            // Anytype records a wrong MIME for the PDF (verbatim from the real export: text/plain); the importer
+            // must derive application/pdf from the extension instead.
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "text/plain", "files\\report.pdf"),
             "files/report.pdf": Buffer.from("%PDF-1.4 hi")
         });
 
