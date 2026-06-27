@@ -1,0 +1,9 @@
+/* The OneNote import footer keeps the "attach source" checkbox on the left while the import
+   button stays on the right, independent of the dialog's right-aligned footer default. */
+.modal-footer .onenote-footer {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}

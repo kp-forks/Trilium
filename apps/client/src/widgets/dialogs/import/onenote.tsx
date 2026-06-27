@@ -1,3 +1,5 @@
+import "./onenote.css";
+
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -151,7 +153,7 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const importDisabled = selectedIds.size === 0;
     useEffect(() => {
         setFooter(phase !== "ready" ? null : (
-            <>
+            <div className="onenote-footer">
                 <FormCheckbox
                     name="onenote-debug"
                     label={t("onenote_import.attach_source")}
@@ -165,7 +167,7 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                     disabled={importDisabled}
                     onClick={() => void doImportRef.current()}
                 />
-            </>
+            </div>
         ));
     }, [phase, debug, importDisabled, setFooter]);
 
