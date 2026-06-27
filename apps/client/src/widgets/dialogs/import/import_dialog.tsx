@@ -54,6 +54,7 @@ export default function ImportDialog() {
             title={noteTitle ? t("import.importIntoNoteNamed", { title: noteTitle }) : t("import.importIntoNote")}
             footer={footer}
             footerAlignment="right"
+            helpPageId={provider?.helpPage}
             onHidden={() => setShown(false)}
             show={shown}
         >

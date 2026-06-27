@@ -70,6 +70,7 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
 
 const provider: ImportProvider = {
     id: "evernote",
+    helpPage: "syuSEKf2rUGr",
     name: t("evernote_import.name"),
     iconUrl,
     description: t("evernote_import.description"),

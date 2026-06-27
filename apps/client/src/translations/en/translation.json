@@ -292,6 +292,13 @@
     "choose_file": "Anytype export (.zip)",
     "import": "Import"
   },
+  "obsidian_import": {
+    "name": "Obsidian",
+    "description": "From a vault",
+    "description_long": "Zip your Obsidian vault folder, then choose the resulting .zip file here.",
+    "choose_file": "Obsidian vault (.zip)",
+    "import": "Import"
+  },
   "evernote_import": {
     "name": "Evernote",
     "description": "From .enex files",

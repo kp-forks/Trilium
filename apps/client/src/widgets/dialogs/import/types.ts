@@ -24,6 +24,8 @@ export interface ImportProvider {
     icon?: string;
     /** One-line description shown under the name. */
     description: string;
+    /** Help note ID (without the `_help_` prefix) for this provider's documentation; shown as a help button in the dialog header. */
+    helpPage?: string;
     /** Visual grouping in the picker: `"service"` (the default) appears in the card grid; `"local"` (file upload) is shown full-width, grouped beneath the services and selected by default. */
     group?: "service" | "local";
     /** The component rendered once this provider is chosen; it drives its own multi-step flow. */

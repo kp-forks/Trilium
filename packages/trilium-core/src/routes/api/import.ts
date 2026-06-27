@@ -13,6 +13,7 @@ import anytypeImportService from "../../services/import/anytype/importer.js";
 import enexImportService from "../../services/import/enex.js";
 import keepImportService from "../../services/import/keep/importer.js";
 import notionImportService from "../../services/import/notion/importer.js";
+import obsidianImportService from "../../services/import/obsidian/importer.js";
 import opmlImportService from "../../services/import/opml.js";
 import singleImportService from "../../services/import/single.js";
 import zipImportService from "../../services/import/zip.js";
@@ -70,6 +71,10 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
             // An Anytype JSON export is likewise a plain `.zip`; the Anytype import dialog tags the upload so
             // it routes to the Anytype importer rather than the generic zip importer.
             note = await anytypeImportService.importAnytype(taskContext, file.buffer, parentNote, file.originalname);
+        } else if (format === "obsidian" && typeof file.buffer !== "string") {
+            // An Obsidian vault is exported as a plain `.zip` of Markdown files, indistinguishable from a
+            // Trilium export by extension alone; the Obsidian import dialog tags the upload to route it here.
+            note = await obsidianImportService.importObsidian(taskContext, file.buffer, parentNote, file.originalname);
         } else if (extension === ".zip" && options.explodeArchives && typeof file.buffer !== "string") {
             note = await zipImportService.importZip(taskContext, file.buffer, parentNote);
         } else if (extension === ".opml" && options.explodeArchives) {
