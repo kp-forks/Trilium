@@ -10,15 +10,15 @@ import TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
 import obsidianImporter from "./importer.js";
 
-/** Builds an in-memory zip from a map of entry name -> contents. */
-async function createZipBuffer(files: Record<string, string | Buffer>): Promise<Buffer> {
+/** Builds an in-memory zip from a map of entry name -> contents, optionally stamping per-entry mtimes. */
+async function createZipBuffer(files: Record<string, string | Buffer>, dates: Record<string, Date> = {}): Promise<Buffer> {
     const archive = new ZipArchive();
     const chunks: Buffer[] = [];
     const passthrough = new PassThrough();
     passthrough.on("data", (chunk: Buffer) => chunks.push(chunk));
     archive.pipe(passthrough);
     for (const [name, content] of Object.entries(files)) {
-        archive.append(content, { name });
+        archive.append(content, { name, date: dates[name] });
     }
     await archive.finalize();
     return Buffer.concat(chunks);
@@ -31,8 +31,8 @@ function excalidrawFile(scene: object, embeddedFiles = ""): string {
 }
 
 /** Runs the Obsidian importer over `files` and returns the import root note. */
-async function importObsidian(files: Record<string, string | Buffer>, fileName?: string): Promise<BNote> {
-    const buffer = await createZipBuffer(files);
+async function importObsidian(files: Record<string, string | Buffer>, fileName?: string, dates?: Record<string, Date>): Promise<BNote> {
+    const buffer = await createZipBuffer(files, dates);
     const taskContext = TaskContext.getInstance("obsidian-integration", "importNotes", { safeImport: true });
 
     return new Promise<BNote>((resolve, reject) => {
@@ -147,6 +147,21 @@ describe("Obsidian importer — integration", () => {
         expect(note.getOwnedLabelValue("label:dateTime")).toBe("promoted,single,datetime,alias=Date Time");
         expect(note.getOwnedLabelValue("label:number")).toBe("promoted,single,number,alias=Number");
         expect(note.getOwnedLabelValue("label:checkboxProp")).toBe("promoted,single,boolean,alias=Checkbox prop");
+    });
+
+    it("preserves a note's modification date from its zip entry, with created falling back to it", async () => {
+        const importRoot = await importObsidian({ "Note.md": "Body." }, undefined, { "Note.md": new Date(2020, 5, 15, 12, 30, 0) });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        if (!note) {
+            throw new Error("note was not imported");
+        }
+        // The date comes from the zip entry (2020), not the import time, and created falls back to modified.
+        // Exact-instant fidelity isn't asserted: archiver (writing) and yauzl (reading) interpret DOS time
+        // zones differently, so this synthetic round-trip skews by the local offset — real OS-written zips
+        // store local DOS time that yauzl reads back correctly.
+        expect(note.utcDateModified?.startsWith("2020-")).toBe(true);
+        expect(note.utcDateCreated).toBe(note.utcDateModified);
     });
 
     it("converts ==highlights== to a coloured span and %%comments%% to dropped HTML comments", async () => {

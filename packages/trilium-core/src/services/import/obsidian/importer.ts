@@ -34,6 +34,7 @@ import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
+import date_utils from "../../utils/date.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
 import { buildPromotedDefinition, toAttributeName } from "../collection_utils.js";
@@ -48,6 +49,8 @@ interface VaultNote {
     path: string;
     title: string;
     markdown: string;
+    /** The zip entry's modification time, when the reader exposes it (the standalone reader doesn't). */
+    modified?: Date;
 }
 
 async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
@@ -66,7 +69,7 @@ async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffe
 async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; attachments: Map<string, Uint8Array>; types: Map<string, string>; vaultRoot: string }> {
     const provider = getZipProvider();
     const allPaths: string[] = [];
-    const raw: { path: string; markdown: string }[] = [];
+    const raw: { path: string; markdown: string; modified?: Date }[] = [];
     const rawAttachments: { path: string; bytes: Uint8Array }[] = [];
     let typesJson = "";
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
@@ -87,7 +90,7 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
             return;
         }
         if (isMarkdown(path)) {
-            raw.push({ path, markdown: decodeUtf8(await readContent()) });
+            raw.push({ path, markdown: decodeUtf8(await readContent()), modified: entry.lastModified });
         } else if (!isSpecial(path)) {
             // A non-Markdown, non-special file is a candidate attachment (`.canvas`/`.base` are handled later).
             rawAttachments.push({ path, bytes: await readContent() });
@@ -95,9 +98,9 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
     }, filenameEncoding);
 
     const vaultRoot = detectVaultRoot(allPaths);
-    const notes = raw.map(({ path, markdown }) => {
+    const notes = raw.map(({ path, markdown, modified }) => {
         const relative = stripVaultRoot(path, vaultRoot);
-        return { path: relative, title: noteTitle(relative), markdown };
+        return { path: relative, title: noteTitle(relative), markdown, modified };
     });
     notes.sort((a, b) => a.path.localeCompare(b.path));
 
@@ -125,7 +128,7 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     const shrinkImages = !!taskContext.data?.shrinkImages;
     // Folder path (POSIX) -> its container note. The empty path maps to the import root.
     const folderNotes = new Map<string, BNote>();
-    const created: { note: BNote; path: string; rendered: string; content: string }[] = [];
+    const created: { note: BNote; path: string; rendered: string; content: string; modified?: Date }[] = [];
 
     // First pass: create every note (so cross-note links can resolve below) with its Markdown rendered and
     // attachments saved. Content is persisted once, in the link pass, to avoid a second write per note.
@@ -138,7 +141,7 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         if (isExcalidrawPath(vaultNote.path)) {
             const note = createExcalidrawNote(parent, vaultNote, attachmentIndex, isProtected);
             if (note) {
-                created.push({ note, path: vaultNote.path.replace(/\.excalidraw\.md$/i, ""), rendered: "", content: "" });
+                created.push({ note, path: vaultNote.path.replace(/\.excalidraw\.md$/i, ""), rendered: "", content: "", modified: vaultNote.modified });
                 taskContext.increaseProgressCount();
                 continue;
             }
@@ -158,14 +161,14 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         // Attachments hang off the note, so this runs after creation; it returns the content with embedded
         // images/files rewritten to point at the saved attachments.
         const content = applyAttachments(note, rendered, attachmentIndex, shrinkImages);
-        created.push({ note, path: vaultNote.path, rendered, content });
+        created.push({ note, path: vaultNote.path, rendered, content, modified: vaultNote.modified });
         taskContext.increaseProgressCount();
     }
 
     // Second pass: now that every note's name -> id is known, resolve wikilinks and note embeds to Trilium
     // internal links / include-notes, recording the relations that drive backlinks and "what links here".
     const noteIndex = buildNoteIndex(created);
-    for (const { note, rendered, content } of created) {
+    for (const { note, rendered, content, modified } of created) {
         const { html, internalLinks, includeLinks } = resolveLinks(content, noteIndex);
         if (html !== rendered) {
             note.setContent(html);
@@ -175,6 +178,14 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         }
         for (const target of includeLinks) {
             note.addRelation("includeNoteLink", target);
+        }
+
+        // Preserve the file's modification time from the zip. ZIP carries no reliable creation time, so
+        // created falls back to it. Runs last, after the content writes above which would re-stamp "now".
+        // (Guard the DOS-epoch sentinel a date-less entry yields.)
+        if (modified && modified.getFullYear() > 1980) {
+            const utc = date_utils.utcDateTimeStr(modified);
+            note.setDateCreatedAndModified(utc, utc);
         }
     }
 
