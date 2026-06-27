@@ -223,6 +223,7 @@
     "explodeArchivesTooltip": "Creates notes from the files inside <code>.zip</code>, <code>.enex</code> and <code>.opml</code> archives. When off, the archives are attached as-is.",
     "explodeArchives": "Read contents of <code>.zip</code>, <code>.enex</code> and <code>.opml</code> archives.",
     "shrinkImagesTooltip": "Scales and optimizes images to save space, which may slightly reduce quality. Doesn't apply to <code>.zip</code> imports with metadata, which are assumed already optimized.",
+    "shrinkImagesProviderTooltip": "Scales and optimizes imported images to save space, which may slightly reduce quality.",
     "shrinkImages": "Shrink images",
     "textImportedAsText": "Import HTML, Markdown and TXT as text notes if it's unclear from metadata",
     "codeImportedAsCode": "Import recognized code files (e.g. <code>.json</code>) as code notes if it's unclear from metadata",

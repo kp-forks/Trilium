@@ -5,11 +5,15 @@ import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
+import { useTriliumOptionBool } from "../../react/hooks.js";
+import OptionsRow, { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/evernote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
 function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
     const [files, setFiles] = useState<File[]>([]);
+    const [compressImages] = useTriliumOptionBool("compressImages");
+    const [shrinkImages, setShrinkImages] = useState(compressImages);
 
     // An Evernote export is one ENEX (.enex) file per notebook, so allow selecting several at once.
     const onChange = useCallback((fileList: FileList | null) => setFiles(fileList ? Array.from(fileList) : []), []);
@@ -25,8 +29,8 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
         // each file becomes its own notebook root. uploadFiles surfaces upload errors via its own toast,
         // so swallow the rejection to avoid an unhandled rejection from this void-ed call.
         closeDialog();
-        await importService.uploadFiles("notes", parentNoteId, files, { safeImport: "true", shrinkImages: "true" }).catch(() => {});
-    }, [files, parentNoteId, closeDialog]);
+        await importService.uploadFiles("notes", parentNoteId, files, { safeImport: "true", shrinkImages: shrinkImages ? "true" : "false" }).catch(() => {});
+    }, [files, shrinkImages, parentNoteId, closeDialog]);
 
     // Keep the latest import handler in a ref so the footer effect depends only on whether files are
     // selected, never on doImport's identity — otherwise re-pushing the footer on every change would loop
@@ -48,8 +52,17 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
     return (
         <Card heading={t("evernote_import.choose_file")}>
             <CardSection>
-                <p className="import-files-description">{t("evernote_import.description_long")}</p>
-                <FileDropZone multiple onChange={onChange} accept=".enex" />
+                <OptionsRow name="import-file" description={t("evernote_import.description_long")} stacked>
+                    <FileDropZone multiple onChange={onChange} accept=".enex" />
+                </OptionsRow>
+                <OptionsRowWithToggle
+                    name="shrink-images"
+                    label={t("import.shrinkImages")}
+                    description={t("import.shrinkImagesProviderTooltip")}
+                    currentValue={compressImages && shrinkImages}
+                    onChange={setShrinkImages}
+                    disabled={!compressImages}
+                />
             </CardSection>
         </Card>
     );
