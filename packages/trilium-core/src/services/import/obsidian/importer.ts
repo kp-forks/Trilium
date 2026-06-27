@@ -6,6 +6,10 @@
  * container note holding its notes). The `.obsidian/` config folder and any other dot-prefixed entry are
  * skipped, and non-Markdown files (attachments, `.canvas`, `.base`, …) are dropped for now.
  *
+ * An Excalidraw-plugin drawing (`*.excalidraw.md`) is the exception to the "Markdown becomes a text note"
+ * rule: it's decoded into a Trilium `canvas` note instead, with its embedded images saved as attachments
+ * (see {@link ./excalidraw.js}).
+ *
  * A vault can be zipped two ways — its *contents* (so `.obsidian/` sits at the zip root) or its *outer
  * folder* (so everything is nested under `Vault name/`). The location of `.obsidian/` pins the true vault
  * root either way, so the redundant wrapper folder is stripped and the import root is named after the vault.
@@ -33,7 +37,8 @@ import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
 import { extractFrontmatter } from "../frontmatter.js";
 import markdownService from "../markdown.js";
-import { applyAttachments, buildAttachmentIndex } from "./attachments.js";
+import { applyAttachments, type AttachmentIndex, buildAttachmentIndex, isImageMime, resolveAttachment } from "./attachments.js";
+import { type ExcalidrawDrawing, isExcalidrawPath, parseExcalidraw } from "./excalidraw.js";
 import { buildNoteIndex, resolveLinks } from "./links.js";
 
 interface VaultNote {
@@ -119,6 +124,19 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     // attachments saved. Content is persisted once, in the link pass, to avoid a second write per note.
     for (const vaultNote of notes) {
         const parent = ensureFolder(parentFolder(vaultNote.path), rootNote, folderNotes, isProtected);
+
+        // An Obsidian Excalidraw drawing becomes a `canvas` note rather than rendered Markdown. It's still
+        // added to `created` (with empty content) so other notes can wikilink to it, but it carries no HTML
+        // for the link/attachment passes below. A drawing that can't be parsed falls through to text import.
+        if (isExcalidrawPath(vaultNote.path)) {
+            const note = createExcalidrawNote(parent, vaultNote, attachmentIndex, isProtected);
+            if (note) {
+                created.push({ note, path: vaultNote.path.replace(/\.excalidraw\.md$/i, ""), rendered: "", content: "" });
+                taskContext.increaseProgressCount();
+                continue;
+            }
+        }
+
         const { body, attributes } = extractFrontmatter(vaultNote.markdown);
         const rendered = markdownService.renderToHtml(body, vaultNote.title, { obsidian: true });
         const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: rendered, type: "text", mime: "text/html", isProtected });
@@ -153,6 +171,30 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     }
 
     return rootNote;
+}
+
+/**
+ * Creates a `canvas` note from an Obsidian Excalidraw drawing, returning it (or `null` when the drawing can't
+ * be parsed, so the caller can fall back to a text note). Each image the scene embeds is resolved against the
+ * vault attachments and saved as an `image`-role attachment titled with its Excalidraw `fileId`, exactly how
+ * the canvas editor stores images, so the scene's `fileId` references render on load.
+ */
+function createExcalidrawNote(parent: BNote, vaultNote: VaultNote, attachmentIndex: AttachmentIndex, isProtected: boolean): BNote | null {
+    const drawing: ExcalidrawDrawing | null = parseExcalidraw(vaultNote.markdown);
+    if (!drawing) {
+        return null;
+    }
+
+    const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: drawing.content, type: "canvas", mime: "application/json", isProtected });
+
+    for (const [fileId, ref] of drawing.embeddedFiles) {
+        const resolved = resolveAttachment(attachmentIndex, ref);
+        if (resolved && isImageMime(resolved.mime)) {
+            note.saveAttachment({ role: "image", mime: resolved.mime, title: fileId, content: resolved.bytes });
+        }
+    }
+
+    return note;
 }
 
 /** Returns (creating on demand, parents first) the container note for `folderPath`; the empty path is the root. */
@@ -251,9 +293,16 @@ function isSpecial(path: string): boolean {
     return /\.(canvas|base)$/i.test(path);
 }
 
-/** The note title for a Markdown file: its base name without the `.md` extension. */
+/**
+ * The note title for a Markdown file: its base name without the `.md` extension. An Excalidraw drawing drops
+ * its full `.excalidraw.md` suffix so the note is titled like Obsidian shows it (e.g. `Drawing 2026-…`).
+ */
 function noteTitle(path: string): string {
-    return basename(path).replace(/\.md$/i, "");
+    const base = basename(path);
+    if (isExcalidrawPath(base)) {
+        return base.replace(/\.excalidraw\.md$/i, "");
+    }
+    return base.replace(/\.md$/i, "");
 }
 
 export default { importObsidian };

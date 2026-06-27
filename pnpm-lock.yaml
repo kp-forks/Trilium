@@ -1632,6 +1632,9 @@ importers:
       js-yaml:
         specifier: 5.1.0
         version: 5.1.0
+      lz-string:
+        specifier: 1.5.0
+        version: 1.5.0
       mime-types:
         specifier: 3.0.2
         version: 3.0.2
@@ -10416,6 +10419,10 @@ packages:
   luxon@3.6.1:
     resolution: {integrity: sha512-tJLxrKJhO2ukZ5z0gyjY1zPh3Rh88Ej9P7jNrZiHMUXHae1yvI2imgOZtL1TO8TW6biMMKfTtAOoEJANgtWBMQ==}
     engines: {node: '>=12'}
+
+  lz-string@1.5.0:
+    resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
+    hasBin: true
 
   macos-alias@0.2.12:
     resolution: {integrity: sha512-yiLHa7cfJcGRFq4FrR4tMlpNHb4Vy4mWnpajlSSIFM5k4Lv8/7BbbDLzCAVogWNl0LlLhizRp1drXv0hK9h0Yw==}
@@ -25042,6 +25049,8 @@ snapshots:
   lunr@2.3.9: {}
 
   luxon@3.6.1: {}
+
+  lz-string@1.5.0: {}
 
   macos-alias@0.2.12:
     dependencies:

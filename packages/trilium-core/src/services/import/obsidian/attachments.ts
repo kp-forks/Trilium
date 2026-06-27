@@ -90,14 +90,14 @@ function replaceWithFileLink(element: HTMLElement, note: BNote, resolved: Resolv
     element.remove();
 }
 
-interface ResolvedAttachment {
+export interface ResolvedAttachment {
     path: string;
     bytes: Uint8Array;
     mime: string;
 }
 
 /** Resolves a reference name to a bundled attachment: an exact path first, then a unique base-name match. */
-function resolveAttachment(index: AttachmentIndex, name: string): ResolvedAttachment | null {
+export function resolveAttachment(index: AttachmentIndex, name: string): ResolvedAttachment | null {
     let path = name;
     let bytes = index.byPath.get(path);
     if (!bytes) {
@@ -148,7 +148,7 @@ function safeDecode(value: string): string {
     }
 }
 
-function isImageMime(mime: string): boolean {
+export function isImageMime(mime: string): boolean {
     return mime.startsWith("image/");
 }
 

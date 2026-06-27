@@ -1,4 +1,5 @@
 import { ZipArchive } from "archiver";
+import LZString from "lz-string";
 import { PassThrough } from "stream";
 import { describe, expect, it } from "vitest";
 
@@ -21,6 +22,12 @@ async function createZipBuffer(files: Record<string, string | Buffer>): Promise<
     }
     await archive.finalize();
     return Buffer.concat(chunks);
+}
+
+/** Builds an Obsidian Excalidraw-plugin Markdown file wrapping `scene` in a compressed-json drawing block. */
+function excalidrawFile(scene: object, embeddedFiles = ""): string {
+    const compressed = LZString.compressToBase64(JSON.stringify(scene));
+    return `---\nexcalidraw-plugin: parsed\ntags: [excalidraw]\n---\n# Excalidraw Data\n${embeddedFiles}%%\n## Drawing\n\`\`\`compressed-json\n${compressed}\n\`\`\`\n%%`;
 }
 
 /** Runs the Obsidian importer over `files` and returns the import root note. */
@@ -252,6 +259,79 @@ describe("Obsidian importer — integration", () => {
         const linker = importRoot.getChildNotes().find((n) => n.title === "Linker");
         const target = importRoot.getChildNotes().find((n) => n.title === "Folder 1")?.getChildNotes()[0];
         expect(decodeUtf8(linker?.getContent() ?? "")).toContain(`href="#root/${target?.noteId}"`);
+    });
+
+    it("converts an Excalidraw-plugin drawing into a canvas note titled without the suffix", async () => {
+        const importRoot = await importObsidian({
+            "Excalidraw/Drawing.excalidraw.md": excalidrawFile({
+                type: "excalidraw",
+                version: 2,
+                source: "https://github.com/zsviczian/obsidian-excalidraw-plugin",
+                elements: [{ id: "rect", type: "rectangle", x: 0, y: 0 }],
+                appState: { viewBackgroundColor: "#ffffff" },
+                files: {}
+            }),
+            ".obsidian/app.json": "{}"
+        });
+
+        const drawing = importRoot.getChildNotes().find((n) => n.title === "Excalidraw")?.getChildNotes()[0];
+        if (!drawing) {
+            throw new Error("drawing was not imported");
+        }
+
+        // The drawing becomes a canvas note, not a text note, titled without its `.excalidraw.md` suffix.
+        expect(drawing.title).toBe("Drawing");
+        expect(drawing.type).toBe("canvas");
+        expect(drawing.mime).toBe("application/json");
+
+        const content = JSON.parse(decodeUtf8(drawing.getContent()));
+        expect(content.type).toBe("excalidraw");
+        expect(content.elements).toEqual([{ id: "rect", type: "rectangle", x: 0, y: 0 }]);
+        // No `excalidraw-plugin`/`tags` labels leak in from the plugin front matter.
+        expect(drawing.getOwnedAttributes()).toHaveLength(0);
+    });
+
+    it("saves a drawing's embedded image as an image attachment titled with its Excalidraw fileId", async () => {
+        const importRoot = await importObsidian({
+            "Drawing.excalidraw.md": excalidrawFile({
+                type: "excalidraw",
+                elements: [{ id: "img", type: "image", fileId: "abc123def456" }],
+                appState: {},
+                files: {}
+            }, "## Embedded Files\nabc123def456: [[shot.png]]\n"),
+            "shot.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png")
+        });
+
+        const drawing = importRoot.getChildNotes().find((n) => n.title === "Drawing");
+        // The image is stored as an `image`-role attachment whose title is the fileId the scene references,
+        // matching how the canvas editor persists images so it renders on load.
+        const images = drawing?.getAttachmentsByRole("image");
+        expect(images?.map((a) => a.title)).toEqual(["abc123def456"]);
+    });
+
+    it("resolves a wikilink that targets an Excalidraw drawing by name", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "See [[Drawing]].",
+            "Drawing.excalidraw.md": excalidrawFile({ type: "excalidraw", elements: [], appState: {}, files: {} })
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        const drawing = importRoot.getChildNotes().find((n) => n.title === "Drawing");
+        if (!note || !drawing) {
+            throw new Error("notes were not imported");
+        }
+
+        expect(decodeUtf8(note.getContent())).toContain(`href="#root/${drawing.noteId}"`);
+        expect(note.getRelations().filter((r) => r.name === "internalLink").map((r) => r.value)).toEqual([drawing.noteId]);
+    });
+
+    it("falls back to a text note when a `.excalidraw.md` file has no usable drawing data", async () => {
+        const importRoot = await importObsidian({ "Broken.excalidraw.md": "Just some text, no drawing block." });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Broken");
+        // A drawing that can't be decoded is imported as ordinary text rather than dropped.
+        expect(note?.type).toBe("text");
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Just some text, no drawing block.</p>");
     });
 
     it("unwraps unresolvable and ambiguous wikilinks to plain text, recording no relation", async () => {
