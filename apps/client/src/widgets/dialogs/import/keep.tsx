@@ -69,6 +69,7 @@ function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanel
 
 const provider: ImportProvider = {
     id: "keep",
+    helpPage: "nhQVuO4zvIxi",
     name: t("keep_import.name"),
     iconUrl,
     description: t("keep_import.description"),

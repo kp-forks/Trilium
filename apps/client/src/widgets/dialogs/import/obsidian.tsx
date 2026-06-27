@@ -68,6 +68,7 @@ function ObsidianPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
 
 const provider: ImportProvider = {
     id: "obsidian",
+    helpPage: "iWD7wiIuMtgV",
     name: t("obsidian_import.name"),
     iconUrl,
     description: t("obsidian_import.description"),

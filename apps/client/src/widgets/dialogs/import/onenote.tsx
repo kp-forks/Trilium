@@ -263,6 +263,7 @@ function SectionTree({ container, selectedIds, onToggle }: {
 
 const provider: ImportProvider = {
     id: "onenote",
+    helpPage: "GnhlmrATVqcH",
     name: t("onenote_import.name"),
     iconUrl,
     description: t("onenote_import.description"),
