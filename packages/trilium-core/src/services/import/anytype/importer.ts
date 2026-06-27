@@ -343,6 +343,21 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
         taskContext.increaseProgressCount();
     }
 
+    // A collection can list a *file object* directly as a member (a file dropped into the collection). It's
+    // not a page, so no note was created for it above — create one now, a `file`/`image` note under its
+    // owning collection, so the member shows up. The membership pass below then clones it into any further
+    // collections. Done after the page loop so the owning collection note already exists.
+    for (const fileId of fileMemberIds(pages, notesByPageId, fileObjects)) {
+        const info = fileObjects.get(fileId);
+        const bytes = info ? files.get(normalizePath(info.source)) : undefined;
+        if (!info || !bytes) {
+            continue;
+        }
+        const primaryCollectionId = primaryCollectionByMember.get(fileId);
+        const parentNoteId = (primaryCollectionId ? notesByPageId.get(primaryCollectionId)?.noteId : undefined) ?? rootNote.noteId;
+        notesByPageId.set(fileId, createFileMemberNote(parentNoteId, info, bytes, isProtected));
+    }
+
     // Membership: clone a member into every collection that isn't already its (primary) parent.
     for (const page of pages) {
         const collectionNote = page.collection ? notesByPageId.get(page.id) : undefined;
@@ -365,6 +380,31 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
     }
 
     return rootNote;
+}
+
+/** The file-object ids a collection lists as members that no page note was created for — i.e. files dropped
+ * directly into a collection (resolvable to bytes via the file map). De-duplicated across collections. */
+function fileMemberIds(pages: ParsedObject[], notesByPageId: Map<string, BNote>, fileObjects: Map<string, FileObjectInfo>): Set<string> {
+    const ids = new Set<string>();
+    for (const page of pages) {
+        for (const memberId of page.collection?.memberIds ?? []) {
+            if (!notesByPageId.has(memberId) && fileObjects.has(memberId)) {
+                ids.add(memberId);
+            }
+        }
+    }
+    return ids;
+}
+
+/** Creates a Trilium note for a file dropped into a collection: an `image` note for an image (so it renders
+ * inline), otherwise a `file` note holding the raw bytes — both children of the owning collection. */
+function createFileMemberNote(parentNoteId: string, info: FileObjectInfo, bytes: Uint8Array, isProtected: boolean | undefined): BNote {
+    if (info.mime.startsWith("image/")) {
+        return imageService.saveImage(parentNoteId, bytes, info.title, false).note;
+    }
+    const { note } = noteService.createNewNote({ parentNoteId, title: info.title, content: bytes, type: "file", mime: info.mime || "application/octet-stream", isProtected });
+    note.addLabel("originalFileName", info.title);
+    return note;
 }
 
 /**

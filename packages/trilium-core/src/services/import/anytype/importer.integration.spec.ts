@@ -764,6 +764,60 @@ describe("Anytype importer — integration", () => {
         expect(content).toContain(">log.txt</a>");
     });
 
+    it("imports a file object that's a collection member as a file note under the collection", async () => {
+        // A file dropped into a collection is listed in its membership (details.links) as a FileObject id, not
+        // a page — so it must still become a (file) note beneath the collection rather than being dropped.
+        const fileCid = "bafyreifilemember";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Docs", [fileCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "application/pdf", "files\\report.pdf"),
+            "files/report.pdf": Buffer.from("%PDF-1.4 hi")
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.title).toBe("Docs");
+        const members = collection.getChildNotes();
+        expect(members.map((n) => n.title)).toEqual(["report.pdf"]);
+        const fileNote = members[0];
+        expect(fileNote.type).toBe("file");
+        expect(fileNote.mime).toBe("application/pdf");
+        expect(decodeUtf8(fileNote.getContent() ?? "")).toBe("%PDF-1.4 hi");
+        expect(fileNote.getOwnedLabelValue("originalFileName")).toBe("report.pdf");
+    });
+
+    it("imports an image object that's a collection member as an image note", async () => {
+        const imgCid = "bafyreiimagemember";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Gallery", [imgCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(imgCid, "pic", "png", "image/png", "files\\pic.png"),
+            "files/pic.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png")
+        });
+
+        const members = importRoot.getChildNotes()[0].getChildNotes();
+        expect(members.map((n) => n.type)).toEqual(["image"]);
+        expect(members[0].title).toBe("pic.png");
+    });
+
+    it("clones a file member into every collection that lists it", async () => {
+        // The same file is a member of two collections — its primary parent is the first, and it's cloned into
+        // the second (same as a page member).
+        const fileCid = "bafyreisharedfile";
+        const importRoot = await importAnytype({
+            "objects/c1.pb.json": collectionObject("c1", "First", [fileCid], []),
+            "objects/c2.pb.json": collectionObject("c2", "Second", [fileCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "shared", "txt", "text/plain", "files\\shared.txt"),
+            "files/shared.txt": Buffer.from("shared bytes")
+        });
+
+        const collections = importRoot.getChildNotes();
+        expect(collections.map((n) => n.title).sort()).toEqual(["First", "Second"]);
+        // The very same note (one noteId) appears under both collections.
+        const firstMember = collections.find((n) => n.title === "First")?.getChildNotes()[0];
+        const secondMember = collections.find((n) => n.title === "Second")?.getChildNotes()[0];
+        expect(firstMember?.noteId).toBe(secondMember?.noteId);
+        expect(firstMember?.title).toBe("shared.txt");
+    });
+
     it("imports an inline image block as a role:image attachment, rewriting the <img src> to point at it", async () => {
         // An Image file block in the body references a FileObject (its `targetObjectId`), whose bytes ship under files/.
         const imageCid = "bafyreiimage";
