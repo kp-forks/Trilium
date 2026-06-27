@@ -110,6 +110,22 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             return `<p><a class="reference-link" href="#root/${target.noteId}">${escapeHtml(target.title)}</a></p>`;
         }
 
+        // A file/media block — an embedded image or attached file (PDF, audio, …). The placeholder carries
+        // the linked FileObject's id in the `src`/`href`; the importer resolves it to a saved attachment
+        // once the note (and thus the attachment) exists — an inline image for an Image, a reference link
+        // for any other file type. A block with no target (still uploading, or a broken reference) is dropped.
+        if (block.file) {
+            const targetId = block.file.targetObjectId;
+            if (!targetId) {
+                return "";
+            }
+            if (block.file.type === "Image") {
+                return `<figure class="image"><img src="${escapeHtml(targetId)}"></figure>`;
+            }
+            const name = (block.file.name ?? "").trim() || targetId;
+            return `<p><a class="anytype-file" href="${escapeHtml(targetId)}">${escapeHtml(name)}</a></p>`;
+        }
+
         // A LaTeX block — a Mermaid diagram or LaTeX math.
         if (block.latex) {
             return renderLatexBlock(block.latex.text ?? "", block.latex.processor);

@@ -725,6 +725,101 @@ describe("Anytype importer — integration", () => {
         expect(content).toContain(">log.txt</a>");
     });
 
+    it("imports an inline image block as a role:image attachment, rewriting the <img src> to point at it", async () => {
+        // An Image file block in the body references a FileObject (its `targetObjectId`), whose bytes ship under files/.
+        const imageCid = "bafyreiimage";
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "img"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "img", file: { type: "Image", name: "shot.png", mime: "image/png", targetObjectId: imageCid, state: "Done", style: "Embed" } }
+                    ],
+                    details: { id: "pg", name: "Page with image", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({
+            "objects/pg.pb.json": page,
+            "filesObjects/f1.pb.json": fileObjectJson(imageCid, "shot", "png", "image/png", "files\\shot.png"),
+            "files/shot.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png-bytes")
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Page with image");
+        // The image becomes a role:"image" attachment titled from the file's name.
+        const attachments = note?.getAttachmentsByRole("image") ?? [];
+        expect(attachments.map((a) => a.title)).toEqual(["shot.png"]);
+
+        // The <img src> is rewritten to the attachment URL (no bare file id left in the body).
+        const content = decodeUtf8(note?.getContent() ?? "");
+        expect(content).toContain(`<figure class="image"><img src="api/attachments/${attachments[0]?.attachmentId}/image/`);
+        expect(content).not.toContain(imageCid);
+    });
+
+    it("imports an inline non-image file block as a role:file attachment with a reference link in the body", async () => {
+        const fileCid = "bafyreipdf";
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "file"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "file", file: { type: "PDF", name: "report.pdf", mime: "application/pdf", targetObjectId: fileCid, state: "Done", style: "Link" } }
+                    ],
+                    details: { id: "pg", name: "Page with file", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({
+            "objects/pg.pb.json": page,
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "application/pdf", "files\\report.pdf"),
+            "files/report.pdf": Buffer.from("%PDF-1.4 fake")
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Page with file");
+        const attachments = note?.getAttachmentsByRole("file") ?? [];
+        expect(attachments.map((a) => a.title)).toEqual(["report.pdf"]);
+        expect(attachments[0]?.mime).toBe("application/pdf");
+
+        // The anchor is rewritten into a Trilium attachment reference-link.
+        const content = decodeUtf8(note?.getContent() ?? "");
+        expect(content).toContain(`class="reference-link"`);
+        expect(content).toContain(`href="#root/${note?.noteId}?viewMode=attachments&attachmentId=${attachments[0]?.attachmentId}"`);
+        expect(content).toContain(">report.pdf</a>");
+        expect(content).not.toContain("anytype-file");
+    });
+
+    it("drops an inline image whose bytes are missing from the export, leaving no broken <img>", async () => {
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "p", "img"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "p", text: { text: "Body", style: "Paragraph" } },
+                        { id: "img", file: { type: "Image", name: "gone.png", targetObjectId: "bafyreimissing", state: "Done", style: "Embed" } }
+                    ],
+                    details: { id: "pg", name: "Missing image", resolvedLayout: 0 }
+                }
+            }
+        });
+        // No filesObjects/files entries for the referenced id.
+        const importRoot = await importAnytype({ "objects/pg.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Missing image");
+        expect(note?.getAttachmentsByRole("image")).toHaveLength(0);
+        const content = decodeUtf8(note?.getContent() ?? "");
+        // The broken figure is dropped; the rest of the body survives.
+        expect(content).toBe("<p>Body</p>");
+    });
+
     it("imports a collection-scoped export (no wrapper) as a named table whose columns are synthesized from members", async () => {
         // Exporting a single collection omits the collection object itself, so its members all carry the same
         // absent createdInContext — the signal to recover the collection (name from the file, columns from members).

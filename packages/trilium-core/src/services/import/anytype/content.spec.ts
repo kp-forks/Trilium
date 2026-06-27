@@ -210,6 +210,36 @@ describe("links", () => {
     });
 });
 
+describe("inline files", () => {
+    /** A file/media block embedding a `FileObject` by its id. */
+    const fileBlock = (id: string, file: AnytypeBlock["file"]): AnytypeBlock => ({ id, file, childrenIds: [] });
+
+    it("renders an Image block as an image figure whose src is the target file id (resolved later by the importer)", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "Image", name: "shot.png", targetObjectId: "file-cid", state: "Done", style: "Embed" })]);
+        expect(parseObject(doc).content).toBe('<figure class="image"><img src="file-cid"></figure>');
+    });
+
+    it("renders a non-image file block as a marked anchor carrying the file name and target id", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "PDF", name: "report.pdf", targetObjectId: "pdf-cid", state: "Done", style: "Link" })]);
+        expect(parseObject(doc).content).toBe('<p><a class="anytype-file" href="pdf-cid">report.pdf</a></p>');
+    });
+
+    it("falls back to the target id as the link text when the file has no name", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "File", targetObjectId: "bare-cid" })]);
+        expect(parseObject(doc).content).toBe('<p><a class="anytype-file" href="bare-cid">bare-cid</a></p>');
+    });
+
+    it("escapes the file name in a non-image anchor", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "File", name: "a & b <x>.txt", targetObjectId: "c" })]);
+        expect(parseObject(doc).content).toBe('<p><a class="anytype-file" href="c">a &amp; b &lt;x&gt;.txt</a></p>');
+    });
+
+    it("drops a file block with no target (e.g. a still-uploading file)", () => {
+        const doc = listDoc(["f1"], [fileBlock("f1", { type: "Image", name: "pending.png", state: "Uploading" })]);
+        expect(parseObject(doc).content).toBe("");
+    });
+});
+
 describe("renderInlineText", () => {
     it("returns escaped plain text when there are no marks", () => {
         expect(renderInlineText("a < b & c > d", [])).toBe("a &lt; b &amp; c &gt; d");

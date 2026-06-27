@@ -57,6 +57,19 @@ export interface AnytypeBlock {
         targetBlockId?: string;
         style?: string;
     };
+    /** A file/media block — an embedded image, PDF or other attached file. `type` is the kind ("Image",
+     * "PDF", "File", "Audio", "Video"); `targetObjectId` is the linked `FileObject`'s id (resolved to its
+     * bytes via the `filesObjects/` metadata + `files/` bytes); `name` is the original filename. Rendered as
+     * an inline `<img>` (Image) or an attachment reference link (other types) pointing at the saved
+     * attachment. `state` is "Done" once the upload finished — a still-uploading file has no bytes. */
+    file?: {
+        name?: string;
+        type?: string;
+        mime?: string;
+        targetObjectId?: string;
+        state?: string;
+        style?: string;
+    };
     /** A "latex" block — Anytype's embed for code-rendered diagrams and math. `processor` picks the renderer
      * ("Mermaid" for a Mermaid diagram; otherwise the `text` is LaTeX math). */
     latex?: {

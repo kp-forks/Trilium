@@ -7,9 +7,12 @@
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
  * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
- * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`) and cross-page links
- * (Anytype's block-level "link to object" → a Trilium reference link plus an `internalLink` relation, so
- * backlinks resolve). Each page keeps its original creation and modification timestamps.
+ * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`), inline file/media blocks
+ * (an embedded image → an inline `role:"image"` attachment; any other attached file → a `role:"file"`
+ * attachment reference link, the bytes resolved from the export's `filesObjects/` metadata + `files/`
+ * bytes) and cross-page links (Anytype's block-level "link to object" → a Trilium reference link plus an
+ * `internalLink` relation, so backlinks resolve). Each page keeps its original creation and modification
+ * timestamps.
  *
  * Collections and their properties are handled in {@link ./collection.js}: a collection becomes a `book` in
  * its mapped view (table / list / grid / calendar / board) whose columns are promoted-attribute definitions,
@@ -23,16 +26,20 @@
  */
 
 import { t } from "i18next";
+import { parse } from "node-html-parser";
 
 import type BNote from "../../../becca/entities/bnote.js";
 import cloningService from "../../cloning.js";
+import imageService from "../../image.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
+import { decodeUtf8 } from "../../utils/binary.js";
 import date_utils from "../../utils/date.js";
 import { newEntityId } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
+import { saveFileAttachment } from "../collection_utils.js";
 import { applyCollectionView, applyFiles, applyProperties, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties, synthesizeColumns } from "./collection.js";
 import { extractContent } from "./content.js";
 import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedColumn, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
@@ -330,6 +337,7 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
 
         applyProperties(note, page.properties);
         applyFiles(note, page, fileObjects, files);
+        applyInlineFiles(note, fileObjects, files);
         applyDates(note, page);
         notesByPageId.set(page.id, note);
         taskContext.increaseProgressCount();
@@ -357,6 +365,76 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
     }
 
     return rootNote;
+}
+
+/**
+ * Resolves the inline file/media placeholders a page's body carries ({@link ./content.js} emits each
+ * `file` block as an `<img>` / `<a class="anytype-file">` whose `src`/`href` is the linked `FileObject`'s
+ * id). For each one it looks the id up in the export's file metadata and bytes, then saves the bytes as an
+ * attachment and rewrites the reference to point at it — an inline `role:"image"` for an image, a
+ * `role:"file"` attachment reference-link for any other file type (matching the Notion importer). A
+ * placeholder whose file is missing from the export (no metadata or bytes — e.g. a still-uploading file) is
+ * dropped (image) or left as plain text (other). Only re-saves the content when something changed.
+ */
+function applyInlineFiles(note: BNote, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>) {
+    const content = decodeUtf8(note.getContent());
+    // Cheap guard: parse only when the body actually holds a placeholder to resolve.
+    if (!content.includes("<img") && !content.includes('class="anytype-file"')) {
+        return;
+    }
+
+    const root = parse(content);
+    let changed = false;
+
+    for (const img of root.querySelectorAll("img")) {
+        const targetId = img.getAttribute("src");
+        const bytes = targetId ? inlineFileBytes(targetId, fileObjects, files) : undefined;
+        if (!targetId || !bytes) {
+            // Unresolved image (still uploading, or bytes absent) — drop the broken figure rather than
+            // leaving an `<img>` pointing at a bare file id.
+            (img.parentNode ?? img).remove();
+            changed = true;
+            continue;
+        }
+        const info = fileObjects.get(targetId);
+        const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, bytes, info?.title || "image", false);
+        /* v8 ignore next -- saveImageToAttachment always returns the id of the attachment it just created, so this guard is never false in practice */
+        if (attachmentId) {
+            img.setAttribute("src", `api/attachments/${attachmentId}/image/${encodeURIComponent(title)}`);
+            changed = true;
+        }
+    }
+
+    for (const anchor of root.querySelectorAll("a.anytype-file")) {
+        anchor.removeAttribute("class");
+        changed = true;
+
+        const targetId = anchor.getAttribute("href");
+        const info = targetId ? fileObjects.get(targetId) : undefined;
+        const bytes = targetId ? inlineFileBytes(targetId, fileObjects, files) : undefined;
+        if (!info || !bytes) {
+            // Unresolved file — keep the (now class-less) link text but drop the bare-id href.
+            anchor.removeAttribute("href");
+            continue;
+        }
+        const attachment = saveFileAttachment(note, info.title, bytes, info.mime);
+        /* v8 ignore next -- saveAttachment always returns the id of the attachment it just created, so this guard is never false in practice */
+        if (attachment.attachmentId) {
+            anchor.setAttribute("href", `#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}`);
+            anchor.setAttribute("class", "reference-link");
+        }
+    }
+
+    if (changed) {
+        note.setContent(root.toString());
+    }
+}
+
+/** The raw bytes a file id (an inline block's `targetObjectId`) resolves to, via its `FileObject`'s source
+ * path, or undefined when either the metadata or the bytes are absent from the export. */
+function inlineFileBytes(targetId: string, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>): Uint8Array | undefined {
+    const info = fileObjects.get(targetId);
+    return info ? files.get(normalizePath(info.source)) : undefined;
 }
 
 /**
