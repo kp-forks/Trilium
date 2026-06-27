@@ -134,4 +134,29 @@ describe("importEnex", () => {
         // The Evernote `--en-*` style markers must not leak into the imported note.
         expect(content).not.toContain("--en-");
     });
+
+    it("converts Evernote internal note links into Trilium reference links, leaving external links intact", async () => {
+        const { importedNote } = await testImport("Internal links.enex");
+
+        const first = importedNote.getChildNotes().find(n => n.title === "First Note");
+        const second = importedNote.getChildNotes().find(n => n.title === "Second Note");
+        if (!first || !second) {
+            throw new Error("cross-linked notes were not imported");
+        }
+
+        const firstContent = decodeUtf8(first.getContent());
+        // The internal link is resolved (by the inline-richlink's text = target title) to a reference link.
+        expect(firstContent).toContain(`href="#root/${second.noteId}"`);
+        expect(firstContent).toContain(`class="reference-link"`);
+        expect(firstContent).not.toContain("evernote://");
+        // The external link is left untouched.
+        expect(firstContent).toContain(`href="http://triliumnotes.org"`);
+
+        // The reverse link resolves too.
+        const secondContent = decodeUtf8(second.getContent());
+        expect(secondContent).toContain(`href="#root/${first.noteId}"`);
+
+        // An internalLink relation is created so backlinks/the link map work.
+        expect(first.getRelations("internalLink").some(r => r.value === second.noteId)).toBe(true);
+    });
 }, 60_000);

@@ -10,7 +10,7 @@ import type TaskContext from "../task_context.js";
 import { escapeHtml, md5 } from "../utils/index.js";
 import { decodeBase64 } from "../utils/binary.js";
 import type { File } from "./common.js";
-import { convertEnexContent, type EnexTask } from "./enex_converter.js";
+import { convertEnexContent, type EnexTask, rewriteEvernoteLinks } from "./enex_converter.js";
 import { sanitizeHtml } from "../sanitizer.js";
 
 /**
@@ -258,6 +258,12 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         }
     };
 
+    // Resolving Evernote internal note links needs every imported note's title -> id, which isn't fully
+    // known until all notes are created (a note can link to one parsed later). Collect the mapping and each
+    // note's final content during the first pass, then resolve the links in a second pass below.
+    const noteIdByTitle = new Map<string, string>();
+    const createdNotes: { note: BNote; content: string; utcDateCreated?: string; utcDateModified?: string }[] = [];
+
     function saveNote() {
         // make a copy because stream continues with the next call and note gets overwritten
         let { title, content, attributes, resources, tasks, utcDateCreated, utcDateModified } = note;
@@ -364,6 +370,12 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         noteService.asyncPostProcessContent(noteEntity, content);
 
         noteEntity.setDateCreatedAndModified(utcDateCreated, utcDateModified);
+
+        // Record for the internal-link resolution pass (first occurrence wins on duplicate titles).
+        if (!noteIdByTitle.has(title)) {
+            noteIdByTitle.set(title, noteEntity.noteId);
+        }
+        createdNotes.push({ note: noteEntity, content, utcDateCreated, utcDateModified });
     }
 
     parser.onclosetag = (tag) => {
@@ -387,6 +399,20 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         await new Promise((resolve) => setTimeout(resolve, 0));
     }
     parser.close();
+
+    // Second pass: now that every imported note's title is known, resolve Evernote internal note links
+    // (`evernote://view-note/<guid>`) to Trilium reference links. setContent re-stamps the modification
+    // date, so the original timestamps are restored afterwards.
+    for (const { note: noteEntity, content, utcDateCreated, utcDateModified } of createdNotes) {
+        const rewritten = rewriteEvernoteLinks(content, (title) => noteIdByTitle.get(title) ?? null);
+        if (rewritten === content) {
+            continue;
+        }
+
+        noteEntity.setContent(rewritten);
+        noteService.asyncPostProcessContent(noteEntity, rewritten);
+        noteEntity.setDateCreatedAndModified(utcDateCreated, utcDateModified);
+    }
 
     return rootNote;
 }

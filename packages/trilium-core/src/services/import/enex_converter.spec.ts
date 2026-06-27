@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { convertEnexContent } from "./enex_converter.js";
+import { convertEnexContent, rewriteEvernoteLinks } from "./enex_converter.js";
 
 // Mirrors the canonical CKEditor todo-list serialization the converter emits (checked before disabled).
 const todoItem = (desc: string, opts: { checked?: boolean; nested?: string } = {}) =>
@@ -180,6 +180,39 @@ describe("convertEnexContent — composition and inertness", () => {
         const input = `<div style="--en-toggle:true; --en-isCollapsed:true;"><div style="--en-toggleSummary:true;">T</div><div style="--en-toggleContent:true;"><ul style="--en-todo:true;"><li style="--en-checked:true;"><div>Inner</div></li></ul></div></div>`;
         expect(convertEnexContent(input)).toBe(
             `<details class="trilium-collapsible"><summary>T</summary>${todoList(todoItem("Inner", { checked: true }))}</details>`
+        );
+    });
+});
+
+describe("rewriteEvernoteLinks — internal note references", () => {
+    // Evernote renders an inline-richlink with the target note's title as its text, so the target is
+    // resolved by that text. The map mirrors a title -> imported noteId lookup built during import.
+    const resolve = (text: string) => (({ "Orar legislație": "noteA", "Acte necesare înscriere": "noteB" }) as Record<string, string>)[text] ?? null;
+
+    it("rewrites an evernote://view-note link into a Trilium reference link when the text matches a note title", () => {
+        const input = `<div><a href="evernote://view-note/73bdd2cd-f542-4dc6-8e23-55e3566dd01d">Orar legislație</a></div>`;
+        expect(rewriteEvernoteLinks(input, resolve)).toBe(`<div><a href="#root/noteA" class="reference-link">Orar legislație</a></div>`);
+    });
+
+    it("handles the classic evernote:///view/... link format", () => {
+        const input = `<a href="evernote:///view/83639451/s1/4f73f255-780d-44aa-a2eb-20da435ea52d/4f73f255/">Acte necesare înscriere</a>`;
+        expect(rewriteEvernoteLinks(input, resolve)).toBe(`<a href="#root/noteB" class="reference-link">Acte necesare înscriere</a>`);
+    });
+
+    it("leaves external links untouched", () => {
+        const input = `<a href="http://triliumnotes.org">Text</a>`;
+        expect(rewriteEvernoteLinks(input, resolve)).toBe(input);
+    });
+
+    it("leaves an unresolvable internal link as-is", () => {
+        const input = `<a href="evernote://view-note/unknown">Some other note</a>`;
+        expect(rewriteEvernoteLinks(input, resolve)).toBe(input);
+    });
+
+    it("rewrites only the internal links, preserving surrounding content and external links", () => {
+        const input = `<p>See <a href="evernote://view-note/x">Orar legislație</a> and <a href="http://x.com">x</a>.</p>`;
+        expect(rewriteEvernoteLinks(input, resolve)).toBe(
+            `<p>See <a href="#root/noteA" class="reference-link">Orar legislație</a> and <a href="http://x.com">x</a>.</p>`
         );
     });
 });

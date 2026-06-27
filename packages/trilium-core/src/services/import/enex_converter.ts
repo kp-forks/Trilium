@@ -37,6 +37,39 @@ export function convertEnexContent(html: string, tasks: EnexTask[] = []): string
     return root.toString();
 }
 
+// #region Internal note links
+/** Prefix shared by Evernote internal-note link schemes: `evernote://view-note/<guid>` and `evernote:///view/.../<guid>/...`. */
+const EVERNOTE_LINK_SCHEME = "evernote:";
+
+/**
+ * Rewrites Evernote internal note links into Trilium internal links. An ENEX export never carries a note's
+ * own guid, so the `evernote://view-note/<guid>` target can't be matched by id; instead Evernote renders an
+ * inline-richlink with the *target note's title* as its text, so the link is resolved by that text. A match
+ * becomes a Trilium reference link (`#root/<noteId>`, the live-title chip); an unresolved internal link and
+ * every external link are left untouched. Meant to run as a second pass, once every imported note's title is
+ * known (a note can link to one imported later).
+ */
+export function rewriteEvernoteLinks(html: string, resolve: (linkText: string) => string | null): string {
+    const root = parse(html);
+    let changed = false;
+
+    for (const anchor of root.querySelectorAll("a")) {
+        if (!(anchor.getAttribute("href") ?? "").startsWith(EVERNOTE_LINK_SCHEME)) {
+            continue;
+        }
+        const noteId = resolve(anchor.textContent.trim());
+        if (!noteId) {
+            continue;
+        }
+        anchor.setAttribute("href", `#root/${noteId}`);
+        anchor.setAttribute("class", "reference-link");
+        changed = true;
+    }
+
+    return changed ? root.toString() : html;
+}
+// #endregion
+
 // #region Tasks
 /**
  * Evernote's newer Tasks feature exports each task group as a "Content not supported" placeholder div
