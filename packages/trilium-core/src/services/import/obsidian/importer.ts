@@ -4,7 +4,12 @@
  * This pass reconstructs the *structure*: every `.md` file becomes a `text` note whose Markdown body is
  * rendered to HTML, and the vault's folder hierarchy is mirrored as the note tree (a folder becomes an empty
  * container note holding its notes). The `.obsidian/` config folder and any other dot-prefixed entry are
- * skipped, and non-Markdown files (attachments, `.canvas`, `.base`, …) are dropped for now.
+ * skipped, and `.canvas`/`.base` files are dropped for now.
+ *
+ * Other non-Markdown files are attachments: one embedded/linked from a note (`![[file]]` / `[[file]]`) is saved
+ * as an inline attachment of that note (see {@link ./attachments.js}); an unreferenced (orphan) file — dragged
+ * into the vault, or left behind after its note was deleted — becomes a standalone `file`/`image` note at its
+ * vault folder location, so no content is silently dropped.
  *
  * An Excalidraw-plugin drawing (`*.excalidraw.md`) is the exception to the "Markdown becomes a text note"
  * rule: it's decoded into a Trilium `canvas` note instead, with its embedded images saved as attachments
@@ -35,11 +40,13 @@ import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
 import date_utils from "../../utils/date.js";
+import { removeFileExtension } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
 import { buildPromotedDefinition, toAttributeName } from "../collection_utils.js";
 import { type FrontmatterAttribute, parseFrontmatter } from "../frontmatter.js";
 import markdownService from "../markdown.js";
+import mimeService from "../mime.js";
 import { applyAttachments, type AttachmentIndex, buildAttachmentIndex, isImageMime, resolveAttachment } from "./attachments.js";
 import { type ExcalidrawDrawing, isExcalidrawPath, parseExcalidraw } from "./excalidraw.js";
 import { buildNoteIndex, resolveLinks } from "./links.js";
@@ -129,6 +136,8 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     // Folder path (POSIX) -> its container note. The empty path maps to the import root.
     const folderNotes = new Map<string, BNote>();
     const created: { note: BNote; path: string; rendered: string; content: string; modified?: Date }[] = [];
+    // Vault paths of attachments materialized inline (embedded/linked); the rest are orphans, handled below.
+    const consumed = new Set<string>();
 
     // First pass: create every note (so cross-note links can resolve below) with its Markdown rendered and
     // attachments saved. Content is persisted once, in the link pass, to avoid a second write per note.
@@ -139,7 +148,7 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         // added to `created` (with empty content) so other notes can wikilink to it, but it carries no HTML
         // for the link/attachment passes below. A drawing that can't be parsed falls through to text import.
         if (isExcalidrawPath(vaultNote.path)) {
-            const note = createExcalidrawNote(parent, vaultNote, attachmentIndex, isProtected);
+            const note = createExcalidrawNote(parent, vaultNote, attachmentIndex, isProtected, consumed);
             if (note) {
                 created.push({ note, path: vaultNote.path.replace(/\.excalidraw\.md$/i, ""), rendered: "", content: "", modified: vaultNote.modified });
                 taskContext.increaseProgressCount();
@@ -160,7 +169,7 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
 
         // Attachments hang off the note, so this runs after creation; it returns the content with embedded
         // images/files rewritten to point at the saved attachments.
-        const content = applyAttachments(note, rendered, attachmentIndex, shrinkImages);
+        const content = applyAttachments(note, rendered, attachmentIndex, shrinkImages, consumed);
         created.push({ note, path: vaultNote.path, rendered, content, modified: vaultNote.modified });
         taskContext.increaseProgressCount();
     }
@@ -189,7 +198,35 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         }
     }
 
+    // Third pass: any bundled file no note embedded or linked is an orphan (e.g. a file dragged into the
+    // vault, or one left behind after its note was deleted). Materialize it as a standalone file/image note at
+    // its vault folder location, mirroring the structure, so no vault content is silently dropped.
+    for (const path of [...attachments.keys()].sort((a, b) => a.localeCompare(b))) {
+        if (consumed.has(path)) {
+            continue;
+        }
+        const parent = ensureFolder(parentFolder(path), rootNote, folderNotes, isProtected);
+        createOrphanFileNote(parent, path, attachments.get(path), isProtected);
+    }
+
     return rootNote;
+}
+
+/**
+ * Creates a standalone note for an orphan (unreferenced) vault file: an `image` note for an image, a `file`
+ * note otherwise. The bytes become the note content, the title drops the extension (Trilium convention) which
+ * is preserved in an `originalFileName` label — matching how the generic ZIP importer treats arbitrary files.
+ */
+function createOrphanFileNote(parent: BNote, path: string, bytes: Uint8Array | undefined, isProtected: boolean): void {
+    /* v8 ignore next 3 -- defensive: `path` comes from the attachments map, so its bytes are always present */
+    if (!bytes) {
+        return;
+    }
+    const fileName = basename(path);
+    const mime = mimeService.getMime(fileName) || "application/octet-stream";
+    const type = isImageMime(mime) ? "image" : "file";
+    const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: removeFileExtension(fileName, mime), content: bytes, type, mime, isProtected });
+    note.addLabel("originalFileName", fileName);
 }
 
 /**
@@ -198,7 +235,7 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
  * vault attachments and saved as an `image`-role attachment titled with its Excalidraw `fileId`, exactly how
  * the canvas editor stores images, so the scene's `fileId` references render on load.
  */
-function createExcalidrawNote(parent: BNote, vaultNote: VaultNote, attachmentIndex: AttachmentIndex, isProtected: boolean): BNote | null {
+function createExcalidrawNote(parent: BNote, vaultNote: VaultNote, attachmentIndex: AttachmentIndex, isProtected: boolean, consumed: Set<string>): BNote | null {
     const drawing: ExcalidrawDrawing | null = parseExcalidraw(vaultNote.markdown);
     if (!drawing) {
         return null;
@@ -209,6 +246,7 @@ function createExcalidrawNote(parent: BNote, vaultNote: VaultNote, attachmentInd
     for (const [fileId, ref] of drawing.embeddedFiles) {
         const resolved = resolveAttachment(attachmentIndex, ref);
         if (resolved && isImageMime(resolved.mime)) {
+            consumed.add(resolved.path);
             note.saveAttachment({ role: "image", mime: resolved.mime, title: fileId, content: resolved.bytes });
         }
     }

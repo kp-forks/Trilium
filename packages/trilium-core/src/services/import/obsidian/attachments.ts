@@ -37,7 +37,11 @@ export function buildAttachmentIndex(attachments: Map<string, Uint8Array>): Atta
     return { byPath: attachments, byBasename };
 }
 
-export function applyAttachments(note: BNote, html: string, index: AttachmentIndex, shrinkImages: boolean): string {
+/**
+ * @param consumed collects the vault paths that were materialized as attachments, so the caller can tell
+ *   which bundled files are still orphaned (unreferenced) and need a standalone note instead.
+ */
+export function applyAttachments(note: BNote, html: string, index: AttachmentIndex, shrinkImages: boolean, consumed?: Set<string>): string {
     if (index.byPath.size === 0 || (!html.includes("<img") && !html.includes("<a"))) {
         return html;
     }
@@ -50,6 +54,7 @@ export function applyAttachments(note: BNote, html: string, index: AttachmentInd
         if (!ref || !resolved) {
             continue;
         }
+        consumed?.add(resolved.path);
         if (isImageMime(resolved.mime)) {
             try {
                 const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, resolved.bytes, basename(resolved.path), shrinkImages);
@@ -73,6 +78,7 @@ export function applyAttachments(note: BNote, html: string, index: AttachmentInd
         if (!ref || !resolved) {
             continue;
         }
+        consumed?.add(resolved.path);
         const attachment = note.saveAttachment({ role: "file", mime: resolved.mime, title: basename(resolved.path), content: resolved.bytes });
         anchor.setAttribute("href", attachmentHref(note.noteId, attachment.attachmentId));
         anchor.setAttribute("class", "reference-link");

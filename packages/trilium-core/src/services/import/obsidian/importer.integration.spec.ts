@@ -185,7 +185,7 @@ describe("Obsidian importer — integration", () => {
         expect(decodeUtf8(note?.getContent() ?? "")).toBe('<p>A <span style="background-color:hsl(60, 75%, 60%)">highlight</span> and a  comment.</p>');
     });
 
-    it("drops attachments, the .base/.canvas files and the .obsidian config folder", async () => {
+    it("drops the .base/.canvas files and the .obsidian config folder, but keeps an orphan attachment", async () => {
         const importRoot = await importObsidian({
             "Note.md": "Body.",
             "Screenshot.png": Buffer.from("\x89PNG\r\n\x1a\nfake"),
@@ -195,8 +195,8 @@ describe("Obsidian importer — integration", () => {
             ".obsidian/workspace.json": "{}"
         });
 
-        // Only the Markdown note is imported; nothing else creates a note.
-        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Note"]);
+        // The Markdown note and the unreferenced attachment are imported; .base/.canvas/.obsidian are not.
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Note", "Screenshot.png"]);
     });
 
     it("strips the wrapper folder and names the root after the vault when the outer folder is zipped", async () => {
@@ -277,6 +277,51 @@ describe("Obsidian importer — integration", () => {
         // The base embed is removed cleanly — no broken image and no empty paragraph left behind.
         expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Body.</p>");
         expect(note?.getAttachmentsByRole("file")).toHaveLength(0);
+    });
+
+    it("materializes an unreferenced (orphan) vault file as a standalone file note at its folder location", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "Just a note, linking nothing.",
+            "Attachments/report.pdf": Buffer.from("%PDF-1.4 fake"),
+            ".obsidian/app.json": "{}"
+        }, "Vault.zip");
+
+        const attachmentsFolder = importRoot.getChildNotes().find((n) => n.title === "Attachments");
+        const orphan = attachmentsFolder?.getChildNotes()[0];
+        if (!orphan) {
+            throw new Error("orphan file was not imported");
+        }
+
+        // The .pdf extension is stripped from the title (Trilium convention) and preserved in a label.
+        expect(orphan.title).toBe("report");
+        expect(orphan.type).toBe("file");
+        expect(orphan.mime).toBe("application/pdf");
+        expect(orphan.getOwnedLabelValue("originalFileName")).toBe("report.pdf");
+        expect(decodeUtf8(orphan.getContent())).toBe("%PDF-1.4 fake");
+    });
+
+    it("materializes an unreferenced image as an image note", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "No embeds here.",
+            "logo.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png")
+        });
+
+        const orphan = importRoot.getChildNotes().find((n) => n.type === "image");
+        expect(orphan?.title).toBe("logo.png");
+        expect(orphan?.mime).toBe("image/png");
+        expect(orphan?.getOwnedLabelValue("originalFileName")).toBe("logo.png");
+    });
+
+    it("does not also create a standalone note for a file that is embedded in a note", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "![[shot.png]]",
+            "shot.png": Buffer.from("\x89PNG\r\n\x1a\nfake")
+        });
+
+        // The image is an inline attachment of the note, not a duplicated standalone note.
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        expect(note?.getAttachmentsByRole("image").map((a) => a.title)).toEqual(["shot.png"]);
+        expect(importRoot.getChildNotes().some((n) => n.type === "image")).toBe(false);
     });
 
     it("resolves a wikilink to a reference link and records an internalLink relation (backlink)", async () => {
