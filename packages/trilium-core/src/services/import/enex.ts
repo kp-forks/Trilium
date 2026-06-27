@@ -370,7 +370,9 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         // Record for the internal-link resolution pass. Internal links are matched by the target's title
         // (the export carries no per-note guid to match on), so a title shared by 2+ notes is ambiguous:
         // mark it null to leave those links unresolved rather than pointing at the wrong same-named note.
-        noteIdByTitle.set(title, noteIdByTitle.has(title) ? null : noteEntity.noteId);
+        // Key on the trimmed title so a padded export title still matches a link's (trimmed) anchor text.
+        const titleKey = title.trim();
+        noteIdByTitle.set(titleKey, noteIdByTitle.has(titleKey) ? null : noteEntity.noteId);
         createdNotes.push({ note: noteEntity, content, utcDateCreated, utcDateModified });
     }
 

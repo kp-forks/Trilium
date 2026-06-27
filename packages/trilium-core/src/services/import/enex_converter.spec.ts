@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import * as htmlParser from "node-html-parser";
+import { describe, expect, it, vi } from "vitest";
 
 import { convertEnexContent, rewriteEvernoteLinks } from "./enex_converter.js";
 
@@ -238,5 +239,21 @@ describe("rewriteEvernoteLinks — internal note references", () => {
         expect(rewriteEvernoteLinks(input, resolve)).toBe(
             `<p>See <a href="#root/noteA" class="reference-link">Orar legislație</a> and <a href="http://x.com">x</a>.</p>`
         );
+    });
+
+    it("only parses when an evernote link is present (fast path skips parsing otherwise)", () => {
+        const parseSpy = vi.spyOn(htmlParser, "parse");
+        try {
+            // Content with no evernote link is returned untouched without paying for an HTML parse.
+            const noLinks = `<p>No internal links</p><a href="http://triliumnotes.org">External</a>`;
+            expect(rewriteEvernoteLinks(noLinks, resolve)).toBe(noLinks);
+            expect(parseSpy).not.toHaveBeenCalled();
+
+            // A present evernote link still triggers a parse so it can be rewritten.
+            rewriteEvernoteLinks(`<a href="evernote://view-note/x">Orar legislație</a>`, resolve);
+            expect(parseSpy).toHaveBeenCalledOnce();
+        } finally {
+            parseSpy.mockRestore();
+        }
     });
 });

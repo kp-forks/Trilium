@@ -180,6 +180,26 @@ describe("importEnex", () => {
         expect(linker.getRelations("internalLink").some(r => dupIds.includes(r.value))).toBe(false);
     });
 
+    it("resolves an internal link to a note whose title has surrounding whitespace", async () => {
+        const { importedNote } = await testImport("Internal links whitespace.enex");
+
+        const linker = importedNote.getChildNotes().find(n => n.title === "Linker");
+        // The target's exported title is padded (" Padded Note "); match it trim-insensitively.
+        const padded = importedNote.getChildNotes().find(n => n.title.trim() === "Padded Note");
+        if (!linker || !padded) {
+            throw new Error("whitespace-title sample notes were not imported");
+        }
+        const content = decodeUtf8(linker.getContent());
+
+        // The link text ("Padded Note") is matched against the padded title after trimming both sides,
+        // so it still resolves to a reference link rather than being left as the raw evernote:// link.
+        expect(content).toContain(`href="#root/${padded.noteId}"`);
+        expect(content).toContain(`class="reference-link"`);
+        expect(content).not.toContain("evernote://");
+        // The backlink relation is created too.
+        expect(linker.getRelations("internalLink").some(r => r.value === padded.noteId)).toBe(true);
+    });
+
     it("converts legacy <en-todo> checkboxes into a real todo-list, not literal ballot boxes", async () => {
         const { importedNote } = await testImport("Legacy checkboxes.enex");
 

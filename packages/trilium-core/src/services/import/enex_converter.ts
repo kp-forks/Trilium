@@ -42,6 +42,11 @@ export function convertEnexContent(html: string, tasks: EnexTask[] = []): string
 /** Prefix shared by Evernote internal-note link schemes: `evernote://view-note/<guid>` and `evernote:///view/.../<guid>/...`. */
 const EVERNOTE_LINK_SCHEME = "evernote:";
 
+/** Whether `html` contains any Evernote internal-note link — the cheap guard that lets {@link rewriteEvernoteLinks} skip parsing. */
+export function hasEvernoteLink(html: string): boolean {
+    return html.includes(EVERNOTE_LINK_SCHEME);
+}
+
 /**
  * Rewrites Evernote internal note links into Trilium internal links. An ENEX export never carries a note's
  * own guid, so the `evernote://view-note/<guid>` target can't be matched by id; instead Evernote renders an
@@ -51,6 +56,12 @@ const EVERNOTE_LINK_SCHEME = "evernote:";
  * known (a note can link to one imported later).
  */
 export function rewriteEvernoteLinks(html: string, resolve: (linkText: string) => string | null): string {
+    // Fast path: with no Evernote link anywhere there is nothing to rewrite, so skip the HTML parse —
+    // this runs over every imported note's content, most of which have no internal links.
+    if (!hasEvernoteLink(html)) {
+        return html;
+    }
+
     const root = parse(html);
     let changed = false;
 
