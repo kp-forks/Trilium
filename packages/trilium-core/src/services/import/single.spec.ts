@@ -109,6 +109,14 @@ describe("processNoteContent", () => {
         expect(importedNote.getContent().toString()).toBe("<h2>Hello world</h2><p>Plain text goes here.</p>");
     });
 
+    it("imports YAML front matter as labels and strips it from a Markdown note", async () => {
+        const md = "---\nfirst: First value\ntags:\n  - Tag\n  - AnotherTag\n---\nThe body.";
+        const { importedNote } = await testImport("Frontmatter.md", "text/markdown", Buffer.from(md));
+        expect(importedNote.getContent().toString()).toBe("<p>The body.</p>");
+        expect(importedNote.getOwnedLabelValue("first")).toBe("First value");
+        expect(importedNote.getOwnedLabelValues("tags")).toEqual(["Tag", "AnotherTag"]);
+    });
+
     it("supports excalidraw note", async () => {
         const { importedNote } = await testImport("New note.excalidraw", "application/json");
         expect(importedNote.mime).toBe("application/json");

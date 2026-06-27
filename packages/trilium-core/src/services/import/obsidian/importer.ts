@@ -13,8 +13,9 @@
  * Obsidian-specific inline syntax is handled during Markdown rendering (gated by the `obsidian` flag):
  * `==highlight==` becomes `<mark>` and `%% comment %%` becomes an HTML comment.
  *
- * Deferred to later passes (so they currently render as literal text or placeholder links): frontmatter →
- * labels, tags, and callouts.
+ * Front matter is parsed generically (see {@link ../frontmatter.js}) into camelCased labels. Obsidian's
+ * property typing (date/number/checkbox via `.obsidian/types.json`), special keys (tags, aliases) and
+ * callouts are deferred to later passes.
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=obsidian`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -30,6 +31,7 @@ import type TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
+import { extractFrontmatter } from "../frontmatter.js";
 import markdownService from "../markdown.js";
 import { applyAttachments, buildAttachmentIndex } from "./attachments.js";
 import { buildNoteIndex, resolveLinks } from "./links.js";
@@ -117,8 +119,15 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     // attachments saved. Content is persisted once, in the link pass, to avoid a second write per note.
     for (const vaultNote of notes) {
         const parent = ensureFolder(parentFolder(vaultNote.path), rootNote, folderNotes, isProtected);
-        const rendered = markdownService.renderToHtml(vaultNote.markdown, vaultNote.title, { obsidian: true });
+        const { body, attributes } = extractFrontmatter(vaultNote.markdown);
+        const rendered = markdownService.renderToHtml(body, vaultNote.title, { obsidian: true });
         const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: rendered, type: "text", mime: "text/html", isProtected });
+
+        // Front matter properties become labels, their names camelCased like the other importers. Obsidian's
+        // typing (date/number/checkbox) and special keys (tags, aliases) layer on in a later pass.
+        for (const attribute of attributes) {
+            note.addLabel(attribute.name, attribute.value);
+        }
 
         // Attachments hang off the note, so this runs after creation; it returns the content with embedded
         // images/files rewritten to point at the saved attachments.

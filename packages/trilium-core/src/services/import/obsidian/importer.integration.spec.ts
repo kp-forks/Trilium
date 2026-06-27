@@ -69,6 +69,27 @@ describe("Obsidian importer — integration", () => {
         expect(decodeUtf8(welcome?.getContent() ?? "")).toBe("<p>This is your new <em>vault</em>.</p>");
     });
 
+    it("imports front matter properties as camelCased labels and strips the block from the note body", async () => {
+        // Modeled on the vault's "Files with properties" note.
+        const importRoot = await importObsidian({
+            "Note.md": "---\nfirst: First value\ntags:\n  - Tag\n  - AnotherTag\nCheckbox prop: true\nList:\n  - a\n  - b\n---\nThe body."
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        if (!note) {
+            throw new Error("note was not imported");
+        }
+
+        // The block is gone from the content; only the rendered body remains.
+        expect(decodeUtf8(note.getContent())).toBe("<p>The body.</p>");
+
+        // Properties become labels with camelCased names; a list yields one label per item.
+        expect(note.getOwnedLabelValue("first")).toBe("First value");
+        expect(note.getOwnedLabelValues("tags")).toEqual(["Tag", "AnotherTag"]);
+        expect(note.getOwnedLabelValue("checkboxProp")).toBe("true");
+        expect(note.getOwnedLabelValues("list")).toEqual(["a", "b"]);
+    });
+
     it("converts ==highlights== to a coloured span and %%comments%% to dropped HTML comments", async () => {
         const importRoot = await importObsidian({
             "Note.md": "A ==highlight== and a %%hidden%% comment."
