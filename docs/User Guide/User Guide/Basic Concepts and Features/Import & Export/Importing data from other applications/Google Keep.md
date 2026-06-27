@@ -34,7 +34,7 @@ Then in Trilium Notes:
 *   Note titles are maintained, if present.
     *   In Google Keep it's common for notes not to have a title, case in which the date and time of the note are used as a title.
 *   To-do lists
-*   <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a> are preserved: images are embedded inline in the note, while other files are kept as attachments.
+*   <a class="reference-link" href="../../../Note%20Types/Text/Images.md">Images</a> and <a class="reference-link" href="../../Notes/Attachments.md">Attachments</a>.
 *   Creation and modification dates are preserved.
 
 ## Limitations

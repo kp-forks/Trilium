@@ -116,19 +116,14 @@
   references are determined via their note title.</p>
 <p>Limitations:</p>
 <ul>
-  <li>
-    <p>Only notes that are part of the same import will have their links rewritten
-      to reference links, to avoid linking to the wrong note.</p>
-  </li>
-  <li>
-    <p>If there are to notes with the same name, internal links will not be created
-      to avoid pointing to the wrong note.</p>
-  </li>
-  <li>
-    <p>Links that couldn't be rewritten (e.g. referring to a missing/duplicate
-      note) will be kept with their original <code spellcheck="false">evernote://</code> URL.</p>
-  </li>
-  <li>It will not fix links to anchors and links to notes that you renamed in
+  <li>Only notes that are part of the same import will have their links rewritten
+    to reference links, to avoid linking to the wrong note.</li>
+  <li>If there are to notes with the same name, internal links will not be created
+    to avoid pointing to the wrong note.</li>
+  <li>Links that couldn't be rewritten (e.g. referring to a missing/duplicate
+    note) will be kept with their original <code spellcheck="false">evernote://</code> URL.</li>
+  <li
+ >It will not fix links to anchors and links to notes that you renamed in
     Evernote after you created the links.</li>
 </ul>
 <h4>Post-processing notes</h4>
@@ -159,4 +154,14 @@
   <li>Some note titles might not be well identified, even if they exist. This
     is especially the case if the note title contains some special characters.
     Should this be problematic, consider&nbsp;<a class="reference-link" href="#root/_help_wy8So3yZZlH9">Reporting issues</a>.</li>
+</ul>
+<h2>Reporting issues</h2>
+<p>When importing your Evernote notebooks, you might find issues in how a
+  note is imported; in that case consider <a href="#root/_help_wy8So3yZZlH9">reporting</a> it.</p>
+<p>When reporting such an issue make sure to provide the following information:</p>
+<ul>
+  <li>A <code spellcheck="false">.enex</code> export of the original note. This
+    allows us to reproduce the issue.</li>
+  <li>A screenshot with how it originally looked like before the import and
+    how it looks after the import.</li>
 </ul>

@@ -92,3 +92,12 @@ The script has the following limitations:
 
 *   It will not fix links to anchors and links to notes that you renamed in Evernote after you created the links.
 *   Some note titles might not be well identified, even if they exist. This is especially the case if the note title contains some special characters. Should this be problematic, consider <a class="reference-link" href="../../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
+
+## Reporting issues
+
+When importing your Evernote notebooks, you might find issues in how a note is imported; in that case consider [reporting](../../../Troubleshooting/Reporting%20issues.md) it.
+
+When reporting such an issue make sure to provide the following information:
+
+*   A `.enex` export of the original note. This allows us to reproduce the issue.
+*   A screenshot with how it originally looked like before the import and how it looks after the import.
