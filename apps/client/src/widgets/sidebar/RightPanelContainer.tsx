@@ -47,25 +47,25 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
     const items = useItems(visible, widgetsByParent);
     useSplit(mode === "docked");
 
-    // Persist only the docked/closed distinction; overlay is ephemeral, so it never writes the option.
-    const transition = useCallback((compute: (prev: RightPaneMode) => RightPaneMode) => {
+    // Apply a transition, persisting only when the docked/closed distinction changes
+    // (overlay is ephemeral, so it never writes the option).
+    const apply = useCallback((action: RightPaneAction) => {
         setMode(prev => {
-            const next = compute(prev);
-            if ((prev === "docked") !== (next === "docked")) {
-                options.save("rightPaneVisible", (next === "docked").toString());
+            const next = reduceRightPaneMode(prev, action);
+            const persist = persistedRightPaneVisible(prev, next);
+            if (persist !== null) {
+                options.save("rightPaneVisible", persist.toString());
             }
             return next;
         });
     }, []);
 
-    const toggleOverlay = useCallback(() => transition(prev => prev === "closed" ? "overlay" : "closed"), [ transition ]);
-    const dock = useCallback(() => transition(() => "docked"), [ transition ]);
-    const close = useCallback(() => transition(() => "closed"), [ transition ]);
+    const toggleOverlay = useCallback(() => apply("toggleOverlay"), [ apply ]);
+    const dock = useCallback(() => apply("dock"), [ apply ]);
+    const close = useCallback(() => apply("close"), [ apply ]);
 
     // Legacy entry points (tab-row toggle, empty-state button) open/close the *docked* pane.
-    useTriliumEvent("toggleRightPane", useCallback(() => {
-        transition(prev => prev === "closed" ? "docked" : "closed");
-    }, [ transition ]));
+    useTriliumEvent("toggleRightPane", useCallback(() => apply("toggleDocked"), [ apply ]));
 
     useOverlayDismiss(mode === "overlay", close);
 
@@ -203,6 +203,26 @@ function useSplit(visible: boolean) {
     }, [ visible ]);
 }
 
+type RightPaneAction = "toggleOverlay" | "toggleDocked" | "dock" | "close";
+
+/** The next mode for a given action (pure). `toggle*` open from closed and close otherwise. */
+export function reduceRightPaneMode(prev: RightPaneMode, action: RightPaneAction): RightPaneMode {
+    switch (action) {
+        case "toggleOverlay": return prev === "closed" ? "overlay" : "closed";
+        case "toggleDocked": return prev === "closed" ? "docked" : "closed";
+        case "dock": return "docked";
+        case "close": return "closed";
+    }
+}
+
+/**
+ * The value to write to the persisted `rightPaneVisible` option for a transition, or null when it
+ * shouldn't change — only the docked/closed distinction is persisted; overlay is runtime-only.
+ */
+export function persistedRightPaneVisible(prev: RightPaneMode, next: RightPaneMode): boolean | null {
+    return (prev === "docked") !== (next === "docked") ? next === "docked" : null;
+}
+
 // Clicks within these keep the overlay open: the pane, the toggle handle, and popups that sidebar
 // content renders into portals outside #right-pane (dropdowns, tooltips, modals). The backdrop is
 // intentionally NOT listed, so clicking the (covered) content area dismisses like other outside clicks.
@@ -219,7 +239,7 @@ export function isWithinOverlay(target: EventTarget | null): boolean {
  * chrome the backdrop doesn't cover (tree, toolbar, tabs) are caught directly. Capture phase so a
  * child's `stopPropagation` can't keep a stale overlay open.
  */
-function useOverlayDismiss(active: boolean, onDismiss: () => void) {
+export function useOverlayDismiss(active: boolean, onDismiss: () => void) {
     useEffect(() => {
         if (!active) return;
         const onPointerDown = (e: PointerEvent) => {
