@@ -17,9 +17,10 @@
  * Obsidian-specific inline syntax is handled during Markdown rendering (gated by the `obsidian` flag):
  * `==highlight==` becomes `<mark>` and `%% comment %%` becomes an HTML comment.
  *
- * Front matter is parsed generically (see {@link ../frontmatter.js}) into camelCased labels. Obsidian's
- * property typing (date/number/checkbox via `.obsidian/types.json`), special keys (tags, aliases) and
- * callouts are deferred to later passes.
+ * Front matter is parsed generically (see {@link ../frontmatter.js}) into camelCased labels, then Obsidian's
+ * special keys are applied (see {@link ./frontmatter.js}): tags become individual labels, aliases become
+ * `#alias` labels, and cssclasses/publish/permalink are dropped. Property typing (date/number/checkbox via
+ * `.obsidian/types.json`) and callouts are deferred to later passes.
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=obsidian`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -35,7 +36,8 @@ import type TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
-import { extractFrontmatter } from "../frontmatter.js";
+import { toAttributeName } from "../collection_utils.js";
+import { extractFrontmatter, type FrontmatterAttribute } from "../frontmatter.js";
 import markdownService from "../markdown.js";
 import { applyAttachments, type AttachmentIndex, buildAttachmentIndex, isImageMime, resolveAttachment } from "./attachments.js";
 import { type ExcalidrawDrawing, isExcalidrawPath, parseExcalidraw } from "./excalidraw.js";
@@ -141,9 +143,10 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         const rendered = markdownService.renderToHtml(body, vaultNote.title, { obsidian: true });
         const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: rendered, type: "text", mime: "text/html", isProtected });
 
-        // Front matter properties become labels, their names camelCased like the other importers. Obsidian's
-        // typing (date/number/checkbox) and special keys (tags, aliases) layer on in a later pass.
-        for (const attribute of attributes) {
+        // Front matter properties become labels (camelCased like the other importers), then Obsidian's special
+        // keys are applied: tags become individual labels, aliases become #alias labels, and
+        // cssclasses/publish/permalink are dropped. Property typing (date/number/checkbox) layers on later.
+        for (const attribute of toObsidianLabels(attributes)) {
             note.addLabel(attribute.name, attribute.value);
         }
 
@@ -195,6 +198,35 @@ function createExcalidrawNote(parent: BNote, vaultNote: VaultNote, attachmentInd
     }
 
     return note;
+}
+
+const DROPPED_FRONTMATTER_KEYS = new Set(["cssclasses", "publish", "permalink"]);
+
+/**
+ * Applies Obsidian's special front matter property semantics on top of the generic parse: each `tags` value
+ * becomes its own label (the sanitized tag as the name, e.g. `#book`), each `aliases` value becomes an
+ * `#alias` label (the alternate name preserved), and `cssclasses`/`publish`/`permalink` are dropped
+ * (presentation / publish-site metadata with no Trilium meaning). Every other property is left as-is.
+ */
+export function toObsidianLabels(attributes: FrontmatterAttribute[]): FrontmatterAttribute[] {
+    const labels: FrontmatterAttribute[] = [];
+    for (const { name, value } of attributes) {
+        if (DROPPED_FRONTMATTER_KEYS.has(name)) {
+            continue;
+        }
+        if (name === "tags") {
+            if (value.trim()) {
+                labels.push({ name: toAttributeName(value), value: "" });
+            }
+        } else if (name === "aliases") {
+            if (value.trim()) {
+                labels.push({ name: "alias", value });
+            }
+        } else {
+            labels.push({ name, value });
+        }
+    }
+    return labels;
 }
 
 /** Returns (creating on demand, parents first) the container note for `folderPath`; the empty path is the root. */

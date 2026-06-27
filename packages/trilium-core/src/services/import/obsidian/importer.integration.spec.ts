@@ -92,9 +92,37 @@ describe("Obsidian importer — integration", () => {
 
         // Properties become labels with camelCased names; a list yields one label per item.
         expect(note.getOwnedLabelValue("first")).toBe("First value");
-        expect(note.getOwnedLabelValues("tags")).toEqual(["Tag", "AnotherTag"]);
         expect(note.getOwnedLabelValue("checkboxProp")).toBe("true");
         expect(note.getOwnedLabelValues("list")).toEqual(["a", "b"]);
+        // tags are an Obsidian special key → individual labels (covered in detail below). A single-token tag
+        // is fully lower-cased by toAttributeName (e.g. "AnotherTag" → "anothertag").
+        const labelNames = note.getOwnedAttributes().filter((a) => a.type === "label").map((a) => a.name);
+        expect(labelNames).toContain("tag");
+        expect(labelNames).toContain("anothertag");
+    });
+
+    it("maps Obsidian special front matter keys: tags → labels, aliases → #alias, dropping cssclasses/publish/permalink", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "---\ntags:\n  - Book\n  - Reading List\naliases:\n  - Alt name\ncssclasses:\n  - foo\npublish: true\npermalink: /x\nfirst: First value\n---\nBody."
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        if (!note) {
+            throw new Error("note was not imported");
+        }
+        const labels = note.getOwnedAttributes().filter((a) => a.type === "label");
+        const names = labels.map((a) => a.name);
+
+        // tags → individual labels named after the (sanitized) tag.
+        expect(names).toContain("book");
+        expect(names).toContain("readingList");
+        // aliases → #alias labels preserving the alternate name.
+        expect(labels.filter((a) => a.name === "alias").map((a) => a.value)).toEqual(["Alt name"]);
+        // dropped keys produce no labels; a regular property is unaffected.
+        expect(names).not.toContain("cssclasses");
+        expect(names).not.toContain("publish");
+        expect(names).not.toContain("permalink");
+        expect(note.getOwnedLabelValue("first")).toBe("First value");
     });
 
     it("converts ==highlights== to a coloured span and %%comments%% to dropped HTML comments", async () => {
