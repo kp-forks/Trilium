@@ -11,6 +11,9 @@ The first step is to obtain a .zip of your Obsidian vault:
 1.  First, identify where your Obsidian vault is located. The easiest way to do so is to open Obsidian and right clicking the name of the vault at the bottom of the left sidebar and then selecting _Show in system explorer_.
 2.  In your system explorer, right click the directory containing your Obsidian vault and compress it to a ZIP file (e.g. on Windows, _Compress To_ → _ZIP_).
 
+> [!TIP]
+> When zipping, you can either ZIP the outer folder of the vault, or the contents of the vault as Trilium will automatically determine the position of the vault in the archive via the `.obsidian` directory.
+
 Then, in Trilium Notes:
 
 1.  In the <a class="reference-link" href="../../UI%20Elements/Note%20Tree.md">Note Tree</a>, right click and select _Import into note_.
@@ -21,6 +24,7 @@ Then, in Trilium Notes:
 
 The following features are preserved by Trilium during the import process:
 
+*   Folder hierarhy is preserved.
 *   Basic Markdown formatting (bold, italic, underline, strikethrough, headings).
 *   Specific Obsidian formatting (highlighting).
 *   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a>
@@ -30,9 +34,13 @@ The following features are preserved by Trilium during the import process:
 *   <a class="reference-link" href="../../../Note%20Types/Text/Math%20Equations.md">Math Equations</a> (inline or block)
 *   <a class="reference-link" href="../../../Note%20Types/Text/Developer-specific%20formatting/Code%20blocks.md">Code blocks</a>, with a best-effort attempt to restore the language.
 *   Links between pages are converted to <a class="reference-link" href="../../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a>.
-*   [Admonitions](../../../Note%20Types/Text/Block%20quotes%20%26%20admonitions.md)
+*   Callouts are converted to Trilium's [Admonitions](../../../Note%20Types/Text/Block%20quotes%20%26%20admonitions.md).
+    *   Obsidian has many more types of callouts (`tldr`, `question`, `attention`), these are all mapped to one of Trilium's existing admonition types (e.g. Note, Tip, Important).
+    *   Custom titles are kept and shown as a bold line at the top of the admonition, since there is no concept of admonition title in Trilium.
+    *   Foldable callouts are imported expanded and without a fold marker.
 *   Notes created by the [_Excalidraw_](https://github.com/zsviczian/obsidian-excalidraw-plugin) community plugin for Obsidian are converted to <a class="reference-link" href="../../../Note%20Types/Canvas.md">Canvas</a> (same underlying technology).
     *   Note that custom features introduced by that plugin will not be supported.
+*   Modification date is preserved via the information obtained from the .zip archive, creation date is not recoverable so it's kept the same as the modification date.
 
 ## Properties
 
@@ -47,6 +55,7 @@ The following note types are supported:
 | Obsidian type | Trilium |
 | --- | --- |
 | Text or not defined | Single-valued `text` label |
+| Number | Single-valued `number` label |
 | Multitext | Multi-valued `text` label |
 | Checkbox | `boolean` label (`true`/`false`). |
 | Date | `date` |
@@ -69,3 +78,6 @@ Obsidian has a few reserved property names, which are treated differently in Tri
     *   When a base is encountered, it is simply ignored from the import.
 *   Canvases are not imported.
     *   Theoretically they could map to either <a class="reference-link" href="../../../Note%20Types/Canvas.md">Canvas</a> or <a class="reference-link" href="../../../Note%20Types/Relation%20Map.md">Relation Map</a> but they are too different to reconcile.
+*   Links
+    *   Links to a specific heading in another note will still point to the right note, but the heading anchor will be dropped.
+    *   Dangling links (pointing to a note that doesn't exist) and ambiguous links (same base name in 2+ notes) are unwrapped to plain text.

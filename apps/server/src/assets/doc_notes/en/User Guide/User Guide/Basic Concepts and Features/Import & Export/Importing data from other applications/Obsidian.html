@@ -15,6 +15,11 @@
  >In your system explorer, right click the directory containing your Obsidian
     vault and compress it to a ZIP file (e.g. on Windows, <em>Compress To</em> → <em>ZIP</em>).</li>
 </ol>
+<aside class="admonition tip">
+  <p>When zipping, you can either ZIP the outer folder of the vault, or the
+    contents of the vault as Trilium will automatically determine the position
+    of the vault in the archive via the <code spellcheck="false">.obsidian</code> directory.</p>
+</aside>
 <p>Then, in Trilium Notes:</p>
 <ol>
   <li>In the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>,
@@ -25,6 +30,7 @@
 <h2>Supported features</h2>
 <p>The following features are preserved by Trilium during the import process:</p>
 <ul>
+  <li>Folder hierarhy is preserved.</li>
   <li>Basic Markdown formatting (bold, italic, underline, strikethrough, headings).</li>
   <li
  >Specific Obsidian formatting (highlighting).</li>
@@ -44,7 +50,17 @@
       a best-effort attempt to restore the language.</li>
     <li>Links between pages are converted to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/QEAPj01N5f7w/_help_hrZ1D00cLbal">Internal (reference) links</a>.</li>
     <li
-   ><a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_NwBbFdNZ9h7O">Admonitions</a>
+   >Callouts are converted to Trilium's <a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_NwBbFdNZ9h7O">Admonitions</a>.
+      <ul>
+        <li>Obsidian has many more types of callouts (<code spellcheck="false">tldr</code>,
+          <code
+          spellcheck="false">question</code>, <code spellcheck="false">attention</code>), these are
+            all mapped to one of Trilium's existing admonition types (e.g. Note, Tip,
+            Important).</li>
+        <li>Custom titles are kept and shown as a bold line at the top of the admonition,
+          since there is no concept of admonition title in Trilium.</li>
+        <li>Foldable callouts are imported expanded and without a fold marker.</li>
+      </ul>
       </li>
       <li>Notes created by the <a href="https://github.com/zsviczian/obsidian-excalidraw-plugin"><em>Excalidraw</em></a> community
         plugin for Obsidian are converted to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_grjYqerjn243">Canvas</a>&nbsp;(same
@@ -53,6 +69,9 @@
           <li>Note that custom features introduced by that plugin will not be supported.</li>
         </ul>
       </li>
+      <li>Modification date is preserved via the information obtained from the .zip
+        archive, creation date is not recoverable so it's kept the same as the
+        modification date.</li>
 </ul>
 <h2>Properties</h2>
 <p>Properties are Obsidian's equivalent of&nbsp;<a class="reference-link"
@@ -83,6 +102,10 @@
       <tr>
         <td>Text or not defined</td>
         <td>Single-valued <code spellcheck="false">text</code> label</td>
+      </tr>
+      <tr>
+        <td>Number</td>
+        <td>Single-valued <code spellcheck="false">number</code> label</td>
       </tr>
       <tr>
         <td>Multitext</td>
@@ -146,6 +169,14 @@
           href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_grjYqerjn243">Canvas</a>&nbsp;or&nbsp;
           <a
           class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iRwzGnHPzonm">Relation Map</a>&nbsp;but they are too different to reconcile.</li>
+      </ul>
+    </li>
+    <li>Links
+      <ul>
+        <li>Links to a specific heading in another note will still point to the right
+          note, but the heading anchor will be dropped.</li>
+        <li>Dangling links (pointing to a note that doesn't exist) and ambiguous links
+          (same base name in 2+ notes) are unwrapped to plain text.</li>
       </ul>
     </li>
 </ul>
