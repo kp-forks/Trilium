@@ -314,8 +314,6 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
     }
 
     async function saveNote(noteMeta: NoteMeta, filePathPrefix: string) {
-        log.info(`Exporting note '${noteMeta.noteId}'`);
-
         if (!noteMeta.noteId || noteMeta.title === undefined) {
             throw new Error("Missing note meta.");
         }
@@ -463,7 +461,12 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
     // The metadata pass above already drove the bare progress count. Reset it and seed the total with the
     // number of notes about to be written so the content-writing pass renders a clean 0→100% progress bar.
     taskContext.resetProgressCount();
-    taskContext.setTotalCount(countMetaNodes(rootMeta));
+    const noteCount = countMetaNodes(rootMeta);
+    taskContext.setTotalCount(noteCount);
+
+    // A single summary line instead of one log entry per note — per-note logging floods the log file and
+    // stdout on large exports (e.g. 20k lines for a 20k-note subtree) for no operational benefit.
+    log.info(`Exporting ${noteCount} notes with format '${format}'`);
 
     await saveNote(rootMeta, "");
 
