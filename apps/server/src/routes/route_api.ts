@@ -11,7 +11,6 @@ import sql from "../services/sql.js";
 import { safeExtractMessageAndStackFromError } from "../services/utils.js";
 import { doubleCsrfProtection as csrfMiddleware } from "./csrf_protection.js";
 
-const MAX_ALLOWED_FILE_SIZE_MB = 250;
 export const router = express.Router();
 
 // TODO: Deduplicate with etapi_utils.ts afterwards.
@@ -145,16 +144,16 @@ function handleException(e: unknown | Error, method: HttpMethod, path: string, r
 export function createUploadMiddleware(): RequestHandler {
     // None of our upload routes consume nested multipart text fields, so reject any bracketed field
     // name outright. This activates multer 2.2.0's guard against CVE-2026-5079 (DoS via deeply-nested
-    // field names) and must be set unconditionally — it is a safety limit, not a user-facing size
-    // limit gated by TRILIUM_NO_UPLOAD_LIMIT. `fieldNestingDepth` is not yet in @types/multer 2.1.0,
-    // hence the local intersection type.
+    // field names). `fieldNestingDepth` is not yet in @types/multer 2.1.0, hence the local intersection
+    // type.
+    //
+    // There is deliberately no upload `fileSize` limit: the old 250 MiB cap conflated archive size
+    // (a ZIP's many entries are each their own blob) with single-blob size, and only bounded the
+    // *compressed* upload. The real constraint — a single blob must stay serialisable for sync — is now
+    // enforced per blob at creation time (see AbstractBeccaEntity._setContent / MAX_BLOB_CONTENT_LENGTH).
     const limits: NonNullable<multer.Options["limits"]> & { fieldNestingDepth?: number } = {
         fieldNestingDepth: 0
     };
-
-    if (!process.env.TRILIUM_NO_UPLOAD_LIMIT) {
-        limits.fileSize = MAX_ALLOWED_FILE_SIZE_MB * 1024 * 1024;
-    }
 
     const multerOptions: multer.Options = {
         limits,
@@ -173,9 +172,7 @@ const uploadMiddleware = createUploadMiddleware();
 
 export const uploadMiddlewareWithErrorHandling = function (req: express.Request, res: express.Response, next: express.NextFunction) {
     uploadMiddleware(req, res, (err) => {
-        if (err?.code === "LIMIT_FILE_SIZE") {
-            res.setHeader("Content-Type", "text/plain").status(400).send(`Cannot upload file because it excceeded max allowed file size of ${MAX_ALLOWED_FILE_SIZE_MB} MiB`);
-        } else if (err?.code === "LIMIT_FIELD_NESTING") {
+        if (err?.code === "LIMIT_FIELD_NESTING") {
             // Triggered by the fieldNestingDepth: 0 limit (CVE-2026-5079 guard). Without this branch the
             // error would be swallowed and the request forwarded to the handler with no file.
             res.setHeader("Content-Type", "text/plain").status(400).send("Upload rejected: nested multipart field names are not allowed.");
