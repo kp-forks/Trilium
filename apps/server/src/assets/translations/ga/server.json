@@ -429,9 +429,16 @@
     "root-title": "Allmhairiú OneNote"
   },
   "notion_import": {
-    "root-title": "Iompórtáil Notion"
+    "root-title": "Iompórtáil Notion",
+    "markdown-export-unsupported": "Breathnaíonn sé seo cosúil le easpórtáil \"Markdown & CSV\" de chuid Notion, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás oibre Notion ag baint úsáide as an bhformáid easpórtála \"HTML\" agus allmhairigh é sin ina ionad.",
+    "subpage-folders-disabled": "Cruthaíodh an easpórtáil Notion seo gan an rogha \"Cruthaigh fillteáin do fho-leathanaigh\", mar sin ní féidir ordlathas an leathanaigh a atógáil. Ath-easpórtáil ó Notion le \"Cruthaigh fillteáin do fho-leathanaigh\" cumasaithe agus allmhairigh é sin ina ionad."
   },
   "keep_import": {
     "root-title": "Iompórtáil Google Keep"
+  },
+  "anytype_import": {
+    "root-title": "Allmhairiú aon chineál",
+    "protobuf-export-unsupported": "Breathnaíonn sé seo cosúil le easpórtáil \"Protobuf\" de chineál ar bith, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás de chineál ar bith ag baint úsáide as an bhformáid \"Bloc ar bith\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad.",
+    "markdown-export-unsupported": "Breathnaíonn sé seo cosúil le heaspórtáil \"Markdown\" de chineál ar bith, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás de chineál ar bith ag baint úsáide as an bhformáid \"Any-Block\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad."
   }
 }
