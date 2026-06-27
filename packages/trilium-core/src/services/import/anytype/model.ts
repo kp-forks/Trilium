@@ -167,6 +167,9 @@ export interface ParsedObject {
     properties: ParsedProperty[];
     /** File-object ids from the object's file properties; resolved to `role:"file"` attachments at import. */
     fileRefs: string[];
+    /** File-object ids the body embeds inline (image/file blocks). Tracks which exported files a page already
+     * references, so a collection-scoped export can tell its unreferenced file members apart from these. */
+    inlineFileIds: string[];
     /** Present when the object is a collection: its table schema and membership. */
     collection?: ParsedCollection;
 }

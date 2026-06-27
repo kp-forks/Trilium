@@ -943,6 +943,64 @@ describe("Anytype importer — integration", () => {
         expect(rows.find((n) => n.getOwnedLabelValue("url"))?.getOwnedLabelValue("url")).toBe("https://triliumnotes.org");
     });
 
+    it("imports a file member of a collection-scoped export (no membership list) as a file note under the root", async () => {
+        // Exporting just the collection drops the wrapper (so no `links` membership) and the file's own
+        // createdInContext points at where it was first added, not the collection — so the only signal the
+        // bundled, page-unreferenced file is a member is its presence. It still becomes a file note.
+        const ctx = "bafyreicollectioncontext";
+        const fileCid = "bafyreiscopedfile";
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": memberObject("m1", { createdInContext: ctx }),
+                "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "text/plain", "files\\report.pdf"),
+                "files/report.pdf": Buffer.from("%PDF-1.4 scoped")
+            },
+            "Ordered collection.zip"
+        );
+
+        expect(importRoot.title).toBe("Ordered collection");
+        const children = importRoot.getChildNotes();
+        // The page member (Untitled) plus the recovered file member.
+        expect(children.map((n) => n.title).sort()).toEqual(["Untitled", "report.pdf"]);
+        const fileNote = children.find((n) => n.type === "file");
+        expect(fileNote?.mime).toBe("application/pdf");
+        expect(decodeUtf8(fileNote?.getContent() ?? "")).toBe("%PDF-1.4 scoped");
+    });
+
+    it("does not duplicate a member page's inline file as a separate collection member", async () => {
+        // In a collection-scoped export the inline image's FileObject is bundled too; it must stay the page's
+        // inline attachment, not also surface as a sibling member note.
+        const ctx = "bafyreicollectioncontext";
+        const imgCid = "bafyreiinlineimg";
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "m1", childrenIds: ["header", "img"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "img", file: { type: "Image", name: "pic.png", targetObjectId: imgCid, state: "Done", style: "Embed" } }
+                    ],
+                    details: { id: "m1", name: "Has image", resolvedLayout: 0, createdInContext: ctx }
+                }
+            }
+        });
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": page,
+                "filesObjects/f1.pb.json": fileObjectJson(imgCid, "pic", "png", "image/png", "files\\pic.png"),
+                "files/pic.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png")
+            },
+            "Gallery.zip"
+        );
+
+        const children = importRoot.getChildNotes();
+        // Only the member page — the image is its inline attachment, not a separate member note.
+        expect(children.map((n) => n.title)).toEqual(["Has image"]);
+        expect(children[0].getAttachmentsByRole("image")).toHaveLength(1);
+    });
+
     it("keeps the default 'Anytype import' text root for a regular multi-page export", async () => {
         const importRoot = await importAnytype(
             {

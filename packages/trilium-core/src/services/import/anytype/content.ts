@@ -25,7 +25,7 @@ import type { AnytypeBlock, AnytypeMark, LinkResolver } from "./model.js";
  * styles wherever they appear. The de-duplicated Trilium ids of every linked-to page are returned
  * alongside the HTML so the caller can record the `internalLink` relations.
  */
-export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLink: LinkResolver): { html: string; linkTargetIds: string[] } {
+export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLink: LinkResolver): { html: string; linkTargetIds: string[]; fileTargetIds: string[] } {
     const byId = new Map<string, AnytypeBlock>();
     for (const block of blocks) {
         byId.set(block.id, block);
@@ -33,12 +33,15 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
 
     const root = (rootId ? byId.get(rootId) : undefined) ?? blocks[0];
     if (!root) {
-        return { html: "", linkTargetIds: [] };
+        return { html: "", linkTargetIds: [], fileTargetIds: [] };
     }
 
     const visited = new Set<string>();
     const linkTargetIds = new Set<string>();
     const addLink = (noteId: string) => linkTargetIds.add(noteId);
+    // The FileObject ids the body embeds inline (image/file blocks), so the importer can tell which exported
+    // files a page already references — and, for a collection-scoped export, which are unreferenced members.
+    const fileTargetIds = new Set<string>();
 
     // Renders a run of sibling ids, grouping consecutive same-kind list items into one list. The header
     // chrome and already-visited blocks (a node reachable twice) are skipped.
@@ -120,6 +123,7 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             if (!targetId) {
                 return "";
             }
+            fileTargetIds.add(targetId);
             if (block.file.type === "Image") {
                 return `<figure class="image"><img src="${escapeHtml(targetId)}"></figure>`;
             }
@@ -184,7 +188,7 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
 
     // The root block is the page container and carries no text of its own — start from its children.
     const html = renderSequence(root.childrenIds ?? []);
-    return { html, linkTargetIds: [...linkTargetIds] };
+    return { html, linkTargetIds: [...linkTargetIds], fileTargetIds: [...fileTargetIds] };
 }
 
 /** The kind of list a block belongs to (bullet/ordered/task), or null when it isn't a list item. */

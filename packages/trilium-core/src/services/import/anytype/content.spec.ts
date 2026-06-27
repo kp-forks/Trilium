@@ -238,6 +238,17 @@ describe("inline files", () => {
         const doc = listDoc(["f1"], [fileBlock("f1", { type: "Image", name: "pending.png", state: "Uploading" })]);
         expect(parseObject(doc).content).toBe("");
     });
+
+    it("surfaces the embedded file ids (so the importer knows which files a page references)", () => {
+        const doc = listDoc(
+            ["f1", "f2"],
+            [
+                fileBlock("f1", { type: "Image", name: "pic.png", targetObjectId: "img-cid" }),
+                fileBlock("f2", { type: "PDF", name: "doc.pdf", targetObjectId: "pdf-cid" })
+            ]
+        );
+        expect(parseObject(doc).inlineFileIds).toEqual(["img-cid", "pdf-cid"]);
+    });
 });
 
 describe("renderInlineText", () => {
