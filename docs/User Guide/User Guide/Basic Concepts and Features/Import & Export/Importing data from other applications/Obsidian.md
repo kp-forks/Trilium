@@ -24,7 +24,7 @@ Then, in Trilium Notes:
 
 The following features are preserved by Trilium during the import process:
 
-*   Folder hierarhy is preserved.
+*   Folder hierarchy is preserved.
 *   Basic Markdown formatting (bold, italic, underline, strikethrough, headings).
 *   Specific Obsidian formatting (highlighting).
 *   <a class="reference-link" href="../../../Note%20Types/Text/Lists.md">Lists</a>
