@@ -28,6 +28,7 @@ import { decodeUtf8 } from "../../utils/binary.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
 import markdownService from "../markdown.js";
+import { applyAttachments, buildAttachmentIndex } from "./attachments.js";
 
 interface VaultNote {
     /** The note's vault-root-relative POSIX path, e.g. `Folder 1/First note.md` (the wrapper folder stripped). */
@@ -37,10 +38,10 @@ interface VaultNote {
 }
 
 async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
-    const { notes, vaultRoot } = await parseVault(fileBuffer);
+    const { notes, attachments, vaultRoot } = await parseVault(fileBuffer);
     taskContext.setTotalCount(notes.length);
 
-    return createNotes(importRootNote, notes, vaultTitle(vaultRoot, fileName), taskContext);
+    return createNotes(importRootNote, notes, attachments, vaultTitle(vaultRoot, fileName), taskContext);
 }
 
 /**
@@ -49,10 +50,11 @@ async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffe
  * folder and any other dot-prefixed entry are skipped, as is every non-Markdown file (handled in later
  * passes). Sorted by path so the resulting tree is built (and ordered) deterministically.
  */
-async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; vaultRoot: string }> {
+async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; attachments: Map<string, Uint8Array>; vaultRoot: string }> {
     const provider = getZipProvider();
     const allPaths: string[] = [];
     const raw: { path: string; markdown: string }[] = [];
+    const rawAttachments: { path: string; bytes: Uint8Array }[] = [];
     const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
 
     await provider.readZipFile(fileBuffer, async (entry, readContent) => {
@@ -60,11 +62,18 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
         if (isDirectory(path)) {
             return;
         }
+        // Record every entry (including .obsidian/) so the vault root can be detected; only collect content
+        // for the kept ones below.
         allPaths.push(path);
-        if (isIgnored(path) || !isMarkdown(path)) {
+        if (isIgnored(path)) {
             return;
         }
-        raw.push({ path, markdown: decodeUtf8(await readContent()) });
+        if (isMarkdown(path)) {
+            raw.push({ path, markdown: decodeUtf8(await readContent()) });
+        } else if (!isSpecial(path)) {
+            // A non-Markdown, non-special file is a candidate attachment (`.canvas`/`.base` are handled later).
+            rawAttachments.push({ path, bytes: await readContent() });
+        }
     }, filenameEncoding);
 
     const vaultRoot = detectVaultRoot(allPaths);
@@ -74,7 +83,12 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
     });
     notes.sort((a, b) => a.path.localeCompare(b.path));
 
-    return { notes, vaultRoot };
+    const attachments = new Map<string, Uint8Array>();
+    for (const { path, bytes } of rawAttachments) {
+        attachments.set(stripVaultRoot(path, vaultRoot), bytes);
+    }
+
+    return { notes, attachments, vaultRoot };
 }
 
 /**
@@ -82,20 +96,29 @@ async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[];
  * container note for its folder (created on demand by {@link ensureFolder}, so a folder note exists before
  * its children), with its Markdown rendered to HTML. Returns the import root.
  */
-function createNotes(importRootNote: BNote, notes: VaultNote[], rootTitle: string, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map<string, Uint8Array>, rootTitle: string, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = !!(importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable());
 
     const rootNote = noteService.createNewNote({ parentNoteId: importRootNote.noteId, title: rootTitle, content: "", type: "text", mime: "text/html", isProtected }).note;
     rootNote.addLabel("iconClass", "bx bx-import");
 
+    const attachmentIndex = buildAttachmentIndex(attachments);
+    const shrinkImages = !!taskContext.data?.shrinkImages;
     // Folder path (POSIX) -> its container note. The empty path maps to the import root.
     const folderNotes = new Map<string, BNote>();
 
-    for (const note of notes) {
-        const parent = ensureFolder(parentFolder(note.path), rootNote, folderNotes, isProtected);
-        const content = markdownService.renderToHtml(note.markdown, note.title);
-        noteService.createNewNote({ parentNoteId: parent.noteId, title: note.title, content, type: "text", mime: "text/html", isProtected });
+    for (const vaultNote of notes) {
+        const parent = ensureFolder(parentFolder(vaultNote.path), rootNote, folderNotes, isProtected);
+        const html = markdownService.renderToHtml(vaultNote.markdown, vaultNote.title);
+        const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: html, type: "text", mime: "text/html", isProtected });
+
+        // Attachments hang off the note, so this runs after creation; it returns the content with embedded
+        // images/files rewritten to point at the saved attachments.
+        const finalHtml = applyAttachments(note, html, attachmentIndex, shrinkImages);
+        if (finalHtml !== html) {
+            note.setContent(finalHtml);
+        }
         taskContext.increaseProgressCount();
     }
 
@@ -191,6 +214,11 @@ function isIgnored(path: string): boolean {
 
 function isMarkdown(path: string): boolean {
     return path.toLowerCase().endsWith(".md");
+}
+
+/** `.canvas` (whiteboards) and `.base` (Bases) get dedicated handling later, so they're not attachments. */
+function isSpecial(path: string): boolean {
+    return /\.(canvas|base)$/i.test(path);
 }
 
 /** The note title for a Markdown file: its base name without the `.md` extension. */

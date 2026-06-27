@@ -111,4 +111,55 @@ describe("Obsidian importer — integration", () => {
         expect(importRoot.title).toBe("Wrapper");
         expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["A", "B"]);
     });
+
+    it("imports image embeds as image attachments and non-image embeds as file reference links", async () => {
+        const importRoot = await importObsidian({
+            "Attachment test.md": "![[shot.png]]\n\n![[doc.rtf]]",
+            "shot.png": Buffer.from("\x89PNG\r\n\x1a\nfake-png"),
+            "doc.rtf": Buffer.from("{\\rtf1 hello}"),
+            ".obsidian/app.json": "{}"
+        }, "Vault.zip");
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Attachment test");
+        if (!note) {
+            throw new Error("note was not imported");
+        }
+        const content = decodeUtf8(note.getContent());
+
+        // The image embed becomes a role:image attachment, its <img> src rewritten to point at it.
+        const images = note.getAttachmentsByRole("image");
+        expect(images.map((a) => a.title)).toEqual(["shot.png"]);
+        expect(content).toContain(`<img src="api/attachments/${images[0]?.attachmentId}/image/`);
+        expect(content).not.toContain(`src="/shot.png"`);
+
+        // The non-image embed becomes a role:file attachment with a reference link.
+        const files = note.getAttachmentsByRole("file");
+        expect(files.map((a) => a.title)).toEqual(["doc.rtf"]);
+        expect(content).toContain(`class="reference-link"`);
+        expect(content).toContain(`attachmentId=${files[0]?.attachmentId}`);
+        expect(content).not.toContain("/doc.rtf");
+    });
+
+    it("resolves an embed by name even when the attachment lives in a different folder", async () => {
+        const importRoot = await importObsidian({
+            "Notes/Page.md": "![[pic.png]]",
+            "Assets/pic.png": Buffer.from("\x89PNG\r\n\x1a\nfake")
+        });
+
+        const page = importRoot.getChildNotes().find((n) => n.title === "Notes")?.getChildNotes()[0];
+        expect(page?.getAttachmentsByRole("image").map((a) => a.title)).toEqual(["pic.png"]);
+    });
+
+    it("leaves note embeds and non-imported targets untouched (handled by later passes)", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "![[Other note]]\n\n![[Untitled.base]]",
+            "Other note.md": "I am a note.",
+            "Untitled.base": "filters: {}"
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        // Neither a note embed nor a .base resolves to an attachment, so nothing is saved in this pass.
+        expect(note?.getAttachmentsByRole("image")).toHaveLength(0);
+        expect(note?.getAttachmentsByRole("file")).toHaveLength(0);
+    });
 });
