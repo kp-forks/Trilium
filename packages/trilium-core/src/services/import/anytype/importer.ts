@@ -90,7 +90,22 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap, optionMap));
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, targets, fileObjectMap, files, rootTitle, rootColumns, collectionExport, taskContext);
+    // For the collection-scoped recovery in createNotes: a bundled file referenced by an object we don't
+    // import (a set, or a system object like the workspace/participant) is not a dropped-in collection member,
+    // so harvest those objects' file references too — the recovery must exclude them, not surface them as
+    // stray members. Only needed when the recovery actually runs (a collection-scoped export).
+    const excludedFileRefs = collectionExport
+        ? new Set(
+              objects
+                  .filter((snapshot) => !isPage(snapshot) && !isCollectionObject(snapshot))
+                  .flatMap((snapshot) => {
+                      const parsed = parseObject(snapshot, resolveLink, relationMap, optionMap);
+                      return [...parsed.fileRefs, ...parsed.inlineFileIds];
+                  })
+          )
+        : undefined;
+
+    return createNotes(importRootNote, pages, targets, fileObjectMap, files, rootTitle, rootColumns, collectionExport, excludedFileRefs, taskContext);
 }
 
 /**
@@ -297,7 +312,7 @@ export function anytypeDate(seconds: number | undefined): string | undefined {
  * is treated as such a member). Once every page exists, each page's outgoing links are recorded as
  * `internalLink` relations, which Trilium uses for backlink detection ("what links here").
  */
-function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, rootTitle: string | undefined, rootColumns: ParsedColumn[] | undefined, collectionExport: boolean, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, rootTitle: string | undefined, rootColumns: ParsedColumn[] | undefined, collectionExport: boolean, excludedFileRefs: Set<string> | undefined, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
     const shrinkImages = !!taskContext.data?.shrinkImages;
@@ -368,7 +383,7 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
     // member pages don't already reference (inline, or as a file property) is a member of the synthesized root
     // collection — create a `file`/`image` note for it under the root.
     if (collectionExport) {
-        const referenced = new Set<string>();
+        const referenced = new Set<string>(excludedFileRefs);
         for (const page of pages) {
             for (const id of [...page.fileRefs, ...page.inlineFileIds]) {
                 referenced.add(id);
@@ -458,8 +473,15 @@ function applyInlineFiles(note: BNote, fileObjects: Map<string, FileObjectInfo>,
         const bytes = targetId ? inlineFileBytes(targetId, fileObjects, files) : undefined;
         if (!targetId || !bytes) {
             // Unresolved image (still uploading, or bytes absent) — drop the broken figure rather than
-            // leaving an `<img>` pointing at a bare file id.
-            (img.parentNode ?? img).remove();
+            // leaving an `<img>` pointing at a bare file id. Only the enclosing `<figure>` is safe to
+            // remove; an inline `<img>` (e.g. inside a paragraph or table cell) must drop just itself so
+            // surrounding text survives.
+            const parent = img.parentNode;
+            if (parent?.tagName?.toLowerCase() === "figure") {
+                parent.remove();
+            } else {
+                img.remove();
+            }
             changed = true;
             continue;
         }

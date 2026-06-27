@@ -1001,6 +1001,38 @@ describe("Anytype importer — integration", () => {
         expect(children[0].getAttachmentsByRole("image")).toHaveLength(1);
     });
 
+    it("does not surface a file referenced only by an unimported object (a set) as a collection member", async () => {
+        // In a collection-scoped export the recovery treats page-unreferenced bundled files as members. A file
+        // referenced only by an object we don't import — here a set (layout 3) carrying it as a file property —
+        // is not a dropped-in member and must not surface as a stray file note.
+        const ctx = "bafyreicollectioncontext";
+        const fileKey = "6a3e3323cafa6953a4661c6f";
+        const fileCid = "bafyreisetfile";
+        const set = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [{ id: "set1", childrenIds: [] }],
+                    details: { id: "set1", name: "My Set", layout: 3, [fileKey]: [fileCid] }
+                }
+            }
+        });
+        const importRoot = await importAnytype(
+            {
+                "objects/m1.pb.json": memberObject("m1", { createdInContext: ctx }),
+                "objects/set1.pb.json": set,
+                "relations/file.pb.json": relationObject(fileKey, "File", 5),
+                "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "csv", "text/plain", "files\\log.csv"),
+                "files/log.csv": "hello,world\n1,2\n"
+            },
+            "Ordered collection.zip"
+        );
+
+        // Only the page member — the set's file is not a collection member, so it isn't recovered.
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Untitled"]);
+        expect(importRoot.getChildNotes().some((n) => n.type === "file")).toBe(false);
+    });
+
     it("keeps the default 'Anytype import' text root for a regular multi-page export", async () => {
         const importRoot = await importAnytype(
             {
