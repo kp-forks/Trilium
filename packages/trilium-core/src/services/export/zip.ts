@@ -449,16 +449,6 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         res.setHeader("Content-Type", "application/zip");
     }
 
-    // Commit the response headers up front. On the desktop build, `res` is a
-    // node-mocks-http mock behind the trilium-app:// protocol dispatcher, which
-    // buffers the entire body (and copies it again) unless flushHeaders() is
-    // called to switch it to a streaming ReadableStream response. On the plain
-    // HTTP server this is a harmless early header flush. Either way it must
-    // happen before any body bytes are written below.
-    if (setHeaders && typeof res.flushHeaders === "function") {
-        res.flushHeaders();
-    }
-
     // Start streaming to the destination *before* appending content. The archiver
     // drains each appended blob as it is added, so memory stays bounded instead of
     // buffering the whole export. Trade-off: a failure while reading content mid-
