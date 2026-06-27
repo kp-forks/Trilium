@@ -69,6 +69,7 @@ function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPan
 
 const provider: ImportProvider = {
     id: "notion",
+    helpPage: "Y5mKeJ6dsCld",
     name: t("notion_import.name"),
     iconUrl,
     description: t("notion_import.description"),

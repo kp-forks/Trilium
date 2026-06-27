@@ -69,6 +69,7 @@ function AnytypePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
 
 const provider: ImportProvider = {
     id: "anytype",
+    helpPage: "83zmPBJRgfnW",
     name: t("anytype_import.name"),
     iconUrl,
     description: t("anytype_import.description"),

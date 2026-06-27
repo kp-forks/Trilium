@@ -113,6 +113,7 @@ function boolToString(value: boolean) {
 
 const provider: ImportProvider = {
     id: "files",
+    helpPage: "mHbBMPDPkVV5",
     group: "local",
     name: t("import.cardName"),
     icon: "bx bx-import",
