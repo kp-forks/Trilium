@@ -480,6 +480,7 @@ function applyInlineFiles(note: BNote, fileObjects: Map<string, FileObjectInfo>,
             if (parent?.tagName?.toLowerCase() === "figure") {
                 parent.remove();
             } else {
+                /* v8 ignore next -- content.ts always wraps an inline image in a <figure>, so a bare (non-figure) <img> never reaches here; kept as a defensive fallback */
                 img.remove();
             }
             changed = true;

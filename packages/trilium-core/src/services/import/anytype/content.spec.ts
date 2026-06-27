@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { renderCodeBlock, renderInlineText, renderLatexBlock, renderTable } from "./content.js";
+import { extractContent, renderCodeBlock, renderInlineText, renderLatexBlock, renderTable } from "./content.js";
 import { parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, LinkResolver } from "./model.js";
 
@@ -251,6 +251,17 @@ describe("inline files", () => {
     });
 });
 
+describe("extractContent", () => {
+    it("returns empty output when the block tree has no resolvable root", () => {
+        expect(extractContent([], "missing", () => undefined)).toEqual({ html: "", linkTargetIds: [], fileTargetIds: [] });
+    });
+
+    it("ignores an inline mark of an unrenderable type, leaving the text plain", () => {
+        // Not a structural mark, a known colour, or a Mention — so it contributes no formatting.
+        expect(renderInlineText("x", [mark(0, 1, "Emoji")])).toBe("x");
+    });
+});
+
 describe("renderInlineText", () => {
     it("returns escaped plain text when there are no marks", () => {
         expect(renderInlineText("a < b & c > d", [])).toBe("a &lt; b &amp; c &gt; d");
@@ -473,5 +484,16 @@ describe("tables", () => {
             ["rows", { id: "rows", childrenIds: [] }]
         ]);
         expect(renderTable(byId.get("tbl") ?? { id: "x" }, byId)).toBe("");
+    });
+
+    it("skips a row whose block is missing from the export", () => {
+        // The rows layout references "r-missing", for which no block exists — that row is dropped.
+        const byId = new Map<string, AnytypeBlock>([
+            ["tbl", { id: "tbl", table: {}, childrenIds: ["cols", "rows"] }],
+            ["cols", { id: "cols", childrenIds: ["c1"] }],
+            ["c1", { id: "c1", childrenIds: [] }],
+            ["rows", { id: "rows", childrenIds: ["r-missing"] }]
+        ]);
+        expect(renderTable(byId.get("tbl") ?? { id: "x" }, byId)).toBe('<figure class="table"><table></table></figure>');
     });
 });

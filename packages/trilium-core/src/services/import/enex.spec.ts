@@ -9,6 +9,7 @@ import { getContext } from "../context.js";
 import sql_init from "../sql_init.js";
 import TaskContext from "../task_context.js";
 import { decodeUtf8 } from "../utils/binary.js";
+import imageService from "../image.js";
 import enex from "./enex.js";
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -214,6 +215,45 @@ describe("importEnex", () => {
         expect(content).not.toContain("evernote://");
         // The backlink relation is created too.
         expect(linker.getRelations("internalLink").some(r => r.value === padded.noteId)).toBe(true);
+    });
+
+    it("imports note metadata (source-url, tags) as labels and appends an unreferenced image resource", async () => {
+        const { importedNote } = await testImport("Note metadata.enex");
+
+        const note = importedNote.getChildNotes().find(n => n.title === "Metadata Note");
+        if (!note) {
+            throw new Error("'Metadata Note' note was not imported");
+        }
+
+        // A note-attributes source-url becomes a "pageUrl" label; each tag becomes an empty label.
+        expect(note.getLabelValue("pageUrl")).toBe("https://triliumnotes.org/page");
+        expect(note.getOwnedAttributes("label").map(a => a.name)).toEqual(expect.arrayContaining(["pageUrl", "important", "archive"]));
+
+        // The image resource isn't referenced by an <en-media> in the body, so it's appended as an attachment
+        // rather than dropped; the empty (data-less) resource is skipped without failing the import.
+        const content = decodeUtf8(note.getContent());
+        expect(content).toContain("<img");
+        // The data-less "empty.bin" resource contributes no attachment.
+        expect(note.getAttachmentsByRole("file").some(a => a.title === "empty.bin")).toBe(false);
+    });
+
+    it("falls back to a file attachment when saving an image resource throws", async () => {
+        // If image processing fails (e.g. a corrupt image), the resource is preserved as a plain file
+        // attachment rather than being lost.
+        const saveImage = vi.spyOn(imageService, "saveImageToAttachment").mockImplementation(() => {
+            throw new Error("simulated image processing failure");
+        });
+        try {
+            const { importedNote } = await testImport("Note metadata.enex");
+            const note = importedNote.getChildNotes().find(n => n.title === "Metadata Note");
+            if (!note) {
+                throw new Error("'Metadata Note' note was not imported");
+            }
+            // The image couldn't be saved as an image, so it lands as a role:"file" attachment instead.
+            expect(note.getAttachmentsByRole("file").map(a => a.title)).toContain("orphan.png");
+        } finally {
+            saveImage.mockRestore();
+        }
     });
 
     it("converts legacy <en-todo> checkboxes into a real todo-list, not literal ballot boxes", async () => {

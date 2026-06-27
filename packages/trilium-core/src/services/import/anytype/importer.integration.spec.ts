@@ -789,6 +789,21 @@ describe("Anytype importer — integration", () => {
         expect(fileNote.getOwnedLabelValue("originalFileName")).toBe("report.pdf");
     });
 
+    it("skips a collection's file member whose bytes are missing from the export", async () => {
+        // The collection lists a FileObject as a member and its metadata ships, but the raw bytes under files/
+        // are absent — so no note can be created for it and it's left out rather than failing the import.
+        const fileCid = "bafyreimissingbytes";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Docs", [fileCid], []),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "report", "pdf", "application/pdf", "files\\report.pdf")
+            // No files/report.pdf entry — the bytes are missing.
+        });
+
+        const collection = importRoot.getChildNotes()[0];
+        expect(collection.title).toBe("Docs");
+        expect(collection.getChildNotes()).toHaveLength(0);
+    });
+
     it("imports an image object that's a collection member as an image note", async () => {
         const imgCid = "bafyreiimagemember";
         const importRoot = await importAnytype({
@@ -915,6 +930,49 @@ describe("Anytype importer — integration", () => {
         const content = decodeUtf8(note?.getContent() ?? "");
         // The broken figure is dropped; the rest of the body survives.
         expect(content).toBe("<p>Body</p>");
+    });
+
+    it("strips the bare-id link of an inline non-image file whose bytes are missing, keeping its text", async () => {
+        // The anytype-file placeholder can't be resolved (no metadata/bytes), so its class and bare-id href are
+        // dropped, leaving the file name as plain (non-linking) text rather than a broken attachment link.
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "pg", childrenIds: ["header", "file"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "file", file: { type: "PDF", name: "gone.pdf", targetObjectId: "bafyreimissingfile", state: "Done", style: "Link" } }
+                    ],
+                    details: { id: "pg", name: "Missing file", resolvedLayout: 0 }
+                }
+            }
+        });
+        const importRoot = await importAnytype({ "objects/pg.pb.json": page });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Missing file");
+        expect(note?.getAttachmentsByRole("file")).toHaveLength(0);
+        const content = decodeUtf8(note?.getContent() ?? "");
+        expect(content).toBe("<p><a>gone.pdf</a></p>");
+    });
+
+    it("skips a file property whose file object's bytes are missing, leaving no attachment or link", async () => {
+        // The file property references a FileObject, but its bytes are absent — so no attachment is created and
+        // the body keeps no reference link to it.
+        const fileKey = "6a3e3323cafa6953a4661c6f";
+        const fileCid = "bafyreimissingprop";
+        const importRoot = await importAnytype({
+            "objects/coll.pb.json": collectionObject("coll", "Files", ["m1"], [fileKey]),
+            "objects/m1.pb.json": memberObject("m1", { [fileKey]: [fileCid] }),
+            "relations/file.pb.json": relationObject(fileKey, "File", 5),
+            "filesObjects/f1.pb.json": fileObjectJson(fileCid, "log", "csv", "text/csv", "files\\log.csv")
+            // No files/log.csv entry — the bytes are missing.
+        });
+
+        const row = importRoot.getChildNotes()[0].getChildNotes()[0];
+        expect(row.getAttachmentsByRole("file")).toHaveLength(0);
+        expect(decodeUtf8(row.getContent() ?? "")).not.toContain("reference-link");
     });
 
     it("imports a collection-scoped export (no wrapper) as a named table whose columns are synthesized from members", async () => {

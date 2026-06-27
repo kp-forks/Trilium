@@ -238,6 +238,44 @@ describe("convertEnexContent — composition and inertness", () => {
     });
 });
 
+describe("convertEnexContent — edge cases", () => {
+    it("injects a custom callout emoji as leading text when the body has no block child to merge into", () => {
+        // A callout whose first child isn't a <div>/<p> (here bare text) takes the leading-text branch.
+        const input = `<div style="--en-callout:true; --en-emoji:🤖;">Plain text</div>`;
+        expect(convertEnexContent(input)).toBe(`<aside class="admonition note">🤖 Plain text</aside>`);
+    });
+
+    it("keeps a toggle's bare-text content (a non-element child) as the collapsible body", () => {
+        const input = `<div style="--en-toggle:true; --en-isCollapsed:true;"><div style="--en-toggleSummary:true;">S</div><div style="--en-toggleContent:true;">Bare text</div></div>`;
+        expect(convertEnexContent(input)).toBe(`<details class="trilium-collapsible"><summary>S</summary>Bare text</details>`);
+    });
+
+    it("ignores stray text nodes between checkbox items when building the todo-list", () => {
+        const input = `<ul style="--en-todo:true;"><li style="--en-checked:false;"><div>A</div></li> <li style="--en-checked:false;"><div>B</div></li></ul>`;
+        expect(convertEnexContent(input)).toBe(todoList(todoItem("A"), todoItem("B")));
+    });
+
+    it("nests a leading sub-list under an empty item when no checkbox item precedes it", () => {
+        const input = `<ul style="--en-todo:true;"><ul style="--en-todo:true;"><li style="--en-checked:false;"><div>Sub</div></li></ul></ul>`;
+        expect(convertEnexContent(input)).toBe(todoList(todoItem("", { nested: todoList(todoItem("Sub")) })));
+    });
+
+    it("uses the raw item content as the description when a checkbox item has no single <div> wrapper", () => {
+        const input = `<ul style="--en-todo:true;"><li style="--en-checked:true;">Direct text</li></ul>`;
+        expect(convertEnexContent(input)).toBe(todoList(todoItem("Direct text", { checked: true })));
+    });
+
+    it("reads a code block's text directly when its lines aren't wrapped in <div>s", () => {
+        const input = `<div style="--en-codeblock:true; --en-syntaxLanguage:c;">inline code</div>`;
+        expect(convertEnexContent(input)).toBe(`<pre><code class="language-text-x-csrc">inline code</code></pre>`);
+    });
+
+    it("maps a code block whose syntax language is 'mermaid' to a language-mermaid block", () => {
+        const input = `<div style="--en-codeblock:true; --en-syntaxLanguage:mermaid;"><div>graph TD</div></div>`;
+        expect(convertEnexContent(input)).toBe(`<pre><code class="language-mermaid">graph TD</code></pre>`);
+    });
+});
+
 describe("rewriteEvernoteLinks — internal note references", () => {
     // Evernote renders an inline-richlink with the target note's title as its text, so the target is
     // resolved by that text. The map mirrors a title -> imported noteId lookup built during import.
