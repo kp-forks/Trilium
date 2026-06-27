@@ -15,6 +15,12 @@ class BrowserZipArchive implements ZipArchive {
         this.#entries[options.name] = typeof content === "string" ? strToU8(content) : content;
     }
 
+    waitForCapacity(): Promise<void> {
+        // zipSync builds the whole archive in memory anyway, so there's nothing
+        // to pace against — resolve immediately.
+        return Promise.resolve();
+    }
+
     pipe(destination: unknown) {
         this.#destination = destination as ZipOutput;
     }

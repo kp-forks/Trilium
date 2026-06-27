@@ -16,6 +16,14 @@ export interface ZipArchive {
     append(content: string | Uint8Array, options: ZipArchiveEntryOptions): void;
     pipe(destination: unknown): void;
     finalize(): Promise<void>;
+    /**
+     * Resolves once the volume of appended-but-not-yet-written data has dropped
+     * below the provider's high-water mark. Lets the export loop apply
+     * backpressure on the *input* side, so a multi-GB archive isn't fully read
+     * into memory before draining begins. Optional: providers that buffer the
+     * whole archive anyway (the WASM/browser provider) can omit it.
+     */
+    waitForCapacity?(): Promise<void>;
 }
 
 export interface FileStream {

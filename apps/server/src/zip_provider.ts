@@ -6,10 +6,31 @@ import * as yauzl from "yauzl";
 
 class NodejsZipArchive implements ZipArchive {
     readonly #archive: ArchiverZip;
+    // Byte sizes of appended entries not yet written out, in FIFO order.
+    // archiver processes its queue strictly in order at concurrency 1 and emits
+    // exactly one "entry" event per append, so this stays aligned with it.
+    readonly #pendingSizes: number[] = [];
+    #queuedBytes = 0;
+    #capacityWaiter: (() => void) | null = null;
+
+    // Cap how much appended-but-unwritten data archiver holds in its internal
+    // queue. The export walk appends the whole note tree synchronously; without
+    // this the entire archive (multi-GB) is read into memory before draining.
+    static readonly #HIGH_WATER_MARK = 64 * 1024 * 1024; // 64 MiB
 
     constructor() {
         this.#archive = new ArchiverZip({
             zlib: { level: 9 }
+        });
+
+        // Fires as each queued entry finishes being written to the output.
+        this.#archive.on("entry", () => {
+            this.#queuedBytes -= this.#pendingSizes.shift() ?? 0;
+            if (this.#capacityWaiter && this.#queuedBytes < NodejsZipArchive.#HIGH_WATER_MARK) {
+                const resolve = this.#capacityWaiter;
+                this.#capacityWaiter = null;
+                resolve();
+            }
         });
     }
 
@@ -19,7 +40,18 @@ class NodejsZipArchive implements ZipArchive {
         // byteOffset/byteLength keep the view scoped to this slice, never the
         // surrounding backing buffer. archiver only reads, so sharing is safe.
         const payload = typeof content === "string" ? content : Buffer.from(content.buffer, content.byteOffset, content.byteLength);
+        const size = typeof content === "string" ? Buffer.byteLength(content) : content.byteLength;
+        this.#pendingSizes.push(size);
+        this.#queuedBytes += size;
         this.#archive.append(payload, options);
+    }
+
+    waitForCapacity(): Promise<void> {
+        if (this.#queuedBytes < NodejsZipArchive.#HIGH_WATER_MARK) {
+            return Promise.resolve();
+        }
+        // At most one waiter: the export loop awaits this before the next append.
+        return new Promise((resolve) => { this.#capacityWaiter = resolve; });
     }
 
     pipe(destination: unknown) {

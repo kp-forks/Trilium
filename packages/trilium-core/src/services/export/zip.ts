@@ -313,7 +313,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         return content;
     }
 
-    function saveNote(noteMeta: NoteMeta, filePathPrefix: string) {
+    async function saveNote(noteMeta: NoteMeta, filePathPrefix: string) {
         log.info(`Exporting note '${noteMeta.noteId}'`);
 
         if (!noteMeta.noteId || noteMeta.title === undefined) {
@@ -349,6 +349,10 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
                 name: filePathPrefix + noteMeta.dataFileName,
                 date: dateUtils.parseDateTime(note.utcDateModified)
             });
+
+            // Pace the synchronous tree walk against the archive's drain so the
+            // whole export isn't buffered into archiver's queue at once.
+            await archive.waitForCapacity?.();
         }
 
         taskContext.increaseProgressCount();
@@ -368,6 +372,8 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
                 name: filePathPrefix + attachmentMeta.dataFileName,
                 date: dateUtils.parseDateTime(note.utcDateModified)
             });
+
+            await archive.waitForCapacity?.();
         }
 
         if (noteMeta.children?.length || 0 > 0) {
@@ -379,7 +385,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
             }
 
             for (const childMeta of noteMeta.children || []) {
-                saveNote(childMeta, `${directoryPath}/`);
+                await saveNote(childMeta, `${directoryPath}/`);
             }
         }
     }
@@ -462,7 +468,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
     archive.append(metaFileJson, { name: "!!!meta.json" });
 
-    saveNote(rootMeta, "");
+    await saveNote(rootMeta, "");
 
     provider.afterDone(rootMeta);
 
