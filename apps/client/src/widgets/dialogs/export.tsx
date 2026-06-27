@@ -184,8 +184,8 @@ ws.subscribeToMessages(async (message) => {
 
 /**
  * Builds the persistent "export in progress" toast. The metadata-collection phase doesn't know the total
- * up front, so it shows a bare running count; once the content-writing phase sets a total, the message
- * switches to "Exporting X of N" with a progress bar.
+ * up front, so it shows an indeterminate "Preparing for export…" message; once the content-writing phase
+ * sets a total, the message switches to "Exporting X of N" with a progress bar.
  */
 function makeProgressToast(taskId: string, progressCount: number, totalCount?: number): ToastOptionsWithRequiredId {
     const hasTotal = typeof totalCount === "number" && totalCount > 0;
@@ -194,7 +194,7 @@ function makeProgressToast(taskId: string, progressCount: number, totalCount?: n
         icon: "bx bx-loader-circle bx-spin",
         message: hasTotal
             ? t("export.export_in_progress_with_total", { progressCount, totalCount })
-            : t("export.export_in_progress", { progressCount }),
+            : t("export.preparing_export"),
         ...(hasTotal ? { progress: progressCount / totalCount } : {})
     };
 }

@@ -149,7 +149,7 @@
     "result_single_markdown": "A single Markdown (.md) file.",
     "export": "Export",
     "choose_export_type": "Choose export type first please",
-    "export_in_progress": "Export in progress: {{progressCount}}",
+    "preparing_export": "Preparing for export…",
     "export_in_progress_with_total": "Exporting {{progressCount}} of {{totalCount}}",
     "export_finished_successfully": "Export finished successfully.",
     "format_pdf": "PDF - for printing or sharing purposes."
