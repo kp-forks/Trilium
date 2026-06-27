@@ -44,6 +44,30 @@ describe("convertEnexContent — checkboxes (--en-todo lists)", () => {
     });
 });
 
+describe("convertEnexContent — legacy checkboxes (<en-todo>)", () => {
+    it("converts a run of <en-todo> line-divs into a single todo-list (instead of literal ballot boxes)", () => {
+        const input = `<div><en-todo checked="false"/>First</div><div><en-todo checked="true"/>Second</div>`;
+        expect(convertEnexContent(input)).toBe(todoList(todoItem("First"), todoItem("Second", { checked: true })));
+    });
+
+    it("preserves inline formatting in the checkbox text", () => {
+        const input = `<div><en-todo checked="false"/>Buy <strong>milk</strong></div>`;
+        expect(convertEnexContent(input)).toBe(todoList(todoItem("Buy <strong>milk</strong>")));
+    });
+
+    it("starts a new list when a non-todo line interrupts the run", () => {
+        const input = `<div><en-todo checked="false"/>A</div><div>Heading</div><div><en-todo checked="true"/>B</div>`;
+        expect(convertEnexContent(input)).toBe(
+            `${todoList(todoItem("A"))}<div>Heading</div>${todoList(todoItem("B", { checked: true }))}`
+        );
+    });
+
+    it("falls back to a unicode ballot box for an inline <en-todo> that isn't a line's checkbox", () => {
+        const input = `<div>Mixed <en-todo checked="true"/>content</div>`;
+        expect(convertEnexContent(input)).toBe(`<div>Mixed ☑ content</div>`);
+    });
+});
+
 describe("convertEnexContent — code blocks (--en-codeblock)", () => {
     it("converts a code block, mapping the syntax language to a CKEditor mime class and joining lines", () => {
         const input = `<div style="--en-codeblock:true; --en-syntaxLanguage:c; --en-lineWrapping:false;box-sizing: border-box;"><div>void main() {</div><div>    printf("Hello world.\\n");</div><div>}</div></div>`;

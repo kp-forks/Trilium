@@ -179,4 +179,25 @@ describe("importEnex", () => {
         const dupIds = importedNote.getChildNotes().filter(n => n.title === "Dup").map(n => n.noteId);
         expect(linker.getRelations("internalLink").some(r => dupIds.includes(r.value))).toBe(false);
     });
+
+    it("converts legacy <en-todo> checkboxes into a real todo-list, not literal ballot boxes", async () => {
+        const { importedNote } = await testImport("Legacy checkboxes.enex");
+
+        const note = importedNote.getChildNotes().find(n => n.title === "Ideas");
+        if (!note) {
+            throw new Error("'Ideas' note was not imported");
+        }
+        const content = decodeUtf8(note.getContent());
+
+        // Rendered as an actual CKEditor todo-list, not the old literal ☐/☑ characters.
+        expect(content).toContain(`<ul class="todo-list">`);
+        expect(content).not.toContain("☐");
+        expect(content).not.toContain("☑");
+
+        expect(content).toContain(`<span class="todo-list__label__description">Write tests</span>`);
+        expect(content).toContain(`<span class="todo-list__label__description">Ship <i>it</i></span>`);
+        expect(content).toContain(`<span class="todo-list__label__description">Investigate bug</span>`);
+        // The checked item ("Investigate bug") carries the checked state.
+        expect(content).toContain(`checked="checked"`);
+    });
 }, 60_000);

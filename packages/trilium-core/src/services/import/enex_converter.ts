@@ -31,6 +31,7 @@ export function convertEnexContent(html: string, tasks: EnexTask[] = []): string
     convertCallouts(root);
     convertToggles(root);
     convertTodoLists(root);
+    convertEnTodoLists(root);
     convertCodeBlocks(root);
     convertFormulaBlocks(root);
     convertMermaidBlocks(root);
@@ -221,6 +222,86 @@ function itemDescription(li: HTMLElement): string {
 
 function isEnTodoUl(node: HTMLElement["childNodes"][number] | null): node is HTMLElement {
     return node instanceof HTMLElement && isTag(node, "ul") && hasEnFlag(node, "--en-todo");
+}
+// #endregion
+
+// #region Legacy checkboxes (<en-todo>)
+/**
+ * Older Evernote notes don't use the `--en-todo` list markup; each checkbox is an inline `<en-todo
+ * checked="…"/>` element at the start of its own `<div>` line (`<div><en-todo checked="false"/>Task</div>`).
+ * Rewrite each maximal run of adjacent such lines into one CKEditor `<ul class="todo-list">` so they import
+ * as real to-do items rather than the literal ☐/☑ characters they used to become. A line that doesn't start
+ * with a checkbox breaks the run; any leftover `<en-todo>` (e.g. mid-line) falls back to a unicode ballot box
+ * so the information isn't lost.
+ */
+function convertEnTodoLists(root: HTMLElement) {
+    convertEnTodoRuns(root);
+
+    for (const enTodo of root.querySelectorAll("en-todo")) {
+        enTodo.insertAdjacentHTML("beforebegin", enTodo.getAttribute("checked") === "true" ? "☑ " : "☐ ");
+        enTodo.remove();
+    }
+}
+
+/** Rewrites each run of adjacent `<en-todo>` line-divs within `container` into one todo-list, then recurses. */
+function convertEnTodoRuns(container: HTMLElement) {
+    for (const run of collectEnTodoRuns(container)) {
+        const items = run.map((div) => buildEnTodoItem(div));
+        run[0].insertAdjacentHTML("beforebegin", renderTodoList(items));
+        for (const div of run) {
+            div.remove();
+        }
+    }
+
+    for (const child of container.childNodes) {
+        if (child instanceof HTMLElement) {
+            convertEnTodoRuns(child);
+        }
+    }
+}
+
+/** Groups a container's direct children into maximal runs of adjacent `<en-todo>` line-divs (ignoring whitespace). */
+function collectEnTodoRuns(container: HTMLElement): HTMLElement[][] {
+    const runs: HTMLElement[][] = [];
+    let current: HTMLElement[] | null = null;
+
+    for (const node of container.childNodes) {
+        if (node instanceof HTMLElement && isEnTodoDiv(node)) {
+            if (!current) {
+                current = [];
+                runs.push(current);
+            }
+            current.push(node);
+        } else if (node instanceof HTMLElement || node.toString().trim() !== "") {
+            // Any other element, or non-whitespace text, breaks the run; whitespace between lines does not.
+            current = null;
+        }
+    }
+
+    return runs;
+}
+
+/** A `<div>` whose first meaningful child is an `<en-todo>` checkbox — Evernote's legacy to-do line. */
+function isEnTodoDiv(node: HTMLElement): boolean {
+    if (!isTag(node, "div")) {
+        return false;
+    }
+    for (const child of node.childNodes) {
+        if (child instanceof HTMLElement) {
+            return isTag(child, "en-todo");
+        }
+        if (child.toString().trim() !== "") {
+            return false;
+        }
+    }
+    return false;
+}
+
+function buildEnTodoItem(div: HTMLElement): string {
+    const checkbox = div.childNodes.find((node): node is HTMLElement => node instanceof HTMLElement && isTag(node, "en-todo"));
+    const checked = checkbox?.getAttribute("checked") === "true";
+    const description = div.childNodes.filter((node) => node !== checkbox).map((node) => node.toString()).join("").trim();
+    return renderTodoItem(checked, description);
 }
 // #endregion
 

@@ -89,11 +89,6 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
 
         content = content.trim();
 
-        // Replace en-todo with unicode ballot box (old Evernote checkbox format). Done as a string replace
-        // before any HTML parsing so node-html-parser never has to deal with the self-closing <en-todo>.
-        content = content.replace(/<en-todo\s+checked="true"\s*\/>/g, "\u2611 ");
-        content = content.replace(/<en-todo(\s+checked="false")?\s*\/>/g, "\u2610 ");
-
         // Replace OneNote converted checkboxes with unicode ballot box based
         // on known hash of checkboxes for regular, p1, and p2 checkboxes
         content = content.replace(
