@@ -173,7 +173,9 @@
     "year_previous": "前の年",
     "year_next": "次の年",
     "list": "リスト",
-    "today": "今日"
+    "today": "今日",
+    "pin_date": "現在の日付を固定し、カレンダーが「今日」ではなく常にこの日付で開くようにする",
+    "unpin_date": "日付の固定を解除し、カレンダーが再び「今日」の日付で開くようにする"
   },
   "note_icon": {
     "change_note_icon": "ノートアイコンの変更",
@@ -303,13 +305,30 @@
   "export": {
     "export_note_title": "ノートをエクスポート",
     "close": "閉じる",
-    "export_type_subtree": "このノートとすべての子孫",
-    "export_type_single": "このノートのみで、子孫ノートは含まない",
+    "export_type_subtree": "このノートとすべての子ノート",
+    "export_type_single": "このノートのみ",
     "export": "エクスポート",
     "choose_export_type": "最初にエクスポートタイプを選択してください",
     "export_in_progress": "エクスポート処理中: {{progressCount}}",
     "export_finished_successfully": "エクスポートが正常に完了しました。",
-    "format_pdf": "PDF - 印刷または共有目的に。"
+    "format_pdf": "PDF - 印刷または共有目的に。",
+    "what_to_export": "エクスポート対象",
+    "format": "フォーマット",
+    "format_html_name": "HTML",
+    "format_html_description": "すべての書式を保持",
+    "format_markdown_name": "マークダウン",
+    "format_markdown_description": "ほとんどの書式を保持",
+    "format_opml_name": "OPML",
+    "format_opml_description": "HTML コンテンツを含むアウトライン形式",
+    "format_share_name": "Web 用 HTML",
+    "format_share_description": "共有ノートテーマを使用した公開可能な静的サイト",
+    "recommended": "推奨",
+    "result_subtree_html": "テキストノートを HTML 形式で保存した ZIP アーカイブ。コード、画像、その他のファイルは元の形式が保持されます。",
+    "result_subtree_markdown": "テキストノートをマークダウン形式で保存した ZIP アーカイブ。コード、画像、その他のファイルは元の形式が保持されます。",
+    "result_share": "共有ノートテーマを使用した、公開可能な静的ウェブサイトを含む ZIP アーカイブ。",
+    "result_opml": "単一の OPML アウトラインファイル。ノートのタイトルとテキストは含まれますが、画像、コードファイル、添付ファイルは含まれません。",
+    "result_single_html": "単一の HTML ファイル。画像や添付ファイルが埋め込まれます。",
+    "result_single_markdown": "単一のマークダウン (.md) ファイル。"
   },
   "help": {
     "title": "チートシート",
@@ -371,10 +390,10 @@
     "importIntoNote": "ノートにインポート",
     "chooseImportFile": "インポートするファイルを選択",
     "options": "オプション",
-    "safeImportTooltip": "Triliumの <code>.zip</code> 形式のエクスポートファイルには、有害な動作を含む実行可能スクリプトが含まれている可能性があります。セーフインポートは、インポートされたすべてのスクリプトの自動実行を無効にします。インポートするファイルの内容を完全に信頼できる場合のみ、「セーフインポート」のチェックを外してください。",
+    "safeImportTooltip": "Triliumの <code>.zip</code> エクスポートには、実行可能スクリプトが含まれている可能性があります。セーフインポートではこれらが無効化されます。アーカイブ内のスクリプトの実行が含まれており、かつその内容を信頼できる場合にのみ、このチェックを外してください。",
     "safeImport": "セーフインポート",
-    "explodeArchivesTooltip": "これがチェックされている場合、Triliumは<code>.zip</code>、<code>.enex</code>、<code>.opml</code>ファイルを読み込み、それらのアーカイブからノートを作成します。チェックされていない場合、Triliumはアーカイブ自体をノートに添付します。",
-    "shrinkImagesTooltip": "<p>これをチェックすると、Triliumはインポートされた画像を、拡大縮小や最適化によって縮小しようとします。これにより、画像の品質が損なわれる可能性があります。チェックを外すと、画像は変更されずにインポートされます。</p><p>これは、メタデータ付きの<code>.zip</code>インポートには適用されません。これらのファイルは既に最適化されていると考えられるためです。</p>",
+    "explodeArchivesTooltip": "<code>.zip</code>, <code>.enex</code> および <code>.opml</code> アーカイブ内のファイルからノートを作成します。この機能をオフにすると、アーカイブはそのまま添付されます。",
+    "shrinkImagesTooltip": "画像をリサイズおよび最適化して容量を節約しますが、画質がわずかに低下する可能性があります。メタデータを含む <code>.zip</code> ファイルのインポートには適用されません。これらはすでに最適化済みとみなされます。",
     "shrinkImages": "画像を縮小",
     "textImportedAsText": "メタデータから判断できない場合は、HTML、マークダウン、TXTをテキストノートとしてインポート",
     "codeImportedAsCode": "メタデータから判断できない場合は、コードファイル（例: <code>.json</code>）をコードノートとしてインポート",
@@ -393,7 +412,11 @@
     "importZipRecommendation": "ZIP ファイルをインポートすると、ノートの階層はアーカイブ内のサブディレクトリ構造を反映します。",
     "spreadsheetImportedAsSpreadsheet": "CSV ファイルや Excel ファイルを、ファイルとしてではなく編集可能なスプレッドシートとしてインポートする",
     "starting": "インポート中…",
-    "in-progress-with-total": "{{total}} 件中 {{progress}} 件をインポート中"
+    "in-progress-with-total": "{{total}} 件中 {{progress}} 件をインポート中",
+    "importIntoNoteNamed": "{{- title}} にインポート",
+    "import_from": "インポート元",
+    "cardName": "ファイルとその他のフォーマット",
+    "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, 画像など"
   },
   "password_not_set": {
     "title": "パスワードが設定されていない",
@@ -2706,8 +2729,11 @@
     "placeholders": {
       "math": "数式",
       "collapsible_summary": "概要",
-      "collapsible_details": "詳細"
-    }
+      "collapsible_details": "詳細",
+      "table_column": "{{number}} 列"
+    },
+    "page_break": "改ページを挿入（印刷用）",
+    "table": "表を挿入"
   },
   "mobile_note_navigator": {
     "back": "1つ上の階層へ移動",
@@ -2878,11 +2904,11 @@
     "title": "全幅"
   },
   "import_provider": {
-    "choose_provider": "インポート元のサービスを選択してください:"
+    "choose_provider": "インポート元のサービスを上記から選択してください。"
   },
   "onenote_import": {
     "name": "Microsoft OneNote",
-    "description": "OneNote アカウントからノートブック、セクション、ページをインポートします。",
+    "description": "アカウントに接続",
     "connect_description": "Microsoft アカウントでサインインして、OneNote ノートブックをインポートしてください。",
     "connect": "Microsoft でサインイン",
     "connecting": "サインインが完了するまでお待ちください…",
@@ -2899,23 +2925,37 @@
   },
   "notion_import": {
     "name": "Notion",
-    "description": "Notion の HTML エクスポートファイル (.zip) からページをインポートします。",
+    "description": "HTML エクスポートから",
     "description_long": "Notion でワークスペースまたはページをサブページを含む HTML 形式でエクスポートし、生成された.zipファイルをここで選択してください。",
     "choose_file": "Notion エクスポート (.zip)",
     "import": "インポート"
   },
   "keep_import": {
     "name": "Google Keep",
-    "description": "Google Keep のエクスポートファイル (.zip) からノートをインポートします。",
+    "description": "Takeout エクスポートから",
     "description_long": "Google Takeout で Keep のデータを.zip 形式でエクスポートし、生成されたファイルをここで選択してください。",
     "choose_file": "Google Keep エクスポート (.zip)",
     "import": "インポート"
   },
   "evernote_import": {
     "name": "Evernote",
-    "description": "Evernote のエクスポートファイル (.enex) からノートをインポートします。",
+    "description": ".enex ファイルから",
     "description_long": "Evernote でノートブック（または一度に最大100件のノート）を ENEX ファイルとしてエクスポートし、1 つ以上の .enex ファイルをここで選択してください。各ファイルは個別のノートブックとしてインポートされます。",
     "choose_file": "Evernote エクスポート (.enex)",
+    "import": "インポート"
+  },
+  "file_upload": {
+    "drop_or_browse_single": "ここにファイルをドラッグ＆ドロップするか、クリックして選択",
+    "drop_or_browse_multiple": "ここにファイルをドラッグ＆ドロップするか、クリックして選択",
+    "browse_single": "タップしてファイルを選択",
+    "browse_multiple": "タップしてファイルを選択",
+    "selected_other": "{{count}} 件のファイルを選択済み"
+  },
+  "anytype_import": {
+    "name": "Anytype",
+    "description": "JSON エクスポートから",
+    "description_long": "Anytypeで、\"Any-Block\" 形式かつ \"JSON\" を選択してスペースをエクスポートし、作成された .zip ファイルをここで選択してください。現時点では、ページとそのテキストのみがインポートされます。",
+    "choose_file": "Anytype エクスポート (.zip)",
     "import": "インポート"
   }
 }
