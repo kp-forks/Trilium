@@ -29,6 +29,7 @@ import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
 import markdownService from "../markdown.js";
 import { applyAttachments, buildAttachmentIndex } from "./attachments.js";
+import { buildNoteIndex, resolveLinks } from "./links.js";
 
 interface VaultNote {
     /** The note's vault-root-relative POSIX path, e.g. `Folder 1/First note.md` (the wrapper folder stripped). */
@@ -107,19 +108,33 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     const shrinkImages = !!taskContext.data?.shrinkImages;
     // Folder path (POSIX) -> its container note. The empty path maps to the import root.
     const folderNotes = new Map<string, BNote>();
+    const created: { note: BNote; path: string; rendered: string; content: string }[] = [];
 
+    // First pass: create every note (so cross-note links can resolve below) with its Markdown rendered and
+    // attachments saved. Content is persisted once, in the link pass, to avoid a second write per note.
     for (const vaultNote of notes) {
         const parent = ensureFolder(parentFolder(vaultNote.path), rootNote, folderNotes, isProtected);
-        const html = markdownService.renderToHtml(vaultNote.markdown, vaultNote.title);
-        const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: html, type: "text", mime: "text/html", isProtected });
+        const rendered = markdownService.renderToHtml(vaultNote.markdown, vaultNote.title);
+        const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: rendered, type: "text", mime: "text/html", isProtected });
 
         // Attachments hang off the note, so this runs after creation; it returns the content with embedded
         // images/files rewritten to point at the saved attachments.
-        const finalHtml = applyAttachments(note, html, attachmentIndex, shrinkImages);
-        if (finalHtml !== html) {
-            note.setContent(finalHtml);
-        }
+        const content = applyAttachments(note, rendered, attachmentIndex, shrinkImages);
+        created.push({ note, path: vaultNote.path, rendered, content });
         taskContext.increaseProgressCount();
+    }
+
+    // Second pass: now that every note's name -> id is known, resolve wikilinks to Trilium internal links and
+    // record the resulting `internalLink` relations (so backlinks / "what links here" work).
+    const noteIndex = buildNoteIndex(created);
+    for (const { note, rendered, content } of created) {
+        const { html, targets } = resolveLinks(content, noteIndex);
+        if (html !== rendered) {
+            note.setContent(html);
+        }
+        for (const target of targets) {
+            note.addRelation("internalLink", target);
+        }
     }
 
     return rootNote;

@@ -162,4 +162,61 @@ describe("Obsidian importer — integration", () => {
         expect(note?.getAttachmentsByRole("image")).toHaveLength(0);
         expect(note?.getAttachmentsByRole("file")).toHaveLength(0);
     });
+
+    it("resolves a wikilink to a reference link and records an internalLink relation (backlink)", async () => {
+        const importRoot = await importObsidian({ "A.md": "See [[B]].", "B.md": "I am B." });
+
+        const a = importRoot.getChildNotes().find((n) => n.title === "A");
+        const b = importRoot.getChildNotes().find((n) => n.title === "B");
+        if (!a || !b) {
+            throw new Error("notes were not imported");
+        }
+
+        // The link resolves to a reference link (the live-title chip) pointing at B.
+        expect(decodeUtf8(a.getContent())).toContain(`<a class="reference-link" href="#root/${b.noteId}">`);
+        // ...and drives backlinks both ways.
+        expect(a.getRelations().filter((r) => r.name === "internalLink").map((r) => r.value)).toEqual([b.noteId]);
+        expect(b.getTargetRelations().filter((r) => r.name === "internalLink").map((r) => r.noteId)).toEqual([a.noteId]);
+    });
+
+    it("uses the alias as the link text for [[Target|alias]]", async () => {
+        const importRoot = await importObsidian({ "A.md": "[[B|the bee]]", "B.md": "b" });
+
+        const a = importRoot.getChildNotes().find((n) => n.title === "A");
+        const b = importRoot.getChildNotes().find((n) => n.title === "B");
+        const content = decodeUtf8(a?.getContent() ?? "");
+        // An aliased link is a plain internal link carrying the alias text, not a live-title reference link.
+        expect(content).toContain(`<a href="#root/${b?.noteId}">the bee</a>`);
+        expect(content).not.toContain("reference-link");
+    });
+
+    it("resolves a path-qualified wikilink even when the base name is ambiguous", async () => {
+        const importRoot = await importObsidian({
+            "Linker.md": "[[Folder 1/Note]]",
+            "Folder 1/Note.md": "one",
+            "Folder 2/Note.md": "two"
+        });
+
+        const linker = importRoot.getChildNotes().find((n) => n.title === "Linker");
+        const target = importRoot.getChildNotes().find((n) => n.title === "Folder 1")?.getChildNotes()[0];
+        expect(decodeUtf8(linker?.getContent() ?? "")).toContain(`href="#root/${target?.noteId}"`);
+    });
+
+    it("unwraps unresolvable and ambiguous wikilinks to plain text, recording no relation", async () => {
+        const importRoot = await importObsidian({
+            "Missing.md": "Go to [[Nowhere]].",
+            "Ambiguous.md": "[[Dup]]",
+            "Folder 1/Dup.md": "one",
+            "Folder 2/Dup.md": "two"
+        });
+
+        const missing = importRoot.getChildNotes().find((n) => n.title === "Missing");
+        expect(decodeUtf8(missing?.getContent() ?? "")).toBe("<p>Go to Nowhere.</p>");
+        expect(missing?.getRelations().filter((r) => r.name === "internalLink")).toHaveLength(0);
+
+        // "Dup" is shared by two notes, so it's ambiguous and left unresolved rather than guessed.
+        const ambiguous = importRoot.getChildNotes().find((n) => n.title === "Ambiguous");
+        expect(decodeUtf8(ambiguous?.getContent() ?? "")).toBe("<p>Dup</p>");
+        expect(ambiguous?.getRelations().filter((r) => r.name === "internalLink")).toHaveLength(0);
+    });
 });
