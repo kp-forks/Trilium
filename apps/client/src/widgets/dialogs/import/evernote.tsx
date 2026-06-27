@@ -49,7 +49,7 @@ function EvernotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
         <Card heading={t("evernote_import.choose_file")}>
             <CardSection>
                 <p className="import-files-description">{t("evernote_import.description_long")}</p>
-                <FileDropZone multiple onChange={onChange} />
+                <FileDropZone multiple onChange={onChange} accept=".enex" />
             </CardSection>
         </Card>
     );

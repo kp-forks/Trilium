@@ -48,7 +48,7 @@ function NotionPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPan
         <Card heading={t("notion_import.choose_file")}>
             <CardSection>
                 <p className="import-files-description">{t("notion_import.description_long")}</p>
-                <FileDropZone onChange={onChange} />
+                <FileDropZone onChange={onChange} accept=".zip" />
             </CardSection>
         </Card>
     );

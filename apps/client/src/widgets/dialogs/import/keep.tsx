@@ -48,7 +48,7 @@ function KeepPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanel
         <Card heading={t("keep_import.choose_file")}>
             <CardSection>
                 <p className="import-files-description">{t("keep_import.description_long")}</p>
-                <FileDropZone onChange={onChange} />
+                <FileDropZone onChange={onChange} accept=".zip" />
             </CardSection>
         </Card>
     );
