@@ -10,6 +10,7 @@ import type TaskContext from "../task_context.js";
 import { escapeHtml, md5 } from "../utils/index.js";
 import { decodeBase64 } from "../utils/binary.js";
 import type { File } from "./common.js";
+import { convertEnexContent, type EnexTask } from "./enex_converter.js";
 import { sanitizeHtml } from "../sanitizer.js";
 
 /**
@@ -48,10 +49,12 @@ interface Note {
     blobId: string;
     content: string;
     resources: Resource[];
+    tasks: EnexTask[];
 }
 
 let note: Partial<Note> = {};
 let resource: Resource;
+let task: EnexTask;
 
 async function importEnex(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote): Promise<BNote> {
     // Imported dynamically so sax's module initialization is deferred to the first ENEX import
@@ -71,7 +74,7 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         isProtected: parentNote.isProtected && protectedSessionService.isProtectedSessionAvailable()
     }).note;
 
-    function extractContent(content: string) {
+    function extractContent(content: string, tasks: EnexTask[] = []) {
         const openingNoteIndex = content.indexOf("<en-note>");
 
         if (openingNoteIndex !== -1) {
@@ -85,6 +88,29 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         }
 
         content = content.trim();
+
+        // Replace en-todo with unicode ballot box (old Evernote checkbox format). Done as a string replace
+        // before any HTML parsing so node-html-parser never has to deal with the self-closing <en-todo>.
+        content = content.replace(/<en-todo\s+checked="true"\s*\/>/g, "\u2611 ");
+        content = content.replace(/<en-todo(\s+checked="false")?\s*\/>/g, "\u2610 ");
+
+        // Replace OneNote converted checkboxes with unicode ballot box based
+        // on known hash of checkboxes for regular, p1, and p2 checkboxes
+        content = content.replace(
+            /<en-media alt="To Do( priority [12])?" hash="(74de5d3d1286f01bac98d32a09f601d9|4a19d3041585e11643e808d68dd3e72f|8e17580123099ac6515c3634b1f6f9a1)"( type="[a-z\/]*"| width="\d+"| height="\d+")*\/>/g,
+            "\u2610 "
+        );
+        content = content.replace(
+            /<en-media alt="To Do( priority [12])?" hash="(5069b775461e471a47ce04ace6e1c6ae|7912ee9cec35fc3dba49edb63a9ed158|3a05f4f006a6eaf2627dae5ed8b8013b)"( type="[a-z\/]*"| width="\d+"| height="\d+")*\/>/g,
+            "\u2611 "
+        );
+
+        // Rewrite Evernote's richer blocks (code/math/mermaid/callouts/toggles/checkboxes) and inline the
+        // note's tasks. Runs BEFORE the list workarounds below: those match on closing tags alone (e.g.
+        // `</div></li>`) and would corrupt the attribute-tagged `--en-todo` checkbox lists; the converter has
+        // already rewritten those into clean todo-lists. Also runs before sanitization, which would strip the
+        // `--en-*` style markers the conversion keys off.
+        content = convertEnexContent(content, tasks);
 
         // workaround for https://github.com/ckeditor/ckeditor5-list/issues/116
         content = content.replace(/<li>\s*<div>/g, "<li>");
@@ -100,21 +126,6 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
         content = content.replace(/<\/li>\s*<ol>/g, "<ol>");
         content = content.replace(/<\/ol>\s*<\/ol>/g, "</ol></li></ol>");
         content = content.replace(/<\/ol>\s*<li>/g, "</ol></li><li>");
-
-        // Replace en-todo with unicode ballot box
-        content = content.replace(/<en-todo\s+checked="true"\s*\/>/g, "\u2611 ");
-        content = content.replace(/<en-todo(\s+checked="false")?\s*\/>/g, "\u2610 ");
-
-        // Replace OneNote converted checkboxes with unicode ballot box based
-        // on known hash of checkboxes for regular, p1, and p2 checkboxes
-        content = content.replace(
-            /<en-media alt="To Do( priority [12])?" hash="(74de5d3d1286f01bac98d32a09f601d9|4a19d3041585e11643e808d68dd3e72f|8e17580123099ac6515c3634b1f6f9a1)"( type="[a-z\/]*"| width="\d+"| height="\d+")*\/>/g,
-            "\u2610 "
-        );
-        content = content.replace(
-            /<en-media alt="To Do( priority [12])?" hash="(5069b775461e471a47ce04ace6e1c6ae|7912ee9cec35fc3dba49edb63a9ed158|3a05f4f006a6eaf2627dae5ed8b8013b)"( type="[a-z\/]*"| width="\d+"| height="\d+")*\/>/g,
-            "\u2611 "
-        );
 
         content = sanitizeHtml(content);
 
@@ -204,6 +215,15 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
                 });
             }
             // unknown tags are just ignored
+        } else if (previousTag === "task" && task) {
+            // Fields can be chunked across events (like resource data), so append rather than assign.
+            if (currentTag === "title") {
+                task.title += text;
+            } else if (currentTag === "taskStatus") {
+                task.status += text;
+            } else if (currentTag === "taskGroupNoteLevelID") {
+                task.groupId += text;
+            }
         }
     };
 
@@ -215,7 +235,8 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
                 content: "",
                 // it's an array, not a key-value object because we don't know if attributes can be duplicated
                 attributes: [],
-                resources: []
+                resources: [],
+                tasks: []
             };
         } else if (tag.name === "resource") {
             resource = {
@@ -226,18 +247,26 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
             if (note.resources) {
                 note.resources.push(resource);
             }
+        } else if (tag.name === "task") {
+            // Evernote's Tasks feature exports each task as a note-level <task> element; the body keeps only a
+            // "Content not supported" placeholder. Collected here so saveNote can render them as a to-do list.
+            task = { title: "", status: "", groupId: "" };
+
+            if (note.tasks) {
+                note.tasks.push(task);
+            }
         }
     };
 
     function saveNote() {
         // make a copy because stream continues with the next call and note gets overwritten
-        let { title, content, attributes, resources, utcDateCreated, utcDateModified } = note;
+        let { title, content, attributes, resources, tasks, utcDateCreated, utcDateModified } = note;
 
         if (!title || !content) {
             throw new Error("Missing title or content for note.");
         }
 
-        content = extractContent(content);
+        content = extractContent(content, tasks);
 
         const noteEntity = noteService.createNewNote({
             parentNoteId: rootNote.noteId,

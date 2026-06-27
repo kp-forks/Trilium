@@ -88,4 +88,50 @@ describe("importEnex", () => {
         expect(test3!.getChildNotes()).toHaveLength(0);
         expect(test3!.getAttachmentsByRole("file")).toHaveLength(0);
     });
+
+    it("converts Evernote's rich blocks (code, math, mermaid, tasks, callouts, toggles, checkboxes)", async () => {
+        const { importedNote } = await testImport("Formatting.enex");
+
+        const note = importedNote.getChildNotes().find(n => n.title === "Formatting");
+        if (!note) {
+            throw new Error("'Formatting' note was not imported");
+        }
+        const content = decodeUtf8(note.getContent());
+
+        // Code block, with the syntax language preserved as a CKEditor mime class.
+        expect(content).toContain(`<pre><code class="language-text-x-csrc">`);
+        expect(content).toContain("void main() {");
+
+        // Math equation (formula block) → CKEditor display-math span.
+        expect(content).toContain(`<span class="math-tex">\\[e=mc^2\\]</span>`);
+
+        // Inline mermaid → language-mermaid code block.
+        expect(content).toContain(`<pre><code class="language-mermaid">`);
+        expect(content).toContain("graph TD");
+
+        // Tasks → a to-do list (both tasks are "open", so unchecked; titles trimmed).
+        expect(content).toContain(`<span class="todo-list__label__description">Task</span>`);
+        expect(content).toContain(`<span class="todo-list__label__description">Another task</span>`);
+        // The "Content not supported" task placeholder must not survive.
+        expect(content).not.toContain("Content not supported");
+
+        // Callouts → admonitions: the default light-bulb maps to "tip", a custom emoji to "note" (emoji kept).
+        expect(content).toContain(`<aside class="admonition tip">`);
+        expect(content).toContain(`<aside class="admonition note">`);
+        expect(content).toContain("🤖");
+
+        // Toggle → Trilium collapsible.
+        expect(content).toContain(`<details class="trilium-collapsible">`);
+        expect(content).toContain("Toggle goes here");
+
+        // Checkboxes → a nested to-do list with proper checked state.
+        expect(content).toContain(`<ul class="todo-list">`);
+        expect(content).toContain(`<span class="todo-list__label__description">Checkbox</span>`);
+        expect(content).toContain(`<span class="todo-list__label__description">Sub</span>`);
+        expect(content).toContain(`checked="checked"`);
+        expect(content).toContain(`<span class="todo-list__label__description">Checked</span>`);
+
+        // The Evernote `--en-*` style markers must not leak into the imported note.
+        expect(content).not.toContain("--en-");
+    });
 }, 60_000);
