@@ -8,7 +8,7 @@ import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FormCheckbox from "../../react/FormCheckbox.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
-import { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
+import OptionsRow, { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/onenote.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 
@@ -189,15 +189,16 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                     ? <p>{t("onenote_import.no_notebooks")}</p>
                     : (
                         <>
-                            <p>{t("onenote_import.select_sections")}</p>
-                            <div className="onenote-notebooks">
-                                {notebooks.map((notebook) => (
-                                    <div className="onenote-notebook" key={notebook.id}>
-                                        <strong>{notebook.title}</strong>
-                                        <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
-                                    </div>
-                                ))}
-                            </div>
+                            <OptionsRow name="onenote-sections" label={t("onenote_import.select_sections")} description={t("onenote_import.select_sections_hint")} stacked>
+                                <div className="onenote-notebooks">
+                                    {notebooks.map((notebook) => (
+                                        <div className="onenote-notebook" key={notebook.id}>
+                                            <strong>{notebook.title}</strong>
+                                            <SectionTree container={notebook} selectedIds={selectedIds} onToggle={toggleSection} />
+                                        </div>
+                                    ))}
+                                </div>
+                            </OptionsRow>
                             <OptionsRowWithToggle
                                 name="onenote-debug"
                                 label={t("onenote_import.attach_source")}
