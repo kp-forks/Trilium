@@ -159,4 +159,24 @@ describe("importEnex", () => {
         // An internalLink relation is created so backlinks/the link map work.
         expect(first.getRelations("internalLink").some(r => r.value === second.noteId)).toBe(true);
     });
+
+    it("leaves a link to a duplicated title unresolved (avoids guessing the wrong same-named note)", async () => {
+        const { importedNote } = await testImport("Duplicate titles.enex");
+
+        const linker = importedNote.getChildNotes().find(n => n.title === "Linker");
+        const target = importedNote.getChildNotes().find(n => n.title === "Target");
+        if (!linker || !target) {
+            throw new Error("duplicate-title sample notes were not imported");
+        }
+        const content = decodeUtf8(linker.getContent());
+
+        // "Dup" is shared by two imported notes, so the link is ambiguous and kept as the original link.
+        expect(content).toContain(`href="evernote://view-note/dddddddd-dddd-dddd-dddd-dddddddddddd"`);
+        // A uniquely-titled target still resolves to a reference link.
+        expect(content).toContain(`href="#root/${target.noteId}"`);
+
+        // No internalLink relation is created toward either ambiguous "Dup" note.
+        const dupIds = importedNote.getChildNotes().filter(n => n.title === "Dup").map(n => n.noteId);
+        expect(linker.getRelations("internalLink").some(r => dupIds.includes(r.value))).toBe(false);
+    });
 }, 60_000);

@@ -261,7 +261,8 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
     // Resolving Evernote internal note links needs every imported note's title -> id, which isn't fully
     // known until all notes are created (a note can link to one parsed later). Collect the mapping and each
     // note's final content during the first pass, then resolve the links in a second pass below.
-    const noteIdByTitle = new Map<string, string>();
+    // Value is the note's id, or null when the title is shared by 2+ imported notes (see saveNote).
+    const noteIdByTitle = new Map<string, string | null>();
     const createdNotes: { note: BNote; content: string; utcDateCreated?: string; utcDateModified?: string }[] = [];
 
     function saveNote() {
@@ -371,10 +372,10 @@ async function importEnex(taskContext: TaskContext<"importNotes">, file: File, p
 
         noteEntity.setDateCreatedAndModified(utcDateCreated, utcDateModified);
 
-        // Record for the internal-link resolution pass (first occurrence wins on duplicate titles).
-        if (!noteIdByTitle.has(title)) {
-            noteIdByTitle.set(title, noteEntity.noteId);
-        }
+        // Record for the internal-link resolution pass. Internal links are matched by the target's title
+        // (the export carries no per-note guid to match on), so a title shared by 2+ notes is ambiguous:
+        // mark it null to leave those links unresolved rather than pointing at the wrong same-named note.
+        noteIdByTitle.set(title, noteIdByTitle.has(title) ? null : noteEntity.noteId);
         createdNotes.push({ note: noteEntity, content, utcDateCreated, utcDateModified });
     }
 
