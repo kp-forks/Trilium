@@ -105,6 +105,11 @@ describe("callouts", () => {
         expect(parseObject(doc).content).toBe('<aside class="admonition note"><p>😶‍🌫️ Foggy</p></aside>');
     });
 
+    it("escapes the callout icon so a crafted iconEmoji can't inject markup", () => {
+        const doc = listDoc(["c1"], [{ id: "c1", text: { text: "Hi", style: "Callout", marks: { marks: [] }, iconEmoji: '<img src=x onerror="alert(1)">' } }]);
+        expect(parseObject(doc).content).toBe('<aside class="admonition note"><p>&lt;img src=x onerror=&quot;alert(1)&quot;&gt; Hi</p></aside>');
+    });
+
     it("applies inline marks in the callout body and renders child blocks inside the aside", () => {
         const doc = listDoc(
             ["c1"],

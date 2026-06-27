@@ -144,7 +144,9 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             // the emoji kept at the start of the body (admonitions have no per-block icon).
             const emoji = block.text?.iconEmoji ?? "";
             const type = emoji ? "note" : "tip";
-            const lead = [emoji, renderInlineText(rawText, marks)].filter(Boolean).join(" ");
+            // Escape the emoji like every other piece of user text here — it's interpolated raw into the
+            // markup, so an export carrying markup in this field would otherwise inject it.
+            const lead = [escapeHtml(emoji), renderInlineText(rawText, marks)].filter(Boolean).join(" ");
             const firstPara = lead ? `<p>${lead}</p>` : "";
             return `<aside class="admonition ${type}">${firstPara}${renderSequence(block.childrenIds ?? [])}</aside>`;
         }
