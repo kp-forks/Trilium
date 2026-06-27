@@ -15,7 +15,7 @@
  * for recording `internalLink` relations (backlinks).
  */
 
-import { parse } from "node-html-parser";
+import { HTMLElement, parse } from "node-html-parser";
 
 import { escapeHtml } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
@@ -84,6 +84,12 @@ export function resolveLinks(html: string, index: NoteIndex): { html: string; in
         const { target } = splitWikilink(safeDecode(src.slice(1)));
         const noteId = resolveNote(index, target);
         if (!noteId) {
+            // An embed of a database (.base) or whiteboard (.canvas) has no Trilium representation yet, so
+            // drop the placeholder rather than leave a broken image; other unresolved embeds are left alone.
+            if (isUnsupportedEmbed(target)) {
+                removeEmbed(img);
+                changed = true;
+            }
             continue;
         }
         img.insertAdjacentHTML("beforebegin", `<section class="include-note" data-note-id="${noteId}" data-box-size="medium">&nbsp;</section>`);
@@ -93,6 +99,21 @@ export function resolveLinks(html: string, index: NoteIndex): { html: string; in
     }
 
     return { html: changed ? root.toString() : html, internalLinks: [...internalLinks], includeLinks: [...includeLinks] };
+}
+
+/** Whether an embed targets a database (`.base`) or whiteboard (`.canvas`) — both unsupported for now. */
+function isUnsupportedEmbed(target: string): boolean {
+    const lower = target.toLowerCase();
+    return lower.endsWith(".base") || lower.endsWith(".canvas");
+}
+
+/** Removes an embed element, also dropping its wrapping paragraph if that leaves it empty. */
+function removeEmbed(img: HTMLElement): void {
+    const parent = img.parentNode;
+    img.remove();
+    if (parent instanceof HTMLElement && parent.tagName?.toLowerCase() === "p" && (parent.textContent ?? "").trim() === "" && parent.querySelectorAll("img").length === 0) {
+        parent.remove();
+    }
 }
 
 /** Resolves a wikilink target to a noteId: an exact vault path first, then a unique base-name match. */

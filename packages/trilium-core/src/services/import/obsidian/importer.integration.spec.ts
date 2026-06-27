@@ -150,16 +150,16 @@ describe("Obsidian importer — integration", () => {
         expect(page?.getAttachmentsByRole("image").map((a) => a.title)).toEqual(["pic.png"]);
     });
 
-    it("leaves note embeds and non-imported targets untouched (handled by later passes)", async () => {
+    it("strips an embed of a database (.base) that has no Trilium representation yet", async () => {
+        // Modeled on the vault's "Formatting test" note, which embeds a Base via `![[Untitled.base]]`.
         const importRoot = await importObsidian({
-            "Note.md": "![[Other note]]\n\n![[Untitled.base]]",
-            "Other note.md": "I am a note.",
+            "Note.md": "Body.\n\n![[Untitled.base]]",
             "Untitled.base": "filters: {}"
         });
 
         const note = importRoot.getChildNotes().find((n) => n.title === "Note");
-        // Neither a note embed nor a .base resolves to an attachment, so nothing is saved in this pass.
-        expect(note?.getAttachmentsByRole("image")).toHaveLength(0);
+        // The base embed is removed cleanly — no broken image and no empty paragraph left behind.
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe("<p>Body.</p>");
         expect(note?.getAttachmentsByRole("file")).toHaveLength(0);
     });
 
