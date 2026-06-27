@@ -7762,6 +7762,175 @@
                                             "format": "markdown",
                                             "dataFileName": "Anytype.md",
                                             "attachments": []
+                                        },
+                                        {
+                                            "isClone": false,
+                                            "noteId": "iWD7wiIuMtgV",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "gh7bpGYxajRS",
+                                                "mHbBMPDPkVV5",
+                                                "ckZ2uNWQmVeX",
+                                                "iWD7wiIuMtgV"
+                                            ],
+                                            "title": "Obsidian",
+                                            "notePosition": 60,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bx-window-open",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "obsidian",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "Oau6X9rCuegd",
+                                                    "isInheritable": false,
+                                                    "position": 50
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "oPVyFC7WL2Lp",
+                                                    "isInheritable": false,
+                                                    "position": 60
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "S6Xx8QIWTV66",
+                                                    "isInheritable": false,
+                                                    "position": 70
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "mT0HEkOsz6i1",
+                                                    "isInheritable": false,
+                                                    "position": 80
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "0vhv7lsOLy82",
+                                                    "isInheritable": false,
+                                                    "position": 90
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "nBAXQFj20hS1",
+                                                    "isInheritable": false,
+                                                    "position": 100
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "YfYAtQBcfo5V",
+                                                    "isInheritable": false,
+                                                    "position": 110
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "QxEyIjRBizuC",
+                                                    "isInheritable": false,
+                                                    "position": 120
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "hrZ1D00cLbal",
+                                                    "isInheritable": false,
+                                                    "position": 130
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "NwBbFdNZ9h7O",
+                                                    "isInheritable": false,
+                                                    "position": 140
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "GTwFsgaA0lCt",
+                                                    "isInheritable": false,
+                                                    "position": 150
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "m523cpzocqaD",
+                                                    "isInheritable": false,
+                                                    "position": 160
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "eIg8jdvaoNNd",
+                                                    "isInheritable": false,
+                                                    "position": 170
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "grjYqerjn243",
+                                                    "isInheritable": false,
+                                                    "position": 180
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "iRwzGnHPzonm",
+                                                    "isInheritable": false,
+                                                    "position": 190
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "OFXdgB2nNk1F",
+                                                    "isInheritable": false,
+                                                    "position": 200
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "KC1HB96bqqHX",
+                                                    "isInheritable": false,
+                                                    "position": 210
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "bwZpz2ajCEwO",
+                                                    "isInheritable": false,
+                                                    "position": 220
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "HI6GBBIduIgv",
+                                                    "isInheritable": false,
+                                                    "position": 230
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Obsidian.md",
+                                            "attachments": []
                                         }
                                     ]
                                 }
