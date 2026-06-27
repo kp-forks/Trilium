@@ -10,7 +10,8 @@ import type { ExportFormat, NoteMetaFile } from "../../meta.js";
 import { getContext } from "../context.js";
 import noteService from "../notes.js";
 import sql_init from "../sql_init.js";
-import { getZipProvider } from "../zip_provider.js";
+import type { ZipArchive, ZipArchiveEntryOptions, ZipProvider } from "../zip_provider.js";
+import { getZipProvider, initZipProvider } from "../zip_provider.js";
 import zip from "./zip.js";
 
 // happy-dom (standalone/WASM) exposes `window`; the Node server suite does not.
@@ -300,6 +301,64 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             expect(entries[attFileName]).toBeDefined();
             // The exported bytes must equal the stored bytes exactly.
             expect(Buffer.compare(entries[attFileName], binaryContent)).toBe(0);
+        });
+
+        it("pipes the archive to the response before appending any content", async () => {
+            // Memory efficiency: the archive must start streaming to the response
+            // before note/attachment content is appended, so blobs drain to the
+            // client as they are added rather than all being buffered in memory.
+            const { note } = createNote("root", { title: "StreamOrder", content: "<p>x</p>" });
+            getContext().init(() =>
+                note.saveAttachment({ role: "file", mime: "text/plain", title: "a.txt", content: "data" })
+            );
+            const branch = note.getParentBranches()[0];
+
+            const events: string[] = [];
+            const original = getZipProvider();
+            const spy: ZipProvider = {
+                detectFilenameEncoding: (b) => original.detectFilenameEncoding(b),
+                readZipFile: (b, fn, enc) => original.readZipFile(b, fn, enc),
+                createFileStream: (p) => original.createFileStream(p),
+                createZipArchive() {
+                    const real = original.createZipArchive();
+                    const wrapper: ZipArchive = {
+                        append(content: string | Uint8Array, options: ZipArchiveEntryOptions) {
+                            events.push(`append:${options.name}`);
+                            real.append(content, options);
+                        },
+                        pipe(dest: unknown) {
+                            events.push("pipe");
+                            real.pipe(dest);
+                        },
+                        finalize() {
+                            events.push("finalize");
+                            return real.finalize();
+                        }
+                    };
+                    return wrapper;
+                }
+            };
+
+            initZipProvider(spy);
+            try {
+                const taskContext = (await import("../task_context.js")).default;
+                const ctx = new taskContext("no-progress-reporting", "export", null);
+                const res = new FakeResponse();
+                const done = collect(res);
+                await zip.exportToZip(ctx, branch, "html", res as unknown as Record<string, unknown>);
+                await done;
+            } finally {
+                initZipProvider(original);
+            }
+
+            // The pipe is the very first archive operation and precedes every append.
+            const pipeIdx = events.indexOf("pipe");
+            const firstAppendIdx = events.findIndex((e) => e.startsWith("append:"));
+            expect(pipeIdx).toBe(0);
+            expect(firstAppendIdx).toBeGreaterThan(pipeIdx);
+            // Content really was appended (note data + attachment), and finalize closes it.
+            expect(events).toContain("append:!!!meta.json");
+            expect(events[events.length - 1]).toBe("finalize");
         });
 
         it("keeps the extension on very long multi-byte titles within the 255-byte limit", async () => {

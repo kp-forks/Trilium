@@ -433,14 +433,6 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         }
     }
 
-    const metaFileJson = JSON.stringify(metaFile, null, "\t");
-
-    archive.append(metaFileJson, { name: "!!!meta.json" });
-
-    saveNote(rootMeta, "");
-
-    provider.afterDone(rootMeta);
-
     const note = branch.getNote();
     const zipFileName = `${branch.prefix ? `${branch.prefix} - ` : ""}${note.getTitleOrProtected()}.zip`;
 
@@ -449,7 +441,21 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         res.setHeader("Content-Type", "application/zip");
     }
 
+    // Start streaming to the destination *before* appending content. The archiver
+    // drains each appended blob as it is added, so memory stays bounded instead of
+    // buffering the whole export. Trade-off: a failure while reading content mid-
+    // export can no longer produce a clean HTTP error (bytes are already on the
+    // wire); the validation that can fail cleanly runs in the try/catch above.
     archive.pipe(res);
+
+    const metaFileJson = JSON.stringify(metaFile, null, "\t");
+
+    archive.append(metaFileJson, { name: "!!!meta.json" });
+
+    saveNote(rootMeta, "");
+
+    provider.afterDone(rootMeta);
+
     await archive.finalize();
 
     taskContext.taskSucceeded(null);
