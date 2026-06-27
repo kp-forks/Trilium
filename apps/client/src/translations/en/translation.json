@@ -150,7 +150,7 @@
     "export": "Export",
     "choose_export_type": "Choose export type first please",
     "preparing_export": "Preparing for export…",
-    "export_in_progress_with_total": "Exporting {{progressCount}} of {{totalCount}}",
+    "export_in_progress_with_total": "Exporting {{progressCount}} of {{totalCount}} notes",
     "export_finished_successfully": "Export finished successfully.",
     "format_pdf": "PDF - for printing or sharing purposes."
   },
