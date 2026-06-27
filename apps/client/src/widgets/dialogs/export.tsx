@@ -69,7 +69,7 @@ export default function ExportDialog() {
                     return;
                 }
 
-                exportBranch(opts.branchId, exportType, selectedFormat);
+                exportBranch(opts.branchId, exportType, selectedFormat, opts.noteTitle || "export");
                 setShown(false);
             }}
             onHidden={() => setShown(false)}
@@ -136,8 +136,18 @@ function exportResultText(exportType: "subtree" | "single", format: string) {
     return format === "markdown" ? t("export.result_subtree_markdown") : t("export.result_subtree_html");
 }
 
-function exportBranch(branchId: string, type: string, format: string) {
+async function exportBranch(branchId: string, type: string, format: string, title: string) {
     const taskId = utils.randomString(10);
+
+    // Desktop: stream subtree zip exports straight to a user-chosen file, bypassing
+    // the in-memory download path. Electron's download manager buffers the whole
+    // response in memory, which spikes badly for large (multi-GB) exports. OPML is
+    // a single non-zip file handled by the regular download route.
+    if (utils.isElectron() && type === "subtree" && format !== "opml") {
+        await window.electronApi?.nativeExport.exportSubtreeToFile({ branchId, format, title, taskId });
+        return;
+    }
+
     const url = open.getUrlForDownload(`api/branches/${branchId}/export/${type}/${format}/${taskId}`);
     open.download(url);
 }

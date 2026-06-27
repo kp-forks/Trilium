@@ -511,6 +511,27 @@ export interface ElectronOneNoteApi {
     login(): Promise<OneNoteLoginResult>;
 }
 
+/** Outcome of a {@link ElectronNativeExportApi.exportSubtreeToFile} request. */
+export interface NativeExportResult {
+    status: "saved" | "cancelled" | "error";
+    /** Absolute path the archive was written to (when `status === "saved"`). */
+    filePath?: string;
+    /** Failure detail (when `status === "error"`). */
+    message?: string;
+}
+
+/** Desktop-native subtree export that streams a `.zip` straight to a file. */
+export interface ElectronNativeExportApi {
+    /**
+     * Prompts a native "save as" dialog, then streams a subtree (branch) export
+     * to the chosen path on disk. This bypasses the in-memory download path, so
+     * memory stays bounded regardless of archive size. Progress/success/error
+     * are reported over the WebSocket via `taskId`. Resolves once the dialog is
+     * dismissed (`cancelled`) or the export finishes (`saved` / `error`).
+     */
+    exportSubtreeToFile(opts: { branchId: string; format: string; title: string; taskId: string }): Promise<NativeExportResult>;
+}
+
 /**
  * The complete surface exposed to the renderer as `window.electronApi` via
  * `contextBridge`. The renderer must access Electron-only functionality through
@@ -545,4 +566,6 @@ export interface ElectronApi {
     security: ElectronSecurityApi;
     /** OneNote importer sign-in via a loopback OAuth redirect (desktop only). */
     onenote: ElectronOneNoteApi;
+    /** Desktop-native subtree export that streams a `.zip` straight to a file. */
+    nativeExport: ElectronNativeExportApi;
 }

@@ -613,4 +613,14 @@ describe("preload script", () => {
             expect(ipcRendererInvoked).toContainEqual({ channel: "onenote-login", args: [] });
         });
     });
+
+    describe("nativeExport", () => {
+        const nativeExport = () => getGroup("nativeExport");
+
+        it("exportSubtreeToFile invokes the corresponding IPC channel with the options", async () => {
+            const opts = { branchId: "branch123", format: "html", title: "My Note", taskId: "task1" };
+            await nativeExport().exportSubtreeToFile(opts);
+            expect(ipcRendererInvoked).toContainEqual({ channel: "export-subtree-to-file", args: [opts] });
+        });
+    });
 });

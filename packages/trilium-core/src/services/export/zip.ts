@@ -488,7 +488,34 @@ async function exportToZipFile(noteId: string, format: ExportFormat, zipFilePath
     getLog().info(`Exported '${noteId}' with format '${format}' to '${zipFilePath}'`);
 }
 
+/**
+ * Streams a subtree (branch) export straight to a file on disk, reporting
+ * progress/success/failure over the WebSocket via `taskId`. Used by the desktop
+ * "native export" flow, which writes directly to a user-chosen path instead of
+ * routing a potentially multi-GB archive through an in-memory HTTP response.
+ */
+async function exportBranchToZipFile(branchId: string, format: ExportFormat, zipFilePath: string, taskId: string) {
+    const branch = becca.getBranch(branchId);
+    if (!branch) {
+        throw new ValidationError(`Branch ${branchId} not found.`);
+    }
+
+    const taskContext = new TaskContext(taskId, "export", null);
+    const { destination, waitForFinish } = getZipProvider().createFileStream(zipFilePath);
+
+    try {
+        await exportToZip(taskContext, branch, format, destination as Record<string, any>, false);
+        await waitForFinish();
+    } catch (e: unknown) {
+        taskContext.reportError(`Export failed with error: ${e instanceof Error ? e.message : String(e)}`);
+        throw e;
+    }
+
+    getLog().info(`Exported branch '${branchId}' with format '${format}' to '${zipFilePath}'`);
+}
+
 export default {
     exportToZip,
-    exportToZipFile
+    exportToZipFile,
+    exportBranchToZipFile
 };

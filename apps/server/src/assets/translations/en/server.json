@@ -335,6 +335,9 @@
   "obsidian_import": {
     "root-title": "Obsidian import"
   },
+  "export": {
+    "zip_filter": "ZIP archive (*.zip)"
+  },
   "pdf": {
     "export_filter": "PDF Document (*.pdf)",
     "unable-to-export-message": "The current note could not be exported as a PDF.",

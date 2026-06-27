@@ -484,4 +484,39 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             ).rejects.toThrow(/not found/);
         });
     });
+
+    describe("exportBranchToZipFile", () => {
+        let tempDir: string;
+
+        beforeAll(() => {
+            tempDir = mkdtempSync(join(tmpdir(), "trilium-zip-branch-export-"));
+        });
+
+        it("streams a subtree export for the given branch to a file path", async () => {
+            const { note, branch } = createNote("root", { title: "BranchFileExport", content: "<p>branch to file</p>" });
+            const zipPath = join(tempDir, `branch-export-${note.noteId}.zip`);
+
+            await getContext().init(() =>
+                zip.exportBranchToZipFile(branch.branchId, "html", zipPath, "no-progress-reporting")
+            );
+
+            const buffer = readFileSync(zipPath);
+            const entries = await readArchive(buffer);
+            const rootMeta = parseMeta(entries).files[0];
+
+            expect(rootMeta.noteId).toBe(note.noteId);
+            const dataFileName = rootMeta.dataFileName ?? "";
+            expect(entries[dataFileName].toString("utf-8")).toContain("branch to file");
+
+            rmSync(zipPath, { force: true });
+        });
+
+        it("throws a ValidationError for a non-existent branch", async () => {
+            await expect(
+                getContext().init(() =>
+                    zip.exportBranchToZipFile("missingBranch123", "html", join(tempDir, "never.zip"), "no-progress-reporting")
+                )
+            ).rejects.toThrow(/not found/);
+        });
+    });
 });

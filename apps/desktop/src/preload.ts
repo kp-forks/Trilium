@@ -204,6 +204,12 @@ contextBridge.exposeInMainWorld("electronApi", {
         }
     },
 
+    nativeExport: {
+        exportSubtreeToFile(opts: { branchId: string; format: string; title: string; taskId: string }) {
+            return ipcRenderer.invoke("export-subtree-to-file", opts);
+        }
+    },
+
     ws: {
         // Renderer → main process. Mirror channel name with the server-side
         // IpcMessagingProvider constants.
