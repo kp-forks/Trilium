@@ -69,6 +69,17 @@ describe("Obsidian importer — integration", () => {
         expect(decodeUtf8(welcome?.getContent() ?? "")).toBe("<p>This is your new <em>vault</em>.</p>");
     });
 
+    it("converts ==highlights== to a coloured span and %%comments%% to dropped HTML comments", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "A ==highlight== and a %%hidden%% comment."
+        });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Note");
+        // The highlight survives sanitization as a CKEditor background-colour span (the sanitizer drops the
+        // trailing semicolon); the comment is rendered as an HTML comment, which the sanitizer then strips.
+        expect(decodeUtf8(note?.getContent() ?? "")).toBe('<p>A <span style="background-color:hsl(60, 75%, 60%)">highlight</span> and a  comment.</p>');
+    });
+
     it("drops attachments, the .base/.canvas files and the .obsidian config folder", async () => {
         const importRoot = await importObsidian({
             "Note.md": "Body.",

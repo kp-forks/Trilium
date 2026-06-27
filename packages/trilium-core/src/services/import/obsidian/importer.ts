@@ -10,8 +10,11 @@
  * folder* (so everything is nested under `Vault name/`). The location of `.obsidian/` pins the true vault
  * root either way, so the redundant wrapper folder is stripped and the import root is named after the vault.
  *
- * Deferred to later passes (so they currently render as literal text or placeholder links): wikilinks
- * `[[…]]`, embeds `![[…]]`, frontmatter → labels, tags, callouts, highlights/comments, and attachments.
+ * Obsidian-specific inline syntax is handled during Markdown rendering (gated by the `obsidian` flag):
+ * `==highlight==` becomes `<mark>` and `%% comment %%` becomes an HTML comment.
+ *
+ * Deferred to later passes (so they currently render as literal text or placeholder links): frontmatter →
+ * labels, tags, and callouts.
  *
  * Invoked from the shared file-import dispatcher (routes/api/import.ts) when the upload is tagged
  * `format=obsidian`, so progress, completion and failure are reported by that dispatcher's TaskContext —
@@ -114,7 +117,7 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
     // attachments saved. Content is persisted once, in the link pass, to avoid a second write per note.
     for (const vaultNote of notes) {
         const parent = ensureFolder(parentFolder(vaultNote.path), rootNote, folderNotes, isProtected);
-        const rendered = markdownService.renderToHtml(vaultNote.markdown, vaultNote.title);
+        const rendered = markdownService.renderToHtml(vaultNote.markdown, vaultNote.title, { obsidian: true });
         const { note } = noteService.createNewNote({ parentNoteId: parent.noteId, title: vaultNote.title, content: rendered, type: "text", mime: "text/html", isProtected });
 
         // Attachments hang off the note, so this runs after creation; it returns the content with embedded

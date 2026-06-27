@@ -455,6 +455,44 @@ describe("renderToHtml", () => {
         });
     });
 
+    describe("Obsidian syntax (obsidian option)", () => {
+        it("renders ==text== as a background-coloured span only when the obsidian flag is set", () => {
+            expect(render("==hi==", "", { obsidian: true }))
+                .toBe('<p><span style="background-color:hsl(60, 75%, 60%);">hi</span></p>');
+            // Off by default so generic Markdown is untouched.
+            expect(render("==hi==")).toBe("<p>==hi==</p>");
+        });
+
+        it("parses inner markdown inside a highlight", () => {
+            expect(render("==**bold**==", "", { obsidian: true }))
+                .toBe('<p><span style="background-color:hsl(60, 75%, 60%);"><strong>bold</strong></span></p>');
+        });
+
+        it("leaves ==== and spaced == as literal text", () => {
+            expect(render("====", "", { obsidian: true })).toBe("<p>====</p>");
+            expect(render("a == b", "", { obsidian: true })).toBe("<p>a == b</p>");
+        });
+
+        it("does not highlight == inside inline code", () => {
+            expect(render("`==x==`", "", { obsidian: true }))
+                .toBe('<p><code spellcheck="false">==x==</code></p>');
+        });
+
+        it("turns %% comment %% into an HTML comment only when the obsidian flag is set", () => {
+            expect(render("a %%secret%% b", "", { obsidian: true })).toBe("<p>a <!-- secret --> b</p>");
+            // Off by default so generic Markdown is untouched.
+            expect(render("a %%secret%% b")).toBe("<p>a %%secret%% b</p>");
+        });
+
+        it("handles a single-block comment spanning lines", () => {
+            expect(render("%%\nhidden\nnote\n%%", "", { obsidian: true })).toBe("<p><!-- hidden\nnote --></p>");
+        });
+
+        it("neutralises a comment terminator in the body so it cannot break out", () => {
+            expect(render("%%a-->b%%", "", { obsidian: true })).toBe("<p><!-- a-- >b --></p>");
+        });
+    });
+
     describe("footnotes", () => {
         it("renders footnotes without throwing", () => {
             const html = render("text[^1]\n\n[^1]: note");

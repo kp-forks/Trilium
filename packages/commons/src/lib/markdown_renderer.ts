@@ -81,6 +81,8 @@ function createTaskStateDetector(states: TaskStateDef[]): (token: Token) => void
 
 import { getMimeTypeFromMarkdownName, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "./mime_type.js";
 import {
+    createCommentExtension,
+    createHighlightExtension,
     createTransclusionExtension,
     createWikiLinkExtension,
     transclusionExtension,
@@ -140,6 +142,13 @@ export interface RenderToHtmlOptions {
      * (e.g. `[/]`) in list items. Defaults to {@link DEFAULT_TASK_STATES}.
      */
     taskStates?: TaskStateDef[];
+    /**
+     * Enable Obsidian-specific Markdown syntax: `==highlight==` → `<mark>` and
+     * `%% comment %%` → an HTML comment. Off by default so generic Markdown import,
+     * paste and the live editor preview are unaffected — only the Obsidian importer
+     * opts in.
+     */
+    obsidian?: boolean;
 }
 
 function escapeHtml(str: string): string {
@@ -441,13 +450,15 @@ export function renderToHtml(content: string, title: string, options: RenderToHt
     const marked = new Marked({ async: false, gfm: true });
     marked.use(markedFootnote());
     marked.use({ walkTokens: createTaskStateDetector(options.taskStates ?? DEFAULT_TASK_STATES) });
-    marked.use({
-        // Order is important, especially for wikilinks.
-        extensions: [
-            options.transclusion ? createTransclusionExtension(options.transclusion) : transclusionExtension,
-            options.wikiLink ? createWikiLinkExtension(options.wikiLink) : wikiLinkExtension
-        ]
-    });
+    // Order is important, especially for wikilinks.
+    const extensions = [
+        options.transclusion ? createTransclusionExtension(options.transclusion) : transclusionExtension,
+        options.wikiLink ? createWikiLinkExtension(options.wikiLink) : wikiLinkExtension
+    ];
+    if (options.obsidian) {
+        extensions.push(createHighlightExtension(), createCommentExtension());
+    }
+    marked.use({ extensions });
 
     const renderer = options.renderer ?? new CustomMarkdownRenderer({ async: false });
     let html = marked.parse(processedText, { async: false, renderer }) as string;
