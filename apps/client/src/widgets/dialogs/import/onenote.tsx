@@ -1,5 +1,3 @@
-import "./onenote.css";
-
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -148,28 +146,19 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const doImportRef = useRef(doImport);
     doImportRef.current = doImport;
 
-    // Surface the primary actions in the dialog's pinned footer once notebooks are loaded; the other
+    // Surface the import button in the dialog's pinned footer once notebooks are loaded; the other
     // phases set it to null so the connect screens show no footer.
     const importDisabled = selectedIds.size === 0;
     useEffect(() => {
         setFooter(phase !== "ready" ? null : (
-            <div className="onenote-footer">
-                <FormCheckbox
-                    name="onenote-debug"
-                    label={t("onenote_import.attach_source")}
-                    hint={t("onenote_import.attach_source_hint")}
-                    currentValue={debug}
-                    onChange={setDebug}
-                />
-                <Button
-                    text={t("onenote_import.import")}
-                    kind="primary"
-                    disabled={importDisabled}
-                    onClick={() => void doImportRef.current()}
-                />
-            </div>
+            <Button
+                text={t("onenote_import.import")}
+                kind="primary"
+                disabled={importDisabled}
+                onClick={() => void doImportRef.current()}
+            />
         ));
-    }, [phase, debug, importDisabled, setFooter]);
+    }, [phase, importDisabled, setFooter]);
 
     if (phase === "checking") {
         return <Card><CardSection className="onenote-panel"><LoadingSpinner /></CardSection></Card>;
@@ -212,6 +201,13 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                             <ExtendedAdmonition type="note" icon="bx bx-info-circle" title={t("onenote_import.order_hint_title")}>
                                 {t("onenote_import.order_hint")}
                             </ExtendedAdmonition>
+                            <FormCheckbox
+                                name="onenote-debug"
+                                label={t("onenote_import.attach_source")}
+                                hint={t("onenote_import.attach_source_hint")}
+                                currentValue={debug}
+                                onChange={setDebug}
+                            />
                         </>
                     )}
             </CardSection>
