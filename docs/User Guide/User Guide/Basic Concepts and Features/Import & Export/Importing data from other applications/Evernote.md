@@ -53,6 +53,7 @@ The following features are preserved by Trilium during the import process:
 *   <a class="reference-link" href="../../../Note%20Types/Text/Math%20Equations.md">Math Equations</a>
 *   Toggle sections
 *   External links
+*   Internal links are re-written to <a class="reference-link" href="../../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> if the target note is part of the same import.
 
 ## Limitations
 
@@ -60,9 +61,23 @@ The following features are preserved by Trilium during the import process:
 *   All resources (except for images) are created as notes’ attachments.
 *   If you have HTML inside ENEX files, the HTML formatting may be broken or lost after import in Trilium. See <a class="reference-link" href="../../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
 
-### Internal links
+### Links to other notes
 
-The importer cannot transform Evernote internal links into Trilium internal links because Evernote internal note IDs are not preserved in ENEX files.
+Since v0.104.0, the ENEX importer tries to recreate links to other notes automatically by converting their Evernote-specific URLs to Trilium's <a class="reference-link" href="../../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a>.
+
+Since the ENEX format does not provide the unique ID of notes, the note references are determined via their note title.
+
+Limitations:
+
+*   Only notes that are part of the same import will have their links rewritten to reference links, to avoid linking to the wrong note.
+*   If there are to notes with the same name, internal links will not be created to avoid pointing to the wrong note.
+*   Links that couldn't be rewritten (e.g. referring to a missing/duplicate note) will be kept with their original `evernote://` URL.
+*   It will not fix links to anchors and links to notes that you renamed in Evernote after you created the links.
+
+#### Post-processing notes
+
+> [!TIP]
+> This script allows rewriting links after the import has been done, and it should also allow finding links between two different imports.
 
 If you want to restore the internal links in Trilium after you import all of your ENEX files, you can use or adapt this custom script: <a class="reference-link" href="Evernote/Process%20internal%20links%20by%20title.js">Process internal links by title</a>
 
