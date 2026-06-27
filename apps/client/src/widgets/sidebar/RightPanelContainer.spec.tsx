@@ -50,8 +50,11 @@ describe("isWithinOverlay", () => {
             <div class="gutter gutter-horizontal"></div>
             <ul class="dropdown-menu"><li class="dropdown-item">y</li></ul>
             <div class="tooltip">t</div>
+            <div class="ck-balloon-panel"><span class="ck-button">b</span></div>
+            <div class="flatpickr-calendar"><span class="flatpickr-day">1</span></div>
         `;
-        for (const selector of [".toc-item", ".right-pane-toggle-handle", ".gutter", ".dropdown-item", ".tooltip"]) {
+        const inside = [".toc-item", ".right-pane-toggle-handle", ".gutter", ".dropdown-item", ".tooltip", ".ck-button", ".flatpickr-day"];
+        for (const selector of inside) {
             expect(isWithinOverlay(document.querySelector(selector)), selector).toBe(true);
         }
     });

@@ -48,18 +48,25 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
     const items = useItems(visible, widgetsByParent);
     useSplit(mode);
 
-    // Apply a transition, persisting only when the docked/closed distinction changes
-    // (overlay is ephemeral, so it never writes the option).
+    // Apply a transition. The state updater stays pure (it can run more than once, e.g. in Strict
+    // Mode); persistence is handled in the effect below.
     const apply = useCallback((action: RightPaneAction) => {
-        setMode(prev => {
-            const next = reduceRightPaneMode(prev, action);
-            const persist = persistedRightPaneVisible(prev, next);
+        setMode(prev => reduceRightPaneMode(prev, action));
+    }, []);
+
+    // Persist only when the docked/closed distinction changes (overlay is ephemeral, so it never
+    // writes the option). Kept out of the updater to avoid duplicate writes from re-invoked updaters.
+    const prevModeRef = useRef<RightPaneMode>(mode);
+    useEffect(() => {
+        const prev = prevModeRef.current;
+        if (prev !== mode) {
+            const persist = persistedRightPaneVisible(prev, mode);
             if (persist !== null) {
                 options.save("rightPaneVisible", persist.toString());
             }
-            return next;
-        });
-    }, []);
+            prevModeRef.current = mode;
+        }
+    }, [ mode ]);
 
     const toggleOverlay = useCallback(() => apply("toggleOverlay"), [ apply ]);
     const dock = useCallback(() => apply("dock"), [ apply ]);
@@ -251,9 +258,10 @@ export function persistedRightPaneVisible(prev: RightPaneMode, next: RightPaneMo
 }
 
 // Clicks within these keep the overlay open: the pane, the toggle handle, the resize gutter, and
-// popups that sidebar content renders into portals outside #right-pane (dropdowns, tooltips, modals).
-// The spacer/backdrop is intentionally NOT listed, so clicking the covered content area dismisses.
-const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .gutter, .dropdown-menu, .tooltip, .modal, .popover";
+// popups that sidebar content renders into portals on document.body, outside #right-pane — dropdowns,
+// tooltips, modals, CKEditor balloons (chat input) and Flatpickr calendars (date attributes). The
+// spacer/backdrop is intentionally NOT listed, so clicking the covered content area dismisses.
+const OVERLAY_KEEP_OPEN_SELECTOR = "#right-pane, .right-pane-toggle-handle, .gutter, .dropdown-menu, .tooltip, .modal, .popover, .ck-balloon-panel, .ck-body, .flatpickr-calendar";
 
 /** Whether an event target lies within the overlay or an allowlisted popup (i.e. should keep it open). */
 export function isWithinOverlay(target: EventTarget | null): boolean {
@@ -273,7 +281,8 @@ export function useOverlayDismiss(active: boolean, onDismiss: () => void) {
             if (!isWithinOverlay(e.target)) onDismiss();
         };
         const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+            // Skip if an inner element already handled Escape (e.g. closed a dropdown or cleared an input).
+            if (e.key === "Escape" && !e.defaultPrevented) {
                 onDismiss();
                 document.querySelector<HTMLElement>(".right-pane-toggle-handle")?.focus();
             }
