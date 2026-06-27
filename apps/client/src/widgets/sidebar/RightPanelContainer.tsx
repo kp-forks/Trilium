@@ -27,6 +27,7 @@ import RightPanelWidget from "./RightPanelWidget";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
+const MAX_WIDTH_PERCENT = 90;
 
 /**
  * - `closed`: hidden. - `docked`: a flex pane that reflows the content (resizable via Split).
@@ -83,10 +84,12 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
                     drag tracking isn't interrupted. Always rendered + CSS-toggled to keep the host's
                     child list structurally stable for Split's gutter injection. */}
                 <div class="right-pane-overlay-spacer" />
-                <div id="right-pane">
-                    {mode === "overlay" && (
-                        <div class="right-pane-overlay-actions">
-                            <ActionButton icon="bx bx-pin" text={t("right_pane.dock")} onClick={dock} />
+                {/* Mode class (right-pane-mode-docked / -overlay) as a styling hook; none when closed. */}
+                <div id="right-pane" class={visible ? `right-pane-mode-${mode}` : undefined}>
+                    {visible && (
+                        <div class="right-pane-actions">
+                            {/* Pin only applies while overlaying (it docks the pane); close shows in both modes. */}
+                            {mode === "overlay" && <ActionButton icon="bx bx-pin" text={t("right_pane.dock")} onClick={dock} />}
                             <ActionButton icon="bx bx-x" text={t("right_pane.close")} onClick={close} />
                         </div>
                     )}
@@ -98,10 +101,13 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
                                 icon="bx bx-sidebar"
                                 text={t("right_pane.empty_message")}
                             >
-                                <Button
-                                    text={t("right_pane.empty_button")}
-                                    triggerCommand="toggleRightPane"
-                                />
+                                {/* The overlay auto-closes (outside click / focus loss / Esc), so a manual hide button is redundant there. */}
+                                {mode !== "overlay" && (
+                                    <Button
+                                        text={t("right_pane.empty_button")}
+                                        triggerCommand="toggleRightPane"
+                                    />
+                                )}
                             </NoItems>
                         )
                     )}
@@ -188,28 +194,39 @@ function useSplit(mode: RightPaneMode) {
         if (mode === "closed") return;
 
         // We are intentionally omitting useTriliumOption to avoid re-render due to size change.
-        const rightPaneWidth = Math.max(MIN_WIDTH_PERCENT, options.getInt("rightPaneWidth") ?? MIN_WIDTH_PERCENT);
-        const saveWidth = (sizes: number[]) => options.save("rightPaneWidth", Math.round(sizes[1]));
+        const rightPaneWidth = Math.min(MAX_WIDTH_PERCENT, Math.max(MIN_WIDTH_PERCENT, options.getInt("rightPaneWidth") ?? MIN_WIDTH_PERCENT));
+
+        // Cap the right pane at MAX_WIDTH_PERCENT. Enforced in onDrag using Split's live percentages
+        // rather than its px-based maxSize, so the cap stays correct across window resizes.
+        let splitInstance: ReturnType<typeof Split> | undefined;
+        const onDrag = (sizes: number[]) => {
+            if (sizes[1] > MAX_WIDTH_PERCENT) {
+                splitInstance?.setSizes([100 - MAX_WIDTH_PERCENT, MAX_WIDTH_PERCENT]);
+            }
+        };
+        const onDragEnd = (sizes: number[]) => options.save("rightPaneWidth", Math.round(sizes[1]));
 
         // Docked: resize the host (and thus the content) against #center-pane.
         // Overlay: resize the pane against the spacer inside the absolute host — the content (#center-pane)
         // is untouched, so it never reflows.
-        const splitInstance = mode === "docked"
+        splitInstance = mode === "docked"
             ? Split(["#center-pane", "#right-pane-host"], {
                 sizes: [100 - rightPaneWidth, rightPaneWidth],
                 gutterSize: DEFAULT_GUTTER_SIZE,
                 minSize: [300, 180],
                 rtl: glob.isRtl,
-                onDragEnd: saveWidth
+                onDrag,
+                onDragEnd
             })
             : Split([".right-pane-overlay-spacer", "#right-pane"], {
                 sizes: [100 - rightPaneWidth, rightPaneWidth],
                 gutterSize: DEFAULT_GUTTER_SIZE,
                 minSize: [0, 180],
                 rtl: glob.isRtl,
-                onDragEnd: saveWidth
+                onDrag,
+                onDragEnd
             });
-        return () => splitInstance.destroy();
+        return () => splitInstance?.destroy();
     }, [ mode ]);
 }
 

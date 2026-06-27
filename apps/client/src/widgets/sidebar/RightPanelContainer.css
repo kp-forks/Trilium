@@ -69,8 +69,8 @@ body.experimental-feature-new-layout #right-pane-host.overlay > .right-pane-over
     background: rgba(0, 0, 0, 0.05);
 }
 
-/* Pin/close controls, shown only in overlay mode. */
-body.experimental-feature-new-layout #right-pane .right-pane-overlay-actions {
+/* Pin/close controls, shown whenever the pane is open (pin only in overlay mode). */
+body.experimental-feature-new-layout #right-pane .right-pane-actions {
     position: absolute;
     top: 4px;
     inset-inline-end: 4px;
