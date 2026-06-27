@@ -124,16 +124,19 @@ function createNotes(importRootNote: BNote, notes: VaultNote[], attachments: Map
         taskContext.increaseProgressCount();
     }
 
-    // Second pass: now that every note's name -> id is known, resolve wikilinks to Trilium internal links and
-    // record the resulting `internalLink` relations (so backlinks / "what links here" work).
+    // Second pass: now that every note's name -> id is known, resolve wikilinks and note embeds to Trilium
+    // internal links / include-notes, recording the relations that drive backlinks and "what links here".
     const noteIndex = buildNoteIndex(created);
     for (const { note, rendered, content } of created) {
-        const { html, targets } = resolveLinks(content, noteIndex);
+        const { html, internalLinks, includeLinks } = resolveLinks(content, noteIndex);
         if (html !== rendered) {
             note.setContent(html);
         }
-        for (const target of targets) {
+        for (const target of internalLinks) {
             note.addRelation("internalLink", target);
+        }
+        for (const target of includeLinks) {
+            note.addRelation("includeNoteLink", target);
         }
     }
 

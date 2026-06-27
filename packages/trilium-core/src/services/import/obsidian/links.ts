@@ -39,13 +39,14 @@ export function buildNoteIndex(notes: { note: { noteId: string }; path: string }
     return { byPath, byName };
 }
 
-export function resolveLinks(html: string, index: NoteIndex): { html: string; targets: string[] } {
-    // The wikilink extension emits a vault-relative `href="/…"`; nothing to do without one.
-    if (!html.includes(`href="/`)) {
-        return { html, targets: [] };
+export function resolveLinks(html: string, index: NoteIndex): { html: string; internalLinks: string[]; includeLinks: string[] } {
+    // Wikilinks render as a vault-relative `href="/…"` and note embeds as `src="/…"`; nothing to do without one.
+    if (!html.includes(`href="/`) && !html.includes(`src="/`)) {
+        return { html, internalLinks: [], includeLinks: [] };
     }
     const root = parse(html);
-    const targets = new Set<string>();
+    const internalLinks = new Set<string>();
+    const includeLinks = new Set<string>();
     let changed = false;
 
     for (const anchor of root.querySelectorAll("a")) {
@@ -64,7 +65,7 @@ export function resolveLinks(html: string, index: NoteIndex): { html: string; ta
                 anchor.removeAttribute("class");
                 anchor.set_content(escapeHtml(alias));
             }
-            targets.add(noteId);
+            internalLinks.add(noteId);
         } else {
             anchor.insertAdjacentHTML("beforebegin", escapeHtml(alias ?? target));
             anchor.remove();
@@ -72,7 +73,26 @@ export function resolveLinks(html: string, index: NoteIndex): { html: string; ta
         changed = true;
     }
 
-    return { html: changed ? root.toString() : html, targets: [...targets] };
+    // Note embeds `![[Note]]` arrive as `<img src="/Note">` (the transclusion). One that resolves to a note
+    // becomes a Trilium include-note; an attachment image (already `api/attachments/…`) or an unresolved/.base
+    // embed is left untouched (the latter for a later pass).
+    for (const img of root.querySelectorAll("img")) {
+        const src = img.getAttribute("src");
+        if (!src || !src.startsWith("/")) {
+            continue;
+        }
+        const { target } = splitWikilink(safeDecode(src.slice(1)));
+        const noteId = resolveNote(index, target);
+        if (!noteId) {
+            continue;
+        }
+        img.insertAdjacentHTML("beforebegin", `<section class="include-note" data-note-id="${noteId}" data-box-size="medium">&nbsp;</section>`);
+        img.remove();
+        includeLinks.add(noteId);
+        changed = true;
+    }
+
+    return { html: changed ? root.toString() : html, internalLinks: [...internalLinks], includeLinks: [...includeLinks] };
 }
 
 /** Resolves a wikilink target to a noteId: an exact vault path first, then a unique base-name match. */

@@ -179,6 +179,26 @@ describe("Obsidian importer — integration", () => {
         expect(b.getTargetRelations().filter((r) => r.name === "internalLink").map((r) => r.noteId)).toEqual([a.noteId]);
     });
 
+    it("turns a note embed ![[Note]] into a Trilium include-note with an includeNoteLink relation", async () => {
+        // Modeled on the vault's "Reference links" note (`[[Formatting test]]` then `![[Formatting test]]`).
+        const importRoot = await importObsidian({ "Reference links.md": "[[Target]]\n\n![[Target]]", "Target.md": "I am the target." });
+
+        const note = importRoot.getChildNotes().find((n) => n.title === "Reference links");
+        const target = importRoot.getChildNotes().find((n) => n.title === "Target");
+        if (!note || !target) {
+            throw new Error("notes were not imported");
+        }
+        const content = decodeUtf8(note.getContent());
+
+        // The plain wikilink is a reference link; the embed becomes an include-note pointing at the same note.
+        expect(content).toContain(`<a class="reference-link" href="#root/${target.noteId}">`);
+        expect(content).toContain(`<section class="include-note" data-note-id="${target.noteId}" data-box-size="medium">`);
+
+        // The embed records an includeNoteLink relation (the wikilink an internalLink).
+        expect(note.getRelations().filter((r) => r.name === "includeNoteLink").map((r) => r.value)).toEqual([target.noteId]);
+        expect(note.getRelations().filter((r) => r.name === "internalLink").map((r) => r.value)).toEqual([target.noteId]);
+    });
+
     it("uses the alias as the link text for [[Target|alias]]", async () => {
         const importRoot = await importObsidian({ "A.md": "[[B|the bee]]", "B.md": "b" });
 
