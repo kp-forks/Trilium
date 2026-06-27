@@ -323,6 +323,44 @@ describe("renderInlineText", () => {
     });
 });
 
+describe("inline mentions", () => {
+    /** A resolver that maps any non-"missing" id to a note, so a Mention resolves unless it's "missing". */
+    const resolve: LinkResolver = (cid) => (cid === "missing" ? undefined : { noteId: `note-${cid}`, title: `Title ${cid}` });
+
+    it("wraps a resolved Mention span in a reference link and reports the target via onLink", () => {
+        const linked: string[] = [];
+        const html = renderInlineText("see X here", [mark(4, 5, "Mention", "abc")], resolve, (id) => linked.push(id));
+        expect(html).toBe('see <a class="reference-link" href="#root/note-abc">X</a> here');
+        expect(linked).toEqual(["note-abc"]);
+    });
+
+    it("leaves a Mention as plain text when its target wasn't imported, recording no link", () => {
+        const linked: string[] = [];
+        const html = renderInlineText("see X here", [mark(4, 5, "Mention", "missing")], resolve, (id) => linked.push(id));
+        expect(html).toBe("see X here");
+        expect(linked).toEqual([]);
+    });
+
+    it("leaves a Mention plain when no resolver is supplied (parsing in isolation)", () => {
+        expect(renderInlineText("see X", [mark(4, 5, "Mention", "abc")])).toBe("see X");
+    });
+
+    it("nests structural marks inside the mention anchor (anchor outermost)", () => {
+        const html = renderInlineText("bold link", [mark(5, 9, "Mention", "abc"), mark(5, 9, "Bold")], resolve);
+        expect(html).toBe('bold <a class="reference-link" href="#root/note-abc"><strong>link</strong></a>');
+    });
+
+    it("renders two mentions in one line, each its own reference link", () => {
+        // Mirrors the "Page with block and inline reference links" page: two mentions over one paragraph.
+        const linked: string[] = [];
+        const html = renderInlineText("Inline link: 2  Untitled ", [mark(13, 14, "Mention", "two"), mark(16, 24, "Mention", "one")], resolve, (id) => linked.push(id));
+        expect(html).toBe(
+            'Inline link: <a class="reference-link" href="#root/note-two">2</a>  <a class="reference-link" href="#root/note-one">Untitled</a> '
+        );
+        expect(linked).toEqual(["note-two", "note-one"]);
+    });
+});
+
 describe("renderCodeBlock", () => {
     it("wraps code in <pre><code> with the resolved language class", () => {
         // Anytype tags C-family code as PrismJS "clike"; Trilium has no such code, so it's aliased to C.

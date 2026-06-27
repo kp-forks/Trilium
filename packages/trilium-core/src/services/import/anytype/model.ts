@@ -14,8 +14,8 @@ export interface AnytypeMarkRange {
 }
 
 /** An inline formatting span over a text block's `text`. `type` is the kind (Bold, Italic, Strikethrough,
- * Underscored, Keyboard, TextColor, …); `param` carries extra data for some kinds (a colour name, a link
- * URL). Marks may overlap freely and are not pre-sorted. */
+ * Underscored, Keyboard, TextColor, Mention, …); `param` carries extra data for some kinds (a colour name, a
+ * link URL, or — for a `Mention` — the linked object's id). Marks may overlap freely and are not pre-sorted. */
 export interface AnytypeMark {
     range?: AnytypeMarkRange;
     type?: string;

@@ -514,6 +514,45 @@ describe("Anytype importer — integration", () => {
         expect(note?.getRelations().filter((r) => r.name === "internalLink")).toHaveLength(0);
     });
 
+    it("renders an inline mention as a reference link and records an internalLink relation for backlinks", async () => {
+        // "Source" mentions "Target" inline via a Mention mark (the target object's id in `param`), mirroring
+        // the "Page with block and inline reference links" page.
+        const source = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "src", childrenIds: ["header", "src-p"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "src-p", text: { text: "Inline link: Target here", style: "Paragraph", marks: { marks: [{ range: { from: 13, to: 19 }, type: "Mention", param: "tgt" }] } } }
+                    ],
+                    details: { id: "src", name: "Source", resolvedLayout: 0 }
+                }
+            }
+        });
+        const target = pageObject("tgt", "Target", ["I am linked"]);
+
+        const importRoot = await importAnytype({
+            "objects/source.pb.json": source,
+            "objects/target.pb.json": target
+        });
+
+        const sourceNote = importRoot.getChildNotes().find((n) => n.title === "Source");
+        const targetNote = importRoot.getChildNotes().find((n) => n.title === "Target");
+        expect(sourceNote).toBeDefined();
+        expect(targetNote).toBeDefined();
+
+        // The mention span becomes an inline reference link to the target note, the surrounding text intact.
+        expect(decodeUtf8(sourceNote?.getContent() ?? "")).toBe(`<p>Inline link: <a class="reference-link" href="#root/${targetNote?.noteId}">Target</a> here</p>`);
+
+        // ...and drives backlink detection just like a block-level link.
+        const internalLinks = sourceNote?.getRelations().filter((r) => r.name === "internalLink") ?? [];
+        expect(internalLinks.map((r) => r.value)).toEqual([targetNote?.noteId]);
+        const backlinks = targetNote?.getTargetRelations().filter((r) => r.name === "internalLink") ?? [];
+        expect(backlinks.map((r) => r.noteId)).toEqual([sourceNote?.noteId]);
+    });
+
     it("preserves a page's created and modified dates from Anytype's detail timestamps", async () => {
         const page = JSON.stringify({
             sbType: "Page",
