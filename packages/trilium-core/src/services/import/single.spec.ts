@@ -117,6 +117,15 @@ describe("processNoteContent", () => {
         expect(importedNote.getOwnedLabelValues("tags")).toEqual(["Tag", "AnotherTag"]);
     });
 
+    it("only creates labels from front matter — never relations (no script triggers)", async () => {
+        const md = '---\n"~runOnNoteCreation": evil\ntemplate: x\n---\nBody.';
+        const { importedNote } = await testImport("Safe.md", "text/markdown", Buffer.from(md));
+        // Front matter applies via addLabel, so the only script-execution / template vector (a relation)
+        // can never appear — even a key that looks like one lands as a harmless label.
+        expect(importedNote.getOwnedAttributes().filter((a) => a.type === "relation")).toHaveLength(0);
+        expect(importedNote.getOwnedAttributes().every((a) => a.type === "label")).toBe(true);
+    });
+
     it("supports excalidraw note", async () => {
         const { importedNote } = await testImport("New note.excalidraw", "application/json");
         expect(importedNote.mime).toBe("application/json");

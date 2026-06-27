@@ -42,6 +42,18 @@ describe("extractFrontmatter", () => {
         expect(attributes).toEqual([]);
     });
 
+    it("sanitizes dangerous-looking property names to plain alphanumeric label names", () => {
+        // A relation/script-trigger or promoted-definition syntax in a key is neutralized by toAttributeName:
+        // the `~`, `:` and markup characters are stripped, so no special attribute can be smuggled in.
+        const { attributes } = extractFrontmatter('---\n"~runOnNoteCreation": x\n"label:evil": y\n"<script>": z\n"~template": w\n---\n');
+        expect(attributes).toEqual([
+            { name: "runonnotecreation", value: "x" },
+            { name: "labelEvil", value: "y" },
+            { name: "script", value: "z" },
+            { name: "template", value: "w" }
+        ]);
+    });
+
     it("keeps the note intact when the front matter YAML is malformed", () => {
         const md = "---\nkey: [unclosed\n---\nBody.";
         const { body, attributes } = extractFrontmatter(md);
