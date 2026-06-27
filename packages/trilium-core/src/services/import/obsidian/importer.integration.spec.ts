@@ -6,6 +6,7 @@ import becca from "../../../becca/becca.js";
 import type BNote from "../../../becca/entities/bnote.js";
 import { getContext } from "../../context.js";
 import TaskContext from "../../task_context.js";
+import { decodeUtf8 } from "../../utils/binary.js";
 import obsidianImporter from "./importer.js";
 
 /** Builds an in-memory zip from a map of entry name -> contents. */
@@ -40,22 +41,45 @@ async function importObsidian(files: Record<string, string | Buffer>, fileName?:
 }
 
 describe("Obsidian importer — integration", () => {
-    // Scaffold only: structure/content processing (folders → notes, Markdown → HTML, links, …) is not wired
-    // up yet, so for now the importer just creates the import root. These assertions lock in that contract.
     it("creates an 'Obsidian import' text root with an import icon", async () => {
-        const importRoot = await importObsidian({
-            "Welcome.md": "# Welcome\n\nFirst note.",
-            "Folder/Nested.md": "Nested note."
-        });
+        const importRoot = await importObsidian({ "Note.md": "body" });
 
         expect(importRoot.title).toBe("Obsidian import");
         expect(importRoot.type).toBe("text");
         expect(importRoot.getOwnedLabelValue("iconClass")).toBe("bx bx-import");
     });
 
-    it("does not import any notes yet (processing arrives in a later pass)", async () => {
-        const importRoot = await importObsidian({ "Note.md": "body" }, "My Vault.zip");
+    it("mirrors the vault folder structure, rendering each note's Markdown to HTML", async () => {
+        const importRoot = await importObsidian({
+            "Welcome.md": "This is your new *vault*.",
+            "Folder 1/First note.md": "Content goes here.",
+            "Folder 2/Folder 2 Note.md": "Nested content."
+        });
 
-        expect(importRoot.getChildNotes()).toHaveLength(0);
+        // The root holds the top-level note plus one container note per folder, named after the folder.
+        const children = importRoot.getChildNotes();
+        expect(children.map((n) => n.title)).toEqual(["Folder 1", "Folder 2", "Welcome"]);
+
+        // Each folder note holds its notes; the Markdown body is rendered to HTML.
+        const folder1 = children.find((n) => n.title === "Folder 1");
+        expect(folder1?.getChildNotes().map((n) => n.title)).toEqual(["First note"]);
+        expect(decodeUtf8(folder1?.getChildNotes()[0]?.getContent() ?? "")).toBe("<p>Content goes here.</p>");
+
+        const welcome = children.find((n) => n.title === "Welcome");
+        expect(decodeUtf8(welcome?.getContent() ?? "")).toBe("<p>This is your new <em>vault</em>.</p>");
+    });
+
+    it("drops attachments, the .base/.canvas files and the .obsidian config folder", async () => {
+        const importRoot = await importObsidian({
+            "Note.md": "Body.",
+            "Screenshot.png": Buffer.from("\x89PNG\r\n\x1a\nfake"),
+            "Untitled.base": "filters: {}",
+            "Untitled.canvas": "{}",
+            ".obsidian/app.json": "{}",
+            ".obsidian/workspace.json": "{}"
+        });
+
+        // Only the Markdown note is imported; nothing else creates a note.
+        expect(importRoot.getChildNotes().map((n) => n.title)).toEqual(["Note"]);
     });
 });
