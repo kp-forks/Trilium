@@ -40,14 +40,15 @@ export default function RightPaneToggleHandle({ rightPaneVisible, onToggle }: Ri
     // The `distance` (second value) keeps the tooltip clear of the handle so it can't
     // overlap it and cause hover flicker.
     const tooltipConfig = useMemo(() => ({
-        title: t("right_pane.toggle"),
+        // Open: a click hides it. Closed: a click peeks it (the transient overlay; the pin docks it).
+        title: rightPaneVisible ? t("right_pane.hide") : t("right_pane.peek"),
         placement: "left" as const,
         offset: () => {
             const rect = buttonRef.current?.getBoundingClientRect();
             if (!rect || pointerY.current === null) return [ 0, TOOLTIP_MARGIN_PX ] as [number, number];
             return [ pointerY.current - (rect.top + rect.height / 2), TOOLTIP_MARGIN_PX ] as [number, number];
         }
-    }), []);
+    }), [ rightPaneVisible ]);
     useStaticTooltip(buttonRef, tooltipConfig);
 
     return (
