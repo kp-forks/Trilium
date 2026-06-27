@@ -53,7 +53,7 @@ export default function ImportDialog() {
             scrollable
             title={noteTitle ? t("import.importIntoNoteNamed", { title: noteTitle }) : t("import.importIntoNote")}
             footer={footer}
-            footerAlignment="between"
+            footerAlignment="right"
             onHidden={() => setShown(false)}
             show={shown}
         >

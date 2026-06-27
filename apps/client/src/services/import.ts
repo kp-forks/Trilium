@@ -68,7 +68,10 @@ function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
     return {
         id,
         message,
-        icon: "plus"
+        icon: "bx bx-check",
+        // This toast replaces the in-progress one (same id), and showPersistent merges fields rather than
+        // swapping the object — so clear the progress explicitly, otherwise the finished bar lingers at 100%.
+        progress: undefined
     };
 }
 

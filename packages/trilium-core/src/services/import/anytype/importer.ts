@@ -7,9 +7,12 @@
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
  * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
- * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`) and cross-page links
- * (Anytype's block-level "link to object" → a Trilium reference link plus an `internalLink` relation, so
- * backlinks resolve). Each page keeps its original creation and modification timestamps.
+ * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`), inline file/media blocks
+ * (an embedded image → an inline `role:"image"` attachment; any other attached file → a `role:"file"`
+ * attachment reference link, the bytes resolved from the export's `filesObjects/` metadata + `files/`
+ * bytes) and cross-page links (Anytype's block-level "link to object" → a Trilium reference link plus an
+ * `internalLink` relation, so backlinks resolve). Each page keeps its original creation and modification
+ * timestamps.
  *
  * Collections and their properties are handled in {@link ./collection.js}: a collection becomes a `book` in
  * its mapped view (table / list / grid / calendar / board) whose columns are promoted-attribute definitions,
@@ -23,16 +26,20 @@
  */
 
 import { t } from "i18next";
+import { parse } from "node-html-parser";
 
 import type BNote from "../../../becca/entities/bnote.js";
 import cloningService from "../../cloning.js";
+import imageService from "../../image.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
+import { decodeUtf8 } from "../../utils/binary.js";
 import date_utils from "../../utils/date.js";
 import { newEntityId } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
 import { getZipProvider } from "../../zip_provider.js";
+import { saveFileAttachment } from "../collection_utils.js";
 import { applyCollectionView, applyFiles, applyProperties, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties, synthesizeColumns } from "./collection.js";
 import { extractContent } from "./content.js";
 import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedColumn, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
@@ -83,7 +90,22 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
     const pages = pageSnapshots.map((snapshot) => parseObject(snapshot, resolveLink, relationMap, optionMap));
     taskContext.setTotalCount(pages.length);
 
-    return createNotes(importRootNote, pages, targets, fileObjectMap, files, rootTitle, rootColumns, taskContext);
+    // For the collection-scoped recovery in createNotes: a bundled file referenced by an object we don't
+    // import (a set, or a system object like the workspace/participant) is not a dropped-in collection member,
+    // so harvest those objects' file references too — the recovery must exclude them, not surface them as
+    // stray members. Only needed when the recovery actually runs (a collection-scoped export).
+    const excludedFileRefs = collectionExport
+        ? new Set(
+              objects
+                  .filter((snapshot) => !isPage(snapshot) && !isCollectionObject(snapshot))
+                  .flatMap((snapshot) => {
+                      const parsed = parseObject(snapshot, resolveLink, relationMap, optionMap);
+                      return [...parsed.fileRefs, ...parsed.inlineFileIds];
+                  })
+          )
+        : undefined;
+
+    return createNotes(importRootNote, pages, targets, fileObjectMap, files, rootTitle, rootColumns, collectionExport, excludedFileRefs, taskContext);
 }
 
 /**
@@ -245,7 +267,7 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
     const details = data?.details ?? {};
     const id = details.id ?? "";
     const title = pageTitle(details);
-    const { html, linkTargetIds } = extractContent(data?.blocks ?? [], id, resolveLink);
+    const { html, linkTargetIds, fileTargetIds } = extractContent(data?.blocks ?? [], id, resolveLink);
 
     return {
         id,
@@ -256,6 +278,7 @@ export function parseObject(snapshot: AnytypeSnapshot, resolveLink: LinkResolver
         dateModified: anytypeDate(details.lastModifiedDate),
         properties: parseProperties(details, relations, options),
         fileRefs: parseFiles(details, relations),
+        inlineFileIds: fileTargetIds,
         collection: parseCollection(data?.blocks ?? [], details, relations)
     };
 }
@@ -284,12 +307,15 @@ export function anytypeDate(seconds: number | undefined): string | undefined {
  * already baked into the content point at the real notes, and carries its own property values as labels. A
  * collection's members are parented under it (their first collection) — a member in further collections is
  * cloned into each. File-property values become `role:"file"` attachments with a reference link prepended to
- * the body. Once every page exists, each page's outgoing links are recorded as `internalLink` relations,
- * which Trilium uses for backlink detection ("what links here").
+ * the body. A file object that's itself a collection member becomes a `file`/`image` note under the
+ * collection (in a collection-scoped export, where the membership list is lost, any unreferenced bundled file
+ * is treated as such a member). Once every page exists, each page's outgoing links are recorded as
+ * `internalLink` relations, which Trilium uses for backlink detection ("what links here").
  */
-function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, rootTitle: string | undefined, rootColumns: ParsedColumn[] | undefined, taskContext: TaskContext<"importNotes">): BNote {
+function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<string, ResolvedLink>, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, rootTitle: string | undefined, rootColumns: ParsedColumn[] | undefined, collectionExport: boolean, excludedFileRefs: Set<string> | undefined, taskContext: TaskContext<"importNotes">): BNote {
     /* v8 ignore next -- the protected branch needs a protected import root with an active protected session, which the in-memory test DB has no way to set up */
     const isProtected = importRootNote.isProtected && protectedSessionService.isProtectedSessionAvailable();
+    const shrinkImages = !!taskContext.data?.shrinkImages;
 
     // A collection-scoped export's root *is* the collection: a `table`-view book carrying the synthesized
     // columns, with the member pages as its rows. A normal export's root is a plain container.
@@ -330,9 +356,48 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
 
         applyProperties(note, page.properties);
         applyFiles(note, page, fileObjects, files);
+        applyInlineFiles(note, fileObjects, files, shrinkImages);
         applyDates(note, page);
         notesByPageId.set(page.id, note);
         taskContext.increaseProgressCount();
+    }
+
+    // A collection can list a *file object* directly as a member (a file dropped into the collection). It's
+    // not a page, so no note was created for it above — create one now, a `file`/`image` note under its
+    // owning collection, so the member shows up. The membership pass below then clones it into any further
+    // collections. Done after the page loop so the owning collection note already exists.
+    for (const fileId of fileMemberIds(pages, notesByPageId, fileObjects)) {
+        const info = fileObjects.get(fileId);
+        const bytes = info ? files.get(normalizePath(info.source)) : undefined;
+        if (!info || !bytes) {
+            continue;
+        }
+        const primaryCollectionId = primaryCollectionByMember.get(fileId);
+        const parentNoteId = (primaryCollectionId ? notesByPageId.get(primaryCollectionId)?.noteId : undefined) ?? rootNote.noteId;
+        notesByPageId.set(fileId, createFileMemberNote(parentNoteId, info, bytes, isProtected, shrinkImages));
+    }
+
+    // A collection-scoped export omits the collection wrapper, so a file dropped into the collection loses its
+    // membership signal — there's no `links`, and the file's `createdInContext` points at where it was first
+    // added (a page), not the collection. Recover it: in a collection-scoped export, any bundled file the
+    // member pages don't already reference (inline, or as a file property) is a member of the synthesized root
+    // collection — create a `file`/`image` note for it under the root.
+    if (collectionExport) {
+        const referenced = new Set<string>(excludedFileRefs);
+        for (const page of pages) {
+            for (const id of [...page.fileRefs, ...page.inlineFileIds]) {
+                referenced.add(id);
+            }
+        }
+        for (const [fileId, info] of fileObjects) {
+            if (notesByPageId.has(fileId) || referenced.has(fileId)) {
+                continue;
+            }
+            const bytes = files.get(normalizePath(info.source));
+            if (bytes) {
+                notesByPageId.set(fileId, createFileMemberNote(rootNote.noteId, info, bytes, isProtected, shrinkImages));
+            }
+        }
     }
 
     // Membership: clone a member into every collection that isn't already its (primary) parent.
@@ -357,6 +422,109 @@ function createNotes(importRootNote: BNote, pages: ParsedObject[], targets: Map<
     }
 
     return rootNote;
+}
+
+/** The file-object ids a collection lists as members that no page note was created for — i.e. files dropped
+ * directly into a collection (resolvable to bytes via the file map). De-duplicated across collections. */
+function fileMemberIds(pages: ParsedObject[], notesByPageId: Map<string, BNote>, fileObjects: Map<string, FileObjectInfo>): Set<string> {
+    const ids = new Set<string>();
+    for (const page of pages) {
+        for (const memberId of page.collection?.memberIds ?? []) {
+            if (!notesByPageId.has(memberId) && fileObjects.has(memberId)) {
+                ids.add(memberId);
+            }
+        }
+    }
+    return ids;
+}
+
+/** Creates a Trilium note for a file dropped into a collection: an `image` note for an image (so it renders
+ * inline), otherwise a `file` note holding the raw bytes — both children of the owning collection. */
+function createFileMemberNote(parentNoteId: string, info: FileObjectInfo, bytes: Uint8Array, isProtected: boolean | undefined, shrinkImages: boolean): BNote {
+    if (info.mime.startsWith("image/")) {
+        return imageService.saveImage(parentNoteId, bytes, info.title, shrinkImages).note;
+    }
+    const { note } = noteService.createNewNote({ parentNoteId, title: info.title, content: bytes, type: "file", mime: info.mime || "application/octet-stream", isProtected });
+    note.addLabel("originalFileName", info.title);
+    return note;
+}
+
+/**
+ * Resolves the inline file/media placeholders a page's body carries ({@link ./content.js} emits each
+ * `file` block as an `<img>` / `<a class="anytype-file">` whose `src`/`href` is the linked `FileObject`'s
+ * id). For each one it looks the id up in the export's file metadata and bytes, then saves the bytes as an
+ * attachment and rewrites the reference to point at it — an inline `role:"image"` for an image, a
+ * `role:"file"` attachment reference-link for any other file type (matching the Notion importer). A
+ * placeholder whose file is missing from the export (no metadata or bytes — e.g. a still-uploading file) is
+ * dropped (image) or left as plain text (other). Only re-saves the content when something changed.
+ */
+function applyInlineFiles(note: BNote, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, shrinkImages: boolean) {
+    const content = decodeUtf8(note.getContent());
+    // Cheap guard: parse only when the body actually holds a placeholder to resolve.
+    if (!content.includes("<img") && !content.includes('class="anytype-file"')) {
+        return;
+    }
+
+    const root = parse(content);
+    let changed = false;
+
+    for (const img of root.querySelectorAll("img")) {
+        const targetId = img.getAttribute("src");
+        const bytes = targetId ? inlineFileBytes(targetId, fileObjects, files) : undefined;
+        if (!targetId || !bytes) {
+            // Unresolved image (still uploading, or bytes absent) — drop the broken figure rather than
+            // leaving an `<img>` pointing at a bare file id. Only the enclosing `<figure>` is safe to
+            // remove; an inline `<img>` (e.g. inside a paragraph or table cell) must drop just itself so
+            // surrounding text survives.
+            const parent = img.parentNode;
+            if (parent?.tagName?.toLowerCase() === "figure") {
+                parent.remove();
+            } else {
+                /* v8 ignore next -- content.ts always wraps an inline image in a <figure>, so a bare (non-figure) <img> never reaches here; kept as a defensive fallback */
+                img.remove();
+            }
+            changed = true;
+            continue;
+        }
+        const info = fileObjects.get(targetId);
+        const { attachmentId, title } = imageService.saveImageToAttachment(note.noteId, bytes, info?.title || "image", shrinkImages);
+        /* v8 ignore next -- saveImageToAttachment always returns the id of the attachment it just created, so this guard is never false in practice */
+        if (attachmentId) {
+            img.setAttribute("src", `api/attachments/${attachmentId}/image/${encodeURIComponent(title)}`);
+            changed = true;
+        }
+    }
+
+    for (const anchor of root.querySelectorAll("a.anytype-file")) {
+        anchor.removeAttribute("class");
+        changed = true;
+
+        const targetId = anchor.getAttribute("href");
+        const info = targetId ? fileObjects.get(targetId) : undefined;
+        const bytes = targetId ? inlineFileBytes(targetId, fileObjects, files) : undefined;
+        if (!info || !bytes) {
+            // Unresolved file — keep the (now class-less) link text but drop the bare-id href.
+            anchor.removeAttribute("href");
+            continue;
+        }
+        const attachment = saveFileAttachment(note, info.title, bytes, info.mime);
+        /* v8 ignore next -- saveAttachment always returns the id of the attachment it just created, so this guard is never false in practice */
+        if (attachment.attachmentId) {
+            anchor.setAttribute("href", `#root/${note.noteId}?viewMode=attachments&attachmentId=${attachment.attachmentId}`);
+            anchor.setAttribute("class", "reference-link");
+        }
+    }
+
+    if (changed) {
+        note.setContent(root.toString());
+    }
+}
+
+/** The raw bytes a file id (an inline block's `targetObjectId`) resolves to, via its `FileObject`'s source
+ * path, or undefined when either the metadata or the bytes are absent from the export. */
+function inlineFileBytes(targetId: string, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>): Uint8Array | undefined {
+    const info = fileObjects.get(targetId);
+    return info ? files.get(normalizePath(info.source)) : undefined;
 }
 
 /**

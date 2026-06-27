@@ -14,8 +14,8 @@ export interface AnytypeMarkRange {
 }
 
 /** An inline formatting span over a text block's `text`. `type` is the kind (Bold, Italic, Strikethrough,
- * Underscored, Keyboard, TextColor, …); `param` carries extra data for some kinds (a colour name, a link
- * URL). Marks may overlap freely and are not pre-sorted. */
+ * Underscored, Keyboard, TextColor, Mention, …); `param` carries extra data for some kinds (a colour name, a
+ * link URL, or — for a `Mention` — the linked object's id). Marks may overlap freely and are not pre-sorted. */
 export interface AnytypeMark {
     range?: AnytypeMarkRange;
     type?: string;
@@ -55,6 +55,19 @@ export interface AnytypeBlock {
      * for a page link. Rendered as a reference link to the imported target note. */
     link?: {
         targetBlockId?: string;
+        style?: string;
+    };
+    /** A file/media block — an embedded image, PDF or other attached file. `type` is the kind ("Image",
+     * "PDF", "File", "Audio", "Video"); `targetObjectId` is the linked `FileObject`'s id (resolved to its
+     * bytes via the `filesObjects/` metadata + `files/` bytes); `name` is the original filename. Rendered as
+     * an inline `<img>` (Image) or an attachment reference link (other types) pointing at the saved
+     * attachment. `state` is "Done" once the upload finished — a still-uploading file has no bytes. */
+    file?: {
+        name?: string;
+        type?: string;
+        mime?: string;
+        targetObjectId?: string;
+        state?: string;
         style?: string;
     };
     /** A "latex" block — Anytype's embed for code-rendered diagrams and math. `processor` picks the renderer
@@ -154,6 +167,9 @@ export interface ParsedObject {
     properties: ParsedProperty[];
     /** File-object ids from the object's file properties; resolved to `role:"file"` attachments at import. */
     fileRefs: string[];
+    /** File-object ids the body embeds inline (image/file blocks). Tracks which exported files a page already
+     * references, so a collection-scoped export can tell its unreferenced file members apart from these. */
+    inlineFileIds: string[];
     /** Present when the object is a collection: its table schema and membership. */
     collection?: ParsedCollection;
 }

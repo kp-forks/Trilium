@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { mapViewType, synthesizeColumns } from "./collection.js";
+import { buildFileObjectMap, mapViewType, synthesizeColumns } from "./collection.js";
 import { isCollectionObject, isPage, parseObject } from "./importer.js";
 import type { AnytypeBlock, AnytypeMark, AnytypeSnapshot, RelationInfo } from "./model.js";
 
@@ -146,6 +146,26 @@ describe("collection properties", () => {
         it("returns no properties when no relation map is supplied", () => {
             const details = { id: "obj", name: "Row", "6a3e335dcafa6953a4661c74": "https://x" };
             expect(parseObject(snapshot([{ id: "obj", childrenIds: [] }], details)).properties).toEqual([]);
+        });
+
+        it("drops a property whose value is null", () => {
+            // A supported relation carrying an explicit null contributes no label.
+            const details = { id: "obj", "6a3e29d5cafa6953a4661c15": null };
+            expect(parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels).properties).toEqual([]);
+        });
+
+        it("drops a date property whose value isn't a finite number", () => {
+            const details = { id: "obj", "6a3e330acafa6953a4661c6b": "not-a-date" };
+            expect(parseObject(snapshot([{ id: "obj", childrenIds: [] }], details), undefined, rels).properties).toEqual([]);
+        });
+    });
+
+    describe("buildFileObjectMap", () => {
+        it("skips a file object that has no id", () => {
+            const withId = snapshot([], { id: "file-1", name: "doc", fileExt: "pdf", source: "files/doc.pdf" }, "FileObject");
+            const withoutId = snapshot([], { name: "orphan" }, "FileObject");
+            const map = buildFileObjectMap([withId, withoutId]);
+            expect([...map.keys()]).toEqual(["file-1"]);
         });
     });
 

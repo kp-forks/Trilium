@@ -25,7 +25,7 @@ import type { AnytypeBlock, AnytypeMark, LinkResolver } from "./model.js";
  * styles wherever they appear. The de-duplicated Trilium ids of every linked-to page are returned
  * alongside the HTML so the caller can record the `internalLink` relations.
  */
-export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLink: LinkResolver): { html: string; linkTargetIds: string[] } {
+export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLink: LinkResolver): { html: string; linkTargetIds: string[]; fileTargetIds: string[] } {
     const byId = new Map<string, AnytypeBlock>();
     for (const block of blocks) {
         byId.set(block.id, block);
@@ -33,11 +33,15 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
 
     const root = (rootId ? byId.get(rootId) : undefined) ?? blocks[0];
     if (!root) {
-        return { html: "", linkTargetIds: [] };
+        return { html: "", linkTargetIds: [], fileTargetIds: [] };
     }
 
     const visited = new Set<string>();
     const linkTargetIds = new Set<string>();
+    const addLink = (noteId: string) => linkTargetIds.add(noteId);
+    // The FileObject ids the body embeds inline (image/file blocks), so the importer can tell which exported
+    // files a page already references — and, for a collection-scoped export, which are unreferenced members.
+    const fileTargetIds = new Set<string>();
 
     // Renders a run of sibling ids, grouping consecutive same-kind list items into one list. The header
     // chrome and already-visited blocks (a node reachable twice) are skipped.
@@ -83,7 +87,7 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
     }
 
     function renderItem(kind: ListKind, item: AnytypeBlock): string {
-        const text = renderInlineText(item.text?.text ?? "", item.text?.marks?.marks ?? []);
+        const text = renderInlineText(item.text?.text ?? "", item.text?.marks?.marks ?? [], resolveLink, addLink);
         const nested = renderSequence(item.childrenIds ?? []);
         if (kind === "task") {
             // CKEditor's read-only todo-list markup (matches the markdown importer's checkbox output).
@@ -110,6 +114,23 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             return `<p><a class="reference-link" href="#root/${target.noteId}">${escapeHtml(target.title)}</a></p>`;
         }
 
+        // A file/media block — an embedded image or attached file (PDF, audio, …). The placeholder carries
+        // the linked FileObject's id in the `src`/`href`; the importer resolves it to a saved attachment
+        // once the note (and thus the attachment) exists — an inline image for an Image, a reference link
+        // for any other file type. A block with no target (still uploading, or a broken reference) is dropped.
+        if (block.file) {
+            const targetId = block.file.targetObjectId;
+            if (!targetId) {
+                return "";
+            }
+            fileTargetIds.add(targetId);
+            if (block.file.type === "Image") {
+                return `<figure class="image"><img src="${escapeHtml(targetId)}"></figure>`;
+            }
+            const name = (block.file.name ?? "").trim() || targetId;
+            return `<p><a class="anytype-file" href="${escapeHtml(targetId)}">${escapeHtml(name)}</a></p>`;
+        }
+
         // A LaTeX block — a Mermaid diagram or LaTeX math.
         if (block.latex) {
             return renderLatexBlock(block.latex.text ?? "", block.latex.processor);
@@ -118,7 +139,7 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
         // A table block: render its columns/rows/cells subtree directly. Returning here skips the generic
         // child walk below, which would otherwise emit every cell's text as a stray paragraph after the table.
         if (block.table) {
-            return renderTable(block, byId);
+            return renderTable(block, byId, resolveLink, addLink);
         }
 
         // Use the raw text (not trimmed) so mark offsets stay aligned; only the emptiness test trims.
@@ -129,12 +150,12 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
         if (style === "Toggle") {
             // A normal toggle becomes a Trilium collapsible block: its label is the summary, its children
             // the collapsed body. (Toggle *headings* fall through to a normal heading below, via tagForStyle.)
-            return `<details class="trilium-collapsible"><summary>${renderInlineText(rawText, marks)}</summary>${renderSequence(block.childrenIds ?? [])}</details>`;
+            return `<details class="trilium-collapsible"><summary>${renderInlineText(rawText, marks, resolveLink, addLink)}</summary>${renderSequence(block.childrenIds ?? [])}</details>`;
         }
 
         if (style === "Quote") {
             // Anytype's Highlight block (internal style "Quote") → a blockquote; its background tint is dropped.
-            const firstPara = rawText.trim() ? `<p>${renderInlineText(rawText, marks)}</p>` : "";
+            const firstPara = rawText.trim() ? `<p>${renderInlineText(rawText, marks, resolveLink, addLink)}</p>` : "";
             return `<blockquote>${firstPara}${renderSequence(block.childrenIds ?? [])}</blockquote>`;
         }
 
@@ -144,7 +165,9 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             // the emoji kept at the start of the body (admonitions have no per-block icon).
             const emoji = block.text?.iconEmoji ?? "";
             const type = emoji ? "note" : "tip";
-            const lead = [emoji, renderInlineText(rawText, marks)].filter(Boolean).join(" ");
+            // Escape the emoji like every other piece of user text here — it's interpolated raw into the
+            // markup, so an export carrying markup in this field would otherwise inject it.
+            const lead = [escapeHtml(emoji), renderInlineText(rawText, marks, resolveLink, addLink)].filter(Boolean).join(" ");
             const firstPara = lead ? `<p>${lead}</p>` : "";
             return `<aside class="admonition ${type}">${firstPara}${renderSequence(block.childrenIds ?? [])}</aside>`;
         }
@@ -156,7 +179,7 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
                 html = renderCodeBlock(rawText, block.fields?.lang);
             } else {
                 const tag = tagForStyle(style);
-                html = `<${tag}>${renderInlineText(rawText, marks)}</${tag}>`;
+                html = `<${tag}>${renderInlineText(rawText, marks, resolveLink, addLink)}</${tag}>`;
             }
         }
         // A non-list block's children (e.g. a toggle heading's collapsed content) follow as flattened siblings.
@@ -165,7 +188,7 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
 
     // The root block is the page container and carries no text of its own — start from its children.
     const html = renderSequence(root.childrenIds ?? []);
-    return { html, linkTargetIds: [...linkTargetIds] };
+    return { html, linkTargetIds: [...linkTargetIds], fileTargetIds: [...fileTargetIds] };
 }
 
 /** The kind of list a block belongs to (bullet/ordered/task), or null when it isn't a list item. */
@@ -240,6 +263,8 @@ interface AppliedMark {
     param: string;
     from: number;
     to: number;
+    /** For a resolved `Mention`, the reference-link href (`#root/<noteId>`) its span wraps. */
+    href?: string;
 }
 
 /**
@@ -248,24 +273,38 @@ interface AppliedMark {
  * into valid nested HTML by splitting the text at every mark boundary, so no segment straddles a mark edge,
  * then wrapping each segment in the tags whose range fully covers it. Adjacent segments always differ in
  * their active set (a boundary is only created where a mark starts or ends), so output is clean without a
- * merge pass. Links, mentions and emoji are ignored, leaving their text as plain (escaped) content.
+ * merge pass. An inline `Mention` (a link to another object, its target id in `param`) becomes a Trilium
+ * reference link around its span when `resolveLink` maps the target to an imported note — and the note id is
+ * surfaced via `onLink` so the caller records the `internalLink` relation; an unresolved mention (or no
+ * resolver — parsing in isolation) leaves the text plain. Emoji are ignored, leaving their text as plain
+ * (escaped) content.
  */
-export function renderInlineText(text: string, marks: AnytypeMark[]): string {
+export function renderInlineText(text: string, marks: AnytypeMark[], resolveLink?: LinkResolver, onLink?: (noteId: string) => void): string {
     const length = text.length;
 
-    // Keep only marks we render (known structural kind, or a known colour name), with offsets clamped to
-    // the text and empty/reversed ranges dropped.
+    // Keep only marks we render (known structural kind, a known colour name, or a resolvable mention link),
+    // with offsets clamped to the text and empty/reversed ranges dropped.
     const applicable: AppliedMark[] = [];
     for (const mark of marks) {
         const param = mark.param ?? "";
+        const from = Math.max(0, Math.min(length, mark.range?.from ?? 0));
+        const to = Math.max(0, Math.min(length, mark.range?.to ?? 0));
+        if (from >= to) {
+            continue;
+        }
+        if (mark.type === "Mention") {
+            // An inline link to another object → a reference link, when its target was imported.
+            const target = param && resolveLink ? resolveLink(param) : undefined;
+            if (target) {
+                applicable.push({ type: "Mention", param, from, to, href: `#root/${target.noteId}` });
+                onLink?.(target.noteId);
+            }
+            continue;
+        }
         if (mark.type === undefined || !isRenderable(mark.type, param)) {
             continue;
         }
-        const from = Math.max(0, Math.min(length, mark.range?.from ?? 0));
-        const to = Math.max(0, Math.min(length, mark.range?.to ?? 0));
-        if (from < to) {
-            applicable.push({ type: mark.type, param, from, to });
-        }
+        applicable.push({ type: mark.type, param, from, to });
     }
 
     if (applicable.length === 0) {
@@ -308,7 +347,8 @@ function isRenderable(type: string, param: string): boolean {
 /**
  * Wraps one segment in the tags of the marks that fully cover it. Text and background colour fold into a
  * single innermost `<span>` (a highlight without a text colour gets the default dark text); the structural
- * marks then nest around it, Bold outermost per {@link MARK_ORDER}.
+ * marks then nest around it, Bold outermost per {@link MARK_ORDER}; a covering mention link wraps the whole
+ * thing as the outermost reference-link anchor.
  */
 function wrapSegment(segment: string, covering: AppliedMark[]): string {
     const textColor = paletteValue(covering, "TextColor", TEXT_COLORS);
@@ -329,6 +369,11 @@ function wrapSegment(segment: string, covering: AppliedMark[]): string {
     for (let i = structural.length - 1; i >= 0; i--) {
         const tag = MARK_TAGS[structural[i].type];
         html = `<${tag}>${html}</${tag}>`;
+    }
+
+    const mention = covering.find((mark) => mark.type === "Mention");
+    if (mention?.href) {
+        html = `<a class="reference-link" href="${mention.href}">${html}</a>`;
     }
 
     return html;
@@ -399,8 +444,10 @@ export function renderLatexBlock(text: string, processor: string | undefined): s
  * order and, for each row, place that column's cell (blank when absent) so the grid stays aligned. A row
  * flagged `isHeader` becomes `<th scope="col">` in a `<thead>`; the rest are `<td>` in the `<tbody>`. The
  * table is wrapped in `<figure class="table">`, the shape CKEditor stores (mirroring the Notion importer).
+ * `resolveLink`/`onLink` are passed through to cell text so an inline mention in a cell becomes a reference
+ * link (and records its `internalLink`), like anywhere else.
  */
-export function renderTable(table: AnytypeBlock, byId: Map<string, AnytypeBlock>): string {
+export function renderTable(table: AnytypeBlock, byId: Map<string, AnytypeBlock>, resolveLink?: LinkResolver, onLink?: (noteId: string) => void): string {
     const [colsLayoutId, rowsLayoutId] = table.childrenIds ?? [];
     const columnIds = (colsLayoutId ? byId.get(colsLayoutId)?.childrenIds : undefined) ?? [];
     const rowIds = (rowsLayoutId ? byId.get(rowsLayoutId)?.childrenIds : undefined) ?? [];
@@ -429,7 +476,7 @@ export function renderTable(table: AnytypeBlock, byId: Map<string, AnytypeBlock>
         const cells = columnIds
             .map((columnId) => {
                 const cell = cellByColumn.get(columnId);
-                const content = cell ? renderInlineText(cell.text?.text ?? "", cell.text?.marks?.marks ?? []) : "";
+                const content = cell ? renderInlineText(cell.text?.text ?? "", cell.text?.marks?.marks ?? [], resolveLink, onLink) : "";
                 return `<${tag}${scope}>${content}</${tag}>`;
             })
             .join("");
