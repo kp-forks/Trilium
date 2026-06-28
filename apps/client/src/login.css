@@ -1,0 +1,26 @@
+/* The login page shares the set-password page's compact-card layout: the setup
+   container's own padding is dropped (see set_password.css for why), and the short
+   form is centred within the fixed wizard frame. */
+
+/* The password variant wraps the whole page in a <form> so the footer's submit button
+   triggers its submit handler; setup.css styles every form at 80% width, which would
+   squeeze the page and float the footer. display: contents makes the form layout-
+   transparent so the page and its full-bleed footer fill the frame. (SSO has no form.) */
+body.setup .setup-container.login-container > form {
+    display: contents;
+}
+
+body.setup .setup-container.login-container {
+    padding: 0;
+}
+
+body.setup .page.login > main {
+    justify-content: center;
+    width: 75%;
+    margin: auto;
+}
+
+body.setup .page.login .login-sso {
+    display: flex;
+    justify-content: center;
+}

@@ -47,14 +47,16 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
         if (hasRedirectBareDomain) {
             // Only redirect to the share page when a share root is actually configured.
             // Otherwise (e.g. the owner's session expired before they set one up) fall back
-            // to the login page rather than stranding the user on a 404. See #7869.
+            // to the login screen rather than stranding the user on a 404. See #7869.
             const shareRootNotes = attributes.getNotesWithLabel("shareRoot");
             if (shareRootNotes.length > 0) {
                 res.redirect("share");
                 return;
             }
         }
-        res.redirect("login");
+        // Otherwise serve the SPA, which renders the login screen from the bootstrap
+        // `loggedIn: false` payload. The API stays protected separately via checkApiAuth.
+        return next();
     } else if (currentTotpStatus !== lastAuthState.totpEnabled || currentSsoStatus !== lastAuthState.ssoEnabled) {
         req.session.destroy((err) => {
             if (err) console.error('Error destroying session:', err);

@@ -142,6 +142,11 @@ async function loadScripts() {
         return;
     }
 
+    if (glob.loggedIn === false) {
+        await import("./login_page.js");
+        return;
+    }
+
     switch (glob.device) {
         case "mobile":
             await import("./mobile.js");

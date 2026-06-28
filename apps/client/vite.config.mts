@@ -97,7 +97,6 @@ export default defineConfig(() => ({
         rollupOptions: {
             input: {
                 index: join(__dirname, "index.html"),
-                login: join(__dirname, "src", "login.ts"),
                 runtime: join(__dirname, "src", "runtime.ts"),
                 print: join(__dirname, "src", "print.tsx")
             },

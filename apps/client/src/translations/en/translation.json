@@ -2849,6 +2849,18 @@
     "sample_treeview": "TreeView",
     "sample_wardley": "Wardley Map"
   },
+  "login": {
+    "heading": "Trilium Login",
+    "password": "Password",
+    "totp-token": "TOTP token",
+    "button": "Login",
+    "remember-me": "Remember me",
+    "incorrect-password": "Password is incorrect. Please try again.",
+    "incorrect-totp": "TOTP is incorrect. Please try again.",
+    "sign_in_with_sso": "Sign in with {{ssoIssuerName}}",
+    "sso-wrong-account": "That account isn't the one linked to this Trilium instance. Sign in with the linked account.",
+    "sso-not-enrolled": "Single sign-on isn't set up yet. Sign in with your password first, then link your account from the settings."
+  },
   "set_password": {
     "heading": "Set password",
     "description": "Before you can start using Trilium from web, you need to set a password first. You will then use this password to login.",
