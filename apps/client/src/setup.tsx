@@ -108,6 +108,7 @@ function SelectLanguage({ setState }: { setState: (state: State) => void }) {
                             key={locale.id}
                             value={locale.id}
                             active={locale.id === currentLocale}
+                            rtl={locale.rtl}
                             onClick={async () => {
                                 await i18n.changeLanguage(locale.id);
                                 setCurrentLocale(locale.id);
