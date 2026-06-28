@@ -2863,8 +2863,6 @@
     "load_failed": "无法加载你的 OneNote 笔记本。",
     "no_notebooks": "未在此帐户中找到笔记本。",
     "select_sections": "选择要导入的分区：",
-    "order_hint_title": "分区的大致顺序",
-    "order_hint": "OneNote 的导入数据不包含原始排序信息，所以分区和分区组会按创建日期排序，可能与 OneNote 中的实际排列不完全一致。",
     "import": "导入所选内容",
     "attach_source": "附加原始 HTML（debug）",
     "attach_source_hint": "将每个页面未经修改的 OneNote HTML 作为附件保存在导入后的笔记上，便于与转换结果进行对比。"

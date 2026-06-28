@@ -2916,11 +2916,9 @@
     "description": "Importer des cahiers, sections et pages de votre compte OneNote.",
     "connect_description": "Connectez-vous avec votre compte Microsoft pour importer vos cahiers OneNote.",
     "connect": "Connectez-vous avec Microsoft",
-    "order_hint_title": "Ordre approximatif des sections",
     "import": "Importer la sélection",
     "attach_source": "Joindre le code HTML d'origine (débogage)",
-    "attach_source_hint": "Enregistre le code HTML OneNote non modifié de chaque page en tant que pièce jointe à la note importée, afin de permettre une comparaison avec le résultat converti.",
-    "order_hint": "OneNote n'inclut pas l'ordre d'origine dans les données importées ; par conséquent, les sections et les groupes sont triés par date de création et peuvent ne pas correspondre à leur disposition dans OneNote."
+    "attach_source_hint": "Enregistre le code HTML OneNote non modifié de chaque page en tant que pièce jointe à la note importée, afin de permettre une comparaison avec le résultat converti."
   },
   "split_editor": {
     "show_details": "Montrer les détails",

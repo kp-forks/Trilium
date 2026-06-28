@@ -2917,8 +2917,6 @@
     "load_failed": "OneNote ノートブックを読み込めませんでした。",
     "no_notebooks": "このアカウントにはノートブックが見つかりませんでした。",
     "select_sections": "インポートするセクションを選択:",
-    "order_hint_title": "セクションの並び順",
-    "order_hint": "OneNote のインポートデータには元の並び順が含まれていないため、セクションとグループは作成日順に並べ替えられ、OneNote での表示と一致しない場合があります。",
     "import": "選択した項目をインポート",
     "attach_source": "元のHTMLを添付（デバッグ）",
     "attach_source_hint": "変換後の結果と比較できるように、各ページの変更されていない OneNote の HTML をインポートされたノートに添付ファイルとして保存します。"

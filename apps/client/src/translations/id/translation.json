@@ -2873,8 +2873,6 @@
     "load_failed": "Tidak dapat memuat notebook OneNote Anda.",
     "no_notebooks": "Tidak ada notebook yang ditemukan di akun ini.",
     "select_sections": "Pilih section yang akan diimpor:",
-    "order_hint_title": "Perkiraan urutan section",
-    "order_hint": "OneNote tidak menyertakan urutan asli dalam data impor, sehingga section dan group diurutkan berdasarkan tanggal pembuatan dan mungkin tidak sesuai dengan tampilan di OneNote.",
     "import": "Impor yang dipilih",
     "attach_source": "Lampirkan HTML asli (debug)",
     "attach_source_hint": "Menyimpan HTML OneNote asli setiap page tanpa perubahan sebagai lampiran pada catatan yang diimpor, untuk membandingkannya dengan hasil konversi."

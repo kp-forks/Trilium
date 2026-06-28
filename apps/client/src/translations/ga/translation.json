@@ -3003,8 +3003,6 @@
     "load_failed": "Níorbh fhéidir do leabhair nótaí OneNote a luchtú.",
     "no_notebooks": "Ní bhfuarthas aon leabhair nótaí sa chuntas seo.",
     "select_sections": "Roghnaigh na rannóga le hallmhairiú:",
-    "order_hint_title": "Ord na rannóg garbh",
-    "order_hint": "Ní chuimsíonn OneNote an t-ordú bunaidh sna sonraí allmhairithe, mar sin déantar rannóga agus grúpaí a shórtáil de réir dáta cruthaithe agus b'fhéidir nach n-oireann siad don chaoi a bhfeictear iad in OneNote.",
     "import": "Iompórtáil roghnaithe",
     "attach_source": "Ceangail HTML bunaidh (dífhabhtú)",
     "attach_source_hint": "Sábhálann sé HTML OneNote neamhathraithe gach leathanaigh mar cheangaltán ar an nóta allmhairithe, chun comparáid a dhéanamh leis an toradh tiontaithe."
