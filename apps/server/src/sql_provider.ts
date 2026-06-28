@@ -24,6 +24,11 @@ export default class BetterSqlite3Provider implements DatabaseProvider {
             readonly: isReadOnly
         });
         this.dbConnection.pragma("journal_mode = WAL");
+        // In WAL mode NORMAL is corruption-safe and skips the per-commit fsync (the WAL is synced at
+        // checkpoints instead), so bulk writes — imports, sync applying many changes — aren't an fsync
+        // storm. A power loss can lose only the last few committed transactions, never corrupt the DB.
+        // The standalone/WASM provider already uses this; this brings the desktop/server in line.
+        this.dbConnection.pragma("synchronous = NORMAL");
     }
 
     loadFromMemory() {
