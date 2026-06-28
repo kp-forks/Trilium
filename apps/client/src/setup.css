@@ -176,6 +176,7 @@ body.setup {
                 box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
                 padding-top: calc(1em + env(safe-area-inset-top));
                 padding-inline-end: 2.5em;
+                user-select: text;
 
                 @media (min-width: 700px) {
                     border-radius: 16px 16px 0 0;
