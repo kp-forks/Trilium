@@ -456,9 +456,13 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
         it("streams a subtree export for the given branch to a file path", async () => {
             const { note, branch } = createNote("root", { title: "BranchFileExport", content: "<p>branch to file</p>" });
             const zipPath = join(tempDir, `branch-export-${note.noteId}.zip`);
+            const { branchId } = branch;
+            if (!branchId) {
+                throw new Error("branch was not saved");
+            }
 
             await getContext().init(() =>
-                zip.exportBranchToZipFile(branch.branchId, "html", zipPath, "no-progress-reporting")
+                zip.exportBranchToZipFile(branchId, "html", zipPath, "no-progress-reporting")
             );
 
             const buffer = readFileSync(zipPath);
