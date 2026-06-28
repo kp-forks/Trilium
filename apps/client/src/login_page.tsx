@@ -122,7 +122,16 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
             }
 
             const factor = resp.status === 401 ? (await resp.json().catch(() => ({}))).factor : undefined;
-            onError(factor === "totp" ? t("login.incorrect-totp") : t("login.incorrect-password"));
+            if (factor === "totp") {
+                // This field accepts either a 6-digit TOTP or a recovery code (22 chars + "=="),
+                // so tailor the message to what was actually entered. This keys off the user's
+                // own input shape, never server state, so it can't reveal whether a given code
+                // was genuinely valid or already used.
+                const looksLikeRecoveryCode = /^.{22}==$/.test(totpRef.current?.value ?? "");
+                onError(t(looksLikeRecoveryCode ? "login.incorrect-recovery-code" : "login.incorrect-totp"));
+            } else {
+                onError(t("login.incorrect-password"));
+            }
         } catch {
             onError(t("login.incorrect-password"));
         } finally {
