@@ -76,7 +76,11 @@ async function importNotesToBranch(req: ImportRequest<{ parentNoteId: string }>)
             // Trilium export by extension alone; the Obsidian import dialog tags the upload to route it here.
             note = await obsidianImportService.importObsidian(taskContext, file.buffer, parentNote, file.originalname);
         } else if (extension === ".zip" && options.explodeArchives && typeof file.buffer !== "string") {
-            note = await zipImportService.importZip(taskContext, file.buffer, parentNote);
+            // Prefer reading the archive straight from the uploaded temp file (server disk storage) so a
+            // multi-GB zip is streamed per entry — never held in one buffer, and free of fs.readFile's
+            // ~2 GiB ceiling. Falls back to the buffer when there's no path (the browser/WASM upload).
+            const zipSource = file.path ? { path: file.path } : file.buffer;
+            note = await zipImportService.importZip(taskContext, zipSource, parentNote);
         } else if (extension === ".opml" && options.explodeArchives) {
             const importResult = await opmlImportService.importOpml(taskContext, file.buffer, parentNote);
             if (!Array.isArray(importResult)) {

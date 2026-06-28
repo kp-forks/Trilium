@@ -225,15 +225,44 @@ export const importMiddlewareWithErrorHandling = function (req: express.Request,
             next(err);
             return;
         }
-        void materializeUploadedImport(req.file, next);
+
+        const file = req.file;
+        if (file?.path && isStreamableZipUpload(req)) {
+            // Generic `.zip` import: hand the importer the temp file's path so the archive is read in
+            // place per entry (the route prefers `file.path`), never buffered. Keep the temp file alive
+            // through the import and delete it once the response is done (or the connection drops).
+            const tempPath = file.path;
+            res.on("close", () => void rm(tempPath, { force: true }).catch(() => {}));
+            next();
+            return;
+        }
+
+        void materializeUploadedImport(file, next);
     });
 };
 
 /**
- * diskStorage gives us `file.path` rather than `file.buffer`. The shared core import handlers still consume
- * `file.buffer`, so read the temp file back into it and delete the temp file before handing off — the unlink
- * is awaited so nothing is left behind even if the handler later throws. (Step 2 will stream importers
- * straight from the path instead of re-buffering here.)
+ * Whether this upload is a plain `.zip` the generic zip importer will read — the case worth streaming from
+ * disk. Tagged provider uploads (notion/keep/anytype/obsidian) and non-zip files go through buffer-based
+ * importers, so they take the {@link materializeUploadedImport} path instead. Kept in sync with the
+ * generic-zip branch in the core import route (routes/api/import.ts).
+ */
+function isStreamableZipUpload(req: express.Request): boolean {
+    const body = req.body as Record<string, string> | undefined;
+    if (body?.format) {
+        return false;
+    }
+    if (body?.explodeArchives === "false") {
+        return false;
+    }
+    return req.file?.originalname?.toLowerCase().endsWith(".zip") ?? false;
+}
+
+/**
+ * For uploads that aren't streamed from a path (tagged providers, non-zip files, the browser): diskStorage
+ * gives us `file.path` rather than `file.buffer`, but those importers consume `file.buffer`, so read the
+ * temp file back into it and delete the temp file before handing off — the unlink is awaited so nothing is
+ * left behind even if the handler later throws.
  */
 async function materializeUploadedImport(file: Express.Multer.File | undefined, next: express.NextFunction) {
     if (!file?.path) {
