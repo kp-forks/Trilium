@@ -42,17 +42,13 @@ function App() {
         return (
             <div class="setup-container login-container">
                 <SetupPage className="login" title={t("login.heading")} illustration={illustration} error={error} errorId={errorId}>
-                    <Card>
-                        <CardSection className="login-sso">
-                            {/* Server route that initiates the OpenID round-trip. */}
-                            <a href="/authenticate" class="google-login-btn">
-                                {config.ssoIssuerIcon
-                                    ? <img src={config.ssoIssuerIcon} alt="" onError={(e) => (e.currentTarget as HTMLImageElement).remove()} />
-                                    : null}
-                                {t("login.sign_in_with_sso", { ssoIssuerName: config.ssoIssuerName ?? "" })}
-                            </a>
-                        </CardSection>
-                    </Card>
+                    {/* Server route that initiates the OpenID round-trip. */}
+                    <a href="/authenticate" class="google-login-btn">
+                        {config.ssoIssuerIcon
+                            ? <img src={config.ssoIssuerIcon} alt="" onError={(e) => (e.currentTarget as HTMLImageElement).remove()} />
+                            : null}
+                        {t("login.sign_in_with_sso", { ssoIssuerName: config.ssoIssuerName ?? "" })}
+                    </a>
                 </SetupPage>
             </div>
         );
