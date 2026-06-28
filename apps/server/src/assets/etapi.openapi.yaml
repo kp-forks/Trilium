@@ -294,6 +294,16 @@ paths:
               required: true
               schema:
                   $ref: "#/components/schemas/EntityId"
+            - name: restoreAsRoot
+              in: query
+              required: false
+              description: >-
+                  When importing a whole-database ZIP export (one whose top note is the database root), map
+                  the archive's "root" note onto {noteId} instead of nesting it under a redundant "root"
+                  wrapper note. Typically used with noteId "root" to restore an entire database.
+              schema:
+                  type: boolean
+                  default: false
         post:
             description: Imports ZIP file into a given note.
             operationId: importZip

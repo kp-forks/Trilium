@@ -43,4 +43,21 @@ describe("etapi/import", () => {
         expect(wrapper?.getChildNotes().map((n) => n.title)).toEqual(expect.arrayContaining(["Journal", "Trilium Demo", "Miscellaneous"]));
         expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
     });
+
+    it("demo zip imports flat under root with ?restoreAsRoot=true (whole-database restore)", async () => {
+        const buffer = readFileSync(join(__dirname, "../../src/assets/db/demo.zip"));
+        const response = await supertest(app)
+            .post("/etapi/notes/root/import?restoreAsRoot=true")
+            .auth(USER, token, { "type": "basic"})
+            .set("Content-Type", "application/octet-stream")
+            .set("Content-Transfer-Encoding", "binary")
+            .send(buffer)
+            .expect(201);
+
+        // restoreAsRoot maps the archive's "root" onto the destination root, so its children land directly
+        // under root (no wrapper note) and no self-referential root->root branch is created.
+        expect(response.body.note.title).toStrictEqual("Journal");
+        expect(response.body.branch.parentNoteId).toStrictEqual("root");
+        expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
+    });
 });
