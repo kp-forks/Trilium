@@ -3,6 +3,8 @@ import type { Express } from "express";
 import fs from "fs";
 import http from "http";
 import https from "https";
+import inspector from "inspector";
+import path from "path";
 import tmp from "tmp";
 
 import buildApp from "./app.js";
@@ -37,13 +39,33 @@ export default async function startTriliumServer(): Promise<Express> {
         getLog().info(error);
     });
 
-    function exit() {
-        console.log("Caught interrupt/termination signal. Exiting.");
-        process.exit(0);
+    // When TRILIUM_PROFILE is set we drive the V8 CPU profiler ourselves rather than relying on Node's
+    // --cpu-prof flag: that flag flushes its file during the normal shutdown path, which the exit() handler
+    // below short-circuits with process.exit(0), so the profile is silently never written.
+    const profilerSession = startCpuProfiler();
+
+    let exiting = false;
+    function exit(reason: string) {
+        if (exiting) {
+            return;
+        }
+        exiting = true;
+        console.log(reason);
+        // Writing the profile needs an async inspector round-trip. On a signal this races the process
+        // teardown and often loses, so the reliable trigger is the Enter keypress wired up below; the
+        // signal path is best-effort.
+        writeCpuProfile(profilerSession, () => process.exit(0));
     }
 
-    process.on("SIGINT", exit);
-    process.on("SIGTERM", exit);
+    process.on("SIGINT", () => exit("Caught interrupt/termination signal. Exiting."));
+    process.on("SIGTERM", () => exit("Caught interrupt/termination signal. Exiting."));
+
+    if (profilerSession) {
+        // Pressing Enter fires during normal event-loop operation, so the async profile flush completes
+        // before we exit — unlike Ctrl+C, which the V8 inspector round-trip can't reliably outrun.
+        process.stdin.resume();
+        process.stdin.on("data", () => exit("Writing CPU profile and exiting (TRILIUM_PROFILE)."));
+    }
 
     if (utils.compareVersions(process.versions.node, MINIMUM_NODE_VERSION) < 0) {
         console.error();
@@ -75,6 +97,60 @@ export default async function startTriliumServer(): Promise<Express> {
     registerOcrHandlers();
 
     return app;
+}
+
+/**
+ * Starts the V8 CPU profiler when TRILIUM_PROFILE is set, returning the inspector session (or null when
+ * profiling is disabled). The companion {@link writeCpuProfile} stops it and writes the `.cpuprofile`.
+ */
+function startCpuProfiler(): inspector.Session | null {
+    if (!process.env.TRILIUM_PROFILE) {
+        return null;
+    }
+
+    const session = new inspector.Session();
+    session.connect();
+    session.post("Profiler.enable", () => {
+        session.post("Profiler.start", () => {
+            console.log("CPU profiler started (TRILIUM_PROFILE). Press Enter in this terminal to write the profile and exit.");
+        });
+    });
+
+    return session;
+}
+
+/**
+ * Stops the profiler started by {@link startCpuProfiler}, writes the result into `profiles/` (relative to the
+ * working directory), then invokes `done`. When profiling is disabled, or if writing fails, `done` still runs
+ * so shutdown is never blocked.
+ */
+function writeCpuProfile(session: inspector.Session | null, done: () => void) {
+    if (!session) {
+        done();
+        return;
+    }
+
+    // Don't let a stuck profiler hang shutdown — exit anyway after a short grace period.
+    const fallback = setTimeout(done, 3000);
+
+    session.post("Profiler.stop", (err, result) => {
+        clearTimeout(fallback);
+        try {
+            if (err) {
+                throw err;
+            }
+            const dir = path.resolve("profiles");
+            fs.mkdirSync(dir, { recursive: true });
+            const file = path.join(dir, `import-${process.pid}.cpuprofile`);
+            fs.writeFileSync(file, JSON.stringify(result.profile));
+            console.log(`CPU profile written to ${file}`);
+        } catch (e) {
+            console.error("Failed to write CPU profile:", e);
+        } finally {
+            session.disconnect();
+            done();
+        }
+    });
 }
 
 async function displayStartupMessage() {
