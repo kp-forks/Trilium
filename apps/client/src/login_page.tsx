@@ -9,10 +9,9 @@ import logo from "./assets/icon-color.svg?url";
 import { initLocale, t } from "./services/i18n";
 import Button from "./widgets/react/Button";
 import { Card, CardSection } from "./widgets/react/Card";
-import FormGroup from "./widgets/react/FormGroup";
 import FormTextBox from "./widgets/react/FormTextBox";
 import SetupPage from "./widgets/react/SetupPage";
-import { OptionsRowWithToggle } from "./widgets/type_widgets/options/components/OptionsRow";
+import OptionsRow, { OptionsRowWithToggle } from "./widgets/type_widgets/options/components/OptionsRow";
 
 async function main() {
     await initLocale((window.glob.currentLocale?.id ?? "en") as LOCALE_IDS);
@@ -132,29 +131,25 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
             >
                 <Card>
                     <CardSection>
-                        <FormGroup label={t("login.password")} name="password">
+                        <OptionsRow name="password" label={t("login.password")} stacked>
                             <FormTextBox
                                 inputRef={passwordRef} autoFocus
                                 type="password" name="password"
                                 currentValue={password} onChange={setPassword}
                                 autocomplete="current-password" required
                             />
-                        </FormGroup>
-                    </CardSection>
+                        </OptionsRow>
 
-                    {totpEnabled && (
-                        <CardSection>
-                            <FormGroup label={t("login.totp-token")} name="totpToken">
+                        {totpEnabled && (
+                            <OptionsRow name="totpToken" label={t("login.totp-token")} stacked>
                                 <FormTextBox
                                     name="totpToken"
                                     currentValue={totpToken} onChange={setTotpToken}
                                     autocomplete="one-time-code" required
                                 />
-                            </FormGroup>
-                        </CardSection>
-                    )}
+                            </OptionsRow>
+                        )}
 
-                    <CardSection>
                         <OptionsRowWithToggle
                             name="rememberMe"
                             label={t("login.remember-me")}
