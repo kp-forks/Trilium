@@ -1,9 +1,6 @@
-<aside class="admonition note">
-  <p>This import mechanism was introduced in Trilium v0.104.0.</p>
-</aside>
 <p>Although Obsidian was indirectly supported through the standard&nbsp;
   <a
-  class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/mHbBMPDPkVV5/_help_Oau6X9rCuegd">Markdown</a>&nbsp;import, its vault structure is distinct enough to warrant
+  class="reference-link" href="#root/_help_Oau6X9rCuegd">Markdown</a>&nbsp;import, its vault structure is distinct enough to warrant
     its own dedicated import channel.</p>
 <h2>Import process</h2>
 <p>The first step is to obtain a .zip of your Obsidian vault:</p>
@@ -34,28 +31,28 @@
   <li>Basic Markdown formatting (bold, italic, underline, strikethrough, headings).</li>
   <li
  >Specific Obsidian formatting (highlighting).</li>
-    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_S6Xx8QIWTV66">Lists</a>
+    <li><a class="reference-link" href="#root/_help_S6Xx8QIWTV66">Lists</a>
     </li>
     <li>To-do lists</li>
-    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">Images</a>&nbsp;and&nbsp;
+    <li><a class="reference-link" href="#root/_help_mT0HEkOsz6i1">Images</a>&nbsp;and&nbsp;
       <a
-      class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_0vhv7lsOLy82">Attachments</a>
+      class="reference-link" href="#root/_help_0vhv7lsOLy82">Attachments</a>
         <ul>
           <li>Non-Markdown files in the Vault are treated as attachments by default
             if they are referenced by at least one note.</li>
-          <li>Otherwise, they will be imported as&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_W8vYD3Q1zjCR">File</a>&nbsp;notes.</li>
+          <li>Otherwise, they will be imported as&nbsp;<a class="reference-link" href="#root/_help_W8vYD3Q1zjCR">File</a>&nbsp;notes.</li>
         </ul>
     </li>
-    <li>Transclusions are converted to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_nBAXQFj20hS1">Include Note</a>&nbsp;or&nbsp;
+    <li>Transclusions are converted to&nbsp;<a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;or&nbsp;
       <a
-      class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_mT0HEkOsz6i1">Images</a>&nbsp;(depending on type).</li>
+      class="reference-link" href="#root/_help_mT0HEkOsz6i1">Images</a>&nbsp;(depending on type).</li>
     <li><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(inline
       or block)</li>
     <li><a class="reference-link" href="#root/_help_QxEyIjRBizuC">Code blocks</a>, with
       a best-effort attempt to restore the language.</li>
-    <li>Links between pages are converted to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/QEAPj01N5f7w/_help_hrZ1D00cLbal">Internal (reference) links</a>.</li>
+    <li>Links between pages are converted to&nbsp;<a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>.</li>
     <li
-   >Callouts are converted to Trilium's <a href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/iPIMuisry3hd/_help_NwBbFdNZ9h7O">Admonitions</a>.
+   >Callouts are converted to Trilium's <a href="#root/_help_NwBbFdNZ9h7O">Admonitions</a>.
       <ul>
         <li>Obsidian has many more types of callouts (<code spellcheck="false">tldr</code>,
           <code
@@ -68,7 +65,7 @@
       </ul>
       </li>
       <li>Notes created by the <a href="https://github.com/zsviczian/obsidian-excalidraw-plugin"><em>Excalidraw</em></a> community
-        plugin for Obsidian are converted to&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_grjYqerjn243">Canvas</a>&nbsp;(same
+        plugin for Obsidian are converted to&nbsp;<a class="reference-link" href="#root/_help_grjYqerjn243">Canvas</a>&nbsp;(same
         underlying technology).
         <ul>
           <li>Note that custom features introduced by that plugin will not be supported.</li>
@@ -80,27 +77,26 @@
 </ul>
 <h2>Properties</h2>
 <p>Properties are Obsidian's equivalent of&nbsp;<a class="reference-link"
-  href="#root/pOsGYCXsbNQG/tC7s2alapj8V/zEY4DaJG4YT5/_help_OFXdgB2nNk1F">Promoted Attributes</a>.
-  One of the core differences between the two is where the property information
-  is stored (i.e. name and type): in Obsidian everything is stored at vault
-  level and shared across all notes, whereas in Trilium each page can have
-  individual promoted attributes, shared through&nbsp;<a class="reference-link"
-  href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_KC1HB96bqqHX">Templates</a>&nbsp;or&nbsp;
+  href="#root/_help_OFXdgB2nNk1F">Promoted Attributes</a>. One of the core differences
+  between the two is where the property information is stored (i.e. name
+  and type): in Obsidian everything is stored at vault level and shared across
+  all notes, whereas in Trilium each page can have individual promoted attributes,
+  shared through&nbsp;<a class="reference-link" href="#root/_help_KC1HB96bqqHX">Templates</a>&nbsp;or&nbsp;
   <a
-  class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/zEY4DaJG4YT5/_help_bwZpz2ajCEwO">Attribute Inheritance</a>.</p>
+  class="reference-link" href="#root/_help_bwZpz2ajCEwO">Attribute Inheritance</a>.</p>
 <p>Another important difference is that promoted attributes in Trilium are
   always displayed, even if empty. In Obsidian, these are simply suggested
   when creating a new property.</p>
 <p>To reconcile all these differences, properties are converted to&nbsp;
   <a
-  class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/zEY4DaJG4YT5/_help_OFXdgB2nNk1F">Promoted Attributes</a>&nbsp;at note level.</p>
+  class="reference-link" href="#root/_help_OFXdgB2nNk1F">Promoted Attributes</a>&nbsp;at note level.</p>
 <p>The following note types are supported:</p>
 <figure class="table">
   <table>
     <thead>
       <tr>
-        <th scope="col">Obsidian type</th>
-        <th scope="col">Trilium</th>
+        <th>Obsidian type</th>
+        <th>Trilium</th>
       </tr>
     </thead>
     <tbody>
@@ -140,9 +136,9 @@
   in Trilium as well:</p>
 <ul>
   <li><code spellcheck="false">tags</code>, where every tag is turned into its
-    own <a href="#root/pOsGYCXsbNQG/tC7s2alapj8V/zEY4DaJG4YT5/_help_HI6GBBIduIgv">label</a> (e.g.
+    own <a href="#root/_help_HI6GBBIduIgv">label</a> (e.g. <code spellcheck="false">#one</code>,
     <code
-    spellcheck="false">#one</code>, <code spellcheck="false">#two</code> when <code spellcheck="false">tags: [ one, two ]</code>).</li>
+    spellcheck="false">#two</code>when <code spellcheck="false">tags: [ one, two ]</code>).</li>
   <li
  ><code spellcheck="false">aliases</code> are simply mapped to individual
     <code
@@ -158,22 +154,22 @@
  >Obsidian <em>bases</em> functionality is not preserved.
     <ul>
       <li>The closest equivalent in Trilium would be&nbsp;<a class="reference-link"
-        href="#root/pOsGYCXsbNQG/_help_GTwFsgaA0lCt">Collections</a>&nbsp;but they work
-        fundamentally different because bases don't store particular notes, they
-        act more like a&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_m523cpzocqaD">Saved Search</a>&nbsp;with
+        href="#root/_help_GTwFsgaA0lCt">Collections</a>&nbsp;but they work fundamentally
+        different because bases don't store particular notes, they act more like
+        a&nbsp;<a class="reference-link" href="#root/_help_m523cpzocqaD">Saved Search</a>&nbsp;with
         a collection view.</li>
       <li>Since the base query format is quite different to Trilium's&nbsp;<a class="reference-link"
-        href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/wArbEsdSae6g/_help_eIg8jdvaoNNd">Search</a>&nbsp;syntax,
-        it's unlikely they'll ever be supported.</li>
-      <li>When a base is encountered, it is simply ignored from the import.&nbsp;</li>
+        href="#root/_help_eIg8jdvaoNNd">Search</a>&nbsp;syntax, it's unlikely they'll
+        ever be supported.</li>
+      <li>When a base is encountered, it is simply ignored from the import.</li>
     </ul>
     </li>
     <li>Canvases are not imported.
       <ul>
         <li>Theoretically they could map to either&nbsp;<a class="reference-link"
-          href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_grjYqerjn243">Canvas</a>&nbsp;or&nbsp;
-          <a
-          class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iRwzGnHPzonm">Relation Map</a>&nbsp;but they are too different to reconcile.</li>
+          href="#root/_help_grjYqerjn243">Canvas</a>&nbsp;or&nbsp;<a class="reference-link"
+          href="#root/_help_iRwzGnHPzonm">Relation Map</a>&nbsp;but they are too different
+          to reconcile.</li>
       </ul>
     </li>
     <li>Links

@@ -1,7 +1,4 @@
 # Obsidian
-> [!NOTE]
-> This import mechanism was introduced in Trilium v0.104.0.
-
 Although Obsidian was indirectly supported through the standard <a class="reference-link" href="../Markdown.md">Markdown</a> import, its vault structure is distinct enough to warrant its own dedicated import channel.
 
 ## Import process

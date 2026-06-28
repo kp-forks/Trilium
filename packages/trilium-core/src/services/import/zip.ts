@@ -1,6 +1,6 @@
 import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
 import { basename, dirname } from "../utils/path.js";
-import { getZipProvider } from "../zip_provider.js";
+import { getZipProvider, type ZipSource } from "../zip_provider.js";
 
 import becca from "../../becca/becca.js";
 import BAttachment from "../../becca/entities/battachment.js";
@@ -13,6 +13,7 @@ import noteService from "../../services/notes.js";
 import { getNoteTitle, newEntityId, removeFileExtension, unescapeHtml } from "../../services/utils/index.js";
 import { processStringOrBuffer } from "../../services/utils/binary.js";
 import protectedSessionService from "../protected_session.js";
+import { getSql } from "../sql/index.js";
 import type TaskContext from "../task_context.js";
 import treeService from "../tree.js";
 import markdownService from "./markdown.js";
@@ -31,6 +32,19 @@ const SPREADSHEET_MIME = "text/x-spreadsheet";
 // Source mimes rendered from Markdown to HTML on import.
 const MARKDOWN_MIMES = ["text/markdown", "text/x-markdown", "text/mdx"];
 
+// A note entry whose content has been read (and any async conversion already applied), ready for the
+// synchronous saveNote() inside a batch transaction. `mimeOverride` is set when prepareEntry converted a
+// raw spreadsheet so saveNote stores it as a spreadsheet instead of re-detecting the raw CSV/XLSX mime.
+interface BatchEntry {
+    filePath: string;
+    content: string | Uint8Array;
+    mimeOverride?: string;
+}
+
+// A buffered import operation, replayed in order inside one transaction. Directory entries carry no
+// content; note entries are BatchEntry. Buffering both preserves the exact zip order across batches.
+type BatchItem = { isDirectory: true; filePath: string } | ({ isDirectory: false } & BatchEntry);
+
 interface MetaFile {
     files: NoteMeta[];
 }
@@ -39,7 +53,7 @@ interface ImportZipOpts {
     preserveIds?: boolean;
 }
 
-async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
+async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
     /** maps from original noteId (in ZIP file) to newly generated noteId */
     const noteIdMap: Record<string, string> = {};
     /** type maps from original attachmentId (in ZIP file) to newly generated attachmentId */
@@ -500,7 +514,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         return content;
     }
 
-    async function saveNote(filePath: string, content: string | Uint8Array) {
+    function saveNote(filePath: string, content: string | Uint8Array, mimeOverride?: string) {
         const { parentNoteMeta, noteMeta, attachmentMeta } = getMeta(filePath);
 
         if (noteMeta?.noImport) {
@@ -549,12 +563,12 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
             throw new Error("Unable to resolve mime type.");
         }
 
-        // A raw CSV/XLSX entry still holds its source bytes; convert them to the Univer workbook
-        // JSON a spreadsheet note stores, then record the spreadsheet mime. Entries from a Trilium
-        // export already carry workbook JSON and the spreadsheet mime, so they skip this.
-        if (type === "spreadsheet" && (mime === CSV_MIME || mime === XLSX_MIME)) {
-            content = await convertSpreadsheetContent(mime, content);
-            mime = SPREADSHEET_MIME;
+        // A raw CSV/XLSX entry is converted to the Univer workbook JSON a spreadsheet note stores by the
+        // async prepareEntry() step (so this function can stay synchronous and run inside a batch
+        // transaction). When that happened, prepareEntry passes the spreadsheet mime here so the note is
+        // stored as a spreadsheet instead of being re-detected as raw CSV/XLSX.
+        if (mimeOverride != null) {
+            mime = mimeOverride;
         }
 
         if (type !== "file" && type !== "image") {
@@ -662,10 +676,38 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         }
     }
 
+    /**
+     * Runs the only asynchronous part of importing a note — converting a raw CSV/XLSX entry into the Univer
+     * workbook JSON a spreadsheet note stores — ahead of the synchronous {@link saveNote}. Keeping saveNote
+     * synchronous is what lets a whole batch of notes be written inside a single synchronous transaction.
+     * Returns the (possibly converted) content plus, when it converted, the mime saveNote should force.
+     */
+    async function prepareEntry(filePath: string, content: string | Uint8Array): Promise<BatchEntry> {
+        const { noteMeta, attachmentMeta } = getMeta(filePath);
+
+        // Attachments, clones and skipped notes return from saveNote before the spreadsheet branch, so
+        // they never need conversion. Only an actual note whose mime resolves to a raw spreadsheet does.
+        if (!attachmentMeta && !noteMeta?.isClone && !noteMeta?.noImport) {
+            const { mime, type: detectedType } = noteMeta ? noteMeta : detectFileTypeAndMime(taskContext, filePath);
+            if (resolveNoteType(detectedType) === "spreadsheet" && (mime === CSV_MIME || mime === XLSX_MIME)) {
+                return { filePath, content: await convertSpreadsheetContent(mime, content), mimeOverride: SPREADSHEET_MIME };
+            }
+        }
+
+        return { filePath, content };
+    }
+
     const zipProvider = getZipProvider();
 
+    // Per-phase wall-clock so a single import run reveals where the time goes (logged as one summary line
+    // below). Cheap: a couple of Date.now() reads per entry.
+    const timing = { encoding: 0, scan: 0, read: 0, save: 0, postProcess: 0, sort: 0, attributes: 0 };
+    let timingMark = Date.now();
+
     // Detect filename encoding once for the whole ZIP (e.g. GBK for Chinese Windows ZIPs)
-    const filenameEncoding = await zipProvider.detectFilenameEncoding(fileBuffer);
+    const filenameEncoding = await zipProvider.detectFilenameEncoding(source);
+    timing.encoding = Date.now() - timingMark;
+    timingMark = Date.now();
 
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
@@ -673,7 +715,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     // client can show a progress bar ("X of N") instead of a bare running count
     let entriesToProcess = 0;
 
-    await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
+    await zipProvider.readZipFile(source, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
         if (isMacOSMetadata(filePath)) {
@@ -693,13 +735,55 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         const topLevelPath = (firstSlash !== -1 ? filePath.substring(0, firstSlash) : filePath);
         topLevelItems.add(topLevelPath);
     }, filenameEncoding);
+    timing.scan = Date.now() - timingMark;
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
-    // the processing pass increments progress once per entry; expose the total so the client shows a bar
+    // The import runs in two labelled phases, each driving its own 0→100% bar: first "extracting" counts
+    // every archive entry (notes, attachments, folders, the meta file), then "processing" counts only the
+    // notes that were actually created. The denominator deliberately changes between phases — the client
+    // shows distinct messages ("Extracted X items" vs "Processed X notes") so the switch reads as progress
+    // rather than the bar jerking. Here we seed the extraction phase with the entry count from the scan.
+    taskContext.setPhase("extracting");
+    taskContext.resetProgressCount();
     taskContext.setTotalCount(entriesToProcess);
 
-    await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
+    // Notes are written in batches, each batch in a single synchronous transaction, instead of letting
+    // every entity save auto-commit on its own. The per-note BEGIN/COMMIT (and its WAL fsync) dominated
+    // import time; batching collapses tens of thousands of commits into a handful (the inner per-entity
+    // transactions become cheap savepoints under the outer one). The flush MUST stay synchronous: holding
+    // a transaction open across the async readContent() would let concurrent requests on the shared DB
+    // connection interleave into the import's transaction. So all async work (reading entries and the
+    // spreadsheet conversion in prepareEntry) happens during accumulation, outside the transaction; the
+    // flush only replays already-prepared items. A byte cap keeps memory bounded so a multi-GB ZIP is
+    // never fully materialised, preserving the per-entry streaming the reader was built for.
+    const BATCH_MAX_COUNT = 200;
+    const BATCH_MAX_BYTES = 50 * 1024 * 1024;
+    let batch: BatchItem[] = [];
+    let batchBytes = 0;
+
+    const flushBatch = () => {
+        if (batch.length === 0) {
+            return;
+        }
+        const items = batch;
+        batch = [];
+        batchBytes = 0;
+
+        const saveStart = Date.now();
+        getSql().transactional(() => {
+            for (const item of items) {
+                if (item.isDirectory) {
+                    saveDirectory(item.filePath);
+                } else {
+                    saveNote(item.filePath, item.content, item.mimeOverride);
+                }
+            }
+        });
+        timing.save += Date.now() - saveStart;
+    };
+
+    await zipProvider.readZipFile(source, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
         if (isMacOSMetadata(filePath)) {
@@ -707,27 +791,45 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
         }
 
         if (/\/$/.test(entry.fileName)) {
-            saveDirectory(filePath);
+            batch.push({ isDirectory: true, filePath });
         } else if (filePath !== "!!!meta.json") {
-            await saveNote(filePath, await readContent());
+            const readStart = Date.now();
+            const content = await readContent();
+            const prepared = await prepareEntry(filePath, content);
+            timing.read += Date.now() - readStart;
+
+            batch.push({ isDirectory: false, ...prepared });
+            batchBytes += prepared.content.length;
+
+            if (batch.length >= BATCH_MAX_COUNT || batchBytes >= BATCH_MAX_BYTES) {
+                flushBatch();
+            }
         }
 
         taskContext.increaseProgressCount();
     }, filenameEncoding);
 
-    // post-processing increments progress once per created note (a subset of the entries, now known
-    // exactly), so widen the total accordingly to keep the count accurate and let the bar reach 100%
-    taskContext.setTotalCount(entriesToProcess + createdNoteIds.size);
+    flushBatch();
+
+    // Post-processing phase: increments progress once per created note (now known exactly). Reset the count
+    // and re-seed the total with the note count so this phase renders its own clean 0→100% bar.
+    taskContext.setPhase("processing");
+    taskContext.resetProgressCount();
+    taskContext.setTotalCount(createdNoteIds.size);
 
     for (const noteId of createdNoteIds) {
         const note = becca.getNote(noteId);
         if (!note) continue;
+        const postStart = Date.now();
         await noteService.asyncPostProcessContent(note, note.getContent());
+        timing.postProcess += Date.now() - postStart;
 
         if (!metaFile) {
             // if there's no meta file, then the notes are created based on the order in that zip file but that
             // is usually quite random, so we sort the notes in the way they would appear in the file manager
+            const sortStart = Date.now();
             treeService.sortNotes(noteId, "title", false, true);
+            timing.sort += Date.now() - sortStart;
         }
 
         taskContext.increaseProgressCount();
@@ -735,6 +837,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
 
     // we're saving attributes and links only now so that all relation and link target notes
     // are already in the database (we don't want to have "broken" relations, not even transitionally)
+    timingMark = Date.now();
     for (const attr of attributes) {
         if (attr.type !== "relation" || attr.value in becca.notes) {
             new BAttribute(attr).save();
@@ -742,6 +845,13 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
             getLog().info(`Relation not imported since the target note doesn't exist: ${JSON.stringify(attr)}`);
         }
     }
+    timing.attributes = Date.now() - timingMark;
+
+    getLog().info(
+        `Import timing (ms): encoding=${timing.encoding} scan=${timing.scan} read=${timing.read} ` +
+        `save=${timing.save} postProcess=${timing.postProcess} sort=${timing.sort} attributes=${timing.attributes} ` +
+        `— ${createdNoteIds.size} notes, ${entriesToProcess} entries, ${attributes.length} attributes`
+    );
 
     if (!firstNote) {
         throw new Error("Unable to determine first note.");

@@ -14,7 +14,7 @@ The first step is to export the data from Evernote:
         *   All the options in _Export note attributes_ are checked.
 *   To export a bunch of notes (up to 100 notes):
     *   In the left sidebar, select _Notes_.
-    *   In the list of notes, <kbd spellcheck="false">Ctrl</kbd>\-click individual notes to select them. Alternatively, click on a note and then <kbd spellcheck="false">Shift</kbd>\-click a more distant note to select all the notes in between.
+    *   In the list of notes, <kbd>Ctrl</kbd>\-click individual notes to select them. Alternatively, click on a note and then <kbd>Shift</kbd>\-click a more distant note to select all the notes in between.
     *   At the bottom there should be a floating bar with some options. Select \[…\] → _Export._
     *   Make sure the following options are set:
         *   File format is set to _ENEX format_.

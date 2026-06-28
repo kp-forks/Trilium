@@ -5,10 +5,8 @@ import { useState } from "preact/hooks";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import open from "../../services/open";
-import toastService, { type ToastOptionsWithRequiredId } from "../../services/toast";
 import tree from "../../services/tree";
 import utils, { isStandalone } from "../../services/utils";
-import ws from "../../services/ws";
 import { ExtendedAdmonition } from "../react/Admonition";
 import { Badge } from "../react/Badge";
 import Button, { ButtonGroup } from "../react/Button";
@@ -69,7 +67,7 @@ export default function ExportDialog() {
                     return;
                 }
 
-                exportBranch(opts.branchId, exportType, selectedFormat);
+                exportBranch(opts.branchId, exportType, selectedFormat, opts.noteTitle || "export");
                 setShown(false);
             }}
             onHidden={() => setShown(false)}
@@ -136,34 +134,18 @@ function exportResultText(exportType: "subtree" | "single", format: string) {
     return format === "markdown" ? t("export.result_subtree_markdown") : t("export.result_subtree_html");
 }
 
-function exportBranch(branchId: string, type: string, format: string) {
+async function exportBranch(branchId: string, type: string, format: string, title: string) {
     const taskId = utils.randomString(10);
-    const url = open.getUrlForDownload(`api/branches/${branchId}/export/${type}/${format}/${taskId}`);
-    open.download(url);
-}
 
-ws.subscribeToMessages(async (message) => {
-    function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
-        return {
-            id,
-            message,
-            icon: "export"
-        };
-    }
-
-    if (!("taskType" in message) || message.taskType !== "export") {
+    // Desktop: stream subtree zip exports straight to a user-chosen file, bypassing
+    // the in-memory download path. Electron's download manager buffers the whole
+    // response in memory, which spikes badly for large (multi-GB) exports. OPML is
+    // a single non-zip file handled by the regular download route.
+    if (utils.isElectron() && type === "subtree" && format !== "opml") {
+        await window.electronApi?.nativeExport.exportSubtreeToFile({ branchId, format, title, taskId });
         return;
     }
 
-    if (message.type === "taskError") {
-        toastService.closePersistent(message.taskId);
-        toastService.showError(message.message);
-    } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeToast(message.taskId, t("export.export_in_progress", { progressCount: message.progressCount })));
-    } else if (message.type === "taskSucceeded") {
-        const toast = makeToast(message.taskId, t("export.export_finished_successfully"));
-        toast.timeout = 5000;
-
-        toastService.showPersistent(toast);
-    }
-});
+    const url = open.getUrlForDownload(`api/branches/${branchId}/export/${type}/${format}/${taskId}`);
+    open.download(url);
+}

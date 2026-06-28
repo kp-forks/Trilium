@@ -1,7 +1,4 @@
 # Google Keep
-> [!NOTE]
-> This import mechanism was introduced in Trilium v0.104.0.
-
 Trilium can import notes from Google Keep, preserving their structure and formatting.
 
 ## Import process

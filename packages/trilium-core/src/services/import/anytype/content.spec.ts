@@ -345,6 +345,40 @@ describe("renderInlineText", () => {
     });
 });
 
+describe("inline formulas", () => {
+    it("converts an inline $…$ formula to a CKEditor inline math span (the real exported paragraph)", () => {
+        // Verbatim from the sample page: Anytype stores an inline formula as literal `$…$` text, no marks.
+        expect(renderInlineText("Inline formula: $e=mc^2$", [])).toBe('Inline formula: <span class="math-tex">\\( e=mc^2 \\)</span>');
+    });
+
+    it("renders the inline formula inside its paragraph through parseObject", () => {
+        const doc = listDoc(["p1"], [{ id: "p1", text: { text: "Inline formula: $e=mc^2$", style: "Paragraph", marks: { marks: [] } } }]);
+        expect(parseObject(doc).content).toBe('<p>Inline formula: <span class="math-tex">\\( e=mc^2 \\)</span></p>');
+    });
+
+    it("converts a $$…$$ run to a display math span", () => {
+        expect(renderInlineText("see $$a+b$$ done", [])).toBe('see <span class="math-tex">\\[ a+b \\]</span> done');
+    });
+
+    it("renders several formulas in one line", () => {
+        expect(renderInlineText("$x$ and $y$", [])).toBe('<span class="math-tex">\\( x \\)</span> and <span class="math-tex">\\( y \\)</span>');
+    });
+
+    it("escapes HTML inside the formula body so it can't inject markup", () => {
+        expect(renderInlineText("$a<b & c$", [])).toBe('<span class="math-tex">\\( a&lt;b &amp; c \\)</span>');
+    });
+
+    it("still applies inline marks to the text surrounding a formula", () => {
+        // Bold over "Mass" [0,4), formula follows untouched.
+        expect(renderInlineText("Mass: $e=mc^2$", [mark(0, 4, "Bold")])).toBe('<strong>Mass</strong>: <span class="math-tex">\\( e=mc^2 \\)</span>');
+    });
+
+    it("leaves a lone or mismatched $ as literal text", () => {
+        expect(renderInlineText("Costs $5 today", [])).toBe("Costs $5 today");
+        expect(renderInlineText("$$e=mc^2$", [])).toBe("$$e=mc^2$");
+    });
+});
+
 describe("inline mentions", () => {
     /** A resolver that maps any non-"missing" id to a note, so a Mention resolves unless it's "missing". */
     const resolve: LinkResolver = (cid) => (cid === "missing" ? undefined : { noteId: `note-${cid}`, title: `Title ${cid}` });

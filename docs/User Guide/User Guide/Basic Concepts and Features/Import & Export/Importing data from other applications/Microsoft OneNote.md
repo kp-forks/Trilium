@@ -1,7 +1,4 @@
 # Microsoft OneNote
-> [!NOTE]
-> This import mechanism was introduced in Trilium v0.104.0.
-
 Trilium allows importing from OneNote. Currently the only mechanism supported is via the Microsoft Graph API which requires you to authenticate in a browser in order for the notes to be obtained by Trilium.
 
 ## Import process

@@ -1,7 +1,4 @@
 # Notion
-> [!NOTE]
-> This import mechanism was introduced in Trilium v0.104.0.
-
 Trilium can import ZIP exports from Notion while preserving structure and formatting.
 
 ## Import process

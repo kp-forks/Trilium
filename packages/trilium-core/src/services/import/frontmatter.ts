@@ -87,6 +87,7 @@ function toValues(value: unknown): string[] {
     if (typeof value === "string") {
         return [value];
     }
+    /* v8 ignore next 3 -- defensive: js-yaml's `load` schema resolves timestamps to strings, never Date objects */
     if (value instanceof Date) {
         return [value.toISOString()];
     }

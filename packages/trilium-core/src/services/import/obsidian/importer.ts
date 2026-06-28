@@ -42,7 +42,7 @@ import { decodeUtf8 } from "../../utils/binary.js";
 import date_utils from "../../utils/date.js";
 import { removeFileExtension } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
-import { getZipProvider } from "../../zip_provider.js";
+import { getZipProvider, type ZipSource } from "../../zip_provider.js";
 import { buildPromotedDefinition, toAttributeName } from "../collection_utils.js";
 import { type FrontmatterAttribute, parseFrontmatter } from "../frontmatter.js";
 import markdownService from "../markdown.js";
@@ -60,8 +60,8 @@ interface VaultNote {
     modified?: Date;
 }
 
-async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
-    const { notes, attachments, types, vaultRoot } = await parseVault(fileBuffer);
+async function importObsidian(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote, fileName?: string): Promise<BNote> {
+    const { notes, attachments, types, vaultRoot } = await parseVault(source);
     taskContext.setTotalCount(notes.length);
 
     return createNotes(importRootNote, notes, attachments, types, vaultTitle(vaultRoot, fileName), taskContext);
@@ -73,15 +73,15 @@ async function importObsidian(taskContext: TaskContext<"importNotes">, fileBuffe
  * folder and any other dot-prefixed entry are skipped, as is every non-Markdown file (handled in later
  * passes). Sorted by path so the resulting tree is built (and ordered) deterministically.
  */
-async function parseVault(fileBuffer: Uint8Array): Promise<{ notes: VaultNote[]; attachments: Map<string, Uint8Array>; types: Map<string, string>; vaultRoot: string }> {
+async function parseVault(source: ZipSource): Promise<{ notes: VaultNote[]; attachments: Map<string, Uint8Array>; types: Map<string, string>; vaultRoot: string }> {
     const provider = getZipProvider();
     const allPaths: string[] = [];
     const raw: { path: string; markdown: string; modified?: Date }[] = [];
     const rawAttachments: { path: string; bytes: Uint8Array }[] = [];
     let typesJson = "";
-    const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
+    const filenameEncoding = await provider.detectFilenameEncoding(source);
 
-    await provider.readZipFile(fileBuffer, async (entry, readContent) => {
+    await provider.readZipFile(source, async (entry, readContent) => {
         const path = normalizePath(entry.fileName);
         if (isDirectory(path)) {
             return;
