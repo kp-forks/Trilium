@@ -77,9 +77,13 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
     errorId: number;
     onError: (message: string) => void;
 }) {
+    // Read the password / TOTP straight from the DOM at submit time instead of mirroring
+    // them into controlled state. A controlled value of "" overwrites (and loses) browser-
+    // autofilled credentials, so the first click would submit an empty password — the
+    // "incorrect password, press again" bug. These fields need no live validation, so they
+    // stay uncontrolled. (rememberMe is a toggle the user actually clicks, so it's controlled.)
     const passwordRef = useRef<HTMLInputElement>(null);
-    const [ password, setPassword ] = useState("");
-    const [ totpToken, setTotpToken ] = useState("");
+    const totpRef = useRef<HTMLInputElement>(null);
     const [ rememberMe, setRememberMe ] = useState(false);
     const [ submitting, setSubmitting ] = useState(false);
 
@@ -90,9 +94,9 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
         }
         setSubmitting(true);
         try {
-            const body = new URLSearchParams({ password });
+            const body = new URLSearchParams({ password: passwordRef.current?.value ?? "" });
             if (totpEnabled) {
-                body.set("totpToken", totpToken);
+                body.set("totpToken", totpRef.current?.value ?? "");
             }
             if (rememberMe) {
                 body.set("rememberMe", "1");
@@ -135,7 +139,6 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
                             <FormTextBox
                                 inputRef={passwordRef} autoFocus
                                 type="password" name="password"
-                                currentValue={password} onChange={setPassword}
                                 autocomplete="current-password" required
                             />
                         </OptionsRow>
@@ -143,8 +146,8 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
                         {totpEnabled && (
                             <OptionsRow name="totpToken" label={t("login.totp-token")} stacked>
                                 <FormTextBox
+                                    inputRef={totpRef}
                                     name="totpToken"
-                                    currentValue={totpToken} onChange={setTotpToken}
                                     autocomplete="one-time-code" required
                                 />
                             </OptionsRow>
