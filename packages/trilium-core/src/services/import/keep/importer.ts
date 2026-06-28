@@ -23,7 +23,7 @@ import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import { decodeUtf8 } from "../../utils/binary.js";
 import dateUtils from "../../utils/date.js";
-import { getZipProvider } from "../../zip_provider.js";
+import { getZipProvider, type ZipSource } from "../../zip_provider.js";
 import mimeService from "../mime.js";
 import { convertKeepHtml, convertKeepHtmlInline } from "./converter.js";
 
@@ -81,8 +81,8 @@ interface ParsedNote {
     utcDateModified?: string;
 }
 
-async function importKeep(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { notes, binaries } = await parseNotes(fileBuffer);
+async function importKeep(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote): Promise<BNote> {
+    const { notes, binaries } = await parseNotes(source);
     taskContext.setTotalCount(notes.length);
 
     return createNotes(importRootNote, notes, binaries, taskContext);
@@ -93,13 +93,13 @@ async function importKeep(taskContext: TaskContext<"importNotes">, fileBuffer: U
  * (keyed by its base file name) so notes can later resolve the files they reference. The redundant per-note
  * `.html`/`.txt` and the `Labels.txt` index are skipped.
  */
-async function parseNotes(fileBuffer: Uint8Array): Promise<{ notes: ParsedNote[]; binaries: Map<string, Uint8Array> }> {
+async function parseNotes(source: ZipSource): Promise<{ notes: ParsedNote[]; binaries: Map<string, Uint8Array> }> {
     const provider = getZipProvider();
-    const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
+    const filenameEncoding = await provider.detectFilenameEncoding(source);
 
     const notes: ParsedNote[] = [];
     const binaries = new Map<string, Uint8Array>();
-    await provider.readZipFile(fileBuffer, async (entry, readContent) => {
+    await provider.readZipFile(source, async (entry, readContent) => {
         const path = entry.fileName;
         if (isDirectory(path)) {
             return;

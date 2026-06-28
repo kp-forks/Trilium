@@ -38,14 +38,14 @@ import { decodeUtf8 } from "../../utils/binary.js";
 import date_utils from "../../utils/date.js";
 import { newEntityId } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
-import { getZipProvider } from "../../zip_provider.js";
+import { getZipProvider, type ZipSource } from "../../zip_provider.js";
 import { saveFileAttachment } from "../collection_utils.js";
 import { applyCollectionView, applyFiles, applyProperties, buildFileObjectMap, buildOptionMap, buildRelationMap, createCollectionNote, normalizePath, parseCollection, parseFiles, parseProperties, synthesizeColumns } from "./collection.js";
 import { extractContent } from "./content.js";
 import type { AnytypeDetails, AnytypeSnapshot, FileObjectInfo, LinkResolver, ParsedColumn, ParsedObject, RelationInfo, ResolvedLink } from "./model.js";
 
-async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, fileName?: string): Promise<BNote> {
-    const { objects, relations, options, fileObjects, files, protobufObjectCount, markdownFileCount } = await parseZip(fileBuffer);
+async function importAnytype(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote, fileName?: string): Promise<BNote> {
+    const { objects, relations, options, fileObjects, files, protobufObjectCount, markdownFileCount } = await parseZip(source);
     const relationMap = buildRelationMap(relations);
     const optionMap = buildOptionMap(options);
     const fileObjectMap = buildFileObjectMap(fileObjects);
@@ -118,7 +118,7 @@ async function importAnytype(taskContext: TaskContext<"importNotes">, fileBuffer
  * `*.md` (Markdown) entries are merely counted, so the caller can fail with guidance instead of importing an
  * empty tree.
  */
-async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[]; fileObjects: AnytypeSnapshot[]; files: Map<string, Uint8Array>; protobufObjectCount: number; markdownFileCount: number }> {
+async function parseZip(source: ZipSource): Promise<{ objects: AnytypeSnapshot[]; relations: AnytypeSnapshot[]; options: AnytypeSnapshot[]; fileObjects: AnytypeSnapshot[]; files: Map<string, Uint8Array>; protobufObjectCount: number; markdownFileCount: number }> {
     const provider = getZipProvider();
     const objects: AnytypeSnapshot[] = [];
     const relations: AnytypeSnapshot[] = [];
@@ -127,9 +127,9 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ objects: AnytypeSnaps
     const files = new Map<string, Uint8Array>();
     let protobufObjectCount = 0;
     let markdownFileCount = 0;
-    const filenameEncoding = await provider.detectFilenameEncoding(fileBuffer);
+    const filenameEncoding = await provider.detectFilenameEncoding(source);
 
-    await provider.readZipFile(fileBuffer, async (entry, readContent) => {
+    await provider.readZipFile(source, async (entry, readContent) => {
         // Raw bytes under files/ are kept as-is (they back file-property attachments), not parsed as JSON.
         if (isFileEntry(entry.fileName)) {
             files.set(normalizePath(entry.fileName), await readContent());

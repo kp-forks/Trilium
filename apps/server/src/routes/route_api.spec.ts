@@ -47,16 +47,18 @@ describe("importMiddlewareWithErrorHandling (disk storage)", () => {
         expect(res.body.tempPresent).toBe(false);
     });
 
-    it("buffers a .zip when a provider format tags it (e.g. notion), rather than streaming", async () => {
+    it("streams a .zip tagged with a provider format (e.g. notion) from its temp path too", async () => {
         const res = await request(buildApp())
             .post("/import")
             .field("format", "notion")
             .attach("upload", Buffer.from("notion-zip"), "export.zip");
 
         expect(res.status).toBe(200);
-        // Tagged providers go through their buffer-based importer, so it's materialized + cleaned up.
-        expect(res.body.content).toBe("notion-zip");
-        expect(res.body.tempPresent).toBe(false);
+        // Provider importers now read the archive in place via file.path, so it isn't buffered and the
+        // temp file is kept for the duration of the import.
+        expect(res.body.content).toBeUndefined();
+        expect(res.body.hasPath).toBe(true);
+        expect(res.body.tempPresent).toBe(true);
     });
 
     it("buffers a .zip when explodeArchives is disabled (imported as a single file)", async () => {

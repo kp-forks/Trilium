@@ -580,9 +580,10 @@ export interface ElectronNativeImportApi {
     /**
      * Imports the file behind `token` into `parentNoteId`. Progress/success/error are reported over the
      * WebSocket via `taskId`, matching the HTTP import path. When importing several files in one batch, set
-     * `last` only on the final call so the success toast fires once, after everything is in.
+     * `last` only on the final call so the success toast fires once, after everything is in. `format` routes
+     * the file to a specific importer (e.g. "obsidian"), mirroring the HTTP route's format tag.
      */
-    importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions; last: boolean }): Promise<NativeImportResult>;
+    importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions; last: boolean; format?: string }): Promise<NativeImportResult>;
 }
 
 /**

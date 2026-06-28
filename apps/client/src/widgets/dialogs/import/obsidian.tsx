@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import importService from "../../../services/import.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
@@ -9,31 +8,18 @@ import { useTriliumOptionBool } from "../../react/hooks.js";
 import { OptionsRowWithToggle } from "../../type_widgets/options/components/OptionsRow.js";
 import iconUrl from "./icons/obsidian.svg?url";
 import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
+import useProviderImport from "./useProviderImport.js";
 
 function ObsidianPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
-    const [file, setFile] = useState<File | null>(null);
     const [compressImages] = useTriliumOptionBool("compressImages");
     const [shrinkImages, setShrinkImages] = useState(compressImages);
+    // `format: "obsidian"` routes the upload/native import to the Obsidian importer, overriding the .zip
+    // extension's default (the generic zip importer).
+    const { hasSelection, displayNames, onChange, onBrowse, doImport } = useProviderImport({ format: "obsidian", parentNoteId, shrinkImages, closeDialog });
 
-    const onChange = useCallback((files: FileList | null) => setFile(files?.[0] ?? null), []);
-
-    const doImport = useCallback(async () => {
-        if (!file) {
-            return;
-        }
-
-        // Close immediately and let the shared import toasts (registered in import.ts) report progress,
-        // completion and any error. `format: "obsidian"` routes the upload to the Obsidian importer on the
-        // shared file-import endpoint, overriding the .zip extension's default (the generic zip importer).
-        // uploadFiles surfaces any upload error via its own toast; swallow the rejection so this void-ed
-        // call doesn't raise an unhandled rejection.
-        closeDialog();
-        await importService.uploadFiles("notes", parentNoteId, [file], { format: "obsidian", safeImport: "true", shrinkImages: shrinkImages ? "true" : "false" }).catch(() => {});
-    }, [file, shrinkImages, parentNoteId, closeDialog]);
-
-    // Keep the latest import handler in a ref so the footer effect depends only on `file` being present,
-    // never on doImport's identity — otherwise re-pushing the footer on every change would loop with the
-    // parent re-rendering us back (see the Anytype/Notion panels for the same reasoning).
+    // Keep the latest import handler in a ref so the footer effect depends only on whether a file is
+    // selected, never on doImport's identity — otherwise re-pushing the footer on every change would loop
+    // with the parent re-rendering us back (see the Anytype/Notion panels for the same reasoning).
     const doImportRef = useRef(doImport);
     doImportRef.current = doImport;
 
@@ -42,17 +28,17 @@ function ObsidianPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderP
             <Button
                 text={t("obsidian_import.import")}
                 kind="primary"
-                disabled={!file}
+                disabled={!hasSelection}
                 onClick={() => void doImportRef.current()}
             />
         );
-    }, [file, setFooter]);
+    }, [hasSelection, setFooter]);
 
     return (
         <Card heading={t("obsidian_import.choose_file")}>
             <CardSection>
                 <p className="import-files-description">{t("obsidian_import.description_long")}</p>
-                <FileDropZone onChange={onChange} />
+                <FileDropZone onChange={onChange} onBrowse={onBrowse} displayNames={displayNames} />
                 <OptionsRowWithToggle
                     name="shrink-images"
                     label={t("import.shrinkImages")}

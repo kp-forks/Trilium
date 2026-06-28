@@ -151,6 +151,20 @@ describe("desktop native import — capability token", () => {
         }
     });
 
+    it("forwards a provider format and still streams the tagged zip from path (not read into a buffer)", async () => {
+        electronMock.showOpenDialogSync.mockReturnValue(["/data/vault.zip"]);
+        const { files } = await pick();
+
+        await importFromToken({ token: files?.[0].token, parentNoteId: "p", taskId: "t", options: OPTIONS, last: true, format: "obsidian" });
+
+        const [, file, , , format] = coreMock.dispatch.mock.calls[0];
+        expect(format).toBe("obsidian");
+        // A tagged provider zip is streamed in place: empty buffer + path, never read here.
+        expect(file).toMatchObject({ originalname: "vault.zip", path: "/data/vault.zip" });
+        expect((file as { buffer: Buffer }).buffer.length).toBe(0);
+        expect(fsMock.readFile).not.toHaveBeenCalled();
+    });
+
     it("rejects an unknown/forged token without importing (a script can't supply a path or guess a token)", async () => {
         const result = await importFromToken({ token: "forged-token", parentNoteId: "parent1", taskId: "t", options: OPTIONS, last: true });
 

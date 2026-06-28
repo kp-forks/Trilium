@@ -214,7 +214,7 @@ contextBridge.exposeInMainWorld("electronApi", {
         pickFiles() {
             return ipcRenderer.invoke("import-pick-files");
         },
-        importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions; last: boolean }) {
+        importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions; last: boolean; format?: string }) {
             return ipcRenderer.invoke("import-from-token", opts);
         }
     },

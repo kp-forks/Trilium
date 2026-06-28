@@ -228,9 +228,10 @@ export const importMiddlewareWithErrorHandling = function (req: express.Request,
 
         const file = req.file;
         if (file?.path && isStreamableZipUpload(req)) {
-            // Generic `.zip` import: hand the importer the temp file's path so the archive is read in
-            // place per entry (the route prefers `file.path`), never buffered. Keep the temp file alive
-            // through the import and delete it once the response is done (or the connection drops).
+            // Zip import (generic *or* a tagged provider): hand the importer the temp file's path so the
+            // archive is read in place per entry (the route prefers `file.path`), never buffered. Keep the
+            // temp file alive through the import and delete it once the response is done (or the connection
+            // drops).
             const tempPath = file.path;
             res.on("close", () => void rm(tempPath, { force: true }).catch(() => {}));
             next();
@@ -242,20 +243,24 @@ export const importMiddlewareWithErrorHandling = function (req: express.Request,
 };
 
 /**
- * Whether this upload is a plain `.zip` the generic zip importer will read — the case worth streaming from
- * disk. Tagged provider uploads (notion/keep/anytype/obsidian) and non-zip files go through buffer-based
- * importers, so they take the {@link materializeUploadedImport} path instead. Kept in sync with the
- * generic-zip branch in the core import route (routes/api/import.ts).
+ * Whether this upload is a `.zip` read by a zip-reading importer — the case worth streaming from disk. That
+ * covers both the generic zip importer and the tagged providers (notion/keep/anytype/obsidian), which all
+ * read the archive via the zip provider and now accept a path. Non-zip files, and a generic `.zip` the user
+ * chose not to explode, go through the buffer-based {@link materializeUploadedImport} path instead. Kept in
+ * sync with the zip branches in the core import route (services/import/dispatch.ts).
  */
 function isStreamableZipUpload(req: express.Request): boolean {
     const body = req.body as Record<string, string> | undefined;
+    const isZip = req.file?.originalname?.toLowerCase().endsWith(".zip") ?? false;
+    if (!isZip) {
+        return false;
+    }
+    // A tagged provider always reads its zip regardless of the explode toggle; only the generic importer
+    // honours `explodeArchives=false` (storing the zip as a single attachment, which needs the buffer).
     if (body?.format) {
-        return false;
+        return true;
     }
-    if (body?.explodeArchives === "false") {
-        return false;
-    }
-    return req.file?.originalname?.toLowerCase().endsWith(".zip") ?? false;
+    return body?.explodeArchives !== "false";
 }
 
 /**

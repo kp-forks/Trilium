@@ -1,6 +1,7 @@
 import type BNote from "../../becca/entities/bnote.js";
 import type TaskContext from "../task_context.js";
 import { extname } from "../utils/path.js";
+import type { ZipSource } from "../zip_provider.js";
 import anytypeImportService from "./anytype/importer.js";
 import type { File } from "./common.js";
 import enexImportService from "./enex.js";
@@ -36,28 +37,31 @@ export interface ImportOptions {
 export default async function importFile(taskContext: TaskContext<"importNotes">, file: File, parentNote: BNote, options: ImportOptions, format?: string): Promise<BNote | (string | number)[] | null> {
     const extension = extname(file.originalname).toLowerCase();
 
-    if (format === "notion" && typeof file.buffer !== "string") {
+    // Every zip-reading importer (generic + the tagged providers) reads the archive straight from the temp
+    // file (server disk storage / native pick) so a multi-GB zip is streamed per entry — never held in one
+    // buffer, and free of fs.readFile's ~2 GiB ceiling. Falls back to the buffer when there's no path (the
+    // browser/WASM upload). The `typeof file.buffer !== "string"` guards below ensure the no-path fallback
+    // is real bytes, not a string body.
+    const zipSource: ZipSource = file.path ? { path: file.path } : file.buffer as Uint8Array;
+
+    if (format === "notion" && (file.path || typeof file.buffer !== "string")) {
         // An explicit format always wins over extension sniffing: a Notion export is just a `.zip`,
         // indistinguishable from a Trilium export without inspecting its contents. The Notion import
         // dialog tags the upload, so we route it to the Notion importer rather than the generic zip.
-        return await notionImportService.importNotion(taskContext, file.buffer, parentNote);
-    } else if (format === "keep" && typeof file.buffer !== "string") {
+        return await notionImportService.importNotion(taskContext, zipSource, parentNote);
+    } else if (format === "keep" && (file.path || typeof file.buffer !== "string")) {
         // Like Notion, a Google Keep (Takeout) export is just a `.zip` indistinguishable from a Trilium
         // export by extension alone, so the Keep import dialog tags the upload to route it here.
-        return await keepImportService.importKeep(taskContext, file.buffer, parentNote);
-    } else if (format === "anytype" && typeof file.buffer !== "string") {
+        return await keepImportService.importKeep(taskContext, zipSource, parentNote);
+    } else if (format === "anytype" && (file.path || typeof file.buffer !== "string")) {
         // An Anytype JSON export is likewise a plain `.zip`; the Anytype import dialog tags the upload so
         // it routes to the Anytype importer rather than the generic zip importer.
-        return await anytypeImportService.importAnytype(taskContext, file.buffer, parentNote, file.originalname);
-    } else if (format === "obsidian" && typeof file.buffer !== "string") {
+        return await anytypeImportService.importAnytype(taskContext, zipSource, parentNote, file.originalname);
+    } else if (format === "obsidian" && (file.path || typeof file.buffer !== "string")) {
         // An Obsidian vault is exported as a plain `.zip` of Markdown files, indistinguishable from a
         // Trilium export by extension alone; the Obsidian import dialog tags the upload to route it here.
-        return await obsidianImportService.importObsidian(taskContext, file.buffer, parentNote, file.originalname);
-    } else if (extension === ".zip" && options.explodeArchives && typeof file.buffer !== "string") {
-        // Prefer reading the archive straight from the temp file (server disk storage / native pick) so a
-        // multi-GB zip is streamed per entry — never held in one buffer, and free of fs.readFile's
-        // ~2 GiB ceiling. Falls back to the buffer when there's no path (the browser/WASM upload).
-        const zipSource = file.path ? { path: file.path } : file.buffer;
+        return await obsidianImportService.importObsidian(taskContext, zipSource, parentNote, file.originalname);
+    } else if (extension === ".zip" && options.explodeArchives && (file.path || typeof file.buffer !== "string")) {
         return await zipImportService.importZip(taskContext, zipSource, parentNote);
     } else if (extension === ".opml" && options.explodeArchives) {
         return await opmlImportService.importOpml(taskContext, file.buffer, parentNote);

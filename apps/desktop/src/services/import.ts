@@ -12,6 +12,8 @@ interface ImportFromTokenOpts {
     options: NativeImportOptions;
     /** Set only on the final file of a batch, so the success toast fires once everything is imported. */
     last: boolean;
+    /** Routes the file to a specific importer (e.g. "obsidian"); the provider dialogs set this. */
+    format?: string;
 }
 
 /**
@@ -96,8 +98,8 @@ async function runNativeImport(path: string, opts: ImportFromTokenOpts): Promise
         cls.disableEntityEvents();
         cls.ignoreEntityChangeIds();
 
-        const file = await buildImportFile(path, options.explodeArchives);
-        const result = await importDispatchService(taskContext, file, parentNote, options);
+        const file = await buildImportFile(path, options.explodeArchives, opts.format);
+        const result = await importDispatchService(taskContext, file, parentNote, options, opts.format);
 
         // Import ran with entity events disabled, so becca wasn't updated incrementally — force a reload.
         // Must run inside the CLS context: becca_loader.load() toggles slow-query logging via the namespace.
@@ -120,17 +122,18 @@ async function runNativeImport(path: string, opts: ImportFromTokenOpts): Promise
 }
 
 /**
- * Builds the {@link File} the importer expects from a path on disk. A zip that will be exploded is left
- * unbuffered (an empty buffer + the `path`) so it streams per entry; every other file is small enough to
- * read into memory here. The MIME is resolved by the importer from the filename, so it's left blank.
+ * Builds the {@link File} the importer expects from a path on disk. A zip that's read in place — a generic
+ * zip that will be exploded, or any tagged provider zip (obsidian/anytype/notion/keep) — is left unbuffered
+ * (an empty buffer + the `path`) so it streams per entry; every other file is small enough to read into
+ * memory here. The MIME is resolved by the importer from the filename, so it's left blank.
  */
-async function buildImportFile(path: string, explodeArchives: boolean): Promise<File> {
+async function buildImportFile(path: string, explodeArchives: boolean, format?: string): Promise<File> {
     const fileName = basename(path);
-    const isExplodableZip = extname(fileName).toLowerCase() === ".zip" && explodeArchives;
+    const streamsFromPath = !!format || (extname(fileName).toLowerCase() === ".zip" && explodeArchives);
     return {
         originalname: fileName,
         mimetype: "",
-        buffer: isExplodableZip ? Buffer.alloc(0) : await readFile(path),
+        buffer: streamsFromPath ? Buffer.alloc(0) : await readFile(path),
         path
     };
 }

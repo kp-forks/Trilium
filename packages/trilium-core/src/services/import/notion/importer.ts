@@ -24,7 +24,7 @@ import protectedSessionService from "../../protected_session.js";
 import { sanitizeHtml } from "../../sanitizer.js";
 import type TaskContext from "../../task_context.js";
 import dateUtils from "../../utils/date.js";
-import { getZipProvider } from "../../zip_provider.js";
+import { getZipProvider, type ZipSource } from "../../zip_provider.js";
 import mimeService from "../mime.js";
 import { toAttributeName } from "../collection_utils.js";
 import { applyDatabaseSchemas, applyOwnedProperties, applyRelationProperties, extractProperties, reconcileDateColumns, resolveDatabaseContainers } from "./collection.js";
@@ -33,8 +33,8 @@ import type { LinkTarget, ParsedPage } from "./model.js";
 import { getNotionId, stripNotionId } from "./notion_id.js";
 import { baseName, firstChildNotionId, folderDepth, internalPageId, isDirectory, normalizePath, ownedFolderKey, parentFolderKey, removeExtension, resolveResourcePath } from "./paths.js";
 
-async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote): Promise<BNote> {
-    const { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount, csvRowTitles } = await parseZip(fileBuffer);
+async function importNotion(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote): Promise<BNote> {
+    const { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount, csvRowTitles } = await parseZip(source);
     if (pages.length === 0 && markdownFileCount > 0) {
         // The user exported from Notion as "Markdown & CSV", but this importer only understands the HTML
         // export — it reconstructs databases by correlating each `.csv` with the surrounding `.html` pages,
@@ -75,7 +75,7 @@ async function importNotion(taskContext: TaskContext<"importNotes">, fileBuffer:
  */
 const MAX_NESTED_ZIP_DEPTH = 2;
 
-async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]>; markdownFileCount: number; csvRowTitles: Set<string> }> {
+async function parseZip(source: ZipSource): Promise<{ pages: ParsedPage[]; resources: Map<string, Uint8Array>; csvPaths: string[]; csvColumnsByFolder: Map<string, string[]>; markdownFileCount: number; csvRowTitles: Set<string> }> {
     const provider = getZipProvider();
     const pages: ParsedPage[] = [];
     const resources = new Map<string, Uint8Array>();
@@ -89,9 +89,11 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
     // disabled export, where row pages are flattened to the root instead of nesting under the database.
     const csvRowTitles = new Set<string>();
 
-    const readArchive = async (buffer: Uint8Array, depth: number): Promise<void> => {
-        const filenameEncoding = await provider.detectFilenameEncoding(buffer);
-        await provider.readZipFile(buffer, async (entry, readContent) => {
+    // `nestedSource` is the top-level archive (possibly a path, streamed from disk) on the first call, and a
+    // nested zip's bytes (read into memory) on deeper calls — both are valid ZipSources.
+    const readArchive = async (nestedSource: ZipSource, depth: number): Promise<void> => {
+        const filenameEncoding = await provider.detectFilenameEncoding(nestedSource);
+        await provider.readZipFile(nestedSource, async (entry, readContent) => {
             const path = entry.fileName;
             if (isDirectory(path)) {
                 return;
@@ -135,7 +137,7 @@ async function parseZip(fileBuffer: Uint8Array): Promise<{ pages: ParsedPage[]; 
         }, filenameEncoding);
     };
 
-    await readArchive(fileBuffer, 0);
+    await readArchive(source, 0);
 
     return { pages, resources, csvPaths, csvColumnsByFolder, markdownFileCount, csvRowTitles };
 }
