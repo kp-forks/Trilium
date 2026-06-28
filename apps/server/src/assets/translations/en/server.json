@@ -338,6 +338,10 @@
   "export": {
     "zip_filter": "ZIP archive (*.zip)"
   },
+  "import": {
+    "zip_filter": "ZIP archive (*.zip)",
+    "invalid_file_grant": "The file selection has expired or is invalid. Please choose the file again."
+  },
   "pdf": {
     "export_filter": "PDF Document (*.pdf)",
     "unable-to-export-message": "The current note could not be exported as a PDF.",

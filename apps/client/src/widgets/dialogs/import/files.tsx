@@ -1,7 +1,9 @@
+import type { NativeImportOptions } from "@triliumnext/commons";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import importService, { type UploadFilesOptions } from "../../../services/import.js";
+import utils from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { Card, CardSection } from "../../react/Card.js";
 import FileDropZone from "../../react/FileDropZone.js";
@@ -44,6 +46,27 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
         await importService.uploadFiles("notes", parentNoteId, Array.from(files), options).catch(() => {});
     }, [files, safeImport, shrinkImages, textImportedAsText, codeImportedAsCode, spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces, parentNoteId, closeDialog]);
 
+    // Desktop only: import a large .zip straight from disk. The OS dialog (in the main process) is the
+    // sole source of the path — it returns a single-use capability token, never a path — and the archive
+    // is read in place, so a multi-GB import stays memory-bounded (no upload, no temp copy). Other files
+    // and drag-drop keep the normal upload route above.
+    const doNativeZipImport = useCallback(async () => {
+        const pick = await window.electronApi?.nativeImport.pickZipFile();
+        if (pick?.status !== "selected" || !pick.token) {
+            return;
+        }
+
+        const options: NativeImportOptions = {
+            safeImport, shrinkImages, textImportedAsText, codeImportedAsCode,
+            spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces
+        };
+
+        // Close immediately and let the shared import toasts (registered in import.ts) report progress,
+        // completion and any error over the WebSocket, exactly like the upload route.
+        closeDialog();
+        await window.electronApi?.nativeImport.importFromToken({ token: pick.token, parentNoteId, taskId: utils.randomString(10), options });
+    }, [safeImport, shrinkImages, textImportedAsText, codeImportedAsCode, spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces, parentNoteId, closeDialog]);
+
     // Keep the latest import handler in a ref so the footer effect depends only on whether files are
     // selected, never on doImport's identity — otherwise re-pushing the footer on every option toggle
     // would loop with the parent re-rendering us back (see the other panels for the same reasoning).
@@ -62,6 +85,12 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
                 <CardSection>
                     <p className="import-files-description">{t("import.importZipRecommendation")}</p>
                     <FileDropZone multiple onChange={setFiles} />
+                    {utils.isElectron() && (
+                        <div className="import-native-zip">
+                            <span className="import-native-zip-hint">{t("import.largeZipHint")}</span>
+                            <Button text={t("import.largeZipButton")} onClick={() => void doNativeZipImport()} />
+                        </div>
+                    )}
                 </CardSection>
             </Card>
 

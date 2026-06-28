@@ -1,4 +1,4 @@
-import type { ElectronApi, ElectronContextMenuParams, OneNoteLoginResult, RendererStartupMetric } from "@triliumnext/commons";
+import type { ElectronApi, ElectronContextMenuParams, NativeImportOptions, OneNoteLoginResult, RendererStartupMetric } from "@triliumnext/commons";
 import { contextBridge, ipcRenderer, webFrame } from "electron";
 
 contextBridge.exposeInMainWorld("electronApi", {
@@ -207,6 +207,15 @@ contextBridge.exposeInMainWorld("electronApi", {
     nativeExport: {
         exportSubtreeToFile(opts: { branchId: string; format: string; title: string; taskId: string }) {
             return ipcRenderer.invoke("export-subtree-to-file", opts);
+        }
+    },
+
+    nativeImport: {
+        pickZipFile() {
+            return ipcRenderer.invoke("import-pick-zip");
+        },
+        importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions }) {
+            return ipcRenderer.invoke("import-from-token", opts);
         }
     },
 

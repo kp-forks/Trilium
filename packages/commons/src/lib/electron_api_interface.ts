@@ -532,6 +532,51 @@ export interface ElectronNativeExportApi {
     exportSubtreeToFile(opts: { branchId: string; format: string; title: string; taskId: string }): Promise<NativeExportResult>;
 }
 
+/** Import flags forwarded to the native importer (mirrors the HTTP route's options; no path). */
+export interface NativeImportOptions {
+    safeImport: boolean;
+    shrinkImages: boolean;
+    textImportedAsText: boolean;
+    codeImportedAsCode: boolean;
+    spreadsheetImportedAsSpreadsheet: boolean;
+    explodeArchives: boolean;
+    replaceUnderscoresWithSpaces: boolean;
+}
+
+/** Outcome of {@link ElectronNativeImportApi.pickZipFile}: a capability token, never a path. */
+export interface NativeImportPickResult {
+    status: "selected" | "cancelled";
+    /** Single-use, short-lived grant for the user-chosen file (when `status === "selected"`). */
+    token?: string;
+    /** Display name of the chosen file (when `status === "selected"`). */
+    fileName?: string;
+}
+
+/** Outcome of {@link ElectronNativeImportApi.importFromToken}. */
+export interface NativeImportResult {
+    status: "imported" | "error";
+    /** Root note of the import (when `status === "imported"`). */
+    importedNoteId?: string;
+    /** Failure detail (when `status === "error"`). */
+    message?: string;
+}
+
+/**
+ * Desktop-native large-`.zip` import that reads the user's file **in place** (bounded memory, no temp
+ * copy). The renderer never handles a filesystem path: {@link pickZipFile} runs the OS dialog in the main
+ * process and returns an opaque capability token, which {@link importFromToken} redeems. A script can't
+ * forge a token or pass a path, so it can never read an arbitrary file.
+ */
+export interface ElectronNativeImportApi {
+    /** Prompts a native "open file" dialog (`.zip`) and returns a single-use token for the chosen file. */
+    pickZipFile(): Promise<NativeImportPickResult>;
+    /**
+     * Imports the file behind `token` into `parentNoteId`. Progress/success/error are reported over the
+     * WebSocket via `taskId`, matching the HTTP import path.
+     */
+    importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions }): Promise<NativeImportResult>;
+}
+
 /**
  * The complete surface exposed to the renderer as `window.electronApi` via
  * `contextBridge`. The renderer must access Electron-only functionality through
@@ -568,4 +613,6 @@ export interface ElectronApi {
     onenote: ElectronOneNoteApi;
     /** Desktop-native subtree export that streams a `.zip` straight to a file. */
     nativeExport: ElectronNativeExportApi;
+    /** Desktop-native large-`.zip` import that reads the user's file in place via a capability token. */
+    nativeImport: ElectronNativeImportApi;
 }

@@ -23,6 +23,22 @@
         color: var(--muted-text-color);
     }
 
+    /* Desktop-only fast path for large .zip imports, shown beneath the drop zone. */
+    .import-native-zip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1em;
+        margin-top: 0.75em;
+        padding-top: 0.75em;
+        border-top: 1px solid var(--main-border-color);
+    }
+
+    .import-native-zip-hint {
+        color: var(--muted-text-color);
+        font-size: 0.9em;
+    }
+
     /* Collapsed-by-default options: the section header toggles the option rows below. */
     .import-options-toggle {
         display: flex;
