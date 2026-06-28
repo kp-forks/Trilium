@@ -229,7 +229,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.12.2)
+        version: 5.0.1(mind-elixir@5.13.0)
       '@preact/signals':
         specifier: 2.9.2
         version: 2.9.2(preact@10.29.2)
@@ -345,8 +345,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.12.2
-        version: 5.12.2
+        specifier: 5.13.0
+        version: 5.13.0
       panzoom:
         specifier: 9.4.4
         version: 9.4.4
@@ -836,7 +836,7 @@ importers:
         version: 0.2.1(mermaid@11.15.0)
       '@mind-elixir/node-menu':
         specifier: 5.0.1
-        version: 5.0.1(mind-elixir@5.12.2)
+        version: 5.0.1(mind-elixir@5.13.0)
       '@popperjs/core':
         specifier: 2.11.8
         version: 2.11.8
@@ -943,8 +943,8 @@ importers:
         specifier: 11.15.0
         version: 11.15.0
       mind-elixir:
-        specifier: 5.12.2
-        version: 5.12.2
+        specifier: 5.13.0
+        version: 5.13.0
       panzoom:
         specifier: 9.4.4
         version: 9.4.4
@@ -10654,8 +10654,8 @@ packages:
     resolution: {integrity: sha512-z0yWI+4FDrrweS8Zmt4Ej5HdJmky15+L2e6Wgn3+iK5fWzb6T3fhNFq2+MeTRb064c6Wr4N/wv0DzQTjNzHNGQ==}
     engines: {node: '>=10'}
 
-  mind-elixir@5.12.2:
-    resolution: {integrity: sha512-G9eyrmjp6Ot+Llf5oPZPj2N5ivzDVwiQpiJEaX7uTUvIRkUwkyoTW1vSKKayl6ZzRoEWE87zupEdlEJWwtqqVg==}
+  mind-elixir@5.13.0:
+    resolution: {integrity: sha512-ilvXVwrMmBclwyA+46nIrqOZot4Rv7arxInJwbK4XL83qMoPFb7AbwSYJIsMUSjJ+XPxMYYZ2SoMuT06eWAMRQ==}
 
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
@@ -17186,9 +17186,9 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.12.2)':
+  '@mind-elixir/node-menu@5.0.1(mind-elixir@5.13.0)':
     dependencies:
-      mind-elixir: 5.12.2
+      mind-elixir: 5.13.0
 
   '@mixmark-io/domino@2.2.0': {}
 
@@ -25395,7 +25395,7 @@ snapshots:
 
   mimic-response@3.1.0: {}
 
-  mind-elixir@5.12.2: {}
+  mind-elixir@5.13.0: {}
 
   minimatch@10.2.5:
     dependencies:
