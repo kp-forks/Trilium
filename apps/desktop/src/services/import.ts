@@ -1,7 +1,7 @@
 import type { NativeImportOptions, NativeImportPickResult, NativeImportResult } from "@triliumnext/commons";
 import { becca, becca_loader, cls, type File, getLog, importDispatchService, type ImportOptions, TaskContext, utils as coreUtils } from "@triliumnext/core";
 import { default as electron } from "electron";
-import { readFile } from "fs/promises";
+import { readFile, stat } from "fs/promises";
 import { t } from "i18next";
 import { basename, extname } from "path";
 
@@ -49,6 +49,24 @@ export function setupImportHandlers() {
             status: "selected",
             files: filePaths.map((path) => ({ token: grantFileAccess(path), fileName: basename(path) }))
         };
+    });
+
+    electron.ipcMain.handle("import-grant-dropped", async (_e, paths: string[]): Promise<NativeImportPickResult> => {
+        // Paths come from the preload's getPathForFile (user-dropped files only); mint a grant for each, the
+        // same capability the OS dialog hands out. Skip anything that isn't a regular file (a dropped folder,
+        // or a path that vanished) so the renderer falls back to the upload route instead of failing later.
+        const files: { token: string; fileName: string }[] = [];
+        for (const path of paths) {
+            try {
+                if ((await stat(path)).isFile()) {
+                    files.push({ token: grantFileAccess(path), fileName: basename(path) });
+                }
+            } catch {
+                // Unreadable/missing path — skip it.
+            }
+        }
+
+        return files.length > 0 ? { status: "selected", files } : { status: "cancelled" };
     });
 
     electron.ipcMain.handle("import-from-token", async (_e, opts: ImportFromTokenOpts): Promise<NativeImportResult> => {

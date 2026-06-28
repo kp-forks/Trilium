@@ -578,6 +578,15 @@ export interface ElectronNativeImportApi {
     /** Prompts a native "open file" dialog (multi-select, any type) and returns single-use tokens for the chosen files. */
     pickFiles(): Promise<NativeImportPickResult>;
     /**
+     * Resolves files the user dropped onto a drop zone to capability tokens, so a drag-and-drop import takes
+     * the same in-place (streamed) path as the dialog. The `File` is the unforgeable capability: the path is
+     * obtained via `webUtils.getPathForFile`, which yields a real path only for a genuinely user-supplied
+     * file and an empty string for anything a script constructed — so a script can't smuggle in an arbitrary
+     * path. Returns `cancelled` when no dropped file resolved (e.g. dragged from a browser, not the OS), so
+     * the caller falls back to the normal upload route.
+     */
+    grantDroppedFiles(files: File[]): Promise<NativeImportPickResult>;
+    /**
      * Imports the file behind `token` into `parentNoteId`. Progress/success/error are reported over the
      * WebSocket via `taskId`, matching the HTTP import path. When importing several files in one batch, set
      * `last` only on the final call so the success toast fires once, after everything is in. `format` routes

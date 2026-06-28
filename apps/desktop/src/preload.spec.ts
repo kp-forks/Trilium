@@ -50,6 +50,12 @@ vi.mock("electron", () => ({
                 ipcRendererListeners.set(channel, filtered);
             }
         }
+    },
+    // Maps a dropped File to its on-disk path; here we read a test-only `path` field off the fake File.
+    webUtils: {
+        getPathForFile(file: { path?: string }) {
+            return file.path ?? "";
+        }
     }
 }));
 
@@ -636,6 +642,13 @@ describe("preload script", () => {
             const opts = { token: "tok-1", parentNoteId: "p1", taskId: "task1", options: { explodeArchives: true }, last: true };
             await nativeImport().importFromToken(opts);
             expect(ipcRendererInvoked).toContainEqual({ channel: "import-from-token", args: [opts] });
+        });
+
+        it("grantDroppedFiles resolves File objects to paths and forwards only those (dropping unresolved)", async () => {
+            const grantDroppedFiles = nativeImport().grantDroppedFiles as (files: unknown[]) => Promise<unknown>;
+            // The second file has no backing path (a script-built blob / browser drag) → getPathForFile yields "".
+            await grantDroppedFiles([{ path: "/data/a.zip" }, { /* no path */ }]);
+            expect(ipcRendererInvoked).toContainEqual({ channel: "import-grant-dropped", args: [["/data/a.zip"]] });
         });
     });
 });

@@ -25,9 +25,13 @@ function dialogReturns(filePaths: string[] | undefined) {
 
 vi.mock("i18next", () => ({ t: (key: string) => key }));
 
-// --- fs mock: the handler reads non-zip files into a buffer; zips are read in place (no readFile) ---
-const fsMock = vi.hoisted(() => ({ readFile: vi.fn<(...args: unknown[]) => Promise<Buffer>>(async () => Buffer.from("data")) }));
-vi.mock("fs/promises", () => ({ readFile: fsMock.readFile }));
+// --- fs mock: the handler reads non-zip files into a buffer; zips are read in place (no readFile). stat is
+// used by import-grant-dropped to reject anything that isn't a regular file. ---
+const fsMock = vi.hoisted(() => ({
+    readFile: vi.fn<(...args: unknown[]) => Promise<Buffer>>(async () => Buffer.from("data")),
+    stat: vi.fn<(...args: unknown[]) => Promise<{ isFile: () => boolean }>>(async () => ({ isFile: () => true }))
+}));
+vi.mock("fs/promises", () => ({ readFile: fsMock.readFile, stat: fsMock.stat }));
 
 // --- core mock: stub the dispatch pipeline so we can assert what the handler calls ---
 const coreMock = vi.hoisted(() => ({
@@ -69,6 +73,9 @@ function pick() {
 function importFromToken(opts: object) {
     return electronMock.handlers.get("import-from-token")?.({}, opts) as Promise<{ status: string; importedNoteId?: string; message?: string }>;
 }
+function grantDropped(paths: string[]) {
+    return electronMock.handlers.get("import-grant-dropped")?.({}, paths) as Promise<{ status: string; files?: { token: string; fileName: string }[] }>;
+}
 
 describe("desktop native import — capability token", () => {
     beforeEach(() => {
@@ -77,6 +84,7 @@ describe("desktop native import — capability token", () => {
         coreMock.tokenCounter = 0;
         coreMock.dispatch.mockResolvedValue({ noteId: "imported1" });
         fsMock.readFile.mockResolvedValue(Buffer.from("data"));
+        fsMock.stat.mockResolvedValue({ isFile: () => true });
         electronMock.getFocusedWindow.mockReturnValue({});
         setupImportHandlers();
     });
@@ -98,6 +106,37 @@ describe("desktop native import — capability token", () => {
         dialogReturns(undefined);
 
         expect(await pick()).toEqual({ status: "cancelled" });
+        expect(coreMock.dispatch).not.toHaveBeenCalled();
+    });
+
+    it("grants tokens for dropped files (same capability as the dialog)", async () => {
+        const result = await grantDropped(["/data/a.zip", "/data/b.md"]);
+
+        expect(result.status).toBe("selected");
+        expect(result.files?.map((f) => f.fileName)).toEqual(["a.zip", "b.md"]);
+        expect(result.files?.every((f) => !!f.token)).toBe(true);
+        // The token redeems to the original path, proving the grant is wired to it.
+        const redeemed = await importFromToken({ token: result.files?.[0].token, parentNoteId: "p", taskId: "t", options: OPTIONS, last: true });
+        expect(redeemed.status).toBe("imported");
+        const [, file] = coreMock.dispatch.mock.calls[0];
+        expect(file).toMatchObject({ path: "/data/a.zip" });
+    });
+
+    it("skips dropped paths that aren't regular files (e.g. a folder)", async () => {
+        fsMock.stat.mockImplementation(async (p: unknown) => ({ isFile: () => p === "/data/file.zip" }));
+
+        const result = await grantDropped(["/data/folder", "/data/file.zip"]);
+
+        expect(result.status).toBe("selected");
+        expect(result.files?.map((f) => f.fileName)).toEqual(["file.zip"]);
+    });
+
+    it("returns cancelled when no dropped path resolves (caller falls back to upload)", async () => {
+        // An empty path list is what the preload sends when getPathForFile resolved nothing (e.g. a browser drag).
+        expect(await grantDropped([])).toEqual({ status: "cancelled" });
+        // A path that can't be stat'd (missing/unreadable) is skipped too.
+        fsMock.stat.mockRejectedValue(new Error("ENOENT"));
+        expect(await grantDropped(["/data/gone.zip"])).toEqual({ status: "cancelled" });
         expect(coreMock.dispatch).not.toHaveBeenCalled();
     });
 

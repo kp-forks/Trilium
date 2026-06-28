@@ -21,6 +21,11 @@ export interface FileDropZoneProps {
      * filenames are known but which aren't `File` objects. When non-empty it wins; dropping files clears it.
      */
     displayNames?: string[];
+    /**
+     * Desktop only: given the dropped files, try to route them through the native (in-place) import. Return
+     * `true` if handled — the upload `onChange` is then skipped; return `false` to fall back to upload.
+     */
+    onNativeDrop?: (files: File[]) => Promise<boolean>;
 }
 
 /**
@@ -28,7 +33,7 @@ export interface FileDropZoneProps {
  * picker. Selected files are listed inside. Drop-in replacement for {@link FormFileUpload} — same
  * `onChange(files)` / `multiple` contract.
  */
-export default function FileDropZone({ name, onChange, multiple, accept, onBrowse, displayNames }: FileDropZoneProps) {
+export default function FileDropZone({ name, onChange, multiple, accept, onBrowse, displayNames, onNativeDrop }: FileDropZoneProps) {
     const inputRef = useRef<HTMLInputElement>(null);
     const [files, setFiles] = useState<File[]>([]);
     const [dragging, setDragging] = useState(false);
@@ -65,15 +70,21 @@ export default function FileDropZone({ name, onChange, multiple, accept, onBrows
         }
     }, []);
 
-    const onDrop = useCallback((e: DragEvent) => {
+    const onDrop = useCallback(async (e: DragEvent) => {
         e.preventDefault();
         dragDepth.current = 0;
         setDragging(false);
         const dropped = e.dataTransfer?.files;
-        if (dropped && dropped.length) {
-            update(dropped);
+        if (!dropped || !dropped.length) {
+            return;
         }
-    }, [update]);
+        // On desktop, try the native in-place route first; only fall back to upload if it didn't handle the
+        // drop. Capture the File list before any await so it survives the event being recycled.
+        if (onNativeDrop && await onNativeDrop(Array.from(dropped))) {
+            return;
+        }
+        update(dropped);
+    }, [update, onNativeDrop]);
 
     // An external (native) selection takes precedence over whatever the in-page input/drop produced.
     const selectedNames = displayNames?.length ? displayNames : files.map((file) => file.name);
@@ -87,7 +98,7 @@ export default function FileDropZone({ name, onChange, multiple, accept, onBrows
             onDragEnter={onDragEnter}
             onDragOver={(e) => e.preventDefault()}
             onDragLeave={onDragLeave}
-            onDrop={onDrop}
+            onDrop={(e) => void onDrop(e)}
         >
             <input
                 ref={inputRef}

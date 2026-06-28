@@ -87,6 +87,19 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
         }
     }, []);
 
+    // Desktop: route a drop through the native in-place path too. Handle it natively only when *every*
+    // dropped file resolved to a real path (the rest — folders, browser drags — fall back to upload so
+    // nothing is silently dropped).
+    const onNativeDrop = useCallback(async (dropped: File[]) => {
+        const pick = await window.electronApi?.nativeImport.grantDroppedFiles(dropped);
+        if (pick?.status !== "selected" || pick.files?.length !== dropped.length) {
+            return false;
+        }
+        setFiles(null);
+        setNativeFiles(pick.files);
+        return true;
+    }, []);
+
     // Keep the latest import handler in a ref so the footer effect depends only on whether files are
     // selected, never on doImport's identity — otherwise re-pushing the footer on every option toggle
     // would loop with the parent re-rendering us back (see the other panels for the same reasoning).
@@ -111,6 +124,7 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
                         // On desktop, browsing opens the native dialog so the chosen files (zips especially)
                         // are read in place. Drag-and-drop still uses the upload route via onChange.
                         onBrowse={utils.isElectron() ? () => void doNativeBrowse() : undefined}
+                        onNativeDrop={utils.isElectron() ? onNativeDrop : undefined}
                         displayNames={nativeFiles?.map((file) => file.fileName)}
                     />
                 </CardSection>

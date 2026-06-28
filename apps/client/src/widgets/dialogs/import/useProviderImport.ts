@@ -20,6 +20,8 @@ interface ProviderImport {
     onChange: (files: FileList | null) => void;
     /** Desktop-only native browse (reads the zip in place); undefined elsewhere. */
     onBrowse?: () => void;
+    /** Desktop-only native drop (reads the dropped zip in place); undefined elsewhere. */
+    onNativeDrop?: (files: File[]) => Promise<boolean>;
     doImport: () => Promise<void>;
 }
 
@@ -49,6 +51,18 @@ export default function useProviderImport({ format, parentNoteId, shrinkImages, 
         setNativeFile(pick.files[0]);
     }, []);
 
+    // Desktop: route a dropped archive through the native in-place path. A provider takes a single file, so
+    // resolve just the first; fall back to upload if it didn't resolve to a real path.
+    const nativeDrop = useCallback(async (dropped: File[]) => {
+        const pick = await window.electronApi?.nativeImport.grantDroppedFiles(dropped.slice(0, 1));
+        if (pick?.status !== "selected" || !pick.files?.length) {
+            return false;
+        }
+        setFile(null);
+        setNativeFile(pick.files[0]);
+        return true;
+    }, []);
+
     const doImport = useCallback(async () => {
         // Close immediately and let the shared import toasts (registered in import.ts) report progress,
         // completion and any error. Swallow rejections so these void-ed calls don't raise unhandled ones.
@@ -75,6 +89,7 @@ export default function useProviderImport({ format, parentNoteId, shrinkImages, 
         displayNames: nativeFile ? [nativeFile.fileName] : undefined,
         onChange,
         onBrowse: utils.isElectron() ? () => void browse() : undefined,
+        onNativeDrop: utils.isElectron() ? nativeDrop : undefined,
         doImport
     };
 }
