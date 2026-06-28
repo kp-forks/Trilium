@@ -1779,7 +1779,7 @@
     "set_password_heading": "Set Password",
     "set_password": "Set Password",
     "password_mismatch": "New passwords are not the same.",
-    "password_changed_success": "Password has been changed. Trilium will be reloaded after you press OK."
+    "password_changed_success": "Password changed successfully."
   },
   "multi_factor_authentication": {
     "authentication_title": "Authentication",
@@ -2848,6 +2848,15 @@
     "sample_ishikawa": "Ishikawa",
     "sample_treeview": "TreeView",
     "sample_wardley": "Wardley Map"
+  },
+  "set_password": {
+    "heading": "Set password",
+    "description": "Before you can start using Trilium from web, you need to set a password first. You will then use this password to login.",
+    "password": "Password",
+    "password-confirmation": "Password confirmation",
+    "button": "Set password",
+    "password-too-short": "Password must be at least {{length}} characters long.",
+    "passwords-dont-match": "The entered passwords don't match."
   },
   "setup": {
     "heading": "Get started with Trilium",

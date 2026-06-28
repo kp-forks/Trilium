@@ -387,7 +387,12 @@ function useWatchdogCrashHandling() {
                 timeout: 20_000
             });
         } else if (currentState === "crashedPermanently") {
-            dialog.info(t("editable_text.keeps-crashing"));
+            toast.showPersistent({
+                id: "editor-crashed-permanently",
+                icon: "bx bx-error-circle",
+                title: t("editable_text.editor_crashed_title"),
+                message: t("editable_text.keeps-crashing")
+            });
             watchdog.editor?.enableReadOnlyMode("crashed-editor");
         }
     }, []);
