@@ -1,5 +1,6 @@
 import "./setup.css";
 import "./login.css";
+import "./login_page.css";
 
 import { LOCALE_IDS } from "@triliumnext/commons";
 import { render } from "preact";
