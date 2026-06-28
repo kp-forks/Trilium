@@ -25,11 +25,13 @@ export function setupExportHandlers() {
             return { status: "cancelled" };
         }
 
-        const filePath = electron.dialog.showSaveDialogSync(focusedWindow, {
+        // Async dialog: showSaveDialogSync blocks the main process event loop (freezing the UI, WebSockets
+        // and background tasks) for as long as the dialog is open.
+        const { canceled, filePath } = await electron.dialog.showSaveDialog(focusedWindow, {
             defaultPath: coreUtils.formatDownloadTitle(title, "file", "application/zip"),
             filters: [{ name: t("export.zip_filter"), extensions: ["zip"] }]
         });
-        if (!filePath) {
+        if (canceled || !filePath) {
             return { status: "cancelled" };
         }
 

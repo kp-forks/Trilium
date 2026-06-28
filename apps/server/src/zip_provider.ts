@@ -11,7 +11,9 @@ class NodejsZipArchive implements ZipArchive {
     // exactly one "entry" event per append, so this stays aligned with it.
     readonly #pendingSizes: number[] = [];
     #queuedBytes = 0;
-    #capacityWaiter: (() => void) | null = null;
+    #capacityWaiter: { resolve: () => void; reject: (err: Error) => void } | null = null;
+    // First error emitted by archiver (disk full, zlib failure, …); surfaced through append/waitForCapacity.
+    #error: Error | null = null;
 
     // Cap how much appended-but-unwritten data archiver holds in its internal
     // queue. The export walk appends the whole note tree synchronously; without
@@ -26,18 +28,33 @@ class NodejsZipArchive implements ZipArchive {
             zlib: { level: 6 }
         });
 
+        // An EventEmitter with no "error" listener throws as an *unhandled* exception when it errors, which
+        // crashes the process. Capture archiver's error and re-surface it through append/waitForCapacity/
+        // finalize so the export fails cleanly instead.
+        this.#archive.on("error", (err: Error) => {
+            this.#error = err;
+            if (this.#capacityWaiter) {
+                const waiter = this.#capacityWaiter;
+                this.#capacityWaiter = null;
+                waiter.reject(err);
+            }
+        });
+
         // Fires as each queued entry finishes being written to the output.
         this.#archive.on("entry", () => {
             this.#queuedBytes -= this.#pendingSizes.shift() ?? 0;
             if (this.#capacityWaiter && this.#queuedBytes < NodejsZipArchive.#HIGH_WATER_MARK) {
-                const resolve = this.#capacityWaiter;
+                const waiter = this.#capacityWaiter;
                 this.#capacityWaiter = null;
-                resolve();
+                waiter.resolve();
             }
         });
     }
 
     append(content: string | Uint8Array, options: ZipArchiveEntryOptions) {
+        if (this.#error) {
+            throw this.#error;
+        }
         // Wrap the Uint8Array in a Buffer view sharing the same memory rather
         // than copying it (Buffer.from(uint8array) would allocate a full copy).
         // byteOffset/byteLength keep the view scoped to this slice, never the
@@ -52,11 +69,14 @@ class NodejsZipArchive implements ZipArchive {
     }
 
     waitForCapacity(): Promise<void> {
+        if (this.#error) {
+            return Promise.reject(this.#error);
+        }
         if (this.#queuedBytes < NodejsZipArchive.#HIGH_WATER_MARK) {
             return Promise.resolve();
         }
         // At most one waiter: the export loop awaits this before the next append.
-        return new Promise((resolve) => { this.#capacityWaiter = resolve; });
+        return new Promise((resolve, reject) => { this.#capacityWaiter = { resolve, reject }; });
     }
 
     pipe(destination: unknown) {

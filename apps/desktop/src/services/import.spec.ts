@@ -4,17 +4,24 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const electronMock = vi.hoisted(() => ({
     handlers: new Map<string, (...args: unknown[]) => unknown>(),
     handle: vi.fn((channel: string, handler: (...args: unknown[]) => unknown) => electronMock.handlers.set(channel, handler)),
-    showOpenDialogSync: vi.fn<(...args: unknown[]) => string[] | undefined>(),
+    showOpenDialog: vi.fn<(...args: unknown[]) => Promise<{ canceled: boolean; filePaths: string[] }>>(),
     getFocusedWindow: vi.fn<() => object | null>(() => ({}))
 }));
 
 vi.mock("electron", () => ({
     default: {
         ipcMain: { handle: electronMock.handle },
-        dialog: { showOpenDialogSync: electronMock.showOpenDialogSync },
+        dialog: { showOpenDialog: electronMock.showOpenDialog },
         BrowserWindow: { getFocusedWindow: electronMock.getFocusedWindow }
     }
 }));
+
+/** Resolves the open-dialog mock to a user selection (or a cancel) the way Electron's async dialog does. */
+function dialogReturns(filePaths: string[] | undefined) {
+    electronMock.showOpenDialog.mockResolvedValue(
+        filePaths && filePaths.length ? { canceled: false, filePaths } : { canceled: true, filePaths: [] }
+    );
+}
 
 vi.mock("i18next", () => ({ t: (key: string) => key }));
 
@@ -75,7 +82,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("pick returns tokens + filenames (never paths) for the user-chosen files", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(["C:/Users/me/big vault.zip", "C:/Users/me/notes.md"]);
+        dialogReturns(["C:/Users/me/big vault.zip", "C:/Users/me/notes.md"]);
 
         const result = await pick();
 
@@ -88,7 +95,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("a cancelled dialog mints no token and imports nothing", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(undefined);
+        dialogReturns(undefined);
 
         expect(await pick()).toEqual({ status: "cancelled" });
         expect(coreMock.dispatch).not.toHaveBeenCalled();
@@ -97,7 +104,7 @@ describe("desktop native import — capability token", () => {
     it("imports a granted zip in place (dispatch receives a { path } file, never read into a buffer)", async () => {
         vi.useFakeTimers();
         try {
-            electronMock.showOpenDialogSync.mockReturnValue(["/data/big.zip"]);
+            dialogReturns(["/data/big.zip"]);
             const { files } = await pick();
             const token = files?.[0].token;
 
@@ -121,7 +128,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("reads a granted non-zip file into a buffer before dispatching", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(["/data/note.md"]);
+        dialogReturns(["/data/note.md"]);
         fsMock.readFile.mockResolvedValue(Buffer.from("# hello"));
         const { files } = await pick();
 
@@ -136,7 +143,7 @@ describe("desktop native import — capability token", () => {
     it("fires the success toast only on the last file of a batch", async () => {
         vi.useFakeTimers();
         try {
-            electronMock.showOpenDialogSync.mockReturnValue(["/data/a.md", "/data/b.md"]);
+            dialogReturns(["/data/a.md", "/data/b.md"]);
             const { files } = await pick();
 
             await importFromToken({ token: files?.[0].token, parentNoteId: "p", taskId: "t", options: OPTIONS, last: false });
@@ -152,7 +159,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("forwards a provider format and still streams the tagged zip from path (not read into a buffer)", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(["/data/vault.zip"]);
+        dialogReturns(["/data/vault.zip"]);
         const { files } = await pick();
 
         await importFromToken({ token: files?.[0].token, parentNoteId: "p", taskId: "t", options: OPTIONS, last: true, format: "obsidian" });
@@ -173,7 +180,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("consumes the token: the same token cannot be redeemed twice (no replay)", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(["/data/once.zip"]);
+        dialogReturns(["/data/once.zip"]);
         const { files } = await pick();
         const token = files?.[0].token;
 
@@ -186,7 +193,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("reports a failed import as an error and surfaces it on the task channel", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(["/data/bad.zip"]);
+        dialogReturns(["/data/bad.zip"]);
         coreMock.dispatch.mockRejectedValue(new Error("corrupt archive"));
         const { files } = await pick();
 
@@ -197,7 +204,7 @@ describe("desktop native import — capability token", () => {
     });
 
     it("surfaces an OPML structured failure (the [status, message] tuple) as an error", async () => {
-        electronMock.showOpenDialogSync.mockReturnValue(["/data/bad.opml"]);
+        dialogReturns(["/data/bad.opml"]);
         coreMock.dispatch.mockResolvedValue([400, "Unsupported OPML version"]);
         const { files } = await pick();
 

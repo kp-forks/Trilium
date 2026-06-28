@@ -474,7 +474,13 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
 
     await archive.finalize();
 
-    taskContext.taskSucceeded(null);
+    // Report success here only for an HTTP response, whose bytes are on the wire once finalize() resolves.
+    // A file (or other) stream isn't durably written until its "finish" event — which the caller awaits via
+    // waitForFinish() — so for those the caller emits taskSucceeded after the flush, not here, to avoid
+    // reporting success before a late write error (e.g. a full disk) leaves a truncated archive.
+    if ("setHeader" in res) {
+        taskContext.taskSucceeded(null);
+    }
 }
 
 /** Counts the notes in a metadata tree — i.e. the number of `saveNote()` calls the content-writing pass will make. */
@@ -520,6 +526,9 @@ async function exportBranchToZipFile(branchId: string, format: ExportFormat, zip
     try {
         await exportToZip(taskContext, branch, format, destination as Record<string, any>, false);
         await waitForFinish();
+        // exportToZip defers success for non-HTTP destinations: only now, with the file fully flushed to
+        // disk, is the export genuinely complete — so report it here rather than before the final write.
+        taskContext.taskSucceeded(null);
     } catch (e: unknown) {
         taskContext.reportError(`Export failed with error: ${e instanceof Error ? e.message : String(e)}`);
         throw e;

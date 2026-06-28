@@ -36,16 +36,18 @@ export function setupImportHandlers() {
             return { status: "cancelled" };
         }
 
-        const selection = electron.dialog.showOpenDialogSync(focusedWindow, {
+        // Async dialog: showOpenDialogSync blocks the main process event loop (freezing the UI, WebSockets
+        // and background tasks) for as long as the picker is open.
+        const { canceled, filePaths } = await electron.dialog.showOpenDialog(focusedWindow, {
             properties: ["openFile", "multiSelections"]
         });
-        if (!selection || selection.length === 0) {
+        if (canceled || filePaths.length === 0) {
             return { status: "cancelled" };
         }
 
         return {
             status: "selected",
-            files: selection.map((path) => ({ token: grantFileAccess(path), fileName: basename(path) }))
+            files: filePaths.map((path) => ({ token: grantFileAccess(path), fileName: basename(path) }))
         };
     });
 
@@ -72,8 +74,16 @@ const GRANT_TTL_MS = 5 * 60 * 1000;
 
 /** Mints a single-use, time-limited token for a path the *user* picked in the OS dialog. */
 function grantFileAccess(path: string): string {
+    // Drop any grants the user never redeemed so the map can't grow unbounded across repeated dialogs.
+    const now = Date.now();
+    for (const [existingToken, grant] of fileGrants) {
+        if (grant.expiresAt < now) {
+            fileGrants.delete(existingToken);
+        }
+    }
+
     const token = coreUtils.randomString(32);
-    fileGrants.set(token, { path, expiresAt: Date.now() + GRANT_TTL_MS });
+    fileGrants.set(token, { path, expiresAt: now + GRANT_TTL_MS });
     return token;
 }
 
@@ -93,23 +103,26 @@ async function runNativeImport(path: string, opts: ImportFromTokenOpts): Promise
     const taskContext = TaskContext.getInstance(opts.taskId, "importNotes", opts.options);
     const options = opts.options satisfies ImportOptions;
 
+    const file = await buildImportFile(path, options.explodeArchives, opts.format);
+
     const note = await cls.init(async () => {
         // Match the HTTP import route: skip per-entity events and change-id tracking during the bulk import.
         cls.disableEntityEvents();
         cls.ignoreEntityChangeIds();
 
-        const file = await buildImportFile(path, options.explodeArchives, opts.format);
-        const result = await importDispatchService(taskContext, file, parentNote, options, opts.format);
-
-        // Import ran with entity events disabled, so becca wasn't updated incrementally — force a reload.
-        // Must run inside the CLS context: becca_loader.load() toggles slow-query logging via the namespace.
-        becca_loader.load();
-
-        if (Array.isArray(result)) {
-            // OPML reports a structured failure as a `[httpStatus, message]` array.
-            throw new Error(String(result[1]));
+        try {
+            const result = await importDispatchService(taskContext, file, parentNote, options, opts.format);
+            if (Array.isArray(result)) {
+                // OPML reports a structured failure as a `[httpStatus, message]` array.
+                throw new Error(String(result[1]));
+            }
+            return result;
+        } finally {
+            // Import ran with entity events disabled, so becca wasn't updated incrementally — reload it to
+            // resync the cache even if the import threw partway (some notes may already be written). Must run
+            // inside the CLS context: becca_loader.load() toggles slow-query logging via the namespace.
+            becca_loader.load();
         }
-        return result;
     });
 
     // Small delay mirrors the route: let the transaction commit before the client reacts to success. Only
