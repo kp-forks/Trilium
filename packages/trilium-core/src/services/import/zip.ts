@@ -1,6 +1,6 @@
 import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
 import { basename, dirname } from "../utils/path.js";
-import { getZipProvider } from "../zip_provider.js";
+import { getZipProvider, type ZipSource } from "../zip_provider.js";
 
 import becca from "../../becca/becca.js";
 import BAttachment from "../../becca/entities/battachment.js";
@@ -39,7 +39,7 @@ interface ImportZipOpts {
     preserveIds?: boolean;
 }
 
-async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Uint8Array, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
+async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
     /** maps from original noteId (in ZIP file) to newly generated noteId */
     const noteIdMap: Record<string, string> = {};
     /** type maps from original attachmentId (in ZIP file) to newly generated attachmentId */
@@ -665,7 +665,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     const zipProvider = getZipProvider();
 
     // Detect filename encoding once for the whole ZIP (e.g. GBK for Chinese Windows ZIPs)
-    const filenameEncoding = await zipProvider.detectFilenameEncoding(fileBuffer);
+    const filenameEncoding = await zipProvider.detectFilenameEncoding(source);
 
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
@@ -673,7 +673,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     // client can show a progress bar ("X of N") instead of a bare running count
     let entriesToProcess = 0;
 
-    await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
+    await zipProvider.readZipFile(source, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
         if (isMacOSMetadata(filePath)) {
@@ -699,7 +699,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, fileBuffer: Ui
     // the processing pass increments progress once per entry; expose the total so the client shows a bar
     taskContext.setTotalCount(entriesToProcess);
 
-    await zipProvider.readZipFile(fileBuffer, async (entry, readContent) => {
+    await zipProvider.readZipFile(source, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
 
         if (isMacOSMetadata(filePath)) {

@@ -1,3 +1,10 @@
+/**
+ * A zip to read: either its raw bytes, or — server/desktop only — a filesystem path the provider opens
+ * and reads *in place* (no full-buffer copy, no ~2 GiB `fs.readFile` ceiling). The browser/WASM provider
+ * only supports the byte form.
+ */
+export type ZipSource = Uint8Array | { path: string };
+
 export interface ZipEntry {
     fileName: string;
     /**
@@ -42,19 +49,20 @@ export interface FileStream {
 
 export interface ZipProvider {
     /**
-     * Detects the filename encoding used in a ZIP file by collecting all
-     * non-UTF-8-flagged entry names and running charset detection on them.
-     * Returns the detected encoding label (usable with TextDecoder), or "utf-8" as fallback.
+     * Detects the filename encoding used in a ZIP by collecting all non-UTF-8-flagged entry names and
+     * running charset detection on them. Returns the detected encoding label (usable with TextDecoder),
+     * or "utf-8" as fallback. Accepts raw bytes or — server/desktop only — a {@link ZipSource} path.
      */
-    detectFilenameEncoding(buffer: Uint8Array): Promise<string>;
+    detectFilenameEncoding(source: ZipSource): Promise<string>;
 
     /**
-     * Iterates over every entry in a ZIP buffer, calling `processEntry` for each one.
-     * `readContent()` inside the callback reads the raw bytes of that entry on demand.
-     * If `filenameEncoding` is provided, non-UTF-8-flagged filenames are decoded using it.
+     * Iterates over every entry in a ZIP, calling `processEntry` for each one. `readContent()` inside the
+     * callback reads the raw bytes of that entry on demand. If `filenameEncoding` is provided,
+     * non-UTF-8-flagged filenames are decoded using it. Accepts raw bytes or — server/desktop only — a
+     * {@link ZipSource} path, in which case the zip is read straight from disk per entry.
      */
     readZipFile(
-        buffer: Uint8Array,
+        source: ZipSource,
         processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>,
         filenameEncoding?: string
     ): Promise<void>;

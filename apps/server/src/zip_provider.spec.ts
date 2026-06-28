@@ -1,6 +1,9 @@
 import type { ZipEntry } from "@triliumnext/core/src/services/zip_provider.js";
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { PassThrough } from "stream";
-import { describe, expect, it } from "vitest";
+import { afterAll, describe, expect, it } from "vitest";
 
 import NodejsZipProvider from "./zip_provider.js";
 
@@ -70,5 +73,55 @@ describe("NodejsZipProvider", () => {
         const entries = await readZip(buffer);
         expect(Object.keys(entries).sort()).toEqual(["a.txt", "dir/b.txt"]);
         expect(entries["dir/b.txt"].toString("utf-8")).toBe("beta");
+    });
+
+    describe("reading from a path (in place, no full-buffer load)", () => {
+        const dir = mkdtempSync(join(tmpdir(), "trilium-zip-provider-spec-"));
+        afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+        let zipCounter = 0;
+        async function writeZip(entries: { name: string; content: string | Uint8Array }[]): Promise<string> {
+            const buffer = await buildZip(entries);
+            const path = join(dir, `zip-${zipCounter++}.zip`);
+            writeFileSync(path, buffer);
+            return path;
+        }
+
+        async function readPath(path: string): Promise<Record<string, Buffer>> {
+            const out: Record<string, Buffer> = {};
+            await provider.readZipFile({ path }, async (entry: ZipEntry, readContent) => {
+                out[entry.fileName] = Buffer.from(await readContent());
+            });
+            return out;
+        }
+
+        it("reads entries straight from a file path", async () => {
+            const path = await writeZip([
+                { name: "a.txt", content: "alpha" },
+                { name: "dir/b.txt", content: "beta" }
+            ]);
+            const entries = await readPath(path);
+            expect(Object.keys(entries).sort()).toEqual(["a.txt", "dir/b.txt"]);
+            expect(entries["dir/b.txt"].toString("utf-8")).toBe("beta");
+        });
+
+        it("yields byte-identical content whether read from a path or its bytes", async () => {
+            const binary = new Uint8Array([0x89, 0x50, 0x00, 0xff, 0x80, 0x01]);
+            const buffer = await buildZip([{ name: "pixel.png", content: binary }]);
+            const path = join(dir, `roundtrip-${zipCounter++}.zip`);
+            writeFileSync(path, buffer);
+
+            const fromPath = await readPath(path);
+            const fromBytes = await readZip(buffer);
+            expect(Buffer.compare(fromPath["pixel.png"], fromBytes["pixel.png"])).toBe(0);
+        });
+
+        it("detects the same filename encoding from a path as from the bytes", async () => {
+            const buffer = await buildZip([{ name: "plain.txt", content: "x" }]);
+            const path = join(dir, `encoding-${zipCounter++}.zip`);
+            writeFileSync(path, buffer);
+
+            expect(await provider.detectFilenameEncoding({ path })).toBe(await provider.detectFilenameEncoding(buffer));
+        });
     });
 });

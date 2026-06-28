@@ -1,4 +1,4 @@
-import type { FileStream, ZipArchive, ZipArchiveEntryOptions, ZipEntry, ZipProvider } from "@triliumnext/core/src/services/zip_provider.js";
+import type { FileStream, ZipArchive, ZipArchiveEntryOptions, ZipEntry, ZipProvider, ZipSource } from "@triliumnext/core/src/services/zip_provider.js";
 import { ZipArchive as ArchiverZip } from "archiver";
 import fs from "fs";
 import type { Stream } from "stream";
@@ -77,18 +77,34 @@ function streamToBuffer(stream: Stream): Promise<Buffer> {
     });
 }
 
+async function openZip(source: ZipSource) {
+    const options = { validateEntrySizes: false, decodeStrings: false };
+    if (source instanceof Uint8Array) {
+        // Wrap the bytes in a Buffer *view* (no copy); fall through to fromBuffer. A `path` source is
+        // opened straight from disk so a multi-GB zip is never held in memory (and dodges fs.readFile's
+        // ~2 GiB ceiling) — yauzl reads the central directory and each entry on demand from the fd.
+        const buf = Buffer.isBuffer(source) ? source : Buffer.from(source.buffer, source.byteOffset, source.byteLength);
+        return yauzl.fromBufferPromise(buf, options);
+    }
+    return yauzl.openPromise(source.path, options);
+}
+
 export default class NodejsZipProvider implements ZipProvider {
-    async detectFilenameEncoding(buffer: Uint8Array): Promise<string> {
-        const zipfile = await yauzl.fromBufferPromise(Buffer.from(buffer), {
-            validateEntrySizes: false,
-            decodeStrings: false
-        });
+    async detectFilenameEncoding(source: ZipSource): Promise<string> {
+        const zipfile = await openZip(source);
 
         const samples: Buffer[] = [];
-        for await (const entry of zipfile.eachEntry()) {
-            const isUtf8Flagged = !!(entry.generalPurposeBitFlag & 0x800);
-            if (!isUtf8Flagged) {
-                samples.push(entry.fileNameRaw);
+        try {
+            for await (const entry of zipfile.eachEntry()) {
+                const isUtf8Flagged = !!(entry.generalPurposeBitFlag & 0x800);
+                if (!isUtf8Flagged) {
+                    samples.push(entry.fileNameRaw);
+                }
+            }
+        } finally {
+            // Release the file descriptor for a path source (no-op for an already-closed buffer reader).
+            if (zipfile.isOpen) {
+                zipfile.close();
             }
         }
 
@@ -121,29 +137,33 @@ export default class NodejsZipProvider implements ZipProvider {
     }
 
     async readZipFile(
-        buffer: Uint8Array,
+        source: ZipSource,
         processEntry: (entry: ZipEntry, readContent: () => Promise<Uint8Array>) => Promise<void>,
         filenameEncoding?: string
     ): Promise<void> {
-        const zipfile = await yauzl.fromBufferPromise(Buffer.from(buffer), {
-            validateEntrySizes: false,
-            decodeStrings: false
-        });
+        const zipfile = await openZip(source);
 
-        for await (const entry of zipfile.eachEntry()) {
-            // yauzl with decodeStrings: false leaves file names undecoded.
-            // Use the detected encoding for non-UTF-8-flagged entries,
-            // falling back to UTF-8.
-            const isUtf8Flagged = !!(entry.generalPurposeBitFlag & 0x800);
-            const encoding = isUtf8Flagged ? "utf-8" : (filenameEncoding || "utf-8");
-            const fileName = decodeBuffer(entry.fileNameRaw, encoding);
+        try {
+            for await (const entry of zipfile.eachEntry()) {
+                // yauzl with decodeStrings: false leaves file names undecoded.
+                // Use the detected encoding for non-UTF-8-flagged entries,
+                // falling back to UTF-8.
+                const isUtf8Flagged = !!(entry.generalPurposeBitFlag & 0x800);
+                const encoding = isUtf8Flagged ? "utf-8" : (filenameEncoding || "utf-8");
+                const fileName = decodeBuffer(entry.fileNameRaw, encoding);
 
-            const readContent = async () => {
-                const readStream = await zipfile.openReadStreamPromise(entry);
-                return await streamToBuffer(readStream);
-            };
+                const readContent = async () => {
+                    const readStream = await zipfile.openReadStreamPromise(entry);
+                    return await streamToBuffer(readStream);
+                };
 
-            await processEntry({ fileName, lastModified: entry.getLastModDate() }, readContent);
+                await processEntry({ fileName, lastModified: entry.getLastModDate() }, readContent);
+            }
+        } finally {
+            // Release the file descriptor for a path source (no-op for an already-closed buffer reader).
+            if (zipfile.isOpen) {
+                zipfile.close();
+            }
         }
     }
 }
