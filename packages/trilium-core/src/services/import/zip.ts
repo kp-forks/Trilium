@@ -664,8 +664,15 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
     const zipProvider = getZipProvider();
 
+    // Per-phase wall-clock so a single import run reveals where the time goes (logged as one summary line
+    // below). Cheap: a couple of Date.now() reads per entry.
+    const timing = { encoding: 0, scan: 0, read: 0, save: 0, postProcess: 0, sort: 0, attributes: 0 };
+    let timingMark = Date.now();
+
     // Detect filename encoding once for the whole ZIP (e.g. GBK for Chinese Windows ZIPs)
     const filenameEncoding = await zipProvider.detectFilenameEncoding(source);
+    timing.encoding = Date.now() - timingMark;
+    timingMark = Date.now();
 
     // we're running two passes in order to obtain critical information first (meta file and root)
     const topLevelItems = new Set<string>();
@@ -693,6 +700,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
         const topLevelPath = (firstSlash !== -1 ? filePath.substring(0, firstSlash) : filePath);
         topLevelItems.add(topLevelPath);
     }, filenameEncoding);
+    timing.scan = Date.now() - timingMark;
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
@@ -715,7 +723,13 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
         if (/\/$/.test(entry.fileName)) {
             saveDirectory(filePath);
         } else if (filePath !== "!!!meta.json") {
-            await saveNote(filePath, await readContent());
+            const readStart = Date.now();
+            const content = await readContent();
+            timing.read += Date.now() - readStart;
+
+            const saveStart = Date.now();
+            await saveNote(filePath, content);
+            timing.save += Date.now() - saveStart;
         }
 
         taskContext.increaseProgressCount();
@@ -728,12 +742,16 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
     for (const noteId of createdNoteIds) {
         const note = becca.getNote(noteId);
         if (!note) continue;
+        const postStart = Date.now();
         await noteService.asyncPostProcessContent(note, note.getContent());
+        timing.postProcess += Date.now() - postStart;
 
         if (!metaFile) {
             // if there's no meta file, then the notes are created based on the order in that zip file but that
             // is usually quite random, so we sort the notes in the way they would appear in the file manager
+            const sortStart = Date.now();
             treeService.sortNotes(noteId, "title", false, true);
+            timing.sort += Date.now() - sortStart;
         }
 
         taskContext.increaseProgressCount();
@@ -741,6 +759,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
     // we're saving attributes and links only now so that all relation and link target notes
     // are already in the database (we don't want to have "broken" relations, not even transitionally)
+    timingMark = Date.now();
     for (const attr of attributes) {
         if (attr.type !== "relation" || attr.value in becca.notes) {
             new BAttribute(attr).save();
@@ -748,6 +767,13 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
             getLog().info(`Relation not imported since the target note doesn't exist: ${JSON.stringify(attr)}`);
         }
     }
+    timing.attributes = Date.now() - timingMark;
+
+    getLog().info(
+        `Import timing (ms): encoding=${timing.encoding} scan=${timing.scan} read=${timing.read} ` +
+        `save=${timing.save} postProcess=${timing.postProcess} sort=${timing.sort} attributes=${timing.attributes} ` +
+        `— ${createdNoteIds.size} notes, ${entriesToProcess} entries, ${attributes.length} attributes`
+    );
 
     if (!firstNote) {
         throw new Error("Unable to determine first note.");
