@@ -305,7 +305,7 @@
   "export": {
     "export_note_title": "ノートをエクスポート",
     "close": "閉じる",
-    "export_type_subtree": "このノートとすべての子ノート",
+    "export_type_subtree": "このノートとすべての子孫ノート",
     "export_type_single": "このノートのみ",
     "export": "エクスポート",
     "choose_export_type": "最初にエクスポートタイプを選択してください",

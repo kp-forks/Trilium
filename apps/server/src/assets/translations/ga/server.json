@@ -437,8 +437,8 @@
     "root-title": "Iompórtáil Google Keep"
   },
   "anytype_import": {
-    "root-title": "Allmhairiú aon chineál",
-    "protobuf-export-unsupported": "Breathnaíonn sé seo cosúil le easpórtáil \"Protobuf\" de chineál ar bith, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás de chineál ar bith ag baint úsáide as an bhformáid \"Bloc ar bith\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad.",
-    "markdown-export-unsupported": "Breathnaíonn sé seo cosúil le heaspórtáil \"Markdown\" de chineál ar bith, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás de chineál ar bith ag baint úsáide as an bhformáid \"Any-Block\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad."
+    "root-title": "Iompórtáil Anytype",
+    "protobuf-export-unsupported": "Breathnaíonn sé seo cosúil le heaspórtáil \"Protobuf\" de chuid Anytype, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás Anytype ag baint úsáide as an bhformáid \"Any-Block\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad.",
+    "markdown-export-unsupported": "Breathnaíonn sé seo cosúil le heaspórtáil \"Markdown\" de chuid Anytype, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás Anytype ag baint úsáide as an bhformáid \"Any-Block\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad."
   }
 }
