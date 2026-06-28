@@ -34,12 +34,9 @@ function loginPage(req: Request, res: Response) {
 }
 
 function setPasswordPage(req: Request, res: Response) {
-    res.render("set_password", {
-        error: false,
-        assetPath,
-        appPath,
-        currentLocale: i18n.getCurrentLocale()
-    });
+    // The set-password screen is served by the SPA at the root now (driven by the
+    // bootstrap `passwordSet: false` flag); redirect any direct hits there.
+    res.redirect(".");
 }
 
 async function setPassword(req: Request, res: Response) {
@@ -51,22 +48,12 @@ async function setPassword(req: Request, res: Response) {
     password1 = password1.trim();
     password2 = password2.trim();
 
-    let error;
-
+    // The client validates these before submitting; the server checks are a safety
+    // net, so a violation here is an exceptional case rather than normal flow.
     if (password1 !== password2) {
-        error = "Entered passwords don't match.";
+        throw new ValidationError("Entered passwords don't match.");
     } else if (password1.length < 4) {
-        error = "Password must be at least 4 characters long.";
-    }
-
-    if (error) {
-        res.render("set_password", {
-            error,
-            assetPath,
-            appPath,
-            currentLocale: i18n.getCurrentLocale()
-        });
-        return;
+        throw new ValidationError("Password must be at least 4 characters long.");
     }
 
     await passwordService.setPassword(password1);

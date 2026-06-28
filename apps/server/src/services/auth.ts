@@ -21,6 +21,15 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
         return next();
     }
 
+    if (!isElectron && !passwordService.isPasswordSet()) {
+        // DB initialized but no password set yet — on the web/server the instance is
+        // unprotected until the user sets one, so let the request through for the client
+        // to fetch its bootstrap and render the set-password screen. Desktop never shows
+        // this screen (it's handled by the internal-electron / session checks below), and
+        // the API stays protected separately via checkApiAuth (which still requires a session).
+        return next();
+    }
+
     const currentTotpStatus = totp.isTotpEnabled();
     const currentSsoStatus = openID.isOpenIDEnabled();
     const lastAuthState = req.session.lastAuthState || { totpEnabled: false, ssoEnabled: false };
@@ -119,7 +128,9 @@ function checkAppInitialized(_req: Request, _res: Response, next: NextFunction) 
 
 function checkPasswordSet(req: Request, res: Response, next: NextFunction) {
     if (!isElectron && !passwordService.isPasswordSet()) {
-        res.redirect("set-password");
+        // The set-password screen is now served by the SPA at the root, driven by
+        // the bootstrap `passwordSet: false` flag.
+        res.redirect(".");
     } else {
         next();
     }

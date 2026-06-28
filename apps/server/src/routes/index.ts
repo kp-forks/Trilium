@@ -1,5 +1,5 @@
 import { BootstrapDefinition } from "@triliumnext/commons";
-import { attributes, BNote, getSharedBootstrapItems, icon_packs as iconPackService, options as optionService, sql_init, task_states } from "@triliumnext/core";
+import { attributes, BNote, getSharedBootstrapItems, icon_packs as iconPackService, options as optionService, password as passwordService, sql_init, task_states } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import packageJson from "../../package.json" with { type: "json" };
@@ -56,6 +56,25 @@ export function bootstrap(req: Request, res: Response) {
         return;
     }
 
+    if (!isElectron && !passwordService.isPasswordSet()) {
+        // Pre-auth window: the DB is initialized but no password has been set yet.
+        // This screen is web/server-only — the desktop app manages its protected-notes
+        // password through the options UI and never gates the app on it — so we exclude
+        // Electron here, which also means the Electron-only title-bar / background-effect
+        // flags are unconditionally false. We serve a minimal payload (no CSRF token /
+        // session data) carrying `passwordSet: false`; theme and icon-pack CSS still come
+        // from commonItems so the screen matches the rest of the app.
+        res.send({
+            ...commonItems,
+            passwordSet: false,
+            platform: process.platform,
+            hasNativeTitleBar: false,
+            hasBackgroundEffects: false,
+            isMainWindow: true
+        } satisfies BootstrapDefinition);
+        return;
+    }
+
 
     const csrfToken = generateCsrfToken(req, res, {
         overwrite: false,
@@ -77,6 +96,7 @@ export function bootstrap(req: Request, res: Response) {
     res.send({
         ...commonItems,
         dbInitialized: true,
+        passwordSet: true,
         csrfToken,
         oauthJustEnrolled,
         platform: process.platform,

@@ -386,6 +386,13 @@ export interface DefinitionObject {
  */
 export type BootstrapDefinition = {
     dbInitialized: boolean;
+    /**
+     * Whether a password has been set yet. `false` only in the pre-auth window
+     * after the database is initialized but before the user has set a password,
+     * which the client uses to render the set-password screen. Omitted (treated
+     * as set) for the regular authenticated payload.
+     */
+    passwordSet?: boolean;
     baseApiUrl: string;
     assetPath: string;
     theme: string;
