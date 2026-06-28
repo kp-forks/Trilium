@@ -9,10 +9,10 @@ import logo from "./assets/icon-color.svg?url";
 import { initLocale, t } from "./services/i18n";
 import Button from "./widgets/react/Button";
 import { Card, CardSection } from "./widgets/react/Card";
-import FormCheckbox from "./widgets/react/FormCheckbox";
 import FormGroup from "./widgets/react/FormGroup";
 import FormTextBox from "./widgets/react/FormTextBox";
 import SetupPage from "./widgets/react/SetupPage";
+import { OptionsRowWithToggle } from "./widgets/type_widgets/options/components/OptionsRow";
 
 async function main() {
     await initLocale((window.glob.currentLocale?.id ?? "en") as LOCALE_IDS);
@@ -155,7 +155,12 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
                     )}
 
                     <CardSection>
-                        <FormCheckbox name="rememberMe" label={t("login.remember-me")} currentValue={rememberMe} onChange={setRememberMe} />
+                        <OptionsRowWithToggle
+                            name="rememberMe"
+                            label={t("login.remember-me")}
+                            currentValue={rememberMe}
+                            onChange={setRememberMe}
+                        />
                     </CardSection>
                 </Card>
             </SetupPage>
