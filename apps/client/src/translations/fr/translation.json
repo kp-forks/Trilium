@@ -135,7 +135,16 @@
     "choose_export_type": "Choisissez d'abord le type d'export",
     "export_in_progress": "Exportation en cours : {{progressCount}}",
     "export_finished_successfully": "L'exportation s'est terminée avec succès.",
-    "format_pdf": "PDF - pour l'impression ou le partage de documents."
+    "format_pdf": "PDF - pour l'impression ou le partage de documents.",
+    "what_to_export": "exporter quoi",
+    "format_html_description": "garder tout le formatage",
+    "format_markdown_name": "formatage",
+    "format_markdown_description": "préserver la plupart du formatage",
+    "format_opml_name": "OPLM",
+    "format_opml_description": "format extérieur avec contenu HTLM",
+    "format_share_name": "HTLM pour internet",
+    "format_share_description": "statique pouvant être publié avec le thème des notes partagés",
+    "recommended": "Recommandation recommandée"
   },
   "help": {
     "noteNavigation": "Navigation dans les notes",
