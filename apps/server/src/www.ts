@@ -1,20 +1,18 @@
-import { app_info as appInfo, getMessagingProvider, getPlatform, utils } from "@triliumnext/core";
+import { app_info as appInfo, getLog, getMessagingProvider, getPlatform, utils } from "@triliumnext/core";
 import type { Express } from "express";
 import fs from "fs";
 import http from "http";
 import https from "https";
-import inspector from "inspector";
-import path from "path";
 import tmp from "tmp";
 
 import buildApp from "./app.js";
 import config from "./services/config.js";
+import { startCpuProfiler, writeCpuProfile } from "./services/cpu_profiler.js";
 import { registerOcrHandlers } from "./services/handlers.js";
 import host from "./services/host.js";
-import { getLog } from "@triliumnext/core";
 import port from "./services/port.js";
-import { getDbSize } from "./services/sql_init.js";
 import { isScriptingEnabled } from "./services/scripting_guard.js";
+import { getDbSize } from "./services/sql_init.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 
 const MINIMUM_NODE_VERSION = "20.0.0";
@@ -97,60 +95,6 @@ export default async function startTriliumServer(): Promise<Express> {
     registerOcrHandlers();
 
     return app;
-}
-
-/**
- * Starts the V8 CPU profiler when TRILIUM_PROFILE is set, returning the inspector session (or null when
- * profiling is disabled). The companion {@link writeCpuProfile} stops it and writes the `.cpuprofile`.
- */
-function startCpuProfiler(): inspector.Session | null {
-    if (!process.env.TRILIUM_PROFILE) {
-        return null;
-    }
-
-    const session = new inspector.Session();
-    session.connect();
-    session.post("Profiler.enable", () => {
-        session.post("Profiler.start", () => {
-            console.log("CPU profiler started (TRILIUM_PROFILE). Press Enter in this terminal to write the profile and exit.");
-        });
-    });
-
-    return session;
-}
-
-/**
- * Stops the profiler started by {@link startCpuProfiler}, writes the result into `profiles/` (relative to the
- * working directory), then invokes `done`. When profiling is disabled, or if writing fails, `done` still runs
- * so shutdown is never blocked.
- */
-function writeCpuProfile(session: inspector.Session | null, done: () => void) {
-    if (!session) {
-        done();
-        return;
-    }
-
-    // Don't let a stuck profiler hang shutdown — exit anyway after a short grace period.
-    const fallback = setTimeout(done, 3000);
-
-    session.post("Profiler.stop", (err, result) => {
-        clearTimeout(fallback);
-        try {
-            if (err) {
-                throw err;
-            }
-            const dir = path.resolve("profiles");
-            fs.mkdirSync(dir, { recursive: true });
-            const file = path.join(dir, `import-${process.pid}.cpuprofile`);
-            fs.writeFileSync(file, JSON.stringify(result.profile));
-            console.log(`CPU profile written to ${file}`);
-        } catch (e) {
-            console.error("Failed to write CPU profile:", e);
-        } finally {
-            session.disconnect();
-            done();
-        }
-    });
 }
 
 async function displayStartupMessage() {

@@ -3,7 +3,7 @@ import { existsSync } from "fs";
 import request from "supertest";
 import { describe, expect, it } from "vitest";
 
-import { importMiddlewareWithErrorHandling } from "./route_api.js";
+import { importMiddlewareWithErrorHandling, uploadMiddlewareWithErrorHandling } from "./route_api.js";
 
 /** Minimal app mounting only the import middleware + a handler that reports what it received. */
 function buildApp() {
@@ -18,6 +18,20 @@ function buildApp() {
             hasPath: !!file?.path,
             // Whether the temp file is still on disk while the handler runs.
             tempPresent: file?.path ? existsSync(file.path) : null
+        });
+    });
+    return app;
+}
+
+/** Minimal app mounting the in-memory upload middleware + a handler that reports the buffered file. */
+function buildUploadApp() {
+    const app = express();
+    app.post("/upload", uploadMiddlewareWithErrorHandling, (req, res) => {
+        const file = req.file;
+        res.json({
+            hasFile: !!file,
+            content: file?.buffer?.toString("utf-8"),
+            originalname: file?.originalname
         });
     });
     return app;
@@ -74,6 +88,45 @@ describe("importMiddlewareWithErrorHandling (disk storage)", () => {
 
     it("proceeds to the handler when no file is uploaded", async () => {
         const res = await request(buildApp()).post("/import");
+
+        expect(res.status).toBe(200);
+        expect(res.body.hasFile).toBe(false);
+    });
+
+    it("rejects a nested multipart field name with a 400 (CVE-2026-5079 guard)", async () => {
+        const res = await request(buildApp())
+            .post("/import")
+            .field("a[b]", "x")
+            .attach("upload", Buffer.from("PK-zip-bytes"), "backup.zip");
+
+        expect(res.status).toBe(400);
+        expect(res.text).toContain("nested multipart field names are not allowed");
+    });
+});
+
+describe("uploadMiddlewareWithErrorHandling (in-memory)", () => {
+    it("buffers a small upload into file.buffer", async () => {
+        const res = await request(buildUploadApp())
+            .post("/upload")
+            .attach("upload", Buffer.from("<svg/>"), "icon.svg");
+
+        expect(res.status).toBe(200);
+        expect(res.body.content).toBe("<svg/>");
+        expect(res.body.originalname).toBe("icon.svg");
+    });
+
+    it("rejects a nested multipart field name with a 400 (CVE-2026-5079 guard)", async () => {
+        const res = await request(buildUploadApp())
+            .post("/upload")
+            .field("a[b]", "x")
+            .attach("upload", Buffer.from("<svg/>"), "icon.svg");
+
+        expect(res.status).toBe(400);
+        expect(res.text).toContain("nested multipart field names are not allowed");
+    });
+
+    it("proceeds to the handler when no file is uploaded", async () => {
+        const res = await request(buildUploadApp()).post("/upload");
 
         expect(res.status).toBe(200);
         expect(res.body.hasFile).toBe(false);

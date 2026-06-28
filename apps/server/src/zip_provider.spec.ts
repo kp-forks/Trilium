@@ -1,4 +1,4 @@
-import type { ZipEntry } from "@triliumnext/core/src/services/zip_provider.js";
+import type { ZipArchive, ZipEntry } from "@triliumnext/core/src/services/zip_provider.js";
 import { mkdtempSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
@@ -8,6 +8,28 @@ import { afterAll, describe, expect, it } from "vitest";
 import NodejsZipProvider from "./zip_provider.js";
 
 const provider = new NodejsZipProvider();
+
+/** Drains an archive into its finalized bytes, collecting everything written to the pipe. */
+function pipeToBuffer(archive: ZipArchive): { sink: PassThrough; bytes: Promise<Buffer> } {
+    const sink = new PassThrough();
+    const chunks: Buffer[] = [];
+    sink.on("data", (chunk: Buffer) => chunks.push(chunk));
+    const bytes = new Promise<Buffer>((resolve, reject) => {
+        sink.on("end", () => resolve(Buffer.concat(chunks)));
+        sink.on("error", reject);
+    });
+    archive.pipe(sink);
+    return { sink, bytes };
+}
+
+/** Narrows the optional waitForCapacity to the concrete server implementation, which always defines it. */
+function capacityOf(archive: ZipArchive): () => Promise<void> {
+    const waitForCapacity = archive.waitForCapacity?.bind(archive);
+    if (!waitForCapacity) {
+        throw new Error("NodejsZipArchive is expected to implement waitForCapacity()");
+    }
+    return waitForCapacity;
+}
 
 /** Builds an archive from the given entries and returns the finalized zip bytes. */
 async function buildZip(entries: { name: string; content: string | Uint8Array }[]): Promise<Buffer> {
@@ -73,6 +95,72 @@ describe("NodejsZipProvider", () => {
         const entries = await readZip(buffer);
         expect(Object.keys(entries).sort()).toEqual(["a.txt", "dir/b.txt"]);
         expect(entries["dir/b.txt"].toString("utf-8")).toBe("beta");
+    });
+
+    it("exposes each entry's last-modified date when reading", async () => {
+        const buffer = await buildZip([{ name: "a.txt", content: "x" }]);
+        let lastModified: Date | undefined;
+        await provider.readZipFile(buffer, async (entry: ZipEntry, readContent) => {
+            lastModified = entry.lastModified;
+            await readContent();
+        });
+        expect(lastModified).toBeInstanceOf(Date);
+    });
+
+    it("stores an entry uncompressed when `store` is set and still round-trips", async () => {
+        // Already-compressed payloads pass `store: true` to skip deflate; the bytes must survive intact.
+        const archive = provider.createZipArchive();
+        const { bytes } = pipeToBuffer(archive);
+        const payload = "already-compressed-bytes".repeat(16);
+        archive.append(payload, { name: "image.jpg", store: true });
+        await archive.finalize();
+
+        const entries = await readZip(await bytes);
+        expect(entries["image.jpg"].toString("utf-8")).toBe(payload);
+    });
+
+    describe("input backpressure (waitForCapacity)", () => {
+        it("resolves immediately when nothing is queued", async () => {
+            const archive = provider.createZipArchive();
+            await expect(capacityOf(archive)()).resolves.toBeUndefined();
+        });
+
+        it("stays pending past the high-water mark until the queued data drains", async () => {
+            const archive = provider.createZipArchive();
+            const { sink } = pipeToBuffer(archive);
+            // PassThrough is paused (no resume yet), so nothing is consumed and the appended entry stays
+            // queued. 65 MiB clears the 64 MiB high-water mark.
+            archive.append(new Uint8Array(65 * 1024 * 1024), { name: "big.bin" });
+
+            let resolved = false;
+            const capacity = capacityOf(archive)().then(() => {
+                resolved = true;
+            });
+            // Still over the mark with nothing consumed — must not have resolved.
+            await Promise.resolve();
+            expect(resolved).toBe(false);
+
+            // Draining the output fires archiver's "entry" event, dropping queued bytes below the mark.
+            sink.resume();
+            await capacity;
+            expect(resolved).toBe(true);
+            await archive.finalize();
+        });
+
+        it("re-surfaces an archiver error through append and waitForCapacity", async () => {
+            const archive = provider.createZipArchive();
+            const { sink } = pipeToBuffer(archive);
+            sink.resume();
+            await archive.finalize();
+
+            // Appending after finalize makes archiver emit "error" (queue closed); the archive captures it
+            // so a missing "error" listener can't crash the process.
+            archive.append("late", { name: "late.txt" });
+            await new Promise((resolve) => setTimeout(resolve, 20));
+
+            expect(() => archive.append("later", { name: "later.txt" })).toThrow();
+            await expect(capacityOf(archive)()).rejects.toBeTruthy();
+        });
     });
 
     describe("reading from a path (in place, no full-buffer load)", () => {
