@@ -258,6 +258,33 @@ describe("processNoteContent", () => {
         expect(finalTotal).toBe(increaseSpy.mock.calls.length);
     });
 
+    it("sets the progress total up front so the denominator doesn't jump mid-import", async () => {
+        const taskContext = TaskContext.getInstance("import-progress-no-jump", "importNotes", { textImportedAsText: true });
+        const setTotalSpy = vi.spyOn(taskContext, "setTotalCount");
+
+        // Flat files at the root: each becomes a note, no folder notes, no meta file.
+        const zipBuffer = await createZipBuffer({ "a.txt": "first", "b.txt": "second", "c.txt": "third" });
+
+        await new Promise<void>((resolve, reject) => {
+            getContext().init(async () => {
+                const rootNote = becca.getNote("root");
+                if (!rootNote) {
+                    reject(new Error("missing root note"));
+                    return;
+                }
+                await zip.importZip(taskContext, zipBuffer, rootNote as BNote);
+                resolve();
+            });
+        });
+
+        const firstTotal = setTotalSpy.mock.calls[0]?.[0] ?? 0;
+        const finalTotal = setTotalSpy.mock.calls.at(-1)?.[0] ?? 0;
+        // The first total already accounts for the post-processing phase (3 entries + 3 notes = 6), rather
+        // than the bare entry count (3) — so the denominator never leaps from 3 to 6 partway through.
+        expect(firstTotal).toBe(6);
+        expect(finalTotal).toBe(firstTotal);
+    });
+
     it("imports a CSV entry as a plain file note when the spreadsheet option is off", async () => {
         const zipBuffer = await createZipBuffer({ "csv_as_file_sample.csv": "a,b\r\n1,2" });
         const { rootNote } = await testImportBuffer(zipBuffer, "import-csv-off", { spreadsheetImportedAsSpreadsheet: false });

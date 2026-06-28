@@ -696,8 +696,14 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
-    // the processing pass increments progress once per entry; expose the total so the client shows a bar
-    taskContext.setTotalCount(entriesToProcess);
+    // The import is counted in two phases: extracting every entry, then post-processing each created note.
+    // Set the total to cover *both* up front so the bar climbs monotonically — otherwise the denominator
+    // jumps mid-import (e.g. "X of 32k" → "X of 60k") when post-processing starts. The post-process count
+    // is taken from the meta file when present (exact for a Trilium export); without one, every entry
+    // becomes a note, so the entry count is the right estimate. Any small mismatch is corrected exactly by
+    // the setTotalCount below, which then barely moves instead of leaping.
+    const estimatedNoteCount = countImportableNotes(metaFile) || entriesToProcess;
+    taskContext.setTotalCount(entriesToProcess + estimatedNoteCount);
 
     await zipProvider.readZipFile(source, async (entry, readContent) => {
         const filePath = normalizeFilePath(entry.fileName);
@@ -821,6 +827,22 @@ export function removeTriliumTags(content: string) {
     content = content.replace(/<div class="content">(.*)<\/div>/gms, "$1");
 
     return content;
+}
+
+/**
+ * Estimates how many notes an import will create — the post-processing phase's unit count — from the meta
+ * tree, so the progress total can be set once up front. Clones and explicitly non-imported notes don't
+ * create a note, so they're not counted. Returns 0 when there's no meta file (the caller then falls back to
+ * the entry count, since without meta every content entry becomes a note). `metaFile` is typed nullable
+ * because control-flow analysis can't see it being assigned inside the read callback.
+ */
+function countImportableNotes(metaFile: MetaFile | null): number {
+    if (!metaFile) {
+        return 0;
+    }
+    const count = (notes: NoteMeta[]): number =>
+        notes.reduce((sum, note) => sum + (note.isClone || note.noImport ? 0 : 1) + count(note.children ?? []), 0);
+    return count(metaFile.files);
 }
 
 export default {
