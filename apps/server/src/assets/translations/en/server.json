@@ -339,7 +339,6 @@
     "zip_filter": "ZIP archive (*.zip)"
   },
   "import": {
-    "zip_filter": "ZIP archive (*.zip)",
     "invalid_file_grant": "The file selection has expired or is invalid. Please choose the file again."
   },
   "pdf": {

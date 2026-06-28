@@ -543,13 +543,19 @@ export interface NativeImportOptions {
     replaceUnderscoresWithSpaces: boolean;
 }
 
-/** Outcome of {@link ElectronNativeImportApi.pickZipFile}: a capability token, never a path. */
+/** A single user-chosen file: a capability token (redeemed to import it) and its display name — never a path. */
+export interface NativeImportPickedFile {
+    /** Single-use, short-lived grant for the chosen file. */
+    token: string;
+    /** Display name of the chosen file. */
+    fileName: string;
+}
+
+/** Outcome of {@link ElectronNativeImportApi.pickFiles}: capability tokens, never paths. */
 export interface NativeImportPickResult {
     status: "selected" | "cancelled";
-    /** Single-use, short-lived grant for the user-chosen file (when `status === "selected"`). */
-    token?: string;
-    /** Display name of the chosen file (when `status === "selected"`). */
-    fileName?: string;
+    /** The user-chosen files (when `status === "selected"`); one or more, since the dialog allows multi-select. */
+    files?: NativeImportPickedFile[];
 }
 
 /** Outcome of {@link ElectronNativeImportApi.importFromToken}. */
@@ -562,19 +568,21 @@ export interface NativeImportResult {
 }
 
 /**
- * Desktop-native large-`.zip` import that reads the user's file **in place** (bounded memory, no temp
- * copy). The renderer never handles a filesystem path: {@link pickZipFile} runs the OS dialog in the main
- * process and returns an opaque capability token, which {@link importFromToken} redeems. A script can't
- * forge a token or pass a path, so it can never read an arbitrary file.
+ * Desktop-native import that reads the user's file **in place** (bounded memory, no temp copy) — the whole
+ * point being multi-GB `.zip` archives, though any importable file is accepted. The renderer never handles
+ * a filesystem path: {@link pickFiles} runs the OS dialog in the main process and returns opaque capability
+ * tokens, which {@link importFromToken} redeems. A script can't forge a token or pass a path, so it can
+ * never read an arbitrary file.
  */
 export interface ElectronNativeImportApi {
-    /** Prompts a native "open file" dialog (`.zip`) and returns a single-use token for the chosen file. */
-    pickZipFile(): Promise<NativeImportPickResult>;
+    /** Prompts a native "open file" dialog (multi-select, any type) and returns single-use tokens for the chosen files. */
+    pickFiles(): Promise<NativeImportPickResult>;
     /**
      * Imports the file behind `token` into `parentNoteId`. Progress/success/error are reported over the
-     * WebSocket via `taskId`, matching the HTTP import path.
+     * WebSocket via `taskId`, matching the HTTP import path. When importing several files in one batch, set
+     * `last` only on the final call so the success toast fires once, after everything is in.
      */
-    importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions }): Promise<NativeImportResult>;
+    importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions; last: boolean }): Promise<NativeImportResult>;
 }
 
 /**

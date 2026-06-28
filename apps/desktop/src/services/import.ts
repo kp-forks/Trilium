@@ -1,45 +1,50 @@
 import type { NativeImportOptions, NativeImportPickResult, NativeImportResult } from "@triliumnext/commons";
-import { becca, becca_loader, cls, getLog, TaskContext, utils as coreUtils, zipImportService } from "@triliumnext/core";
+import { becca, becca_loader, cls, type File, getLog, importDispatchService, type ImportOptions, TaskContext, utils as coreUtils } from "@triliumnext/core";
 import { default as electron } from "electron";
-import { basename } from "path";
+import { readFile } from "fs/promises";
 import { t } from "i18next";
+import { basename, extname } from "path";
 
 interface ImportFromTokenOpts {
     token: string;
     parentNoteId: string;
     taskId: string;
     options: NativeImportOptions;
+    /** Set only on the final file of a batch, so the success toast fires once everything is imported. */
+    last: boolean;
 }
 
 /**
- * Registers the desktop-native large-`.zip` import IPC handlers.
+ * Registers the desktop-native import IPC handlers (reachable only from the import dialog's "browse" action).
  *
  * Security model: the renderer **never** supplies a path. The OS dialog runs here in the main process and
- * is the *only* thing that mints an access grant; `import-pick-zip` returns a single-use, short-lived
- * **token** (plus the display filename), and `import-from-token` accepts that token — not a path. So a
- * note script can at most pop the dialog (the user still has to pick a file) and can never read an
- * arbitrary file: it can't forge a valid token, and there's no path parameter to abuse.
+ * is the *only* thing that mints an access grant; `import-pick-files` returns single-use, short-lived
+ * **tokens** (plus display filenames), and `import-from-token` accepts a token — not a path. So a note
+ * script can at most pop the dialog (the user still has to pick a file) and can never read an arbitrary
+ * file: it can't forge a valid token, and there's no path parameter to abuse.
  *
- * The chosen file is read **in place** (`zipImportService.importZip({ path })`, streamed per entry), so a
- * multi-GB archive is never copied to a temp file or held in memory — the reason this path exists.
+ * Any importable file is accepted, but the reason this path exists is large `.zip` archives: a zip is read
+ * **in place** (`{ path }`, streamed per entry) so a multi-GB import is never copied to a temp file or held
+ * in memory. Smaller single files are read into a buffer and dispatched exactly like an HTTP upload.
  */
 export function setupImportHandlers() {
-    electron.ipcMain.handle("import-pick-zip", async (): Promise<NativeImportPickResult> => {
+    electron.ipcMain.handle("import-pick-files", async (): Promise<NativeImportPickResult> => {
         const focusedWindow = electron.BrowserWindow.getFocusedWindow();
         if (!focusedWindow) {
             return { status: "cancelled" };
         }
 
         const selection = electron.dialog.showOpenDialogSync(focusedWindow, {
-            properties: ["openFile"],
-            filters: [{ name: t("import.zip_filter"), extensions: ["zip"] }]
+            properties: ["openFile", "multiSelections"]
         });
         if (!selection || selection.length === 0) {
             return { status: "cancelled" };
         }
 
-        const path = selection[0];
-        return { status: "selected", token: grantFileAccess(path), fileName: basename(path) };
+        return {
+            status: "selected",
+            files: selection.map((path) => ({ token: grantFileAccess(path), fileName: basename(path) }))
+        };
     });
 
     electron.ipcMain.handle("import-from-token", async (_e, opts: ImportFromTokenOpts): Promise<NativeImportResult> => {
@@ -49,11 +54,11 @@ export function setupImportHandlers() {
         }
 
         try {
-            return { status: "imported", importedNoteId: await runZipImport(path, opts) };
+            return { status: "imported", importedNoteId: await runNativeImport(path, opts) };
         } catch (e) {
             const message = e instanceof Error ? e.message : String(e);
             TaskContext.getInstance(opts.taskId, "importNotes", opts.options).reportError(message);
-            getLog().error(`Native zip import failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
+            getLog().error(`Native import failed: ${coreUtils.safeExtractMessageAndStackFromError(e)}`);
             return { status: "error", message };
         }
     });
@@ -80,25 +85,52 @@ function redeemFileAccess(token: string): string | null {
     return grant.path;
 }
 
-/** Imports the zip at `path` in place, reporting progress/success over the WebSocket like the HTTP route. */
-async function runZipImport(path: string, opts: ImportFromTokenOpts): Promise<string | undefined> {
+/** Imports the file at `path` in place, reporting progress/success over the WebSocket like the HTTP route. */
+async function runNativeImport(path: string, opts: ImportFromTokenOpts): Promise<string | undefined> {
     const parentNote = becca.getNoteOrThrow(opts.parentNoteId);
     const taskContext = TaskContext.getInstance(opts.taskId, "importNotes", opts.options);
+    const options = opts.options satisfies ImportOptions;
 
     const note = await cls.init(async () => {
         // Match the HTTP import route: skip per-entity events and change-id tracking during the bulk import.
         cls.disableEntityEvents();
         cls.ignoreEntityChangeIds();
-        const importedNote = await zipImportService.importZip(taskContext, { path }, parentNote);
+
+        const file = await buildImportFile(path, options.explodeArchives);
+        const result = await importDispatchService(taskContext, file, parentNote, options);
 
         // Import ran with entity events disabled, so becca wasn't updated incrementally — force a reload.
         // Must run inside the CLS context: becca_loader.load() toggles slow-query logging via the namespace.
         becca_loader.load();
-        return importedNote;
+
+        if (Array.isArray(result)) {
+            // OPML reports a structured failure as a `[httpStatus, message]` array.
+            throw new Error(String(result[1]));
+        }
+        return result;
     });
 
-    // Small delay mirrors the route: let the transaction commit before the client reacts to success.
-    setTimeout(() => taskContext.taskSucceeded({ parentNoteId: opts.parentNoteId, importedNoteId: note?.noteId }), 1000);
+    // Small delay mirrors the route: let the transaction commit before the client reacts to success. Only
+    // the last file of a batch fires the success toast so it doesn't flash once per file.
+    if (opts.last) {
+        setTimeout(() => taskContext.taskSucceeded({ parentNoteId: opts.parentNoteId, importedNoteId: note?.noteId }), 1000);
+    }
 
     return note?.noteId;
+}
+
+/**
+ * Builds the {@link File} the importer expects from a path on disk. A zip that will be exploded is left
+ * unbuffered (an empty buffer + the `path`) so it streams per entry; every other file is small enough to
+ * read into memory here. The MIME is resolved by the importer from the filename, so it's left blank.
+ */
+async function buildImportFile(path: string, explodeArchives: boolean): Promise<File> {
+    const fileName = basename(path);
+    const isExplodableZip = extname(fileName).toLowerCase() === ".zip" && explodeArchives;
+    return {
+        originalname: fileName,
+        mimetype: "",
+        buffer: isExplodableZip ? Buffer.alloc(0) : await readFile(path),
+        path
+    };
 }

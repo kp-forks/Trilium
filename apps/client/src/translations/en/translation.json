@@ -218,8 +218,6 @@
     "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, images and more",
     "chooseImportFile": "Choose import file",
     "importZipRecommendation": "When importing a ZIP file, the note hierarchy will reflect the subdirectory structure within the archive.",
-    "largeZipHint": "Importing a large ZIP? Choose it directly for best performance:",
-    "largeZipButton": "Choose .zip…",
     "options": "Options",
     "safeImportTooltip": "Trilium <code>.zip</code> exports can contain executable scripts. Safe import disables them; uncheck only if the archive is meant to run scripts and you trust its contents.",
     "safeImport": "Safe import",

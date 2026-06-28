@@ -211,10 +211,10 @@ contextBridge.exposeInMainWorld("electronApi", {
     },
 
     nativeImport: {
-        pickZipFile() {
-            return ipcRenderer.invoke("import-pick-zip");
+        pickFiles() {
+            return ipcRenderer.invoke("import-pick-files");
         },
-        importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions }) {
+        importFromToken(opts: { token: string; parentNoteId: string; taskId: string; options: NativeImportOptions; last: boolean }) {
             return ipcRenderer.invoke("import-from-token", opts);
         }
     },

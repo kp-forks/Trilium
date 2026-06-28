@@ -627,13 +627,13 @@ describe("preload script", () => {
     describe("nativeImport", () => {
         const nativeImport = () => getGroup("nativeImport");
 
-        it("pickZipFile invokes the open-dialog IPC channel with no path argument", async () => {
-            await nativeImport().pickZipFile();
-            expect(ipcRendererInvoked).toContainEqual({ channel: "import-pick-zip", args: [] });
+        it("pickFiles invokes the open-dialog IPC channel with no path argument", async () => {
+            await nativeImport().pickFiles();
+            expect(ipcRendererInvoked).toContainEqual({ channel: "import-pick-files", args: [] });
         });
 
         it("importFromToken forwards the token + options (never a path) to its IPC channel", async () => {
-            const opts = { token: "tok-1", parentNoteId: "p1", taskId: "task1", options: { explodeArchives: true } };
+            const opts = { token: "tok-1", parentNoteId: "p1", taskId: "task1", options: { explodeArchives: true }, last: true };
             await nativeImport().importFromToken(opts);
             expect(ipcRendererInvoked).toContainEqual({ channel: "import-from-token", args: [opts] });
         });

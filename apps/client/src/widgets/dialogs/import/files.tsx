@@ -1,4 +1,4 @@
-import type { NativeImportOptions } from "@triliumnext/commons";
+import type { NativeImportOptions, NativeImportPickedFile } from "@triliumnext/commons";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -15,6 +15,9 @@ import type { ImportProvider, ImportProviderPanelProps } from "./types.js";
 function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPanelProps) {
     const [compressImages] = useTriliumOptionBool("compressImages");
     const [files, setFiles] = useState<FileList | null>(null);
+    // Desktop only: files picked via the native OS dialog, identified by capability tokens (not paths) so
+    // they can be imported in place. Mutually exclusive with `files` — picking clears one, the other clears it.
+    const [nativeFiles, setNativeFiles] = useState<NativeImportPickedFile[] | null>(null);
     const [safeImport, setSafeImport] = useState(true);
     const [explodeArchives, setExplodeArchives] = useState(true);
     const [shrinkImages, setShrinkImages] = useState(compressImages);
@@ -25,6 +28,26 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
     const [optionsShown, setOptionsShown] = useState(false);
 
     const doImport = useCallback(async () => {
+        // Close immediately and let the shared import toasts (registered in import.ts) report progress,
+        // completion and any error over the WebSocket. Rejections are swallowed so these void-ed calls
+        // don't raise an unhandled rejection.
+        if (nativeFiles?.length) {
+            const options: NativeImportOptions = {
+                safeImport, shrinkImages, textImportedAsText, codeImportedAsCode,
+                spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces
+            };
+            // One taskId for the whole batch so the toast tracks all files together; `last` on the final
+            // file fires the success toast once, mirroring the upload route.
+            const taskId = utils.randomString(10);
+            closeDialog();
+            for (let i = 0; i < nativeFiles.length; i++) {
+                await window.electronApi?.nativeImport.importFromToken({
+                    token: nativeFiles[i].token, parentNoteId, taskId, options, last: i === nativeFiles.length - 1
+                }).catch(() => {});
+            }
+            return;
+        }
+
         if (!files) {
             return;
         }
@@ -39,33 +62,30 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
             replaceUnderscoresWithSpaces: boolToString(replaceUnderscoresWithSpaces)
         };
 
-        // Close immediately and let the shared import toasts (registered in import.ts) report progress,
-        // completion and any error. Swallow the rejection so this void-ed call doesn't raise an unhandled
-        // rejection.
         closeDialog();
         await importService.uploadFiles("notes", parentNoteId, Array.from(files), options).catch(() => {});
-    }, [files, safeImport, shrinkImages, textImportedAsText, codeImportedAsCode, spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces, parentNoteId, closeDialog]);
+    }, [files, nativeFiles, safeImport, shrinkImages, textImportedAsText, codeImportedAsCode, spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces, parentNoteId, closeDialog]);
 
-    // Desktop only: import a large .zip straight from disk. The OS dialog (in the main process) is the
-    // sole source of the path — it returns a single-use capability token, never a path — and the archive
-    // is read in place, so a multi-GB import stays memory-bounded (no upload, no temp copy). Other files
-    // and drag-drop keep the normal upload route above.
-    const doNativeZipImport = useCallback(async () => {
-        const pick = await window.electronApi?.nativeImport.pickZipFile();
-        if (pick?.status !== "selected" || !pick.token) {
+    // Desktop only: browse via the native OS dialog. The dialog (in the main process) is the sole source of
+    // the path — it returns single-use capability tokens, never paths — and the files are read in place, so
+    // a multi-GB archive stays memory-bounded (no upload, no temp copy). Picking clears any dropped files.
+    const doNativeBrowse = useCallback(async () => {
+        const pick = await window.electronApi?.nativeImport.pickFiles();
+        if (pick?.status !== "selected" || !pick.files?.length) {
             return;
         }
+        setFiles(null);
+        setNativeFiles(pick.files);
+    }, []);
 
-        const options: NativeImportOptions = {
-            safeImport, shrinkImages, textImportedAsText, codeImportedAsCode,
-            spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces
-        };
-
-        // Close immediately and let the shared import toasts (registered in import.ts) report progress,
-        // completion and any error over the WebSocket, exactly like the upload route.
-        closeDialog();
-        await window.electronApi?.nativeImport.importFromToken({ token: pick.token, parentNoteId, taskId: utils.randomString(10), options });
-    }, [safeImport, shrinkImages, textImportedAsText, codeImportedAsCode, spreadsheetImportedAsSpreadsheet, explodeArchives, replaceUnderscoresWithSpaces, parentNoteId, closeDialog]);
+    // Drag-and-drop (or, off desktop, the in-page picker) goes through the normal upload route; a fresh
+    // selection there clears any native pick so the two never coexist.
+    const onFilesChange = useCallback((list: FileList | null) => {
+        setFiles(list);
+        if (list?.length) {
+            setNativeFiles(null);
+        }
+    }, []);
 
     // Keep the latest import handler in a ref so the footer effect depends only on whether files are
     // selected, never on doImport's identity — otherwise re-pushing the footer on every option toggle
@@ -73,24 +93,26 @@ function FilesPanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPane
     const doImportRef = useRef(doImport);
     doImportRef.current = doImport;
 
+    const hasSelection = !!files || !!nativeFiles?.length;
     useEffect(() => {
         setFooter(
-            <Button text={t("import.import")} kind="primary" disabled={!files} onClick={() => void doImportRef.current()} />
+            <Button text={t("import.import")} kind="primary" disabled={!hasSelection} onClick={() => void doImportRef.current()} />
         );
-    }, [files, setFooter]);
+    }, [hasSelection, setFooter]);
 
     return (
         <>
             <Card heading={t("import.chooseImportFile")}>
                 <CardSection>
                     <p className="import-files-description">{t("import.importZipRecommendation")}</p>
-                    <FileDropZone multiple onChange={setFiles} />
-                    {utils.isElectron() && (
-                        <div className="import-native-zip">
-                            <span className="import-native-zip-hint">{t("import.largeZipHint")}</span>
-                            <Button text={t("import.largeZipButton")} onClick={() => void doNativeZipImport()} />
-                        </div>
-                    )}
+                    <FileDropZone
+                        multiple
+                        onChange={onFilesChange}
+                        // On desktop, browsing opens the native dialog so the chosen files (zips especially)
+                        // are read in place. Drag-and-drop still uses the upload route via onChange.
+                        onBrowse={utils.isElectron() ? () => void doNativeBrowse() : undefined}
+                        displayNames={nativeFiles?.map((file) => file.fileName)}
+                    />
                 </CardSection>
             </Card>
 
