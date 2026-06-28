@@ -278,8 +278,41 @@ interface AppliedMark {
  * surfaced via `onLink` so the caller records the `internalLink` relation; an unresolved mention (or no
  * resolver — parsing in isolation) leaves the text plain. Emoji are ignored, leaving their text as plain
  * (escaped) content.
+ *
+ * Inline math is handled first: Anytype stores an inline formula as literal `$…$` (or display `$$…$$`) text
+ * with no mark, so {@link splitInlineFormulas} peels those runs out and emits them as CKEditor math spans —
+ * the surrounding text (and any marks over it) is rendered normally around them.
  */
 export function renderInlineText(text: string, marks: AnytypeMark[], resolveLink?: LinkResolver, onLink?: (noteId: string) => void): string {
+    const formulas = splitInlineFormulas(text);
+    if (formulas.length === 0) {
+        return renderMarkedText(text, marks, resolveLink, onLink);
+    }
+
+    // Render the non-formula slices (with their marks, offset back to local coordinates) interleaved with the
+    // math spans, in document order.
+    let html = "";
+    let cursor = 0;
+    const renderSlice = (start: number, end: number) => {
+        if (end <= start) {
+            return;
+        }
+        const sliceMarks = marks
+            .map((m) => ({ ...m, range: { from: (m.range?.from ?? 0) - start, to: (m.range?.to ?? 0) - start } }))
+            .filter((m) => m.range.to > 0 && m.range.from < end - start);
+        html += renderMarkedText(text.slice(start, end), sliceMarks, resolveLink, onLink);
+    };
+    for (const formula of formulas) {
+        renderSlice(cursor, formula.from);
+        html += renderInlineFormula(formula.body, formula.display);
+        cursor = formula.to;
+    }
+    renderSlice(cursor, text.length);
+    return html;
+}
+
+/** Renders a text run's inline marks to HTML (no formula handling — {@link renderInlineText} peels those off first). */
+function renderMarkedText(text: string, marks: AnytypeMark[], resolveLink?: LinkResolver, onLink?: (noteId: string) => void): string {
     const length = text.length;
 
     // Keep only marks we render (known structural kind, a known colour name, or a resolvable mention link),
@@ -433,6 +466,28 @@ export function renderLatexBlock(text: string, processor: string | undefined): s
         return `<pre><code class="language-mermaid">${escaped}</code></pre>`;
     }
     return `<span class="math-tex">\\[ ${escaped} \\]</span>`;
+}
+
+/**
+ * Finds the inline-math runs in a text block. Anytype carries an inline formula as literal `$…$` (inline) or
+ * `$$…$$` (display) text with no mark. The delimiter rules mirror Trilium's markdown renderer: a delimiter
+ * `$`/`$$` may not sit next to another `$` (so `${VAR}` and mismatched `$$x$` stay literal) and the body may
+ * not contain a `$` or a blank line. Ranges are returned in document order with their original offsets.
+ */
+function splitInlineFormulas(text: string): { from: number; to: number; body: string; display: boolean }[] {
+    const pattern = /(?<![\\$])\$\$(?!\$)((?:(?!\n{2,})[^$])+?)\$\$(?!\$)|(?<![\\$])\$(?!\$)([^$\n]+?)\$(?!\$)/g;
+    const formulas: { from: number; to: number; body: string; display: boolean }[] = [];
+    for (const match of text.matchAll(pattern)) {
+        const display = match[1] !== undefined;
+        formulas.push({ from: match.index, to: match.index + match[0].length, body: display ? match[1] : match[2], display });
+    }
+    return formulas;
+}
+
+/** Renders one inline formula as a CKEditor math span (display `\[ … \]` or inline `\( … \)`), body escaped. */
+function renderInlineFormula(body: string, display: boolean): string {
+    const escaped = escapeHtml(body).replace(/&quot;/g, '"');
+    return display ? `<span class="math-tex">\\[ ${escaped} \\]</span>` : `<span class="math-tex">\\( ${escaped} \\)</span>`;
 }
 // #endregion
 
