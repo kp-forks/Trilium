@@ -1,20 +1,28 @@
+import type { WebSocketMessage } from "@triliumnext/commons";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { WebSocketMessage } from "@triliumnext/commons";
+// import.ts registers its task-progress ws.subscribeToMessages handlers at module load, and it is now loaded
+// eagerly (pulled into app_context's graph via main_tree_executors) so its toasts survive a page refresh.
+// That means it evaluates the moment this spec imports app_context — before any in-body override could run —
+// so we mock ws.js here (hoisted above all imports) to CAPTURE handlers as they register. The captured list
+// also holds handlers from other eagerly-loaded services, so tests dispatch to ALL of them and rely on each
+// handler self-filtering by taskType, mirroring protected_session.spec.
+type MessageHandler = (message: WebSocketMessage) => void | Promise<void>;
+const { handlers } = vi.hoisted(() => ({ handlers: [] as MessageHandler[] }));
+
+vi.mock("./ws.js", () => ({
+    default: {
+        subscribeToMessages(cb: MessageHandler) {
+            handlers.push(cb);
+        },
+        waitForMaxKnownEntityChangeId: async () => {}
+    }
+}));
+
 import appContext from "../components/app_context.js";
 import * as i18n from "./i18n.js";
 import server from "./server.js";
 import toastService from "./toast.js";
-import ws from "./ws.js";
-
-// Capture the message handlers that import.ts registers at module load. The
-// global ws mock's subscribeToMessages is a no-op, so we replace it with a
-// capturing variant BEFORE importing the module under test.
-type MessageHandler = (message: WebSocketMessage) => void | Promise<void>;
-const handlers: MessageHandler[] = [];
-ws.subscribeToMessages = ((cb: MessageHandler) => {
-    handlers.push(cb);
-}) as typeof ws.subscribeToMessages;
 
 let importService: typeof import("./import.js").default;
 let uploadFiles: typeof import("./import.js").uploadFiles;
@@ -23,8 +31,9 @@ beforeAll(async () => {
     const mod = await import("./import.js");
     importService = mod.default;
     uploadFiles = mod.uploadFiles;
-    // Two handlers registered at load: importNotes + importAttachments.
-    expect(handlers.length).toBe(2);
+    // import.ts contributes three handlers (importNotes + importAttachments + export); the rest of the eager
+    // graph adds more, so just assert ours were captured.
+    expect(handlers.length).toBeGreaterThanOrEqual(3);
 });
 
 // Toast service spies.
@@ -136,11 +145,11 @@ async function dispatch(message: any) {
 }
 
 describe("importNotes ws handler", () => {
-    const handler = () => handlers[0];
+    const handler = () => dispatch;
 
     it("ignores messages without a matching taskType", async () => {
         await handler()({ type: "taskSucceeded" } as any); // no taskType
-        await handler()({ type: "taskSucceeded", taskType: "importAttachments" } as any); // wrong type
+        await handler()({ type: "taskSucceeded", taskType: "unrelatedTask" } as any); // not addressed to any toast handler
         expect(toastService.showError).not.toHaveBeenCalled();
         expect(toastService.showPersistent).not.toHaveBeenCalled();
     });
@@ -238,11 +247,11 @@ describe("importNotes ws handler", () => {
 });
 
 describe("importAttachments ws handler", () => {
-    const handler = () => handlers[1];
+    const handler = () => dispatch;
 
     it("ignores messages without a matching taskType", async () => {
         await handler()({ type: "taskSucceeded" } as any); // no taskType
-        await handler()({ type: "taskSucceeded", taskType: "importNotes" } as any); // wrong type
+        await handler()({ type: "taskSucceeded", taskType: "unrelatedTask" } as any); // not addressed to any toast handler
         expect(toastService.showError).not.toHaveBeenCalled();
         expect(toastService.showPersistent).not.toHaveBeenCalled();
     });
@@ -313,6 +322,46 @@ describe("importAttachments ws handler", () => {
         expect(toastService.showError).not.toHaveBeenCalled();
         expect(toastService.showPersistent).not.toHaveBeenCalled();
         expect(toastService.closePersistent).not.toHaveBeenCalled();
+    });
+});
+
+describe("export ws handler", () => {
+    const handler = () => dispatch;
+
+    it("ignores messages without a matching taskType", async () => {
+        await handler()({ type: "taskSucceeded" } as any); // no taskType
+        await handler()({ type: "taskSucceeded", taskType: "unrelatedTask" } as any); // not addressed to any toast handler
+        expect(toastService.showPersistent).not.toHaveBeenCalled();
+    });
+
+    it("closes the toast and shows an error on taskError", async () => {
+        await handler()({ type: "taskError", taskType: "export", taskId: "e1", message: "boom" } as any);
+        expect(toastService.closePersistent).toHaveBeenCalledWith("e1");
+        expect(toastService.showError).toHaveBeenCalledWith("boom");
+    });
+
+    it("shows an indeterminate toast (no bar) before a total is known, and a progress bar once it is", async () => {
+        const tSpy = vi.spyOn(i18n, "t").mockImplementation(((key: string) => key) as typeof i18n.t);
+
+        await handler()({ type: "taskProgressCount", taskType: "export", taskId: "e2", progressCount: 4 } as any);
+        let toast = (toastService.showPersistent as any).mock.calls.at(-1)[0];
+        expect(toast.message).toBe("export.preparing_export");
+        expect(toast.progress).toBeUndefined();
+
+        await handler()({ type: "taskProgressCount", taskType: "export", taskId: "e2", progressCount: 4, totalCount: 8 } as any);
+        toast = (toastService.showPersistent as any).mock.calls.at(-1)[0];
+        expect(toast.message).toBe("export.export_in_progress_with_total");
+        expect(toast.progress).toBe(4 / 8);
+
+        tSpy.mockRestore();
+    });
+
+    it("shows a timed success toast that clears the progress bar on taskSucceeded", async () => {
+        await handler()({ type: "taskSucceeded", taskType: "export", taskId: "e3", result: null } as any);
+        const toast = (toastService.showPersistent as any).mock.calls.at(-1)[0];
+        expect(toast.id).toBe("e3");
+        expect(toast.timeout).toBe(5000);
+        expect(toast.progress).toBeUndefined();
     });
 });
 

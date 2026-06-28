@@ -5,10 +5,8 @@ import { useState } from "preact/hooks";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import open from "../../services/open";
-import toastService, { type ToastOptionsWithRequiredId } from "../../services/toast";
 import tree from "../../services/tree";
 import utils, { isStandalone } from "../../services/utils";
-import ws from "../../services/ws";
 import { ExtendedAdmonition } from "../react/Admonition";
 import { Badge } from "../react/Badge";
 import Button, { ButtonGroup } from "../react/Button";
@@ -150,51 +148,4 @@ async function exportBranch(branchId: string, type: string, format: string, titl
 
     const url = open.getUrlForDownload(`api/branches/${branchId}/export/${type}/${format}/${taskId}`);
     open.download(url);
-}
-
-ws.subscribeToMessages(async (message) => {
-    function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
-        return {
-            id,
-            message,
-            icon: "export",
-            // This toast replaces the in-progress one (same id), and showPersistent merges fields rather
-            // than swapping the object — so clear the progress explicitly, otherwise the finished bar
-            // lingers at 100%.
-            progress: undefined
-        };
-    }
-
-    if (!("taskType" in message) || message.taskType !== "export") {
-        return;
-    }
-
-    if (message.type === "taskError") {
-        toastService.closePersistent(message.taskId);
-        toastService.showError(message.message);
-    } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount));
-    } else if (message.type === "taskSucceeded") {
-        const toast = makeToast(message.taskId, t("export.export_finished_successfully"));
-        toast.timeout = 5000;
-
-        toastService.showPersistent(toast);
-    }
-});
-
-/**
- * Builds the persistent "export in progress" toast. The metadata-collection phase doesn't know the total
- * up front, so it shows an indeterminate "Preparing for export…" message; once the content-writing phase
- * sets a total, the message switches to "Exporting X of N" with a progress bar.
- */
-function makeProgressToast(taskId: string, progressCount: number, totalCount?: number): ToastOptionsWithRequiredId {
-    const hasTotal = typeof totalCount === "number" && totalCount > 0;
-    return {
-        id: taskId,
-        icon: "bx bx-loader-circle bx-spin",
-        message: hasTotal
-            ? t("export.export_in_progress_with_total", { progressCount, totalCount })
-            : t("export.preparing_export"),
-        ...(hasTotal ? { progress: progressCount / totalCount } : {})
-    };
 }
