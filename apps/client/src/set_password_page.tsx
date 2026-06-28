@@ -8,10 +8,10 @@ import { useRef, useState } from "preact/hooks";
 import { initLocale, t } from "./services/i18n";
 import Button from "./widgets/react/Button";
 import { Card, CardSection } from "./widgets/react/Card";
-import FormGroup from "./widgets/react/FormGroup";
 import FormTextBox from "./widgets/react/FormTextBox";
 import Icon from "./widgets/react/Icon";
 import SetupPage from "./widgets/react/SetupPage";
+import OptionsRow from "./widgets/type_widgets/options/components/OptionsRow";
 
 const MIN_PASSWORD_LENGTH = 4;
 
@@ -50,30 +50,32 @@ function App() {
                 >
                     <Card>
                         <CardSection>
-                            <FormGroup
-                                label={t("set_password.password")} name="password1"
-                                error={tooShort ? t("set_password.password-too-short", { length: MIN_PASSWORD_LENGTH }) : undefined}
+                            <OptionsRow
+                                name="password1" label={t("set_password.password")}
+                                description={tooShort ? <span className="text-danger">{t("set_password.password-too-short", { length: MIN_PASSWORD_LENGTH })}</span> : undefined}
+                                stacked
                             >
                                 <FormTextBox
+                                    className={tooShort ? "is-invalid" : undefined}
                                     inputRef={password1Ref} autoFocus
                                     type="password" name="password1"
                                     currentValue={password1} onChange={setPassword1}
                                     autocomplete="new-password" required
                                 />
-                            </FormGroup>
-                        </CardSection>
+                            </OptionsRow>
 
-                        <CardSection>
-                            <FormGroup
-                                label={t("set_password.password-confirmation")} name="password2"
-                                error={mismatch ? t("set_password.passwords-dont-match") : undefined}
+                            <OptionsRow
+                                name="password2" label={t("set_password.password-confirmation")}
+                                description={mismatch ? <span className="text-danger">{t("set_password.passwords-dont-match")}</span> : undefined}
+                                stacked
                             >
                                 <FormTextBox
+                                    className={mismatch ? "is-invalid" : undefined}
                                     type="password" name="password2"
                                     currentValue={password2} onChange={setPassword2}
                                     autocomplete="new-password" required
                                 />
-                            </FormGroup>
+                            </OptionsRow>
                         </CardSection>
                     </Card>
                 </SetupPage>
