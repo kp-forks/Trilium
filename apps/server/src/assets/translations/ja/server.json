@@ -429,9 +429,16 @@
     "root-title": "OneNote インポート"
   },
   "notion_import": {
-    "root-title": "Notion インポート"
+    "root-title": "Notion インポート",
+    "markdown-export-unsupported": "これは Notion の \"Markdown & CSV\" エクスポートのようですが、Trilium ではインポートできません。Notion のワークスペースを \"HTML\" 形式で再度エクスポートし、そちらをインポートしてください。",
+    "subpage-folders-disabled": "この Notion エクスポートは \"サブページ用のフォルダーを作成\" オプションを無効にして作成されているため、ページの階層構造を復元できません。Notion から \"サブページ用のフォルダーを作成\" を有効にして再度エクスポートし、そちらをインポートしてください。"
   },
   "keep_import": {
     "root-title": "Google Keep インポート"
+  },
+  "anytype_import": {
+    "root-title": "Anytype インポート",
+    "protobuf-export-unsupported": "これは Anytype の \"Protobuf\" エクスポートのようですが、 Trilium ではインポートできません。Anytype のスペースを、\"Any-Block\" 形式で \"JSON\" を選択して再度エクスポートし、そちらをインポートしてください。",
+    "markdown-export-unsupported": "これは Anytype の \"Markdown\" エクスポートのようですが、 Trilium ではインポートできません。Anytype のスペースを、\"Any-Block\" 形式で \"JSON\" を選択して再度エクスポートし、そちらをインポートしてください。"
   }
 }

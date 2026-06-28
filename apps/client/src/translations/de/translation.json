@@ -2910,8 +2910,6 @@
     "load_failed": "Ihre OneNote-Notizbücher konnten nicht geladen werden.",
     "no_notebooks": "In diesem Konto wurden keine Notizbücher gefunden.",
     "select_sections": "Wählen Sie die zu importierenden Abschnitte:",
-    "order_hint_title": "Ungefähre Abschnittsreihenfolge",
-    "order_hint": "OneNote enthält die ursprüngliche Reihenfolge nicht in den Importdaten, daher werden Abschnitte und Gruppen nach Erstellungsdatum sortiert und stimmen möglicherweise nicht mit der Darstellung in OneNote überein.",
     "import": "Auswahl importieren",
     "attach_source": "Original-HTML anhängen (Debug)",
     "attach_source_hint": "Speichert das unveränderte OneNote-HTML jeder Seite als Anhang der importierten Notiz, um es mit dem konvertierten Ergebnis zu vergleichen."
