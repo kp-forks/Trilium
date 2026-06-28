@@ -89,11 +89,14 @@ async function runZipImport(path: string, opts: ImportFromTokenOpts): Promise<st
         // Match the HTTP import route: skip per-entity events and change-id tracking during the bulk import.
         cls.disableEntityEvents();
         cls.ignoreEntityChangeIds();
-        return zipImportService.importZip(taskContext, { path }, parentNote);
+        const importedNote = await zipImportService.importZip(taskContext, { path }, parentNote);
+
+        // Import ran with entity events disabled, so becca wasn't updated incrementally — force a reload.
+        // Must run inside the CLS context: becca_loader.load() toggles slow-query logging via the namespace.
+        becca_loader.load();
+        return importedNote;
     });
 
-    // Import ran with entity events disabled, so becca wasn't updated incrementally — force a reload.
-    becca_loader.load();
     // Small delay mirrors the route: let the transaction commit before the client reacts to success.
     setTimeout(() => taskContext.taskSucceeded({ parentNoteId: opts.parentNoteId, importedNoteId: note?.noteId }), 1000);
 
