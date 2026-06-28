@@ -282,8 +282,7 @@ body.setup {
 
     .illustration-icon,
     .illustration-logo {
-        margin-top: 3rem;
-        margin-bottom: 1rem;
+        margin: 3rem auto 1rem auto;
 
         body.desktop & {
             margin-top: 1rem;
