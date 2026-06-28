@@ -1,4 +1,5 @@
 <p>Trilium natively supports the following formats for both import and export.</p>
+<h2>Supported formats</h2>
 <ul>
   <li>HTML:
     <ul>
@@ -10,6 +11,7 @@
      >Note that HTML is not a standardized format so some more specific features
         such as admonitions or&nbsp;<a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;might
         not be supported by other applications.</li>
+  <li>The notes can also be exported as <a href="#root/pOsGYCXsbNQG/tC7s2alapj8V/R9pX4DGra2Vt/_help_ycBFjKrrwE9p">static HTML that can be used for web publishing</a>.</li>
   </ul>
   </li>
   <li><a class="reference-link" href="#root/_help_Oau6X9rCuegd">Markdown</a>
@@ -31,25 +33,81 @@
   bypassed via a <code spellcheck="false">TRILIUM_NO_UPLOAD_LIMIT</code> environment
   variable; with v0.104.0 this limit was removed.</p>
 <p>Nevertheless, there is still a limit for the maximum size of a <strong>single item</strong> (whether
-  it's a&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_W8vYD3Q1zjCR">File</a>,
-  an&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_0vhv7lsOLy82">Attachments</a>&nbsp;or
-  even a&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/KSZ04uQ2D1St/_help_iPIMuisry3hd">Text</a>&nbsp;note).
+  it's a&nbsp;<a class="reference-link" href="#root/_help_W8vYD3Q1zjCR">File</a>,
+  an&nbsp;<a class="reference-link" href="#root/_help_0vhv7lsOLy82">Attachments</a>&nbsp;or
+  even a&nbsp;<a class="reference-link" href="#root/_help_iPIMuisry3hd">Text</a>&nbsp;note).
   The limit is approximately 374 MiB and it's determined by the&nbsp;<a class="reference-link"
-  href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/_help_cbkrhQjrkKrh">Synchronization</a>&nbsp;protocol.
-  Attempts to import such large files will be refused.</p>
+  href="#root/_help_cbkrhQjrkKrh">Synchronization</a>&nbsp;protocol. Attempts to
+  import such large files will be refused.</p>
 <p>During large imports or exports, memory consumption might spike but it
   will remain somewhere around the 2 gigabyte mark. Tested with a 2.4 GB
   database with ~21k notes.</p>
 <aside class="admonition important">
-  <p>For the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/_help_poXkQfguuA0U">Desktop Installation</a>,
+  <p>For the&nbsp;<a class="reference-link" href="#root/_help_poXkQfguuA0U">Desktop Installation</a>,
     there are two distinct import mechanisms:</p>
   <ul>
-    <li>A quick import, from the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>.</li>
+    <li>A quick import, from the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>.</li>
     <li
    >The import dialog (via right click in the note tree → <em>Import into note</em> or
-      from&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_8YBEPzcpUgxw">Note buttons</a>).</li>
+      from&nbsp;<a class="reference-link" href="#root/_help_8YBEPzcpUgxw">Note buttons</a>).</li>
   </ul>
   <p>When dealing with large files (multi-gigabyte), prefer using the import
     dialog as it has a special mechanism which makes sure that the file is
     read directly from disk rather than uploaded again.</p>
+</aside>
+<h2>Exporting the root note</h2>
+<p>The root note is the top-most note. Exporting it behaves just like any
+  other note: right click on it in the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
+  select <em>Export</em>.</p>
+<p>Starting with v0.104.0, when a root note is imported, it will be imported
+  as a child of your existing root note. This behavior makes sure that the
+  import cannot change or overwrite your existing notes.</p>
+<p>You can easily move the notes onto the root using the tree's&nbsp;<a class="reference-link"
+  href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/oPVyFC7WL2Lp/_help_yTjUdsOi4CIE">Multiple selection</a>&nbsp;and
+  delete the redundant root note.</p>
+<figure class="table">
+  <table>
+    <thead>
+      <tr>
+        <th style="width:50%;" scope="col">Before</th>
+        <th scope="col">After</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <ul>
+            <li>root
+              <ul>
+                <li>one</li>
+                <li>two</li>
+              </ul>
+            </li>
+          </ul>
+        </td>
+        <td>
+          <ul>
+            <li>root (existing)
+              <ul>
+                <li>root (from import)
+                  <ul>
+                    <li>one</li>
+                    <li>two</li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</figure>
+<aside class="admonition tip">
+  <ul>
+    <li>Consider using <a href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/_help_ODY7qQn5m2FT">backups</a> instead
+      of full root note.</li>
+    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_pgxEVkzLl1OP">ETAPI (REST API)</a>&nbsp;can
+      bypass this import behavior using the <code spellcheck="false">restoreAsRoot</code> option.</li>
+  </ul>
 </aside>
