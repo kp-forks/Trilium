@@ -4,7 +4,7 @@ import ws from "./ws.js";
 import utils from "./utils.js";
 import appContext from "../components/app_context.js";
 import { t } from "./i18n.js";
-import { WebSocketMessage } from "@triliumnext/commons";
+import { ProgressPhase, WebSocketMessage } from "@triliumnext/commons";
 
 type BooleanLike = boolean | "true" | "false";
 
@@ -77,15 +77,21 @@ function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
 
 /**
  * Builds the persistent "import in progress" toast:
- *  - a total is known    → "Importing X of N" with a progress bar;
+ *  - a phase is known (zip import) → a phase-specific message: "Extracted X items of N" while extracting
+ *    archive entries, "Processed X notes of N" while post-processing the created notes;
+ *  - a total but no phase (single-format importers like Notion/Obsidian) → "Imported X notes of N";
  *  - some progress, no total → a bare running count;
  *  - nothing counted yet (count 0, no total) → a generic indeterminate message, since "in progress: 0"
  *    is meaningless while the importer is still working out how much there is to do.
  */
-function makeProgressToast(taskId: string, progressCount: number, totalCount?: number): ToastOptionsWithRequiredId {
+function makeProgressToast(taskId: string, progressCount: number, totalCount?: number, phase?: ProgressPhase): ToastOptionsWithRequiredId {
     const hasTotal = typeof totalCount === "number" && totalCount > 0;
     let message: string;
-    if (hasTotal) {
+    if (hasTotal && phase === "extracting") {
+        message = t("import.extracting", { progress: progressCount, total: totalCount });
+    } else if (hasTotal && phase === "processing") {
+        message = t("import.processing", { progress: progressCount, total: totalCount });
+    } else if (hasTotal) {
         message = t("import.in-progress-with-total", { progress: progressCount, total: totalCount });
     } else if (progressCount > 0) {
         message = t("import.in-progress", { progress: progressCount });
@@ -129,7 +135,7 @@ ws.subscribeToMessages(async (message) => {
     if (message.type === "taskError") {
         reportImportError(message.taskId, message.message);
     } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount));
+        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount, message.phase));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("import.successful"));
         toast.timeout = 5000;
@@ -150,7 +156,7 @@ ws.subscribeToMessages(async (message: WebSocketMessage) => {
     if (message.type === "taskError") {
         reportImportError(message.taskId, message.message);
     } else if (message.type === "taskProgressCount") {
-        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount));
+        toastService.showPersistent(makeProgressToast(message.taskId, message.progressCount, message.totalCount, message.phase));
     } else if (message.type === "taskSucceeded") {
         const toast = makeToast(message.taskId, t("import.successful"));
         toast.timeout = 5000;

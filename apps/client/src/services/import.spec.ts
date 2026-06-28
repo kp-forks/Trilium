@@ -174,6 +174,18 @@ describe("importNotes ws handler", () => {
         expect(toast.progress).toBe(3 / 12);
     });
 
+    it("uses phase-specific messages for the zip extraction and processing phases", async () => {
+        const tSpy = vi.spyOn(i18n, "t").mockImplementation(((key: string) => key) as typeof i18n.t);
+
+        await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 3, totalCount: 12, phase: "extracting" } as any);
+        expect((toastService.showPersistent as any).mock.calls.at(-1)[0].message).toBe("import.extracting");
+
+        await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 7, totalCount: 9, phase: "processing" } as any);
+        expect((toastService.showPersistent as any).mock.calls.at(-1)[0].message).toBe("import.processing");
+
+        tSpy.mockRestore();
+    });
+
     it("shows a generic 'starting' message (no bar) before anything is counted", async () => {
         const tSpy = vi.spyOn(i18n, "t").mockImplementation(((key: string) => key) as typeof i18n.t);
         await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 0 } as any);

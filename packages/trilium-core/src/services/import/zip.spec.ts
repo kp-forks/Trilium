@@ -224,11 +224,12 @@ describe("processNoteContent", () => {
         expect(sheet.cellData[0][1].v).toBe(42);
     });
 
-    it("reports a progress total that the running count lands exactly on (bar reaches 100%)", async () => {
+    it("each phase's running count lands exactly on its total (the bar reaches 100% in both phases)", async () => {
         // fresh task id -> a new TaskContext whose constructor increment happens before we spy
         const taskContext = TaskContext.getInstance("import-progress-total", "importNotes", { textImportedAsText: true });
         const setTotalSpy = vi.spyOn(taskContext, "setTotalCount");
         const increaseSpy = vi.spyOn(taskContext, "increaseProgressCount");
+        const resetSpy = vi.spyOn(taskContext, "resetProgressCount");
 
         const zipBuffer = await createZipBuffer({
             "a.txt": "first",
@@ -248,21 +249,25 @@ describe("processNoteContent", () => {
             });
         });
 
-        // the total is set twice: an initial estimate after the scan pass, then widened to the exact
-        // value once the created-note count is known
+        // two labelled phases — extraction (archive entries) then processing (created notes) — each reset
+        // to zero and given its own total, so each drives an independent 0→100% bar
         expect(setTotalSpy).toHaveBeenCalledTimes(2);
+        expect(resetSpy).toHaveBeenCalledTimes(2);
 
-        const finalTotal = setTotalSpy.mock.calls.at(-1)?.[0];
-        // the constructor's first increment isn't captured by the spy, but it brought progressCount from
-        // -1 to 0, so the final progressCount equals the number of captured increments
-        expect(finalTotal).toBe(increaseSpy.mock.calls.length);
+        const extractionTotal = setTotalSpy.mock.calls[0]?.[0] ?? 0;
+        const processingTotal = setTotalSpy.mock.calls[1]?.[0] ?? 0;
+        // the constructor's first increment ran before the spy; every later increment belongs to one of the
+        // two phases, so the captured increments equal the two phase totals combined — i.e. each phase counts
+        // up to exactly its own total
+        expect(increaseSpy.mock.calls.length).toBe(extractionTotal + processingTotal);
     });
 
-    it("sets the progress total up front so the denominator doesn't jump mid-import", async () => {
-        const taskContext = TaskContext.getInstance("import-progress-no-jump", "importNotes", { textImportedAsText: true });
+    it("drives extraction and post-processing as two separate, labelled phases", async () => {
+        const taskContext = TaskContext.getInstance("import-progress-phases", "importNotes", { textImportedAsText: true });
         const setTotalSpy = vi.spyOn(taskContext, "setTotalCount");
+        const setPhaseSpy = vi.spyOn(taskContext, "setPhase");
 
-        // Flat files at the root: each becomes a note, no folder notes, no meta file.
+        // Flat files at the root: 3 entries, each becomes a note, no folder notes, no meta file.
         const zipBuffer = await createZipBuffer({ "a.txt": "first", "b.txt": "second", "c.txt": "third" });
 
         await new Promise<void>((resolve, reject) => {
@@ -277,12 +282,11 @@ describe("processNoteContent", () => {
             });
         });
 
-        const firstTotal = setTotalSpy.mock.calls[0]?.[0] ?? 0;
-        const finalTotal = setTotalSpy.mock.calls.at(-1)?.[0] ?? 0;
-        // The first total already accounts for the post-processing phase (3 entries + 3 notes = 6), rather
-        // than the bare entry count (3) — so the denominator never leaps from 3 to 6 partway through.
-        expect(firstTotal).toBe(6);
-        expect(finalTotal).toBe(firstTotal);
+        // extraction is announced first (counting archive entries), then processing (counting created notes)
+        expect(setPhaseSpy.mock.calls.map((call) => call[0])).toEqual(["extracting", "processing"]);
+        // 3 entries extracted, then the 3 created notes processed — the denominator deliberately switches
+        // between phases rather than being summed into one inflated total
+        expect(setTotalSpy.mock.calls.map((call) => call[0])).toEqual([3, 3]);
     });
 
     it("imports a CSV entry as a plain file note when the spreadsheet option is off", async () => {

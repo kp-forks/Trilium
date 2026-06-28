@@ -150,7 +150,7 @@
     "export": "Export",
     "choose_export_type": "Choose export type first please",
     "preparing_export": "Preparing for export…",
-    "export_in_progress_with_total": "Exporting {{progressCount}} of {{totalCount}} notes",
+    "export_in_progress_with_total": "Exported {{progressCount}} notes out of {{totalCount}}",
     "export_finished_successfully": "Export finished successfully.",
     "format_pdf": "PDF - for printing or sharing purposes."
   },
@@ -239,8 +239,10 @@
       "reset_button": "Reset to Default List"
     },
     "starting": "Importing…",
-    "in-progress": "Import in progress: {{progress}}",
-    "in-progress-with-total": "Importing {{progress}} of {{total}}",
+    "in-progress": "Imported {{progress}} notes",
+    "in-progress-with-total": "Imported {{progress}} notes out of {{total}}",
+    "extracting": "Extracted {{progress}} items out of {{total}}",
+    "processing": "Processed {{progress}} notes out of {{total}}",
     "successful": "Import finished successfully."
   },
   "file_upload": {

@@ -739,14 +739,14 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
     topLevelPath = (topLevelItems.size > 1 ? "" : topLevelItems.values().next().value ?? "");
 
-    // The import is counted in two phases: extracting every entry, then post-processing each created note.
-    // Set the total to cover *both* up front so the bar climbs monotonically — otherwise the denominator
-    // jumps mid-import (e.g. "X of 32k" → "X of 60k") when post-processing starts. The post-process count
-    // is taken from the meta file when present (exact for a Trilium export); without one, every entry
-    // becomes a note, so the entry count is the right estimate. Any small mismatch is corrected exactly by
-    // the setTotalCount below, which then barely moves instead of leaping.
-    const estimatedNoteCount = countImportableNotes(metaFile) || entriesToProcess;
-    taskContext.setTotalCount(entriesToProcess + estimatedNoteCount);
+    // The import runs in two labelled phases, each driving its own 0→100% bar: first "extracting" counts
+    // every archive entry (notes, attachments, folders, the meta file), then "processing" counts only the
+    // notes that were actually created. The denominator deliberately changes between phases — the client
+    // shows distinct messages ("Extracted X items" vs "Processed X notes") so the switch reads as progress
+    // rather than the bar jerking. Here we seed the extraction phase with the entry count from the scan.
+    taskContext.setPhase("extracting");
+    taskContext.resetProgressCount();
+    taskContext.setTotalCount(entriesToProcess);
 
     // Notes are written in batches, each batch in a single synchronous transaction, instead of letting
     // every entity save auto-commit on its own. The per-note BEGIN/COMMIT (and its WAL fsync) dominated
@@ -811,9 +811,11 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
     flushBatch();
 
-    // post-processing increments progress once per created note (a subset of the entries, now known
-    // exactly), so widen the total accordingly to keep the count accurate and let the bar reach 100%
-    taskContext.setTotalCount(entriesToProcess + createdNoteIds.size);
+    // Post-processing phase: increments progress once per created note (now known exactly). Reset the count
+    // and re-seed the total with the note count so this phase renders its own clean 0→100% bar.
+    taskContext.setPhase("processing");
+    taskContext.resetProgressCount();
+    taskContext.setTotalCount(createdNoteIds.size);
 
     for (const noteId of createdNoteIds) {
         const note = becca.getNote(noteId);
@@ -929,22 +931,6 @@ export function removeTriliumTags(content: string) {
     content = content.replace(/<div class="content">(.*)<\/div>/gms, "$1");
 
     return content;
-}
-
-/**
- * Estimates how many notes an import will create — the post-processing phase's unit count — from the meta
- * tree, so the progress total can be set once up front. Clones and explicitly non-imported notes don't
- * create a note, so they're not counted. Returns 0 when there's no meta file (the caller then falls back to
- * the entry count, since without meta every content entry becomes a note). `metaFile` is typed nullable
- * because control-flow analysis can't see it being assigned inside the read callback.
- */
-function countImportableNotes(metaFile: MetaFile | null): number {
-    if (!metaFile) {
-        return 0;
-    }
-    const count = (notes: NoteMeta[]): number =>
-        notes.reduce((sum, note) => sum + (note.isClone || note.noImport ? 0 : 1) + count(note.children ?? []), 0);
-    return count(metaFile.files);
 }
 
 export default {
