@@ -37,6 +37,9 @@ export function setupExportHandlers() {
 
         try {
             await zipExportService.exportBranchToZipFile(branchId, format as ExportFormat, filePath, taskId);
+            // Reveal the saved archive in the OS file manager, selecting it — more useful than opening the
+            // zip itself (cf. PDF export, which opens the document).
+            electron.shell.showItemInFolder(filePath);
             return { status: "saved", filePath };
         } catch (e) {
             // Remove the partial/incomplete archive left at the destination.
