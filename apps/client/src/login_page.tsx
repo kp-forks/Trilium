@@ -115,6 +115,12 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
                 return;
             }
 
+            if (resp.status === 429) {
+                // Rate limiter kicked in (too many attempts) — not a credential failure.
+                onError(t("login.too-many-attempts"));
+                return;
+            }
+
             const factor = resp.status === 401 ? (await resp.json().catch(() => ({}))).factor : undefined;
             onError(factor === "totp" ? t("login.incorrect-totp") : t("login.incorrect-password"));
         } catch {
