@@ -181,6 +181,8 @@ describe("importNotes ws handler", () => {
         await handler()({ type: "taskProgressCount", taskType: "importNotes", taskId: "t2", progressCount: 3, totalCount: 12 } as any);
         const toast = (toastService.showPersistent as any).mock.calls[0][0];
         expect(toast.progress).toBe(3 / 12);
+        // The in-progress toast can't be dismissed — the import runs regardless, so a × would read as "cancel".
+        expect(toast.dismissible).toBe(false);
     });
 
     it("uses phase-specific messages for the zip extraction and processing phases", async () => {
@@ -214,6 +216,8 @@ describe("importNotes ws handler", () => {
         const toast = (toastService.showPersistent as any).mock.calls[0][0];
         expect(toast.timeout).toBe(5000);
         expect(setNote).toHaveBeenCalledWith("imp1");
+        // The terminal toast re-enables dismissal, overriding the progress toast's value via the merge.
+        expect(toast.dismissible).toBe(true);
     });
 
     it("shows a success toast but does not navigate when there is no imported note id", async () => {
@@ -352,6 +356,8 @@ describe("export ws handler", () => {
         toast = (toastService.showPersistent as any).mock.calls.at(-1)[0];
         expect(toast.message).toBe("export.export_in_progress_with_total");
         expect(toast.progress).toBe(4 / 8);
+        // The in-progress toast can't be dismissed — the export runs regardless of the toast.
+        expect(toast.dismissible).toBe(false);
 
         tSpy.mockRestore();
     });
@@ -362,6 +368,8 @@ describe("export ws handler", () => {
         expect(toast.id).toBe("e3");
         expect(toast.timeout).toBe(5000);
         expect(toast.progress).toBeUndefined();
+        // The terminal toast re-enables dismissal, overriding the progress toast's value via the merge.
+        expect(toast.dismissible).toBe(true);
     });
 });
 

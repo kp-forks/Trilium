@@ -71,8 +71,10 @@ function makeToast(id: string, message: string): ToastOptionsWithRequiredId {
         message,
         icon: "bx bx-check",
         // This toast replaces the in-progress one (same id), and showPersistent merges fields rather than
-        // swapping the object — so clear the progress explicitly, otherwise the finished bar lingers at 100%.
-        progress: undefined
+        // swapping the object — so reset the fields the progress toast set: clear the progress (otherwise the
+        // finished bar lingers at 100%) and re-enable dismissal (the progress toast disabled it).
+        progress: undefined,
+        dismissible: true
     };
 }
 
@@ -104,6 +106,8 @@ function makeProgressToast(taskId: string, progressCount: number, totalCount?: n
         id: taskId,
         icon: "bx bx-loader-circle bx-spin",
         message,
+        // The import keeps running regardless of the toast, so don't offer a × that looks like "cancel".
+        dismissible: false,
         ...(hasTotal ? { progress: progressCount / totalCount } : {})
     };
 }
@@ -203,8 +207,10 @@ function makeExportToast(id: string, message: string): ToastOptionsWithRequiredI
         message,
         icon: "export",
         // This toast replaces the in-progress one (same id), and showPersistent merges fields rather than
-        // swapping the object — so clear the progress explicitly, otherwise the finished bar lingers at 100%.
-        progress: undefined
+        // swapping the object — so reset the fields the progress toast set: clear the progress (otherwise the
+        // finished bar lingers at 100%) and re-enable dismissal (the progress toast disabled it).
+        progress: undefined,
+        dismissible: true
     };
 }
 
@@ -221,6 +227,8 @@ function makeExportProgressToast(taskId: string, progressCount: number, totalCou
         message: hasTotal
             ? t("export.export_in_progress_with_total", { progressCount, totalCount })
             : t("export.preparing_export"),
+        // The export keeps running regardless of the toast, so don't offer a × that looks like "cancel".
+        dismissible: false,
         ...(hasTotal ? { progress: progressCount / totalCount } : {})
     };
 }
