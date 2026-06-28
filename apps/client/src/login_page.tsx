@@ -42,8 +42,19 @@ function App() {
         return (
             <div class="setup-container login-container">
                 <SetupPage className="login" title={t("login.heading")} illustration={illustration} error={error} errorId={errorId}>
-                    {/* Server route that initiates the OpenID round-trip. */}
-                    <a href="/authenticate" class="google-login-btn">
+                    {/* Server route that initiates the OpenID round-trip. A global anchor-click
+                        handler (link.ts, pulled in transitively) preventDefaults every link and
+                        only navigates note/http links, so a plain server route would do nothing on
+                        click. Navigate explicitly and keep the event from reaching that handler. */}
+                    <a
+                        href="/authenticate"
+                        class="google-login-btn"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.location.href = "/authenticate";
+                        }}
+                    >
                         {config.ssoIssuerIcon
                             ? <img src={config.ssoIssuerIcon} alt="" onError={(e) => (e.currentTarget as HTMLImageElement).remove()} />
                             : null}
