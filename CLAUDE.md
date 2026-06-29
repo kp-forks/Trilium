@@ -2,8 +2,6 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-> **Note**: When updating this file, also update `.github/copilot-instructions.md` to keep both AI coding assistants in sync.
-
 ## Overview
 
 Trilium Notes is a hierarchical note-taking application with synchronization, scripting, and rich text editing. TypeScript monorepo using pnpm with multiple apps and shared packages.
