@@ -1,9 +1,16 @@
 body.setup .setup-container.login-container {
     height: auto;
-    padding-block: 4em;
+
+    &.oidc {
+        padding-block: 4em;
+    }
 
     .illustration-logo {
         --size: 162px;
+    }
+
+    main {
+        padding-block: 2em;
     }
 
     .oidc-login {

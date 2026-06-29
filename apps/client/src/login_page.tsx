@@ -40,7 +40,7 @@ export function App() {
 
     if (config?.ssoEnabled) {
         return (
-            <div class="setup-container login-container">
+            <div class="setup-container login-container oidc">
                 <SetupPage className="login" title={t("login.heading")} illustration={illustration} error={error} errorId={errorId}>
                     {/* A <button>, not an <a>, on purpose: link.ts installs a global anchor-click
                         handler that preventDefaults every link and only navigates note/http links,
