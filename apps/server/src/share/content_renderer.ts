@@ -23,6 +23,14 @@ const shareAdjustedAssetPath = isDev ? assetPath : `../${assetPath}`;
 const templateCache: Map<string, string> = new Map();
 
 /**
+ * Maximum number of lines a code block may have before server-side syntax highlighting is skipped.
+ * Mirrors the editor's per-block cutoff (HIGHLIGHT_MAX_BLOCK_COUNT in the ckeditor5 syntax
+ * highlighting plugin); beyond it `highlightAuto` is too slow and would block the event loop on
+ * large shared/included code notes (#9717).
+ */
+const HIGHLIGHT_MAX_LINE_COUNT = 500;
+
+/**
  * Represents the output of the content renderer.
  */
 export interface Result {
@@ -419,6 +427,10 @@ function renderText(result: Result, note: SNote | BNote) {
                 continue;
             }
 
+            if (!shouldSyntaxHighlight(codeEl.text)) {
+                continue;
+            }
+
             const highlightResult = highlightAuto(codeEl.text);
             codeEl.innerHTML = highlightResult.value;
             codeEl.classList.add("hljs");
@@ -525,12 +537,32 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
             continue;
         }
 
+        if (!shouldSyntaxHighlight(codeEl.text)) {
+            continue;
+        }
+
         const highlightResult = highlightAuto(codeEl.text);
         codeEl.innerHTML = highlightResult.value;
         codeEl.classList.add("hljs");
     }
 
     result.content = document.innerHTML;
+}
+
+/**
+ * Whether a code block is small enough to syntax-highlight server-side. Highlighting (especially
+ * `highlightAuto`, which probes every registered language) scales with content size and would block
+ * the single Node event loop on very large code, so blocks beyond {@link HIGHLIGHT_MAX_LINE_COUNT}
+ * lines are left unhighlighted.
+ */
+export function shouldSyntaxHighlight(code: string) {
+    let lineCount = 1;
+    for (let i = 0; i < code.length; i++) {
+        if (code.charCodeAt(i) === 10 /* \n */ && ++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -543,8 +575,10 @@ export function renderCode(result: Result) {
         // Escape the raw code so that any `<`/`>` it contains are not later re-parsed as HTML.
         // When such a code note is included into a shared text note, renderText re-parses the
         // resulting HTML; with unescaped angle brackets (e.g. generics, comparisons, JSX) a large
-        // code note explodes into a pathological node-html-parser tree and hangs the event loop.
-        result.content = `<pre>${escapeHtml(result.content)}</pre>`;
+        // code note would explode into a pathological node-html-parser tree and hang the event
+        // loop (#9717). The <code> wrapper additionally lets renderText apply syntax highlighting,
+        // bounded by shouldSyntaxHighlight().
+        result.content = `<pre><code>${escapeHtml(result.content)}</code></pre>`;
     }
 }
 

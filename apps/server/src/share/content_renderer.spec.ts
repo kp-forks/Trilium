@@ -2,7 +2,7 @@ import { trimIndentation } from "@triliumnext/commons";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import { buildShareNote, buildShareNotes } from "../test/shaca_mocking.js";
-import { getContent, renderCode, type Result } from "./content_renderer.js";
+import { getContent, renderCode, type Result, shouldSyntaxHighlight } from "./content_renderer.js";
 
 describe("content_renderer", () => {
     beforeAll(() => {
@@ -57,6 +57,29 @@ describe("content_renderer", () => {
                 <strong>Baz</strong>
                 <p>After</p>
             `);
+        });
+
+        it("renders an included large code note without hanging or re-parsing it as HTML (#9717)", () => {
+            // ~2 MiB of angle-bracket-heavy code that previously exploded node-html-parser.
+            const codeLine = `const x: Array<Map<string, List<number>>> = a < b && c > d; // <div>\n`;
+            const bigCode = codeLine.repeat(Math.ceil((2 * 1024 * 1024) / codeLine.length));
+            buildShareNote({ id: "bigcode", type: "code", mime: "application/javascript", content: bigCode });
+            const note = buildShareNote({
+                id: "host",
+                content: `<p>Before</p><section class="include-note" data-note-id="bigcode" data-box-size="medium">&nbsp;</section><p>After</p>`
+            });
+
+            const start = Date.now();
+            const result = getContent(note);
+            const elapsed = Date.now() - start;
+
+            expect(elapsed).toBeLessThan(2000);
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            // The code is escaped, not re-parsed into markup, and not highlighted (over the limit).
+            expect(result.content).toContain("&lt;Map&lt;string");
+            expect(result.content).not.toContain("hljs");
+            expect(result.content).toContain("<p>Before</p>");
+            expect(result.content).toContain("<p>After</p>");
         });
 
         it("handles syntax highlight for code blocks with escaped syntax", () => {
@@ -197,14 +220,14 @@ describe("content_renderer", () => {
             expect(emptyResult.isEmpty).toBeTruthy();
         });
 
-        it("wraps code in <pre>", () => {
+        it("wraps code in <pre><code>", () => {
             const result: Result = {
                 header: "",
                 content: "\tHello\nworld"
             };
             renderCode(result);
             expect(result.isEmpty).toBeFalsy();
-            expect(result.content).toBe("<pre>\tHello\nworld</pre>");
+            expect(result.content).toBe("<pre><code>\tHello\nworld</code></pre>");
         });
 
         it("escapes HTML-significant characters so the content cannot be re-parsed as markup", () => {
@@ -213,7 +236,19 @@ describe("content_renderer", () => {
                 content: `const x: Array<Map<string, number>> = a < b && c > d; // <div>`
             };
             renderCode(result);
-            expect(result.content).toBe(`<pre>const x: Array&lt;Map&lt;string, number&gt;&gt; = a &lt; b &amp;&amp; c &gt; d; // &lt;div&gt;</pre>`);
+            expect(result.content).toBe(`<pre><code>const x: Array&lt;Map&lt;string, number&gt;&gt; = a &lt; b &amp;&amp; c &gt; d; // &lt;div&gt;</code></pre>`);
+        });
+    });
+
+    describe("shouldSyntaxHighlight", () => {
+        it("allows small code blocks", () => {
+            expect(shouldSyntaxHighlight("a\nb\nc")).toBe(true);
+            expect(shouldSyntaxHighlight("")).toBe(true);
+        });
+
+        it("rejects code blocks beyond the line limit", () => {
+            expect(shouldSyntaxHighlight(Array(500).fill("x").join("\n"))).toBe(true);
+            expect(shouldSyntaxHighlight(Array(501).fill("x").join("\n"))).toBe(false);
         });
     });
 });
