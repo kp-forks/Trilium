@@ -925,7 +925,7 @@
     "update_available": "Update available"
   },
   "note_launcher": {
-    "this_launcher_doesnt_define_target_note": "This launcher doesn't define target note."
+    "this_launcher_doesnt_define_target_note": "This launcher has no target note configured, so there's nothing to open. Set its \"target\" relation to point it at a note."
   },
   "code_buttons": {
     "execute_button_title": "Execute script",
@@ -1024,7 +1024,7 @@
     "open_all_in_tabs_tooltip": "Open all results in new tabs",
     "open_all_confirm_one": "This will open {{count}} note in new tabs. Continue?",
     "open_all_confirm_other": "This will open {{count}} notes in new tabs. Continue?",
-    "open_all_too_many": "Too many results ({{count}}). Maximum is {{max}}."
+    "open_all_too_many": "Too many notes to open at once ({{count}}). The maximum is {{max}}, try narrowing the results first."
   },
   "edited_notes": {
     "no_edited_notes_found": "No edited notes on this day yet...",
@@ -1779,7 +1779,7 @@
     "set_password_heading": "Set Password",
     "set_password": "Set Password",
     "password_mismatch": "New passwords are not the same.",
-    "password_changed_success": "Password has been changed. Trilium will be reloaded after you press OK."
+    "password_changed_success": "Password changed successfully."
   },
   "multi_factor_authentication": {
     "authentication_title": "Authentication",
@@ -2848,6 +2848,30 @@
     "sample_ishikawa": "Ishikawa",
     "sample_treeview": "TreeView",
     "sample_wardley": "Wardley Map"
+  },
+  "login": {
+    "heading": "Log in to Trilium Notes",
+    "password": "Password",
+    "totp-token": "One-time password or recovery code",
+    "button": "Log in",
+    "remember-me": "Remember me",
+    "incorrect-password": "Password is incorrect. Please try again.",
+    "incorrect-totp": "One-time password is incorrect. Please try again.",
+    "incorrect-recovery-code": "Recovery code is incorrect, or has already been used.",
+    "too-many-attempts": "Too many login attempts. Please wait a few minutes and try again.",
+    "connection-error": "Couldn't reach the server. Check your connection and try again.",
+    "sign_in_with_sso": "Sign in with {{ssoIssuerName}}",
+    "sso-wrong-account": "That account isn't the one linked to this Trilium instance. Sign in with the linked account.",
+    "sso-not-enrolled": "Single sign-on isn't set up yet. Sign in with your password first, then link your account from the settings."
+  },
+  "set_password": {
+    "heading": "Set password",
+    "description": "Before you can start using Trilium from web, you need to set a password first. You will then use this password to login.",
+    "password": "Password",
+    "password-confirmation": "Password confirmation",
+    "button": "Set password",
+    "password-too-short": "Password must be at least {{length}} characters long.",
+    "passwords-dont-match": "The entered passwords don't match."
   },
   "setup": {
     "heading": "Get started with Trilium",

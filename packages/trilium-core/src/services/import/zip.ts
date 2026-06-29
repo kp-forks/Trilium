@@ -51,6 +51,14 @@ interface MetaFile {
 
 interface ImportZipOpts {
     preserveIds?: boolean;
+    /**
+     * Restore a whole-database export: map the archive's "root" note onto the import target instead of
+     * importing it as a new child note. The archived root's content merges into the destination and its
+     * children become the destination's children - no redundant "root" wrapper note, no root->root branch.
+     * Used by the demo-content import (and intended for a future "restore from ZIP" flow). Without it, an
+     * archived "root" is remapped to a fresh id like any other note (see {@link getNewNoteId}).
+     */
+    restoreAsRoot?: boolean;
 }
 
 async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSource, importRootNote: BNote, opts?: ImportZipOpts): Promise<BNote> {
@@ -73,8 +81,13 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
             return "empty_note_id";
         }
 
-        if (origNoteId === "root" || opts?.preserveIds) {
+        if (opts?.preserveIds) {
             return origNoteId;
+        }
+
+        // Whole-database restore: the archived root note IS the destination root, not a new child note.
+        if (opts?.restoreAsRoot && origNoteId === "root") {
+            return importRootNote.noteId;
         }
 
         if (!noteIdMap[origNoteId]) {
@@ -537,14 +550,24 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
             return;
         }
 
-        const parentNoteId = getParentNoteId(filePath, parentNoteMeta);
+        let parentNoteId = getParentNoteId(filePath, parentNoteMeta);
 
         if (!parentNoteId) {
             throw new Error(`Cannot find parentNoteId for '${filePath}'`);
         }
 
+        // When restoring a whole database (restoreAsRoot), the archived "root" maps onto the import root
+        // itself - it already exists with its own parentage, so we only refresh its content and never
+        // create a branch for it. For any other note, guard against a self-referential branch: reserved
+        // IDs like "root" are remapped on import so this shouldn't normally happen, but a malformed archive
+        // could otherwise persist a root->root branch that corrupts the tree and breaks loading.
+        const isImportRootNote = noteId === importRootNote.noteId;
+        if (!isImportRootNote && parentNoteId === noteId) {
+            parentNoteId = importRootNote.noteId;
+        }
+
         if (noteMeta?.isClone) {
-            if (!becca.getBranchFromChildAndParent(noteId, parentNoteId)) {
+            if (!isImportRootNote && !becca.getBranchFromChildAndParent(noteId, parentNoteId)) {
                 new BBranch({
                     noteId,
                     parentNoteId,
@@ -605,7 +628,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
             note.setContent(content);
 
-            if (!becca.getBranchFromChildAndParent(noteId, parentNoteId)) {
+            if (!isImportRootNote && !becca.getBranchFromChildAndParent(noteId, parentNoteId)) {
                 new BBranch({
                     noteId,
                     parentNoteId,
@@ -615,7 +638,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
                 }).save();
             }
 
-            if (opts?.preserveIds) {
+            if (opts?.preserveIds || isImportRootNote) {
                 firstNote = firstNote || note;
             }
         } else {
