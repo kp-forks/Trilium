@@ -137,7 +137,7 @@
     "format_pdf": "PDF - pour l'impression ou le partage de documents.",
     "what_to_export": "exporter quoi",
     "format_html_description": "garder tout le formatage",
-    "format_markdown_name": "formatage",
+    "format_markdown_name": "Markdown",
     "format_markdown_description": "préserver la plupart du formatage",
     "format_opml_name": "OPML",
     "format_opml_description": "format extérieur avec contenu HTML",
