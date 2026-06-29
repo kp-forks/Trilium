@@ -200,7 +200,7 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
-    { name: "codeNoteThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeNoteThemeMatchesApp", value: "true", isSynced: false },
     { name: "codeNoteThemeLight", value: "default:vs-code-light", isSynced: false },
     { name: "codeNoteThemeDark", value: "default:vs-code-dark", isSynced: false },
     { name: "motionEnabled", value: "true", isSynced: false },
@@ -229,7 +229,7 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
-    { name: "codeBlockThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeBlockThemeMatchesApp", value: "true", isSynced: false },
     { name: "codeBlockThemeLight", value: "default:stackoverflow-light", isSynced: false },
     { name: "codeBlockThemeDark", value: "default:stackoverflow-dark", isSynced: false },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },
