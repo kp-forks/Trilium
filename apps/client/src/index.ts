@@ -138,12 +138,12 @@ async function loadScripts() {
     }
 
     if (glob.passwordSet === false) {
-        await import("./set_password_page.js");
+        await import("./set_password.js");
         return;
     }
 
     if (glob.loggedIn === false) {
-        await import("./login_page.js");
+        await import("./login.js");
         return;
     }
 

@@ -7,7 +7,7 @@ vi.mock("./services/i18n", () => ({
     getCurrentLanguage: () => "en"
 }));
 
-import { App } from "./set_password_page";
+import { App } from "./set_password";
 
 let container: HTMLDivElement;
 function renderInto(vnode: preact.ComponentChild) {
