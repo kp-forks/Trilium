@@ -206,5 +206,14 @@ describe("content_renderer", () => {
             expect(result.isEmpty).toBeFalsy();
             expect(result.content).toBe("<pre>\tHello\nworld</pre>");
         });
+
+        it("escapes HTML-significant characters so the content cannot be re-parsed as markup", () => {
+            const result: Result = {
+                header: "",
+                content: `const x: Array<Map<string, number>> = a < b && c > d; // <div>`
+            };
+            renderCode(result);
+            expect(result.content).toBe(`<pre>const x: Array&lt;Map&lt;string, number&gt;&gt; = a &lt; b &amp;&amp; c &gt; d; // &lt;div&gt;</pre>`);
+        });
     });
 });

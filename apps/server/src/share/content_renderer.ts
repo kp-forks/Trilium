@@ -540,9 +540,11 @@ export function renderCode(result: Result) {
     if (typeof result.content !== "string" || !result.content?.trim()) {
         result.isEmpty = true;
     } else {
-        const preEl = new HTMLElement("pre", {});
-        preEl.appendChild(new TextNode(result.content));
-        result.content = preEl.outerHTML;
+        // Escape the raw code so that any `<`/`>` it contains are not later re-parsed as HTML.
+        // When such a code note is included into a shared text note, renderText re-parses the
+        // resulting HTML; with unescaped angle brackets (e.g. generics, comparisons, JSX) a large
+        // code note explodes into a pathological node-html-parser tree and hangs the event loop.
+        result.content = `<pre>${escapeHtml(result.content)}</pre>`;
     }
 }
 
