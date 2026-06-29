@@ -29,6 +29,12 @@ body.experimental-feature-new-layout #right-pane-host {
     flex-direction: row;
 }
 
+/* A soft-dismissed peek keeps its content mounted (so re-peeking is instant and stateful); this
+   takes it out of layout/paint without unmounting it. Applied whenever the pane isn't shown. */
+body.experimental-feature-new-layout #right-pane-host.hidden {
+    display: none;
+}
+
 /* Docked: #right-pane fills the host (which Split sizes against #center-pane). */
 body.experimental-feature-new-layout #right-pane-host:not(.peek) > #right-pane {
     flex: 1 1 0;
