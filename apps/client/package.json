@@ -91,7 +91,7 @@
     "happy-dom": "20.10.6",
     "jsdom": "29.1.1",
     "lightningcss": "1.32.0",
-    "stylelint": "17.13.0",
+    "stylelint": "17.14.0",
     "vite-plugin-static-copy": "4.1.1"
   }
 }
