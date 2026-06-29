@@ -38,9 +38,13 @@ body.setup .setup-container.login-container {
     }
 
     .oidc-login {
-        padding: 1.25rem 4rem;
         font-weight: 500;
-        margin: auto;
+        padding: 1.25rem 2rem;
+
+        @media (min-width: 700px) {
+            padding: 1.25rem 4rem;
+            margin: auto;
+        }
 
         img {
             margin-inline-end: 10px;
