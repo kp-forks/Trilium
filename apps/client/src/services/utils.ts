@@ -159,6 +159,21 @@ export function isMac() {
     return navigator.platform.indexOf("Mac") > -1;
 }
 
+/**
+ * Returns `true` when the (server-reported) host platform is Linux. Prefer this over a
+ * `!isMac && !isWindows` derivation so future platforms aren't misclassified as Linux.
+ */
+export function isLinux() {
+    return window.glob.platform === "linux";
+}
+
+/**
+ * Returns `true` when the (server-reported) host platform is Windows.
+ */
+export function isWindows() {
+    return window.glob.platform === "win32";
+}
+
 export function isCtrlKey(evt: KeyboardEvent | MouseEvent | JQuery.ClickEvent | JQuery.ContextMenuEvent | JQuery.TriggeredEvent | React.PointerEvent<HTMLCanvasElement> | JQueryEventObject) {
     return (!isMac() && evt.ctrlKey) || (isMac() && evt.metaKey);
 }
@@ -885,6 +900,8 @@ export default {
     isElectron,
     isPWA,
     isMac,
+    isLinux,
+    isWindows,
     isCtrlKey,
     assertArguments,
     escapeHtml,
