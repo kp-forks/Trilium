@@ -52,7 +52,7 @@ function App() {
                         text={(
                             <>
                                 {config.ssoIssuerIcon
-                                    ? <img src={config.ssoIssuerIcon} alt="" onError={(e) => (e.currentTarget as HTMLImageElement).remove()} />
+                                    ? <img src={config.ssoIssuerIcon} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }} />
                                     : null}
                                 {t("login.sign_in_with_sso", { ssoIssuerName: config.ssoIssuerName ?? "" })}
                             </>
@@ -138,7 +138,9 @@ function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
                 onError(t("login.incorrect-password"));
             }
         } catch {
-            onError(t("login.incorrect-password"));
+            // fetch only rejects on network-level failures (server unreachable, DNS, etc.) —
+            // not on HTTP error statuses — so this is a connection problem, not bad credentials.
+            onError(t("login.connection-error"));
         } finally {
             setSubmitting(false);
         }
