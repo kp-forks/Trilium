@@ -133,7 +133,6 @@
     "export_type_single": "Seulement cette note sans ses descendants",
     "export": "Exporter",
     "choose_export_type": "Choisissez d'abord le type d'export",
-    "export_in_progress": "Exportation en cours : {{progressCount}}",
     "export_finished_successfully": "L'exportation s'est terminée avec succès.",
     "format_pdf": "PDF - pour l'impression ou le partage de documents.",
     "what_to_export": "exporter quoi",

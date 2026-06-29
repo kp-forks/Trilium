@@ -136,7 +136,6 @@
     "export_type_single": "Hanya catatan ini tanpa turunannya",
     "export": "Ekspor",
     "choose_export_type": "Silakan pilih jenis ekspor terlebih dahulu",
-    "export_in_progress": "Ekspor sedang berlangsung: {{progressCount}}",
     "export_finished_successfully": "Ekspor selesai dengan sukses.",
     "format_pdf": "PDF - untuk keperluan cetak atau berbagi."
   },

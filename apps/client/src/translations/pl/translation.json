@@ -106,7 +106,6 @@
     "export_type_single": "Tylko ta notatka (bez elementów podrzędnych)",
     "export": "Eksportuj",
     "choose_export_type": "Proszę najpierw wybrać typ eksportu",
-    "export_in_progress": "Eksport w toku: {{progressCount}}",
     "export_finished_successfully": "Eksport zakończony pomyślnie.",
     "format_pdf": "PDF - do druku lub udostępniania."
   },

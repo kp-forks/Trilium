@@ -132,7 +132,6 @@
     "export_type_single": "Nur diese Notiz ohne ihre Unternotizen",
     "export": "Export",
     "choose_export_type": "Bitte wählen Sie zuerst den Exporttyp aus",
-    "export_in_progress": "Export läuft: {{progressCount}}",
     "export_finished_successfully": "Der Export wurde erfolgreich abgeschlossen.",
     "format_pdf": "PDF - für Ausdrucke oder Teilen."
   },

@@ -97,7 +97,6 @@
     "export_type_single": "Apenas esta nota, sem os seus descendentes",
     "export": "Exportar",
     "choose_export_type": "Por favor, escolha primeiro o tipo de exportação",
-    "export_in_progress": "Exportação em andamento: {{progressCount}}",
     "export_finished_successfully": "Exportação concluída com sucesso.",
     "format_pdf": "PDF – para impressão ou compartilhamento."
   },

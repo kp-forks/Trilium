@@ -281,7 +281,6 @@
     "export_type_single": "Только эта заметка без ее потомков",
     "export": "Экспорт",
     "choose_export_type": "Сначала выберите тип экспорта",
-    "export_in_progress": "Экспорт: {{progressCount}}",
     "export_finished_successfully": "Экспорт завершился успешно.",
     "format_pdf": "PDF - для печати или обмена."
   },
