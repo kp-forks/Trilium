@@ -405,6 +405,31 @@ describe("trilium-app protocol dispatcher", () => {
         expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([1, 2, 3, 4]));
     });
 
+    // The <audio>/<video> media data source refuses a response with no length, unlike
+    // fetch() which reads to EOF. Express's own Content-Length is stripped as a transport
+    // header (it can mismatch the buffered body), so the buffered path must restore one
+    // matching the exact bytes it emits — otherwise media playback fails over trilium-app://
+    // with MEDIA_ERR_SRC_NOT_SUPPORTED even though the same note plays over HTTP.
+    it("sets an accurate Content-Length on buffered responses (media playback)", async () => {
+        const app = express();
+        app.get("/media", (_req, res) => {
+            res.setHeader("Content-Type", "audio/mpeg");
+            res.send(Buffer.from([0, 1, 2, 3, 4]));
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/media"));
+        expect(response.headers.get("content-length")).toBe("5");
+        expect(new Uint8Array(await response.arrayBuffer())).toEqual(new Uint8Array([0, 1, 2, 3, 4]));
+    });
+
+    it("does not set Content-Length on a null-body status response", async () => {
+        const app = express();
+        app.get("/nc", (_req, res) => res.status(204).send());
+
+        const response = await dispatch(app, new Request("trilium-app://app/nc"));
+        expect(response.headers.has("content-length")).toBe(false);
+    });
+
     it("ignores a fetch abort that fires after a buffered response already completed", async () => {
         const app = express();
         app.get("/done", (_req, res) => res.send("done"));

@@ -15,7 +15,10 @@ import options from "../../services/options";
  * reference implementation). Only the docked/closed distinction is persisted — peek is runtime-only.
  */
 export type PaneMode = "closed" | "peek" | "docked";
-export type PaneAction = "togglePeek" | "toggleDocked" | "dock" | "close";
+// `togglePeek` and `dismiss` are *soft* closes (content stays mounted, hidden, so re-peeking preserves
+// widget state); `close` (the × button) and the docked toggle are *hard* closes that unmount. The
+// mode result is the same; the mount distinction lives in usePaneMode.
+export type PaneAction = "togglePeek" | "toggleDocked" | "dock" | "close" | "dismiss";
 
 /** The next mode for a given action (pure). `toggle*` open from closed and close otherwise. */
 export function reducePaneMode(prev: PaneMode, action: PaneAction): PaneMode {
@@ -24,6 +27,7 @@ export function reducePaneMode(prev: PaneMode, action: PaneAction): PaneMode {
         case "toggleDocked": return prev === "closed" ? "docked" : "closed";
         case "dock": return "docked";
         case "close": return "closed";
+        case "dismiss": return "closed";
     }
 }
 
@@ -37,23 +41,47 @@ export function persistedPaneVisible(prev: PaneMode, next: PaneMode): boolean | 
 
 export interface PaneModeController {
     mode: PaneMode;
+    /** Whether the pane is shown (peek or docked) — drives CSS show/hide. */
     visible: boolean;
+    /** Whether the content should be in the DOM. Stays true across a soft `dismiss` so the content
+        persists between consecutive peeks; goes false on a hard `close`. */
+    mounted: boolean;
     togglePeek: () => void;
     toggleDocked: () => void;
     dock: () => void;
     close: () => void;
+    dismiss: () => void;
+}
+
+interface PaneState {
+    mode: PaneMode;
+    mounted: boolean;
 }
 
 /**
- * Owns a pane's mode and its persistence. `visibleOption` stores only the docked/closed distinction.
- * The state updater stays pure (it can run more than once, e.g. in Strict Mode); persistence runs in
- * an effect so it isn't duplicated by re-invoked updaters.
+ * Owns a pane's mode, mount lifecycle and persistence. `visibleOption` stores only the docked/closed
+ * distinction. The state updater stays pure (it can run more than once, e.g. in Strict Mode);
+ * persistence runs in an effect so it isn't duplicated by re-invoked updaters.
  */
 export function usePaneMode(visibleOption: OptionNames): PaneModeController {
-    const [ mode, setMode ] = useState<PaneMode>(() => options.is(visibleOption) ? "docked" : "closed");
+    const [ { mode, mounted }, setState ] = useState<PaneState>(() => {
+        const docked = options.is(visibleOption);
+        return { mode: docked ? "docked" : "closed", mounted: docked };
+    });
 
     const apply = useCallback((action: PaneAction) => {
-        setMode(prev => reducePaneMode(prev, action));
+        setState(prev => {
+            const mode = reducePaneMode(prev.mode, action);
+            let mounted: boolean;
+            if (mode !== "closed") {
+                mounted = true;                                         // shown → mounted
+            } else if (action === "togglePeek" || action === "dismiss") {
+                mounted = prev.mounted;                                 // soft close: peek button / outside-press / Esc keep the content mounted (hidden)
+            } else {
+                mounted = false;                                        // hard close: the × button (`close`) / docked toggle unmount the content
+            }
+            return { mode, mounted };
+        });
     }, []);
 
     const prevModeRef = useRef<PaneMode>(mode);
@@ -72,8 +100,9 @@ export function usePaneMode(visibleOption: OptionNames): PaneModeController {
     const toggleDocked = useCallback(() => apply("toggleDocked"), [ apply ]);
     const dock = useCallback(() => apply("dock"), [ apply ]);
     const close = useCallback(() => apply("close"), [ apply ]);
+    const dismiss = useCallback(() => apply("dismiss"), [ apply ]);
 
-    return { mode, visible: mode !== "closed", togglePeek, toggleDocked, dock, close };
+    return { mode, visible: mode !== "closed", mounted, togglePeek, toggleDocked, dock, close, dismiss };
 }
 
 // App-wide popup roots that render outside the pane (on document.body) but must NOT dismiss a peek:

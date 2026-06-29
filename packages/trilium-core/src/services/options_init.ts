@@ -6,7 +6,7 @@ import dateUtils from "./utils/date.js";
 import keyboardActions from "./keyboard_actions.js";
 import { getLog } from "./log.js";
 import optionService from "./options.js";
-import { isWindows, randomSecureToken } from "./utils/index.js";
+import { isLinux, isWindows, randomSecureToken } from "./utils/index.js";
 
 export function initDocumentOptions() {
     optionService.createOption("documentId", randomSecureToken(16), false);
@@ -145,7 +145,9 @@ const defaultOptions: DefaultOption[] = [
     { name: "rightPaneWidth", value: "25", isSynced: false },
     { name: "rightPaneVisible", value: "true", isSynced: false },
     { name: "rightPaneCollapsedItems", value: "[]", isSynced: false },
-    { name: "nativeTitleBarVisible", value: "false", isSynced: false },
+    // On Linux a native title bar integrates better with the rest of the system, so default it on there.
+    // This only applies to fresh installs — existing databases already have the option set and are left untouched.
+    { name: "nativeTitleBarVisible", value: () => isLinux() ? "true" : "false", isSynced: false },
     { name: "eraseEntitiesAfterTimeInSeconds", value: "604800", isSynced: true }, // default is 7 days
     { name: "eraseEntitiesAfterTimeScale", value: "86400", isSynced: true }, // default 86400 seconds = Day
     { name: "hideArchivedNotes_main", value: "false", isSynced: false },
@@ -200,7 +202,7 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
-    { name: "codeNoteThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeNoteThemeMatchesApp", value: "true", isSynced: false },
     { name: "codeNoteThemeLight", value: "default:vs-code-light", isSynced: false },
     { name: "codeNoteThemeDark", value: "default:vs-code-dark", isSynced: false },
     { name: "motionEnabled", value: "true", isSynced: false },
@@ -229,7 +231,7 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
-    { name: "codeBlockThemeMatchesApp", value: "false", isSynced: false },
+    { name: "codeBlockThemeMatchesApp", value: "true", isSynced: false },
     { name: "codeBlockThemeLight", value: "default:stackoverflow-light", isSynced: false },
     { name: "codeBlockThemeDark", value: "default:stackoverflow-dark", isSynced: false },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },

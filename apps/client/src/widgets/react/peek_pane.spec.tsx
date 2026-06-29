@@ -2,7 +2,7 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { isWithinPeek, persistedPaneVisible, reducePaneMode, usePeekDismiss } from "./peek_pane";
+import { isWithinPeek, PaneModeController, persistedPaneVisible, reducePaneMode, usePaneMode, usePeekDismiss } from "./peek_pane";
 
 describe("reducePaneMode", () => {
     it("opens as peek from closed and closes otherwise", () => {
@@ -17,11 +17,57 @@ describe("reducePaneMode", () => {
         expect(reducePaneMode("docked", "toggleDocked")).toBe("closed");
     });
 
-    it("docks and closes unconditionally", () => {
+    it("docks, and both close and dismiss reach closed, unconditionally", () => {
         for (const prev of ["closed", "peek", "docked"] as const) {
             expect(reducePaneMode(prev, "dock")).toBe("docked");
             expect(reducePaneMode(prev, "close")).toBe("closed");
+            expect(reducePaneMode(prev, "dismiss")).toBe("closed");
         }
+    });
+});
+
+describe("usePaneMode", () => {
+    afterEach(() => {
+        document.body.innerHTML = "";
+    });
+
+    it("keeps content mounted across a soft dismiss, and unmounts on a hard close", () => {
+        let controller: PaneModeController | undefined;
+        const host = document.createElement("div");
+        document.body.appendChild(host);
+        function Harness() {
+            controller = usePaneMode("rightPaneVisible");
+            return null;
+        }
+        act(() => render(<Harness />, host));
+
+        // Starts closed (the mocked option is unset) and unmounted.
+        expect(controller?.mode).toBe("closed");
+        expect(controller?.mounted).toBe(false);
+
+        act(() => controller?.togglePeek());
+        expect(controller?.mode).toBe("peek");
+        expect(controller?.visible).toBe(true);
+        expect(controller?.mounted).toBe(true);
+
+        // Peek button while open (togglePeek) soft-dismisses: hidden but still mounted.
+        act(() => controller?.togglePeek());
+        expect(controller?.mode).toBe("closed");
+        expect(controller?.visible).toBe(false);
+        expect(controller?.mounted).toBe(true);
+
+        // Re-peek reuses it; outside-press/Esc (dismiss) is also soft.
+        act(() => controller?.togglePeek());
+        act(() => controller?.dismiss());
+        expect(controller?.visible).toBe(false);
+        expect(controller?.mounted).toBe(true);
+
+        // The × button (hard close) unmounts.
+        act(() => controller?.close());
+        expect(controller?.visible).toBe(false);
+        expect(controller?.mounted).toBe(false);
+
+        act(() => render(null, host));
     });
 });
 
