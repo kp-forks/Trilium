@@ -30,7 +30,7 @@ overrides:
   "@lezer/common": "1.5.2"
   "@lezer/highlight": "1.2.3"
   "@lezer/lr": "1.4.10"
-  "mermaid": "11.15.0"
+  "mermaid": "11.16.0"
   "preact": "10.29.2"
   "roughjs": "4.6.6"
   "@types/express-serve-static-core": "5.1.1"
