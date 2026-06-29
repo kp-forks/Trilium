@@ -15,9 +15,12 @@ body.setup .setup-container.login-container {
 }
 
 body.setup .page.login > main {
-    justify-content: center;
-    width: 75%;
     margin: auto;
+
+    @media (min-width: 700px) {
+        width: 75%;
+        justify-content: center;
+    }
 }
 
 body.setup .page.login .login-sso {

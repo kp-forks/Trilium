@@ -1,5 +1,7 @@
 body.setup .setup-container.login-container {
-    height: auto;
+    @media (min-width: 700px) {
+        height: auto;
+    }
 
     &.oidc {
         padding-block: 4em;
