@@ -218,10 +218,17 @@ export async function dispatch(app: Application, request: Request): Promise<Resp
             // null-body status codes (101 / 204 / 205 / 304). Express is
             // happy to call `res.status(204).send()` so we must filter here.
             const body = NULL_BODY_STATUSES.has(res.statusCode) ? null : toUint8Array(rawPayload);
+            // Express's own Content-Length is stripped (it can mismatch the buffered body), but the
+            // media data source (<audio>/<video>) refuses a response with no length — unlike fetch(),
+            // which reads to EOF. We own the exact bytes here, so restore an accurate Content-Length.
+            const headers = normalizeResponseHeaders(res.getHeaders());
+            if (body) {
+                headers.push(["content-length", String(body.byteLength)]);
+            }
             try {
                 resolve(new Response(body as BodyInit | null, {
                     status: res.statusCode,
-                    headers: normalizeResponseHeaders(res.getHeaders())
+                    headers
                 }));
             } catch (err) {
                 reject(err);
