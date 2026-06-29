@@ -164,14 +164,14 @@ export function isMac() {
  * `!isMac && !isWindows` derivation so future platforms aren't misclassified as Linux.
  */
 export function isLinux() {
-    return window.glob.platform === "linux";
+    return window.glob?.platform === "linux";
 }
 
 /**
  * Returns `true` when the (server-reported) host platform is Windows.
  */
 export function isWindows() {
-    return window.glob.platform === "win32";
+    return window.glob?.platform === "win32";
 }
 
 export function isCtrlKey(evt: KeyboardEvent | MouseEvent | JQuery.ClickEvent | JQuery.ContextMenuEvent | JQuery.TriggeredEvent | React.PointerEvent<HTMLCanvasElement> | JQueryEventObject) {
