@@ -11,7 +11,7 @@
      >Note that HTML is not a standardized format so some more specific features
         such as admonitions or&nbsp;<a class="reference-link" href="#root/_help_hrZ1D00cLbal">Internal (reference) links</a>&nbsp;might
         not be supported by other applications.</li>
-  <li>The notes can also be exported as <a href="#root/pOsGYCXsbNQG/tC7s2alapj8V/R9pX4DGra2Vt/_help_ycBFjKrrwE9p">static HTML that can be used for web publishing</a>.</li>
+  <li>The notes can also be exported as <a href="#root/_help_ycBFjKrrwE9p">static HTML that can be used for web publishing</a>.</li>
   </ul>
   </li>
   <li><a class="reference-link" href="#root/_help_Oau6X9rCuegd">Markdown</a>
@@ -57,19 +57,19 @@
 </aside>
 <h2>Exporting the root note</h2>
 <p>The root note is the top-most note. Exporting it behaves just like any
-  other note: right click on it in the&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
+  other note: right click on it in the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>&nbsp;and
   select <em>Export</em>.</p>
 <p>Starting with v0.104.0, when a root note is imported, it will be imported
   as a child of your existing root note. This behavior makes sure that the
   import cannot change or overwrite your existing notes.</p>
 <p>You can easily move the notes onto the root using the tree's&nbsp;<a class="reference-link"
-  href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/Vc8PjrjAGuOp/oPVyFC7WL2Lp/_help_yTjUdsOi4CIE">Multiple selection</a>&nbsp;and
-  delete the redundant root note.</p>
+  href="#root/_help_yTjUdsOi4CIE">Multiple selection</a>&nbsp;and delete the redundant
+  root note.</p>
 <figure class="table">
   <table>
     <thead>
       <tr>
-        <th style="width:50%;" scope="col">Before</th>
+        <th scope="col">Before</th>
         <th scope="col">After</th>
       </tr>
     </thead>
@@ -104,10 +104,9 @@
   </table>
 </figure>
 <aside class="admonition tip">
-  <ul>
-    <li>Consider using <a href="#root/pOsGYCXsbNQG/Otzi9La2YAUX/_help_ODY7qQn5m2FT">backups</a> instead
-      of full root note.</li>
-    <li><a class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_pgxEVkzLl1OP">ETAPI (REST API)</a>&nbsp;can
-      bypass this import behavior using the <code spellcheck="false">restoreAsRoot</code> option.</li>
-  </ul>
+  <p>Instead of exporting full ZIPs (including the root note), consider using
+    <a
+    href="#root/_help_ODY7qQn5m2FT">backups</a>instead. Backups always contain the entire structure, as well
+      as additional information a ZIP export does not have: maintains note IDs,
+      contains the options/tokens and handle&nbsp;<a class="reference-link" href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/BFs8mudNFgCS/_help_bwg0e8ewQMak">Protected Notes</a>&nbsp;better.</p>
 </aside>

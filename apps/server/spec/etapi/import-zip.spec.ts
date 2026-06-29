@@ -32,32 +32,15 @@ describe("etapi/import", () => {
 
         // A Trilium root-export (its top note is "root") imported into root is nested under a "root"
         // wrapper note rather than being remapped onto / merged into the system root - that would
-        // create a self-referential root->root branch that breaks loading. Whole-database *restore*
-        // (the demo content on first run) instead passes the restoreAsRoot import option, which maps
-        // the archive's root onto the destination root - see trilium-core import/zip.spec.ts.
+        // create a self-referential root->root branch that breaks loading. (Whole-database *restore*,
+        // which maps the archive's root onto the destination root, is an internal-only option used by
+        // the demo-content seed - it is deliberately not exposed over ETAPI. See import/zip.spec.ts.)
         expect(response.body.note.title).toStrictEqual("root");
         expect(response.body.branch.parentNoteId).toStrictEqual("root");
 
         // the demo's top-level notes live under that wrapper, and no corrupt root->root branch exists
         const wrapper = becca.getNote(response.body.note.noteId);
         expect(wrapper?.getChildNotes().map((n) => n.title)).toEqual(expect.arrayContaining(["Journal", "Trilium Demo", "Miscellaneous"]));
-        expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
-    });
-
-    it("demo zip imports flat under root with ?restoreAsRoot=true (whole-database restore)", async () => {
-        const buffer = readFileSync(join(__dirname, "../../src/assets/db/demo.zip"));
-        const response = await supertest(app)
-            .post("/etapi/notes/root/import?restoreAsRoot=true")
-            .auth(USER, token, { "type": "basic"})
-            .set("Content-Type", "application/octet-stream")
-            .set("Content-Transfer-Encoding", "binary")
-            .send(buffer)
-            .expect(201);
-
-        // restoreAsRoot maps the archive's "root" onto the destination root, so its children land directly
-        // under root (no wrapper note) and no self-referential root->root branch is created.
-        expect(response.body.note.title).toStrictEqual("Journal");
-        expect(response.body.branch.parentNoteId).toStrictEqual("root");
         expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
     });
 });

@@ -173,11 +173,7 @@ function register(router: Router) {
         const note = eu.getAndCheckNote(req.params.noteId);
         const taskContext = new TaskContext("no-progress-reporting", "importNotes", null);
 
-        // Whole-database restore: map the archive's "root" note onto the target note instead of nesting it
-        // in a redundant "root" wrapper. Use when importing a Trilium root export into "root".
-        const restoreAsRoot = req.query.restoreAsRoot === "true";
-
-        zipImportService.importZip(taskContext, req.body, note, { restoreAsRoot }).then((importedNote) => {
+        zipImportService.importZip(taskContext, req.body, note).then((importedNote) => {
             res.status(201).json({
                 note: mappers.mapNoteToPojo(importedNote),
                 branch: mappers.mapBranchToPojo(importedNote.getParentBranches()[0])
