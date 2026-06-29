@@ -309,7 +309,6 @@
     "export_type_single": "このノートのみ",
     "export": "エクスポート",
     "choose_export_type": "最初にエクスポートタイプを選択してください",
-    "export_in_progress": "エクスポート処理中: {{progressCount}}",
     "export_finished_successfully": "エクスポートが正常に完了しました。",
     "format_pdf": "PDF - 印刷または共有目的に。",
     "what_to_export": "エクスポート対象",
@@ -416,7 +415,8 @@
     "importIntoNoteNamed": "{{- title}} にインポート",
     "import_from": "インポート元",
     "cardName": "ファイルとその他のフォーマット",
-    "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, 画像など"
+    "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, 画像など",
+    "shrinkImagesProviderTooltip": "インポートした画像のサイズを調整および最適化して容量を節約しますが、画質が若干低下する場合があります。"
   },
   "password_not_set": {
     "title": "パスワードが設定されていない",
@@ -2318,7 +2318,11 @@
     "empty_message": "このノートには何も表示されません",
     "empty_button": "パネルを非表示",
     "toggle": "右パネルを切り替え",
-    "custom_widget_go_to_source": "ソースコードへ移動"
+    "custom_widget_go_to_source": "ソースコードへ移動",
+    "peek": "右ペインをピーク表示",
+    "hide": "右ペインを非表示",
+    "dock": "パネルをドッキング",
+    "close": "パネルを閉じる"
   },
   "attributes_panel": {
     "title": "ノート属性"
@@ -2916,10 +2920,13 @@
     "disconnect": "接続を解除",
     "load_failed": "OneNote ノートブックを読み込めませんでした。",
     "no_notebooks": "このアカウントにはノートブックが見つかりませんでした。",
-    "select_sections": "インポートするセクションを選択:",
+    "select_sections": "インポートするセクションを選択",
     "import": "選択した項目をインポート",
     "attach_source": "元のHTMLを添付（デバッグ）",
-    "attach_source_hint": "変換後の結果と比較できるように、各ページの変更されていない OneNote の HTML をインポートされたノートに添付ファイルとして保存します。"
+    "attach_source_hint": "変換後の結果と比較できるように、各ページの変更されていない OneNote の HTML をインポートされたノートに添付ファイルとして保存します。",
+    "section_heading": "Microsoft OneNote",
+    "checking": "OneNote への接続を確認中…",
+    "select_sections_hint": "OneNote のインポートデータには元の並び順が含まれないため、セクションやグループは作成日順に並べ替えられます。そのため、OneNote 上での表示順序とは異なる場合があります。"
   },
   "notion_import": {
     "name": "Notion",
@@ -2954,6 +2961,13 @@
     "description": "JSON エクスポートから",
     "description_long": "Anytypeで、\"Any-Block\" 形式かつ \"JSON\" を選択してスペースをエクスポートし、作成された .zip ファイルをここで選択してください。現時点では、ページとそのテキストのみがインポートされます。",
     "choose_file": "Anytype エクスポート (.zip)",
+    "import": "インポート"
+  },
+  "obsidian_import": {
+    "name": "Obsidian",
+    "description": "Vault から",
+    "description_long": "Obsidian の Vault フォルダを ZIP 形式で圧縮し、作成された .zip ファイルをここで選択してください。",
+    "choose_file": "Obsidian vault (.zip)",
     "import": "インポート"
   }
 }

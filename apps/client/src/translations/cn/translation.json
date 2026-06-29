@@ -131,7 +131,6 @@
     "export_type_single": "仅此笔记，不包括子笔记",
     "export": "导出",
     "choose_export_type": "请先选择导出类型",
-    "export_in_progress": "导出进行中：{{progressCount}}",
     "export_finished_successfully": "导出成功完成。",
     "format_pdf": "PDF - 用于打印或共享目的。"
   },

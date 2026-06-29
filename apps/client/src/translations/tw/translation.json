@@ -132,7 +132,6 @@
     "export_type_single": "僅此筆記，不包括子筆記",
     "export": "匯出",
     "choose_export_type": "請先選擇匯出類型",
-    "export_in_progress": "正在匯出：{{progressCount}}",
     "export_finished_successfully": "成功匯出。",
     "format_pdf": "PDF - 用於列印或與他人分享。"
   },

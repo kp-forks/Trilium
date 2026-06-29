@@ -137,7 +137,6 @@
     "export_note_title": "Esporta la nota",
     "export": "Esporta",
     "choose_export_type": "Scegli prima il tipo di esportazione, per favore",
-    "export_in_progress": "Esportazione in corso: {{progressCount}}",
     "export_finished_successfully": "Esportazione terminata con successo.",
     "format_pdf": "PDF- allo scopo di stampa o esportazione.",
     "export_type_subtree": "Questa nota e tutti i suoi discendenti",

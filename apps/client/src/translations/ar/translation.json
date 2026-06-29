@@ -631,7 +631,6 @@
     "export": "تصدير",
     "export_note_title": "تصدير الملاحظة",
     "export_finished_successfully": "اكتمل التصدير بنجاح.",
-    "export_in_progress": "جار التصدير: {{progressCount}}",
     "choose_export_type": "اختر نوع التصدير اولا من فضلك",
     "export_type_single": "هذه الملاحظة فقط دون الملاحظات الفرعية التابعة لها",
     "format_pdf": "PDF - لأغراض الطباعة أو المشاركة.",

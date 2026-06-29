@@ -584,7 +584,6 @@
     "close": "Închide",
     "export": "Exportă",
     "export_finished_successfully": "Export finalizat cu succes.",
-    "export_in_progress": "Export în curs: {{progressCount}}",
     "export_note_title": "Exportă notița",
     "export_type_single": "Doar această notiță fără descendenții ei",
     "export_type_subtree": "Această notiță și toți descendenții ei",

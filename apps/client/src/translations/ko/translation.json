@@ -101,7 +101,6 @@
     "export_type_single": "이 노트에만 해당(후손 노트를 포함하지 않음)",
     "export": "내보내기",
     "choose_export_type": "내보내기 타입을 선택해 주세요",
-    "export_in_progress": "내보내기 진행 중: {{progressCount}}",
     "export_finished_successfully": "내보내기를 성공적으로 완료했습니다.",
     "format_pdf": "PDF - 인쇄 또는 공유용",
     "close": "닫기",

@@ -85,7 +85,6 @@
     "export_type_single": "Pouze tato poznámka bez jejích potomků",
     "export": "Exportovat",
     "choose_export_type": "Nejprve vyberte typ exportu",
-    "export_in_progress": "Export probíhá: {{progressCount}}",
     "export_finished_successfully": "Export byl úspěšně dokončen.",
     "format_pdf": "PDF – pro tisk nebo sdílení."
   },
