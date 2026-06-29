@@ -327,7 +327,9 @@
     "result_share": "共有ノートテーマを使用した、公開可能な静的ウェブサイトを含む ZIP アーカイブ。",
     "result_opml": "単一の OPML アウトラインファイル。ノートのタイトルとテキストは含まれますが、画像、コードファイル、添付ファイルは含まれません。",
     "result_single_html": "単一の HTML ファイル。画像や添付ファイルが埋め込まれます。",
-    "result_single_markdown": "単一のマークダウン (.md) ファイル。"
+    "result_single_markdown": "単一のマークダウン (.md) ファイル。",
+    "preparing_export": "エクスポートを準備中…",
+    "export_in_progress_with_total": "{{totalCount}} 件中 {{progressCount}} 件のノートをエクスポートしました"
   },
   "help": {
     "title": "チートシート",
@@ -405,18 +407,20 @@
       "placeholder": "HTMLタグを1行に1つ入力",
       "reset_button": "リストをデフォルトにリセット"
     },
-    "in-progress": "インポート中: {{progress}}",
+    "in-progress": "{{progress}} 件のノートをインポートしました",
     "successful": "インポートは正常に終了しました。",
     "explodeArchives": "<code>.zip</code>, <code>.enex</code> および <code>.opml</code> アーカイブの内容を読み取ります。",
     "importZipRecommendation": "ZIP ファイルをインポートすると、ノートの階層はアーカイブ内のサブディレクトリ構造を反映します。",
     "spreadsheetImportedAsSpreadsheet": "CSV ファイルや Excel ファイルを、ファイルとしてではなく編集可能なスプレッドシートとしてインポートする",
     "starting": "インポート中…",
-    "in-progress-with-total": "{{total}} 件中 {{progress}} 件をインポート中",
+    "in-progress-with-total": "{{total}} 件中 {{progress}} 件をインポートしました",
     "importIntoNoteNamed": "{{- title}} にインポート",
     "import_from": "インポート元",
     "cardName": "ファイルとその他のフォーマット",
     "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, 画像など",
-    "shrinkImagesProviderTooltip": "インポートした画像のサイズを調整および最適化して容量を節約しますが、画質が若干低下する場合があります。"
+    "shrinkImagesProviderTooltip": "インポートした画像のサイズを調整および最適化して容量を節約しますが、画質が若干低下する場合があります。",
+    "extracting": "{{total}} 件中 {{progress}} 件のアイテムを抽出しました",
+    "processing": "{{total}} 件中 {{progress}} 件のノートを処理しました"
   },
   "password_not_set": {
     "title": "パスワードが設定されていない",
