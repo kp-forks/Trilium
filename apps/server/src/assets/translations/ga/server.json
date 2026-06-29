@@ -66,7 +66,8 @@
     "toggle-classic-editor-toolbar": "Athraigh an cluaisín Formáidithe don eagarthóir leis an mbarra uirlisí socraithe",
     "toggle-zen-mode": "Cumasaíonn/díchumasaíonn sé an mód zen (comhad úsáideora íosta le haghaidh eagarthóireacht níos dírithe)",
     "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach",
-    "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe sa chrann nótaí"
+    "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe sa chrann nótaí",
+    "peek-right-pane": "Féach ar an bpainéal ar dheis mar phainéal sealadach a shnámhann os cionn an ábhair agus a dhúnann nuair a chailleann sé fócas"
   },
   "keyboard_action_names": {
     "back-in-note-history": "Ar ais i Stair na Nótaí",
@@ -165,7 +166,8 @@
     "copy-without-formatting": "Cóipeáil Gan Formáidiú",
     "force-save-revision": "Athbhreithniú Sábháilte Fórsála",
     "save-named-revision": "Sábháil Athbhreithniú Ainmnithe",
-    "toggle-archived-notes": "Infheictheacht Nótaí Cartlainne a Athrú"
+    "toggle-archived-notes": "Infheictheacht Nótaí Cartlainne a Athrú",
+    "peek-right-pane": "Féach ar an bPanáil Ar Dheis"
   },
   "login": {
     "title": "Logáil Isteach",
@@ -440,5 +442,14 @@
     "root-title": "Iompórtáil Anytype",
     "protobuf-export-unsupported": "Breathnaíonn sé seo cosúil le heaspórtáil \"Protobuf\" de chuid Anytype, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás Anytype ag baint úsáide as an bhformáid \"Any-Block\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad.",
     "markdown-export-unsupported": "Breathnaíonn sé seo cosúil le heaspórtáil \"Markdown\" de chuid Anytype, nach féidir le Trilium a allmhairiú. Ath-easpórtáil do spás Anytype ag baint úsáide as an bhformáid \"Any-Block\" le \"JSON\" roghnaithe agus allmhairigh é sin ina ionad."
+  },
+  "obsidian_import": {
+    "root-title": "Allmhairiú Obsidian"
+  },
+  "export": {
+    "zip_filter": "Cartlann ZIP (*.zip)"
+  },
+  "import": {
+    "invalid_file_grant": "Tá an rogha comhaid imithe in éag nó tá sé neamhbhailí. Roghnaigh an comhad arís le do thoil."
   }
 }
