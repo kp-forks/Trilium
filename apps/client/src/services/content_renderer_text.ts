@@ -1,3 +1,5 @@
+import { KATEX_MACROS } from "@triliumnext/commons";
+
 import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import { default as content_renderer, type RenderOptions } from "./content_renderer.js";
@@ -5,7 +7,6 @@ import froca from "./froca.js";
 import { t } from "./i18n.js";
 import link from "./link.js";
 import { applyLinkEmbeds } from "./link_embed.js";
-import { renderMathInElement } from "./math.js";
 import { getMermaidConfig, loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
 import { sanitizeNoteContentHtml } from "./sanitize_content.js";
 import { formatCodeBlocks } from "./syntax_highlight.js";
@@ -41,7 +42,13 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
     }
 
     if ($renderedContent.find("span.math-tex").length > 0) {
-        renderMathInElement($renderedContent[0], { trust: true });
+        // KaTeX is heavy, so the math service is only loaded when there are formulas to render.
+        const { renderMathInElement } = await import("./math.js");
+        // throwOnError: false makes KaTeX render invalid formulas as an inline red error
+        // (with the parse message as a tooltip) instead of throwing and leaving raw `$…$`
+        // text plus a console error — matching the editor's behavior.
+        // Spread KATEX_MACROS into a fresh object: KaTeX may mutate it (e.g. via `\gdef`).
+        renderMathInElement($renderedContent[0], { trust: true, throwOnError: false, macros: { ...KATEX_MACROS } });
     }
 
     const getNoteIdFromLink = (el: HTMLElement) => tree.getNoteIdFromUrl($(el).attr("href") || "");

@@ -12,8 +12,8 @@ import { isTriliumAppShellUrl, TRILIUM_APP_ORIGIN, TRILIUM_APP_SCHEME } from "./
  * Registers the `trilium-app://` custom scheme as privileged so the renderer
  * can load the UI from `trilium-app://app/` with a proper origin & cookie jar,
  * fetch support, and CORS. The actual request handler is installed by
- * `setupTriliumAppProtocol` below, once the Express app has been built and
- * `app.ready` has fired.
+ * `setupTriliumAppProtocol` below, once `app.ready` has fired (the Express
+ * app may still be building at that point — requests wait for it).
  *
  * **Must be called before `app.ready`.** Electron only honours
  * `registerSchemesAsPrivileged` if it runs synchronously during startup;
@@ -31,7 +31,11 @@ export function registerTriliumAppScheme() {
                 standard: true,
                 secure: true,
                 supportFetchAPI: true,
-                corsEnabled: true
+                corsEnabled: true,
+                // Chromium only code-caches http(s) scripts by default; without
+                // this the renderer bundle is recompiled from source on every
+                // launch instead of reusing bytecode from the Code Cache dir.
+                codeCache: true
             }
         }
     ]);
@@ -47,8 +51,13 @@ export function registerTriliumAppScheme() {
  * `Readable` for the request and a node-mocks-http response, then dispatch
  * through the Express app so the real session, CSRF, body-parser, multer and
  * error middleware all run.
+ *
+ * Accepts a promise of the Express app so the handler can be installed before
+ * the server has finished building — windows can then be created (and the
+ * renderer can spin up) concurrently with server startup; requests that
+ * arrive early simply wait inside the handler until the app resolves.
  */
-export function setupTriliumAppProtocol(app: Application) {
+export function setupTriliumAppProtocol(app: Application | Promise<Application>) {
     electron.app.whenReady().then(() => {
         installFrameOriginGuard();
         electron.protocol.handle(TRILIUM_APP_SCHEME, async (request) => {
@@ -58,7 +67,7 @@ export function setupTriliumAppProtocol(app: Application) {
                 return new Response("Forbidden", { status: 403 });
             }
             try {
-                return await dispatch(app, request);
+                return await dispatch(await app, request);
             } catch (err) {
                 console.error(`[trilium-app] dispatch failed for ${request.method} ${request.url}:`, err);
                 return new Response("Internal Server Error", { status: 500 });
@@ -273,15 +282,33 @@ function installStreamingBridge(
 ): StreamingBridge {
     let streaming = false;
     let controller: ReadableStreamDefaultController<Uint8Array> | null = null;
+    // Set when write() signalled backpressure (returned false). The producer
+    // (e.g. archiver's pipe) then pauses until we emit a 'drain' event.
+    let producerPaused = false;
     const origWrite = res.write.bind(res);
     const origEnd = res.end.bind(res);
+
+    // Bound how much streamed-but-unread data sits in the queue. Without this a
+    // consumer slower than the producer — e.g. Electron writing a multi-GB
+    // export to disk — would let the whole payload pile up in memory.
+    const HIGH_WATER_MARK = 1024 * 1024; // 1 MiB
+
+    function resumeProducerIfReady() {
+        if (producerPaused && controller && controller.desiredSize !== null && controller.desiredSize > 0) {
+            producerPaused = false;
+            res.emit("drain");
+        }
+    }
 
     function commit() {
         if (streaming) return;
         streaming = true;
         const body = new ReadableStream<Uint8Array>({
-            start(c) { controller = c; }
-        });
+            start(c) { controller = c; },
+            // The consumer pulled (queue has capacity again) → release a producer
+            // that paused on backpressure.
+            pull() { resumeProducerIfReady(); }
+        }, new ByteLengthQueuingStrategy({ highWaterMark: HIGH_WATER_MARK }));
         try {
             onCommit(new Response(body, {
                 /* v8 ignore next -- defensive: statusCode is always set before flushHeaders */
@@ -323,6 +350,12 @@ function installStreamingBridge(
         write(chunk: unknown, ...rest: unknown[]): boolean {
             if (streaming) {
                 enqueue(chunk);
+                // Honour backpressure: once the queue is full, tell the producer
+                // to pause until the consumer drains it (pull → 'drain').
+                if (controller && controller.desiredSize !== null && controller.desiredSize <= 0) {
+                    producerPaused = true;
+                    return false;
+                }
                 return true;
             }
             return (origWrite as (...a: unknown[]) => boolean)(chunk, ...rest);

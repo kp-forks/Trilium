@@ -21,7 +21,7 @@ bundleService.getWidgetBundlesByParent().then(async (widgetBundles) => {
     const DesktopLayout = (await import("./layouts/desktop_layout.js")).default;
 
     appContext.setLayout(new DesktopLayout(widgetBundles));
-    appContext.start().catch((e) => {
+    appContext.start().then(reportFullRenderStartupMetric).catch((e) => {
         toastService.showPersistent({
             id: "critical-error",
             title: t("toast.critical-error.title"),
@@ -66,6 +66,21 @@ function initOnElectron() {
 
     // Clear navigation history on frontend refresh.
     api.navigation.clearNavigationHistory();
+}
+
+/**
+ * Tells the Electron main process that the client finished its initial render
+ * (layout widgets attached, froca loaded, tab restoration started) so it gets
+ * logged against the other startup metrics. The double requestAnimationFrame
+ * defers the report until the browser has painted a frame of the rendered
+ * layout, rather than measuring DOM construction only. No-op outside Electron.
+ */
+function reportFullRenderStartupMetric() {
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            window.electronApi?.window.reportStartupMetric("client-full-render");
+        });
+    });
 }
 
 function initFullScreenDetection(win: ElectronWindowApi) {

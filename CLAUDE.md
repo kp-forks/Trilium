@@ -27,7 +27,7 @@ pnpm desktop:build             # Electron
 # Test
 pnpm test:all                  # All tests (parallel + sequential)
 pnpm test:parallel             # Client + most package tests
-pnpm test:sequential           # Server, ckeditor5-mermaid, ckeditor5-math (shared DB)
+pnpm test:sequential           # Server (shared DB) + browser-mode tests (ckeditor5, ckeditor5-mermaid, ckeditor5-math)
 pnpm --filter server test      # Single package tests
 pnpm coverage                  # Coverage reports
 
@@ -131,6 +131,7 @@ Common UI components are available in `apps/client/src/widgets/react/` — **alw
 - `Slider` - Range slider with label
 - `Checkbox`, `RadioButton` - Form controls
 - `CollapsibleSection` - Expandable content sections
+- `Badge` - Colored pill/label with optional icon, tooltip, and `onClick` (for counts, status flags). Set its color via the `--color` CSS variable on a wrapper class (not inline styles); pass `outline` for a colored-border/transparent-fill variant instead of a solid background. `BadgeWithDropdown` pairs a badge with a dropdown menu. Don't hand-roll pill/badge markup — reuse it
 
 Fluent builder pattern: `.child()`, `.class()`, `.css()` chaining with position-based ordering.
 
@@ -222,6 +223,7 @@ SQLite via `better-sqlite3`. SQL abstraction in `packages/trilium-core/src/servi
 - Electron-only features should check `isElectron()` from `apps/client/src/services/utils.ts` (client) or `utils.isElectron` (server)
 - **`@electron/remote` is removed** — do not use it. All renderer↔main communication goes through the preload bridge.
 - **Spurious `electron.app is undefined` error** — when running Electron-based apps (`pnpm desktop:start`, `pnpm edit-docs:edit-docs`, etc.), the console may print `TypeError: Cannot read properties of undefined (reading 'commandLine')` from `apps/desktop/src/main.ts` (the `app.commandLine.appendSwitch("disable-http-cache")` line). This is **not a real failure** — the app runs correctly. Do not try to fix it, guard it, or investigate electron initialization order unless the user explicitly raises it as a bug.
+- **`ELECTRON_RUN_AS_NODE` leak crashes Electron launches** — shells spawned by Electron-based tools (the VS Code extension host, AI coding agents running inside it) often inherit `ELECTRON_RUN_AS_NODE=1`. With it set, launching the desktop app (`pnpm desktop:start`, `pnpm --filter desktop start-prod`, `electron dist`) crashes at startup with `TypeError: Not running in an Electron environment!` (thrown by `electron-is-dev`, because `require("electron")` resolves to the npm stub's path string instead of the built-in module). This is an environment problem, not an app bug — unset the variable before launching: `Remove-Item Env:ELECTRON_RUN_AS_NODE -ErrorAction SilentlyContinue` (PowerShell) or `unset ELECTRON_RUN_AS_NODE` (bash).
 
 Three inheritance mechanisms:
 1. **Standard**: `note.getInheritableAttributes()` walks parent tree

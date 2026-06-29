@@ -36,6 +36,8 @@ import { getSql } from "./sql/index";
 import treeService from "./tree.js";
 import { escapeHtml, randomString, unescapeHtml } from "./utils/index";
 import ws from "./ws.js";
+import markdownExport from "./export/markdown.js";
+import markdownImport from "./import/markdown.js";
 
 /**
  * A whole number
@@ -61,21 +63,54 @@ interface NoteAndBranch {
 
 export interface Api {
     /**
-     * Note where the script started executing (entrypoint).
-     * As an analogy, in C this would be the file which contains the main() function of the current process.
+     * Converts the given HTML string to Markdown.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
+    htmlToMarkdown(html: string): string;
+
+    /**
+     * Converts the given Markdown string to HTML.
+     *
+     * @param markdown - Markdown content to convert
+     * @returns HTML representation of the input Markdown
+     */
+    markdownToHtml(markdown: string): string;
+
+    /**
+     * Note where the script execution started — the entry point of the current script bundle
+     * (in C terms, the file containing `main()`). When a script is spread across multiple code
+     * notes (descendant code notes loaded as modules via `require()`), every note in the
+     * bundle shares the same `startNote`, while {@link currentNote} differs per note.
+     * Messages from `api.log()` are grouped under this note.
+     *
+     * When a frontend script calls `api.runOnBackend()`, the frontend's `startNote` is
+     * preserved here; since that note may not be resolvable on the backend, this can be null.
      */
     startNote?: BNote | null;
 
     /**
-     * Note where the script is currently executing. This comes into play when your script is spread in multiple code
-     * notes, the script starts in "startNote", but then through function calls may jump into another note (currentNote).
-     * A similar concept in C would be __FILE__
-     * Don't mix this up with the concept of active note.
+     * Note containing the source code that is currently executing (in C terms, `__FILE__`).
+     * Equal to {@link startNote} unless execution has moved into a descendant module note
+     * loaded via `require()`. Don't confuse this with the concept of the active note in
+     * the UI.
      */
     currentNote: BNote;
 
     /**
-     * Entity whose event triggered this execution
+     * Entity whose event triggered this execution; `undefined` when the run was not
+     * event-driven (e.g. started manually via "Execute script" or `note.executeScript()`).
+     *
+     * What it holds depends on the trigger:
+     * - `~runOnNoteCreation`, `~runOnNoteChange`, `~runOnNoteTitleChange`,
+     *   `~runOnNoteContentChange` — the affected note ({@link BNote});
+     * - `~runOnChildNoteCreation` — the newly created child note;
+     * - `~runOnAttributeCreation`, `~runOnAttributeChange` — the attribute;
+     * - `~runOnBranchCreation`, `~runOnBranchChange`, `~runOnBranchDeletion` — the branch;
+     * - scheduled scripts (`#run=backendStartup` / `#run=hourly` / `#run=daily`) — the
+     *   script note itself;
+     * - search scripts (`~searchScript`) — the search note.
      */
     originEntity?: AbstractBeccaEntity<any> | null;
 
@@ -490,6 +525,9 @@ function BackendScriptApi(this: Api, currentNote: BNote, apiParams: ApiParams) {
     this.getOption = (optionName) => becca.getOption(optionName);
     this.getOptions = () => optionsService.getOptions();
     this.getAttribute = (attributeId) => becca.getAttribute(attributeId);
+
+    this.htmlToMarkdown = (html) => markdownExport.toMarkdown(html);
+    this.markdownToHtml = (markdown) => markdownImport.renderToHtml(markdown, "");
 
     this.searchForNotes = (query, searchParams = {}) => {
         if (searchParams.includeArchivedNotes === undefined) {

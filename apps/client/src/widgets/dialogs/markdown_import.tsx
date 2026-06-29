@@ -8,7 +8,7 @@ import utils from "../../services/utils";
 import Button from "../react/Button";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
-import { CKEditorApi } from "../type_widgets/text/CKEditorWithWatchdog";
+import type { CKEditorApi } from "../type_widgets/text/CKEditorWithWatchdog";
 
 export interface MarkdownImportOpts {
     editorApi: CKEditorApi;

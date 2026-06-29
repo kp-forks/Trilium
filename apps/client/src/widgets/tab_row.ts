@@ -614,6 +614,12 @@ export default class TabRowWidget extends BasicWidget {
 
         setTimeout(() => $tab.removeClass("note-tab-was-just-added"), 500);
         this.$containerAnchor.before($tab);
+        // When opened from a link the model may place this tab before the end; mirror that order in
+        // the DOM. When appended (the common case) it is already correct, so skip the O(n) walk.
+        const mainContexts = appContext.tabManager.getMainNoteContexts();
+        if (mainContexts[mainContexts.length - 1]?.ntxId !== ntxId) {
+            this.syncTabOrder();
+        }
         this.setVisibility();
         this.setTabCloseEvent($tab);
         this.updateTitle($tab, t("tab_row.new_tab"));

@@ -1,5 +1,5 @@
 import { createFontStylesheetLink } from "./services/font";
-import { buildThemeStylesheetRefs, createStylesheetLink, getThemeStyle, StylesheetRef } from "./services/theme";
+import { buildThemeStylesheetRefs, createStylesheetLink, getThemeStyle, initThemeChangeNotifier, StylesheetRef } from "./services/theme";
 
 async function bootstrap() {
     showSplash();
@@ -9,6 +9,7 @@ async function bootstrap() {
         loadBootstrapCss()
     ]);
     loadStylesheets();
+    initThemeChangeNotifier();
     loadIcons();
     setBodyAttributes();
     await loadScripts();
@@ -133,6 +134,16 @@ function setBodyAttributes() {
 async function loadScripts() {
     if (!glob.dbInitialized) {
         await import("./setup.js");
+        return;
+    }
+
+    if (glob.passwordSet === false) {
+        await import("./set_password.js");
+        return;
+    }
+
+    if (glob.loggedIn === false) {
+        await import("./login.js");
         return;
     }
 

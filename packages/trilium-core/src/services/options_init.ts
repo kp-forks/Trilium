@@ -152,6 +152,7 @@ const defaultOptions: DefaultOption[] = [
     { name: "debugModeEnabled", value: "false", isSynced: false },
     { name: "headingStyle", value: "underline", isSynced: true },
     { name: "autoCollapseNoteTree", value: "true", isSynced: true },
+    { name: "treeScrollFollowNavigation", value: "true", isSynced: true },
     { name: "autoReadonlySizeText", value: "32000", isSynced: false },
     { name: "autoReadonlySizeCode", value: "64000", isSynced: false },
     { name: "dailyBackupEnabled", value: "true", isSynced: false },
@@ -165,6 +166,9 @@ const defaultOptions: DefaultOption[] = [
     { name: "highlightsList", value: '["underline","color","bgColor"]', isSynced: true },
     { name: "checkForUpdates", value: "true", isSynced: true },
     { name: "disableTray", value: "false", isSynced: false },
+    { name: "closeToTray", value: "false", isSynced: false },
+    { name: "launchOnStartup", value: "false", isSynced: false },
+    { name: "hideOnAutoStart", value: "false", isSynced: false },
     { name: "eraseUnusedAttachmentsAfterSeconds", value: "2592000", isSynced: true }, // default 30 days
     { name: "eraseUnusedAttachmentsAfterTimeScale", value: "86400", isSynced: true }, // default 86400 seconds = Day
     { name: "logRetentionDays", value: "90", isSynced: false }, // default 90 days
@@ -176,10 +180,8 @@ const defaultOptions: DefaultOption[] = [
     { name: "searchAutocompleteFuzzy", value: "false", isSynced: true },
 
     { name: "editedNotesOpenInRibbon", value: "true", isSynced: true },
-    { name: "mfaEnabled", value: "false", isSynced: false },
     { name: "mfaMethod", value: "totp", isSynced: false },
     { name: "encryptedRecoveryCodes", value: "false", isSynced: false },
-    { name: "userSubjectIdentifierSaved", value: "false", isSynced: false },
 
     // Appearance
     { name: "splitEditorOrientation", value: "horizontal", isSynced: true },

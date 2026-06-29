@@ -19,6 +19,7 @@ Starting with v0.104.0, Trilium provides a level of data intercompatibility betw
 *   Microsoft Excel (.xlsx)
     *   Preserves basic formatting (fonts, sizes, borders, backgrounds).
     *   Formulas are preserved, but note that not all Excel functions are supported and vice-versa with Univer.
+    *   Images (cell-bound or floating), without preserving rotation.
     *   Supports multi-sheets natively.
 *   Comma-Separated Values (.csv)
     *   Since it's a text-based format, any formatting is lost.
@@ -42,6 +43,9 @@ Both [import and export](../Basic%20Concepts%20and%20Features/Import%20%26%20Exp
 
 The spreadsheet has support for the following features:
 
+*   Since v0.104.0, images that can be either inside a cell or floating above.
+    *   The images are saved as <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Notes/Attachments.md">Attachments</a> for performance reasons.
+    *   The image upload respects the same compression settings as text <a class="reference-link" href="Text/Images.md">Images</a>.
 *   Filtering
 *   Sorting
 *   Data validation
@@ -56,8 +60,12 @@ We might consider adding [other features](https://docs.univer.ai/guides/sheets/f
 Spreadsheets can be [shared](../Advanced%20Usage/Sharing.md), case in which a best-effort HTML rendering of the spreadsheet is done:
 
 *   Preserves basic formatting.
-*   Since v0.104.0, properly formats numbers and dates.
-*   Cells with formulas display the i
+*   Cells with formulas display the precalculated value instead of the formula.
+
+Since v0.104.0:
+
+*   Numbers and dates are properly formatted.
+*   Images are shown inside a cell or floating above, including rotation.
 
 For more advanced use cases, this will most likely not work as intended. Feel free to [report issues](../Troubleshooting/Reporting%20issues.md), but keep in mind that we might not be able to have a complete feature parity with all the features of Univer.
 
@@ -81,6 +89,4 @@ If you would like us to work on these features, consider [supporting us](https:/
 
 ### Mobile support
 
-There is no dedicated mobile support.
-
-Mobile support is currently experimental in Univer and when it becomes stable, we could potentially integrate it into Trilium as well.
+Versions prior to v0.104.0 have no dedicated mobile support, which means that the interaction is difficult without a mouse and keyboard. Starting with v0.104.0 we integrate Univer's mobile plugin, which introduces feature such as drag to pan which makes the interface more usable on mobile.

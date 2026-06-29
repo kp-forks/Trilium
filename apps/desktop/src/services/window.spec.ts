@@ -17,6 +17,8 @@ const state = vi.hoisted(() => ({
     ipcOn: new Map<string, Handler>(),
     ipcHandle: new Map<string, Handler>(),
     ipcEmit: vi.fn(),
+    // captured electron.app event handlers (e.g. before-quit)
+    appOn: new Map<string, Handler>(),
     // captured events.subscribe callbacks keyed by event name
     eventSubs: new Map<string, Handler>(),
     // captured BrowserWindow instances
@@ -36,6 +38,8 @@ interface FakeSession {
     clearCache: ReturnType<typeof vi.fn>;
     availableSpellCheckerLanguages: string[];
     setSpellCheckerLanguages: ReturnType<typeof vi.fn>;
+    setSpellCheckerEnabled: ReturnType<typeof vi.fn>;
+    on: ReturnType<typeof vi.fn>;
 }
 
 class FakeWebContents {
@@ -46,6 +50,7 @@ class FakeWebContents {
         this.listeners.set(event, list);
         return this;
     });
+    public once = vi.fn((event: string, cb: Handler) => this.on(event, cb));
     public listeners = new Map<string, Handler[]>();
     public toggleDevTools = vi.fn();
     public isDevToolsOpened = vi.fn(() => false);
@@ -58,7 +63,9 @@ class FakeWebContents {
     public session: FakeSession = state.sharedSession ?? {
         clearCache: vi.fn(() => Promise.resolve()),
         availableSpellCheckerLanguages: ["en-US", "de"],
-        setSpellCheckerLanguages: vi.fn()
+        setSpellCheckerLanguages: vi.fn(),
+        setSpellCheckerEnabled: vi.fn(),
+        on: vi.fn()
     };
     public navigationHistory = {
         canGoBack: vi.fn(() => true),
@@ -89,6 +96,7 @@ class FakeBrowserWindow {
         this.listeners.set(event, list);
         return this;
     });
+    public once = vi.fn((event: string, cb: Handler) => this.on(event, cb));
     public setMenuBarVisibility = vi.fn();
     public removeMenu = vi.fn();
     public loadURL = vi.fn(() => Promise.resolve());
@@ -153,7 +161,9 @@ const fakeNativeImage = {
 const fakeApp = {
     setUserTasks: vi.fn(),
     relaunch: vi.fn(),
-    exit: vi.fn()
+    exit: vi.fn(),
+    quit: vi.fn(),
+    on: vi.fn((event: string, cb: Handler) => state.appOn.set(event, cb))
 };
 
 const electronSurface = {
@@ -187,6 +197,10 @@ vi.mock("electron-window-state", () => ({
 // windowing tests focused and free of the extra electron app/session surface.
 vi.mock("./web_contents_security", () => ({ setupWebContentsSecurity: vi.fn() }));
 
+// Startup timing has its own suite (startup_metrics.spec.ts); here we only
+// verify that window creation marks the right milestones.
+vi.mock("./startup_metrics", () => ({ markStartupMetric: vi.fn() }));
+
 vi.mock("@triliumnext/core", async (importOriginal) => {
     const actual = await importOriginal<typeof import("@triliumnext/core")>();
     return {
@@ -217,6 +231,7 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
 
 const windowService = (await import("./window.js")).default;
 const { setupWindowing } = await import("./window.js");
+const { markStartupMetric } = await import("./startup_metrics.js");
 
 function fireOn(channel: string, event: unknown, ...args: unknown[]) {
     const fn = state.ipcOn.get(channel);
@@ -261,6 +276,7 @@ beforeEach(() => {
     state.keyboardActions = [];
     state.windows = [];
     state.fromWebContentsResult = undefined;
+    state.appOn.clear();
     state.registerResults = [];
     state.nativeImageEmpty = false;
     state.nativeImageThrow = false;
@@ -326,6 +342,27 @@ describe("window service", () => {
             await windowService.createMainWindow();
             const opts = state.windows[state.windows.length - 1].opts as Record<string, unknown>;
             expect(opts.frame).toBeUndefined();
+        });
+
+        it("creates the window hidden when startHidden is set, visible otherwise", async () => {
+            await windowService.createMainWindow(true);
+            expect((state.windows[state.windows.length - 1].opts as Record<string, unknown>).show).toBe(false);
+
+            await windowService.createMainWindow();
+            expect((state.windows[state.windows.length - 1].opts as Record<string, unknown>).show).toBe(true);
+        });
+
+        it("marks startup metrics for creation, first paint, and load finish", async () => {
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            expect(markStartupMetric).toHaveBeenCalledWith("main-window-created");
+
+            win.fire("ready-to-show");
+            expect(markStartupMetric).toHaveBeenCalledWith("main-window-first-paint");
+
+            win.webContents.fire("did-finish-load");
+            expect(markStartupMetric).toHaveBeenCalledWith("main-window-load-finished");
         });
     });
 
@@ -447,11 +484,20 @@ describe("window service", () => {
             expect(true).toBe(true);
         });
 
-        it("does not set up spellcheck when disabled", async () => {
+        it("applies the disabled spell-check state to the session", async () => {
             state.optionBools = { spellCheckEnabled: false };
             await windowService.createExtraWindow("#y");
             const wc = state.windows[state.windows.length - 1].webContents;
-            expect(wc.session.setSpellCheckerLanguages).not.toHaveBeenCalled();
+            // The subsystem is always attached (webPreferences.spellcheck: true); the
+            // option drives the runtime enabled state instead of window creation.
+            expect(wc.session.setSpellCheckerEnabled).toHaveBeenCalledWith(false);
+        });
+
+        it("applies the enabled spell-check state to the session", async () => {
+            state.optionBools = { spellCheckEnabled: true };
+            await windowService.createExtraWindow("#z");
+            const wc = state.windows[state.windows.length - 1].webContents;
+            expect(wc.session.setSpellCheckerEnabled).toHaveBeenCalledWith(true);
         });
 
         it("loads spellcheck languages once per session", async () => {
@@ -479,7 +525,9 @@ describe("window service", () => {
             const shared = {
                 clearCache: vi.fn(() => Promise.resolve()),
                 availableSpellCheckerLanguages: ["en-US"],
-                setSpellCheckerLanguages: vi.fn()
+                setSpellCheckerLanguages: vi.fn(),
+                setSpellCheckerEnabled: vi.fn(),
+                on: vi.fn()
             };
             state.sharedSession = shared;
 
@@ -699,6 +747,22 @@ describe("window service", () => {
             expect(ev.returnValue).toEqual(["en-US", "de"]);
         });
 
+        it("set-spellchecker-languages applies the codes to every open window's session", () => {
+            new FakeBrowserWindow();
+            fireOn("set-spellchecker-languages", makeEvent(), ["en-US", "fr"]);
+            for (const win of state.windows) {
+                expect(win.webContents.session.setSpellCheckerLanguages).toHaveBeenCalledWith(["en-US", "fr"]);
+            }
+        });
+
+        it("set-spellchecker-enabled applies the state to every open window's session", () => {
+            new FakeBrowserWindow();
+            fireOn("set-spellchecker-enabled", makeEvent(), false);
+            for (const win of state.windows) {
+                expect(win.webContents.session.setSpellCheckerEnabled).toHaveBeenCalledWith(false);
+            }
+        });
+
         it("title bar / material / vibrancy / button position setters", () => {
             const win = state.windows[state.windows.length - 1];
             fireOn("set-title-bar-overlay", makeEvent(), { color: "#fff", symbolColor: "#000" });
@@ -872,6 +936,67 @@ describe("window service", () => {
             await cb();
             spy.mockRestore();
             expect(state.log.error).toHaveBeenCalledWith(expect.stringContaining("Failed to swap"));
+        });
+    });
+
+    describe("close-to-tray", () => {
+        it("hides the main window instead of closing when closeToTray is enabled", async () => {
+            state.optionBools = { closeToTray: true };
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).toHaveBeenCalled();
+            expect(win.hide).toHaveBeenCalled();
+            // The window must survive so it can be shown again from the tray.
+            expect(windowService.getMainWindow()).toBe(win);
+        });
+
+        it("closes normally when closeToTray is disabled", async () => {
+            state.optionBools = {};
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
+        });
+
+        it("closes normally when the tray is disabled, even if closeToTray is on", async () => {
+            state.optionBools = { closeToTray: true, disableTray: true };
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
+        });
+
+        // NOTE: keep this test LAST. `before-quit` flips the module-level
+        // `isQuitting` flag to `true` and nothing resets it, so any close-to-tray
+        // assertion ordered after this one would see the window close for real.
+        it("lets the main window close for real once a genuine quit is underway", async () => {
+            setupWindowing();
+            state.optionBools = { closeToTray: true };
+            await windowService.createMainWindow();
+            const win = state.windows[state.windows.length - 1];
+
+            // Simulate a real quit (Cmd+Q, tray "Quit", app menu, OS shutdown).
+            const beforeQuit = state.appOn.get("before-quit");
+            if (!beforeQuit) throw new Error("before-quit handler not registered");
+            beforeQuit();
+
+            const event = { preventDefault: vi.fn() };
+            win.fire("close", event);
+
+            expect(event.preventDefault).not.toHaveBeenCalled();
+            expect(win.hide).not.toHaveBeenCalled();
         });
     });
 });

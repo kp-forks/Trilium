@@ -6,7 +6,7 @@ import { highlightSelectionMatches } from "@codemirror/search";
 import { autocompletion, type CompletionSource } from "@codemirror/autocomplete";
 import { vim } from "@replit/codemirror-vim";
 import { indentationMarkers } from "@replit/codemirror-indentation-markers";
-import byMimeType from "./syntax_highlighting.js";
+import byMimeType, { MIME_ALIASES } from "./syntax_highlighting.js";
 import smartIndentWithTab from "./extensions/custom_tab.js";
 import type { ThemeDefinition } from "./color_themes.js";
 import { createSearchHighlighter, SearchHighlighter, searchMatchHighlightTheme } from "./find_replace.js";
@@ -25,6 +25,21 @@ const preventCtrlEnterKeymap: readonly KeyBinding[] = [
         preventDefault: true
     }
 ];
+
+// Lint diagnostics (e.g. the TypeScript script linter or the Mermaid linter) can produce very
+// long messages; without a width cap and wrapping the tooltip overflows the editor and gets
+// clipped at the edges. `.cm-tooltip-lint` is the diagnostics list shared by both the gutter
+// tooltip (where it also carries `.cm-tooltip`) and the inline hover tooltip (where it's nested
+// inside a `.cm-tooltip-hover` wrapper), so targeting it directly covers both.
+const lintTooltipTheme = EditorView.baseTheme({
+    ".cm-tooltip-lint": {
+        maxWidth: "min(40em, 90vw)"
+    },
+    ".cm-diagnostic": {
+        whiteSpace: "normal",
+        overflowWrap: "anywhere"
+    }
+});
 
 type ContentChangedListener = () => void;
 
@@ -91,6 +106,7 @@ export default class CodeMirror extends EditorView {
             languageCompartment.of([]),
             lineWrappingCompartment.of(config.lineWrapping ? EditorView.lineWrapping : []),
             searchMatchHighlightTheme,
+            lintTooltipTheme,
             searchHighlightCompartment.of([]),
             typeCompletionCompartment.of([]),
             completionSourceCompartment.of([]),
@@ -259,6 +275,26 @@ export default class CodeMirror extends EditorView {
         });
     }
 
+    /**
+     * Inserts a blank line at the very top of the document and places the cursor on it — the code-note
+     * analog of the Notion-like behavior when pressing Enter in the note title. If the first line is
+     * already empty, the cursor is simply moved there instead of inserting another blank line, so a
+     * brand-new (empty) note does not end up with two blank lines. No-op for read-only editors, since
+     * CodeMirror's `readOnly` facet does not block programmatic transactions.
+     */
+    insertBlankLineAtTop() {
+        if (this.config.readOnly) {
+            return;
+        }
+        const firstLineEmpty = this.state.doc.line(1).length === 0;
+        this.dispatch({
+            ...(firstLineEmpty ? {} : { changes: { from: 0, insert: "\n" } }),
+            selection: EditorSelection.cursor(0),
+            // Reveal the new top line — the cursor may have been at the bottom of a long note.
+            scrollIntoView: true
+        });
+    }
+
     async performFind(searchTerm: string, matchCase: boolean, wholeWord: boolean) {
         const plugin = createSearchHighlighter();
         this.dispatch({
@@ -318,7 +354,7 @@ export default class CodeMirror extends EditorView {
         this.currentMime = mime;
         let newExtension: Extension[] = [];
 
-        const correspondingSyntax = byMimeType[mime];
+        const correspondingSyntax = byMimeType[MIME_ALIASES[mime] ?? mime];
         if (correspondingSyntax) {
             const resolvedSyntax = await correspondingSyntax();
 

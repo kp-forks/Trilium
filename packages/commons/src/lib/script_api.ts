@@ -26,6 +26,43 @@ export interface ScriptAttribute {
     isOwned: boolean;
 }
 
+/** An attachment as seen by frontend scripts (subset of the client's `FAttachment`). */
+export interface ScriptAttachment {
+    attachmentId: string;
+    ownerId: string;
+    role: string;
+    mime: string;
+    title: string;
+    utcDateModified: string;
+    contentLength: number;
+}
+
+/** Creation/modification timestamps returned by {@link ScriptFNote.getMetadata}. */
+export interface ScriptNoteMetadata {
+    dateCreated: string;
+    utcDateCreated: string;
+    dateModified: string;
+    utcDateModified: string;
+}
+
+/** A note's binary/text content blob (subset of the client's `FBlob`). */
+export interface ScriptBlob {
+    blobId: string;
+    content: string;
+    contentLength: number;
+    dateModified: string;
+    utcDateModified: string;
+}
+
+/** One resolved tree path to a note (subset of the client's `NotePathRecord`). */
+export interface ScriptNotePathRecord {
+    isArchived: boolean;
+    isInHoistedSubTree: boolean;
+    isSearch?: boolean;
+    notePath: string[];
+    isHidden: boolean;
+}
+
 /** A note as seen by frontend scripts (subset of the client's `FNote`). */
 export interface ScriptFNote {
     noteId: string;
@@ -33,29 +70,157 @@ export interface ScriptFNote {
     type: string;
     mime: string;
     isProtected: boolean;
+    /** Whether the note is archived (has the `archived` label). */
+    isArchived: boolean;
+    /** Whether the note's metadata (title, attributes) is read-only. */
+    isMetadataReadOnly: boolean;
+    /** IDs of this note's owned attributes. */
     attributes: string[];
+    /** IDs of relations pointing *at* this note. */
+    targetRelations: string[];
+    /** Parent note IDs. */
     parents: string[];
+    /** Child note IDs. */
     children: string[];
 
+    // --- Hierarchy ---------------------------------------------------------
     getParentNotes(): ScriptFNote[];
     getChildNotes(): Promise<ScriptFNote[]>;
     getParentNoteIds(): string[];
     getChildNoteIds(): string[];
+    getChildNoteIdsWithArchiveFiltering(includeArchived?: boolean): Promise<string[]>;
+    getSubtreeNotes(): Promise<ScriptFNote[]>;
+    getSubtreeNoteIds(includeArchived?: boolean): Promise<string[]>;
+    hasChildren(): boolean;
+    hasAncestor(ancestorNoteId: string, followTemplates?: boolean): boolean;
+    isRoot(): boolean;
+    getParentBranchIds(): string[];
+    getBranchIds(): string[];
+    getParentBranches(): ScriptFBranch[];
+    getChildBranches(): ScriptFBranch[];
+    getBranches(): ScriptFBranch[];
+    getFilteredChildBranches(): ScriptFBranch[];
+    getAllNotePaths(): string[][];
+    getBestNotePath(hoistedNoteId?: string, activeNotePath?: string | null): string[];
+    getBestNotePathString(hoistedNoteId?: string): string;
+    getSortedNotePathRecords(
+        hoistedNoteId?: string,
+        activeNotePath?: string | null
+    ): ScriptNotePathRecord[];
 
+    // --- Attributes (inherited + own) --------------------------------------
     getAttributes(type?: string, name?: string): ScriptAttribute[];
     getOwnedAttributes(type?: string, name?: string): ScriptAttribute[];
     getAttribute(type: string, name: string): ScriptAttribute | null;
+    getOwnedAttribute(type: string, name: string): ScriptAttribute | null;
+    getAttributeValue(type: string, name: string): string | null;
+    getOwnedAttributeValue(type: string, name: string): string | null;
     hasAttribute(type: string, name: string): boolean;
-    getLabels(name?: string): ScriptAttribute[];
-    getLabelValue(name: string): string | null;
-    hasLabel(name: string): boolean;
-    getRelations(name?: string): ScriptAttribute[];
-    getRelationValue(name: string): string | null;
-    getRelationTarget(name: string): Promise<ScriptFNote | null>;
+    hasOwnedAttribute(type: string, name: string): boolean;
+    getAttributeDefinitions(): ScriptAttribute[];
+    getPromotedDefinitionAttributes(): ScriptAttribute[];
 
+    // --- Labels ------------------------------------------------------------
+    getLabels(name?: string): ScriptAttribute[];
+    getOwnedLabels(name?: string): ScriptAttribute[];
+    getLabel(name: string): ScriptAttribute | null;
+    getOwnedLabel(name: string): ScriptAttribute | null;
+    getLabelValue(name: string): string | null;
+    getOwnedLabelValue(name: string): string | null;
+    hasLabel(name: string): boolean;
+    hasOwnedLabel(name: string): boolean;
+    hasLabelOrDisabled(name: string): boolean;
+    isLabelTruthy(name: string): boolean;
+
+    // --- Relations ---------------------------------------------------------
+    getRelations(name?: string): ScriptAttribute[];
+    getOwnedRelations(name: string): ScriptAttribute[];
+    getRelation(name: string): ScriptAttribute | null;
+    getOwnedRelation(name: string): ScriptAttribute | null;
+    getRelationValue(name: string): string | null;
+    getOwnedRelationValue(name: string): string | null;
+    hasRelation(name: string): boolean;
+    hasOwnedRelation(name: string): boolean;
+    getLabelOrRelation(nameWithPrefix: string): string | null;
+    getRelationTarget(name: string): Promise<ScriptFNote | null>;
+    getRelationTargets(name: string): Promise<(ScriptFNote | null)[]>;
+    getTargetRelations(): ScriptAttribute[];
+    getTargetRelationSourceNotes(): Promise<ScriptFNote[]>;
+
+    // --- Content & attachments ---------------------------------------------
     getContent(): Promise<string | Uint8Array>;
+    getJsonContent(): Promise<unknown>;
+    getBlob(): Promise<ScriptBlob | null>;
+    getNoteComplement(): Promise<ScriptBlob | null>;
+    getMetadata(): Promise<ScriptNoteMetadata>;
+    attachments: ScriptAttachment[] | null;
+    getAttachments(): Promise<ScriptAttachment[]>;
+    getAttachmentsByRole(role: string): Promise<ScriptAttachment[]>;
+    getAttachmentById(attachmentId: string): Promise<ScriptAttachment | undefined>;
+    getNotesToInheritAttributesFrom(): ScriptFNote[];
+
+    // --- Type & state predicates -------------------------------------------
     getIcon(): string;
-    isRoot(): boolean;
+    isFolder(): boolean;
+    isShared(): boolean;
+    isContentAvailable(): boolean;
+    isJson(): boolean;
+    isJavaScript(): boolean;
+    isJsx(): boolean;
+    isHtml(): boolean;
+    isMarkdown(): boolean;
+    isOptions(): boolean;
+    isTriliumScript(): boolean;
+    isTriliumSqlite(): boolean;
+    isLaunchBarConfig(): boolean;
+    isHiddenCompletely(): boolean;
+    isInHiddenSubtree(): boolean;
+    isEligibleForConversionToAttachment(): boolean;
+
+    // --- Presentation ------------------------------------------------------
+    getColorClass(): string;
+    getCssClass(): string;
+    getWorkspaceIconClass(): string;
+    getWorkspaceTabBackgroundColor(): string;
+
+    // --- Scripting runtime -------------------------------------------------
+    getScriptEnv(): "frontend" | "backend" | null;
+    executeScript(): Promise<unknown>;
+
+    // --- Low-level / Froca-managed -----------------------------------------
+    // Exposed for completeness; most scripts should use the higher-level
+    // accessors above rather than these cache fields and mutators.
+    /** Blob ID of the current content; changes when content changes. */
+    blobId: string;
+    /** Map of parent note ID → branch ID. */
+    parentToBranch: Record<string, string>;
+    /** Map of child note ID → branch ID. */
+    childToBranch: Record<string, string>;
+    searchResultsLoaded?: boolean;
+    highlightedTokens?: string[];
+    /** Plain data representation of the note (the live object minus its cache handle). */
+    dto: Record<string, unknown>;
+    addParent(parentNoteId: string, branchId: string, sort?: boolean): void;
+    addChild(childNoteId: string, branchId: string, sort?: boolean): void;
+    sortParents(): void;
+    sortChildren(): void;
+    update(row: Record<string, unknown>): void;
+    invalidateAttributeCache(): void;
+    toString(): string;
+}
+
+/** A branch (parent↔child link) as seen by frontend scripts (subset of `FBranch`). */
+export interface ScriptFBranch {
+    branchId: string;
+    noteId: string;
+    parentNoteId: string;
+    notePosition: number;
+    prefix?: string;
+    isExpanded?: boolean;
+    getNote(): Promise<ScriptFNote | null>;
+    getNoteFromCache(): ScriptFNote | undefined;
+    getParentNote(): Promise<ScriptFNote | null>;
+    isTopLevel(): boolean;
 }
 
 /** A split/tab context as seen by frontend scripts (subset of `NoteContext`). */
@@ -137,19 +302,29 @@ export interface FrontendApi {
      * */
     $container: unknown;
     /**
-     * Note where the script started executing, i.e., the (event) entrypoint of the current script execution.
+     * Note where the script execution started — the entry point of the current script bundle
+     * (in C terms, the file containing `main()`). When a script is spread across multiple code
+     * notes (descendant code notes loaded as modules via `require()`), every note in the
+     * bundle shares the same `startNote`, while {@link currentNote} differs per note.
+     * Messages from `api.log()` are grouped under this note.
      */
     startNote: ScriptFNote;
     /**
-     * Note where the script is currently executing, i.e. the note where the currently executing source code is written.
+     * Note containing the source code that is currently executing (in C terms, `__FILE__`).
+     * Equal to {@link startNote} unless execution has moved into a descendant module note
+     * loaded via `require()`. Don't confuse this with the note open in the UI — use
+     * `api.getActiveContextNote()` for that.
      */
     currentNote: ScriptFNote;
     /**
-     * Entity whose event triggered this execution.
+     * Entity whose event triggered this execution, or `null`.
      *
-     * <p>
-     * For front-end scripts, generally there's no origin entity specified since the scripts are run by the user or automatically by the UI (widgets).
-     * If there is an origin entity specified, then it's going to be a note entity.
+     * Most frontend scripts are started by the user or by the UI (startup scripts, widgets),
+     * so this is usually `null`. It is set to a note when:
+     * - the script runs through a `~renderNote` relation — then it's the note being rendered
+     *   (the one carrying the relation), not the script note;
+     * - a backend script calls `api.runOnFrontend()` — then it's the backend execution's
+     *   `originEntity`, provided that entity was a note.
      */
     originEntity: unknown | null;
     /**
@@ -469,6 +644,26 @@ export interface FrontendApi {
      */
     formatNoteSize(size: number): string;
     /**
+     * Converts the given HTML string to Markdown.
+     *
+     * Unlike the backend API, this runs on the server (the HTML→Markdown
+     * converter is backend-only), so it returns a promise.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
+    htmlToMarkdown(html: string): Promise<string>;
+    /**
+     * Converts the given Markdown string to HTML.
+     *
+     * Runs entirely in the browser; the promise is only needed because the
+     * Markdown renderer is loaded on demand.
+     *
+     * @param markdown - Markdown content to convert
+     * @returns HTML representation of the input Markdown
+     */
+    markdownToHtml(markdown: string): Promise<string>;
+    /**
      * @returns date in YYYY-MM-DD format
      */
     formatDateISO(date: Date): string;
@@ -501,6 +696,51 @@ export interface ScriptBBranch {
     getParentNote(): ScriptBNote | null;
 }
 
+/** A note revision as seen by backend scripts (subset of trilium-core's `BRevision`). */
+export interface ScriptBRevision {
+    revisionId?: string;
+    noteId: string;
+    type: string;
+    mime: string;
+    title: string;
+    dateLastEdited?: string;
+    utcDateLastEdited?: string;
+    contentLength?: number;
+    getContent(): string | Uint8Array;
+    getJsonContent(): unknown;
+}
+
+/** Result of a clone operation ({@link ScriptBNote.cloneTo}); mirrors `CloneResponse`. */
+export interface ScriptCloneResponse {
+    success: boolean;
+    message?: string;
+    branchId?: string;
+    notePath?: string;
+}
+
+/** A single parent→child link in a subtree ({@link ScriptBNote.getSubtree}). */
+export interface ScriptSubtreeRelationship {
+    parentNoteId: string;
+    childNoteId: string;
+}
+
+/** Options accepted by the subtree traversal helpers on {@link ScriptBNote}. */
+export interface ScriptSubtreeOpts {
+    includeArchived?: boolean;
+    includeHidden?: boolean;
+    resolveSearch?: boolean;
+}
+
+/** Input accepted by {@link ScriptBNote.saveAttachment}. */
+export interface ScriptSaveAttachmentInput {
+    attachmentId?: string;
+    role: string;
+    mime: string;
+    title: string;
+    content?: string | Uint8Array;
+    position?: number;
+}
+
 /** A note as seen by backend scripts (subset of trilium-core's `BNote`). */
 export interface ScriptBNote {
     noteId: string;
@@ -508,34 +748,195 @@ export interface ScriptBNote {
     type: string;
     mime: string;
     isProtected: boolean;
+    isArchived: boolean;
+    isDeleted: boolean;
+    /** Share root ID this note is published under, if any. */
+    shareId: string;
+    blobId: string;
+    dateCreated: string;
+    dateModified: string;
+    utcDateCreated: string;
+    utcDateModified: string;
 
+    // --- Content -----------------------------------------------------------
     getContent(): string | Uint8Array;
     setContent(content: string | Uint8Array, opts?: { forceFrontendReload?: boolean }): void;
     getJsonContent<T = unknown>(): T | null;
+    getJsonContentSafely(): unknown;
+    setJsonContent(content: unknown): void;
+    hasStringContent(): boolean;
+    getFileName(): string;
+    getFlatText(): string;
     /** Plain serialisable representation of the note (the real return type is `NotePojo`). */
     getPojo(): Record<string, unknown>;
+    getTitleOrProtected(): string;
+    getIcon(): string;
 
+    // --- Hierarchy ---------------------------------------------------------
+    parents: ScriptBNote[];
+    children: ScriptBNote[];
+    parentBranches: ScriptBBranch[];
+    parentCount: number;
+    childrenCount: number;
     getParentNotes(): ScriptBNote[];
     getChildNotes(): ScriptBNote[];
+    getVisibleChildNotes(): ScriptBNote[];
     getParentBranches(): ScriptBBranch[];
     getChildBranches(): ScriptBBranch[];
+    getVisibleChildBranches(): ScriptBBranch[];
+    getStrongParentBranches(): ScriptBBranch[];
+    getFilteredChildBranches(): ScriptBBranch[];
+    getBranches(): ScriptBBranch[];
+    hasChildren(): boolean;
+    hasVisibleChildren(): boolean;
+    getAncestors(): ScriptBNote[];
+    getAncestorNoteIds(): string[];
+    getDescendantNoteIds(): string[];
+    getDistanceToAncestor(ancestorNoteId: string): number;
+    hasAncestor(ancestorNoteId: string): boolean;
+    isDescendantOfNote(ancestorNoteId: string): boolean;
+    isRoot(): boolean;
+    getSubtree(opts?: ScriptSubtreeOpts): {
+        notes: ScriptBNote[];
+        relationships: ScriptSubtreeRelationship[];
+    };
+    getSubtreeNoteIds(opts?: ScriptSubtreeOpts): string[];
+    getSubtreeNotesIncludingTemplated(): ScriptBNote[];
+    getInheritingNotes(): ScriptBNote[];
 
+    // --- Note paths --------------------------------------------------------
+    getAllNotePaths(): string[][];
+    getBestNotePath(hoistedNoteId?: string): string[];
+    getBestNotePathString(hoistedNoteId?: string): string;
+    getSortedNotePathRecords(hoistedNoteId?: string): ScriptNotePathRecord[];
+    areAllNotePathsArchived(): boolean;
+
+    // --- Attributes (read) -------------------------------------------------
+    ownedAttributes: ScriptAttribute[];
+    targetRelations: ScriptAttribute[];
+    attributeCount: number;
+    ownedAttributeCount: number;
+    labelCount: number;
+    ownedLabelCount: number;
+    relationCount: number;
+    relationCountIncludingLinks: number;
+    ownedRelationCount: number;
+    ownedRelationCountIncludingLinks: number;
+    targetRelationCount: number;
+    targetRelationCountIncludingLinks: number;
     getAttributes(type?: string, name?: string): ScriptAttribute[];
     getOwnedAttributes(type?: string, name?: string): ScriptAttribute[];
     getAttribute(type: string, name: string): ScriptAttribute | null;
+    getOwnedAttribute(type: string, name: string, value?: string | null): ScriptAttribute | null;
+    getAttributeValue(type: string, name: string): string | null;
+    getOwnedAttributeValue(type: string, name: string): string | null;
+    getAttributeById(attributeId: string): ScriptAttribute | undefined;
+    getAttributeCaseInsensitive(
+        type: string,
+        name: string,
+        value?: string | null
+    ): ScriptAttribute | undefined;
     hasAttribute(type: string, name: string): boolean;
+    hasOwnedAttribute(type: string, name: string, value?: string): boolean;
+    getLabelDefinitions(): ScriptAttribute[];
+    getRelationDefinitions(): ScriptAttribute[];
+    getTargetRelations(): ScriptAttribute[];
+
+    // --- Labels ------------------------------------------------------------
     getLabel(name: string): ScriptAttribute | null;
+    getOwnedLabel(name: string): ScriptAttribute | null;
     getLabels(name?: string): ScriptAttribute[];
+    getOwnedLabels(name: string): ScriptAttribute[];
     getLabelValue(name: string): string | null;
+    getOwnedLabelValue(name: string): string | null;
+    getLabelValues(name: string): string[];
+    getOwnedLabelValues(name: string): string[];
     hasLabel(name: string): boolean;
-    addLabel(name: string, value?: string, isInheritable?: boolean): ScriptAttribute;
+    hasOwnedLabel(name: string, value?: string): boolean;
+    isLabelTruthy(name: string): boolean;
+    hasInheritableArchivedLabel(): boolean;
+
+    // --- Relations ---------------------------------------------------------
     getRelation(name: string): ScriptAttribute | null;
+    getOwnedRelation(name: string): ScriptAttribute | null;
     getRelations(name?: string): ScriptAttribute[];
+    getOwnedRelations(name?: string | null): ScriptAttribute[];
     getRelationValue(name: string): string | null;
+    getOwnedRelationValue(name: string): string | null;
     getRelationTarget(name: string): ScriptBNote | null;
+    hasRelation(name: string, value?: string): boolean;
+    hasOwnedRelation(name: string, value?: string): boolean;
+
+    // --- Attributes (write) ------------------------------------------------
+    addLabel(name: string, value?: string, isInheritable?: boolean): ScriptAttribute;
     addRelation(name: string, targetNoteId: string, isInheritable?: boolean): ScriptAttribute;
-    addAttribute(type: string, name: string, value?: string, isInheritable?: boolean): ScriptAttribute;
+    addAttribute(
+        type: string,
+        name: string,
+        value?: string,
+        isInheritable?: boolean
+    ): ScriptAttribute;
+    setLabel(name: string, value?: string): void;
+    setRelation(name: string, value?: string): void;
+    setAttribute(type: string, name: string, value?: string): void;
+    setAttributeValueById(attributeId: string, value?: string): void;
+    toggleLabel(enabled: boolean, name: string, value?: string): void;
+    toggleRelation(enabled: boolean, name: string, value?: string): void;
+    toggleAttribute(type: string, enabled: boolean, name: string, value?: string): void;
+    removeLabel(name: string, value?: string): void;
+    removeRelation(name: string, value?: string): void;
+    removeAttribute(type: string, name: string, value?: string): void;
+    isInherited(): boolean;
+
+    // --- Revisions & attachments -------------------------------------------
+    revisionCount: number | null;
+    getRevisions(): ScriptBRevision[];
+    saveRevision(opts?: { description?: string; source?: string }): ScriptBRevision;
+    getAttachments(): ScriptAttachment[];
+    getAttachmentById(attachmentId: string): ScriptAttachment;
+    getAttachmentByTitle(title: string): ScriptAttachment | undefined;
+    getAttachmentsByRole(role: string): ScriptAttachment[];
+    saveAttachment(
+        attachment: ScriptSaveAttachmentInput,
+        matchBy?: "attachmentId" | "title"
+    ): ScriptAttachment;
+    convertToParentAttachment(opts?: Record<string, unknown>): ScriptAttachment | null;
+    isEligibleForConversionToAttachment(opts?: Record<string, unknown>): boolean;
+
+    // --- Sizes -------------------------------------------------------------
+    contentSize: number | null;
+    contentAndAttachmentsSize: number | null;
+    contentAndAttachmentsAndRevisionsSize: number | null;
+
+    // --- Tree operations ---------------------------------------------------
+    cloneTo(parentNoteId: string): ScriptCloneResponse;
+    deleteNote(deleteId?: string | null): void;
+    sortParents(): void;
+    sortChildren(): void;
+
+    // --- Search ------------------------------------------------------------
+    searchNotesInSubtree(searchString: string): ScriptBNote[];
+    searchNoteInSubtree(searchString: string): ScriptBNote | null;
+    getSearchResultNotes(): ScriptBNote[];
+
+    // --- Type & state predicates -------------------------------------------
     isFolder(): boolean;
+    isContentAvailable(): boolean;
+    isStringNote(): boolean;
+    isHtml(): boolean;
+    isImage(): boolean;
+    isJavaScript(): boolean;
+    isJsx(): boolean;
+    isJson(): boolean;
+    isMarkdown(): boolean;
+    isOptions(): boolean;
+    isLaunchBarConfig(): boolean;
+    isHiddenCompletely(): boolean;
+    isInHiddenSubtree(): boolean;
+
+    // --- Scripting runtime -------------------------------------------------
+    getScriptEnv(): "frontend" | "backend" | null;
+    executeScript(): unknown;
 }
 
 /** Result of the backend note-creation helpers. */
@@ -595,19 +996,36 @@ export interface ScriptResponse {
  */
 export interface BackendApi {
     /**
-     * Note where the script started executing (entrypoint).
-     * As an analogy, in C this would be the file which contains the main() function of the current process.
+     * Note where the script execution started — the entry point of the current script bundle
+     * (in C terms, the file containing `main()`). When a script is spread across multiple code
+     * notes (descendant code notes loaded as modules via `require()`), every note in the
+     * bundle shares the same `startNote`, while {@link currentNote} differs per note.
+     * Messages from `api.log()` are grouped under this note.
+     *
+     * When a frontend script calls `api.runOnBackend()`, the frontend's `startNote` is
+     * preserved here; since that note may not be resolvable on the backend, this can be null.
      */
     startNote?: ScriptBNote | null;
     /**
-     * Note where the script is currently executing. This comes into play when your script is spread in multiple code
-     * notes, the script starts in "startNote", but then through function calls may jump into another note (currentNote).
-     * A similar concept in C would be __FILE__
-     * Don't mix this up with the concept of active note.
+     * Note containing the source code that is currently executing (in C terms, `__FILE__`).
+     * Equal to {@link startNote} unless execution has moved into a descendant module note
+     * loaded via `require()`. Don't confuse this with the concept of the active note in
+     * the UI.
      */
     currentNote: ScriptBNote;
     /**
-     * Entity whose event triggered this execution
+     * Entity whose event triggered this execution; `undefined` when the run was not
+     * event-driven (e.g. started manually via "Execute script" or `note.executeScript()`).
+     *
+     * What it holds depends on the trigger:
+     * - `~runOnNoteCreation`, `~runOnNoteChange`, `~runOnNoteTitleChange`,
+     *   `~runOnNoteContentChange` — the affected note;
+     * - `~runOnChildNoteCreation` — the newly created child note;
+     * - `~runOnAttributeCreation`, `~runOnAttributeChange` — the attribute;
+     * - `~runOnBranchCreation`, `~runOnBranchChange`, `~runOnBranchDeletion` — the branch;
+     * - scheduled scripts (`#run=backendStartup` / `#run=hourly` / `#run=daily`) — the
+     *   script note itself;
+     * - search scripts (`~searchScript`) — the search note.
      */
     originEntity?: unknown | null;
 
@@ -845,6 +1263,20 @@ export interface BackendApi {
      * @returns unescaped string
      */
     unescapeHtml(str: string): string;
+    /**
+     * Converts the given HTML string to Markdown.
+     *
+     * @param html - HTML content to convert
+     * @returns Markdown representation of the input HTML
+     */
+    htmlToMarkdown(html: string): string;
+    /**
+     * Converts the given Markdown string to HTML.
+     *
+     * @param markdown - Markdown content to convert
+     * @returns HTML representation of the input Markdown
+     */
+    markdownToHtml(markdown: string): string;
     /**
      * sql
      * @type {module:sql}

@@ -5,6 +5,14 @@
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
+  "scripts": {
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@vitest/browser": "4.1.9",
+    "vitest": "4.1.9",
+    "webdriverio": "9.29.0"
+  },
   "dependencies": {
     "@triliumnext/commons": "workspace:*",
     "@triliumnext/ckeditor5-admonition": "workspace:*",

@@ -29,7 +29,7 @@ import Slider from "../widgets/react/Slider";
 import RightPanelWidget from "../widgets/sidebar/RightPanelWidget";
 
 export interface WidgetDefinition {
-    parent: "right-pane",
+    parent: "left-pane" | "center-pane" | "note-detail-pane" | "right-pane",
     render: () => VNode,
     position?: number,
 }

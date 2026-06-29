@@ -1,4 +1,3 @@
-import { renderSpreadsheetToHtml } from "@triliumnext/commons";
 import { render } from "preact";
 import { useCallback, useLayoutEffect, useRef } from "preact/hooks";
 
@@ -103,6 +102,7 @@ export function SingleNoteRenderer({ note, onReady }: RendererProps) {
 
             if (note.type === "spreadsheet") {
                 // Render spreadsheet as HTML tables instead of an image.
+                const { renderSpreadsheetToHtml } = await import("@triliumnext/commons/src/lib/spreadsheet/render_to_html");
                 const blob = await note.getBlob();
                 const html = renderSpreadsheetToHtml(blob?.content ?? "");
                 container.innerHTML = html;

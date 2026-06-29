@@ -146,7 +146,14 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     const imageViewerWrapper = useRef<HTMLDivElement>(null);
     const [ title, setTitle ] = useState(attachment.title);
     const [ textContent, setTextContent ] = useState<string | null>(null);
-    const supportsOcr = attachment.role === "image" || attachment.role === "file";
+    // Tracked in state so the deletion warning reacts to entity reloads. The FAttachment is mutated
+    // in place by froca, so reading it directly during render wouldn't re-render an image attachment
+    // (whose title/content don't change when only the erasure schedule does).
+    const [ scheduledForErasureSince, setScheduledForErasureSince ] = useState(attachment.utcDateScheduledForErasureSince);
+    // "importSource" attachments (e.g. OneNote debug source) behave like ordinary files for
+    // preview, OCR and link-copying purposes.
+    const isFileLike = attachment.role === "file" || attachment.role === "importSource";
+    const supportsOcr = attachment.role === "image" || isFileLike;
 
     // Image attachments opened in full detail get the interactive zoom/pan viewer; everything
     // else is rendered imperatively via the content renderer.
@@ -161,11 +168,12 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
                 });
         }
 
-        if (attachment.role === "file") {
+        if (isFileLike) {
             attachment.getBlob().then(blob => setTextContent(blob?.content ?? null));
         }
 
         setTitle(attachment.title);
+        setScheduledForErasureSince(attachment.utcDateScheduledForErasureSince);
     }
 
     useEffect(refresh, [ attachment, isZoomableImage ]);
@@ -182,11 +190,11 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
         }
     }, [ isZoomableImage ]);
 
-    async function copyAttachmentLinkToClipboard() {
+    async function copyAttachmentReferenceToClipboard() {
         if (attachment.role === "image") {
             const $img = refToJQuerySelector(isZoomableImage ? imageViewerWrapper : contentWrapper).find("img");
             if ($img.length) image.copyImageReferenceToClipboard($img.parent());
-        } else if (attachment.role === "file") {
+        } else if (isFileLike) {
             const $link = await link.createLink(attachment.ownerId, {
                 referenceLink: true,
                 viewScope: {
@@ -205,11 +213,11 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
 
     return (
         <div className="attachment-detail-widget">
-            <div className={`attachment-detail-wrapper ${isFullDetail ? "full-detail" : "list-view"} ${attachment.utcDateScheduledForErasureSince ? "scheduled-for-deletion" : ""}`}>
+            <div className={`attachment-detail-wrapper ${isFullDetail ? "full-detail" : "list-view"} ${scheduledForErasureSince ? "scheduled-for-deletion" : ""}`}>
                 <div className="attachment-title-line">
                     <AttachmentActions
                         attachment={attachment}
-                        copyAttachmentLinkToClipboard={copyAttachmentLinkToClipboard}
+                        copyAttachmentReferenceToClipboard={copyAttachmentReferenceToClipboard}
                         onShowOcr={supportsOcr ? () => appContext.triggerCommand("showOcrTextDialog", {
                             textUrl: `ocr/attachments/${attachment.attachmentId}/text`,
                             processUrl: `ocr/process-attachment/${attachment.attachmentId}`
@@ -237,7 +245,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
                     <div style="flex: 1 1;" />
                 </div>
 
-                {attachment.utcDateScheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={attachment.utcDateScheduledForErasureSince} />}
+                {scheduledForErasureSince && <DeletionAlert utcDateScheduledForErasureSince={scheduledForErasureSince} />}
                 {textContent && <TextPreview content={textContent} />}
                 {isZoomableImage ? (
                     <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">
@@ -278,7 +286,7 @@ function DeletionAlert({ utcDateScheduledForErasureSince }: { utcDateScheduledFo
     );
 }
 
-function AttachmentActions({ attachment, copyAttachmentLinkToClipboard, onShowOcr }: { attachment: FAttachment, copyAttachmentLinkToClipboard: () => void, onShowOcr?: () => void }) {
+function AttachmentActions({ attachment, copyAttachmentReferenceToClipboard, onShowOcr }: { attachment: FAttachment, copyAttachmentReferenceToClipboard: () => void, onShowOcr?: () => void }) {
     const isElectron = utils.isElectron();
     const fileUploadRef = useRef<HTMLInputElement>(null);
 
@@ -309,8 +317,8 @@ function AttachmentActions({ attachment, copyAttachmentLinkToClipboard, onShowOc
                     onClick={() => open.downloadAttachment(attachment.attachmentId)}
                 >{t("attachments_actions.download")}</FormListItem>
                 <FormListItem
-                    icon="bx bx-link"
-                    onClick={copyAttachmentLinkToClipboard}
+                    icon="bx bx-copy"
+                    onClick={copyAttachmentReferenceToClipboard}
                 >{t("attachments_actions.copy_link_to_clipboard")}</FormListItem>
                 {onShowOcr && (
                     <FormListItem

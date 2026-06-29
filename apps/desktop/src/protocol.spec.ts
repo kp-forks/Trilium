@@ -1,3 +1,5 @@
+import { once } from "node:events";
+
 import express from "express";
 import multer from "multer";
 import { describe, expect, it, vi } from "vitest";
@@ -213,6 +215,78 @@ describe("trilium-app protocol dispatcher", () => {
         await expect(reader.read()).rejects.toThrow();
     });
 
+    it("applies backpressure: res.write() returns false once the unread queue exceeds the high-water mark", async () => {
+        const app = express();
+        const writeResults: boolean[] = [];
+        app.get("/bp", (_req, res) => {
+            res.setHeader("Content-Type", "application/octet-stream");
+            res.flushHeaders();
+            // Write several 1 MiB chunks synchronously while nothing reads the
+            // body. Without backpressure these would all be buffered and return
+            // true; with it, the queue fills and writes start returning false.
+            for (let i = 0; i < 6; i++) {
+                writeResults.push(res.write(Buffer.alloc(1024 * 1024, i)));
+            }
+            res.end();
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/bp"));
+        expect(writeResults).toContain(false);
+
+        // Backpressure is advisory: every chunk is still delivered intact.
+        const body = response.body;
+        if (!body) throw new Error("expected a streaming body");
+        const reader = body.getReader();
+        let total = 0;
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            total += value?.length ?? 0;
+        }
+        expect(total).toBe(6 * 1024 * 1024);
+    });
+
+    it("emits 'drain' to resume a producer that paused on backpressure", async () => {
+        const app = express();
+        const order: string[] = [];
+        let routeFinished: () => void = () => {};
+        const routeDone = new Promise<void>((resolve) => { routeFinished = resolve; });
+
+        app.get("/bp2", async (_req, res) => {
+            res.setHeader("Content-Type", "application/octet-stream");
+            res.flushHeaders();
+            // Fill until backpressure. Capped so an implementation that never
+            // signals backpressure can't loop forever (it would just fail below).
+            let paused = false;
+            for (let i = 0; i < 64 && !paused; i++) {
+                paused = res.write(Buffer.alloc(1024 * 1024, i)) === false;
+            }
+            order.push(paused ? "paused" : "no-backpressure");
+            // Wait to be resumed, but never hang the suite if 'drain' never comes.
+            const outcome = await Promise.race([
+                once(res, "drain").then(() => "drained" as const),
+                new Promise<"timeout">((resolve) => setTimeout(() => resolve("timeout"), 3000))
+            ]);
+            order.push(outcome);
+            res.end();
+            routeFinished();
+        });
+
+        const response = await dispatch(app, new Request("trilium-app://app/bp2"));
+        const body = response.body;
+        if (!body) throw new Error("expected a streaming body");
+        const reader = body.getReader();
+        // Draining the queue frees capacity, which pulls the stream and must emit
+        // 'drain' so the paused producer continues.
+        while (true) {
+            const { done } = await reader.read();
+            if (done) break;
+        }
+        await routeDone;
+
+        expect(order).toEqual(["paused", "drained"]);
+    });
+
     it("returns a 500 Response when dispatch throws inside the protocol handler", async () => {
         electronMock.handle.mockReset();
         setupTriliumAppProtocol(express());
@@ -225,6 +299,46 @@ describe("trilium-app protocol dispatcher", () => {
         // the handler must convert that into a 500 rather than rejecting.
         const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
         const response = await handler({ url: "::::not-a-url", method: "GET", headers: new Headers(), signal: null } as unknown as Request);
+        errorSpy.mockRestore();
+
+        expect(response.status).toBe(500);
+        expect(await response.text()).toBe("Internal Server Error");
+    });
+
+    it("holds requests until a promised Express app resolves", async () => {
+        electronMock.handle.mockReset();
+        let resolveApp: (app: ReturnType<typeof buildTestApp>) => void = () => {};
+        setupTriliumAppProtocol(new Promise((res) => { resolveApp = res; }));
+        await Promise.resolve(); // let whenReady().then(...) run
+
+        const handler = electronMock.handle.mock.calls[0][1] as (req: Request) => Promise<Response>;
+        const responsePromise = handler(new Request("trilium-app://app/echo-json", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ hello: "world" })
+        }));
+
+        // The request must wait for the app instead of failing or settling early.
+        const settledEarly = await Promise.race([responsePromise.then(() => true), Promise.resolve(false)]);
+        expect(settledEarly).toBe(false);
+
+        resolveApp(buildTestApp());
+        const response = await responsePromise;
+        expect(response.status).toBe(200);
+        expect(await response.json()).toEqual({ echo: { hello: "world" } });
+    });
+
+    it("returns a 500 when the promised Express app rejects (server failed to start)", async () => {
+        electronMock.handle.mockReset();
+        let rejectApp: (err: Error) => void = () => {};
+        setupTriliumAppProtocol(new Promise((_res, rej) => { rejectApp = rej; }));
+        await Promise.resolve(); // let whenReady().then(...) run
+
+        const handler = electronMock.handle.mock.calls[0][1] as (req: Request) => Promise<Response>;
+        const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+        const responsePromise = handler(new Request("trilium-app://app/anything"));
+        rejectApp(new Error("server never started"));
+        const response = await responsePromise;
         errorSpy.mockRestore();
 
         expect(response.status).toBe(500);
@@ -416,7 +530,7 @@ describe("trilium-app protocol dispatcher", () => {
         expect(electronMock.registerSchemesAsPrivileged).toHaveBeenCalledWith([
             expect.objectContaining({
                 scheme: "trilium-app",
-                privileges: expect.objectContaining({ standard: true, secure: true, supportFetchAPI: true, corsEnabled: true })
+                privileges: expect.objectContaining({ standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, codeCache: true })
             })
         ]);
     });

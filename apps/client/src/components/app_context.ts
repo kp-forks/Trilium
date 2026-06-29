@@ -93,7 +93,15 @@ export type CommandMappings = {
     "api-log-messages": CommandData;
     focusTree: CommandData;
     focusOnTitle: CommandData;
-    focusOnDetail: CommandData;
+    focusOnDetail: CommandData & {
+        /**
+         * When set, instead of merely focusing the editor, an empty paragraph is inserted at the very
+         * top of the document and the cursor is placed there (Notion-like behavior when pressing Enter
+         * in the title). Only honored by text notes. If the first block is already an empty paragraph,
+         * the cursor is placed in it rather than stacking another empty paragraph.
+         */
+        insertNewlineAtTop?: boolean;
+    };
     searchNotes: CommandData & {
         searchString?: string;
         ancestorNoteId?: string | null;
@@ -139,6 +147,7 @@ export type CommandMappings = {
     openNewNoteSplit: NoteCommandData;
     openInWindow: NoteCommandData;
     openInPopup: CommandData & { noteIdOrPath: string; };
+    openInTreePopup: CommandData & { noteIdOrPath: string; hoistedNoteId: string; };
     openNoteInNewTab: CommandData;
     openNoteInNewSplit: CommandData;
     openNoteInNewWindow: CommandData;
@@ -344,6 +353,7 @@ export type CommandMappings = {
     toggleRibbonTabNotePaths: CommandData;
     toggleRibbonTabSimilarNotes: CommandData;
     toggleRightPane: CommandData;
+    peekRightPane: CommandData;
     printActiveNote: CommandData;
     exportAsPdf: CommandData;
     showPrintPreview: PrintPreviewData;
@@ -430,6 +440,12 @@ type EventMappings = {
     /** Triggered when the {@link CommandMappings.setActiveScreen} command is invoked. */
     activeScreenChanged: {
         activeScreen: Screen;
+    };
+    /** Triggered when the active theme changes (theme option swap or, for auto themes, the OS light/dark flip),
+     * once the new stylesheet is applied. Lets widgets that read CSS variables in JS (e.g. canvas renderers)
+     * re-read them. Consume with {@link useTriliumEvent}("themeChanged") or the {@link useColorScheme} hook. */
+    themeChanged: {
+        themeStyle: "light" | "dark";
     };
     activeContextChanged: {
         noteContext: NoteContext;

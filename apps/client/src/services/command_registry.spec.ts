@@ -182,11 +182,11 @@ describe("CommandRegistry keyboard actions", () => {
         expect(treeCmd.name).toBe("command_palette.tree-action-name:Tree Action");
     });
 
-    it("skips already-registered, description-less, electron-only and ignored actions", async () => {
+    it("skips already-registered, electron-only and ignored actions, but registers description-less ones", async () => {
         getActions.mockImplementation(async () => [
             // Collides with a manually-registered default command id -> skipped.
             action({ actionName: "export-note" }),
-            // No description -> skipped.
+            // No description -> still registered (separators are filtered out upstream).
             action({ actionName: "noDesc", description: undefined }),
             // Electron-only while not in electron -> skipped.
             action({ actionName: "electronOnly", isElectronOnly: true }),
@@ -200,7 +200,8 @@ describe("CommandRegistry keyboard actions", () => {
 
         // export-note stays the manually-registered command (has a handler).
         expect(registry.getCommand("export-note")!.handler).toBeTypeOf("function");
-        expect(registry.getCommand("noDesc")).toBeUndefined();
+        expect(registry.getCommand("noDesc")).toBeDefined();
+        expect(registry.getCommand("noDesc")!.description).toBeUndefined();
         expect(registry.getCommand("electronOnly")).toBeUndefined();
         expect(registry.getCommand("ignored")).toBeUndefined();
 

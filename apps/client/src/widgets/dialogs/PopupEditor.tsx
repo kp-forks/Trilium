@@ -23,7 +23,7 @@ import Modal from "../react/Modal";
 import { NoteContextContext, ParentComponent } from "../react/react_utils";
 import ReadOnlyNoteInfoBar from "../ReadOnlyNoteInfoBar";
 import StandaloneRibbonAdapter from "../ribbon/components/StandaloneRibbonAdapter";
-import FormattingToolbar from "../ribbon/FormattingToolbar";
+import FormattingToolbar, { showFormattingToolbar } from "../ribbon/FormattingToolbar";
 import MobileEditorToolbar from "../type_widgets/text/mobile_editor_toolbar";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
@@ -129,7 +129,7 @@ export default function PopupEditor() {
 
                     {isMobile
                         ? <MobileEditorToolbar inPopupEditor />
-                        : <StandaloneRibbonAdapter component={FormattingToolbar} />}
+                        : <StandaloneRibbonAdapter component={FormattingToolbar} show={showFormattingToolbar} />}
 
                     <FloatingButtons items={items} />
                     <NoteDetail />

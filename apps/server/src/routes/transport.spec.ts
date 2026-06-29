@@ -77,6 +77,29 @@ describe("Route transport & middleware", () => {
                 .expect(200);
             expect(res.body.uploaded).toBe(true);
         });
+
+        it("accepts a flat (non-bracketed) multipart field alongside the file", async () => {
+            // fieldNestingDepth: 0 rejects only bracketed names; a flat field has zero brackets.
+            const { noteId } = await createTextNote(ctx, { title: "Flat field target" });
+            const res = await ctx.agent.put(`/api/notes/${noteId}/file`)
+                .set("x-csrf-token", ctx.csrfToken)
+                .field("description", "a plain field")
+                .attach("upload", Buffer.from("uploaded bytes"), { filename: "doc.txt", contentType: "text/plain" })
+                .expect(200);
+            expect(res.body.uploaded).toBe(true);
+        });
+
+        it("rejects a nested (bracketed) multipart field name with 400 (CVE-2026-5079 guard)", async () => {
+            // The fieldNestingDepth: 0 limit aborts with LIMIT_FIELD_NESTING, which the upload error
+            // handler maps to a 400 instead of letting the request reach the route handler file-less.
+            const { noteId } = await createTextNote(ctx, { title: "Nested field target" });
+            const res = await ctx.agent.put(`/api/notes/${noteId}/file`)
+                .set("x-csrf-token", ctx.csrfToken)
+                .field("a[b][c]", "deep")
+                .attach("upload", Buffer.from("uploaded bytes"), { filename: "doc.txt", contentType: "text/plain" })
+                .expect(400);
+            expect(res.text).toContain("nested multipart field names are not allowed");
+        });
     });
 
     it("redirects /setup to the app when the DB is already initialized", async () => {

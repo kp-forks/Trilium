@@ -72,6 +72,7 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "nativeTitleBarVisible",
     "headingStyle",
     "autoCollapseNoteTree",
+    "treeScrollFollowNavigation",
     "autoReadonlySizeText",
     "customDateTimeFormat",
     "autoReadonlySizeCode",
@@ -91,9 +92,11 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "highlightsList",
     "checkForUpdates",
     "disableTray",
+    "closeToTray",
+    "launchOnStartup",
+    "hideOnAutoStart",
     "eraseUnusedAttachmentsAfterSeconds",
     "eraseUnusedAttachmentsAfterTimeScale",
-    "disableTray",
     "customSearchEngineName",
     "customSearchEngineUrl",
     "editedNotesOpenInRibbon",
@@ -120,7 +123,6 @@ const ALLOWED_OPTIONS = new Set<OptionNames>([
     "seenCallToActions",
     "experimentalFeatures",
     "newLayout",
-    "mfaEnabled",
     "mfaMethod",
     // LLM options
     "aiEnabled",
@@ -159,6 +161,8 @@ function getOptions() {
     // Expose scripting config (read-only, from config.ini / env vars)
     resultMap["backendScriptingEnabled"] = config.Security.backendScriptingEnabled ? "true" : "false";
     resultMap["sqlConsoleEnabled"] = config.Security.sqlConsoleEnabled ? "true" : "false";
+    // Desktop LAN-access override (read-only; toggled via the Electron security bridge)
+    resultMap["allowLanAccess"] = config.Security.allowLanAccess ? "true" : "false";
 
     // Detect if the user has any backend scripts with #run labels (backendStartup, hourly, daily).
     // Filter by MIME type since #run can also appear on frontend scripts.

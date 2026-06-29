@@ -46,11 +46,13 @@ export default defineConfig(() => ({
     cacheDir: '../../.cache/vite',
     base: "",
     plugins,
-    // Use esbuild for JSX transformation (much faster than Babel)
-    esbuild: {
-        jsx: 'automatic',
-        jsxImportSource: 'preact',
-        jsxDev: isDev
+    // Use oxc for JSX transformation (Vite 8+ replaced the deprecated `esbuild` option with `oxc`)
+    oxc: {
+        jsx: {
+            runtime: 'automatic',
+            importSource: 'preact',
+            development: isDev
+        }
     },
     css: {
         transformer: 'lightningcss',
@@ -95,8 +97,6 @@ export default defineConfig(() => ({
         rollupOptions: {
             input: {
                 index: join(__dirname, "index.html"),
-                login: join(__dirname, "src", "login.ts"),
-                set_password: join(__dirname, "src", "set_password.ts"),
                 runtime: join(__dirname, "src", "runtime.ts"),
                 print: join(__dirname, "src", "print.tsx")
             },
