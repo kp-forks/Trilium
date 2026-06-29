@@ -27,7 +27,7 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-function App() {
+export function App() {
     const password1Ref = useRef<HTMLInputElement>(null);
     const [ password1, setPassword1 ] = useState("");
     const [ password2, setPassword2 ] = useState("");
@@ -84,4 +84,7 @@ function App() {
     );
 }
 
-main();
+// Skip the bootstrap render under test, where the component is imported directly.
+if (import.meta.env.MODE !== "test") {
+    void main();
+}

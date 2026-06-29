@@ -26,7 +26,7 @@ async function main() {
     document.body.replaceChildren(bodyWrapper);
 }
 
-function App() {
+export function App() {
     const config = window.glob.login;
     const illustration = <img src={logo} alt="" className="illustration-logo" />;
 
@@ -76,7 +76,7 @@ function App() {
     );
 }
 
-function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
+export function PasswordLogin({ illustration, totpEnabled, error, errorId, onError }: {
     illustration: preact.ComponentChildren;
     totpEnabled: boolean;
     error: string | null;
@@ -196,4 +196,7 @@ function ssoErrorMessage(ssoError: string | false | undefined): string | null {
     return ssoError === "wrong_account" ? t("login.sso-wrong-account") : t("login.sso-not-enrolled");
 }
 
-main();
+// Skip the bootstrap render under test, where the components are imported directly.
+if (import.meta.env.MODE !== "test") {
+    void main();
+}
