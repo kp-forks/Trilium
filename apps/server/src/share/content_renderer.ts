@@ -434,11 +434,13 @@ function renderText(result: Result, note: SNote | BNote) {
                 continue;
             }
 
-            if (!shouldSyntaxHighlight(codeEl.text)) {
+            // codeEl.text recursively traverses the node's subtree, so read it once.
+            const codeText = codeEl.text;
+            if (!shouldSyntaxHighlight(codeText)) {
                 continue;
             }
 
-            const highlightResult = highlightAuto(codeEl.text);
+            const highlightResult = highlightAuto(codeText);
             codeEl.innerHTML = highlightResult.value;
             codeEl.classList.add("hljs");
         }
@@ -544,11 +546,13 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
             continue;
         }
 
-        if (!shouldSyntaxHighlight(codeEl.text)) {
+        // codeEl.text recursively traverses the node's subtree, so read it once.
+        const codeText = codeEl.text;
+        if (!shouldSyntaxHighlight(codeText)) {
             continue;
         }
 
-        const highlightResult = highlightAuto(codeEl.text);
+        const highlightResult = highlightAuto(codeText);
         codeEl.innerHTML = highlightResult.value;
         codeEl.classList.add("hljs");
     }
@@ -568,8 +572,9 @@ export function shouldSyntaxHighlight(code: string) {
     }
 
     let lineCount = 1;
-    for (let i = 0; i < code.length; i++) {
-        if (code.charCodeAt(i) === 10 /* \n */ && ++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {
+    let index = -1;
+    while ((index = code.indexOf("\n", index + 1)) !== -1) {
+        if (++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {
             return false;
         }
     }
