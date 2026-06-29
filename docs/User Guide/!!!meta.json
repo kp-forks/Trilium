@@ -6998,6 +6998,13 @@
                                     "position": 140
                                 },
                                 {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "bwg0e8ewQMak",
+                                    "isInheritable": false,
+                                    "position": 150
+                                },
+                                {
                                     "type": "label",
                                     "name": "iconClass",
                                     "value": "bx bx-import",
@@ -7010,13 +7017,6 @@
                                     "value": "import-export",
                                     "isInheritable": false,
                                     "position": 20
-                                },
-                                {
-                                    "type": "relation",
-                                    "name": "internalLink",
-                                    "value": "bwg0e8ewQMak",
-                                    "isInheritable": false,
-                                    "position": 150
                                 }
                             ],
                             "format": "markdown",
