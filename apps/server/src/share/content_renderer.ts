@@ -31,6 +31,13 @@ const templateCache: Map<string, string> = new Map();
 const HIGHLIGHT_MAX_LINE_COUNT = 500;
 
 /**
+ * Maximum number of characters a code block may have before server-side syntax highlighting is
+ * skipped. The line-count cutoff alone does not protect against a single very long line (e.g.
+ * minified code), so a separate character ceiling guards `highlightAuto`'s size-driven cost.
+ */
+const HIGHLIGHT_MAX_CHAR_COUNT = 50_000;
+
+/**
  * Represents the output of the content renderer.
  */
 export interface Result {
@@ -553,9 +560,13 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
  * Whether a code block is small enough to syntax-highlight server-side. Highlighting (especially
  * `highlightAuto`, which probes every registered language) scales with content size and would block
  * the single Node event loop on very large code, so blocks beyond {@link HIGHLIGHT_MAX_LINE_COUNT}
- * lines are left unhighlighted.
+ * lines or {@link HIGHLIGHT_MAX_CHAR_COUNT} characters are left unhighlighted.
  */
 export function shouldSyntaxHighlight(code: string) {
+    if (code.length > HIGHLIGHT_MAX_CHAR_COUNT) {
+        return false;
+    }
+
     let lineCount = 1;
     for (let i = 0; i < code.length; i++) {
         if (code.charCodeAt(i) === 10 /* \n */ && ++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {

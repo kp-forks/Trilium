@@ -250,5 +250,11 @@ describe("content_renderer", () => {
             expect(shouldSyntaxHighlight(Array(500).fill("x").join("\n"))).toBe(true);
             expect(shouldSyntaxHighlight(Array(501).fill("x").join("\n"))).toBe(false);
         });
+
+        it("rejects a single huge line that stays under the line limit", () => {
+            // No newlines, so the line check never trips — the character ceiling must catch it.
+            expect(shouldSyntaxHighlight("x".repeat(50_000))).toBe(true);
+            expect(shouldSyntaxHighlight("x".repeat(50_001))).toBe(false);
+        });
     });
 });
