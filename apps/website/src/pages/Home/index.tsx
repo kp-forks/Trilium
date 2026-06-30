@@ -291,7 +291,7 @@ function CollectionsSection() {
 function AiIntegrationSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")}>
+        <Section className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
             <div className="ai-integration-split">
                 <div className="ai-screenshot">
                     <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />
@@ -301,10 +301,6 @@ function AiIntegrationSection() {
                     <Card iconSvg={aiToolsIcon} title={t("ai_integration.tools_title")}>{t("ai_integration.tools_description")}</Card>
                     <Card iconSvg={apiKeyIcon} title={t("ai_integration.providers_title")}>{t("ai_integration.providers_description")}</Card>
                 </div>
-            </div>
-
-            <div className="ai-integration-cta">
-                <Button outline text={t("ai_integration.learn_more")} href="https://docs.triliumnotes.org/user-guide/llm" openExternally />
             </div>
         </Section>
     );
