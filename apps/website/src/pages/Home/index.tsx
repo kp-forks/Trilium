@@ -34,6 +34,12 @@ import tableIcon from "../../assets/boxicons/bx-table.svg?raw";
 import attributesIcon from "../../assets/boxicons/bx-tag.svg?raw";
 import mermaidIcon from "../../assets/boxicons/bx-vector-square.svg?raw";
 import markdownIcon from "../../assets/boxicons/bxs-markdown.svg?raw";
+import anytypeIcon from "../../assets/import/anytype.svg?raw";
+import evernoteIcon from "../../assets/import/evernote.svg?raw";
+import keepIcon from "../../assets/import/keep.svg?raw";
+import notionIcon from "../../assets/import/notion.svg?raw";
+import obsidianIcon from "../../assets/import/obsidian.svg?raw";
+import oneNoteIcon from "../../assets/import/onenote.svg?raw";
 import Button, { Link } from '../../components/Button.js';
 import Card from '../../components/Card.js';
 import DownloadButton from '../../components/DownloadButton.js';
@@ -51,6 +57,7 @@ export function Home() {
             <ProductivityBenefitsSection />
             <NoteTypesSection />
             <ExtensibilityBenefitsSection />
+            <ImportSection />
             <CollectionsSection />
             <AiIntegrationSection />
             <FaqSection />
@@ -234,7 +241,7 @@ function ExtensibilityBenefitsSection() {
 function CollectionsSection() {
     const { t } = useTranslation();
     return (
-        <Section className="collections" title={t("collections.title")} subtitle={t("collections.subtitle")}>
+        <Section className="collections accented" title={t("collections.title")} subtitle={t("collections.subtitle")}>
             <ListWithScreenshot items={[
                 {
                     title: t("collections.calendar_title"),
@@ -286,7 +293,7 @@ function CollectionsSection() {
 function AiIntegrationSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits accented ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")}>
+        <Section className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")}>
             <div className="ai-integration-split">
                 <div className="ai-screenshot">
                     <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />
@@ -300,6 +307,26 @@ function AiIntegrationSection() {
 
             <div className="ai-integration-cta">
                 <Button outline text={t("ai_integration.learn_more")} href="https://docs.triliumnotes.org/user-guide/llm" openExternally />
+            </div>
+        </Section>
+    );
+}
+
+function ImportSection() {
+    const { t } = useTranslation();
+    return (
+        <Section className="benefits import" title={t("import.title")} subtitle={t("import.subtitle")}>
+            <div className="benefits-container grid-3-cols">
+                <Card iconSvg={oneNoteIcon} title={t("import.onenote_title")}>{t("import.onenote_description")}</Card>
+                <Card iconSvg={notionIcon} title={t("import.notion_title")}>{t("import.notion_description")}</Card>
+                <Card iconSvg={keepIcon} title={t("import.keep_title")}>{t("import.keep_description")}</Card>
+                <Card iconSvg={evernoteIcon} title={t("import.evernote_title")}>{t("import.evernote_description")}</Card>
+                <Card iconSvg={anytypeIcon} title={t("import.anytype_title")}>{t("import.anytype_description")}</Card>
+                <Card iconSvg={obsidianIcon} title={t("import.obsidian_title")}>{t("import.obsidian_description")}</Card>
+            </div>
+
+            <div className="import-cta">
+                <Button outline text={t("import.learn_more")} href="https://docs.triliumnotes.org/user-guide/importing" openExternally />
             </div>
         </Section>
     );

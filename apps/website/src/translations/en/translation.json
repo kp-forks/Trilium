@@ -85,6 +85,23 @@
     "dashboard_title": "Dashboard",
     "dashboard_description": "Arrange your notes as draggable, resizable tiles on a grid. Notes becomes live widgets showing their content at a glance; ideal for building a personal homepage or a project overview that brings everything in one place."
   },
+  "import": {
+    "title": "Bring your notes with you",
+    "subtitle": "Already keeping notes somewhere else? Trilium ships dedicated importers that understand each application's structure, so your notebooks, notes and formatting come across intact instead of as a flat dump.",
+    "onenote_title": "Microsoft OneNote",
+    "onenote_description": "Connect your account through Microsoft Graph and import your notebooks directly.",
+    "notion_title": "Notion",
+    "notion_description": "Import a ZIP export of your workspace.",
+    "keep_title": "Google Keep",
+    "keep_description": "Import a ZIP export from Google Takeout.",
+    "evernote_title": "Evernote",
+    "evernote_description": "Import an ENEX export of your notes.",
+    "anytype_title": "Anytype",
+    "anytype_description": "Import a JSON export of your data.",
+    "obsidian_title": "Obsidian",
+    "obsidian_description": "Import a ZIP of your vault.",
+    "learn_more": "Learn more about importing"
+  },
   "ai_integration": {
     "title": "AI integration",
     "subtitle": "Optional, and entirely on your terms. AI features are opt-in and disabled by default: your notes are never sent anywhere unless you enable them and connect your own provider.",
