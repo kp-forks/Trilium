@@ -53,6 +53,8 @@ In the _Collections_ tab in the <a class="reference-link" href="../Basic%20Conc
 
 *   Hide weekends from the week view.
 *   Display week numbers on the calendar.
+*   Set the slot duration (the length of each time row in day/week view).
+*   Set the slot label interval (how often time labels appear on the axis in day/week view).
 
 ## Configuring the calendar using attributes
 
@@ -95,7 +97,7 @@ The following attributes can be added to the Collection type:
         </tr>
         <tr>
             <td><code spellcheck="false">#calendar:slotDuration</code></td>
-            <td>Sets how long each timeslot is on the calendar. Defaults to <code>00:30:00</code> (30 minutes). Must have the format "HH:MM:SS". For example, to create timeslots for every 10 minutes, you would set <code spellcheck="false">#calendar:slotDuration="00:10:00"</code>.</td>
+            <td>Sets how long each timeslot is on the calendar. Defaults to <code>00:15:00</code> (15 minutes). Must have the format "HH:MM:SS". For example, to create timeslots for every 10 minutes, you would set <code spellcheck="false">#calendar:slotDuration="00:10:00"</code>.</td>
         </tr>
         <tr>
             <td><code spellcheck="false">#calendar:slotLabelInterval</code></td>
@@ -180,22 +182,24 @@ Also note that the recurrence label can be made promoted as with the start and e
 
 ## Slot Duration & Slot Label Interval
 
-Trilium's calendar view is powered by FullCalendar, which gives you fine-grained control over how the time grid looks and behaves for day and week views. Two labels you can use to configure these views are `#slotDuration` and `#slotLabelInterval`. Understanding what each one does — and how they interact — lets you tailor the calendar to match your workflow, whether you're scheduling in 15-minute increments or planning out your day in broad hourly blocks.
+Trilium's calendar view is powered by FullCalendar, which gives you fine-grained control over how the time grid looks and behaves for day and week views. Two labels you can use to configure these views are `#calendar:slotDuration` and `#calendar:slotLabelInterval`. Understanding what each one does — and how they interact — lets you tailor the calendar to match your workflow, whether you're scheduling in 15-minute increments or planning out your day in broad hourly blocks.
 
-### `slotDuration`
+These settings can also be adjusted from the _Collections_ tab in the <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Ribbon.md">Ribbon</a>.
 
-Controls how tall each time slot is on the calendar — essentially the smallest unit of time the grid is divided into. A shorter duration means more rows and finer granularity; a longer one means fewer, chunkier rows. The default is one row every 15 minutes
+### `#calendar:slotDuration`
+
+Controls how tall each time slot is on the calendar — essentially the smallest unit of time the grid is divided into. A shorter duration means more rows and finer granularity; a longer one means fewer, chunkier rows. The default is one row every 15 minutes.
 
 **Examples:**
 
 | Value | Result |
 |---|---|
-| `#slotDuration="00:15:00"` | One row every 15 minutes |
-| `#slotDuration="00:30:00"` | One row every 30 minutes |
-| `#slotDuration="01:00:00"` | One row every hour |
+| `#calendar:slotDuration="00:15:00"` | One row every 15 minutes |
+| `#calendar:slotDuration="00:30:00"` | One row every 30 minutes |
+| `#calendar:slotDuration="01:00:00"` | One row every hour |
 
 
-### `slotLabelInterval`
+### `#calendar:slotLabelInterval`
 
 Controls how often a time label appears on the left-hand axis. This is independent of the slot size — you can have very small slots but only label every hour to keep the axis readable. The default is a time label shown every hour.
 
@@ -203,14 +207,14 @@ Controls how often a time label appears on the left-hand axis. This is independe
 
 | Value | Result |
 |---|---|
-| `slotLabelInterval="00:30:00"` | Show a time label every 30 minutes |
-| `slotLabelInterval="01:00:00"` | Show a time label every hour |
+| `#calendar:slotLabelInterval="00:30:00"` | Show a time label every 30 minutes |
+| `#calendar:slotLabelInterval="01:00:00"` | Show a time label every hour |
 
 
 
 ### Useful combinations
 
-| `slotDuration` | `slotLabelInterval` | Result |
+| `#calendar:slotDuration` | `#calendar:slotLabelInterval` | Result |
 |---|---|---|
 | `00:15:00` | `01:00:00` | Fine grid, clean axis — good for busy schedules |
 | `00:30:00` | `01:00:00` | Standard calendar feel |
@@ -223,7 +227,7 @@ Both values use `HH:mm:ss` format. Hours can go up to `24` (`24:00:00`), while m
 
 ### Examples
 
-#### `#slotDuration="00:05:00"` — `#slotLabelInterval="00:30:00"`
+#### `#calendar:slotDuration="00:05:00"` — `#calendar:slotLabelInterval="00:30:00"`
 
 Slots every 5 minutes, but only labelled every 30 minutes. Useful for very precise scheduling without a cluttered axis.
 
@@ -256,7 +260,7 @@ Slots every 5 minutes, but only labelled every 30 minutes. Useful for very preci
 
 ---
 
-#### `#slotDuration="00:15:00"` — `#slotLabelInterval="01:00:00"`
+#### `#calendar:slotDuration="00:15:00"` — `#calendar:slotLabelInterval="01:00:00"`
 
 Slots every 15 minutes, but only labelled on the hour. A good balance between granularity and readability.
 

@@ -69,6 +69,7 @@ export const bookPropertiesConfig: Record<ViewTypeOptions, BookConfig> = {
                     { value: "00:01:00", label: "1 Minute" },
                     { value: "00:05:00", label: "5 Minutes" },
                     { value: "00:10:00", label: "10 Minutes" },
+                    { value: "00:15:00", label: "15 Minutes" },
                     { value: "00:20:00", label: "20 Minutes" },
                     { value: "00:30:00", label: "30 Minutes" },
                     { value: "01:00:00", label: "1 Hour" }

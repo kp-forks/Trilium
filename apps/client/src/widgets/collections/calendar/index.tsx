@@ -398,6 +398,7 @@ function useEventDisplayCustomization(parentNote: FNote, componentId: string | u
         if (iconClass) {
             let titleContainer: HTMLElement | null = null;
             switch (e.view.type) {
+                case "timeGridDay":
                 case "timeGridWeek":
                 case "dayGridMonth":
                     titleContainer = e.el.querySelector(".fc-event-title");
@@ -430,6 +431,7 @@ function useEventDisplayCustomization(parentNote: FNote, componentId: string | u
 
             let mainContainer;
             switch (e.view.type) {
+                case "timeGridDay":
                 case "timeGridWeek":
                 case "dayGridMonth":
                     mainContainer = e.el.querySelector(".fc-event-main");
