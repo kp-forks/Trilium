@@ -13,8 +13,10 @@ import aiToolsIcon from "../../assets/boxicons/bx-cog.svg?raw";
 import boardIcon from "../../assets/boxicons/bx-columns-3.svg?raw";
 import dashboardIcon from "../../assets/boxicons/bx-dashboard.svg?raw";
 import dockerIcon from "../../assets/boxicons/bx-docker.svg?raw";
+import templatesIcon from "../../assets/boxicons/bx-duplicate.svg?raw";
 import restApiIcon from "../../assets/boxicons/bx-extension.svg?raw";
 import fileIcon from "../../assets/boxicons/bx-file.svg?raw";
+import authIcon from "../../assets/boxicons/bx-fingerprint.svg?raw";
 import noteStructureIcon from "../../assets/boxicons/bx-folder.svg?raw";
 import gitHubIcon from "../../assets/boxicons/bx-github.svg?raw";
 import shareIcon from "../../assets/boxicons/bx-globe.svg?raw";
@@ -28,7 +30,6 @@ import webClipperIcon from "../../assets/boxicons/bx-paperclip.svg?raw";
 import canvasIcon from "../../assets/boxicons/bx-pen.svg?raw";
 import syncIcon from "../../assets/boxicons/bx-refresh-cw.svg?raw";
 import searchIcon from "../../assets/boxicons/bx-search.svg?raw";
-import jumpToIcon from "../../assets/boxicons/bx-send-alt.svg?raw";
 import backendIcon from "../../assets/boxicons/bx-server.svg?raw";
 import protectedNotesIcon from "../../assets/boxicons/bx-shield.svg?raw";
 import presentationIcon from "../../assets/boxicons/bx-slideshow.svg?raw";
@@ -111,6 +112,14 @@ function HeroSection() {
             <div className="screenshot-container">
                 {screenshotUrl && <img class="screenshot" src={screenshotUrl} alt={t("hero_section.screenshot_alt")} />}
             </div>
+
+            <p className="hero-tagline">
+                <span>{t("hero_section.tagline_free")}</span>
+                <span className="dot" aria-hidden="true" />
+                <span>{t("hero_section.tagline_no_account")}</span>
+                <span className="dot" aria-hidden="true" />
+                <span>{t("hero_section.tagline_cross_platform")}</span>
+            </p>
         </Section>
     );
 }
@@ -142,11 +151,12 @@ function ProductivityBenefitsSection() {
             <Section className="benefits accented" title={t("productivity_benefits.title")}>
                 <div className="benefits-container grid-3-cols">
                     <Card iconSvg={revisionsIcon} title={t("productivity_benefits.revisions_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions">{t("productivity_benefits.revisions_content")}</Card>
-                    <Card iconSvg={syncIcon} title={t("productivity_benefits.sync_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/synchronization">{t("productivity_benefits.sync_content")}</Card>
                     <Card iconSvg={protectedNotesIcon} title={t("productivity_benefits.protected_notes_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes">{t("productivity_benefits.protected_notes_content")}</Card>
-                    <Card iconSvg={jumpToIcon} title={t("productivity_benefits.jump_to_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/jump-to">{t("productivity_benefits.jump_to_content")}</Card>
+                    <Card iconSvg={authIcon} title={t("productivity_benefits.auth_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/installation/server/authentication">{t("productivity_benefits.auth_content")}</Card>
                     <Card iconSvg={searchIcon} title={t("productivity_benefits.search_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/search">{t("productivity_benefits.search_content")}</Card>
+                    <Card iconSvg={templatesIcon} title={t("productivity_benefits.templates_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/template">{t("productivity_benefits.templates_content")}</Card>
                     <Card iconSvg={webClipperIcon} title={t("productivity_benefits.web_clipper_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/web-clipper">{t("productivity_benefits.web_clipper_content")}</Card>
+                    <Card iconSvg={syncIcon} title={t("productivity_benefits.sync_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/synchronization">{t("productivity_benefits.sync_content")}</Card>
                     <Card iconSvg={shareIcon} title={t("productivity_benefits.share_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/sharing">{t("productivity_benefits.share_content")}</Card>
                     <Card iconSvg={restApiIcon} title={t("productivity_benefits.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/etapi">{t("productivity_benefits.api_content")}</Card>
                 </div>
