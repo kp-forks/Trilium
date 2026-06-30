@@ -80,7 +80,9 @@
     "geomap_title": "Geomap",
     "geomap_description": "Plan your vacations or mark your points of interest directly on a geographical map using customizable markers. Display recorded GPX tracks to track itineraries.",
     "presentation_title": "Presentation",
-    "presentation_description": "Organize information into slides and present them in full-screen with smooth transitions. The slides can also be exported to PDF for easy sharing."
+    "presentation_description": "Organize information into slides and present them in full-screen with smooth transitions. The slides can also be exported to PDF for easy sharing.",
+    "dashboard_title": "Dashboard",
+    "dashboard_description": "Arrange your notes as draggable, resizable tiles on a grid. Notes becomes live widgets showing their content at a glance; ideal for building a personal homepage or a project overview that brings everything in one place."
   },
   "faq": {
     "title": "Frequently Asked Questions",

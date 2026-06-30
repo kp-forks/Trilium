@@ -8,6 +8,7 @@ import calendarIcon from "../../assets/boxicons/bx-calendar.svg?raw";
 import hoistingIcon from "../../assets/boxicons/bx-chevrons-up.svg?raw";
 import codeIcon from "../../assets/boxicons/bx-code.svg?raw";
 import boardIcon from "../../assets/boxicons/bx-columns-3.svg?raw";
+import dashboardIcon from "../../assets/boxicons/bx-dashboard.svg?raw";
 import dockerIcon from "../../assets/boxicons/bx-docker.svg?raw";
 import restApiIcon from "../../assets/boxicons/bx-extension.svg?raw";
 import fileIcon from "../../assets/boxicons/bx-file.svg?raw";
@@ -265,6 +266,13 @@ function CollectionsSection() {
                     imageUrl: "/collection_presentation.webp",
                     moreInfo: "https://docs.triliumnotes.org/user-guide/collections/presentation",
                     description: t("collections.presentation_description")
+                },
+                {
+                    title: t("collections.dashboard_title"),
+                    iconSvg: dashboardIcon,
+                    imageUrl: "/collection_dashboard.webp",
+                    moreInfo: "https://docs.triliumnotes.org/user-guide/collections/Dashboard",
+                    description: t("collections.dashboard_description")
                 }
             ]} />
         </Section>
