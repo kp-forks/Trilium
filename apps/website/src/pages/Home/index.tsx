@@ -234,7 +234,7 @@ function ExtensibilityBenefitsSection() {
 function CollectionsSection() {
     const { t } = useTranslation();
     return (
-        <Section className="collections" title={t("collections.title")}>
+        <Section className="collections" title={t("collections.title")} subtitle={t("collections.subtitle")}>
             <ListWithScreenshot items={[
                 {
                     title: t("collections.calendar_title"),
@@ -286,8 +286,7 @@ function CollectionsSection() {
 function AiIntegrationSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits accented ai-integration" title={t("ai_integration.title")}>
-            <p className="section-subtitle">{t("ai_integration.subtitle")}</p>
+        <Section className="benefits accented ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")}>
             <div className="ai-integration-split">
                 <div className="ai-screenshot">
                     <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />

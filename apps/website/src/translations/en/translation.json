@@ -71,6 +71,7 @@
   },
   "collections": {
     "title": "Collections",
+    "subtitle": "Collections give a group of notes a purpose-built view. Display the very same notes as a calendar, a table, a Kanban board, an interactive map and more, then switch between layouts whenever your needs change.",
     "calendar_title": "Calendar",
     "calendar_description": "Organize your personal or professional events using a calendar, with support for all-day and multi-day events. See your events at a glance with the week, month and year views. Easy interaction to add or drag events.",
     "table_title": "Table",
@@ -86,7 +87,7 @@
   },
   "ai_integration": {
     "title": "AI integration",
-    "subtitle": "Optional, and entirely on your terms. AI features are opt-in and disabled by default — your notes are never sent anywhere unless you enable them and connect your own provider.",
+    "subtitle": "Optional, and entirely on your terms. AI features are opt-in and disabled by default: your notes are never sent anywhere unless you enable them and connect your own provider.",
     "screenshot_alt": "The Trilium AI chat creating notes on your behalf through built-in tools",
     "chat_title": "Chat with your notes",
     "chat_description": "Ask questions and brainstorm in a built-in chat that can draw on the content of your own notes.",

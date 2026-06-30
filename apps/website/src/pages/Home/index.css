@@ -142,7 +142,7 @@ section.accented {
     padding: 1em;
 }
 
-section.ai-integration .section-subtitle {
+.section-subtitle {
     max-width: 46em;
     margin: -0.5em auto 2em;
     text-align: center;
