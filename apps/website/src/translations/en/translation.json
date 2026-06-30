@@ -54,7 +54,9 @@
     "mindmap_description": "Organize your thoughts visually or brainstorm ideas.",
     "others_list": "and others: <0>note map</0>, <1>relation map</1>, <2>saved searches</2>, <3>render note</3>, and <4>web views</4>.",
     "markdown_title": "Markdown",
-    "markdown_description": "Prefer plain text? Write your notes directly in Markdown, keeping them portable and easy to version, while still rendering tables, code blocks and rich formatting in a side-by-side preview."
+    "markdown_description": "Prefer plain text? Write your notes directly in Markdown, keeping them portable and easy to version, while still rendering tables, code blocks and rich formatting in a side-by-side preview.",
+    "spreadsheet_title": "Spreadsheet",
+    "spreadsheet_description": "A fully-featured spreadsheet for tabular data, with formulas, conditional formatting, data validation, sorting and filtering. Import and export Excel (.xlsx) and CSV files."
   },
   "extensibility_benefits": {
     "title": "Sharing & extensibility",

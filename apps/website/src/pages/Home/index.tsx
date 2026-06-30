@@ -159,6 +159,13 @@ function NoteTypesSection() {
                     description: t("note_types.code_description")
                 },
                 {
+                    title: t("note_types.spreadsheet_title"),
+                    imageUrl: "/type_spreadsheet.webp",
+                    iconSvg: tableIcon,
+                    moreInfo: "https://docs.triliumnotes.org/user-guide/note-types/Spreadsheets",
+                    description: t("note_types.spreadsheet_description")
+                },
+                {
                     title: t("note_types.canvas_title"),
                     imageUrl: "/type_canvas.webp",
                     iconSvg: canvasIcon,
