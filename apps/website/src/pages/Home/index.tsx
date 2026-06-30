@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { ComponentChildren } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useContext, useEffect, useState } from 'preact/hooks';
 import { Trans, useTranslation } from 'react-i18next';
 
 import botIcon from "../../assets/boxicons/bx-bot.svg?raw";
@@ -54,6 +54,7 @@ import Icon from '../../components/Icon.js';
 import Section from '../../components/Section.js';
 import { getPlatform } from '../../download-helper.js';
 import { useColorScheme, usePageTitle } from '../../hooks.js';
+import { StargazersContext } from '../../index.js';
 
 export function Home() {
     usePageTitle("");
@@ -78,6 +79,7 @@ function HeroSection() {
     const { t } = useTranslation();
     const platform = getPlatform();
     const colorScheme = useColorScheme();
+    const stargazersCount = useContext(StargazersContext);
     const [ screenshotUrl, setScreenshotUrl ] = useState<string>();
 
     useEffect(() => {
@@ -105,7 +107,7 @@ function HeroSection() {
                     <DownloadButton big />
                     <Button href="./get-started/" className="mobile-only" text={t("hero_section.get_started")} />
                     <div className="additional-options">
-                        <Button iconSvg={gitHubIcon} outline text={t("hero_section.github")} href="https://github.com/TriliumNext/Trilium/" openExternally />
+                        <Button iconSvg={gitHubIcon} outline text={<>{t("hero_section.github")}<span className="github-stars">{`${(stargazersCount / 1000).toFixed(1)}K+`}</span></>} href="https://github.com/TriliumNext/Trilium/" openExternally />
                         <Button iconSvg={dockerIcon} outline text={t("hero_section.dockerhub")} href="https://hub.docker.com/r/triliumnext/trilium" openExternally />
                     </div>
                 </div>

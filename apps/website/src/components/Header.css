@@ -49,20 +49,6 @@ header {
     }
 }
 
-.repository-button a {
-    display: flex;
-    color: currentColor;
-
-    &:hover {
-        color: var(--brand-1);
-        text-decoration: none;
-    }
-
-    .counter {
-        margin-inline-start: 4px;
-    }
-}
-
 @media (max-width: 719.99px) {
     :root {
         --header-height: 60px;
@@ -89,10 +75,6 @@ header {
 
             .banner {
                 flex-grow: 1;
-            }
-
-            .social-button {
-                align-items: center;
             }
         }
 
@@ -156,15 +138,8 @@ header {
             width: 100%;
         }
 
-        .repository-button .social-button {
-            flex-direction: column;
-            align-items: center;
-            font-size: 0.6em;
-        }
-
         nav {
             font-size: 0.9em;
-            justify-content: center;
         }
 
         .download-button {
