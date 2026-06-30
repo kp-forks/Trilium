@@ -16,6 +16,7 @@
   },
   "organization_benefits": {
     "title": "Organization",
+    "screenshot_alt": "Hierarchical note tree in Trilium",
     "note_structure_title": "Note structure",
     "note_structure_description": "Notes can be arranged hierarchically. There's no need for folders, since each note can contain sub-notes. A single note can be added in multiple places in the hierarchy.",
     "attributes_title": "Note labels and relations",

@@ -115,11 +115,16 @@ function OrganizationBenefitsSection() {
     const { t } = useTranslation();
     return (
         <>
-            <Section className="benefits" title={t("organization_benefits.title")}>
-                <div className="benefits-container grid-3-cols">
-                    <Card iconSvg={noteStructureIcon} title={t("organization_benefits.note_structure_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/notes">{t("organization_benefits.note_structure_description")}</Card>
-                    <Card iconSvg={attributesIcon} title={t("organization_benefits.attributes_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/attributes">{t("organization_benefits.attributes_description")}</Card>
-                    <Card iconSvg={hoistingIcon} title={t("organization_benefits.hoisting_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting">{t("organization_benefits.hoisting_description")}</Card>
+            <Section className="benefits organization" title={t("organization_benefits.title")}>
+                <div className="organization-split">
+                    <div className="organization-screenshot">
+                        <img src="/feature_tree.webp" alt={t("organization_benefits.screenshot_alt")} loading="lazy" />
+                    </div>
+                    <div className="benefits-container organization-cards">
+                        <Card iconSvg={noteStructureIcon} title={t("organization_benefits.note_structure_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/notes">{t("organization_benefits.note_structure_description")}</Card>
+                        <Card iconSvg={attributesIcon} title={t("organization_benefits.attributes_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/attributes">{t("organization_benefits.attributes_description")}</Card>
+                        <Card iconSvg={hoistingIcon} title={t("organization_benefits.hoisting_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/note-hoisting">{t("organization_benefits.hoisting_description")}</Card>
+                    </div>
                 </div>
             </Section>
         </>

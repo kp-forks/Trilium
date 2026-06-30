@@ -149,6 +149,27 @@ section.accented {
     color: var(--muted-color);
 }
 
+section.organization .organization-split {
+    display: flex;
+    flex-direction: column;
+    gap: 2em;
+    align-items: center;
+}
+
+section.organization .organization-screenshot img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+section.organization .organization-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1em;
+}
+
 section.ai-integration .ai-integration-split {
     display: flex;
     flex-direction: column;
@@ -181,6 +202,21 @@ section.ai-integration .ai-cards {
 }
 
 @media (min-width: 720px) {
+    section.organization .organization-split {
+        flex-direction: row;
+        align-items: center;
+        gap: 3em;
+    }
+
+    section.organization .organization-screenshot {
+        flex: 0 0 32%;
+        max-width: 320px;
+    }
+
+    section.organization .organization-cards {
+        flex: 1;
+    }
+
     section.ai-integration .ai-integration-split {
         flex-direction: row;
         align-items: center;
