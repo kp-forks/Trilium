@@ -145,27 +145,25 @@ section.hero-section {
             flex-grow: 1;
         }
 
+        /* Kept as inline (not inline-flex): an inline-flex box introduces its own
+           baseline that pushes the whole "GitHub" text row down ~1px relative to
+           the button icon. Inline content lets the count baseline-align normally. */
         .github-stars {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.25em;
             margin-inline-start: 0.5em;
             padding-inline-start: 0.5em;
             border-inline-start: 1px solid currentColor;
             opacity: 0.75;
 
-            /* .bx is fixed at 24px globally; shrink it to match the count text.
-               Nudge up slightly: the digits have no descenders, so centering on
-               the full line box leaves the star sitting a touch low. */
+            /* .bx is fixed at 24px globally; shrink it to match the count text. */
             .bx {
                 width: 1em;
                 height: 1em;
-                transform: translateY(-0.03em);
+                margin-inline-end: 0.25em;
+                vertical-align: -0.125em;
 
                 svg {
                     width: 100%;
                     height: 100%;
-                    display: block;
                 }
             }
         }
