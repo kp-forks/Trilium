@@ -17,7 +17,9 @@
 
 /* Scroll-container essentials (flex/min-height/overflow) come from .chat-message-list. */
 .sidebar-chat-messages {
-    padding: 0.5rem;
+    /* Extra bottom padding mirrors the main chat widget: room for the first lines of
+       an incoming reply to appear without auto-following the stream. */
+    padding: 0.5rem 0.5rem 4em;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;

@@ -11,6 +11,9 @@ import { useSmoothStreaming } from "./useSmoothStreaming.js";
 /** A user-supplied attachment waiting to be sent with the next message. */
 export type AttachmentBlock = ImageBlock | FileBlock | TextFileBlock;
 
+/** Distance (px) from the bottom within which the timeline counts as "at bottom". */
+const SCROLL_BOTTOM_THRESHOLD = 50;
+
 /**
  * Flatten a stored message's content into the wire format the server expects.
  * Plain string content stays as-is; block-shaped content (with images) becomes
@@ -79,6 +82,10 @@ export interface UseLlmChatReturn {
     lastPromptTokens: number;
     messagesEndRef: RefObject<HTMLDivElement>;
     scrollContainerRef: RefObject<HTMLDivElement>;
+    /** Whether the timeline is scrolled away from the bottom (drives the jump-to-bottom button). */
+    showScrollToBottom: boolean;
+    /** Jump the timeline to the latest content. */
+    scrollToBottom: () => void;
     /** Whether a provider is configured and available */
     hasProvider: boolean;
     /** Whether we're still checking for providers */
@@ -139,10 +146,13 @@ export function useLlmChat(
     const [lastPromptTokens, setLastPromptTokens] = useState<number>(0);
     const [hasProvider, setHasProvider] = useState<boolean>(true); // Assume true initially
     const [isCheckingProvider, setIsCheckingProvider] = useState<boolean>(true);
+    const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
-    const isNearBottomRef = useRef(true);
+    // Set when the user sends a message, so the next render scrolls their message
+    // into view exactly once — distinct from the (now removed) follow-while-streaming.
+    const scrollOnNextMessagesRef = useRef(false);
 
     // Refs to get fresh values in getContent (avoids stale closures)
     const messagesRef = useRef(messages);
@@ -217,36 +227,49 @@ export function useLlmChat(
         }
     }, [refreshModels]));
 
-    // Track whether the user is near the bottom of the scroll container
+    // The timeline never follows the stream automatically — the model can outpace
+    // the reader. Instead we surface a jump-to-bottom button whenever there is
+    // content below the fold, and the user decides when to catch up.
+    const updateScrollButton = useCallback(() => {
+        const container = scrollContainerRef.current;
+        if (!container) {
+            setShowScrollToBottom(false);
+            return;
+        }
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        setShowScrollToBottom(distanceFromBottom > SCROLL_BOTTOM_THRESHOLD);
+    }, []);
+
+    /** Jump the timeline to the latest content (used by the jump-to-bottom button). */
+    const scrollToBottom = useCallback(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, []);
+
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
+        container.addEventListener("scroll", updateScrollButton, { passive: true });
+        return () => container.removeEventListener("scroll", updateScrollButton);
+    }, [updateScrollButton]);
 
-        const THRESHOLD = 50; // px from bottom
-        const handleScroll = () => {
-            isNearBottomRef.current =
-                container.scrollHeight - container.scrollTop - container.clientHeight <= THRESHOLD;
-        };
-
-        container.addEventListener("scroll", handleScroll, { passive: true });
-        return () => container.removeEventListener("scroll", handleScroll);
-    }, []);
-
-    // Scroll to bottom when content changes, but only if user hasn't scrolled away.
-    // Always use instant scroll — smooth animations race with the scroll listener
-    // during streaming, causing the auto-scroll to "unstick" mid-animation.
-    const scrollToBottom = useCallback(() => {
-        if (isNearBottomRef.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-        }
-    }, []);
-
+    // Recompute button visibility as content changes. When the user has just sent a
+    // message, scroll once so their message (and the first lines of the reply that
+    // streams into the bottom spacing) stay in view — but never follow after that.
     useEffect(() => {
-        scrollToBottom();
-    }, [messages, smoothedTailText, streamingThinking, scrollToBottom]);
+        if (scrollOnNextMessagesRef.current) {
+            scrollOnNextMessagesRef.current = false;
+            scrollToBottom();
+        }
+        updateScrollButton();
+    }, [messages, smoothedTailText, streamingThinking, scrollToBottom, updateScrollButton]);
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
+        // Opening an existing chat should land on the most recent message, so scroll
+        // once after the loaded messages render (same one-shot path as sending).
+        if ((content.messages?.length ?? 0) > 0) {
+            scrollOnNextMessagesRef.current = true;
+        }
         setMessagesInternal(content.messages || []);
         if (content.selectedModel) {
             setSelectedModel(content.selectedModel);
@@ -578,6 +601,7 @@ export function useLlmChat(
         };
         setInput("");
         setPendingAttachments([]);
+        scrollOnNextMessagesRef.current = true;
         await runStream([...messages, userMessage]);
     }, [input, isStreaming, messages, runStream]);
 
@@ -585,6 +609,7 @@ export function useLlmChat(
     const retryLast = useCallback(async () => {
         if (isStreaming) return;
         if (messages[messages.length - 1]?.type !== "error") return;
+        scrollOnNextMessagesRef.current = true;
         await runStream(messages.slice(0, -1));
     }, [isStreaming, messages, runStream]);
 
@@ -643,6 +668,8 @@ export function useLlmChat(
         lastPromptTokens,
         messagesEndRef,
         scrollContainerRef,
+        showScrollToBottom,
+        scrollToBottom,
         hasProvider,
         isCheckingProvider,
 

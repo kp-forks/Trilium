@@ -2068,6 +2068,7 @@
     "add_provider": "Add AI Provider",
     "stop": "Stop",
     "retry": "Retry",
+    "scroll_to_bottom": "Scroll to latest",
     "attach_file": "Attach image, PDF, or text file",
     "remove_attachment": "Remove attachment",
     "attachment_upload_failed": "Failed to upload \"{{name}}\".",
