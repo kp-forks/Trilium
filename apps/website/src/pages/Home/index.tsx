@@ -29,6 +29,7 @@ import importExportIcon from "../../assets/boxicons/bx-swap-horizontal.svg?raw";
 import tableIcon from "../../assets/boxicons/bx-table.svg?raw";
 import attributesIcon from "../../assets/boxicons/bx-tag.svg?raw";
 import mermaidIcon from "../../assets/boxicons/bx-vector-square.svg?raw";
+import markdownIcon from "../../assets/boxicons/bxs-markdown.svg?raw";
 import Button, { Link } from '../../components/Button.js';
 import Card from '../../components/Card.js';
 import DownloadButton from '../../components/DownloadButton.js';
@@ -144,18 +145,18 @@ function NoteTypesSection() {
                     description: t("note_types.text_description")
                 },
                 {
+                    title: t("note_types.markdown_title"),
+                    imageUrl: "/type_markdown.webp",
+                    iconSvg: markdownIcon,
+                    moreInfo: "https://docs.triliumnotes.org/user-guide/note-types/markdown",
+                    description: t("note_types.markdown_description")
+                },
+                {
                     title: t("note_types.code_title"),
                     imageUrl: "/type_code.webp",
                     iconSvg: codeIcon,
                     moreInfo: "https://docs.triliumnotes.org/user-guide/note-types/code",
                     description: t("note_types.code_description")
-                },
-                {
-                    title: t("note_types.file_title"),
-                    imageUrl: "/type_file.webp",
-                    iconSvg: fileIcon,
-                    moreInfo: "https://docs.triliumnotes.org/user-guide/note-types/file",
-                    description: t("note_types.file_description")
                 },
                 {
                     title: t("note_types.canvas_title"),
@@ -177,6 +178,13 @@ function NoteTypesSection() {
                     iconSvg: mindmapIcon,
                     moreInfo: "https://docs.triliumnotes.org/user-guide/note-types/mindmap",
                     description: t("note_types.mindmap_description")
+                },
+                {
+                    title: t("note_types.file_title"),
+                    imageUrl: "/type_file.webp",
+                    iconSvg: fileIcon,
+                    moreInfo: "https://docs.triliumnotes.org/user-guide/note-types/file",
+                    description: t("note_types.file_description")
                 }
             ]} />
             <p>
