@@ -4,9 +4,11 @@ import { ComponentChildren } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { Trans, useTranslation } from 'react-i18next';
 
+import botIcon from "../../assets/boxicons/bx-bot.svg?raw";
 import calendarIcon from "../../assets/boxicons/bx-calendar.svg?raw";
 import hoistingIcon from "../../assets/boxicons/bx-chevrons-up.svg?raw";
 import codeIcon from "../../assets/boxicons/bx-code.svg?raw";
+import aiToolsIcon from "../../assets/boxicons/bx-cog.svg?raw";
 import boardIcon from "../../assets/boxicons/bx-columns-3.svg?raw";
 import dashboardIcon from "../../assets/boxicons/bx-dashboard.svg?raw";
 import dockerIcon from "../../assets/boxicons/bx-docker.svg?raw";
@@ -16,6 +18,7 @@ import noteStructureIcon from "../../assets/boxicons/bx-folder.svg?raw";
 import gitHubIcon from "../../assets/boxicons/bx-github.svg?raw";
 import shareIcon from "../../assets/boxicons/bx-globe.svg?raw";
 import revisionsIcon from "../../assets/boxicons/bx-history.svg?raw";
+import apiKeyIcon from "../../assets/boxicons/bx-key.svg?raw";
 import geomapIcon from "../../assets/boxicons/bx-map.svg?raw";
 import mindmapIcon from "../../assets/boxicons/bx-network-chart.svg?raw";
 import textNoteIcon from "../../assets/boxicons/bx-note.svg?raw";
@@ -49,6 +52,7 @@ export function Home() {
             <NoteTypesSection />
             <ExtensibilityBenefitsSection />
             <CollectionsSection />
+            <AiIntegrationSection />
             <FaqSection />
             <FinalCta />
         </>
@@ -275,6 +279,29 @@ function CollectionsSection() {
                     description: t("collections.dashboard_description")
                 }
             ]} />
+        </Section>
+    );
+}
+
+function AiIntegrationSection() {
+    const { t } = useTranslation();
+    return (
+        <Section className="benefits accented ai-integration" title={t("ai_integration.title")}>
+            <p className="section-subtitle">{t("ai_integration.subtitle")}</p>
+            <div className="ai-integration-split">
+                <div className="ai-screenshot">
+                    <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />
+                </div>
+                <div className="benefits-container ai-cards">
+                    <Card iconSvg={botIcon} title={t("ai_integration.chat_title")}>{t("ai_integration.chat_description")}</Card>
+                    <Card iconSvg={aiToolsIcon} title={t("ai_integration.tools_title")}>{t("ai_integration.tools_description")}</Card>
+                    <Card iconSvg={apiKeyIcon} title={t("ai_integration.providers_title")}>{t("ai_integration.providers_description")}</Card>
+                </div>
+            </div>
+
+            <div className="ai-integration-cta">
+                <Button outline text={t("ai_integration.learn_more")} href="https://docs.triliumnotes.org/user-guide/llm" openExternally />
+            </div>
         </Section>
     );
 }
