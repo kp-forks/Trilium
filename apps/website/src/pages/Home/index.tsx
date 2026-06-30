@@ -29,7 +29,6 @@ import searchIcon from "../../assets/boxicons/bx-search.svg?raw";
 import jumpToIcon from "../../assets/boxicons/bx-send-alt.svg?raw";
 import protectedNotesIcon from "../../assets/boxicons/bx-shield.svg?raw";
 import presentationIcon from "../../assets/boxicons/bx-slideshow.svg?raw";
-import importExportIcon from "../../assets/boxicons/bx-swap-horizontal.svg?raw";
 import tableIcon from "../../assets/boxicons/bx-table.svg?raw";
 import attributesIcon from "../../assets/boxicons/bx-tag.svg?raw";
 import mermaidIcon from "../../assets/boxicons/bx-vector-square.svg?raw";
@@ -227,8 +226,7 @@ function ExtensibilityBenefitsSection() {
     return (
         <>
             <Section className="benefits accented" title={t("extensibility_benefits.title")}>
-                <div className="benefits-container grid-4-cols">
-                    <Card iconSvg={importExportIcon} title={t("extensibility_benefits.import_export_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/import-export">{t("extensibility_benefits.import_export_description")}</Card>
+                <div className="benefits-container grid-3-cols">
                     <Card iconSvg={shareIcon} title={t("extensibility_benefits.share_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/sharing">{t("extensibility_benefits.share_description")}</Card>
                     <Card iconSvg={codeIcon} title={t("extensibility_benefits.scripting_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/scripts">{t("extensibility_benefits.scripting_description")}</Card>
                     <Card iconSvg={restApiIcon} title={t("extensibility_benefits.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/etapi">{t("extensibility_benefits.api_description")}</Card>
@@ -325,8 +323,10 @@ function ImportSection() {
                 <Card iconSvg={obsidianIcon} title={t("import.obsidian_title")}>{t("import.obsidian_description")}</Card>
             </div>
 
+            <p className="import-export-note">{t("import.export_note")}</p>
+
             <div className="import-cta">
-                <Button outline text={t("import.learn_more")} href="https://docs.triliumnotes.org/user-guide/importing" openExternally />
+                <Button outline text={t("import.learn_more")} href="https://docs.triliumnotes.org/user-guide/concepts/import-export" openExternally />
             </div>
         </Section>
     );

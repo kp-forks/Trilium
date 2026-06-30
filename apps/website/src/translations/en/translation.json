@@ -60,8 +60,6 @@
   },
   "extensibility_benefits": {
     "title": "Sharing & extensibility",
-    "import_export_title": "Import/export",
-    "import_export_description": "Easily interact with other applications using Markdown, ENEX, OPML formats.",
     "share_title": "Share notes on the web",
     "share_description": "If you have a server, it can be used to share a subset of your notes with other people.",
     "scripting_title": "Advanced scripting",
@@ -86,7 +84,7 @@
     "dashboard_description": "Arrange your notes as draggable, resizable tiles on a grid. Notes becomes live widgets showing their content at a glance; ideal for building a personal homepage or a project overview that brings everything in one place."
   },
   "import": {
-    "title": "Bring your notes with you",
+    "title": "Your notes are never locked in",
     "subtitle": "Already keeping notes somewhere else? Trilium ships dedicated importers that understand each application's structure, so your notebooks, notes and formatting come across intact instead of as a flat dump.",
     "onenote_title": "Microsoft OneNote",
     "onenote_description": "Connect your account through Microsoft Graph and import your notebooks directly.",
@@ -100,7 +98,8 @@
     "anytype_description": "Import a JSON export of your data.",
     "obsidian_title": "Obsidian",
     "obsidian_description": "Import a ZIP of your vault.",
-    "learn_more": "Learn more about importing"
+    "export_note": "And taking your data out is just as easy. Export any note or your whole tree to Markdown or HTML at any time.",
+    "learn_more": "Learn more about import & export"
   },
   "ai_integration": {
     "title": "AI integration",
