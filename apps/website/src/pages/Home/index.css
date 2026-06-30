@@ -213,36 +213,54 @@ section.hero-section {
         align-items: stretch;
     }
 
-    /* Two-column grid: the text column (title above, tagline pinned to the bottom
-       row) on the left, the screenshot spanning the full height on the right. A
-       grid keeps the tagline in normal flow — so it never overlaps the buttons on
-       short viewports — while still letting the screenshot fill the hero. */
+    /* Text column on the left (title + tagline stacked, centered as a group between
+       two flexible spacer rows); the empty 1fr column reserves the right side for
+       the screenshot, which is layered over it as a full-height absolute element so
+       it fills the hero without dictating the grid's row heights. */
     section.hero-section > .content-wrapper {
+        position: relative;
         display: grid;
-        grid-template-columns: minmax(0, 34%) 1fr;
-        grid-template-rows: 1fr auto;
-        align-items: center;
-        column-gap: 2em;
+        grid-template-columns: minmax(0, 40%) 1fr;
+        grid-template-rows: 1fr auto auto 1fr;
+        /* Fill the hero's height. margin-block:0 overrides the base `margin:auto`,
+           whose vertical auto-margins would otherwise center (and shrink) the
+           wrapper instead of letting height:100% fill the section. */
+        height: 100%;
+        margin-block: 0;
         /* Slim top padding so the screenshot reaches up near the header instead
            of leaving an empty band above it. */
         padding: 0.75em 3em 1.5em;
     }
 
-    /* Keep the text column vertically centered next to the full-height screenshot. */
     section.hero-section .title-section {
         grid-column: 1;
-        grid-row: 1;
+        grid-row: 2;
         max-width: 30em;
     }
 
-    /* Deep screenshot: enlarge the right column and let it run off the right
-       edge of the viewport for an immersive, "spilling off the page" look. The
-       column spans both rows (full hero height) and anchors the image to the top
-       so the previously empty band above it is used. */
+    /* Tagline sits directly below the download buttons, sharing the text column. */
+    section.hero-section .hero-tagline {
+        grid-column: 1;
+        grid-row: 3;
+        width: auto;
+        margin: 1.75em 0 0;
+        gap: 0.4em 0.7em;
+        justify-content: flex-start;
+    }
+
+    /* Deep screenshot: full-height on the right, anchored to the top and run off
+       the right edge of the viewport for an immersive, "spilling off the page"
+       look. Absolutely positioned so its intrinsic size can't inflate the grid. */
     section.hero-section .screenshot-container {
-        grid-column: 2;
-        grid-row: 1 / 3;
-        margin-right: calc(50% - 50vw - 8em);
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        /* Start where grid column 2 begins. The +3em compensates for the left
+           padding and column gap so the image clears the text column at every
+           width (the absolute % is of the padding box, the grid % of the content
+           box). */
+        left: calc(40% + 3em);
+        right: calc(50% - 50vw - 8em);
         display: flex;
         align-items: flex-start;
         overflow: hidden;
@@ -255,16 +273,6 @@ section.hero-section {
         min-width: 62vw;
         object-fit: cover;
         object-position: left top;
-    }
-
-    /* Tagline sits in its own bottom row of the text column, clear of the screenshot. */
-    section.hero-section .hero-tagline {
-        grid-column: 1;
-        grid-row: 2;
-        align-self: end;
-        width: auto;
-        margin: 0;
-        justify-content: flex-start;
     }
 
     section.hero-section .download-wrapper {
