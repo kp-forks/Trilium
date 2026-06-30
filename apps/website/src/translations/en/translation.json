@@ -6,6 +6,17 @@
     "older_releases": "See older releases",
     "server_title": "Set up a server for access on multiple devices"
   },
+  "section_nav": {
+    "aria_label": "Jump to section",
+    "organization": "Organize",
+    "productivity": "Features",
+    "note_types": "Note types",
+    "import": "Import & export",
+    "collections": "Collections",
+    "scripting": "Scripting",
+    "ai_integration": "AI",
+    "faq": "FAQ"
+  },
   "hero_section": {
     "title": "Organize your thoughts. Build your personal knowledge base.",
     "subtitle": "Trilium is an open-source solution for note-taking and organizing a personal knowledge base. Use it locally on your desktop, or sync it with your self-hosted server to keep your notes everywhere you go.",

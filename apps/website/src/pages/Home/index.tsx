@@ -54,16 +54,30 @@ import Card from '../../components/Card.js';
 import DownloadButton from '../../components/DownloadButton.js';
 import Icon from '../../components/Icon.js';
 import Section from '../../components/Section.js';
+import SectionNav, { SectionNavItem } from '../../components/SectionNav.js';
 import { getPlatform } from '../../download-helper.js';
 import { useColorScheme, usePageTitle } from '../../hooks.js';
 import { StargazersContext } from '../../index.js';
 
 export function Home() {
+    const { t } = useTranslation();
     usePageTitle("");
+
+    const navItems: SectionNavItem[] = [
+        { id: "organization", label: t("section_nav.organization") },
+        { id: "productivity", label: t("section_nav.productivity") },
+        { id: "note-types", label: t("section_nav.note_types") },
+        { id: "import-export", label: t("section_nav.import") },
+        { id: "collections", label: t("section_nav.collections") },
+        { id: "scripting", label: t("section_nav.scripting") },
+        { id: "ai-integration", label: t("section_nav.ai_integration") },
+        { id: "faq", label: t("section_nav.faq") }
+    ];
 
     return (
         <>
             <HeroSection />
+            <SectionNav items={navItems} />
             <OrganizationBenefitsSection />
             <ProductivityBenefitsSection />
             <NoteTypesSection />
@@ -135,7 +149,7 @@ function OrganizationBenefitsSection() {
     const { t } = useTranslation();
     return (
         <>
-            <Section className="benefits organization" title={t("organization_benefits.title")}>
+            <Section id="organization" className="benefits organization" title={t("organization_benefits.title")}>
                 <div className="organization-split">
                     <div className="organization-screenshot">
                         <img src="/feature_tree.webp" alt={t("organization_benefits.screenshot_alt")} loading="lazy" />
@@ -155,7 +169,7 @@ function ProductivityBenefitsSection() {
     const { t } = useTranslation();
     return (
         <>
-            <Section className="benefits accented" title={t("productivity_benefits.title")}>
+            <Section id="productivity" className="benefits accented" title={t("productivity_benefits.title")}>
                 <div className="benefits-container grid-3-cols">
                     <Card iconSvg={syncIcon} title={t("productivity_benefits.sync_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/synchronization">{t("productivity_benefits.sync_content")}</Card>
                     <Card iconSvg={searchIcon} title={t("productivity_benefits.search_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/search">{t("productivity_benefits.search_content")}</Card>
@@ -175,7 +189,7 @@ function ProductivityBenefitsSection() {
 function NoteTypesSection() {
     const { t } = useTranslation();
     return (
-        <Section className="note-types" title={t("note_types.title")} subtitle={t("note_types.subtitle")}>
+        <Section id="note-types" className="note-types" title={t("note_types.title")} subtitle={t("note_types.subtitle")}>
             <TabbedShowcase items={[
                 {
                     title: t("note_types.text_title"),
@@ -253,7 +267,7 @@ function NoteTypesSection() {
 function CollectionsSection() {
     const { t } = useTranslation();
     return (
-        <Section className="collections" title={t("collections.title")} subtitle={t("collections.subtitle")}>
+        <Section id="collections" className="collections" title={t("collections.title")} subtitle={t("collections.subtitle")}>
             <TabbedShowcase items={[
                 {
                     title: t("collections.calendar_title"),
@@ -305,7 +319,7 @@ function CollectionsSection() {
 function AiIntegrationSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
+        <Section id="ai-integration" className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
             <div className="feature-split">
                 <div className="feature-screenshot">
                     <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />
@@ -323,7 +337,7 @@ function AiIntegrationSection() {
 function ScriptingSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits scripting accented" title={t("scripting.title")} subtitle={t("scripting.subtitle")} cta={{ text: t("scripting.learn_more"), href: "https://docs.triliumnotes.org/user-guide/scripts" }}>
+        <Section id="scripting" className="benefits scripting accented" title={t("scripting.title")} subtitle={t("scripting.subtitle")} cta={{ text: t("scripting.learn_more"), href: "https://docs.triliumnotes.org/user-guide/scripts" }}>
             <div className="feature-split">
                 <div className="feature-screenshot">
                     <img src="/feature_scripting.webp" alt={t("scripting.screenshot_alt")} loading="lazy" />
@@ -342,7 +356,7 @@ function ScriptingSection() {
 function ImportSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits import accented" title={t("import.title")} subtitle={t("import.subtitle")}>
+        <Section id="import-export" className="benefits import accented" title={t("import.title")} subtitle={t("import.subtitle")}>
             <div className="benefits-container grid-3-cols">
                 <Card iconSvg={importIcon} title={t("import.pillar_import_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/import-export">
                     {t("import.pillar_import_description")}
@@ -388,7 +402,6 @@ interface ShowcaseItem {
 }
 
 function TabbedShowcase({ items }: { items: ShowcaseItem[] }) {
-    const { t } = useTranslation();
     const [ activeIndex, setActiveIndex ] = useState(0);
     const active = items[activeIndex];
 
@@ -437,7 +450,7 @@ function TabbedShowcase({ items }: { items: ShowcaseItem[] }) {
 function FaqSection() {
     const { t } = useTranslation();
     return (
-        <Section className="faq" title={t("faq.title")}>
+        <Section id="faq" className="faq" title={t("faq.title")}>
             <div className="faq-list">
                 <FaqItem question={t("faq.free_question")}>{t("faq.free_answer")}</FaqItem>
                 <FaqItem question={t("faq.mobile_question")}>{t("faq.mobile_answer")}</FaqItem>

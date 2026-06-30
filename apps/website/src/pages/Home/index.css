@@ -244,6 +244,12 @@ section.accented {
     background: linear-gradient(135deg, rgba(228, 123, 25, 0.08), rgba(79, 165, 43, 0.08));
 }
 
+/* Offset anchor jumps so a section lands below the sticky header + section nav
+   instead of being hidden underneath them. */
+section[id] {
+    scroll-margin-top: calc(var(--header-height) + 3.5em);
+}
+
 .benefits-container .card {
     padding: 1em;
 }
