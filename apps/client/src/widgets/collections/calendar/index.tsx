@@ -3,7 +3,7 @@ import "./index.css";
 import { Calendar as FullCalendar } from "@fullcalendar/core";
 import { DateSelectArg, EventChangeArg, EventMountArg, EventSourceFuncArg, LocaleInput, PluginDef } from "@fullcalendar/core/index.js";
 import { DateClickArg } from "@fullcalendar/interaction";
-import { dayjs,DISPLAYABLE_LOCALE_IDS  } from "@triliumnext/commons";
+import { DISPLAYABLE_LOCALE_IDS } from "@triliumnext/commons";
 import { RefObject } from "preact";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -26,7 +26,7 @@ import { changeEvent, newEvent } from "./api";
 import Calendar from "./calendar";
 import { openCalendarContextMenu } from "./context_menu";
 import { buildEvents, buildEventsForCalendar } from "./event_builder";
-import { formatDateToLocalISO, parseStartEndDateFromEvent, parseStartEndTimeFromEvent } from "./utils";
+import { formatDateToLocalISO, isValidDuration, parseStartEndDateFromEvent, parseStartEndTimeFromEvent } from "./utils";
 
 interface CalendarViewData {
 
@@ -140,19 +140,6 @@ export default function CalendarView({ note, noteIds }: ViewModeProps<CalendarVi
 
     const { eventDidMount } = useEventDisplayCustomization(note, parentComponent?.componentId);
     const editingProps = useEditing(note, isEditable, isCalendarRoot, parentComponent?.componentId);
-
-    const isValidDuration = (str) => {
-        if (!/^(\d{2}):([0-5]\d):([0-5]\d)$/.test(str)) return false;
-
-        const [hours, minutes, seconds] = str.split(':').map(Number);
-        const d = dayjs.duration({ hours, minutes, seconds });
-
-        const totalMs = d.asMilliseconds();
-        const oneMinute = dayjs.duration(1, 'minute').asMilliseconds();
-        const twentyFourHours = dayjs.duration(24, 'hours').asMilliseconds();
-
-        return totalMs >= oneMinute && totalMs <= twentyFourHours;
-    };
 
     // React to changes.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
