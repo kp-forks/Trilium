@@ -338,23 +338,24 @@ function ScriptingSection() {
 function ImportSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits import accented" title={t("import.title")} subtitle={t("import.subtitle")} cta={{ text: t("import.learn_more"), href: "https://docs.triliumnotes.org/user-guide/concepts/import-export" }}>
+        <Section className="benefits import accented" title={t("import.title")} subtitle={t("import.subtitle")}>
             <div className="benefits-container grid-3-cols">
-                <Card iconSvg={importIcon} title={t("import.pillar_import_title")}>{t("import.pillar_import_description")}</Card>
+                <Card iconSvg={importIcon} title={t("import.pillar_import_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/import-export">
+                    {t("import.pillar_import_description")}
+                    <div className="import-logos">
+                        <span className="import-logos-label">{t("import.sources_label")}</span>
+                        <div className="import-logos-row">
+                            <span className="import-logo" title={t("import.onenote_title")}><Icon svg={oneNoteIcon} /></span>
+                            <span className="import-logo" title={t("import.notion_title")}><Icon svg={notionIcon} /></span>
+                            <span className="import-logo" title={t("import.keep_title")}><Icon svg={keepIcon} /></span>
+                            <span className="import-logo" title={t("import.evernote_title")}><Icon svg={evernoteIcon} /></span>
+                            <span className="import-logo" title={t("import.anytype_title")}><Icon svg={anytypeIcon} /></span>
+                            <span className="import-logo" title={t("import.obsidian_title")}><Icon svg={obsidianIcon} /></span>
+                        </div>
+                    </div>
+                </Card>
                 <Card iconSvg={exportIcon} title={t("import.pillar_export_title")}>{t("import.pillar_export_description")}</Card>
-                <Card iconSvg={printerIcon} title={t("import.pillar_pdf_title")}>{t("import.pillar_pdf_description")}</Card>
-            </div>
-
-            <div className="import-logos">
-                <span className="import-logos-label">{t("import.sources_label")}</span>
-                <div className="import-logos-row">
-                    <span className="import-logo" title={t("import.onenote_title")}><Icon svg={oneNoteIcon} /></span>
-                    <span className="import-logo" title={t("import.notion_title")}><Icon svg={notionIcon} /></span>
-                    <span className="import-logo" title={t("import.keep_title")}><Icon svg={keepIcon} /></span>
-                    <span className="import-logo" title={t("import.evernote_title")}><Icon svg={evernoteIcon} /></span>
-                    <span className="import-logo" title={t("import.anytype_title")}><Icon svg={anytypeIcon} /></span>
-                    <span className="import-logo" title={t("import.obsidian_title")}><Icon svg={obsidianIcon} /></span>
-                </div>
+                <Card iconSvg={printerIcon} title={t("import.pillar_pdf_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/note-types/file/pdf">{t("import.pillar_pdf_description")}</Card>
             </div>
         </Section>
     );

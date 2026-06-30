@@ -175,11 +175,23 @@ section.hero-section {
 }
 
 @media (min-width: 720px) {
+    section.hero-section {
+        /* Clip the screenshot where it bleeds past the right edge of the viewport */
+        overflow: hidden;
+    }
+
     section.hero-section > .content-wrapper {
         flex-direction: row;
         flex-wrap: wrap;
         gap: 3em;
         padding: 3em;
+    }
+
+    /* Deep screenshot: enlarge the right column and let it run off the right
+       edge of the viewport for an immersive, "spilling off the page" look. */
+    section.hero-section .screenshot-container {
+        flex: 1 1 55%;
+        margin-right: calc(50% - 50vw - 3em);
     }
 
     section.hero-section .hero-tagline {
@@ -304,14 +316,15 @@ section.import .bx svg {
 }
 
 section.import .import-logos {
-    margin-top: 2.5em;
-    text-align: center;
+    margin-top: 1.25em;
 }
 
 section.import .import-logos-label {
     display: block;
-    margin-bottom: 1em;
-    font-size: 0.9em;
+    margin-bottom: 0.6em;
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     color: var(--muted-color);
 }
 
@@ -319,8 +332,7 @@ section.import .import-logos-row {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: center;
-    gap: 1.75em;
+    gap: 1em;
 }
 
 section.import .import-logo {
@@ -335,8 +347,8 @@ section.import .import-logo:hover {
 }
 
 section.import .import-logo .bx {
-    width: 2em;
-    height: 2em;
+    width: 1.6em;
+    height: 1.6em;
 }
 
 section.final-cta {

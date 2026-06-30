@@ -18,7 +18,7 @@
     "screenshot_alt": "Screenshot of the Trilium Notes desktop application"
   },
   "organization_benefits": {
-    "title": "Organization",
+    "title": "Structure your notes, your way",
     "screenshot_alt": "Hierarchical note tree in Trilium",
     "note_structure_title": "Note structure",
     "note_structure_description": "Notes can be arranged hierarchically. There's no need for folders, since each note can contain sub-notes. A single note can be added in multiple places in the hierarchy.",
@@ -70,7 +70,7 @@
     "spreadsheet_description": "A fully-featured spreadsheet for tabular data, with formulas, conditional formatting, data validation, sorting and filtering. Import and export Excel (.xlsx) and CSV files."
   },
   "collections": {
-    "title": "Collections",
+    "title": "See your notes from every angle",
     "subtitle": "Collections give a group of notes a purpose-built view. Display the very same notes as a calendar, a table, a Kanban board, an interactive map and more, then switch between layouts whenever your needs change.",
     "calendar_title": "Calendar",
     "calendar_description": "Organize your personal or professional events using a calendar, with support for all-day and multi-day events. See your events at a glance with the week, month and year views. Easy interaction to add or drag events.",
@@ -100,11 +100,10 @@
     "keep_title": "Google Keep",
     "evernote_title": "Evernote",
     "anytype_title": "Anytype",
-    "obsidian_title": "Obsidian",
-    "learn_more": "Learn more about import & export"
+    "obsidian_title": "Obsidian"
   },
   "ai_integration": {
-    "title": "AI integration",
+    "title": "AI on your terms",
     "subtitle": "Optional, and entirely on your terms. AI features are opt-in and disabled by default: your notes are never sent anywhere unless you enable them and connect your own provider.",
     "screenshot_alt": "The Trilium AI chat creating notes on your behalf through built-in tools",
     "chat_title": "Chat with your notes",
