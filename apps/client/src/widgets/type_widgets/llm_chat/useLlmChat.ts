@@ -1,6 +1,6 @@
 import type { LlmCitation, LlmMessage, LlmMessagePart, LlmModelInfo, LlmUsage } from "@triliumnext/commons";
 import { RefObject } from "preact";
-import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
@@ -11,8 +11,22 @@ import { useSmoothStreaming } from "./useSmoothStreaming.js";
 /** A user-supplied attachment waiting to be sent with the next message. */
 export type AttachmentBlock = ImageBlock | FileBlock | TextFileBlock;
 
-/** Distance (px) from the bottom within which the timeline counts as "at bottom". */
+/** Distance (px) past the content bottom edge within which the timeline counts as "at bottom". */
 const SCROLL_BOTTOM_THRESHOLD = 50;
+/**
+ * On send, the boundary between the user's message and the reply is parked this
+ * fraction of the viewport down from the top — the reply then types out in place,
+ * with the tail of the query still visible above.
+ */
+const REPLY_ANCHOR_TOP_FRACTION = 0.25;
+/** Duration (ms) of the smooth scroll that parks a new reply near the top. */
+const ANCHOR_SCROLL_DURATION_MS = 300;
+
+/** The most recent user message element inside the scroll container, or null. */
+function getLastUserMessageEl(container: HTMLElement): HTMLElement | null {
+    const els = container.querySelectorAll<HTMLElement>('[data-message-role="user"]');
+    return els.length ? els[els.length - 1] : null;
+}
 
 /**
  * Flatten a stored message's content into the wire format the server expects.
@@ -82,6 +96,8 @@ export interface UseLlmChatReturn {
     lastPromptTokens: number;
     messagesEndRef: RefObject<HTMLDivElement>;
     scrollContainerRef: RefObject<HTMLDivElement>;
+    /** Trailing spacer below the last message; sized so the active turn can park near the top. */
+    bottomSpacerRef: RefObject<HTMLDivElement>;
     /** Whether the timeline is scrolled away from the bottom (drives the jump-to-bottom button). */
     showScrollToBottom: boolean;
     /** Jump the timeline to the latest content. */
@@ -149,10 +165,13 @@ export function useLlmChat(
     const [showScrollToBottom, setShowScrollToBottom] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const bottomSpacerRef = useRef<HTMLDivElement>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
-    // Set when the user sends a message, so the next render scrolls their message
-    // into view exactly once — distinct from the (now removed) follow-while-streaming.
-    const scrollOnNextMessagesRef = useRef(false);
+    const anchorRafRef = useRef<number | null>(null);
+    // A one-shot scroll to run after the next messages render: "anchor" parks a fresh
+    // reply near the top (sending/retrying), "bottom" jumps to the latest content
+    // (loading a chat). The timeline never follows the stream beyond this single action.
+    const pendingScrollRef = useRef<"anchor" | "bottom" | null>(null);
 
     // Refs to get fresh values in getContent (avoids stale closures)
     const messagesRef = useRef(messages);
@@ -227,23 +246,103 @@ export function useLlmChat(
         }
     }, [refreshModels]));
 
-    // The timeline never follows the stream automatically — the model can outpace
-    // the reader. Instead we surface a jump-to-bottom button whenever there is
-    // content below the fold, and the user decides when to catch up.
+    // The timeline does not follow the stream — the model can outpace the reader, and
+    // moving text is hard to read. A jump-to-latest button appears whenever there is
+    // content below the fold; its visibility is measured against the real content end
+    // (the messagesEnd anchor).
     const updateScrollButton = useCallback(() => {
         const container = scrollContainerRef.current;
-        if (!container) {
+        const endEl = messagesEndRef.current;
+        if (!container || !endEl) {
             setShowScrollToBottom(false);
             return;
         }
-        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
-        setShowScrollToBottom(distanceFromBottom > SCROLL_BOTTOM_THRESHOLD);
+        const distance = endEl.getBoundingClientRect().top - container.getBoundingClientRect().bottom;
+        setShowScrollToBottom(distance > SCROLL_BOTTOM_THRESHOLD);
     }, []);
 
-    /** Jump the timeline to the latest content (used by the jump-to-bottom button). */
+    /** Jump to the latest content (ignores the trailing spacer). */
     const scrollToBottom = useCallback(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+        messagesEndRef.current?.scrollIntoView({ block: "end", behavior: "instant" });
     }, []);
+
+    // Size the trailing spacer so the current turn can be parked near the top: reserve
+    // enough room below the user→reply boundary for the boundary to sit at
+    // REPLY_ANCHOR_TOP_FRACTION of the viewport, minus whatever the reply already
+    // provides (so long replies leave little blank). Set imperatively so it settles
+    // synchronously, right before the one-shot anchor scroll — no extra render, no flash.
+    const recomputeBottomSpacer = useCallback(() => {
+        const container = scrollContainerRef.current;
+        const spacer = bottomSpacerRef.current;
+        const endEl = messagesEndRef.current;
+        if (!container || !spacer || !endEl) return;
+
+        const lastUser = getLastUserMessageEl(container);
+        const viewport = container.clientHeight;
+        if (!lastUser || viewport === 0) {
+            spacer.style.height = "0px";
+            return;
+        }
+        // The spacer sits after endEl, so boundary→endEl is independent of its own
+        // height — no feedback loop.
+        const boundary = lastUser.getBoundingClientRect().bottom;
+        const contentEnd = endEl.getBoundingClientRect().top;
+        const replyHeight = Math.max(0, contentEnd - boundary);
+        const roomNeeded = viewport * (1 - REPLY_ANCHOR_TOP_FRACTION);
+        spacer.style.height = `${Math.round(Math.max(0, roomNeeded - replyHeight))}px`;
+    }, []);
+
+    /** Smoothly scroll the container to `targetTop` over ANCHOR_SCROLL_DURATION_MS. */
+    const smoothScrollTo = useCallback((targetTop: number) => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        if (anchorRafRef.current != null) {
+            cancelAnimationFrame(anchorRafRef.current);
+            anchorRafRef.current = null;
+        }
+        const maxScroll = container.scrollHeight - container.clientHeight;
+        const to = Math.max(0, Math.min(targetTop, maxScroll));
+        const from = container.scrollTop;
+        const distance = to - from;
+        if (Math.abs(distance) < 1) {
+            container.scrollTop = to;
+            return;
+        }
+        const start = performance.now();
+        let lastSetTop = from;
+        const step = (now: number) => {
+            // Bail out if the user scrolled mid-animation (don't fight them).
+            if (Math.abs(container.scrollTop - lastSetTop) > 2) {
+                anchorRafRef.current = null;
+                return;
+            }
+            const t = Math.min(1, (now - start) / ANCHOR_SCROLL_DURATION_MS);
+            const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2; // easeInOutQuad
+            container.scrollTop = from + distance * eased;
+            lastSetTop = container.scrollTop;
+            anchorRafRef.current = t < 1 ? requestAnimationFrame(step) : null;
+        };
+        anchorRafRef.current = requestAnimationFrame(step);
+    }, []);
+
+    /** Park the latest user→reply boundary near the top, once, with a smooth transition. */
+    const anchorReplyToTop = useCallback(() => {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        const lastUser = getLastUserMessageEl(container);
+        if (!lastUser) {
+            scrollToBottom();
+            return;
+        }
+        const viewport = container.clientHeight;
+        const containerTop = container.getBoundingClientRect().top;
+        const userRect = lastUser.getBoundingClientRect();
+        const boundaryWithinView = userRect.bottom - containerTop;
+        // Keep at most a REPLY_ANCHOR_TOP_FRACTION-viewport sliver of the query above the
+        // boundary; if the query is shorter, just pin its top (no blank gap above).
+        const offsetAboveBoundary = Math.min(viewport * REPLY_ANCHOR_TOP_FRACTION, userRect.height);
+        smoothScrollTo(container.scrollTop + boundaryWithinView - offsetAboveBoundary);
+    }, [scrollToBottom, smoothScrollTo]);
 
     useEffect(() => {
         const container = scrollContainerRef.current;
@@ -252,23 +351,52 @@ export function useLlmChat(
         return () => container.removeEventListener("scroll", updateScrollButton);
     }, [updateScrollButton]);
 
-    // Recompute button visibility as content changes. When the user has just sent a
-    // message, scroll once so their message (and the first lines of the reply that
-    // streams into the bottom spacing) stay in view — but never follow after that.
-    useEffect(() => {
-        if (scrollOnNextMessagesRef.current) {
-            scrollOnNextMessagesRef.current = false;
-            scrollToBottom();
+    // Re-fit the spacer and run any pending one-shot scroll as the message list changes.
+    // A layout effect lets the spacer settle synchronously so the anchor scroll already
+    // has the room it needs (no double-scroll, no flash). The stream itself never moves
+    // the view: `messages` is stable while streaming, so this does not re-run per token.
+    useLayoutEffect(() => {
+        recomputeBottomSpacer();
+        const mode = pendingScrollRef.current;
+        if (mode) {
+            pendingScrollRef.current = null;
+            if (mode === "anchor") {
+                anchorReplyToTop();
+            } else {
+                scrollToBottom();
+            }
         }
         updateScrollButton();
-    }, [messages, smoothedTailText, streamingThinking, scrollToBottom, updateScrollButton]);
+    }, [messages, recomputeBottomSpacer, anchorReplyToTop, scrollToBottom, updateScrollButton]);
+
+    // While streaming, the reply grows without changing `messages` — refresh only the
+    // button (the spacer intentionally stays at its turn-start size; nothing scrolls).
+    useEffect(() => {
+        updateScrollButton();
+    }, [smoothedTailText, streamingThinking, updateScrollButton]);
+
+    // Re-fit the spacer when the container is resized (pane split, window resize, etc.).
+    useEffect(() => {
+        const container = scrollContainerRef.current;
+        if (!container || typeof ResizeObserver === "undefined") return;
+        const observer = new ResizeObserver(() => {
+            recomputeBottomSpacer();
+            updateScrollButton();
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, [recomputeBottomSpacer, updateScrollButton]);
+
+    // Stop any in-flight anchor animation when the widget unmounts.
+    useEffect(() => () => {
+        if (anchorRafRef.current != null) cancelAnimationFrame(anchorRafRef.current);
+    }, []);
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
-        // Opening an existing chat should land on the most recent message, so scroll
-        // once after the loaded messages render (same one-shot path as sending).
+        // Opening an existing chat should land on the most recent message.
         if ((content.messages?.length ?? 0) > 0) {
-            scrollOnNextMessagesRef.current = true;
+            pendingScrollRef.current = "bottom";
         }
         setMessagesInternal(content.messages || []);
         if (content.selectedModel) {
@@ -601,7 +729,7 @@ export function useLlmChat(
         };
         setInput("");
         setPendingAttachments([]);
-        scrollOnNextMessagesRef.current = true;
+        pendingScrollRef.current = "anchor";
         await runStream([...messages, userMessage]);
     }, [input, isStreaming, messages, runStream]);
 
@@ -609,7 +737,7 @@ export function useLlmChat(
     const retryLast = useCallback(async () => {
         if (isStreaming) return;
         if (messages[messages.length - 1]?.type !== "error") return;
-        scrollOnNextMessagesRef.current = true;
+        pendingScrollRef.current = "anchor";
         await runStream(messages.slice(0, -1));
     }, [isStreaming, messages, runStream]);
 
@@ -668,6 +796,7 @@ export function useLlmChat(
         lastPromptTokens,
         messagesEndRef,
         scrollContainerRef,
+        bottomSpacerRef,
         showScrollToBottom,
         scrollToBottom,
         hasProvider,

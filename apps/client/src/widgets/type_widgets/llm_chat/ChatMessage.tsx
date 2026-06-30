@@ -193,7 +193,7 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
     const hasBlockContent = Array.isArray(message.content);
 
     return (
-        <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`}>
+        <div className={`llm-chat-message-wrapper llm-chat-message-wrapper-${message.role}`} data-message-role={message.role}>
             <div className={messageClasses}>
                 <div className="llm-chat-message-content">
                     {hasBlockContent ? (

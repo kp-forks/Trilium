@@ -63,6 +63,7 @@ export default function ChatMessageList({ chat, emptyStateText, className }: Cha
                     />
                 )}
                 <div ref={chat.messagesEndRef} />
+                <div ref={chat.bottomSpacerRef} className="chat-bottom-spacer" aria-hidden="true" />
             </div>
             {chat.showScrollToBottom && (
                 <ActionButton

@@ -18,6 +18,14 @@
     overflow-y: auto;
 }
 
+/* Reserved room below the last message so a new reply can be parked near the top and
+   type out in place. Height is set imperatively by useLlmChat (sized to what the turn
+   actually needs), so long replies leave little trailing blank. */
+.chat-bottom-spacer {
+    flex-shrink: 0;
+    pointer-events: none;
+}
+
 /* Floating jump-to-bottom button, centered along the bottom edge of the timeline. */
 .chat-message-list-wrapper .chat-scroll-to-bottom.icon-action {
     position: absolute;

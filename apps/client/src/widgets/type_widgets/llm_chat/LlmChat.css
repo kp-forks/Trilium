@@ -5,10 +5,7 @@
     box-sizing: border-box;
 
     .llm-chat-messages {
-        /* Extra bottom padding leaves breathing room below the last message, so the
-           first few lines of an incoming reply stream into view rather than below
-           the fold (the timeline no longer auto-follows the stream). */
-        padding: 1em 1em 6em;
+        padding: 1em;
     }
 
     .llm-chat-input-form {
