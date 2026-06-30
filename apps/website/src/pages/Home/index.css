@@ -213,32 +213,35 @@ section.hero-section {
         align-items: stretch;
     }
 
+    /* Two-column grid: the text column (title above, tagline pinned to the bottom
+       row) on the left, the screenshot spanning the full height on the right. A
+       grid keeps the tagline in normal flow — so it never overlaps the buttons on
+       short viewports — while still letting the screenshot fill the hero. */
     section.hero-section > .content-wrapper {
-        position: relative;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        align-items: stretch;
-        gap: 2em;
+        display: grid;
+        grid-template-columns: minmax(0, 34%) 1fr;
+        grid-template-rows: 1fr auto;
+        align-items: center;
+        column-gap: 2em;
         /* Slim top padding so the screenshot reaches up near the header instead
-           of leaving an empty band; the tagline is pinned absolutely so it needs
-           no reserved bottom space here. */
-        padding: 0.75em 3em 2.5em;
+           of leaving an empty band above it. */
+        padding: 0.75em 3em 1.5em;
     }
 
-    /* Keep the text column vertically centered while the screenshot fills the
-       full height of the hero next to it. */
+    /* Keep the text column vertically centered next to the full-height screenshot. */
     section.hero-section .title-section {
-        flex-basis: 34%;
+        grid-column: 1;
+        grid-row: 1;
         max-width: 30em;
-        align-self: center;
     }
 
     /* Deep screenshot: enlarge the right column and let it run off the right
        edge of the viewport for an immersive, "spilling off the page" look. The
-       column stretches to the hero's full height and anchors the image to the
-       top so the previously empty band above it is used. */
+       column spans both rows (full hero height) and anchors the image to the top
+       so the previously empty band above it is used. */
     section.hero-section .screenshot-container {
-        flex: 1 1 64%;
+        grid-column: 2;
+        grid-row: 1 / 3;
         margin-right: calc(50% - 50vw - 8em);
         display: flex;
         align-items: flex-start;
@@ -254,13 +257,12 @@ section.hero-section {
         object-position: left top;
     }
 
-    /* Pin the tagline to the bottom of the text column, clear of the screenshot. */
+    /* Tagline sits in its own bottom row of the text column, clear of the screenshot. */
     section.hero-section .hero-tagline {
-        position: absolute;
-        left: 3em;
-        bottom: 1.5em;
+        grid-column: 1;
+        grid-row: 2;
+        align-self: end;
         width: auto;
-        max-width: 34em;
         margin: 0;
         justify-content: flex-start;
     }
@@ -686,6 +688,8 @@ section.note-types .more-note-types {
     justify-content: center;
     gap: 0.75em;
     margin-top: 2em;
+    padding-top: 2em;
+    border-top: 1px solid color-mix(in srgb, var(--foreground-color) 12%, transparent);
 }
 
 section.note-types .more-note-types-label {
