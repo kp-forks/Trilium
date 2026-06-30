@@ -37,7 +37,11 @@
     "search_title": "Powerful search",
     "search_content": "Or search for text inside notes and narrow down the search by filtering by the parent note, or by depth.",
     "web_clipper_title": "Web clipper",
-    "web_clipper_content": "Grab web pages (or screenshots) and place them directly into Trilium using the web clipper browser extension."
+    "web_clipper_content": "Grab web pages (or screenshots) and place them directly into Trilium using the web clipper browser extension.",
+    "share_title": "Share notes on the web",
+    "share_content": "If you have a server, it can be used to share a subset of your notes with other people.",
+    "api_title": "REST API",
+    "api_content": "Interact with Trilium programmatically using its builtin REST API."
   },
   "note_types": {
     "title": "Multiple ways to represent your information",
@@ -58,13 +62,6 @@
     "markdown_description": "Prefer plain text? Write your notes directly in Markdown, keeping them portable and easy to version, while still rendering tables, code blocks and rich formatting in a side-by-side preview.",
     "spreadsheet_title": "Spreadsheet",
     "spreadsheet_description": "A fully-featured spreadsheet for tabular data, with formulas, conditional formatting, data validation, sorting and filtering. Import and export Excel (.xlsx) and CSV files."
-  },
-  "extensibility_benefits": {
-    "title": "Sharing & extensibility",
-    "share_title": "Share notes on the web",
-    "share_description": "If you have a server, it can be used to share a subset of your notes with other people.",
-    "api_title": "REST API",
-    "api_description": "Interact with Trilium programmatically using its builtin REST API."
   },
   "collections": {
     "title": "Collections",

@@ -172,9 +172,9 @@ section.organization .organization-cards {
 
 @media (max-width: 719.99px) {
     section.organization .organization-screenshot img {
-        width: auto;
-        max-width: 100%;
-        max-height: 50vh;
+        max-height: 30vh;
+        object-fit: cover;
+        object-position: top;
     }
 }
 

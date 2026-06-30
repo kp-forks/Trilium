@@ -60,7 +60,6 @@ export function Home() {
             <OrganizationBenefitsSection />
             <ProductivityBenefitsSection />
             <NoteTypesSection />
-            <ExtensibilityBenefitsSection />
             <ImportSection />
             <CollectionsSection />
             <ScriptingSection />
@@ -148,6 +147,8 @@ function ProductivityBenefitsSection() {
                     <Card iconSvg={jumpToIcon} title={t("productivity_benefits.jump_to_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/jump-to">{t("productivity_benefits.jump_to_content")}</Card>
                     <Card iconSvg={searchIcon} title={t("productivity_benefits.search_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/search">{t("productivity_benefits.search_content")}</Card>
                     <Card iconSvg={webClipperIcon} title={t("productivity_benefits.web_clipper_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/web-clipper">{t("productivity_benefits.web_clipper_content")}</Card>
+                    <Card iconSvg={shareIcon} title={t("productivity_benefits.share_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/sharing">{t("productivity_benefits.share_content")}</Card>
+                    <Card iconSvg={restApiIcon} title={t("productivity_benefits.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/etapi">{t("productivity_benefits.api_content")}</Card>
                 </div>
             </Section>
         </>
@@ -232,24 +233,10 @@ function NoteTypesSection() {
     );
 }
 
-function ExtensibilityBenefitsSection() {
-    const { t } = useTranslation();
-    return (
-        <>
-            <Section className="benefits accented" title={t("extensibility_benefits.title")}>
-                <div className="benefits-container grid-2-cols">
-                    <Card iconSvg={shareIcon} title={t("extensibility_benefits.share_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/sharing">{t("extensibility_benefits.share_description")}</Card>
-                    <Card iconSvg={restApiIcon} title={t("extensibility_benefits.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/etapi">{t("extensibility_benefits.api_description")}</Card>
-                </div>
-            </Section>
-        </>
-    );
-}
-
 function CollectionsSection() {
     const { t } = useTranslation();
     return (
-        <Section className="collections accented" title={t("collections.title")} subtitle={t("collections.subtitle")}>
+        <Section className="collections" title={t("collections.title")} subtitle={t("collections.subtitle")}>
             <TabbedShowcase items={[
                 {
                     title: t("collections.calendar_title"),
@@ -301,7 +288,7 @@ function CollectionsSection() {
 function AiIntegrationSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits ai-integration accented" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
+        <Section className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
             <div className="feature-split">
                 <div className="feature-screenshot">
                     <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />
@@ -319,7 +306,7 @@ function AiIntegrationSection() {
 function ScriptingSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits scripting" title={t("scripting.title")} subtitle={t("scripting.subtitle")} cta={{ text: t("scripting.learn_more"), href: "https://docs.triliumnotes.org/user-guide/scripts" }}>
+        <Section className="benefits scripting accented" title={t("scripting.title")} subtitle={t("scripting.subtitle")} cta={{ text: t("scripting.learn_more"), href: "https://docs.triliumnotes.org/user-guide/scripts" }}>
             <div className="feature-split">
                 <div className="feature-screenshot">
                     <img src="/feature_scripting.webp" alt={t("scripting.screenshot_alt")} loading="lazy" />
@@ -338,7 +325,7 @@ function ScriptingSection() {
 function ImportSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits import" title={t("import.title")} subtitle={t("import.subtitle")} cta={{ text: t("import.learn_more"), href: "https://docs.triliumnotes.org/user-guide/concepts/import-export" }}>
+        <Section className="benefits import accented" title={t("import.title")} subtitle={t("import.subtitle")} cta={{ text: t("import.learn_more"), href: "https://docs.triliumnotes.org/user-guide/concepts/import-export" }}>
             <div className="benefits-container grid-3-cols">
                 <Card iconSvg={oneNoteIcon} title={t("import.onenote_title")}>{t("import.onenote_description")}</Card>
                 <Card iconSvg={notionIcon} title={t("import.notion_title")}>{t("import.notion_description")}</Card>
