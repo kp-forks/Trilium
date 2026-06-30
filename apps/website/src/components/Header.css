@@ -32,14 +32,10 @@ header {
         height: 32px;
     }
 
-    img+span {
-        font-size: 1.3em;
-    }
-
     nav {
         flex-grow: 1;
         display: flex;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: var(--gap);
 
         a {
@@ -156,10 +152,6 @@ header {
 
 @media ((min-width: 720px) and (max-width: 1115px)) {
     header {
-        .banner span {
-            display: none;
-        }
-
         .content-wrapper {
             width: 100%;
         }
