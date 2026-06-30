@@ -36,7 +36,7 @@
     "auth_title": "Secure sign-in",
     "auth_content": "Protect your server login with multi-factor authentication (TOTP), or sign in through your own identity provider with OpenID Connect single sign-on.",
     "search_title": "Search & quick navigation",
-    "search_content": "Jump to any note or command by title with fuzzy matching, or run a full-text search across your notes, narrowed by parent note or depth.",
+    "search_content": "Jump to any note or command by title with fuzzy matching, or run a full-text search across your notes, reaching even the text inside images and PDFs thanks to built-in OCR.",
     "templates_title": "Templates",
     "templates_content": "Define reusable note templates with a preset structure, attributes and content, then create new notes from them in a click.",
     "web_clipper_title": "Web clipper",
