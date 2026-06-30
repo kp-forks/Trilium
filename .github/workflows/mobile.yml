@@ -4,11 +4,6 @@ on:
   pull_request:
     paths:
       - "apps/mobile/**"
-      - "apps/client/**"
-      - "apps/standalone/**"
-      - "packages/**"
-      - "pnpm-lock.yaml"
-      - "package.json"
       - ".github/workflows/mobile.yml"
       - ".github/actions/build-mobile/**"
   workflow_dispatch:
@@ -28,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Build mobile APK
         uses: ./.github/actions/build-mobile

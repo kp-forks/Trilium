@@ -6,7 +6,7 @@ import dateUtils from "./utils/date.js";
 import keyboardActions from "./keyboard_actions.js";
 import { getLog } from "./log.js";
 import optionService from "./options.js";
-import { isWindows, randomSecureToken } from "./utils/index.js";
+import { isLinux, isWindows, randomSecureToken } from "./utils/index.js";
 
 export function initDocumentOptions() {
     optionService.createOption("documentId", randomSecureToken(16), false);
@@ -69,6 +69,7 @@ export async function initNotSyncedOptions(initialized: boolean, opts: NotSynced
     optionService.createOption("syncServerHost", opts.syncServerHost || "", false);
     optionService.createOption("syncServerTimeout", "120", false); // 120 seconds (2 minutes)
     optionService.createOption("syncProxy", opts.syncProxy || "", false);
+    optionService.createOption("syncIncomplete", "false", false);
 }
 
 /**
@@ -136,7 +137,7 @@ const defaultOptions: DefaultOption[] = [
     { name: "codeNoteIndentWithTabs", value: "false", isSynced: true },
     {
         name: "codeNotesMimeTypes",
-        value: '["text/x-csrc","text/x-c++src","text/x-csharp","text/css","text/x-elixir","text/x-go","text/x-groovy","text/x-haskell","text/html","message/http","text/x-java","application/javascript;env=frontend","application/javascript;env=backend","application/json","text/x-kotlin","text/x-markdown","text/x-perl","text/x-php","text/x-python","text/x-ruby",null,"text/x-sql","text/x-sqlite;schema=trilium","text/x-swift","text/xml","text/x-yaml","text/x-sh","application/typescript"]',
+        value: '["text/x-csrc","text/x-c++src","text/x-csharp","text/css","text/x-elixir","text/x-go","text/x-groovy","text/x-haskell","text/html","message/http","text/x-java","text/javascript","application/javascript;env=frontend","application/javascript;env=backend","application/json","text/x-kotlin","text/x-markdown","text/x-perl","text/x-php","text/x-python","text/x-ruby",null,"text/x-sql","text/x-sqlite;schema=trilium","text/x-swift","text/xml","text/x-yaml","text/x-sh","application/typescript"]',
         isSynced: true
     },
     { name: "leftPaneWidth", value: "25", isSynced: false },
@@ -144,13 +145,16 @@ const defaultOptions: DefaultOption[] = [
     { name: "rightPaneWidth", value: "25", isSynced: false },
     { name: "rightPaneVisible", value: "true", isSynced: false },
     { name: "rightPaneCollapsedItems", value: "[]", isSynced: false },
-    { name: "nativeTitleBarVisible", value: "false", isSynced: false },
+    // On Linux a native title bar integrates better with the rest of the system, so default it on there.
+    // This only applies to fresh installs — existing databases already have the option set and are left untouched.
+    { name: "nativeTitleBarVisible", value: () => isLinux() ? "true" : "false", isSynced: false },
     { name: "eraseEntitiesAfterTimeInSeconds", value: "604800", isSynced: true }, // default is 7 days
     { name: "eraseEntitiesAfterTimeScale", value: "86400", isSynced: true }, // default 86400 seconds = Day
     { name: "hideArchivedNotes_main", value: "false", isSynced: false },
     { name: "debugModeEnabled", value: "false", isSynced: false },
     { name: "headingStyle", value: "underline", isSynced: true },
     { name: "autoCollapseNoteTree", value: "true", isSynced: true },
+    { name: "treeScrollFollowNavigation", value: "true", isSynced: true },
     { name: "autoReadonlySizeText", value: "32000", isSynced: false },
     { name: "autoReadonlySizeCode", value: "64000", isSynced: false },
     { name: "dailyBackupEnabled", value: "true", isSynced: false },
@@ -164,6 +168,9 @@ const defaultOptions: DefaultOption[] = [
     { name: "highlightsList", value: '["underline","color","bgColor"]', isSynced: true },
     { name: "checkForUpdates", value: "true", isSynced: true },
     { name: "disableTray", value: "false", isSynced: false },
+    { name: "closeToTray", value: "false", isSynced: false },
+    { name: "launchOnStartup", value: "false", isSynced: false },
+    { name: "hideOnAutoStart", value: "false", isSynced: false },
     { name: "eraseUnusedAttachmentsAfterSeconds", value: "2592000", isSynced: true }, // default 30 days
     { name: "eraseUnusedAttachmentsAfterTimeScale", value: "86400", isSynced: true }, // default 86400 seconds = Day
     { name: "logRetentionDays", value: "90", isSynced: false }, // default 90 days
@@ -175,10 +182,8 @@ const defaultOptions: DefaultOption[] = [
     { name: "searchAutocompleteFuzzy", value: "false", isSynced: true },
 
     { name: "editedNotesOpenInRibbon", value: "true", isSynced: true },
-    { name: "mfaEnabled", value: "false", isSynced: false },
     { name: "mfaMethod", value: "totp", isSynced: false },
     { name: "encryptedRecoveryCodes", value: "false", isSynced: false },
-    { name: "userSubjectIdentifierSaved", value: "false", isSynced: false },
 
     // Appearance
     { name: "splitEditorOrientation", value: "horizontal", isSynced: true },
@@ -197,6 +202,9 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "codeNoteThemeMatchesApp", value: "true", isSynced: false },
+    { name: "codeNoteThemeLight", value: "default:vs-code-light", isSynced: false },
+    { name: "codeNoteThemeDark", value: "default:vs-code-dark", isSynced: false },
     { name: "motionEnabled", value: "true", isSynced: false },
     { name: "shadowsEnabled", value: "true", isSynced: false },
     { name: "backdropEffectsEnabled", value: "true", isSynced: false },
@@ -223,6 +231,9 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "codeBlockThemeMatchesApp", value: "true", isSynced: false },
+    { name: "codeBlockThemeLight", value: "default:stackoverflow-light", isSynced: false },
+    { name: "codeBlockThemeDark", value: "default:stackoverflow-dark", isSynced: false },
     { name: "codeBlockWordWrap", value: "false", isSynced: true },
     { name: "codeBlockTabWidth", value: "4", isSynced: true },
 
@@ -257,6 +268,8 @@ const defaultOptions: DefaultOption[] = [
     { name: "experimentalFeatures", value: "[]", isSynced: true },
 
     // AI / LLM
+    // Was previously the "llm" experimental feature; inherit the value from there for existing users.
+    { name: "aiEnabled", value: (optionsMap) => optionsMap.experimentalFeatures?.includes('"llm"') ? "true" : "false", isSynced: true },
     { name: "llmProviders", value: "[]", isSynced: true },
     { name: "mcpEnabled", value: "false", isSynced: false },
 

@@ -1,12 +1,11 @@
 import type { WebSocketMessage } from "@triliumnext/commons";
-import type { ClientMessageHandler, MessagingProvider } from "@triliumnext/core";
+import { getLog, shouldLogMessage, type ClientMessageHandler, type MessagingProvider } from "@triliumnext/core";
 import type { IncomingMessage, Server as HttpServer } from "http";
 import type express from "express";
 import { WebSocket, WebSocketServer } from "ws";
 
 import config from "./config.js";
-import log from "./log.js";
-import { isElectron, randomString } from "./utils.js";
+import { randomString } from "./utils.js";
 
 type SessionParser = (req: IncomingMessage, params: {}, cb: () => void) => void;
 
@@ -15,6 +14,10 @@ type SessionParser = (req: IncomingMessage, params: {}, cb: () => void) => void;
  *
  * Handles the raw WebSocket transport: server setup, connection management,
  * message serialization, and client tracking.
+ *
+ * Note: this provider is no longer used by the Electron desktop build —
+ * desktop runs IpcMessagingProvider instead so the renderer↔server messaging
+ * channel never crosses a TCP socket. See `apps/server/src/main.ts`.
  */
 export default class WebSocketMessagingProvider implements MessagingProvider {
     private webSocketServer!: WebSocketServer;
@@ -25,10 +28,10 @@ export default class WebSocketMessagingProvider implements MessagingProvider {
         this.webSocketServer = new WebSocketServer({
             verifyClient: (info, done) => {
                 sessionParser(info.req as express.Request, {} as express.Response, () => {
-                    const allowed = isElectron || (info.req as any).session.loggedIn || (config.General && config.General.noAuthentication);
+                    const allowed = (info.req as any).session.loggedIn || (config.General && config.General.noAuthentication);
 
                     if (!allowed) {
-                        log.error("WebSocket connection not allowed because session is neither electron nor logged in.");
+                        getLog().error("WebSocket connection not allowed: session is not logged in.");
                     }
 
                     done(allowed);
@@ -44,12 +47,30 @@ export default class WebSocketMessagingProvider implements MessagingProvider {
 
             console.log(`websocket client connected`);
 
-            ws.on("message", async (messageJson) => {
-                const message = JSON.parse(messageJson as any);
+            ws.on("error", (error) => {
+                // A protocol error on a single connection (e.g. WS_ERR_INVALID_CLOSE_CODE from a
+                // malformed close frame sent by a browser going to sleep) emits an "error" event on
+                // this socket. Without a listener, Node's EventEmitter rethrows it as an uncaught
+                // exception and crashes the whole process. Log and drop the connection instead.
+                // https://github.com/TriliumNext/Trilium/issues/9598
+                console.error("WebSocket connection error:", error);
+                this.clientMap.delete(id);
+            });
 
-                if (this.clientMessageHandler) {
-                    await this.clientMessageHandler(id, message);
-                }
+            ws.on("message", (messageJson) => {
+                void (async () => {
+                    try {
+                        const message = JSON.parse(messageJson as any);
+
+                        if (this.clientMessageHandler) {
+                            await this.clientMessageHandler(id, message);
+                        }
+                    } catch (e) {
+                        // A malformed message (invalid JSON) or a failing handler must not
+                        // crash the process via an unhandled rejection on this floating promise.
+                        console.error("Failed to process websocket message:", e);
+                    }
+                })();
             });
 
             ws.on("close", () => {
@@ -74,8 +95,8 @@ export default class WebSocketMessagingProvider implements MessagingProvider {
         const jsonStr = JSON.stringify(message);
 
         if (this.webSocketServer) {
-            if (message.type !== "sync-failed" && message.type !== "api-log-messages") {
-                log.info(`Sending message to all clients: ${jsonStr}`);
+            if (shouldLogMessage(message)) {
+                getLog().info(`Sending message to all clients: ${jsonStr}`);
             }
 
             this.webSocketServer.clients.forEach((client) => {

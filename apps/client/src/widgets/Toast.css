@@ -25,6 +25,7 @@
 
 .toast-body {
     white-space: preserve-breaks;
+    user-select: text;
     overflow: hidden;
 }
 
@@ -50,6 +51,12 @@
     display: flex;
     align-items: center;
     padding: var(--bs-toast-padding-y) var(--bs-toast-padding-x);
+}
+
+/* Without the close button the body would otherwise butt against the toast edge, since the body itself
+   carries no inline padding in the no-title layout (it relies on the icon/close padding for breathing room). */
+.toast.no-title.not-dismissible .toast-body {
+    padding-inline-end: var(--bs-toast-padding-x);
 }
 
 .toast {

@@ -163,6 +163,9 @@ export const bookPropertiesConfig: Record<ViewTypeOptions, BookConfig> = {
                 }))
             }
         ]
+    },
+    dashboard: {
+        properties: []
     }
 };
 

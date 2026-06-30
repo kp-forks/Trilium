@@ -101,8 +101,7 @@ export default class RootCommandExecutor extends Component {
 
     async showLaunchBarSubtreeCommand() {
         const rootNote = utils.isMobile() ? "_lbMobileRoot" : "_lbRoot";
-        await this.showAndHoistSubtree(rootNote);
-        this.showLeftPaneCommand();
+        appContext.triggerCommand("openInTreePopup", { noteIdOrPath: rootNote, hoistedNoteId: rootNote });
     }
 
     async showShareSubtreeCommand() {
@@ -111,13 +110,6 @@ export default class RootCommandExecutor extends Component {
 
     async showHiddenSubtreeCommand() {
         await this.showAndHoistSubtree("_hidden");
-    }
-
-    async showOptionsCommand({ section }: CommandListenerData<"showOptions">) {
-        await appContext.tabManager.openContextWithNote(section || "_options", {
-            activate: true,
-            hoistedNoteId: "_options"
-        });
     }
 
     async showSQLConsoleHistoryCommand() {
@@ -187,11 +179,7 @@ export default class RootCommandExecutor extends Component {
     toggleTrayCommand() {
         if (!utils.isElectron() || options.is("disableTray")) return;
 
-        const { BrowserWindow } = utils.dynamicRequire("@electron/remote");
-        const windows = BrowserWindow.getAllWindows() as Electron.BaseWindow[];
-        const isVisible = windows.every((w) => w.isVisible());
-        const action = isVisible ? "hide" : "show";
-        for (const window of windows) window[action]();
+        window.electronApi?.window.toggleAllWindows();
     }
 
     toggleZenModeCommand() {
@@ -252,7 +240,7 @@ export default class RootCommandExecutor extends Component {
         const tab = mainNoteContexts[index];
 
         if (tab) {
-            appContext.tabManager.activateNoteContext(tab.ntxId);
+            appContext.tabManager.activateTabContext(tab.ntxId);
         }
     }
 

@@ -1,6 +1,7 @@
 import fs from "fs";
 import { join, resolve, sep } from "path";
 
+import { codecovVitePlugin } from "@codecov/vite-plugin";
 import prefresh from "@prefresh/vite";
 import { defineConfig, type Plugin } from "vite";
 import { viteStaticCopy } from "vite-plugin-static-copy";
@@ -66,9 +67,7 @@ const pdfjsServePlugin = (): Plugin => ({
                     json: "application/json"
                 };
                 res.setHeader("Content-Type", mimeTypes[ext] || "application/octet-stream");
-                // Match isolation headers from main page for iframe compatibility
                 res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-                res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
                 fs.createReadStream(filePath).pipe(res);
             } else {
                 next();
@@ -199,16 +198,33 @@ if (process.env.TRILIUM_INTEGRATION_TEST) {
     ]
 }
 
+if (!isDev) {
+    // Put the Codecov vite plugin after all other plugins.
+    // Gated on CODECOV_TOKEN so it stays a no-op locally and in the
+    // integration-test build (which sets no token).
+    plugins = [
+        ...plugins,
+        codecovVitePlugin({
+            enableBundleAnalysis: !!process.env.CODECOV_TOKEN,
+            bundleName: "standalone",
+            uploadToken: process.env.CODECOV_TOKEN
+        })
+    ];
+}
+
 export default defineConfig(() => ({
     root: join(__dirname, 'src'),  // Set src as root so index.html is served from /
     envDir: __dirname,  // Load .env files from standalone directory, not src/
     cacheDir: '../../../node_modules/.vite/apps/standalone',
     base: "",
     plugins,
-    esbuild: {
-        jsx: 'automatic',
-        jsxImportSource: 'preact',
-        jsxDev: isDev
+    // Use oxc for JSX transformation (Vite 8+ replaced the deprecated `esbuild` option with `oxc`)
+    oxc: {
+        jsx: {
+            runtime: 'automatic',
+            importSource: 'preact',
+            development: isDev
+        }
     },
     css: {
         transformer: 'lightningcss',
@@ -257,16 +273,16 @@ export default defineConfig(() => ({
             ]
         },
         headers: {
-            // Required for SharedArrayBuffer which is needed by SQLite WASM OPFS VFS
-            // See: https://sqlite.org/wasm/doc/trunk/persistence.md#coop-coep
-            "Cross-Origin-Opener-Policy": "same-origin",
-            "Cross-Origin-Embedder-Policy": "require-corp"
+            // COOP is kept for security (prevents window.opener attacks).
+            // COEP is intentionally omitted: SAHPool (our primary SQLite VFS) does not
+            // require SharedArrayBuffer/COEP, and omitting it allows cross-origin iframes
+            // (e.g. in-app help pointing to docs.triliumnotes.org).
+            "Cross-Origin-Opener-Policy": "same-origin"
         }
     },
     preview: {
         headers: {
-            "Cross-Origin-Opener-Policy": "same-origin",
-            "Cross-Origin-Embedder-Policy": "require-corp"
+            "Cross-Origin-Opener-Policy": "same-origin"
         }
     },
     optimizeDeps: {
@@ -305,10 +321,45 @@ export default defineConfig(() => ({
         environment: "happy-dom",
         setupFiles: [join(__dirname, "src/test_setup.ts")],
         dir: join(__dirname),
+        reporters: [
+            "default",
+            // Absolute path on purpose: the Vite `root` above is `src`, so a
+            // relative outputFile would land in `src/test-output`. Anchor to the
+            // package dir to match the other apps and the CI upload path.
+            ["junit", { outputFile: join(__dirname, "test-output/vitest/junit.xml"), addFileAttribute: true }]
+        ],
         include: [
             "src/**/*.{test,spec}.{ts,tsx}",
             "../../packages/trilium-core/src/**/*.{test,spec}.{ts,tsx}"
         ],
+        coverage: {
+            // Absolute path for the same reason as the junit reporter above: the
+            // Vite `root` is `src`, so a relative path would land in
+            // `src/test-output`. Anchor to the package dir (matches the CI upload path).
+            reportsDirectory: join(__dirname, "test-output/vitest/coverage"),
+            provider: "v8" as const,
+            // trilium-core lives outside this project's `root` (which is `src`),
+            // so its files are only collected when `allowExternal` is enabled.
+            allowExternal: true,
+            // Vite `root` above is `src`, so coverage include globs resolve relative to src/.
+            // `../../../` walks src -> standalone -> apps -> repo root to reach the core package.
+            include: ["**/*.{ts,tsx}", "../../../packages/trilium-core/src/**/*.{ts,tsx}"],
+            exclude: [
+                "**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}",
+                "**/*.d.ts",
+                // Build/E2E config, not unit-testable.
+                "**/playwright.config.ts",
+                // Test harness, not product code.
+                "**/test_setup.ts",
+                // Thin re-export entry (forwards the client desktop entry).
+                "**/desktop.ts",
+                // The web-worker entry boots @triliumnext/core (and a second SQLite
+                // WASM init) on load, which conflicts with the unit-test harness's own
+                // core initialization; it is exercised by the Playwright e2e suite instead.
+                "**/local-server-worker.ts"
+            ],
+            reporter: ["text", "html", "lcov"]
+        },
         server: {
             deps: {
                 inline: ["@sqlite.org/sqlite-wasm"]

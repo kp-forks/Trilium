@@ -1,8 +1,14 @@
-import { ADMONITION_TYPE_MAPPINGS } from "@triliumnext/commons";
+import { type TaskStateDef } from "@triliumnext/commons";
+import { ADMONITION_TYPE_MAPPINGS } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { gfm } from "@triliumnext/turndown-plugin-gfm";
 import Turnish, { type Rule } from "turnish";
 
+import { getTaskStates } from "../task_states.js";
+
 let instance: Turnish | null = null;
+
+/** Task states for the current `toMarkdown` invocation, consulted by the list-item filter. */
+let currentTaskStates: TaskStateDef[] = [];
 
 export { ADMONITION_TYPE_MAPPINGS };
 
@@ -26,6 +32,8 @@ const fencedCodeBlockFilter: Rule = {
 };
 
 function toMarkdown(content: string) {
+    currentTaskStates = getTaskStates();
+
     if (instance === null) {
         instance = new Turnish({
             headingStyle: "atx",
@@ -45,6 +53,7 @@ function toMarkdown(content: string) {
         instance.addRule("fencedCodeBlock", fencedCodeBlockFilter);
         instance.addRule("img", buildImageFilter());
         instance.addRule("admonition", buildAdmonitionFilter());
+        instance.addRule("details", buildDetailsFilter());
         instance.addRule("inlineLink", buildInlineLinkFilter());
         instance.addRule("figure", buildFigureFilter());
         instance.addRule("math", buildMathFilter());
@@ -211,6 +220,27 @@ function buildFigureFilter(): Rule {
     };
 }
 
+/**
+ * Markdown has no native syntax for disclosure widgets, but GitHub, Obsidian
+ * and most CommonMark+HTML renderers accept raw <details>/<summary> verbatim
+ * — and Trilium's markdown importer already parses them back into the
+ * collapsible model node, so passthrough round-trips losslessly.
+ *
+ * We match on tag name only (not on the trilium-collapsible class) so any
+ * pasted/imported <details> is preserved too; stripping it to plain text
+ * would silently lose structure.
+ */
+function buildDetailsFilter(): Rule {
+    return {
+        filter(node) {
+            return node.nodeName === "DETAILS";
+        },
+        replacement(_content, node) {
+            return `\n\n${(node as HTMLElement).outerHTML}\n\n`;
+        }
+    };
+}
+
 // Keep in line with https://github.com/mixmark-io/turndown/blob/master/src/commonmark-rules.js.
 function buildListItemFilter(): Rule {
     return {
@@ -226,8 +256,16 @@ function buildListItemFilter(): Rule {
                 const index = Array.prototype.indexOf.call(parent.children, node);
                 prefix = `${start ? Number(start) + index : index + 1}.  `;
             } else if (parent.classList.contains("todo-list")) {
-                const isChecked = node.querySelector("input[type=checkbox]:checked");
-                prefix = (isChecked ? "- [x] " : "- [ ] ");
+                const state = (node as HTMLElement).getAttribute("data-trilium-task-state");
+                const stateMarker = state
+                    ? currentTaskStates.find((s) => s.name === state)?.markdownSymbol
+                    : undefined;
+                if (stateMarker) {
+                    prefix = `- [${stateMarker}] `;
+                } else {
+                    const isChecked = node.querySelector("input[type=checkbox]:checked");
+                    prefix = (isChecked ? "- [x] " : "- [ ] ");
+                }
             }
 
             const result = prefix + content + (node.nextSibling && !/\n$/.test(content) ? '\n' : '');

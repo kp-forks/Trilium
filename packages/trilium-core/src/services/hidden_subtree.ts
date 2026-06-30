@@ -12,6 +12,7 @@ import migrationService from "./migration.js";
 import noteService from "./notes.js";
 import { getLog } from "./log.js";
 import { getSql } from "./sql/index.js";
+import { seedDefaultTaskStates } from "./task_states.js";
 
 export const LBTPL_ROOT = "_lbTplRoot";
 export const LBTPL_BASE = "_lbTplBase";
@@ -70,7 +71,10 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
             {
                 id: "_llmChat",
                 title: t("hidden-subtree.llm-chat-history-title"),
-                type: "doc",
+                type: "book",
+                attributes: [
+                    { type: "label", name: "viewType", value: "grid" }
+                ],
                 icon: "bx-message-square-dots"
             },
             {
@@ -83,6 +87,48 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                 id: "_bulkAction",
                 title: t("hidden-subtree.bulk-action-title"),
                 type: "doc"
+            },
+            {
+                id: "_taskStates",
+                title: t("hidden-subtree.task-states-title"),
+                type: "doc",
+                icon: "bx-list-check",
+                isExpanded: true,
+                attributes: [
+                    { type: "label", name: "child:label:stateId", value: `promoted,single,text,alias=${t("hidden-subtree.task-state-attr-state-id")}` },
+                    { type: "label", name: "child:label:markdownSymbol", value: `promoted,single,text,alias=${t("hidden-subtree.task-state-attr-markdown-symbol")}` },
+                    { type: "label", name: "child:label:isCompleted", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-completed")}` },
+                    { type: "label", name: "child:label:color", value: `promoted,single,color,alias=${t("hidden-subtree.task-state-attr-color")}` },
+                    { type: "label", name: "child:label:isHidden", value: `promoted,single,boolean,alias=${t("hidden-subtree.task-state-attr-is-hidden")}` },
+                    // Documentation page for this container. The anchor states use
+                    // `system_state`, custom states use `task_state` (see createTaskStateNote).
+                    { type: "label", name: "docName", value: "task_states" }
+                ],
+                // Non-customizable anchor states — recreated if missing; they only
+                // determine where `none`/`done` sit in the toolbar/cycling order.
+                children: [
+                    {
+                        id: "_taskStateNone",
+                        title: t("hidden-subtree.task-state-none"),
+                        type: "doc",
+                        icon: "bx-checkbox",
+                        attributes: [
+                            { type: "label", name: "hidePromotedAttributes" },
+                            { type: "label", name: "docName", value: "system_state" }
+                        ]
+                    },
+                    {
+                        id: "_taskStateDone",
+                        title: t("hidden-subtree.task-state-done"),
+                        type: "doc",
+                        icon: "bx-check",
+                        attributes: [
+                            { type: "label", name: "hidePromotedAttributes" },
+                            { type: "label", name: "color", value: "#4de64d" },
+                            { type: "label", name: "docName", value: "system_state" }
+                        ]
+                    }
+                ]
             },
             {
                 id: "_backendLog",
@@ -255,9 +301,11 @@ function buildHiddenSubtreeDefinition(helpSubtree: HiddenSubtreeItem[]): HiddenS
                     { id: "_optionsCodeNotes", title: t("hidden-subtree.code-notes-title"), type: "contentWidget", icon: "bx-code" },
                     { id: "_optionsImages", title: "Images", type: "contentWidget", enforceDeleted: true },
                     { id: "_optionsMedia", title: t("hidden-subtree.images-title"), type: "contentWidget", icon: "bx-image" },
-                    { id: "_optionsSpellcheck", title: t("hidden-subtree.spellcheck-title"), type: "contentWidget", icon: "bx-check-double" },
+                    { id: "_optionsSpellcheck", title: t("hidden-subtree.spellcheck-title"), type: "contentWidget", icon: "bx-check-double", attributes: [{ type: "label", name: "electronOnly" }] },
+                    { id: "_optionsDesktop", title: t("hidden-subtree.desktop-title"), type: "contentWidget", icon: "bx-desktop", attributes: [{ type: "label", name: "electronOnly" }] },
+                    { id: "_optionsSecurity", title: t("hidden-subtree.security-title"), type: "contentWidget", icon: "bx-shield" },
                     { id: "_optionsPassword", title: t("hidden-subtree.password-title"), type: "contentWidget", icon: "bx-lock" },
-                    { id: '_optionsMFA', title: t('hidden-subtree.multi-factor-authentication-title'), type: 'contentWidget', icon: 'bx-lock ' },
+                    { id: "_optionsMFA", title: t("hidden-subtree.multi-factor-authentication-title"), type: "contentWidget", enforceDeleted: true },
                     { id: "_optionsEtapi", title: t("hidden-subtree.etapi-title"), type: "contentWidget", icon: "bx-extension" },
                     { id: "_optionsBackup", title: t("hidden-subtree.backup-title"), type: "contentWidget", icon: "bx-data" },
                     { id: "_optionsSync", title: t("hidden-subtree.sync-title"), type: "contentWidget", icon: "bx-wifi" },
@@ -298,15 +346,23 @@ function checkHiddenSubtree(force = false, extraOpts: CheckHiddenExtraOpts = {})
     }
 
     getSql().transactional(() => {
-        checkHiddenSubtreeRecursively("root", hiddenSubtreeDefinition, extraOpts);
-    });
+        const taskStatesExisted = !!becca.notes["_taskStates"];
 
-    try {
-        cleanUpHelp(helpSubtree);
-    } catch (e) {
-        // Non-critical operation should something go wrong.
-        console.error(e);
-    }
+        checkHiddenSubtreeRecursively("root", hiddenSubtreeDefinition, extraOpts);
+
+        // Seed the default task states only the first time the container is created,
+        // so that later user deletions stick instead of being recreated on startup.
+        if (!taskStatesExisted) {
+            seedDefaultTaskStates();
+        }
+
+        try {
+            cleanUpHelp(helpSubtree);
+        } catch (e) {
+            // Non-critical operation should something go wrong.
+            console.error(e);
+        }
+    });
 }
 
 /**
@@ -374,6 +430,7 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
             noteId: item.id,
             title: item.title,
             type: item.type,
+            mime: item.mime,
             parentNoteId,
             content: item.content ?? "",
             ignoreForbiddenParents: true
@@ -459,6 +516,12 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
         note.save();
     }
 
+    if (item.mime && note.mime !== item.mime) {
+        // enforce a correct MIME type
+        note.mime = item.mime;
+        note.save();
+    }
+
     if (branch) {
         // in case of launchers the branch ID is not preserved and should not be relied upon - launchers which move between
         // visible and available will change branch since the branch's parent-child relationship is immutable
@@ -484,8 +547,12 @@ function checkHiddenSubtreeRecursively(parentNoteId: string, item: HiddenSubtree
                 continue;
             }
 
-            // Ensure value is consistent.
-            if (attribute.value !== attrDef.value || attribute.type !== attrDef.type) {
+            // Ensure value is consistent. Normalize the expected value the same way it is written
+            // below (`attrDef.value ?? ""`): many definitions omit `value` (undefined) while the
+            // stored attribute holds "". Comparing the raw `attrDef.value` made `"" !== undefined`
+            // always true, so every value-less attribute was re-saved on each run — and save()
+            // unconditionally emits a sync entity change, churning all open editors.
+            if (attribute.value !== (attrDef.value ?? "") || attribute.type !== attrDef.type) {
                 attribute.type = attrDef.type;
                 attribute.value = attrDef.value ?? "";
                 attribute.save();

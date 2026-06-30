@@ -1,5 +1,7 @@
-import { renderSpreadsheetToHtml, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
-import { icon_packs as iconPackService, sanitize, utils } from "@triliumnext/core";
+import { extractYouTubeVideoId } from "@triliumnext/commons";
+import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
+import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
+import { type BAttachment, type BBranch, becca, BNote, getLog, icon_packs as iconPackService, options, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
@@ -8,13 +10,8 @@ import { t } from "i18next";
 import { HTMLElement, Options, parse, TextNode } from "node-html-parser";
 import { join } from "path";
 
-import becca from "../becca/becca.js";
-import BAttachment from '../becca/entities/battachment.js';
-import type BBranch from "../becca/entities/bbranch.js";
-import BNote from "../becca/entities/bnote.js";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";
-import log from "../services/log.js";
-import options from "../services/options.js";
+import { isScriptingEnabled } from "../services/scripting_guard.js";
 import { getResourceDir, isDev } from "../services/utils.js";
 import SAttachment from "./shaca/entities/sattachment.js";
 import SBranch from "./shaca/entities/sbranch.js";
@@ -24,6 +21,21 @@ import shareRoot from "./share_root.js";
 
 const shareAdjustedAssetPath = isDev ? assetPath : `../${assetPath}`;
 const templateCache: Map<string, string> = new Map();
+
+/**
+ * Maximum number of lines a code block may have before server-side syntax highlighting is skipped.
+ * Mirrors the editor's per-block cutoff (HIGHLIGHT_MAX_BLOCK_COUNT in the ckeditor5 syntax
+ * highlighting plugin); beyond it `highlightAuto` is too slow and would block the event loop on
+ * large shared/included code notes (#9717).
+ */
+const HIGHLIGHT_MAX_LINE_COUNT = 500;
+
+/**
+ * Maximum number of characters a code block may have before server-side syntax highlighting is
+ * skipped. The line-count cutoff alone does not protect against a single very long line (e.g.
+ * minified code), so a separate character ceiling guards `highlightAuto`'s size-driven cost.
+ */
+const HIGHLIGHT_MAX_CHAR_COUNT = 50_000;
 
 /**
  * Represents the output of the content renderer.
@@ -95,7 +107,10 @@ export function renderNoteForExport(note: BNote, parentBranch: BBranch, basePath
         faviconUrl: `${basePath}favicon.ico`,
         ancestors,
         isStatic: true,
-        iconPackCss: iconPacks.map(p => iconPackService.generateCss(p, `${basePath}assets/icon-pack-${p.prefix.toLowerCase()}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`))
+        iconPackCss: [
+            ...iconPacks.map(p => iconPackService.generateCss(p, `${basePath}assets/icon-pack-${p.prefix.toLowerCase()}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`)),
+            task_states.generateTaskStateCss()
+        ]
             .filter(Boolean)
             .join("\n\n"),
         iconPackSupportedPrefixes: iconPacks.map(p => p.prefix)
@@ -147,10 +162,13 @@ export function renderNoteContent(note: SNote) {
         ancestors,
         isStatic: false,
         faviconUrl: note.hasRelation("shareFavicon") ? `api/notes/${note.getRelationValue("shareFavicon")}/download` : `../favicon.ico`,
-        iconPackCss: iconPacks.map(p => iconPackService.generateCss(p, p.builtin
-            ? `assets/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
-            : `api/attachments/${p.fontAttachmentId}/download`
-        ))
+        iconPackCss: [
+            ...iconPacks.map(p => iconPackService.generateCss(p, p.builtin
+                ? `assets/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
+                : `api/attachments/${p.fontAttachmentId}/download`
+            )),
+            task_states.generateTaskStateCss()
+        ]
             .filter(Boolean)
             .join("\n\n"),
         iconPackSupportedPrefixes: iconPacks.map(p => p.prefix)
@@ -181,7 +199,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
     }
 
     const { header, content, isEmpty } = getContent(note);
-    const showLoginInShareTheme = options.getOption("showLoginInShareTheme");
+    const showLoginInShareTheme = options.getOptionBool("showLoginInShareTheme");
     const opts = {
         note,
         header,
@@ -193,11 +211,13 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
         t,
         isDev,
         utils,
+        sanitizeUrl: sanitize.sanitizeUrl,
         ...renderArgs,
     };
 
     // Check if the user has their own template.
-    if (note.hasRelation("shareTemplate")) {
+    // Skip user-provided EJS templates when backend scripting is disabled since EJS can execute arbitrary JS.
+    if (note.hasRelation("shareTemplate") && isScriptingEnabled()) {
         // Get the template note and content
         const templateId = note.getRelation("shareTemplate")?.value;
         const templateNote = templateId && shaca.getNote(templateId);
@@ -224,7 +244,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
                 }
             } catch (e: unknown) {
                 const [errMessage, errStack] = utils.safeExtractMessageAndStackFromError(e);
-                log.error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
+                getLog().error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
             }
         }
     }
@@ -320,6 +340,48 @@ function renderText(result: Result, note: SNote | BNote) {
     };
     const document = parse(result.content || "", parseOpts);
 
+    // Process link mentions (inline) — metadata is stored in data attributes.
+    for (const mentionEl of document.querySelectorAll("span.link-mention")) {
+        const url = mentionEl.getAttribute("data-url");
+        if (!url) continue;
+        const title = mentionEl.getAttribute("data-title") || safeHostnameForShare(url);
+        const favicon = mentionEl.getAttribute("data-favicon");
+        const faviconHtml = favicon
+            ? `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">`
+            : `<span class="link-embed-mention-dot"></span>`;
+        mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+            faviconHtml +
+            `<span class="link-embed-mention-title">${escapeHtml(title)}</span></a>`;
+    }
+
+    // Process link embeds (block) — metadata is stored in data attributes.
+    for (const embedEl of document.querySelectorAll("section.link-embed")) {
+        const url = embedEl.getAttribute("data-url");
+        const embedType = embedEl.getAttribute("data-embed-type");
+        if (!url) continue;
+
+        if (embedType === "youtube") {
+            const videoId = extractYouTubeVideoId(url);
+            if (videoId) {
+                embedEl.innerHTML = `<div class="link-embed-video"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0" frameborder="0" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:none;"></iframe></div>`;
+            }
+        } else {
+            const title = embedEl.getAttribute("data-title") || safeHostnameForShare(url);
+            const description = embedEl.getAttribute("data-description");
+            const image = embedEl.getAttribute("data-image");
+            const siteName = embedEl.getAttribute("data-site-name") || safeHostnameForShare(url);
+
+            const imageHtml = image
+                ? `<div class="link-embed-card-image-wrapper"><img class="link-embed-card-image" src="${escapeHtml(image)}" alt="" loading="lazy"></div>`
+                : `<div class="link-embed-card-image-wrapper"><div class="link-embed-card-image-placeholder">&#128279;</div></div>`;
+            const descHtml = description ? `<div class="link-embed-card-description">${escapeHtml(description)}</div>` : "";
+
+            embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+                imageHtml +
+                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}<div class="link-embed-card-url">${escapeHtml(siteName)}</div></div></a>`;
+        }
+    }
+
     // Process include notes.
     for (const includeNoteEl of document.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
@@ -372,7 +434,13 @@ function renderText(result: Result, note: SNote | BNote) {
                 continue;
             }
 
-            const highlightResult = highlightAuto(codeEl.text);
+            // codeEl.text recursively traverses the node's subtree, so read it once.
+            const codeText = codeEl.text;
+            if (!shouldSyntaxHighlight(codeText)) {
+                continue;
+            }
+
+            const highlightResult = highlightAuto(codeText);
             codeEl.innerHTML = highlightResult.value;
             codeEl.classList.add("hljs");
         }
@@ -400,7 +468,7 @@ function handleAttachmentLink(linkEl: HTMLElement, href: string, getNote: GetNot
             linkEl.appendChild(new TextNode(attachment.title));
         } else {
             linkEl.removeAttribute("href");
-            log.error(`Broken attachment link detected in shared note: unable to find attachment with ID ${attachmentId}`);
+            getLog().error(`Broken attachment link detected in shared note: unable to find attachment with ID ${attachmentId}`);
         }
     } else {
         const [notePath] = href.split("?");
@@ -420,7 +488,7 @@ function handleAttachmentLink(linkEl: HTMLElement, href: string, getNote: GetNot
             }
             linkEl.classList.add(`type-${linkedNote.type}`);
         } else {
-            log.error(`Broken link detected in shared note: unable to find note with ID ${noteId}`);
+            getLog().error(`Broken link detected in shared note: unable to find note with ID ${noteId}`);
             linkEl.removeAttribute("href");
         }
     }
@@ -450,7 +518,7 @@ function cleanUpReferenceLinks(linkEl: HTMLElement, getNote: GetNoteFunction) {
     } else if (note.isProtected) {
         linkEl.innerHTML = "[protected]";
     } else {
-        linkEl.innerHTML = `<span><span class="${note.getIcon()}"></span>${utils.escapeHtml(note.title)}</span>`;
+        linkEl.innerHTML = `<span><span class="${escapeHtml(note.getIcon())}"></span>${utils.escapeHtml(note.title)}</span>`;
     }
 }
 
@@ -478,12 +546,39 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
             continue;
         }
 
-        const highlightResult = highlightAuto(codeEl.text);
+        // codeEl.text recursively traverses the node's subtree, so read it once.
+        const codeText = codeEl.text;
+        if (!shouldSyntaxHighlight(codeText)) {
+            continue;
+        }
+
+        const highlightResult = highlightAuto(codeText);
         codeEl.innerHTML = highlightResult.value;
         codeEl.classList.add("hljs");
     }
 
     result.content = document.innerHTML;
+}
+
+/**
+ * Whether a code block is small enough to syntax-highlight server-side. Highlighting (especially
+ * `highlightAuto`, which probes every registered language) scales with content size and would block
+ * the single Node event loop on very large code, so blocks beyond {@link HIGHLIGHT_MAX_LINE_COUNT}
+ * lines or {@link HIGHLIGHT_MAX_CHAR_COUNT} characters are left unhighlighted.
+ */
+export function shouldSyntaxHighlight(code: string) {
+    if (code.length > HIGHLIGHT_MAX_CHAR_COUNT) {
+        return false;
+    }
+
+    let lineCount = 1;
+    let index = -1;
+    while ((index = code.indexOf("\n", index + 1)) !== -1) {
+        if (++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -493,9 +588,13 @@ export function renderCode(result: Result) {
     if (typeof result.content !== "string" || !result.content?.trim()) {
         result.isEmpty = true;
     } else {
-        const preEl = new HTMLElement("pre", {});
-        preEl.appendChild(new TextNode(result.content));
-        result.content = preEl.outerHTML;
+        // Escape the raw code so that any `<`/`>` it contains are not later re-parsed as HTML.
+        // When such a code note is included into a shared text note, renderText re-parses the
+        // resulting HTML; with unescaped angle brackets (e.g. generics, comparisons, JSX) a large
+        // code note would explode into a pathological node-html-parser tree and hang the event
+        // loop (#9717). The <code> wrapper additionally lets renderText apply syntax highlighting,
+        // bounded by shouldSyntaxHighlight().
+        result.content = `<pre><code>${escapeHtml(result.content)}</code></pre>`;
     }
 }
 
@@ -538,6 +637,12 @@ function renderWebView(note: SNote | BNote, result: Result) {
     if (!url) return;
 
     result.content = `<iframe class="webview" src="${sanitize.sanitizeUrl(url)}" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>`;
+}
+
+
+
+function safeHostnameForShare(url: string): string {
+    try { return new URL(url).hostname; } catch { return url; }
 }
 
 export default {

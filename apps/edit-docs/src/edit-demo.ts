@@ -1,11 +1,9 @@
-import { createZipFromDirectory, extractZip, importData, initializeDatabase, startElectron } from "./utils.js";
-import { initializeTranslations } from "@triliumnext/server/src/services/i18n.js";
+import { createZipFromDirectory, extractZip, importData, initializeEditDocsCore, startElectron } from "./utils.js";
 import debounce from "@triliumnext/client/src/services/debounce.js";
-import cls from "@triliumnext/server/src/services/cls.js";
+import type { NoteMeta, NoteMetaFile } from "@triliumnext/core";
+import { cls } from "@triliumnext/core";
 import fs from "fs/promises";
 import { join } from "path";
-import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
-import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
 
 // Paths are relative to apps/edit-docs/dist.
 const DEMO_ZIP_PATH = join(__dirname, "../../server/src/assets/db/demo.zip");
@@ -17,14 +15,15 @@ async function main() {
         setTimeout(() => registerHandlers(), 10_000);
     });
 
-    await initializeTranslations();
-    await initializeDatabase(true);
+    await initializeEditDocsCore();
 
-    // Wait for becca to be loaded before importing data
-    const { becca_loader } = await import("@triliumnext/core");
-    await becca_loader.beccaLoaded;
-
+    // Create the in-memory database schema and resolve dbReady (requires CLS context)
+    const { sql_init, becca_loader } = await import("@triliumnext/core");
     cls.init(async () => {
+        cls.ignoreEntityChangeIds();
+        await sql_init.createInitialDatabase(true);
+        await becca_loader.beccaLoaded;
+
         await importData(DEMO_ZIP_DIR_PATH);
         setOptions();
         initializedPromise.resolve();
@@ -32,7 +31,7 @@ async function main() {
 }
 
 async function setOptions() {
-    const optionsService = (await import("@triliumnext/server/src/services/options.js")).default;
+    const { options: optionsService } = await import("@triliumnext/core");
     const sql = (await import("@triliumnext/server/src/services/sql.js")).default;
 
     optionsService.setOption("eraseUnusedAttachmentsAfterSeconds", 10);

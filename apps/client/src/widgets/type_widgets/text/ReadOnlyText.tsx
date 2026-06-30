@@ -12,17 +12,17 @@ import appContext from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
 import { applyInlineMermaid, rewriteMermaidDiagramsInContainer } from "../../../services/content_renderer_text";
 import { getLocaleById } from "../../../services/i18n";
+import { applyLinkEmbeds } from "../../../services/link_embed";
 import { renderMathInElement } from "../../../services/math";
 import { formatCodeBlocks } from "../../../services/syntax_highlight";
 import { useNoteBlob, useNoteLabel, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { RawHtmlBlock } from "../../react/RawHtml";
-import TouchBar, { TouchBarButton, TouchBarSpacer } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
 import { applyReferenceLinks } from "./read_only_helper";
 import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./utils";
 
 export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetProps) {
-    const blob = useNoteBlob(note);
+    const blob = useNoteBlob(note, undefined, { reportLoadStateTo: noteContext });
     const { isRtl } = useNoteLanguage(note);
     const readOnlyContentRef = usePreactRef<HTMLDivElement>(null);
 
@@ -44,19 +44,6 @@ export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetPro
                 dir={isRtl ? "rtl" : "ltr"}
                 contentRef={readOnlyContentRef}
             />
-
-            <TouchBar>
-                <TouchBarSpacer size="flexible" />
-                <TouchBarButton
-                    icon="NSLockUnlockedTemplate"
-                    click={() => {
-                        if (noteContext?.viewScope) {
-                            noteContext.viewScope.readOnlyTemporarilyDisabled = true;
-                            appContext.triggerEvent("readOnlyTemporarilyDisabled", { noteContext });
-                        }
-                    }}
-                />
-            </TouchBar>
         </>
     );
 }
@@ -103,6 +90,7 @@ export function ReadOnlyTextContent({ html, ntxId, dir, className, contentRef: e
         rewriteMermaidDiagramsInContainer(container);
         applyInlineMermaid(container);
         applyIncludedNotes(container);
+        applyLinkEmbeds(container);
         applyMath(container);
         applyReferenceLinks(container);
         formatCodeBlocks($(container));
@@ -153,6 +141,8 @@ function applyIncludedNotes(container: HTMLDivElement) {
 function applyMath(container: HTMLDivElement) {
     const equations = container.querySelectorAll("span.math-tex");
     for (const equation of equations) {
-        renderMathInElement(equation, { trust: true });
+        // throwOnError: false renders invalid formulas as an inline red error (with the
+        // parse message as a tooltip) instead of throwing and logging to the console.
+        renderMathInElement(equation, { trust: true, throwOnError: false });
     }
 }

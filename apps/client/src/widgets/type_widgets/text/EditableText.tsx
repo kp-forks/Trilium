@@ -1,24 +1,23 @@
 import "./EditableText.css";
+import "./LinkEmbed.css";
 
 import { CKTextEditor, EditorWatchdog, TemplateDefinition } from "@triliumnext/ckeditor5";
 import { deferred } from "@triliumnext/commons";
-import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
-import { buildSelectedBackgroundColor } from "../../../components/touch_bar";
 import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
 import link, { parseNavigationStateFromUrl } from "../../../services/link";
 import note_create from "../../../services/note_create";
 import options from "../../../services/options";
 import toast from "../../../services/toast";
-import utils, { hasTouchBar, isMobile } from "../../../services/utils";
+import utils, { isMobile } from "../../../services/utils";
 import { useEditorSpacedUpdate, useLegacyImperativeHandlers, useNoteLabel, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
-import TouchBar, { TouchBarButton, TouchBarGroup, TouchBarSegmentedControl } from "../../react/TouchBar";
 import { TypeWidgetProps } from "../type_widget";
 import CKEditorWithWatchdog, { CKEditorApi } from "./CKEditorWithWatchdog";
 import getTemplates, { updateTemplateCache } from "./snippets.js";
+import linkEmbedService from "../../../services/link_embed";
 import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./utils";
 
 /**
@@ -32,7 +31,6 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
     const contentRef = useRef<string>("");
     const watchdogRef = useRef<EditorWatchdog>(null);
     const editorApiRef = useRef<CKEditorApi>(null);
-    const refreshTouchBarRef = useRef<() => void>(null);
     const [ language ] = useNoteLabel(note, "language");
     const [ textNoteEditorType ] = useTriliumOption("textNoteEditorType");
     const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
@@ -93,10 +91,14 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
         editor.editing.view.focus();
     });
 
-    useTriliumEvent("focusOnDetail", async ({ ntxId: eventNtxId }) => {
+    useTriliumEvent("focusOnDetail", async ({ ntxId: eventNtxId, insertNewlineAtTop }) => {
         if (eventNtxId !== ntxId) return;
-        const editor = await waitForEditor();
-        editor?.editing.view.focus();
+        const editor = await waitForEditor() as CKTextEditor | undefined;
+        if (!editor) return;
+        if (insertNewlineAtTop) {
+            placeCursorInNewTopParagraph(editor);
+        }
+        editor.editing.view.focus();
     });
 
     useLegacyImperativeHandlers({
@@ -133,6 +135,25 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             });
         },
         loadIncludedNote,
+        // Link embed functionality
+        addLinkEmbedToTextCommand() {
+            if (!editorApiRef.current) return;
+            parentComponent?.triggerCommand("showLinkEmbedDialog", {
+                editorApi: editorApiRef.current,
+            });
+        },
+        async fetchLinkMetadata(url: string) {
+            return await linkEmbedService.fetchMetadata(url);
+        },
+        detectEmbedType(url: string) {
+            return linkEmbedService.detectEmbedType(url);
+        },
+        renderLinkEmbed(container, metadata, editable) {
+            linkEmbedService.renderEmbedPreview(container, metadata, editable);
+        },
+        renderLinkMention(container, metadata, editable) {
+            linkEmbedService.renderMentionPreview(container, metadata, editable);
+        },
         // Creating notes in @-completion
         async createNoteForReferenceLink(title: string) {
             const notePath = noteContext?.notePath;
@@ -258,13 +279,6 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                 onWatchdogStateChange={onWatchdogStateChange}
                 onChange={() => spacedUpdate.scheduleUpdate()}
                 onEditorInitialized={(editor) => {
-                    if (hasTouchBar) {
-                        const handler = () => refreshTouchBarRef.current?.();
-                        for (const event of [ "bold", "italic", "underline", "paragraph", "heading" ]) {
-                            editor.commands.get(event)?.on("change", handler);
-                        }
-                    }
-
                     if (containerRef.current) {
                         setupImageOpening(containerRef.current, false);
                     }
@@ -277,10 +291,41 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
 
                 }}
             />}
-
-            <EditableTextTouchBar watchdogRef={watchdogRef} refreshTouchBarRef={refreshTouchBarRef} />
         </>
     );
+}
+
+/**
+ * Inserts an empty paragraph at the very top of the document and places the cursor in it, giving the
+ * Notion-like behavior when pressing Enter in the note title. If the first block is already an empty
+ * paragraph, the cursor is placed in it rather than stacking another empty paragraph.
+ */
+function placeCursorInNewTopParagraph(editor: CKTextEditor) {
+    editor.model.change((writer) => {
+        const root = editor.model.document.getRoot();
+        if (!root) return;
+
+        const firstChild = root.getChild(0);
+        if (firstChild?.is("element", "paragraph") && firstChild.isEmpty) {
+            writer.setSelection(firstChild, "in");
+            return;
+        }
+
+        const paragraph = writer.createElement("paragraph");
+        writer.insert(paragraph, root, 0);
+        writer.setSelection(paragraph, "in");
+    });
+
+    // The scrolling container scrolls, not the editor itself, and the inline title may have scrolled
+    // out of view (e.g. the cursor was at the bottom of a long note), so the selection change alone
+    // won't move the viewport. Explicitly reveal the new top paragraph once it has rendered.
+    requestAnimationFrame(() => {
+        // The editor may have been destroyed while waiting for the frame (e.g. the user navigated
+        // away from the note), in which case `editing` is nulled — bail out instead of throwing.
+        if (editor.editing?.view) {
+            editor.editing.view.scrollToTheSelection();
+        }
+    });
 }
 
 function useTemplates() {
@@ -342,7 +387,12 @@ function useWatchdogCrashHandling() {
                 timeout: 20_000
             });
         } else if (currentState === "crashedPermanently") {
-            dialog.info(t("editable_text.keeps-crashing"));
+            toast.showPersistent({
+                id: "editor-crashed-permanently",
+                icon: "bx bx-error-circle",
+                title: t("editable_text.editor_crashed_title"),
+                message: t("editable_text.keeps-crashing")
+            });
             watchdog.editor?.enableReadOnlyMode("crashed-editor");
         }
     }, []);
@@ -363,67 +413,3 @@ function onNotificationWarning(data, evt) {
     evt.stop();
 }
 
-function EditableTextTouchBar({ watchdogRef, refreshTouchBarRef }: { watchdogRef: RefObject<EditorWatchdog | null>, refreshTouchBarRef: RefObject<() => void> }) {
-    const [ headingSelectedIndex, setHeadingSelectedIndex ] = useState<number>();
-
-    function refresh() {
-        let headingSelectedIndex: number | undefined;
-        const editor = watchdogRef.current?.editor;
-        const headingCommand = editor?.commands.get("heading");
-        const paragraphCommand = editor?.commands.get("paragraph");
-        if (paragraphCommand?.value) {
-            headingSelectedIndex = 0;
-        } else if (headingCommand?.value === "heading2") {
-            headingSelectedIndex = 1;
-        } else if (headingCommand?.value === "heading3") {
-            headingSelectedIndex = 2;
-        }
-        setHeadingSelectedIndex(headingSelectedIndex);
-    }
-
-    useEffect(refresh, [ watchdogRef ]);
-    refreshTouchBarRef.current = refresh;
-
-    return (
-        <TouchBar>
-            <TouchBarSegmentedControl
-                segments={[
-                    { label: "P" },
-                    { label: "H2" },
-                    { label: "H3" }
-                ]}
-                onChange={(selectedIndex) => {
-                    const editor = watchdogRef.current?.editor;
-                    switch (selectedIndex) {
-                        case 0:
-                            editor?.execute("paragraph");
-                            break;
-                        case 1:
-                            editor?.execute("heading", { value: "heading2" });
-                            break;
-                        case 2:
-                            editor?.execute("heading", { value: "heading3" });
-                            break;
-                    }
-                }}
-                selectedIndex={headingSelectedIndex}
-                mode="buttons"
-            />
-
-            <TouchBarGroup>
-                <TouchBarCommandButton watchdogRef={watchdogRef} command="bold" icon="NSTouchBarTextBoldTemplate" />
-                <TouchBarCommandButton watchdogRef={watchdogRef} command="italic" icon="NSTouchBarTextItalicTemplate" />
-                <TouchBarCommandButton watchdogRef={watchdogRef} command="underline" icon="NSTouchBarTextUnderlineTemplate" />
-            </TouchBarGroup>
-        </TouchBar>
-    );
-}
-
-function TouchBarCommandButton({ watchdogRef, icon, command }: { watchdogRef: RefObject<EditorWatchdog | null>, icon: string, command: string }) {
-    const editor = watchdogRef.current?.editor;
-    return (<TouchBarButton
-        icon={icon}
-        click={() => editor?.execute(command)}
-        backgroundColor={buildSelectedBackgroundColor(editor?.commands.get(command)?.value as boolean)}
-    />);
-}

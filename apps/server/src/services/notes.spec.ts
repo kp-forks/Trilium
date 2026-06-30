@@ -1,9 +1,9 @@
+import { BAttribute, becca, becca_easy_mocking, checkImageAttachments, collectCanvasImageFileIds, findBookmarks, findLlmChatLinks, saveLinks } from "@triliumnext/core";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import becca from "../becca/becca.js";
-import { buildNote } from "../test/becca_easy_mocking.js";
+
 import { randomString } from "./utils.js";
-import BAttribute from "../becca/entities/battribute.js";
-import { checkImageAttachments, findBookmarks, saveLinks } from "./notes.js";
+
+const { buildNote } = becca_easy_mocking;
 
 vi.mock("./sql.js", () => ({
     default: {
@@ -24,6 +24,30 @@ vi.mock("./ws.js", () => ({
 vi.mock("./entity_changes.js", () => ({
     default: { putEntityChange: () => {} }
 }));
+
+describe("collectCanvasImageFileIds", () => {
+    it("collects fileIds from image elements in the scene JSON", () => {
+        const content = JSON.stringify({
+            elements: [
+                { type: "image", fileId: "file-1" },
+                { type: "rectangle" },
+                { type: "image", fileId: "file-2" }
+            ]
+        });
+        expect(collectCanvasImageFileIds(content)).toEqual(new Set([ "file-1", "file-2" ]));
+    });
+
+    it("returns an empty set for malformed content (e.g. note type just changed)", () => {
+        expect(collectCanvasImageFileIds("not json")).toEqual(new Set());
+        expect(collectCanvasImageFileIds(JSON.stringify({}))).toEqual(new Set());
+    });
+
+    it("returns an empty set when the JSON shape is unexpected (null / non-array elements)", () => {
+        expect(collectCanvasImageFileIds(JSON.stringify(null))).toEqual(new Set());
+        expect(collectCanvasImageFileIds(JSON.stringify({ elements: 5 }))).toEqual(new Set());
+        expect(collectCanvasImageFileIds(JSON.stringify({ elements: "oops" }))).toEqual(new Set());
+    });
+});
 
 describe("findBookmarks", () => {
     it("extracts bookmark IDs from empty anchor tags", () => {
@@ -98,6 +122,17 @@ describe("checkImageAttachments", () => {
 
             expect(att.save).toHaveBeenCalled();
             expect(att.utcDateScheduledForErasureSince).toBeTruthy();
+        });
+
+        it("leaves non-embeddable roles untouched even when unreferenced", () => {
+            const note = buildNote({ title: "Test", attachments: [{ title: "OneNote source.html", role: "importSource", mime: "text/html" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, "<p>No images here</p>");
+
+            expect(att.save).not.toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeFalsy();
         });
 
         it("cancels erasure when attachment is re-referenced", () => {
@@ -190,6 +225,133 @@ describe("checkImageAttachments", () => {
             expect(att2.save).not.toHaveBeenCalled();
             expect(att3.save).toHaveBeenCalled();
             expect(att3.utcDateScheduledForErasureSince).toBeTruthy();
+        });
+    });
+
+    describe("Spreadsheet content", () => {
+        /** Wraps a drawing source URL into the JSON shape a spreadsheet note persists. */
+        function spreadsheetContent(source: string) {
+            return JSON.stringify({
+                version: 1,
+                workbook: {
+                    resources: [{
+                        name: "SHEET_DRAWING_PLUGIN",
+                        data: JSON.stringify({ "sheet-1": { data: { img1: { imageSourceType: "URL", source } }, order: ["img1"] } })
+                    }]
+                }
+            });
+        }
+
+        it("keeps an attachment referenced by the workbook drawing source alive", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "image.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, spreadsheetContent(`api/attachments/${att.attachmentId}/image/image.png`));
+
+            expect(att.save).not.toHaveBeenCalled();
+        });
+
+        it("schedules an inserted-then-removed image for erasure", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "image.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, spreadsheetContent("api/attachments/someOtherId/image/image.png"));
+
+            expect(att.save).toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeTruthy();
+        });
+
+        it("never schedules the preview thumbnail for erasure even though it is unreferenced", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "spreadsheet-export.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [thumbnail] = note.getAttachments();
+
+            // Content with no drawing images at all — the thumbnail is the only "image" attachment.
+            checkImageAttachments(note, JSON.stringify({ version: 1, workbook: { resources: [] } }));
+
+            expect(thumbnail.save).not.toHaveBeenCalled();
+            expect(thumbnail.utcDateScheduledForErasureSince).toBeFalsy();
+        });
+
+        it("cancels erasure when the image is re-referenced", () => {
+            const note = buildNote({ title: "Sheet", type: "spreadsheet", mime: "application/json", attachments: [{ title: "image.png", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+            att.utcDateScheduledForErasureSince = "2025-01-01 00:00:00.000Z";
+
+            checkImageAttachments(note, spreadsheetContent(`api/attachments/${att.attachmentId}/image/image.png`));
+
+            expect(att.save).toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeNull();
+        });
+    });
+
+    describe("Canvas content", () => {
+        /** Wraps image fileIds into the JSON shape a canvas note persists (one element per fileId). */
+        function canvasContent(...fileIds: string[]) {
+            return JSON.stringify({
+                type: "excalidraw",
+                version: 2,
+                elements: fileIds.map((fileId) => ({ type: "image", fileId })),
+                files: {},
+                appState: {}
+            });
+        }
+
+        it("keeps an image referenced by the scene (attachment titled with its fileId) alive", () => {
+            const note = buildNote({ title: "Canvas", type: "canvas", mime: "application/json", attachments: [{ title: "fileId-1", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            checkImageAttachments(note, canvasContent("fileId-1"));
+
+            expect(att.save).not.toHaveBeenCalled();
+        });
+
+        it("schedules an inserted-then-removed image for erasure", () => {
+            const note = buildNote({ title: "Canvas", type: "canvas", mime: "application/json", attachments: [{ title: "fileId-1", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+
+            // Scene no longer references fileId-1 (the image was deleted from the canvas).
+            checkImageAttachments(note, canvasContent("fileId-2"));
+
+            expect(att.save).toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeTruthy();
+        });
+
+        it("never schedules the SVG export preview for erasure even though it is unreferenced", () => {
+            const note = buildNote({ title: "Canvas", type: "canvas", mime: "application/json", attachments: [{ title: "canvas-export.svg", role: "image", mime: "image/svg+xml" }] });
+            mockAttachmentSaves(note);
+            const [exportPreview] = note.getAttachments();
+
+            checkImageAttachments(note, canvasContent());
+
+            expect(exportPreview.save).not.toHaveBeenCalled();
+            expect(exportPreview.utcDateScheduledForErasureSince).toBeFalsy();
+        });
+
+        it("cancels erasure when the image is re-referenced (e.g. undo)", () => {
+            const note = buildNote({ title: "Canvas", type: "canvas", mime: "application/json", attachments: [{ title: "fileId-1", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+            const [att] = note.getAttachments();
+            att.utcDateScheduledForErasureSince = "2025-01-01 00:00:00.000Z";
+
+            checkImageAttachments(note, canvasContent("fileId-1"));
+
+            expect(att.save).toHaveBeenCalled();
+            expect(att.utcDateScheduledForErasureSince).toBeNull();
+        });
+
+        it("does not perform foreign-attachment copying (no forceFrontendReload)", () => {
+            const note = buildNote({ title: "Canvas", type: "canvas", mime: "application/json", attachments: [{ title: "fileId-1", role: "image", mime: "image/png" }] });
+            mockAttachmentSaves(note);
+
+            const result = checkImageAttachments(note, canvasContent("fileId-1"));
+
+            expect(result.forceFrontendReload).toBe(false);
         });
     });
 
@@ -321,5 +483,247 @@ describe("saveLinks", () => {
 
         expect(linkA.markAsDeleted).not.toHaveBeenCalled();
         expect(linkB.markAsDeleted).not.toHaveBeenCalled();
+    });
+
+    describe("llmChat notes", () => {
+        function makeChatContent(messages: unknown[]) {
+            return JSON.stringify({ version: 1, messages });
+        }
+
+        it("detects [[noteId]] wiki-links in assistant text blocks", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            const targetA = buildNote({ title: "Note A" });
+            const targetB = buildNote({ title: "Note B" });
+            becca.notes[targetA.noteId] = targetA;
+            becca.notes[targetB.noteId] = targetB;
+
+            const linkA = makeLinkRelation(note.noteId, "internalLink", targetA.noteId);
+            const linkB = makeLinkRelation(note.noteId, "internalLink", targetB.noteId);
+            note.getRelations = () => [linkA, linkB];
+
+            const content = makeChatContent([
+                { id: "1", role: "user", content: "Show me notes" },
+                {
+                    id: "2", role: "assistant", content: [
+                        { type: "text", content: `Here are your notes: [[${targetA.noteId}]] and [[${targetB.noteId}]]` }
+                    ]
+                }
+            ]);
+            saveLinks(note, content);
+
+            expect(linkA.markAsDeleted).not.toHaveBeenCalled();
+            expect(linkB.markAsDeleted).not.toHaveBeenCalled();
+        });
+
+        it("detects noteId in tool call inputs", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            const target = buildNote({ title: "Target Note" });
+            becca.notes[target.noteId] = target;
+
+            const link = makeLinkRelation(note.noteId, "internalLink", target.noteId);
+            note.getRelations = () => [link];
+
+            const content = makeChatContent([
+                {
+                    id: "1", role: "assistant", content: [
+                        {
+                            type: "tool_call", toolCall: {
+                                id: "tc1", toolName: "get_note",
+                                input: { noteId: target.noteId },
+                                result: "{}"
+                            }
+                        }
+                    ]
+                }
+            ]);
+            saveLinks(note, content);
+
+            expect(link.markAsDeleted).not.toHaveBeenCalled();
+        });
+
+        it("detects parentNoteId in tool call inputs", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            const parent = buildNote({ title: "Parent Note" });
+            becca.notes[parent.noteId] = parent;
+
+            const link = makeLinkRelation(note.noteId, "internalLink", parent.noteId);
+            note.getRelations = () => [link];
+
+            const content = makeChatContent([
+                {
+                    id: "1", role: "assistant", content: [
+                        {
+                            type: "tool_call", toolCall: {
+                                id: "tc1", toolName: "create_note",
+                                input: { parentNoteId: parent.noteId, title: "New" },
+                                result: "{}"
+                            }
+                        }
+                    ]
+                }
+            ]);
+            saveLinks(note, content);
+
+            expect(link.markAsDeleted).not.toHaveBeenCalled();
+        });
+
+        it("detects links from both text blocks and tool calls", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            const targetA = buildNote({ title: "Note A" });
+            const targetB = buildNote({ title: "Note B" });
+            becca.notes[targetA.noteId] = targetA;
+            becca.notes[targetB.noteId] = targetB;
+
+            const linkA = makeLinkRelation(note.noteId, "internalLink", targetA.noteId);
+            const linkB = makeLinkRelation(note.noteId, "internalLink", targetB.noteId);
+            note.getRelations = () => [linkA, linkB];
+
+            const content = makeChatContent([
+                {
+                    id: "1", role: "assistant", content: [
+                        {
+                            type: "tool_call", toolCall: {
+                                id: "tc1", toolName: "get_note",
+                                input: { noteId: targetA.noteId },
+                                result: "{}"
+                            }
+                        },
+                        { type: "text", content: `See [[${targetB.noteId}]] for details.` }
+                    ]
+                }
+            ]);
+            saveLinks(note, content);
+
+            expect(linkA.markAsDeleted).not.toHaveBeenCalled();
+            expect(linkB.markAsDeleted).not.toHaveBeenCalled();
+        });
+
+        it("deletes links that are no longer in the chat content", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            const removedTarget = buildNote({ title: "Removed" });
+            becca.notes[removedTarget.noteId] = removedTarget;
+
+            const staleLink = makeLinkRelation(note.noteId, "internalLink", removedTarget.noteId);
+            note.getRelations = () => [staleLink];
+
+            const content = makeChatContent([
+                { id: "1", role: "user", content: "Hello" },
+                { id: "2", role: "assistant", content: [{ type: "text", content: "Hi there!" }] }
+            ]);
+            saveLinks(note, content);
+
+            expect(staleLink.markAsDeleted).toHaveBeenCalled();
+        });
+
+        it("ignores user messages (does not extract links from them)", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            const target = buildNote({ title: "Target" });
+            becca.notes[target.noteId] = target;
+
+            const staleLink = makeLinkRelation(note.noteId, "internalLink", target.noteId);
+            note.getRelations = () => [staleLink];
+
+            const content = makeChatContent([
+                { id: "1", role: "user", content: `Check [[${target.noteId}]]` }
+            ]);
+            saveLinks(note, content);
+
+            expect(staleLink.markAsDeleted).toHaveBeenCalled();
+        });
+
+        it("handles invalid JSON content gracefully", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            note.getRelations = () => [];
+
+            expect(() => saveLinks(note, "not valid json")).not.toThrow();
+        });
+
+        it("handles empty messages array", () => {
+            const note = buildNote({ title: "Chat", type: "llmChat", mime: "application/json" });
+            note.getRelations = () => [];
+
+            expect(() => saveLinks(note, JSON.stringify({ version: 1, messages: [] }))).not.toThrow();
+        });
+    });
+});
+
+describe("findLlmChatLinks", () => {
+    it("extracts wiki-links from assistant text blocks", () => {
+        const links: { name: "internalLink" | "imageLink" | "includeNoteLink" | "relationMapLink"; value: string }[] = [];
+        const content = JSON.stringify({
+            messages: [{
+                role: "assistant",
+                content: [{ type: "text", content: "See [[abc123]] and [[def456]]" }]
+            }]
+        });
+        findLlmChatLinks(content, links);
+
+        expect(links).toEqual([
+            { name: "internalLink", value: "abc123" },
+            { name: "internalLink", value: "def456" }
+        ]);
+    });
+
+    it("extracts noteId and parentNoteId from tool call inputs", () => {
+        const links: { name: "internalLink" | "imageLink" | "includeNoteLink" | "relationMapLink"; value: string }[] = [];
+        const content = JSON.stringify({
+            messages: [{
+                role: "assistant",
+                content: [
+                    {
+                        type: "tool_call",
+                        toolCall: { id: "t1", toolName: "get_note", input: { noteId: "noteA" } }
+                    },
+                    {
+                        type: "tool_call",
+                        toolCall: { id: "t2", toolName: "create_note", input: { parentNoteId: "noteB", title: "X" } }
+                    }
+                ]
+            }]
+        });
+        findLlmChatLinks(content, links);
+
+        expect(links).toEqual([
+            { name: "internalLink", value: "noteA" },
+            { name: "internalLink", value: "noteB" }
+        ]);
+    });
+
+    it("skips user and system messages", () => {
+        const links: { name: "internalLink" | "imageLink" | "includeNoteLink" | "relationMapLink"; value: string }[] = [];
+        const content = JSON.stringify({
+            messages: [
+                { role: "user", content: "Check [[abc123]]" },
+                { role: "system", content: "You have [[def456]]" }
+            ]
+        });
+        findLlmChatLinks(content, links);
+
+        expect(links).toEqual([]);
+    });
+
+    it("returns nothing for invalid JSON", () => {
+        const links: { name: "internalLink" | "imageLink" | "includeNoteLink" | "relationMapLink"; value: string }[] = [];
+        findLlmChatLinks("broken json {", links);
+
+        expect(links).toEqual([]);
+    });
+
+    it("returns nothing when messages is missing", () => {
+        const links: { name: "internalLink" | "imageLink" | "includeNoteLink" | "relationMapLink"; value: string }[] = [];
+        findLlmChatLinks(JSON.stringify({ version: 1 }), links);
+
+        expect(links).toEqual([]);
+    });
+
+    it("handles legacy string content in assistant messages", () => {
+        const links: { name: "internalLink" | "imageLink" | "includeNoteLink" | "relationMapLink"; value: string }[] = [];
+        const content = JSON.stringify({
+            messages: [{ role: "assistant", content: "Some text with [[abc123]]" }]
+        });
+        findLlmChatLinks(content, links);
+
+        // Legacy string content is not an array of blocks, so it's skipped
+        expect(links).toEqual([]);
     });
 });

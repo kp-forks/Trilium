@@ -20,12 +20,14 @@ type Labels = {
     language: string;
     originalFileName: string;
     pageUrl: string;
+    docUrl: string;
     dateNote: string;
 
     // Scripting
     run: string;
     widget: boolean;
     "disabled:widget": boolean;
+    customRequestHandler: string;
 
     // Tree specific
     subtreeHidden: boolean;
@@ -72,6 +74,7 @@ type Labels = {
     webViewSrc: string;
     "disabled:webViewSrc": string;
     readOnly: boolean;
+    fullContentWidth: boolean;
     displayMode: string;
     tabWidth: number;
     indentWithTabs: boolean;
