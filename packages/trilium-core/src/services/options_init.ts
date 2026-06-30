@@ -324,3 +324,24 @@ function getKeyboardDefaultOptions() {
     })) as DefaultOption[];
 }
 
+let syncedFlagByOption: Map<OptionNames, boolean> | null = null;
+
+/**
+ * Resolves the declared `isSynced` flag for one of the well-known default options.
+ *
+ * Returns `undefined` for names that are not part of {@link defaultOptions} (e.g. options created
+ * directly in {@link initNotSyncedOptions}/{@link initDocumentOptions}, keyboard shortcuts, or unknown
+ * names). Used by `setOption` so that auto-creating a missing default does not silently downgrade a
+ * meant-to-be-synced option to local-only, which would otherwise produce an unreconcilable sync hash.
+ *
+ * The lookup is built lazily on first use to avoid evaluating the (cyclic) options module graph at
+ * import time.
+ */
+export function getDefaultOptionSyncedFlag(name: OptionNames): boolean | undefined {
+    if (!syncedFlagByOption) {
+        syncedFlagByOption = new Map(defaultOptions.map((option) => [option.name, option.isSynced]));
+    }
+
+    return syncedFlagByOption.get(name);
+}
+
