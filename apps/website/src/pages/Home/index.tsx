@@ -362,12 +362,12 @@ function ImportSection() {
                     <div className="import-logos">
                         <span className="import-logos-label">{t("import.sources_label")}</span>
                         <div className="import-logos-row">
-                            <span className="import-logo" title={t("import.onenote_title")}><Icon svg={oneNoteIcon} /></span>
-                            <span className="import-logo" title={t("import.notion_title")}><Icon svg={notionIcon} /></span>
-                            <span className="import-logo" title={t("import.keep_title")}><Icon svg={keepIcon} /></span>
-                            <span className="import-logo" title={t("import.evernote_title")}><Icon svg={evernoteIcon} /></span>
-                            <span className="import-logo" title={t("import.anytype_title")}><Icon svg={anytypeIcon} /></span>
-                            <span className="import-logo" title={t("import.obsidian_title")}><Icon svg={obsidianIcon} /></span>
+                            <span className="import-logo" role="img" aria-label={t("import.onenote_title")} title={t("import.onenote_title")}><Icon svg={oneNoteIcon} /></span>
+                            <span className="import-logo" role="img" aria-label={t("import.notion_title")} title={t("import.notion_title")}><Icon svg={notionIcon} /></span>
+                            <span className="import-logo" role="img" aria-label={t("import.keep_title")} title={t("import.keep_title")}><Icon svg={keepIcon} /></span>
+                            <span className="import-logo" role="img" aria-label={t("import.evernote_title")} title={t("import.evernote_title")}><Icon svg={evernoteIcon} /></span>
+                            <span className="import-logo" role="img" aria-label={t("import.anytype_title")} title={t("import.anytype_title")}><Icon svg={anytypeIcon} /></span>
+                            <span className="import-logo" role="img" aria-label={t("import.obsidian_title")} title={t("import.obsidian_title")}><Icon svg={obsidianIcon} /></span>
                         </div>
                     </div>
                 </Card>
@@ -414,10 +414,11 @@ function TabbedShowcase({ items }: { items: ShowcaseItem[] }) {
                             <button
                                 type="button"
                                 role="tab"
+                                id={`showcase-tab-${index}`}
                                 aria-selected={isActive}
+                                aria-controls={`showcase-panel-${index}`}
                                 className={`showcase-tab ${isActive ? "active" : ""}`}
                                 onClick={() => setActiveIndex(index)}
-                                onMouseEnter={() => setActiveIndex(index)}
                                 onFocus={() => setActiveIndex(index)}
                             >
                                 {item.iconSvg && <span className="tab-icon"><Icon svg={item.iconSvg} /></span>}
@@ -428,7 +429,7 @@ function TabbedShowcase({ items }: { items: ShowcaseItem[] }) {
                 })}
             </ul>
 
-            <div className="showcase-preview" key={activeIndex} role="tabpanel">
+            <div className="showcase-preview" key={activeIndex} role="tabpanel" id={`showcase-panel-${activeIndex}`} aria-labelledby={`showcase-tab-${activeIndex}`}>
                 <div className="showcase-image-frame">
                     <img src={active.imageUrl} alt={active.title} loading="lazy" />
                 </div>

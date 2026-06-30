@@ -46,8 +46,14 @@ export default function SectionNav({ items }: { items: SectionNavItem[] }) {
 }
 
 function useActiveSection(items: SectionNavItem[], setActiveId: (id: string) => void) {
+    // Hold the latest items in a ref so the observer reads current values without
+    // being torn down and rebuilt whenever the parent passes a fresh array literal.
+    const itemsRef = useRef(items);
+    itemsRef.current = items;
+    const itemIds = items.map((item) => item.id).join(",");
+
     useEffect(() => {
-        const sections = items
+        const sections = itemsRef.current
             .map((item) => document.getElementById(item.id))
             .filter((el): el is HTMLElement => el !== null);
         if (sections.length === 0) {
@@ -65,7 +71,7 @@ function useActiveSection(items: SectionNavItem[], setActiveId: (id: string) => 
                     }
                 }
                 // The topmost section that has crossed the trigger line wins.
-                const current = items.find((item) => visible.has(item.id));
+                const current = itemsRef.current.find((item) => visible.has(item.id));
                 if (current) {
                     setActiveId(current.id);
                 }
@@ -77,5 +83,5 @@ function useActiveSection(items: SectionNavItem[], setActiveId: (id: string) => 
 
         sections.forEach((section) => observer.observe(section));
         return () => observer.disconnect();
-    }, [ items, setActiveId ]);
+    }, [ itemIds, setActiveId ]);
 }

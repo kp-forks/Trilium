@@ -55,12 +55,13 @@ export default function LanguageSelector({ className, inline, onSelect }: Langua
                     <Icon svg={globeIcon} className="globe" />
                     {t("header.language")}
                 </span>
-                <ul className="language-menu" role="listbox">
+                <ul className="language-menu">
                     {LOCALES.map(locale => (
-                        <li key={locale.id} role="option" aria-selected={locale.id === currentLocale}>
+                        <li key={locale.id}>
                             <Link
                                 href={swapLocaleInUrl(url, locale.id)}
                                 className={locale.id === currentLocale ? "active" : ""}
+                                aria-current={locale.id === currentLocale ? "page" : undefined}
                                 onClick={onSelect}
                             >
                                 {locale.name}
@@ -77,7 +78,7 @@ export default function LanguageSelector({ className, inline, onSelect }: Langua
             <button
                 type="button"
                 className="language-toggle"
-                aria-haspopup="listbox"
+                aria-haspopup="true"
                 aria-expanded={open}
                 onClick={() => setOpen(!open)}
             >
@@ -87,12 +88,13 @@ export default function LanguageSelector({ className, inline, onSelect }: Langua
             </button>
 
             {open && (
-                <ul className="language-menu" role="listbox">
+                <ul className="language-menu">
                     {LOCALES.map(locale => (
-                        <li key={locale.id} role="option" aria-selected={locale.id === currentLocale}>
+                        <li key={locale.id}>
                             <Link
                                 href={swapLocaleInUrl(url, locale.id)}
                                 className={locale.id === currentLocale ? "active" : ""}
+                                aria-current={locale.id === currentLocale ? "page" : undefined}
                                 onClick={() => setOpen(false)}
                             >
                                 {locale.name}
