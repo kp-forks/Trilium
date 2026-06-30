@@ -74,20 +74,17 @@ section.hero-section {
     }
 
     .hero-tagline {
-        margin-top: 1.25em;
+        width: 100%;
+        margin-top: 1.5em;
         font-size: 0.85em;
         color: var(--muted-color);
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.4em 0.75em;
+        gap: 0.4em 0.9em;
         justify-content: center;
 
-        @media (min-width: 720px) {
-            justify-content: flex-start;
-        }
-
-        span:not(.dot) {
+        > *:not(.dot) {
             white-space: nowrap;
         }
 
@@ -101,7 +98,8 @@ section.hero-section {
     }
 
     .screenshot-container {
-        flex-grow: 1;
+        flex: 1 1 0;
+        min-width: 0;
 
         @media (prefers-reduced-motion: no-preference) {
             animation: hero-rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
@@ -179,8 +177,13 @@ section.hero-section {
 @media (min-width: 720px) {
     section.hero-section > .content-wrapper {
         flex-direction: row;
+        flex-wrap: wrap;
         gap: 3em;
         padding: 3em;
+    }
+
+    section.hero-section .hero-tagline {
+        margin-top: 0;
     }
 
     section.hero-section .download-wrapper {
@@ -300,11 +303,40 @@ section.import .bx svg {
     height: 100%;
 }
 
-section.import .import-export-note {
-    max-width: 46em;
-    margin: 2.5em auto 0;
+section.import .import-logos {
+    margin-top: 2.5em;
     text-align: center;
+}
+
+section.import .import-logos-label {
+    display: block;
+    margin-bottom: 1em;
+    font-size: 0.9em;
     color: var(--muted-color);
+}
+
+section.import .import-logos-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1.75em;
+}
+
+section.import .import-logo {
+    color: var(--muted-color);
+    opacity: 0.85;
+    transition: color 0.15s ease, opacity 0.15s ease;
+}
+
+section.import .import-logo:hover {
+    color: var(--foreground-color);
+    opacity: 1;
+}
+
+section.import .import-logo .bx {
+    width: 2em;
+    height: 2em;
 }
 
 section.final-cta {

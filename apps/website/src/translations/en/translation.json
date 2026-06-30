@@ -12,7 +12,7 @@
     "get_started": "Get started",
     "github": "GitHub",
     "dockerhub": "Docker Hub",
-    "tagline_free": "Free & open source",
+    "tagline_license": "AGPL-3.0 licensed",
     "tagline_no_account": "No account needed",
     "tagline_cross_platform": "Works offline",
     "screenshot_alt": "Screenshot of the Trilium Notes desktop application"
@@ -49,7 +49,8 @@
     "api_content": "Interact with Trilium programmatically using its builtin REST API."
   },
   "note_types": {
-    "title": "Multiple ways to represent your information",
+    "title": "A note type for every kind of content",
+    "subtitle": "Not everything fits neatly into a paragraph. Trilium offers a range of note types, from rich text and code to spreadsheets, diagrams and mind maps, so you can capture each idea in the form that suits it best and mix them freely throughout your tree.",
     "text_title": "Text notes",
     "text_description": "The notes are edited using a visual (WYSIWYG) editor, with support for tables, images, math expressions, code blocks with syntax highlighting. Quickly format the text using Markdown-like syntax or using slash commands.",
     "code_title": "Code notes",
@@ -86,20 +87,20 @@
   },
   "import": {
     "title": "Your notes are never locked in",
-    "subtitle": "Already keeping notes somewhere else? Trilium ships dedicated importers that understand each application's structure, so your notebooks, notes and formatting come across intact instead of as a flat dump.",
+    "subtitle": "Your notes are yours to move freely. Bring them in from other apps, take them back out in open formats, or turn them into polished documents, whenever you like.",
+    "pillar_import_title": "Import",
+    "pillar_import_description": "Pull your notes in from other apps with their structure intact, or import standard Markdown, HTML and OPML files.",
+    "pillar_export_title": "Export",
+    "pillar_export_description": "Take any note or your entire tree back out as Markdown, HTML or OPML at any time.",
+    "pillar_pdf_title": "Print to PDF",
+    "pillar_pdf_description": "Save a single note or a whole subtree as a polished, book-like PDF.",
+    "sources_label": "Imports directly from",
     "onenote_title": "Microsoft OneNote",
-    "onenote_description": "Connect your account through Microsoft Graph and import your notebooks directly.",
     "notion_title": "Notion",
-    "notion_description": "Import a ZIP export of your workspace.",
     "keep_title": "Google Keep",
-    "keep_description": "Import a ZIP export from Google Takeout.",
     "evernote_title": "Evernote",
-    "evernote_description": "Import an ENEX export of your notes.",
     "anytype_title": "Anytype",
-    "anytype_description": "Import a JSON export of your data.",
     "obsidian_title": "Obsidian",
-    "obsidian_description": "Import a ZIP of your vault.",
-    "export_note": "And taking your data out is just as easy. Export any note or your whole tree to Markdown or HTML at any time.",
     "learn_more": "Learn more about import & export"
   },
   "ai_integration": {

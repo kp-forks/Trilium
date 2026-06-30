@@ -14,6 +14,7 @@ import boardIcon from "../../assets/boxicons/bx-columns-3.svg?raw";
 import dashboardIcon from "../../assets/boxicons/bx-dashboard.svg?raw";
 import dockerIcon from "../../assets/boxicons/bx-docker.svg?raw";
 import templatesIcon from "../../assets/boxicons/bx-duplicate.svg?raw";
+import exportIcon from "../../assets/boxicons/bx-export.svg?raw";
 import restApiIcon from "../../assets/boxicons/bx-extension.svg?raw";
 import fileIcon from "../../assets/boxicons/bx-file.svg?raw";
 import authIcon from "../../assets/boxicons/bx-fingerprint.svg?raw";
@@ -21,6 +22,7 @@ import noteStructureIcon from "../../assets/boxicons/bx-folder.svg?raw";
 import gitHubIcon from "../../assets/boxicons/bx-github.svg?raw";
 import shareIcon from "../../assets/boxicons/bx-globe.svg?raw";
 import revisionsIcon from "../../assets/boxicons/bx-history.svg?raw";
+import importIcon from "../../assets/boxicons/bx-import.svg?raw";
 import apiKeyIcon from "../../assets/boxicons/bx-key.svg?raw";
 import widgetsIcon from "../../assets/boxicons/bx-layout.svg?raw";
 import geomapIcon from "../../assets/boxicons/bx-map.svg?raw";
@@ -28,6 +30,7 @@ import mindmapIcon from "../../assets/boxicons/bx-network-chart.svg?raw";
 import textNoteIcon from "../../assets/boxicons/bx-note.svg?raw";
 import webClipperIcon from "../../assets/boxicons/bx-paperclip.svg?raw";
 import canvasIcon from "../../assets/boxicons/bx-pen.svg?raw";
+import printerIcon from "../../assets/boxicons/bx-printer.svg?raw";
 import syncIcon from "../../assets/boxicons/bx-refresh-cw.svg?raw";
 import searchIcon from "../../assets/boxicons/bx-search.svg?raw";
 import backendIcon from "../../assets/boxicons/bx-server.svg?raw";
@@ -114,7 +117,7 @@ function HeroSection() {
             </div>
 
             <p className="hero-tagline">
-                <span>{t("hero_section.tagline_free")}</span>
+                <Link href="https://docs.triliumnotes.org/user-guide/misc/license" openExternally>{t("hero_section.tagline_license")}</Link>
                 <span className="dot" aria-hidden="true" />
                 <span>{t("hero_section.tagline_no_account")}</span>
                 <span className="dot" aria-hidden="true" />
@@ -168,7 +171,7 @@ function ProductivityBenefitsSection() {
 function NoteTypesSection() {
     const { t } = useTranslation();
     return (
-        <Section className="note-types" title={t("note_types.title")}>
+        <Section className="note-types" title={t("note_types.title")} subtitle={t("note_types.subtitle")}>
             <TabbedShowcase items={[
                 {
                     title: t("note_types.text_title"),
@@ -337,15 +340,22 @@ function ImportSection() {
     return (
         <Section className="benefits import accented" title={t("import.title")} subtitle={t("import.subtitle")} cta={{ text: t("import.learn_more"), href: "https://docs.triliumnotes.org/user-guide/concepts/import-export" }}>
             <div className="benefits-container grid-3-cols">
-                <Card iconSvg={oneNoteIcon} title={t("import.onenote_title")}>{t("import.onenote_description")}</Card>
-                <Card iconSvg={notionIcon} title={t("import.notion_title")}>{t("import.notion_description")}</Card>
-                <Card iconSvg={keepIcon} title={t("import.keep_title")}>{t("import.keep_description")}</Card>
-                <Card iconSvg={evernoteIcon} title={t("import.evernote_title")}>{t("import.evernote_description")}</Card>
-                <Card iconSvg={anytypeIcon} title={t("import.anytype_title")}>{t("import.anytype_description")}</Card>
-                <Card iconSvg={obsidianIcon} title={t("import.obsidian_title")}>{t("import.obsidian_description")}</Card>
+                <Card iconSvg={importIcon} title={t("import.pillar_import_title")}>{t("import.pillar_import_description")}</Card>
+                <Card iconSvg={exportIcon} title={t("import.pillar_export_title")}>{t("import.pillar_export_description")}</Card>
+                <Card iconSvg={printerIcon} title={t("import.pillar_pdf_title")}>{t("import.pillar_pdf_description")}</Card>
             </div>
 
-            <p className="import-export-note">{t("import.export_note")}</p>
+            <div className="import-logos">
+                <span className="import-logos-label">{t("import.sources_label")}</span>
+                <div className="import-logos-row">
+                    <span className="import-logo" title={t("import.onenote_title")}><Icon svg={oneNoteIcon} /></span>
+                    <span className="import-logo" title={t("import.notion_title")}><Icon svg={notionIcon} /></span>
+                    <span className="import-logo" title={t("import.keep_title")}><Icon svg={keepIcon} /></span>
+                    <span className="import-logo" title={t("import.evernote_title")}><Icon svg={evernoteIcon} /></span>
+                    <span className="import-logo" title={t("import.anytype_title")}><Icon svg={anytypeIcon} /></span>
+                    <span className="import-logo" title={t("import.obsidian_title")}><Icon svg={obsidianIcon} /></span>
+                </div>
+            </div>
         </Section>
     );
 }
