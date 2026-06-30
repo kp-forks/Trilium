@@ -343,10 +343,10 @@ function ScriptingSection() {
                     <img src="/feature_scripting.webp" alt={t("scripting.screenshot_alt")} loading="lazy" />
                 </div>
                 <div className="benefits-container feature-cards">
-                    <Card iconSvg={widgetsIcon} title={t("scripting.widgets_title")}>{t("scripting.widgets_description")}</Card>
-                    <Card iconSvg={backendIcon} title={t("scripting.backend_title")}>{t("scripting.backend_description")}</Card>
-                    <Card iconSvg={renderIcon} title={t("scripting.render_title")}>{t("scripting.render_description")}</Card>
-                    <Card iconSvg={scriptApiIcon} title={t("scripting.api_title")}>{t("scripting.api_description")}</Card>
+                    <Card iconSvg={widgetsIcon} title={t("scripting.widgets_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/scripts/frontend-basics/custom-widget">{t("scripting.widgets_description")}</Card>
+                    <Card iconSvg={backendIcon} title={t("scripting.backend_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/scripts/backend-basics">{t("scripting.backend_description")}</Card>
+                    <Card iconSvg={renderIcon} title={t("scripting.render_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/note-types/render-note">{t("scripting.render_description")}</Card>
+                    <Card iconSvg={scriptApiIcon} title={t("scripting.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/scripts/script-api">{t("scripting.api_description")}</Card>
                 </div>
             </div>
         </Section>
