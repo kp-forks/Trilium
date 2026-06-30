@@ -154,14 +154,18 @@ section.hero-section {
             border-inline-start: 1px solid currentColor;
             opacity: 0.75;
 
-            /* .bx is fixed at 24px globally; shrink it to match the count text. */
+            /* .bx is fixed at 24px globally; shrink it to match the count text.
+               Nudge up slightly: the digits have no descenders, so centering on
+               the full line box leaves the star sitting a touch low. */
             .bx {
                 width: 1em;
                 height: 1em;
+                transform: translateY(-0.06em);
 
                 svg {
                     width: 100%;
                     height: 100%;
+                    display: block;
                 }
             }
         }
