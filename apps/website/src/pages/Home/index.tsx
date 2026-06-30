@@ -153,14 +153,14 @@ function ProductivityBenefitsSection() {
         <>
             <Section className="benefits accented" title={t("productivity_benefits.title")}>
                 <div className="benefits-container grid-3-cols">
+                    <Card iconSvg={syncIcon} title={t("productivity_benefits.sync_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/synchronization">{t("productivity_benefits.sync_content")}</Card>
+                    <Card iconSvg={searchIcon} title={t("productivity_benefits.search_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/search">{t("productivity_benefits.search_content")}</Card>
                     <Card iconSvg={revisionsIcon} title={t("productivity_benefits.revisions_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/notes/note-revisions">{t("productivity_benefits.revisions_content")}</Card>
                     <Card iconSvg={protectedNotesIcon} title={t("productivity_benefits.protected_notes_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/notes/protected-notes">{t("productivity_benefits.protected_notes_content")}</Card>
-                    <Card iconSvg={authIcon} title={t("productivity_benefits.auth_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/installation/server/authentication">{t("productivity_benefits.auth_content")}</Card>
-                    <Card iconSvg={searchIcon} title={t("productivity_benefits.search_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/navigation/search">{t("productivity_benefits.search_content")}</Card>
                     <Card iconSvg={templatesIcon} title={t("productivity_benefits.templates_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/template">{t("productivity_benefits.templates_content")}</Card>
                     <Card iconSvg={webClipperIcon} title={t("productivity_benefits.web_clipper_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/web-clipper">{t("productivity_benefits.web_clipper_content")}</Card>
-                    <Card iconSvg={syncIcon} title={t("productivity_benefits.sync_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/setup/synchronization">{t("productivity_benefits.sync_content")}</Card>
                     <Card iconSvg={shareIcon} title={t("productivity_benefits.share_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/sharing">{t("productivity_benefits.share_content")}</Card>
+                    <Card iconSvg={authIcon} title={t("productivity_benefits.auth_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/installation/server/authentication">{t("productivity_benefits.auth_content")}</Card>
                     <Card iconSvg={restApiIcon} title={t("productivity_benefits.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/etapi">{t("productivity_benefits.api_content")}</Card>
                 </div>
             </Section>

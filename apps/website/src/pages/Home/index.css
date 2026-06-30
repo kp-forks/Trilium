@@ -65,6 +65,9 @@ section.hero-section {
             font-size: clamp(2.2rem, 3.6vw, 3rem);
             letter-spacing: -0.02em;
             margin-block: 0.5em 0.45em;
+            /* Descenders (e.g. the "g" in "knowledge") fall outside the painted
+               box with this tight line-height; pad so the gradient covers them. */
+            padding-bottom: 0.12em;
         }
 
         p {
@@ -208,7 +211,7 @@ section.hero-section {
     }
 
     section.hero-section .download-wrapper {
-        display: inline-flex;
+        display: flex;
     }
 }
 

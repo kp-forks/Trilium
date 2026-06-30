@@ -34,9 +34,9 @@
     "protected_notes_title": "Protected notes",
     "protected_notes_content": "Protect sensitive personal information by encrypting the notes and locking them behind a password-protected session.",
     "auth_title": "Secure sign-in",
-    "auth_content": "Protect your server login with multi-factor authentication (TOTP), or sign in through your own identity provider with OpenID Connect single sign-on.",
+    "auth_content": "Protect your server login with multi-factor authentication (TOTP), or sign in through your identity provider with OpenID Connect.",
     "search_title": "Search & quick navigation",
-    "search_content": "Jump to any note or command by title with fuzzy matching, or run a full-text search across your notes, reaching even the text inside images and PDFs thanks to built-in OCR.",
+    "search_content": "Jump to any note or command by title with fuzzy matching, or run a full-text search across your notes, even text inside images and PDFs via OCR.",
     "templates_title": "Templates",
     "templates_content": "Define reusable note templates with a preset structure, attributes and content, then create new notes from them in a click.",
     "web_clipper_title": "Web clipper",
@@ -44,9 +44,9 @@
     "sync_title": "Synchronization",
     "sync_content": "Use a self-hosted or cloud instance to easily synchronize your notes across multiple devices, and to access it from your mobile phone using a PWA.",
     "share_title": "Share notes on the web",
-    "share_content": "If you have a server, it can be used to share a subset of your notes with other people.",
+    "share_content": "If you have a server, publish any subtree of your notes as a public, read-only website that anyone can browse without an account.",
     "api_title": "REST API",
-    "api_content": "Interact with Trilium programmatically using its builtin REST API."
+    "api_content": "Read, create and update your notes programmatically over HTTP with Trilium's built-in REST API, ideal for automations and third-party integrations."
   },
   "note_types": {
     "title": "A note type for every kind of content",
