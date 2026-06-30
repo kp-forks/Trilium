@@ -8,6 +8,7 @@ import botIcon from "../../assets/boxicons/bx-bot.svg?raw";
 import calendarIcon from "../../assets/boxicons/bx-calendar.svg?raw";
 import hoistingIcon from "../../assets/boxicons/bx-chevrons-up.svg?raw";
 import codeIcon from "../../assets/boxicons/bx-code.svg?raw";
+import scriptApiIcon from "../../assets/boxicons/bx-code-alt.svg?raw";
 import aiToolsIcon from "../../assets/boxicons/bx-cog.svg?raw";
 import boardIcon from "../../assets/boxicons/bx-columns-3.svg?raw";
 import dashboardIcon from "../../assets/boxicons/bx-dashboard.svg?raw";
@@ -19,6 +20,7 @@ import gitHubIcon from "../../assets/boxicons/bx-github.svg?raw";
 import shareIcon from "../../assets/boxicons/bx-globe.svg?raw";
 import revisionsIcon from "../../assets/boxicons/bx-history.svg?raw";
 import apiKeyIcon from "../../assets/boxicons/bx-key.svg?raw";
+import widgetsIcon from "../../assets/boxicons/bx-layout.svg?raw";
 import geomapIcon from "../../assets/boxicons/bx-map.svg?raw";
 import mindmapIcon from "../../assets/boxicons/bx-network-chart.svg?raw";
 import textNoteIcon from "../../assets/boxicons/bx-note.svg?raw";
@@ -27,11 +29,13 @@ import canvasIcon from "../../assets/boxicons/bx-pen.svg?raw";
 import syncIcon from "../../assets/boxicons/bx-refresh-cw.svg?raw";
 import searchIcon from "../../assets/boxicons/bx-search.svg?raw";
 import jumpToIcon from "../../assets/boxicons/bx-send-alt.svg?raw";
+import backendIcon from "../../assets/boxicons/bx-server.svg?raw";
 import protectedNotesIcon from "../../assets/boxicons/bx-shield.svg?raw";
 import presentationIcon from "../../assets/boxicons/bx-slideshow.svg?raw";
 import tableIcon from "../../assets/boxicons/bx-table.svg?raw";
 import attributesIcon from "../../assets/boxicons/bx-tag.svg?raw";
 import mermaidIcon from "../../assets/boxicons/bx-vector-square.svg?raw";
+import renderIcon from "../../assets/boxicons/bx-window-alt.svg?raw";
 import markdownIcon from "../../assets/boxicons/bxs-markdown.svg?raw";
 import anytypeIcon from "../../assets/import/anytype.svg?raw";
 import evernoteIcon from "../../assets/import/evernote.svg?raw";
@@ -59,6 +63,7 @@ export function Home() {
             <ExtensibilityBenefitsSection />
             <ImportSection />
             <CollectionsSection />
+            <ScriptingSection />
             <AiIntegrationSection />
             <FaqSection />
             <FinalCta />
@@ -232,9 +237,8 @@ function ExtensibilityBenefitsSection() {
     return (
         <>
             <Section className="benefits accented" title={t("extensibility_benefits.title")}>
-                <div className="benefits-container grid-3-cols">
+                <div className="benefits-container grid-2-cols">
                     <Card iconSvg={shareIcon} title={t("extensibility_benefits.share_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/sharing">{t("extensibility_benefits.share_description")}</Card>
-                    <Card iconSvg={codeIcon} title={t("extensibility_benefits.scripting_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/scripts">{t("extensibility_benefits.scripting_description")}</Card>
                     <Card iconSvg={restApiIcon} title={t("extensibility_benefits.api_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/advanced-usage/etapi">{t("extensibility_benefits.api_description")}</Card>
                 </div>
             </Section>
@@ -297,15 +301,34 @@ function CollectionsSection() {
 function AiIntegrationSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits ai-integration" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
-            <div className="ai-integration-split">
-                <div className="ai-screenshot">
+        <Section className="benefits ai-integration accented" title={t("ai_integration.title")} subtitle={t("ai_integration.subtitle")} cta={{ text: t("ai_integration.learn_more"), href: "https://docs.triliumnotes.org/user-guide/llm" }}>
+            <div className="feature-split">
+                <div className="feature-screenshot">
                     <img src="/feature_llm.webp" alt={t("ai_integration.screenshot_alt")} loading="lazy" />
                 </div>
-                <div className="benefits-container ai-cards">
+                <div className="benefits-container feature-cards">
                     <Card iconSvg={botIcon} title={t("ai_integration.chat_title")}>{t("ai_integration.chat_description")}</Card>
                     <Card iconSvg={aiToolsIcon} title={t("ai_integration.tools_title")}>{t("ai_integration.tools_description")}</Card>
                     <Card iconSvg={apiKeyIcon} title={t("ai_integration.providers_title")}>{t("ai_integration.providers_description")}</Card>
+                </div>
+            </div>
+        </Section>
+    );
+}
+
+function ScriptingSection() {
+    const { t } = useTranslation();
+    return (
+        <Section className="benefits scripting" title={t("scripting.title")} subtitle={t("scripting.subtitle")} cta={{ text: t("scripting.learn_more"), href: "https://docs.triliumnotes.org/user-guide/scripts" }}>
+            <div className="feature-split">
+                <div className="feature-screenshot">
+                    <img src="/feature_scripting.webp" alt={t("scripting.screenshot_alt")} loading="lazy" />
+                </div>
+                <div className="benefits-container feature-cards">
+                    <Card iconSvg={widgetsIcon} title={t("scripting.widgets_title")}>{t("scripting.widgets_description")}</Card>
+                    <Card iconSvg={backendIcon} title={t("scripting.backend_title")}>{t("scripting.backend_description")}</Card>
+                    <Card iconSvg={renderIcon} title={t("scripting.render_title")}>{t("scripting.render_description")}</Card>
+                    <Card iconSvg={scriptApiIcon} title={t("scripting.api_title")}>{t("scripting.api_description")}</Card>
                 </div>
             </div>
         </Section>
@@ -385,7 +408,7 @@ function FaqSection() {
     const { t } = useTranslation();
     return (
         <Section className="faq" title={t("faq.title")}>
-            <div class="grid-2-cols">
+            <div className="faq-list">
                 <FaqItem question={t("faq.mobile_question")}>{t("faq.mobile_answer")}</FaqItem>
                 <FaqItem question={t("faq.database_question")}>{t("faq.database_answer")}</FaqItem>
                 <FaqItem question={t("faq.server_question")}>{t("faq.server_answer")}</FaqItem>
@@ -393,15 +416,25 @@ function FaqSection() {
                 <FaqItem question={t("faq.network_share_question")}>{t("faq.network_share_answer")}</FaqItem>
                 <FaqItem question={t("faq.security_question")}>{t("faq.security_answer")}</FaqItem>
             </div>
+
+            <p className="faq-more">
+                <Trans
+                    i18nKey="faq.more_questions"
+                    components={[
+                        <Link key="discussions" href="https://github.com/orgs/TriliumNext/discussions" openExternally />
+                    ]}
+                />
+            </p>
         </Section>
     );
 }
 
 function FaqItem({ question, children }: { question: string; children: ComponentChildren }) {
     return (
-        <Card title={question}>
-            {children}
-        </Card>
+        <details className="faq-item">
+            <summary>{question}</summary>
+            <div className="faq-answer">{children}</div>
+        </details>
     );
 }
 
