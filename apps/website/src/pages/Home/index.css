@@ -160,7 +160,7 @@ section.hero-section {
             .bx {
                 width: 1em;
                 height: 1em;
-                transform: translateY(-0.06em);
+                transform: translateY(-0.03em);
 
                 svg {
                     width: 100%;
@@ -244,10 +244,10 @@ section.accented {
     background: linear-gradient(135deg, rgba(228, 123, 25, 0.08), rgba(79, 165, 43, 0.08));
 }
 
-/* Offset anchor jumps so a section lands below the sticky header + section nav
-   instead of being hidden underneath them. */
+/* Offset anchor jumps so a section lands flush below the sticky header +
+   section nav instead of leaving a gap (the nav itself renders ~46px). */
 section[id] {
-    scroll-margin-top: calc(var(--header-height) + 3.5em);
+    scroll-margin-top: calc(var(--header-height) + 41px);
 }
 
 .benefits-container .card {
