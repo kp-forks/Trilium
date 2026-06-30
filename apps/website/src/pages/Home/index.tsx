@@ -6,6 +6,7 @@ import { Trans, useTranslation } from 'react-i18next';
 
 import botIcon from "../../assets/boxicons/bx-bot.svg?raw";
 import calendarIcon from "../../assets/boxicons/bx-calendar.svg?raw";
+import arrowIcon from "../../assets/boxicons/bx-chevron-right.svg?raw";
 import hoistingIcon from "../../assets/boxicons/bx-chevrons-up.svg?raw";
 import codeIcon from "../../assets/boxicons/bx-code.svg?raw";
 import scriptApiIcon from "../../assets/boxicons/bx-code-alt.svg?raw";
@@ -41,6 +42,7 @@ import attributesIcon from "../../assets/boxicons/bx-tag.svg?raw";
 import mermaidIcon from "../../assets/boxicons/bx-vector-square.svg?raw";
 import renderIcon from "../../assets/boxicons/bx-window-alt.svg?raw";
 import markdownIcon from "../../assets/boxicons/bxs-markdown.svg?raw";
+import starIcon from "../../assets/boxicons/bxs-star.svg?raw";
 import anytypeIcon from "../../assets/import/anytype.svg?raw";
 import evernoteIcon from "../../assets/import/evernote.svg?raw";
 import keepIcon from "../../assets/import/keep.svg?raw";
@@ -107,7 +109,7 @@ function HeroSection() {
                     <DownloadButton big />
                     <Button href="./get-started/" className="mobile-only" text={t("hero_section.get_started")} />
                     <div className="additional-options">
-                        <Button iconSvg={gitHubIcon} outline text={<>{t("hero_section.github")}<span className="github-stars">{`${(stargazersCount / 1000).toFixed(1)}K+`}</span></>} href="https://github.com/TriliumNext/Trilium/" openExternally />
+                        <Button iconSvg={gitHubIcon} outline text={<>{t("hero_section.github")}<span className="github-stars"><Icon svg={starIcon} />{`${(stargazersCount / 1000).toFixed(1)}K+`}</span></>} href="https://github.com/TriliumNext/Trilium/" openExternally />
                         <Button iconSvg={dockerIcon} outline text={t("hero_section.dockerhub")} href="https://hub.docker.com/r/triliumnext/trilium" openExternally />
                     </div>
                 </div>
@@ -419,9 +421,13 @@ function TabbedShowcase({ items }: { items: ShowcaseItem[] }) {
                     <img src={active.imageUrl} alt={active.title} loading="lazy" />
                 </div>
                 <div className="showcase-details">
-                    <h3>{active.title}</h3>
+                    <h3>
+                        <Link href={active.moreInfo} className="card-heading-link" openExternally>
+                            <span>{active.title}</span>
+                            <Icon svg={arrowIcon} className="card-arrow" />
+                        </Link>
+                    </h3>
                     <p>{active.description}</p>
-                    <Link href={active.moreInfo} className="more-info" openExternally>{t("components.link_learn_more")}</Link>
                 </div>
             </div>
         </div>

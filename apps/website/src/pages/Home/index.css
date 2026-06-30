@@ -146,10 +146,17 @@ section.hero-section {
         }
 
         .github-stars {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25em;
             margin-inline-start: 0.5em;
             padding-inline-start: 0.5em;
             border-inline-start: 1px solid currentColor;
             opacity: 0.75;
+
+            .bx {
+                font-size: 0.9em;
+            }
         }
     }
 }
