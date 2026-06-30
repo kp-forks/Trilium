@@ -42,6 +42,7 @@ import oneNoteIcon from "../../assets/import/onenote.svg?raw";
 import Button, { Link } from '../../components/Button.js';
 import Card from '../../components/Card.js';
 import DownloadButton from '../../components/DownloadButton.js';
+import Icon from '../../components/Icon.js';
 import Section from '../../components/Section.js';
 import { getPlatform } from '../../download-helper.js';
 import { useColorScheme, usePageTitle } from '../../hooks.js';
@@ -147,7 +148,7 @@ function NoteTypesSection() {
     const { t } = useTranslation();
     return (
         <Section className="note-types" title={t("note_types.title")}>
-            <ListWithScreenshot items={[
+            <TabbedShowcase items={[
                 {
                     title: t("note_types.text_title"),
                     imageUrl: "/type_text.webp",
@@ -240,7 +241,7 @@ function CollectionsSection() {
     const { t } = useTranslation();
     return (
         <Section className="collections accented" title={t("collections.title")} subtitle={t("collections.subtitle")}>
-            <ListWithScreenshot items={[
+            <TabbedShowcase items={[
                 {
                     title: t("collections.calendar_title"),
                     imageUrl: "/collection_calendar.webp",
@@ -309,7 +310,7 @@ function AiIntegrationSection() {
 function ImportSection() {
     const { t } = useTranslation();
     return (
-        <Section className="benefits import" title={t("import.title")} subtitle={t("import.subtitle")}>
+        <Section className="benefits import" title={t("import.title")} subtitle={t("import.subtitle")} cta={{ text: t("import.learn_more"), href: "https://docs.triliumnotes.org/user-guide/concepts/import-export" }}>
             <div className="benefits-container grid-3-cols">
                 <Card iconSvg={oneNoteIcon} title={t("import.onenote_title")}>{t("import.onenote_description")}</Card>
                 <Card iconSvg={notionIcon} title={t("import.notion_title")}>{t("import.notion_description")}</Card>
@@ -320,34 +321,57 @@ function ImportSection() {
             </div>
 
             <p className="import-export-note">{t("import.export_note")}</p>
-
-            <div className="import-cta">
-                <Button outline text={t("import.learn_more")} href="https://docs.triliumnotes.org/user-guide/concepts/import-export" openExternally />
-            </div>
         </Section>
     );
 }
 
-function ListWithScreenshot({ items, cardExtra }: {
-    items: { title: string, imageUrl: string, description: string, moreInfo: string, iconSvg?: string }[];
-    cardExtra?: ComponentChildren;
-}) {
+interface ShowcaseItem {
+    title: string;
+    imageUrl: string;
+    description: string;
+    moreInfo: string;
+    iconSvg?: string;
+}
+
+function TabbedShowcase({ items }: { items: ShowcaseItem[] }) {
+    const { t } = useTranslation();
+    const [ activeIndex, setActiveIndex ] = useState(0);
+    const active = items[activeIndex];
+
     return (
-        <div className={`list-with-screenshot`}>
-            <ul>
-                {items.map(item => (
-                    <li>
-                        <Card
-                            title={item.title}
-                            moreInfoUrl={item.moreInfo}
-                            iconSvg={item.iconSvg}
-                            imageUrl={item.imageUrl}
-                        >
-                            {item.description}
-                        </Card>
-                    </li>
-                ))}
+        <div className="tabbed-showcase">
+            <ul className="showcase-tabs" role="tablist">
+                {items.map((item, index) => {
+                    const isActive = index === activeIndex;
+                    return (
+                        <li role="presentation" key={item.title}>
+                            <button
+                                type="button"
+                                role="tab"
+                                aria-selected={isActive}
+                                className={`showcase-tab ${isActive ? "active" : ""}`}
+                                onClick={() => setActiveIndex(index)}
+                                onMouseEnter={() => setActiveIndex(index)}
+                                onFocus={() => setActiveIndex(index)}
+                            >
+                                {item.iconSvg && <span className="tab-icon"><Icon svg={item.iconSvg} /></span>}
+                                <span className="tab-label">{item.title}</span>
+                            </button>
+                        </li>
+                    );
+                })}
             </ul>
+
+            <div className="showcase-preview" key={activeIndex} role="tabpanel">
+                <div className="showcase-image-frame">
+                    <img src={active.imageUrl} alt={active.title} loading="lazy" />
+                </div>
+                <div className="showcase-details">
+                    <h3>{active.title}</h3>
+                    <p>{active.description}</p>
+                    <Link href={active.moreInfo} className="more-info" openExternally>{t("components.link_learn_more")}</Link>
+                </div>
+            </div>
         </div>
     );
 }

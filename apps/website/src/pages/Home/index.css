@@ -170,7 +170,7 @@ section.ai-integration .ai-cards {
     gap: 1em;
 }
 
-section.ai-integration .ai-integration-cta {
+.section-cta {
     margin-top: 2.5em;
     display: flex;
     justify-content: center;
@@ -209,16 +209,6 @@ section.import .import-export-note {
     color: var(--muted-color);
 }
 
-section.import .import-cta {
-    margin-top: 1.5em;
-    display: flex;
-    justify-content: center;
-
-    .button {
-        padding: 0.75em 2em;
-    }
-}
-
 section.final-cta {
     text-align: center;
     padding: 6em 0;
@@ -253,50 +243,147 @@ section.faq {
     }
 }
 
-.list-with-screenshot {
-    gap: 2em;
+.tabbed-showcase {
+    display: grid;
+    gap: 1.5em;
+    align-items: start;
 
     @media (min-width: 720px) {
-        display: flex;
+        grid-template-columns: minmax(210px, 1fr) 2.3fr;
+        gap: 2.5em;
+    }
+}
+
+.tabbed-showcase .showcase-tabs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    gap: 0.5em;
+    /* Mobile: horizontally scrollable chips */
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+        display: none;
     }
 
-    h3 {
-        color: var(--brand-1);
-    }
-
-    ul {
-        list-style-type: none;
-        margin: 0;
-        padding: 0;
-        gap: 1em;
-        display: grid;
-
-        @media (min-width: 720px) {
-            grid-template-columns: 1fr 1fr 1fr;
-        }
-
-        li {
-            margin: 0;
-
-            .card {
-                border: 1px solid transparent;
-                height: 100%;
-            }
-        }
-    }
-
-    .details {
-        max-height: 35vh;
-        overflow: hidden;
-        display: flex;
+    @media (min-width: 720px) {
         flex-direction: column;
+        overflow: visible;
+    }
 
-        @media (max-width: 719.99px) {
-            margin-top: 1em;
+    li {
+        margin: 0;
+    }
+}
+
+.tabbed-showcase .showcase-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7em;
+    width: auto;
+    white-space: nowrap;
+    cursor: pointer;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    background: transparent;
+    color: var(--muted-color);
+    font: inherit;
+    padding: 0.7em 0.9em;
+    text-align: left;
+    transition: background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+
+    @media (min-width: 720px) {
+        width: 100%;
+    }
+
+    .tab-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 2em;
+        height: 2em;
+        border-radius: 9px;
+        color: var(--brand-1);
+        background: color-mix(in srgb, var(--brand-1) 12%, transparent);
+        transition: background-color 0.18s ease, color 0.18s ease;
+    }
+
+    &:hover {
+        color: var(--foreground-color);
+        border-color: color-mix(in srgb, var(--brand-1) 25%, transparent);
+    }
+
+    &.active {
+        color: var(--foreground-color);
+        background: var(--card-background-color);
+        border-color: color-mix(in srgb, var(--brand-1) 35%, transparent);
+        box-shadow: var(--card-box-shadow);
+
+        .tab-icon {
+            color: var(--brand-foreground-color);
+            background: var(--brand-1);
         }
     }
+}
+
+.tabbed-showcase .showcase-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2em;
+    min-width: 0;
+
+    @media (prefers-reduced-motion: no-preference) {
+        animation: showcase-fade 0.15s ease;
+    }
+}
+
+.tabbed-showcase .showcase-image-frame {
+    /* Fixed aspect ratio keeps the frame a constant height across screenshots,
+       so swapping tabs never shifts the layout. Off-ratio images are matted
+       against the card background rather than cropped. */
+    aspect-ratio: 16 / 10;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--card-background-color);
+    box-shadow: var(--card-box-shadow);
+    border: 1px solid color-mix(in srgb, var(--brand-1) 15%, transparent);
 
     img {
+        display: block;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
+    }
+}
+
+.tabbed-showcase .showcase-details {
+    color: var(--muted-color);
+
+    h3 {
+        margin: 0 0 0.4em;
+        color: var(--brand-1);
+        font-weight: 300;
+        font-size: 1.3rem;
+    }
+
+    p {
+        margin: 0 0 0.6em;
+    }
+
+    .more-info {
+        font-size: 0.9em;
+    }
+}
+
+@keyframes showcase-fade {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
     }
 }
