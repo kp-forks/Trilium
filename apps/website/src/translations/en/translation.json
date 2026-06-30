@@ -137,6 +137,12 @@
     "network_share_answer": "No, it's generally not a good idea to share a SQLite database over a network drive. Although sometimes it might work, there are chances that the database will get corrupted due to imperfect file locks over a network.",
     "security_question": "How is my data protected?",
     "security_answer": "By default, notes are not encrypted and can be read directly from the database. Once a note is marked as encrypted, the note is encrypted using AES-128-CBC.",
+    "free_question": "Is Trilium free?",
+    "free_answer": "Yes, completely. Trilium is free and open-source under the AGPL-3.0 license, with no paid tiers, accounts or feature paywalls. You're free to use, self-host and modify it however you like.",
+    "cloud_question": "Is there a hosted or cloud version?",
+    "cloud_answer": "Not an official one yet, though it's something we'd like to offer in the future. For now Trilium is self-hosted: run the desktop app, or host the server yourself. If you'd rather not manage a server, third-party providers such as <0>PikaPods</0> offer managed Trilium hosting.",
+    "collaboration_question": "Can multiple people collaborate on the same notes?",
+    "collaboration_answer": "Trilium is designed as a single-user application. You can sync your own notes across all of your devices, and publish read-only notes to the web for others to view, but real-time multi-user editing of the same notes isn't supported.",
     "more_questions": "Still have questions? <0>Ask the community</0>"
   },
   "final_cta": {

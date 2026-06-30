@@ -396,9 +396,19 @@ function FaqSection() {
     return (
         <Section className="faq" title={t("faq.title")}>
             <div className="faq-list">
+                <FaqItem question={t("faq.free_question")}>{t("faq.free_answer")}</FaqItem>
                 <FaqItem question={t("faq.mobile_question")}>{t("faq.mobile_answer")}</FaqItem>
-                <FaqItem question={t("faq.database_question")}>{t("faq.database_answer")}</FaqItem>
                 <FaqItem question={t("faq.server_question")}>{t("faq.server_answer")}</FaqItem>
+                <FaqItem question={t("faq.cloud_question")}>
+                    <Trans
+                        i18nKey="faq.cloud_answer"
+                        components={[
+                            <Link key="pikapods" href="https://www.pikapods.com/pods?run=trilium-next" openExternally />
+                        ]}
+                    />
+                </FaqItem>
+                <FaqItem question={t("faq.collaboration_question")}>{t("faq.collaboration_answer")}</FaqItem>
+                <FaqItem question={t("faq.database_question")}>{t("faq.database_answer")}</FaqItem>
                 <FaqItem question={t("faq.scaling_question")}>{t("faq.scaling_answer")}</FaqItem>
                 <FaqItem question={t("faq.network_share_question")}>{t("faq.network_share_answer")}</FaqItem>
                 <FaqItem question={t("faq.security_question")}>{t("faq.security_answer")}</FaqItem>
