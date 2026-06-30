@@ -1,0 +1,72 @@
+import "./LanguageSelector.css";
+
+import { useContext, useEffect, useRef, useState } from "preact/hooks";
+import { useLocation } from "preact-iso";
+
+import { LocaleContext } from "..";
+import chevronIcon from "../assets/boxicons/bx-chevron-down.svg?raw";
+import globeIcon from "../assets/boxicons/bx-globe.svg?raw";
+import { LOCALES, swapLocaleInUrl } from "../i18n";
+import { Link } from "./Button.js";
+import Icon from "./Icon.js";
+
+export default function LanguageSelector({ className }: { className?: string }) {
+    const { url } = useLocation();
+    const currentLocale = useContext(LocaleContext);
+    const [ open, setOpen ] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+
+    const current = LOCALES.find(l => l.id === currentLocale) ?? LOCALES.find(l => l.id === "en");
+
+    useEffect(() => {
+        if (!open) return;
+
+        function onPointerDown(e: PointerEvent) {
+            if (ref.current && !ref.current.contains(e.target as Node)) {
+                setOpen(false);
+            }
+        }
+        function onKeyDown(e: KeyboardEvent) {
+            if (e.key === "Escape") setOpen(false);
+        }
+
+        document.addEventListener("pointerdown", onPointerDown);
+        document.addEventListener("keydown", onKeyDown);
+        return () => {
+            document.removeEventListener("pointerdown", onPointerDown);
+            document.removeEventListener("keydown", onKeyDown);
+        };
+    }, [ open ]);
+
+    return (
+        <div className={`language-selector ${className ?? ""}`} ref={ref}>
+            <button
+                type="button"
+                className="language-toggle"
+                aria-haspopup="listbox"
+                aria-expanded={open}
+                onClick={() => setOpen(!open)}
+            >
+                <Icon svg={globeIcon} className="globe" />
+                <span className="current-language">{current?.name}</span>
+                <Icon svg={chevronIcon} className="chevron" />
+            </button>
+
+            {open && (
+                <ul className="language-menu" role="listbox">
+                    {LOCALES.map(locale => (
+                        <li key={locale.id} role="option" aria-selected={locale.id === currentLocale}>
+                            <Link
+                                href={swapLocaleInUrl(url, locale.id)}
+                                className={locale.id === currentLocale ? "active" : ""}
+                                onClick={() => setOpen(false)}
+                            >
+                                {locale.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            )}
+        </div>
+    );
+}

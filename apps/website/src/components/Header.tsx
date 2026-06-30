@@ -12,6 +12,7 @@ import { Link } from "./Button.js";
 import DownloadButton from './DownloadButton.js';
 import { SocialButtons } from "./Footer.js";
 import Icon from "./Icon.js";
+import LanguageSelector from "./LanguageSelector.js";
 
 export function Header() {
     const { url } = useLocation();
@@ -62,6 +63,7 @@ export function Header() {
                     <SocialButtons className="mobile-only" withText />
                 </nav>
 
+                <LanguageSelector className="desktop-only" />
                 <DownloadButton />
             </div>
         </header>
