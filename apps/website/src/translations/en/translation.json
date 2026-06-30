@@ -142,8 +142,7 @@
     "render_title": "Render notes",
     "render_description": "Build interactive dashboards and mini-apps that render right inside a note, like the clock shown here.",
     "api_title": "Script API",
-    "api_description": "A typed API for notes, branches, attributes and search, available to both frontend and backend scripts.",
-    "learn_more": "Learn more about scripting"
+    "api_description": "A typed API for notes, branches, attributes and search, available to both frontend and backend scripts."
   },
   "faq": {
     "title": "Frequently Asked Questions",

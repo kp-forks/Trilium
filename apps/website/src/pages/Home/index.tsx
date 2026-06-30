@@ -337,7 +337,7 @@ function AiIntegrationSection() {
 function ScriptingSection() {
     const { t } = useTranslation();
     return (
-        <Section id="scripting" className="benefits scripting accented" title={t("scripting.title")} subtitle={t("scripting.subtitle")} cta={{ text: t("scripting.learn_more"), href: "https://docs.triliumnotes.org/user-guide/scripts" }}>
+        <Section id="scripting" className="benefits scripting accented" title={t("scripting.title")} subtitle={t("scripting.subtitle")}>
             <div className="feature-split">
                 <div className="feature-screenshot">
                     <img src="/feature_scripting.webp" alt={t("scripting.screenshot_alt")} loading="lazy" />
