@@ -128,11 +128,28 @@
     "export_note_title": "导出笔记",
     "close": "关闭",
     "export_type_subtree": "此笔记及其所有子笔记",
-    "export_type_single": "仅此笔记，不包括子笔记",
+    "export_type_single": "仅此笔记",
     "export": "导出",
     "choose_export_type": "请先选择导出类型",
     "export_finished_successfully": "导出成功完成。",
-    "format_pdf": "PDF - 用于打印或共享目的。"
+    "format_pdf": "PDF - 用于打印或共享目的。",
+    "what_to_export": "需导出的内容",
+    "format_html_description": "保留全部格式",
+    "format_markdown_name": "Markdown",
+    "format_markdown_description": "保留大部分格式",
+    "format_opml_name": "大纲标记语言 OPML",
+    "format_opml_description": "包含HTML内容的大纲格式",
+    "format_share_name": "网页适用 HTML 格式",
+    "format_share_description": "使用共享笔记主题生成可发布静态站点",
+    "recommended": "推荐选项",
+    "result_subtree_html": "压缩包内文本笔记以 HTML 格式存储，代码、图片及其他文件均保留原始格式。",
+    "result_subtree_markdown": "压缩包内文本笔记以 Markdown 格式保存，代码、图片及其他文件均保留原有格式。",
+    "result_share": "包含使用共享笔记主题、可对外发布静态网站的ZIP压缩包。",
+    "result_opml": "单个 OPML 大纲文件，包含笔记标题与正文内容；不含图片、代码文件及附件。",
+    "result_single_html": "单个 HTML 文件，图片与附件均内嵌于该文件中。",
+    "result_single_markdown": "单个Markdown（.md）格式文件。",
+    "preparing_export": "正在准备导出…",
+    "export_in_progress_with_total": "已导出 {{progressCount}} / {{totalCount}} 条笔记"
   },
   "help": {
     "noteNavigation": "笔记导航",
@@ -194,11 +211,11 @@
     "importIntoNote": "导入到笔记",
     "chooseImportFile": "选择导入文件",
     "options": "选项",
-    "safeImportTooltip": "Trilium <code>.zip</code> 导出文件可能包含可能有害的可执行脚本。安全导入将停用所有导入脚本的自动执行。仅当导入的归档文件原本就包含可执行脚本，且你完全信任导入的可执行脚本的内容时，才取消选中“安全导入”。",
+    "safeImportTooltip": "Trilium <code>.zip</code> 导出文件可能包含有害的可执行脚本。安全导入会禁用这类脚本。仅当压缩包需要运行脚本且你完全信任其内容时，再取消勾选该选项。",
     "safeImport": "安全导入",
-    "explodeArchivesTooltip": "如果选中此项，则Trilium将读取<code>.zip</code>、<code>.enex</code>和<code>.opml</code>文件，并从这些归档文件内部的文件创建笔记。如果未选中，则Trilium会将这些归档文件本身附加到笔记中。",
+    "explodeArchivesTooltip": "从<code>.zip</code>、<code>.enex</code>和<code>.opml</code>内部的文件创建笔记。关闭此选项时，压缩包将直接作为笔记附件。",
     "explodeArchives": "读取<code>.zip</code>、<code>.enex</code>和<code>.opml</code>归档文件的内容。",
-    "shrinkImagesTooltip": "<p>如果选中此选项，Trilium将尝试通过缩放和优化来缩小导入的图像，这可能会影响图像的感知质量。如果未选中，图像将不做修改地导入。</p><p>这不适用于带有元数据的<code>.zip</code>导入，因为这些文件已被假定为已优化。</p>",
+    "shrinkImagesTooltip": "如果选中此选项，Trilium将尝试通过缩放和优化来缩小导入的图像，这可能会影响图像的感知质量。如果未选中，图像将不做修改地导入。这不适用于带有元数据的 <code>.zip</code> 导入，因为这些文件已被假定为已优化。",
     "shrinkImages": "压缩图像",
     "textImportedAsText": "如果元数据不明确，将 HTML、Markdown 和 TXT 导入为文本笔记",
     "codeImportedAsCode": "如果元数据不明确，将识别的代码文件（例如<code>.json</code>）导入为代码笔记",
@@ -211,12 +228,19 @@
       "placeholder": "输入 HTML 标签，每行一个",
       "reset_button": "重置为默认列表"
     },
-    "in-progress": "导入进行中：{{progress}}",
+    "in-progress": "已导入 {{progress}} 条笔记",
     "successful": "导入成功完成。",
     "importZipRecommendation": "导入 ZIP 文件时，笔记层级将反映压缩文件内的子目录结构。",
     "spreadsheetImportedAsSpreadsheet": "将CSV和Excel文件作为可编辑的电子表格导入，而非普通文件",
     "starting": "正在导入…",
-    "in-progress-with-total": "正在导入{{progress}}/{{total}}"
+    "in-progress-with-total": "已导入 {{progress}} / {{total}} 条笔记",
+    "importIntoNoteNamed": "导入至{{- title}}",
+    "import_from": "从…导入",
+    "cardName": "文件及其他格式",
+    "cardDescription": "ZIP、ENEX、OPML、Markdown、HTML、图片及更多格式",
+    "shrinkImagesProviderTooltip": "缩放并优化导入图片以节省存储空间，画质会轻微下降。",
+    "extracting": "已提取 {{progress}} / {{total}} 项内容",
+    "processing": "已处理 {{progress}} / {{total}} 条笔记"
   },
   "include_note": {
     "dialog_title": "包含笔记",
@@ -611,7 +635,9 @@
     "today": "今天",
     "week": "周",
     "month": "月",
-    "list": "列表"
+    "list": "列表",
+    "pin_date": "固定当前日期，让日历默认打开该时间区间，而非跳转至当日",
+    "unpin_date": "取消日期固定，日历将恢复默认打开当日日期"
   },
   "close_pane_button": {
     "close_this_pane": "关闭此面板"
@@ -1908,7 +1934,7 @@
         "title": "固定",
         "description": "编辑工具出现在 \"格式\" 功能区标签中。"
       },
-      "multiline-toolbar": "如果工具栏无法完全显示，则分多行显示。",
+      "multiline-toolbar": "如果工具栏无法完全显示，则分多行显示",
       "toolbar_style": "工具栏样式"
     }
   },
@@ -2385,7 +2411,8 @@
     "play-mode-title": "播放模式：{{mode}}",
     "play-mode-once": "单次播放",
     "play-mode-loop": "循环播放",
-    "play-mode-next": "播放下一个"
+    "play-mode-next": "播放下一个",
+    "forward-10s": "快进10秒（右方向键）"
   },
   "mermaid": {
     "sample_diagrams": "示例图：",
@@ -2704,8 +2731,11 @@
     "placeholders": {
       "math": "方程",
       "collapsible_summary": "摘要",
-      "collapsible_details": "详细内容"
-    }
+      "collapsible_details": "详细内容",
+      "table_column": "第{{number}}列"
+    },
+    "page_break": "插入分页符（用于打印）",
+    "table": "插入表格"
   },
   "mobile_note_navigator": {
     "back": "返回上一级",
@@ -2849,11 +2879,11 @@
     "tooltip": "一段可重复使用的文本或代码，可插入编辑器中（通过工具栏的片段菜单，或使用斜杠命令）。"
   },
   "import_provider": {
-    "choose_provider": "选择要导入的服务："
+    "choose_provider": "从上方选择要导入的服务。"
   },
   "onenote_import": {
     "name": "Microsoft OneNote",
-    "description": "从你的 OneNote 帐户导入笔记本、分区和页面。",
+    "description": "连接到您的账户",
     "connect_description": "使用你的 Microsoft 帐户登录以导入 OneNote 笔记本。",
     "connect": "使用 Microsoft 登录",
     "connecting": "正在等待登录完成…",
@@ -2861,28 +2891,31 @@
     "disconnect": "断开连接",
     "load_failed": "无法加载你的 OneNote 笔记本。",
     "no_notebooks": "未在此帐户中找到笔记本。",
-    "select_sections": "选择要导入的分区：",
+    "select_sections": "选择要导入的分区",
     "import": "导入所选内容",
     "attach_source": "附加原始 HTML（debug）",
-    "attach_source_hint": "将每个页面未经修改的 OneNote HTML 作为附件保存在导入后的笔记上，便于与转换结果进行对比。"
+    "attach_source_hint": "将每个页面未经修改的 OneNote HTML 作为附件保存在导入后的笔记上，便于与转换结果进行对比。",
+    "section_heading": "微软 OneNote",
+    "checking": "正在校验 OneNote 连接状态…",
+    "select_sections_hint": "OneNote导入数据不会保留原始排序，分区与分组将按创建日期排序，显示顺序可能与OneNote内原有布局不一致。"
   },
   "notion_import": {
     "name": "Notion",
-    "description": "从 Notion 的 HTML 导出文件（.zip）中导入页面。",
+    "description": "从 HTML 格式文件导入页面",
     "description_long": "在 Notion 中，将工作区或页面导出为包含子页面的 HTML 格式，然后在此处选择生成的 .zip 文件。",
     "choose_file": "Notion 导出文件（.zip）",
     "import": "导入"
   },
   "keep_import": {
     "name": "Google Keep",
-    "description": "从 Google Keep 的导出文件（.zip）中导入笔记。",
+    "description": "从 Takeout 文件导入笔记",
     "description_long": "在Google Takeout中，将你的Keep数据导出为.zip文件，然后在此处选择生成的文件。",
     "choose_file": "Google Keep 导出文件（.zip）",
     "import": "导入"
   },
   "evernote_import": {
     "name": "Evernote",
-    "description": "从 Evernote 导出文件（.enex）中导入笔记。",
+    "description": "从 .enex 文件导入笔记",
     "description_long": "在 Evernote 中，将笔记本（或一次最多 100 条笔记）导出为 ENEX 文件，然后在此处选择一个或多个 .enex 文件。每个文件将作为独立的笔记本导入。",
     "choose_file": "Evernote 导出文件（.enex）",
     "import": "导入"
@@ -2913,5 +2946,26 @@
     "launch_on_startup_description": "登录电脑时自动打开 Trilium。",
     "hide_on_auto_start": "启动时最小化到系统托盘",
     "hide_on_auto_start_description": "开机自动启动后，以隐藏于系统托盘的方式启动，而不是打开窗口。需要同时启用开机时自动启动和系统托盘图标。"
+  },
+  "file_upload": {
+    "drop_or_browse_single": "将文件拖拽至此处，或点击浏览选择文件",
+    "drop_or_browse_multiple": "将多个文件拖拽至此，或点击浏览选取文件",
+    "browse_single": "点击选择文件",
+    "browse_multiple": "点击选择多个文件",
+    "selected_other": "已选中 {{count}} 个文件"
+  },
+  "anytype_import": {
+    "name": "Anytype",
+    "description": "从 JSON 导出文件导入",
+    "description_long": "在Anytype中，选择Any-Block格式并勾选JSON导出你的空间，随后在此选中生成的zip压缩包。目前仅支持导入页面及页面文本内容。",
+    "choose_file": "Anytype导出文件（.zip）",
+    "import": "导入"
+  },
+  "obsidian_import": {
+    "name": "Obsidian",
+    "description": "从知识库导入",
+    "description_long": "将Obsidian库文件夹压缩为.zip包，再在此处选择生成的压缩文件。",
+    "choose_file": "Obsidian知识库压缩包（.zip）",
+    "import": "导入"
   }
 }
