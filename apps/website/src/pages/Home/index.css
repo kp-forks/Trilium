@@ -204,33 +204,65 @@ section.hero-section {
     section.hero-section {
         /* Clip the screenshot where it bleeds past the right edge of the viewport */
         overflow: hidden;
+
+        /* Occupy exactly one viewport below the sticky header. Without this the
+           bleeding screenshot can push the row slightly taller than the screen. */
+        height: calc(100vh - var(--header-height));
+        box-sizing: border-box;
+        display: flex;
+        align-items: stretch;
     }
 
     section.hero-section > .content-wrapper {
+        position: relative;
         flex-direction: row;
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        align-items: stretch;
         gap: 2em;
-        padding: 3em;
+        /* Slim top padding so the screenshot reaches up near the header instead
+           of leaving an empty band; the tagline is pinned absolutely so it needs
+           no reserved bottom space here. */
+        padding: 0.75em 3em 2.5em;
     }
 
+    /* Keep the text column vertically centered while the screenshot fills the
+       full height of the hero next to it. */
     section.hero-section .title-section {
         flex-basis: 34%;
         max-width: 30em;
+        align-self: center;
     }
 
     /* Deep screenshot: enlarge the right column and let it run off the right
-       edge of the viewport for an immersive, "spilling off the page" look. */
+       edge of the viewport for an immersive, "spilling off the page" look. The
+       column stretches to the hero's full height and anchors the image to the
+       top so the previously empty band above it is used. */
     section.hero-section .screenshot-container {
         flex: 1 1 64%;
         margin-right: calc(50% - 50vw - 8em);
+        display: flex;
+        align-items: flex-start;
+        overflow: hidden;
     }
 
     section.hero-section .screenshot {
+        height: 100%;
+        width: auto;
+        max-width: none;
         min-width: 62vw;
+        object-fit: cover;
+        object-position: left top;
     }
 
+    /* Pin the tagline to the bottom of the text column, clear of the screenshot. */
     section.hero-section .hero-tagline {
-        margin-top: 0;
+        position: absolute;
+        left: 3em;
+        bottom: 1.5em;
+        width: auto;
+        max-width: 34em;
+        margin: 0;
+        justify-content: flex-start;
     }
 
     section.hero-section .download-wrapper {
@@ -644,6 +676,47 @@ section.faq {
 
     p {
         margin: 0 0 0.6em;
+    }
+}
+
+section.note-types .more-note-types {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75em;
+    margin-top: 2em;
+}
+
+section.note-types .more-note-types-label {
+    font-size: 0.75em;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted-color);
+}
+
+section.note-types .more-note-types a.button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.4em 0.9em;
+    font-size: 0.9em;
+    box-shadow: none;
+    transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+section.note-types .more-note-types a.button:hover {
+    color: var(--brand-foreground-color);
+    background-color: var(--brand-1);
+}
+
+section.note-types .more-note-types a.button .bx {
+    width: 1.1em;
+    height: 1.1em;
+
+    svg {
+        width: 100%;
+        height: 100%;
     }
 }
 

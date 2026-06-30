@@ -4,7 +4,8 @@ import { ComponentChildren } from 'preact';
 import { useContext, useEffect, useState } from 'preact/hooks';
 import { Trans, useTranslation } from 'react-i18next';
 
-import botIcon from "../../assets/boxicons/bx-bot.svg?raw";
+import importIcon from "../../assets/boxicons/bx-archive-arrow-down.svg?raw";
+import exportIcon from "../../assets/boxicons/bx-archive-arrow-up.svg?raw";
 import calendarIcon from "../../assets/boxicons/bx-calendar.svg?raw";
 import arrowIcon from "../../assets/boxicons/bx-chevron-right.svg?raw";
 import hoistingIcon from "../../assets/boxicons/bx-chevrons-up.svg?raw";
@@ -12,18 +13,18 @@ import codeIcon from "../../assets/boxicons/bx-code.svg?raw";
 import scriptApiIcon from "../../assets/boxicons/bx-code-alt.svg?raw";
 import aiToolsIcon from "../../assets/boxicons/bx-cog.svg?raw";
 import boardIcon from "../../assets/boxicons/bx-columns-3.svg?raw";
+import templatesIcon from "../../assets/boxicons/bx-copy.svg?raw";
 import dashboardIcon from "../../assets/boxicons/bx-dashboard.svg?raw";
 import dockerIcon from "../../assets/boxicons/bx-docker.svg?raw";
-import templatesIcon from "../../assets/boxicons/bx-duplicate.svg?raw";
-import exportIcon from "../../assets/boxicons/bx-export.svg?raw";
 import restApiIcon from "../../assets/boxicons/bx-extension.svg?raw";
 import fileIcon from "../../assets/boxicons/bx-file.svg?raw";
+import savedSearchIcon from "../../assets/boxicons/bx-file-search.svg?raw";
 import authIcon from "../../assets/boxicons/bx-fingerprint.svg?raw";
 import noteStructureIcon from "../../assets/boxicons/bx-folder.svg?raw";
 import gitHubIcon from "../../assets/boxicons/bx-github.svg?raw";
 import shareIcon from "../../assets/boxicons/bx-globe.svg?raw";
+import webViewIcon from "../../assets/boxicons/bx-globe-alt.svg?raw";
 import revisionsIcon from "../../assets/boxicons/bx-history.svg?raw";
-import importIcon from "../../assets/boxicons/bx-import.svg?raw";
 import apiKeyIcon from "../../assets/boxicons/bx-key.svg?raw";
 import widgetsIcon from "../../assets/boxicons/bx-layout.svg?raw";
 import geomapIcon from "../../assets/boxicons/bx-map.svg?raw";
@@ -33,6 +34,7 @@ import webClipperIcon from "../../assets/boxicons/bx-paperclip.svg?raw";
 import canvasIcon from "../../assets/boxicons/bx-pen.svg?raw";
 import printerIcon from "../../assets/boxicons/bx-printer.svg?raw";
 import syncIcon from "../../assets/boxicons/bx-refresh-cw.svg?raw";
+import botIcon from "../../assets/boxicons/bx-robot.svg?raw";
 import searchIcon from "../../assets/boxicons/bx-search.svg?raw";
 import backendIcon from "../../assets/boxicons/bx-server.svg?raw";
 import protectedNotesIcon from "../../assets/boxicons/bx-shield.svg?raw";
@@ -40,8 +42,9 @@ import presentationIcon from "../../assets/boxicons/bx-slideshow.svg?raw";
 import tableIcon from "../../assets/boxicons/bx-table.svg?raw";
 import attributesIcon from "../../assets/boxicons/bx-tag.svg?raw";
 import mermaidIcon from "../../assets/boxicons/bx-vector-square.svg?raw";
-import renderIcon from "../../assets/boxicons/bx-window-alt.svg?raw";
+import renderIcon from "../../assets/boxicons/bx-window.svg?raw";
 import markdownIcon from "../../assets/boxicons/bxs-markdown.svg?raw";
+import noteMapIcon from "../../assets/boxicons/bxs-network-chart.svg?raw";
 import starIcon from "../../assets/boxicons/bxs-star.svg?raw";
 import anytypeIcon from "../../assets/import/anytype.svg?raw";
 import evernoteIcon from "../../assets/import/evernote.svg?raw";
@@ -248,18 +251,14 @@ function NoteTypesSection() {
                     description: t("note_types.file_description")
                 }
             ]} />
-            <p>
-                <Trans
-                    i18nKey="note_types.others_list"
-                    components={[
-                        <Link href="https://docs.triliumnotes.org/user-guide/note-types/note-map" openExternally />,
-                        <Link href="https://docs.triliumnotes.org/user-guide/note-types/relation-map" openExternally />,
-                        <Link href="https://docs.triliumnotes.org/user-guide/note-types/saved-search" openExternally />,
-                        <Link href="https://docs.triliumnotes.org/user-guide/note-types/render-note" openExternally />,
-                        <Link href="https://docs.triliumnotes.org/user-guide/note-types/webview" openExternally />
-                    ]}
-                />
-            </p>
+            <div className="more-note-types">
+                <span className="more-note-types-label">{t("note_types.others_label")}</span>
+                <Button iconSvg={noteMapIcon} outline text={t("note_types.notemap_title")} href="https://docs.triliumnotes.org/user-guide/note-types/note-map" openExternally />
+                <Button iconSvg={noteMapIcon} outline text={t("note_types.relationmap_title")} href="https://docs.triliumnotes.org/user-guide/note-types/relation-map" openExternally />
+                <Button iconSvg={savedSearchIcon} outline text={t("note_types.savedsearch_title")} href="https://docs.triliumnotes.org/user-guide/note-types/saved-search" openExternally />
+                <Button iconSvg={restApiIcon} outline text={t("note_types.rendernote_title")} href="https://docs.triliumnotes.org/user-guide/note-types/render-note" openExternally />
+                <Button iconSvg={webViewIcon} outline text={t("note_types.webview_title")} href="https://docs.triliumnotes.org/user-guide/note-types/webview" openExternally />
+            </div>
         </Section>
     );
 }
