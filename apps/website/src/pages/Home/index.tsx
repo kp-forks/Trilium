@@ -354,8 +354,22 @@ function ImportSection() {
                         </div>
                     </div>
                 </Card>
-                <Card iconSvg={exportIcon} title={t("import.pillar_export_title")}>{t("import.pillar_export_description")}</Card>
-                <Card iconSvg={printerIcon} title={t("import.pillar_pdf_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/note-types/file/pdf">{t("import.pillar_pdf_description")}</Card>
+                <Card iconSvg={exportIcon} title={t("import.pillar_export_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/concepts/import-export">
+                    {t("import.pillar_export_description")}
+                    <ul className="format-list">
+                        <li>{t("import.pillar_export_markdown")}</li>
+                        <li>{t("import.pillar_export_html")}</li>
+                        <li>{t("import.pillar_export_opml")}</li>
+                    </ul>
+                </Card>
+                <Card iconSvg={printerIcon} title={t("import.pillar_pdf_title")} moreInfoUrl="https://docs.triliumnotes.org/user-guide/note-types/file/pdf">
+                    {t("import.pillar_pdf_description")}
+                    <ul className="format-list">
+                        <li>{t("import.pillar_pdf_single")}</li>
+                        <li>{t("import.pillar_pdf_subtree")}</li>
+                        <li>{t("import.pillar_pdf_ready")}</li>
+                    </ul>
+                </Card>
             </div>
         </Section>
     );
