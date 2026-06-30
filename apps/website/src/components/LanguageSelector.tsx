@@ -2,6 +2,7 @@ import "./LanguageSelector.css";
 
 import { useContext, useEffect, useRef, useState } from "preact/hooks";
 import { useLocation } from "preact-iso";
+import { useTranslation } from "react-i18next";
 
 import { LocaleContext } from "..";
 import chevronIcon from "../assets/boxicons/bx-chevron-down.svg?raw";
@@ -10,7 +11,15 @@ import { LOCALES, swapLocaleInUrl } from "../i18n";
 import { Link } from "./Button.js";
 import Icon from "./Icon.js";
 
-export default function LanguageSelector({ className }: { className?: string }) {
+interface LanguageSelectorProps {
+    className?: string;
+    /** Render the locales inline (no dropdown) — used inside the mobile menu. */
+    inline?: boolean;
+    onSelect?: () => void;
+}
+
+export default function LanguageSelector({ className, inline, onSelect }: LanguageSelectorProps) {
+    const { t } = useTranslation();
     const { url } = useLocation();
     const currentLocale = useContext(LocaleContext);
     const [ open, setOpen ] = useState(false);
@@ -19,6 +28,7 @@ export default function LanguageSelector({ className }: { className?: string }) 
     const current = LOCALES.find(l => l.id === currentLocale) ?? LOCALES.find(l => l.id === "en");
 
     useEffect(() => {
+        if (inline) return;
         if (!open) return;
 
         function onPointerDown(e: PointerEvent) {
@@ -36,7 +46,31 @@ export default function LanguageSelector({ className }: { className?: string }) 
             document.removeEventListener("pointerdown", onPointerDown);
             document.removeEventListener("keydown", onKeyDown);
         };
-    }, [ open ]);
+    }, [ open, inline ]);
+
+    if (inline) {
+        return (
+            <div className={`language-selector inline ${className ?? ""}`}>
+                <span className="language-label">
+                    <Icon svg={globeIcon} className="globe" />
+                    {t("header.language")}
+                </span>
+                <ul className="language-menu" role="listbox">
+                    {LOCALES.map(locale => (
+                        <li key={locale.id} role="option" aria-selected={locale.id === currentLocale}>
+                            <Link
+                                href={swapLocaleInUrl(url, locale.id)}
+                                className={locale.id === currentLocale ? "active" : ""}
+                                onClick={onSelect}
+                            >
+                                {locale.name}
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        );
+    }
 
     return (
         <div className={`language-selector ${className ?? ""}`} ref={ref}>

@@ -48,19 +48,24 @@ export function Header() {
                 </div>
 
                 <nav className={`${mobileMenuShown ? "mobile-shown" : ""}`}>
-                    {headerLinks.map(link => {
-                        const linkHref = link.external ? link.url : swapLocaleInUrl(link.url, locale);
-                        return (<Link
-                            href={linkHref}
-                            className={url === linkHref ? "active" : ""}
-                            openExternally={link.external}
-                            onClick={() => {
-                                setMobileMenuShown(false);
-                            }}
-                        >{link.text}</Link>);
-                    })}
+                    <div className="nav-links">
+                        {headerLinks.map(link => {
+                            const linkHref = link.external ? link.url : swapLocaleInUrl(link.url, locale);
+                            return (<Link
+                                href={linkHref}
+                                className={url === linkHref ? "active" : ""}
+                                openExternally={link.external}
+                                onClick={() => {
+                                    setMobileMenuShown(false);
+                                }}
+                            >{link.text}</Link>);
+                        })}
+                    </div>
 
-                    <SocialButtons className="mobile-only" withText />
+                    <div className="nav-bottom mobile-only">
+                        <LanguageSelector inline onSelect={() => setMobileMenuShown(false)} />
+                        <SocialButtons withText />
+                    </div>
                 </nav>
 
                 <LanguageSelector className="desktop-only" />

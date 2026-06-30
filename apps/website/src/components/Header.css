@@ -38,6 +38,10 @@ header {
         justify-content: flex-start;
         gap: var(--gap);
 
+        .nav-links {
+            display: contents;
+        }
+
         a {
             text-decoration: none;
             color: inherit;
@@ -63,6 +67,17 @@ header {
         box-sizing: border-box;
         display: flex;
 
+        &:has(nav.mobile-shown) {
+            height: 100vh;
+            overflow-y: auto;
+
+            .content-wrapper {
+                display: flex;
+                flex-direction: column;
+                min-height: 100%;
+            }
+        }
+
         .content-wrapper {
             display: block;
         }
@@ -72,6 +87,7 @@ header {
             align-items: center;
             width: 100%;
             gap: 2em;
+            flex-shrink: 0;
 
             .banner {
                 flex-grow: 1;
@@ -90,8 +106,21 @@ header {
 
             &.mobile-shown {
                 display: flex;
+                flex-grow: 1;
                 max-height: 100vh;
                 padding: 2em 0;
+            }
+
+            .nav-links {
+                display: flex;
+                flex-direction: column;
+                gap: var(--gap);
+                margin-top: 2em;
+            }
+
+            .nav-bottom {
+                flex-shrink: 0;
+                margin-top: auto;
             }
         }
     }
