@@ -189,6 +189,12 @@ async function pullChanges(syncContext: SyncContext) {
 
             outstandingPullCount = resp.outstandingPullCount;
 
+            // Advance the cursor to whatever the server has processed — even when it returns no entity
+            // changes, since it may have skipped past changes owned by this instance. Capturing it here
+            // (before the empty-response break) lets the apply phase persist the advance, so we don't
+            // re-request the skipped range on every subsequent sync.
+            cursor = resp.lastEntityChangeId;
+
             const hasPendingChanges = resp.entityChanges.length > 0 || outstandingPullCount > 0;
             if (hasPendingChanges && optionService.getOptionOrNull("syncIncomplete") !== "true") {
                 optionService.setOption("syncIncomplete", "true");
@@ -206,12 +212,14 @@ async function pullChanges(syncContext: SyncContext) {
             }
 
             batch.push(resp);
-            cursor = resp.lastEntityChangeId;
             batchBytes += estimatePullResponseBytes(resp);
         } while (batchBytes < maxBatchBytes);
 
-        if (batch.length === 0) {
-            break; // nothing left to pull
+        // Nothing to apply and the cursor didn't move → fully caught up. If the cursor DID advance (the
+        // server skipped this instance's own changes and returned nothing), fall through so the apply
+        // phase persists the advance.
+        if (batch.length === 0 && getLastSyncedPull() === cursor) {
+            break;
         }
 
         // Apply phase: all fetched chunks in a single transaction.
@@ -232,9 +240,11 @@ async function pullChanges(syncContext: SyncContext) {
             }
         });
 
-        log.info(
-            `Sync: pulled ${batch.length} chunk(s) (${batchChanges} changes, ~${Math.round(batchBytes / 1_048_576)} MB) in ${applyStart - fetchStart}ms and applied them in ${Date.now() - applyStart}ms, ${outstandingPullCount} outstanding pulls`
-        );
+        if (batch.length > 0) {
+            log.info(
+                `Sync: pulled ${batch.length} chunk(s) (${batchChanges} changes, ~${Math.round(batchBytes / 1_048_576)} MB) in ${applyStart - fetchStart}ms and applied them in ${Date.now() - applyStart}ms, ${outstandingPullCount} outstanding pulls`
+            );
+        }
 
         if (noMoreChanges) {
             break;

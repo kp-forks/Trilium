@@ -113,6 +113,19 @@ describe("sync service", () => {
         expect(urls.some((u) => u.includes("/api/sync/check"))).toBe(true);
     });
 
+    it("persists an advanced cursor even when the server returns an empty change batch", async () => {
+        // The server may skip past changes owned by this instance and return no entity changes but an
+        // advanced lastEntityChangeId. The client must persist that advance, otherwise every subsequent
+        // sync re-requests (and the server re-scans) the same skipped range.
+        config.login = { instanceId: "REMOTE_INSTANCE", maxEntityChangeId: 100 }; // don't lower our cursor on login
+        config.changed = [{ entityChanges: [], lastEntityChangeId: 20, outstandingPullCount: 0 }];
+        cls.init(() => options.setOption("lastSyncedPull", "5"));
+
+        await runSync();
+
+        expect(Number(options.getOption("lastSyncedPull"))).toBe(20);
+    });
+
     it("re-runs the content check while the server reports outstanding pulls", async () => {
         config.check = [
             { maxEntityChangeId: 999_999_999, entityHashes: {} }, // lastSyncedPull < max -> loop again
