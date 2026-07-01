@@ -8,7 +8,7 @@ import BNote from "../../becca/entities/bnote.js";
 import TaskContext from "../task_context.js";
 import sql_init from "../sql_init.js";
 import single from "./single.js";
-import stripBom from "strip-bom";
+import { stripBom } from "../utils/binary.js";
 import { getContext } from "../context.js";
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 
@@ -107,6 +107,23 @@ describe("processNoteContent", () => {
         const { importedNote } = await testImport("UTF-16LE Text Note.md", "text/markdown");
         expect(importedNote.mime).toBe("text/html");
         expect(importedNote.getContent().toString()).toBe("<h2>Hello world</h2><p>Plain text goes here.</p>");
+    });
+
+    it("imports YAML front matter as labels and strips it from a Markdown note", async () => {
+        const md = "---\nfirst: First value\ntags:\n  - Tag\n  - AnotherTag\n---\nThe body.";
+        const { importedNote } = await testImport("Frontmatter.md", "text/markdown", Buffer.from(md));
+        expect(importedNote.getContent().toString()).toBe("<p>The body.</p>");
+        expect(importedNote.getOwnedLabelValue("first")).toBe("First value");
+        expect(importedNote.getOwnedLabelValues("tags")).toEqual(["Tag", "AnotherTag"]);
+    });
+
+    it("only creates labels from front matter — never relations (no script triggers)", async () => {
+        const md = '---\n"~runOnNoteCreation": evil\ntemplate: x\n---\nBody.';
+        const { importedNote } = await testImport("Safe.md", "text/markdown", Buffer.from(md));
+        // Front matter applies via addLabel, so the only script-execution / template vector (a relation)
+        // can never appear — even a key that looks like one lands as a harmless label.
+        expect(importedNote.getOwnedAttributes().filter((a) => a.type === "relation")).toHaveLength(0);
+        expect(importedNote.getOwnedAttributes().every((a) => a.type === "label")).toBe(true);
     });
 
     it("supports excalidraw note", async () => {

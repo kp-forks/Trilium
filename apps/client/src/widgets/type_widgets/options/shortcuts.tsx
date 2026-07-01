@@ -633,7 +633,10 @@ const MODIFIER_KEYS = new Set([ "Control", "Alt", "Shift", "Meta" ]);
 
 const NAMED_KEYS: Record<string, string> = {
     ArrowUp: "Up", ArrowDown: "Down", ArrowLeft: "Left", ArrowRight: "Right",
-    " ": "Space", Spacebar: "Space"
+    " ": "Space", Spacebar: "Space",
+    // "+" collides with the shortcut separator, so it is stored as the named "Plus" token instead of
+    // a literal "+". On QWERTZ/AZERTY this is a dedicated key; on US layouts it is Shift+"=".
+    "+": "Plus"
 };
 
 /**

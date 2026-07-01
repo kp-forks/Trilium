@@ -23,6 +23,21 @@ const shareAdjustedAssetPath = isDev ? assetPath : `../${assetPath}`;
 const templateCache: Map<string, string> = new Map();
 
 /**
+ * Maximum number of lines a code block may have before server-side syntax highlighting is skipped.
+ * Mirrors the editor's per-block cutoff (HIGHLIGHT_MAX_BLOCK_COUNT in the ckeditor5 syntax
+ * highlighting plugin); beyond it `highlightAuto` is too slow and would block the event loop on
+ * large shared/included code notes (#9717).
+ */
+const HIGHLIGHT_MAX_LINE_COUNT = 500;
+
+/**
+ * Maximum number of characters a code block may have before server-side syntax highlighting is
+ * skipped. The line-count cutoff alone does not protect against a single very long line (e.g.
+ * minified code), so a separate character ceiling guards `highlightAuto`'s size-driven cost.
+ */
+const HIGHLIGHT_MAX_CHAR_COUNT = 50_000;
+
+/**
  * Represents the output of the content renderer.
  */
 export interface Result {
@@ -184,7 +199,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
     }
 
     const { header, content, isEmpty } = getContent(note);
-    const showLoginInShareTheme = options.getOption("showLoginInShareTheme");
+    const showLoginInShareTheme = options.getOptionBool("showLoginInShareTheme");
     const opts = {
         note,
         header,
@@ -419,7 +434,13 @@ function renderText(result: Result, note: SNote | BNote) {
                 continue;
             }
 
-            const highlightResult = highlightAuto(codeEl.text);
+            // codeEl.text recursively traverses the node's subtree, so read it once.
+            const codeText = codeEl.text;
+            if (!shouldSyntaxHighlight(codeText)) {
+                continue;
+            }
+
+            const highlightResult = highlightAuto(codeText);
             codeEl.innerHTML = highlightResult.value;
             codeEl.classList.add("hljs");
         }
@@ -525,12 +546,39 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
             continue;
         }
 
-        const highlightResult = highlightAuto(codeEl.text);
+        // codeEl.text recursively traverses the node's subtree, so read it once.
+        const codeText = codeEl.text;
+        if (!shouldSyntaxHighlight(codeText)) {
+            continue;
+        }
+
+        const highlightResult = highlightAuto(codeText);
         codeEl.innerHTML = highlightResult.value;
         codeEl.classList.add("hljs");
     }
 
     result.content = document.innerHTML;
+}
+
+/**
+ * Whether a code block is small enough to syntax-highlight server-side. Highlighting (especially
+ * `highlightAuto`, which probes every registered language) scales with content size and would block
+ * the single Node event loop on very large code, so blocks beyond {@link HIGHLIGHT_MAX_LINE_COUNT}
+ * lines or {@link HIGHLIGHT_MAX_CHAR_COUNT} characters are left unhighlighted.
+ */
+export function shouldSyntaxHighlight(code: string) {
+    if (code.length > HIGHLIGHT_MAX_CHAR_COUNT) {
+        return false;
+    }
+
+    let lineCount = 1;
+    let index = -1;
+    while ((index = code.indexOf("\n", index + 1)) !== -1) {
+        if (++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -540,9 +588,13 @@ export function renderCode(result: Result) {
     if (typeof result.content !== "string" || !result.content?.trim()) {
         result.isEmpty = true;
     } else {
-        const preEl = new HTMLElement("pre", {});
-        preEl.appendChild(new TextNode(result.content));
-        result.content = preEl.outerHTML;
+        // Escape the raw code so that any `<`/`>` it contains are not later re-parsed as HTML.
+        // When such a code note is included into a shared text note, renderText re-parses the
+        // resulting HTML; with unescaped angle brackets (e.g. generics, comparisons, JSX) a large
+        // code note would explode into a pathological node-html-parser tree and hang the event
+        // loop (#9717). The <code> wrapper additionally lets renderText apply syntax highlighting,
+        // bounded by shouldSyntaxHighlight().
+        result.content = `<pre><code>${escapeHtml(result.content)}</code></pre>`;
     }
 }
 

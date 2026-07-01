@@ -101,7 +101,12 @@ export default function NoteDetail() {
         // globally, so it gets also to e.g. ribbon components. But this means that the event can be generated multiple
         // times if the same note is open in several tabs.
 
-        if (note.noteId && loadResults.isNoteContentReloaded(note.noteId, parentComponent.componentId)) {
+        if (note.noteId
+            && loadResults.isNoteReloaded(note.noteId, parentComponent.componentId)
+            && (type !== (await getExtendedWidgetType(note, noteContext)) || mime !== note?.mime)) {
+            // this needs to have a triggerEvent so that e.g., note type (not in the component subtree) is updated
+            parentComponent.triggerEvent("noteTypeMimeChanged", { noteId: note.noteId });
+        } else if (note.noteId && loadResults.isNoteContentReloaded(note.noteId, parentComponent.componentId)) {
             // probably incorrect event
             // calling this.refresh() is not enough since the event needs to be propagated to children as well
             // FIXME: create a separate event to force hierarchical refresh
@@ -109,11 +114,6 @@ export default function NoteDetail() {
             // this uses handleEvent to make sure that the ordinary content updates are propagated only in the subtree
             // to avoid the problem in #3365
             parentComponent.handleEvent("noteTypeMimeChanged", { noteId: note.noteId });
-        } else if (note.noteId
-            && loadResults.isNoteReloaded(note.noteId, parentComponent.componentId)
-            && (type !== (await getExtendedWidgetType(note, noteContext)) || mime !== note?.mime)) {
-            // this needs to have a triggerEvent so that e.g., note type (not in the component subtree) is updated
-            parentComponent.triggerEvent("noteTypeMimeChanged", { noteId: note.noteId });
         } else {
             const attrs = loadResults.getAttributeRows();
 
