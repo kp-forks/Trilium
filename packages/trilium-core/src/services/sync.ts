@@ -469,7 +469,7 @@ function getEntityChangeRecords(entityChanges: EntityChange[]) {
 
         records.push(record);
 
-        length += JSON.stringify(record).length;
+        length += estimateEntityChangeRecordSize(record);
 
         if (length > 1_000_000) {
             // each sync request/response should have at most ~1 MB.
@@ -478,6 +478,20 @@ function getEntityChangeRecords(entityChanges: EntityChange[]) {
     }
 
     return records;
+}
+
+/**
+ * Rough serialized byte size of an entity-change record, used only to bound a sync response to
+ * ~1 MB. Avoids a full `JSON.stringify(record)` here — the record's (base64-encoded) blob content
+ * would otherwise be serialized just to be measured, then serialized again when the response is
+ * sent. Blob content dominates the payload; a fixed allowance covers the entityChange plus the
+ * record's other (small) entity fields, which is precise enough for a size threshold.
+ */
+export function estimateEntityChangeRecordSize(record: EntityChangeRecord): number {
+    const content = record.entity?.content;
+    const contentLength = typeof content === "string" ? content.length : content?.length ?? 0;
+
+    return contentLength + 300;
 }
 
 function getLastSyncedPull() {
