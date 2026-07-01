@@ -394,8 +394,10 @@ export function useLlmChat(
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
-        // Opening an existing chat should land on the most recent message.
-        if ((content.messages?.length ?? 0) > 0) {
+        // Opening an existing chat should land on the most recent message — but never
+        // clobber a send/retry that has already queued the reply-anchor positioning
+        // (a content reload can race the layout effect that consumes the pending mode).
+        if ((content.messages?.length ?? 0) > 0 && pendingScrollRef.current !== "anchor") {
             pendingScrollRef.current = "bottom";
         }
         setMessagesInternal(content.messages || []);
