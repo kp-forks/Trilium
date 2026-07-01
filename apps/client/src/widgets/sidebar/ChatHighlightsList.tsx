@@ -1,5 +1,6 @@
 import "./ChatHighlightsList.css";
 
+import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import ActionButton from "../react/ActionButton";
 import { useGetContextData } from "../react/hooks";
@@ -26,8 +27,14 @@ export default function ChatHighlightsList() {
                                     icon="bx bx-x"
                                     text={t("llm_chat.highlight_remove")}
                                     onClick={e => {
+                                        // Confirm here only: the list's small ✕ is easy to hit by accident,
+                                        // unlike the deliberate right-click "Remove highlight" on the text itself.
                                         e.stopPropagation();
-                                        data?.removeHighlight(highlight.id);
+                                        void (async () => {
+                                            if (await dialog.confirm(t("llm_chat.highlight_remove_confirm"))) {
+                                                data?.removeHighlight(highlight.id);
+                                            }
+                                        })();
                                     }}
                                 />
                             </li>
