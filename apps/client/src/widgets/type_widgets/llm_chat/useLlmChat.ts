@@ -172,6 +172,11 @@ export function useLlmChat(
     // reply near the top (sending/retrying), "bottom" jumps to the latest content
     // (loading a chat). The timeline never follows the stream beyond this single action.
     const pendingScrollRef = useRef<"anchor" | "bottom" | null>(null);
+    // True from the moment the layout effect commits an anchor scroll until that smooth scroll finishes or
+    // the user takes over. `pendingScrollRef` only guards the window before the layout effect consumes the
+    // mode; once consumed it's null, so this covers the ~300ms animation that follows — during which a
+    // content reload must not queue a bottom jump that would yank the just-parked reply to the latest content.
+    const anchorScrollActiveRef = useRef(false);
 
     // Refs to get fresh values in getContent (avoids stale closures)
     const messagesRef = useRef(messages);
@@ -295,7 +300,10 @@ export function useLlmChat(
     /** Smoothly scroll the container to `targetTop` over ANCHOR_SCROLL_DURATION_MS. */
     const smoothScrollTo = useCallback((targetTop: number) => {
         const container = scrollContainerRef.current;
-        if (!container) return;
+        if (!container) {
+            anchorScrollActiveRef.current = false;
+            return;
+        }
         if (anchorRafRef.current != null) {
             cancelAnimationFrame(anchorRafRef.current);
             anchorRafRef.current = null;
@@ -306,21 +314,30 @@ export function useLlmChat(
         const distance = to - from;
         if (Math.abs(distance) < 1) {
             container.scrollTop = to;
+            anchorScrollActiveRef.current = false;
             return;
         }
+        // Committed to the parked position — hold off reload-driven bottom jumps until the animation ends.
+        anchorScrollActiveRef.current = true;
         const start = performance.now();
         let lastSetTop = from;
         const step = (now: number) => {
             // Bail out if the user scrolled mid-animation (don't fight them).
             if (Math.abs(container.scrollTop - lastSetTop) > 2) {
                 anchorRafRef.current = null;
+                anchorScrollActiveRef.current = false;
                 return;
             }
             const t = Math.min(1, (now - start) / ANCHOR_SCROLL_DURATION_MS);
             const eased = t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2; // easeInOutQuad
             container.scrollTop = from + distance * eased;
             lastSetTop = container.scrollTop;
-            anchorRafRef.current = t < 1 ? requestAnimationFrame(step) : null;
+            if (t < 1) {
+                anchorRafRef.current = requestAnimationFrame(step);
+            } else {
+                anchorRafRef.current = null;
+                anchorScrollActiveRef.current = false;
+            }
         };
         anchorRafRef.current = requestAnimationFrame(step);
     }, []);
@@ -394,10 +411,11 @@ export function useLlmChat(
 
     // Load state from content object
     const loadFromContent = useCallback((content: LlmChatContent) => {
-        // Opening an existing chat should land on the most recent message — but never
-        // clobber a send/retry that has already queued the reply-anchor positioning
-        // (a content reload can race the layout effect that consumes the pending mode).
-        if ((content.messages?.length ?? 0) > 0 && pendingScrollRef.current !== "anchor") {
+        // Opening an existing chat should land on the most recent message — but never clobber a send/retry
+        // that has queued the reply-anchor positioning, nor one whose anchor scroll is still animating: a
+        // content reload can race both the layout effect that consumes the pending mode and the ~300ms
+        // smooth scroll that follows, and a bottom jump in either window would yank the reply to the latest content.
+        if ((content.messages?.length ?? 0) > 0 && pendingScrollRef.current !== "anchor" && !anchorScrollActiveRef.current) {
             pendingScrollRef.current = "bottom";
         }
         setMessagesInternal(content.messages || []);
