@@ -180,6 +180,9 @@ function pointCompare(aNode: Node, aOffset: number, bNode: Node, bOffset: number
 }
 
 function findAllOccurrences(haystack: string, needle: string): number[] {
+    // An empty needle would make indexOf loop forever (it matches at every position). Callers already
+    // guard against it, but keep the function self-safe.
+    if (!needle) return [];
     const indices: number[] = [];
     for (let from = haystack.indexOf(needle); from !== -1; from = haystack.indexOf(needle, from + 1)) {
         indices.push(from);

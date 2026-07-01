@@ -12,6 +12,7 @@ import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormDropdownDivider, FormListItem } from "../react/FormList.js";
 import { useActiveNoteContext, useNote, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
+import { useChatHighlights } from "../type_widgets/llm_chat/chat_highlights.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessageList from "../type_widgets/llm_chat/ChatMessageList.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
@@ -53,6 +54,11 @@ export default function SidebarChat() {
 
     const chatRef = useRef(chat);
     chatRef.current = chat;
+
+    // Enable highlighting (painting + right-click Add/Remove/Copy) in the sidebar chat. No note context
+    // is passed: the sidebar chat is itself the right pane, so there's no slot for the highlights list —
+    // the highlights live in the messages only.
+    useChatHighlights(chat, undefined);
 
     // Save directly via server.put using the string noteId.
     // This avoids the FNote dependency that useEditorSpacedUpdate requires.

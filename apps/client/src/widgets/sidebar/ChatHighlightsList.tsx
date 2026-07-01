@@ -16,12 +16,27 @@ export default function ChatHighlightsList() {
 
     return (
         <RightPanelWidget id="chat-highlights" title={t("llm_chat.highlights_title", { count: highlights.length })} grow>
-            <span className="chat-highlights-list">
+            <div className="chat-highlights-list">
                 {highlights.length > 0 ? (
                     <ol>
                         {highlights.map(highlight => (
-                            <li key={highlight.id} onClick={() => data?.scrollToHighlight(highlight.id)}>
-                                <span className="chat-highlight-text">{highlight.text}</span>
+                            <li key={highlight.id}>
+                                {/* The text is the focusable scroll target (keyboard-accessible); the ✕
+                                    stays a separate button rather than nesting inside an interactive row. */}
+                                <span
+                                    className="chat-highlight-text"
+                                    role="button"
+                                    tabIndex={0}
+                                    onClick={() => data?.scrollToHighlight(highlight.id)}
+                                    onKeyDown={e => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            data?.scrollToHighlight(highlight.id);
+                                        }
+                                    }}
+                                >
+                                    {highlight.text}
+                                </span>
                                 <ActionButton
                                     className="chat-highlight-remove"
                                     icon="bx bx-x"
@@ -43,7 +58,7 @@ export default function ChatHighlightsList() {
                 ) : (
                     <div className="no-highlights">{t("llm_chat.highlights_empty")}</div>
                 )}
-            </span>
+            </div>
         </RightPanelWidget>
     );
 }

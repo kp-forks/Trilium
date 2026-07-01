@@ -10,7 +10,6 @@
     gap: 0.25em;
     padding: 0.25em 0.4em;
     border-radius: 4px;
-    cursor: pointer;
 }
 
 .chat-highlights-list li:hover {
@@ -22,6 +21,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    cursor: pointer;
 }
 
 .chat-highlights-list .chat-highlight-remove {

@@ -8,7 +8,7 @@ import { t } from "../../../services/i18n.js";
 import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
-import type { HighlightAnchor, StoredMessage } from "./llm_chat_types.js";
+import type { HighlightAnchor } from "./llm_chat_types.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
 /** A highlight surfaced in the sidebar list. */
@@ -28,6 +28,15 @@ export interface ChatHighlightsContext {
 
 /** The single CSS Custom Highlight registry entry all chat highlights paint through. */
 const HIGHLIGHT_NAME = "chat-highlight";
+
+type RangeMap = Map<string, { range: Range; messageId: string }>;
+
+// A `::highlight()` name is global to the document, so every open chat shares this one registry entry
+// instead of each registering its own (which would evict the others on set/delete — broken with two
+// chats open in split panes). Each live hook instance contributes its resolved ranges; the entry is
+// rebuilt from all of them and removed only once the last chat unmounts.
+const activeRangeMaps = new Set<{ current: RangeMap }>();
+let sharedHighlight: Highlight | null = null;
 
 /**
  * Wires up user-created highlights for an AI chat: painting stored highlights over the rendered
@@ -51,17 +60,10 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     const setMessagesRef = useRef(chat.setMessages);
     setMessagesRef.current = chat.setMessages;
 
-    // Live registry entry + the resolved ranges behind the currently painted highlights, keyed by
-    // anchor id (used for hit-testing on right-click).
-    const highlightRef = useRef<Highlight | null>(null);
-    const rangesRef = useRef(new Map<string, { range: Range; messageId: string }>());
-
-    const paint = useCallback((rangeById: Map<string, { range: Range; messageId: string }>) => {
-        const highlight = ensureHighlight(highlightRef);
-        if (!highlight) return;
-        highlight.clear();
-        for (const { range } of rangeById.values()) highlight.add(range);
-    }, []);
+    // The resolved ranges behind this chat's currently painted highlights, keyed by anchor id (used
+    // for hit-testing on right-click and for scroll-to). Registered in the module-level set so the
+    // shared highlight can paint every open chat's ranges.
+    const rangesRef = useRef<RangeMap>(new Map());
 
     // Rebuild ranges from the stored anchors and repaint. A layout effect so painting settles in the
     // same frame the messages render — no flash. The stream keeps `messages` stable, so this doesn't
@@ -70,7 +72,7 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         const container = scrollContainerRef.current;
         if (!container) return;
 
-        const rangeById = new Map<string, { range: Range; messageId: string }>();
+        const rangeById: RangeMap = new Map();
         const items: ChatHighlightItem[] = [];
         for (const message of messagesRef.current) {
             if (!message.highlights?.length) continue;
@@ -85,17 +87,16 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         }
 
         rangesRef.current = rangeById;
-        paint(rangeById);
+        activeRangeMaps.add(rangesRef);
+        repaintChatHighlights();
         setHighlightItems(items);
-    }, [scrollContainerRef, paint]);
+    }, [scrollContainerRef]);
 
     useLayoutEffect(() => recompute(), [messages, recompute]);
 
-    // Drop the registry entry on unmount so a switched-away chat leaves no paint behind.
-    useEffect(() => () => {
-        highlightRef.current = null;
-        if (isHighlightApiAvailable()) CSS.highlights.delete(HIGHLIGHT_NAME);
-    }, []);
+    // On unmount, drop this chat's ranges from the shared highlight (and the registry entry with the
+    // last chat), so a switched-away chat leaves no paint behind.
+    useEffect(() => () => releaseRangeMap(rangesRef), []);
 
     const addHighlight = useCallback((messageId: string, built: Omit<HighlightAnchor, "id">) => {
         const anchor: HighlightAnchor = { id: randomString(), ...built };
@@ -115,16 +116,12 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     }, []);
 
     const scrollToHighlight = useCallback((anchorId: string) => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-        const located = findAnchor(messagesRef.current, anchorId);
-        if (!located) return;
-        const root = findMessageContentRoot(container, located.messageId);
-        if (!root) return;
-        const range = resolveAnchorRange(root, located.anchor);
-        const element = range && nearestElement(range.startContainer);
+        // Reuse the range resolved by the most recent recompute rather than re-walking the DOM; every
+        // listed highlight has a cached entry (the list is built from the same resolved set).
+        const entry = rangesRef.current.get(anchorId);
+        const element = entry && nearestElement(entry.range.startContainer);
         element?.scrollIntoView({ block: "center", behavior: "smooth" });
-    }, [scrollContainerRef]);
+    }, []);
 
     // Right-click menu over the timeline: Copy the selection (or highlighted text), plus Remove when
     // the click lands on a highlight or Highlight for a prose selection. Because preventing the default
@@ -167,27 +164,43 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         return () => container.removeEventListener("contextmenu", onContextMenu);
     }, [scrollContainerRef, addHighlight, removeHighlight]);
 
-    // Publish the list for the sidebar widget; clear it on unmount so no stale list lingers.
+    // Publish the list for the sidebar widget.
     useEffect(() => {
         noteContext?.setContextData("chatHighlights", { highlights: highlightItems, scrollToHighlight, removeHighlight });
     }, [noteContext, highlightItems, scrollToHighlight, removeHighlight]);
 
-    const noteContextRef = useRef(noteContext);
-    noteContextRef.current = noteContext;
-    useEffect(() => () => noteContextRef.current?.clearContextData("chatHighlights"), []);
+    // Clear the published data when this context goes away (note switch or unmount), so the sidebar
+    // doesn't keep showing a stale list. Kept separate from the publish effect above — clearing there
+    // would flash the list empty on every update.
+    useEffect(() => () => noteContext?.clearContextData("chatHighlights"), [noteContext]);
 }
 
 function isHighlightApiAvailable(): boolean {
     return typeof Highlight !== "undefined" && typeof CSS !== "undefined" && !!CSS.highlights;
 }
 
-function ensureHighlight(ref: { current: Highlight | null }): Highlight | null {
-    if (ref.current) return ref.current;
-    if (!isHighlightApiAvailable()) return null;
-    const highlight = new Highlight();
-    ref.current = highlight;
-    CSS.highlights.set(HIGHLIGHT_NAME, highlight);
-    return highlight;
+/** Rebuild the shared registry entry from every open chat's ranges. */
+function repaintChatHighlights() {
+    if (!isHighlightApiAvailable()) return;
+    if (!sharedHighlight) {
+        sharedHighlight = new Highlight();
+        CSS.highlights.set(HIGHLIGHT_NAME, sharedHighlight);
+    }
+    sharedHighlight.clear();
+    for (const ref of activeRangeMaps) {
+        for (const { range } of ref.current.values()) sharedHighlight.add(range);
+    }
+}
+
+/** Drop one chat's ranges; remove the registry entry entirely once no chats remain. */
+function releaseRangeMap(ref: { current: RangeMap }) {
+    activeRangeMaps.delete(ref);
+    if (activeRangeMaps.size === 0) {
+        if (isHighlightApiAvailable()) CSS.highlights.delete(HIGHLIGHT_NAME);
+        sharedHighlight = null;
+    } else {
+        repaintChatHighlights();
+    }
 }
 
 function findMessageContentRoot(container: HTMLElement, messageId: string): HTMLElement | null {
@@ -195,14 +208,6 @@ function findMessageContentRoot(container: HTMLElement, messageId: string): HTML
     // may carry ids with characters that would make a selector invalid and throw.
     for (const el of container.querySelectorAll<HTMLElement>("[data-message-id]")) {
         if (el.dataset.messageId === messageId) return el.querySelector<HTMLElement>(".llm-chat-message-content");
-    }
-    return null;
-}
-
-function findAnchor(messages: StoredMessage[], anchorId: string): { anchor: HighlightAnchor; messageId: string } | null {
-    for (const message of messages) {
-        const anchor = message.highlights?.find(h => h.id === anchorId);
-        if (anchor) return { anchor, messageId: message.id };
     }
     return null;
 }
