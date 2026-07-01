@@ -2077,6 +2077,7 @@
     "highlight_add": "Highlight",
     "highlight_remove": "Remove highlight",
     "highlight_remove_confirm": "Remove this highlight?",
+    "quote_selection": "Quote selection",
     "attach_file": "Attach image, PDF, or text file",
     "remove_attachment": "Remove attachment",
     "attachment_upload_failed": "Failed to upload \"{{name}}\".",

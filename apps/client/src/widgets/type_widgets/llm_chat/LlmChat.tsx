@@ -6,6 +6,7 @@ import { t } from "../../../services/i18n.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
 import { useChatHighlights } from "./chat_highlights.js";
+import { useChatMessageJumps } from "./chat_message_jump.js";
 import { useChatToc } from "./chat_toc.js";
 import ChatInputBar from "./ChatInputBar.js";
 import ChatMessageList from "./ChatMessageList.js";
@@ -31,6 +32,9 @@ export default function LlmChat({ note, noteContext }: TypeWidgetProps) {
 
     // Paint user-created highlights over the replies and publish them for the sidebar widget.
     useChatHighlights(chat, noteContext);
+
+    // Make the "message ID …" links in submitted quotes jump to the referenced message.
+    useChatMessageJumps(chat.scrollContainerRef);
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,

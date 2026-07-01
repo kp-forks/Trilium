@@ -8,6 +8,7 @@ import { t } from "../../../services/i18n.js";
 import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
+import { buildQuoteMarkdown } from "./chat_quote.js";
 import type { HighlightAnchor } from "./llm_chat_types.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
@@ -59,6 +60,8 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     isStreamingRef.current = isStreaming;
     const setMessagesRef = useRef(chat.setMessages);
     setMessagesRef.current = chat.setMessages;
+    const appendToInputRef = useRef(chat.appendToInput);
+    appendToInputRef.current = chat.appendToInput;
 
     // The resolved ranges behind this chat's currently painted highlights, keyed by anchor id (used
     // for hit-testing on right-click and for scroll-to). Registered in the module-level set so the
@@ -153,6 +156,18 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
                 items.push({ title: t("llm_chat.highlight_remove"), uiIcon: "bx bx-eraser", handler: () => removeHighlight(hitId) });
             } else if (built) {
                 items.push({ title: t("llm_chat.highlight_add"), uiIcon: "bx bx-highlight", handler: () => addHighlight(messageId, built) });
+            }
+
+            // Quote the selection into the reply input. Disabled while streaming — the input is
+            // read-only then, so there's nowhere to write it. Text is captured now (the menu can
+            // clear the live selection before the handler runs).
+            const quotedText = !streaming ? selectionRange?.toString() : undefined;
+            if (quotedText?.trim()) {
+                items.push({
+                    title: t("llm_chat.quote_selection"),
+                    uiIcon: "bx bxs-quote-alt-left",
+                    handler: () => appendToInputRef.current(buildQuoteMarkdown(quotedText, messageId))
+                });
             }
 
             if (items.length === 0) return; // nothing to do → leave the native menu

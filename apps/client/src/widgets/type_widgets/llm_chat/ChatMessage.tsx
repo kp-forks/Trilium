@@ -11,6 +11,7 @@ import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
+import { linkifyMessageIdReferences } from "./chat_quote.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type TextFileBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import { SafeImage } from "./retry_image.js";
@@ -139,12 +140,15 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
     // Render markdown for plain-string content (assistant legacy content and user prompts).
     // User prompts may contain `[Title](#root/noteId)` reference links produced by the
     // chat input's @-mention feature, which markdown renders as proper clickable links.
+    // A submitted quote's "message ID …" source line is turned into a jump link back to the
+    // quoted message — user messages only, where those source lines live.
     const renderedContent = useMemo(() => {
         if (!isThinking && typeof message.content === "string") {
-            return renderMarkdown(message.content);
+            const html = renderMarkdown(message.content);
+            return message.role === "user" ? linkifyMessageIdReferences(html) : html;
         }
         return null;
-    }, [message.content, isThinking]);
+    }, [message.content, isThinking, message.role]);
 
     const messageClasses = [
         "llm-chat-message",

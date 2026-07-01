@@ -11,6 +11,11 @@ import { useSmoothStreaming } from "./useSmoothStreaming.js";
 /** A user-supplied attachment waiting to be sent with the next message. */
 export type AttachmentBlock = ImageBlock | FileBlock | TextFileBlock;
 
+/** The subset of the reply-input editor API the chat needs to write into it imperatively. */
+export interface InputEditorApi {
+    appendBlock(text: string): void;
+}
+
 /** Distance (px) past the content bottom edge within which the timeline counts as "at bottom". */
 const SCROLL_BOTTOM_THRESHOLD = 50;
 /**
@@ -107,6 +112,11 @@ export interface UseLlmChatReturn {
     /** Whether we're still checking for providers */
     isCheckingProvider: boolean;
 
+    /** Register the reply-input editor so message-timeline actions (e.g. quoting) can write into it. */
+    registerInputEditor: (api: InputEditorApi | undefined) => void;
+    /** Append a preformatted block (e.g. a Markdown quote) to the reply input and focus it. */
+    appendToInput: (text: string) => void;
+
     // Setters
     setInput: (value: string) => void;
     setMessages: (messages: StoredMessage[]) => void;
@@ -199,6 +209,16 @@ export function useLlmChat(
     contextNoteIdRef.current = contextNoteId;
     const pendingAttachmentsRef = useRef(pendingAttachments);
     pendingAttachmentsRef.current = pendingAttachments;
+
+    // The reply-input editor, registered by ChatInputBar once mounted. Held in a ref so timeline
+    // actions (e.g. quoting a selection) can write into it without a render-order dependency.
+    const inputEditorRef = useRef<InputEditorApi | undefined>();
+    const registerInputEditor = useCallback((api: InputEditorApi | undefined) => {
+        inputEditorRef.current = api;
+    }, []);
+    const appendToInput = useCallback((text: string) => {
+        inputEditorRef.current?.appendBlock(text);
+    }, []);
 
     const addPendingAttachment = useCallback((attachment: AttachmentBlock) => {
         setPendingAttachments(prev => [...prev, attachment]);
@@ -814,6 +834,9 @@ export function useLlmChat(
         scrollToBottom,
         hasProvider,
         isCheckingProvider,
+
+        registerInputEditor,
+        appendToInput,
 
         // Setters
         setInput,
