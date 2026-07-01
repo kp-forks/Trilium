@@ -1,6 +1,6 @@
 import "./code.css";
 
-import CodeMirror from "@triliumnext/codemirror";
+import CodeMirror, { triliumLogHighlighter } from "@triliumnext/codemirror";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 import server from "../../../services/server";
@@ -51,6 +51,7 @@ export default function BackendLog({ ntxId, parentComponent }: TypeWidgetProps) 
                 mime="text/plain"
                 readOnly
                 preferPerformance
+                onInitialized={() => editorRef.current?.setNamedExtension("triliumLogHighlighter", triliumLogHighlighter)}
                 {...(noteWrapLines != null && { lineWrapping: noteWrapLines })}
             />
         </div>
