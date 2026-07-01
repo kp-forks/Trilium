@@ -69,6 +69,48 @@ describe("triliumLogHighlighter", () => {
         const plain = classesOf("18:18:40.077 Slow query took 78ms: SELECT 1");
         expect(plain).toEqual([ "cm-log-timestamp" ]);
     });
+
+    it("locates the verb and URL spans for variable-length HTTP methods", () => {
+        for (const [ doc, verb, url ] of [
+            [ "18:18:38.904 200 GET /a with 1 bytes took 1ms", "GET", "/a" ],
+            [ "18:18:38.904 204 DELETE /api/notes/x with 0 bytes took 2ms", "DELETE", "/api/notes/x" ],
+            [ "18:18:38.904 200 OPTIONS /api/y?z=1 with 0 bytes took 2ms", "OPTIONS", "/api/y?z=1" ]
+        ]) {
+            const spans = decorationsOf(state(doc));
+            expect(sliceOf(doc, spans, "cm-log-verb")).toBe(verb);
+            expect(sliceOf(doc, spans, "cm-log-url")).toBe(url);
+        }
+    });
+
+    it("handles ERROR: blocks, closes them at the next entry, and carries JS Info across lines", () => {
+        const doc = [
+            "17:34:08.519 ERROR: boom",          // 1: error header (ERROR: variant)
+            "    at foo (bar.ts:1:2)",           // 2: error continuation
+            "18:18:40.077 Slow query took 5ms",  // 3: plain entry — closes the error block
+            "17:35:00.000 JS Info: started",     // 4: info header
+            "    detail continues"               // 5: info continuation
+        ].join("\n");
+        const s = state(doc);
+
+        expect(lineClassesAt(s, 1)).toContain("cm-log-error");
+        expect(lineClassesAt(s, 2)).toContain("cm-log-error");
+        expect(lineClassesAt(s, 3)).not.toContain("cm-log-error"); // block terminated
+        expect(lineClassesAt(s, 4)).toContain("cm-log-info");
+        expect(lineClassesAt(s, 5)).toContain("cm-log-info");
+    });
+
+    it("rebuilds decorations when the document changes (editable notes)", () => {
+        let s = state("18:18:40.077 Slow query took 78ms");
+        expect(classesOfState(s)).toEqual([ "cm-log-timestamp" ]);
+
+        s = s.update({ changes: { from: s.doc.length, insert: "\n17:34:08.519 JS Error: boom" } }).state;
+        expect(classesOfState(s)).toContain("cm-log-error");
+    });
+
+    it("adds no decorations to non-timestamped or empty content", () => {
+        expect(decorationsOf(state("just some text\nanother line"))).toHaveLength(0);
+        expect(decorationsOf(state(""))).toHaveLength(0);
+    });
 });
 
 function state(doc: string): EditorState {
@@ -91,4 +133,22 @@ function decorationsOf(editorState: EditorState): DecorationSpan[] {
 
 function classesOf(doc: string): string[] {
     return decorationsOf(state(doc)).map((d) => d.class);
+}
+
+function classesOfState(editorState: EditorState): string[] {
+    return decorationsOf(editorState).map((d) => d.class);
+}
+
+/** The document text covered by the (first) span carrying `cls`. */
+function sliceOf(doc: string, spans: DecorationSpan[], cls: string): string | undefined {
+    const span = spans.find((d) => d.class === cls);
+    return span && doc.slice(span.from, span.to);
+}
+
+/** Classes of the line decorations (zero-length, at the line start) on line `lineNo` (1-based). */
+function lineClassesAt(editorState: EditorState, lineNo: number): string[] {
+    const from = editorState.doc.line(lineNo).from;
+    return decorationsOf(editorState)
+        .filter((d) => d.from === from && d.to === from)
+        .map((d) => d.class);
 }
