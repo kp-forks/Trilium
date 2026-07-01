@@ -5,12 +5,13 @@ import { useCallback, useEffect, useRef } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
+import { useChatToc } from "./chat_toc.js";
 import ChatInputBar from "./ChatInputBar.js";
 import ChatMessageList from "./ChatMessageList.js";
 import type { LlmChatContent } from "./llm_chat_types.js";
 import { useLlmChat } from "./useLlmChat.js";
 
-export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
+export default function LlmChat({ note, noteContext }: TypeWidgetProps) {
     const spacedUpdateRef = useRef<{ scheduleUpdate: () => void }>(null);
 
     const chat = useLlmChat(
@@ -23,6 +24,9 @@ export default function LlmChat({ note, ntxId, noteContext }: TypeWidgetProps) {
     useEffect(() => {
         chat.setChatNoteId(note?.noteId);
     }, [note?.noteId, chat.setChatNoteId]);
+
+    // Publish a table of contents (one entry per user message) for the sidebar widget.
+    useChatToc(chat, noteContext);
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,
