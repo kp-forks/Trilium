@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preac
 import type NoteContext from "../../../components/note_context.js";
 import contextMenu, { type MenuItem } from "../../../menus/context_menu.js";
 import { t } from "../../../services/i18n.js";
+import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
 import type { HighlightAnchor, StoredMessage } from "./llm_chat_types.js";
@@ -125,32 +126,41 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         element?.scrollIntoView({ block: "center", behavior: "smooth" });
     }, [scrollContainerRef]);
 
-    // Right-click: remove when the click lands on an existing highlight, else offer to highlight a
-    // prose selection. Attached to the timeline; both paths bail (leaving the native menu) when there's
-    // nothing to do, so ordinary right-clicks are untouched.
+    // Right-click menu over the timeline: Copy the selection (or highlighted text), plus Remove when
+    // the click lands on a highlight or Highlight for a prose selection. Because preventing the default
+    // menu drops the browser's own Copy, we provide it here. Bails (leaving the native menu) when
+    // there's nothing to offer, so ordinary right-clicks are untouched. Copy stays available while a
+    // reply streams; only the message-mutating add/remove are suppressed then.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
         const onContextMenu = (e: MouseEvent) => {
-            if (isStreamingRef.current) return; // mutating messages mid-stream would race the finalized reply
             const wrapper = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-message-id]");
             const messageId = wrapper?.dataset.messageId;
             const root = wrapper?.querySelector<HTMLElement>(".llm-chat-message-content");
-            if (!messageId || !root) return; // thinking/error messages carry no id → not highlightable
+            if (!messageId || !root) return; // thinking/error messages carry no id → nothing to offer
 
-            const hitId = highlightAtPoint(rangesRef.current, messageId, e.clientX, e.clientY);
+            const streaming = isStreamingRef.current;
+            const hitId = streaming ? null : highlightAtPoint(rangesRef.current, messageId, e.clientX, e.clientY);
+            const selectionRange = selectionRangeWithin(container.ownerDocument.getSelection(), root);
+            const built = !streaming && selectionRange ? createAnchorFromSelection(root, selectionRange) : null;
+
+            const items: MenuItem<unknown>[] = [];
+            // Copy the live selection as rich text: execCommand serializes the selected DOM to both
+            // text/html and text/plain (what the native menu we suppressed would have done).
+            if (selectionRange?.toString().trim()) {
+                items.push({ title: t("llm_chat.copy"), uiIcon: "bx bx-copy", handler: copySelection });
+            }
             if (hitId) {
-                e.preventDefault();
-                showMenu(e, t("llm_chat.highlight_remove"), "bx bx-eraser", () => removeHighlight(hitId));
-                return;
+                items.push({ title: t("llm_chat.highlight_remove"), uiIcon: "bx bx-eraser", handler: () => removeHighlight(hitId) });
+            } else if (built) {
+                items.push({ title: t("llm_chat.highlight_add"), uiIcon: "bx bx-highlight", handler: () => addHighlight(messageId, built) });
             }
 
-            const range = selectionRangeWithin(container.ownerDocument.getSelection(), root);
-            const built = range && createAnchorFromSelection(root, range);
-            if (!built) return;
+            if (items.length === 0) return; // nothing to do → leave the native menu
             e.preventDefault();
-            showMenu(e, t("llm_chat.highlight_add"), "bx bx-highlight", () => addHighlight(messageId, built));
+            showMenu(e, items);
         };
 
         container.addEventListener("contextmenu", onContextMenu);
@@ -246,7 +256,16 @@ function nearestElement(node: Node): HTMLElement | null {
     return node instanceof HTMLElement ? node : node.parentElement;
 }
 
-function showMenu(e: MouseEvent, title: string, uiIcon: string, handler: () => void) {
-    const items: MenuItem<unknown>[] = [{ title, uiIcon, handler }];
+function showMenu(e: MouseEvent, items: MenuItem<unknown>[]) {
     void contextMenu.show({ x: e.pageX, y: e.pageY, items, selectMenuItemHandler: () => {} });
+}
+
+/** Copy the current selection as rich text. The menu opens on mousedown, so the selection is still live. */
+function copySelection() {
+    const ok = document.execCommand("copy");
+    if (ok) {
+        toast.showMessage(t("clipboard.copy_success"));
+    } else {
+        toast.showError(t("clipboard.copy_failed"));
+    }
 }
