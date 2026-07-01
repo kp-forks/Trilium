@@ -1,11 +1,14 @@
-import { RangeSetBuilder, type Extension, type Text } from "@codemirror/state";
-import { Decoration, type DecorationSet, EditorView, ViewPlugin, type ViewUpdate } from "@codemirror/view";
+import { type EditorState, type Extension, RangeSetBuilder, StateField } from "@codemirror/state";
+import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
 
 /**
  * Lightweight regex highlighter for the Trilium backend log. Each log entry is a single line
- * beginning with a `HH:MM:SS.mmm` timestamp; decorations are computed only over the visible
- * viewport, so this stays cheap even on very large logs (and is unaffected by `preferPerformance`,
- * which only disables the language-mode syntax highlighting).
+ * beginning with a `HH:MM:SS.mmm` timestamp. The decorations live in a {@link StateField} (rather
+ * than a view plugin) so they are applied deterministically the instant the extension enters the
+ * configuration — e.g. when a code note is switched to the `text/x-trilium-log` MIME type — instead
+ * of only after the next edit or scroll (a dynamically added view plugin doesn't paint until the
+ * following update). The whole document is scanned top-to-bottom, which also lets the error/info
+ * block state carry across continuation lines without a separate backwards scan.
  *
  * Recognised entries:
  *  - the leading timestamp (muted, on every entry)
@@ -53,39 +56,28 @@ const logHighlightTheme = EditorView.baseTheme({
     ".cm-log-info": { color: "var(--log-info-color, inherit)" }
 });
 
-const logHighlightPlugin = ViewPlugin.fromClass(class {
-    decorations: DecorationSet;
-
-    constructor(view: EditorView) {
-        this.decorations = buildLogDecorations(view);
-    }
-
-    update(update: ViewUpdate) {
-        if (update.docChanged || update.viewportChanged) {
-            this.decorations = buildLogDecorations(update.view);
-        }
-    }
-}, {
-    decorations: (plugin) => plugin.decorations
+const logHighlightField = StateField.define<DecorationSet>({
+    create(state) {
+        return buildLogDecorations(state);
+    },
+    update(decorations, tr) {
+        return tr.docChanged ? buildLogDecorations(tr.state) : decorations;
+    },
+    provide: (field) => EditorView.decorations.from(field)
 });
 
-/** The extension to register on the backend-log editor (e.g. via `setNamedExtension`). */
-export const triliumLogHighlighter: Extension = [ logHighlightPlugin, logHighlightTheme ];
+/** The extension to register on the backend-log editor (e.g. via a `text/x-trilium-log` MIME type). */
+export const triliumLogHighlighter: Extension = [ logHighlightField, logHighlightTheme ];
 
-function buildLogDecorations(view: EditorView): DecorationSet {
+function buildLogDecorations(state: EditorState): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>();
-    const doc = view.state.doc;
+    const doc = state.doc;
 
-    for (const { from, to } of view.visibleRanges) {
-        // Continuation lines belong to the nearest preceding timestamped line, which may be
-        // scrolled above the viewport — seed the state by scanning backwards from the top line.
-        let blockLine = blockLineAtStart(doc, doc.lineAt(from).number);
-        let pos = from;
-        while (pos <= to) {
-            const line = doc.lineAt(pos);
-            blockLine = decorateLine(builder, line, blockLine);
-            pos = line.to + 1;
-        }
+    // A single top-to-bottom pass keeps the error/info block state (used to colour continuation
+    // lines) flowing naturally across lines.
+    let blockLine: Decoration | null = null;
+    for (let n = 1; n <= doc.lines; n++) {
+        blockLine = decorateLine(builder, doc.line(n), blockLine);
     }
 
     return builder.finish();
@@ -143,20 +135,4 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
     }
 
     return newBlockLine;
-}
-
-/**
- * Walks backwards from the line above `lineNumber` to the nearest timestamped line and returns the
- * block decoration `lineNumber` starts inside (or null). The scan is capped so a pathologically long
- * block near the top of the viewport can't stall rendering.
- */
-function blockLineAtStart(doc: Text, lineNumber: number): Decoration | null {
-    const MAX_SCAN = 1000;
-    for (let n = lineNumber - 1, steps = 0; n >= 1 && steps < MAX_SCAN; n--, steps++) {
-        const text = doc.line(n).text;
-        if (TIMESTAMP.test(text)) {
-            return blockLineFor(text);
-        }
-    }
-    return null;
 }
