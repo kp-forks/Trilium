@@ -1,7 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { buildChatHeadings, pickActiveHeadingId, truncateForToc } from "./chat_toc.js";
 import type { ContentBlock, StoredMessage } from "./llm_chat_types.js";
+
+// i18next isn't initialized in unit tests, so stub `t` with a minimal interpolating
+// implementation to make the localized "File: " prefix deterministic.
+vi.mock("../../../services/i18n.js", () => ({
+    t: (key: string, opts?: Record<string, unknown>) =>
+        key === "llm_chat.toc_file" ? `File: ${opts?.name}` : key
+}));
 
 describe("truncateForToc", () => {
     it("returns short text unchanged", () => {
@@ -132,12 +139,28 @@ describe("buildChatHeadings", () => {
         expect(heading.text).toBe("Describe this image");
     });
 
-    it("falls back to an attachment title for image-only messages", () => {
+    it("prefixes the localized \"File: \" label for image-only messages", () => {
         const content: ContentBlock[] = [
             { type: "image", attachmentId: "att1", mime: "image/png", title: "diagram.png", url: "/x" }
         ];
         const [heading] = buildChatHeadings([userMessage("u1", content)]);
-        expect(heading.text).toBe("diagram.png");
+        expect(heading.text).toBe("File: diagram.png");
+    });
+
+    it("prefixes a localized \"File: \" label for file-only messages", () => {
+        const content: ContentBlock[] = [
+            { type: "file", attachmentId: "att1", mime: "application/pdf", title: "report.pdf", url: "/x" }
+        ];
+        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        expect(heading.text).toBe("File: report.pdf");
+    });
+
+    it("prefixes the \"File: \" label for text-file-only messages too", () => {
+        const content: ContentBlock[] = [
+            { type: "text_file", attachmentId: "att1", mime: "text/markdown", title: "notes.md", url: "/x" }
+        ];
+        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        expect(heading.text).toBe("File: notes.md");
     });
 });
 

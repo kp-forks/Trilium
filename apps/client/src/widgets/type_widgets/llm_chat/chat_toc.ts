@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context.js";
+import { t } from "../../../services/i18n.js";
 import { escapeHtml } from "../../../services/utils.js";
 import type { HeadingContext } from "../../sidebar/TableOfContents.js";
 import { type ContentBlock, getMessageText, type StoredMessage } from "./llm_chat_types.js";
@@ -129,8 +130,10 @@ function getMessagePreviewText(content: string | ContentBlock[]): string {
     if (text.trim()) return text;
     if (Array.isArray(content)) {
         for (const block of content) {
+            // Attachment-only messages get a localized "File: " prefix so a bare filename
+            // in the list isn't mistaken for the message's prose.
             if ((block.type === "image" || block.type === "file" || block.type === "text_file") && block.title) {
-                return block.title;
+                return t("llm_chat.toc_file", { name: block.title });
             }
         }
     }
