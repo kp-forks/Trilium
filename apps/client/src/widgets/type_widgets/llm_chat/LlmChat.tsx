@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
+import { useChatHighlights } from "./chat_highlights.js";
 import { useChatToc } from "./chat_toc.js";
 import ChatInputBar from "./ChatInputBar.js";
 import ChatMessageList from "./ChatMessageList.js";
@@ -27,6 +28,9 @@ export default function LlmChat({ note, noteContext }: TypeWidgetProps) {
 
     // Publish a table of contents (one entry per user message) for the sidebar widget.
     useChatToc(chat, noteContext);
+
+    // Paint user-created highlights over the replies and publish them for the sidebar widget.
+    useChatHighlights(chat, noteContext);
 
     const spacedUpdate = useEditorSpacedUpdate({
         note,
