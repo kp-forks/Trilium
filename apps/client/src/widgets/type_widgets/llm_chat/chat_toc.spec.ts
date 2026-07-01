@@ -162,6 +162,16 @@ describe("buildChatHeadings", () => {
         const [heading] = buildChatHeadings([userMessage("u1", content)]);
         expect(heading.text).toBe("File: notes.md");
     });
+
+    it("comma-joins the titles when a message carries multiple files", () => {
+        const content: ContentBlock[] = [
+            { type: "image", attachmentId: "att1", mime: "image/png", title: "diagram.png", url: "/x" },
+            { type: "file", attachmentId: "att2", mime: "application/pdf", title: "report.pdf", url: "/y" },
+            { type: "text_file", attachmentId: "att3", mime: "text/markdown", title: "notes.md", url: "/z" }
+        ];
+        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        expect(heading.text).toBe("File: diagram.png, report.pdf, notes.md");
+    });
 });
 
 describe("pickActiveHeadingId", () => {

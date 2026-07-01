@@ -129,13 +129,15 @@ function getMessagePreviewText(content: string | ContentBlock[]): string {
     const text = getMessageText(content);
     if (text.trim()) return text;
     if (Array.isArray(content)) {
+        // Attachment-only messages get a localized "File: " prefix so a bare filename in
+        // the list isn't mistaken for the message's prose; multiple files are comma-joined.
+        const titles: string[] = [];
         for (const block of content) {
-            // Attachment-only messages get a localized "File: " prefix so a bare filename
-            // in the list isn't mistaken for the message's prose.
             if ((block.type === "image" || block.type === "file" || block.type === "text_file") && block.title) {
-                return t("llm_chat.toc_file", { name: block.title });
+                titles.push(block.title);
             }
         }
+        if (titles.length > 0) return t("llm_chat.toc_file", { name: titles.join(", ") });
     }
     return "";
 }
