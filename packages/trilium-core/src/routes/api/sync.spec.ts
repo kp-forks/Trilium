@@ -1,3 +1,4 @@
+import type { EntityChange } from "@triliumnext/commons";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import consistencyChecksService from "../../services/consistency_checks";
@@ -196,6 +197,30 @@ describe("Sync API (core)", () => {
             // keep the shared DB clean for other specs
             sql.execute("DELETE FROM entity_changes WHERE id IN (?, ?)", [maxId + 1, maxId + 2]);
             sql.execute("DELETE FROM options WHERE name = 'otst_opt'");
+        });
+
+        it("getEntityChangeRecords stops accumulating once the response byte cap is reached", () => {
+            const sql = getSql();
+            const maxId = sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes");
+            const changes: EntityChange[] = [];
+            for (let i = 0; i < 3; i++) {
+                sql.execute("INSERT INTO options (name, value, isSynced, utcDateModified) VALUES (?, 'v', 1, '2020-01-01T00:00:00.000Z')", [`cap_opt_${i}`]);
+                sql.execute(
+                    `INSERT INTO entity_changes (id, entityName, entityId, hash, isErased, changeId, componentId, instanceId, isSynced, utcDateChanged)
+                     VALUES (?, 'options', ?, 'h', 0, ?, 'cmp', 'OTHER', 1, '2020-01-01T00:00:00.000Z')`,
+                    [maxId + 1 + i, `cap_opt_${i}`, `cap_chg_${i}`]
+                );
+                changes.push(sql.getRow<EntityChange>("SELECT * FROM entity_changes WHERE id = ?", [maxId + 1 + i]));
+            }
+
+            // Each option record estimates ~300 bytes, so a 400-byte cap stops right after the second
+            // record crosses it (the crossing record is still included).
+            expect(syncService.getEntityChangeRecords(changes, 400)).toHaveLength(2);
+            // With the (large) default cap all three are returned.
+            expect(syncService.getEntityChangeRecords(changes)).toHaveLength(3);
+
+            sql.execute("DELETE FROM entity_changes WHERE id BETWEEN ? AND ?", [maxId + 1, maxId + 3]);
+            for (let i = 0; i < 3; i++) sql.execute("DELETE FROM options WHERE name = ?", [`cap_opt_${i}`]);
         });
     });
 

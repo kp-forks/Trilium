@@ -254,8 +254,8 @@ describe("sync service", () => {
             const records = syncService.getEntityChangeRecords([
                 ec({ entityName: "blobs", entityId: "sync_big_blob" }),
                 ec({ entityName: "blobs", entityId: "sync_small_blob" })
-            ]);
-            // The big blob fills the budget so the small one is not included.
+            ], 1_000_000);
+            // The big blob alone exceeds the (explicit) cap, so the small one is not included.
             expect(records).toHaveLength(1);
             expect(records[0]?.entityChange.entityId).toBe("sync_big_blob");
         });
