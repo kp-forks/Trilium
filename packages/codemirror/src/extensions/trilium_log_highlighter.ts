@@ -7,8 +7,11 @@ import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
  * than a view plugin) so they are applied deterministically the instant the extension enters the
  * configuration — e.g. when a code note is switched to the `text/x-trilium-log` MIME type — instead
  * of only after the next edit or scroll (a dynamically added view plugin doesn't paint until the
- * following update). The whole document is scanned top-to-bottom, which also lets the error/info
- * block state carry across continuation lines without a separate backwards scan.
+ * following update). Only the last {@link MAX_HIGHLIGHTED_LINES} lines are scanned (top-to-bottom
+ * within that window) so a large backend log — potentially a whole day of per-request lines — can't
+ * block the main thread; logs append newest-last and the view scrolls to the end, so the tail is
+ * the relevant part. That single pass also lets the error/info block state carry across continuation
+ * lines without a separate backwards scan.
  *
  * Recognised entries:
  *  - the leading timestamp (muted, on every entry)
@@ -27,6 +30,9 @@ const TIMESTAMP = /^\d{2}:\d{2}:\d{2}\.\d{3}/;
 const HTTP_REQUEST = /^\d{2}:\d{2}:\d{2}\.\d{3} (\d{3}) (GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) (\S+)/;
 const ERROR_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} (?:JS Error|ERROR):/;
 const INFO_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} JS Info:/;
+
+/** Upper bound on how many (trailing) lines are highlighted, to cap the per-rebuild work. */
+export const MAX_HIGHLIGHTED_LINES = 10_000;
 
 const timestampMark = Decoration.mark({ class: "cm-log-timestamp" });
 const verbMark = Decoration.mark({ class: "cm-log-verb" });
@@ -73,10 +79,13 @@ function buildLogDecorations(state: EditorState): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>();
     const doc = state.doc;
 
-    // A single top-to-bottom pass keeps the error/info block state (used to colour continuation
-    // lines) flowing naturally across lines.
+    // Scan at most the last MAX_HIGHLIGHTED_LINES lines. A single top-to-bottom pass over that window
+    // keeps the error/info block state (used to colour continuation lines) flowing across lines; a
+    // stack trace straddling the window's top edge may miss its colour, which is acceptable for a log
+    // that large.
+    const firstLine = Math.max(1, doc.lines - MAX_HIGHLIGHTED_LINES + 1);
     let blockLine: Decoration | null = null;
-    for (let n = 1; n <= doc.lines; n++) {
+    for (let n = firstLine; n <= doc.lines; n++) {
         blockLine = decorateLine(builder, doc.line(n), blockLine);
     }
 

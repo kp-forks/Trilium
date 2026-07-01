@@ -62,7 +62,7 @@ export default function ChatMessageList({ chat, emptyStateText, className }: Cha
                         isStreaming
                     />
                 )}
-                <div ref={chat.messagesEndRef} />
+                <div ref={chat.messagesEndRef} className="chat-messages-end" aria-hidden="true" />
                 <div ref={chat.bottomSpacerRef} className="chat-bottom-spacer" aria-hidden="true" />
             </div>
             {chat.showScrollToBottom && (

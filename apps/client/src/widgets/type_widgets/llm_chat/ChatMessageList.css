@@ -18,6 +18,13 @@
     overflow-y: auto;
 }
 
+/* Content-end sentinel watched by the jump-to-latest IntersectionObserver. A 1px
+   height keeps it reliably observable across browsers (zero-area targets are flaky). */
+.chat-messages-end {
+    min-height: 1px;
+    flex-shrink: 0;
+}
+
 /* Reserved room below the last message so a new reply can be parked near the top and
    type out in place. Height is set imperatively by useLlmChat (sized to what the turn
    actually needs), so long replies leave little trailing blank. */

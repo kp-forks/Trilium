@@ -2,7 +2,7 @@ import { Compartment, EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { describe, expect, it } from "vitest";
 
-import { triliumLogHighlighter } from "./trilium_log_highlighter.js";
+import { MAX_HIGHLIGHTED_LINES, triliumLogHighlighter } from "./trilium_log_highlighter.js";
 
 interface DecorationSpan {
     from: number;
@@ -110,6 +110,25 @@ describe("triliumLogHighlighter", () => {
     it("adds no decorations to non-timestamped or empty content", () => {
         expect(decorationsOf(state("just some text\nanother line"))).toHaveLength(0);
         expect(decorationsOf(state(""))).toHaveLength(0);
+    });
+
+    it("only highlights the last MAX_HIGHLIGHTED_LINES lines of a large log", () => {
+        // First line (beyond the cap) is an error header; if the whole doc were scanned it would be
+        // coloured. The tail stays highlighted.
+        const lines = [ "17:00:00.000 JS Error: old boom" ];
+        for (let i = 0; i < MAX_HIGHLIGHTED_LINES + 50; i++) {
+            lines.push(`18:00:00.${String(i % 1000).padStart(3, "0")} Slow query ${i}`);
+        }
+        const s = state(lines.join("\n"));
+
+        // The first line's error header is beyond the cap, so it is never coloured.
+        expect(lineClassesAt(s, 1)).toHaveLength(0);
+        expect(classesOfState(s)).not.toContain("cm-log-error");
+
+        // The tail is highlighted, and the number of scanned lines is bounded by the cap.
+        const timestamps = classesOfState(s).filter((c) => c === "cm-log-timestamp");
+        expect(timestamps.length).toBeGreaterThan(0);
+        expect(timestamps.length).toBeLessThanOrEqual(MAX_HIGHLIGHTED_LINES);
     });
 });
 

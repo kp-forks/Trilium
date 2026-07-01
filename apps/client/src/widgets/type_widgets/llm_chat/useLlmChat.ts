@@ -251,21 +251,6 @@ export function useLlmChat(
         }
     }, [refreshModels]));
 
-    // The timeline does not follow the stream — the model can outpace the reader, and
-    // moving text is hard to read. A jump-to-latest button appears whenever there is
-    // content below the fold; its visibility is measured against the real content end
-    // (the messagesEnd anchor).
-    const updateScrollButton = useCallback(() => {
-        const container = scrollContainerRef.current;
-        const endEl = messagesEndRef.current;
-        if (!container || !endEl) {
-            setShowScrollToBottom(false);
-            return;
-        }
-        const distance = endEl.getBoundingClientRect().top - container.getBoundingClientRect().bottom;
-        setShowScrollToBottom(distance > SCROLL_BOTTOM_THRESHOLD);
-    }, []);
-
     /** Jump to the latest content (ignores the trailing spacer). */
     const scrollToBottom = useCallback(() => {
         messagesEndRef.current?.scrollIntoView({ block: "end", behavior: "instant" });
@@ -361,12 +346,27 @@ export function useLlmChat(
         smoothScrollTo(container.scrollTop + boundaryWithinView - offsetAboveBoundary);
     }, [scrollToBottom, smoothScrollTo]);
 
+    // The timeline does not follow the stream — the model can outpace the reader, and
+    // moving text is hard to read. A jump-to-latest button appears whenever the content
+    // end sits below the fold. An IntersectionObserver on the messagesEnd anchor drives
+    // it: it fires only when the anchor crosses the viewport edge — no per-scroll layout
+    // reads — and covers scrolling, resize, streaming growth, and message changes alike.
     useEffect(() => {
         const container = scrollContainerRef.current;
-        if (!container) return;
-        container.addEventListener("scroll", updateScrollButton, { passive: true });
-        return () => container.removeEventListener("scroll", updateScrollButton);
-    }, [updateScrollButton]);
+        const endEl = messagesEndRef.current;
+        if (!container || !endEl || typeof IntersectionObserver === "undefined") return;
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                const rootBounds = entry.rootBounds;
+                // Show only when the content end is genuinely below the fold — not when it
+                // has been scrolled above (matches the previous distance-based check).
+                setShowScrollToBottom(rootBounds ? entry.boundingClientRect.top > rootBounds.bottom : false);
+            },
+            { root: container, rootMargin: `0px 0px ${SCROLL_BOTTOM_THRESHOLD}px 0px`, threshold: 0 }
+        );
+        observer.observe(endEl);
+        return () => observer.disconnect();
+    }, []);
 
     // Re-fit the spacer and run any pending one-shot scroll as the message list changes.
     // A layout effect lets the spacer settle synchronously so the anchor scroll already
@@ -383,30 +383,23 @@ export function useLlmChat(
                 scrollToBottom();
             }
         }
-        updateScrollButton();
-    }, [messages, recomputeBottomSpacer, anchorReplyToTop, scrollToBottom, updateScrollButton]);
-
-    // While streaming, the reply grows without changing `messages` — refresh only the
-    // button (the spacer intentionally stays at its turn-start size; nothing scrolls).
-    useEffect(() => {
-        updateScrollButton();
-    }, [smoothedTailText, streamingThinking, updateScrollButton]);
+    }, [messages, recomputeBottomSpacer, anchorReplyToTop, scrollToBottom]);
 
     // Re-fit the spacer when the container is resized (pane split, window resize, etc.).
+    // The button is handled by the IntersectionObserver, which reacts to resize itself.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container || typeof ResizeObserver === "undefined") return;
-        const observer = new ResizeObserver(() => {
-            recomputeBottomSpacer();
-            updateScrollButton();
-        });
+        const observer = new ResizeObserver(() => recomputeBottomSpacer());
         observer.observe(container);
         return () => observer.disconnect();
-    }, [recomputeBottomSpacer, updateScrollButton]);
+    }, [recomputeBottomSpacer]);
 
-    // Stop any in-flight anchor animation when the widget unmounts.
+    // On unmount, stop the anchor animation and abort any active stream so it stops
+    // consuming API tokens and can't push chunks into an unmounted component.
     useEffect(() => () => {
         if (anchorRafRef.current != null) cancelAnimationFrame(anchorRafRef.current);
+        abortControllerRef.current?.abort();
     }, []);
 
     // Load state from content object
