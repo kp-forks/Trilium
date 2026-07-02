@@ -468,7 +468,7 @@ function getEntityChangeRow(entityChange: EntityChange) {
  * receiver's peak memory. It is a soft cap: a response is at least one record, and the record that
  * crosses the threshold is still included.
  */
-const MAX_PULL_RESPONSE_BYTES = 8 * 1024 * 1024;
+export const MAX_PULL_RESPONSE_BYTES = 8 * 1024 * 1024;
 
 function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes = MAX_PULL_RESPONSE_BYTES) {
     const records: EntityChangeRecord[] = [];
