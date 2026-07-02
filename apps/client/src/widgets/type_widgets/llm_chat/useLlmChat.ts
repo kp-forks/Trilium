@@ -5,7 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
-import type { ContentBlock, FileBlock, ImageBlock, LlmChatContent, StoredMessage, TextFileBlock } from "./llm_chat_types.js";
+import { type ContentBlock, type FileBlock, type ImageBlock, type LlmChatContent, type StoredMessage, type TextFileBlock, trimToFirstUserMessage } from "./llm_chat_types.js";
 import { useSmoothStreaming } from "./useSmoothStreaming.js";
 
 /** A user-supplied attachment waiting to be sent with the next message. */
@@ -497,7 +497,7 @@ export function useLlmChat(
             return block as ContentBlock & { type: "text" };
         }
 
-        const apiMessages: LlmMessage[] = conversation.map(m => ({
+        const apiMessages: LlmMessage[] = trimToFirstUserMessage(conversation).map(m => ({
             role: m.role,
             content: flattenToApiContent(m.content)
         }));

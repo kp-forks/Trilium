@@ -4,10 +4,12 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preac
 
 import type NoteContext from "../../../components/note_context.js";
 import contextMenu, { type MenuItem } from "../../../menus/context_menu.js";
+import dialog from "../../../services/dialog.js";
 import { t } from "../../../services/i18n.js";
 import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
 import { canCopyMessage, copyMessageToClipboard } from "./chat_copy.js";
+import { canDeleteMessage, removeMessage } from "./chat_delete.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
 import { buildQuoteMarkdown } from "./chat_quote.js";
 import { canSaveToSubNote, saveMessageToSubNote } from "./chat_save.js";
@@ -124,6 +126,12 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         }));
     }, []);
 
+    const confirmAndDeleteMessage = useCallback(async (messageId: string) => {
+        if (await dialog.confirm(t("llm_chat.delete_message_confirm"))) {
+            setMessagesRef.current(removeMessage(messagesRef.current, messageId));
+        }
+    }, []);
+
     const scrollToHighlight = useCallback((anchorId: string) => {
         // Reuse the range resolved by the most recent recompute rather than re-walking the DOM; every
         // listed highlight has a cached entry (the list is built from the same resolved set).
@@ -133,10 +141,10 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     }, []);
 
     // Right-click menu over the timeline. With a text selection: Copy, Quote, and Add/Remove
-    // highlight. With no selection: Copy the whole message, and Save it to a sub-note (note chats
-    // only). Because preventing the default menu drops the browser's own Copy, we provide it here.
-    // Bails (leaving the native menu) when there's nothing to offer. Copy stays available while a
-    // reply streams; only the message-mutating add/remove are suppressed then.
+    // highlight. With no selection: Copy the whole message, Save it to a sub-note (note chats only),
+    // and Delete it. Because preventing the default menu drops the browser's own Copy, we provide it
+    // here. Bails (leaving the native menu) when there's nothing to offer. Copy stays available while
+    // a reply streams; the message-mutating add/remove/delete are suppressed then.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -199,6 +207,13 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
                     handler: () => void saveMessageToSubNote(parentNotePath, messageMarkdown)
                 });
             }
+            if (canDeleteMessage(hasSelection, message, streaming)) {
+                items.push({
+                    title: t("llm_chat.delete_message"),
+                    uiIcon: "bx bx-trash",
+                    handler: () => void confirmAndDeleteMessage(messageId)
+                });
+            }
 
             if (items.length === 0) return; // nothing to do → leave the native menu
             e.preventDefault();
@@ -207,7 +222,7 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
 
         container.addEventListener("contextmenu", onContextMenu);
         return () => container.removeEventListener("contextmenu", onContextMenu);
-    }, [scrollContainerRef, addHighlight, removeHighlight]);
+    }, [scrollContainerRef, addHighlight, removeHighlight, confirmAndDeleteMessage]);
 
     // Publish the list for the sidebar widget.
     useEffect(() => {

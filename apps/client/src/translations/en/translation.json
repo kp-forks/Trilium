@@ -2081,6 +2081,8 @@
     "copy_message": "Copy message",
     "save_to_subnote": "Save to sub-note",
     "save_to_subnote_failed": "Failed to create a note from the message.",
+    "delete_message": "Delete message",
+    "delete_message_confirm": "Delete this message? This operation cannot be undone.",
     "attach_file": "Attach image, PDF, or text file",
     "remove_attachment": "Remove attachment",
     "attachment_upload_failed": "Failed to upload \"{{name}}\".",
