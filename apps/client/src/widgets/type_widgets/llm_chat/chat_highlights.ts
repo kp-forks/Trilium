@@ -81,9 +81,16 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
             if (!message.highlights?.length) continue;
             const root = findMessageContentRoot(container, message.id);
             if (!root) continue;
+            const resolved: { anchor: HighlightAnchor; range: Range }[] = [];
             for (const anchor of message.highlights) {
                 const range = resolveAnchorRange(root, anchor);
                 if (!range) continue; // orphaned (e.g. regenerated message) — drop cleanly, never mis-paint
+                resolved.push({ anchor, range });
+            }
+            // Order by position within the message so the sidebar list follows the document, not the
+            // order the user happened to create the highlights in (`addHighlight` appends).
+            resolved.sort((a, b) => a.range.compareBoundaryPoints(Range.START_TO_START, b.range));
+            for (const { anchor, range } of resolved) {
                 rangeById.set(anchor.id, { range, messageId: message.id });
                 items.push({ id: anchor.id, messageId: message.id, text: anchor.quotedText });
             }
