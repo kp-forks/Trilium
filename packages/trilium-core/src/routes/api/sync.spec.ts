@@ -199,6 +199,41 @@ describe("Sync API (core)", () => {
             sql.execute("DELETE FROM options WHERE name = 'otst_opt'");
         });
 
+        it("fills the response across multiple 1000-row fetches instead of stopping at the row limit", async () => {
+            // 1100 metadata-only rows estimate to ~0.33 MB — far below the 8 MB byte cap — so a
+            // single pull must now return all of them in one response (two LIMIT-1000 fetches)
+            // rather than capping at 1000 rows per round-trip.
+            const sql = getSql();
+            const maxId = sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes");
+            const COUNT = 1100;
+
+            sql.transactional(() => {
+                for (let i = 0; i < COUNT; i++) {
+                    sql.execute("INSERT INTO options (name, value, isSynced, utcDateModified) VALUES (?, 'v', 1, '2020-01-01T00:00:00.000Z')", [`rowcap_opt_${i}`]);
+                    sql.execute(
+                        `INSERT INTO entity_changes (id, entityName, entityId, hash, isErased, changeId, componentId, instanceId, isSynced, utcDateChanged)
+                         VALUES (?, 'options', ?, 'h', 0, ?, 'cmp', 'OTHER', 1, '2020-01-01T00:00:00.000Z')`,
+                        [maxId + 1 + i, `rowcap_opt_${i}`, `rowcap_chg_${i}`]
+                    );
+                }
+            });
+
+            const res = await api.get<{ entityChanges: unknown[]; lastEntityChangeId: number; outstandingPullCount: number }>(
+                "/api/sync/changed",
+                { query: { instanceId: "CLIENTX", lastEntityChangeId: String(maxId) } }
+            );
+
+            expect(res.status).toBe(200);
+            expect(res.body.entityChanges.length).toBe(COUNT); // > 1000: the row limit no longer binds
+            expect(res.body.lastEntityChangeId).toBe(maxId + COUNT);
+            expect(res.body.outstandingPullCount).toBe(0);
+
+            sql.transactional(() => {
+                sql.execute("DELETE FROM entity_changes WHERE id BETWEEN ? AND ?", [maxId + 1, maxId + COUNT]);
+                sql.execute("DELETE FROM options WHERE name LIKE 'rowcap_opt_%'");
+            });
+        });
+
         it("getEntityChangeRecords stops accumulating once the response byte cap is reached", () => {
             const sql = getSql();
             const maxId = sql.getValue<number>("SELECT COALESCE(MAX(id), 0) FROM entity_changes");
