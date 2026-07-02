@@ -2078,6 +2078,7 @@
     "highlight_remove": "Remove highlight",
     "highlight_remove_confirm": "Remove this highlight?",
     "quote_selection": "Quote selection",
+    "copy_message": "Copy message",
     "save_to_subnote": "Save to sub-note",
     "save_to_subnote_failed": "Failed to create a note from the message.",
     "attach_file": "Attach image, PDF, or text file",

@@ -7,6 +7,7 @@ import contextMenu, { type MenuItem } from "../../../menus/context_menu.js";
 import { t } from "../../../services/i18n.js";
 import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
+import { canCopyMessage, copyMessageToClipboard } from "./chat_copy.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
 import { buildQuoteMarkdown } from "./chat_quote.js";
 import { canSaveToSubNote, saveMessageToSubNote } from "./chat_save.js";
@@ -132,10 +133,10 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     }, []);
 
     // Right-click menu over the timeline. With a text selection: Copy, Quote, and Add/Remove
-    // highlight. With no selection: Save the whole message to a sub-note (note chats only). Because
-    // preventing the default menu drops the browser's own Copy, we provide it here. Bails (leaving the
-    // native menu) when there's nothing to offer. Copy stays available while a reply streams; only the
-    // message-mutating add/remove are suppressed then.
+    // highlight. With no selection: Copy the whole message, and Save it to a sub-note (note chats
+    // only). Because preventing the default menu drops the browser's own Copy, we provide it here.
+    // Bails (leaving the native menu) when there's nothing to offer. Copy stays available while a
+    // reply streams; only the message-mutating add/remove are suppressed then.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -182,13 +183,20 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
             // commands above apply, and a whole-message save would then be confusing.
             const parentNotePath = noteContextRef.current?.notePath;
             const hasSelection = !!selectionRange?.toString().trim();
-            const savedMessage = messagesRef.current.find(m => m.id === messageId);
-            const savedMarkdown = savedMessage ? getMessageText(savedMessage.content) : "";
-            if (parentNotePath && canSaveToSubNote(parentNotePath, hasSelection, savedMarkdown)) {
+            const message = messagesRef.current.find(m => m.id === messageId);
+            const messageMarkdown = message ? getMessageText(message.content) : "";
+            if (canCopyMessage(hasSelection, messageMarkdown)) {
+                items.push({
+                    title: t("llm_chat.copy_message"),
+                    uiIcon: "bx bx-copy",
+                    handler: () => copyMessageToClipboard(messageMarkdown)
+                });
+            }
+            if (parentNotePath && canSaveToSubNote(parentNotePath, hasSelection, messageMarkdown)) {
                 items.push({
                     title: t("llm_chat.save_to_subnote"),
                     uiIcon: "bx bx-save",
-                    handler: () => void saveMessageToSubNote(parentNotePath, savedMarkdown)
+                    handler: () => void saveMessageToSubNote(parentNotePath, messageMarkdown)
                 });
             }
 
