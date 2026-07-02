@@ -131,7 +131,12 @@ export default function SidebarChat() {
     // Custom submit handler that ensures chat note exists first
     const handleSubmit = useCallback(async (e: Event) => {
         e.preventDefault();
-        if (!chat.input.trim() || chat.isStreaming) return;
+        if (!chat.hasInputText || chat.isStreaming) return;
+
+        // Snapshot the draft before any await: as soon as this handler suspends, the input
+        // bar clears the editor, which zeroes the live draft ref the delegated
+        // chat.handleSubmit below reads.
+        const draft = chat.getInput();
 
         // Ensure chat note exists before sending (lazy creation)
         let noteId = chatNoteId;
@@ -157,7 +162,9 @@ export default function SidebarChat() {
         // setChatNoteId above won't be visible until next render)
         chat.setChatNoteId(noteId);
 
-        // Delegate to shared handler
+        // Restore the draft (the editor clear wiped it during the awaits above), then
+        // delegate to the shared handler.
+        chat.setInput(draft);
         await chat.handleSubmit(e);
     }, [chatNoteId, chat]);
 

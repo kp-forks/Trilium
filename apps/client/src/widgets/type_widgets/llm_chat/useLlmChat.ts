@@ -90,9 +90,11 @@ export interface LlmChatOptions {
 export interface UseLlmChatReturn {
     // State
     messages: StoredMessage[];
-    input: string;
+    /** Whether the reply-input draft has non-whitespace text. The draft itself is kept out of
+     * state (typing must not re-render the chat tree); read it at submit time via
+     * {@link getInput}. */
+    hasInputText: boolean;
     isStreaming: boolean;
-    streamingContent: string;
     streamingBlocks: ContentBlock[];
     streamingThinking: string;
     pendingCitations: LlmCitation[];
@@ -124,6 +126,9 @@ export interface UseLlmChatReturn {
     registerInputEditor: (api: InputEditorApi | undefined) => void;
     /** Append a preformatted block (e.g. a Markdown quote) to the reply input and focus it. */
     appendToInput: (text: string) => void;
+
+    /** Read the current reply-input draft text (kept in a ref, not state — see {@link hasInputText}). */
+    getInput: () => string;
 
     // Setters
     setInput: (value: string) => void;
@@ -162,7 +167,16 @@ export function useLlmChat(
     const { defaultEnableNoteTools = false, supportsExtendedThinking = false, contextNoteId: initialContextNoteId, chatNoteId: initialChatNoteId } = options;
 
     const [messages, setMessagesInternal] = useState<StoredMessage[]>([]);
-    const [input, setInput] = useState("");
+    // The reply-input draft lives in a ref so typing never re-renders the chat tree; only the
+    // empty <-> non-empty transition is stateful (it drives the send button), and same-value
+    // setState calls bail out of re-rendering.
+    const inputRef = useRef("");
+    const [hasInputText, setHasInputText] = useState(false);
+    const setInput = useCallback((value: string) => {
+        inputRef.current = value;
+        setHasInputText(value.trim().length > 0);
+    }, []);
+    const getInput = useCallback(() => inputRef.current, []);
     const [isStreaming, setIsStreaming] = useState(false);
     // The canonical "target" content received from the stream so far. The
     // displayed `streamingBlocks` is derived from this with the trailing text
@@ -237,11 +251,16 @@ export function useLlmChat(
         setPendingAttachments(prev => prev.filter(a => a.attachmentId !== attachmentId));
     }, []);
 
-    // Wrapper to call onMessagesChange when messages update
+    // Wrapper to call onMessagesChange when messages update. The callback goes through a ref:
+    // both hosts pass inline arrows, and keeping them out of the deps keeps setMessages — and the
+    // whole action-callback chain built on it (runStream, handleSubmit, retryLast, ...) — stable
+    // across renders.
+    const onMessagesChangeRef = useRef(onMessagesChange);
+    onMessagesChangeRef.current = onMessagesChange;
     const setMessages = useCallback((newMessages: StoredMessage[]) => {
         setMessagesInternal(newMessages);
-        onMessagesChange?.(newMessages);
-    }, [onMessagesChange]);
+        onMessagesChangeRef.current?.(newMessages);
+    }, []);
 
     // Fetch available models on mount
     const refreshModels = useCallback(() => {
@@ -743,7 +762,7 @@ export function useLlmChat(
     const handleSubmit = useCallback(async (e: Event) => {
         e.preventDefault();
         if (isStreaming) return;
-        const trimmedInput = input.trim();
+        const trimmedInput = inputRef.current.trim();
         const attachments = pendingAttachmentsRef.current;
         if (!trimmedInput && attachments.length === 0) return;
 
@@ -774,7 +793,7 @@ export function useLlmChat(
         setPendingAttachments([]);
         pendingScrollRef.current = "anchor";
         await runStream([...messages, userMessage]);
-    }, [input, isStreaming, messages, runStream]);
+    }, [isStreaming, messages, runStream, setInput]);
 
     /** Re-run the last turn after a failed response, dropping the trailing error message. */
     const retryLast = useCallback(async () => {
@@ -825,17 +844,11 @@ export function useLlmChat(
         ];
     }, [targetBlocks, smoothedTailText]);
 
-    const streamingContent = useMemo(() => streamingBlocks
-        .filter((b): b is ContentBlock & { type: "text" } => b.type === "text")
-        .map(b => b.content)
-        .join(""), [streamingBlocks]);
-
     return {
         // State
         messages,
-        input,
+        hasInputText,
         isStreaming,
-        streamingContent,
         streamingBlocks,
         streamingThinking,
         pendingCitations,
@@ -858,6 +871,7 @@ export function useLlmChat(
 
         registerInputEditor,
         appendToInput,
+        getInput,
 
         // Setters
         setInput,

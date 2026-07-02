@@ -11,6 +11,9 @@ interface SmoothStreamingOptions {
     maxBacklogSeconds?: number;
 }
 
+/** Minimum time between displayed-text state commits (see the cadence cap in `tick`). */
+const MIN_COMMIT_INTERVAL_MS = 40;
+
 export interface SmoothStreamingHandle {
     /** The smoothed prefix of the appended target text — render this. */
     displayedText: string;
@@ -42,6 +45,15 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}): Smooth
 
     const tick = useCallback(() => {
         const now = performance.now();
+
+        // Cap the commit cadence: every setDisplayedText re-renders the whole chat tree, and
+        // rAF fires at display refresh rate (up to 144 Hz). ~25 commits/s still reads as a
+        // smooth typewriter (the reveal rate is time-based, so throughput is unaffected).
+        if (now - lastTickRef.current < MIN_COMMIT_INTERVAL_MS) {
+            rafRef.current = requestAnimationFrame(tick);
+            return;
+        }
+
         const dt = (now - lastTickRef.current) / 1000;
         lastTickRef.current = now;
 

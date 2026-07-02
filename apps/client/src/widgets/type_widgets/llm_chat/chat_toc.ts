@@ -44,32 +44,50 @@ export function useChatToc(chat: UseLlmChatReturn, noteContext: NoteContext | un
         }
     }, []);
 
-    // Scroll-spy: recompute the active heading whenever the timeline scrolls or resizes.
-    // Layout reads are batched into a single animation frame so a fast scroll can't queue
-    // a backlog of reflows.
+    // Scroll-spy: pick the active heading whenever the timeline scrolls or resizes. Heading
+    // offsets are measured once per headings change or container resize — never per scroll
+    // frame, where per-heading geometry reads would force layout across the whole timeline.
+    // Scrolling only reads scrollTop. Offsets can drift when content resizes without
+    // resizing the container (e.g. an image loading mid-history); the drift only affects
+    // the highlight and heals on the next measure.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
-        let rafId: number | null = null;
-        const recompute = () => {
-            rafId = null;
-            const containerTop = container.getBoundingClientRect().top;
-            const entries: HeadingOffset[] = [];
+        // Offsets relative to the scroll content, independent of the scroll position.
+        let offsets: HeadingOffset[] = [];
+        let activationLine = 0;
+        const measure = () => {
+            const contentTop = container.getBoundingClientRect().top - container.scrollTop;
+            offsets = [];
             for (const heading of headings) {
                 if (!heading.element?.isConnected) continue;
-                entries.push({ id: heading.id, top: heading.element.getBoundingClientRect().top - containerTop });
+                offsets.push({ id: heading.id, top: heading.element.getBoundingClientRect().top - contentTop });
             }
-            const activationLine = container.clientHeight * ACTIVATION_LINE_FRACTION;
-            setActiveHeadingId(pickActiveHeadingId(entries, activationLine));
+            activationLine = container.clientHeight * ACTIVATION_LINE_FRACTION;
+        };
+
+        let rafId: number | null = null;
+        let measureNeeded = true;
+        const recompute = () => {
+            rafId = null;
+            if (measureNeeded) {
+                measureNeeded = false;
+                measure();
+            }
+            setActiveHeadingId(pickActiveHeadingId(offsets, activationLine + container.scrollTop));
         };
         const schedule = () => {
             if (rafId == null) rafId = requestAnimationFrame(recompute);
         };
+        const scheduleMeasure = () => {
+            measureNeeded = true;
+            schedule();
+        };
 
         recompute();
         container.addEventListener("scroll", schedule, { passive: true });
-        const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(schedule) : null;
+        const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
         resizeObserver?.observe(container);
 
         return () => {
@@ -95,19 +113,27 @@ export function useChatToc(chat: UseLlmChatReturn, noteContext: NoteContext | un
 
 interface HeadingOffset {
     id: string;
-    /** Distance (px) of the message's top edge below the scroll container's top edge. */
+    /** The heading's top edge position, in the same coordinate space as the activation line. */
     top: number;
 }
 
-function findMessageElement(container: HTMLElement | null, messageId: string): HTMLElement | null {
-    if (!container) return null;
-    // Compare the parsed dataset value rather than interpolating the id into a CSS selector:
-    // persisted or imported chats may carry ids with characters (quotes, backslashes, newlines)
-    // that would make an attribute selector invalid and throw.
+/**
+ * Map every rendered message element by its id in one pass, so heading extraction stays
+ * O(messages) instead of running a full-timeline query per message. The dataset value is
+ * compared as parsed rather than interpolated into a CSS selector: persisted or imported
+ * chats may carry ids with characters (quotes, backslashes, newlines) that would make an
+ * attribute selector invalid and throw.
+ */
+function buildMessageElementMap(container: HTMLElement | null): Map<string, HTMLElement> {
+    const elementById = new Map<string, HTMLElement>();
+    if (!container) return elementById;
     for (const el of container.querySelectorAll<HTMLElement>("[data-message-id]")) {
-        if (el.dataset.messageId === messageId) return el;
+        const id = el.dataset.messageId;
+        if (id !== undefined && !elementById.has(id)) {
+            elementById.set(id, el);
+        }
     }
-    return null;
+    return elementById;
 }
 
 /** Headings inside an assistant reply's rendered markdown (excludes tool cards, citations, etc.). */
@@ -121,6 +147,7 @@ const REPLY_HEADING_SELECTOR = [1, 2, 3, 4, 5, 6].map(n => `.llm-chat-markdown h
  * them (e.g. an imported chat), they keep their own level so the hierarchy starts at 1.
  */
 export function extractChatHeadings(messages: StoredMessage[], container: HTMLElement | null): ChatHeading[] {
+    const elementById = buildMessageElementMap(container);
     const headings: ChatHeading[] = [];
     let hasUserHeading = false;
     for (const message of messages) {
@@ -134,11 +161,11 @@ export function extractChatHeadings(messages: StoredMessage[], container: HTMLEl
                 id: message.id,
                 level: 1,
                 text: escapeHtml(preview),
-                element: findMessageElement(container, message.id)
+                element: elementById.get(message.id) ?? null
             });
             hasUserHeading = true;
         } else if (message.role === "assistant") {
-            const messageEl = findMessageElement(container, message.id);
+            const messageEl = elementById.get(message.id);
             if (!messageEl) continue;
             const levelOffset = hasUserHeading ? 1 : 0;
             let index = 0;

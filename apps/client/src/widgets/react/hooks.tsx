@@ -1111,9 +1111,12 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
                 tooltip.dispose();
             }
 
-            // Remove any lingering tooltip popup elements from the DOM.
+            // Remove any lingering tooltip popup elements from the DOM. This must stay
+            // unconditional: delegated (`selector:`) configs spawn per-target Tooltip
+            // instances whose popups the parent's dispose() does not remove, and cleanups
+            // run before DOM removal, so a disconnected-only sweep would not catch them.
             document
-                .querySelectorAll('.tooltip')
+                .querySelectorAll(".tooltip")
                 .forEach(t => t.remove());
         };
     }, [ elRef, config ]);

@@ -131,16 +131,16 @@ export default function ChatInputBar({
     // Clear the editor immediately when a submit fires with non-empty, non-streaming
     // input — mirrors the rejection check inside chat.handleSubmit so we don't wipe
     // text that won't actually be sent. Doing it here (instead of as a useEffect on
-    // chat.input) avoids the React-render / CKEditor-change-event race that left the
-    // editor visually populated after submit.
+    // the draft state) avoids the React-render / CKEditor-change-event race that left
+    // the editor visually populated after submit.
     const handleSubmit = useCallback((e: Event) => {
-        const willSubmit = (chat.input.trim() || chat.pendingAttachments.length > 0) && !chat.isStreaming;
+        const willSubmit = (chat.hasInputText || chat.pendingAttachments.length > 0) && !chat.isStreaming;
         baseSubmit(e);
         if (willSubmit) {
             editorApiRef.current?.setText("");
             editorApiRef.current?.focus();
         }
-    }, [baseSubmit, chat.input, chat.isStreaming, chat.pendingAttachments.length]);
+    }, [baseSubmit, chat.hasInputText, chat.isStreaming, chat.pendingAttachments.length]);
     submitRef.current = handleSubmit;
 
     // Expose the reply-input editor to the chat hook so timeline actions (e.g. quoting a selection)
@@ -422,7 +422,7 @@ export default function ChatInputBar({
                     icon={chat.isStreaming ? "bx bx-stop" : "bx bx-send"}
                     text={chat.isStreaming ? t("llm_chat.stop") : t("llm_chat.send")}
                     onClick={chat.isStreaming ? chat.stopStreaming : handleSubmit}
-                    disabled={!chat.isStreaming && !chat.input.trim() && chat.pendingAttachments.length === 0}
+                    disabled={!chat.isStreaming && !chat.hasInputText && chat.pendingAttachments.length === 0}
                     className={`llm-chat-send-btn ${chat.isStreaming ? "llm-chat-stop-btn" : ""}`}
                 />
             </div>
