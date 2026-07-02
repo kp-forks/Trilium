@@ -9,7 +9,8 @@ import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
 import { buildQuoteMarkdown } from "./chat_quote.js";
-import type { HighlightAnchor } from "./llm_chat_types.js";
+import { canSaveToSubNote, saveMessageToSubNote } from "./chat_save.js";
+import { getMessageText, type HighlightAnchor } from "./llm_chat_types.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
 /** A highlight surfaced in the sidebar list. */
@@ -62,6 +63,10 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     setMessagesRef.current = chat.setMessages;
     const appendToInputRef = useRef(chat.appendToInput);
     appendToInputRef.current = chat.appendToInput;
+    // Present for note chats (a real note in a tab), undefined for the right-pane sidebar chat —
+    // used to gate "Save to sub-note" (note chats only) and as the new note's parent.
+    const noteContextRef = useRef(noteContext);
+    noteContextRef.current = noteContext;
 
     // The resolved ranges behind this chat's currently painted highlights, keyed by anchor id (used
     // for hit-testing on right-click and for scroll-to). Registered in the module-level set so the
@@ -126,11 +131,11 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         element?.scrollIntoView({ block: "center", behavior: "smooth" });
     }, []);
 
-    // Right-click menu over the timeline: Copy the selection (or highlighted text), plus Remove when
-    // the click lands on a highlight or Highlight for a prose selection. Because preventing the default
-    // menu drops the browser's own Copy, we provide it here. Bails (leaving the native menu) when
-    // there's nothing to offer, so ordinary right-clicks are untouched. Copy stays available while a
-    // reply streams; only the message-mutating add/remove are suppressed then.
+    // Right-click menu over the timeline. With a text selection: Copy, Quote, and Add/Remove
+    // highlight. With no selection: Save the whole message to a sub-note (note chats only). Because
+    // preventing the default menu drops the browser's own Copy, we provide it here. Bails (leaving the
+    // native menu) when there's nothing to offer. Copy stays available while a reply streams; only the
+    // message-mutating add/remove are suppressed then.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -167,6 +172,23 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
                     title: t("llm_chat.quote_selection"),
                     uiIcon: "bx bxs-quote-alt-left",
                     handler: () => appendToInputRef.current(buildQuoteMarkdown(quotedText, messageId))
+                });
+            }
+
+            // Save the whole message as a child note and open it in this tab. Note chats only — the
+            // right-pane sidebar chat has no note to parent under (no noteContext). Rendered from the
+            // message's markdown source so math, mermaid, and code survive intact. Offered on the
+            // message surface only when there's no text selection: with a selection the selection
+            // commands above apply, and a whole-message save would then be confusing.
+            const parentNotePath = noteContextRef.current?.notePath;
+            const hasSelection = !!selectionRange?.toString().trim();
+            const savedMessage = messagesRef.current.find(m => m.id === messageId);
+            const savedMarkdown = savedMessage ? getMessageText(savedMessage.content) : "";
+            if (parentNotePath && canSaveToSubNote(parentNotePath, hasSelection, savedMarkdown)) {
+                items.push({
+                    title: t("llm_chat.save_to_subnote"),
+                    uiIcon: "bx bx-save",
+                    handler: () => void saveMessageToSubNote(parentNotePath, savedMarkdown)
                 });
             }
 
