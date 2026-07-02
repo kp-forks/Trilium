@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import Database from "better-sqlite3";
+import { existsSync } from "fs";
 import { join } from "path";
 
 import SyncInstance from "./sync-instance";
@@ -19,7 +20,13 @@ import SyncInstance from "./sync-instance";
 const PASSWORD = "sync-e2e-password";
 
 test.describe("sync protocol", () => {
-    test.skip(!!process.env.TRILIUM_DOCKER, "spawns local server processes; not available against a Docker target");
+    // This spec spawns its own local server instances from the production bundle, so it only
+    // needs `dist/main.cjs` to exist — which every CI e2e job guarantees (they all build the
+    // server first), regardless of whether the *main* e2e target is local or Docker-hosted.
+    test.skip(
+        !existsSync(join(__dirname, "..", "..", "dist", "main.cjs")),
+        "requires the built server bundle (dist/main.cjs)"
+    );
 
     test("initial sync reproduces the source; incremental sync works both ways", async ({}, testInfo) => {
         test.setTimeout(600_000);
