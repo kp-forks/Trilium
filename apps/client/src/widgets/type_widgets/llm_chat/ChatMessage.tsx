@@ -2,6 +2,7 @@ import "./ChatMessage.css";
 import "../markdown/MarkdownCommons.css";
 
 import { type LlmCitation } from "@triliumnext/commons";
+import { memo } from "preact/compat";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -104,7 +105,7 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
     );
 }
 
-export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
+function ChatMessage({ message, isStreaming, onRetry }: Props) {
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
@@ -222,6 +223,13 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
         </div>
     );
 }
+
+// Memoized: the message list re-renders on every reply-input keystroke (input state lives in the
+// same hook), so without this every message reconciles per character — sluggish on long chats. Props
+// are stable across keystrokes (same `message` object, `isStreaming` false, stable `onRetry`), so
+// completed messages are skipped; the streaming placeholder uses a fresh object each render, so it
+// still updates.
+export default memo(ChatMessage);
 
 /** Group content blocks so that consecutive tool_calls are merged into one entry. */
 function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
