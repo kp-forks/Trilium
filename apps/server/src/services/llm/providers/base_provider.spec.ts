@@ -303,6 +303,7 @@ describe("BaseProvider system prompt", () => {
         expect(prompt).toContain("Blockquotes");
         expect(prompt).toContain("Tables");
         expect(prompt).toContain("Collapsible blocks");
+        expect(prompt).toContain("Keyboard keys");
     });
 
     it("lists the workspace's custom task-state markers so the model can recognize them", () => {
