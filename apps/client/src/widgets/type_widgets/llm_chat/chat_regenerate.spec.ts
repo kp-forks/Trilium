@@ -37,7 +37,7 @@ describe("canRegenerate", () => {
 describe("conversationForRegenerate", () => {
     it("keeps everything up to and including the last user message", () => {
         const messages = [msg("u1", "user"), msg("a1", "assistant"), msg("u2", "user"), msg("t2", "assistant"), msg("a2", "assistant")];
-        expect(conversationForRegenerate(messages).map(m => m.id)).toEqual(["u1", "a1", "u2"]);
+        expect(conversationForRegenerate(messages)?.map(m => m.id)).toEqual(["u1", "a1", "u2"]);
     });
 
     it("returns null when there is no user message", () => {
