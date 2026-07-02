@@ -300,6 +300,8 @@ describe("BaseProvider system prompt", () => {
         const prompt = provider.callBuildSystemPrompt([], {})!;
         expect(prompt).toContain("Admonitions");
         expect(prompt).toContain("Mermaid diagrams");
+        expect(prompt).toContain("Blockquotes");
+        expect(prompt).toContain("Tables");
     });
 });
 

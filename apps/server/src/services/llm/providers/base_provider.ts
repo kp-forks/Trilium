@@ -245,11 +245,13 @@ export abstract class BaseProvider implements LlmProvider {
                 + `- \`> [!WARNING]\` — something that may cause problems or surprise\n`
                 + `- \`> [!CAUTION]\` — a destructive or irreversible action\n`
                 + `Syntax: the marker must be on its own line, and every content line must start with \`>\`.\n\n`
+                + `**Blockquotes** — prefix lines with \`>\` (without a \`[!TYPE]\` marker) to quote text.\n\n`
                 + `**Math equations** — KaTeX (LaTeX subset). Use \`$...$\` for inline math and \`$$...$$\` for display (block) math. Example: \`$E = mc^2$\` or:\n`
                 + `$$\n\\int_0^\\infty e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}\n$$\n\n`
                 + `**Mermaid diagrams** — use a fenced code block with the \`mermaid\` language tag. Example:\n`
                 + "```mermaid\ngraph LR\n    A --> B\n```\n\n"
                 + `**Code blocks** — use fenced code blocks with a language tag for syntax highlighting (e.g. \`\`\`js, \`\`\`python).\n\n`
+                + `**Tables** — GitHub-style pipe tables: a header row, a \`---\` separator row, then the data rows.\n\n`
                 + `**Footnotes** — use \`[^1]\` in text and \`[^1]: explanation\` at the bottom.\n\n`
                 + `**Task lists** — use \`- [ ]\` for unchecked and \`- [x]\` for checked items.`
         );
