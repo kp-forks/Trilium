@@ -14,18 +14,19 @@ import { DEFAULT_GUTTER_SIZE } from "../../services/resizer";
 import { isStandalone } from "../../services/utils";
 import ActionButton from "../react/ActionButton";
 import Button from "../react/Button";
-import { useActiveNoteContext, useLegacyWidget, useNoteProperty, useTriliumEvent, useTriliumOptionBool, useTriliumOptionJson } from "../react/hooks";
+import { useActiveNoteContext, useGetContextData, useLegacyWidget, useNoteProperty, useTriliumEvent, useTriliumOptionBool, useTriliumOptionJson } from "../react/hooks";
 import LazyComponent from "../react/LazyComponent";
 import NoItems from "../react/NoItems";
 import { PaneMode, usePaneMode, usePeekDismiss } from "../react/peek_pane";
 import LegacyRightPanelWidget from "../right_panel_widget";
+import ChatHighlightsList from "./ChatHighlightsList";
 import HighlightsList from "./HighlightsList";
 import PdfAnnotations from "./pdf/PdfAnnotations";
 import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
-import RightPanePeekButton from "./RightPanePeekButton";
 import RightPanelWidget from "./RightPanelWidget";
+import RightPanePeekButton from "./RightPanePeekButton";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
@@ -107,6 +108,9 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
     const noteType = useNoteProperty(note, "type");
     const noteMime = useNoteProperty(note, "mime");
     const [ highlightsList ] = useTriliumOptionJson<string[]>("highlightsList");
+    // Published by the LLM chat; drives the chat highlights widget's visibility (only shown once
+    // the chat has at least one highlight).
+    const chatHighlights = useGetContextData("chatHighlights");
     // Subscribe to the AI toggle so the LLM chat is added/removed reactively without a page reload.
     const [ aiEnabled ] = useTriliumOptionBool("aiEnabled");
     const isPdf = noteType === "file" && noteMime === "application/pdf";
@@ -115,7 +119,7 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
     const definitions: RightPanelWidgetDefinition[] = [
         {
             el: <TableOfContents />,
-            enabled: (noteType === "text" || noteType === "doc" || isPdf || !!note?.isMarkdown()),
+            enabled: (noteType === "text" || noteType === "doc" || isPdf || noteType === "llmChat" || !!note?.isMarkdown()),
         },
         {
             el: <PdfPages />,
@@ -136,6 +140,10 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
         {
             el: <HighlightsList />,
             enabled: noteType === "text" && highlightsList.length > 0,
+        },
+        {
+            el: <ChatHighlightsList />,
+            enabled: noteType === "llmChat" && (chatHighlights?.highlights.length ?? 0) > 0,
         },
         {
             // Loaded lazily because the chat pulls in the whole LLM + CKEditor graph,

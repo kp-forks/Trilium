@@ -1510,7 +1510,8 @@
     "title": "Available MIME types in the dropdown",
     "tooltip_syntax_highlighting": "Syntax highlighting",
     "tooltip_code_block_syntax": "Code blocks in Text notes",
-    "tooltip_code_note_syntax": "Code notes"
+    "tooltip_code_note_syntax": "Code notes",
+    "trilium_log": "Trilium Log"
   },
   "vim_key_bindings": {
     "use_vim_keybindings_in_code_notes": "Vim keybindings",
@@ -2071,6 +2072,14 @@
     "add_provider": "Add AI Provider",
     "stop": "Stop",
     "retry": "Retry",
+    "scroll_to_bottom": "Scroll to latest",
+    "toc_file": "File: {{name}}",
+    "highlights_title": "Highlights ({{count}})",
+    "highlights_empty": "No highlights yet. Select text in a message and choose \"Highlight\".",
+    "copy": "Copy",
+    "highlight_add": "Highlight",
+    "highlight_remove": "Remove highlight",
+    "highlight_remove_confirm": "Remove this highlight?",
     "attach_file": "Attach image, PDF, or text file",
     "remove_attachment": "Remove attachment",
     "attachment_upload_failed": "Failed to upload \"{{name}}\".",

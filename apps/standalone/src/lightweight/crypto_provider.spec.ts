@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import aesjs from "aes-js";
 
 import BrowserCryptoProvider from "./crypto_provider.js";
@@ -109,5 +109,80 @@ describe("AesJsCipher (via createCipheriv/createDecipheriv)", () => {
 
         expect(out).toHaveLength(16);
         expect(out[15]).toBe(0);
+    });
+});
+
+describe("BrowserCryptoProvider base64", () => {
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder();
+    // RFC 4648 §10 test vectors
+    const vectors: [string, string][] = [
+        ["", ""],
+        ["f", "Zg=="],
+        ["fo", "Zm8="],
+        ["foo", "Zm9v"],
+        ["foob", "Zm9vYg=="],
+        ["fooba", "Zm9vYmE="],
+        ["foobar", "Zm9vYmFy"]
+    ];
+
+    it("encodes the RFC 4648 test vectors", () => {
+        for (const [input, expected] of vectors) {
+            expect(provider.base64Encode(encoder.encode(input))).toBe(expected);
+        }
+    });
+
+    it("decodes the RFC 4648 test vectors", () => {
+        for (const [input, expected] of vectors) {
+            expect(decoder.decode(provider.base64Decode(expected))).toBe(input);
+        }
+    });
+
+    it("round-trips every byte value 0..255", () => {
+        const bytes = new Uint8Array(256);
+        for (let i = 0; i < 256; i++) bytes[i] = i;
+        expect(Array.from(provider.base64Decode(provider.base64Encode(bytes)))).toEqual(Array.from(bytes));
+    });
+
+    it("round-trips a large buffer spanning multiple 32K chunks", () => {
+        const bytes = new Uint8Array(100_000); // > CHUNK (0x8000), forces the multi-chunk path
+        for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 7) & 0xff;
+        const round = provider.base64Decode(provider.base64Encode(bytes));
+        expect(Array.from(round)).toEqual(Array.from(bytes));
+    });
+
+    it("encodes a Uint8Array view (subarray with a non-zero offset)", () => {
+        const backing = new Uint8Array([0xff, 0xff, 0x66, 0x6f, 0x6f, 0xff]); // "foo" in the middle
+        expect(provider.base64Encode(backing.subarray(2, 5))).toBe("Zm9v");
+    });
+
+    describe("native (TC39 arraybuffer-base64) fast path", () => {
+        // The test runtime may or may not ship the native methods; save whatever is there and
+        // restore it afterwards, so stubbing never clobbers a real implementation.
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const proto = Uint8Array.prototype as any;
+        const ctor = Uint8Array as any;
+        const savedToBase64 = proto.toBase64;
+        const savedFromBase64 = ctor.fromBase64;
+
+        afterEach(() => {
+            if (savedToBase64 === undefined) delete proto.toBase64;
+            else proto.toBase64 = savedToBase64;
+            if (savedFromBase64 === undefined) delete ctor.fromBase64;
+            else ctor.fromBase64 = savedFromBase64;
+        });
+
+        it("prefers Uint8Array.prototype.toBase64 for encoding when the runtime provides it", () => {
+            proto.toBase64 = function (this: Uint8Array) {
+                return `NATIVE(${this.length})`;
+            };
+            expect(provider.base64Encode(new Uint8Array(3))).toBe("NATIVE(3)");
+        });
+
+        it("prefers Uint8Array.fromBase64 for decoding when the runtime provides it", () => {
+            ctor.fromBase64 = (base64: string) => new Uint8Array([base64.length]);
+            expect(Array.from(provider.base64Decode("abcd"))).toEqual([4]);
+        });
+        /* eslint-enable @typescript-eslint/no-explicit-any */
     });
 });
