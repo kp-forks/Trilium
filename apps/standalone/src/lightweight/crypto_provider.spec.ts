@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import aesjs from "aes-js";
 
 import BrowserCryptoProvider from "./crypto_provider.js";
@@ -154,5 +154,35 @@ describe("BrowserCryptoProvider base64", () => {
     it("encodes a Uint8Array view (subarray with a non-zero offset)", () => {
         const backing = new Uint8Array([0xff, 0xff, 0x66, 0x6f, 0x6f, 0xff]); // "foo" in the middle
         expect(provider.base64Encode(backing.subarray(2, 5))).toBe("Zm9v");
+    });
+
+    describe("native (TC39 arraybuffer-base64) fast path", () => {
+        // The test runtime may or may not ship the native methods; save whatever is there and
+        // restore it afterwards, so stubbing never clobbers a real implementation.
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const proto = Uint8Array.prototype as any;
+        const ctor = Uint8Array as any;
+        const savedToBase64 = proto.toBase64;
+        const savedFromBase64 = ctor.fromBase64;
+
+        afterEach(() => {
+            if (savedToBase64 === undefined) delete proto.toBase64;
+            else proto.toBase64 = savedToBase64;
+            if (savedFromBase64 === undefined) delete ctor.fromBase64;
+            else ctor.fromBase64 = savedFromBase64;
+        });
+
+        it("prefers Uint8Array.prototype.toBase64 for encoding when the runtime provides it", () => {
+            proto.toBase64 = function (this: Uint8Array) {
+                return `NATIVE(${this.length})`;
+            };
+            expect(provider.base64Encode(new Uint8Array(3))).toBe("NATIVE(3)");
+        });
+
+        it("prefers Uint8Array.fromBase64 for decoding when the runtime provides it", () => {
+            ctor.fromBase64 = (base64: string) => new Uint8Array([base64.length]);
+            expect(Array.from(provider.base64Decode("abcd"))).toEqual([4]);
+        });
+        /* eslint-enable @typescript-eslint/no-explicit-any */
     });
 });
