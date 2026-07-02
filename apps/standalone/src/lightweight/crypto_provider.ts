@@ -94,6 +94,52 @@ export default class BrowserCryptoProvider implements CryptoProvider {
         }
         return result === 0;
     }
+
+    base64Encode(bytes: Uint8Array): string {
+        // Prefer the native (TC39 arraybuffer-base64) encoder where available — Chrome 140+,
+        // Firefox 133+, Safari 18.2+. It runs at native speed (SIMD) and avoids materializing
+        // the intermediate "binary string" entirely. Detected per call so tests can stub it.
+        const nativeBytes = bytes as NativeBase64Array;
+        if (typeof nativeBytes.toBase64 === "function") {
+            return nativeBytes.toBase64();
+        }
+
+        // Fallback: build the binary string in 32K chunks via fromCharCode.apply. This avoids both
+        // the pathological per-byte string concatenation of a naive loop and the call-stack limit
+        // of applying fromCharCode to the whole array at once.
+        const CHUNK = 0x8000; // 32768
+        let binary = "";
+        for (let i = 0; i < bytes.length; i += CHUNK) {
+            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK) as unknown as number[]);
+        }
+        return btoa(binary);
+    }
+
+    base64Decode(base64: string): Uint8Array {
+        const nativeCtor = Uint8Array as unknown as NativeBase64Constructor;
+        if (typeof nativeCtor.fromBase64 === "function") {
+            return nativeCtor.fromBase64(base64);
+        }
+
+        const binary = atob(base64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return bytes;
+    }
+}
+
+/**
+ * Structural types for the TC39 "arraybuffer-base64" Uint8Array methods, which are newer than the
+ * ES2022 lib this package compiles against. Both are probed with `typeof` before use.
+ */
+interface NativeBase64Array extends Uint8Array {
+    toBase64?(): string;
+}
+interface NativeBase64Constructor {
+    fromBase64?(base64: string): Uint8Array;
 }
 
 /**
