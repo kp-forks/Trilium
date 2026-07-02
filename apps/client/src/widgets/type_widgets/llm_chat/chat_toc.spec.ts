@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { buildChatHeadings, pickActiveHeadingId, truncateForToc } from "./chat_toc.js";
+import { extractChatHeadings, pickActiveHeadingId, truncateForToc } from "./chat_toc.js";
 import type { ContentBlock, StoredMessage } from "./llm_chat_types.js";
 
 // i18next isn't initialized in unit tests, so stub `t` with a minimal interpolating
@@ -99,33 +99,49 @@ describe("truncateForToc", () => {
     });
 });
 
-describe("buildChatHeadings", () => {
+describe("extractChatHeadings", () => {
     function userMessage(id: string, content: string | ContentBlock[]): StoredMessage {
         return { id, role: "user", content, createdAt: "2026-01-01T00:00:00.000Z" };
     }
-    function assistantMessage(id: string, content: string): StoredMessage {
-        return { id, role: "assistant", content, createdAt: "2026-01-01T00:00:00.000Z" };
+    function assistantMessage(id: string, content: string, type?: StoredMessage["type"]): StoredMessage {
+        return { id, role: "assistant", content, createdAt: "2026-01-01T00:00:00.000Z", type };
+    }
+    /** Build a fake chat timeline DOM out of per-message wrappers. */
+    function containerWith(...wrappers: string[]): HTMLElement {
+        const el = document.createElement("div");
+        el.innerHTML = wrappers.join("");
+        return el;
+    }
+    function messageWrapper(id: string, inner = ""): string {
+        return `<div data-message-id="${id}">${inner}</div>`;
+    }
+    function markdownContent(inner: string): string {
+        return `<div class="llm-chat-markdown">${inner}</div>`;
     }
 
-    it("emits one entry per user message, in order, skipping assistant messages", () => {
-        const headings = buildChatHeadings([
+    it("emits one entry per user message, in order, skipping heading-less assistant messages", () => {
+        const headings = extractChatHeadings([
             userMessage("u1", "First question"),
             assistantMessage("a1", "First answer"),
             userMessage("u2", "Second question")
-        ]);
-        expect(headings).toEqual([
+        ], containerWith(
+            messageWrapper("u1"),
+            messageWrapper("a1", markdownContent("<p>First answer</p>")),
+            messageWrapper("u2")
+        ));
+        expect(headings).toMatchObject([
             { id: "u1", level: 1, text: "First question" },
             { id: "u2", level: 1, text: "Second question" }
         ]);
     });
 
     it("uses the message id as the heading id so it doubles as a scroll anchor", () => {
-        const [heading] = buildChatHeadings([userMessage("abc123", "Hi")]);
+        const [heading] = extractChatHeadings([userMessage("abc123", "Hi")], null);
         expect(heading.id).toBe("abc123");
     });
 
-    it("escapes HTML in the message so it renders literally", () => {
-        const [heading] = buildChatHeadings([userMessage("u1", "<script>alert(1)</script>")]);
+    it("escapes HTML in the user message so it renders literally", () => {
+        const [heading] = extractChatHeadings([userMessage("u1", "<script>alert(1)</script>")], null);
         expect(heading.text).not.toContain("<script>");
         expect(heading.text).toContain("&lt;script&gt;");
     });
@@ -135,7 +151,7 @@ describe("buildChatHeadings", () => {
             { type: "image", attachmentId: "att1", mime: "image/png", title: "pic.png", url: "/x" },
             { type: "text", content: "Describe this image" }
         ];
-        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        const [heading] = extractChatHeadings([userMessage("u1", content)], null);
         expect(heading.text).toBe("Describe this image");
     });
 
@@ -143,7 +159,7 @@ describe("buildChatHeadings", () => {
         const content: ContentBlock[] = [
             { type: "image", attachmentId: "att1", mime: "image/png", title: "diagram.png", url: "/x" }
         ];
-        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        const [heading] = extractChatHeadings([userMessage("u1", content)], null);
         expect(heading.text).toBe("File: diagram.png");
     });
 
@@ -151,7 +167,7 @@ describe("buildChatHeadings", () => {
         const content: ContentBlock[] = [
             { type: "file", attachmentId: "att1", mime: "application/pdf", title: "report.pdf", url: "/x" }
         ];
-        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        const [heading] = extractChatHeadings([userMessage("u1", content)], null);
         expect(heading.text).toBe("File: report.pdf");
     });
 
@@ -159,7 +175,7 @@ describe("buildChatHeadings", () => {
         const content: ContentBlock[] = [
             { type: "text_file", attachmentId: "att1", mime: "text/markdown", title: "notes.md", url: "/x" }
         ];
-        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        const [heading] = extractChatHeadings([userMessage("u1", content)], null);
         expect(heading.text).toBe("File: notes.md");
     });
 
@@ -169,8 +185,116 @@ describe("buildChatHeadings", () => {
             { type: "file", attachmentId: "att2", mime: "application/pdf", title: "report.pdf", url: "/y" },
             { type: "text_file", attachmentId: "att3", mime: "text/markdown", title: "notes.md", url: "/z" }
         ];
-        const [heading] = buildChatHeadings([userMessage("u1", content)]);
+        const [heading] = extractChatHeadings([userMessage("u1", content)], null);
         expect(heading.text).toBe("File: diagram.png, report.pdf, notes.md");
+    });
+
+    describe("assistant reply headings", () => {
+        it("nests reply headings one level below the question (H1→2, H2→3, H3→4)", () => {
+            const headings = extractChatHeadings([
+                userMessage("u1", "Question"),
+                assistantMessage("a1", "Answer")
+            ], containerWith(
+                messageWrapper("u1"),
+                messageWrapper("a1", markdownContent("<h1>Overview</h1><p>…</p><h2>Details</h2><h3>Fine print</h3>"))
+            ));
+            expect(headings).toMatchObject([
+                { id: "u1", level: 1 },
+                { id: "a1:0", level: 2, text: "Overview" },
+                { id: "a1:1", level: 3, text: "Details" },
+                { id: "a1:2", level: 4, text: "Fine print" }
+            ]);
+        });
+
+        it("anchors each reply heading to its own element", () => {
+            const container = containerWith(
+                messageWrapper("u1"),
+                messageWrapper("a1", markdownContent("<h1>Overview</h1><h2>Details</h2>"))
+            );
+            const headings = extractChatHeadings([
+                userMessage("u1", "Question"),
+                assistantMessage("a1", "Answer")
+            ], container);
+            expect(headings[1].element?.tagName).toBe("H1");
+            expect(headings[2].element?.tagName).toBe("H2");
+            expect(headings[0].element?.dataset.messageId).toBe("u1");
+        });
+
+        it("keeps reply heading HTML as-is, without truncation", () => {
+            const longHeading = `A <strong>very</strong> long heading ${"with many words ".repeat(20)}indeed`;
+            const headings = extractChatHeadings([
+                userMessage("u1", "Q"),
+                assistantMessage("a1", "Answer")
+            ], containerWith(
+                messageWrapper("u1"),
+                messageWrapper("a1", markdownContent(`<h2>${longHeading}</h2>`))
+            ));
+            expect(headings[1].text).toBe(longHeading);
+        });
+
+        it("starts the hierarchy at level 1 when no user message precedes the reply", () => {
+            const headings = extractChatHeadings([
+                assistantMessage("a1", "Answer")
+            ], containerWith(
+                messageWrapper("a1", markdownContent("<h1>Overview</h1><h2>Details</h2>"))
+            ));
+            expect(headings).toMatchObject([
+                { id: "a1:0", level: 1, text: "Overview" },
+                { id: "a1:1", level: 2, text: "Details" }
+            ]);
+        });
+
+        it("shifts levels once a user message has appeared, even for later replies", () => {
+            const headings = extractChatHeadings([
+                assistantMessage("a1", "Preamble"),
+                userMessage("u1", "Question"),
+                assistantMessage("a2", "Answer")
+            ], containerWith(
+                messageWrapper("a1", markdownContent("<h1>Before</h1>")),
+                messageWrapper("u1"),
+                messageWrapper("a2", markdownContent("<h1>After</h1>"))
+            ));
+            expect(headings).toMatchObject([
+                { id: "a1:0", level: 1, text: "Before" },
+                { id: "u1", level: 1 },
+                { id: "a2:0", level: 2, text: "After" }
+            ]);
+        });
+
+        it("ignores headings outside the rendered markdown (e.g. tool cards)", () => {
+            const headings = extractChatHeadings([
+                userMessage("u1", "Q"),
+                assistantMessage("a1", "Answer")
+            ], containerWith(
+                messageWrapper("u1"),
+                messageWrapper("a1", `<div class="tool-card"><h1>Not a heading</h1></div>${markdownContent("<h1>Real</h1>")}`)
+            ));
+            expect(headings).toMatchObject([
+                { id: "u1", level: 1 },
+                { id: "a1:0", level: 2, text: "Real" }
+            ]);
+        });
+
+        it("skips error and thinking messages entirely", () => {
+            const headings = extractChatHeadings([
+                userMessage("u1", "Q"),
+                assistantMessage("t1", "Thinking…", "thinking"),
+                assistantMessage("e1", "Something broke", "error")
+            ], containerWith(
+                messageWrapper("u1"),
+                messageWrapper("t1", markdownContent("<h1>Thought</h1>")),
+                messageWrapper("e1", markdownContent("<h1>Oops</h1>"))
+            ));
+            expect(headings).toMatchObject([{ id: "u1", level: 1 }]);
+        });
+
+        it("skips assistant messages that are not in the DOM", () => {
+            const headings = extractChatHeadings([
+                userMessage("u1", "Q"),
+                assistantMessage("a1", "Answer")
+            ], containerWith(messageWrapper("u1")));
+            expect(headings).toMatchObject([{ id: "u1", level: 1 }]);
+        });
     });
 });
 
