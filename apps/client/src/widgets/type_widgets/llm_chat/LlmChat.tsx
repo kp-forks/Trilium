@@ -37,7 +37,7 @@ export default function LlmChat({ note, noteContext }: TypeWidgetProps) {
     // Right-click menu over the timeline, with highlights contributing their add/remove items.
     useChatContextMenu({ chat, noteContext, contextMenuItems: highlights.highlightMenuItems });
 
-    // Make the "message ID …" links in submitted quotes jump to the referenced message.
+    // Make the "Show quote source" links in submitted quotes jump to the referenced message.
     useChatMessageJumps(chat.scrollContainerRef);
 
     const spacedUpdate = useEditorSpacedUpdate({

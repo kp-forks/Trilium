@@ -9,7 +9,7 @@ const FLASH_CLASS = "llm-chat-message-jump-target";
 const FLASH_DURATION_MS = 1200;
 
 /**
- * Makes the "message ID …" jump links in submitted quotes clickable: scrolls the referenced message
+ * Makes the "Show quote source" jump links in submitted quotes clickable: scrolls the referenced message
  * into view and briefly flashes it. One delegated listener on the timeline covers the links in every
  * message, so there's no per-message wiring. A missing target (the referenced message was deleted or
  * regenerated) is a graceful no-op — mirroring how highlights drop orphaned anchors.

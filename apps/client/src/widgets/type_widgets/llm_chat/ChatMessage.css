@@ -277,8 +277,9 @@
     font-style: italic;
 }
 
-/* "message ID …" jump link in a submitted quote's source line. Inherits link color from
-   `.llm-chat-markdown a`; only the pointer cursor is needed since it carries no href. */
+/* "Show quote source" jump link at the end of a submitted quote. Inherits link color from
+   `.llm-chat-markdown a`; the pointer cursor is kept explicit since the jump is handled by a click
+   listener rather than real navigation. */
 .chat-message-jump {
     cursor: pointer;
 }

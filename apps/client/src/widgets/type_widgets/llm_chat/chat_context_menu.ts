@@ -108,7 +108,7 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
                 items.push({
                     title: t("llm_chat.quote_selection"),
                     uiIcon: "bx bxs-quote-alt-left",
-                    handler: () => appendToInputRef.current(buildQuoteMarkdown(quotedText, messageId))
+                    handler: () => appendToInputRef.current(buildQuoteMarkdown(quotedText, messageId, t("llm_chat.quoted_from")))
                 });
             }
 

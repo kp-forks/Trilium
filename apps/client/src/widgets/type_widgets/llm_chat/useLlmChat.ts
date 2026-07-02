@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
+import { stripQuoteSources } from "./chat_quote.js";
 import { type ContentBlock, type FileBlock, type ImageBlock, type LlmChatContent, type StoredMessage, type TextFileBlock, trimToFirstUserMessage } from "./llm_chat_types.js";
 import { useSmoothStreaming } from "./useSmoothStreaming.js";
 
@@ -62,6 +63,12 @@ function flattenToApiContent(content: string | ContentBlock[]): string | LlmMess
     if (parts.length === 0) return "";
     if (parts.length === 1 && parts[0].type === "text") return parts[0].text;
     return parts;
+}
+
+/** Strip quote attribution lines from wire content, so the message-id anchors never reach the LLM. */
+function stripQuoteSourcesFromApiContent(content: string | LlmMessagePart[]): string | LlmMessagePart[] {
+    if (typeof content === "string") return stripQuoteSources(content);
+    return content.map(part => (part.type === "text" ? { ...part, text: stripQuoteSources(part.text) } : part));
 }
 
 export interface ModelOption extends LlmModelInfo {
@@ -499,7 +506,7 @@ export function useLlmChat(
 
         const apiMessages: LlmMessage[] = trimToFirstUserMessage(conversation).map(m => ({
             role: m.role,
-            content: flattenToApiContent(m.content)
+            content: stripQuoteSourcesFromApiContent(flattenToApiContent(m.content))
         }));
 
         const selectedModelProvider = availableModels.find(m => m.id === selectedModel)?.provider;
