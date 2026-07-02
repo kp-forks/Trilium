@@ -19,6 +19,8 @@ export function useChatMessageJumps(scrollContainerRef: RefObject<HTMLElement>) 
         const container = scrollContainerRef.current;
         if (!container) return;
 
+        let flashTimer: number | undefined;
+
         const onClick = (e: MouseEvent) => {
             const link = (e.target as HTMLElement | null)?.closest<HTMLElement>(`.${MESSAGE_JUMP_CLASS}`);
             const targetId = link?.dataset.messageId;
@@ -34,14 +36,26 @@ export function useChatMessageJumps(scrollContainerRef: RefObject<HTMLElement>) 
             if (!wrapper) return; // referenced message is gone — nothing to jump to
 
             wrapper.scrollIntoView({ block: "center", behavior: "smooth" });
-            // Re-trigger the flash on repeat clicks: remove, force a reflow, then re-add.
-            wrapper.classList.remove(FLASH_CLASS);
+
+            // Flash the target. Cancel any pending removal and clear a lingering flash from an earlier
+            // rapid jump (which its own timer would otherwise remove, cutting this one short or leaving
+            // the old one stuck), then force a reflow so re-adding the class replays the animation.
+            if (flashTimer !== undefined) window.clearTimeout(flashTimer);
+            for (const flashed of container.querySelectorAll(`.${FLASH_CLASS}`)) {
+                flashed.classList.remove(FLASH_CLASS);
+            }
             void wrapper.offsetWidth;
             wrapper.classList.add(FLASH_CLASS);
-            window.setTimeout(() => wrapper.classList.remove(FLASH_CLASS), FLASH_DURATION_MS);
+            flashTimer = window.setTimeout(() => {
+                wrapper.classList.remove(FLASH_CLASS);
+                flashTimer = undefined;
+            }, FLASH_DURATION_MS);
         };
 
         container.addEventListener("click", onClick);
-        return () => container.removeEventListener("click", onClick);
+        return () => {
+            container.removeEventListener("click", onClick);
+            if (flashTimer !== undefined) window.clearTimeout(flashTimer);
+        };
     }, [scrollContainerRef]);
 }

@@ -64,6 +64,11 @@ describe("stripQuoteSources", () => {
     it("leaves text with no token untouched", () => {
         expect(stripQuoteSources("> a normal quote\n\ntext")).toBe("> a normal quote\n\ntext");
     });
+
+    it("keeps quoted content that merely contains a token but isn't an attribution footer", () => {
+        const md = "> the api uses <<mid:abc123>> as an anchor\n> (Quoted from <<mid:def456>>)\n\nq";
+        expect(stripQuoteSources(md)).toBe("> the api uses <<mid:abc123>> as an anchor\n\nq");
+    });
 });
 
 describe("renderQuoteSourceLinks", () => {
@@ -95,6 +100,11 @@ describe("renderQuoteSourceLinks", () => {
             `> first\n> [${label}](${QUOTE_SOURCE_HREF_PREFIX}aaa)\n\n` +
             `> second\n> [${label}](${QUOTE_SOURCE_HREF_PREFIX}bbb)`
         );
+    });
+
+    it("does not treat a quoted line that merely contains a token as a source", () => {
+        const md = "> mentions <<mid:abc123>> mid-sentence\n\ntext";
+        expect(renderQuoteSourceLinks(md, label)).toBe(md);
     });
 
     it("leaves surrounding non-quote text in place", () => {

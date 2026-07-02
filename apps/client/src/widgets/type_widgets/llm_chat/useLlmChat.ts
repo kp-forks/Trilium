@@ -786,7 +786,9 @@ export function useLlmChat(
 
     /** Regenerate the last reply: re-run from the last user message, dropping the reply that followed. */
     const regenerateLastReply = useCallback(async () => {
-        if (isStreaming) return;
+        // Re-check against the current state, not the snapshot from when the menu opened: only act while
+        // idle and while the last message is still an assistant reply to regenerate.
+        if (isStreaming || messages[messages.length - 1]?.role !== "assistant") return;
         const conversation = conversationForRegenerate(messages);
         if (!conversation) return;
         pendingScrollRef.current = "anchor";

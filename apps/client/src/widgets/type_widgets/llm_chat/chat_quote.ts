@@ -23,20 +23,22 @@ export const MESSAGE_JUMP_CLASS = "chat-message-jump";
 /** Href scheme for a quote-source link; the referenced message id follows the prefix. */
 export const QUOTE_SOURCE_HREF_PREFIX = "#mid-";
 
-// The message-id anchor embedded in a quote's attribution line. Locale-independent, so the transforms
-// below never depend on the translated "Quoted from" wrapper. Ids are `[A-Za-z0-9]` (from randomString).
-const MID_TOKEN = /<<mid:([A-Za-z0-9]+)>>/;
-const MID_TOKEN_GLOBAL = /<<mid:([A-Za-z0-9]+)>>/g;
+// A quote's attribution footer, exactly as `buildQuoteMarkdown` emits it: a blockquote line of the
+// shape `> (<label> <<mid:id>>)`. Anchoring to the whole line (not the bare `<<mid:…>>` token) keeps
+// quoted *content* that merely contains such a sequence from being mistaken for an attribution line.
+// The `<<mid:…>>` anchor is locale-independent, so the match never depends on the translated wrapper.
+// Ids are `[A-Za-z0-9]` (from randomString).
+const ATTRIBUTION_LINE = /^\s*>\s*\(.*<<mid:([A-Za-z0-9]+)>>\)\s*$/;
 
 /**
- * Remove quote attribution lines (those carrying a `<<mid:…>>` token) from `markdown`, keeping the
- * quoted text. Used for anything that leaves the chat timeline — the LLM payload and saved notes —
- * where the message-id anchor is meaningless (and, to the LLM, distracting noise).
+ * Remove quote attribution lines from `markdown`, keeping the quoted text. Used for anything that
+ * leaves the chat timeline — the LLM payload and saved notes — where the message-id anchor is
+ * meaningless (and, to the LLM, distracting noise).
  */
 export function stripQuoteSources(markdown: string): string {
     return markdown
         .split("\n")
-        .filter(line => !MID_TOKEN.test(line))
+        .filter(line => !ATTRIBUTION_LINE.test(line))
         .join("\n");
 }
 
@@ -72,11 +74,16 @@ function isQuoteLine(line: string): boolean {
 
 /** Apply the one/none/many rule to a single contiguous blockquote block. */
 function rewriteQuoteBlock(block: string[], label: string): string[] {
-    const ids = block.flatMap(line => [...line.matchAll(MID_TOKEN_GLOBAL)].map(match => match[1]));
-    if (ids.length === 0) return block;
-    if (ids.length > 1) {
-        return block.filter(line => !MID_TOKEN.test(line)); // ambiguous → drop token lines, no link
+    const sources: { index: number; id: string }[] = [];
+    block.forEach((line, index) => {
+        const match = ATTRIBUTION_LINE.exec(line);
+        if (match) sources.push({ index, id: match[1] });
+    });
+    if (sources.length === 0) return block;
+    if (sources.length > 1) {
+        return block.filter(line => !ATTRIBUTION_LINE.test(line)); // ambiguous → drop, no link
     }
-    const link = `> [${label}](${QUOTE_SOURCE_HREF_PREFIX}${ids[0]})`;
-    return block.map(line => (MID_TOKEN.test(line) ? link : line));
+    const { index, id } = sources[0];
+    const link = `> [${label}](${QUOTE_SOURCE_HREF_PREFIX}${id})`;
+    return block.map((line, i) => (i === index ? link : line));
 }
