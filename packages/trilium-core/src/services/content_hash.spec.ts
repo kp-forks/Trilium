@@ -184,5 +184,26 @@ describe("content_hash", () => {
                 expect(restored).toEqual(before);
             });
         });
+
+        it("recomputes when a row's isSynced flag is flipped in place (count and max id unchanged)", () => {
+            getContext().init(() => {
+                insertEntityChange({ entityName: "spec_g", entityId: "Zflip1", hash: "FLIP" });
+                const withRow = contentHash.getEntityHashes();
+                expect(withRow["spec_g"]?.["Z"]).toBeDefined();
+
+                // No production code path does this (isSynced changes go through REPLACE with a
+                // fresh id), but the fingerprint's syncedCount term guards against one appearing:
+                // an in-place flip changes neither COUNT(*) nor MAX(id).
+                getSql().execute("UPDATE entity_changes SET isSynced = 0 WHERE entityId = 'Zflip1'");
+                const flippedOut = contentHash.getEntityHashes();
+                expect(flippedOut).not.toHaveProperty("spec_g");
+
+                getSql().execute("UPDATE entity_changes SET isSynced = 1 WHERE entityId = 'Zflip1'");
+                const flippedBack = contentHash.getEntityHashes();
+                expect(flippedBack["spec_g"]?.["Z"]).toBe(withRow["spec_g"]?.["Z"]);
+
+                getSql().execute("DELETE FROM entity_changes WHERE entityName = 'spec_g'");
+            });
+        });
     });
 });

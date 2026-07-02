@@ -15,26 +15,31 @@ interface FailedCheck {
  *
  * Every write to entity_changes moves the fingerprint: updates go through a REPLACE that assigns a
  * fresh autoincrement id (raising MAX(id)) and deletions lower COUNT(*), so `(count, maxId)`
- * changing is a reliable "something changed" signal regardless of which code path wrote. The check
- * runs at the end of every sync cycle of every connected client (every ~60 s), and in the common
- * idle case nothing has changed — the cache turns a full scan-and-hash of entity_changes (plus the
- * unused-blob sweep) into a single index-only query.
+ * changing is a reliable "something changed" signal regardless of which code path wrote. No current
+ * code path flips a row's isSynced flag in place (that too goes through REPLACE), but since the
+ * hash computation filters on isSynced, the fingerprint also tracks the synced-row count as cheap
+ * insurance against such a writer ever appearing. The check runs at the end of every sync cycle of
+ * every connected client (every ~60 s), and in the common idle case nothing has changed — the
+ * cache turns a full scan-and-hash of entity_changes (plus the unused-blob sweep) into a single
+ * index-only query. Cache hits are deliberately not logged (they would fire every cycle for every
+ * client); a check without a "Content hash computation took" log line was served from cache.
  */
-let cached: { hashes: Record<string, SectorHash>; count: number; maxId: number } | null = null;
+let cached: { hashes: Record<string, SectorHash>; count: number; maxId: number; syncedCount: number } | null = null;
 
 function getEntityChangesFingerprint() {
-    return getSql().getRow<{ count: number; maxId: number }>(
-        "SELECT COUNT(*) AS count, COALESCE(MAX(id), 0) AS maxId FROM entity_changes");
+    return getSql().getRow<{ count: number; maxId: number; syncedCount: number }>(
+        "SELECT COUNT(*) AS count, COALESCE(MAX(id), 0) AS maxId, COALESCE(SUM(isSynced), 0) AS syncedCount FROM entity_changes");
 }
 
 function getEntityHashes() {
     const fingerprint = getEntityChangesFingerprint();
 
-    if (cached && cached.count === fingerprint.count && cached.maxId === fingerprint.maxId) {
+    if (cached
+        && cached.count === fingerprint.count
+        && cached.maxId === fingerprint.maxId
+        && cached.syncedCount === fingerprint.syncedCount) {
         // Nothing changed since the last computation. The unused-blob sweep can be skipped too:
         // a blob can only become unused through a change that itself writes entity_changes.
-        getLog().info("Content hashes served from cache (entity changes unchanged)");
-
         return cached.hashes;
     }
 
