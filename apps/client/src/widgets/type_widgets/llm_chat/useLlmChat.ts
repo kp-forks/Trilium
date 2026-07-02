@@ -5,11 +5,18 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
-import type { ContentBlock, FileBlock, ImageBlock, LlmChatContent, StoredMessage, TextFileBlock } from "./llm_chat_types.js";
+import { stripQuoteSources } from "./chat_quote.js";
+import { conversationForRegenerate } from "./chat_regenerate.js";
+import { type ContentBlock, type FileBlock, type ImageBlock, type LlmChatContent, type StoredMessage, type TextFileBlock, trimToFirstUserMessage } from "./llm_chat_types.js";
 import { useSmoothStreaming } from "./useSmoothStreaming.js";
 
 /** A user-supplied attachment waiting to be sent with the next message. */
 export type AttachmentBlock = ImageBlock | FileBlock | TextFileBlock;
+
+/** The subset of the reply-input editor API the chat needs to write into it imperatively. */
+export interface InputEditorApi {
+    appendBlock(text: string): void;
+}
 
 /** Distance (px) past the content bottom edge within which the timeline counts as "at bottom". */
 const SCROLL_BOTTOM_THRESHOLD = 50;
@@ -57,6 +64,12 @@ function flattenToApiContent(content: string | ContentBlock[]): string | LlmMess
     if (parts.length === 0) return "";
     if (parts.length === 1 && parts[0].type === "text") return parts[0].text;
     return parts;
+}
+
+/** Strip quote attribution lines from wire content, so the message-id anchors never reach the LLM. */
+function stripQuoteSourcesFromApiContent(content: string | LlmMessagePart[]): string | LlmMessagePart[] {
+    if (typeof content === "string") return stripQuoteSources(content);
+    return content.map(part => (part.type === "text" ? { ...part, text: stripQuoteSources(part.text) } : part));
 }
 
 export interface ModelOption extends LlmModelInfo {
@@ -107,6 +120,11 @@ export interface UseLlmChatReturn {
     /** Whether we're still checking for providers */
     isCheckingProvider: boolean;
 
+    /** Register the reply-input editor so message-timeline actions (e.g. quoting) can write into it. */
+    registerInputEditor: (api: InputEditorApi | undefined) => void;
+    /** Append a preformatted block (e.g. a Markdown quote) to the reply input and focus it. */
+    appendToInput: (text: string) => void;
+
     // Setters
     setInput: (value: string) => void;
     setMessages: (messages: StoredMessage[]) => void;
@@ -133,6 +151,8 @@ export interface UseLlmChatReturn {
     stopStreaming: () => void;
     /** Re-run the last turn after a failed response (drops the trailing error message) */
     retryLast: () => void;
+    /** Regenerate the last reply: re-run from the last user message, dropping the reply that followed */
+    regenerateLastReply: () => void;
 }
 
 export function useLlmChat(
@@ -199,6 +219,16 @@ export function useLlmChat(
     contextNoteIdRef.current = contextNoteId;
     const pendingAttachmentsRef = useRef(pendingAttachments);
     pendingAttachmentsRef.current = pendingAttachments;
+
+    // The reply-input editor, registered by ChatInputBar once mounted. Held in a ref so timeline
+    // actions (e.g. quoting a selection) can write into it without a render-order dependency.
+    const inputEditorRef = useRef<InputEditorApi | undefined>();
+    const registerInputEditor = useCallback((api: InputEditorApi | undefined) => {
+        inputEditorRef.current = api;
+    }, []);
+    const appendToInput = useCallback((text: string) => {
+        inputEditorRef.current?.appendBlock(text);
+    }, []);
 
     const addPendingAttachment = useCallback((attachment: AttachmentBlock) => {
         setPendingAttachments(prev => [...prev, attachment]);
@@ -477,9 +507,9 @@ export function useLlmChat(
             return block as ContentBlock & { type: "text" };
         }
 
-        const apiMessages: LlmMessage[] = conversation.map(m => ({
+        const apiMessages: LlmMessage[] = trimToFirstUserMessage(conversation).map(m => ({
             role: m.role,
-            content: flattenToApiContent(m.content)
+            content: stripQuoteSourcesFromApiContent(flattenToApiContent(m.content))
         }));
 
         const selectedModelProvider = availableModels.find(m => m.id === selectedModel)?.provider;
@@ -754,6 +784,17 @@ export function useLlmChat(
         await runStream(messages.slice(0, -1));
     }, [isStreaming, messages, runStream]);
 
+    /** Regenerate the last reply: re-run from the last user message, dropping the reply that followed. */
+    const regenerateLastReply = useCallback(async () => {
+        // Re-check against the current state, not the snapshot from when the menu opened: only act while
+        // idle and while the last message is still an assistant reply to regenerate.
+        if (isStreaming || messages[messages.length - 1]?.role !== "assistant") return;
+        const conversation = conversationForRegenerate(messages);
+        if (!conversation) return;
+        pendingScrollRef.current = "anchor";
+        await runStream(conversation);
+    }, [isStreaming, messages, runStream]);
+
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -815,6 +856,9 @@ export function useLlmChat(
         hasProvider,
         isCheckingProvider,
 
+        registerInputEditor,
+        appendToInput,
+
         // Setters
         setInput,
         setMessages,
@@ -835,6 +879,7 @@ export function useLlmChat(
         clearMessages,
         refreshModels,
         stopStreaming,
-        retryLast
+        retryLast,
+        regenerateLastReply
     };
 }

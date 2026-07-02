@@ -12,6 +12,7 @@ import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormDropdownDivider, FormListItem } from "../react/FormList.js";
 import { useActiveNoteContext, useNote, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
+import { useChatContextMenu } from "../type_widgets/llm_chat/chat_context_menu.js";
 import { useChatHighlights } from "../type_widgets/llm_chat/chat_highlights.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessageList from "../type_widgets/llm_chat/ChatMessageList.js";
@@ -55,10 +56,13 @@ export default function SidebarChat() {
     const chatRef = useRef(chat);
     chatRef.current = chat;
 
-    // Enable highlighting (painting + right-click Add/Remove/Copy) in the sidebar chat. No note context
-    // is passed: the sidebar chat is itself the right pane, so there's no slot for the highlights list —
-    // the highlights live in the messages only.
-    useChatHighlights(chat, undefined);
+    // Enable highlighting (painting + right-click add/remove) in the sidebar chat. No note context is
+    // passed: the sidebar chat is itself the right pane, so there's no slot for the highlights list —
+    // the highlights live in the messages only. Save-to-sub-note is likewise unavailable (no parent).
+    const highlights = useChatHighlights(chat, undefined);
+
+    // Right-click menu over the timeline, with highlights contributing their add/remove items.
+    useChatContextMenu({ chat, noteContext: undefined, contextMenuItems: highlights.highlightMenuItems });
 
     // Save directly via server.put using the string noteId.
     // This avoids the FNote dependency that useEditorSpacedUpdate requires.

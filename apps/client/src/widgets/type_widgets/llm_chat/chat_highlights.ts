@@ -3,10 +3,9 @@ import "./chat_highlights.css";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context.js";
-import contextMenu, { type MenuItem } from "../../../menus/context_menu.js";
 import { t } from "../../../services/i18n.js";
-import toast from "../../../services/toast.js";
 import { randomString } from "../../../services/utils.js";
+import type { ChatContextMenuItemsProvider } from "./chat_context_menu.js";
 import { createAnchorFromSelection, resolveAnchorRange } from "./chat_highlights_anchor.js";
 import type { HighlightAnchor } from "./llm_chat_types.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
@@ -26,6 +25,12 @@ export interface ChatHighlightsContext {
     removeHighlight(id: string): void;
 }
 
+/** What {@link useChatHighlights} exposes to the shared chat context menu. */
+export interface ChatHighlights {
+    /** Highlight items for the right-clicked message: remove over an existing highlight, else add for a selection. */
+    highlightMenuItems: ChatContextMenuItemsProvider;
+}
+
 /** The single CSS Custom Highlight registry entry all chat highlights paint through. */
 const HIGHLIGHT_NAME = "chat-highlight";
 
@@ -39,24 +44,22 @@ const activeRangeMaps = new Set<{ current: RangeMap }>();
 let sharedHighlight: Highlight | null = null;
 
 /**
- * Wires up user-created highlights for an AI chat: painting stored highlights over the rendered
- * prose, a right-click menu to add and remove them, and publishing the list to the note context so
- * the shared sidebar widget can display it — mirroring {@link useChatToc}.
+ * Wires up user-created highlights for an AI chat: painting stored highlights over the rendered prose,
+ * contributing add/remove items to the shared chat context menu, and publishing the list to the note
+ * context so the sidebar widget can display it — mirroring {@link useChatToc}.
  *
  * Highlights are painted with the CSS Custom Highlight API rather than by wrapping text in elements,
  * so nothing is injected into the Preact-owned message DOM. Because that paints over live `Range`s
  * (which go stale when a message re-renders), the ranges are rebuilt from the stored anchors on every
  * message change.
  */
-export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteContext | undefined) {
-    const { messages, isStreaming, scrollContainerRef } = chat;
+export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteContext | undefined): ChatHighlights {
+    const { messages, scrollContainerRef } = chat;
     const [highlightItems, setHighlightItems] = useState<ChatHighlightItem[]>([]);
 
-    // Latest values for the imperative event handler and callbacks, so they never read stale state.
+    // Latest values for the imperative callbacks, so they never read stale state.
     const messagesRef = useRef(messages);
     messagesRef.current = messages;
-    const isStreamingRef = useRef(isStreaming);
-    isStreamingRef.current = isStreaming;
     const setMessagesRef = useRef(chat.setMessages);
     setMessagesRef.current = chat.setMessages;
 
@@ -78,9 +81,16 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
             if (!message.highlights?.length) continue;
             const root = findMessageContentRoot(container, message.id);
             if (!root) continue;
+            const resolved: { anchor: HighlightAnchor; range: Range }[] = [];
             for (const anchor of message.highlights) {
                 const range = resolveAnchorRange(root, anchor);
                 if (!range) continue; // orphaned (e.g. regenerated message) — drop cleanly, never mis-paint
+                resolved.push({ anchor, range });
+            }
+            // Order by position within the message so the sidebar list follows the document, not the
+            // order the user happened to create the highlights in (`addHighlight` appends).
+            resolved.sort((a, b) => a.range.compareBoundaryPoints(Range.START_TO_START, b.range));
+            for (const { anchor, range } of resolved) {
                 rangeById.set(anchor.id, { range, messageId: message.id });
                 items.push({ id: anchor.id, messageId: message.id, text: anchor.quotedText });
             }
@@ -123,46 +133,21 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
         element?.scrollIntoView({ block: "center", behavior: "smooth" });
     }, []);
 
-    // Right-click menu over the timeline: Copy the selection (or highlighted text), plus Remove when
-    // the click lands on a highlight or Highlight for a prose selection. Because preventing the default
-    // menu drops the browser's own Copy, we provide it here. Bails (leaving the native menu) when
-    // there's nothing to offer, so ordinary right-clicks are untouched. Copy stays available while a
-    // reply streams; only the message-mutating add/remove are suppressed then.
-    useEffect(() => {
-        const container = scrollContainerRef.current;
-        if (!container) return;
-
-        const onContextMenu = (e: MouseEvent) => {
-            const wrapper = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-message-id]");
-            const messageId = wrapper?.dataset.messageId;
-            const root = wrapper?.querySelector<HTMLElement>(".llm-chat-message-content");
-            if (!messageId || !root) return; // thinking/error messages carry no id → nothing to offer
-
-            const streaming = isStreamingRef.current;
-            const hitId = streaming ? null : highlightAtPoint(rangesRef.current, messageId, e.clientX, e.clientY);
-            const selectionRange = selectionRangeWithin(container.ownerDocument.getSelection(), root);
-            const built = !streaming && selectionRange ? createAnchorFromSelection(root, selectionRange) : null;
-
-            const items: MenuItem<unknown>[] = [];
-            // Copy the live selection as rich text: execCommand serializes the selected DOM to both
-            // text/html and text/plain (what the native menu we suppressed would have done).
-            if (selectionRange?.toString().trim()) {
-                items.push({ title: t("llm_chat.copy"), uiIcon: "bx bx-copy", handler: copySelection });
-            }
-            if (hitId) {
-                items.push({ title: t("llm_chat.highlight_remove"), uiIcon: "bx bx-eraser", handler: () => removeHighlight(hitId) });
-            } else if (built) {
-                items.push({ title: t("llm_chat.highlight_add"), uiIcon: "bx bx-highlight", handler: () => addHighlight(messageId, built) });
-            }
-
-            if (items.length === 0) return; // nothing to do → leave the native menu
-            e.preventDefault();
-            showMenu(e, items);
-        };
-
-        container.addEventListener("contextmenu", onContextMenu);
-        return () => container.removeEventListener("contextmenu", onContextMenu);
-    }, [scrollContainerRef, addHighlight, removeHighlight]);
+    // Contribute the highlight commands to the chat context menu: Remove over an existing highlight,
+    // else Highlight for a prose selection. Both mutate the message, so they're suppressed while a
+    // reply streams.
+    const highlightMenuItems = useCallback<ChatContextMenuItemsProvider>((ctx) => {
+        if (ctx.streaming) return [];
+        const hitId = highlightAtPoint(rangesRef.current, ctx.messageId, ctx.clientX, ctx.clientY);
+        if (hitId) {
+            return [{ title: t("llm_chat.highlight_remove"), uiIcon: "bx bx-eraser", handler: () => removeHighlight(hitId) }];
+        }
+        const built = ctx.selectionRange ? createAnchorFromSelection(ctx.root, ctx.selectionRange) : null;
+        if (built) {
+            return [{ title: t("llm_chat.highlight_add"), uiIcon: "bx bx-highlight", handler: () => addHighlight(ctx.messageId, built) }];
+        }
+        return [];
+    }, [addHighlight, removeHighlight]);
 
     // Publish the list for the sidebar widget.
     useEffect(() => {
@@ -173,6 +158,8 @@ export function useChatHighlights(chat: UseLlmChatReturn, noteContext: NoteConte
     // doesn't keep showing a stale list. Kept separate from the publish effect above — clearing there
     // would flash the list empty on every update.
     useEffect(() => () => noteContext?.clearContextData("chatHighlights"), [noteContext]);
+
+    return { highlightMenuItems };
 }
 
 function isHighlightApiAvailable(): boolean {
@@ -212,16 +199,8 @@ function findMessageContentRoot(container: HTMLElement, messageId: string): HTML
     return null;
 }
 
-/** The selection's range if it is non-empty and fully contained within `root`, else null. */
-function selectionRangeWithin(selection: Selection | null, root: HTMLElement): Range | null {
-    if (!selection || selection.isCollapsed || selection.rangeCount === 0) return null;
-    const range = selection.getRangeAt(0);
-    if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return null;
-    return range;
-}
-
 /** The id of the smallest highlight (of `messageId`) painted under the given viewport point, if any. */
-function highlightAtPoint(ranges: Map<string, { range: Range; messageId: string }>, messageId: string, x: number, y: number): string | null {
+function highlightAtPoint(ranges: RangeMap, messageId: string, x: number, y: number): string | null {
     const caret = caretFromPoint(document, x, y);
     if (!caret) return null;
 
@@ -259,18 +238,4 @@ function caretFromPoint(doc: Document, x: number, y: number): { node: Node; offs
 
 function nearestElement(node: Node): HTMLElement | null {
     return node instanceof HTMLElement ? node : node.parentElement;
-}
-
-function showMenu(e: MouseEvent, items: MenuItem<unknown>[]) {
-    void contextMenu.show({ x: e.pageX, y: e.pageY, items, selectMenuItemHandler: () => {} });
-}
-
-/** Copy the current selection as rich text. The menu opens on mousedown, so the selection is still live. */
-function copySelection() {
-    const ok = document.execCommand("copy");
-    if (ok) {
-        toast.showMessage(t("clipboard.copy_success"));
-    } else {
-        toast.showError(t("clipboard.copy_failed"));
-    }
 }

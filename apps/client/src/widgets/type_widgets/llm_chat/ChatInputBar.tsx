@@ -143,6 +143,15 @@ export default function ChatInputBar({
     }, [baseSubmit, chat.input, chat.isStreaming, chat.pendingAttachments.length]);
     submitRef.current = handleSubmit;
 
+    // Expose the reply-input editor to the chat hook so timeline actions (e.g. quoting a selection)
+    // can write into it. A stable wrapper reads the live api ref, so it works regardless of whether
+    // the CKEditor's imperative handle has committed by the time this effect first runs.
+    const registerInputEditor = chat.registerInputEditor;
+    useEffect(() => {
+        registerInputEditor({ appendBlock: (text) => editorApiRef.current?.appendBlock(text) });
+        return () => registerInputEditor(undefined);
+    }, [registerInputEditor]);
+
     // Reflect streaming state into CKEditor's read-only lock.
     useEffect(() => {
         const editor = editorInstanceRef.current;

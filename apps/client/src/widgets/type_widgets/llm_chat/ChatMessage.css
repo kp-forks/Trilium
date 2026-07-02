@@ -277,6 +277,25 @@
     font-style: italic;
 }
 
+/* "Show quote source" jump link at the end of a submitted quote. Inherits link color from
+   `.llm-chat-markdown a`; the pointer cursor is kept explicit since the jump is handled by a click
+   listener rather than real navigation. */
+.chat-message-jump {
+    cursor: pointer;
+}
+
+/* Flash the referenced bubble when jumped to. A box-shadow outline pulse (no layout shift)
+   works on both the user bubble and the transparent assistant bubble. Duration mirrors
+   FLASH_DURATION_MS in chat_message_jump.ts. */
+.llm-chat-message-wrapper.llm-chat-message-jump-target .llm-chat-message {
+    animation: llm-chat-jump-flash 1.2s ease-out;
+}
+
+@keyframes llm-chat-jump-flash {
+    from { box-shadow: 0 0 0 2px var(--quick-search-result-highlight-color, #007bff); }
+    to { box-shadow: 0 0 0 2px transparent; }
+}
+
 /* Message footer (timestamp + token usage, sits below the bubble) */
 .llm-chat-footer {
     position: absolute;

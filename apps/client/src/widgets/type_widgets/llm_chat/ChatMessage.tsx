@@ -2,15 +2,14 @@ import "./ChatMessage.css";
 import "../markdown/MarkdownCommons.css";
 
 import { type LlmCitation } from "@triliumnext/commons";
-import { CustomMarkdownRenderer, renderToHtml } from "@triliumnext/commons/src/lib/markdown_renderer";
-import DOMPurify from "dompurify";
-import type { Tokens } from "marked";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import Button from "../../react/Button.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
+import { renderMarkdown } from "./chat_markdown.js";
+import { renderQuoteSourceLinks } from "./chat_quote.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
 import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type TextFileBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import { SafeImage } from "./retry_image.js";
@@ -20,32 +19,6 @@ function shortenNumber(n: number): string {
     if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
     if (n >= 1_000) return `${(n / 1_000).toFixed(n >= 10_000 ? 0 : 1)}k`;
     return n.toString();
-}
-
-/**
- * Renderer that tags `#root/...` markdown links with the `reference-link` class
- * so ReadOnlyTextContent's applyReferenceLinks pass decorates them with the
- * note icon, color, and title — same shape as the `[[noteId]]` wiki-link
- * extension's output, but for chat's `[Title](#root/noteId)` references.
- */
-class ChatMarkdownRenderer extends CustomMarkdownRenderer {
-    override link(token: Tokens.Link): string {
-        const html = super.link(token);
-        if (token.href.startsWith("#root/")) {
-            return html.replace(/^<a\b/, '<a class="reference-link"');
-        }
-        return html;
-    }
-}
-
-/** Parse markdown to HTML using the shared rendering pipeline. */
-function renderMarkdown(markdown: string): string {
-    return renderToHtml(markdown, "", {
-        sanitize: (h) => DOMPurify.sanitize(h),
-        wikiLink: { formatHref: (id) => `#root/${id}` },
-        demoteH1: false,
-        renderer: new ChatMarkdownRenderer({ async: false })
-    });
 }
 
 /** Renders markdown content using the shared read-only text pipeline (math, syntax highlighting, mermaid, etc.). */
@@ -139,12 +112,17 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
     // Render markdown for plain-string content (assistant legacy content and user prompts).
     // User prompts may contain `[Title](#root/noteId)` reference links produced by the
     // chat input's @-mention feature, which markdown renders as proper clickable links.
+    // A submitted quote's attribution line is rewritten (before rendering) into a "Show quote source"
+    // jump link back to the quoted message — user messages only, where quotes live.
     const renderedContent = useMemo(() => {
         if (!isThinking && typeof message.content === "string") {
-            return renderMarkdown(message.content);
+            const source = message.role === "user"
+                ? renderQuoteSourceLinks(message.content, t("llm_chat.show_quote_source"))
+                : message.content;
+            return renderMarkdown(source);
         }
         return null;
-    }, [message.content, isThinking]);
+    }, [message.content, isThinking, message.role]);
 
     const messageClasses = [
         "llm-chat-message",

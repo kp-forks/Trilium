@@ -587,17 +587,18 @@ function areObjectsEqual(...args: unknown[]) {
     return true;
 }
 
-function copyHtmlToClipboard(content: string) {
+function copyHtmlToClipboard(html: string, plainText: string = html) {
     function listener(e: ClipboardEvent) {
         if (e.clipboardData) {
-            e.clipboardData.setData("text/html", content);
-            e.clipboardData.setData("text/plain", content);
+            e.clipboardData.setData("text/html", html);
+            e.clipboardData.setData("text/plain", plainText);
         }
         e.preventDefault();
     }
     document.addEventListener("copy", listener);
-    document.execCommand("copy");
+    const ok = document.execCommand("copy");
     document.removeEventListener("copy", listener);
+    return ok;
 }
 
 export function createImageSrcUrl(note: FNote) {
