@@ -8,6 +8,7 @@ import toast from "../../../services/toast.js";
 import { canCopyMessage, copyMessageToClipboard } from "./chat_copy.js";
 import { canDeleteMessage, removeMessage } from "./chat_delete.js";
 import { buildQuoteMarkdown } from "./chat_quote.js";
+import { canRegenerate } from "./chat_regenerate.js";
 import { canSaveToSubNote, saveMessageToSubNote } from "./chat_save.js";
 import { getMessageText } from "./llm_chat_types.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
@@ -41,7 +42,8 @@ export interface ChatContextMenuOptions {
 /**
  * The right-click menu over an AI chat's message timeline. Owns the single `contextmenu` listener and
  * builds the menu for the message under the cursor: with a text selection — Copy and Quote; with none
- * — Copy message, Save to a sub-note (note chats only) and Delete. `contextMenuItems` lets another
+ * — Copy message, Save to a sub-note (note chats only), Regenerate (last reply only) and Delete.
+ * `contextMenuItems` lets another
  * concern (currently highlights) inject its own items next to the selection commands. Bails to the
  * native menu when nothing applies.
  *
@@ -61,6 +63,8 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
     setMessagesRef.current = chat.setMessages;
     const appendToInputRef = useRef(chat.appendToInput);
     appendToInputRef.current = chat.appendToInput;
+    const regenerateLastReplyRef = useRef(chat.regenerateLastReply);
+    regenerateLastReplyRef.current = chat.regenerateLastReply;
     // Present for note chats (a real note in a tab), undefined for the right-pane sidebar chat —
     // gates "Save to sub-note" (note chats only) and is the new note's parent.
     const noteContextRef = useRef(noteContext);
@@ -127,6 +131,13 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
                     title: t("llm_chat.save_to_subnote"),
                     uiIcon: "bx bx-save",
                     handler: () => void saveMessageToSubNote(parentNotePath, messageMarkdown)
+                });
+            }
+            if (canRegenerate(hasSelection, message, messagesRef.current, streaming)) {
+                items.push({
+                    title: t("llm_chat.regenerate"),
+                    uiIcon: "bx bx-revision",
+                    handler: () => void regenerateLastReplyRef.current()
                 });
             }
             if (canDeleteMessage(hasSelection, message, streaming)) {

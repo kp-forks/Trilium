@@ -6,6 +6,7 @@ import { getAvailableModels, streamChatCompletion } from "../../../services/llm_
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
 import { stripQuoteSources } from "./chat_quote.js";
+import { conversationForRegenerate } from "./chat_regenerate.js";
 import { type ContentBlock, type FileBlock, type ImageBlock, type LlmChatContent, type StoredMessage, type TextFileBlock, trimToFirstUserMessage } from "./llm_chat_types.js";
 import { useSmoothStreaming } from "./useSmoothStreaming.js";
 
@@ -150,6 +151,8 @@ export interface UseLlmChatReturn {
     stopStreaming: () => void;
     /** Re-run the last turn after a failed response (drops the trailing error message) */
     retryLast: () => void;
+    /** Regenerate the last reply: re-run from the last user message, dropping the reply that followed */
+    regenerateLastReply: () => void;
 }
 
 export function useLlmChat(
@@ -781,6 +784,15 @@ export function useLlmChat(
         await runStream(messages.slice(0, -1));
     }, [isStreaming, messages, runStream]);
 
+    /** Regenerate the last reply: re-run from the last user message, dropping the reply that followed. */
+    const regenerateLastReply = useCallback(async () => {
+        if (isStreaming) return;
+        const conversation = conversationForRegenerate(messages);
+        if (!conversation) return;
+        pendingScrollRef.current = "anchor";
+        await runStream(conversation);
+    }, [isStreaming, messages, runStream]);
+
     const handleKeyDown = useCallback((e: KeyboardEvent) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
@@ -865,6 +877,7 @@ export function useLlmChat(
         clearMessages,
         refreshModels,
         stopStreaming,
-        retryLast
+        retryLast,
+        regenerateLastReply
     };
 }
