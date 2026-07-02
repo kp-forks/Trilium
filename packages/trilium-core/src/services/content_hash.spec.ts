@@ -1,7 +1,8 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { getContext } from "./context.js";
 import contentHash from "./content_hash.js";
+import eraseService from "./erase.js";
 import { getSql } from "./sql/index.js";
 import { hash } from "./utils/index.js";
 
@@ -146,6 +147,42 @@ describe("content_hash", () => {
             const mismatch = failed.find((c) => c.entityName === "spec_e");
             expect(mismatch).toBeDefined();
             expect(mismatch?.sector).toBe("O");
+        });
+    });
+
+    describe("fingerprint cache", () => {
+        it("serves cached hashes (and skips the unused-blob sweep) while entity_changes is unchanged", () => {
+            getContext().init(() => {
+                const eraseSpy = vi.spyOn(eraseService, "eraseUnusedBlobs");
+
+                const first = contentHash.getEntityHashes();
+                const callsAfterFirst = eraseSpy.mock.calls.length;
+
+                const second = contentHash.getEntityHashes();
+
+                expect(second).toEqual(first);
+                // cache hit: neither the full scan nor the unused-blob pre-sweep ran again
+                expect(eraseSpy.mock.calls.length).toBe(callsAfterFirst);
+
+                eraseSpy.mockRestore();
+            });
+        });
+
+        it("recomputes after raw-SQL writes (fingerprint moves) and returns to the original hashes after cleanup", () => {
+            getContext().init(() => {
+                const before = contentHash.getEntityHashes();
+
+                // raw INSERT bypassing entityChangesService — count/max(id) must still catch it
+                insertEntityChange({ entityName: "spec_f", entityId: "Zcached1", hash: "CH1" });
+                const after = contentHash.getEntityHashes();
+                expect(after["spec_f"]?.["Z"]).toBe(hash("CH1" + 0));
+
+                // raw DELETE — caught as well, and the hashes return to their original values
+                getSql().execute("DELETE FROM entity_changes WHERE entityName = 'spec_f'");
+                const restored = contentHash.getEntityHashes();
+                expect(restored).not.toHaveProperty("spec_f");
+                expect(restored).toEqual(before);
+            });
         });
     });
 });
