@@ -302,6 +302,7 @@ describe("BaseProvider system prompt", () => {
         expect(prompt).toContain("Mermaid diagrams");
         expect(prompt).toContain("Blockquotes");
         expect(prompt).toContain("Tables");
+        expect(prompt).toContain("Collapsible blocks");
     });
 });
 
