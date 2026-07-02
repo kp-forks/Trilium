@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import { useEditorSpacedUpdate } from "../../react/hooks.js";
 import { TypeWidgetProps } from "../type_widget.js";
+import { useChatContextMenu } from "./chat_context_menu.js";
 import { useChatHighlights } from "./chat_highlights.js";
 import { useChatMessageJumps } from "./chat_message_jump.js";
 import { useChatToc } from "./chat_toc.js";
@@ -31,7 +32,10 @@ export default function LlmChat({ note, noteContext }: TypeWidgetProps) {
     useChatToc(chat, noteContext);
 
     // Paint user-created highlights over the replies and publish them for the sidebar widget.
-    useChatHighlights(chat, noteContext);
+    const highlights = useChatHighlights(chat, noteContext);
+
+    // Right-click menu over the timeline, with highlights contributing their add/remove items.
+    useChatContextMenu({ chat, noteContext, contextMenuItems: highlights.highlightMenuItems });
 
     // Make the "message ID …" links in submitted quotes jump to the referenced message.
     useChatMessageJumps(chat.scrollContainerRef);
