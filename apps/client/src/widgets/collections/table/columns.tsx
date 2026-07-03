@@ -29,7 +29,11 @@ const labelTypeMappings: Record<ColumnType, Partial<ColumnDefinition>> = {
     },
     boolean: {
         formatter: "tickCross",
-        editor: "tickCross"
+        editor: "tickCross",
+        // Values arrive as strings ("true"/"false") from stored labels but as real booleans
+        // once toggled via the editor; the boolean sorter normalizes both, whereas the default
+        // string sorter treats boolean `false` as empty and orders it inconsistently.
+        sorter: "boolean"
     },
     date: {
         editor: "date",
