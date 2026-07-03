@@ -2,6 +2,7 @@ import "./ChatMessage.css";
 import "../markdown/MarkdownCommons.css";
 
 import { type LlmCitation } from "@triliumnext/commons";
+import { memo } from "preact/compat";
 import { useMemo } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -30,6 +31,16 @@ function MarkdownContent({ html, isStreaming }: { html: string; isStreaming?: bo
         </>
     );
 }
+
+/**
+ * Markdown for one text block, memoized per content string: while a reply streams, each
+ * commit re-renders the whole streaming message, but only the smoothed tail block's content
+ * actually changes — earlier blocks skip both the re-render and the markdown re-parse.
+ */
+const TextBlockContent = memo(function TextBlockContent({ content, isStreaming }: { content: string; isStreaming?: boolean }) {
+    const html = useMemo(() => renderMarkdown(content), [content]);
+    return <MarkdownContent html={html} isStreaming={isStreaming} />;
+});
 
 interface Props {
     message: StoredMessage;
@@ -104,7 +115,7 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
     );
 }
 
-export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
+function ChatMessage({ message, isStreaming, onRetry }: Props) {
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
     const textContent = typeof message.content === "string" ? message.content : getMessageText(message.content);
@@ -223,6 +234,13 @@ export default function ChatMessage({ message, isStreaming, onRetry }: Props) {
     );
 }
 
+// Memoized: the message list re-renders on every chat state change (streaming updates arrive at
+// animation-frame rate), so without this every message reconciles per update — sluggish on long
+// chats. Props are stable across those renders (same `message` object, `isStreaming` false, stable
+// `onRetry`), so completed messages are skipped; the streaming placeholder uses a fresh object each
+// render, so it still updates.
+export default memo(ChatMessage);
+
 /** Group content blocks so that consecutive tool_calls are merged into one entry. */
 function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
     const groups: ContentGroup[] = [];
@@ -253,11 +271,10 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
 function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
     return groupContentBlocks(blocks).map((group) => {
         if (group.type === "text") {
-            const html = renderMarkdown(group.block.content);
             const isLastBlock = group.index === blocks.length - 1;
             return (
                 <div key={group.index}>
-                    <MarkdownContent html={html} isStreaming={isStreaming && isLastBlock} />
+                    <TextBlockContent content={group.block.content} isStreaming={isStreaming && isLastBlock} />
                 </div>
             );
         }

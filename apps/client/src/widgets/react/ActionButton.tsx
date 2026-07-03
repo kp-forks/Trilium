@@ -1,5 +1,6 @@
+import type { Tooltip } from "bootstrap";
 import { HTMLAttributes } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { CommandNames } from "../../components/app_context";
 import keyboard_actions from "../../services/keyboard_actions";
@@ -26,14 +27,17 @@ export default function ActionButton({ text, icon, className, triggerCommand, ti
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ keyboardShortcut, setKeyboardShortcut ] = useState<string[]>();
 
-    useStaticTooltip(buttonRef, {
+    // Memoized so useStaticTooltip's effect (keyed on config identity) doesn't dispose and
+    // recreate the Bootstrap tooltip on every re-render.
+    const tooltipConfig = useMemo<Partial<Tooltip.Options>>(() => ({
         title: keyboardShortcut?.length ? `${text} (${keyboardShortcut?.join(",")})` : text,
         placement: titlePosition ?? "bottom",
         fallbackPlacements: [ titlePosition ?? "bottom" ],
         customClass: tooltipClass ?? "",
         trigger: cachedIsMobile ? "focus" : "hover focus",
         animation: false
-    });
+    }), [text, keyboardShortcut, titlePosition, tooltipClass]);
+    useStaticTooltip(buttonRef, tooltipConfig);
 
     useEffect(() => {
         if (triggerCommand) {
