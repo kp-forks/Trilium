@@ -273,6 +273,26 @@ export default function SidebarChat() {
         }
     }, [chatNoteId]);
 
+    const handleRenameChat = useCallback(async () => {
+        if (!chatNoteId) return;
+
+        const newTitle = await dialog.prompt({
+            title: t("sidebar_chat.rename_title"),
+            message: t("sidebar_chat.rename_message"),
+            defaultValue: chatNote?.title ?? ""
+        });
+        // null = cancelled; ignore empty or unchanged names.
+        const trimmed = newTitle?.trim();
+        if (!trimmed || trimmed === chatNote?.title) return;
+
+        try {
+            // The header title updates reactively once the change syncs back to froca.
+            await server.put(`notes/${chatNoteId}/title`, { title: trimmed });
+        } catch (err) {
+            console.error("Failed to rename chat:", err);
+        }
+    }, [chatNoteId, chatNote]);
+
     return (
         <RightPanelWidget
             id="sidebar-chat"
@@ -351,6 +371,14 @@ export default function SidebarChat() {
                         >
                             {t("sidebar_chat.save_chat")}
                         </FormListItem>
+                        <FormListItem
+                            icon="bx bx-edit-alt"
+                            onClick={() => void handleRenameChat()}
+                            disabled={!chatNoteId}
+                        >
+                            {t("sidebar_chat.rename")}
+                        </FormListItem>
+                        <FormDropdownDivider />
                         <FormListItem
                             icon="bx bx-trash"
                             onClick={() => { if (chatNoteId) void handleDeleteChat(chatNoteId); }}

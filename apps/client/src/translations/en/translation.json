@@ -2104,6 +2104,9 @@
     "recent_chats": "Recent chats",
     "no_chats": "No previous chats",
     "view_all_chats": "View all chats",
+    "rename": "Rename",
+    "rename_title": "Rename chat",
+    "rename_message": "Enter a new name for this chat:",
     "delete": "Delete",
     "delete_chat": "Delete chat",
     "delete_confirm": "Delete this chat? This can't be undone."
