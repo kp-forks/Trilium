@@ -96,6 +96,21 @@ describe("content_renderer", () => {
             expect(result.content).not.toContain("reference-link");
         });
 
+        it("expands a note shared across sibling branches in each branch when exporting (not a false cycle)", () => {
+            buildShareNote({ id: "dagD", title: "Note D", content: "<p>D body</p>" });
+            buildShareNote({ id: "dagB", content: `<p>B body</p><section class="include-note" data-note-id="dagD" data-box-size="medium">&nbsp;</section>` });
+            buildShareNote({ id: "dagC", content: `<p>C body</p><section class="include-note" data-note-id="dagD" data-box-size="medium">&nbsp;</section>` });
+            const noteA = buildShareNote({
+                id: "dagA",
+                content: `<section class="include-note" data-note-id="dagB" data-box-size="medium">&nbsp;</section><section class="include-note" data-note-id="dagC" data-box-size="medium">&nbsp;</section>`
+            });
+            const result = getContent(noteA, { expandNestedIncludes: true });
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            // Diamond A→{B,C}→D: D is not a cycle, so it expands in both branches.
+            expect((result.content.match(/D body/g) ?? []).length).toBe(2);
+            expect(result.content).not.toContain("reference-link");
+        });
+
         it("does not loop on a circular include chain when expanding recursively", () => {
             buildShareNote({
                 id: "cycB",

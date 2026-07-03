@@ -398,9 +398,10 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
     }
 
     // Process include notes. The share view renders only the first level of inclusion; static export
-    // (expandNestedIncludes) keeps expanding recursively. A shared seenNoteIds set guards the
-    // recursive path against cycles that would otherwise loop forever.
-    const seenNoteIds = options.seenNoteIds ?? new Set<string>();
+    // (expandNestedIncludes) keeps expanding recursively. seenNoteIds tracks the current ancestor
+    // path (cloned per descent below) so the recursive path can break cycles without treating a note
+    // included in two sibling sub-trees as circular.
+    const seenNoteIds = new Set(options.seenNoteIds);
     seenNoteIds.add(note.noteId);
     for (const includeNoteEl of document.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
@@ -412,13 +413,13 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
         // Deeper-than-first-level includes (and any cycle in the recursive path) degrade to a
         // reference link that the link-processing passes below resolve to the shared note.
         if (options.includesAsReferenceLinks || seenNoteIds.has(noteId)) {
-            includeNoteEl.replaceWith(...parse(`<a class="reference-link" href="#root/${noteId}">${escapeHtml(includedNote.title)}</a>`, parseOpts).childNodes);
+            includeNoteEl.replaceWith(...parse(`<a class="reference-link" href="#root/${escapeHtml(noteId)}">${escapeHtml(includedNote.title)}</a>`, parseOpts).childNodes);
             continue;
         }
 
         const includedResult = getContent(includedNote, options.expandNestedIncludes
-            ? { expandNestedIncludes: true, seenNoteIds }
-            : { includesAsReferenceLinks: true, seenNoteIds });
+            ? { expandNestedIncludes: true, seenNoteIds: new Set(seenNoteIds) }
+            : { includesAsReferenceLinks: true, seenNoteIds: new Set(seenNoteIds) });
         if (typeof includedResult.content !== "string") continue;
 
         const includedDocument = parse(includedResult.content, parseOpts).childNodes;

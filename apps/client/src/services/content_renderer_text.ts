@@ -40,7 +40,7 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
     } else if (options.includesAsReferenceLinks) {
         // This note is itself an included note in display mode: stop after the first level by
         // degrading its own includes to reference links instead of expanding them.
-        await replaceIncludesWithReferenceLinks($renderedContent[0]);
+        replaceIncludesWithReferenceLinks($renderedContent[0]);
     } else {
         await renderIncludedNotes($renderedContent[0], seenNoteIds, options.expandNestedIncludes ?? false);
     }
@@ -106,30 +106,32 @@ async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<stri
 
         // On display only the first level is expanded: the included note is rendered with its own
         // includes degraded to reference links. Printing/export keeps expanding recursively.
+        // Clone seenNoteIds per descent so it tracks the current ancestor path only — sibling
+        // branches must not pollute each other (a note included in two sub-trees is not a cycle).
         const renderedContent = (await content_renderer.getRenderedContent(note, expandNested
-            ? { seenNoteIds, expandNestedIncludes: true }
-            : { seenNoteIds, includesAsReferenceLinks: true }
+            ? { seenNoteIds: new Set(seenNoteIds), expandNestedIncludes: true }
+            : { seenNoteIds: new Set(seenNoteIds), includesAsReferenceLinks: true }
         )).$renderedContent;
         includeNoteEl.replaceChildren(...renderedContent);
     }
 }
 
 /**
- * Replace each `section.include-note` in the given content with a reference link to the included
- * note, without expanding it. Used on display to stop inclusion after the first level so a note's
- * transitive include graph is not rendered inline.
+ * Replace each `section.include-note` in the given content with a bare reference link to the
+ * included note, without expanding it. Used on display to stop inclusion after the first level so a
+ * note's transitive include graph is not rendered inline. The link's title, icon and colour are
+ * filled in by the reference-link post-processing pass in `postProcessRichContent` (the same pass
+ * that resolves reference links authored in the note), which also batch-prefetches the note.
  */
-async function replaceIncludesWithReferenceLinks(contentEl: HTMLElement) {
+function replaceIncludesWithReferenceLinks(contentEl: HTMLElement) {
     for (const includeNoteEl of contentEl.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
         if (!noteId) continue;
 
-        const $referenceLink = await link.createLink(noteId, {
-            referenceLink: true,
-            showNoteIcon: true,
-            showTooltip: false
-        });
-        includeNoteEl.replaceWith(...$referenceLink);
+        const referenceLink = document.createElement("a");
+        referenceLink.className = "reference-link";
+        referenceLink.setAttribute("href", `#root/${noteId}`);
+        includeNoteEl.replaceWith(referenceLink);
     }
 }
 
