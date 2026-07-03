@@ -8,6 +8,7 @@ import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
 import { t } from "../services/i18n.js";
+import type { LlmChatContent, StoredMessage } from "../widgets/type_widgets/llm_chat/llm_chat_types.js";
 import renderText, { postProcessRichContent, renderChildrenList } from "./content_renderer_text.js";
 import renderDoc from "./doc_renderer.js";
 import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
@@ -93,6 +94,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (type === "webView" && options.interactive && !options.tooltip && entity instanceof FNote && entity.hasLabel("webViewSrc")) {
         await renderWebView(entity, $renderedContent);
+    } else if (type === "llmChat" && !options.tooltip && entity instanceof FNote) {
+        await renderLlmChat(entity, $renderedContent);
     } else if (entity instanceof FNote) {
         $renderedContent.addClass("no-preview");
         $renderedContent.append(
@@ -360,6 +363,37 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
             parentComponent: undefined,
             noteContext: undefined
         }), container);
+    }
+    $renderedContent.append($container);
+}
+
+/**
+ * Renders a saved AI chat conversation as a read-only preview: the stored messages painted with the
+ * same {@link ChatMessage} components as the live timeline, but with no input bar, context menu, or
+ * read-only notice — just the conversation. Mounted as a disposable Preact root (ChatMessage carries
+ * effects), so the embedding caller must tear it down via {@link disposeInteractiveContent} — the
+ * collection tiles that show these previews already do. Loaded lazily so the chat widget code is only
+ * pulled in when a chat note is previewed.
+ */
+async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>) {
+    const blob = await note.getBlob();
+    const source = blob?.content ?? "";
+
+    let messages: StoredMessage[] = [];
+    if (source.trim()) {
+        try {
+            messages = (JSON.parse(source) as LlmChatContent).messages ?? [];
+        } catch {
+            // Malformed content → empty preview rather than throwing.
+        }
+    }
+    if (messages.length === 0) return;
+
+    const ChatPreview = (await import("../widgets/type_widgets/llm_chat/ChatPreview")).default;
+    const $container = $('<div class="note-detail-llm-chat-preview">');
+    const container = $container.get(0);
+    if (container) {
+        await mountInteractiveWidget(h(ChatPreview, { messages }), container);
     }
     $renderedContent.append($container);
 }
