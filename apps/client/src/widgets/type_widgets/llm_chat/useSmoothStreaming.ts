@@ -44,6 +44,14 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}): Smooth
     const lastTickRef = useRef(0);
 
     const tick = useCallback(() => {
+        // Stop as soon as there's nothing left to reveal, instead of spinning rAF for up to
+        // MIN_COMMIT_INTERVAL_MS after the stream has drained.
+        const backlog = targetRef.current.length - displayedLenRef.current;
+        if (backlog <= 0) {
+            rafRef.current = null;
+            return;
+        }
+
         const now = performance.now();
 
         // Cap the commit cadence: every setDisplayedText re-renders the whole chat tree, and
@@ -56,12 +64,6 @@ export function useSmoothStreaming(options: SmoothStreamingOptions = {}): Smooth
 
         const dt = (now - lastTickRef.current) / 1000;
         lastTickRef.current = now;
-
-        const backlog = targetRef.current.length - displayedLenRef.current;
-        if (backlog <= 0) {
-            rafRef.current = null;
-            return;
-        }
 
         // With a small backlog the baseline cadence dominates (calm, readable);
         // with a large backlog we accelerate so the lag stays bounded.
