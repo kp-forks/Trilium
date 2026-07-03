@@ -29,6 +29,19 @@ export interface RenderOptions {
     noChildrenList?: boolean;
     /** If enabled, it will prevent rendering of included notes. */
     noIncludedNotes?: boolean;
+    /**
+     * Keep expanding include-note sections recursively at every depth. Used for printing/export,
+     * which preserves full nesting. When false (the default for on-screen display), only the first
+     * level of inclusion is rendered and deeper include-note sections are replaced with a reference
+     * link (see {@link includesAsReferenceLinks}).
+     */
+    expandNestedIncludes?: boolean;
+    /**
+     * Internal: render this note's own include-note sections as reference links instead of expanding
+     * them. Set when rendering a note that is itself already an included note in display mode, so that
+     * inclusion stops after the first level.
+     */
+    includesAsReferenceLinks?: boolean;
     /** If enabled, it will include archived notes when rendering children list. */
     includeArchivedNotes?: boolean;
     /** Set of note IDs that have already been seen during rendering to prevent infinite recursion. */
