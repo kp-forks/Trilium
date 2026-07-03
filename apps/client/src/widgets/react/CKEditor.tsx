@@ -13,14 +13,15 @@ export interface CKEditorApi {
      */
     setText(text: string): void;
     /**
-     * Appends `text` to the end of the editor as its own block, translating embedded newlines into
-     * soft breaks, then leaves two blank lines below it for visual separation with the cursor on the
-     * last one, and focuses the editor. Existing content is preserved; an empty editor gets the text
-     * at the top with no leading blank.
+     * Appends a `> `-prefixed markdown quote to the end of the editor as a real block-quote element
+     * (its prefixes stripped and content wrapped in a `blockQuote`, so it re-serializes to the same
+     * markdown), then places the cursor in an empty paragraph below it and focuses the editor. Existing
+     * content is preserved; an empty editor gets the quote at the top with no leading blank. Requires
+     * the `BlockQuote` plugin to be loaded on the editor instance.
      *
-     * @param text text to append (may contain `\n`)
+     * @param markdown a `> `-prefixed markdown blockquote (lines may be joined by `\n`)
      */
-    appendBlock(text: string): void;
+    appendBlockQuote(markdown: string): void;
 }
 
 interface CKEditorOpts {
@@ -56,9 +57,12 @@ export default function CKEditor({ apiRef, currentValue, editor, config, disable
             setText(text: string) {
                 textEditorRef.current?.setData(text);
             },
-            appendBlock(text: string) {
+            appendBlockQuote(markdown: string) {
                 const editor = textEditorRef.current;
                 if (!editor) return;
+                // Strip the `> ` prefixes to recover the raw content; the block-quote element re-adds
+                // them when the reply is serialized back to markdown.
+                const lines = markdown.split("\n").map((line) => line.replace(/^\s*>\s?/, ""));
                 editor.model.change((writer) => {
                     const root = editor.model.document.getRoot();
                     if (!root) return;
@@ -70,22 +74,28 @@ export default function CKEditor({ apiRef, currentValue, editor, config, disable
                         writer.remove(onlyChild);
                     }
 
-                    // The text block: one paragraph, its lines joined by soft breaks so the whole
-                    // excerpt stays a single block (a bare `writer.insert` keeps it from merging into
-                    // the preceding paragraph, giving the blank-line separation we want).
-                    const paragraph = writer.createElement("paragraph");
-                    text.split("\n").forEach((line, index) => {
-                        if (index > 0) writer.appendElement("softBreak", paragraph);
-                        if (line.length > 0) writer.appendText(line, paragraph);
-                    });
-                    writer.insert(paragraph, writer.createPositionAt(root, "end"));
+                    // A blank quote line separates paragraphs; lines within a paragraph are joined by
+                    // soft breaks. Emitting one <paragraph> per group round-trips to `> a\n>\n> b`
+                    // instead of collapsing the blank separator into a spurious hard break.
+                    const quote = writer.createElement("blockQuote");
+                    for (const paragraphLines of groupQuoteLinesIntoParagraphs(lines)) {
+                        const paragraph = writer.createElement("paragraph");
+                        writer.append(paragraph, quote);
+                        paragraphLines.forEach((line, index) => {
+                            if (index > 0) writer.appendElement("softBreak", paragraph);
+                            writer.appendText(line, paragraph);
+                        });
+                    }
+                    // A quote of only blank lines still needs a block child to stay schema-valid.
+                    if (quote.isEmpty) {
+                        writer.append(writer.createElement("paragraph"), quote);
+                    }
+                    writer.insert(quote, writer.createPositionAt(root, "end"));
 
-                    // Two trailing empty paragraphs separate the appended block from where the user
-                    // types; the cursor lands on the last one.
-                    const blankLine = writer.createElement("paragraph");
-                    writer.insert(blankLine, writer.createPositionAfter(paragraph));
+                    // A trailing empty paragraph below the quote holds the cursor so the user types
+                    // outside (after) the quote.
                     const cursorParagraph = writer.createElement("paragraph");
-                    writer.insert(cursorParagraph, writer.createPositionAfter(blankLine));
+                    writer.insert(cursorParagraph, writer.createPositionAfter(quote));
                     writer.setSelection(cursorParagraph, "in");
                 });
                 editor.editing.view.focus();
@@ -149,4 +159,27 @@ export default function CKEditor({ apiRef, currentValue, editor, config, disable
             {...restProps}
         />
     )
+}
+
+/**
+ * Groups the (already `> `-stripped) lines of a markdown quote into paragraphs: a blank line starts a
+ * new paragraph, and consecutive non-blank lines belong to the same one. Returns one entry per
+ * paragraph, each holding its lines (which become soft breaks). Used by {@link CKEditorApi.appendBlockQuote}
+ * so a `> a\n>\n> b` quote becomes two paragraphs rather than one paragraph with a doubled hard break.
+ */
+export function groupQuoteLinesIntoParagraphs(lines: string[]): string[][] {
+    const paragraphs: string[][] = [];
+    let current: string[] | null = null;
+    for (const line of lines) {
+        if (line.length === 0) {
+            current = null;
+            continue;
+        }
+        if (!current) {
+            current = [];
+            paragraphs.push(current);
+        }
+        current.push(line);
+    }
+    return paragraphs;
 }

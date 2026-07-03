@@ -15,7 +15,7 @@ export type AttachmentBlock = ImageBlock | FileBlock | TextFileBlock;
 
 /** The subset of the reply-input editor API the chat needs to write into it imperatively. */
 export interface InputEditorApi {
-    appendBlock(text: string): void;
+    appendBlockQuote(markdown: string): void;
 }
 
 /** Distance (px) past the content bottom edge within which the timeline counts as "at bottom". */
@@ -241,7 +241,7 @@ export function useLlmChat(
         inputEditorRef.current = api;
     }, []);
     const appendToInput = useCallback((text: string) => {
-        inputEditorRef.current?.appendBlock(text);
+        inputEditorRef.current?.appendBlockQuote(text);
     }, []);
 
     const addPendingAttachment = useCallback((attachment: AttachmentBlock) => {

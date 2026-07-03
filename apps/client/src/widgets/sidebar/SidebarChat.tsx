@@ -1,21 +1,26 @@
 import "./SidebarChat.css";
 
+import type { SaveLlmChatResponse } from "@triliumnext/commons";
 import type { Dropdown as BootstrapDropdown } from "bootstrap";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context.js";
 import dateNoteService, { type RecentLlmChat } from "../../services/date_notes.js";
+import dialog from "../../services/dialog.js";
 import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
+import { randomString } from "../../services/utils.js";
+import ws from "../../services/ws.js";
 import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormDropdownDivider, FormListItem } from "../react/FormList.js";
-import { useActiveNoteContext, useNote, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
+import { useActiveNoteContext, useNote, useNoteLabelBoolean, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
 import { useChatContextMenu } from "../type_widgets/llm_chat/chat_context_menu.js";
 import { useChatHighlights } from "../type_widgets/llm_chat/chat_highlights.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessageList from "../type_widgets/llm_chat/ChatMessageList.js";
+import ChatReadOnlyNotice from "../type_widgets/llm_chat/ChatReadOnlyNotice.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
 import { useLlmChat } from "../type_widgets/llm_chat/useLlmChat.js";
 import RightPanelWidget from "./RightPanelWidget.js";
@@ -42,6 +47,9 @@ export default function SidebarChat() {
     const chatNote = useNote(chatNoteId);
     const chatTitle = useNoteProperty(chatNote, "title") || t("sidebar_chat.title");
 
+    // A `#readOnly` chat is immutable: reply bar replaced by a notice, mutating commands suppressed.
+    const [readOnly] = useNoteLabelBoolean(chatNote, "readOnly");
+
     // Refs for stable access in the spaced update callback
     const chatNoteIdRef = useRef(chatNoteId);
     chatNoteIdRef.current = chatNoteId;
@@ -62,7 +70,7 @@ export default function SidebarChat() {
     const highlights = useChatHighlights(chat, undefined);
 
     // Right-click menu over the timeline, with highlights contributing their add/remove items.
-    useChatContextMenu({ chat, noteContext: undefined, contextMenuItems: highlights.highlightMenuItems });
+    useChatContextMenu({ chat, noteContext: undefined, contextMenuItems: highlights.highlightMenuItems, readOnly });
 
     // Save directly via server.put using the string noteId.
     // This avoids the FNote dependency that useEditorSpacedUpdate requires.
@@ -190,12 +198,18 @@ export default function SidebarChat() {
         await spacedUpdate.updateNowIfNecessary();
 
         try {
-            await server.post("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
-            // Create a new empty chat after saving
+            const { notePath } = await server.post<SaveLlmChatResponse>("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
+            // Create a new empty chat after saving so the sidebar starts fresh.
             const note = await dateNoteService.createLlmChat();
             if (note) {
                 setChatNoteId(note.noteId);
                 chatRef.current.clearMessages();
+            }
+            // Open the saved note in a new tab so the user can view and reorganize it. Wait for the
+            // clone's entity changes to reach froca first, otherwise the new note path can't resolve.
+            if (notePath) {
+                await ws.waitForMaxKnownEntityChangeId();
+                await appContext.tabManager.openTabWithNoteWithHoisting(notePath, { activate: true });
             }
         } catch (err) {
             console.error("Failed to save chat to permanent location:", err);
@@ -237,6 +251,48 @@ export default function SidebarChat() {
         }
     }, [chatNoteId, spacedUpdate]);
 
+    const handleDeleteChat = useCallback(async (noteId: string) => {
+        if (!(await dialog.confirm(t("sidebar_chat.delete_confirm")))) return;
+
+        try {
+            // Same soft-delete the tree uses (see branches.deleteNotes), minus the delete-notes dialog.
+            await server.remove(`notes/${noteId}?taskId=${randomString(10)}&eraseNotes=false&last=true`);
+            setRecentChats(prev => prev.filter(c => c.noteId !== noteId));
+
+            // If the open chat was the one deleted, reset the sidebar to a blank state. Don't create a
+            // replacement note here — the sidebar lazily creates one on the first message (handleSubmit),
+            // so creating one now would leave an empty, timestamp-titled chat cluttering the history.
+            // Null the ref too so the clearMessages save below can't write back to the deleted note.
+            if (noteId === chatNoteId) {
+                setChatNoteId(null);
+                chatNoteIdRef.current = null;
+                chatRef.current.clearMessages();
+            }
+        } catch (err) {
+            console.error("Failed to delete chat:", err);
+        }
+    }, [chatNoteId]);
+
+    const handleRenameChat = useCallback(async () => {
+        if (!chatNoteId) return;
+
+        const newTitle = await dialog.prompt({
+            title: t("sidebar_chat.rename_title"),
+            message: t("sidebar_chat.rename_message"),
+            defaultValue: chatNote?.title ?? ""
+        });
+        // null = cancelled; ignore empty or unchanged names.
+        const trimmed = newTitle?.trim();
+        if (!trimmed || trimmed === chatNote?.title) return;
+
+        try {
+            // The header title updates reactively once the change syncs back to froca.
+            await server.put(`notes/${chatNoteId}/title`, { title: trimmed });
+        } catch (err) {
+            console.error("Failed to rename chat:", err);
+        }
+    }, [chatNoteId, chatNote]);
+
     return (
         <RightPanelWidget
             id="sidebar-chat"
@@ -269,7 +325,7 @@ export default function SidebarChat() {
                                 <FormListItem
                                     key={chatItem.noteId}
                                     icon="bx bx-message-square-dots"
-                                    className={chatItem.noteId === chatNoteId ? "active" : ""}
+                                    className={`sidebar-chat-history-item ${chatItem.noteId === chatNoteId ? "active" : ""}`}
                                     onClick={() => handleSelectChat(chatItem.noteId)}
                                 >
                                     <div className="sidebar-chat-history-item-content">
@@ -280,6 +336,15 @@ export default function SidebarChat() {
                                             {formatDateTime(new Date(chatItem.dateModified), "short", "short")}
                                         </span>
                                     </div>
+                                    <ActionButton
+                                        icon="bx bx-trash"
+                                        text={t("sidebar_chat.delete_chat")}
+                                        className="sidebar-chat-history-delete"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            void handleDeleteChat(chatItem.noteId);
+                                        }}
+                                    />
                                 </FormListItem>
                             ))
                         )}
@@ -291,12 +356,37 @@ export default function SidebarChat() {
                             {t("sidebar_chat.view_all_chats")}
                         </FormListItem>
                     </Dropdown>
-                    <ActionButton
-                        icon="bx bx-save"
-                        text={t("sidebar_chat.save_chat")}
-                        onClick={handleSaveChat}
-                        disabled={chat.messages.length === 0}
-                    />
+                    <Dropdown
+                        text=""
+                        buttonClassName="bx bx-dots-vertical-rounded"
+                        title={t("sidebar_chat.more_actions")}
+                        iconAction
+                        hideToggleArrow
+                        dropdownOptions={{ popperConfig: { strategy: "fixed" } }}
+                    >
+                        <FormListItem
+                            icon="bx bx-save"
+                            onClick={() => void handleSaveChat()}
+                            disabled={chat.messages.length === 0}
+                        >
+                            {t("sidebar_chat.save_chat")}
+                        </FormListItem>
+                        <FormListItem
+                            icon="bx bx-edit-alt"
+                            onClick={() => void handleRenameChat()}
+                            disabled={!chatNoteId}
+                        >
+                            {t("sidebar_chat.rename")}
+                        </FormListItem>
+                        <FormDropdownDivider />
+                        <FormListItem
+                            icon="bx bx-trash"
+                            onClick={() => { if (chatNoteId) void handleDeleteChat(chatNoteId); }}
+                            disabled={!chatNoteId}
+                        >
+                            {t("sidebar_chat.delete")}
+                        </FormListItem>
+                    </Dropdown>
                 </>
             }
         >
@@ -306,12 +396,16 @@ export default function SidebarChat() {
                     className="sidebar-chat-messages"
                     emptyStateText={t("sidebar_chat.empty_state")}
                 />
-                <ChatInputBar
-                    chat={chat}
-                    activeNoteId={activeNoteId ?? undefined}
-                    activeNoteTitle={activeNote?.title}
-                    onSubmit={handleSubmit}
-                />
+                {readOnly ? (
+                    <ChatReadOnlyNotice />
+                ) : (
+                    <ChatInputBar
+                        chat={chat}
+                        activeNoteId={activeNoteId ?? undefined}
+                        activeNoteTitle={activeNote?.title}
+                        onSubmit={handleSubmit}
+                    />
+                )}
             </div>
         </RightPanelWidget>
     );
