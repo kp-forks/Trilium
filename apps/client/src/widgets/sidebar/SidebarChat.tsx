@@ -6,8 +6,10 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../components/app_context.js";
 import dateNoteService, { type RecentLlmChat } from "../../services/date_notes.js";
+import dialog from "../../services/dialog.js";
 import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
+import { randomString } from "../../services/utils.js";
 import ws from "../../services/ws.js";
 import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
@@ -249,6 +251,28 @@ export default function SidebarChat() {
         }
     }, [chatNoteId, spacedUpdate]);
 
+    const handleDeleteChat = useCallback(async (noteId: string) => {
+        if (!(await dialog.confirm(t("sidebar_chat.delete_confirm")))) return;
+
+        try {
+            // Same soft-delete the tree uses (see branches.deleteNotes), minus the delete-notes dialog.
+            await server.remove(`notes/${noteId}?taskId=${randomString(10)}&eraseNotes=false&last=true`);
+            setRecentChats(prev => prev.filter(c => c.noteId !== noteId));
+
+            // If the open chat was the one deleted, reset the sidebar to a blank state. Don't create a
+            // replacement note here — the sidebar lazily creates one on the first message (handleSubmit),
+            // so creating one now would leave an empty, timestamp-titled chat cluttering the history.
+            // Null the ref too so the clearMessages save below can't write back to the deleted note.
+            if (noteId === chatNoteId) {
+                setChatNoteId(null);
+                chatNoteIdRef.current = null;
+                chatRef.current.clearMessages();
+            }
+        } catch (err) {
+            console.error("Failed to delete chat:", err);
+        }
+    }, [chatNoteId]);
+
     return (
         <RightPanelWidget
             id="sidebar-chat"
@@ -281,7 +305,7 @@ export default function SidebarChat() {
                                 <FormListItem
                                     key={chatItem.noteId}
                                     icon="bx bx-message-square-dots"
-                                    className={chatItem.noteId === chatNoteId ? "active" : ""}
+                                    className={`sidebar-chat-history-item ${chatItem.noteId === chatNoteId ? "active" : ""}`}
                                     onClick={() => handleSelectChat(chatItem.noteId)}
                                 >
                                     <div className="sidebar-chat-history-item-content">
@@ -292,6 +316,15 @@ export default function SidebarChat() {
                                             {formatDateTime(new Date(chatItem.dateModified), "short", "short")}
                                         </span>
                                     </div>
+                                    <ActionButton
+                                        icon="bx bx-trash"
+                                        text={t("sidebar_chat.delete_chat")}
+                                        className="sidebar-chat-history-delete"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            void handleDeleteChat(chatItem.noteId);
+                                        }}
+                                    />
                                 </FormListItem>
                             ))
                         )}

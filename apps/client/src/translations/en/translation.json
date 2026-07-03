@@ -2101,7 +2101,9 @@
     "history": "Chat history",
     "recent_chats": "Recent chats",
     "no_chats": "No previous chats",
-    "view_all_chats": "View all chats"
+    "view_all_chats": "View all chats",
+    "delete_chat": "Delete chat",
+    "delete_confirm": "Delete this chat? This can't be undone."
   },
   "shared_switch": {
     "shared": "Shared",
