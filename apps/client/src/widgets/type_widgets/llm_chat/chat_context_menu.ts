@@ -9,7 +9,7 @@ import { canCopyMessage, copyMessageToClipboard } from "./chat_copy.js";
 import { canDeleteMessage, removeMessage } from "./chat_delete.js";
 import { buildQuoteMarkdown } from "./chat_quote.js";
 import { canRegenerate } from "./chat_regenerate.js";
-import { canSaveToSubNote, saveMessageToSubNote } from "./chat_save.js";
+import { canSaveAsNote, canSaveToSubNote, saveMessageAsInboxNote, saveMessageToSubNote } from "./chat_save.js";
 import { getMessageText } from "./llm_chat_types.js";
 import type { UseLlmChatReturn } from "./useLlmChat.js";
 
@@ -142,6 +142,15 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems, readOn
                     title: t("llm_chat.save_to_subnote"),
                     uiIcon: "bx bx-save",
                     handler: () => void saveMessageToSubNote(parentNotePath, messageMarkdown)
+                });
+            }
+            // Sidebar chat has no parent note to save under, so offer saving the message to the inbox
+            // as its own note instead. Create-only, so it stays available on a read-only chat.
+            if (!noteContextRef.current && canSaveAsNote(hasSelection, messageMarkdown)) {
+                items.push({
+                    title: t("llm_chat.save_as_note"),
+                    uiIcon: "bx bx-save",
+                    handler: () => void saveMessageAsInboxNote(messageMarkdown)
                 });
             }
             if (!readOnly && canRegenerate(hasSelection, message, messagesRef.current, streaming)) {
