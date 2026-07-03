@@ -128,6 +128,19 @@ describe("content_renderer", () => {
             expect(result.content).toContain("reference-link");
         });
 
+        it("leaves an include-note section untouched when the referenced note is missing", () => {
+            const note = buildShareNote({
+                id: "missingRefHost",
+                content: `<p>host</p><section class="include-note" data-note-id="ghostNote" data-box-size="medium">&nbsp;</section>`
+            });
+            const result = getContent(note);
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            // The missing note is skipped: the section stays, nothing is expanded or reference-linked.
+            expect(result.content).toContain("host");
+            expect(result.content).toContain(`data-note-id="ghostNote"`);
+            expect(result.content).not.toContain("reference-link");
+        });
+
         it("renders an included large code note without hanging or re-parsing it as HTML (#9717)", () => {
             // ~2 MiB of angle-bracket-heavy code that previously exploded node-html-parser.
             const codeLine = `const x: Array<Map<string, List<number>>> = a < b && c > d; // <div>\n`;

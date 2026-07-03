@@ -331,6 +331,25 @@ describe("Nested include notes (single-level display vs recursive print)", () =>
         expect(contentEl.querySelector('section.include-note[data-note-id="nestC"]')).toBeNull();
         expect(contentEl.querySelector("a.reference-link")?.getAttribute("href")).toContain("nestC");
     });
+
+    it("leaves include-note sections with a missing or invalid note ID untouched when degrading to reference links", async () => {
+        const note = buildNote({
+            id: "badRefHost",
+            title: "Host",
+            content: trimIndentation`
+                <p>host</p>
+                <section class="include-note" data-box-size="medium">&nbsp;</section>
+                <section class="include-note" data-note-id="bad id!" data-box-size="medium">&nbsp;</section>
+            `
+        });
+        const contentEl = document.createElement("div");
+        await renderText(note, $(contentEl), { includesAsReferenceLinks: true });
+
+        // Neither the missing-id nor the invalid-id section is converted to a reference link;
+        // both are left in place.
+        expect(contentEl.querySelector("a.reference-link")).toBeNull();
+        expect(contentEl.querySelectorAll("section.include-note").length).toBe(2);
+    });
 });
 
 describe("renderIncludedNotes via postProcessRichContent", () => {
