@@ -203,7 +203,12 @@ async function pullChanges(syncContext: SyncContext) {
             }
 
             if (totalPullCount === null) {
-                totalPullCount = resp.entityChanges.length + outstandingPullCount;
+                // Keep the denominator as the *grand* total so the setup progress bar doesn't reset
+                // to 0% after a restart. Already-pulled changes persist in the local entity_changes
+                // table, so adding them to the remaining count reconstructs the original total —
+                // a resumed sync would otherwise only see the leftover work and rescale from zero.
+                const alreadyPulled = getSql().getValue<number>("SELECT COUNT(1) FROM entity_changes WHERE isSynced = 1") ?? 0;
+                totalPullCount = alreadyPulled + resp.entityChanges.length + outstandingPullCount;
             }
 
             if (resp.entityChanges.length === 0) {

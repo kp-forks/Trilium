@@ -31,6 +31,7 @@ interface FakeConfig {
     changed?: ChangesResponse[];
     check?: CheckResponse[];
     onCheck?: (callIndex: number) => void;
+    onChanged?: (callIndex: number) => void;
 }
 
 let config: FakeConfig = {};
@@ -50,6 +51,7 @@ const fakeRequest: RequestProvider = {
             return reply(config.login ?? { instanceId: "REMOTE_INSTANCE", maxEntityChangeId: 0 });
         }
         if (url.includes("/api/sync/changed")) {
+            config.onChanged?.(changedIdx);
             const seq = config.changed ?? [{ entityChanges: [], lastEntityChangeId: 0, outstandingPullCount: 0 }];
             return reply(seq[Math.min(changedIdx++, seq.length - 1)]);
         }
@@ -111,6 +113,31 @@ describe("sync service", () => {
         expect(urls.some((u) => u.includes("/api/sync/changed"))).toBe(true);
         expect(urls.some((u) => u.includes("/api/sync/finished"))).toBe(true);
         expect(urls.some((u) => u.includes("/api/sync/check"))).toBe(true);
+    });
+
+    it("counts already-pulled local changes into the pull total so a resumed sync keeps the grand total", async () => {
+        // On resume the remote only reports the *remaining* changes; the already-pulled ones live in
+        // the local entity_changes table. The total must be their sum, otherwise the setup progress
+        // bar rescales the leftover work to 0-100% and appears to restart from zero.
+        const countSynced = () => getSql().getValue<number>("SELECT COUNT(1) FROM entity_changes WHERE isSynced = 1") ?? 0;
+
+        let alreadyPulled = 0;
+        let capturedTotal: number | null = null;
+        config.onChanged = (callIndex) => {
+            // callIndex 0: same moment the sync samples the already-pulled count.
+            if (callIndex === 0) alreadyPulled = countSynced();
+            // callIndex 1: the total has now been frozen for this session — read it back.
+            if (callIndex === 1) capturedTotal = syncService.getTotalPullCount();
+        };
+        config.changed = [
+            { entityChanges: [pulledOptionChange()], lastEntityChangeId: 9, outstandingPullCount: 5 },
+            { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
+        ];
+
+        await runSync();
+
+        // grand total = already-pulled (local) + this batch (1) + remaining reported by the remote (5)
+        expect(capturedTotal).toBe(alreadyPulled + 1 + 5);
     });
 
     it("persists an advanced cursor even when the server returns an empty change batch", async () => {

@@ -23,6 +23,10 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
         layoutOrientation: "vertical" as const,
         headingStyle: "plain" as const,
         componentId: "",
+        // Schema present but not yet initialized means a sync was started and interrupted, so the
+        // setup screen resumes it instead of starting over. A fully initialized DB is never mid-sync.
+        // Kept in the common items so both payload shapes carry the flag uniformly.
+        syncInProgress: !dbInitialized && sqlInit.schemaExists(),
         ...getIconConfig(assetPath)
     };
 
@@ -30,9 +34,6 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
     if (!dbInitialized) {
         return {
             ...commonItems,
-            // Schema already present but not yet initialized means a sync was started
-            // and interrupted, so the setup screen resumes it instead of starting over.
-            syncInProgress: sqlInit.schemaExists(),
             theme: "next",
             themeCssUrl: false as const,
             themeUseNextAsBase: "next" as const,

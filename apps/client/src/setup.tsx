@@ -247,11 +247,14 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
     const currentIndex = steps.findIndex((s) => s.key === step);
 
     const syncingDone = currentIndex > steps.findIndex((s) => s.key === "syncing");
+    // Pulled-so-far, clamped: the remote can gain changes mid-sync, briefly pushing the
+    // outstanding count above the frozen total, which would otherwise show a negative bar.
+    const pulled = stats.totalPullCount ? Math.max(0, stats.totalPullCount - stats.outstandingPullCount) : 0;
     let progress = 0;
     if (syncingDone) {
         progress = 100;
     } else if (stats.totalPullCount) {
-        progress = Math.round(((stats.totalPullCount - stats.outstandingPullCount) / stats.totalPullCount) * 100);
+        progress = Math.min(100, Math.round((pulled / stats.totalPullCount) * 100));
     }
 
     return (
@@ -267,7 +270,7 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
                         {s.label}
                         {s.key === "syncing" && (
                             <div class="sync-progress">
-                                <progress value={syncingDone ? 1 : stats.totalPullCount! - stats.outstandingPullCount} max={syncingDone ? 1 : stats.totalPullCount!} />
+                                <progress value={syncingDone ? 1 : pulled} max={syncingDone ? 1 : (stats.totalPullCount ?? 1)} />
                                 <span>{progress}%</span>
                             </div>
                         )}
