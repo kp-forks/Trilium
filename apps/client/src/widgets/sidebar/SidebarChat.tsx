@@ -1,5 +1,6 @@
 import "./SidebarChat.css";
 
+import type { SaveLlmChatResponse } from "@triliumnext/commons";
 import type { Dropdown as BootstrapDropdown } from "bootstrap";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -7,6 +8,7 @@ import appContext from "../../components/app_context.js";
 import dateNoteService, { type RecentLlmChat } from "../../services/date_notes.js";
 import { t } from "../../services/i18n.js";
 import server from "../../services/server.js";
+import ws from "../../services/ws.js";
 import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
@@ -194,12 +196,18 @@ export default function SidebarChat() {
         await spacedUpdate.updateNowIfNecessary();
 
         try {
-            await server.post("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
-            // Create a new empty chat after saving
+            const { notePath } = await server.post<SaveLlmChatResponse>("special-notes/save-llm-chat", { llmChatNoteId: chatNoteId });
+            // Create a new empty chat after saving so the sidebar starts fresh.
             const note = await dateNoteService.createLlmChat();
             if (note) {
                 setChatNoteId(note.noteId);
                 chatRef.current.clearMessages();
+            }
+            // Open the saved note in a new tab so the user can view and reorganize it. Wait for the
+            // clone's entity changes to reach froca first, otherwise the new note path can't resolve.
+            if (notePath) {
+                await ws.waitForMaxKnownEntityChangeId();
+                await appContext.tabManager.openTabWithNoteWithHoisting(notePath, { activate: true });
             }
         } catch (err) {
             console.error("Failed to save chat to permanent location:", err);
