@@ -336,12 +336,29 @@ export default function SidebarChat() {
                             {t("sidebar_chat.view_all_chats")}
                         </FormListItem>
                     </Dropdown>
-                    <ActionButton
-                        icon="bx bx-save"
-                        text={t("sidebar_chat.save_chat")}
-                        onClick={handleSaveChat}
-                        disabled={chat.messages.length === 0}
-                    />
+                    <Dropdown
+                        text=""
+                        buttonClassName="bx bx-dots-vertical-rounded"
+                        title={t("sidebar_chat.more_actions")}
+                        iconAction
+                        hideToggleArrow
+                        dropdownOptions={{ popperConfig: { strategy: "fixed" } }}
+                    >
+                        <FormListItem
+                            icon="bx bx-save"
+                            onClick={() => void handleSaveChat()}
+                            disabled={chat.messages.length === 0}
+                        >
+                            {t("sidebar_chat.save_chat")}
+                        </FormListItem>
+                        <FormListItem
+                            icon="bx bx-trash"
+                            onClick={() => { if (chatNoteId) void handleDeleteChat(chatNoteId); }}
+                            disabled={!chatNoteId}
+                        >
+                            {t("sidebar_chat.delete")}
+                        </FormListItem>
+                    </Dropdown>
                 </>
             }
         >
