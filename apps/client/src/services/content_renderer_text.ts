@@ -126,7 +126,9 @@ async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<stri
 function replaceIncludesWithReferenceLinks(contentEl: HTMLElement) {
     for (const includeNoteEl of contentEl.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
-        if (!noteId) continue;
+        // Validate the ID against a note-ID allow-list before interpolating it into the href: it
+        // comes from note HTML, and the reference-link pass later reinterprets that href.
+        if (!noteId || !/^[a-zA-Z0-9_]+$/.test(noteId)) continue;
 
         const referenceLink = document.createElement("a");
         referenceLink.className = "reference-link";
