@@ -966,7 +966,7 @@ input[type="range"] {
     scrollbar-width: var(--scrollbar-thickness);
 }
 
-@supports selector(::-webkit-scrollbar) {
+@supports (-webkit-box-reflect: below) {
     /* Prevent the scrollbar-color and scrollbar-width properties to override the custom styles
      * defined using ::-webkit-scrollbar. */
     :root {

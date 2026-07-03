@@ -1,4 +1,4 @@
-import { type EntityChange, SyncTestResponse } from "@triliumnext/commons";
+import { type EntityChange, type EntityChangeRecord, SyncTestResponse } from "@triliumnext/commons";
 import type { Request } from "express";
 import { t } from "i18next";
 
@@ -9,7 +9,7 @@ import { getLog } from "../../services/log.js";
 import optionService from "../../services/options.js";
 import { getSql } from "../../services/sql/index.js";
 import sqlInit from "../../services/sql_init.js";
-import syncService from "../../services/sync.js";
+import syncService, { estimateEntityChangeRecordSize, MAX_PULL_RESPONSE_BYTES } from "../../services/sync.js";
 import syncOptions from "../../services/sync_options.js";
 import syncUpdateService from "../../services/sync_update.js";
 import * as utils from "../../services/utils/index.js";
@@ -117,7 +117,7 @@ function forceFullSync() {
  *         description: Marker to identify this request in server log
  *     responses:
  *       '200':
- *         description: Sync changes, limited to approximately one megabyte.
+ *         description: Sync changes, limited to approximately eight megabytes.
  *         content:
  *           application/json:
  *             schema:
@@ -146,12 +146,23 @@ function getChanged(req: Request) {
         throw new ValidationError("Missing or invalid last entity change ID.");
     }
 
-    let lastEntityChangeId: number | null | undefined = parseInt(req.query.lastEntityChangeId);
+    let lastEntityChangeId = parseInt(req.query.lastEntityChangeId);
     const clientInstanceId = req.query.instanceId;
-    let filteredEntityChanges: EntityChange[] = [];
 
     const sql = getSql();
-    do {
+    const entityChangeRecords: EntityChangeRecord[] = [];
+    let estimatedResponseBytes = 0;
+    // Where the next row fetch starts. Advances over every fetched row, unlike
+    // `lastEntityChangeId` (the cursor returned to the client), which only advances over rows the
+    // client can safely skip: records included in the response and batches consisting entirely of
+    // the client's own changes.
+    let fetchCursor = lastEntityChangeId;
+
+    // Accumulate rows across LIMIT-1000 fetches until the response byte estimate crosses the cap
+    // (or the table is exhausted). Metadata-only records are ~300 bytes, so a single 1000-row fetch
+    // fills only ~4% of the byte budget — without this loop the row limit binds long before the
+    // byte cap on metadata-dense ranges, costing many extra round-trips.
+    while (estimatedResponseBytes < MAX_PULL_RESPONSE_BYTES) {
         const entityChanges: EntityChange[] = sql.getRows<EntityChange>(
             `
             SELECT *
@@ -160,25 +171,45 @@ function getChanged(req: Request) {
             AND id > ?
             ORDER BY id
             LIMIT 1000`,
-            [lastEntityChangeId]
+            [fetchCursor]
         );
 
         if (entityChanges.length === 0) {
             break;
         }
 
-        filteredEntityChanges = entityChanges.filter((ec) => ec.instanceId !== clientInstanceId);
+        // rows fetched from entity_changes always carry an id
+        fetchCursor = entityChanges[entityChanges.length - 1].id ?? fetchCursor;
 
-        if (filteredEntityChanges.length === 0) {
-            lastEntityChangeId = entityChanges[entityChanges.length - 1].id;
+        const foreignEntityChanges = entityChanges.filter((ec) => ec.instanceId !== clientInstanceId);
+
+        if (foreignEntityChanges.length === 0) {
+            // the whole batch is the client's own changes — skip the client's cursor past it
+            lastEntityChangeId = fetchCursor;
+            continue;
         }
-    } while (filteredEntityChanges.length === 0);
 
-    const entityChangeRecords = syncService.getEntityChangeRecords(filteredEntityChanges);
+        const records = syncService.getEntityChangeRecords(foreignEntityChanges, MAX_PULL_RESPONSE_BYTES - estimatedResponseBytes);
+
+        for (const record of records) {
+            estimatedResponseBytes += estimateEntityChangeRecordSize(record);
+        }
+
+        entityChangeRecords.push(...records);
+
+        if (records.length > 0) {
+            // rows fetched from entity_changes always carry an id
+            lastEntityChangeId = records[records.length - 1].entityChange.id ?? lastEntityChangeId;
+        }
+
+        if (records.length < foreignEntityChanges.length) {
+            // the byte budget was reached mid-batch (or trailing records were skipped) — anything
+            // not included must be re-served next request, so stop without advancing further
+            break;
+        }
+    }
 
     if (entityChangeRecords.length > 0) {
-        lastEntityChangeId = entityChangeRecords[entityChangeRecords.length - 1].entityChange.id;
-
         getLog().info(`Returning ${entityChangeRecords.length} entity changes in ${Date.now() - startTime}ms`);
     }
 
