@@ -247,6 +247,71 @@ describe("Text content renderer", () => {
     });
 });
 
+describe("Nested include notes (single-level display vs recursive print)", () => {
+    function buildIncludeChain() {
+        // C (leaf) ← included by B ← included by A. Distinctive bodies so we can
+        // assert which levels were expanded vs. replaced with a reference link.
+        const noteC = buildNote({ id: "nestC", title: "Note C", content: "<p>C body</p>" });
+        const noteB = buildNote({
+            id: "nestB",
+            title: "Note B",
+            content: trimIndentation`
+                <p>B body</p>
+                <section class="include-note" data-note-id="nestC" data-box-size="medium">&nbsp;</section>
+            `
+        });
+        const noteA = buildNote({
+            id: "nestA",
+            title: "Note A",
+            content: trimIndentation`
+                <p>A body</p>
+                <section class="include-note" data-note-id="nestB" data-box-size="medium">&nbsp;</section>
+            `
+        });
+        return { noteA, noteB, noteC };
+    }
+
+    it("on display, renders only the first level and replaces the nested include with a reference link", async () => {
+        const { noteA } = buildIncludeChain();
+        const contentEl = document.createElement("div");
+        await renderText(noteA, $(contentEl));
+
+        // First level (B) is expanded — its body is present.
+        expect(contentEl.textContent).toContain("B body");
+        // Second level (C) is NOT expanded — its body must be absent.
+        expect(contentEl.textContent).not.toContain("C body");
+        // The nested include section for C is gone, replaced by a reference link to C.
+        expect(contentEl.querySelector('section.include-note[data-note-id="nestC"]')).toBeNull();
+        const refLink = contentEl.querySelector("a.reference-link");
+        expect(refLink).not.toBeNull();
+        expect(refLink?.getAttribute("href")).toContain("nestC");
+    });
+
+    it("on print (expandNestedIncludes), keeps expanding nested includes recursively", async () => {
+        const { noteA } = buildIncludeChain();
+        const contentEl = document.createElement("div");
+        await renderText(noteA, $(contentEl), { expandNestedIncludes: true });
+
+        // Both levels expanded, all bodies present, no reference-link placeholder.
+        expect(contentEl.textContent).toContain("B body");
+        expect(contentEl.textContent).toContain("C body");
+        expect(contentEl.querySelector("a.reference-link")).toBeNull();
+    });
+
+    it("renders a note's own includes as reference links when includesAsReferenceLinks is set", async () => {
+        // This mirrors how an already-included note (e.g. the editor include widget) is rendered:
+        // its content shows, but its own includes degrade to reference links.
+        const { noteB } = buildIncludeChain();
+        const contentEl = document.createElement("div");
+        await renderText(noteB, $(contentEl), { includesAsReferenceLinks: true });
+
+        expect(contentEl.textContent).toContain("B body");
+        expect(contentEl.textContent).not.toContain("C body");
+        expect(contentEl.querySelector('section.include-note[data-note-id="nestC"]')).toBeNull();
+        expect(contentEl.querySelector("a.reference-link")?.getAttribute("href")).toContain("nestC");
+    });
+});
+
 describe("renderIncludedNotes via postProcessRichContent", () => {
     it("warns and skips an include-note section whose note cannot be found", async () => {
         const warn = vi.spyOn(console, "warn").mockImplementation(() => {});

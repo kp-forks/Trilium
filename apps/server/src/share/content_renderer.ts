@@ -198,7 +198,8 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
         return note.getContent() ?? "";
     }
 
-    const { header, content, isEmpty } = getContent(note);
+    // Static export preserves full include-note nesting; the live share view renders only the first level.
+    const { header, content, isEmpty } = getContent(note, { expandNestedIncludes: renderArgs.isStatic });
     const showLoginInShareTheme = options.getOptionBool("showLoginInShareTheme");
     const opts = {
         note,
@@ -277,7 +278,21 @@ export function readTemplate(path: string) {
     return templateString;
 }
 
-export function getContent(note: SNote | BNote) {
+export interface ShareRenderOptions {
+    /**
+     * Keep expanding include-note sections recursively at every depth. Used for static export, which
+     * preserves full nesting. When false (the default for the on-screen share view), only the first
+     * level of inclusion is rendered and deeper include-note sections are replaced with a reference
+     * link.
+     */
+    expandNestedIncludes?: boolean;
+    /** Internal: render this note's own include-note sections as reference links instead of expanding. */
+    includesAsReferenceLinks?: boolean;
+    /** Internal: note IDs already rendered on the current include path, used as a recursion cycle guard. */
+    seenNoteIds?: Set<string>;
+}
+
+export function getContent(note: SNote | BNote, options: ShareRenderOptions = {}) {
     if (note.isProtected) {
         return {
             header: "",
@@ -293,7 +308,7 @@ export function getContent(note: SNote | BNote) {
     };
 
     if (note.type === "text") {
-        renderText(result, note);
+        renderText(result, note, options);
     } else if (note.type === "code" && note.mime === "text/x-markdown") {
         renderMarkdown(result, note);
     } else if (note.type === "code") {
@@ -333,7 +348,7 @@ function renderIndex(result: Result) {
     result.content += "</ul>";
 }
 
-function renderText(result: Result, note: SNote | BNote) {
+function renderText(result: Result, note: SNote | BNote, options: ShareRenderOptions = {}) {
     if (typeof result.content !== "string") return;
     const parseOpts: Partial<Options> = {
         blockTextElements: {}
@@ -382,15 +397,28 @@ function renderText(result: Result, note: SNote | BNote) {
         }
     }
 
-    // Process include notes.
+    // Process include notes. The share view renders only the first level of inclusion; static export
+    // (expandNestedIncludes) keeps expanding recursively. A shared seenNoteIds set guards the
+    // recursive path against cycles that would otherwise loop forever.
+    const seenNoteIds = options.seenNoteIds ?? new Set<string>();
+    seenNoteIds.add(note.noteId);
     for (const includeNoteEl of document.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
         if (!noteId) continue;
 
-        const note = shaca.getNote(noteId);
-        if (!note) continue;
+        const includedNote = shaca.getNote(noteId);
+        if (!includedNote) continue;
 
-        const includedResult = getContent(note);
+        // Deeper-than-first-level includes (and any cycle in the recursive path) degrade to a
+        // reference link that the link-processing passes below resolve to the shared note.
+        if (options.includesAsReferenceLinks || seenNoteIds.has(noteId)) {
+            includeNoteEl.replaceWith(...parse(`<a class="reference-link" href="#root/${noteId}">${escapeHtml(includedNote.title)}</a>`, parseOpts).childNodes);
+            continue;
+        }
+
+        const includedResult = getContent(includedNote, options.expandNestedIncludes
+            ? { expandNestedIncludes: true, seenNoteIds }
+            : { includesAsReferenceLinks: true, seenNoteIds });
         if (typeof includedResult.content !== "string") continue;
 
         const includedDocument = parse(includedResult.content, parseOpts).childNodes;

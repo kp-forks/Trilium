@@ -59,6 +59,60 @@ describe("content_renderer", () => {
             `);
         });
 
+        it("renders only the first level of nested includes on the share view (nested include becomes a reference link)", () => {
+            buildShareNote({ id: "nestC2", title: "Note C", content: "<p>C body</p>" });
+            buildShareNote({
+                id: "nestB2",
+                title: "Note B",
+                content: `<p>B body</p><section class="include-note" data-note-id="nestC2" data-box-size="medium">&nbsp;</section>`
+            });
+            const noteA = buildShareNote({
+                id: "nestA2",
+                content: `<p>A body</p><section class="include-note" data-note-id="nestB2" data-box-size="medium">&nbsp;</section>`
+            });
+            const result = getContent(noteA);
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            // First level (B) expanded; second level (C) replaced with a reference link, not expanded.
+            expect(result.content).toContain("B body");
+            expect(result.content).not.toContain("C body");
+            expect(result.content).toContain("reference-link");
+            expect(result.content).toContain("Note C");
+        });
+
+        it("expands nested includes recursively when exporting (expandNestedIncludes)", () => {
+            buildShareNote({ id: "expC", title: "Note C", content: "<p>C body</p>" });
+            buildShareNote({
+                id: "expB",
+                content: `<p>B body</p><section class="include-note" data-note-id="expC" data-box-size="medium">&nbsp;</section>`
+            });
+            const noteA = buildShareNote({
+                id: "expA",
+                content: `<p>A body</p><section class="include-note" data-note-id="expB" data-box-size="medium">&nbsp;</section>`
+            });
+            const result = getContent(noteA, { expandNestedIncludes: true });
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            expect(result.content).toContain("B body");
+            expect(result.content).toContain("C body");
+            expect(result.content).not.toContain("reference-link");
+        });
+
+        it("does not loop on a circular include chain when expanding recursively", () => {
+            buildShareNote({
+                id: "cycB",
+                content: `<p>B body</p><section class="include-note" data-note-id="cycA" data-box-size="medium">&nbsp;</section>`
+            });
+            const noteA = buildShareNote({
+                id: "cycA",
+                content: `<p>A body</p><section class="include-note" data-note-id="cycB" data-box-size="medium">&nbsp;</section>`
+            });
+            const result = getContent(noteA, { expandNestedIncludes: true });
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            // A expands B; B's re-include of A is broken by the cycle guard (reference link), no hang.
+            expect(result.content).toContain("A body");
+            expect(result.content).toContain("B body");
+            expect(result.content).toContain("reference-link");
+        });
+
         it("renders an included large code note without hanging or re-parsing it as HTML (#9717)", () => {
             // ~2 MiB of angle-bracket-heavy code that previously exploded node-html-parser.
             const codeLine = `const x: Array<Map<string, List<number>>> = a < b && c > d; // <div>\n`;

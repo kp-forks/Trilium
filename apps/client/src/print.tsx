@@ -110,7 +110,8 @@ export function SingleNoteRenderer({ note, onReady }: RendererProps) {
                 if (note.type === "text") {
                     await import("@triliumnext/ckeditor5/src/theme/ck-content.css");
                 }
-                const { $renderedContent } = await content_renderer.getRenderedContent(note, { noChildrenList: true });
+                // Printing preserves full include-note nesting (see expandNestedIncludes).
+                const { $renderedContent } = await content_renderer.getRenderedContent(note, { noChildrenList: true, expandNestedIncludes: true });
                 container.replaceChildren(...$renderedContent);
 
                 // Wait for all images to load.

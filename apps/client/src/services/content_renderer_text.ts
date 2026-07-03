@@ -35,10 +35,14 @@ export default async function renderText(note: FNote | FAttachment, $renderedCon
 export async function postProcessRichContent(note: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>, options: RenderOptions = {}) {
     const seenNoteIds = options.seenNoteIds ?? new Set<string>();
     seenNoteIds.add("noteId" in note ? note.noteId : note.attachmentId);
-    if (!options.noIncludedNotes) {
-        await renderIncludedNotes($renderedContent[0], seenNoteIds);
-    } else {
+    if (options.noIncludedNotes) {
         $renderedContent.find("section.include-note").remove();
+    } else if (options.includesAsReferenceLinks) {
+        // This note is itself an included note in display mode: stop after the first level by
+        // degrading its own includes to reference links instead of expanding them.
+        await replaceIncludesWithReferenceLinks($renderedContent[0]);
+    } else {
+        await renderIncludedNotes($renderedContent[0], seenNoteIds, options.expandNestedIncludes ?? false);
     }
 
     if ($renderedContent.find("span.math-tex").length > 0) {
@@ -67,7 +71,7 @@ export async function postProcessRichContent(note: FNote | FAttachment, $rendere
     await formatCodeBlocks($renderedContent);
 }
 
-async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<string>) {
+async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<string>, expandNested: boolean) {
     // TODO: Consider duplicating with server's share/content_renderer.ts.
     const includeNoteEls = contentEl.querySelectorAll("section.include-note");
 
@@ -100,10 +104,32 @@ async function renderIncludedNotes(contentEl: HTMLElement, seenNoteIds: Set<stri
             continue;
         }
 
-        const renderedContent = (await content_renderer.getRenderedContent(note, {
-            seenNoteIds
-        })).$renderedContent;
+        // On display only the first level is expanded: the included note is rendered with its own
+        // includes degraded to reference links. Printing/export keeps expanding recursively.
+        const renderedContent = (await content_renderer.getRenderedContent(note, expandNested
+            ? { seenNoteIds, expandNestedIncludes: true }
+            : { seenNoteIds, includesAsReferenceLinks: true }
+        )).$renderedContent;
         includeNoteEl.replaceChildren(...renderedContent);
+    }
+}
+
+/**
+ * Replace each `section.include-note` in the given content with a reference link to the included
+ * note, without expanding it. Used on display to stop inclusion after the first level so a note's
+ * transitive include graph is not rendered inline.
+ */
+async function replaceIncludesWithReferenceLinks(contentEl: HTMLElement) {
+    for (const includeNoteEl of contentEl.querySelectorAll("section.include-note")) {
+        const noteId = includeNoteEl.getAttribute("data-note-id");
+        if (!noteId) continue;
+
+        const $referenceLink = await link.createLink(noteId, {
+            referenceLink: true,
+            showNoteIcon: true,
+            showTooltip: false
+        });
+        includeNoteEl.replaceWith(...$referenceLink);
     }
 }
 
