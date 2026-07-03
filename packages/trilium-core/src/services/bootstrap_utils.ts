@@ -8,6 +8,7 @@ import { getCurrentLocale } from "./i18n";
 import attributes from "./attributes";
 import BNote from "../becca/entities/bnote";
 import { getPlatform } from "./platform";
+import sqlInit from "./sql_init";
 
 export default function getSharedBootstrapItems(assetPath: string, dbInitialized: boolean) {
     const sql = getSql();
@@ -29,6 +30,9 @@ export default function getSharedBootstrapItems(assetPath: string, dbInitialized
     if (!dbInitialized) {
         return {
             ...commonItems,
+            // Schema already present but not yet initialized means a sync was started
+            // and interrupted, so the setup screen resumes it instead of starting over.
+            syncInProgress: sqlInit.schemaExists(),
             theme: "next",
             themeCssUrl: false as const,
             themeUseNextAsBase: "next" as const,

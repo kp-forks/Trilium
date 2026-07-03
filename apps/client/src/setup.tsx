@@ -52,10 +52,25 @@ function renderState(state: State, setState: (state: State) => void) {
 }
 
 function App() {
-    const [state, setState] = useState<State>("selectLanguage");
+    // A sync that already created the schema but was interrupted before finishing
+    // resumes straight on the progress screen instead of restarting the wizard.
+    const resuming = window.glob.syncInProgress === true;
+    const [state, setState] = useState<State>(resuming ? "syncFromServerInProgress" : "selectLanguage");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
+
+    useEffect(() => {
+        if (!resuming) {
+            return;
+        }
+        // The background sync timer stays gated behind DB initialization, so nothing
+        // restarts the interrupted sync on its own — kick it off like the launch-bar
+        // button does. sync/now is a no-op if a sync is somehow already running.
+        server.post("sync/now").catch(() => {
+            // Ignore — the progress screen keeps polling sync/stats regardless.
+        });
+    }, [resuming]);
 
     function handleSetState(newState: State) {
         setPrevState(prevStateRef.current);
