@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import aesjs from "aes-js";
 
 import BrowserCryptoProvider from "./crypto_provider.js";
@@ -184,5 +184,44 @@ describe("BrowserCryptoProvider base64", () => {
             expect(Array.from(provider.base64Decode("abcd"))).toEqual([4]);
         });
         /* eslint-enable @typescript-eslint/no-explicit-any */
+    });
+
+    describe("fallback decoder (WebView < 140, no native fromBase64)", () => {
+        // Force the pure-JS decoder — the exact path the mobile WebView 136 takes — by removing the
+        // native method for the duration of these tests.
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const ctor = Uint8Array as any;
+        const savedFromBase64 = ctor.fromBase64;
+        beforeEach(() => delete ctor.fromBase64);
+        afterEach(() => {
+            if (savedFromBase64 === undefined) delete ctor.fromBase64;
+            else ctor.fromBase64 = savedFromBase64;
+        });
+        /* eslint-enable @typescript-eslint/no-explicit-any */
+
+        it("decodes the RFC 4648 vectors (no atob intermediate)", () => {
+            for (const [input, expected] of vectors) {
+                expect(decoder.decode(provider.base64Decode(expected))).toBe(input);
+            }
+        });
+
+        it("handles empty input and both padding lengths", () => {
+            expect(provider.base64Decode("")).toHaveLength(0);
+            expect(Array.from(provider.base64Decode("Zg=="))).toEqual([0x66]); // 1 byte, 2 pad
+            expect(Array.from(provider.base64Decode("Zm8="))).toEqual([0x66, 0x6f]); // 2 bytes, 1 pad
+            expect(Array.from(provider.base64Decode("Zm9v"))).toEqual([0x66, 0x6f, 0x6f]); // 3 bytes, no pad
+        });
+
+        it("round-trips every byte value 0..255 on the fallback path", () => {
+            const bytes = new Uint8Array(256);
+            for (let i = 0; i < 256; i++) bytes[i] = i;
+            expect(Array.from(provider.base64Decode(provider.base64Encode(bytes)))).toEqual(Array.from(bytes));
+        });
+
+        it("round-trips a large buffer whose length is not a multiple of 3", () => {
+            const bytes = new Uint8Array(100_003);
+            for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 7) & 0xff;
+            expect(Array.from(provider.base64Decode(provider.base64Encode(bytes)))).toEqual(Array.from(bytes));
+        });
     });
 });

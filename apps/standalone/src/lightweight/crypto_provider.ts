@@ -9,6 +9,12 @@ import aesjs from "aes-js";
 
 const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+// Test-only (Vite define): force the pure-JS base64 fallback, reproducing WebViews below Chrome 140
+// that lack native Uint8Array.fromBase64/toBase64 — e.g. the Android WebView 136 that OOMs on sync.
+// Never set in production builds.
+declare const __TRILIUM_FORCE_B64_FALLBACK__: boolean;
+const FORCE_B64_FALLBACK = typeof __TRILIUM_FORCE_B64_FALLBACK__ !== "undefined" && __TRILIUM_FORCE_B64_FALLBACK__;
+
 /**
  * Crypto provider for browser environments using pure JavaScript crypto libraries.
  * Uses aes-js for synchronous AES encryption (matching Node.js behavior).
@@ -100,7 +106,7 @@ export default class BrowserCryptoProvider implements CryptoProvider {
         // Firefox 133+, Safari 18.2+. It runs at native speed (SIMD) and avoids materializing
         // the intermediate "binary string" entirely. Detected per call so tests can stub it.
         const nativeBytes = bytes as NativeBase64Array;
-        if (typeof nativeBytes.toBase64 === "function") {
+        if (!FORCE_B64_FALLBACK && typeof nativeBytes.toBase64 === "function") {
             return nativeBytes.toBase64();
         }
 
@@ -117,18 +123,58 @@ export default class BrowserCryptoProvider implements CryptoProvider {
 
     base64Decode(base64: string): Uint8Array {
         const nativeCtor = Uint8Array as unknown as NativeBase64Constructor;
-        if (typeof nativeCtor.fromBase64 === "function") {
+        if (!FORCE_B64_FALLBACK && typeof nativeCtor.fromBase64 === "function") {
             return nativeCtor.fromBase64(base64);
         }
 
-        const binary = atob(base64);
-        const len = binary.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
+        return base64FallbackDecode(base64);
     }
+}
+
+// Base64 alphabet → 6-bit value, indexed by char code (non-alphabet bytes map to 0).
+const B64_DECODE_TABLE = /* @__PURE__ */ (() => {
+    const table = new Uint8Array(256);
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for (let i = 0; i < alphabet.length; i++) {
+        table[alphabet.charCodeAt(i)] = i;
+    }
+    return table;
+})();
+
+/**
+ * Decodes standard (padded) base64 straight into a pre-sized `Uint8Array`, without `atob`'s
+ * intermediate binary string. On the WebView-<140 fallback path this removes a whole extra copy of
+ * the decoded blob from the peak — the copy that pushed sync's blob decode over the mobile heap.
+ * Assumes padded, whitespace-free standard base64 (what `encodeBase64` / btoa / `toBase64` emit).
+ */
+function base64FallbackDecode(base64: string): Uint8Array {
+    const len = base64.length;
+    if (len === 0) {
+        return new Uint8Array(0);
+    }
+
+    let padding = 0;
+    if (base64.charCodeAt(len - 1) === 0x3d) padding++; // '='
+    if (len > 1 && base64.charCodeAt(len - 2) === 0x3d) padding++;
+
+    // For padded base64 `len` is a multiple of 4, so this is exact.
+    const outLen = ((len * 3) >> 2) - padding;
+    const bytes = new Uint8Array(outLen);
+    const table = B64_DECODE_TABLE;
+
+    let o = 0;
+    for (let i = 0; i < len; i += 4) {
+        const c0 = table[base64.charCodeAt(i)];
+        const c1 = table[base64.charCodeAt(i + 1)];
+        const c2 = table[base64.charCodeAt(i + 2)];
+        const c3 = table[base64.charCodeAt(i + 3)];
+
+        bytes[o++] = (c0 << 2) | (c1 >> 4);
+        if (o < outLen) bytes[o++] = ((c1 & 0x0f) << 4) | (c2 >> 2);
+        if (o < outLen) bytes[o++] = ((c2 & 0x03) << 6) | c3;
+    }
+
+    return bytes;
 }
 
 /**
