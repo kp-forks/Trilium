@@ -11,11 +11,12 @@ import { formatDateTime } from "../../utils/formatters";
 import ActionButton from "../react/ActionButton.js";
 import Dropdown from "../react/Dropdown.js";
 import { FormDropdownDivider, FormListItem } from "../react/FormList.js";
-import { useActiveNoteContext, useNote, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
+import { useActiveNoteContext, useNote, useNoteLabelBoolean, useNoteProperty, useSpacedUpdate } from "../react/hooks.js";
 import { useChatContextMenu } from "../type_widgets/llm_chat/chat_context_menu.js";
 import { useChatHighlights } from "../type_widgets/llm_chat/chat_highlights.js";
 import ChatInputBar from "../type_widgets/llm_chat/ChatInputBar.js";
 import ChatMessageList from "../type_widgets/llm_chat/ChatMessageList.js";
+import ChatReadOnlyNotice from "../type_widgets/llm_chat/ChatReadOnlyNotice.js";
 import type { LlmChatContent } from "../type_widgets/llm_chat/llm_chat_types.js";
 import { useLlmChat } from "../type_widgets/llm_chat/useLlmChat.js";
 import RightPanelWidget from "./RightPanelWidget.js";
@@ -42,6 +43,9 @@ export default function SidebarChat() {
     const chatNote = useNote(chatNoteId);
     const chatTitle = useNoteProperty(chatNote, "title") || t("sidebar_chat.title");
 
+    // A `#readOnly` chat is immutable: reply bar replaced by a notice, mutating commands suppressed.
+    const [readOnly] = useNoteLabelBoolean(chatNote, "readOnly");
+
     // Refs for stable access in the spaced update callback
     const chatNoteIdRef = useRef(chatNoteId);
     chatNoteIdRef.current = chatNoteId;
@@ -62,7 +66,7 @@ export default function SidebarChat() {
     const highlights = useChatHighlights(chat, undefined);
 
     // Right-click menu over the timeline, with highlights contributing their add/remove items.
-    useChatContextMenu({ chat, noteContext: undefined, contextMenuItems: highlights.highlightMenuItems });
+    useChatContextMenu({ chat, noteContext: undefined, contextMenuItems: highlights.highlightMenuItems, readOnly });
 
     // Save directly via server.put using the string noteId.
     // This avoids the FNote dependency that useEditorSpacedUpdate requires.
@@ -306,12 +310,16 @@ export default function SidebarChat() {
                     className="sidebar-chat-messages"
                     emptyStateText={t("sidebar_chat.empty_state")}
                 />
-                <ChatInputBar
-                    chat={chat}
-                    activeNoteId={activeNoteId ?? undefined}
-                    activeNoteTitle={activeNote?.title}
-                    onSubmit={handleSubmit}
-                />
+                {readOnly ? (
+                    <ChatReadOnlyNotice />
+                ) : (
+                    <ChatInputBar
+                        chat={chat}
+                        activeNoteId={activeNoteId ?? undefined}
+                        activeNoteTitle={activeNote?.title}
+                        onSubmit={handleSubmit}
+                    />
+                )}
             </div>
         </RightPanelWidget>
     );

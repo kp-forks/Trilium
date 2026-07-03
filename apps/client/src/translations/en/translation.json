@@ -2070,6 +2070,7 @@
     "stop": "Stop",
     "retry": "Retry",
     "scroll_to_bottom": "Scroll to latest",
+    "read_only_notice": "Replying is not available because this AI chat is read-only.",
     "toc_file": "File: {{name}}",
     "highlights_title": "Highlights ({{count}})",
     "highlights_empty": "No highlights yet. Select text in a message and choose \"Highlight\".",

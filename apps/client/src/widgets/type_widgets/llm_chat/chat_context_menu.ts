@@ -37,6 +37,8 @@ export interface ChatContextMenuOptions {
     noteContext: NoteContext | undefined;
     /** Builds extra items to add to the message's context menu (e.g. highlight add/remove). */
     contextMenuItems: ChatContextMenuItemsProvider;
+    /** When the chat is read-only (`#readOnly`), the mutating commands are suppressed. */
+    readOnly: boolean;
 }
 
 /**
@@ -49,9 +51,10 @@ export interface ChatContextMenuOptions {
  *
  * Preventing the default menu drops the browser's own Copy, so we provide a rich Copy here. Copy stays
  * available while a reply streams; the message-mutating commands (highlight add/remove, delete) are
- * suppressed then.
+ * suppressed then. On a read-only chat every mutating command (highlight add/remove, quote, regenerate,
+ * delete) is suppressed for the whole conversation — only Copy and Save-to-sub-note remain.
  */
-export function useChatContextMenu({ chat, noteContext, contextMenuItems }: ChatContextMenuOptions) {
+export function useChatContextMenu({ chat, noteContext, contextMenuItems, readOnly }: ChatContextMenuOptions) {
     const { scrollContainerRef } = chat;
 
     // Latest values for the imperative event handler, so it never reads stale state.
@@ -59,6 +62,8 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
     messagesRef.current = chat.messages;
     const isStreamingRef = useRef(chat.isStreaming);
     isStreamingRef.current = chat.isStreaming;
+    const readOnlyRef = useRef(readOnly);
+    readOnlyRef.current = readOnly;
     const setMessagesRef = useRef(chat.setMessages);
     setMessagesRef.current = chat.setMessages;
     const appendToInputRef = useRef(chat.appendToInput);
@@ -87,6 +92,9 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
             if (!messageId || !root) return; // thinking/error messages carry no id → nothing to offer
 
             const streaming = isStreamingRef.current;
+            // A read-only chat (`#readOnly`) is immutable: every command that would change the
+            // conversation is suppressed, leaving only Copy and Save-to-sub-note.
+            const readOnly = readOnlyRef.current;
             const selectionRange = selectionRangeWithin(container.ownerDocument.getSelection(), root);
             const hasSelection = !!selectionRange?.toString().trim();
             const message = messagesRef.current.find(m => m.id === messageId);
@@ -101,13 +109,16 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
                 items.push({ title: t("llm_chat.copy"), uiIcon: "bx bx-copy", handler: copySelection });
             }
 
-            // Injected commands (highlight add/remove) sit next to the selection commands.
-            items.push(...contextMenuItems({ messageId, root, selectionRange, streaming, clientX: e.clientX, clientY: e.clientY }));
+            // Injected commands (highlight add/remove) sit next to the selection commands. They
+            // mutate the stored conversation, so they're dropped on a read-only chat.
+            if (!readOnly) {
+                items.push(...contextMenuItems({ messageId, root, selectionRange, streaming, clientX: e.clientX, clientY: e.clientY }));
+            }
 
             // Quote the selection into the reply input. Suppressed while streaming — the input is
             // read-only then. Text is captured now (the menu can clear the live selection before the
             // handler runs).
-            const quotedText = !streaming ? selectionRange?.toString() : undefined;
+            const quotedText = !streaming && !readOnly ? selectionRange?.toString() : undefined;
             if (quotedText?.trim()) {
                 items.push({
                     title: t("llm_chat.quote_selection"),
@@ -133,14 +144,14 @@ export function useChatContextMenu({ chat, noteContext, contextMenuItems }: Chat
                     handler: () => void saveMessageToSubNote(parentNotePath, messageMarkdown)
                 });
             }
-            if (canRegenerate(hasSelection, message, messagesRef.current, streaming)) {
+            if (!readOnly && canRegenerate(hasSelection, message, messagesRef.current, streaming)) {
                 items.push({
                     title: t("llm_chat.regenerate"),
                     uiIcon: "bx bx-revision",
                     handler: () => void regenerateLastReplyRef.current()
                 });
             }
-            if (canDeleteMessage(hasSelection, message, streaming)) {
+            if (!readOnly && canDeleteMessage(hasSelection, message, streaming)) {
                 items.push({
                     title: t("llm_chat.delete_message"),
                     uiIcon: "bx bx-trash",
