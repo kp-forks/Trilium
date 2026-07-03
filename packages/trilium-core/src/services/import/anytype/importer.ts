@@ -7,7 +7,8 @@
  * headings, inline marks (bold/italic/strikethrough/underline/inline-code and text/background colours),
  * code blocks (with the language preserved as the Trilium MIME), bullet/numbered/task lists (grouped and
  * nested), toggles (normal toggles → collapsible blocks; toggle headings → plain headings), callouts
- * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`), inline file/media blocks
+ * (→ admonitions), quotes/highlights (→ `<blockquote>`), dividers (→ `<hr>`), bookmark cards (Anytype's
+ * web-link card → a Trilium link-embed / open-graph preview), inline file/media blocks
  * (an embedded image → an inline `role:"image"` attachment; any other attached file → a `role:"file"`
  * attachment reference link, the bytes resolved from the export's `filesObjects/` metadata + `files/`
  * bytes) and cross-page links (Anytype's block-level "link to object" → a Trilium reference link plus an
@@ -34,7 +35,7 @@ import imageService from "../../image.js";
 import noteService from "../../notes.js";
 import protectedSessionService from "../../protected_session.js";
 import type TaskContext from "../../task_context.js";
-import { decodeUtf8 } from "../../utils/binary.js";
+import { decodeUtf8, encodeBase64 } from "../../utils/binary.js";
 import date_utils from "../../utils/date.js";
 import { newEntityId } from "../../utils/index.js";
 import { basename } from "../../utils/path.js";
@@ -452,21 +453,43 @@ function createFileMemberNote(parentNoteId: string, info: FileObjectInfo, bytes:
 /**
  * Resolves the inline file/media placeholders a page's body carries ({@link ./content.js} emits each
  * `file` block as an `<img>` / `<a class="anytype-file">` whose `src`/`href` is the linked `FileObject`'s
- * id). For each one it looks the id up in the export's file metadata and bytes, then saves the bytes as an
- * attachment and rewrites the reference to point at it — an inline `role:"image"` for an image, a
- * `role:"file"` attachment reference-link for any other file type (matching the Notion importer). A
- * placeholder whose file is missing from the export (no metadata or bytes — e.g. a still-uploading file) is
- * dropped (image) or left as plain text (other). Only re-saves the content when something changed.
+ * id, and each bookmark card's favicon/preview as a `data-favicon` / `data-image` file id on its
+ * `section.link-embed`). For a file placeholder it looks the id up in the export's file metadata and bytes,
+ * then saves the bytes as an attachment and rewrites the reference to point at it — an inline `role:"image"`
+ * for an image, a `role:"file"` attachment reference-link for any other file type (matching the Notion
+ * importer). A bookmark's favicon/preview id is instead resolved to an inline base64 `data:` URI (the form
+ * Trilium natively stores a link-embed favicon/image in), never an attachment. A placeholder whose file is
+ * missing from the export (no metadata or bytes — e.g. a still-uploading file) is dropped (image /
+ * favicon / preview) or left as plain text (other file). Only re-saves the content when something changed.
  */
 function applyInlineFiles(note: BNote, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>, shrinkImages: boolean) {
     const content = decodeUtf8(note.getContent());
     // Cheap guard: parse only when the body actually holds a placeholder to resolve.
-    if (!content.includes("<img") && !content.includes('class="anytype-file"')) {
+    if (!content.includes("<img") && !content.includes('class="anytype-file"') && !content.includes("link-embed")) {
         return;
     }
 
     const root = parse(content);
     let changed = false;
+
+    // A bookmark card's favicon/preview: resolve each file-id placeholder to an inline base64 data URI, or
+    // drop the attribute when the export has no bytes for it (rather than leaving a bare id that renders as a
+    // broken image; the client already falls back to a placeholder when the attribute is absent).
+    for (const section of root.querySelectorAll("section.link-embed")) {
+        for (const attr of ["data-favicon", "data-image"]) {
+            const targetId = section.getAttribute(attr);
+            if (!targetId) {
+                continue;
+            }
+            const dataUri = inlineFileDataUri(targetId, fileObjects, files);
+            if (dataUri) {
+                section.setAttribute(attr, dataUri);
+            } else {
+                section.removeAttribute(attr);
+            }
+            changed = true;
+        }
+    }
 
     for (const img of root.querySelectorAll("img")) {
         const targetId = img.getAttribute("src");
@@ -525,6 +548,17 @@ function applyInlineFiles(note: BNote, fileObjects: Map<string, FileObjectInfo>,
 function inlineFileBytes(targetId: string, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>): Uint8Array | undefined {
     const info = fileObjects.get(targetId);
     return info ? files.get(normalizePath(info.source)) : undefined;
+}
+
+/** A file id resolved to an inline `data:<mime>;base64,<bytes>` URI (for a bookmark card's favicon/preview,
+ * stored inline rather than as an attachment), or undefined when the export has no bytes for it. */
+function inlineFileDataUri(targetId: string, fileObjects: Map<string, FileObjectInfo>, files: Map<string, Uint8Array>): string | undefined {
+    const bytes = inlineFileBytes(targetId, fileObjects, files);
+    if (!bytes) {
+        return undefined;
+    }
+    const mime = fileObjects.get(targetId)?.mime || "application/octet-stream";
+    return `data:${mime};base64,${encodeBase64(bytes)}`;
 }
 
 /**
