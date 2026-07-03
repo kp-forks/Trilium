@@ -74,15 +74,22 @@ export default function CKEditor({ apiRef, currentValue, editor, config, disable
                         writer.remove(onlyChild);
                     }
 
-                    // One paragraph inside the quote, its lines joined by soft breaks so the whole
-                    // excerpt stays a single contiguous blockquote.
-                    const paragraph = writer.createElement("paragraph");
-                    lines.forEach((line, index) => {
-                        if (index > 0) writer.appendElement("softBreak", paragraph);
-                        if (line.length > 0) writer.appendText(line, paragraph);
-                    });
+                    // A blank quote line separates paragraphs; lines within a paragraph are joined by
+                    // soft breaks. Emitting one <paragraph> per group round-trips to `> a\n>\n> b`
+                    // instead of collapsing the blank separator into a spurious hard break.
                     const quote = writer.createElement("blockQuote");
-                    writer.append(paragraph, quote);
+                    for (const paragraphLines of groupQuoteLinesIntoParagraphs(lines)) {
+                        const paragraph = writer.createElement("paragraph");
+                        writer.append(paragraph, quote);
+                        paragraphLines.forEach((line, index) => {
+                            if (index > 0) writer.appendElement("softBreak", paragraph);
+                            writer.appendText(line, paragraph);
+                        });
+                    }
+                    // A quote of only blank lines still needs a block child to stay schema-valid.
+                    if (quote.isEmpty) {
+                        writer.append(writer.createElement("paragraph"), quote);
+                    }
                     writer.insert(quote, writer.createPositionAt(root, "end"));
 
                     // A trailing empty paragraph below the quote holds the cursor so the user types
@@ -152,4 +159,27 @@ export default function CKEditor({ apiRef, currentValue, editor, config, disable
             {...restProps}
         />
     )
+}
+
+/**
+ * Groups the (already `> `-stripped) lines of a markdown quote into paragraphs: a blank line starts a
+ * new paragraph, and consecutive non-blank lines belong to the same one. Returns one entry per
+ * paragraph, each holding its lines (which become soft breaks). Used by {@link CKEditorApi.appendBlockQuote}
+ * so a `> a\n>\n> b` quote becomes two paragraphs rather than one paragraph with a doubled hard break.
+ */
+export function groupQuoteLinesIntoParagraphs(lines: string[]): string[][] {
+    const paragraphs: string[][] = [];
+    let current: string[] | null = null;
+    for (const line of lines) {
+        if (line.length === 0) {
+            current = null;
+            continue;
+        }
+        if (!current) {
+            current = [];
+            paragraphs.push(current);
+        }
+        current.push(line);
+    }
+    return paragraphs;
 }

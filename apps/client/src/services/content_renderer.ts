@@ -382,7 +382,11 @@ async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>)
     let messages: StoredMessage[] = [];
     if (source.trim()) {
         try {
-            messages = (JSON.parse(source) as LlmChatContent).messages ?? [];
+            const parsed = JSON.parse(source);
+            // JSON.parse("null") (or any non-object) must not throw on `.messages`.
+            if (parsed && typeof parsed === "object") {
+                messages = (parsed as LlmChatContent).messages ?? [];
+            }
         } catch {
             // Malformed content → empty preview rather than throwing.
         }
