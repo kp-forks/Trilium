@@ -794,6 +794,9 @@
     "october": "October",
     "november": "November",
     "december": "December",
+    "day": "Day",
+    "day_previous": "Previous Day",
+    "day_next": "Next Day",
     "week": "Week",
     "week_previous": "Previous week",
     "week_next": "Next week",
@@ -1273,6 +1276,10 @@
     "open_note_instruction": "Open a note by typing the note's title into the input below or choose a note in the tree.",
     "search_placeholder": "search for a note by its name",
     "enter_workspace": "Enter workspace {{title}}"
+  },
+  "blob_stub": {
+    "not_synced": "This note's content is too large to sync to this device. You can open it on the sync server instead.",
+    "open_on_server": "Open on server"
   },
   "file": {
     "file_preview_not_available": "File preview is not available for this file format.",
@@ -2581,7 +2588,14 @@
     "slide-overview": "Toggle an overview of the slides"
   },
   "calendar_view": {
-    "delete_note": "Delete note..."
+    "delete_note": "Delete note...",
+    "time_slots": "Time slots",
+    "slot_duration": "Duration",
+    "slot_label_interval": "Label interval",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours"
   },
   "ocr": {
     "extracted_text": "Extracted Text (OCR)",

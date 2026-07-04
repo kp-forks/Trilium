@@ -11,8 +11,10 @@ import options from "./options.js";
 import { type ExecOpts, initRequest, type RequestProvider } from "./request.js";
 import { getSql } from "./sql/index.js";
 import setupService from "./setup.js";
+import sqlInit from "./sql_init.js";
 import syncService, { estimateEntityChangeRecordSize } from "./sync.js";
 import syncOptions from "./sync_options.js";
+import syncUpdateService from "./sync_update.js";
 import dateUtils from "./utils/date.js";
 
 interface ChangesResponse {
@@ -115,6 +117,51 @@ describe("sync service", () => {
         expect(urls.some((u) => u.includes("/api/sync/check"))).toBe(true);
     });
 
+    it("prefetches the next chunk before applying the current batch (download/apply pipelining)", async () => {
+        const events: string[] = [];
+        // The first chunk's estimated size (content length) exceeds the batch budget, so the
+        // batch closes after one chunk and the next chunk must be prefetched before the apply.
+        const bigChange = { entityChange: { entityName: "notes", entityId: "pf1" }, entity: { content: "x".repeat(33 * 1024 * 1024) } };
+        const smallChange = { entityChange: { entityName: "notes", entityId: "pf2" }, entity: { content: "y" } };
+        config.changed = [
+            { entityChanges: [bigChange], lastEntityChangeId: 1, outstandingPullCount: 1 },
+            { entityChanges: [smallChange], lastEntityChangeId: 2, outstandingPullCount: 0 },
+            { entityChanges: [], lastEntityChangeId: 2, outstandingPullCount: 0 }
+        ];
+        config.onChanged = (i) => events.push(`fetch:${i}`);
+        vi.spyOn(syncUpdateService, "updateEntities").mockImplementation(() => {
+            events.push("apply");
+        });
+
+        await expect(runSync()).resolves.toEqual({ success: true });
+
+        // The request for chunk 1 is fired before batch 0 (the big chunk) is applied, so the
+        // download overlaps the SQL work; both batches are still applied, in order.
+        expect(events.indexOf("fetch:1")).toBeGreaterThan(events.indexOf("fetch:0"));
+        expect(events.indexOf("apply")).toBeGreaterThan(events.indexOf("fetch:1"));
+        expect(events.filter((e) => e === "apply")).toHaveLength(2);
+        expect(events.indexOf("fetch:2")).toBeGreaterThan(events.indexOf("apply"));
+    });
+
+    it("marks the database as initialized once a sync converges", async () => {
+        // An initial sync-from-server interrupted by a crash resumes via sync/now or the sync
+        // timer — NOT via setup.triggerSync(), which is the only other place that sets the flag.
+        // If sync() itself doesn't set it on convergence, a resumed initial sync completes but
+        // the DB stays uninitialized and the setup screen waits on "finalizing" forever.
+        const initSpy = vi.spyOn(sqlInit, "setDbAsInitialized").mockImplementation(() => {});
+
+        await expect(runSync()).resolves.toEqual({ success: true });
+        expect(initSpy).toHaveBeenCalled();
+    });
+
+    it("does not mark the database as initialized when the sync fails", async () => {
+        const initSpy = vi.spyOn(sqlInit, "setDbAsInitialized").mockImplementation(() => {});
+        config.loginThrows = new Error("kaboom");
+
+        await expect(runSync()).resolves.toMatchObject({ success: false });
+        expect(initSpy).not.toHaveBeenCalled();
+    });
+
     it("counts already-pulled local changes into the pull total so a resumed initial sync keeps the grand total", async () => {
         // On resume the remote only reports the *remaining* changes; the already-pulled ones live in
         // the local entity_changes table. The total must be their sum, otherwise the setup progress
@@ -184,6 +231,37 @@ describe("sync service", () => {
         await runSync();
 
         expect(Number(options.getOption("lastSyncedPull"))).toBe(20);
+    });
+
+    it("appends maxBlobContentSize to pull URLs when the option is set", async () => {
+        // A single non-empty batch then an empty one so the pull loop terminates.
+        config.changed = [
+            { entityChanges: [pulledOptionChange()], lastEntityChangeId: 9, outstandingPullCount: 0 },
+            { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
+        ];
+        cls.init(() => options.setOption("syncMaxBlobContentSize", "1048576"));
+
+        await runSync();
+
+        const changedUrls = requestLog.filter((r) => r.url.includes("/api/sync/changed")).map((r) => r.url);
+        expect(changedUrls.length).toBeGreaterThan(0);
+        expect(changedUrls.every((u) => u.includes("maxBlobContentSize=1048576"))).toBe(true);
+
+        cls.init(() => options.setOption("syncMaxBlobContentSize", "0"));
+    });
+
+    it("omits maxBlobContentSize from pull URLs when the option is 0", async () => {
+        config.changed = [
+            { entityChanges: [pulledOptionChange()], lastEntityChangeId: 9, outstandingPullCount: 0 },
+            { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
+        ];
+        cls.init(() => options.setOption("syncMaxBlobContentSize", "0"));
+
+        await runSync();
+
+        const changedUrls = requestLog.filter((r) => r.url.includes("/api/sync/changed")).map((r) => r.url);
+        expect(changedUrls.length).toBeGreaterThan(0);
+        expect(changedUrls.some((u) => u.includes("maxBlobContentSize"))).toBe(false);
     });
 
     it("re-runs the content check while the server reports outstanding pulls", async () => {
@@ -310,6 +388,31 @@ describe("sync service", () => {
 
             const reorder = syncService.getEntityChangeRecords([ec({ entityName: "note_reordering", entityId: "root" })]);
             expect(reorder[0]?.entity).toBeTypeOf("object");
+        });
+
+        it("does not stub oversized blob content when no size limit is passed (push path)", () => {
+            // getEntityChangeRecords is shared with the push path, which must never stub: a mobile
+            // device that creates a large blob has to push its full content, not an empty stub.
+            cls.init(() => {
+                getSql().execute(
+                    "INSERT INTO blobs (blobId, content, dateModified, utcDateModified) VALUES ('sync_pushpath_blob', ?, ?, ?)",
+                    ["z".repeat(500), dateUtils.utcNowDateTime(), dateUtils.utcNowDateTime()]
+                );
+            });
+            const records = syncService.getEntityChangeRecords([ec({ entityName: "blobs", entityId: "sync_pushpath_blob" })]);
+            expect(records[0]?.entity?.content).not.toBe("");
+        });
+
+        it("stubs oversized blob content when a size limit is passed", () => {
+            cls.init(() => {
+                getSql().execute(
+                    "INSERT INTO blobs (blobId, content, dateModified, utcDateModified) VALUES ('sync_stub_blob', ?, ?, ?)",
+                    ["z".repeat(500), dateUtils.utcNowDateTime(), dateUtils.utcNowDateTime()]
+                );
+            });
+            const [record] = syncService.getEntityChangeRecords([ec({ entityName: "blobs", entityId: "sync_stub_blob" })], undefined, 100);
+            expect(record?.entity?.content).toBe("");
+            expect(record?.entityChange.hash).toBe("remote"); // the ec hash is left untouched
         });
 
         it("throws when an entity type has no primary key", () => {

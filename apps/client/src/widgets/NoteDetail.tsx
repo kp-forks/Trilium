@@ -411,12 +411,31 @@ export async function getExtendedWidgetType(note: FNote | null | undefined, note
         resultingType = type;
     }
 
+    // A note whose blob was withheld by the sync server (device blob size limit) has empty content;
+    // route it to a placeholder rather than a content widget. This also prevents an editor from
+    // saving the empty stub back over the real content on the server. Only content-backed types are
+    // checked, so blobless notes (docs, launchers, books) don't trigger a needless blob fetch; the
+    // fetch itself is froca-cached and coalesced with the render's own blob load.
+    if (BLOB_BACKED_TYPES.has(resultingType)) {
+        const blob = await note.getBlob();
+        if (blob?.isStubbed) {
+            resultingType = "blobStub";
+        }
+    }
+
     if (note.isProtected && !protected_session_holder.isProtectedSessionAvailable()) {
         resultingType = "protectedSession";
     }
 
     return resultingType;
 }
+
+// Extended note types that render or edit a note's blob content, and so must fall back to the
+// "blobStub" placeholder when that content was not synced to this device.
+const BLOB_BACKED_TYPES = new Set<ExtendedNoteType>([
+    "editableText", "readOnlyText", "editableCode", "readOnlyCode", "markdown",
+    "file", "image", "mermaid", "canvas", "mindMap", "render", "spreadsheet"
+]);
 
 export function checkFullHeight(noteContext: NoteContext | undefined, type: ExtendedNoteType | undefined) {
     if (!noteContext) return false;
