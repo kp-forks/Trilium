@@ -107,7 +107,7 @@ type ParsedManifest =
     | { ok: true; icons: PreviewIcon[] }
     | { ok: false };
 
-function parseManifest(content: string): ParsedManifest {
+export function parseManifest(content: string): ParsedManifest {
     if (!content.trim()) return { ok: true, icons: [] };
 
     let data: unknown;
@@ -134,7 +134,7 @@ function parseManifest(content: string): ParsedManifest {
  * (e.g. a CSS-style escape) rather than the real character; those are converted to their code
  * point. A value that is already a real character is returned unchanged.
  */
-function resolveGlyph(raw: string): string {
+export function resolveGlyph(raw: string): string {
     const match = raw.match(/^\\u?([0-9a-fA-F]{2,6})$/);
     if (match) {
         const codePoint = parseInt(match[1], 16);
