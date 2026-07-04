@@ -311,6 +311,10 @@
     "duplicate-note-suffix": "(dup)",
     "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}"
   },
+  "note_conversion": {
+    "revision_before_markdown": "Before conversion to Markdown",
+    "revision_before_text": "Before conversion to Text Note"
+  },
   "backend_log": {
     "log-does-not-exist": "The backend log file '{{ fileName }}' does not exist (yet).",
     "reading-log-failed": "Reading the backend log file '{{ fileName }}' failed."
