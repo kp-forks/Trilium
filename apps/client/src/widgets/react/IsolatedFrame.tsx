@@ -12,6 +12,8 @@ interface IsolatedFrameProps {
     css?: string;
     /** Host `:root` CSS custom properties to mirror into the frame, so its CSS can use `var(...)`. Re-synced on theme change. */
     cssVars?: string[];
+    /** Class name applied to the frame's `<body>`, e.g. to toggle a mode the injected CSS keys off. */
+    bodyClassName?: string;
     children?: ComponentChildren;
 }
 
@@ -25,7 +27,7 @@ interface IsolatedFrameProps {
  * with {@link IsolatedFrameProps.cssVars}. Because the document has no base URL, any URLs referenced
  * from that CSS must be absolute.
  */
-export default function IsolatedFrame({ className, title, css, cssVars, children }: IsolatedFrameProps) {
+export default function IsolatedFrame({ className, title, css, cssVars, bodyClassName, children }: IsolatedFrameProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [ body, setBody ] = useState<HTMLElement | null>(null);
     const colorScheme = useColorScheme();
@@ -50,6 +52,10 @@ export default function IsolatedFrame({ className, title, css, cssVars, children
         }
         style.textContent = `${buildRootVars(cssVars)}${css ?? ""}`;
     }, [ css, cssVars, colorScheme, body ]);
+
+    useLayoutEffect(() => {
+        if (body) body.className = bodyClassName ?? "";
+    }, [ bodyClassName, body ]);
 
     return (
         <>

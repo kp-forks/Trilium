@@ -12,23 +12,20 @@ body {
     margin: 0;
     height: 100%;
     user-select: none;
+    /* Read-only previews (collection tiles) are clipped; interactive mode scrolls (see below). */
     overflow: hidden;
 }
 
-html:has(.ip-grid.interactive),
-body:has(.ip-grid.interactive) {
-    overflow: auto;
-}
-
-
 body {
     color: var(--main-text-color, #000);
-    background: var(--main-background-color, #fff);
-    padding: 8px;
+    padding: 0;
     box-sizing: border-box;
-    /* Read-only previews (collection tiles) are clipped, not scrollable — see the interactive override below. */
 }
 
+body.interactive {
+    overflow: auto;
+    padding: 20px;
+}
 
 .ip-grid {
     --icon-size: 24px;
@@ -40,9 +37,9 @@ body {
     justify-content: start;
 }
 
-.ip-grid.ip-grid.interactive {
-    --icon-size-ratio: .75;
+body.interactive .ip-grid {
     --icon-size: 48px;
+    --icon-size-ratio: .75;
 }
 
 .ip-cell {
@@ -59,7 +56,7 @@ body {
 }
 
 /* Hover highlight only in interactive mode (off for read-only content-renderer previews). */
-.ip-grid.interactive .ip-cell:hover {
+body.interactive .ip-cell:hover {
     background: var(--hover-item-background-color, rgba(127, 127, 127, 0.2));
     color: var(--hover-item-text-color);
     transform: scale(1.5);

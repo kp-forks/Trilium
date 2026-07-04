@@ -20,7 +20,6 @@ const NON_INTERACTIVE_ICON_LIMIT = 250;
 /** Theme variables forwarded into the isolated preview frame so it matches the app's colours. */
 const PREVIEW_CSS_VARS = [
     "--main-text-color",
-    "--main-background-color",
     "--hover-item-background-color",
     "--hover-item-text-color",
     "--accented-background-color"
@@ -67,8 +66,8 @@ export function IconPackPreview({ note, content, interactive = true }: IconPackP
     const visibleIcons = interactive ? parsed.icons : parsed.icons.slice(0, NON_INTERACTIVE_ICON_LIMIT);
 
     return (
-        <IsolatedFrame className="icon-pack-frame" title={t("icon_pack.preview_title")} css={css} cssVars={PREVIEW_CSS_VARS}>
-            <div className={interactive ? "ip-grid interactive" : "ip-grid"}>
+        <IsolatedFrame className="icon-pack-frame" title={t("icon_pack.preview_title")} css={css} cssVars={PREVIEW_CSS_VARS} bodyClassName={interactive ? "interactive" : undefined}>
+            <div className="ip-grid">
                 {visibleIcons.map((icon) => (
                     <div className="ip-cell" key={icon.id} title={interactive ? iconTooltip(prefix, icon) : undefined}>
                         <span className="ip-glyph">{icon.glyph}</span>
