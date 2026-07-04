@@ -11,6 +11,7 @@ import { getLog } from "./log.js";
 import optionService from "./options.js";
 import setupService from "./setup.js";
 import { getSql } from "./sql/index.js";
+import sqlInit from "./sql_init.js";
 import syncMutexService from "./sync_mutex.js";
 import syncOptions from "./sync_options.js";
 import syncUpdateService from "./sync_update.js";
@@ -203,7 +204,21 @@ async function pullChanges(syncContext: SyncContext) {
             }
 
             if (totalPullCount === null) {
-                totalPullCount = resp.entityChanges.length + outstandingPullCount;
+                // Keep the denominator as the *grand* total so the setup progress bar doesn't reset
+                // to 0% after a restart mid initial-sync. Already-pulled changes persist in the local
+                // entity_changes table, so adding them to the remaining count reconstructs the
+                // original total — a resumed sync would otherwise only see the leftover work and
+                // rescale from zero.
+                //
+                // This only matters while the initial sync is in progress; the DB isn't marked
+                // initialized until the first sync converges (syncFinished). On an established
+                // database this COUNT would otherwise scan the full entity_changes table on every
+                // routine sync and inflate the total with every change ever pulled, so skip it there
+                // and count only this session's work.
+                const alreadyPulled = sqlInit.isDbInitialized()
+                    ? 0
+                    : getSql().getValue<number>("SELECT COUNT(1) FROM entity_changes WHERE isSynced = 1") ?? 0;
+                totalPullCount = alreadyPulled + resp.entityChanges.length + outstandingPullCount;
             }
 
             if (resp.entityChanges.length === 0) {
@@ -468,7 +483,7 @@ function getEntityChangeRow(entityChange: EntityChange) {
  * receiver's peak memory. It is a soft cap: a response is at least one record, and the record that
  * crosses the threshold is still included.
  */
-const MAX_PULL_RESPONSE_BYTES = 8 * 1024 * 1024;
+export const MAX_PULL_RESPONSE_BYTES = 8 * 1024 * 1024;
 
 function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes = MAX_PULL_RESPONSE_BYTES) {
     const records: EntityChangeRecord[] = [];

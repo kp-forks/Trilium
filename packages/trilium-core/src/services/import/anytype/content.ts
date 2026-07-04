@@ -4,8 +4,9 @@
  * An object's `snapshot.data.blocks` is a flat list joined into a tree by each block's `childrenIds`.
  * {@link extractContent} walks that tree from the root in document order and converts each block to HTML —
  * headings (`<h2>`/`<h3>`/`<h4>`), bullet/numbered/task lists (grouped and nested), toggles, callouts,
- * quotes, dividers, tables ({@link renderTable}), Mermaid diagrams / LaTeX math ({@link renderLatexBlock})
- * and cross-page reference links — applying inline marks ({@link renderInlineText}) and rendering code
+ * quotes, dividers, tables ({@link renderTable}), Mermaid diagrams / LaTeX math ({@link renderLatexBlock}),
+ * bookmark cards ({@link renderBookmark} → link-embed previews) and cross-page reference links — applying
+ * inline marks ({@link renderInlineText}) and rendering code
  * blocks ({@link renderCodeBlock}). It returns the HTML plus the Trilium ids of every linked-to page (for
  * the `internalLink` relations). The structure importer (importer.ts) owns object selection and the note
  * tree; it calls into here. Mirrors the Notion importer's `converter.ts`.
@@ -112,6 +113,21 @@ export function extractContent(blocks: AnytypeBlock[], rootId: string, resolveLi
             }
             linkTargetIds.add(target.noteId);
             return `<p><a class="reference-link" href="#root/${target.noteId}">${escapeHtml(target.title)}</a></p>`;
+        }
+
+        // A bookmark block — Anytype's web-link card. It becomes a Trilium link-embed (open-graph preview),
+        // the same markup the Notion importer produces for its bookmark cards. The card's url/title/description
+        // are carried inline; its favicon/preview are content-addressed file CIDs, emitted as placeholders the
+        // importer resolves to inline `data:` URIs (how Trilium natively stores a link-embed favicon/image).
+        // Those file ids are surfaced (like an inline image's) so a collection-scoped export doesn't mistake
+        // them for stray members. A card still missing its url is dropped.
+        if (block.bookmark) {
+            for (const hash of [block.bookmark.faviconHash, block.bookmark.imageHash]) {
+                if (hash) {
+                    fileTargetIds.add(hash);
+                }
+            }
+            return renderBookmark(block.bookmark);
         }
 
         // A file/media block — an embedded image or attached file (PDF, audio, …). The placeholder carries
@@ -416,6 +432,44 @@ function wrapSegment(segment: string, covering: AppliedMark[]): string {
 function paletteValue(covering: AppliedMark[], type: string, palette: Record<string, string>): string | undefined {
     const mark = covering.find((candidate) => candidate.type === type);
     return mark ? palette[mark.param] : undefined;
+}
+// #endregion
+
+// #region Bookmarks
+/**
+ * Renders an Anytype bookmark block as a Trilium link-embed (`<section class="link-embed" …>`), the same
+ * open-graph-preview markup the Notion importer produces and CKEditor's LinkEmbed plugin round-trips. The
+ * card's `url`, `title` and `description` map to `data-url` / `data-title` / `data-description`. The
+ * favicon/preview are content-addressed file CIDs (`faviconHash`/`imageHash`), emitted as-is in
+ * `data-favicon` / `data-image` as placeholders — the importer resolves each to an inline base64 `data:` URI
+ * (the form Trilium natively stores a link-embed favicon/image in), or drops the attribute when the export
+ * has no bytes for it. Optional fields are only written when present. A card with no url (still fetching, or
+ * a broken export) is dropped.
+ */
+export function renderBookmark(bookmark: NonNullable<AnytypeBlock["bookmark"]>): string {
+    const url = (bookmark.url ?? "").trim();
+    if (!url) {
+        return "";
+    }
+
+    let attrs = `data-url="${escapeHtml(url)}" data-embed-type="opengraph"`;
+    const title = (bookmark.title ?? "").trim();
+    if (title) {
+        attrs += ` data-title="${escapeHtml(title)}"`;
+    }
+    const description = (bookmark.description ?? "").trim();
+    if (description) {
+        attrs += ` data-description="${escapeHtml(description)}"`;
+    }
+    const favicon = (bookmark.faviconHash ?? "").trim();
+    if (favicon) {
+        attrs += ` data-favicon="${escapeHtml(favicon)}"`;
+    }
+    const image = (bookmark.imageHash ?? "").trim();
+    if (image) {
+        attrs += ` data-image="${escapeHtml(image)}"`;
+    }
+    return `<section class="link-embed" ${attrs}></section>`;
 }
 // #endregion
 

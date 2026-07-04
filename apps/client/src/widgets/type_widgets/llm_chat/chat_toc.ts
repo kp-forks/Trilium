@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context.js";
 import { t } from "../../../services/i18n.js";
@@ -10,52 +10,84 @@ import type { UseLlmChatReturn } from "./useLlmChat.js";
 /** A single entry in the shared table-of-contents widget. */
 type RawHeading = HeadingContext["headings"][number];
 
+/** A chat table-of-contents entry, anchored to its rendered element for scrolling and tracking. */
+export interface ChatHeading extends RawHeading {
+    element: HTMLElement | null;
+}
+
 /** How far down the viewport (as a fraction of its height) the "you are here" line sits. */
 const ACTIVATION_LINE_FRACTION = 0.3;
 
 /**
- * Publishes a table of contents for an AI chat — one entry per user message — into the
- * note context, so the shared {@link TableOfContents} widget renders it exactly like the
- * text-note and PDF tables of contents. Also tracks which message is currently in view and
- * highlights the matching entry as the user scrolls.
+ * Publishes a table of contents for an AI chat into the note context, so the shared
+ * {@link TableOfContents} widget renders it exactly like the text-note and PDF tables of
+ * contents. Each user message becomes a level-1 entry (its text truncated to a short
+ * preview); headings inside assistant replies nest below it, untruncated, shifted one
+ * level down (reply H1 → level 2). Also tracks which entry is currently in view and
+ * highlights it as the user scrolls.
  */
 export function useChatToc(chat: UseLlmChatReturn, noteContext: NoteContext | undefined) {
     const { messages, scrollContainerRef } = chat;
+    const [headings, setHeadings] = useState<ChatHeading[]>([]);
     const [activeHeadingId, setActiveHeadingId] = useState<string | null>(null);
 
-    const headings = useMemo(() => buildChatHeadings(messages), [messages]);
+    // Extract from the rendered DOM whenever the message list changes. Effects run after
+    // the commit, so the messages (including a just-finalized streaming reply) are in the
+    // DOM by now. Streamed-in-progress content is not in `messages` and is ignored.
+    useEffect(() => {
+        setHeadings(extractChatHeadings(messages, scrollContainerRef.current));
+    }, [messages, scrollContainerRef]);
 
-    const scrollToHeading = useCallback((heading: RawHeading) => {
-        const el = findMessageElement(scrollContainerRef.current, heading.id);
-        el?.scrollIntoView({ block: "start", behavior: "smooth" });
-    }, [scrollContainerRef]);
+    const scrollToHeading = useCallback((heading: ChatHeading) => {
+        if (heading.element?.isConnected) {
+            heading.element.scrollIntoView({ block: "start", behavior: "smooth" });
+        }
+    }, []);
 
-    // Scroll-spy: recompute the active heading whenever the timeline scrolls or resizes.
-    // Layout reads are batched into a single animation frame so a fast scroll can't queue
-    // a backlog of reflows.
+    // Scroll-spy: pick the active heading whenever the timeline scrolls or resizes. Heading
+    // offsets are measured once per headings change or container resize — never per scroll
+    // frame, where per-heading geometry reads would force layout across the whole timeline.
+    // Scrolling only reads scrollTop. Offsets can drift when content resizes without
+    // resizing the container (e.g. an image loading mid-history); the drift only affects
+    // the highlight and heals on the next measure.
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
 
+        // Offsets relative to the scroll content, independent of the scroll position.
+        let offsets: HeadingOffset[] = [];
+        let activationLine = 0;
+        const measure = () => {
+            const contentTop = container.getBoundingClientRect().top - container.scrollTop;
+            offsets = [];
+            for (const heading of headings) {
+                if (!heading.element?.isConnected) continue;
+                offsets.push({ id: heading.id, top: heading.element.getBoundingClientRect().top - contentTop });
+            }
+            activationLine = container.clientHeight * ACTIVATION_LINE_FRACTION;
+        };
+
         let rafId: number | null = null;
+        let measureNeeded = true;
         const recompute = () => {
             rafId = null;
-            const containerTop = container.getBoundingClientRect().top;
-            const entries: HeadingOffset[] = [];
-            for (const heading of headings) {
-                const el = findMessageElement(container, heading.id);
-                if (el) entries.push({ id: heading.id, top: el.getBoundingClientRect().top - containerTop });
+            if (measureNeeded) {
+                measureNeeded = false;
+                measure();
             }
-            const activationLine = container.clientHeight * ACTIVATION_LINE_FRACTION;
-            setActiveHeadingId(pickActiveHeadingId(entries, activationLine));
+            setActiveHeadingId(pickActiveHeadingId(offsets, activationLine + container.scrollTop));
         };
         const schedule = () => {
             if (rafId == null) rafId = requestAnimationFrame(recompute);
         };
+        const scheduleMeasure = () => {
+            measureNeeded = true;
+            schedule();
+        };
 
         recompute();
         container.addEventListener("scroll", schedule, { passive: true });
-        const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(schedule) : null;
+        const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(scheduleMeasure) : null;
         resizeObserver?.observe(container);
 
         return () => {
@@ -81,30 +113,73 @@ export function useChatToc(chat: UseLlmChatReturn, noteContext: NoteContext | un
 
 interface HeadingOffset {
     id: string;
-    /** Distance (px) of the message's top edge below the scroll container's top edge. */
+    /** The heading's top edge position, in the same coordinate space as the activation line. */
     top: number;
 }
 
-function findMessageElement(container: HTMLElement | null, messageId: string): HTMLElement | null {
-    if (!container) return null;
-    // Compare the parsed dataset value rather than interpolating the id into a CSS selector:
-    // persisted or imported chats may carry ids with characters (quotes, backslashes, newlines)
-    // that would make an attribute selector invalid and throw.
+/**
+ * Map every rendered message element by its id in one pass, so heading extraction stays
+ * O(messages) instead of running a full-timeline query per message. The dataset value is
+ * compared as parsed rather than interpolated into a CSS selector: persisted or imported
+ * chats may carry ids with characters (quotes, backslashes, newlines) that would make an
+ * attribute selector invalid and throw.
+ */
+function buildMessageElementMap(container: HTMLElement | null): Map<string, HTMLElement> {
+    const elementById = new Map<string, HTMLElement>();
+    if (!container) return elementById;
     for (const el of container.querySelectorAll<HTMLElement>("[data-message-id]")) {
-        if (el.dataset.messageId === messageId) return el;
+        const id = el.dataset.messageId;
+        if (id !== undefined && !elementById.has(id)) {
+            elementById.set(id, el);
+        }
     }
-    return null;
+    return elementById;
 }
 
-/** Build one table-of-contents entry per user message, in order. */
-export function buildChatHeadings(messages: StoredMessage[]): RawHeading[] {
-    const headings: RawHeading[] = [];
+/** Headings inside an assistant reply's rendered markdown (excludes tool cards, citations, etc.). */
+const REPLY_HEADING_SELECTOR = [1, 2, 3, 4, 5, 6].map(n => `.llm-chat-markdown h${n}`).join(", ");
+
+/**
+ * Build the table-of-contents entries for a chat: a level-1 entry per user message
+ * (truncated preview) and, nested below it, one entry per heading found in the rendered
+ * assistant replies — untruncated, exactly like the text-note table of contents. Reply
+ * headings are shifted one level down (H1 → 2, H2 → 3, …); if no user message precedes
+ * them (e.g. an imported chat), they keep their own level so the hierarchy starts at 1.
+ */
+export function extractChatHeadings(messages: StoredMessage[], container: HTMLElement | null): ChatHeading[] {
+    const elementById = buildMessageElementMap(container);
+    const headings: ChatHeading[] = [];
+    let hasUserHeading = false;
     for (const message of messages) {
-        if (message.role !== "user") continue;
-        const preview = truncateForToc(getMessagePreviewText(message.content));
-        // The shared widget renders `text` as HTML (via RawHtml), so escape the plain
-        // message text so it renders literally and can't inject markup.
-        headings.push({ id: message.id, level: 1, text: escapeHtml(preview) });
+        if (message.type === "error" || message.type === "thinking") continue;
+
+        if (message.role === "user") {
+            const preview = truncateForToc(getMessagePreviewText(message.content));
+            // The shared widget renders `text` as HTML (via RawHtml), so escape the plain
+            // message text so it renders literally and can't inject markup.
+            headings.push({
+                id: message.id,
+                level: 1,
+                text: escapeHtml(preview),
+                element: elementById.get(message.id) ?? null
+            });
+            hasUserHeading = true;
+        } else if (message.role === "assistant") {
+            const messageEl = elementById.get(message.id);
+            if (!messageEl) continue;
+            const levelOffset = hasUserHeading ? 1 : 0;
+            let index = 0;
+            for (const headingEl of messageEl.querySelectorAll<HTMLHeadingElement>(REPLY_HEADING_SELECTOR)) {
+                headings.push({
+                    id: `${message.id}:${index}`,
+                    level: parseInt(headingEl.tagName.substring(1), 10) + levelOffset,
+                    // Already-rendered, DOMPurify-sanitized HTML — used as-is, untruncated.
+                    text: headingEl.innerHTML,
+                    element: headingEl
+                });
+                index++;
+            }
+        }
     }
     return headings;
 }

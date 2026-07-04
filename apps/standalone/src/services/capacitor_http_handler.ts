@@ -33,12 +33,18 @@ function getCapacitorHttp() {
  * restrictions, and plain HTTP targets work from an HTTPS WebView origin.
  */
 export const capacitorHttpHandler: NativeHttpHandler = async (request) => {
+    // Ask for the raw response as text rather than CapacitorHttp's default JSON auto-parsing. The
+    // worker (BridgedRequestProvider) parses the body itself, so letting the plugin parse it to an
+    // object only for us to JSON.stringify it straight back is a wasted parse + serialize of the
+    // entire body — doubling main-thread peak memory on a large sync response (e.g. one carrying a
+    // big blob), which shares the mobile process heap with the sync worker.
+    const responseType = request.responseType ?? "text";
     const response = await getCapacitorHttp().request({
         method: request.method,
         url: request.url,
         headers: request.headers,
         data: request.body,
-        responseType: request.responseType
+        responseType
     });
 
     // Normalize header keys to lowercase for consistent access in the worker

@@ -1636,8 +1636,10 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     transform: rotate(-90deg);
 }
 
-::-webkit-scrollbar {
-    width: 12px;
+@supports (-webkit-box-reflect: below) {
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
 }
 
 ::-webkit-scrollbar-thumb {

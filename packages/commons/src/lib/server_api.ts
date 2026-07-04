@@ -387,6 +387,13 @@ export interface DefinitionObject {
 export type BootstrapDefinition = {
     dbInitialized: boolean;
     /**
+     * Whether a sync that has already created the database schema was interrupted
+     * before finishing (schema exists but the `initialized` flag is not yet set).
+     * Only meaningful while `dbInitialized` is `false`; the setup screen uses it to
+     * jump straight back to the sync-in-progress step and resume the sync on restart.
+     */
+    syncInProgress?: boolean;
+    /**
      * Whether a password has been set yet. `false` only in the pre-auth window
      * after the database is initialized but before the user has set a password,
      * which the client uses to render the set-password screen. Omitted (treated

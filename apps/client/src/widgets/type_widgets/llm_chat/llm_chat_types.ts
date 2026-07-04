@@ -87,6 +87,16 @@ export function getMessageText(content: string | ContentBlock[]): string {
 }
 
 /**
+ * Drop leading messages until the first user turn, so the conversation sent to the LLM starts with a
+ * user message. Some providers (e.g. Anthropic) reject a leading assistant turn, which can happen
+ * after the first user message is deleted. A conversation with no user message is left untouched.
+ */
+export function trimToFirstUserMessage<T extends { role: string }>(messages: T[]): T[] {
+    const firstUser = messages.findIndex(m => m.role === "user");
+    return firstUser <= 0 ? messages : messages.slice(firstUser);
+}
+
+/**
  * Extract tool calls from message content blocks.
  */
 export function getMessageToolCalls(message: StoredMessage): ToolCall[] {

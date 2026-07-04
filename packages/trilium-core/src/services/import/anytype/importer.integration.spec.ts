@@ -132,6 +132,74 @@ describe("Anytype importer — integration", () => {
         expect(decodeUtf8(first?.getContent() ?? "")).toBe("<p>Hello world</p><p>Second paragraph</p>");
     });
 
+    it("keeps a bookmark block as a link-embed, inlining its favicon as a base64 data URI", async () => {
+        // A page holding a bookmark card. The card's target is a separate `ot-bookmark` object (a non-page
+        // layout, so not imported); the card carries the url/title/description and a favicon file id (resolved
+        // from the export's filesObjects/files to an inline data URI, how Trilium natively stores a favicon).
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "page1", childrenIds: ["header", "bm"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "bm", bookmark: { url: "https://triliumnotes.org/", title: "Trilium Notes", description: "An open-source note-taking app.", faviconHash: "fav-cid", type: "Page", targetObjectId: "bookmark-obj", state: "Done" } }
+                    ],
+                    details: { id: "page1", name: "Links", resolvedLayout: 0 },
+                    objectTypes: ["ot-page"]
+                }
+            }
+        });
+        // The `ot-bookmark` object the card mirrors — layout 11, so it must NOT be imported as a page.
+        const bookmarkObject = JSON.stringify({
+            sbType: "Page",
+            snapshot: { data: { blocks: [{ id: "bookmark-obj", childrenIds: [] }], details: { id: "bookmark-obj", name: "Trilium Notes", resolvedLayout: 11, source: "https://triliumnotes.org/" }, objectTypes: ["ot-bookmark"] } }
+        });
+        const faviconBytes = Buffer.from([0x00, 0x01, 0x02, 0x03]);
+
+        const importRoot = await importAnytype({
+            "objects/page1.pb.json": page,
+            "objects/bookmark.pb.json": bookmarkObject,
+            "filesObjects/fav.pb.json": fileObjectJson("fav-cid", "triliumnotes_org_icon", "ico", "image/x-icon", "files\\triliumnotes_org_icon.ico"),
+            "files/triliumnotes_org_icon.ico": faviconBytes
+        });
+
+        const children = importRoot.getChildNotes();
+        expect(children.map((note) => note.title)).toEqual(["Links"]);
+        // The favicon file id has been resolved to an inline data URI (mime derived from the .ico name).
+        expect(decodeUtf8(children[0]?.getContent() ?? "")).toBe(
+            `<section class="link-embed" data-url="https://triliumnotes.org/" data-embed-type="opengraph" data-title="Trilium Notes" data-description="An open-source note-taking app." data-favicon="data:image/vnd.microsoft.icon;base64,${faviconBytes.toString("base64")}"></section>`
+        );
+    });
+
+    it("drops a bookmark's favicon placeholder when the export has no bytes for it", async () => {
+        // The card references a favicon file id, but no filesObjects/files entry backs it — the importer drops
+        // the data-favicon attribute rather than leaving a bare id that would render as a broken image.
+        const page = JSON.stringify({
+            sbType: "Page",
+            snapshot: {
+                data: {
+                    blocks: [
+                        { id: "page1", childrenIds: ["header", "bm"] },
+                        { id: "header", childrenIds: ["title"] },
+                        { id: "title", text: { text: "", style: "Title" } },
+                        { id: "bm", bookmark: { url: "https://example.com/", title: "Example", faviconHash: "missing-cid", state: "Done" } }
+                    ],
+                    details: { id: "page1", name: "Links", resolvedLayout: 0 },
+                    objectTypes: ["ot-page"]
+                }
+            }
+        });
+
+        const importRoot = await importAnytype({ "objects/page1.pb.json": page });
+
+        const children = importRoot.getChildNotes();
+        expect(decodeUtf8(children[0]?.getContent() ?? "")).toBe(
+            '<section class="link-embed" data-url="https://example.com/" data-embed-type="opengraph" data-title="Example"></section>'
+        );
+    });
+
     it("imports only pages, skipping sets, system objects and the relations/types folders", async () => {
         const importRoot = await importAnytype({
             "objects/page1.pb.json": pageObject("page1", "Real Page", ["content"]),
