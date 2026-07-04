@@ -131,9 +131,13 @@ export default class BrowserCryptoProvider implements CryptoProvider {
     }
 }
 
-// Base64 alphabet → 6-bit value, indexed by char code (non-alphabet bytes map to 0).
+// Sentinel for a char code that is not part of the base64 alphabet. Distinct from 0 so the decoder
+// can tell a real 'A' (value 0) apart from padding / whitespace / garbage, which it skips.
+const B64_INVALID = 0xff;
+
+// Base64 alphabet → 6-bit value, indexed by char code (non-alphabet bytes map to B64_INVALID).
 const B64_DECODE_TABLE = /* @__PURE__ */ (() => {
-    const table = new Uint8Array(256);
+    const table = new Uint8Array(256).fill(B64_INVALID);
     const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     for (let i = 0; i < alphabet.length; i++) {
         table[alphabet.charCodeAt(i)] = i;
@@ -142,39 +146,41 @@ const B64_DECODE_TABLE = /* @__PURE__ */ (() => {
 })();
 
 /**
- * Decodes standard (padded) base64 straight into a pre-sized `Uint8Array`, without `atob`'s
- * intermediate binary string. On the WebView-<140 fallback path this removes a whole extra copy of
- * the decoded blob from the peak — the copy that pushed sync's blob decode over the mobile heap.
- * Assumes padded, whitespace-free standard base64 (what `encodeBase64` / btoa / `toBase64` emit).
+ * Decodes standard base64 straight into a pre-sized `Uint8Array`, without `atob`'s intermediate
+ * binary string. On the WebView-<140 fallback path this removes a whole extra copy of the decoded
+ * blob from the peak — the copy that pushed sync's blob decode over the mobile heap.
+ *
+ * Non-alphabet characters (padding `=` and any ASCII whitespace, e.g. newlines in line-wrapped
+ * base64) are skipped rather than decoded as zero bytes, matching `atob` / native `fromBase64`
+ * semantics. This is done in a single streaming pass over the input via a bit accumulator, so it
+ * stays allocation-free (no sanitized copy of the whole string) and preserves the memory win.
  */
 function base64FallbackDecode(base64: string): Uint8Array {
     const len = base64.length;
-    if (len === 0) {
-        return new Uint8Array(0);
-    }
-
-    let padding = 0;
-    if (base64.charCodeAt(len - 1) === 0x3d) padding++; // '='
-    if (len > 1 && base64.charCodeAt(len - 2) === 0x3d) padding++;
-
-    // For padded base64 `len` is a multiple of 4, so this is exact.
-    const outLen = ((len * 3) >> 2) - padding;
-    const bytes = new Uint8Array(outLen);
     const table = B64_DECODE_TABLE;
 
-    let o = 0;
-    for (let i = 0; i < len; i += 4) {
-        const c0 = table[base64.charCodeAt(i)];
-        const c1 = table[base64.charCodeAt(i + 1)];
-        const c2 = table[base64.charCodeAt(i + 2)];
-        const c3 = table[base64.charCodeAt(i + 3)];
+    // Upper bound: every 4 alphabet symbols yield 3 bytes. Padding/whitespace only ever reduce the
+    // real output, so this never under-allocates; the exact length is returned as a view at the end.
+    const bytes = new Uint8Array((len * 3) >> 2);
 
-        bytes[o++] = (c0 << 2) | (c1 >> 4);
-        if (o < outLen) bytes[o++] = ((c1 & 0x0f) << 4) | (c2 >> 2);
-        if (o < outLen) bytes[o++] = ((c2 & 0x03) << 6) | c3;
+    let o = 0;
+    let acc = 0; // bit accumulator holding up to three pending 6-bit symbols
+    let accBits = 0;
+    for (let i = 0; i < len; i++) {
+        const v = table[base64.charCodeAt(i)];
+        if (v === B64_INVALID) {
+            continue; // '=' padding or whitespace — ignore, don't emit a zero byte
+        }
+
+        acc = (acc << 6) | v;
+        accBits += 6;
+        if (accBits >= 8) {
+            accBits -= 8;
+            bytes[o++] = (acc >> accBits) & 0xff;
+        }
     }
 
-    return bytes;
+    return o === bytes.length ? bytes : bytes.subarray(0, o);
 }
 
 /**

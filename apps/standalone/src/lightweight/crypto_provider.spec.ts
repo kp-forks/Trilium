@@ -223,5 +223,23 @@ describe("BrowserCryptoProvider base64", () => {
             for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 31 + 7) & 0xff;
             expect(Array.from(provider.base64Decode(provider.base64Encode(bytes)))).toEqual(Array.from(bytes));
         });
+
+        it("ignores embedded whitespace instead of decoding it as zero bytes (atob / native parity)", () => {
+            // Line-wrapped and space-separated base64 must decode identically to the compact form,
+            // not emit spurious 0x00 bytes for the newlines/spaces.
+            expect(decoder.decode(provider.base64Decode("Zm9v\nYmFy"))).toBe("foobar");
+            expect(decoder.decode(provider.base64Decode("Zm9v YmFy"))).toBe("foobar");
+            expect(decoder.decode(provider.base64Decode("  Zm9v\r\nYmFy  \n"))).toBe("foobar");
+            // Whitespace around padding is tolerated too.
+            expect(Array.from(provider.base64Decode("Zg =="))).toEqual([0x66]);
+            expect(Array.from(provider.base64Decode("Z m 8 ="))).toEqual([0x66, 0x6f]);
+        });
+
+        it("round-trips a large buffer that is line-wrapped every 76 chars (MIME style)", () => {
+            const bytes = new Uint8Array(50_000);
+            for (let i = 0; i < bytes.length; i++) bytes[i] = (i * 17 + 3) & 0xff;
+            const wrapped = provider.base64Encode(bytes).replace(/(.{76})/g, "$1\n");
+            expect(Array.from(provider.base64Decode(wrapped))).toEqual(Array.from(bytes));
+        });
     });
 });
