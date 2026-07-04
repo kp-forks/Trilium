@@ -23,6 +23,10 @@ export interface SplitEditorProps extends EditableCodeProps {
     previewButtons?: ComponentChildren;
     editorBefore?: ComponentChildren;
     forceOrientation?: "horizontal" | "vertical";
+    /** Forces the editor pane into read-only mode regardless of the note's own read-only state, e.g. for note types whose content isn't editable as text. */
+    forceReadOnly?: boolean;
+    /** Replaces the default CodeMirror editor pane, e.g. for note types whose content shouldn't be shown in a code editor (large `file` notes). Implies read-only; combine with {@link forceReadOnly} so the preview is still fed from the blob. */
+    editorContent?: ComponentChildren;
     extraContent?: ComponentChildren;
 }
 
@@ -41,11 +45,11 @@ export interface SplitEditorProps extends EditableCodeProps {
  * - Can display errors to the user via {@link setError}.
  * - Horizontal or vertical orientation for the editor/preview split, adjustable via the switch split orientation button floating button.
  */
-export default function SplitEditor({ note, noteContext, error, previewStale, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, extraContent, ...editorProps }: SplitEditorProps) {
+export default function SplitEditor({ note, noteContext, error, previewStale, splitOptions, previewContent, previewButtons, className, editorBefore, forceOrientation, forceReadOnly, editorContent, extraContent, ...editorProps }: SplitEditorProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const splitEditorOrientation = useSplitOrientation(forceOrientation);
     const [ displayMode ] = useNoteLabel(note, "displayMode");
-    const readOnly = useEffectiveReadOnly(note, noteContext);
+    const readOnly = useEffectiveReadOnly(note, noteContext) || Boolean(forceReadOnly);
     const mode = displayMode === "source" || displayMode === "split" || displayMode === "preview"
         ? displayMode
         : readOnly ? "preview" : "split";
@@ -73,7 +77,7 @@ export default function SplitEditor({ note, noteContext, error, previewStale, sp
         <div className="note-detail-split-editor-col">
             {editorBefore}
             <div className="note-detail-split-editor">
-                {readOnly
+                {editorContent ?? (readOnly
                     ? <ReadOnlyCode note={note} noteContext={noteContext} {...editorProps} />
                     : <EditableCode
                         note={note}
@@ -82,7 +86,7 @@ export default function SplitEditor({ note, noteContext, error, previewStale, sp
                         updateInterval={750} debounceUpdate
                         noBackgroundChange
                         {...editorProps}
-                    />}
+                    />)}
             </div>
             {extraContent}
         </div>

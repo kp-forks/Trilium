@@ -208,7 +208,7 @@ function SwitchSplitOrientationButton({ note, isReadOnly, isDefaultViewMode }: N
 
 function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInnerProps) {
     const [ displayMode, setDisplayMode ] = useNoteLabel(note, "displayMode");
-    const isEnabled = (note.isMarkdown() || note.type === "mermaid") && note.isContentAvailable() && isDefaultViewMode;
+    const isEnabled = (note.isMarkdown() || note.type === "mermaid" || note.isIconPack()) && note.isContentAvailable() && isDefaultViewMode;
     if (!isEnabled) return null;
 
     const mode = displayMode === "source" || displayMode === "preview" ? displayMode : "split";
