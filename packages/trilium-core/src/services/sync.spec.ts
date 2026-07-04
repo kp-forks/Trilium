@@ -126,6 +126,37 @@ describe("sync service", () => {
         expect(Number(options.getOption("lastSyncedPull"))).toBe(20);
     });
 
+    it("appends maxBlobContentSize to pull URLs when the option is set", async () => {
+        // A single non-empty batch then an empty one so the pull loop terminates.
+        config.changed = [
+            { entityChanges: [pulledOptionChange()], lastEntityChangeId: 9, outstandingPullCount: 0 },
+            { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
+        ];
+        cls.init(() => options.setOption("syncMaxBlobContentSize", "1048576"));
+
+        await runSync();
+
+        const changedUrls = requestLog.filter((r) => r.url.includes("/api/sync/changed")).map((r) => r.url);
+        expect(changedUrls.length).toBeGreaterThan(0);
+        expect(changedUrls.every((u) => u.includes("maxBlobContentSize=1048576"))).toBe(true);
+
+        cls.init(() => options.setOption("syncMaxBlobContentSize", "0"));
+    });
+
+    it("omits maxBlobContentSize from pull URLs when the option is 0", async () => {
+        config.changed = [
+            { entityChanges: [pulledOptionChange()], lastEntityChangeId: 9, outstandingPullCount: 0 },
+            { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
+        ];
+        cls.init(() => options.setOption("syncMaxBlobContentSize", "0"));
+
+        await runSync();
+
+        const changedUrls = requestLog.filter((r) => r.url.includes("/api/sync/changed")).map((r) => r.url);
+        expect(changedUrls.length).toBeGreaterThan(0);
+        expect(changedUrls.some((u) => u.includes("maxBlobContentSize"))).toBe(false);
+    });
+
     it("re-runs the content check while the server reports outstanding pulls", async () => {
         config.check = [
             { maxEntityChangeId: 999_999_999, entityHashes: {} }, // lastSyncedPull < max -> loop again
@@ -250,6 +281,31 @@ describe("sync service", () => {
 
             const reorder = syncService.getEntityChangeRecords([ec({ entityName: "note_reordering", entityId: "root" })]);
             expect(reorder[0]?.entity).toBeTypeOf("object");
+        });
+
+        it("does not stub oversized blob content when no size limit is passed (push path)", () => {
+            // getEntityChangeRecords is shared with the push path, which must never stub: a mobile
+            // device that creates a large blob has to push its full content, not an empty stub.
+            cls.init(() => {
+                getSql().execute(
+                    "INSERT INTO blobs (blobId, content, dateModified, utcDateModified) VALUES ('sync_pushpath_blob', ?, ?, ?)",
+                    ["z".repeat(500), dateUtils.utcNowDateTime(), dateUtils.utcNowDateTime()]
+                );
+            });
+            const records = syncService.getEntityChangeRecords([ec({ entityName: "blobs", entityId: "sync_pushpath_blob" })]);
+            expect(records[0]?.entity?.content).not.toBe("");
+        });
+
+        it("stubs oversized blob content when a size limit is passed", () => {
+            cls.init(() => {
+                getSql().execute(
+                    "INSERT INTO blobs (blobId, content, dateModified, utcDateModified) VALUES ('sync_stub_blob', ?, ?, ?)",
+                    ["z".repeat(500), dateUtils.utcNowDateTime(), dateUtils.utcNowDateTime()]
+                );
+            });
+            const [record] = syncService.getEntityChangeRecords([ec({ entityName: "blobs", entityId: "sync_stub_blob" })], undefined, 100);
+            expect(record?.entity?.content).toBe("");
+            expect(record?.entityChange.hash).toBe("remote"); // the ec hash is left untouched
         });
 
         it("throws when an entity type has no primary key", () => {

@@ -1,6 +1,6 @@
 import "./setup.css";
 
-import { LOCALES, NetworkAddressesResponse, SetupSyncFromServerResponse } from "@triliumnext/commons";
+import { LOCALES, MOBILE_SYNC_MAX_BLOB_CONTENT_SIZE, NetworkAddressesResponse, SetupSyncFromServerResponse } from "@triliumnext/commons";
 import clsx from "clsx";
 import { render } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
@@ -340,7 +340,11 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
             const resp = await server.post<SetupSyncFromServerResponse>("setup/sync-from-server", {
                 syncServerHost: syncServerHost.trim().replace(/\/+$/, ""),
                 syncProxy: syncProxy.trim(),
-                password
+                password,
+                // On mobile (Capacitor), don't pull blobs above the default limit — they blow the
+                // WASM/native heap during sync. The server sends stubs instead; other platforms
+                // send 0 (no limit).
+                syncMaxBlobContentSize: isMobileApp() ? MOBILE_SYNC_MAX_BLOB_CONTENT_SIZE : 0
             });
 
             if (resp.result === "success") {

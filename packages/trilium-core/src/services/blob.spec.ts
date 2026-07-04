@@ -1,3 +1,4 @@
+import { EMPTY_BLOB_ID } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
 import becca from "../becca/becca.js";
@@ -8,8 +9,9 @@ import { getContext } from "./context.js";
 import protectedSessionService from "./protected_session.js";
 import dataEncryption from "./encryption/data_encryption.js";
 import notesService from "./notes.js";
+import { getSql } from "./sql/index.js";
 import { decodeUtf8, encodeUtf8 } from "./utils/binary.js";
-import { hash } from "./utils/index.js";
+import { hash, hashedBlobId } from "./utils/index.js";
 
 const PROTECTED_KEY = encodeUtf8("0123456789abcdef"); // exactly 16 bytes
 
@@ -169,6 +171,67 @@ describe("blob", () => {
             // Binary blobs come back with content nulled but contentLength preserved.
             expect(pojoContent).toBeNull();
             expect(contentLength).toBeGreaterThan(0);
+        });
+
+        it("marks a blob as stubbed when content is empty but the blobId is not the empty-content hash", () => {
+            const { isStubbed, blobId } = getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "blob spec stub note",
+                    content: "<p>content that was withheld by the sync server</p>",
+                    type: "text"
+                });
+
+                // Simulate a sync stub: the server delivered empty content, but the (content-derived)
+                // blobId is still the original non-empty hash.
+                getSql().execute("UPDATE blobs SET content = '' WHERE blobId = ?", [note.blobId]);
+
+                const pojo = blob.getBlobPojo("notes", note.noteId);
+                return { isStubbed: pojo.isStubbed, blobId: pojo.blobId };
+            });
+
+            expect(blobId).not.toBe(EMPTY_BLOB_ID);
+            expect(isStubbed).toBe(true);
+        });
+
+        it("does not mark a normal (non-empty) blob as stubbed", () => {
+            const isStubbed = getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "blob spec normal note",
+                    content: "<p>ordinary content</p>",
+                    type: "text"
+                });
+                return blob.getBlobPojo("notes", note.noteId).isStubbed;
+            });
+
+            expect(isStubbed).toBe(false);
+        });
+
+        it("does not mark a genuinely empty blob as stubbed", () => {
+            const { isStubbed, blobId } = getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "blob spec empty note",
+                    content: "<p>temporary</p>",
+                    type: "text"
+                });
+                // Empty content hashes to EMPTY_BLOB_ID, so this is a legitimately empty blob, not a stub.
+                note.setContent("");
+
+                const pojo = blob.getBlobPojo("notes", note.noteId);
+                return { isStubbed: pojo.isStubbed, blobId: pojo.blobId };
+            });
+
+            expect(blobId).toBe(EMPTY_BLOB_ID);
+            expect(isStubbed).toBe(false);
+        });
+    });
+
+    describe("EMPTY_BLOB_ID", () => {
+        it("equals hashedBlobId of empty content", () => {
+            // Guards the hard-coded constant in commons (which cannot call hashedBlobId at module load).
+            expect(hashedBlobId("")).toBe(EMPTY_BLOB_ID);
         });
     });
 });

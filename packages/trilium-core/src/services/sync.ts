@@ -164,6 +164,7 @@ async function doLogin(): Promise<SyncContext> {
 async function pullChanges(syncContext: SyncContext) {
     const log = getLog();
     const maxBatchBytes = getMaxPullBatchBytes();
+    const maxBlobContentSize = getMaxBlobContentSize();
 
     while (true) {
         // Fetch phase: pull consecutive chunks (each needs its own HTTP round-trip) until we've
@@ -180,7 +181,8 @@ async function pullChanges(syncContext: SyncContext) {
 
         do {
             const logMarkerId = randomString(10); // to easily pair sync events between client and server logs
-            const changesUri = `/api/sync/changed?instanceId=${getInstanceId()}&lastEntityChangeId=${cursor}&logMarkerId=${logMarkerId}`;
+            const changesUri = `/api/sync/changed?instanceId=${getInstanceId()}&lastEntityChangeId=${cursor}&logMarkerId=${logMarkerId}`
+                + (maxBlobContentSize ? `&maxBlobContentSize=${maxBlobContentSize}` : "");
 
             const resp = await syncRequest<ChangesResponse>(syncContext, "GET", changesUri);
             if (!resp) {
@@ -425,7 +427,7 @@ async function syncRequest<T extends {}>(syncContext: SyncContext, method: strin
     return response;
 }
 
-function getEntityChangeRow(entityChange: EntityChange) {
+function getEntityChangeRow(entityChange: EntityChange, maxBlobContentSize?: number) {
     const { entityName, entityId } = entityChange;
 
     if (entityName === "note_reordering") {
@@ -449,6 +451,16 @@ function getEntityChangeRow(entityChange: EntityChange) {
             entityRow.content = binary_utils.encodeUtf8(entityRow.content);
         }
 
+        // A client that opted into a blob size limit (e.g. mobile, to bound peak memory) receives a
+        // stub for oversized blobs: the entity_change row — and crucially its hash — is sent
+        // unchanged, so the client's content-hash checks still pass, while the entity row carries an
+        // empty string (never null, which the consistency checker would "repair" and push back). The
+        // client stores an empty-content blob and shows an "open on server" placeholder. Measured on
+        // the raw (pre-base64) content, so the threshold matches the user-facing byte size.
+        if (maxBlobContentSize && entityRow.content && typeof entityRow.content !== "string" && entityRow.content.byteLength > maxBlobContentSize) {
+            entityRow.content = "";
+        }
+
         if (entityRow.content) {
             entityRow.content = binary_utils.encodeBase64(entityRow.content);
         }
@@ -470,7 +482,7 @@ function getEntityChangeRow(entityChange: EntityChange) {
  */
 export const MAX_PULL_RESPONSE_BYTES = 8 * 1024 * 1024;
 
-function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes = MAX_PULL_RESPONSE_BYTES) {
+function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes = MAX_PULL_RESPONSE_BYTES, maxBlobContentSize?: number) {
     const records: EntityChangeRecord[] = [];
     let length = 0;
 
@@ -481,7 +493,7 @@ function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes 
             continue;
         }
 
-        const entity = getEntityChangeRow(entityChange);
+        const entity = getEntityChangeRow(entityChange, maxBlobContentSize);
         if (!entity) {
             continue;
         }
@@ -516,6 +528,18 @@ export function estimateEntityChangeRecordSize(record: EntityChangeRecord): numb
 
 function getLastSyncedPull() {
     return parseInt(optionService.getOption("lastSyncedPull"));
+}
+
+/**
+ * Per-device limit (in bytes) above which blob content is not pulled from the sync server; the
+ * server sends an empty-content stub instead. `0` (or an unset/invalid option) disables the limit,
+ * which is the default for every platform except mobile. Read with `getOptionOrNull` so databases
+ * created before this option existed do not throw.
+ */
+function getMaxBlobContentSize(): number {
+    const value = parseInt(optionService.getOptionOrNull("syncMaxBlobContentSize") ?? "0");
+
+    return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 function setLastSyncedPull(entityChangeId: number) {

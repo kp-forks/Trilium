@@ -224,7 +224,7 @@ async function createInitialDatabase(skipDemoDb?: boolean, locale?: string) {
     log.info("Database initialization completed, emitted DB_INITIALIZED event");
 }
 
-async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", syncProxy = "") {
+async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", syncProxy = "", syncMaxBlobContentSize = 0) {
     const log = getLog();
     const sql = getSql();
     log.info("Creating database for sync");
@@ -239,7 +239,7 @@ async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", 
     sql.transactional(() => {
         sql.executeScript(schema);
 
-        initNotSyncedOptions(false, { syncServerHost, syncProxy });
+        initNotSyncedOptions(false, { syncServerHost, syncProxy, syncMaxBlobContentSize });
 
         // document options required for sync to kick off
         for (const opt of options) {
