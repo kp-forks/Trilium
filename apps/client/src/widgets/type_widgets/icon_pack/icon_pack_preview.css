@@ -42,7 +42,8 @@ body {
     contain-intrinsic-size: 48px 48px;
 }
 
-.ip-cell:hover {
+/* Hover highlight only in interactive mode (off for read-only content-renderer previews). */
+.ip-grid.interactive .ip-cell:hover {
     background: var(--hover-item-background-color, rgba(127, 127, 127, 0.2));
     color: var(--hover-item-text-color);
     transform: scale(1.5);

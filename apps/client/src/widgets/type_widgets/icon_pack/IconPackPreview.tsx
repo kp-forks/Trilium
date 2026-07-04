@@ -21,11 +21,21 @@ const PREVIEW_CSS_VARS = [
     "--hover-item-text-color"
 ];
 
+interface IconPackPreviewProps {
+    note: FNote;
+    content: string;
+    /** When `false`, glyphs get no hover highlight and no tooltips (read-only previews). Defaults to `true`. */
+    interactive?: boolean;
+}
+
 /**
  * Renders an icon pack's manifest as a grid of glyphs inside an isolated frame. Shared between the
  * icon-pack editor's preview pane and the read-only content renderer (collections, child listings).
+ *
+ * When {@link IconPackPreviewProps.interactive} is `false` (read-only previews), glyphs get no hover
+ * highlight and no tooltips.
  */
-export function IconPackPreview({ note, content }: { note: FNote; content: string }) {
+export function IconPackPreview({ note, content, interactive = true }: IconPackPreviewProps) {
     const [ prefix ] = useNoteLabel(note, "iconPack");
     // The user isn't meant to see the preview update on every keystroke — it lags a beat behind.
     const debounced = useDebouncedValue(content, PREVIEW_DEBOUNCE_MS);
@@ -48,9 +58,9 @@ export function IconPackPreview({ note, content }: { note: FNote; content: strin
 
     return (
         <IsolatedFrame className="icon-pack-frame" title={t("icon_pack.preview_title")} css={css} cssVars={PREVIEW_CSS_VARS}>
-            <div className="ip-grid">
+            <div className={interactive ? "ip-grid interactive" : "ip-grid"}>
                 {parsed.icons.map((icon) => (
-                    <div className="ip-cell" key={icon.id} title={iconTooltip(prefix, icon)}>
+                    <div className="ip-cell" key={icon.id} title={interactive ? iconTooltip(prefix, icon) : undefined}>
                         <span className="ip-glyph">{icon.glyph}</span>
                     </div>
                 ))}

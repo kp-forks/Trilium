@@ -198,7 +198,7 @@ async function renderIconPack(note: FNote, $renderedContent: JQuery<HTMLElement>
     const $container = $('<div class="icon-pack-rendered">');
     const container = $container.get(0);
     if (container) {
-        render(h(IconPackPreview, { note, content }), container);
+        render(h(IconPackPreview, { note, content, interactive: false }), container);
         // Mark the standalone Preact root so disposeInteractiveContent() can unmount the frame/effects.
         container.setAttribute(INTERACTIVE_MOUNT_ATTR, "");
     }
