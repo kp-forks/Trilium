@@ -115,11 +115,14 @@ describe("sync service", () => {
         expect(urls.some((u) => u.includes("/api/sync/check"))).toBe(true);
     });
 
-    it("counts already-pulled local changes into the pull total so a resumed sync keeps the grand total", async () => {
+    it("counts already-pulled local changes into the pull total so a resumed initial sync keeps the grand total", async () => {
         // On resume the remote only reports the *remaining* changes; the already-pulled ones live in
         // the local entity_changes table. The total must be their sum, otherwise the setup progress
-        // bar rescales the leftover work to 0-100% and appears to restart from zero.
+        // bar rescales the leftover work to 0-100% and appears to restart from zero. This only applies
+        // while the DB is not yet marked initialized (the initial sync hasn't converged).
         const countSynced = () => getSql().getValue<number>("SELECT COUNT(1) FROM entity_changes WHERE isSynced = 1") ?? 0;
+        const prevInitialized = options.getOptionOrNull("initialized");
+        cls.init(() => options.setOption("initialized", "false"));
 
         let alreadyPulled = 0;
         let capturedTotal: number | null = null;
@@ -134,10 +137,40 @@ describe("sync service", () => {
             { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
         ];
 
-        await runSync();
+        try {
+            await runSync();
+        } finally {
+            cls.init(() => options.setOption("initialized", prevInitialized ?? "true"));
+        }
 
         // grand total = already-pulled (local) + this batch (1) + remaining reported by the remote (5)
         expect(capturedTotal).toBe(alreadyPulled + 1 + 5);
+    });
+
+    it("does not count historical changes into the pull total on an established (initialized) database", async () => {
+        // Post-initialization the setup progress bar isn't shown, and counting every change ever
+        // pulled would both scan the full entity_changes table and inflate the total. The session
+        // total should be just this batch plus the remaining outstanding changes.
+        const prevInitialized = options.getOptionOrNull("initialized");
+        cls.init(() => options.setOption("initialized", "true"));
+
+        let capturedTotal: number | null = null;
+        config.onChanged = (callIndex) => {
+            if (callIndex === 1) capturedTotal = syncService.getTotalPullCount();
+        };
+        config.changed = [
+            { entityChanges: [pulledOptionChange()], lastEntityChangeId: 9, outstandingPullCount: 5 },
+            { entityChanges: [], lastEntityChangeId: 9, outstandingPullCount: 0 }
+        ];
+
+        try {
+            await runSync();
+        } finally {
+            cls.init(() => options.setOption("initialized", prevInitialized ?? "true"));
+        }
+
+        // 1 change in this batch + 5 remaining, with no historical inflation.
+        expect(capturedTotal).toBe(1 + 5);
     });
 
     it("persists an advanced cursor even when the server returns an empty change batch", async () => {
