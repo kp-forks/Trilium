@@ -1251,6 +1251,12 @@
     "show_details": "Show details",
     "last_valid_render": "Showing last valid render"
   },
+  "icon_pack": {
+    "preview_title": "Icon pack preview",
+    "invalid_manifest": "The icon pack manifest could not be parsed. Check that it is valid JSON.",
+    "no_icons": "This icon pack contains no icons.",
+    "tooltip": "Class: {{- class}}\nGlyph code: {{- code}}\nTerms: {{- terms}}"
+  },
   "editable_text": {
     "placeholder": "Type the content of your note here...",
     "editor_crashed_title": "The text editor crashed",
