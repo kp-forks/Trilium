@@ -57,6 +57,7 @@ describe("getExtendedWidgetType blob-stub routing", () => {
             isProtected: false,
             isTriliumSqlite: () => false,
             isMarkdown: () => false,
+            isIconPack: () => false,
             getBlob: async () => ({ isStubbed: false }),
             ...overrides
         } as unknown as FNote;
