@@ -80,9 +80,10 @@ export default function RightPanelWidget({ id, title, buttons, children, contain
             </div>
 
             <div id={parentComponent?.componentId} class="body-wrapper">
-                {/* keepMounted widgets stay in the DOM when collapsed and hide via `hidden` (display:none),
-                    so their state and DOM-attached listeners survive a collapse; others unmount as before. */}
-                {(expanded || keepMounted) && <div class="card-body" hidden={!expanded}>
+                {/* keepMounted widgets stay in the DOM when collapsed and hide via an inline display:none
+                    (which beats any stylesheet `.card-body` display rule, unlike the `hidden` attribute), so
+                    their state and DOM-attached listeners survive a collapse; others unmount as before. */}
+                {(expanded || keepMounted) && <div class="card-body" style={!expanded ? { display: "none" } : undefined}>
                     {children}
                 </div>}
             </div>
