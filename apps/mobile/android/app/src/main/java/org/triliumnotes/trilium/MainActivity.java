@@ -19,8 +19,6 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // Custom plugins must be registered before super.onCreate() initializes the bridge.
-        registerPlugin(TriliumHttp.class);
         super.onCreate(savedInstanceState);
         // Streaming HTTP proxy for the sync worker (see TriliumWebViewClient).
         getBridge().setWebViewClient(new TriliumWebViewClient(getBridge()));

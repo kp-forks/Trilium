@@ -23,24 +23,10 @@ function getHttpPlugin(): HttpPlugin {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cap = (window as any).Capacitor;
 
-    // Prefer the app's own TriliumHttp plugin: it always returns the body as a plain string.
-    // CapacitorHttp force-parses application/json responses into a Java object tree and
-    // re-serializes them into the bridge message regardless of the requested responseType
-    // (the "backward compatibility" branch in HttpRequestHandler.readData), which costs two
-    // full JSON passes per multi-megabyte sync response.
-    //
-    // Capacitor.Plugins only contains plugins that were registered from the JS side, so a
-    // native-only plugin like TriliumHttp does not appear there on its own — it has to be
-    // looked up via registerPlugin(), and only when the native bridge actually announced it
-    // in PluginHeaders (otherwise proxy method calls would throw "not implemented").
-    // registerPlugin() also stores the proxy in Capacitor.Plugins, so the first branch acts
-    // as the cache on subsequent calls. The CapacitorHttp fallback keeps things working if
-    // the JS bundle is ever newer than the installed native binary.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const hasTriliumHttp = cap?.PluginHeaders?.some((header: any) => header?.name === "TriliumHttp");
-    const plugin = cap?.Plugins?.TriliumHttp
-        ?? (hasTriliumHttp ? cap.registerPlugin("TriliumHttp") : null)
-        ?? cap?.Plugins?.CapacitorHttp;
+    // The plugin transport only carries the requests the streaming proxy can't (login/push
+    // POSTs, binary responses, and everything on iOS) — small traffic where CapacitorHttp's
+    // response marshalling overhead is irrelevant, so stock CapacitorHttp is enough.
+    const plugin = cap?.Plugins?.CapacitorHttp;
 
     if (!plugin) {
         throw new Error("No native HTTP plugin is available");
@@ -182,12 +168,12 @@ export const capacitorHttpHandler: NativeHttpHandler = async (request) => {
 
     let body: string;
     if (request.responseType === "arraybuffer") {
-        // Both plugins return binary data as a base64 string — pass it through directly
+        // CapacitorHttp returns binary data as a base64 string — pass it through directly.
         body = String(response.data);
     } else {
-        // TriliumHttp always returns a string. On the CapacitorHttp fallback, JSON responses
-        // arrive pre-parsed as an object (see above) and have to be re-serialized for the
-        // worker, which parses the body itself.
+        // CapacitorHttp force-parses application/json responses into an object, so it has to
+        // be re-serialized for the worker (which parses the body itself); other content types
+        // arrive as a plain string and pass straight through.
         body = typeof response.data === "string"
             ? response.data
             : JSON.stringify(response.data);
