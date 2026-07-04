@@ -39,10 +39,19 @@ export function useChatToc(chat: UseLlmChatReturn, noteContext: NoteContext | un
     }, [messages, scrollContainerRef]);
 
     const scrollToHeading = useCallback((heading: ChatHeading) => {
-        if (heading.element?.isConnected) {
-            heading.element.scrollIntoView({ block: "start", behavior: "smooth" });
-        }
-    }, []);
+        const container = scrollContainerRef.current;
+        const element = heading.element;
+        if (!container || !element?.isConnected) return;
+        // Scroll the heading to the very activation line the scroll-spy uses to pick the active entry, so
+        // clicking a heading leaves *that* heading highlighted. Scrolling it to the top instead would drop
+        // the activation line (30% down) into the following section, highlighting the next entry. Same
+        // content-space math as `measure()` below; round up so the heading lands at or just below the line
+        // despite sub-pixel scroll rounding (never one entry short).
+        const contentTop = container.getBoundingClientRect().top - container.scrollTop;
+        const headingOffset = element.getBoundingClientRect().top - contentTop;
+        const activationOffset = container.clientHeight * ACTIVATION_LINE_FRACTION;
+        container.scrollTo({ top: Math.ceil(headingOffset - activationOffset), behavior: "smooth" });
+    }, [scrollContainerRef]);
 
     // Scroll-spy: pick the active heading whenever the timeline scrolls or resizes. Heading
     // offsets are measured once per headings change or container resize — never per scroll
