@@ -64,6 +64,8 @@ export const bookPropertiesConfig: Record<ViewTypeOptions, BookConfig> = {
                 label: t("calendar_view.time_slots"),
                 icon: "bx bx-time",
                 type: "submenu",
+                // Time slots only apply to the time-grid views (Day / Week).
+                isVisible: isTimeGridCalendarView,
                 children: [
                     {
                         label: t("calendar_view.slot_duration"),
@@ -181,6 +183,12 @@ function slotDurationOptions(minutes: number[]): ComboBoxItem[] {
 
 function pad(n: number) {
     return String(n).padStart(2, "0");
+}
+
+/** The calendar's slot settings only apply to the time-grid views (Day / Week). */
+function isTimeGridCalendarView(note: FNote) {
+    const view = note.getLabelValue("calendar:view");
+    return view === "timeGridDay" || view === "timeGridWeek";
 }
 
 function ListExpandDepth(context: { note: FNote, parentComponent: Component }) {

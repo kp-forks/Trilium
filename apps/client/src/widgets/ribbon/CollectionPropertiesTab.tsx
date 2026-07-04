@@ -1,6 +1,6 @@
 import "./CollectionPropertiesTab.css";
 
-import { ComponentChildren } from "preact";
+import { ComponentChildren, Fragment } from "preact";
 import { useContext, useMemo } from "preact/hooks";
 
 import FNote from "../../entities/fnote";
@@ -13,7 +13,7 @@ import FormCheckbox from "../react/FormCheckbox";
 import FormSelect, { FormSelectWithGroups } from "../react/FormSelect";
 import FormTextBox from "../react/FormTextBox";
 import { useNoteLabel, useNoteLabelBoolean } from "../react/hooks";
-import { BookProperty, ButtonProperty, CheckBoxProperty, ComboBoxGroup, ComboBoxItem, ComboBoxProperty, NumberProperty, SplitButtonProperty } from "../react/NotePropertyMenu";
+import { BookProperty, ButtonProperty, CheckBoxProperty, ComboBoxGroup, ComboBoxItem, ComboBoxProperty, isPropertyVisible, NumberProperty, OptionGroupProperty, SplitButtonProperty } from "../react/NotePropertyMenu";
 import { ParentComponent } from "../react/react_utils";
 import { bookPropertiesConfig } from "./collection-properties-config";
 import { TabContext } from "./ribbon-interface";
@@ -72,7 +72,7 @@ function CollectionTypeSwitcher({ viewType, setViewType }: { viewType: string, s
 function BookProperties({ note, properties }: { viewType: ViewTypeOptions, note: FNote, properties: BookProperty[] }) {
     return (
         <>
-            {properties.map((property, index) => (
+            {properties.filter((property) => isPropertyVisible(property, note)).map((property, index) => (
                 <div key={index} className={`type-${property}`}>
                     {mapPropertyView({ note, property })}
                 </div>
@@ -101,6 +101,17 @@ function mapPropertyView({ note, property }: { note: FNote, property: BookProper
             return <NumberPropertyView note={note} property={property} />;
         case "combobox":
             return <ComboBoxPropertyView note={note} property={property} />;
+        case "option-group":
+            return <OptionGroupPropertyView note={note} property={property} />;
+        case "submenu":
+            // The ribbon is a flat strip, so a submenu is flattened to its (visible) children inline.
+            return (
+                <>
+                    {property.children.filter((child) => isPropertyVisible(child, note)).map((child, index) => (
+                        <Fragment key={index}>{mapPropertyView({ note, property: child })}</Fragment>
+                    ))}
+                </>
+            );
     }
 }
 
@@ -175,6 +186,20 @@ function ComboBoxPropertyView({ note, property }: { note: FNote, property: Combo
         <LabelledEntry label={property.label}>
             <FormSelectWithGroups
                 values={property.options.filter(i => !("type" in i)) as (ComboBoxItem | ComboBoxGroup)[]}
+                keyProperty="value" titleProperty="label"
+                currentValue={value ?? property.defaultValue} onChange={setValue}
+            />
+        </LabelledEntry>
+    );
+}
+
+function OptionGroupPropertyView({ note, property }: { note: FNote, property: OptionGroupProperty }) {
+    const [ value, setValue ] = useNoteLabel(note, property.bindToLabel);
+
+    return (
+        <LabelledEntry label={property.label}>
+            <FormSelectWithGroups
+                values={property.options}
                 keyProperty="value" titleProperty="label"
                 currentValue={value ?? property.defaultValue} onChange={setValue}
             />

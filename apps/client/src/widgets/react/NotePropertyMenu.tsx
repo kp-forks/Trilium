@@ -81,6 +81,8 @@ export interface SubmenuProperty {
     type: "submenu";
     label: string;
     icon?: string;
+    /** When provided, the submenu is only rendered if this returns true for the current note. */
+    isVisible?: (note: FNote) => boolean;
     children: BookProperty[];
 }
 
@@ -95,7 +97,16 @@ export interface OptionGroupProperty {
 
 export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty | SubmenuProperty | OptionGroupProperty | Separator;
 
+/** Whether a property should render for the given note, honouring an optional `isVisible` predicate. */
+export function isPropertyVisible(property: BookProperty, note: FNote): boolean {
+    return !("isVisible" in property) || (property.isVisible?.(note) ?? true);
+}
+
 export function ViewProperty({ note, property }: { note: FNote, property: BookProperty }) {
+    if (!isPropertyVisible(property, note)) {
+        return null;
+    }
+
     switch (property.type) {
         case "button":
             return <ButtonPropertyView note={note} property={property} />;
