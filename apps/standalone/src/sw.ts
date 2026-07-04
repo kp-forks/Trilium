@@ -192,10 +192,12 @@ self.addEventListener("fetch", (event) => {
         return;
     }
 
-    // In dev mode, let the browser handle all non-API requests directly.
-    // Custom URL scheme handlers (e.g. capacitor://) are not accessible via
-    // fetch() from within a service worker context on iOS WKWebView.
-    if (isDev) {
+    // On the Capacitor custom URL scheme (capacitor://) the WebView serves app assets
+    // through its native URLSchemeHandler, which a service worker cannot reach via fetch() —
+    // let those requests fall through to the WebView's own loader. In practice the SW is only
+    // registered on http/https origins (main.ts uses a fetch/XHR interceptor instead of a SW
+    // on capacitor://), so this is a defensive guard rather than a hot path.
+    if (self.location.protocol === "capacitor:") {
         return;
     }
 
