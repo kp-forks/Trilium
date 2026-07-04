@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "preact/hooks";
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import { isDesktop } from "../../../services/utils";
-import { useColorScheme, useNoteBlob, useNoteLabel } from "../../react/hooks";
+import { useNoteBlob, useNoteLabel } from "../../react/hooks";
 import IsolatedFrame from "../../react/IsolatedFrame";
 import NoItems from "../../react/NoItems";
 import { TextPreview } from "../File";
@@ -14,6 +14,16 @@ import { TypeWidgetProps } from "../type_widget";
 
 /** How long to wait after the last edit before re-parsing and re-rendering the (potentially large) preview. */
 const PREVIEW_DEBOUNCE_MS = 1500;
+
+/** Theme variables forwarded into the isolated preview frame so it matches the app's colours. */
+const PREVIEW_CSS_VARS = [
+    "--main-text-color",
+    "--main-background-color",
+    "--muted-text-color",
+    "--main-border-color",
+    "--accented-background-color",
+    "--hover-item-background-color"
+];
 
 export default function IconPack(props: TypeWidgetProps) {
     const [ content, setContent ] = useState("");
@@ -47,16 +57,12 @@ function FileSource({ note }: { note: FNote }) {
 
 function IconPackPreview({ note, content }: { note: FNote; content: string }) {
     const [ prefix ] = useNoteLabel(note, "iconPack");
-    // Recompute the injected theme colors when the app switches between light and dark.
-    const colorScheme = useColorScheme();
     // The user isn't meant to see the preview update on every keystroke — it lags a beat behind.
     const debounced = useDebouncedValue(content, PREVIEW_DEBOUNCE_MS);
     const font = useIconPackFont(note);
 
     const parsed = useMemo(() => parseManifest(debounced), [ debounced ]);
-    // `getThemeColors()` reads theme-dependent CSS variables; `colorScheme` is the recompute trigger.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const css = useMemo(() => buildPreviewCss(font, getThemeColors()), [ font, colorScheme ]);
+    const css = useMemo(() => buildPreviewCss(font), [ font ]);
 
     if (!parsed.ok) {
         return <div className="icon-pack-preview"><NoItems icon="bx bx-error-circle" text={t("icon_pack.invalid_manifest")} /></div>;
@@ -71,7 +77,7 @@ function IconPackPreview({ note, content }: { note: FNote; content: string }) {
     }
 
     return (
-        <IsolatedFrame className="icon-pack-frame" title={t("icon_pack.preview_title")} css={css}>
+        <IsolatedFrame className="icon-pack-frame" title={t("icon_pack.preview_title")} css={css} cssVars={PREVIEW_CSS_VARS}>
             <div className="ip-grid">
                 {parsed.icons.map((icon) => (
                     <div className="ip-cell" key={icon.id} title={iconTooltip(prefix, icon)}>
@@ -173,15 +179,7 @@ function useIconPackFont(note: FNote): IconPackFont | null {
 
 const PREVIEW_FONT_FAMILY = "tn-icon-pack-preview";
 
-function getThemeColors() {
-    const style = getComputedStyle(document.documentElement);
-    return {
-        text: style.getPropertyValue("--main-text-color").trim() || "#000",
-        background: style.getPropertyValue("--main-background-color").trim() || "#fff"
-    };
-}
-
-function buildPreviewCss(font: IconPackFont | null, colors: { text: string; background: string }): string {
+function buildPreviewCss(font: IconPackFont | null): string {
     const fontFace = font
         ? `@font-face { font-family: "${PREVIEW_FONT_FAMILY}"; src: url("${font.url}") format("${font.format}"); font-display: block; }`
         : "";
@@ -189,8 +187,8 @@ function buildPreviewCss(font: IconPackFont | null, colors: { text: string; back
         ${fontFace}
         html, body { margin: 0; height: 100%; }
         body {
-            color: ${colors.text};
-            background: ${colors.background};
+            color: var(--main-text-color, #000);
+            background: var(--main-background-color, #fff);
             padding: 8px;
             box-sizing: border-box;
             overflow: auto;
@@ -214,7 +212,7 @@ function buildPreviewCss(font: IconPackFont | null, colors: { text: string; back
             content-visibility: auto;
             contain-intrinsic-size: 32px 32px;
         }
-        .ip-cell:hover { background: rgba(127, 127, 127, 0.2); }
+        .ip-cell:hover { background: var(--hover-item-background-color, rgba(127, 127, 127, 0.2)); }
         .ip-glyph { font-family: "${PREVIEW_FONT_FAMILY}"; font-size: 32px; line-height: 1; }
     `;
 }

@@ -2,12 +2,16 @@ import { ComponentChildren } from "preact";
 import { createPortal } from "preact/compat";
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 
+import { useColorScheme } from "./hooks";
+
 interface IsolatedFrameProps {
     className?: string;
     /** Accessible title for the underlying `<iframe>`. */
     title: string;
     /** CSS injected into the isolated document's `<head>`. Kept in sync on change. */
     css?: string;
+    /** Host `:root` CSS custom properties to mirror into the frame, so its CSS can use `var(...)`. Re-synced on theme change. */
+    cssVars?: string[];
     children?: ComponentChildren;
 }
 
@@ -17,12 +21,14 @@ interface IsolatedFrameProps {
  * and nothing rendered here leaks out. Children are Preact nodes portalled into the frame's `<body>`,
  * so they stay live and interactive (re-render on prop changes) rather than being a static snapshot.
  *
- * Provide the frame's own styling via {@link IsolatedFrameProps.css}. Because the document has no
- * base URL, any URLs referenced from that CSS must be absolute.
+ * Provide the frame's own styling via {@link IsolatedFrameProps.css}; theme values can be forwarded
+ * with {@link IsolatedFrameProps.cssVars}. Because the document has no base URL, any URLs referenced
+ * from that CSS must be absolute.
  */
-export default function IsolatedFrame({ className, title, css, children }: IsolatedFrameProps) {
+export default function IsolatedFrame({ className, title, css, cssVars, children }: IsolatedFrameProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [ body, setBody ] = useState<HTMLElement | null>(null);
+    const colorScheme = useColorScheme();
 
     // A same-origin, src-less iframe exposes an empty document synchronously once mounted; re-capture
     // on load in case the browser swaps the initial about:blank document.
@@ -32,6 +38,7 @@ export default function IsolatedFrame({ className, title, css, children }: Isola
     };
     useLayoutEffect(captureBody, []);
 
+    // `colorScheme` is not read directly — it re-runs this effect so mirrored vars pick up the new theme.
     useLayoutEffect(() => {
         const doc = body?.ownerDocument;
         if (!doc) return;
@@ -41,8 +48,8 @@ export default function IsolatedFrame({ className, title, css, children }: Isola
             style.id = "isolated-frame-style";
             doc.head.appendChild(style);
         }
-        style.textContent = css ?? "";
-    }, [ css, body ]);
+        style.textContent = `${buildRootVars(cssVars)}${css ?? ""}`;
+    }, [ css, cssVars, colorScheme, body ]);
 
     return (
         <>
@@ -50,4 +57,16 @@ export default function IsolatedFrame({ className, title, css, children }: Isola
             {body && createPortal(children, body)}
         </>
     );
+}
+
+/** Reads the named custom properties off the host's `:root` and emits a `:root { ... }` block for the frame. */
+function buildRootVars(names: string[] | undefined): string {
+    if (!names?.length) return "";
+    const hostStyle = getComputedStyle(document.documentElement);
+    const declarations = names
+        .map((name) => [ name, hostStyle.getPropertyValue(name).trim() ] as const)
+        .filter(([ , value ]) => value)
+        .map(([ name, value ]) => `${name}: ${value};`)
+        .join(" ");
+    return declarations ? `:root { ${declarations} }\n` : "";
 }
