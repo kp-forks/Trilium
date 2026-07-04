@@ -298,6 +298,10 @@ export default function SidebarChat() {
             id="sidebar-chat"
             title={chatTitle}
             grow
+            // Keep the chat mounted when collapsed: it holds live conversation state and its context-menu /
+            // highlight / scroll listeners are wired in this (always-mounted) component, so unmounting the
+            // body on collapse would orphan them and they wouldn't re-attach on expand.
+            keepMounted
             buttons={
                 <>
                     <ActionButton
