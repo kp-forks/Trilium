@@ -284,7 +284,14 @@ function getMaxPullBatchBytes() {
     // Standalone/browser is the only platform reporting none of mac/windows/linux.
     const isBrowser = !isMac() && !isWindows() && !isLinux();
 
-    return isBrowser ? 16 * 1024 * 1024 : 32 * 1024 * 1024;
+    if (!isBrowser) {
+        return 32 * 1024 * 1024; // desktop
+    }
+
+    // Mobile (Capacitor) is the only client that opts into a blob size limit, i.e. the
+    // memory-constrained case. Pull roughly one server response per apply instead of stacking
+    // several, to keep the peak the mobile heap holds at once well below the OOM ceiling.
+    return getMaxBlobContentSize() > 0 ? 4 * 1024 * 1024 : 16 * 1024 * 1024;
 }
 
 /** Rough in-memory size of a pulled changes response, dominated by (base64-encoded) blob content. */
