@@ -73,6 +73,14 @@ async function sync() {
                 continueSync = await checkContentHash(syncContext);
             } while (continueSync);
 
+            // A converged sync (everything pushed, everything pulled, content hashes verified)
+            // is what makes an initial sync-from-server database usable. setup.triggerSync()
+            // only marks it initialized when its own sync() call succeeds — an initial sync
+            // interrupted by a crash/restart resumes through sync/now or the sync timer, which
+            // would otherwise leave the flag unset forever and the setup screen stuck on
+            // "finalizing". Idempotent no-op on already-initialized databases.
+            sqlInit.setDbAsInitialized();
+
             ws.syncFinished();
 
             if (optionService.getOptionOrNull("syncIncomplete") === "true") {

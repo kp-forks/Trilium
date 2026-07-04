@@ -11,6 +11,7 @@ import options from "./options.js";
 import { type ExecOpts, initRequest, type RequestProvider } from "./request.js";
 import { getSql } from "./sql/index.js";
 import setupService from "./setup.js";
+import sqlInit from "./sql_init.js";
 import syncService, { estimateEntityChangeRecordSize } from "./sync.js";
 import syncOptions from "./sync_options.js";
 import dateUtils from "./utils/date.js";
@@ -113,6 +114,25 @@ describe("sync service", () => {
         expect(urls.some((u) => u.includes("/api/sync/changed"))).toBe(true);
         expect(urls.some((u) => u.includes("/api/sync/finished"))).toBe(true);
         expect(urls.some((u) => u.includes("/api/sync/check"))).toBe(true);
+    });
+
+    it("marks the database as initialized once a sync converges", async () => {
+        // An initial sync-from-server interrupted by a crash resumes via sync/now or the sync
+        // timer — NOT via setup.triggerSync(), which is the only other place that sets the flag.
+        // If sync() itself doesn't set it on convergence, a resumed initial sync completes but
+        // the DB stays uninitialized and the setup screen waits on "finalizing" forever.
+        const initSpy = vi.spyOn(sqlInit, "setDbAsInitialized").mockImplementation(() => {});
+
+        await expect(runSync()).resolves.toEqual({ success: true });
+        expect(initSpy).toHaveBeenCalled();
+    });
+
+    it("does not mark the database as initialized when the sync fails", async () => {
+        const initSpy = vi.spyOn(sqlInit, "setDbAsInitialized").mockImplementation(() => {});
+        config.loginThrows = new Error("kaboom");
+
+        await expect(runSync()).resolves.toMatchObject({ success: false });
+        expect(initSpy).not.toHaveBeenCalled();
     });
 
     it("counts already-pulled local changes into the pull total so a resumed initial sync keeps the grand total", async () => {
