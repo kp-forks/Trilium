@@ -41,7 +41,9 @@ interface IconPackPreviewProps {
  * highlight and no tooltips.
  */
 export function IconPackPreview({ note, content, interactive = true }: IconPackPreviewProps) {
-    const [ prefix ] = useNoteLabel(note, "iconPack");
+    // Fall back to the disabled label so disabled packs (#disabled:iconPack) still show their class in tooltips.
+    const [ enabledPrefix ] = useNoteLabel(note, "iconPack");
+    const prefix = enabledPrefix ?? note.getLabelValue("disabled:iconPack");
     // The user isn't meant to see the preview update on every keystroke — it lags a beat behind.
     const debounced = useDebouncedValue(content, PREVIEW_DEBOUNCE_MS);
     const font = useIconPackFont(note);

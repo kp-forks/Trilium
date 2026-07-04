@@ -1076,8 +1076,9 @@ export default class FNote {
 
     isIconPack() {
         // Icon-pack manifests exist both as JSON `code` notes (created manually per the docs) and as
-        // `file` notes (produced by the icon-pack builder and shipped in distributable zips).
-        return (this.type === "code" || this.type === "file") && this.mime === "application/json" && this.hasLabel("iconPack");
+        // `file` notes (produced by the icon-pack builder and shipped in distributable zips). Disabled
+        // packs (#disabled:iconPack, e.g. from a safe import) still preview so the user can inspect them.
+        return (this.type === "code" || this.type === "file") && this.mime === "application/json" && this.hasLabelOrDisabled("iconPack");
     }
 
     isTriliumScript() {
