@@ -175,6 +175,13 @@ async function pullChanges(syncContext: SyncContext) {
     const maxBatchBytes = getMaxPullBatchBytes();
     const maxBlobContentSize = getMaxBlobContentSize();
 
+    // Download/apply pipeline: the request for the next batch's first chunk is fired just before
+    // the current batch is applied, so the network transfer overlaps the (synchronous) SQL work —
+    // the two are roughly equal halves of initial-sync wall time, so overlapping them nearly
+    // halves it. Only the first chunk of a batch can be prefetched: every subsequent chunk's URL
+    // depends on the cursor returned by the response before it.
+    let prefetchedChunk: Promise<ChangesResponse> | null = null;
+
     while (true) {
         // Fetch phase: pull consecutive chunks (each needs its own HTTP round-trip) until we've
         // accumulated ~maxBatchBytes worth of content, then apply them all in a single transaction.
@@ -189,14 +196,8 @@ async function pullChanges(syncContext: SyncContext) {
         const fetchStart = Date.now();
 
         do {
-            const logMarkerId = randomString(10); // to easily pair sync events between client and server logs
-            const changesUri = `/api/sync/changed?instanceId=${getInstanceId()}&lastEntityChangeId=${cursor}&logMarkerId=${logMarkerId}`
-                + (maxBlobContentSize ? `&maxBlobContentSize=${maxBlobContentSize}` : "");
-
-            const resp = await syncRequest<ChangesResponse>(syncContext, "GET", changesUri);
-            if (!resp) {
-                throw new Error("Request failed.");
-            }
+            const resp = await (prefetchedChunk ?? fetchChangesChunk(syncContext, cursor, maxBlobContentSize));
+            prefetchedChunk = null;
 
             outstandingPullCount = resp.outstandingPullCount;
 
@@ -247,6 +248,13 @@ async function pullChanges(syncContext: SyncContext) {
             break;
         }
 
+        if (!noMoreChanges) {
+            prefetchedChunk = fetchChangesChunk(syncContext, cursor, maxBlobContentSize);
+            // If the apply phase throws, the in-flight prefetch is abandoned — pre-attach a
+            // handler so a late network failure doesn't surface as an unhandled rejection.
+            prefetchedChunk.catch(() => {});
+        }
+
         // Apply phase: all fetched chunks in a single transaction.
         const applyStart = Date.now();
         let batchChanges = 0;
@@ -258,6 +266,11 @@ async function pullChanges(syncContext: SyncContext) {
                 }
 
                 batchChanges += resp.entityChanges.length;
+
+                // Drop the applied chunk's rows (and their multi-MB content strings) right away
+                // instead of keeping the whole batch alive until the loop ends — on the WASM build
+                // the renderer is memory-capped and peak size is what kills it.
+                resp.entityChanges = [];
             }
 
             if (getLastSyncedPull() !== cursor) {
@@ -279,6 +292,19 @@ async function pullChanges(syncContext: SyncContext) {
     log.info("Finished pull");
 
     totalPullCount = null;
+}
+
+async function fetchChangesChunk(syncContext: SyncContext, cursor: number, maxBlobContentSize: number): Promise<ChangesResponse> {
+    const logMarkerId = randomString(10); // to easily pair sync events between client and server logs
+    const changesUri = `/api/sync/changed?instanceId=${getInstanceId()}&lastEntityChangeId=${cursor}&logMarkerId=${logMarkerId}`
+        + (maxBlobContentSize ? `&maxBlobContentSize=${maxBlobContentSize}` : "");
+
+    const resp = await syncRequest<ChangesResponse>(syncContext, "GET", changesUri);
+    if (!resp) {
+        throw new Error("Request failed.");
+    }
+
+    return resp;
 }
 
 /**

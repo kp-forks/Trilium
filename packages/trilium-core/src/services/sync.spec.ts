@@ -14,6 +14,7 @@ import setupService from "./setup.js";
 import sqlInit from "./sql_init.js";
 import syncService, { estimateEntityChangeRecordSize } from "./sync.js";
 import syncOptions from "./sync_options.js";
+import syncUpdateService from "./sync_update.js";
 import dateUtils from "./utils/date.js";
 
 interface ChangesResponse {
@@ -114,6 +115,32 @@ describe("sync service", () => {
         expect(urls.some((u) => u.includes("/api/sync/changed"))).toBe(true);
         expect(urls.some((u) => u.includes("/api/sync/finished"))).toBe(true);
         expect(urls.some((u) => u.includes("/api/sync/check"))).toBe(true);
+    });
+
+    it("prefetches the next chunk before applying the current batch (download/apply pipelining)", async () => {
+        const events: string[] = [];
+        // The first chunk's estimated size (content length) exceeds the batch budget, so the
+        // batch closes after one chunk and the next chunk must be prefetched before the apply.
+        const bigChange = { entityChange: { entityName: "notes", entityId: "pf1" }, entity: { content: "x".repeat(33 * 1024 * 1024) } };
+        const smallChange = { entityChange: { entityName: "notes", entityId: "pf2" }, entity: { content: "y" } };
+        config.changed = [
+            { entityChanges: [bigChange], lastEntityChangeId: 1, outstandingPullCount: 1 },
+            { entityChanges: [smallChange], lastEntityChangeId: 2, outstandingPullCount: 0 },
+            { entityChanges: [], lastEntityChangeId: 2, outstandingPullCount: 0 }
+        ];
+        config.onChanged = (i) => events.push(`fetch:${i}`);
+        vi.spyOn(syncUpdateService, "updateEntities").mockImplementation(() => {
+            events.push("apply");
+        });
+
+        await expect(runSync()).resolves.toEqual({ success: true });
+
+        // The request for chunk 1 is fired before batch 0 (the big chunk) is applied, so the
+        // download overlaps the SQL work; both batches are still applied, in order.
+        expect(events.indexOf("fetch:1")).toBeGreaterThan(events.indexOf("fetch:0"));
+        expect(events.indexOf("apply")).toBeGreaterThan(events.indexOf("fetch:1"));
+        expect(events.filter((e) => e === "apply")).toHaveLength(2);
+        expect(events.indexOf("fetch:2")).toBeGreaterThan(events.indexOf("apply"));
     });
 
     it("marks the database as initialized once a sync converges", async () => {
