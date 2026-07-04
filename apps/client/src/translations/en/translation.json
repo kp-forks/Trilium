@@ -2577,8 +2577,9 @@
   },
   "calendar_view": {
     "delete_note": "Delete note...",
-    "set_slot_duration": "Time slot duration",
-    "set_slot_label_interval": "Time slot label interval",
+    "time_slots": "Time slots",
+    "slot_duration": "Duration",
+    "slot_label_interval": "Label interval",
     "minutes_one": "{{count}} minute",
     "minutes_other": "{{count}} minutes",
     "hours_one": "{{count}} hour",

@@ -61,19 +61,25 @@ export const bookPropertiesConfig: Record<ViewTypeOptions, BookConfig> = {
                 bindToLabel: "calendar:weekNumbers"
             },
             {
-                label: t("calendar_view.set_slot_duration"),
+                label: t("calendar_view.time_slots"),
                 icon: "bx bx-time",
-                type: "combobox",
-                bindToLabel: "calendar:slotDuration",
-                options: slotDurationOptions([5, 10, 15, 20, 30, 60])
-            },
-            {
-                label: t("calendar_view.set_slot_label_interval"),
-                icon: "bx bx-time",
-                type: "combobox",
-                bindToLabel: "calendar:slotLabelInterval",
-                // Labels want to be coarser than the slots themselves.
-                options: slotDurationOptions([15, 30, 60])
+                type: "submenu",
+                children: [
+                    {
+                        label: t("calendar_view.slot_duration"),
+                        type: "option-group",
+                        bindToLabel: "calendar:slotDuration",
+                        options: slotDurationOptions([5, 10, 15, 20, 30, 60])
+                    },
+                    { type: "separator" },
+                    {
+                        label: t("calendar_view.slot_label_interval"),
+                        type: "option-group",
+                        bindToLabel: "calendar:slotLabelInterval",
+                        // Labels want to be coarser than the slots themselves.
+                        options: slotDurationOptions([15, 30, 60])
+                    }
+                ]
             }
         ]
     },

@@ -77,7 +77,23 @@ export interface ComboBoxProperty {
     dropStart?: boolean;
 }
 
-export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty | Separator;
+export interface SubmenuProperty {
+    type: "submenu";
+    label: string;
+    icon?: string;
+    children: BookProperty[];
+}
+
+/** A labelled group of radio-style options rendered inline (e.g. inside a {@link SubmenuProperty}), bound to its own label. */
+export interface OptionGroupProperty {
+    type: "option-group";
+    label: string;
+    bindToLabel: FilterLabelsByType<string>;
+    defaultValue?: string;
+    options: ComboBoxItem[];
+}
+
+export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty | SubmenuProperty | OptionGroupProperty | Separator;
 
 export function ViewProperty({ note, property }: { note: FNote, property: BookProperty }) {
     switch (property.type) {
@@ -91,9 +107,46 @@ export function ViewProperty({ note, property }: { note: FNote, property: BookPr
             return <NumberPropertyView note={note} property={property} />;
         case "combobox":
             return <ComboBoxPropertyView note={note} property={property} />;
+        case "submenu":
+            return <SubmenuPropertyView note={note} property={property} />;
+        case "option-group":
+            return <OptionGroupPropertyView note={note} property={property} />;
         case "separator":
             return <FormDropdownDivider />;
     }
+}
+
+function SubmenuPropertyView({ note, property }: { note: FNote, property: SubmenuProperty }) {
+    return (
+        <FormDropdownSubmenu
+            title={property.label}
+            icon={property.icon ?? "bx bx-empty"}
+        >
+            {property.children.map((child, index) => (
+                <ViewProperty key={index} note={note} property={child} />
+            ))}
+        </FormDropdownSubmenu>
+    );
+}
+
+function OptionGroupPropertyView({ note, property }: { note: FNote, property: OptionGroupProperty }) {
+    const [ value, setValue ] = useNoteLabel(note, property.bindToLabel);
+    const valueWithDefault = value ?? property.defaultValue ?? null;
+
+    return (
+        <Fragment>
+            <FormListItem disabled>{property.label}</FormListItem>
+            {property.options.map((option) => (
+                <FormListItem
+                    key={option.value}
+                    checked={valueWithDefault === option.value}
+                    onClick={() => setValue(option.value)}
+                >
+                    {option.label}
+                </FormListItem>
+            ))}
+        </Fragment>
+    );
 }
 
 function ButtonPropertyView({ note, property }: { note: FNote, property: ButtonProperty }) {
