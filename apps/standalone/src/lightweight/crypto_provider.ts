@@ -9,6 +9,12 @@ import aesjs from "aes-js";
 
 const CHARS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
+// Test-only (Vite define): force the pure-JS base64 fallback, reproducing WebViews below Chrome 140
+// that lack native Uint8Array.fromBase64/toBase64 — e.g. the Android WebView 136 that OOMs on sync.
+// Never set in production builds.
+declare const __TRILIUM_FORCE_B64_FALLBACK__: boolean;
+const FORCE_B64_FALLBACK = typeof __TRILIUM_FORCE_B64_FALLBACK__ !== "undefined" && __TRILIUM_FORCE_B64_FALLBACK__;
+
 /**
  * Crypto provider for browser environments using pure JavaScript crypto libraries.
  * Uses aes-js for synchronous AES encryption (matching Node.js behavior).
@@ -100,7 +106,7 @@ export default class BrowserCryptoProvider implements CryptoProvider {
         // Firefox 133+, Safari 18.2+. It runs at native speed (SIMD) and avoids materializing
         // the intermediate "binary string" entirely. Detected per call so tests can stub it.
         const nativeBytes = bytes as NativeBase64Array;
-        if (typeof nativeBytes.toBase64 === "function") {
+        if (!FORCE_B64_FALLBACK && typeof nativeBytes.toBase64 === "function") {
             return nativeBytes.toBase64();
         }
 
@@ -117,18 +123,64 @@ export default class BrowserCryptoProvider implements CryptoProvider {
 
     base64Decode(base64: string): Uint8Array {
         const nativeCtor = Uint8Array as unknown as NativeBase64Constructor;
-        if (typeof nativeCtor.fromBase64 === "function") {
+        if (!FORCE_B64_FALLBACK && typeof nativeCtor.fromBase64 === "function") {
             return nativeCtor.fromBase64(base64);
         }
 
-        const binary = atob(base64);
-        const len = binary.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes;
+        return base64FallbackDecode(base64);
     }
+}
+
+// Sentinel for a char code that is not part of the base64 alphabet. Distinct from 0 so the decoder
+// can tell a real 'A' (value 0) apart from padding / whitespace / garbage, which it skips.
+const B64_INVALID = 0xff;
+
+// Base64 alphabet → 6-bit value, indexed by char code (non-alphabet bytes map to B64_INVALID).
+const B64_DECODE_TABLE = /* @__PURE__ */ (() => {
+    const table = new Uint8Array(256).fill(B64_INVALID);
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    for (let i = 0; i < alphabet.length; i++) {
+        table[alphabet.charCodeAt(i)] = i;
+    }
+    return table;
+})();
+
+/**
+ * Decodes standard base64 straight into a pre-sized `Uint8Array`, without `atob`'s intermediate
+ * binary string. On the WebView-<140 fallback path this removes a whole extra copy of the decoded
+ * blob from the peak — the copy that pushed sync's blob decode over the mobile heap.
+ *
+ * Non-alphabet characters (padding `=` and any ASCII whitespace, e.g. newlines in line-wrapped
+ * base64) are skipped rather than decoded as zero bytes, matching `atob` / native `fromBase64`
+ * semantics. This is done in a single streaming pass over the input via a bit accumulator, so it
+ * stays allocation-free (no sanitized copy of the whole string) and preserves the memory win.
+ */
+function base64FallbackDecode(base64: string): Uint8Array {
+    const len = base64.length;
+    const table = B64_DECODE_TABLE;
+
+    // Upper bound: every 4 alphabet symbols yield 3 bytes. Padding/whitespace only ever reduce the
+    // real output, so this never under-allocates; the exact length is returned as a view at the end.
+    const bytes = new Uint8Array((len * 3) >> 2);
+
+    let o = 0;
+    let acc = 0; // bit accumulator holding up to three pending 6-bit symbols
+    let accBits = 0;
+    for (let i = 0; i < len; i++) {
+        const v = table[base64.charCodeAt(i)];
+        if (v === B64_INVALID) {
+            continue; // '=' padding or whitespace — ignore, don't emit a zero byte
+        }
+
+        acc = (acc << 6) | v;
+        accBits += 6;
+        if (accBits >= 8) {
+            accBits -= 8;
+            bytes[o++] = (acc >> accBits) & 0xff;
+        }
+    }
+
+    return o === bytes.length ? bytes : bytes.subarray(0, o);
 }
 
 /**
