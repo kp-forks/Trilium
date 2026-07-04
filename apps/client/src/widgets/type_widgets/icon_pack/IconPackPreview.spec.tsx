@@ -20,6 +20,11 @@ describe("resolveGlyph", () => {
         expect(resolveGlyph("")).toBe("");
         expect(resolveGlyph("bx-sushi")).toBe("bx-sushi");
         expect(resolveGlyph("\\zzzz")).toBe("\\zzzz");
+
+        // An out-of-range code point (regex allows 6 hex digits) is left as-is, not passed to
+        // String.fromCodePoint (which throws RangeError above U+10FFFF).
+        expect(resolveGlyph("\\110000")).toBe("\\110000");
+        expect(resolveGlyph("\\10ffff")).toBe(String.fromCodePoint(0x10ffff));
     });
 });
 

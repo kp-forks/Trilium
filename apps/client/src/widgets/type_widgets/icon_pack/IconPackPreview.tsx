@@ -127,7 +127,9 @@ export function resolveGlyph(raw: string): string {
     const match = raw.match(/^\\u?([0-9a-fA-F]{2,6})$/);
     if (match) {
         const codePoint = parseInt(match[1], 16);
-        if (!Number.isNaN(codePoint)) return String.fromCodePoint(codePoint);
+        // The regex admits up to 6 hex digits; guard the valid Unicode range so an out-of-range escape
+        // (e.g. "\110000") isn't handed to String.fromCodePoint, which throws RangeError above U+10FFFF.
+        if (!Number.isNaN(codePoint) && codePoint <= 0x10ffff) return String.fromCodePoint(codePoint);
     }
     return raw;
 }
