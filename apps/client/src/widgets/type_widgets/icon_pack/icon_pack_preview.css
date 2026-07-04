@@ -72,12 +72,18 @@ body.interactive .ip-cell:hover {
 
 .ip-count {
     display: inline-block;
-    position: fixed;
-    right: 16px;
-    bottom: 8px;
+    position: absolute;
+    right: 0;
+    bottom: 0;
     padding: 4px 8px;
     border-radius: 6px;
     font-family: sans-serif;
     background: var(--accented-background-color, gray);
     font-size: .85rem;
+}
+
+body.interactive .ip-count {
+    position: fixed;
+    right: 16px;
+    bottom: 8px;
 }
