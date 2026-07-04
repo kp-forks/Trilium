@@ -1,0 +1,53 @@
+/*
+ * Styles for the isolated icon-pack preview iframe. Imported as a raw string (`?raw`) and combined
+ * with the dynamically generated @font-face in IconPack.tsx, then injected into the frame's <head> —
+ * it is intentionally NOT a side-effect import, so these rules never touch the host document.
+ *
+ * The `.ip-glyph` font family must match PREVIEW_FONT_FAMILY in IconPack.tsx.
+ * The CSS variables used here should be present in the PREVIEW_CSS_VARS array in IconPack.tsx.
+ */
+
+html,
+body {
+    margin: 0;
+    height: 100%;
+}
+
+body {
+    color: var(--main-text-color, #000);
+    background: var(--main-background-color, #fff);
+    padding: 8px;
+    box-sizing: border-box;
+    overflow: auto;
+}
+
+.ip-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 32px);
+    gap: 8px;
+    justify-content: start;
+}
+
+.ip-cell {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px;
+    border-radius: 4px;
+    cursor: default;
+    /* Skip layout/paint for off-screen cells so large packs stay responsive. */
+    content-visibility: auto;
+    contain-intrinsic-size: 32px 32px;
+}
+
+.ip-cell:hover {
+    background: var(--hover-item-background-color, rgba(127, 127, 127, 0.2));
+}
+
+.ip-glyph {
+    font-family: "tn-icon-pack-preview";
+    font-size: 32px;
+    line-height: 1;
+}

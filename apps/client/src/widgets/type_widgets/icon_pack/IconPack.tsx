@@ -3,6 +3,7 @@ import "./IconPack.css";
 import { useEffect, useMemo, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
+import debounce from "../../../services/debounce";
 import { t } from "../../../services/i18n";
 import { isDesktop } from "../../../services/utils";
 import { useNoteBlob, useNoteLabel } from "../../react/hooks";
@@ -11,6 +12,7 @@ import NoItems from "../../react/NoItems";
 import { TextPreview } from "../File";
 import SplitEditor from "../helpers/SplitEditor";
 import { TypeWidgetProps } from "../type_widget";
+import previewStylesheet from "./icon_pack_preview.css?raw";
 
 /** How long to wait after the last edit before re-parsing and re-rendering the (potentially large) preview. */
 const PREVIEW_DEBOUNCE_MS = 1500;
@@ -19,9 +21,6 @@ const PREVIEW_DEBOUNCE_MS = 1500;
 const PREVIEW_CSS_VARS = [
     "--main-text-color",
     "--main-background-color",
-    "--muted-text-color",
-    "--main-border-color",
-    "--accented-background-color",
     "--hover-item-background-color"
 ];
 
@@ -183,45 +182,16 @@ function buildPreviewCss(font: IconPackFont | null): string {
     const fontFace = font
         ? `@font-face { font-family: "${PREVIEW_FONT_FAMILY}"; src: url("${font.url}") format("${font.format}"); font-display: block; }`
         : "";
-    return `
-        ${fontFace}
-        html, body { margin: 0; height: 100%; }
-        body {
-            color: var(--main-text-color, #000);
-            background: var(--main-background-color, #fff);
-            padding: 8px;
-            box-sizing: border-box;
-            overflow: auto;
-        }
-        .ip-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, 32px);
-            gap: 8px;
-            justify-content: start;
-        }
-        .ip-cell {
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 8px;
-            border-radius: 4px;
-            cursor: default;
-            /* Skip layout/paint for off-screen cells so large packs stay responsive. */
-            content-visibility: auto;
-            contain-intrinsic-size: 32px 32px;
-        }
-        .ip-cell:hover { background: var(--hover-item-background-color, rgba(127, 127, 127, 0.2)); }
-        .ip-glyph { font-family: "${PREVIEW_FONT_FAMILY}"; font-size: 32px; line-height: 1; }
-    `;
+    // The static rules live in icon_pack_preview.css (its `.ip-glyph` uses PREVIEW_FONT_FAMILY).
+    return `${fontFace}\n${previewStylesheet}`;
 }
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
     const [ debounced, setDebounced ] = useState(value);
+    const commit = useMemo(() => debounce(setDebounced, delayMs), [ delayMs ]);
     useEffect(() => {
-        const timer = setTimeout(() => setDebounced(value), delayMs);
-        return () => clearTimeout(timer);
-    }, [ value, delayMs ]);
+        commit(value);
+        return commit.clear;
+    }, [ value, commit ]);
     return debounced;
 }
