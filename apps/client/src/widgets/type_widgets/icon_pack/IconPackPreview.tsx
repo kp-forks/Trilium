@@ -18,7 +18,8 @@ const PREVIEW_CSS_VARS = [
     "--main-text-color",
     "--main-background-color",
     "--hover-item-background-color",
-    "--hover-item-text-color"
+    "--hover-item-text-color",
+    "--accented-background-color"
 ];
 
 interface IconPackPreviewProps {
@@ -65,6 +66,7 @@ export function IconPackPreview({ note, content, interactive = true }: IconPackP
                     </div>
                 ))}
             </div>
+            <div className="ip-count">{t("icon_pack.count", { count: parsed.icons.length })}</div>
         </IsolatedFrame>
     );
 }

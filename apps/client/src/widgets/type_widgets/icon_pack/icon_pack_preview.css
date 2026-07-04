@@ -3,8 +3,8 @@
  * with the dynamically generated @font-face in IconPack.tsx, then injected into the frame's <head> —
  * it is intentionally NOT a side-effect import, so these rules never touch the host document.
  *
- * The `.ip-glyph` font family must match PREVIEW_FONT_FAMILY in IconPack.tsx.
- * The CSS variables used here should be present in the PREVIEW_CSS_VARS array in IconPack.tsx.
+ * The `.ip-glyph` font family must match PREVIEW_FONT_FAMILY in IconPackPreview.tsx.
+ * The CSS variables used here should be present in the PREVIEW_CSS_VARS array in IconPackPreview.tsx.
  */
 
 html,
@@ -55,4 +55,16 @@ body {
     font-family: "tn-icon-pack-preview";
     font-size: 32px;
     line-height: 1;
+}
+
+.ip-count {
+    display: inline-block;
+    position: fixed;
+    right: 16px;
+    bottom: 8px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-family: sans-serif;
+    background: var(--accented-background-color, gray);
+    font-size: .85rem;
 }

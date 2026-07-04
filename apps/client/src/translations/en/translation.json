@@ -1255,7 +1255,9 @@
     "preview_title": "Icon pack preview",
     "invalid_manifest": "The icon pack manifest could not be parsed. Check that it is valid JSON.",
     "no_icons": "This icon pack contains no icons.",
-    "tooltip": "Class: {{- class}}\nGlyph code: {{- code}}\nTerms: {{- terms}}"
+    "tooltip": "Class: {{- class}}\nGlyph code: {{- code}}\nTerms: {{- terms}}",
+    "count_one": "{{count}} icon",
+    "count_other": "{{count}} icons"
   },
   "editable_text": {
     "placeholder": "Type the content of your note here...",
