@@ -21,7 +21,8 @@ const PREVIEW_DEBOUNCE_MS = 1500;
 const PREVIEW_CSS_VARS = [
     "--main-text-color",
     "--main-background-color",
-    "--hover-item-background-color"
+    "--hover-item-background-color",
+    "--hover-item-text-color"
 ];
 
 export default function IconPack(props: TypeWidgetProps) {

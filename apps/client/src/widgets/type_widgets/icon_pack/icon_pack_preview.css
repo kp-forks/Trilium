@@ -11,6 +11,7 @@ html,
 body {
     margin: 0;
     height: 100%;
+    user-select: none;
 }
 
 body {
@@ -23,27 +24,30 @@ body {
 
 .ip-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, 32px);
+    grid-template-columns: repeat(auto-fill, 48px);
     gap: 8px;
     justify-content: start;
 }
 
 .ip-cell {
-    width: 32px;
-    height: 32px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px;
-    border-radius: 4px;
+    border-radius: 6px;
     cursor: default;
     /* Skip layout/paint for off-screen cells so large packs stay responsive. */
     content-visibility: auto;
-    contain-intrinsic-size: 32px 32px;
+    contain-intrinsic-size: 48px 48px;
 }
 
 .ip-cell:hover {
     background: var(--hover-item-background-color, rgba(127, 127, 127, 0.2));
+    color: var(--hover-item-text-color);
+    transform: scale(1.5);
+    transition: transform 200ms ease-in-out,
+                background 150ms ease-in-out;
 }
 
 .ip-glyph {
