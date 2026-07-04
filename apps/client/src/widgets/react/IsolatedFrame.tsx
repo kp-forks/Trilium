@@ -50,7 +50,9 @@ export default function IsolatedFrame({ className, title, css, cssVars, bodyClas
             style.id = "isolated-frame-style";
             doc.head.appendChild(style);
         }
-        style.textContent = `${buildRootVars(cssVars)}${css ?? ""}`;
+        // Forward the app's color scheme so the frame's UA-painted elements (scrollbars, form
+        // controls) match the theme instead of defaulting to light.
+        style.textContent = `:root { color-scheme: ${colorScheme}; }\n${buildRootVars(cssVars)}${css ?? ""}`;
     }, [ css, cssVars, colorScheme, body ]);
 
     useLayoutEffect(() => {
