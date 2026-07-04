@@ -50,11 +50,11 @@ type Labels = {
     geolocation: string;
     expanded: string;
     "calendar:hideWeekends": boolean;
+    "calendar:weekNumbers": boolean;
+    "calendar:view": string;
     "calendar:initialDate": string;
     "calendar:slotDuration": string;
     "calendar:slotLabelInterval": string;
-    "calendar:weekNumbers": boolean;
-    "calendar:view": string;
     "map:style": string;
     "map:scale": boolean;
     "map:hideLabels": boolean;

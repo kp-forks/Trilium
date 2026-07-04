@@ -39,7 +39,6 @@ interface CalendarViewData {
     nextText: string;
 }
 
-
 const CALENDAR_VIEWS = [
     {
         type: "timeGridDay",
@@ -82,7 +81,6 @@ const SUPPORTED_CALENDAR_VIEW_TYPE = CALENDAR_VIEWS.map(v => v.type);
 
 const DEFAULT_SLOT_DURATION = "00:15:00";
 const DEFAULT_SLOT_LABEL_INTERVAL = "01:00:00";
-
 
 // Here we hard-code the imports in order to ensure that they are embedded by webpack without having to load all the languages.
 export const LOCALE_MAPPINGS: Record<DISPLAYABLE_LOCALE_IDS, (() => Promise<{ default: LocaleInput }>) | null> = {

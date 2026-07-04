@@ -1,6 +1,5 @@
 import { DateSelectArg } from "@fullcalendar/core/index.js";
 import { EventImpl } from "@fullcalendar/core/internal";
-import { dayjs } from "@triliumnext/commons";
 import FNote from "../../../entities/fnote";
 
 export function parseStartEndDateFromEvent(e: DateSelectArg | EventImpl) {
@@ -82,15 +81,19 @@ export function getCustomisableLabel(note: FNote, defaultLabelName: string, cust
     return note.getLabelValue(defaultLabelName);
 }
 
+// Bounds for a FullCalendar slot duration / label interval, in seconds.
+const MIN_DURATION_SECONDS = 60; // 1 minute
+const MAX_DURATION_SECONDS = 24 * 60 * 60; // 24 hours
+
 export function isValidDuration(str: string | null | undefined): boolean {
-    if (!str || !/^(\d{2}):([0-5]\d):([0-5]\d)$/.test(str)) return false;
+    // The regex already constrains minutes/seconds to 00–59, so only the total needs bounding.
+    const match = str?.match(/^(\d{2}):([0-5]\d):([0-5]\d)$/);
+    if (!match) return false;
 
-    const [hours, minutes, seconds] = str.split(":").map(Number);
-    const totalMs = dayjs.duration({ hours, minutes, seconds }).asMilliseconds();
-    const oneMinute = dayjs.duration(1, "minute").asMilliseconds();
-    const twentyFourHours = dayjs.duration(24, "hours").asMilliseconds();
+    const [, hours, minutes, seconds] = match;
+    const totalSeconds = Number(hours) * 3600 + Number(minutes) * 60 + Number(seconds);
 
-    return totalMs >= oneMinute && totalMs <= twentyFourHours;
+    return totalSeconds >= MIN_DURATION_SECONDS && totalSeconds <= MAX_DURATION_SECONDS;
 }
 
 // Source: https://stackoverflow.com/a/30465299/4898894

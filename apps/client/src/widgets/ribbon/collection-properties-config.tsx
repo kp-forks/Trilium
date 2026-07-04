@@ -65,30 +65,16 @@ export const bookPropertiesConfig: Record<ViewTypeOptions, BookConfig> = {
                 icon: "bx bx-time",
                 type: "combobox",
                 bindToLabel: "calendar:slotDuration",
-                options: [
-                    { value: "00:01:00", label: "1 Minute" },
-                    { value: "00:05:00", label: "5 Minutes" },
-                    { value: "00:10:00", label: "10 Minutes" },
-                    { value: "00:15:00", label: "15 Minutes" },
-                    { value: "00:20:00", label: "20 Minutes" },
-                    { value: "00:30:00", label: "30 Minutes" },
-                    { value: "01:00:00", label: "1 Hour" }
-                ]
+                options: slotDurationOptions([5, 10, 15, 20, 30, 60])
             },
             {
                 label: t("calendar_view.set_slot_label_interval"),
                 icon: "bx bx-time",
                 type: "combobox",
                 bindToLabel: "calendar:slotLabelInterval",
-                options: [
-                    { value: "00:01:00", label: "1 Minute" },
-                    { value: "00:05:00", label: "5 Minutes" },
-                    { value: "00:10:00", label: "10 Minutes" },
-                    { value: "00:20:00", label: "20 Minutes" },
-                    { value: "00:30:00", label: "30 Minutes" },
-                    { value: "01:00:00", label: "1 Hour" }
-                ]
-            },
+                // Labels want to be coarser than the slots themselves.
+                options: slotDurationOptions([15, 30, 60])
+            }
         ]
     },
     geoMap: {
@@ -175,6 +161,20 @@ function buildMapLayer([ id, layer ]: [ string, MapLayer ]): ComboBoxItem {
         value: id,
         label: layer.name
     };
+}
+
+/** Builds FullCalendar duration options (`HH:MM:00`) from a list of whole minutes, with localized labels. */
+function slotDurationOptions(minutes: number[]): ComboBoxItem[] {
+    return minutes.map((total) => ({
+        value: `${pad(Math.floor(total / 60))}:${pad(total % 60)}:00`,
+        label: total % 60 === 0
+            ? t("calendar_view.hours", { count: total / 60 })
+            : t("calendar_view.minutes", { count: total })
+    }));
+}
+
+function pad(n: number) {
+    return String(n).padStart(2, "0");
 }
 
 function ListExpandDepth(context: { note: FNote, parentComponent: Component }) {
