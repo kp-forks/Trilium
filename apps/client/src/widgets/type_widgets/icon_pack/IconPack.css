@@ -1,0 +1,13 @@
+.note-detail-icon-pack .icon-pack-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 1em;
+    overflow: auto;
+}
+
+.note-detail-icon-pack .icon-pack-file-source {
+    height: 100%;
+    overflow: auto;
+}
