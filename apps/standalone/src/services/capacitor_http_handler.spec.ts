@@ -24,11 +24,12 @@ describe("capacitorHttpHandler", () => {
         ).rejects.toThrow("CapacitorHttp plugin is not available");
     });
 
-    it("forwards the request and lowercases response header keys (object body)", async () => {
+    it("requests the raw text response and passes a JSON string through unchanged (no re-parse/re-stringify)", async () => {
+        const rawJson = '{"ok":true}';
         const request = vi.fn().mockResolvedValue({
             status: 200,
             headers: { "Content-Type": "application/json", "X-Custom": "v" },
-            data: { ok: true }
+            data: rawJson
         });
         installCapacitor(request);
 
@@ -44,10 +45,19 @@ describe("capacitorHttpHandler", () => {
             url: "https://api/test",
             headers: { Authorization: "token" },
             data: "{}",
-            responseType: undefined
+            responseType: "text"
         });
         expect(result.status).toBe(200);
         expect(result.headers).toEqual({ "content-type": "application/json", "x-custom": "v" });
+        // Passed straight through — not JSON.stringify'd back.
+        expect(result.body).toBe(rawJson);
+    });
+
+    it("still serializes object response data as a defensive fallback", async () => {
+        const request = vi.fn().mockResolvedValue({ status: 200, headers: {}, data: { ok: true } });
+        installCapacitor(request);
+
+        const result = await capacitorHttpHandler({ method: "GET", url: "https://x", headers: {} });
         expect(result.body).toBe(JSON.stringify({ ok: true }));
     });
 

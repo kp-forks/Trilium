@@ -52,10 +52,25 @@ function renderState(state: State, setState: (state: State) => void) {
 }
 
 function App() {
-    const [state, setState] = useState<State>("selectLanguage");
+    // A sync that already created the schema but was interrupted before finishing
+    // resumes straight on the progress screen instead of restarting the wizard.
+    const resuming = window.glob.syncInProgress === true;
+    const [state, setState] = useState<State>(resuming ? "syncFromServerInProgress" : "selectLanguage");
     const [prevState, setPrevState] = useState<State | null>(null);
     const [transitioning, setTransitioning] = useState(false);
     const prevStateRef = useRef<State>(state);
+
+    useEffect(() => {
+        if (!resuming) {
+            return;
+        }
+        // The background sync timer stays gated behind DB initialization, so nothing
+        // restarts the interrupted sync on its own — kick it off like the launch-bar
+        // button does. sync/now is a no-op if a sync is somehow already running.
+        server.post("sync/now").catch(() => {
+            // Ignore — the progress screen keeps polling sync/stats regardless.
+        });
+    }, [resuming]);
 
     function handleSetState(newState: State) {
         setPrevState(prevStateRef.current);
@@ -232,11 +247,14 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
     const currentIndex = steps.findIndex((s) => s.key === step);
 
     const syncingDone = currentIndex > steps.findIndex((s) => s.key === "syncing");
+    // Pulled-so-far, clamped: the remote can gain changes mid-sync, briefly pushing the
+    // outstanding count above the frozen total, which would otherwise show a negative bar.
+    const pulled = stats.totalPullCount ? Math.max(0, stats.totalPullCount - stats.outstandingPullCount) : 0;
     let progress = 0;
     if (syncingDone) {
         progress = 100;
     } else if (stats.totalPullCount) {
-        progress = Math.round(((stats.totalPullCount - stats.outstandingPullCount) / stats.totalPullCount) * 100);
+        progress = Math.min(100, Math.round((pulled / stats.totalPullCount) * 100));
     }
 
     return (
@@ -252,7 +270,7 @@ function SyncInProgress({ device }: { device: "server" | "desktop" }) {
                         {s.label}
                         {s.key === "syncing" && (
                             <div class="sync-progress">
-                                <progress value={syncingDone ? 1 : stats.totalPullCount! - stats.outstandingPullCount} max={syncingDone ? 1 : stats.totalPullCount!} />
+                                <progress value={syncingDone ? 1 : pulled} max={syncingDone ? 1 : (stats.totalPullCount ?? 1)} />
                                 <span>{progress}%</span>
                             </div>
                         )}
