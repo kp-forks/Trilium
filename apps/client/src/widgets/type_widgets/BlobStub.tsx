@@ -23,7 +23,7 @@ export default function BlobStub({ note }: TypeWidgetProps) {
                 <Button
                     kind="primary"
                     text={t("blob_stub.open_on_server")}
-                    onClick={() => window.open(url, "_blank")}
+                    onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
                 />
             )}
         </NoItems>
