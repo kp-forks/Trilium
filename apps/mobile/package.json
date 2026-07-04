@@ -9,7 +9,9 @@
     "build": "pnpm --filter @triliumnext/standalone build",
     "sync": "pnpm build && cap sync",
     "open:android": "cap open android",
-    "run:android": "cap run android"
+    "run:android": "cap run android",
+    "open:ios": "cap open ios",
+    "run:ios": "cap run ios"
   },
   "dependencies": {
     "@capacitor/android": "8.4.1",
