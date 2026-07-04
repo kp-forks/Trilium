@@ -12,26 +12,42 @@ body {
     margin: 0;
     height: 100%;
     user-select: none;
+    overflow: hidden;
 }
+
+html:has(.ip-grid.interactive),
+body:has(.ip-grid.interactive) {
+    overflow: auto;
+}
+
 
 body {
     color: var(--main-text-color, #000);
     background: var(--main-background-color, #fff);
     padding: 8px;
     box-sizing: border-box;
-    overflow: auto;
+    /* Read-only previews (collection tiles) are clipped, not scrollable — see the interactive override below. */
 }
 
+
 .ip-grid {
+    --icon-size: 24px;
+    --icon-size-ratio: .85;
+
     display: grid;
-    grid-template-columns: repeat(auto-fill, 48px);
+    grid-template-columns: repeat(auto-fill, var(--icon-size));
     gap: 8px;
     justify-content: start;
 }
 
+.ip-grid.ip-grid.interactive {
+    --icon-size-ratio: .75;
+    --icon-size: 48px;
+}
+
 .ip-cell {
-    width: 48px;
-    height: 48px;
+    width: var(--icon-size);
+    height: var(--icon-size);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -39,7 +55,7 @@ body {
     cursor: default;
     /* Skip layout/paint for off-screen cells so large packs stay responsive. */
     content-visibility: auto;
-    contain-intrinsic-size: 48px 48px;
+    contain-intrinsic-size: var(--icon-size) var(--icon-size);
 }
 
 /* Hover highlight only in interactive mode (off for read-only content-renderer previews). */
@@ -53,7 +69,7 @@ body {
 
 .ip-glyph {
     font-family: "tn-icon-pack-preview";
-    font-size: 32px;
+    font-size: calc(var(--icon-size) * var(--icon-size-ratio));
     line-height: 1;
 }
 

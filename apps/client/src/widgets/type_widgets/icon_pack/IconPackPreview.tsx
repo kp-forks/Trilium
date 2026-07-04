@@ -13,6 +13,10 @@ import previewStylesheet from "./icon_pack_preview.css?raw";
 /** How long to wait after the last edit before re-parsing and re-rendering the (potentially large) preview. */
 const PREVIEW_DEBOUNCE_MS = 1500;
 
+/** In non-interactive previews (collection tiles) only this many glyphs are rendered to stay lightweight;
+ * the count line still reports the true total. */
+const NON_INTERACTIVE_ICON_LIMIT = 250;
+
 /** Theme variables forwarded into the isolated preview frame so it matches the app's colours. */
 const PREVIEW_CSS_VARS = [
     "--main-text-color",
@@ -57,10 +61,13 @@ export function IconPackPreview({ note, content, interactive = true }: IconPackP
         return <div className="icon-pack-preview"><NoItems icon="bx bx-images" text={t("icon_pack.no_icons")} /></div>;
     }
 
+    // Keep read-only tiles cheap by rendering only a capped sample; the count line still shows the true total.
+    const visibleIcons = interactive ? parsed.icons : parsed.icons.slice(0, NON_INTERACTIVE_ICON_LIMIT);
+
     return (
         <IsolatedFrame className="icon-pack-frame" title={t("icon_pack.preview_title")} css={css} cssVars={PREVIEW_CSS_VARS}>
             <div className={interactive ? "ip-grid interactive" : "ip-grid"}>
-                {parsed.icons.map((icon) => (
+                {visibleIcons.map((icon) => (
                     <div className="ip-cell" key={icon.id} title={interactive ? iconTooltip(prefix, icon) : undefined}>
                         <span className="ip-glyph">{icon.glyph}</span>
                     </div>
