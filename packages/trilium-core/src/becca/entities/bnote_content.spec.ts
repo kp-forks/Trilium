@@ -8,6 +8,8 @@ import eraseService from "../../services/erase.js";
 import noteService from "../../services/notes.js";
 import optionService from "../../services/options.js";
 import protectedSessionService from "../../services/protected_session.js";
+import { getSql } from "../../services/sql/index.js";
+import date_utils from "../../services/utils/date.js";
 import Module from "module";
 
 import { encodeUtf8, unwrapStringOrBuffer } from "../../services/utils/binary.js";
@@ -91,6 +93,43 @@ describe("BNote content / misc getters", () => {
             expect(note.utcDateCreatedObj).toBeNull();
             expect(note.dateModifiedObj).toBeNull();
             expect(note.utcDateModifiedObj).toBeNull();
+        });
+    });
+
+    describe("setDateCreatedAndModified (forces import dates, bypassing beforeSaving)", () => {
+        it("persists explicit UTC dates, derives the local columns, and keeps the blob in step", () => {
+            const note = createNote();
+            const utcDateCreated = "2021-03-04 05:06:07.000Z";
+            const utcDateModified = "2022-08-09 10:11:12.000Z";
+
+            getContext().init(() => note.setDateCreatedAndModified(utcDateCreated, utcDateModified));
+
+            // the in-memory entity reflects the forced dates
+            expect(note.utcDateCreated).toBe(utcDateCreated);
+            expect(note.utcDateModified).toBe(utcDateModified);
+            expect(note.dateCreated).toBe(dayjs(utcDateCreated).format(date_utils.LOCAL_DATETIME_FORMAT));
+            expect(note.dateModified).toBe(dayjs(utcDateModified).format(date_utils.LOCAL_DATETIME_FORMAT));
+
+            // and so does the persisted row — i.e. beforeSaving's "now" stamping did not win
+            const row = getSql().getRow<{ utcDateCreated: string; utcDateModified: string }>(
+                "SELECT utcDateCreated, utcDateModified FROM notes WHERE noteId = ?",
+                [note.noteId]
+            );
+            expect(row.utcDateCreated).toBe(utcDateCreated);
+            expect(row.utcDateModified).toBe(utcDateModified);
+
+            const blobModified = getSql().getValue<string>("SELECT utcDateModified FROM blobs WHERE blobId = ?", [note.blobId]);
+            expect(blobModified).toBe(utcDateModified);
+        });
+
+        it("leaves a date pair untouched when its argument is omitted", () => {
+            const note = createNote();
+            const originalUtcCreated = note.utcDateCreated;
+
+            getContext().init(() => note.setDateCreatedAndModified(undefined, "2030-01-02 03:04:05.000Z"));
+
+            expect(note.utcDateCreated).toBe(originalUtcCreated);
+            expect(note.utcDateModified).toBe("2030-01-02 03:04:05.000Z");
         });
     });
 

@@ -11,10 +11,11 @@ export function isDev() { return getPlatform().getEnv("TRILIUM_ENV") === "dev"; 
 export function isElectron() { return getPlatform().isElectron; }
 export function isMac() { return getPlatform().isMac; }
 export function isWindows() { return getPlatform().isWindows; }
+export function isLinux() { return getPlatform().isLinux; }
 
 // render and book are string note in the sense that they are expected to contain empty string
 const STRING_NOTE_TYPES = new Set(["text", "code", "relationMap", "search", "render", "book", "mermaid", "canvas", "webView"]);
-const STRING_MIME_TYPES = new Set(["application/javascript", "application/x-javascript", "application/json", "application/x-sql", "image/svg+xml"]);
+const STRING_MIME_TYPES = new Set(["application/javascript", "application/x-javascript", "application/json", "application/x-sql", "image/svg+xml", "application/inkml+xml"]);
 
 export function hash(text: string) {
     return encodeBase64(getCrypto().createHash("sha1", text.normalize()));
@@ -408,6 +409,29 @@ export function slugify(text: string) {
 
 export function stripTags(text: string) {
     return text.replace(/<(?:.|\n)*?>/gm, "");
+}
+
+/**
+ * Generates a list of unique slugs for the given heading titles, preserving
+ * document order. Titles are stripped of HTML tags and slugified; when the same
+ * slug would be produced more than once (e.g. multiple headings sharing a
+ * title), subsequent occurrences get a numeric suffix (`foo`, `foo-1`, `foo-2`, …).
+ *
+ * This keeps anchor IDs and their table-of-contents links unique on shared
+ * pages, so clicking a duplicate heading in the ToC jumps to the right one.
+ */
+export function slugifyHeadings(titles: string[]): string[] {
+    const used = new Set<string>();
+    return titles.map((title) => {
+        const base = slugify(stripTags(title));
+        let slug = base;
+        let counter = 1;
+        while (used.has(slug)) {
+            slug = `${base}-${counter++}`;
+        }
+        used.add(slug);
+        return slug;
+    });
 }
 
 export function toObject<T, K extends string | number | symbol, V>(array: T[], fn: (item: T) => [K, V]): Record<K, V> {

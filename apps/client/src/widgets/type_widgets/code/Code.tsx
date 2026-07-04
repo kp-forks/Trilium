@@ -9,7 +9,7 @@ import { CommandListenerData } from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
 import utils from "../../../services/utils";
-import { useColorScheme, useEditorSpacedUpdate, useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteBlob, useNoteLabelInt, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { useColorScheme, useEditorSpacedUpdate, useKeyboardShortcuts, useLegacyImperativeHandlers, useNoteBlob, useNoteLabel, useNoteLabelInt, useNoteLabelOptionalBool, useNoteProperty, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { refToJQuerySelector } from "../../react/react_utils";
 import { CODE_THEME_DEFAULT_PREFIX as DEFAULT_PREFIX } from "../constants";
 import { TypeWidgetProps } from "../type_widget";
@@ -39,6 +39,9 @@ export interface EditableCodeProps extends TypeWidgetProps, Omit<CodeEditorProps
 export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent, editorRef }: TypeWidgetProps & { editorRef?: Ref<VanillaCodeMirror> }) {
     const [ content, setContent ] = useState("");
     const blob = useNoteBlob(note);
+    // Read reactively so switching the language from the dropdown re-highlights live, rather than
+    // only after the note is reloaded (unlike the editable view, read-only has no edits to trigger it).
+    const mime = useNoteProperty(note, "mime");
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
     const [ noteWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
@@ -60,7 +63,7 @@ export function ReadOnlyCode({ note, viewScope, ntxId, parentComponent, editorRe
             editorRef={editorRef}
             className="note-detail-readonly-code-content"
             content={content}
-            mime={note.mime}
+            mime={mime ?? "text/plain"}
             readOnly
             {...(noteTabWidth != null && { indentSize: noteTabWidth })}
             {...(noteUseTabs != null && { useTabs: noteUseTabs })}
@@ -99,6 +102,7 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     const [ noteTabWidth ] = useNoteLabelInt(note, "tabWidth");
     const [ noteUseTabs ] = useNoteLabelOptionalBool(note, "indentWithTabs");
     const [ noteWrapLines ] = useNoteLabelOptionalBool(note, "wrapLines");
+    const [ customRequestHandler ] = useNoteLabel(note, "customRequestHandler");
     const mime = useNoteProperty(note, "mime");
     const spacedUpdate = useEditorSpacedUpdate({
         note,
@@ -130,7 +134,9 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
     useKeyboardShortcuts("code-detail", containerRef, parentComponent, ntxId);
 
     // Code snippets (#snippet notes with a matching MIME) as `/snippet:<name>` slash commands.
-    // Disabled for Markdown notes, whose editor provides its own combined slash-command menu.
+    // Disabled for Markdown notes, whose editor provides its own combined slash-command menu. On
+    // script notes the snippet source co-exists with the TypeScript language service's source via
+    // the editor's shared completion-source registry.
     useSnippetSlashCommands(
         editorView,
         (candidate) => candidate.type === "code" && (candidate.mime === note.mime || candidate.mime === "text/plain"),
@@ -144,6 +150,7 @@ export function EditableCode({ note, ntxId, noteContext, debounceUpdate, parentC
             ntxId={ntxId} parentComponent={parentComponent}
             editorRef={combinedEditorRef} containerRef={containerRef}
             mime={mime ?? "text/plain"}
+            customRequestHandler={customRequestHandler != null}
             className="note-detail-code-editor"
             placeholder={placeholder ?? t("editable_code.placeholder")}
             vimKeybindings={vimKeymapEnabled}
@@ -224,9 +231,18 @@ export function CodeEditor({ parentComponent, ntxId, containerRef: externalConta
         editor.focus();
     });
 
-    useTriliumEvent("focusOnDetail", ({ ntxId: eventNtxId }) => {
+    useTriliumEvent("focusOnDetail", ({ ntxId: eventNtxId, insertNewlineAtTop }) => {
         if (eventNtxId !== ntxId) return;
-        codeEditorRef.current?.focus();
+        const editor = codeEditorRef.current;
+        if (!editor) return;
+        if (insertNewlineAtTop) {
+            editor.insertBlankLineAtTop();
+            // The code editor itself is `overflow: hidden`; the surrounding `.scrolling-container`
+            // scrolls (together with the inline title), so CodeMirror's own scrollIntoView can't
+            // reveal the new top line. Scroll that container to the top once the line has rendered.
+            requestAnimationFrame(() => editor.dom.closest(".scrolling-container")?.scrollTo({ top: 0 }));
+        }
+        editor.focus();
     });
 
     return <CodeMirror

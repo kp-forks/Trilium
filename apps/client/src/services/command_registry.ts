@@ -139,11 +139,6 @@ export class CommandRegistry {
                 continue;
             }
 
-            // Skip actions that don't have a description (likely separators)
-            if (!action.description) {
-                continue;
-            }
-
             // Skip Electron-only actions if not in Electron environment
             if (action.isElectronOnly && !utils.isElectron()) {
                 continue;

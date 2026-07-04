@@ -1,5 +1,4 @@
 import { dayjs } from "@triliumnext/commons";
-import { snapdom } from "@zumer/snapdom";
 
 import FNote from "../entities/fnote";
 import type { ViewMode, ViewScope } from "./link.js";
@@ -34,7 +33,16 @@ export function restartDesktopApp() {
  * On any other platform than Electron, nothing happens.
  */
 function reloadTray() {
-    window.electronApi?.tray.reloadTray();
+    window.electronApi?.systemIntegration.reloadTray();
+}
+
+/**
+ * Re-applies the OS autostart entry after the `launchOnStartup` option changes.
+ *
+ * On any other platform than Electron, nothing happens.
+ */
+function reapplyLaunchOnStartup() {
+    window.electronApi?.systemIntegration.reapplyLaunchOnStartup();
 }
 
 function parseDate(str: string) {
@@ -149,6 +157,21 @@ export function isMobileApp() {
 
 export function isMac() {
     return navigator.platform.indexOf("Mac") > -1;
+}
+
+/**
+ * Returns `true` when the (server-reported) host platform is Linux. Prefer this over a
+ * `!isMac && !isWindows` derivation so future platforms aren't misclassified as Linux.
+ */
+export function isLinux() {
+    return window.glob?.platform === "linux";
+}
+
+/**
+ * Returns `true` when the (server-reported) host platform is Windows.
+ */
+export function isWindows() {
+    return window.glob?.platform === "win32";
 }
 
 export function isCtrlKey(evt: KeyboardEvent | MouseEvent | JQuery.ClickEvent | JQuery.ContextMenuEvent | JQuery.TriggeredEvent | React.PointerEvent<HTMLCanvasElement> | JQueryEventObject) {
@@ -564,17 +587,18 @@ function areObjectsEqual(...args: unknown[]) {
     return true;
 }
 
-function copyHtmlToClipboard(content: string) {
+function copyHtmlToClipboard(html: string, plainText: string = html) {
     function listener(e: ClipboardEvent) {
         if (e.clipboardData) {
-            e.clipboardData.setData("text/html", content);
-            e.clipboardData.setData("text/plain", content);
+            e.clipboardData.setData("text/html", html);
+            e.clipboardData.setData("text/plain", plainText);
         }
         e.preventDefault();
     }
     document.addEventListener("copy", listener);
-    document.execCommand("copy");
+    const ok = document.execCommand("copy");
     document.removeEventListener("copy", listener);
+    return ok;
 }
 
 export function createImageSrcUrl(note: FNote) {
@@ -633,6 +657,7 @@ function prepareElementForSnapdom(source: string | SVGElement | HTMLElement): {
  * @param svgSource either an SVG string, an SVGElement, or an HTMLElement to be downloaded.
  */
 async function downloadAsSvg(nameWithoutExtension: string, svgSource: string | SVGElement | HTMLElement) {
+    const { snapdom } = await import("@zumer/snapdom");
     const { element, cleanup } = prepareElementForSnapdom(svgSource);
 
     try {
@@ -671,6 +696,7 @@ function triggerDownload(fileName: string, dataUrl: string) {
  * @param svgSource either an SVG string, an SVGElement, or an HTMLElement to be converted to PNG.
  */
 async function downloadAsPng(nameWithoutExtension: string, svgSource: string | SVGElement | HTMLElement) {
+    const { snapdom } = await import("@zumer/snapdom");
     const { element, cleanup } = prepareElementForSnapdom(svgSource);
 
     try {
@@ -863,6 +889,7 @@ export default {
     reloadFrontendApp,
     restartDesktopApp,
     reloadTray,
+    reapplyLaunchOnStartup,
     parseDate,
     formatDateISO,
     formatDateTime,
@@ -874,6 +901,8 @@ export default {
     isElectron,
     isPWA,
     isMac,
+    isLinux,
+    isWindows,
     isCtrlKey,
     assertArguments,
     escapeHtml,

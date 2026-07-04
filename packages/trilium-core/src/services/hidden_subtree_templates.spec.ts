@@ -46,7 +46,8 @@ describe("buildHiddenSubtreeTemplates", () => {
             "_template_geo_map",
             "_template_board",
             "_template_presentation_slide",
-            "_template_presentation"
+            "_template_presentation",
+            "_template_dashboard"
         ]);
         // No duplicate ids.
         expect(new Set(ids).size).toBe(ids.length);
@@ -62,6 +63,7 @@ describe("buildHiddenSubtreeTemplates", () => {
         expect(viewTypeOf(childById(templates, "_template_geo_map"))).toBe("geoMap");
         expect(viewTypeOf(childById(templates, "_template_board"))).toBe("board");
         expect(viewTypeOf(childById(templates, "_template_presentation"))).toBe("presentation");
+        expect(viewTypeOf(childById(templates, "_template_dashboard"))).toBe("dashboard");
     });
 
     it("flags collection templates as templates and as collections", () => {
@@ -73,7 +75,8 @@ describe("buildHiddenSubtreeTemplates", () => {
             "_template_table",
             "_template_geo_map",
             "_template_board",
-            "_template_presentation"
+            "_template_presentation",
+            "_template_dashboard"
         ];
 
         for (const id of collectionIds) {
@@ -82,6 +85,15 @@ describe("buildHiddenSubtreeTemplates", () => {
             expect(names, id).toContain("template");
             expect(names, id).toContain("collection");
         }
+    });
+
+    it("marks the dashboard collection template as beta", () => {
+        const templates = buildHiddenSubtreeTemplates();
+        const dashboard = childById(templates, "_template_dashboard");
+
+        const beta = dashboard.attributes?.find((a) => a.name === "beta");
+        expect(beta).toBeDefined();
+        expect(beta?.type).toBe("label");
     });
 
     it("configures the text snippet template as a text note with promoted description", () => {

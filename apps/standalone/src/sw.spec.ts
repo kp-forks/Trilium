@@ -101,6 +101,15 @@ describe("fetch routing", () => {
         expect(event._response).toBeUndefined();
     });
 
+    it("lets native-proxy requests fall through to the network stack untouched", async () => {
+        const handlers = await loadSw();
+        const event = fetchEvent(`${origin}/_trilium_native_http/ping`);
+        handlers.fetch(event);
+        // No respondWith: only the WebView's own network path reaches shouldInterceptRequest.
+        expect(event._response).toBeUndefined();
+        expect(fetch).not.toHaveBeenCalled();
+    });
+
     it("routes local-first prefixes to the client bridge", async () => {
         const handlers = await loadSw();
         const event = fetchEvent(`${origin}/api/notes`);

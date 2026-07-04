@@ -1655,6 +1655,39 @@ class BNote extends AbstractBeccaEntity<BNote> {
         return formatDownloadTitle(this.title, this.type, this.mime);
     }
 
+    /**
+     * Forces explicit creation/modification timestamps onto the note and its blob, persisting them
+     * immediately with raw SQL. This deliberately bypasses the automatic "now" stamping that
+     * {@link beforeSaving} applies on every regular save, which is why importers that need to preserve
+     * the source's original dates (ENEX, OneNote, …) call this *after* the note and its content have
+     * been saved.
+     *
+     * Both arguments are UTC datetimes in Trilium's DB format (e.g. `2023-08-21 23:38:51.110Z`); the
+     * matching local-time columns are derived from them. Either may be omitted to leave that pair at
+     * its current value.
+     */
+    setDateCreatedAndModified(utcDateCreated?: string, utcDateModified?: string) {
+        const toLocalDbFormat = (utc: string) => dayjs(utc).format(dateUtils.LOCAL_DATETIME_FORMAT);
+
+        if (utcDateCreated) {
+            this.utcDateCreated = utcDateCreated;
+            this.dateCreated = toLocalDbFormat(utcDateCreated);
+        }
+        if (utcDateModified) {
+            this.utcDateModified = utcDateModified;
+            this.dateModified = toLocalDbFormat(utcDateModified);
+        }
+
+        const sql = getSql();
+        sql.execute(
+            /*sql*/`UPDATE notes
+                    SET dateCreated = ?, utcDateCreated = ?, dateModified = ?, utcDateModified = ?
+                    WHERE noteId = ?`,
+            [this.dateCreated, this.utcDateCreated, this.dateModified, this.utcDateModified, this.noteId]
+        );
+        sql.execute(/*sql*/`UPDATE blobs SET utcDateModified = ? WHERE blobId = ?`, [this.utcDateModified, this.blobId]);
+    }
+
     override beforeSaving() {
         super.beforeSaving();
 

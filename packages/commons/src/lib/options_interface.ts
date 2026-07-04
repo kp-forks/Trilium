@@ -61,6 +61,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     syncServerTimeoutTimeScale: number;
     syncProxy: string;
     syncIncomplete: boolean;
+    syncMaxBlobContentSize: number;
     mainFontFamily: FontFamily;
     treeFontFamily: FontFamily;
     detailFontFamily: FontFamily;
@@ -90,13 +91,11 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     customDateTimeFormat: string;
 
     // Multi-Factor Authentication
-    mfaEnabled: boolean;
     mfaMethod: string;
     totpEncryptionSalt: string;
     totpEncryptedSecret: string;
     totpVerificationHash: string;
     encryptedRecoveryCodes: boolean;
-    userSubjectIdentifierSaved: boolean;
     recoveryCodeInitialVector: string;
     recoveryCodeSecurityKey: string;
     recoveryCodesEncrypted: string;
@@ -148,6 +147,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     databaseReadonly: boolean;
     backendScriptingEnabled: boolean;
     sqlConsoleEnabled: boolean;
+    allowLanAccess: boolean;
     hasUserBackendScripts: boolean;
     isPasswordSet: boolean;
     overrideThemeFonts: boolean;
@@ -161,6 +161,7 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     hideArchivedNotes_main: boolean;
     debugModeEnabled: boolean;
     autoCollapseNoteTree: boolean;
+    treeScrollFollowNavigation: boolean;
     dailyBackupEnabled: boolean;
     weeklyBackupEnabled: boolean;
     monthlyBackupEnabled: boolean;
@@ -168,6 +169,12 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     downloadImagesAutomatically: boolean;
     checkForUpdates: boolean;
     disableTray: boolean;
+    /** When closing the window on desktop, hide it to the system tray instead of quitting. Requires the tray icon to be enabled. */
+    closeToTray: boolean;
+    /** Whether the desktop app is launched automatically when the user logs into their computer. */
+    launchOnStartup: boolean;
+    /** When the app is launched automatically at login, start it minimized to the tray instead of showing a window. Requires {@link launchOnStartup} and the tray icon. */
+    hideOnAutoStart: boolean;
     editedNotesOpenInRibbon: boolean;
     codeBlockWordWrap: boolean;
     codeBlockTabWidth: number;
@@ -200,6 +207,8 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     includeNoteDefaultBoxSize: "small" | "medium" | "full" | "expandable";
 
     // AI / LLM
+    /** Whether the AI/LLM features (chat sidebar, LLM chat notes) are enabled. */
+    aiEnabled: boolean;
     /** JSON array of configured LLM providers with their API keys */
     llmProviders: string;
     /** Whether the MCP (Model Context Protocol) server endpoint is enabled. */

@@ -329,6 +329,7 @@ async function initialize(): Promise<void> {
                 }
             }
 
+            coreModule.sync.startSyncTimer();
             coreModule.scheduler.startScheduler();
 
             logService.info("[Worker] Initialization complete");

@@ -281,6 +281,11 @@ describe("#isStringNote", () => {
             "w/ non-string note type (file), but mime type starting with 'text/', it should return true",
             [ "file", "text/html" ],
             true
+        ],
+        [
+            "w/ 'undefined' note type and the InkML mime type, it should return true",
+            [ undefined, "application/inkml+xml" ],
+            true
         ]
     ];
 
@@ -562,6 +567,12 @@ describe("#isWindows", () => {
     });
 });
 
+describe("#isLinux", () => {
+    it("should export a boolean", () => {
+        expect(utils.isLinux()).toBeTypeOf("boolean");
+    });
+});
+
 describe("#safeExtractMessageAndStackFromError", () => {
     it("should correctly extract the message and stack property if it gets passed an instance of an Error", () => {
         const testMessage = "Test Message";
@@ -786,6 +797,29 @@ describe("#slugify", () => {
         const expectedSlug = "café-naïve-façade-jalapeño";
         const result = utils.slugify(testString);
         expect(result).toBe(expectedSlug);
+    });
+});
+
+describe("#slugifyHeadings", () => {
+    it("slugifies each heading in order", () => {
+        expect(utils.slugifyHeadings(["First Section", "Second Section"])).toStrictEqual(["first-section", "second-section"]);
+    });
+
+    it("disambiguates duplicate titles with a numeric suffix", () => {
+        expect(utils.slugifyHeadings(["Notes", "Notes", "Notes"])).toStrictEqual(["notes", "notes-1", "notes-2"]);
+    });
+
+    it("avoids colliding a suffix with an existing slug", () => {
+        // "Notes 1" naturally slugifies to "notes-1", so the second "Notes" must skip to "notes-2"
+        expect(utils.slugifyHeadings(["Notes", "Notes 1", "Notes"])).toStrictEqual(["notes", "notes-1", "notes-2"]);
+    });
+
+    it("strips HTML tags before slugifying", () => {
+        expect(utils.slugifyHeadings(["<b>Bold</b> Heading"])).toStrictEqual(["bold-heading"]);
+    });
+
+    it("returns an empty array for no headings", () => {
+        expect(utils.slugifyHeadings([])).toStrictEqual([]);
     });
 });
 

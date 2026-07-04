@@ -179,6 +179,12 @@ self.addEventListener("fetch", (event) => {
     // Only handle same-origin
     if (url.origin !== self.location.origin) return;
 
+    // Native streaming HTTP proxy (Capacitor Android): these must reach the WebView's
+    // network stack untouched so WebViewClient.shouldInterceptRequest can answer them —
+    // a respondWith() (even a fetch() pass-through) would re-issue them from the service
+    // worker, which the interceptor never sees. See capacitor_http_handler.ts.
+    if (url.pathname.startsWith("/_trilium_native_http/")) return;
+
     // API-ish: local-first via bridge (must be checked before navigate handling,
     // because export triggers a navigation to an /api/ URL)
     if (isLocalFirst(url)) {

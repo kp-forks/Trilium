@@ -14,6 +14,7 @@ import treeService from "../services/tree.js";
 import utils from "../services/utils.js";
 import { ReactWrappedWidget } from "../widgets/basic_widget.js";
 import type { HeadingContext } from "../widgets/sidebar/TableOfContents.js";
+import type { ChatHighlightsContext } from "../widgets/type_widgets/llm_chat/chat_highlights.js";
 import appContext, { type EventData, type EventListener } from "./app_context.js";
 import Component from "./component.js";
 
@@ -39,6 +40,7 @@ const READ_ONLY_CAPABLE_TYPES: string[] = [
 
 export interface NoteContextDataMap {
     toc: HeadingContext;
+    chatHighlights: ChatHighlightsContext;
     pdfPages: {
         totalPages: number;
         currentPage: number;
@@ -59,6 +61,13 @@ export interface NoteContextDataMap {
     };
     saveState: {
         state: SaveState;
+    };
+    /** Published by content widgets (via `useNoteBlob`) while the note's content is being fetched,
+     * so the note detail can show a loading state instead of the previous note's content. */
+    contentLoad: {
+        state: "loading" | "loaded" | "error";
+        /** Re-attempts the content fetch (e.g. from a "Retry" button after an error). */
+        retry: () => void;
     };
 }
 

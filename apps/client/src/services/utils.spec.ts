@@ -351,12 +351,22 @@ describe("electron-aware helpers", () => {
 
     it("reloadTray invokes electron tray when present and is a no-op otherwise", () => {
         const reloadTray = vi.fn();
-        (window as any).electronApi = { tray: { reloadTray } };
+        (window as any).electronApi = { systemIntegration: { reloadTray } };
         utils.reloadTray();
         expect(reloadTray).toHaveBeenCalled();
 
         delete (window as any).electronApi;
         expect(() => utils.reloadTray()).not.toThrow();
+    });
+
+    it("reapplyLaunchOnStartup invokes electron systemIntegration when present and is a no-op otherwise", () => {
+        const reapplyLaunchOnStartup = vi.fn();
+        (window as any).electronApi = { systemIntegration: { reapplyLaunchOnStartup } };
+        utils.reapplyLaunchOnStartup();
+        expect(reapplyLaunchOnStartup).toHaveBeenCalled();
+
+        delete (window as any).electronApi;
+        expect(() => utils.reapplyLaunchOnStartup()).not.toThrow();
     });
 
     it("clearBrowserCache calls electron clearCache when available", async () => {
@@ -424,6 +434,21 @@ describe("DOM / clipboard helpers (default export)", () => {
         expect(execSpy).toHaveBeenCalledWith("copy");
         expect(setData).toHaveBeenCalledWith("text/html", "<b>x</b>");
         expect(setData).toHaveBeenCalledWith("text/plain", "<b>x</b>");
+        delete (document as any).execCommand;
+    });
+
+    it("copyHtmlToClipboard writes a distinct plain-text payload when given one", () => {
+        const setData = vi.fn();
+        const execSpy = vi.fn(() => {
+            const evt: any = new Event("copy");
+            evt.clipboardData = { setData };
+            document.dispatchEvent(evt);
+            return true;
+        });
+        (document as any).execCommand = execSpy;
+        utils.copyHtmlToClipboard("<b>x</b>", "x");
+        expect(setData).toHaveBeenCalledWith("text/html", "<b>x</b>");
+        expect(setData).toHaveBeenCalledWith("text/plain", "x");
         delete (document as any).execCommand;
     });
 
