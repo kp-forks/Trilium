@@ -1266,6 +1266,10 @@
     "search_placeholder": "search for a note by its name",
     "enter_workspace": "Enter workspace {{title}}"
   },
+  "blob_stub": {
+    "not_synced": "This note's content is too large to sync to this device. You can open it on the sync server instead.",
+    "open_on_server": "Open on server"
+  },
   "file": {
     "file_preview_not_available": "File preview is not available for this file format.",
     "too_big": "The preview only shows the first {{maxNumChars}} characters of the file for performance reasons. Download the file and open it externally to be able to see the entire content."

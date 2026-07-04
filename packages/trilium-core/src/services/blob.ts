@@ -1,4 +1,4 @@
-import { BlobRow } from "@triliumnext/commons";
+import { BlobRow, EMPTY_BLOB_ID } from "@triliumnext/commons";
 import becca from "../becca/becca.js";
 import { NotFoundError } from "../errors";
 import protectedSessionService from "./protected_session.js";
@@ -19,13 +19,19 @@ function getBlobPojo(entityName: string, entityId: string, opts?: { preview: boo
 
     const pojo = blob.getPojo();
 
+    // A sync stub: the blob carries empty content but its (content-derived) blobId is not the hash of
+    // empty content — i.e. its real content was withheld by the sync server because it exceeded this
+    // device's `syncMaxBlobContentSize`. Detected before content is decoded/nulled below, off the raw
+    // stored length. The client shows an "open on server" placeholder instead of empty content.
+    const isStubbed = pojo.contentLength === 0 && pojo.blobId !== EMPTY_BLOB_ID;
+
     if (!entity.hasStringContent()) {
         pojo.content = null;
     } else {
         pojo.content = processContent(pojo.content, !!entity.isProtected, true) as string | Uint8Array;
     }
 
-    return pojo;
+    return { ...pojo, isStubbed };
 }
 
 function processContent(content: Uint8Array | string | null, isProtected: boolean, isStringContent: boolean) {

@@ -73,6 +73,14 @@ async function sync() {
                 continueSync = await checkContentHash(syncContext);
             } while (continueSync);
 
+            // A converged sync (everything pushed, everything pulled, content hashes verified)
+            // is what makes an initial sync-from-server database usable. setup.triggerSync()
+            // only marks it initialized when its own sync() call succeeds — an initial sync
+            // interrupted by a crash/restart resumes through sync/now or the sync timer, which
+            // would otherwise leave the flag unset forever and the setup screen stuck on
+            // "finalizing". Idempotent no-op on already-initialized databases.
+            sqlInit.setDbAsInitialized();
+
             ws.syncFinished();
 
             if (optionService.getOptionOrNull("syncIncomplete") === "true") {
@@ -165,6 +173,14 @@ async function doLogin(): Promise<SyncContext> {
 async function pullChanges(syncContext: SyncContext) {
     const log = getLog();
     const maxBatchBytes = getMaxPullBatchBytes();
+    const maxBlobContentSize = getMaxBlobContentSize();
+
+    // Download/apply pipeline: the request for the next batch's first chunk is fired just before
+    // the current batch is applied, so the network transfer overlaps the (synchronous) SQL work —
+    // the two are roughly equal halves of initial-sync wall time, so overlapping them nearly
+    // halves it. Only the first chunk of a batch can be prefetched: every subsequent chunk's URL
+    // depends on the cursor returned by the response before it.
+    let prefetchedChunk: Promise<ChangesResponse> | null = null;
 
     while (true) {
         // Fetch phase: pull consecutive chunks (each needs its own HTTP round-trip) until we've
@@ -180,13 +196,8 @@ async function pullChanges(syncContext: SyncContext) {
         const fetchStart = Date.now();
 
         do {
-            const logMarkerId = randomString(10); // to easily pair sync events between client and server logs
-            const changesUri = `/api/sync/changed?instanceId=${getInstanceId()}&lastEntityChangeId=${cursor}&logMarkerId=${logMarkerId}`;
-
-            const resp = await syncRequest<ChangesResponse>(syncContext, "GET", changesUri);
-            if (!resp) {
-                throw new Error("Request failed.");
-            }
+            const resp = await (prefetchedChunk ?? fetchChangesChunk(syncContext, cursor, maxBlobContentSize));
+            prefetchedChunk = null;
 
             outstandingPullCount = resp.outstandingPullCount;
 
@@ -237,6 +248,13 @@ async function pullChanges(syncContext: SyncContext) {
             break;
         }
 
+        if (!noMoreChanges) {
+            prefetchedChunk = fetchChangesChunk(syncContext, cursor, maxBlobContentSize);
+            // If the apply phase throws, the in-flight prefetch is abandoned — pre-attach a
+            // handler so a late network failure doesn't surface as an unhandled rejection.
+            prefetchedChunk.catch(() => {});
+        }
+
         // Apply phase: all fetched chunks in a single transaction.
         const applyStart = Date.now();
         let batchChanges = 0;
@@ -248,6 +266,11 @@ async function pullChanges(syncContext: SyncContext) {
                 }
 
                 batchChanges += resp.entityChanges.length;
+
+                // Drop the applied chunk's rows (and their multi-MB content strings) right away
+                // instead of keeping the whole batch alive until the loop ends — on the WASM build
+                // the renderer is memory-capped and peak size is what kills it.
+                resp.entityChanges = [];
             }
 
             if (getLastSyncedPull() !== cursor) {
@@ -271,6 +294,19 @@ async function pullChanges(syncContext: SyncContext) {
     totalPullCount = null;
 }
 
+async function fetchChangesChunk(syncContext: SyncContext, cursor: number, maxBlobContentSize: number): Promise<ChangesResponse> {
+    const logMarkerId = randomString(10); // to easily pair sync events between client and server logs
+    const changesUri = `/api/sync/changed?instanceId=${getInstanceId()}&lastEntityChangeId=${cursor}&logMarkerId=${logMarkerId}`
+        + (maxBlobContentSize ? `&maxBlobContentSize=${maxBlobContentSize}` : "");
+
+    const resp = await syncRequest<ChangesResponse>(syncContext, "GET", changesUri);
+    if (!resp) {
+        throw new Error("Request failed.");
+    }
+
+    return resp;
+}
+
 /**
  * Maximum accumulated content size (in bytes) to buffer across pulled chunks before applying them
  * in a single transaction during {@link pullChanges}. Larger batches mean fewer commits (each of
@@ -282,7 +318,14 @@ function getMaxPullBatchBytes() {
     // Standalone/browser is the only platform reporting none of mac/windows/linux.
     const isBrowser = !isMac() && !isWindows() && !isLinux();
 
-    return isBrowser ? 16 * 1024 * 1024 : 32 * 1024 * 1024;
+    if (!isBrowser) {
+        return 32 * 1024 * 1024; // desktop
+    }
+
+    // Mobile (Capacitor) is the only client that opts into a blob size limit, i.e. the
+    // memory-constrained case. Pull roughly one server response per apply instead of stacking
+    // several, to keep the peak the mobile heap holds at once well below the OOM ceiling.
+    return getMaxBlobContentSize() > 0 ? 4 * 1024 * 1024 : 16 * 1024 * 1024;
 }
 
 /** Rough in-memory size of a pulled changes response, dominated by (base64-encoded) blob content. */
@@ -440,7 +483,7 @@ async function syncRequest<T extends {}>(syncContext: SyncContext, method: strin
     return response;
 }
 
-function getEntityChangeRow(entityChange: EntityChange) {
+function getEntityChangeRow(entityChange: EntityChange, maxBlobContentSize?: number) {
     const { entityName, entityId } = entityChange;
 
     if (entityName === "note_reordering") {
@@ -464,6 +507,16 @@ function getEntityChangeRow(entityChange: EntityChange) {
             entityRow.content = binary_utils.encodeUtf8(entityRow.content);
         }
 
+        // A client that opted into a blob size limit (e.g. mobile, to bound peak memory) receives a
+        // stub for oversized blobs: the entity_change row — and crucially its hash — is sent
+        // unchanged, so the client's content-hash checks still pass, while the entity row carries an
+        // empty string (never null, which the consistency checker would "repair" and push back). The
+        // client stores an empty-content blob and shows an "open on server" placeholder. Measured on
+        // the raw (pre-base64) content, so the threshold matches the user-facing byte size.
+        if (maxBlobContentSize && entityRow.content && typeof entityRow.content !== "string" && entityRow.content.byteLength > maxBlobContentSize) {
+            entityRow.content = "";
+        }
+
         if (entityRow.content) {
             entityRow.content = binary_utils.encodeBase64(entityRow.content);
         }
@@ -485,7 +538,7 @@ function getEntityChangeRow(entityChange: EntityChange) {
  */
 export const MAX_PULL_RESPONSE_BYTES = 8 * 1024 * 1024;
 
-function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes = MAX_PULL_RESPONSE_BYTES) {
+function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes = MAX_PULL_RESPONSE_BYTES, maxBlobContentSize?: number) {
     const records: EntityChangeRecord[] = [];
     let length = 0;
 
@@ -496,7 +549,7 @@ function getEntityChangeRecords(entityChanges: EntityChange[], maxResponseBytes 
             continue;
         }
 
-        const entity = getEntityChangeRow(entityChange);
+        const entity = getEntityChangeRow(entityChange, maxBlobContentSize);
         if (!entity) {
             continue;
         }
@@ -531,6 +584,18 @@ export function estimateEntityChangeRecordSize(record: EntityChangeRecord): numb
 
 function getLastSyncedPull() {
     return parseInt(optionService.getOption("lastSyncedPull"));
+}
+
+/**
+ * Per-device limit (in bytes) above which blob content is not pulled from the sync server; the
+ * server sends an empty-content stub instead. `0` (or an unset/invalid option) disables the limit,
+ * which is the default for every platform except mobile. Read with `getOptionOrNull` so databases
+ * created before this option existed do not throw.
+ */
+function getMaxBlobContentSize(): number {
+    const value = parseInt(optionService.getOptionOrNull("syncMaxBlobContentSize") ?? "0");
+
+    return Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 function setLastSyncedPull(entityChangeId: number) {

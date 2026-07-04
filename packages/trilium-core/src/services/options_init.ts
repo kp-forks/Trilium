@@ -19,6 +19,7 @@ export function initDocumentOptions() {
 interface NotSyncedOpts {
     syncServerHost?: string;
     syncProxy?: string;
+    syncMaxBlobContentSize?: number;
 }
 
 /**
@@ -70,6 +71,9 @@ export async function initNotSyncedOptions(initialized: boolean, opts: NotSynced
     optionService.createOption("syncServerTimeout", "120", false); // 120 seconds (2 minutes)
     optionService.createOption("syncProxy", opts.syncProxy || "", false);
     optionService.createOption("syncIncomplete", "false", false);
+    // Per-device blob size limit (bytes) for sync pulls; 0 = disabled. Set to a non-zero value only
+    // on memory-constrained clients (mobile), so this is not synced across the cluster.
+    optionService.createOption("syncMaxBlobContentSize", (opts.syncMaxBlobContentSize ?? 0).toString(), false);
 }
 
 /**
@@ -111,6 +115,7 @@ const defaultOptions: DefaultOption[] = [
         },
         isSynced: false
     },
+    { name: "syncMaxBlobContentSize", value: "0", isSynced: false },
     { name: "revisionSnapshotTimeInterval", value: "600", isSynced: true },
     { name: "revisionSnapshotTimeIntervalTimeScale", value: "60", isSynced: true }, // default to Minutes
     { name: "revisionSnapshotNumberLimit", value: "-1", isSynced: true },
