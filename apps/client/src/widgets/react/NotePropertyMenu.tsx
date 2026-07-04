@@ -151,7 +151,11 @@ function OptionGroupPropertyView({ note, property }: { note: FNote, property: Op
                 <FormListItem
                     key={option.value}
                     checked={valueWithDefault === option.value}
-                    onClick={() => setValue(option.value)}
+                    // Keep the menu open so several grouped settings can be adjusted in one go.
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setValue(option.value);
+                    }}
                 >
                     {option.label}
                 </FormListItem>
