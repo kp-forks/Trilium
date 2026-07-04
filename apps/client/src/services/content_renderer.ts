@@ -83,6 +83,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         await renderMarkdown(entity, $renderedContent, options);
     } else if (type === "code") {
         await renderCode(entity, $renderedContent);
+    } else if (type === "iconPack" && !options.tooltip && entity instanceof FNote) {
+        await renderIconPack(entity, $renderedContent, options);
     } else if (["image", "canvas", "mindMap", "spreadsheet"].includes(type)) {
         await renderImage(entity, $renderedContent, options);
     } else if (!options.tooltip && ["file", "pdf", "audio", "video"].includes(type)) {
@@ -174,6 +176,33 @@ async function renderMarkdown(note: FNote | FAttachment, $renderedContent: JQuer
     });
     $renderedContent.append($('<div class="ck-content">').html(html));
     await postProcessRichContent(note, $renderedContent, options);
+}
+
+/**
+ * Renders an icon pack as its glyph grid (the same isolated-frame preview used by the editor),
+ * mounted like the PDF viewer. Its own module keeps the editor stack (SplitEditor/CodeMirror) out
+ * of this path. Falls back to the children list for an empty manifest.
+ */
+async function renderIconPack(note: FNote, $renderedContent: JQuery<HTMLElement>, options: RenderOptions) {
+    const blob = await note.getBlob();
+    const content = blob?.content ?? "";
+
+    if (!content.trim()) {
+        if (!options.noChildrenList) {
+            await renderChildrenList($renderedContent, note, options.includeArchivedNotes ?? false);
+        }
+        return;
+    }
+
+    const { IconPackPreview } = await import("../widgets/type_widgets/icon_pack/IconPackPreview");
+    const $container = $('<div class="icon-pack-rendered">');
+    const container = $container.get(0);
+    if (container) {
+        render(h(IconPackPreview, { note, content }), container);
+        // Mark the standalone Preact root so disposeInteractiveContent() can unmount the frame/effects.
+        container.setAttribute(INTERACTIVE_MOUNT_ATTR, "");
+    }
+    $renderedContent.append($container);
 }
 
 /**
@@ -508,13 +537,16 @@ function getRenderingType(entity: FNote | FAttachment) {
     }
 
     const mime = "mime" in entity && entity.mime;
-    const isIconPack = entity instanceof FNote && entity.hasLabel("iconPack");
+    const isIconPack = entity instanceof FNote && entity.isIconPack();
 
-    if (type === "file" && mime === "application/pdf") {
+    if (isIconPack) {
+        // Icon packs (JSON `code`/`file` notes with #iconPack) render as their glyph grid, not as raw JSON.
+        type = "iconPack";
+    } else if (type === "file" && mime === "application/pdf") {
         type = "pdf";
     } else if (type === "code" && entity instanceof FNote && entity.isMarkdown()) {
         type = "markdown";
-    } else if ((type === "file" || type === "viewConfig") && mime && CODE_MIME_TYPES.has(mime) && !isIconPack) {
+    } else if ((type === "file" || type === "viewConfig") && mime && CODE_MIME_TYPES.has(mime)) {
         type = "code";
     } else if (type === "file" && mime && mime.startsWith("audio/")) {
         type = "audio";

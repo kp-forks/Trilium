@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { parseManifest, resolveGlyph } from "./IconPack";
+import { parseManifest, resolveGlyph } from "./IconPackPreview";
 
 // U+E964 is the code point used across the escape-form assertions below.
 const E964 = String.fromCodePoint(0xe964);
