@@ -129,6 +129,16 @@ export default class BrowserCryptoProvider implements CryptoProvider {
 
         return base64FallbackDecode(base64);
     }
+
+    base64DecodeInto(base64: string, target: Uint8Array): number {
+        // Native in-place decode (TC39 arraybuffer-base64, Chrome 140+) skips even the JS loop.
+        const nativeTarget = target as NativeBase64Array;
+        if (!FORCE_B64_FALLBACK && typeof nativeTarget.setFromBase64 === "function") {
+            return nativeTarget.setFromBase64(base64).written;
+        }
+
+        return base64DecodeIntoBuffer(base64, target);
+    }
 }
 
 // Sentinel for a char code that is not part of the base64 alphabet. Distinct from 0 so the decoder
@@ -156,12 +166,18 @@ const B64_DECODE_TABLE = /* @__PURE__ */ (() => {
  * stays allocation-free (no sanitized copy of the whole string) and preserves the memory win.
  */
 function base64FallbackDecode(base64: string): Uint8Array {
-    const len = base64.length;
-    const table = B64_DECODE_TABLE;
-
     // Upper bound: every 4 alphabet symbols yield 3 bytes. Padding/whitespace only ever reduce the
     // real output, so this never under-allocates; the exact length is returned as a view at the end.
-    const bytes = new Uint8Array((len * 3) >> 2);
+    const bytes = new Uint8Array((base64.length * 3) >> 2);
+    const o = base64DecodeIntoBuffer(base64, bytes);
+
+    return o === bytes.length ? bytes : bytes.subarray(0, o);
+}
+
+/** The streaming decode pass shared by the allocating and the in-place (pooled) decode paths. */
+function base64DecodeIntoBuffer(base64: string, bytes: Uint8Array): number {
+    const len = base64.length;
+    const table = B64_DECODE_TABLE;
 
     let o = 0;
     let acc = 0; // bit accumulator holding up to three pending 6-bit symbols
@@ -180,7 +196,7 @@ function base64FallbackDecode(base64: string): Uint8Array {
         }
     }
 
-    return o === bytes.length ? bytes : bytes.subarray(0, o);
+    return o;
 }
 
 /**
@@ -189,6 +205,7 @@ function base64FallbackDecode(base64: string): Uint8Array {
  */
 interface NativeBase64Array extends Uint8Array {
     toBase64?(): string;
+    setFromBase64?(base64: string): { read: number; written: number };
 }
 interface NativeBase64Constructor {
     fromBase64?(base64: string): Uint8Array;
