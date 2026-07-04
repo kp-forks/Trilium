@@ -2577,8 +2577,8 @@
   },
   "calendar_view": {
     "delete_note": "Delete note...",
-    "set_slot_duration": "Set slot duration",
-    "set_slot_label_interval": "Set slot label interval"
+    "set_slot_duration": "Time slot duration",
+    "set_slot_label_interval": "Time slot label interval"
   },
   "ocr": {
     "extracted_text": "Extracted Text (OCR)",
