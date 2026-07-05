@@ -319,6 +319,25 @@ describe("localFetch", () => {
         const res = await promise;
         expect(res.status).toBe(200);
     });
+
+    it("builds a Response when the worker reply omits headers", async () => {
+        const bridge = await freshBridge();
+        const promise = bridge.localFetch(new Request("http://x/api/notes"));
+
+        const worker = lastWorker();
+        await vi.waitFor(() => expect(worker.postMessage).toHaveBeenCalledWith(
+            expect.objectContaining({ type: "LOCAL_REQUEST" }),
+            []
+        ));
+
+        const posted = worker.postMessage.mock.calls.at(-1)?.[0] as { id: string };
+        // No `headers` field → the header-copy branch is skipped.
+        worker.onmessage?.({ data: { type: "LOCAL_RESPONSE", id: posted.id, response: { status: 200 } } });
+
+        const res = await promise;
+        expect(res.status).toBe(200);
+        expect(res.headers.get("content-type")).toBeNull();
+    });
 });
 
 describe("isLocalApiRequest", () => {

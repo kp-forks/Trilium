@@ -181,6 +181,13 @@ describe("BridgedRequestProvider.exec", () => {
         respond({ status: 500, data: { message: "boom via data" } });
         await expect(promise).rejects.toThrow("500 GET http://x: boom via data");
     });
+
+    it("falls back to an empty message when the structured-clone error data has no message field", async () => {
+        const provider = new BridgedRequestProvider();
+        const promise = provider.exec({ method: "GET", url: "http://x" } as ExecOpts);
+        respond({ status: 500, data: { code: "X" } });
+        await expect(promise).rejects.toThrow("500 GET http://x:");
+    });
 });
 
 describe("BridgedRequestProvider.getImage", () => {
