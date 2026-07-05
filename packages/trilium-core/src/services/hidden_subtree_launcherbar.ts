@@ -98,8 +98,7 @@ export default function buildLaunchBarConfig() {
             type: "launcher",
             builtinWidget: "sidebarChat",
             icon: "bx bx-message-square-dots"
-        },
-
+        }
     ];
 
     const desktopVisibleLaunchers: HiddenSubtreeItem[] = [

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { t } from "../../../services/i18n.js";
 import FormTextBox from "../../react/FormTextBox.jsx";
 import { useSpacedUpdate } from "../../react/hooks.jsx";
@@ -9,7 +9,14 @@ import BulkAction from "../BulkAction.jsx";
 function SaveRevisionBulkActionComponent({ bulkAction, actionDef }: { bulkAction: AbstractBulkAction, actionDef: ActionDefinition }) {
     const [ revisionName, setRevisionName ] = useState<string>(actionDef.revisionName ?? "");
     const spacedUpdate = useSpacedUpdate(() => bulkAction.saveAction({ revisionName }));
-    useEffect(() => spacedUpdate.scheduleUpdate(), [ revisionName ]);
+
+    function onChange(value: string) {
+        setRevisionName(value);
+        // Mirror into actionDef immediately so an Execute that fires before the debounced
+        // saveAction still submits the typed name rather than a stale/undefined value.
+        bulkAction.actionDef.revisionName = value;
+        spacedUpdate.scheduleUpdate();
+    }
 
     return (
         <BulkAction
@@ -19,10 +26,10 @@ function SaveRevisionBulkActionComponent({ bulkAction, actionDef }: { bulkAction
         >
             <FormTextBox
                 placeholder={t("save_revision.revision_name_placeholder")}
-                currentValue={revisionName} onChange={setRevisionName}
+                currentValue={revisionName} onChange={onChange}
             />
         </BulkAction>
-    )
+    );
 }
 
 export default class SaveRevisionBulkAction extends AbstractBulkAction {
@@ -35,6 +42,6 @@ export default class SaveRevisionBulkAction extends AbstractBulkAction {
     }
 
     doRender() {
-        return <SaveRevisionBulkActionComponent bulkAction={this} actionDef={this.actionDef} />
+        return <SaveRevisionBulkActionComponent bulkAction={this} actionDef={this.actionDef} />;
     }
 }

@@ -32,26 +32,27 @@ export default function ActionButton({ text, icon, className, triggerCommand, ti
     const title = keyboardShortcut?.length ? `${text} (${keyboardShortcut.join(",")})` : text;
     const titleRef = useRef(title);
     titleRef.current = title;
-    const hasTitle = title.length > 0;
+    const hasTitle = !!title && title.length > 0;
 
     // The tooltip is recreated only when its structural options (or its presence) change — not when
     // the label text changes. A plain text change is pushed into the live tooltip via setContent
     // below, so a dynamic label updates in place instead of disposing and recreating the tooltip,
-    // which would drop the current hover.
+    // which would drop the current hover. The title is resolved lazily (a function) so Bootstrap
+    // always reads the latest value from titleRef rather than one captured when the config was memoized.
     const tooltipConfig = useMemo<Partial<Tooltip.Options>>(() => ({
-        title: hasTitle ? titleRef.current : undefined,
+        title: hasTitle ? () => titleRef.current ?? "" : undefined,
         placement: titlePosition ?? "bottom",
         fallbackPlacements: [ titlePosition ?? "bottom" ],
         customClass: tooltipClass ?? "",
         html: tooltipHtml ?? false,
-        trigger: cachedIsMobile ? "focus" : "hover",
+        trigger: cachedIsMobile ? "focus" : "hover focus",
         animation: false
     }), [titlePosition, tooltipClass, tooltipHtml, hasTitle]);
     useStaticTooltip(buttonRef, tooltipConfig);
 
     useEffect(() => {
         if (buttonRef.current) {
-            Tooltip.getInstance(buttonRef.current)?.setContent({ ".tooltip-inner": title });
+            Tooltip.getInstance(buttonRef.current)?.setContent({ ".tooltip-inner": title ?? "" });
         }
     }, [title]);
 

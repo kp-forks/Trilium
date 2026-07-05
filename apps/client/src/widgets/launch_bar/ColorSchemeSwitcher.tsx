@@ -11,19 +11,20 @@ const SCHEME_ICONS: Record<ColorScheme, string> = {
     dark: "bx bx-moon"
 };
 
-const SCHEME_LABELS: Record<ColorScheme, string> = {
-    system: t("theme.color_scheme_switcher_system"),
-    light: t("theme.color_scheme_switcher_light"),
-    dark: t("theme.color_scheme_switcher_dark")
-};
-
 export default function ColorSchemeSwitcher({ launcherNote }: LauncherNoteProps) {
     const [ theme, setTheme ] = useTriliumOption("theme");
     const { scheme, isCustom } = resolveColorScheme(theme);
 
+    // Resolved at render time (not module load) so the labels follow a runtime language change.
+    const schemeLabels: Record<ColorScheme, string> = {
+        system: t("theme.color_scheme_switcher_system"),
+        light: t("theme.color_scheme_switcher_light"),
+        dark: t("theme.color_scheme_switcher_dark")
+    };
+
     const tooltip = isCustom
         ? t("theme.color_scheme_switcher_unsupported")
-        : `<span class="mode">${SCHEME_LABELS[scheme]}</span><span class="hint">${t("theme.color_scheme_switcher_hint")}</span>`;
+        : `<span class="mode">${schemeLabels[scheme]}</span><span class="hint">${t("theme.color_scheme_switcher_hint")}</span>`;
 
     return (
         <LaunchBarActionButton
