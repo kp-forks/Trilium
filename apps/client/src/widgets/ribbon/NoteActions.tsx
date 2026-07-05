@@ -392,7 +392,11 @@ function ConvertNoteFormat({ note }: { note: FNote }) {
         <FormListItem
             icon="bx bxl-markdown"
             onClick={async () => {
-                if (!(await dialog.confirm(t("note_actions.convert_format_warning")))) {
+                // Text → Markdown is lossy; Markdown → Text is not, so use the milder warning there.
+                const warning = isMarkdown
+                    ? t("note_actions.convert_format_warning")
+                    : t("note_actions.convert_format_warning_risky");
+                if (!(await dialog.confirm(warning))) {
                     return;
                 }
 

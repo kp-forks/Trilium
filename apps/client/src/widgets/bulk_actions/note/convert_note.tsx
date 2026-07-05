@@ -1,4 +1,4 @@
-import { NOTE_CONVERSION_IDS, NoteConversionId } from "@triliumnext/commons";
+import { NOTE_CONVERSION_IDS, NoteConversionId, RISKY_NOTE_CONVERSION_IDS } from "@triliumnext/commons";
 import { useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
@@ -43,7 +43,13 @@ export default class ConvertNoteBulkAction extends AbstractBulkAction {
 
     getConfirmationMessage() {
         // Only warn once a conversion has actually been selected.
-        return this.actionDef.conversion ? t("convert_note.warning") : null;
+        const { conversion } = this.actionDef;
+        if (!conversion) {
+            return null;
+        }
+        return RISKY_NOTE_CONVERSION_IDS.includes(conversion)
+            ? t("convert_note.warning_risky")
+            : t("convert_note.warning");
     }
 
     static get actionName() {
