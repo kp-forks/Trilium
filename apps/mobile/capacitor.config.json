@@ -4,7 +4,6 @@
   "webDir": "../standalone/dist",
   "server": {
     "androidScheme": "https",
-    "iosScheme": "https",
     "hostname": "localhost"
   },
   "ios": {
