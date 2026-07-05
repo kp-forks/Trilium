@@ -403,8 +403,8 @@ importers:
         specifier: 8.11.12
         version: 8.11.12
       '@types/tabulator-tables':
-        specifier: 6.3.4
-        version: 6.3.4
+        specifier: 6.3.5
+        version: 6.3.5
       happy-dom:
         specifier: 20.10.6
         version: 20.10.6
@@ -1004,8 +1004,8 @@ importers:
         specifier: 5.2.2
         version: 5.2.2
       '@types/tabulator-tables':
-        specifier: 6.3.4
-        version: 6.3.4
+        specifier: 6.3.5
+        version: 6.3.5
       cross-env:
         specifier: 10.1.0
         version: 10.1.0
@@ -5749,8 +5749,8 @@ packages:
   '@types/supertest@7.2.0':
     resolution: {integrity: sha512-uh2Lv57xvggst6lCqNdFAmDSvoMG7M/HDtX4iUCquxQ5EGPtaPM5PL5Hmi7LCvOG8db7YaCPNJEeoI8s/WzIQw==}
 
-  '@types/tabulator-tables@6.3.4':
-    resolution: {integrity: sha512-5b7lP+ztHb4djsH6Nw9sL2i/helpREljgs75Xm9wQWiubslSXYeCjiSdfZMgwQt/iDXVODIlVg3o7+L5Fk3SJQ==}
+  '@types/tabulator-tables@6.3.5':
+    resolution: {integrity: sha512-e2BuSIfb+jW0r9NfyPaAqi7HLkLskfGM1gj2iF+obFHrpSd0Zu1ySRbDfHs8KdiV2A74qtNBDbD9e1fe+ORb7A==}
 
   '@types/tmp@0.2.6':
     resolution: {integrity: sha512-chhaNf2oKHlRkDGt+tiKE2Z5aJ6qalm7Z9rlLdBwmOiAAf09YQvvoLXjWK4HWPF1xU/fqvMgfNfpVoBscA/tKA==}
@@ -18741,7 +18741,7 @@ snapshots:
       '@types/methods': 1.1.4
       '@types/superagent': 8.1.9
 
-  '@types/tabulator-tables@6.3.4': {}
+  '@types/tabulator-tables@6.3.5': {}
 
   '@types/tmp@0.2.6': {}
 
