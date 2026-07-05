@@ -1,3 +1,4 @@
+import type { NoteConversionId } from "@triliumnext/commons";
 import { t } from "i18next";
 
 import { ValidationError } from "../errors.js";
@@ -10,6 +11,28 @@ import type BNote from "../becca/entities/bnote.js";
 const MARKDOWN_TARGET_MIME = "text/x-markdown";
 
 type SourceFormat = "html" | "markdown";
+
+interface NoteConversion {
+    /** Whether `note` is the expected source type for this conversion. */
+    appliesTo: (note: BNote) => boolean;
+    sourceFormat: SourceFormat;
+}
+
+/**
+ * Registry of the available directed conversions, keyed by the id shared with the client via
+ * `@triliumnext/commons`. To add a conversion, add its id to `NOTE_CONVERSION_IDS` in commons and
+ * an entry here (plus the option label on the client).
+ */
+export const NOTE_CONVERSIONS: Record<NoteConversionId, NoteConversion> = {
+    htmlToMarkdown: {
+        appliesTo: (note) => note.type === "text",
+        sourceFormat: "html"
+    },
+    markdownToHtml: {
+        appliesTo: (note) => note.isMarkdown(),
+        sourceFormat: "markdown"
+    }
+};
 
 interface ConversionResult {
     content: string;
@@ -43,8 +66,9 @@ export function convertNoteContent(sourceFormat: SourceFormat, content: string, 
 /**
  * Converts a note in place between an HTML text note and a Markdown code note.
  *
- * A named revision capturing the pre-conversion state is saved first, so the conversion —
- * which is lossy in the HTML→Markdown direction — remains reversible.
+ * The direction is inferred from the note's current type. A named revision capturing the
+ * pre-conversion state is saved first, so the conversion — which is lossy in the HTML→Markdown
+ * direction — remains reversible.
  *
  * Must be called within a CLS context (Express routes already provide one).
  */
@@ -59,18 +83,41 @@ export function convertNoteFormat(note: BNote): { type: string } {
         throw new ValidationError(`Note '${note.noteId}' content is not available; a protected session may be required.`);
     }
 
+    performConversion(note, isMarkdown ? "markdown" : "html");
+
+    return { type: isMarkdown ? "text" : "code" };
+}
+
+/**
+ * Applies a specific directed conversion (from the {@link NOTE_CONVERSIONS} registry) to a note,
+ * used by the `convertNote` bulk action. The note is left untouched (silently skipped) if it is
+ * not the expected source type or its content is unavailable, so a batch can target a mixed set.
+ */
+export function convertNoteByConversionId(note: BNote, conversionId: string): boolean {
+    const conversion = NOTE_CONVERSIONS[conversionId as NoteConversionId];
+
+    if (!conversion || !conversion.appliesTo(note) || !note.isContentAvailable()) {
+        return false;
+    }
+
+    performConversion(note, conversion.sourceFormat);
+    return true;
+}
+
+/** Saves the pre-conversion revision, transforms the content, and switches the note's type/mime. */
+function performConversion(note: BNote, sourceFormat: SourceFormat) {
     const content = note.getContent();
     if (typeof content !== "string") {
         throw new ValidationError(`Note '${note.noteId}' does not have textual content.`);
     }
 
     // Snapshot the current (pre-conversion) state under a descriptive name.
-    const description = isMarkdown
+    const description = sourceFormat === "markdown"
         ? t("note_conversion.revision_before_text")
         : t("note_conversion.revision_before_markdown");
     note.saveRevision({ description, source: "manual" });
 
-    const { content: newContent, type, mime } = convertNoteContent(isMarkdown ? "markdown" : "html", content, note.title);
+    const { content: newContent, type, mime } = convertNoteContent(sourceFormat, content, note.title);
 
     // Change the type/mime before writing content so type-specific processing (link extraction
     // in `updateNoteData`) runs against the new format.
@@ -79,11 +126,10 @@ export function convertNoteFormat(note: BNote): { type: string } {
     note.save();
 
     noteService.updateNoteData(note.noteId, newContent);
-
-    return { type };
 }
 
 export default {
     convertNoteContent,
-    convertNoteFormat
+    convertNoteFormat,
+    convertNoteByConversionId
 };

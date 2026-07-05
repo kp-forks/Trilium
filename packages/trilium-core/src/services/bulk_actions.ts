@@ -6,6 +6,7 @@ import becca from "../becca/becca.js";
 import type BNote from "../becca/entities/bnote.js";
 import cloningService from "./cloning.js";
 import { getLog } from "./log";
+import noteFormatConversionService from "./note_format_conversion.js";
 import { evaluateTemplate } from "./safe_template.js";
 import { executeBundle } from "./script.js";
 import { assertScriptingEnabled } from "./scripting_guard.js";
@@ -106,6 +107,10 @@ const ACTION_HANDLERS: ActionHandlerMap = {
         if ("success" in res && !res.success) {
             getLog().info(`Moving/cloning note ${note.noteId} to ${action.targetParentNoteId} failed with error ${JSON.stringify(res)}`);
         }
+    },
+    convertNote: (action, note) => {
+        // Only converts notes matching the conversion's expected source type; others are skipped.
+        noteFormatConversionService.convertNoteByConversionId(note, action.conversion);
     },
     executeScript: (action, note) => {
         assertScriptingEnabled();

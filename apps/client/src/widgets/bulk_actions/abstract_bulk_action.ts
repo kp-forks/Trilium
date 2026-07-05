@@ -15,6 +15,7 @@ export interface ActionDefinition {
     labelValue?: string;
     oldLabelName?: string;
     newLabelName?: string;
+    conversion?: string;
 }
 
 export default abstract class AbstractBulkAction {
@@ -28,6 +29,14 @@ export default abstract class AbstractBulkAction {
 
     // to be overridden
     abstract doRender(): VNode;
+
+    /**
+     * An optional message shown for confirmation before the batch is executed (e.g. to warn about
+     * a lossy operation). Returning `null` (the default) means the action runs without a prompt.
+     */
+    getConfirmationMessage(): string | null {
+        return null;
+    }
 
     static get actionName() {
         return "";

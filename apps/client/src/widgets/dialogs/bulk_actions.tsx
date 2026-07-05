@@ -7,6 +7,7 @@ import server from "../../services/server";
 import FormCheckbox from "../react/FormCheckbox";
 import Button from "../react/Button";
 import bulk_action from "../../services/bulk_action";
+import dialog from "../../services/dialog";
 import toast from "../../services/toast";
 import RenameNoteBulkAction from "../bulk_actions/note/rename_note";
 import FNote from "../../entities/fnote";
@@ -60,6 +61,14 @@ export default function BulkActionsDialog() {
             footer={<Button text={t("bulk_actions.execute_bulk_actions")} kind="primary" />}
             show={shown}
             onSubmit={async () => {
+                // Let actions surface a confirmation prompt (e.g. lossy conversions) before executing.
+                const confirmMessages = existingActions
+                    .map((action) => action.getConfirmationMessage())
+                    .filter((message): message is string => !!message);
+                if (confirmMessages.length && !await dialog.confirm(confirmMessages.join("\n\n"))) {
+                    return;
+                }
+
                 await server.post("bulk-action/execute", {
                     noteIds: selectedOrActiveNoteIds,
                     includeDescendants

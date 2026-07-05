@@ -709,6 +709,15 @@
     "clone_note_new_parent": "clone note to the new parent if note has multiple clones/branches (it's not clear which branch should be removed)",
     "nothing_will_happen": "nothing will happen if note cannot be moved to the target note (i.e. this would create a tree cycle)"
   },
+  "convert_note": {
+    "convert_note": "Convert",
+    "convert_note_to": "Convert note",
+    "choose_conversion": "(choose a conversion)",
+    "conversion_htmlToMarkdown": "Text Notes → Markdown Notes",
+    "conversion_markdownToHtml": "Markdown Notes → Text Notes",
+    "help_text": "The conversion is applied only to notes matching the source type; other notes are left untouched. A revision of each converted note is saved beforehand.",
+    "warning": "Some formatting may be lost when converting notes and you may need to fix a few things afterwards. A revision of each converted note will be saved beforehand so you can restore it. Do you want to continue?"
+  },
   "rename_note": {
     "rename_note": "Rename note",
     "rename_note_title_to": "Rename note title to",

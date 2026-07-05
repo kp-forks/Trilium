@@ -13,6 +13,7 @@ import ExecuteScriptBulkAction from "../widgets/bulk_actions/execute_script.js";
 import AddLabelBulkAction from "../widgets/bulk_actions/label/add_label.js";
 import AddRelationBulkAction from "../widgets/bulk_actions/relation/add_relation.js";
 import RenameNoteBulkAction from "../widgets/bulk_actions/note/rename_note.js";
+import ConvertNoteBulkAction from "../widgets/bulk_actions/note/convert_note.js";
 import { t } from "./i18n.js";
 import type FNote from "../entities/fnote.js";
 import toast from "./toast.js";
@@ -29,7 +30,7 @@ export const ACTION_GROUPS = [
     },
     {
         title: t("bulk_actions.notes"),
-        actions: [RenameNoteBulkAction, MoveNoteBulkAction, DeleteNoteBulkAction, DeleteRevisionsBulkAction]
+        actions: [RenameNoteBulkAction, MoveNoteBulkAction, ConvertNoteBulkAction, DeleteNoteBulkAction, DeleteRevisionsBulkAction]
     },
     {
         title: t("bulk_actions.other"),
@@ -50,7 +51,8 @@ const ACTION_CLASSES = [
     AddRelationBulkAction,
     UpdateLabelValueBulkAction,
     UpdateRelationTargetBulkAction,
-    ExecuteScriptBulkAction
+    ExecuteScriptBulkAction,
+    ConvertNoteBulkAction
 ];
 
 async function addAction(noteId: string, actionName: string) {
