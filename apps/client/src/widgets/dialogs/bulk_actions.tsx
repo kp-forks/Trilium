@@ -69,9 +69,18 @@ export default function BulkActionsDialog() {
                     return;
                 }
 
+                // Submit the in-memory action definitions rather than letting the server re-read the
+                // stored labels, so a still-in-flight action save can't make the batch run against a
+                // stale/empty choice.
+                const actions = existingActions.map((action) => ({
+                    ...action.actionDef,
+                    name: (action.constructor as typeof AbstractBulkAction).actionName
+                }));
+
                 await server.post("bulk-action/execute", {
                     noteIds: selectedOrActiveNoteIds,
-                    includeDescendants
+                    includeDescendants,
+                    actions
                 });
 
                 toast.showMessage(t("bulk_actions.bulk_actions_executed"), 3000);

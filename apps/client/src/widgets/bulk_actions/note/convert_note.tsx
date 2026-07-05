@@ -15,10 +15,12 @@ function ConvertNoteBulkActionComponent({ bulkAction, actionDef }: { bulkAction:
         ...NOTE_CONVERSION_IDS.map((value) => ({ value, title: t(`convert_note.conversion_${value}`) }))
     ];
 
-    // Persist the choice immediately (not debounced) so executing right after selecting doesn't
-    // run against a stale/empty conversion and silently skip every note.
+    // Update the in-memory action immediately (not debounced) so the confirmation prompt and the
+    // executed payload both use the live choice, without waiting for the async label save to
+    // round-trip through the server.
     function onChange(value: string) {
         setConversion(value);
+        bulkAction.actionDef.conversion = value;
         void bulkAction.saveAction({ conversion: value });
     }
 
