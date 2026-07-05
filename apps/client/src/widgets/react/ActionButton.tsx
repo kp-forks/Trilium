@@ -1,4 +1,4 @@
-import type { Tooltip } from "bootstrap";
+import { Tooltip } from "bootstrap";
 import { HTMLAttributes } from "preact";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -12,6 +12,8 @@ export interface ActionButtonProps extends Pick<HTMLAttributes<HTMLButtonElement
     titlePosition?: "top" | "right" | "bottom" | "left";
     /** Extra class applied to the tooltip popup (e.g. `tooltip-top` to raise its z-index above modals). */
     tooltipClass?: string;
+    /** Renders `text` as (sanitized) HTML in the tooltip instead of plain text. Only pass trusted, non-user content. */
+    tooltipHtml?: boolean;
     icon: string;
     className?: string;
     triggerCommand?: CommandNames;
@@ -23,21 +25,35 @@ export interface ActionButtonProps extends Pick<HTMLAttributes<HTMLButtonElement
 
 const cachedIsMobile = isMobile();
 
-export default function ActionButton({ text, icon, className, triggerCommand, titlePosition, tooltipClass, noIconActionClass, frame, active, disabled, ...restProps }: ActionButtonProps) {
+export default function ActionButton({ text, icon, className, triggerCommand, titlePosition, tooltipClass, tooltipHtml, noIconActionClass, frame, active, disabled, ...restProps }: ActionButtonProps) {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ keyboardShortcut, setKeyboardShortcut ] = useState<string[]>();
 
-    // Memoized so useStaticTooltip's effect (keyed on config identity) doesn't dispose and
-    // recreate the Bootstrap tooltip on every re-render.
+    const title = keyboardShortcut?.length ? `${text} (${keyboardShortcut.join(",")})` : text;
+    const titleRef = useRef(title);
+    titleRef.current = title;
+    const hasTitle = title.length > 0;
+
+    // The tooltip is recreated only when its structural options (or its presence) change — not when
+    // the label text changes. A plain text change is pushed into the live tooltip via setContent
+    // below, so a dynamic label updates in place instead of disposing and recreating the tooltip,
+    // which would drop the current hover.
     const tooltipConfig = useMemo<Partial<Tooltip.Options>>(() => ({
-        title: keyboardShortcut?.length ? `${text} (${keyboardShortcut?.join(",")})` : text,
+        title: hasTitle ? titleRef.current : undefined,
         placement: titlePosition ?? "bottom",
         fallbackPlacements: [ titlePosition ?? "bottom" ],
         customClass: tooltipClass ?? "",
-        trigger: cachedIsMobile ? "focus" : "hover focus",
+        html: tooltipHtml ?? false,
+        trigger: cachedIsMobile ? "focus" : "hover",
         animation: false
-    }), [text, keyboardShortcut, titlePosition, tooltipClass]);
+    }), [titlePosition, tooltipClass, tooltipHtml, hasTitle]);
     useStaticTooltip(buttonRef, tooltipConfig);
+
+    useEffect(() => {
+        if (buttonRef.current) {
+            Tooltip.getInstance(buttonRef.current)?.setContent({ ".tooltip-inner": title });
+        }
+    }, [title]);
 
     useEffect(() => {
         if (triggerCommand) {

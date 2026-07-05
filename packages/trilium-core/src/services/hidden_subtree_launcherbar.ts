@@ -86,12 +86,20 @@ export default function buildLaunchBarConfig() {
             icon: "bx bxs-yin-yang"
         },
         {
+            id: "_colorSchemeSwitcher",
+            title: t("hidden-subtree.color-scheme-switcher-title"),
+            type: "launcher",
+            builtinWidget: "colorSchemeSwitcher",
+            icon: "bx bx-adjust"
+        },
+        {
             id: "_lbSidebarChat",
             title: t("hidden-subtree.sidebar-chat-title"),
             type: "launcher",
             builtinWidget: "sidebarChat",
             icon: "bx bx-message-square-dots"
-        }
+        },
+
     ];
 
     const desktopVisibleLaunchers: HiddenSubtreeItem[] = [
