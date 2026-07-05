@@ -92,8 +92,8 @@ importers:
   .:
     devDependencies:
       '@electron/rebuild':
-        specifier: 4.0.6
-        version: 4.0.6
+        specifier: 4.1.0
+        version: 4.1.0
       '@fast-csv/parse':
         specifier: 5.0.7
         version: 5.0.7
@@ -2611,8 +2611,8 @@ packages:
     engines: {node: '>=12.13.0'}
     hasBin: true
 
-  '@electron/rebuild@4.0.6':
-    resolution: {integrity: sha512-323ygp5Lz4DP2nVu54NLCx4n0TKsQ3OMDG3PPeOFjOTMDtSxGbCi7mQfWBc5C80pp+9awEsiHx9HR9DfAM/IEQ==}
+  '@electron/rebuild@4.1.0':
+    resolution: {integrity: sha512-GFky+1JeO8fpSqtZCh+2wFRN/MVbAhm7tXI2M7BA1Os79OR8LEoxRtAbRPyxvmKWhEMF/p10rNJkkgP1klI13g==}
     engines: {node: '>=22.12.0'}
     hasBin: true
 
@@ -15770,7 +15770,7 @@ snapshots:
       - bluebird
       - supports-color
 
-  '@electron/rebuild@4.0.6':
+  '@electron/rebuild@4.1.0':
     dependencies:
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.4.3
