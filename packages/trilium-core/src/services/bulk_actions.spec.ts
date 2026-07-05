@@ -245,6 +245,34 @@ describe("bulk_actions service (real DB)", () => {
         });
     });
 
+    describe("saveRevision", () => {
+        it("saves a named revision capturing the note's current content", () => {
+            const note = createNote("root");
+            expect(note.note.getRevisions().length).toBe(0);
+
+            getContext().init(() =>
+                bulkActionService.executeActions([{ name: "saveRevision", revisionName: "milestone" }], [note.note.noteId])
+            );
+
+            const revisions = note.note.getRevisions();
+            expect(revisions.length).toBe(1);
+            // The revision "name" is stored in its description field.
+            expect(revisions[0].description).toBe("milestone");
+        });
+
+        it("saves an unnamed revision when no name is provided", () => {
+            const note = createNote("root");
+
+            getContext().init(() =>
+                bulkActionService.executeActions([{ name: "saveRevision" }], [note.note.noteId])
+            );
+
+            const revisions = note.note.getRevisions();
+            expect(revisions.length).toBe(1);
+            expect(revisions[0].description).toBe("");
+        });
+    });
+
     describe("deleteRevisions", () => {
         it("erases all revisions of the targeted note", () => {
             const note = createNote("root");

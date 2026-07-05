@@ -30,6 +30,15 @@ const ACTION_HANDLERS: ActionHandlerMap = {
 
         note.deleteNote(deleteId);
     },
+    saveRevision: (action, note) => {
+        // Mirror forceSaveRevision: skip protected notes outside a protected session
+        // rather than throwing and aborting the whole batch.
+        if (!note.isContentAvailable()) {
+            getLog().info(`Skipping saveRevision for protected note ${note.noteId}.`);
+            return;
+        }
+        note.saveRevision({ description: action.revisionName ?? "", source: "manual" });
+    },
     deleteRevisions: (action, note) => {
         const revisionIds = note
             .getRevisions()

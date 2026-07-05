@@ -23,6 +23,9 @@ export type ActionHandlers = {
         targetNoteId: string;
     },
     deleteNote: {},
+    saveRevision: {
+        revisionName?: string;
+    },
     deleteRevisions: {},
     deleteLabel: {
         labelName: string;

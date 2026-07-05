@@ -696,6 +696,11 @@
     "undelete_notes_instruction": "After the deletion, it's possible to undelete them from Recent Changes dialog.",
     "erase_notes_instruction": "To erase notes permanently, you can go after the deletion to the Option -> Other and click the \"Erase deleted notes now\" button."
   },
+  "save_revision": {
+    "save_revision": "Save revision",
+    "revision_name_placeholder": "Revision name (optional)",
+    "help": "A named revision will be saved for each matched note, capturing its current content and title."
+  },
   "delete_revisions": {
     "delete_note_revisions": "Delete note revisions",
     "all_past_note_revisions": "All past note revisions of matched notes will be deleted. Note itself will be fully preserved. In other terms, note's history will be removed."

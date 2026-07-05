@@ -16,6 +16,7 @@ export interface ActionDefinition {
     oldLabelName?: string;
     newLabelName?: string;
     conversion?: string;
+    revisionName?: string;
 }
 
 export default abstract class AbstractBulkAction {
