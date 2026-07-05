@@ -7,6 +7,7 @@ import { ValidationError } from "../../errors.js";
 import becca from "../../becca/becca.js";
 import type BBranch from "../../becca/entities/bbranch.js";
 import { getLog } from "../../services/log.js";
+import noteFormatConversionService from "../../services/note_format_conversion.js";
 import noteService from "../../services/notes.js";
 import { getSql } from "../../services/sql/index";
 import TaskContext from "../../services/task_context.js";
@@ -368,6 +369,13 @@ function convertNoteToAttachment(req: Request<{ noteId: string }>) {
     };
 }
 
+function convertNoteFormat(req: Request<{ noteId: string }>) {
+    const { noteId } = req.params;
+    const note = becca.getNoteOrThrow(noteId);
+
+    return noteFormatConversionService.convertNoteFormat(note);
+}
+
 export default {
     getNote,
     getNoteBlob,
@@ -385,5 +393,6 @@ export default {
     eraseUnusedAttachmentsNow,
     getDeleteNotesPreview,
     forceSaveRevision,
-    convertNoteToAttachment
+    convertNoteToAttachment,
+    convertNoteFormat
 };
