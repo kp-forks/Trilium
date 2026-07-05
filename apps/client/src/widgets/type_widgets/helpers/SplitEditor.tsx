@@ -12,6 +12,7 @@ import { ExtendedAdmonition } from "../../react/Admonition";
 import { Badge } from "../../react/Badge";
 import { useEffectiveReadOnly, useNoteBlob, useNoteLabel, useTriliumOption } from "../../react/hooks";
 import { EditableCode, EditableCodeProps, ReadOnlyCode } from "../code/Code";
+import { resolveDisplayMode } from "./split_editor_mode";
 
 export interface SplitEditorProps extends EditableCodeProps {
     className?: string;
@@ -50,9 +51,7 @@ export default function SplitEditor({ note, noteContext, error, previewStale, sp
     const splitEditorOrientation = useSplitOrientation(forceOrientation);
     const [ displayMode ] = useNoteLabel(note, "displayMode");
     const readOnly = useEffectiveReadOnly(note, noteContext) || Boolean(forceReadOnly);
-    const mode = displayMode === "source" || displayMode === "split" || displayMode === "preview"
-        ? displayMode
-        : readOnly ? "preview" : "split";
+    const mode = resolveDisplayMode(displayMode, readOnly);
 
     // Lazy-mount each pane on first need, then keep it mounted so subsequent switches stay instant.
     const editorMounted = useRef(mode !== "preview");
