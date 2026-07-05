@@ -5,6 +5,7 @@ import { ValidationError } from "../errors.js";
 import mdExportService from "./export/markdown.js";
 import markdownImportService from "./import/markdown.js";
 import noteService from "./notes.js";
+import { getSql } from "./sql/index.js";
 import type BNote from "../becca/entities/bnote.js";
 
 /** The MIME used for the Markdown note type, matching the note-type registry (`NOTE_TYPES`). */
@@ -106,26 +107,33 @@ export function convertNoteByConversionId(note: BNote, conversionId: string): bo
 
 /** Saves the pre-conversion revision, transforms the content, and switches the note's type/mime. */
 function performConversion(note: BNote, sourceFormat: SourceFormat) {
-    const content = note.getContent();
-    if (typeof content !== "string") {
+    const rawContent = note.getContent();
+    if (rawContent != null && typeof rawContent !== "string") {
         throw new ValidationError(`Note '${note.noteId}' does not have textual content.`);
     }
+    // A brand-new or empty note may have no content; treat it as an empty document rather than failing.
+    const content = rawContent ?? "";
 
     // Snapshot the current (pre-conversion) state under a descriptive name.
     const description = sourceFormat === "markdown"
         ? t("note_conversion.revision_before_text")
         : t("note_conversion.revision_before_markdown");
-    note.saveRevision({ description, source: "manual" });
 
     const { content: newContent, type, mime } = convertNoteContent(sourceFormat, content, note.title);
 
-    // Change the type/mime before writing content so type-specific processing (link extraction
-    // in `updateNoteData`) runs against the new format.
-    note.type = type;
-    note.mime = mime;
-    note.save();
+    // Persist the revision, the type/mime switch and the converted content in a single transaction,
+    // so a sync peer never observes the note with its new type but old (unconverted) content.
+    getSql().transactional(() => {
+        note.saveRevision({ description, source: "manual" });
 
-    noteService.updateNoteData(note.noteId, newContent);
+        // Change the type/mime before writing content so type-specific processing (link extraction
+        // in `updateNoteData`) runs against the new format.
+        note.type = type;
+        note.mime = mime;
+        note.save();
+
+        noteService.updateNoteData(note.noteId, newContent);
+    });
 }
 
 export default {

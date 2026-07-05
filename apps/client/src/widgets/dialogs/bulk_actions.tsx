@@ -9,7 +9,7 @@ import Button from "../react/Button";
 import bulk_action from "../../services/bulk_action";
 import dialog from "../../services/dialog";
 import toast from "../../services/toast";
-import RenameNoteBulkAction from "../bulk_actions/note/rename_note";
+import AbstractBulkAction from "../bulk_actions/abstract_bulk_action";
 import FNote from "../../entities/fnote";
 import froca from "../../services/froca";
 import { useTriliumEvent } from "../react/hooks";
@@ -19,7 +19,7 @@ export default function BulkActionsDialog() {
     const [ bulkActionNote, setBulkActionNote ] = useState<FNote | null>();
     const [ includeDescendants, setIncludeDescendants ] = useState(false);
     const [ affectedNoteCount, setAffectedNoteCount ] = useState(0);
-    const [ existingActions, setExistingActions ] = useState<RenameNoteBulkAction[]>([]);
+    const [ existingActions, setExistingActions ] = useState<AbstractBulkAction[]>([]);
     const [ shown, setShown ] = useState(false);
 
     useTriliumEvent("openBulkActionsDialog", async ({ selectedOrActiveNoteIds }) => {
@@ -113,7 +113,7 @@ function AvailableActionsList() {
     </table>;
 }
 
-function ExistingActionsList({ existingActions }: { existingActions?: RenameNoteBulkAction[] }) {
+function ExistingActionsList({ existingActions }: { existingActions?: AbstractBulkAction[] }) {
     return (
         <table class="bulk-existing-action-list">
             { existingActions

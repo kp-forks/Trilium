@@ -1,22 +1,26 @@
 import { NOTE_CONVERSION_IDS, NoteConversionId, RISKY_NOTE_CONVERSION_IDS } from "@triliumnext/commons";
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n";
 import FormSelect from "../../react/FormSelect";
-import { useSpacedUpdate } from "../../react/hooks";
 import AbstractBulkAction, { ActionDefinition } from "../abstract_bulk_action";
 import BulkAction from "../BulkAction";
 
-/** Human-readable label for each conversion id, in the order they appear in the combo box. */
-const CONVERSION_OPTIONS: { value: NoteConversionId | ""; title: string }[] = [
-    { value: "", title: t("convert_note.choose_conversion") },
-    ...NOTE_CONVERSION_IDS.map((value) => ({ value, title: t(`convert_note.conversion_${value}`) }))
-];
-
 function ConvertNoteBulkActionComponent({ bulkAction, actionDef }: { bulkAction: AbstractBulkAction, actionDef: ActionDefinition }) {
     const [ conversion, setConversion ] = useState<string>(actionDef.conversion ?? "");
-    const spacedUpdate = useSpacedUpdate(() => bulkAction.saveAction({ conversion }));
-    useEffect(() => spacedUpdate.scheduleUpdate(), [ conversion ]);
+
+    // Evaluate labels on render so they follow runtime language changes.
+    const conversionOptions: { value: NoteConversionId | ""; title: string }[] = [
+        { value: "", title: t("convert_note.choose_conversion") },
+        ...NOTE_CONVERSION_IDS.map((value) => ({ value, title: t(`convert_note.conversion_${value}`) }))
+    ];
+
+    // Persist the choice immediately (not debounced) so executing right after selecting doesn't
+    // run against a stale/empty conversion and silently skip every note.
+    function onChange(value: string) {
+        setConversion(value);
+        void bulkAction.saveAction({ conversion: value });
+    }
 
     return (
         <BulkAction
@@ -25,11 +29,11 @@ function ConvertNoteBulkActionComponent({ bulkAction, actionDef }: { bulkAction:
             helpText={<p>{t("convert_note.help_text")}</p>}
         >
             <FormSelect
-                values={CONVERSION_OPTIONS}
+                values={conversionOptions}
                 keyProperty="value"
                 titleProperty="title"
                 currentValue={conversion}
-                onChange={setConversion}
+                onChange={onChange}
             />
         </BulkAction>
     );
@@ -47,7 +51,7 @@ export default class ConvertNoteBulkAction extends AbstractBulkAction {
         if (!conversion) {
             return null;
         }
-        return RISKY_NOTE_CONVERSION_IDS.includes(conversion)
+        return RISKY_NOTE_CONVERSION_IDS.includes(conversion as NoteConversionId)
             ? t("convert_note.warning_risky")
             : t("convert_note.warning");
     }
