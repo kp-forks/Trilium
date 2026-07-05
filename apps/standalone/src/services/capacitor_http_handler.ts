@@ -176,7 +176,7 @@ export const capacitorHttpHandler: NativeHttpHandler = async (request) => {
     // Binary responses come back from Capacitor as a base64 string — pass it
     // through as `body` so the worker's atob+Uint8Array path still works.
     if (request.responseType === "arraybuffer") {
-        const body = typeof response.data === "string" ? response.data : String(response.data);
+        const body = String(response.data);
         return { status: response.status, headers, body };
     }
 
