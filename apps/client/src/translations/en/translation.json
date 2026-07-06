@@ -2263,11 +2263,6 @@
     "search_not_executed": "Search has not been executed yet.",
     "search_now": "Search now"
   },
-  "spacer": {
-    "configure_launchbar": "Configure launch bar",
-    "launcher_orientation": "Launch bar orientation",
-    "will_reload_frontend": "(will reload app)"
-  },
   "sql_result": {
     "not_executed": "The query has not been executed yet.",
     "no_rows": "No rows have been returned for this query",
@@ -2365,7 +2360,10 @@
     "duplicate-launcher": "Duplicate launcher <kbd data-command=\"duplicateSubtree\">"
   },
   "launcher_button_context_menu": {
-    "remove_from_launch_bar": "Remove from launch bar"
+    "remove_from_launch_bar": "Remove from launch bar",
+    "configure_launch_bar": "Configure launch bar",
+    "launch_bar_orientation": "Launch bar orientation",
+    "will_reload_frontend": "(will reload app)"
   },
   "highlighting": {
     "title": "Code Blocks",
