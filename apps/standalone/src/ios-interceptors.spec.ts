@@ -235,6 +235,74 @@ describe("setupImageInterceptor", () => {
         expect(mocks.localFetch).toHaveBeenCalledOnce();
     });
 
+    it("revokes the previous blob URL when an image is repointed to another API image", async () => {
+        let counter = 0;
+        vi.spyOn(URL, "createObjectURL").mockImplementation(() => `blob:url-${++counter}`);
+        const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+        // Fresh Response per call — a body can only be read once, and this image
+        // is swapped twice.
+        mocks.localFetch.mockImplementation(async () => makeResponse("bytes"));
+
+        const img = document.createElement("img");
+        img.setAttribute("src", "/api/images/1");
+        document.body.appendChild(img);
+        setupImageInterceptor();
+        await vi.waitFor(() => expect(img.getAttribute("src")).toBe("blob:url-1"));
+
+        // Repoint the same element at a different API image; the first blob URL is
+        // now orphaned and must be revoked, otherwise it leaks for the page's life.
+        img.setAttribute("src", "/api/images/2");
+        await vi.waitFor(() => expect(img.getAttribute("src")).toBe("blob:url-2"));
+
+        expect(revoke).toHaveBeenCalledWith("blob:url-1");
+    });
+
+    it("revokes the blob URL when an intercepted image is removed from the DOM", async () => {
+        vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:removed-url");
+        const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+        mocks.localFetch.mockResolvedValue(makeResponse("bytes"));
+
+        const img = document.createElement("img");
+        img.setAttribute("src", "/api/images/1");
+        document.body.appendChild(img);
+        setupImageInterceptor();
+        await vi.waitFor(() => expect(img.getAttribute("src")).toBe("blob:removed-url"));
+
+        // Navigating away removes the <img>; its blob URL must be revoked or it
+        // leaks — the dominant "every note you open adds memory" case.
+        img.remove();
+        await vi.waitFor(() => expect(revoke).toHaveBeenCalledWith("blob:removed-url"));
+    });
+
+    it("revokes blob URLs of images inside a removed container subtree", async () => {
+        vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:subtree-url");
+        const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+        mocks.localFetch.mockResolvedValue(makeResponse("bytes"));
+
+        const container = document.createElement("div");
+        const img = document.createElement("img");
+        img.setAttribute("src", "/api/images/1");
+        container.appendChild(img);
+        document.body.appendChild(container);
+        setupImageInterceptor();
+        await vi.waitFor(() => expect(img.getAttribute("src")).toBe("blob:subtree-url"));
+
+        // Removing the wrapper detaches the nested <img> too; its URL must be freed.
+        container.remove();
+        await vi.waitFor(() => expect(revoke).toHaveBeenCalledWith("blob:subtree-url"));
+    });
+
+    it("ignores removed non-element nodes", async () => {
+        const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+        const text = document.createTextNode("text");
+        document.body.appendChild(text);
+        setupImageInterceptor();
+
+        text.remove(); // removedNodes contains a text node — neither <img> nor Element
+        await new Promise((r) => setTimeout(r, 20));
+        expect(revoke).not.toHaveBeenCalled();
+    });
+
     it("ignores src mutations on non-image elements", async () => {
         const span = document.createElement("span");
         span.setAttribute("src", "/api/images/a");

@@ -57,6 +57,11 @@ export function setupFetchInterceptor() {
 // re-fetch on idempotent re-renders.
 export function setupImageInterceptor() {
     const lastProcessedSrc = new WeakMap<HTMLImageElement, string>();
+    // Object URLs are held by the browser until explicitly revoked (the SPA
+    // document never unloads), so track the one currently assigned to each <img>
+    // and revoke it whenever the image is repointed or removed — otherwise every
+    // image swap leaks memory, which matters most on the constrained iOS WebView.
+    const blobUrls = new WeakMap<HTMLImageElement, string>();
 
     function matchesLocalApi(value: string): URL | null {
         if (!value || value.startsWith("blob:") || value.startsWith("data:")) return null;
@@ -67,6 +72,14 @@ export function setupImageInterceptor() {
             return null;
         }
         return (abs.origin === location.origin && isLocalApiRequest(abs)) ? abs : null;
+    }
+
+    function releaseBlobUrl(img: HTMLImageElement) {
+        const previous = blobUrls.get(img);
+        if (previous) {
+            URL.revokeObjectURL(previous);
+            blobUrls.delete(img);
+        }
     }
 
     async function swapToBlob(img: HTMLImageElement, originalSrc: string, absUrl: URL) {
@@ -80,7 +93,11 @@ export function setupImageInterceptor() {
                 return;
             }
             const blob = await resp.blob();
-            img.setAttribute("src", URL.createObjectURL(blob));
+            // Free the URL from a prior swap on this same element before replacing it.
+            releaseBlobUrl(img);
+            const blobUrl = URL.createObjectURL(blob);
+            blobUrls.set(img, blobUrl);
+            img.setAttribute("src", blobUrl);
         } catch (err) {
             console.warn("[ImageInterceptor] Failed to load", absUrl.href, err);
             lastProcessedSrc.delete(img);
@@ -104,6 +121,13 @@ export function setupImageInterceptor() {
                         checkImage(node);
                     } else if (node instanceof Element) {
                         node.querySelectorAll("img").forEach((img) => checkImage(img as HTMLImageElement));
+                    }
+                }
+                for (const node of record.removedNodes) {
+                    if (node instanceof HTMLImageElement) {
+                        releaseBlobUrl(node);
+                    } else if (node instanceof Element) {
+                        node.querySelectorAll("img").forEach((img) => releaseBlobUrl(img as HTMLImageElement));
                     }
                 }
             }
