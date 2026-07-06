@@ -2264,9 +2264,9 @@
     "search_now": "Search now"
   },
   "spacer": {
-    "configure_launchbar": "Configure Launchbar",
-    "launcher_orientation": "Launcher bar orientation",
-    "will_reload_frontend": "(will reload frontend)"
+    "configure_launchbar": "Configure launch bar",
+    "launcher_orientation": "Launch bar orientation",
+    "will_reload_frontend": "(will reload app)"
   },
   "sql_result": {
     "not_executed": "The query has not been executed yet.",
