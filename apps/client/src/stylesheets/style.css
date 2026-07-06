@@ -1593,6 +1593,14 @@ body.desktop li.dropdown-submenu:hover > ul.dropdown-menu {
     overflow: auto;
 }
 
+/* Flipped upward (added by ContextMenu.repositionSubmenu) when the submenu would overflow the bottom of the viewport. */
+.dropdown-submenu > .dropdown-menu.submenu-flip-up {
+    top: auto;
+    bottom: 0;
+    margin-top: 0;
+    margin-bottom: -10px;
+}
+
 body.desktop .dropdown-submenu > .dropdown-menu {
     min-width: max-content;
     max-width: 300px;
