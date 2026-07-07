@@ -1,26 +1,29 @@
+import type Turnish from "turnish";
+import type { Rule, TurnishOptions } from "turnish";
+
 var indexOf = Array.prototype.indexOf
 var every = Array.prototype.every
-var rules = {}
-var alignMap = { left: ':---', right: '---:', center: ':---:' };
+var rules: Record<string, Rule> = {}
+var alignMap: Record<string, string> = { left: ':---', right: '---:', center: ':---:' };
 
-let isCodeBlock_ = null;
-let options_ = null;
+let isCodeBlock_: ((node: Node) => boolean) | null = null;
+let options_: TurnishOptions | null = null;
 
 // We need to cache the result of tableShouldBeSkipped() as it is expensive.
 // Caching it means we went from about 9000 ms for rendering down to 90 ms.
 // Fixes https://github.com/laurent22/joplin/issues/6736
-const tableShouldBeSkippedCache_ = new WeakMap();
+const tableShouldBeSkippedCache_ = new WeakMap<HTMLTableElement, boolean>();
 
-function getAlignment(node) {
+function getAlignment(node: HTMLElement | null): string {
   return node ? (node.getAttribute('align') || node.style.textAlign || '').toLowerCase() : '';
 }
 
-function getBorder(alignment) {
+function getBorder(alignment: string): string {
   return alignment ? alignMap[alignment] : '---';
 }
 
-function getColumnAlignment(table, columnIndex) {
-  var votes = {
+function getColumnAlignment(table: HTMLTableElement, columnIndex: number): string {
+  var votes: Record<string, number> = {
     left: 0,
     right: 0,
     center: 0,
@@ -32,7 +35,7 @@ function getColumnAlignment(table, columnIndex) {
   for (var i = 0; i < table.rows.length; ++i) {
     var row = table.rows[i];
     if (columnIndex < row.childNodes.length) {
-      var cellAlignment = getAlignment(row.childNodes[columnIndex]);
+      var cellAlignment = getAlignment(row.childNodes[columnIndex] as HTMLElement);
       ++votes[cellAlignment];
 
       if (votes[cellAlignment] > votes[align]) {
@@ -46,7 +49,7 @@ function getColumnAlignment(table, columnIndex) {
 
 rules.tableCell = {
   filter: ['th', 'td'],
-  replacement: function (content, node) {
+  replacement: function (content: string, node) {
     if (tableShouldBeSkipped(nodeParentTable(node))) return content;
     return cell(content, node)
   }
@@ -54,9 +57,9 @@ rules.tableCell = {
 
 rules.tableRow = {
   filter: 'tr',
-  replacement: function (content, node) {
+  replacement: function (content: string, node) {
     const parentTable = nodeParentTable(node);
-    if (tableShouldBeSkipped(parentTable)) return content;
+    if (!parentTable || tableShouldBeSkipped(parentTable)) return content;
 
     var borderCells = ''
 
@@ -73,11 +76,11 @@ rules.tableRow = {
 }
 
 rules.table = {
-  filter: function (node, options) {
+  filter: function (node) {
     return node.nodeName === 'TABLE';
   },
 
-  replacement: function (content, node) {
+  replacement: function (content: string, node) {
     // Only convert tables that can result in valid Markdown
     // Other tables are kept as HTML using `keep` (see below).
     if (tableShouldBeHtml(node, options_)) {
@@ -111,7 +114,7 @@ rules.tableColgroup = {
 
 rules.tableSection = {
   filter: ['thead', 'tbody', 'tfoot'],
-  replacement: function (content) {
+  replacement: function (content: string) {
     return content
   }
 }
@@ -121,8 +124,9 @@ rules.tableSection = {
 // - or if its the first child of the TABLE or the first TBODY (possibly
 //   following a blank THEAD)
 // - and every cell is a TH
-function isHeadingRow (tr) {
+function isHeadingRow (tr: Node): boolean {
   var parentNode = tr.parentNode
+  if (!parentNode) return false;
   return (
     parentNode.nodeName === 'THEAD' ||
     (
@@ -133,14 +137,14 @@ function isHeadingRow (tr) {
   )
 }
 
-function isFirstTbody (element) {
+function isFirstTbody (element: Node): boolean {
   var previousSibling = element.previousSibling
   return (
     element.nodeName === 'TBODY' && (
       !previousSibling ||
       (
         previousSibling.nodeName === 'THEAD' &&
-        /^\s*$/i.test(previousSibling.textContent)
+        /^\s*$/i.test(previousSibling.textContent || '')
       )
     )
   )
@@ -149,7 +153,7 @@ function isFirstTbody (element) {
 // Format table cells following MD060 compact style:
 // Each cell has 1 space padding on left and right (prefix + content + ' |').
 // Empty cells result in 2 spaces between pipes (1 left + 1 right padding).
-function cell (content, node = null, index = null) {
+function cell (content: string, node: any = null, index: number | null = null): string {
   if (index === null) index = indexOf.call(node.parentNode.childNodes, node)
   var prefix = ' '
   if (index === 0) prefix = '| '
@@ -159,7 +163,7 @@ function cell (content, node = null, index = null) {
   return prefix + filteredContent + ' |'
 }
 
-function nodeContainsTable(node) {
+function nodeContainsTable(node: Node): boolean {
   if (!node.childNodes) return false;
 
   for (let i = 0; i < node.childNodes.length; i++) {
@@ -170,7 +174,7 @@ function nodeContainsTable(node) {
   return false;
 }
 
-const nodeContains = (node, types) => {
+const nodeContains = (node: Node, types: string | string[]): boolean => {
   if (!node.childNodes) return false;
 
   for (let i = 0; i < node.childNodes.length; i++) {
@@ -183,7 +187,7 @@ const nodeContains = (node, types) => {
   return false;
 }
 
-const tableShouldBeHtml = (tableNode, options) => {
+const tableShouldBeHtml = (tableNode: any, options: TurnishOptions | null): boolean => {
   const possibleTags = [
     'UL',
     'OL',
@@ -203,7 +207,7 @@ const tableShouldBeHtml = (tableNode, options) => {
   // that's made of HTML tables. In that case we have this logic of removing the
   // outer table and keeping only the inner ones. For the Rich Text editor
   // however we always want to keep nested tables.
-  if (options.preserveNestedTables) possibleTags.push('TABLE');
+  if (options?.preserveNestedTables) possibleTags.push('TABLE');
 
   return nodeContains(tableNode, 'code') ||
     nodeContains(tableNode, possibleTags) ||
@@ -219,13 +223,15 @@ const tableShouldBeHtml = (tableNode, options) => {
 // parent is a THEAD, or it is the first row and every cell is a TH). This is the
 // row that produces the Markdown divider line; without it the table has no
 // header and must be kept as HTML.
-function tableHasHeadingRow(tableNode) {
+function tableHasHeadingRow(tableNode: HTMLTableElement): boolean {
   return !!tableNode.rows && tableNode.rows.length > 0 && isHeadingRow(tableNode.rows[0]);
 }
 
 // Various conditions under which a table should be skipped - i.e. each cell
 // will be rendered one after the other as if they were paragraphs.
-function tableShouldBeSkipped(tableNode) {
+function tableShouldBeSkipped(tableNode: HTMLTableElement | null): boolean {
+  if (!tableNode) return true;
+
   const cached = tableShouldBeSkippedCache_.get(tableNode);
   if (cached !== undefined) return cached;
 
@@ -235,7 +241,7 @@ function tableShouldBeSkipped(tableNode) {
   return result;
 }
 
-function tableShouldBeSkipped_(tableNode) {
+function tableShouldBeSkipped_(tableNode: HTMLTableElement | null): boolean {
   if (!tableNode) return true;
   if (!tableNode.rows) return true;
   if (tableNode.rows.length === 1 && tableNode.rows[0].childNodes.length <= 1) return true; // Table with only one cell
@@ -243,25 +249,23 @@ function tableShouldBeSkipped_(tableNode) {
   return false;
 }
 
-function nodeParentDiv(node) {
+function nodeParentDiv(node: Node): HTMLElement | null {
   let parent = node.parentNode;
-  while (parent.nodeName !== 'DIV') {
+  while (parent && parent.nodeName !== 'DIV') {
     parent = parent.parentNode;
-    if (!parent) return null;
   }
-  return parent;
+  return parent as HTMLElement | null;
 }
 
-function nodeParentTable(node) {
+function nodeParentTable(node: Node): HTMLTableElement | null {
   let parent = node.parentNode;
-  while (parent.nodeName !== 'TABLE') {
+  while (parent && parent.nodeName !== 'TABLE') {
     parent = parent.parentNode;
-    if (!parent) return null;
   }
-  return parent;
+  return parent as HTMLTableElement | null;
 }
 
-function handleColSpan(content, node, emptyChar) {
+function handleColSpan(content: string, node: any, emptyChar: string): string {
   const colspan = node.getAttribute('colspan') || 1;
   for (let i = 1; i < colspan; i++) {
     content += ' |' + emptyChar;
@@ -269,7 +273,7 @@ function handleColSpan(content, node, emptyChar) {
   return content
 }
 
-function tableColCount(node) {
+function tableColCount(node: HTMLTableElement): number {
   let maxColCount = 0;
   for (let i = 0; i < node.rows.length; i++) {
     const row = node.rows[i]
@@ -291,18 +295,18 @@ var TABLE_CONTAINER_TAGS = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'COLGROUP'
 // lines are produced, so the result stays a single raw-HTML block on reimport.
 // Inter-element whitespace text nodes are dropped, which makes the output stable
 // across repeated export/import cycles.
-function prettyPrintTable(node) {
+function prettyPrintTable(node: Element): string {
   return serializeStructuralNode(node, 0);
 }
 
-function serializeStructuralNode(node, depth) {
+function serializeStructuralNode(node: Element, depth: number): string {
   const indent = '    '.repeat(depth);
   const closeTag = '</' + node.nodeName.toLowerCase() + '>';
 
   // Use the DOM's own serializer for the opening tag so attribute quoting/escaping
   // matches the rest of the output. A shallow clone has no children, so its
   // outerHTML is exactly the opening tag plus (for non-void elements) the closing tag.
-  const shallowHtml = node.cloneNode(false).outerHTML;
+  const shallowHtml = (node.cloneNode(false) as Element).outerHTML;
   const isVoid = !shallowHtml.endsWith(closeTag);
   const openTag = isVoid ? shallowHtml : shallowHtml.slice(0, shallowHtml.length - closeTag.length);
 
@@ -315,15 +319,15 @@ function serializeStructuralNode(node, depth) {
   for (let i = 0; i < node.childNodes.length; i++) {
     const child = node.childNodes[i];
     if (child.nodeType === 1) { // ELEMENT_NODE — whitespace-only text nodes are skipped
-      lines.push(serializeStructuralNode(child, depth + 1));
+      lines.push(serializeStructuralNode(child as Element, depth + 1));
     }
   }
   lines.push(indent + closeTag);
   return lines.join('\n');
 }
 
-export default function tables (turndownService) {
-  isCodeBlock_ = turndownService.isCodeBlock;
+export default function tables (turndownService: Turnish) {
+  isCodeBlock_ = (turndownService as any).isCodeBlock ?? null;
   options_ = turndownService.options;
 
   turndownService.keep(function (node) {
