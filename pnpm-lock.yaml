@@ -501,8 +501,8 @@ importers:
         specifier: 1.0.2
         version: 1.0.2
       electron:
-        specifier: 42.5.2
-        version: 42.5.2
+        specifier: 42.6.0
+        version: 42.6.0
       node-mocks-http:
         specifier: 1.17.2
         version: 1.17.2(@types/express@5.0.6)(@types/node@24.13.1)
@@ -560,8 +560,8 @@ importers:
         specifier: workspace:*
         version: link:../desktop
       electron:
-        specifier: 42.5.2
-        version: 42.5.2
+        specifier: 42.6.0
+        version: 42.6.0
 
   apps/icon-pack-builder:
     devDependencies:
@@ -8291,8 +8291,8 @@ packages:
     resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
     engines: {node: '>=8.0.0'}
 
-  electron@42.5.2:
-    resolution: {integrity: sha512-nEoyciv2iC6gTvCbkQ3eP5tjAOo28wfm0adZaMYTns92MyODHeD1TlrGt4E35d4tJfDlmv+BHOuz0QIkJ63c6w==}
+  electron@42.6.0:
+    resolution: {integrity: sha512-axGNgd+yCTg+vi1VEGrQqAj9WVWkePKwbICSAvMiT2eTaxhij9a/xhBHD6rXV8wrlW9ZfJzE5+xg752ImxrmTw==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -22561,7 +22561,7 @@ snapshots:
       - supports-color
     optional: true
 
-  electron@42.5.2:
+  electron@42.6.0:
     dependencies:
       '@electron-internal/extract-zip': 1.0.3
       '@electron/get': 5.0.0
