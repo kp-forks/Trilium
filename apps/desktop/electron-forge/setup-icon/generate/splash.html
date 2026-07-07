@@ -11,15 +11,17 @@
         background: #ffffff;
     }
     /* The window has no chrome or shadow (Squirrel's Update.exe is WindowStyle.None
-       + transparent), and GIF's 1-bit transparency can't cast a soft shadow onto the
-       desktop. So the stage is an opaque neutral "tray" with a hairline edge, holding
-       a rounded white card whose soft shadow falls on the tray — giving the splash a
-       defined, elevated boundary against any surface (e.g. a white Explorer pane). */
+       + transparent), and the installer ships ONE baked GIF that can't follow the
+       user's Windows theme. A dark card degrades more gracefully than a light one:
+       it's gentle on a dark desktop and unremarkable on a light one (a dark element
+       on a light screen doesn't glare the way a bright card does on a dark screen).
+       The stage is a dark tray holding a slightly-lighter dark card, so the card
+       reads as elevated even where the tray blends into a dark desktop. */
     .stage {
         width: 640px;
         height: 480px;
         box-sizing: border-box;
-        background: #eceef1;
+        background: #23262b;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -29,9 +31,9 @@
     .card {
         width: 582px;
         height: 430px;
-        background: #ffffff;
+        background: #2b2f36;
         border-radius: 18px;
-        box-shadow: 0 5px 18px rgba(22, 24, 30, 0.16), 0 1px 3px rgba(22, 24, 30, 0.10);
+        box-shadow: 0 8px 26px rgba(0, 0, 0, 0.5);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -48,12 +50,12 @@
         font-size: 36px;
         font-weight: 600;
         letter-spacing: 0.01em;
-        color: #232920;
+        color: #f2f3f5;
         display: flex;
         align-items: baseline;
         gap: 13px;
     }
-    .word-notes { font-weight: 350; color: #6b7264; }
+    .word-notes { font-weight: 350; color: #9aa0a8; }
     .nightly-badge {
         display: none;
         font-size: 14px;

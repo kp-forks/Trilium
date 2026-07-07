@@ -40,9 +40,13 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
 
 - The window has no chrome and no drop shadow (Squirrel's `Update.exe` is `WindowStyle.None` +
   transparent), and GIF's 1-bit transparency can't cast a soft shadow onto the desktop. So the splash
-  is a **card on a tray**: an opaque light-neutral tray holding a rounded white card whose soft
-  shadow falls on the tray. The tray is a touch darker than the card, so it separates on its own —
-  including against a white Explorer pane, where a plain white splash would vanish.
+  is a **card on a tray**: an opaque tray holding a rounded, slightly-lighter card whose soft shadow
+  falls on the tray, giving a defined, elevated boundary against any surface.
+- The card is **dark**, on purpose. The installer ships one baked GIF that can't follow the user's
+  Windows theme, and no opaque surface is theme-neutral. A dark card degrades more gracefully than a
+  light one: it's gentle on a dark desktop and unremarkable on a light one, whereas a light card is a
+  harsh bright flash for dark-mode users. The colorful trillium also pops on the dark card. The one
+  cost is that the mark's white "starburst" (card showing through the leaf gaps) becomes dark.
 
 ## Encoding
 
@@ -50,15 +54,15 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
   written as a transparent index over the kept canvas (`dispose: 1`). This shrinks the mostly-static
   steady tail to almost nothing (~140 KiB total). It saves file size only — not `Update.exe` memory,
   which re-expands every frame to full size regardless.
-- The large flat colors (card white, tray, wordmark) are **pinned** into the palette:
-  gifenc's `applyPalette` nearest-color search is approximate, so without pinning the big white card
-  drifts to a warm near-white. `deriveAnchorColors()` reads these colors from the first rendered
-  frame and forces any exact-match pixel to that palette index, so changing the tray/card tone in
-  `splash.html` needs no change in the generator.
+- The large flat colors (card, tray, wordmark) are **pinned** into the palette: gifenc's
+  `applyPalette` nearest-color search is approximate, so without pinning a big flat area drifts (the
+  white card used to go warm). `deriveAnchorColors()` reads the card and tray from the first rendered
+  frame — so changing the tray/card tone in `splash.html` needs no change here — and pins the wordmark
+  colour explicitly (update it there if the wordmark colour changes).
 
 ## Output contract
 
-- 640 × 480, opaque; light-neutral tray (`#eceef1`) + white card. Transparency is used only for delta
+- 640 × 480, opaque; dark tray (`#23262b`) + dark card (`#2b2f36`). Transparency is used only for delta
   frames — frame 0 is a full opaque frame, so the loop resets cleanly with no reliance on desktop
   show-through. 108 frames, ~20 s loop, infinite loop, 255-color global palette, ~140 KiB.
 - The mark and wordmark are drawn larger than strictly needed: Squirrel's `Update.exe` is not
