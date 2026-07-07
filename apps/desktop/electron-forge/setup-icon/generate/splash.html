@@ -106,10 +106,15 @@
     const params = new URLSearchParams(location.search);
     stage.classList.add(params.get("variant") === "nightly" ? "variant-nightly" : "variant-stable");
 
-    // Timeline (seconds). The loop is TOTAL_FRAMES / FPS long; DOT_CYCLE must divide
-    // it evenly so the pulse is continuous across the GIF loop point.
-    const FPS = 10;
-    const TOTAL_FRAMES = 36;
+    // Timeline (all times in seconds). The reveal plays once at 10 fps, then a long
+    // steady tail pulses at 5 fps out to LOOP_DURATION. The low-fps tail keeps the
+    // frame COUNT down, which is what matters: Squirrel's Update.exe renders the GIF
+    // with WpfAnimatedGif, which pre-decodes every frame to a full-size bitmap in a
+    // 32-bit process — so memory scales with frame count, not file size.
+    const REVEAL_DURATION = 1.5;   // reveal phase, rendered at REVEAL_FPS
+    const LOOP_DURATION = 20;      // total GIF length before it loops
+    const REVEAL_FPS = 10;
+    const STEADY_FPS = 5;
     const LEAF_STARTS = { green: 0, orange: 0.25, red: 0.5 };
     const LEAF_DURATION = 0.4;
     const TEXT_START = 0.7;
@@ -141,9 +146,8 @@
         leaf.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
     }
 
-    function renderFrame(frame) {
-        const t = frame / FPS;
-
+    // Renders the whole composition at absolute time `t` (seconds).
+    function renderFrame(t) {
         setLeaf(".leaf-green", t, LEAF_STARTS.green);
         setLeaf(".leaf-orange", t, LEAF_STARTS.orange);
         setLeaf(".leaf-red", t, LEAF_STARTS.red);
@@ -164,11 +168,28 @@
         }
     }
 
-    window.SPLASH_TIMELINE = { fps: FPS, totalFrames: TOTAL_FRAMES };
+    // Frame schedule: [{ t, delay }] where delay is the ms this frame is shown.
+    function buildTimeline() {
+        const frames = [];
+        const revealStep = 1 / REVEAL_FPS;
+        const steadyStep = 1 / STEADY_FPS;
+        let t = 0;
+        while (t < REVEAL_DURATION) {
+            frames.push({ t, delay: revealStep * 1000 });
+            t += revealStep;
+        }
+        while (t < LOOP_DURATION) {
+            frames.push({ t, delay: steadyStep * 1000 });
+            t += steadyStep;
+        }
+        return frames;
+    }
+
+    window.SPLASH_TIMELINE = buildTimeline();
     window.renderFrame = renderFrame;
 
     // When opened directly in a browser, show the settled state.
-    renderFrame(TOTAL_FRAMES - 1);
+    renderFrame(LOOP_DURATION / 2);
 </script>
 </body>
 </html>

@@ -4,9 +4,14 @@
  *
  * Run with: pnpm --filter desktop generate-setup-banners
  *
- * Renders each frame deterministically via window.renderFrame(i) in headless
+ * Renders each frame deterministically via window.renderFrame(t) in headless
  * Chromium, then encodes an animated GIF with gifenc. Run on Windows so the
  * wordmark renders in Segoe UI, which is what the installer audience sees.
+ *
+ * Frames are delta-encoded: a single global palette, and pixels unchanged from
+ * the previous frame are written as a transparent index over the kept canvas
+ * (dispose = 1). The static reveal costs full frames; the steady tail (only the
+ * pulsing dots change) costs almost nothing, so the file stays small even at 20s.
  */
 import { chromium, type Page } from "@playwright/test";
 import { writeFileSync } from "fs";
@@ -23,7 +28,8 @@ const SPLASH_PAGE = pathToFileURL(path.join(SETUP_ICON_DIR, "generate", "splash.
 
 const WIDTH = 640;
 const HEIGHT = 480;
-const MAX_COLORS = 128;
+// One color slot is reserved for transparency, so quantize to 255 (not 256).
+const PALETTE_COLORS = 255;
 
 const VARIANTS = [
     { variant: "stable", fileName: "setup-banner.gif" },
@@ -34,23 +40,64 @@ async function renderVariant(page: Page, variant: string): Promise<Buffer> {
     await page.goto(`${SPLASH_PAGE}?variant=${variant}`);
     const timeline = await page.evaluate(() => window.SPLASH_TIMELINE);
 
-    const gif = GIFEncoder();
-    for (let frame = 0; frame < timeline.totalFrames; frame++) {
-        await page.evaluate((f) => window.renderFrame(f), frame);
-        const screenshot = PNG.sync.read(await page.screenshot({ clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT } }));
-        const rgba = new Uint8Array(screenshot.data.buffer, screenshot.data.byteOffset, screenshot.data.length);
+    // Capture every frame's raw pixels up front; delta encoding needs to diff
+    // consecutive frames and to build one palette covering all of them.
+    const frames: Uint8Array[] = [];
+    for (const { t } of timeline) {
+        await page.evaluate((time) => window.renderFrame(time), t);
+        const png = PNG.sync.read(await page.screenshot({ clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT } }));
+        frames.push(new Uint8Array(png.data.buffer, png.data.byteOffset, png.data.length).slice());
+    }
 
-        const palette = quantize(rgba, MAX_COLORS);
+    const palette = buildGlobalPalette(frames);
+    const transparentIndex = palette.length; // 255: unused by applyPalette (0..254)
+
+    const gif = GIFEncoder();
+    let previous: Uint8Array | null = null;
+    for (const [i, { delay }] of timeline.entries()) {
+        const rgba = frames[i];
         const index = applyPalette(rgba, palette);
+        if (previous) {
+            for (let p = 0; p < index.length; p++) {
+                const b = p * 4;
+                if (rgba[b] === previous[b] && rgba[b + 1] === previous[b + 1] && rgba[b + 2] === previous[b + 2]) {
+                    index[p] = transparentIndex;
+                }
+            }
+        }
         gif.writeFrame(index, WIDTH, HEIGHT, {
-            palette,
-            delay: 1000 / timeline.fps,
+            palette: i === 0 ? palette : undefined, // global color table, written once
+            first: i === 0,
+            transparent: true,
+            transparentIndex,
+            dispose: 1, // keep the previous canvas so transparent pixels persist
+            delay,
             repeat: 0 // loop forever
         });
+        previous = rgba;
     }
     gif.finish();
 
     return Buffer.from(gif.bytes());
+}
+
+// Builds one palette shared by every frame (required for cross-frame transparency).
+// Sampling a handful of frames across the timeline captures the reveal's partial
+// leaves plus the steady tail's dot-pulse tints without quantizing all ~110 frames.
+function buildGlobalPalette(frames: Uint8Array[]): number[][] {
+    const count = Math.min(frames.length, 6);
+    const step = Math.max(1, Math.floor(frames.length / count));
+    const sampled: Uint8Array[] = [];
+    for (let i = 0; i < frames.length; i += step) {
+        sampled.push(frames[i]);
+    }
+    const merged = new Uint8Array(sampled.reduce((n, f) => n + f.length, 0));
+    let offset = 0;
+    for (const frame of sampled) {
+        merged.set(frame, offset);
+        offset += frame.length;
+    }
+    return quantize(merged, PALETTE_COLORS);
 }
 
 const browser = await chromium.launch();
@@ -72,7 +119,7 @@ try {
 
 declare global {
     interface Window {
-        SPLASH_TIMELINE: { fps: number; totalFrames: number };
-        renderFrame: (frame: number) => void;
+        SPLASH_TIMELINE: { t: number; delay: number }[];
+        renderFrame: (t: number) => void;
     }
 }
