@@ -33,8 +33,8 @@ const MARGIN = 44; // transparent padding around the window for its drop shadow
 
 // Icon CENTERS in Finder's top-left content coordinates. Same values as the `contents`
 // entries in forge.config.ts — these are what a real build writes into .DS_Store.
-const APP = { x: 180, y: 185, label: "Trilium Notes" };
-const APPS = { x: 460, y: 185, label: "Applications" };
+const APP = { x: 180, y: 215, label: "Trilium Notes" };
+const APPS = { x: 460, y: 215, label: "Applications" };
 
 const bgHref = pathToFileURL(path.join(DMG_DIR, "background.png")).href;
 const APPLICATIONS_ICNS = "/System/Library/CoreServices/CoreTypes.bundle/Contents/Resources/ApplicationsFolderIcon.icns";

@@ -160,12 +160,12 @@ const config: ForgeConfig = {
                 additionalDMGOptions: {
                     window: { size: { width: 640, height: 400 } }
                 },
-                // Icon CENTERS in a bottom-left coordinate space, matched to the platforms in
-                // background.html. These need a macOS test-build to fine-tune: the DMG can only
-                // be built and visually verified there (appdmg is darwin-only).
+                // Icon CENTERS in Finder's .DS_Store Iloc coordinate space: top-left origin,
+                // y increasing downward. y=215 matches the platform centers in background.html
+                // (top:140 + height:150/2). Verify on a macOS build (appdmg is darwin-only).
                 contents: (opts: { appPath: string }) => [
-                    { x: 180, y: 185, type: "file", path: opts.appPath },
-                    { x: 460, y: 185, type: "link", path: "/Applications" }
+                    { x: 180, y: 215, type: "file", path: opts.appPath },
+                    { x: 460, y: 215, type: "link", path: "/Applications" }
                 ]
             }
         },
