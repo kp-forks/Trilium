@@ -61,15 +61,19 @@ describe("keyboard_shortcut_display", () => {
             expect(formatShortcutKey("Del")).toBe("Delete");
             expect(formatShortcutKey("delete")).toBe("Delete");
             expect(formatShortcutKey("ESC")).toBe("Esc");
-            expect(formatShortcutKey("ArrowUp")).toBe("Up");
-            expect(formatShortcutKey("up")).toBe("Up");
             expect(formatShortcutKey("PageDown")).toBe("Page Down");
         });
 
-        it("renders the plus key (named token or glyph) as '+' and never translates it", () => {
+        it("renders normalization-only keys (arrows, plus) as their universal glyph and never translates them", () => {
+            expect(formatShortcutKey("ArrowUp")).toBe("↑");
+            expect(formatShortcutKey("up")).toBe("↑");
+            expect(formatShortcutKey("Down")).toBe("↓");
+            expect(formatShortcutKey("Left")).toBe("←");
+            expect(formatShortcutKey("Right")).toBe("→");
             expect(formatShortcutKey("Plus")).toBe("+");
             expect(formatShortcutKey("+")).toBe("+");
-            // Normalization-only token: a translator must not be able to override the universal glyph.
+            // A translator must not be able to override a universal glyph.
+            expect(formatShortcutKey("ArrowUp", fakeTranslate)).toBe("↑");
             expect(formatShortcutKey("Plus", fakeTranslate)).toBe("+");
         });
 
@@ -83,7 +87,7 @@ describe("keyboard_shortcut_display", () => {
 
         it("uses the translator for known tokens and ignores it for pass-through tokens", () => {
             expect(formatShortcutKey("Ctrl", fakeTranslate)).toBe("L·CTRL");
-            expect(formatShortcutKey("ArrowLeft", fakeTranslate)).toBe("L·LEFT");
+            expect(formatShortcutKey("Enter", fakeTranslate)).toBe("L·ENTER");
             // Letters have no id, so the translator is never consulted.
             expect(formatShortcutKey("J", fakeTranslate)).toBe("J");
         });
@@ -99,19 +103,21 @@ describe("keyboard_shortcut_display", () => {
     describe("formatShortcut", () => {
         it("produces an ordered list of English labels by default", () => {
             expect(formatShortcut("Ctrl+Shift+J")).toEqual([ "Ctrl", "Shift", "J" ]);
-            expect(formatShortcut("Alt+Left")).toEqual([ "Alt", "Left" ]);
+            expect(formatShortcut("Alt+Left")).toEqual([ "Alt", "←" ]);
             expect(formatShortcut("Meta+Plus")).toEqual([ "Meta", "+" ]);
             expect(formatShortcut("F5")).toEqual([ "F5" ]);
         });
 
-        it("translates every table token while leaving pass-through tokens intact", () => {
-            expect(formatShortcut("Ctrl+Shift+Up", fakeTranslate)).toEqual([ "L·CTRL", "L·SHIFT", "L·UP" ]);
+        it("translates the translatable tokens while leaving pass-through and glyph tokens intact", () => {
+            expect(formatShortcut("Ctrl+Shift+Enter", fakeTranslate)).toEqual([ "L·CTRL", "L·SHIFT", "L·ENTER" ]);
             expect(formatShortcut("Ctrl+J", fakeTranslate)).toEqual([ "L·CTRL", "J" ]);
+            // Arrow glyphs are normalization-only, so a translator leaves them untouched.
+            expect(formatShortcut("Ctrl+Up", fakeTranslate)).toEqual([ "L·CTRL", "↑" ]);
         });
 
         it("strips global: and normalizes aliases end-to-end", () => {
             expect(formatShortcut("global:CommandOrControl+Alt+P")).toEqual([ "Ctrl", "Alt", "P" ]);
-            expect(formatShortcut("Cmd+ArrowRight")).toEqual([ "Meta", "Right" ]);
+            expect(formatShortcut("Cmd+ArrowRight")).toEqual([ "Meta", "→" ]);
         });
 
         it("returns [] for an empty shortcut", () => {
