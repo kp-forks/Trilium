@@ -328,6 +328,18 @@ $$`;
         expect(markdownService.renderToHtml(html, "Title")).toStrictEqual(html);
     });
 
+    // The exporter keeps headerless tables (and heading-column-only tables) as raw
+    // HTML rather than inventing a phantom empty header row. Confirm the import side
+    // passes that HTML through unchanged, so the round-trip introduces no blank row.
+    it("preserves a headerless table (heading columns only) without a phantom header row", () => {
+        const html = /*html*/`<table><tbody><tr><th>Heading</th><td>Not a heading</td></tr><tr><td>Heading</td><td>Not a heading</td></tr></tbody></table>`;
+        const result = markdownService.renderToHtml(html, "Title");
+        expect(result).toStrictEqual(html);
+        // No synthesized empty header row leaked in.
+        expect(result).not.toContain("<thead>");
+        expect(result).not.toContain("<th></th>");
+    });
+
     it("generates strike-through text", () => {
         const input = `~~Hello~~ world.`;
         const expected = /*html*/`<p><del>Hello</del> world.</p>`;

@@ -179,10 +179,7 @@ describe("Markdown export", () => {
             > [!IMPORTANT]
             > This is a very important information.
             >${space}
-            > |  |  |
-            > | --- | --- |
-            > | 1 | 2 |
-            > | 3 | 4 |
+            > <table><tbody><tr><td>1</td><td>2</td></tr><tr><td>3</td><td>4</td></tr></tbody></table>
 
             > [!CAUTION]
             > This is a caution.
@@ -387,7 +384,10 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
-    it("exports unformatted table", () => {
+    // A table with no heading row can't be expressed as a GFM table without
+    // inventing a phantom empty header (which would reimport as a blank row), so
+    // it is kept as raw HTML to round-trip faithfully.
+    it("keeps a table with no heading row as HTML", () => {
         const html = trimIndentation/*html*/`\
             <figure class="table">
                 <table>
@@ -412,11 +412,7 @@ describe("Markdown export", () => {
                 </table>
             </figure>
         `;
-        const expected = trimIndentation`\
-            |  |  |
-            | --- | --- |
-            | Hi | there |
-            | Hi | there |`;
+        const expected = `<table><tbody><tr><td>Hi</td><td>there</td></tr><tr><td>Hi</td><td>there</td></tr></tbody></table>`;
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 

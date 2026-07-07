@@ -88,24 +88,12 @@ rules.table = {
       // Ensure there are no blank lines
       content = content.replace(/\n+/g, '\n')
 
-      // If table has no heading, add an empty one so as to get a valid Markdown table
-      var secondLine = content.trim().split('\n');
-      if (secondLine.length >= 2) secondLine = secondLine[1]
-      var secondLineIsDivider = /\| :?---/.test(secondLine);
-
-      var columnCount = tableColCount(node);
-      var emptyHeader = ''
-      if (columnCount && !secondLineIsDivider) {
-        // MD060 compact style: 2 spaces between pipes for empty cells
-        emptyHeader = '|' + '  |'.repeat(columnCount) + '\n' + '|'
-        for (var columnIndex = 0; columnIndex < columnCount; ++columnIndex) {
-          emptyHeader += ' ' + getBorder(getColumnAlignment(node, columnIndex)) + ' |';
-        }
-      }
-
+      // A table reaching this branch always has a real heading row (otherwise
+      // `tableShouldBeHtml` would have kept it as HTML), so the rendered content
+      // already starts with a header + divider and no synthetic header is needed.
       const captionContent = node.caption ? node.caption.textContent || '' : '';
       const caption = captionContent ? `${captionContent}\n\n` : '';
-      const tableContent = `${emptyHeader}${content}`.trimStart();
+      const tableContent = content.trimStart();
       return `\n\n${caption}${tableContent}\n\n`;
     }
   }
@@ -218,7 +206,21 @@ const tableShouldBeHtml = (tableNode, options) => {
   if (options.preserveNestedTables) possibleTags.push('TABLE');
 
   return nodeContains(tableNode, 'code') ||
-    nodeContains(tableNode, possibleTags);
+    nodeContains(tableNode, possibleTags) ||
+    // GFM tables must have a header row. A table with no heading row (or with
+    // only heading columns) cannot be represented in Markdown without inventing
+    // a phantom empty header, which reimports as a spurious blank row. Keep such
+    // tables as raw HTML instead so they round-trip faithfully. Skippable tables
+    // (e.g. a single cell) are rendered as paragraphs and are left untouched.
+    (!tableShouldBeSkipped(tableNode) && !tableHasHeadingRow(tableNode));
+}
+
+// A table has a heading row when its first row qualifies as a heading row (its
+// parent is a THEAD, or it is the first row and every cell is a TH). This is the
+// row that produces the Markdown divider line; without it the table has no
+// header and must be kept as HTML.
+function tableHasHeadingRow(tableNode) {
+  return !!tableNode.rows && tableNode.rows.length > 0 && isHeadingRow(tableNode.rows[0]);
 }
 
 // Various conditions under which a table should be skipped - i.e. each cell
