@@ -25,7 +25,11 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
 ## Output contract
 
 - 640 × 480, opaque white background (GIF transparency is 1-bit and would leave ragged edges over
-  the desktop), 36 frames at 100 ms (3.6 s loop), infinite loop, ≤ 128 colors per frame.
+  the desktop), 36 frames at 100 ms (3.6 s loop), infinite loop, ≤ 128 colors per frame, ~250 KiB.
+- The mark and wordmark are drawn larger than strictly needed: Squirrel's `Update.exe` is not
+  DPI-aware, so on a HiDPI display the window is bilinear-stretched by the display scale factor
+  (e.g. 1.5×) and there is no way to signal density through a GIF. Bolder artwork survives that
+  stretch better — it cannot be made pixel-sharp from our side.
 - The leaf geometry and the nine stable fill colors are taken verbatim from the app icon
   (`icon-color.svg`); the nightly variant remaps each leaf to a purple ramp.
 - The dot pulse cycle (1.2 s) divides the loop length evenly so the pulse is continuous across the
