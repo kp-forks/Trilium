@@ -69,13 +69,8 @@
     .variant-nightly .s1 { stop-color: #8146b8; }
     .variant-nightly .s2 { stop-color: #6e2ea8; }
 
-    .hint {
-        position: absolute;
-        bottom: 26px; left: 0; right: 0;
-        text-align: center;
-        font-size: 12.5px; letter-spacing: 0.02em;
-        color: #8a909a;
-    }
+    /* No instructional text: the DMG ships one baked image for every locale, and the
+       arrow plus Finder's own icon labels already convey "drag to Applications". */
 
     /* Leaf fills — stable are the exact nine from icon-color.svg; nightly are purple ramps. */
     .variant-stable .g1 { fill: #95c980; } .variant-stable .g2 { fill: #72b755; } .variant-stable .g3 { fill: #4fa52b; }
@@ -117,8 +112,6 @@
         <path d="M6 23 H74 M56 7 L80 23 L56 39" fill="none" stroke="url(#tri)"
               stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
-
-    <div class="hint">Drag Trilium&nbsp;Notes to your Applications folder</div>
 </div>
 <script>
     const params = new URLSearchParams(location.search);

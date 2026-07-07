@@ -35,7 +35,9 @@ composited at those coordinates. It is **reference only** — appdmg never uses 
 - The two subtle "platforms" mark where Finder drops the real icons (app on the left, `/Applications`
   alias on the right). The icon **centers** must line up with the `contents` coordinates in
   `forge.config.ts`; those use a **bottom-left** origin, so `y_bottomleft = windowHeight - y_fromTop`.
-- No icon text labels are baked in — Finder draws the app name and "Applications" under the real icons.
+- **No baked text beyond the "Trilium Notes" wordmark** (a brand name, not translated). The DMG ships
+  one image for every locale, so there is no localized instruction line — the arrow conveys the action,
+  and Finder draws the app name and "Applications" labels under the real icons.
 
 ## Output contract
 
