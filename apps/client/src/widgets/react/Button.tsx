@@ -2,7 +2,7 @@ import type { ComponentChildren, CSSProperties, RefObject } from "preact";
 import { useMemo } from "preact/hooks";
 
 import { CommandNames } from "../../components/app_context";
-import { formatShortcutLocalized } from "../../services/keyboard_shortcut_display";
+import { formatShortcut } from "../../services/keyboard_shortcut_display";
 import { isDesktop, isMobile } from "../../services/utils";
 import ActionButton from "./ActionButton";
 import Icon from "./Icon";
@@ -58,7 +58,7 @@ function Button({ name, buttonRef, className, text, onClick, keyboardShortcut, i
     // Memoize keyboard shortcut rendering
     const shortcutElements = useMemo(() => {
         if (!keyboardShortcut || cachedIsMobile) return null;
-        const keys = formatShortcutLocalized(keyboardShortcut);
+        const keys = formatShortcut(keyboardShortcut);
         return keys.map((key, index) => (
             <>
                 <kbd key={index}>{key}</kbd>

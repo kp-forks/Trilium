@@ -1,5 +1,5 @@
 /**
- * Translatable, display-only formatting of keyboard shortcut strings.
+ * Display-only formatting of keyboard shortcut strings.
  *
  * Shortcuts are *stored* in a canonical, language-independent format (e.g. `Ctrl+Shift+J`,
  * `Alt+Left`, `Meta+Plus`). That stored form is load-bearing — it drives keystroke matching,
@@ -10,13 +10,11 @@
  * The single rule is: split the shortcut on `+`, then classify each token:
  *  - a *glyph* token (arrow keys, the plus key) renders a universal symbol — identical in every
  *    language, so it is a constant here and never translated;
- *  - a *translatable* token (modifier or named key) resolves its label entirely through the injected
- *    translator, keyed by an id under {@link SHORTCUT_KEY_PREFIX}; the English source lives in the
- *    translation files, not here;
+ *  - a *translatable* token (modifier or named key) resolves its label through i18n, keyed by an id
+ *    under {@link SHORTCUT_KEY_PREFIX}; the label text lives in the translation files, not here;
  *  - any other token — letter, digit, function key, punctuation — is emitted verbatim.
  *
- * The translator is injected so the core is unit-testable with a stub; production callers use
- * {@link formatShortcutLocalized}, which binds the application's i18n runtime.
+ * Tests stub the labels by mocking `./i18n.js`.
  */
 
 import { t } from "./i18n.js";
@@ -24,24 +22,7 @@ import { t } from "./i18n.js";
 /** i18n key prefix under which the per-token labels live. */
 export const SHORTCUT_KEY_PREFIX = "keyboard_shortcut_keys";
 
-/** Resolves a token id (e.g. `"ctrl"`) to its localized label via the translation files. */
-export type ShortcutKeyTranslator = (id: string) => string;
-
 const GLOBAL_PREFIX = "global:";
-
-/**
- * Formats a stored shortcut into localized display tokens using the application's i18n runtime. This
- * is the binding every display site should use; {@link formatShortcut} accepts an injected translator
- * for tests.
- */
-export function formatShortcutLocalized(shortcut: string): string[] {
-    return formatShortcut(shortcut, translateShortcutKey);
-}
-
-/** The i18n-backed token translator: resolves `${SHORTCUT_KEY_PREFIX}.<id>` from the translation files. */
-export function translateShortcutKey(id: string): string {
-    return t(`${SHORTCUT_KEY_PREFIX}.${id}`);
-}
 
 /**
  * Formats a single stored shortcut string into an ordered list of display tokens. The array is the
@@ -51,10 +32,9 @@ export function translateShortcutKey(id: string): string {
  * A leading `global:` prefix (a storage detail) is stripped so it never leaks into the display.
  *
  * @param shortcut a stored shortcut, e.g. `"Ctrl+Shift+J"`, `"global:Meta+Plus"`, `"F5"`.
- * @param translate token-id → label resolver (see {@link translateShortcutKey}).
  */
-export function formatShortcut(shortcut: string, translate: ShortcutKeyTranslator): string[] {
-    return splitShortcutForDisplay(shortcut).map((token) => formatShortcutKey(token, translate));
+export function formatShortcut(shortcut: string): string[] {
+    return splitShortcutForDisplay(shortcut).map((token) => formatShortcutKey(token));
 }
 
 /**
@@ -79,10 +59,10 @@ export function splitShortcutForDisplay(shortcut: string): string[] {
 
 /**
  * Renders one shortcut token (matched case-insensitively): a glyph token ({@link KEY_GLYPHS}) becomes
- * its universal symbol, a translatable token ({@link TRANSLATABLE_KEYS}) is resolved through
- * `translate`, and any other token — letter, digit, function key, punctuation — is returned unchanged.
+ * its universal symbol, a translatable token ({@link TRANSLATABLE_KEYS}) is resolved through i18n, and
+ * any other token — letter, digit, function key, punctuation — is returned unchanged.
  */
-export function formatShortcutKey(token: string, translate: ShortcutKeyTranslator): string {
+export function formatShortcutKey(token: string): string {
     const lower = token.toLowerCase();
 
     const glyph = KEY_GLYPHS[lower];
@@ -92,7 +72,7 @@ export function formatShortcutKey(token: string, translate: ShortcutKeyTranslato
 
     const id = TRANSLATABLE_KEYS[lower];
     if (id) {
-        return translate(id);
+        return t(`${SHORTCUT_KEY_PREFIX}.${id}`);
     }
 
     return token;

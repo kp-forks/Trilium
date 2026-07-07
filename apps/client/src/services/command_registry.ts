@@ -3,7 +3,7 @@ import appContext, { type CommandNames } from "../components/app_context.js";
 import type NoteTreeWidget from "../widgets/note_tree.js";
 import { t, translationsInitializedPromise } from "./i18n.js";
 import keyboardActions from "./keyboard_actions.js";
-import { formatShortcutLocalized } from "./keyboard_shortcut_display.js";
+import { formatShortcut } from "./keyboard_shortcut_display.js";
 import utils from "./utils.js";
 
 export interface CommandDefinition {
@@ -164,7 +164,8 @@ export class CommandRegistry {
                 name,
                 description: action.description,
                 icon: action.iconClass,
-                shortcut: primaryShortcut ? this.formatShortcut(primaryShortcut) : undefined,
+                // Render the primary shortcut in the command-palette style (spaced +).
+                shortcut: primaryShortcut ? formatShortcut(primaryShortcut).join(" + ") : undefined,
                 commandName: action.actionName as CommandNames,
                 source: "keyboard-action",
                 keyboardAction: action
@@ -172,11 +173,6 @@ export class CommandRegistry {
 
             this.register(commandDef);
         }
-    }
-
-    private formatShortcut(shortcut: string): string {
-        // Localize each key token and render the combination in the command-palette style (spaced +).
-        return formatShortcutLocalized(shortcut).join(" + ");
     }
 
     register(command: CommandDefinition) {

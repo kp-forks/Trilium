@@ -1,6 +1,6 @@
 import server from "./server.js";
 import appContext from "../components/app_context.js";
-import { formatShortcutLocalized } from "./keyboard_shortcut_display.js";
+import { formatShortcut } from "./keyboard_shortcut_display.js";
 import shortcutService, { ShortcutBinding } from "./shortcuts.js";
 import type Component from "../components/component.js";
 import type { ActionKeyboardShortcut } from "@triliumnext/commons";
@@ -132,5 +132,5 @@ export default {
 
 /** Renders a list of stored shortcuts into a localized, comma-separated display string. */
 function formatShortcutList(shortcuts: string[] | undefined) {
-    return (shortcuts ?? []).map((shortcut) => formatShortcutLocalized(shortcut).join("+")).join(", ");
+    return (shortcuts ?? []).map((shortcut) => formatShortcut(shortcut).join("+")).join(", ");
 }

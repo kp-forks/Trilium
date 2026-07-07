@@ -1,15 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 
+// Stub the labels the same way the sibling specs (command_registry, keyboard_actions) do: resolve
+// `keyboard_shortcut_keys.<id>` to a recognizable `L·<ID>` so translated output is unmistakable, and
+// anything else back to its key. A glyph/pass-through result (e.g. "↑", not "L·UP") then proves i18n
+// was not consulted for that token.
+vi.mock("./i18n.js", () => ({
+    t: (key: string) =>
+        key.startsWith("keyboard_shortcut_keys.")
+            ? `L·${key.slice("keyboard_shortcut_keys.".length).toUpperCase()}`
+            : key
+}));
+
 import {
     formatShortcut,
     formatShortcutKey,
     SHORTCUT_KEY_PREFIX,
-    splitShortcutForDisplay,
-    type ShortcutKeyTranslator
+    splitShortcutForDisplay
 } from "./keyboard_shortcut_display.js";
-
-/** Fake i18n resolver: uppercases the id and prefixes `L·` so translated output is unmistakable. */
-const fakeTranslate: ShortcutKeyTranslator = (id) => `L·${id.toUpperCase()}`;
 
 describe("keyboard_shortcut_display", () => {
     describe("splitShortcutForDisplay", () => {
@@ -46,63 +53,59 @@ describe("keyboard_shortcut_display", () => {
     });
 
     describe("formatShortcutKey", () => {
-        it("resolves modifiers and their aliases through the translator to one id", () => {
-            expect(formatShortcutKey("Ctrl", fakeTranslate)).toBe("L·CTRL");
-            expect(formatShortcutKey("Control", fakeTranslate)).toBe("L·CTRL");
-            expect(formatShortcutKey("CommandOrControl", fakeTranslate)).toBe("L·CTRL");
-            expect(formatShortcutKey("Meta", fakeTranslate)).toBe("L·META");
-            expect(formatShortcutKey("Cmd", fakeTranslate)).toBe("L·META");
-            expect(formatShortcutKey("Command", fakeTranslate)).toBe("L·META");
+        it("resolves modifiers and their aliases through i18n to one id", () => {
+            expect(formatShortcutKey("Ctrl")).toBe("L·CTRL");
+            expect(formatShortcutKey("Control")).toBe("L·CTRL");
+            expect(formatShortcutKey("CommandOrControl")).toBe("L·CTRL");
+            expect(formatShortcutKey("Meta")).toBe("L·META");
+            expect(formatShortcutKey("Cmd")).toBe("L·META");
+            expect(formatShortcutKey("Command")).toBe("L·META");
         });
 
         it("resolves named-key aliases to one id and matches case-insensitively", () => {
-            expect(formatShortcutKey("Enter", fakeTranslate)).toBe("L·ENTER");
-            expect(formatShortcutKey("Return", fakeTranslate)).toBe("L·ENTER");
-            expect(formatShortcutKey("Del", fakeTranslate)).toBe("L·DELETE");
-            expect(formatShortcutKey("delete", fakeTranslate)).toBe("L·DELETE");
-            expect(formatShortcutKey("ESC", fakeTranslate)).toBe("L·ESCAPE");
-            expect(formatShortcutKey("PageDown", fakeTranslate)).toBe("L·PAGE_DOWN");
+            expect(formatShortcutKey("Enter")).toBe("L·ENTER");
+            expect(formatShortcutKey("Return")).toBe("L·ENTER");
+            expect(formatShortcutKey("Del")).toBe("L·DELETE");
+            expect(formatShortcutKey("delete")).toBe("L·DELETE");
+            expect(formatShortcutKey("ESC")).toBe("L·ESCAPE");
+            expect(formatShortcutKey("PageDown")).toBe("L·PAGE_DOWN");
         });
 
-        it("renders glyph keys (arrows, plus) as their universal symbol without consulting the translator", () => {
-            const translate = vi.fn(fakeTranslate);
-            expect(formatShortcutKey("ArrowUp", translate)).toBe("↑");
-            expect(formatShortcutKey("up", translate)).toBe("↑");
-            expect(formatShortcutKey("Down", translate)).toBe("↓");
-            expect(formatShortcutKey("Left", translate)).toBe("←");
-            expect(formatShortcutKey("Right", translate)).toBe("→");
-            expect(formatShortcutKey("Plus", translate)).toBe("+");
-            expect(formatShortcutKey("+", translate)).toBe("+");
-            expect(translate).not.toHaveBeenCalled();
+        it("renders glyph keys (arrows, plus) as their universal symbol, not a translated label", () => {
+            expect(formatShortcutKey("ArrowUp")).toBe("↑");
+            expect(formatShortcutKey("up")).toBe("↑");
+            expect(formatShortcutKey("Down")).toBe("↓");
+            expect(formatShortcutKey("Left")).toBe("←");
+            expect(formatShortcutKey("Right")).toBe("→");
+            expect(formatShortcutKey("Plus")).toBe("+");
+            expect(formatShortcutKey("+")).toBe("+");
         });
 
-        it("passes non-table tokens through verbatim without consulting the translator", () => {
-            const translate = vi.fn(fakeTranslate);
-            expect(formatShortcutKey("J", translate)).toBe("J");
-            expect(formatShortcutKey("5", translate)).toBe("5");
-            expect(formatShortcutKey("F11", translate)).toBe("F11");
-            expect(formatShortcutKey("[", translate)).toBe("[");
-            expect(formatShortcutKey("=", translate)).toBe("=");
-            expect(translate).not.toHaveBeenCalled();
+        it("passes non-table tokens through verbatim, not a translated label", () => {
+            expect(formatShortcutKey("J")).toBe("J");
+            expect(formatShortcutKey("5")).toBe("5");
+            expect(formatShortcutKey("F11")).toBe("F11");
+            expect(formatShortcutKey("[")).toBe("[");
+            expect(formatShortcutKey("=")).toBe("=");
         });
     });
 
     describe("formatShortcut", () => {
         it("resolves translatable tokens and leaves glyph/pass-through tokens intact", () => {
-            expect(formatShortcut("Ctrl+Shift+J", fakeTranslate)).toEqual([ "L·CTRL", "L·SHIFT", "J" ]);
-            expect(formatShortcut("Alt+Left", fakeTranslate)).toEqual([ "L·ALT", "←" ]);
-            expect(formatShortcut("Meta+Plus", fakeTranslate)).toEqual([ "L·META", "+" ]);
-            expect(formatShortcut("F5", fakeTranslate)).toEqual([ "F5" ]);
-            expect(formatShortcut("Ctrl+Up", fakeTranslate)).toEqual([ "L·CTRL", "↑" ]);
+            expect(formatShortcut("Ctrl+Shift+J")).toEqual([ "L·CTRL", "L·SHIFT", "J" ]);
+            expect(formatShortcut("Alt+Left")).toEqual([ "L·ALT", "←" ]);
+            expect(formatShortcut("Meta+Plus")).toEqual([ "L·META", "+" ]);
+            expect(formatShortcut("F5")).toEqual([ "F5" ]);
+            expect(formatShortcut("Ctrl+Up")).toEqual([ "L·CTRL", "↑" ]);
         });
 
         it("strips global: and normalizes aliases end-to-end", () => {
-            expect(formatShortcut("global:CommandOrControl+Alt+P", fakeTranslate)).toEqual([ "L·CTRL", "L·ALT", "P" ]);
-            expect(formatShortcut("Cmd+ArrowRight", fakeTranslate)).toEqual([ "L·META", "→" ]);
+            expect(formatShortcut("global:CommandOrControl+Alt+P")).toEqual([ "L·CTRL", "L·ALT", "P" ]);
+            expect(formatShortcut("Cmd+ArrowRight")).toEqual([ "L·META", "→" ]);
         });
 
         it("returns [] for an empty shortcut", () => {
-            expect(formatShortcut("", fakeTranslate)).toEqual([]);
+            expect(formatShortcut("")).toEqual([]);
         });
     });
 

@@ -9,7 +9,7 @@ import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
 import options from "../../../services/options";
 import server from "../../../services/server";
-import { formatShortcutLocalized } from "../../../services/keyboard_shortcut_display";
+import { formatShortcut } from "../../../services/keyboard_shortcut_display";
 import { canonicalizeShortcut, KEYCODES_WITH_NO_MODIFIER } from "../../../services/shortcuts";
 import toast from "../../../services/toast";
 import { arrayEqual, isElectron, isMobile, reloadFrontendApp } from "../../../services/utils";
@@ -414,7 +414,7 @@ function revertShortcut(action: ActionKeyboardShortcut) {
 
 function formatDefaultShortcuts(action: ActionKeyboardShortcut) {
     return action.defaultShortcuts?.length
-        ? action.defaultShortcuts.map((shortcut) => formatShortcutLocalized(shortcut).join("+")).join(", ")
+        ? action.defaultShortcuts.map((shortcut) => formatShortcut(shortcut).join("+")).join(", ")
         : t("shortcuts.no_default_shortcut");
 }
 
@@ -489,7 +489,7 @@ function ShortcutEditor({ keyboardShortcut: action, conflicts }: { keyboardShort
                                 </TooltipButton>
                             )
                             : global && <TooltipIcon icon="bx bx-globe" className="shortcut-chip-global-indicator" tooltip={t("shortcuts.global_shortcut")} tooltipClass="tooltip-top" />}
-                        <kbd>{formatShortcutLocalized(shortcut).join("+")}</kbd>
+                        <kbd>{formatShortcut(shortcut).join("+")}</kbd>
                         <TooltipButton
                             className="shortcut-chip-action shortcut-chip-remove"
                             title={t("shortcuts.remove_shortcut")}
