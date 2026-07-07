@@ -88,9 +88,15 @@ export function splitShortcutForDisplay(shortcut: string): string[] {
  * function key, or punctuation key — is returned unchanged.
  */
 export function formatShortcutKey(token: string, translate?: ShortcutKeyTranslator): string {
-    const entry = TRANSLATABLE_KEYS[token.toLowerCase()];
+    const entry = KEY_LABELS[token.toLowerCase()];
     if (!entry) {
         return token;
+    }
+
+    // Entries without an `id` are display normalization only (a universal glyph such as "+"), not
+    // translation — they never consult the translator and are never exposed as translation keys.
+    if (!entry.id) {
+        return entry.en;
     }
 
     const translated = translate?.(entry.id);
@@ -102,12 +108,13 @@ function stripGlobalPrefix(shortcut: string): string {
 }
 
 /**
- * Maps a raw shortcut token (lowercased, aliases collapsed) to its stable translation `id` and the
- * built-in English label used when no translation is available. Tokens absent from this table are
- * rendered verbatim, so only modifiers and named keys — the parts that differ across languages — need
- * an entry.
+ * Maps a raw shortcut token (lowercased, aliases collapsed) to its display label. An entry with an
+ * `id` is *translatable* — the `id` resolves a per-language label, with `en` as the fallback. An entry
+ * without an `id` is *normalization only*: a universal glyph (e.g. the stored word "Plus" shown as
+ * "+") that reads identically in every language and must not be offered to translators. Tokens absent
+ * from this table — letters, digits, function keys, punctuation — are rendered verbatim.
  */
-const TRANSLATABLE_KEYS: Record<string, { id: string; en: string }> = {
+const KEY_LABELS: Record<string, { id?: string; en: string }> = {
     // Modifiers.
     ctrl: { id: "ctrl", en: "Ctrl" },
     control: { id: "ctrl", en: "Ctrl" },
@@ -141,9 +148,10 @@ const TRANSLATABLE_KEYS: Record<string, { id: string; en: string }> = {
     arrowleft: { id: "left", en: "Left" },
     right: { id: "right", en: "Right" },
     arrowright: { id: "right", en: "Right" },
-    // The plus key is stored as the named token `Plus`; displayed as the "+" glyph.
-    plus: { id: "plus", en: "+" },
-    "+": { id: "plus", en: "+" },
+    // The plus key is stored as the named token `Plus`; normalized to the universal "+" glyph. No
+    // `id`: "+" is language-neutral, so it is never routed through translation.
+    plus: { en: "+" },
+    "+": { en: "+" },
     insert: { id: "insert", en: "Insert" },
     ins: { id: "insert", en: "Insert" }
 };

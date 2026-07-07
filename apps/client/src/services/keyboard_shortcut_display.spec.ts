@@ -66,9 +66,11 @@ describe("keyboard_shortcut_display", () => {
             expect(formatShortcutKey("PageDown")).toBe("Page Down");
         });
 
-        it("renders the plus key (named token or glyph) as '+'", () => {
+        it("renders the plus key (named token or glyph) as '+' and never translates it", () => {
             expect(formatShortcutKey("Plus")).toBe("+");
             expect(formatShortcutKey("+")).toBe("+");
+            // Normalization-only token: a translator must not be able to override the universal glyph.
+            expect(formatShortcutKey("Plus", fakeTranslate)).toBe("+");
         });
 
         it("passes non-table tokens through verbatim (letters, digits, function keys, punctuation)", () => {
