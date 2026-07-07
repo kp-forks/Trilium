@@ -49,20 +49,30 @@ async function renderVariant(page: Page, variant: string): Promise<Buffer> {
         frames.push(new Uint8Array(png.data.buffer, png.data.byteOffset, png.data.length).slice());
     }
 
-    const palette = buildGlobalPalette(frames);
+    const anchors = deriveAnchorColors(frames[0]);
+    const palette = buildGlobalPalette(frames, anchors);
     const transparentIndex = palette.length; // 255: unused by applyPalette (0..254)
+
+    // gifenc's applyPalette nearest-color search is approximate (rgb565 cache), so the
+    // large flat white card drifts to a warm near-white even though pure white is in the
+    // palette. Pin any pixel that exactly matches an anchor to that anchor's index. The
+    // anchors are prepended in buildGlobalPalette, so anchor n is at palette index n.
+    const anchorIndexByColor = new Map<number, number>();
+    anchors.forEach(([r, g, b], i) => anchorIndexByColor.set((r << 16) | (g << 8) | b, i));
 
     const gif = GIFEncoder();
     let previous: Uint8Array | null = null;
     for (const [i, { delay }] of timeline.entries()) {
         const rgba = frames[i];
         const index = applyPalette(rgba, palette);
-        if (previous) {
-            for (let p = 0; p < index.length; p++) {
-                const b = p * 4;
-                if (rgba[b] === previous[b] && rgba[b + 1] === previous[b + 1] && rgba[b + 2] === previous[b + 2]) {
-                    index[p] = transparentIndex;
-                }
+        for (let p = 0; p < index.length; p++) {
+            const b = p * 4;
+            const anchor = anchorIndexByColor.get((rgba[b] << 16) | (rgba[b + 1] << 8) | rgba[b + 2]);
+            if (anchor !== undefined) {
+                index[p] = anchor;
+            }
+            if (previous && rgba[b] === previous[b] && rgba[b + 1] === previous[b + 1] && rgba[b + 2] === previous[b + 2]) {
+                index[p] = transparentIndex; // unchanged: keep prior canvas
             }
         }
         gif.writeFrame(index, WIDTH, HEIGHT, {
@@ -81,10 +91,28 @@ async function renderVariant(page: Page, variant: string): Promise<Buffer> {
     return Buffer.from(gif.bytes());
 }
 
+// Flat backdrop colors that cover large areas and must reproduce exactly (left to the
+// quantizer they drift — the big white card goes warm). They are read straight from the
+// first frame (t = 0: empty card on the tray), so changing the tray/card tone in
+// splash.html needs no change here. The wordmark near-black is a small area but pinned
+// for crisp text. Sample points must stay inside their flat region.
+function deriveAnchorColors(frame0: Uint8Array): number[][] {
+    const pixel = (x: number, y: number) => {
+        const i = (y * WIDTH + x) * 4;
+        return [frame0[i], frame0[i + 1], frame0[i + 2]];
+    };
+    return [
+        pixel(WIDTH / 2, 60),   // card (white; empty at t = 0)
+        pixel(3, 3),            // tray (corner, outside the card)
+        pixel(0, HEIGHT / 2),   // tray hairline (1px window edge)
+        [35, 41, 32]            // wordmark (#232920)
+    ];
+}
+
 // Builds one palette shared by every frame (required for cross-frame transparency).
 // Sampling a handful of frames across the timeline captures the reveal's partial
 // leaves plus the steady tail's dot-pulse tints without quantizing all ~110 frames.
-function buildGlobalPalette(frames: Uint8Array[]): number[][] {
+function buildGlobalPalette(frames: Uint8Array[], anchors: number[][]): number[][] {
     const count = Math.min(frames.length, 6);
     const step = Math.max(1, Math.floor(frames.length / count));
     const sampled: Uint8Array[] = [];
@@ -97,7 +125,8 @@ function buildGlobalPalette(frames: Uint8Array[]): number[][] {
         merged.set(frame, offset);
         offset += frame.length;
     }
-    return quantize(merged, PALETTE_COLORS);
+    const quantized = quantize(merged, PALETTE_COLORS - anchors.length);
+    return [...anchors, ...quantized];
 }
 
 const browser = await chromium.launch();
