@@ -45,6 +45,15 @@ export function formatShortcut(shortcut: string): string[] {
 }
 
 /**
+ * Joins formatted shortcut tokens into a display string. On macOS the tokens are concatenated with no
+ * separator (native convention: `⇧⌘J`); elsewhere they are joined with `sep` (default `"+"`; the
+ * command palette passes `" + "`).
+ */
+export function joinShortcut(tokens: string[], sep = "+"): string {
+    return tokens.join(isMac() ? "" : sep);
+}
+
+/**
  * Splits a stored shortcut into its ordered tokens (modifiers followed by the final key), preserving
  * original casing. Mirrors the plus-key handling of the matcher in `shortcuts.ts`: `+` doubles as the
  * separator, so the plus key is encoded either as the named token `Plus` or as a lone/trailing `+`

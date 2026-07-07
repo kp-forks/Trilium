@@ -18,6 +18,7 @@ vi.mock("./utils.js", () => ({ isMac: vi.fn(() => false) }));
 import {
     formatShortcut,
     formatShortcutKey,
+    joinShortcut,
     SHORTCUT_KEY_PREFIX,
     splitShortcutForDisplay
 } from "./keyboard_shortcut_display.js";
@@ -153,6 +154,20 @@ describe("keyboard_shortcut_display", () => {
             expect(formatShortcut("Cmd+J")).toEqual([ "⌘", "J" ]);
             expect(formatShortcut("Control+J")).toEqual([ "⌃", "J" ]);
             expect(formatShortcut("global:CommandOrControl+Alt+P")).toEqual([ "⌃", "⌥", "P" ]);
+        });
+    });
+
+    describe("joinShortcut", () => {
+        it("joins with the given separator off macOS (default '+', palette ' + ')", () => {
+            expect(joinShortcut([ "Ctrl", "Shift", "J" ])).toBe("Ctrl+Shift+J");
+            expect(joinShortcut([ "Ctrl", "N" ], " + ")).toBe("Ctrl + N");
+        });
+
+        it("concatenates with no separator on macOS, ignoring the separator argument", () => {
+            vi.mocked(isMac).mockReturnValue(true);
+            expect(joinShortcut([ "⇧", "⌘", "J" ])).toBe("⇧⌘J");
+            expect(joinShortcut([ "⌃", "N" ], " + ")).toBe("⌃N");
+            vi.mocked(isMac).mockReturnValue(false);
         });
     });
 
