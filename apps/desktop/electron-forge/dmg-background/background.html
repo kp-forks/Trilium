@@ -49,20 +49,24 @@
     }
     .variant-nightly .badge { display: inline-block; }
 
-    /* Drop platforms — subtle tiles holding each icon AND the label Finder draws beneath
-       it. Tall enough (icon 128 + gap + caption) that the caption sits on the flat face
-       rather than tucking under the rounded bottom corners. Icon centers land at y = 200
-       (see `contents` in forge.config.ts); the caption falls in the lower third. */
-    .platform {
+    /* Light label plate baked behind the app caption — the Firefox DMG trick. A background
+       picture forces Finder to render the window in light mode, so it draws icon captions in
+       black in BOTH light and dark themes — illegible on this dark surface, and the DMG has no
+       label-colour field to override it. So we bake a light pill under where Finder draws the
+       "Trilium Notes" caption (icon center y = 200, so the caption lands ~y = 278). Only the
+       app is plated: its name is a fixed-width brand,
+       whereas the localized /Applications name varies in width — and the folder is self-evident,
+       so like Firefox we leave it unplated. Plate position needs a macOS build to fine-tune,
+       same as the icon `contents`. */
+    .plate {
         position: absolute;
-        width: 156px; height: 178px;
-        top: 122px;
-        border-radius: 28px;
-        background: rgba(255, 255, 255, 0.035);
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        top: 266px; height: 24px;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
     }
-    .platform.app { left: 102px; }
-    .platform.apps { left: 382px; }
+    .plate.app { left: 116px; width: 128px; }
+    .variant-stable .plate { background: #e9eaee; }
+    .variant-nightly .plate { background: #ece2f4; }
 
     /* Muted neutral arrow — a functional cue, kept quiet so the icons carry the colour
        (the ambient glow already reuses the brand palette). Channel-agnostic. Vertically
@@ -98,8 +102,7 @@
         <span class="word">Trilium <span class="notes">Notes</span><span class="badge">NIGHTLY</span></span>
     </div>
 
-    <div class="platform app"></div>
-    <div class="platform apps"></div>
+    <div class="plate app"></div>
 
     <svg class="arrow" viewBox="0 0 92 46" aria-hidden="true">
         <path d="M6 23 H74 M56 7 L80 23 L56 39" fill="none" stroke="#767d88"

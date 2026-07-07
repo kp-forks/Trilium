@@ -29,29 +29,37 @@ reads `background.png`/`@2x`). Kept reproducible from source so it isn't a myste
 - **PNG + `@2x` for Retina.** appdmg auto-packages `background.png` and `background@2x.png` into a
   multi-resolution TIFF. Finder *is* Retina-aware (unlike Squirrel's loading window), so it renders crisp.
 - **One image per channel, not per theme.** Like the splash, the background is baked and doesn't follow
-  Finder's light/dark mode — but as a full dark surface it reads fine either way.
+  Finder's light/dark mode. Crucially, **setting a background picture forces Finder to render the window in
+  light mode**, so the icon captions are drawn in **black in both light and dark system themes** — not the
+  white-on-dark you might expect in Dark mode. And the caption colour is Finder's alone: the DMG format has
+  no label-colour field (the `icvp` icon-view plist appdmg/ds-store write exposes only icon size, positions,
+  window size, and background). appdmg also can't ship separate dark/light backgrounds (only tools like
+  DropDMG can). So we keep the app caption legible with the light label plate described under *Design*.
 
 ## Design
 
 - Reuses the installer splash's brand language: the same dark surface and a soft glow tinted from the
   trillium's three leaves (green/orange/red — purple for nightly). The drag arrow is a muted neutral
   grey, kept quiet so it doesn't compete with the icons.
-- The two subtle "tiles" mark where Finder drops the real icons (app on the left, `/Applications`
-  alias on the right). Each tile is tall enough (156 × 178) to hold its 128 px icon *and* the caption
-  Finder draws beneath it, so the caption lands on the flat face rather than tucking under the rounded
-  bottom corners. The icon **centers** must line up with the `contents` coordinates in `forge.config.ts`.
-  Those coordinates use a **top-left** origin, y increasing downward, with `(x, y)` being the icon center
-  — Finder's `.DS_Store` `Iloc` convention (confirmed by appdmg's own example, where `y: 344` sits near
-  the *bottom* of the window). So the `contents` y is measured from the top, not `windowHeight - y`. The
-  tiles span **y 122..300**; `contents` uses **y = 200**, seating the icon in the upper part with the
-  caption in the lower third.
-- **No baked text beyond the "Trilium Notes" wordmark** (a brand name, not translated). The DMG ships
-  one image for every locale, so there is no localized instruction line — the arrow conveys the action,
-  and Finder draws the app name and "Applications" labels under the real icons.
+- The icons sit directly on the dark surface (no tiles), app on the left and `/Applications` alias on the
+  right, with the drag arrow between them. Their **centers** must line up with the `contents` coordinates
+  in `forge.config.ts`, which use a **top-left** origin, y increasing downward, with `(x, y)` the icon
+  center — Finder's `.DS_Store` `Iloc` convention (confirmed by appdmg's own example, where `y: 344` sits
+  near the *bottom* of the window). So the `contents` y is measured from the top, not `windowHeight - y`.
+  `contents` uses **y = 200** (near the vertical middle), so Finder draws the captions at **~y = 278**.
+- **Light label plate — the Firefox DMG trick.** Because a background picture forces Finder to draw the
+  captions in black (in both themes) and we can't override that colour, a light rounded **plate is baked
+  into the background** under where Finder draws the "Trilium Notes" caption, so its black text stays
+  legible on the dark surface. Only the app is plated: its name is a
+  fixed-width brand string, whereas the localized `/Applications` name varies in width — and the folder is
+  self-evident, so (like Firefox) its caption is left unplated. The plate position tracks the icon center,
+  so keep it in sync if `contents` y changes; fine-tune on a macOS build like the icon positions.
+- **No baked text beyond the "Trilium Notes" wordmark** (a brand name, not translated). The DMG ships one
+  image for every locale, so there is no localized instruction line — the arrow conveys the action, and
+  Finder draws the app name and "Applications" captions under the real icons.
 
 ## Output contract
 
 - 640 × 400 pt window; `background.png` is 640 × 400, `background@2x.png` is 1280 × 800.
-- `iconSize` 128; app icon centered at (180, 200), Applications at (460, 200) in **top-left** coords,
-  seated in the tiles in `background.html` (156 × 178, spanning y 122..300) — keep these in sync with the
-  tile positions in `background.html` and the `contents` in the maker config.
+- `iconSize` 128; app icon centered at (180, 200), Applications at (460, 200) in **top-left** coords —
+  keep in sync with the `contents` in the maker config and the label plate position in `background.html`.
