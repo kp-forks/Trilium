@@ -15,13 +15,13 @@ built and visually verified on macOS** (`appdmg` is `os: [darwin]` and isn't ins
 `contents` icon coordinates in `forge.config.ts` are a best effort matched to the artwork; fine-tune
 them on a real macOS build.
 
-`preview.png` is a faithful mock of the assembled Finder window: the real app icon (`icon.icns`) and
-the real macOS Applications-folder icon composited at the same `contents` coordinates the DMG uses,
-under a reconstructed Finder title bar, with the icon labels Finder draws. On macOS the two icons are
-rendered from their `.icns` via `sips` (pixel-perfect); off macOS it falls back to the flat logo and a
-drawn folder so the script still runs anywhere. It is **reference only** — appdmg never uses it (it only
-reads `background.png`/`@2x`). Kept reproducible from source so it isn't a mystery image; regenerate with
-`pnpm --filter desktop generate-dmg-preview`.
+`preview.png` (stable) and `preview-dev.png` (nightly) are faithful mocks of the assembled Finder window:
+the real app icon (`icon.icns` / `icon-dev.icns`) and the real macOS Applications-folder icon composited at
+the same `contents` coordinates the DMG uses, under a reconstructed Finder title bar, with the captions
+Finder draws. On macOS the icons are rendered from their `.icns` via `sips` (pixel-perfect); off macOS it
+falls back to the flat logo and a drawn folder so the script still runs anywhere. They are **reference
+only** — appdmg never uses them (it only reads `background.png`/`@2x`). Kept reproducible from source so
+they aren't mystery images; regenerate with `pnpm --filter desktop generate-dmg-preview`.
 
 ## How it differs from the Windows splash
 
@@ -42,21 +42,23 @@ reads `background.png`/`@2x`). Kept reproducible from source so it isn't a myste
 - **Light surface, reused verbatim from the in-app setup screen** (`apps/client/src/setup.css`, light
   theme): soft indigo/purple/blue radial glows over the near-white left-pane base (`#f2f2f2`). The light
   surface keeps Finder's forced-black captions legible on their own. The same gradient is used for both
-  channels; **nightly** is distinguished only by the purple leaf mark and the NIGHTLY badge. The wordmark
-  is dark (`#2b3038`, muted `#7c828c` for "Notes"), and the drag arrow is a muted neutral grey, kept quiet
-  so it doesn't compete with the icons.
+  channels. The drag arrow is a muted neutral grey, kept quiet so it doesn't compete with the icons.
+- **No wordmark banner.** The Finder title bar (volume name + icon) and the app icon already carry the
+  brand, so a baked wordmark would just triplicate it — the surface stays clean with only the icons,
+  arrow, and captions Finder draws.
 - The icons sit directly on the surface (no tiles/plates), app on the left and `/Applications` alias on the
   right, with the drag arrow between them. Their **centers** must line up with the `contents` coordinates
   in `forge.config.ts`, which use a **top-left** origin, y increasing downward, with `(x, y)` the icon
   center — Finder's `.DS_Store` `Iloc` convention (confirmed by appdmg's own example, where `y: 344` sits
   near the *bottom* of the window). So the `contents` y is measured from the top, not `windowHeight - y`.
-  `contents` uses **y = 200** (near the vertical middle), so Finder draws the captions at **~y = 278**.
-- **No baked text beyond the "Trilium Notes" wordmark** (a brand name, not translated). The DMG ships one
-  image for every locale, so there is no localized instruction line — the arrow conveys the action, and
-  Finder draws the app name and "Applications" captions under the real icons.
+  `contents` uses **y = 182**, centering the icon + caption pair vertically now that no banner sits above
+  them; Finder draws the captions at **~y = 262**.
+- **Nightly badge.** The only baked text: a `Nightly` badge on the nightly background (`background-dev.png`),
+  centered under the app icon just below where Finder draws the app caption (~y = 282). Stable ships no
+  baked text at all, so there is no localized instruction line — the arrow conveys the action.
 
 ## Output contract
 
 - 640 × 400 pt window; `background.png` is 640 × 400, `background@2x.png` is 1280 × 800.
-- `iconSize` 128; app icon centered at (180, 200), Applications at (460, 200) in **top-left** coords —
-  keep in sync with the `contents` in the maker config.
+- `iconSize` 128; app icon centered at (180, 182), Applications at (460, 182) in **top-left** coords —
+  keep in sync with the `contents` in the maker config (and the nightly badge position in `background.html`).
