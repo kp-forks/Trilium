@@ -36,13 +36,15 @@ reads `background.png`/`@2x`). Kept reproducible from source so it isn't a myste
 - Reuses the installer splash's brand language: the same dark surface and a soft glow tinted from the
   trillium's three leaves (green/orange/red — purple for nightly). The drag arrow is a muted neutral
   grey, kept quiet so it doesn't compete with the icons.
-- The two subtle "platforms" mark where Finder drops the real icons (app on the left, `/Applications`
-  alias on the right). The icon **centers** must line up with the `contents` coordinates in
-  `forge.config.ts`. Those coordinates use a **top-left** origin, y increasing downward, with `(x, y)`
-  being the icon center — Finder's `.DS_Store` `Iloc` convention (confirmed by appdmg's own example,
-  where `y: 344` sits near the *bottom* of the window). So for a pedestal centered at `y` from the top,
-  the `contents` entry is also `y` from the top — not `windowHeight - y`. The pedestals are centered at
-  **y = 215** (`top: 140 + height: 150 / 2`), so `contents` uses `y = 215` to match.
+- The two subtle "tiles" mark where Finder drops the real icons (app on the left, `/Applications`
+  alias on the right). Each tile is tall enough (156 × 178) to hold its 128 px icon *and* the caption
+  Finder draws beneath it, so the caption lands on the flat face rather than tucking under the rounded
+  bottom corners. The icon **centers** must line up with the `contents` coordinates in `forge.config.ts`.
+  Those coordinates use a **top-left** origin, y increasing downward, with `(x, y)` being the icon center
+  — Finder's `.DS_Store` `Iloc` convention (confirmed by appdmg's own example, where `y: 344` sits near
+  the *bottom* of the window). So the `contents` y is measured from the top, not `windowHeight - y`. The
+  tiles span **y 122..300**; `contents` uses **y = 200**, seating the icon in the upper part with the
+  caption in the lower third.
 - **No baked text beyond the "Trilium Notes" wordmark** (a brand name, not translated). The DMG ships
   one image for every locale, so there is no localized instruction line — the arrow conveys the action,
   and Finder draws the app name and "Applications" labels under the real icons.
@@ -50,6 +52,6 @@ reads `background.png`/`@2x`). Kept reproducible from source so it isn't a myste
 ## Output contract
 
 - 640 × 400 pt window; `background.png` is 640 × 400, `background@2x.png` is 1280 × 800.
-- `iconSize` 128; app icon centered at (180, 215), Applications at (460, 215) in **top-left** coords,
-  matching the pedestal centers in `background.html` (`top: 140 + height: 150 / 2`) — keep these in sync
-  with the platform positions in `background.html` and the `contents` in the maker config.
+- `iconSize` 128; app icon centered at (180, 200), Applications at (460, 200) in **top-left** coords,
+  seated in the tiles in `background.html` (156 × 178, spanning y 122..300) — keep these in sync with the
+  tile positions in `background.html` and the `contents` in the maker config.

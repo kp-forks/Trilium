@@ -49,21 +49,25 @@
     }
     .variant-nightly .badge { display: inline-block; }
 
-    /* Drop platforms — subtle pedestals under where the real icons land. */
+    /* Drop platforms — subtle tiles holding each icon AND the label Finder draws beneath
+       it. Tall enough (icon 128 + gap + caption) that the caption sits on the flat face
+       rather than tucking under the rounded bottom corners. Icon centers land at y = 200
+       (see `contents` in forge.config.ts); the caption falls in the lower third. */
     .platform {
         position: absolute;
-        width: 150px; height: 150px;
-        top: 140px;
-        border-radius: 26px;
+        width: 156px; height: 178px;
+        top: 122px;
+        border-radius: 28px;
         background: rgba(255, 255, 255, 0.035);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
     }
-    .platform.app { left: 105px; }
-    .platform.apps { left: 385px; }
+    .platform.app { left: 102px; }
+    .platform.apps { left: 382px; }
 
     /* Muted neutral arrow — a functional cue, kept quiet so the icons carry the colour
-       (the ambient glow already reuses the brand palette). Channel-agnostic. */
-    .arrow { position: absolute; top: 192px; left: 274px; width: 92px; height: 46px; }
+       (the ambient glow already reuses the brand palette). Channel-agnostic. Vertically
+       centered on the icon centers (y = 200). */
+    .arrow { position: absolute; top: 177px; left: 274px; width: 92px; height: 46px; }
 
     /* No instructional text: the DMG ships one baked image for every locale, and the
        arrow plus Finder's own icon labels already convey "drag to Applications". */

@@ -161,11 +161,12 @@ const config: ForgeConfig = {
                     window: { size: { width: 640, height: 400 } }
                 },
                 // Icon CENTERS in Finder's .DS_Store Iloc coordinate space: top-left origin,
-                // y increasing downward. y=215 matches the platform centers in background.html
-                // (top:140 + height:150/2). Verify on a macOS build (appdmg is darwin-only).
+                // y increasing downward. y=200 sits the icon in the upper part of each tile in
+                // background.html, leaving room for the caption Finder draws below it (the tiles
+                // span y 122..300). Verify on a macOS build (appdmg is darwin-only).
                 contents: (opts: { appPath: string }) => [
-                    { x: 180, y: 215, type: "file", path: opts.appPath },
-                    { x: 460, y: 215, type: "link", path: "/Applications" }
+                    { x: 180, y: 200, type: "file", path: opts.appPath },
+                    { x: 460, y: 200, type: "link", path: "/Applications" }
                 ]
             }
         },
