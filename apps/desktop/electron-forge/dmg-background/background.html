@@ -61,13 +61,9 @@
     .platform.app { left: 105px; }
     .platform.apps { left: 385px; }
 
+    /* Muted neutral arrow — a functional cue, kept quiet so the icons carry the colour
+       (the ambient glow already reuses the brand palette). Channel-agnostic. */
     .arrow { position: absolute; top: 192px; left: 274px; width: 92px; height: 46px; }
-    .variant-stable .s0 { stop-color: #e47b19; }
-    .variant-stable .s1 { stop-color: #4fa52b; }
-    .variant-stable .s2 { stop-color: #e33f3b; }
-    .variant-nightly .s0 { stop-color: #b18ad6; }
-    .variant-nightly .s1 { stop-color: #8146b8; }
-    .variant-nightly .s2 { stop-color: #6e2ea8; }
 
     /* No instructional text: the DMG ships one baked image for every locale, and the
        arrow plus Finder's own icon labels already convey "drag to Applications". */
@@ -102,14 +98,7 @@
     <div class="platform apps"></div>
 
     <svg class="arrow" viewBox="0 0 92 46" aria-hidden="true">
-        <defs>
-            <linearGradient id="tri" x1="0" y1="0" x2="1" y2="0">
-                <stop class="s0" offset="0"/>
-                <stop class="s1" offset="0.5"/>
-                <stop class="s2" offset="1"/>
-            </linearGradient>
-        </defs>
-        <path d="M6 23 H74 M56 7 L80 23 L56 39" fill="none" stroke="url(#tri)"
+        <path d="M6 23 H74 M56 7 L80 23 L56 39" fill="none" stroke="#767d88"
               stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
 </div>

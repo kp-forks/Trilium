@@ -30,8 +30,9 @@ composited at those coordinates. It is **reference only** — appdmg never uses 
 
 ## Design
 
-- Reuses the installer splash's brand language: the same dark surface, a soft glow, and a drag arrow
-  tinted from the trillium's three leaves (green/orange/red — purple for nightly).
+- Reuses the installer splash's brand language: the same dark surface and a soft glow tinted from the
+  trillium's three leaves (green/orange/red — purple for nightly). The drag arrow is a muted neutral
+  grey, kept quiet so it doesn't compete with the icons.
 - The two subtle "platforms" mark where Finder drops the real icons (app on the left, `/Applications`
   alias on the right). The icon **centers** must line up with the `contents` coordinates in
   `forge.config.ts`; those use a **bottom-left** origin, so `y_bottomleft = windowHeight - y_fromTop`.
