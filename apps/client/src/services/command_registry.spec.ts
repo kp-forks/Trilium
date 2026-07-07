@@ -26,8 +26,16 @@ const {
 // async loadCommands() proceeds. t() is made a deterministic stub.
 vi.mock("./i18n.js", () => ({
     translationsInitializedPromise: Promise.resolve(),
-    t: (key: string, opts?: Record<string, unknown>) =>
-        opts && "name" in opts ? `${key}:${opts.name}` : key
+    t: (key: string, opts?: Record<string, unknown>) => {
+        // Resolve the keyboard-shortcut key labels the way the real translation files do.
+        if (key.startsWith("keyboard_shortcut_keys.")) {
+            const labels: Record<string, string> = {
+                ctrl: "Ctrl", alt: "Alt", shift: "Shift", meta: "Meta"
+            };
+            return labels[key.slice("keyboard_shortcut_keys.".length)] ?? key;
+        }
+        return opts && "name" in opts ? `${key}:${opts.name}` : key;
+    }
 }));
 
 vi.mock("../components/app_context.js", () => ({

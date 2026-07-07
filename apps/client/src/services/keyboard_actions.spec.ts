@@ -13,6 +13,20 @@ vi.mock("../components/app_context.js", () => ({
     }
 }));
 
+// `updateDisplayedShortcuts` formats shortcuts via keyboard_shortcut_display, which resolves each key
+// label through i18n. Stub `t` to resolve the shortcut-key labels the way the translation files do.
+vi.mock("./i18n.js", () => ({
+    t: (key: string) => {
+        if (key.startsWith("keyboard_shortcut_keys.")) {
+            const labels: Record<string, string> = {
+                ctrl: "Ctrl", alt: "Alt", shift: "Shift", meta: "Meta"
+            };
+            return labels[key.slice("keyboard_shortcut_keys.".length)] ?? key;
+        }
+        return key;
+    }
+}));
+
 type KbModule = typeof import("./keyboard_actions.js");
 type ShortcutsModule = typeof import("./shortcuts.js");
 

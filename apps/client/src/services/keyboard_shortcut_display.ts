@@ -7,44 +7,40 @@
  * never be translated. This module translates a shortcut only at the moment it is *shown* to the
  * user, leaving the stored value untouched.
  *
- * The single rule is: split the shortcut on `+`, then look up each token in {@link TRANSLATABLE_KEYS}.
- * A token found in the table is replaced by its translated (or default English) label; a token not in
- * the table — letters, digits, function keys, punctuation — is emitted verbatim, since those are
- * identical across languages.
+ * The single rule is: split the shortcut on `+`, then classify each token:
+ *  - a *glyph* token (arrow keys, the plus key) renders a universal symbol — identical in every
+ *    language, so it is a constant here and never translated;
+ *  - a *translatable* token (modifier or named key) resolves its label entirely through the injected
+ *    translator, keyed by an id under {@link SHORTCUT_KEY_PREFIX}; the English source lives in the
+ *    translation files, not here;
+ *  - any other token — letter, digit, function key, punctuation — is emitted verbatim.
  *
- * The core is a pure function that takes an injected `translate` callback, so it can be unit-tested
- * (and used) without booting the i18n runtime. Callers that want localized output pass a `translate`
- * that resolves `${SHORTCUT_KEY_PREFIX}.<id>`.
+ * The translator is injected so the core is unit-testable with a stub; production callers use
+ * {@link formatShortcutLocalized}, which binds the application's i18n runtime.
  */
 
 import { t } from "./i18n.js";
 
-/** i18n key prefix under which the per-token labels live once this mapper is wired to translations. */
+/** i18n key prefix under which the per-token labels live. */
 export const SHORTCUT_KEY_PREFIX = "keyboard_shortcut_keys";
 
-/** Resolves a token id (e.g. `"ctrl"`) to a localized label, or a nullish value when untranslated. */
-export type ShortcutKeyTranslator = (id: string) => string | null | undefined;
+/** Resolves a token id (e.g. `"ctrl"`) to its localized label via the translation files. */
+export type ShortcutKeyTranslator = (id: string) => string;
 
 const GLOBAL_PREFIX = "global:";
 
 /**
  * Formats a stored shortcut into localized display tokens using the application's i18n runtime. This
- * is the binding every display site should use; {@link formatShortcut} remains available for callers
- * that need to inject their own translator (e.g. tests) or the built-in English defaults.
+ * is the binding every display site should use; {@link formatShortcut} accepts an injected translator
+ * for tests.
  */
 export function formatShortcutLocalized(shortcut: string): string[] {
     return formatShortcut(shortcut, translateShortcutKey);
 }
 
-/**
- * The default i18n-backed token translator: resolves `${SHORTCUT_KEY_PREFIX}.<id>`. Returns
- * `undefined` when the key is missing (i18next echoes the key back), so {@link formatShortcutKey}
- * falls back to the built-in English label.
- */
-export function translateShortcutKey(id: string): string | undefined {
-    const key = `${SHORTCUT_KEY_PREFIX}.${id}`;
-    const value = t(key);
-    return value === key ? undefined : value;
+/** The i18n-backed token translator: resolves `${SHORTCUT_KEY_PREFIX}.<id>` from the translation files. */
+export function translateShortcutKey(id: string): string {
+    return t(`${SHORTCUT_KEY_PREFIX}.${id}`);
 }
 
 /**
@@ -55,9 +51,9 @@ export function translateShortcutKey(id: string): string | undefined {
  * A leading `global:` prefix (a storage detail) is stripped so it never leaks into the display.
  *
  * @param shortcut a stored shortcut, e.g. `"Ctrl+Shift+J"`, `"global:Meta+Plus"`, `"F5"`.
- * @param translate optional token-id → label resolver; omit for the built-in English labels.
+ * @param translate token-id → label resolver (see {@link translateShortcutKey}).
  */
-export function formatShortcut(shortcut: string, translate?: ShortcutKeyTranslator): string[] {
+export function formatShortcut(shortcut: string, translate: ShortcutKeyTranslator): string[] {
     return splitShortcutForDisplay(shortcut).map((token) => formatShortcutKey(token, translate));
 }
 
@@ -82,25 +78,24 @@ export function splitShortcutForDisplay(shortcut: string): string[] {
 }
 
 /**
- * Translates one shortcut token. Tokens present in {@link TRANSLATABLE_KEYS} (modifiers and named
- * keys, matched case-insensitively) resolve to their localized label, falling back to the built-in
- * English default when `translate` is absent or returns nothing. Any other token — a letter, digit,
- * function key, or punctuation key — is returned unchanged.
+ * Renders one shortcut token (matched case-insensitively): a glyph token ({@link KEY_GLYPHS}) becomes
+ * its universal symbol, a translatable token ({@link TRANSLATABLE_KEYS}) is resolved through
+ * `translate`, and any other token — letter, digit, function key, punctuation — is returned unchanged.
  */
-export function formatShortcutKey(token: string, translate?: ShortcutKeyTranslator): string {
-    const entry = KEY_LABELS[token.toLowerCase()];
-    if (!entry) {
-        return token;
+export function formatShortcutKey(token: string, translate: ShortcutKeyTranslator): string {
+    const lower = token.toLowerCase();
+
+    const glyph = KEY_GLYPHS[lower];
+    if (glyph) {
+        return glyph;
     }
 
-    // Entries without an `id` are display normalization only (a universal glyph such as "+"), not
-    // translation — they never consult the translator and are never exposed as translation keys.
-    if (!entry.id) {
-        return entry.en;
+    const id = TRANSLATABLE_KEYS[lower];
+    if (id) {
+        return translate(id);
     }
 
-    const translated = translate?.(entry.id);
-    return translated ? translated : entry.en;
+    return token;
 }
 
 function stripGlobalPrefix(shortcut: string): string {
@@ -108,52 +103,49 @@ function stripGlobalPrefix(shortcut: string): string {
 }
 
 /**
- * Maps a raw shortcut token (lowercased, aliases collapsed) to its display label. An entry with an
- * `id` is *translatable* — the `id` resolves a per-language label, with `en` as the fallback. An entry
- * without an `id` is *normalization only*: a universal glyph (e.g. the stored word "Plus" shown as
- * "+") that reads identically in every language and must not be offered to translators. Tokens absent
- * from this table — letters, digits, function keys, punctuation — are rendered verbatim.
+ * Tokens rendered as a universal glyph — the arrow keys (whose keycap *is* the glyph) and the plus key
+ * (stored as the named token `Plus`). These read identically in every language, so they are constants
+ * and are never routed through translation.
  */
-const KEY_LABELS: Record<string, { id?: string; en: string }> = {
-    // Modifiers.
-    ctrl: { id: "ctrl", en: "Ctrl" },
-    control: { id: "ctrl", en: "Ctrl" },
-    // Resolved to a concrete modifier server-side; folded to Ctrl here defensively for display.
-    commandorcontrol: { id: "ctrl", en: "Ctrl" },
-    alt: { id: "alt", en: "Alt" },
-    shift: { id: "shift", en: "Shift" },
-    meta: { id: "meta", en: "Meta" },
-    cmd: { id: "meta", en: "Meta" },
-    command: { id: "meta", en: "Meta" },
+const KEY_GLYPHS: Record<string, string> = {
+    up: "↑", arrowup: "↑",
+    down: "↓", arrowdown: "↓",
+    left: "←", arrowleft: "←",
+    right: "→", arrowright: "→",
+    plus: "+", "+": "+"
+};
+
+/**
+ * Maps a raw shortcut token (lowercased, aliases collapsed) to its translation id under
+ * {@link SHORTCUT_KEY_PREFIX}. Only modifiers and named keys — the parts that differ across languages —
+ * appear here; their labels come from the translation files, never hard-coded in this module.
+ */
+const TRANSLATABLE_KEYS: Record<string, string> = {
+    // Modifiers. `CommandOrControl` is resolved to a concrete modifier server-side; folded to Ctrl
+    // here defensively for display.
+    ctrl: "ctrl",
+    control: "ctrl",
+    commandorcontrol: "ctrl",
+    alt: "alt",
+    shift: "shift",
+    meta: "meta",
+    cmd: "meta",
+    command: "meta",
 
     // Named keys.
-    enter: { id: "enter", en: "Enter" },
-    return: { id: "enter", en: "Enter" },
-    escape: { id: "escape", en: "Esc" },
-    esc: { id: "escape", en: "Esc" },
-    delete: { id: "delete", en: "Delete" },
-    del: { id: "delete", en: "Delete" },
-    backspace: { id: "backspace", en: "Backspace" },
-    space: { id: "space", en: "Space" },
-    tab: { id: "tab", en: "Tab" },
-    home: { id: "home", en: "Home" },
-    end: { id: "end", en: "End" },
-    pageup: { id: "page_up", en: "Page Up" },
-    pagedown: { id: "page_down", en: "Page Down" },
-    // Arrow keys: the physical keycap is the glyph itself and it reads identically in every language,
-    // so these are normalization-only (no `id`, never translated), like the plus key below.
-    up: { en: "↑" },
-    arrowup: { en: "↑" },
-    down: { en: "↓" },
-    arrowdown: { en: "↓" },
-    left: { en: "←" },
-    arrowleft: { en: "←" },
-    right: { en: "→" },
-    arrowright: { en: "→" },
-    // The plus key is stored as the named token `Plus`; normalized to the universal "+" glyph. No
-    // `id`: "+" is language-neutral, so it is never routed through translation.
-    plus: { en: "+" },
-    "+": { en: "+" },
-    insert: { id: "insert", en: "Insert" },
-    ins: { id: "insert", en: "Insert" }
+    enter: "enter",
+    return: "enter",
+    escape: "escape",
+    esc: "escape",
+    delete: "delete",
+    del: "delete",
+    backspace: "backspace",
+    space: "space",
+    tab: "tab",
+    home: "home",
+    end: "end",
+    pageup: "page_up",
+    pagedown: "page_down",
+    insert: "insert",
+    ins: "insert"
 };
