@@ -329,10 +329,26 @@ $$`;
     });
 
     // The exporter keeps headerless tables (and heading-column-only tables) as raw
-    // HTML rather than inventing a phantom empty header row. Confirm the import side
-    // passes that HTML through unchanged, so the round-trip introduces no blank row.
+    // HTML rather than inventing a phantom empty header row, pretty-printed across
+    // multiple indented lines. Confirm the import side passes that exact multi-line
+    // HTML through unchanged (no blank lines means it stays a single HTML block), so
+    // the round-trip introduces no blank row.
     it("preserves a headerless table (heading columns only) without a phantom header row", () => {
-        const html = /*html*/`<table><tbody><tr><th>Heading</th><td>Not a heading</td></tr><tr><td>Heading</td><td>Not a heading</td></tr></tbody></table>`;
+        // Exactly what the Markdown exporter emits for such a table.
+        const html = [
+            `<table>`,
+            `    <tbody>`,
+            `        <tr>`,
+            `            <th>Heading</th>`,
+            `            <td>Not a heading</td>`,
+            `        </tr>`,
+            `        <tr>`,
+            `            <td>Heading</td>`,
+            `            <td>Not a heading</td>`,
+            `        </tr>`,
+            `    </tbody>`,
+            `</table>`
+        ].join("\n");
         const result = markdownService.renderToHtml(html, "Title");
         expect(result).toStrictEqual(html);
         // No synthesized empty header row leaked in.

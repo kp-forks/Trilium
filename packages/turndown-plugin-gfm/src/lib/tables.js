@@ -81,7 +81,7 @@ rules.table = {
     // Only convert tables that can result in valid Markdown
     // Other tables are kept as HTML using `keep` (see below).
     if (tableShouldBeHtml(node, options_)) {
-      return node.outerHTML;
+      return prettyPrintTable(node);
     } else {
       if (tableShouldBeSkipped(node)) return content;
 
@@ -277,6 +277,49 @@ function tableColCount(node) {
     if (colCount > maxColCount) maxColCount = colCount
   }
   return maxColCount
+}
+
+// Structural table elements whose children are themselves structural and are
+// therefore broken onto their own indented lines. Every other element (td, th,
+// caption, col) is a leaf: its content is emitted verbatim on a single line.
+var TABLE_CONTAINER_TAGS = ['TABLE', 'THEAD', 'TBODY', 'TFOOT', 'TR', 'COLGROUP'];
+
+// Serializes a table that is kept as raw HTML into indented, multi-line markup so
+// it stays readable inside the exported Markdown file. Only structural tags are
+// placed on their own lines; cell contents are emitted verbatim (never re-indented)
+// so whitespace-significant content such as <pre> code survives untouched. No blank
+// lines are produced, so the result stays a single raw-HTML block on reimport.
+// Inter-element whitespace text nodes are dropped, which makes the output stable
+// across repeated export/import cycles.
+function prettyPrintTable(node) {
+  return serializeStructuralNode(node, 0);
+}
+
+function serializeStructuralNode(node, depth) {
+  const indent = '    '.repeat(depth);
+  const closeTag = '</' + node.nodeName.toLowerCase() + '>';
+
+  // Use the DOM's own serializer for the opening tag so attribute quoting/escaping
+  // matches the rest of the output. A shallow clone has no children, so its
+  // outerHTML is exactly the opening tag plus (for non-void elements) the closing tag.
+  const shallowHtml = node.cloneNode(false).outerHTML;
+  const isVoid = !shallowHtml.endsWith(closeTag);
+  const openTag = isVoid ? shallowHtml : shallowHtml.slice(0, shallowHtml.length - closeTag.length);
+
+  if (TABLE_CONTAINER_TAGS.indexOf(node.nodeName) === -1) {
+    // Leaf structural element (td/th/caption/col): keep its content on one line.
+    return isVoid ? indent + openTag : indent + openTag + node.innerHTML.trim() + closeTag;
+  }
+
+  const lines = [indent + openTag];
+  for (let i = 0; i < node.childNodes.length; i++) {
+    const child = node.childNodes[i];
+    if (child.nodeType === 1) { // ELEMENT_NODE — whitespace-only text nodes are skipped
+      lines.push(serializeStructuralNode(child, depth + 1));
+    }
+  }
+  lines.push(indent + closeTag);
+  return lines.join('\n');
 }
 
 export default function tables (turndownService) {
