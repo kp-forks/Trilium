@@ -40,9 +40,9 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
 
 - The window has no chrome and no drop shadow (Squirrel's `Update.exe` is `WindowStyle.None` +
   transparent), and GIF's 1-bit transparency can't cast a soft shadow onto the desktop. So the splash
-  is a **card on a tray**: an opaque light-neutral tray with a hairline edge, holding a rounded white
-  card whose soft shadow falls on the tray. That gives a defined, elevated boundary against any
-  surface — notably a white Explorer pane, where a plain white splash would vanish.
+  is a **card on a tray**: an opaque light-neutral tray holding a rounded white card whose soft
+  shadow falls on the tray. The tray is a touch darker than the card, so it separates on its own —
+  including against a white Explorer pane, where a plain white splash would vanish.
 
 ## Encoding
 
@@ -50,7 +50,7 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
   written as a transparent index over the kept canvas (`dispose: 1`). This shrinks the mostly-static
   steady tail to almost nothing (~140 KiB total). It saves file size only — not `Update.exe` memory,
   which re-expands every frame to full size regardless.
-- The large flat colors (card white, tray, hairline, wordmark) are **pinned** into the palette:
+- The large flat colors (card white, tray, wordmark) are **pinned** into the palette:
   gifenc's `applyPalette` nearest-color search is approximate, so without pinning the big white card
   drifts to a warm near-white. `deriveAnchorColors()` reads these colors from the first rendered
   frame and forces any exact-match pixel to that palette index, so changing the tray/card tone in

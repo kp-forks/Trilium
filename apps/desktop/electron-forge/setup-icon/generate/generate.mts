@@ -104,7 +104,6 @@ function deriveAnchorColors(frame0: Uint8Array): number[][] {
     return [
         pixel(WIDTH / 2, 60),   // card (white; empty at t = 0)
         pixel(3, 3),            // tray (corner, outside the card)
-        pixel(0, HEIGHT / 2),   // tray hairline (1px window edge)
         [35, 41, 32]            // wordmark (#232920)
     ];
 }
