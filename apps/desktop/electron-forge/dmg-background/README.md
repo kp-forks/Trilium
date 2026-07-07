@@ -15,6 +15,11 @@ built and visually verified on macOS** (`appdmg` is `os: [darwin]` and isn't ins
 `contents` icon coordinates in `forge.config.ts` are a best effort matched to the artwork; fine-tune
 them on a real macOS build.
 
+`preview.png` shows the assembled window with the real app icon and a stand-in Applications folder
+composited at those coordinates. It is **reference only** — appdmg never uses it (it only reads
+`background.png`/`@2x`). Kept reproducible from source so it isn't a mystery image; regenerate with
+`pnpm --filter desktop generate-dmg-preview`.
+
 ## How it differs from the Windows splash
 
 - **Static, not animated.** A DMG background is a Finder window background image — it can't animate.
