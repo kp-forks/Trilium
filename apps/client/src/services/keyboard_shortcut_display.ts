@@ -14,10 +14,16 @@
  *    under {@link SHORTCUT_KEY_PREFIX}; the label text lives in the translation files, not here;
  *  - any other token — letter, digit, function key, punctuation — is emitted verbatim.
  *
- * Tests stub the labels by mocking `./i18n.js`.
+ * On macOS the modifiers and the common named keys are additionally rendered as their platform glyphs
+ * (⌘ ⌥ ⌃ ⇧, plus ↩ ⎋ ⇥ ⌦ ⌫), with modifiers reordered into Apple's canonical order (⌃⌥⇧⌘). Keys
+ * whose macOS glyph is rarely seen (Page Up/Down, Home/End) — and Space, which Apple writes as a word —
+ * keep their translated label. Everything else is unchanged. The stored format is never touched.
+ *
+ * Tests stub the labels by mocking `./i18n.js` (and `./utils.js` for the macOS branch).
  */
 
 import { t } from "./i18n.js";
+import { isMac } from "./utils.js";
 
 /** i18n key prefix under which the per-token labels live. */
 export const SHORTCUT_KEY_PREFIX = "keyboard_shortcut_keys";
@@ -34,7 +40,8 @@ const GLOBAL_PREFIX = "global:";
  * @param shortcut a stored shortcut, e.g. `"Ctrl+Shift+J"`, `"global:Meta+Plus"`, `"F5"`.
  */
 export function formatShortcut(shortcut: string): string[] {
-    return splitShortcutForDisplay(shortcut).map((token) => formatShortcutKey(token));
+    const tokens = splitShortcutForDisplay(shortcut);
+    return isMac() ? formatTokensForMac(tokens) : tokens.map((token) => formatShortcutKey(token));
 }
 
 /**
@@ -80,6 +87,39 @@ export function formatShortcutKey(token: string): string {
 
 function stripGlobalPrefix(shortcut: string): string {
     return shortcut.startsWith(GLOBAL_PREFIX) ? shortcut.substring(GLOBAL_PREFIX.length) : shortcut;
+}
+
+/**
+ * macOS variant: render modifier tokens as their platform glyphs, reordered into Apple's canonical
+ * order (⌃⌥⇧⌘) regardless of how the shortcut was stored, followed by the remaining keys — which get
+ * their macOS glyph when one is defined ({@link MAC_GLYPHS}) and otherwise fall back to the
+ * cross-platform rendering (translated label / arrow glyph / verbatim). The `+` join between tokens is
+ * left to the call sites unchanged.
+ */
+function formatTokensForMac(tokens: string[]): string[] {
+    const modifierIds: string[] = [];
+    const rest: string[] = [];
+    for (const token of tokens) {
+        const id = TRANSLATABLE_KEYS[token.toLowerCase()];
+        if (id && MAC_MODIFIER_ORDER.includes(id)) {
+            modifierIds.push(id);
+        } else {
+            rest.push(token);
+        }
+    }
+
+    modifierIds.sort((a, b) => MAC_MODIFIER_ORDER.indexOf(a) - MAC_MODIFIER_ORDER.indexOf(b));
+
+    return [
+        ...modifierIds.map((id) => MAC_GLYPHS[id]),
+        ...rest.map((token) => macKeyGlyph(token) ?? formatShortcutKey(token))
+    ];
+}
+
+/** The macOS glyph for `token` if one is defined, otherwise `undefined`. */
+function macKeyGlyph(token: string): string | undefined {
+    const id = TRANSLATABLE_KEYS[token.toLowerCase()];
+    return id ? MAC_GLYPHS[id] : undefined;
 }
 
 /**
@@ -129,3 +169,26 @@ const TRANSLATABLE_KEYS: Record<string, string> = {
     insert: "insert",
     ins: "insert"
 };
+
+/**
+ * macOS key glyphs keyed by translation id: the four modifiers plus the common named keys. Keys absent
+ * here (Page Up/Down, Home/End, Space, Insert) keep their translated label on macOS — their glyphs are
+ * rarely seen and read worse than the word. The Return key uses ↩ (U+21A9), matching Apple's native
+ * menus, and the forward-delete glyph ⌦ pairs with Backspace's ⌫.
+ */
+const MAC_GLYPHS: Record<string, string> = {
+    // Modifiers, rendered in MAC_MODIFIER_ORDER (Control, Option, Shift, Command).
+    ctrl: "⌃",
+    alt: "⌥",
+    shift: "⇧",
+    meta: "⌘",
+    // Common named keys.
+    enter: "↩",
+    escape: "⎋",
+    tab: "⇥",
+    delete: "⌦",
+    backspace: "⌫"
+};
+
+/** Apple's canonical modifier display order; also defines which ids are treated as modifiers. */
+const MAC_MODIFIER_ORDER = [ "ctrl", "alt", "shift", "meta" ];

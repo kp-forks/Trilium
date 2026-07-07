@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Stub the labels the same way the sibling specs (command_registry, keyboard_actions) do: resolve
 // `keyboard_shortcut_keys.<id>` to a recognizable `L·<ID>` so translated output is unmistakable, and
@@ -11,12 +11,17 @@ vi.mock("./i18n.js", () => ({
             : key
 }));
 
+// The formatter branches on isMac() for the macOS glyph rendering; default to non-Mac and flip it per
+// test with vi.mocked(isMac).mockReturnValue(true).
+vi.mock("./utils.js", () => ({ isMac: vi.fn(() => false) }));
+
 import {
     formatShortcut,
     formatShortcutKey,
     SHORTCUT_KEY_PREFIX,
     splitShortcutForDisplay
 } from "./keyboard_shortcut_display.js";
+import { isMac } from "./utils.js";
 
 describe("keyboard_shortcut_display", () => {
     describe("splitShortcutForDisplay", () => {
@@ -106,6 +111,48 @@ describe("keyboard_shortcut_display", () => {
 
         it("returns [] for an empty shortcut", () => {
             expect(formatShortcut("")).toEqual([]);
+        });
+    });
+
+    describe("formatShortcut on macOS", () => {
+        beforeEach(() => vi.mocked(isMac).mockReturnValue(true));
+        afterEach(() => vi.mocked(isMac).mockReturnValue(false));
+
+        it("renders modifiers as macOS glyphs", () => {
+            expect(formatShortcut("Ctrl+J")).toEqual([ "⌃", "J" ]);
+            expect(formatShortcut("Alt+J")).toEqual([ "⌥", "J" ]);
+            expect(formatShortcut("Shift+J")).toEqual([ "⇧", "J" ]);
+            expect(formatShortcut("Meta+J")).toEqual([ "⌘", "J" ]);
+        });
+
+        it("renders the common named keys as glyphs; arrows and letters are unchanged", () => {
+            expect(formatShortcut("Meta+Enter")).toEqual([ "⌘", "↩" ]);
+            expect(formatShortcut("Escape")).toEqual([ "⎋" ]);
+            expect(formatShortcut("Tab")).toEqual([ "⇥" ]);
+            expect(formatShortcut("Delete")).toEqual([ "⌦" ]);
+            expect(formatShortcut("Backspace")).toEqual([ "⌫" ]);
+            expect(formatShortcut("Meta+Up")).toEqual([ "⌘", "↑" ]);
+        });
+
+        it("keeps the rarely-glyphed keys and Space as translated labels", () => {
+            expect(formatShortcut("Meta+PageUp")).toEqual([ "⌘", "L·PAGE_UP" ]);
+            expect(formatShortcut("Meta+PageDown")).toEqual([ "⌘", "L·PAGE_DOWN" ]);
+            expect(formatShortcut("Meta+Home")).toEqual([ "⌘", "L·HOME" ]);
+            expect(formatShortcut("Meta+End")).toEqual([ "⌘", "L·END" ]);
+            expect(formatShortcut("Meta+Space")).toEqual([ "⌘", "L·SPACE" ]);
+        });
+
+        it("reorders modifiers into Apple's canonical order (⌃⌥⇧⌘) regardless of stored order", () => {
+            // Stored "Meta+Shift" → display ⇧⌘; "Shift+Ctrl" → ⌃⇧.
+            expect(formatShortcut("Meta+Shift+J")).toEqual([ "⇧", "⌘", "J" ]);
+            expect(formatShortcut("Shift+Ctrl+J")).toEqual([ "⌃", "⇧", "J" ]);
+            expect(formatShortcut("Meta+Alt+Ctrl+Shift+J")).toEqual([ "⌃", "⌥", "⇧", "⌘", "J" ]);
+        });
+
+        it("maps modifier aliases to the same glyph and strips global:", () => {
+            expect(formatShortcut("Cmd+J")).toEqual([ "⌘", "J" ]);
+            expect(formatShortcut("Control+J")).toEqual([ "⌃", "J" ]);
+            expect(formatShortcut("global:CommandOrControl+Alt+P")).toEqual([ "⌃", "⌥", "P" ]);
         });
     });
 

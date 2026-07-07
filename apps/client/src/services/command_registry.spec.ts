@@ -56,7 +56,9 @@ vi.mock("./keyboard_actions.js", () => ({
 }));
 
 vi.mock("./utils.js", () => ({
-    default: { isElectron }
+    default: { isElectron },
+    // keyboard_shortcut_display imports the named isMac; keep the command palette on the non-Mac path.
+    isMac: () => false
 }));
 
 // Imported AFTER the mocks (vi.mock is hoisted).
