@@ -233,7 +233,7 @@ describe("keyboard_actions", () => {
                 <kbd data-command="cmdMissing">not set</kbd>
                 <span data-trigger-command="cmdTrigger" title="My label"></span>
                 <span data-trigger-command="cmdTriggerNoTitle"></span>
-                <span data-trigger-command="cmdTriggerAlready" title="X (ctrl+x)"></span>
+                <span data-trigger-command="cmdTriggerAlready" title="X (Ctrl+x)"></span>
                 <span data-trigger-command=""></span>
                 <span data-trigger-command="cmdMissing"></span>
             </div>
@@ -244,18 +244,19 @@ describe("keyboard_actions", () => {
         // jQuery .each runs synchronously but the async getAction inside resolves later
         await new Promise((r) => setTimeout(r, 0));
 
-        expect($container.find('kbd[data-command="cmdKbd"]').text()).toBe("ctrl+a, ctrl+b");
+        // Shortcuts are localized for display: the modifier token normalizes to its canonical label.
+        expect($container.find('kbd[data-command="cmdKbd"]').text()).toBe("Ctrl+a, Ctrl+b");
         // empty shortcuts but text already "not set" -> condition false -> text untouched
         expect($container.find('kbd[data-command="cmdEmpty"]').text()).toBe("not set");
         // missing action -> getAction silent returns undefined -> skipped
         expect($container.find('kbd[data-command="cmdMissing"]').text()).toBe("not set");
 
         // title with content gets the shortcut appended in parentheses
-        expect($container.find('[data-trigger-command="cmdTrigger"]').attr("title")).toBe("My label (ctrl+t)");
+        expect($container.find('[data-trigger-command="cmdTrigger"]').attr("title")).toBe("My label (Ctrl+t)");
         // no title -> becomes just the shortcuts
-        expect($container.find('[data-trigger-command="cmdTriggerNoTitle"]').attr("title")).toBe("ctrl+n");
+        expect($container.find('[data-trigger-command="cmdTriggerNoTitle"]').attr("title")).toBe("Ctrl+n");
         // title already includes the shortcut -> early return, unchanged
-        expect($container.find('[data-trigger-command="cmdTriggerAlready"]').attr("title")).toBe("X (ctrl+x)");
+        expect($container.find('[data-trigger-command="cmdTriggerAlready"]').attr("title")).toBe("X (Ctrl+x)");
     });
 
     it("updateDisplayedShortcuts sets text when shortcuts empty but element text differs from 'not set'", async () => {

@@ -17,6 +17,8 @@
  * that resolves `${SHORTCUT_KEY_PREFIX}.<id>`.
  */
 
+import { t } from "./i18n.js";
+
 /** i18n key prefix under which the per-token labels live once this mapper is wired to translations. */
 export const SHORTCUT_KEY_PREFIX = "keyboard_shortcut_keys";
 
@@ -24,6 +26,26 @@ export const SHORTCUT_KEY_PREFIX = "keyboard_shortcut_keys";
 export type ShortcutKeyTranslator = (id: string) => string | null | undefined;
 
 const GLOBAL_PREFIX = "global:";
+
+/**
+ * Formats a stored shortcut into localized display tokens using the application's i18n runtime. This
+ * is the binding every display site should use; {@link formatShortcut} remains available for callers
+ * that need to inject their own translator (e.g. tests) or the built-in English defaults.
+ */
+export function formatShortcutLocalized(shortcut: string): string[] {
+    return formatShortcut(shortcut, translateShortcutKey);
+}
+
+/**
+ * The default i18n-backed token translator: resolves `${SHORTCUT_KEY_PREFIX}.<id>`. Returns
+ * `undefined` when the key is missing (i18next echoes the key back), so {@link formatShortcutKey}
+ * falls back to the built-in English label.
+ */
+export function translateShortcutKey(id: string): string | undefined {
+    const key = `${SHORTCUT_KEY_PREFIX}.${id}`;
+    const value = t(key);
+    return value === key ? undefined : value;
+}
 
 /**
  * Formats a single stored shortcut string into an ordered list of display tokens. The array is the

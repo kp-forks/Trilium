@@ -2,6 +2,7 @@ import { KeyboardActionNames } from "@triliumnext/commons";
 import { h, JSX, render } from "preact";
 
 import keyboardActionService, { getActionSync } from "../services/keyboard_actions.js";
+import { formatShortcutLocalized } from "../services/keyboard_shortcut_display.js";
 import note_tooltip from "../services/note_tooltip.js";
 import utils from "../services/utils.js";
 
@@ -277,7 +278,7 @@ class ContextMenu {
             if (shortcuts) {
                 const allShortcuts: string[] = [];
                 for (const effectiveShortcut of shortcuts) {
-                    allShortcuts.push(effectiveShortcut.split("+")
+                    allShortcuts.push(formatShortcutLocalized(effectiveShortcut)
                         .map(key => `<kbd>${key}</kbd>`)
                         .join("+"));
                 }

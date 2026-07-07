@@ -5,6 +5,7 @@ import appContext, { CommandNames } from "../../components/app_context.js";
 import RawHtml from "../react/RawHtml.jsx";
 import { useEffect, useState } from "preact/hooks";
 import keyboard_actions from "../../services/keyboard_actions.js";
+import { formatShortcutLocalized } from "../../services/keyboard_shortcut_display.js";
 import { useTriliumEvent } from "../react/hooks.jsx";
 
 export default function HelpDialog() {
@@ -141,7 +142,7 @@ function FixedKeyboardShortcut({ keys, description }: { keys?: string[], descrip
         <li>
             {keys && keys.map((key, index) =>
                 <>
-                    <kbd key={index}>{key}</kbd>
+                    <kbd key={index}>{formatShortcutLocalized(key).join("+")}</kbd>
                     {index < keys.length - 1 ? ", " : "" }
                 </>
             )} - <RawHtml html={description} />
