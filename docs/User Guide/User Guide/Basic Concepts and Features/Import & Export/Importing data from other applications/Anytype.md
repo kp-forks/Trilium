@@ -93,7 +93,7 @@ The following types are supported:
         </tr>
         <tr>
             <td>Date / Date with time</td>
-            <td><ul><li data-list-item-id="eb2f417ce240ac72c1773231746ecf0c6"><code spellcheck="false">datetime</code> if the time is included.</li><li data-list-item-id="ee9dcf32dba7753df568315409159aa7d"><code spellcheck="false">date</code> if only dates.</li></ul></td>
+            <td><ul><li><code spellcheck="false">datetime</code> if the time is included.</li><li><code spellcheck="false">date</code> if only dates.</li></ul></td>
         </tr>
         <tr>
             <td>File</td>

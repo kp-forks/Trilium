@@ -89,7 +89,7 @@ The resulting collection will be <a class="reference-link" href="../../../Colle
         </tr>
         <tr>
             <td>Date</td>
-            <td><ul><li data-list-item-id="eee6673ab2869e699cab68ecf33d7f114"><code spellcheck="false">datetime</code> if at least one has time.</li><li data-list-item-id="e2b9de45b9e0044bdd49f52ccbc9d143b"><code spellcheck="false">date</code> if only dates.</li><li data-list-item-id="ea59885b04bf57523709c778687bc94a5">Two attributes if any of the dates have an end date.</li></ul></td>
+            <td><ul><li><code spellcheck="false">datetime</code> if at least one has time.</li><li><code spellcheck="false">date</code> if only dates.</li><li>Two attributes if any of the dates have an end date.</li></ul></td>
         </tr>
         <tr>
             <td>Checkbox</td>

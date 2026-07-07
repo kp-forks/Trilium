@@ -28,7 +28,7 @@ Child notes can be automatically sorted by attaching specific [labels](../../Adv
         </tr>
         <tr>
             <td><code spellcheck="false">#sortDirection</code></td>
-            <td><p>If <code spellcheck="false">sorted</code> is applied, specifies the direction of the sort:</p><ul><li data-list-item-id="e4df319827bd47bea6bb62c3c5b8e83a6"><code spellcheck="false">ASC</code>, ascending (default)</li><li data-list-item-id="ea986fb4e3f1218a29cba4435d397252b"><code spellcheck="false">DESC</code>, descending</li></ul></td>
+            <td><p>If <code spellcheck="false">sorted</code> is applied, specifies the direction of the sort:</p><ul><li><code spellcheck="false">ASC</code>, ascending (default)</li><li><code spellcheck="false">DESC</code>, descending</li></ul></td>
         </tr>
         <tr>
             <td><code spellcheck="false">#sortFoldersFirst</code></td>

@@ -47,8 +47,8 @@ You can easily move the notes onto the root using the tree's <a class="referenc
     </thead>
     <tbody>
         <tr>
-            <td><ul><li data-list-item-id="e8c5b61fca3b22a75ee4f651a12b0cd2b">root<ul><li data-list-item-id="e1e4f62c9fe4499cabfefcba28bf64c7e">one</li><li data-list-item-id="e8088b4ea90e8371d88182db886b8fd1f">two</li></ul></li></ul></td>
-            <td><ul><li data-list-item-id="e74bf0ef3d3f2aff13bb3918d1e23e06f">root (existing)<ul><li data-list-item-id="efcba337fd0db50e4d83740d986d04b00">root (from import)<ul><li data-list-item-id="e50b95f63c2069dbf902c281256c32155">one</li><li data-list-item-id="e406337a40071ddfc3c5b1432ba235a2e">two</li></ul></li></ul></li></ul></td>
+            <td><ul><li>root<ul><li>one</li><li>two</li></ul></li></ul></td>
+            <td><ul><li>root (existing)<ul><li>root (from import)<ul><li>one</li><li>two</li></ul></li></ul></li></ul></td>
         </tr>
     </tbody>
 </table>

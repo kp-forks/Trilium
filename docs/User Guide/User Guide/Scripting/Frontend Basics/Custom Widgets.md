@@ -95,13 +95,13 @@ A widget can be placed in one of the following sections of the applications:
             <th><code spellcheck="false">note-detail-pane</code></th>
             <td><p>In the content area, inside the note detail area. If a split is open, the widget will be contained inside the split.</p><p>This is ideal if the widget is note-specific.</p></td>
             <td><a class="reference-link" href="Custom%20Widgets/Note%20context%20aware%20widget.md">Note context aware widget</a></td>
-            <td><ul><li data-list-item-id="ec06332efcc3039721606c052f0d913fa">The widget must export a <code spellcheck="false">class</code> and not an instance of the class (e.g. <code spellcheck="false">no new</code>) because it needs to be multiplied for each note, so that splits work correctly.</li><li data-list-item-id="e8da690a2a8df148f6b5fc04ba1611688">Since the <code spellcheck="false">class</code> is exported instead of an instance, the <code spellcheck="false">parentWidget</code> getter must be <code spellcheck="false">static</code>, otherwise the widget is ignored.</li></ul></td>
+            <td><ul><li>The widget must export a <code spellcheck="false">class</code> and not an instance of the class (e.g. <code spellcheck="false">no new</code>) because it needs to be multiplied for each note, so that splits work correctly.</li><li>Since the <code spellcheck="false">class</code> is exported instead of an instance, the <code spellcheck="false">parentWidget</code> getter must be <code spellcheck="false">static</code>, otherwise the widget is ignored.</li></ul></td>
         </tr>
         <tr>
             <th><code spellcheck="false">right-pane</code></th>
             <td>In the&nbsp;<a class="reference-link" href="../../Basic%20Concepts%20and%20Features/UI%20Elements/Right%20Sidebar.md">Right Sidebar</a>, as a dedicated section.</td>
             <td><a class="reference-link" href="Custom%20Widgets/Right%20pane%20widget.md">Right pane widget</a></td>
-            <td><ul><li data-list-item-id="efe008d361e224f422582552648e1afe7">Although not mandatory, it's best to use a <code spellcheck="false">RightPanelWidget</code> instead of a <code spellcheck="false">BasicWidget</code> or a <code spellcheck="false">NoteContextAwareWidget</code>.</li></ul></td>
+            <td><ul><li>Although not mandatory, it's best to use a <code spellcheck="false">RightPanelWidget</code> instead of a <code spellcheck="false">BasicWidget</code> or a <code spellcheck="false">NoteContextAwareWidget</code>.</li></ul></td>
         </tr>
     </tbody>
 </table>

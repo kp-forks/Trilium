@@ -22,7 +22,7 @@
             <td>Text</td>
             <td>Nullable</td>
             <td><code>null</code></td>
-            <td><p>The content of the blob, can be either:</p><ul><li data-list-item-id="e1f1b8623c64f95f19751bbe494063d0f">text (for plain text notes or HTML notes).</li><li data-list-item-id="e5bbdee6fe5e5b12361fc74e339c9f1db">binary (for images and other types of attachments)</li></ul></td>
+            <td><p>The content of the blob, can be either:</p><ul><li>text (for plain text notes or HTML notes).</li><li>binary (for images and other types of attachments)</li></ul></td>
         </tr>
         <tr>
             <th><code>dateModified</code></th>

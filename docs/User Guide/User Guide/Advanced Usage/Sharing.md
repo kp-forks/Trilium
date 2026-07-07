@@ -32,13 +32,13 @@ Trilium allows you to share selected notes as **publicly accessible** read-only 
     <tbody>
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Text.md">Text</a></th>
-            <td><ul><li data-list-item-id="e26b4ce9ba4e9dfe224d04e0f341925ed">Table of contents.</li><li data-list-item-id="e9707fdfa2c92d66690cf932f7e647253">Syntax highlight of code blocks, provided a language is selected (does not work if “Auto-detected” is enabled).</li><li data-list-item-id="e84420a10c6d64bd107edb6e867c91d4b">Rendering for math equations.</li><li data-list-item-id="e10834dcd0619d77ae2e94d3695bedf58"><a href="../Note%20Types/Text/Include%20Note.md">Including notes</a> (only if the included notes are also shared).</li></ul></td>
-            <td><ul><li data-list-item-id="e41cc4139377f9f88d653d1eb8ca47bb4">Inline Mermaid diagrams are not rendered.</li></ul></td>
+            <td><ul><li>Table of contents.</li><li>Syntax highlight of code blocks, provided a language is selected (does not work if “Auto-detected” is enabled).</li><li>Rendering for math equations.</li><li><a href="../Note%20Types/Text/Include%20Note.md">Including notes</a> (only if the included notes are also shared).</li></ul></td>
+            <td><ul><li>Inline Mermaid diagrams are not rendered.</li></ul></td>
         </tr>
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Code.md">Code</a></th>
-            <td><ul><li data-list-item-id="e291ae6d5130677b4c99f7c3bdbe974b4">Basic support (displaying the contents of the note in a monospace font).</li></ul></td>
-            <td><ul><li data-list-item-id="e0270680bbdd7a129306e61e11691e36d">No syntax highlight.</li></ul></td>
+            <td><ul><li>Basic support (displaying the contents of the note in a monospace font).</li></ul></td>
+            <td><ul><li>No syntax highlight.</li></ul></td>
         </tr>
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Saved%20Search.md">Saved Search</a></th>
@@ -62,18 +62,18 @@ Trilium allows you to share selected notes as **publicly accessible** read-only 
         </tr>
         <tr>
             <th><a class="reference-link" href="../Collections.md">Collections</a></th>
-            <td><ul><li data-list-item-id="ea031e1d4149eb443ace756234490c5a4">The child notes are displayed in a fixed format.&nbsp;</li></ul></td>
-            <td><ul><li data-list-item-id="ea4a9d424aec2afbaecc07bbf64b7bebd">More advanced view types such as the calendar view are not supported.</li></ul></td>
+            <td><ul><li>The child notes are displayed in a fixed format.&nbsp;</li></ul></td>
+            <td><ul><li>More advanced view types such as the calendar view are not supported.</li></ul></td>
         </tr>
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Mermaid%20Diagrams.md">Mermaid Diagrams</a></th>
-            <td><ul><li data-list-item-id="e582d283f2b1b30cbe5ae35d8e01b2bf2">The diagram is displayed as a vector image.</li></ul></td>
-            <td><ul><li data-list-item-id="e33268686446e3c217077201bb5964364">No further interaction supported.</li></ul></td>
+            <td><ul><li>The diagram is displayed as a vector image.</li></ul></td>
+            <td><ul><li>No further interaction supported.</li></ul></td>
         </tr>
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Canvas.md">Canvas</a></th>
-            <td><ul><li data-list-item-id="e443dd0e97c30cb12c77e8906a71569ea">The diagram is displayed as a vector image.</li></ul></td>
-            <td><ul><li data-list-item-id="efe151ef3f3826c825416417525fb5fb2">No further interaction supported.</li></ul></td>
+            <td><ul><li>The diagram is displayed as a vector image.</li></ul></td>
+            <td><ul><li>No further interaction supported.</li></ul></td>
         </tr>
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Web%20View.md">Web View</a></th>
@@ -83,7 +83,7 @@ Trilium allows you to share selected notes as **publicly accessible** read-only 
         <tr>
             <th><a class="reference-link" href="../Note%20Types/Mind%20Map.md">Mind Map</a></th>
             <td>The diagram is displayed as a vector image.</td>
-            <td><ul><li data-list-item-id="ed3b4fb473042f6e32b4502d4fa11a767">No further interaction supported.</li></ul></td>
+            <td><ul><li>No further interaction supported.</li></ul></td>
         </tr>
         <tr>
             <th><a class="reference-link" href="../Collections/Geo%20Map.md">Geo Map</a></th>
@@ -93,7 +93,7 @@ Trilium allows you to share selected notes as **publicly accessible** read-only 
         <tr>
             <th><a class="reference-link" href="../Note%20Types/File.md">File</a></th>
             <td>Basic interaction (downloading the file).</td>
-            <td><ul><li data-list-item-id="ed87e836a39d127ebcbb33e9e59045afb">No further interaction supported.</li></ul></td>
+            <td><ul><li>No further interaction supported.</li></ul></td>
         </tr>
     </tbody>
 </table>
@@ -272,7 +272,7 @@ The URL must be absolute and include the scheme (e.g. `https://`).
         </tr>
         <tr>
             <td><code spellcheck="false">#shareDisallowRobotIndexing</code></td>
-            <td><p>Indicates to web crawlers that the page should not be indexed of this note by:</p><ul><li data-list-item-id="e6baa9f60bf59d085fd31aa2cce07a0e7">Setting the <code spellcheck="false">X-Robots-Tag: noindex</code> HTTP header.</li><li data-list-item-id="ec0d067db136ef9794e4f1033405880b7">Setting the <code spellcheck="false">noindex, follow</code> meta tag.</li></ul></td>
+            <td><p>Indicates to web crawlers that the page should not be indexed of this note by:</p><ul><li>Setting the <code spellcheck="false">X-Robots-Tag: noindex</code> HTTP header.</li><li>Setting the <code spellcheck="false">noindex, follow</code> meta tag.</li></ul></td>
         </tr>
         <tr>
             <td><code spellcheck="false">#shareCredentials</code></td>

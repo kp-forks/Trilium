@@ -15,7 +15,7 @@ Global events are attached to the script note via label. Simply create e.g. "run
     <tbody>
         <tr>
             <td><code spellcheck="false">run</code></td>
-            <td><p>Defines on which events script should run. Possible values are:</p><ul><li data-list-item-id="e658488cf1a0862603088ef384e41b8b6"><code spellcheck="false">backendStartup</code> - when Trilium backend starts up</li><li data-list-item-id="ef40ba992fc450d33a18ca4cb031eca66"><code spellcheck="false">hourly</code> - run once an hour. You can use additional label <code spellcheck="false">runAtHour</code> to specify at which hour, on the back-end.</li><li data-list-item-id="e07458d4f55b6eb42468a5535b8425c5f"><code spellcheck="false">daily</code> - run once a day, on the back-end</li></ul></td>
+            <td><p>Defines on which events script should run. Possible values are:</p><ul><li><code spellcheck="false">backendStartup</code> - when Trilium backend starts up</li><li><code spellcheck="false">hourly</code> - run once an hour. You can use additional label <code spellcheck="false">runAtHour</code> to specify at which hour, on the back-end.</li><li><code spellcheck="false">daily</code> - run once a day, on the back-end</li></ul></td>
         </tr>
         <tr>
             <td><code spellcheck="false">runOnInstance</code></td>
