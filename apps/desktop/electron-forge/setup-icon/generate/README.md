@@ -39,14 +39,17 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
 ## Framing
 
 - The window has no chrome and no drop shadow (Squirrel's `Update.exe` is `WindowStyle.None` +
-  transparent), and GIF's 1-bit transparency can't cast a soft shadow onto the desktop. So the splash
-  is a **card on a tray**: an opaque tray holding a rounded, slightly-lighter card whose soft shadow
-  falls on the tray, giving a defined, elevated boundary against any surface.
-- The card is **dark**, on purpose. The installer ships one baked GIF that can't follow the user's
-  Windows theme, and no opaque surface is theme-neutral. A dark card degrades more gracefully than a
-  light one: it's gentle on a dark desktop and unremarkable on a light one, whereas a light card is a
-  harsh bright flash for dark-mode users. The colorful trillium also pops on the dark card. The one
-  cost is that the mark's white "starburst" (card showing through the leaf gaps) becomes dark.
+  transparent). The splash is a **flat dark surface with a 1px hairline**. The surface is **dark** on
+  purpose: the installer ships one baked GIF that can't follow the user's Windows theme, and no opaque
+  surface is theme-neutral — a dark surface degrades more gracefully than a light one (gentle on a
+  dark desktop, unremarkable on a light one, whereas a light one is a harsh bright flash for dark-mode
+  users). The colorful trillium also pops on it. The one cost is that the mark's white "starburst"
+  (the surface showing through the leaf gaps) becomes dark.
+- The **hairline** does the work a drop shadow can't: on a dark desktop the dark surface nearly
+  matches the background, so the hairline is what gives the splash a defined edge; on a light desktop
+  the dark fill already contrasts and the hairline just reads as a crisp border. (An earlier
+  card-on-tray framing was dropped once the surface went dark — the tray collapsed into an invisible
+  margin and the shadow stopped showing, leaving the hairline as the only thing earning its keep.)
 
 ## Encoding
 
@@ -54,15 +57,15 @@ Run it on **Windows** so the wordmark renders in Segoe UI (the font is rasterize
   written as a transparent index over the kept canvas (`dispose: 1`). This shrinks the mostly-static
   steady tail to almost nothing (~140 KiB total). It saves file size only — not `Update.exe` memory,
   which re-expands every frame to full size regardless.
-- The large flat colors (card, tray, wordmark) are **pinned** into the palette: gifenc's
+- The flat colors (surface, hairline, wordmark) are **pinned** into the palette: gifenc's
   `applyPalette` nearest-color search is approximate, so without pinning a big flat area drifts (the
-  white card used to go warm). `deriveAnchorColors()` reads the card and tray from the first rendered
-  frame — so changing the tray/card tone in `splash.html` needs no change here — and pins the wordmark
-  colour explicitly (update it there if the wordmark colour changes).
+  white card, in an earlier light design, used to go warm). `deriveAnchorColors()` reads the surface
+  and hairline from the first rendered frame — so changing the surface tone in `splash.html` needs no
+  change here — and pins the wordmark colour explicitly (update it there if the wordmark changes).
 
 ## Output contract
 
-- 640 × 480, opaque; dark tray (`#23262b`) + dark card (`#2b2f36`). Transparency is used only for delta
+- 640 × 480, opaque; flat dark surface (`#26292f`) + 1px hairline (`#484d57`). Transparency is used only for delta
   frames — frame 0 is a full opaque frame, so the loop resets cleanly with no reliance on desktop
   show-through. 108 frames, ~20 s loop, infinite loop, 255-color global palette, ~140 KiB.
 - The mark and wordmark are drawn larger than strictly needed: Squirrel's `Update.exe` is not
