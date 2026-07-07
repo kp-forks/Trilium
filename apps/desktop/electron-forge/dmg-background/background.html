@@ -10,27 +10,23 @@
        Finder also draws their text labels, so none are baked in here. Brand language
        reused from the installer splash: the same dark surface, plus a soft glow and a
        drag arrow tinted from the trillium's leaves. ?variant=nightly swaps to purple. */
+    /* Light surface reused VERBATIM from the in-app setup screen (apps/client/src/setup.css,
+       light theme): soft indigo/purple/blue glows over the near-white left-pane base (#f2f2f2).
+       A light background keeps Finder's icon captions — which it forces to black for any DMG
+       with a background picture — legible without a baked label plate. Same gradient for both
+       channels; nightly is distinguished only by the purple leaf mark and the NIGHTLY badge. */
     .bg {
         position: relative;
         width: 640px;
         height: 400px;
         overflow: hidden;
         font-family: -apple-system, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
-        color: #f2f3f5;
-    }
-    .variant-stable {
+        color: #2b3038;
         background:
-            radial-gradient(120px 90px at 34% 30%, rgba(228, 123, 25, 0.16), transparent 70%),
-            radial-gradient(140px 100px at 63% 24%, rgba(79, 165, 43, 0.16), transparent 70%),
-            radial-gradient(120px 100px at 50% 46%, rgba(227, 63, 59, 0.13), transparent 70%),
-            linear-gradient(180deg, #2b3038 0%, #23262b 100%);
-    }
-    .variant-nightly {
-        background:
-            radial-gradient(120px 90px at 34% 30%, rgba(177, 138, 214, 0.16), transparent 70%),
-            radial-gradient(140px 100px at 63% 24%, rgba(129, 70, 184, 0.18), transparent 70%),
-            radial-gradient(120px 100px at 50% 46%, rgba(110, 46, 168, 0.15), transparent 70%),
-            linear-gradient(180deg, #2b3038 0%, #23262b 100%);
+            radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.3) 0%, transparent 50%),
+            radial-gradient(ellipse at 80% 20%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
+            radial-gradient(ellipse at 60% 80%, rgba(59, 130, 246, 0.25) 0%, transparent 50%),
+            #f2f2f2;
     }
 
     .brand {
@@ -40,7 +36,7 @@
     }
     .brand svg { width: 44px; height: 44px; display: block; }
     .brand .word { font-size: 25px; font-weight: 600; letter-spacing: 0.01em; }
-    .brand .word .notes { font-weight: 350; color: #9aa0a8; }
+    .brand .word .notes { font-weight: 350; color: #7c828c; }
     .brand .badge {
         display: none;
         font-size: 11px; font-weight: 700; letter-spacing: 0.14em;
@@ -49,28 +45,8 @@
     }
     .variant-nightly .badge { display: inline-block; }
 
-    /* Light label plate baked behind the app caption — the Firefox DMG trick. A background
-       picture forces Finder to render the window in light mode, so it draws icon captions in
-       black in BOTH light and dark themes — illegible on this dark surface, and the DMG has no
-       label-colour field to override it. So we bake a light pill under where Finder draws the
-       "Trilium Notes" caption (icon center y = 200, so the caption lands ~y = 278). Only the
-       app is plated: its name is a fixed-width brand,
-       whereas the localized /Applications name varies in width — and the folder is self-evident,
-       so like Firefox we leave it unplated. Plate position needs a macOS build to fine-tune,
-       same as the icon `contents`. */
-    .plate {
-        position: absolute;
-        top: 266px; height: 24px;
-        border-radius: 12px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.28);
-    }
-    .plate.app { left: 116px; width: 128px; }
-    .variant-stable .plate { background: #e9eaee; }
-    .variant-nightly .plate { background: #ece2f4; }
-
-    /* Muted neutral arrow — a functional cue, kept quiet so the icons carry the colour
-       (the ambient glow already reuses the brand palette). Channel-agnostic. Vertically
-       centered on the icon centers (y = 200). */
+    /* Muted neutral arrow — a functional cue, kept quiet so the icons carry the colour.
+       Channel-agnostic. Vertically centered on the icon centers (y = 200). */
     .arrow { position: absolute; top: 177px; left: 274px; width: 92px; height: 46px; }
 
     /* No instructional text: the DMG ships one baked image for every locale, and the
@@ -101,8 +77,6 @@
         </svg>
         <span class="word">Trilium <span class="notes">Notes</span><span class="badge">NIGHTLY</span></span>
     </div>
-
-    <div class="plate app"></div>
 
     <svg class="arrow" viewBox="0 0 92 46" aria-hidden="true">
         <path d="M6 23 H74 M56 7 L80 23 L56 39" fill="none" stroke="#767d88"

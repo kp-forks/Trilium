@@ -130,11 +130,9 @@ function buildHtml() {
     .content .bg { position: absolute; inset: 0; width: ${WIDTH}px; height: ${HEIGHT}px; }
     .item { position: absolute; width: ${ICON}px; height: ${ICON}px; transform: translate(-50%, -50%); }
     .item .icon { width: ${ICON}px; height: ${ICON}px; display: block; }
-    /* A background picture forces Finder to render the window in light mode, so it draws the
-       captions in black in BOTH light and dark themes (not white-on-dark) — which is why this
-       preview renders them black. The app label reads because it sits on the light plate baked
-       into the background; the Applications label stays dark on the dark surface, as it does in
-       the real DMG (and in Firefox's). */
+    /* A background picture forces Finder to draw icon captions in black (in both light and dark
+       system themes), which is why this preview renders them black. The light background keeps
+       both captions legible on their own — no per-label plate needed. */
     .item .label {
         position: absolute; left: 50%; top: ${ICON + 6}px; transform: translateX(-50%);
         white-space: nowrap; font-size: 13px; font-weight: 500; color: #1d1d1f;

@@ -33,27 +33,24 @@ reads `background.png`/`@2x`). Kept reproducible from source so it isn't a myste
   light mode**, so the icon captions are drawn in **black in both light and dark system themes** — not the
   white-on-dark you might expect in Dark mode. And the caption colour is Finder's alone: the DMG format has
   no label-colour field (the `icvp` icon-view plist appdmg/ds-store write exposes only icon size, positions,
-  window size, and background). appdmg also can't ship separate dark/light backgrounds (only tools like
-  DropDMG can). So we keep the app caption legible with the light label plate described under *Design*.
+  window size, and background), and appdmg can't ship separate dark/light backgrounds (only tools like
+  DropDMG can). That black caption colour is why the surface is **light** (see *Design*) — the captions read
+  on their own, with no per-label trick needed.
 
 ## Design
 
-- Reuses the installer splash's brand language: the same dark surface and a soft glow tinted from the
-  trillium's three leaves (green/orange/red — purple for nightly). The drag arrow is a muted neutral
-  grey, kept quiet so it doesn't compete with the icons.
-- The icons sit directly on the dark surface (no tiles), app on the left and `/Applications` alias on the
+- **Light surface, reused verbatim from the in-app setup screen** (`apps/client/src/setup.css`, light
+  theme): soft indigo/purple/blue radial glows over the near-white left-pane base (`#f2f2f2`). The light
+  surface keeps Finder's forced-black captions legible on their own. The same gradient is used for both
+  channels; **nightly** is distinguished only by the purple leaf mark and the NIGHTLY badge. The wordmark
+  is dark (`#2b3038`, muted `#7c828c` for "Notes"), and the drag arrow is a muted neutral grey, kept quiet
+  so it doesn't compete with the icons.
+- The icons sit directly on the surface (no tiles/plates), app on the left and `/Applications` alias on the
   right, with the drag arrow between them. Their **centers** must line up with the `contents` coordinates
   in `forge.config.ts`, which use a **top-left** origin, y increasing downward, with `(x, y)` the icon
   center — Finder's `.DS_Store` `Iloc` convention (confirmed by appdmg's own example, where `y: 344` sits
   near the *bottom* of the window). So the `contents` y is measured from the top, not `windowHeight - y`.
   `contents` uses **y = 200** (near the vertical middle), so Finder draws the captions at **~y = 278**.
-- **Light label plate — the Firefox DMG trick.** Because a background picture forces Finder to draw the
-  captions in black (in both themes) and we can't override that colour, a light rounded **plate is baked
-  into the background** under where Finder draws the "Trilium Notes" caption, so its black text stays
-  legible on the dark surface. Only the app is plated: its name is a
-  fixed-width brand string, whereas the localized `/Applications` name varies in width — and the folder is
-  self-evident, so (like Firefox) its caption is left unplated. The plate position tracks the icon center,
-  so keep it in sync if `contents` y changes; fine-tune on a macOS build like the icon positions.
 - **No baked text beyond the "Trilium Notes" wordmark** (a brand name, not translated). The DMG ships one
   image for every locale, so there is no localized instruction line — the arrow conveys the action, and
   Finder draws the app name and "Applications" captions under the real icons.
@@ -62,4 +59,4 @@ reads `background.png`/`@2x`). Kept reproducible from source so it isn't a myste
 
 - 640 × 400 pt window; `background.png` is 640 × 400, `background@2x.png` is 1280 × 800.
 - `iconSize` 128; app icon centered at (180, 200), Applications at (460, 200) in **top-left** coords —
-  keep in sync with the `contents` in the maker config and the label plate position in `background.html`.
+  keep in sync with the `contents` in the maker config.
