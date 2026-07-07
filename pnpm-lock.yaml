@@ -276,8 +276,8 @@ importers:
         specifier: 0.25.1
         version: 0.25.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)(rxjs@7.8.2)
       '@zumer/snapdom':
-        specifier: 2.12.9
-        version: 2.12.9
+        specifier: 2.15.0
+        version: 2.15.0
       autocomplete.js:
         specifier: 0.38.1
         version: 0.38.1
@@ -874,8 +874,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/splitjs
       '@zumer/snapdom':
-        specifier: 2.12.9
-        version: 2.12.9
+        specifier: 2.15.0
+        version: 2.15.0
       aes-js:
         specifier: 3.1.2
         version: 3.1.2
@@ -6627,8 +6627,8 @@ packages:
     resolution: {integrity: sha512-RQ4h9F6DOiHxpdocUDrOl6xBM+yOtz+LkUol47AVWcfebGBDpZ7w7Xvz9PS24JgXvLGiXXzSAfdCdVy1tPlaFA==}
     engines: {bun: '>=0.7.0', deno: '>=1.0.0', node: '>=18.0.0'}
 
-  '@zumer/snapdom@2.12.9':
-    resolution: {integrity: sha512-Zufl1vEthT931kcZfmAaRSnucAGIRLGi9N6JI8ZsdyHww5hHHLk4t5LU1DxS5pNAPi1MptPHcGON1pkXEBf5iw==}
+  '@zumer/snapdom@2.15.0':
+    resolution: {integrity: sha512-rdayfg832lYhy2v2DRr4LwzhIT0ZMeGKYicVmtzbji95KhUd7Z1g6/5jTsDEU4q32a6ywbIpAixO45hubsEftQ==}
 
   abbrev@1.1.1:
     resolution: {integrity: sha512-nne9/IiQ/hzIhY6pdDnbBtz7DjPTKrY00P/zvPSm5pOFkl6xuGrGnXn/VtTNNfNtAfZ9/1RtehkszU9qcTii0Q==}
@@ -20647,7 +20647,7 @@ snapshots:
 
   '@zip.js/zip.js@2.8.26': {}
 
-  '@zumer/snapdom@2.12.9': {}
+  '@zumer/snapdom@2.15.0': {}
 
   abbrev@1.1.1: {}
 
