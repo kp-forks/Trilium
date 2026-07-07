@@ -332,18 +332,34 @@ function extractFormulas(text: string): { processedText: string; placeholderMap:
     let processedText = noCodeText
         .replace(/(?<![\\$])\$\$(?!\$)((?:(?!\n{2,})[^$])+?)\$\$(?!\$)/g, (_, formula: string) => {
             const key = `<!--FORMULA_BLOCK_${timestamp}_${id++}-->`;
-            formulaMap.set(key, `<span class="math-tex">\\[${formula}\\]</span>`);
+            formulaMap.set(key, `<span class="math-tex">\\[${escapeMathFormula(formula)}\\]</span>`);
             return key;
         })
         .replace(/(?<![\\$])\$(?!\$)([^$\n]+?)\$(?!\$)/g, (_, formula: string) => {
             const key = `<!--FORMULA_INLINE_${timestamp}_${id++}-->`;
-            formulaMap.set(key, `<span class="math-tex">\\(${formula}\\)</span>`);
+            formulaMap.set(key, `<span class="math-tex">\\(${escapeMathFormula(formula)}\\)</span>`);
             return key;
         });
 
     processedText = restoreFromMap(processedText, codeMap);
 
     return { processedText, placeholderMap: formulaMap };
+}
+
+/**
+ * Escapes the HTML-significant characters (`&`, `<`, `>`) in a math formula body.
+ *
+ * The formula is restored into the HTML string *before* sanitization, so a raw `<`
+ * (e.g. `k<K`) would be parsed as the start of an HTML tag and the sanitizer would
+ * strip everything after it, truncating the equation (#10418). Escaping matches how
+ * CKEditor serializes the equation (a text node, so quotes are intentionally left
+ * untouched) and round-trips cleanly back into the editor.
+ */
+function escapeMathFormula(formula: string): string {
+    return formula
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 }
 
 function restoreFromMap(text: string, map: Map<string, string>): string {
