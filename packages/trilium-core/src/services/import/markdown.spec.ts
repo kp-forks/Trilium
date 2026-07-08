@@ -245,6 +245,26 @@ $$`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
+    it("escapes HTML-significant characters in display math so they survive sanitization (#10418)", () => {
+        // The `<` in `k<K` used to be treated as the start of an HTML tag by the
+        // sanitizer, which stripped everything from `<K` onwards and truncated the
+        // formula. Escaping `<`/`>`/`&` (matching how CKEditor serializes the math
+        // text node) keeps the whole equation intact.
+        const input = `$$
+\\min_{0\\le k<K}\\|\\operatorname{grad}\\Phi(x_k)\\|^2 = O(1/K),
+$$`;
+        const expected = /*html*/`<span class="math-tex">\\[
+\\min_{0\\le k&lt;K}\\|\\operatorname{grad}\\Phi(x_k)\\|^2 = O(1/K),
+\\]</span>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
+    it("escapes HTML-significant characters in inline math (#10418)", () => {
+        const input = `Condition: $a<b$ and $c>d$ with $x \\& y$.`;
+        const expected = /*html*/`<p>Condition: <span class="math-tex">\\(a&lt;b\\)</span> and <span class="math-tex">\\(c&gt;d\\)</span> with <span class="math-tex">\\(x \\&amp; y\\)</span>.</p>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
     it("ignores math formulas inside code blocks and converts inline math expressions correctly", () => {
         const result = markdownService.renderToHtml(trimIndentation`\
             \`\`\`unknownlanguage

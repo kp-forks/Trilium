@@ -251,6 +251,64 @@ describe("inline files", () => {
     });
 });
 
+describe("bookmarks", () => {
+    /** A bookmark block — Anytype's web-link card, carrying the target site's url/title/description inline. */
+    const bookmarkBlock = (id: string, bookmark: AnytypeBlock["bookmark"]): AnytypeBlock => ({ id, bookmark, childrenIds: [] });
+
+    it("renders a bookmark as a Trilium link-embed, keeping the title, description and favicon/preview file placeholders", () => {
+        const doc = listDoc(["b1"], [
+            bookmarkBlock("b1", {
+                url: "https://triliumnotes.org/",
+                title: "Trilium Notes",
+                description: "An open-source note-taking app.",
+                faviconHash: "favicon-cid",
+                imageHash: "preview-cid",
+                type: "Page",
+                targetObjectId: "bookmark-obj-cid",
+                state: "Done"
+            })
+        ]);
+        const result = parseObject(doc);
+        // The favicon/preview are emitted as raw file-id placeholders; the importer resolves them to data URIs.
+        expect(result.content).toBe(
+            '<section class="link-embed" data-url="https://triliumnotes.org/" data-embed-type="opengraph" data-title="Trilium Notes" data-description="An open-source note-taking app." data-favicon="favicon-cid" data-image="preview-cid"></section>'
+        );
+        // The favicon/preview file ids are surfaced so a collection-scoped export doesn't treat them as members.
+        expect(result.inlineFileIds).toEqual(["favicon-cid", "preview-cid"]);
+    });
+
+    it("omits the optional fields when the bookmark doesn't provide them", () => {
+        const doc = listDoc(["b1"], [bookmarkBlock("b1", { url: "https://example.com/", state: "Done" })]);
+        const result = parseObject(doc);
+        expect(result.content).toBe(
+            '<section class="link-embed" data-url="https://example.com/" data-embed-type="opengraph"></section>'
+        );
+        expect(result.inlineFileIds).toEqual([]);
+    });
+
+    it("escapes the url, title and description", () => {
+        const doc = listDoc(["b1"], [
+            bookmarkBlock("b1", { url: 'https://example.com/?a="1"&b=2', title: 'A & "B" <x>', description: "<script>" })
+        ]);
+        expect(parseObject(doc).content).toBe(
+            '<section class="link-embed" data-url="https://example.com/?a=&quot;1&quot;&amp;b=2" data-embed-type="opengraph" data-title="A &amp; &quot;B&quot; &lt;x&gt;" data-description="&lt;script&gt;"></section>'
+        );
+    });
+
+    it("drops a bookmark with no url (still resolving, or a broken card)", () => {
+        const doc = listDoc(["b1"], [bookmarkBlock("b1", { title: "No url yet", state: "Fetching" })]);
+        expect(parseObject(doc).content).toBe("");
+    });
+
+    it("does not record an internalLink for a bookmark (it is an external web link, not an imported note)", () => {
+        const doc = listDoc(["b1"], [bookmarkBlock("b1", { url: "https://example.com/", targetObjectId: "bookmark-obj-cid", state: "Done" })]);
+        const resolve: LinkResolver = () => ({ noteId: "n", title: "unexpected" });
+
+        const result = parseObject(doc, resolve);
+        expect(result.linkTargetIds).toEqual([]);
+    });
+});
+
 describe("extractContent", () => {
     it("returns empty output when the block tree has no resolvable root", () => {
         expect(extractContent([], "missing", () => undefined)).toEqual({ html: "", linkTargetIds: [], fileTargetIds: [] });

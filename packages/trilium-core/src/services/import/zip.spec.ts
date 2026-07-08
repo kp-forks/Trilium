@@ -19,7 +19,7 @@ async function testImport(fileName: string) {
     return testImportBuffer(buffer);
 }
 
-async function testImportBuffer(buffer: Buffer, taskId = "import-mdx", taskData: Record<string, unknown> = { textImportedAsText: true }) {
+async function testImportBuffer(buffer: Buffer, taskId = "import-mdx", taskData: Record<string, unknown> = { textImportedAsText: true }, opts?: { restoreAsRoot?: boolean; preserveIds?: boolean }) {
     const taskContext = TaskContext.getInstance(taskId, "importNotes", taskData);
 
     return new Promise<{ importedNote: BNote; rootNote: BNote }>((resolve, reject) => {
@@ -30,7 +30,7 @@ async function testImportBuffer(buffer: Buffer, taskId = "import-mdx", taskData:
                 return;
             }
 
-            const importedNote = await zip.importZip(taskContext, buffer, rootNote as BNote);
+            const importedNote = await zip.importZip(taskContext, buffer, rootNote as BNote, opts);
             resolve({
                 importedNote,
                 rootNote
@@ -287,6 +287,138 @@ describe("processNoteContent", () => {
         // 3 entries extracted, then the 3 created notes processed — the denominator deliberately switches
         // between phases rather than being summed into one inflated total
         expect(setTotalSpy.mock.calls.map((call) => call[0])).toEqual([3, 3]);
+    });
+
+    it("imports an exported root note as a regular note instead of corrupting the system root", async () => {
+        // Exporting a root note that has its own content yields a meta entry with noteId "root" AND a
+        // data file. The "root" id must be remapped on import (like any other note) so the archived root
+        // lands as an ordinary note under the import target - rather than overwriting the destination's
+        // real root note and creating a self-referential root->root branch that breaks loading.
+        const metaFile = {
+            formatVersion: 2,
+            appVersion: "0.0.0",
+            files: [{
+                noteId: "root",
+                title: "root",
+                type: "text",
+                mime: "text/html",
+                format: "html",
+                dataFileName: "root.html",
+                dirFileName: "root",
+                attributes: [],
+                attachments: [],
+                children: [{
+                    noteId: "1giO9zlsdvT6",
+                    title: "Hi",
+                    type: "text",
+                    mime: "text/html",
+                    format: "html",
+                    dataFileName: "Hi.html",
+                    attributes: [],
+                    attachments: []
+                }]
+            }]
+        };
+
+        const zipBuffer = await createZipBuffer({
+            "!!!meta.json": JSON.stringify(metaFile),
+            "root.html": "<p>archived root content</p>",
+            "root/Hi.html": "<p>hi content</p>"
+        });
+
+        const { importedNote, rootNote } = await testImportBuffer(zipBuffer, "import-root-note");
+
+        // The archived root becomes a fresh, ordinary note placed under the import target - not the system root.
+        expect(importedNote.noteId).not.toBe("root");
+        expect(importedNote.title).toBe("root");
+        expect(importedNote.getContent().toString()).toContain("archived root content");
+        expect(rootNote.getChildNotes().map((n) => n.noteId)).toContain(importedNote.noteId);
+
+        // Its child came along under the new note.
+        const hi = importedNote.getChildNotes().find((n) => n.title === "Hi");
+        expect(hi?.getContent().toString()).toContain("hi content");
+
+        // No corruption: the system root keeps its own content and gains no self-referential branch.
+        expect(rootNote.getContent().toString()).not.toContain("archived root content");
+        expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
+    });
+
+    it("restoreAsRoot maps the archived root onto the destination root instead of wrapping it (demo-content shape)", async () => {
+        // The demo archive (and a whole-database restore) is an export whose top note IS "root" with no
+        // own content - just children. With restoreAsRoot those children must land directly under the
+        // destination root, not inside a redundant "root" wrapper note (which produced "two root folders").
+        const metaFile = {
+            formatVersion: 2,
+            appVersion: "0.0.0",
+            files: [{
+                noteId: "root",
+                title: "root",
+                type: "text",
+                mime: "text/html",
+                format: "html",
+                dirFileName: "root",
+                attributes: [],
+                attachments: [],
+                children: [
+                    { noteId: "demoChildA", title: "Journal", type: "text", mime: "text/html", format: "html", dataFileName: "Journal.html", attributes: [], attachments: [] },
+                    { noteId: "demoChildB", title: "Miscellaneous", type: "text", mime: "text/html", format: "html", dataFileName: "Miscellaneous.html", attributes: [], attachments: [] }
+                ]
+            }]
+        };
+
+        const zipBuffer = await createZipBuffer({
+            "!!!meta.json": JSON.stringify(metaFile),
+            "root/Journal.html": "<p>journal</p>",
+            "root/Miscellaneous.html": "<p>misc</p>"
+        });
+
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-restore-as-root", { textImportedAsText: true }, { restoreAsRoot: true });
+
+        // The archived root's children are DIRECT children of the destination root - a "root" wrapper note
+        // would interpose itself as their parent instead (the "two root folders" regression).
+        const journal = rootNote.getChildNotes().find((n) => n.title === "Journal");
+        const misc = rootNote.getChildNotes().find((n) => n.title === "Miscellaneous");
+        expect(journal?.getParentNotes().map((n) => n.noteId)).toEqual(["root"]);
+        expect(misc?.getParentNotes().map((n) => n.noteId)).toEqual(["root"]);
+        // And no self-referential root branch.
+        expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
+    });
+
+    it("restoreAsRoot merges an archived root that has its own content into the destination root", async () => {
+        const metaFile = {
+            formatVersion: 2,
+            appVersion: "0.0.0",
+            files: [{
+                noteId: "root",
+                title: "root",
+                type: "text",
+                mime: "text/html",
+                format: "html",
+                dataFileName: "root.html",
+                dirFileName: "root",
+                attributes: [],
+                attachments: [],
+                children: [
+                    { noteId: "restoreChild1", title: "Restored Child", type: "text", mime: "text/html", format: "html", dataFileName: "Restored Child.html", attributes: [], attachments: [] }
+                ]
+            }]
+        };
+
+        const zipBuffer = await createZipBuffer({
+            "!!!meta.json": JSON.stringify(metaFile),
+            "root.html": "<p>restored root content</p>",
+            "root/Restored Child.html": "<p>child content</p>"
+        });
+
+        const { rootNote } = await testImportBuffer(zipBuffer, "import-restore-root-content", { textImportedAsText: true }, { restoreAsRoot: true });
+
+        // The archived root's content is written onto the real root, and its child attaches directly to
+        // root - no wrapper note, no self-referential branch.
+        expect(rootNote.getContent().toString()).toContain("restored root content");
+        const child = rootNote.getChildNotes().find((n) => n.title === "Restored Child");
+        expect(child?.getParentNotes().map((n) => n.noteId)).toEqual(["root"]);
+        expect(child?.getContent().toString()).toContain("child content");
+        expect(becca.getBranchFromChildAndParent("root", "root")).toBeFalsy();
     });
 
     it("imports a CSV entry as a plain file note when the spreadsheet option is off", async () => {

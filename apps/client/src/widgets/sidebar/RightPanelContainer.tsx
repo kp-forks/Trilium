@@ -2,6 +2,7 @@
 import "./RightPanelContainer.css";
 
 import Split from "@triliumnext/split.js";
+import clsx from "clsx";
 import { VNode } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 
@@ -13,18 +14,19 @@ import { DEFAULT_GUTTER_SIZE } from "../../services/resizer";
 import { isStandalone } from "../../services/utils";
 import ActionButton from "../react/ActionButton";
 import Button from "../react/Button";
-import { useActiveNoteContext, useLegacyWidget, useNoteProperty, useTriliumEvent, useTriliumOptionBool, useTriliumOptionJson } from "../react/hooks";
+import { useActiveNoteContext, useGetContextData, useLegacyWidget, useNoteProperty, useTriliumEvent, useTriliumOptionBool, useTriliumOptionJson } from "../react/hooks";
 import LazyComponent from "../react/LazyComponent";
 import NoItems from "../react/NoItems";
 import { PaneMode, usePaneMode, usePeekDismiss } from "../react/peek_pane";
 import LegacyRightPanelWidget from "../right_panel_widget";
+import ChatHighlightsList from "./ChatHighlightsList";
 import HighlightsList from "./HighlightsList";
 import PdfAnnotations from "./pdf/PdfAnnotations";
 import PdfAttachments from "./pdf/PdfAttachments";
 import PdfLayers from "./pdf/PdfLayers";
 import PdfPages from "./pdf/PdfPages";
-import RightPanePeekButton from "./RightPanePeekButton";
 import RightPanelWidget from "./RightPanelWidget";
+import RightPanePeekButton from "./RightPanePeekButton";
 import TableOfContents from "./TableOfContents";
 
 const MIN_WIDTH_PERCENT = 5;
@@ -37,8 +39,8 @@ interface RightPanelWidgetDefinition {
 }
 
 export default function RightPanelContainer({ widgetsByParent }: { widgetsByParent: WidgetsByParent }) {
-    const { mode, visible, togglePeek, toggleDocked, dock, close } = usePaneMode("rightPaneVisible");
-    const items = useItems(visible, widgetsByParent);
+    const { mode, visible, mounted, togglePeek, toggleDocked, dock, close, dismiss } = usePaneMode("rightPaneVisible");
+    const items = useItems(mounted, widgetsByParent);
     useSplit(mode);
 
     // Legacy entry points (tab-row toggle, empty-state button) open/close the *docked* pane;
@@ -46,7 +48,9 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
     useTriliumEvent("toggleRightPane", toggleDocked);
     useTriliumEvent("peekRightPane", togglePeek);
 
-    usePeekDismiss(mode === "peek", close, {
+    // Outside-press / Esc *soft*-dismisses the peek: it hides but stays mounted, so re-peeking is
+    // instant and preserves widget state. The × button and the docked toggle hard-close (unmount).
+    usePeekDismiss(mode === "peek", dismiss, {
         keepOpenSelector: "#right-pane, .right-pane-peek-button",
         focusSelector: ".right-pane-peek-button"
     });
@@ -58,8 +62,9 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
             <RightPanePeekButton rightPaneVisible={visible} onToggle={togglePeek} />
             {/* Persistent host so #right-pane never reparents between modes (which would remount the
                 right pane widgets). Docked: an in-flow flex child Split resizes against #center-pane.
-                Peek: an absolute layer over the content where Split resizes the spacer vs the pane. */}
-            <div id="right-pane-host" class={mode === "peek" ? "peek" : undefined}>
+                Peek: an absolute layer over the content where Split resizes the spacer vs the pane.
+                `hidden` (display:none) keeps soft-dismissed peek content mounted but out of layout. */}
+            <div id="right-pane-host" class={clsx(mode === "peek" && "peek", !visible && "hidden")}>
                 {/* The spacer is both the left Split target and the dismiss backdrop in peek mode:
                     it covers the content (a click dismisses) and shields the PDF iframe so Split's
                     drag tracking isn't interrupted. Always rendered + CSS-toggled to keep the host's
@@ -74,7 +79,7 @@ export default function RightPanelContainer({ widgetsByParent }: { widgetsByPare
                             <ActionButton icon="bx bx-x" text={t("right_pane.close")} onClick={close} />
                         </div>
                     )}
-                    {visible && (
+                    {mounted && (
                         items.length > 0 ? (
                             items
                         ) : (
@@ -103,6 +108,9 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
     const noteType = useNoteProperty(note, "type");
     const noteMime = useNoteProperty(note, "mime");
     const [ highlightsList ] = useTriliumOptionJson<string[]>("highlightsList");
+    // Published by the LLM chat; drives the chat highlights widget's visibility (only shown once
+    // the chat has at least one highlight).
+    const chatHighlights = useGetContextData("chatHighlights");
     // Subscribe to the AI toggle so the LLM chat is added/removed reactively without a page reload.
     const [ aiEnabled ] = useTriliumOptionBool("aiEnabled");
     const isPdf = noteType === "file" && noteMime === "application/pdf";
@@ -111,7 +119,7 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
     const definitions: RightPanelWidgetDefinition[] = [
         {
             el: <TableOfContents />,
-            enabled: (noteType === "text" || noteType === "doc" || isPdf || !!note?.isMarkdown()),
+            enabled: (noteType === "text" || noteType === "doc" || isPdf || noteType === "llmChat" || !!note?.isMarkdown()),
         },
         {
             el: <PdfPages />,
@@ -132,6 +140,10 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
         {
             el: <HighlightsList />,
             enabled: noteType === "text" && highlightsList.length > 0,
+        },
+        {
+            el: <ChatHighlightsList />,
+            enabled: noteType === "llmChat" && (chatHighlights?.highlights.length ?? 0) > 0,
         },
         {
             // Loaded lazily because the chat pulls in the whole LLM + CKEditor graph,

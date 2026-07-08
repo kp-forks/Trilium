@@ -75,6 +75,9 @@ vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent })
 const embeddedNoteListComponent = vi.fn((_props: any) => null);
 vi.mock("../widgets/collections/NoteList", () => ({ EmbeddedNoteList: embeddedNoteListComponent }));
 
+const iconPackPreviewComponent = vi.fn((_props: any) => null);
+vi.mock("../widgets/type_widgets/icon_pack/IconPackPreview", () => ({ IconPackPreview: iconPackPreviewComponent }));
+
 // `addHook` is a no-op here: sanitize_content.ts registers a DOMPurify hook at
 // module load (pulled in transitively), which would otherwise throw against this mock.
 vi.mock("dompurify", () => ({ default: { sanitize: (s: string) => s, addHook: () => {} } }));
@@ -646,7 +649,8 @@ describe("getRenderingType detection", () => {
 
         const iconPack = buildNote({ title: "icons", type: "file", "#iconPack": "" });
         iconPack.mime = "application/json";
-        // iconPack stays a file -> renders as a generic file (not tooltip), so type === file
-        expect((await getRenderedContent(iconPack)).type).toBe("file");
+        iconPack.getBlob = (async () => ({ content: "{}" })) as any;
+        // Tagged as an icon pack -> renders the glyph-grid preview, not raw file/code content.
+        expect((await getRenderedContent(iconPack)).type).toBe("iconPack");
     });
 });

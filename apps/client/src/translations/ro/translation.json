@@ -2728,5 +2728,22 @@
       "invalid-symbol": "simbolul markdown trebuie să fie un singur caracter, cu excepția „[”, „ ”, „X” și „]”",
       "duplicate-symbol": "simbol markdown duplicat"
     }
+  },
+  "keyboard_shortcut_keys": {
+    "ctrl": "Ctrl",
+    "alt": "Alt",
+    "shift": "Shift",
+    "meta": "Meta",
+    "enter": "Enter",
+    "escape": "Esc",
+    "delete": "Delete",
+    "backspace": "Backspace",
+    "space": "Spațiu",
+    "tab": "Tab",
+    "home": "Home",
+    "end": "End",
+    "page_up": "Page Up",
+    "page_down": "Page Down",
+    "insert": "Insert"
   }
 }

@@ -1,9 +1,12 @@
 # Import & Export
 Trilium natively supports the following formats for both import and export.
 
+## Supported formats
+
 *   HTML:
     *   This is the main format used by Trilium, where standard tags are used to represent basic formatting and layout (e.g. `<strong>`, `<table>`, `<pre>`).
     *   Note that HTML is not a standardized format so some more specific features such as admonitions or <a class="reference-link" href="../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> might not be supported by other applications.
+    *   The notes can also be exported as [static HTML that can be used for web publishing](../Advanced%20Usage/Sharing/Exporting%20static%20HTML%20for%20web%20publishing.md).
 *   <a class="reference-link" href="Import%20%26%20Export/Markdown.md">Markdown</a>
     *   Most of the formatting is preserved, see <a class="reference-link" href="Import%20%26%20Export/Markdown/Supported%20syntax.md">Supported syntax</a>.
 *   OPML (Outliner Interchange Format)
@@ -26,3 +29,16 @@ During large imports or exports, memory consumption might spike but it will rema
 > *   The import dialog (via right click in the note tree → _Import into note_ or from <a class="reference-link" href="UI%20Elements/Note%20buttons.md">Note buttons</a>).
 > 
 > When dealing with large files (multi-gigabyte), prefer using the import dialog as it has a special mechanism which makes sure that the file is read directly from disk rather than uploaded again.
+
+## Exporting the root note
+
+The root note is the top-most note. Exporting it behaves just like any other note: right click on it in the <a class="reference-link" href="UI%20Elements/Note%20Tree.md">Note Tree</a> and select _Export_.
+
+Starting with v0.104.0, when a root note is imported, it will be imported as a child of your existing root note. This behavior makes sure that the import cannot change or overwrite your existing notes.
+
+You can easily move the notes onto the root using the tree's <a class="reference-link" href="UI%20Elements/Note%20Tree/Multiple%20selection.md">Multiple selection</a> and delete the redundant root note.
+
+<table><thead><tr><th scope="col">Before</th><th scope="col">After</th></tr></thead><tbody><tr><td><ul><li data-list-item-id="e8c5b61fca3b22a75ee4f651a12b0cd2b">root<ul><li data-list-item-id="e1e4f62c9fe4499cabfefcba28bf64c7e">one</li><li data-list-item-id="e8088b4ea90e8371d88182db886b8fd1f">two</li></ul></li></ul></td><td><ul><li data-list-item-id="e74bf0ef3d3f2aff13bb3918d1e23e06f">root (existing)<ul><li data-list-item-id="efcba337fd0db50e4d83740d986d04b00">root (from import)<ul><li data-list-item-id="e50b95f63c2069dbf902c281256c32155">one</li><li data-list-item-id="e406337a40071ddfc3c5b1432ba235a2e">two</li></ul></li></ul></li></ul></td></tr></tbody></table>
+
+> [!TIP]
+> Instead of exporting full ZIPs (including the root note), consider using [backups](../Installation%20%26%20Setup/Backup.md) instead. Backups always contain the entire structure, as well as additional information a ZIP export does not have: maintains note IDs, contains the options/tokens and handle <a class="reference-link" href="Notes/Protected%20Notes.md">Protected Notes</a> better.

@@ -696,6 +696,11 @@
     "undelete_notes_instruction": "After the deletion, it's possible to undelete them from Recent Changes dialog.",
     "erase_notes_instruction": "To erase notes permanently, you can go after the deletion to the Option -> Other and click the \"Erase deleted notes now\" button."
   },
+  "save_revision": {
+    "save_revision": "Save revision",
+    "revision_name_placeholder": "Revision name (optional)",
+    "help": "A named revision will be saved for each matched note, capturing its current content and title."
+  },
   "delete_revisions": {
     "delete_note_revisions": "Delete note revisions",
     "all_past_note_revisions": "All past note revisions of matched notes will be deleted. Note itself will be fully preserved. In other terms, note's history will be removed."
@@ -708,6 +713,16 @@
     "move_note_new_parent": "move note to the new parent if note has only one parent (i.e. the old branch is removed and new branch into the new parent is created)",
     "clone_note_new_parent": "clone note to the new parent if note has multiple clones/branches (it's not clear which branch should be removed)",
     "nothing_will_happen": "nothing will happen if note cannot be moved to the target note (i.e. this would create a tree cycle)"
+  },
+  "convert_note": {
+    "convert_note": "Convert",
+    "convert_note_to": "Convert note",
+    "choose_conversion": "(choose a conversion)",
+    "conversion_htmlToMarkdown": "Text Notes → Markdown Notes (lossy)",
+    "conversion_markdownToHtml": "Markdown Notes → Text Notes",
+    "help_text": "The conversion is applied only to notes matching the source type; other notes are left untouched. A revision of each converted note is saved beforehand.",
+    "warning": "Some formatting may be lost when converting notes and you may need to fix a few things afterwards. A revision of each converted note will be saved beforehand so you can restore it. Do you want to continue?",
+    "warning_risky": "You are converting between two formats that don't have identical capabilities, so some formatting may be lost and some unsupported elements may be dropped.<br><br>Do you fully assume this risk and want to proceed with the conversion?<br><br>A revision of each converted note will be saved beforehand, so you can revert to the original format."
   },
   "rename_note": {
     "rename_note": "Rename note",
@@ -794,6 +809,9 @@
     "october": "October",
     "november": "November",
     "december": "December",
+    "day": "Day",
+    "day_previous": "Previous Day",
+    "day_next": "Next Day",
     "week": "Week",
     "week_previous": "Previous week",
     "week_next": "Next week",
@@ -905,6 +923,12 @@
     "convert_into_attachment_failed": "Converting note '{{title}}' failed.",
     "convert_into_attachment_successful": "Note '{{title}}' has been converted to attachment.",
     "convert_into_attachment_prompt": "Are you sure you want to convert note '{{title}}' into an attachment of the parent note?",
+    "convert_to_markdown": "Convert to Markdown Note",
+    "convert_to_text": "Convert to Text Note",
+    "convert_format_warning": "Some formatting may be lost during the conversion and you may need to fix a few things afterwards. A revision of the current note will be saved beforehand so you can restore it. Do you want to continue?",
+    "convert_format_warning_risky": "You are converting between two formats that don't have identical capabilities, so some formatting may be lost and some unsupported elements may be dropped.<br><br>Do you fully assume this risk and want to proceed with the conversion?<br><br>A revision of the current note will be saved beforehand, so you can revert to the original format.",
+    "convert_to_markdown_successful": "Note has been converted to Markdown.",
+    "convert_to_text_successful": "Note has been converted to a text note.",
     "print_pdf": "Export as PDF...",
     "export_as_image": "Export as image",
     "export_as_image_png": "PNG (raster)",
@@ -925,7 +949,7 @@
     "update_available": "Update available"
   },
   "note_launcher": {
-    "this_launcher_doesnt_define_target_note": "This launcher doesn't define target note."
+    "this_launcher_doesnt_define_target_note": "This launcher has no target note configured, so there's nothing to open. Set its \"target\" relation to point it at a note."
   },
   "code_buttons": {
     "execute_button_title": "Execute script",
@@ -1024,7 +1048,7 @@
     "open_all_in_tabs_tooltip": "Open all results in new tabs",
     "open_all_confirm_one": "This will open {{count}} note in new tabs. Continue?",
     "open_all_confirm_other": "This will open {{count}} notes in new tabs. Continue?",
-    "open_all_too_many": "Too many results ({{count}}). Maximum is {{max}}."
+    "open_all_too_many": "Too many notes to open at once ({{count}}). The maximum is {{max}}, try narrowing the results first."
   },
   "edited_notes": {
     "no_edited_notes_found": "No edited notes on this day yet...",
@@ -1251,6 +1275,14 @@
     "show_details": "Show details",
     "last_valid_render": "Showing last valid render"
   },
+  "icon_pack": {
+    "preview_title": "Icon pack preview",
+    "invalid_manifest": "The icon pack manifest could not be parsed. Check that it is valid JSON.",
+    "no_icons": "This icon pack contains no icons.",
+    "tooltip": "Class: {{- class}}\nGlyph code: {{- code}}\nTerms: {{- terms}}",
+    "count_one": "{{count}} icon",
+    "count_other": "{{count}} icons"
+  },
   "editable_text": {
     "placeholder": "Type the content of your note here...",
     "editor_crashed_title": "The text editor crashed",
@@ -1265,6 +1297,10 @@
     "open_note_instruction": "Open a note by typing the note's title into the input below or choose a note in the tree.",
     "search_placeholder": "search for a note by its name",
     "enter_workspace": "Enter workspace {{title}}"
+  },
+  "blob_stub": {
+    "not_synced": "This note's content is too large to sync to this device. You can open it on the sync server instead.",
+    "open_on_server": "Open on server"
   },
   "file": {
     "file_preview_not_available": "File preview is not available for this file format.",
@@ -1474,6 +1510,11 @@
     "color_scheme_light": "Light",
     "color_scheme_dark": "Dark",
     "color_scheme_custom_disabled": "Color scheme override is not available for custom themes",
+    "color_scheme_switcher_system": "System mode",
+    "color_scheme_switcher_light": "Light mode",
+    "color_scheme_switcher_dark": "Dark mode",
+    "color_scheme_switcher_hint": "Click to switch the color scheme.",
+    "color_scheme_switcher_unsupported": "The current theme doesn't support changing the color scheme.",
     "layout": "Layout",
     "layout-vertical-title": "Vertical",
     "layout-horizontal-title": "Horizontal",
@@ -1507,7 +1548,8 @@
     "title": "Available MIME types in the dropdown",
     "tooltip_syntax_highlighting": "Syntax highlighting",
     "tooltip_code_block_syntax": "Code blocks in Text notes",
-    "tooltip_code_note_syntax": "Code notes"
+    "tooltip_code_note_syntax": "Code notes",
+    "trilium_log": "Trilium Log"
   },
   "vim_key_bindings": {
     "use_vim_keybindings_in_code_notes": "Vim keybindings",
@@ -1779,7 +1821,7 @@
     "set_password_heading": "Set Password",
     "set_password": "Set Password",
     "password_mismatch": "New passwords are not the same.",
-    "password_changed_success": "Password has been changed. Trilium will be reloaded after you press OK."
+    "password_changed_success": "Password changed successfully."
   },
   "multi_factor_authentication": {
     "authentication_title": "Authentication",
@@ -1892,6 +1934,23 @@
     "conflicts_badge_one": "{{count}} conflict",
     "conflicts_badge_other": "{{count}} conflicts",
     "conflicts_badge_tooltip": "Some shortcuts are assigned to more than one action. Click to show only the conflicting shortcuts."
+  },
+  "keyboard_shortcut_keys": {
+    "ctrl": "Ctrl",
+    "alt": "Alt",
+    "shift": "Shift",
+    "meta": "Meta",
+    "enter": "Enter",
+    "escape": "Esc",
+    "delete": "Delete",
+    "backspace": "Backspace",
+    "space": "Space",
+    "tab": "Tab",
+    "home": "Home",
+    "end": "End",
+    "page_up": "Page Up",
+    "page_down": "Page Down",
+    "insert": "Insert"
   },
   "spellcheck": {
     "title": "Spell Check",
@@ -2068,6 +2127,25 @@
     "add_provider": "Add AI Provider",
     "stop": "Stop",
     "retry": "Retry",
+    "scroll_to_bottom": "Scroll to latest",
+    "read_only_notice": "Replying is not available because this AI chat is read-only.",
+    "toc_file": "File: {{name}}",
+    "highlights_title": "Highlights ({{count}})",
+    "highlights_empty": "No highlights yet. Select text in a message and choose \"Highlight\".",
+    "copy": "Copy",
+    "highlight_add": "Highlight",
+    "highlight_remove": "Remove highlight",
+    "highlight_remove_confirm": "Remove this highlight?",
+    "quote_selection": "Quote selection",
+    "quoted_from": "Quoted from",
+    "show_quote_source": "Show quote source",
+    "copy_message": "Copy message",
+    "save_to_subnote": "Save to sub-note",
+    "save_as_note": "Save as note",
+    "save_note_failed": "Failed to create a note from the message.",
+    "regenerate": "Regenerate",
+    "delete_message": "Delete message",
+    "delete_message_confirm": "Delete this message? This operation cannot be undone.",
     "attach_file": "Attach image, PDF, or text file",
     "remove_attachment": "Remove attachment",
     "attachment_upload_failed": "Failed to upload \"{{name}}\".",
@@ -2077,12 +2155,19 @@
     "title": "AI Chat",
     "launcher_title": "Open AI Chat",
     "new_chat": "Start new chat",
+    "more_actions": "More actions",
     "save_chat": "Save chat to notes",
     "empty_state": "Start a conversation",
     "history": "Chat history",
     "recent_chats": "Recent chats",
     "no_chats": "No previous chats",
-    "view_all_chats": "View all chats"
+    "view_all_chats": "View all chats",
+    "rename": "Rename",
+    "rename_title": "Rename chat",
+    "rename_message": "Enter a new name for this chat:",
+    "delete": "Delete",
+    "delete_chat": "Delete chat",
+    "delete_confirm": "Delete this chat? This can't be undone."
   },
   "shared_switch": {
     "shared": "Shared",
@@ -2546,7 +2631,14 @@
     "slide-overview": "Toggle an overview of the slides"
   },
   "calendar_view": {
-    "delete_note": "Delete note..."
+    "delete_note": "Delete note...",
+    "time_slots": "Time slots",
+    "slot_duration": "Duration",
+    "slot_label_interval": "Label interval",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours"
   },
   "ocr": {
     "extracted_text": "Extracted Text (OCR)",
@@ -2847,7 +2939,34 @@
     "sample_venn": "Venn",
     "sample_ishikawa": "Ishikawa",
     "sample_treeview": "TreeView",
-    "sample_wardley": "Wardley Map"
+    "sample_wardley": "Wardley Map",
+    "sample_cynefin": "Cynefin",
+    "sample_swimlane": "Swimlane",
+    "sample_railroad": "Railroad"
+  },
+  "login": {
+    "heading": "Log in to Trilium Notes",
+    "password": "Password",
+    "totp-token": "One-time password or recovery code",
+    "button": "Log in",
+    "remember-me": "Remember me",
+    "incorrect-password": "Password is incorrect. Please try again.",
+    "incorrect-totp": "One-time password is incorrect. Please try again.",
+    "incorrect-recovery-code": "Recovery code is incorrect, or has already been used.",
+    "too-many-attempts": "Too many login attempts. Please wait a few minutes and try again.",
+    "connection-error": "Couldn't reach the server. Check your connection and try again.",
+    "sign_in_with_sso": "Sign in with {{ssoIssuerName}}",
+    "sso-wrong-account": "That account isn't the one linked to this Trilium instance. Sign in with the linked account.",
+    "sso-not-enrolled": "Single sign-on isn't set up yet. Sign in with your password first, then link your account from the settings."
+  },
+  "set_password": {
+    "heading": "Set password",
+    "description": "Before you can start using Trilium from web, you need to set a password first. You will then use this password to login.",
+    "password": "Password",
+    "password-confirmation": "Password confirmation",
+    "button": "Set password",
+    "password-too-short": "Password must be at least {{length}} characters long.",
+    "passwords-dont-match": "The entered passwords don't match."
   },
   "setup": {
     "heading": "Get started with Trilium",

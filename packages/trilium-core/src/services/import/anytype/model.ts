@@ -36,9 +36,10 @@ export interface AnytypeText {
     iconEmoji?: string;
 }
 
-/** A single block in an object's `snapshot.data.blocks`. Non-text blocks (dividers, dataviews, …) carry
- * other keys this importer doesn't read yet; only `id`, `childrenIds`, `text`, `div`, `link` and (for code
- * blocks) `fields.lang` are needed to pull out the page's content in document order. */
+/** A single block in an object's `snapshot.data.blocks`. Non-text blocks (dataviews, …) carry other keys
+ * this importer doesn't read yet; only `id`, `childrenIds`, `text`, `div`, `link`, `file`, `latex`,
+ * `bookmark`, `table`/`tableRow` and (for code blocks) `fields.lang` are needed to pull out the page's
+ * content in document order. */
 export interface AnytypeBlock {
     id: string;
     childrenIds?: string[];
@@ -75,6 +76,22 @@ export interface AnytypeBlock {
     latex?: {
         text?: string;
         processor?: string;
+    };
+    /** A "bookmark" block — Anytype's web-link card. It carries the target site's `url`, `title` and
+     * `description` inline (fetched by Anytype when the card was created); `faviconHash`/`imageHash` are the
+     * CIDs of the fetched icon/preview `FileObject`s (content-addressed, not URLs — the importer resolves them
+     * to inline base64 `data:` URIs), and `targetObjectId` is the separate `ot-bookmark` object the card
+     * mirrors (a non-page layout, so not imported). Rendered as a Trilium link-embed (open-graph preview),
+     * like the Notion importer's bookmark cards. */
+    bookmark?: {
+        url?: string;
+        title?: string;
+        description?: string;
+        imageHash?: string;
+        faviconHash?: string;
+        type?: string;
+        targetObjectId?: string;
+        state?: string;
     };
     /** A table block (an empty marker object). Its two children are a `TableColumns` and a `TableRows`
      * layout block; each row's cells are text blocks whose id is `${rowId}-${columnId}`. */

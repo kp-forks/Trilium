@@ -1636,8 +1636,10 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     transform: rotate(-90deg);
 }
 
-::-webkit-scrollbar {
-    width: 12px;
+@supports (-webkit-box-reflect: below) {
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
 }
 
 ::-webkit-scrollbar-thumb {
@@ -2201,6 +2203,7 @@ body.zen #launcher-container,
 body.zen #launcher-pane,
 body.zen #left-pane,
 body.zen #right-pane,
+body.zen .right-pane-peek-button,
 body.zen #mobile-sidebar-wrapper,
 body.zen .tab-row-container,
 body.zen .tab-row-widget,
@@ -2217,6 +2220,11 @@ body.zen .floating-buttons-children > *:not(.bx-edit-alt),
 body.zen .action-button,
 body.zen .note-split:not(.type-book) .note-list-widget {
     display: none !important;
+}
+
+body.experimental-feature-new-layout.zen #vertical-main-container {
+    /* Remove the placeholder for the right pane peek button */
+    --right-pane-peek-button-gutter: 0;
 }
 
 body.zen .split-note-container-widget > .gutter {
