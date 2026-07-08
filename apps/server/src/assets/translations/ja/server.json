@@ -445,5 +445,11 @@
   },
   "obsidian_import": {
     "root-title": "Obsidian インポート"
+  },
+  "export": {
+    "zip_filter": "ZIP アーカイブ (*.zip)"
+  },
+  "import": {
+    "invalid_file_grant": "選択したファイルの有効期限が切れているか、ファイルが無効です。もう一度ファイルを選択してください。"
   }
 }
