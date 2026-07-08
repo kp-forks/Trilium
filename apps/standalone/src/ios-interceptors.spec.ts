@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { installIosInterceptors, setupFetchInterceptor, setupImageInterceptor, setupXhrInterceptor } from "./ios-interceptors.js";
+import { installIosInterceptors, setupFetchInterceptor, setupImageInterceptor, setupStylesheetInterceptor, setupXhrInterceptor } from "./ios-interceptors.js";
 
 const mocks = vi.hoisted(() => ({
     localFetch: vi.fn(),
@@ -337,6 +337,163 @@ describe("setupImageInterceptor", () => {
 
         await vi.waitFor(() => expect(mocks.localFetch).toHaveBeenCalledOnce());
         Object.defineProperty(document, "documentElement", { configurable: true, value: realDocEl });
+    });
+});
+
+describe("setupStylesheetInterceptor", () => {
+    function addStyle(css: string) {
+        const styleEl = document.createElement("style");
+        styleEl.textContent = css;
+        document.body.appendChild(styleEl);
+        return styleEl;
+    }
+
+    it("rewrites local API url() refs in an existing <style> to blob URLs, fetching each unique URL once", async () => {
+        let counter = 0;
+        vi.spyOn(URL, "createObjectURL").mockImplementation(() => `blob:font-${++counter}`);
+        mocks.localFetch.mockImplementation(async () => makeResponse("font-bytes"));
+
+        // Same URL referenced with two quoting styles + a second URL unquoted; the
+        // bundled relative ref and the data: URI must stay untouched.
+        const styleEl = addStyle(`
+            @font-face { src: url('api/attachments/download/f1') format('woff2'); }
+            .a { background: url("api/attachments/download/f1"); }
+            .b { background: url(api/attachments/download/f2); }
+            .c { background: url('./fonts/bundled.woff2'); }
+            .d { background: url(data:font/woff2;base64,AAAA); }
+        `);
+        setupStylesheetInterceptor();
+
+        await vi.waitFor(() => expect(styleEl.textContent).toContain("blob:"));
+        const css = styleEl.textContent ?? "";
+        expect(css).not.toContain("api/attachments/download");
+        // Both f1 refs collapse to the same blob URL; f2 gets its own.
+        expect(css.match(/blob:font-1/g)).toHaveLength(2);
+        expect(css).toContain("blob:font-2");
+        expect(css).toContain("./fonts/bundled.woff2");
+        expect(css).toContain("data:font/woff2;base64,AAAA");
+        expect(mocks.localFetch).toHaveBeenCalledTimes(2);
+        const fetchedUrls = mocks.localFetch.mock.calls.map(([req]) => (req as Request).url);
+        expect(fetchedUrls).toEqual([
+            localUrl("/api/attachments/download/f1"),
+            localUrl("/api/attachments/download/f2")
+        ]);
+    });
+
+    it("rewrites a <style> appended after setup without reprocessing its own rewrite", async () => {
+        vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:font-url");
+        mocks.localFetch.mockImplementation(async () => makeResponse("font-bytes"));
+        setupStylesheetInterceptor();
+
+        const styleEl = addStyle(".x { src: url('api/attachments/download/f1'); }");
+        await vi.waitFor(() => expect(styleEl.textContent).toContain("blob:font-url"));
+
+        // The rewrite itself mutates the style; the second pass must find nothing to do.
+        await new Promise((r) => setTimeout(r, 20));
+        expect(mocks.localFetch).toHaveBeenCalledOnce();
+    });
+
+    it("rewrites when a style's text is replaced later and shares the asset cache across styles", async () => {
+        vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:shared-font");
+        mocks.localFetch.mockImplementation(async () => makeResponse("font-bytes"));
+        const plain = addStyle(".plain { color: red; }");
+        setupStylesheetInterceptor();
+
+        plain.textContent = ".x { src: url('api/attachments/download/f1'); }";
+        await vi.waitFor(() => expect(plain.textContent).toContain("blob:shared-font"));
+
+        // A second stylesheet referencing the same asset reuses the cached blob URL.
+        const second = addStyle(".y { src: url('api/attachments/download/f1'); }");
+        await vi.waitFor(() => expect(second.textContent).toContain("blob:shared-font"));
+        expect(mocks.localFetch).toHaveBeenCalledOnce();
+    });
+
+    it("leaves the style unchanged when the asset fetch fails, then allows a retry", async () => {
+        mocks.localFetch.mockRejectedValue(new Error("worker down"));
+        const css = ".x { src: url('api/attachments/download/f1'); }";
+        const styleEl = addStyle(css);
+        setupStylesheetInterceptor();
+
+        await vi.waitFor(() => expect(console.warn).toHaveBeenCalled());
+        expect(styleEl.textContent).toBe(css);
+
+        // The failure is dropped from the cache, so the next stylesheet retries the fetch.
+        vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:retried");
+        mocks.localFetch.mockImplementation(async () => makeResponse("font-bytes"));
+        const second = addStyle(css);
+        await vi.waitFor(() => expect(second.textContent).toContain("blob:retried"));
+    });
+
+    it("swaps a local API stylesheet <link> to a blob URL and rewrites the fetched CSS", async () => {
+        const themeCss = `
+            @font-face { src: url('api/attachments/download/themefont'); }
+            .bg { background: url(../../../fonts/asset.png); }
+        `;
+        mocks.localFetch.mockImplementation(async (req: Request) =>
+            makeResponse(req.url.includes("notes/download") ? themeCss : "font-bytes"));
+        const cssBlobs: Blob[] = [];
+        vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => {
+            if ((blob as Blob).type === "text/css") {
+                cssBlobs.push(blob as Blob);
+                return `blob:css-${cssBlobs.length}`;
+            }
+            return "blob:theme-font";
+        });
+        setupStylesheetInterceptor();
+
+        const link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("href", "api/notes/download/theme1");
+        document.body.appendChild(link);
+
+        await vi.waitFor(() => expect(link.getAttribute("href")).toBe("blob:css-1"));
+        const rewritten = await cssBlobs[0].text();
+        // The api font ref becomes a blob URL; the bundled relative ref is absolutized
+        // (relative paths would otherwise resolve against the blob: origin and break).
+        expect(rewritten).toContain('url("blob:theme-font")');
+        expect(rewritten).toContain(`url("${localUrl("/fonts/asset.png")}")`);
+    });
+
+    it("ignores non-stylesheet links, cross-origin stylesheets, and styles without url() refs", async () => {
+        setupStylesheetInterceptor();
+
+        const icon = document.createElement("link");
+        icon.setAttribute("rel", "icon");
+        icon.setAttribute("href", "api/notes/download/x");
+        document.body.appendChild(icon);
+
+        const remote = document.createElement("link");
+        remote.setAttribute("rel", "stylesheet");
+        remote.setAttribute("href", "https://example.com/api/theme.css");
+        document.body.appendChild(remote);
+
+        addStyle(".plain { color: red; }");
+
+        await new Promise((r) => setTimeout(r, 20));
+        expect(mocks.localFetch).not.toHaveBeenCalled();
+    });
+
+    it("revokes the CSS blob when the link is repointed or removed", async () => {
+        let counter = 0;
+        vi.spyOn(URL, "createObjectURL").mockImplementation(() => `blob:css-${++counter}`);
+        const revoke = vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+        mocks.localFetch.mockImplementation(async () => makeResponse(".theme {}"));
+        setupStylesheetInterceptor();
+
+        const link = document.createElement("link");
+        link.setAttribute("rel", "stylesheet");
+        link.setAttribute("href", "api/notes/download/theme1");
+        document.body.appendChild(link);
+        await vi.waitFor(() => expect(link.getAttribute("href")).toBe("blob:css-1"));
+
+        // Repointing at another theme replaces the blob and frees the old one.
+        link.setAttribute("href", "api/notes/download/theme2");
+        await vi.waitFor(() => expect(link.getAttribute("href")).toBe("blob:css-2"));
+        expect(revoke).toHaveBeenCalledWith("blob:css-1");
+
+        // Removing the link frees the current one.
+        link.remove();
+        await vi.waitFor(() => expect(revoke).toHaveBeenCalledWith("blob:css-2"));
     });
 });
 

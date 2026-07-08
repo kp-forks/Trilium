@@ -11,12 +11,16 @@ import { isLocalApiRequest, localFetch } from "./local-bridge.js";
  * under `capacitor://`, these three interceptors stand in for it, each catching
  * a request path the SW would otherwise handle:
  *
- *   - {@link setupFetchInterceptor} — `window.fetch` calls to the local API.
- *   - {@link setupXhrInterceptor}   — `XMLHttpRequest` (jQuery `$.ajax`), which
- *                                     does not go through `window.fetch`.
- *   - {@link setupImageInterceptor} — `<img src="api/images/…">` loads, which
- *                                     the browser's internal image loader issues
- *                                     without touching fetch or XHR.
+ *   - {@link setupFetchInterceptor}      — `window.fetch` calls to the local API.
+ *   - {@link setupXhrInterceptor}        — `XMLHttpRequest` (jQuery `$.ajax`), which
+ *                                          does not go through `window.fetch`.
+ *   - {@link setupImageInterceptor}      — `<img src="api/images/…">` loads, which
+ *                                          the browser's internal image loader issues
+ *                                          without touching fetch or XHR.
+ *   - {@link setupStylesheetInterceptor} — CSS-initiated subresource loads: icon pack
+ *                                          fonts referenced by `@font-face` `url()` in
+ *                                          injected `<style>` tags and custom theme CSS
+ *                                          loaded via `<link href="api/…">`.
  *
  * The caller gates this on `location.protocol === "capacitor:"`, so none of it
  * runs on Android or the web build.
@@ -25,6 +29,7 @@ export function installIosInterceptors() {
     setupFetchInterceptor();
     setupXhrInterceptor();
     setupImageInterceptor();
+    setupStylesheetInterceptor();
 }
 
 export function setupFetchInterceptor() {
@@ -262,4 +267,187 @@ export function setupXhrInterceptor() {
     }
 
     window.XMLHttpRequest = PatchedXHR as unknown as typeof XMLHttpRequest;
+}
+
+// CSS-initiated subresource loads — @font-face src, background-image, etc. — are
+// issued by the style engine, so neither the fetch/XHR interceptors nor the image
+// interceptor see them. On capacitor:// they hit the native scheme handler, which
+// answers unknown paths with the SPA fallback (index.html), so the load fails.
+// Two shapes exist in practice:
+//
+//   - icon pack fonts: injected <style> tags containing
+//     `src: url('api/attachments/download/<id>')`
+//   - custom themes: <link rel="stylesheet" href="api/notes/download/<id>">
+//
+// Rewrite both to blob: URLs backed by the SQLite worker. For a <link>, the
+// fetched CSS is itself rewritten (its api url() refs become blob: URLs and its
+// other relative refs are absolutized, since relative paths would resolve
+// against the blob: origin and break).
+//
+// Fetched assets are cached by absolute URL for the lifetime of the page and
+// deliberately never revoked: unlike per-note images, fonts and theme assets are
+// few, shared between stylesheets, and live as long as the app.
+export function setupStylesheetInterceptor() {
+    const CSS_URL_RE = /url\(\s*(?:"([^"]+)"|'([^']+)'|([^"')][^)\s]*))\s*\)/g;
+
+    // absolute URL of a fetched asset -> pending blob: URL (null = failed, retryable)
+    const assetBlobUrls = new Map<string, Promise<string | null>>();
+    // <link> elements get a fresh CSS blob per processed href; these are per-element,
+    // so they are revoked when the link is repointed or removed.
+    const linkBlobUrls = new WeakMap<HTMLLinkElement, string>();
+    const lastProcessedHref = new WeakMap<HTMLLinkElement, string>();
+
+    function toLocalApiUrl(ref: string, baseHref: string): URL | null {
+        if (!ref || ref.startsWith("blob:") || ref.startsWith("data:") || ref.startsWith("#")) return null;
+        let abs: URL;
+        try {
+            abs = new URL(ref, baseHref);
+        } catch {
+            return null;
+        }
+        return (abs.origin === location.origin && isLocalApiRequest(abs)) ? abs : null;
+    }
+
+    function fetchAssetAsBlobUrl(abs: URL): Promise<string | null> {
+        let pending = assetBlobUrls.get(abs.href);
+        if (!pending) {
+            pending = (async () => {
+                try {
+                    const resp = await localFetch(new Request(abs.href));
+                    if (!resp.ok) return null;
+                    return URL.createObjectURL(await resp.blob());
+                } catch (err) {
+                    console.warn("[StylesheetInterceptor] Failed to load", abs.href, err);
+                    return null;
+                }
+            })();
+            assetBlobUrls.set(abs.href, pending);
+            // Drop failures from the cache so a later mutation can retry them.
+            void pending.then((url) => {
+                if (!url) assetBlobUrls.delete(abs.href);
+            });
+        }
+        return pending;
+    }
+
+    /**
+     * Replaces local-API `url()` references with blob: URLs. When
+     * `absolutizeRelative` is set (for CSS that will be served from a blob: URL),
+     * the remaining relative references are resolved against `baseHref` instead.
+     * Returns null when there is nothing to rewrite.
+     */
+    async function rewriteCssText(cssText: string, baseHref: string, absolutizeRelative = false): Promise<string | null> {
+        const replacements = new Map<string, string>();
+        for (const match of cssText.matchAll(CSS_URL_RE)) {
+            const ref = match[1] ?? match[2] ?? match[3];
+            if (replacements.has(ref)) continue;
+            const abs = toLocalApiUrl(ref, baseHref);
+            if (abs) {
+                const blobUrl = await fetchAssetAsBlobUrl(abs);
+                if (blobUrl) replacements.set(ref, blobUrl);
+            } else if (absolutizeRelative && !/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref)) {
+                try {
+                    replacements.set(ref, new URL(ref, baseHref).href);
+                } catch {
+                    // leave unparseable refs alone
+                }
+            }
+        }
+        if (!replacements.size) return null;
+        return cssText.replace(CSS_URL_RE, (full, dquoted, squoted, unquoted) => {
+            const replacement = replacements.get(dquoted ?? squoted ?? unquoted);
+            return replacement ? `url("${replacement}")` : full;
+        });
+    }
+
+    async function processStyle(styleEl: HTMLStyleElement) {
+        const css = styleEl.textContent;
+        if (!css || !css.includes("url(")) return;
+        const rewritten = await rewriteCssText(css, location.href);
+        // Only apply if the text was not changed underneath us while fetching.
+        if (rewritten !== null && styleEl.textContent === css) {
+            styleEl.textContent = rewritten;
+        }
+    }
+
+    async function processLink(link: HTMLLinkElement) {
+        if ((link.getAttribute("rel") ?? "").toLowerCase() !== "stylesheet") return;
+        const href = link.getAttribute("href");
+        if (!href) return;
+        const abs = toLocalApiUrl(href, location.href);
+        if (!abs) return;
+        if (lastProcessedHref.get(link) === href) return;
+        lastProcessedHref.set(link, href);
+
+        try {
+            const resp = await localFetch(new Request(abs.href));
+            if (!resp.ok) {
+                lastProcessedHref.delete(link);
+                return;
+            }
+            const css = await resp.text();
+            const rewritten = (await rewriteCssText(css, abs.href, true)) ?? css;
+            releaseLinkBlobUrl(link);
+            const blobUrl = URL.createObjectURL(new Blob([rewritten], { type: "text/css" }));
+            linkBlobUrls.set(link, blobUrl);
+            link.setAttribute("href", blobUrl);
+        } catch (err) {
+            console.warn("[StylesheetInterceptor] Failed to load", abs.href, err);
+            lastProcessedHref.delete(link);
+        }
+    }
+
+    function releaseLinkBlobUrl(link: HTMLLinkElement) {
+        const previous = linkBlobUrls.get(link);
+        if (previous) {
+            URL.revokeObjectURL(previous);
+            linkBlobUrls.delete(link);
+        }
+    }
+
+    function processElement(el: Element) {
+        if (el instanceof HTMLStyleElement) void processStyle(el);
+        else if (el instanceof HTMLLinkElement) void processLink(el);
+    }
+
+    const observer = new MutationObserver((records) => {
+        for (const record of records) {
+            if (record.type === "attributes" && record.attributeName === "href" && record.target instanceof HTMLLinkElement) {
+                void processLink(record.target);
+            } else if (record.type === "childList") {
+                for (const node of record.addedNodes) {
+                    if (node instanceof Element) {
+                        processElement(node);
+                        node.querySelectorAll("style, link").forEach(processElement);
+                    } else if (node.parentElement instanceof HTMLStyleElement) {
+                        // Replacing a style's textContent surfaces as an added Text node.
+                        void processStyle(node.parentElement);
+                    }
+                }
+                for (const node of record.removedNodes) {
+                    if (node instanceof HTMLLinkElement) {
+                        releaseLinkBlobUrl(node);
+                    } else if (node instanceof Element) {
+                        node.querySelectorAll("link").forEach((link) => releaseLinkBlobUrl(link as HTMLLinkElement));
+                    }
+                }
+            }
+        }
+    });
+
+    function start() {
+        observer.observe(document.documentElement, {
+            subtree: true,
+            childList: true,
+            attributes: true,
+            attributeFilter: ["href"]
+        });
+        document.querySelectorAll("style, link").forEach(processElement);
+    }
+
+    if (document.documentElement) {
+        start();
+    } else {
+        document.addEventListener("DOMContentLoaded", start, { once: true });
+    }
 }
