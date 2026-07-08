@@ -1,5 +1,4 @@
 import appContext from "../components/app_context.js";
-import DeletedFNote from "../entities/deleted_fnote.js";
 import type FNote from "../entities/fnote.js";
 import attributeRenderer from "./attribute_renderer.js";
 import contentRenderer from "./content_renderer.js";
@@ -88,6 +87,9 @@ export async function mouseEnterHandler<T>(this: HTMLElement, e: JQuery.Triggere
         // The element explicitly targets a soft-deleted note (e.g. an entry in the deleted-notes
         // dialog): read it via the deleted-content route. `DeletedFNote.load` returns null once the
         // note is erased, so the tooltip then shows the "note has been deleted" message.
+        // Imported lazily to avoid a static import cycle (DeletedFNote extends FNote, which
+        // transitively imports this module via the context menu).
+        const { default: DeletedFNote } = await import("../entities/deleted_fnote.js");
         note = await DeletedFNote.load(noteId);
         renderPromise = renderTooltip(note);
     } else {
@@ -165,6 +167,9 @@ export async function renderTooltip(note: FNote | null) {
         return `<div>${t("note_tooltip.note-has-been-deleted")}</div>`;
     }
 
+    // Lazy import to avoid a static import cycle (DeletedFNote extends FNote, which transitively
+    // imports this module via the context menu).
+    const { default: DeletedFNote } = await import("../entities/deleted_fnote.js");
     const isDeleted = note instanceof DeletedFNote;
     const hoistedNoteId = appContext.tabManager.getActiveContext()?.hoistedNoteId;
     const bestNotePath = note.getBestNotePathString(hoistedNoteId);
