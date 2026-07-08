@@ -328,6 +328,34 @@ $$`;
         expect(markdownService.renderToHtml(html, "Title")).toStrictEqual(html);
     });
 
+    // The exporter keeps headerless tables (and heading-column-only tables) as raw
+    // HTML rather than inventing a phantom empty header row, pretty-printed across
+    // multiple indented lines. Confirm the import side passes that exact multi-line
+    // HTML through unchanged (no blank lines means it stays a single HTML block), so
+    // the round-trip introduces no blank row.
+    it("preserves a headerless table (heading columns only) without a phantom header row", () => {
+        // Exactly what the Markdown exporter emits for such a table.
+        const html = [
+            `<table>`,
+            `    <tbody>`,
+            `        <tr>`,
+            `            <th>Heading</th>`,
+            `            <td>Not a heading</td>`,
+            `        </tr>`,
+            `        <tr>`,
+            `            <td>Heading</td>`,
+            `            <td>Not a heading</td>`,
+            `        </tr>`,
+            `    </tbody>`,
+            `</table>`
+        ].join("\n");
+        const result = markdownService.renderToHtml(html, "Title");
+        expect(result).toStrictEqual(html);
+        // No synthesized empty header row leaked in.
+        expect(result).not.toContain("<thead>");
+        expect(result).not.toContain("<th></th>");
+    });
+
     it("generates strike-through text", () => {
         const input = `~~Hello~~ world.`;
         const expected = /*html*/`<p><del>Hello</del> world.</p>`;

@@ -18,6 +18,7 @@ import { ValidationError } from "../../errors";
 import { extname } from "../utils/path";
 import { truncateUtf8Bytes } from "../utils/binary";
 import { rewriteMarkdownContentLinks, isMarkdownCodeNote } from "./rewrite_links.js";
+import { stripListItemIds } from "./strip_list_item_ids.js";
 
 // Most filesystems cap a single path component at 255 bytes; keep exported file names within that.
 const MAX_FILENAME_BYTES = 255;
@@ -299,6 +300,13 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         const isText = ["html", "markdown"].includes(noteMeta?.format || "");
         if (isText) {
             content = content.toString();
+        }
+
+        // Text notes store HTML regardless of the export format, so strip CKEditor's per-list-item
+        // bookkeeping before the provider runs: gone from HTML exports and from the raw-HTML tables
+        // that survive Markdown conversion alike.
+        if (noteMeta?.type === "text" && typeof content === "string") {
+            content = stripListItemIds(content);
         }
 
         content = provider.prepareContent(title, content, noteMeta, note, branch);
