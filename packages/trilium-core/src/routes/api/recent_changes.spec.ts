@@ -107,6 +107,8 @@ describe("Recent changes API (core)", () => {
             // ...the deleted note is present, and the live one is filtered out.
             expect(res.body.some((change) => change.noteId === deletedId)).toBe(true);
             expect(res.body.some((change) => change.noteId === live.noteId)).toBe(false);
+            // Each deleted note appears exactly once (only its deletion point, not creation/revisions).
+            expect(res.body.filter((change) => change.noteId === deletedId)).toHaveLength(1);
         });
 
         it("includes live notes when deletedOnly is not set", async () => {
