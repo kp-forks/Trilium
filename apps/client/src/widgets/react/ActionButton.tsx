@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { CommandNames } from "../../components/app_context";
 import keyboard_actions from "../../services/keyboard_actions";
+import { formatShortcut, joinShortcut } from "../../services/keyboard_shortcut_display";
 import { isMobile } from "../../services/utils";
 import { useStaticTooltip } from "./hooks";
 
@@ -29,7 +30,9 @@ export default function ActionButton({ text, icon, className, triggerCommand, ti
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ keyboardShortcut, setKeyboardShortcut ] = useState<string[]>();
 
-    const title = keyboardShortcut?.length ? `${text} (${keyboardShortcut.join(",")})` : text;
+    const title = keyboardShortcut?.length
+        ? `${text} (${keyboardShortcut.map((shortcut) => joinShortcut(formatShortcut(shortcut))).join(", ")})`
+        : text;
     const titleRef = useRef(title);
     titleRef.current = title;
     const hasTitle = !!title && title.length > 0;
