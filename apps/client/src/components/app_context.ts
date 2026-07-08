@@ -142,7 +142,8 @@ export type CommandMappings = {
     showPromptDialog: PromptDialogOptions;
     showInfoDialog: InfoProps;
     showConfirmDialog: ConfirmWithMessageOptions;
-    showRecentChanges: CommandData & { ancestorNoteId?: string; deletedOnly?: boolean };
+    showRecentChanges: CommandData & { ancestorNoteId: string };
+    showDeletedNotes: CommandData & { ancestorNoteId?: string };
     showImportDialog: CommandData & { noteId: string };
     openNewNoteSplit: NoteCommandData;
     openInWindow: NoteCommandData;

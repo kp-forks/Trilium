@@ -22,9 +22,15 @@ export default function RecentChangesDialog() {
     const [ shown, setShown ] = useState(false);
     const [ deletedOnly, setDeletedOnly ] = useState(false);
 
-    useTriliumEvent("showRecentChanges", ({ ancestorNoteId, deletedOnly }) => {
+    useTriliumEvent("showRecentChanges", ({ ancestorNoteId }) => {
         setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
-        setDeletedOnly(deletedOnly ?? false);
+        setDeletedOnly(false);
+        setShown(true);
+    });
+
+    useTriliumEvent("showDeletedNotes", ({ ancestorNoteId }) => {
+        setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
+        setDeletedOnly(true);
         setShown(true);
     });
 
