@@ -423,6 +423,7 @@
     "deleted_notes_settings": "Deleted Notes Settings",
     "deleted_notes_message": "Deleted notes have been erased.",
     "no_changes_message": "No changes yet...",
+    "no_deleted_notes_message": "No deleted notes.",
     "undelete_link": "undelete",
     "confirm_undelete": "Do you want to undelete this note and its sub-notes?"
   },

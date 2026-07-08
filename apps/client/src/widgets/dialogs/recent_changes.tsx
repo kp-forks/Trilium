@@ -88,7 +88,7 @@ export default function RecentChangesDialog() {
             <div className="recent-changes-content">
                 {groupedByDate?.size
                     ? <RecentChangesTimeline groupedByDate={groupedByDate} setShown={setShown} />
-                    : <>{t("recent_changes.no_changes_message")}</>}
+                    : <>{deletedOnly ? t("recent_changes.no_deleted_notes_message") : t("recent_changes.no_changes_message")}</>}
             </div>
         </Modal>
     )
