@@ -201,9 +201,14 @@ function deleteNote(req: Request<{ noteId: string }>) {
 function undeleteNote(req: Request<{ noteId: string }>) {
     const taskContext = TaskContext.getInstance(randomString(10), "undeleteNotes", null);
 
-    noteService.undeleteNote(req.params.noteId, taskContext);
+    // Report whether the note was actually restored: it may fail silently if the note was already
+    // erased or its parent is no longer available, so the client can give feedback instead of
+    // navigating to a note that was never brought back.
+    const undeleted = noteService.undeleteNote(req.params.noteId, taskContext);
 
     taskContext.taskSucceeded(null);
+
+    return { undeleted };
 }
 
 function sortChildNotes(req: Request<{ noteId: string }>) {

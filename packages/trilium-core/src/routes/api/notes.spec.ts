@@ -117,9 +117,41 @@ describe("Notes API (core)", () => {
             expect(del.status).toBe(204);
             expect(noteIsDeleted(noteId)).toBe(1);
 
-            const undel = await api.put(`/api/notes/${noteId}/undelete`);
-            expect(undel.status).toBe(204);
+            const undel = await api.put<{ undeleted: boolean }>(`/api/notes/${noteId}/undelete`);
+            expect(undel.status).toBe(200);
+            expect(undel.body.undeleted).toBe(true);
             expect(noteIsDeleted(noteId)).toBe(0);
+        });
+
+        it("reports failure (and restores nothing) when the note's parent is still deleted", async () => {
+            const parent = await createTextNote(api, { title: "Deleted parent" });
+            const child = await createTextNote(api, { parentNoteId: parent.noteId, title: "Orphaned child" });
+
+            // Deleting the parent soft-deletes the whole subtree, including the child.
+            const del = await api.delete(`/api/notes/${parent.noteId}`, {
+                query: { taskId: "test-parent-delete", last: "true" }
+            });
+            expect(del.status).toBe(204);
+            expect(noteIsDeleted(child.noteId)).toBe(1);
+
+            // Undeleting the child directly can't succeed — its only parent is itself still deleted.
+            const undel = await api.put<{ undeleted: boolean }>(`/api/notes/${child.noteId}/undelete`);
+            expect(undel.status).toBe(200);
+            expect(undel.body.undeleted).toBe(false);
+            expect(noteIsDeleted(child.noteId)).toBe(1);
+        });
+
+        it("reports failure (instead of crashing) when undeleting an already-erased note", async () => {
+            const { noteId } = await createTextNote(api, { title: "Erase then undelete" });
+            const del = await api.delete(`/api/notes/${noteId}`, {
+                query: { taskId: "test-erase-undelete", eraseNotes: "true", last: "true" }
+            });
+            expect(del.status).toBe(204);
+            expect(noteIsDeleted(noteId)).toBeNull(); // row is gone entirely
+
+            const undel = await api.put<{ undeleted: boolean }>(`/api/notes/${noteId}/undelete`);
+            expect(undel.status).toBe(200);
+            expect(undel.body.undeleted).toBe(false);
         });
 
         it("400s when deleting without a taskId", async () => {

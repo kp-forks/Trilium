@@ -1093,24 +1093,39 @@ function updateNoteData(noteId: string, content: string, attachments: Attachment
     }
 }
 
-function undeleteNote(noteId: string, taskContext: TaskContext<"undeleteNotes">) {
-    const noteRow = getSql().getRow<NoteRow>("SELECT * FROM notes WHERE noteId = ?", [noteId]);
+/**
+ * Attempts to restore a soft-deleted note (and the deleted subtree below it, sharing its deleteId).
+ *
+ * @returns `true` if the note was restored, `false` if it could not be — because it has already been
+ *          erased, is not actually deleted, or has no surviving (undeleted) parent to reattach to.
+ */
+function undeleteNote(noteId: string, taskContext: TaskContext<"undeleteNotes">): boolean {
+    // Use getRowOrNull: the note may have been erased (e.g. by the erasure scheduler or another client)
+    // between the caller observing it and this call, in which case its row no longer exists.
+    const noteRow = getSql().getRowOrNull<NoteRow>("SELECT * FROM notes WHERE noteId = ?", [noteId]);
+
+    if (!noteRow) {
+        getLog().info(`Note '${noteId}' no longer exists (has been erased) and thus cannot be undeleted.`);
+        return false;
+    }
 
     if (!noteRow.isDeleted || !noteRow.deleteId) {
         getLog().error(`Note '${noteId}' is not deleted and thus cannot be undeleted.`);
-        return;
+        return false;
     }
 
     const undeletedParentBranchIds = getUndeletedParentBranchIds(noteId, noteRow.deleteId);
 
     if (undeletedParentBranchIds.length === 0) {
-        // cannot undelete if there's no undeleted parent
-        return;
+        // cannot undelete if there's no undeleted parent (its parent is itself still deleted or erased)
+        return false;
     }
 
     for (const parentBranchId of undeletedParentBranchIds) {
         undeleteBranch(parentBranchId, noteRow.deleteId, taskContext);
     }
+
+    return true;
 }
 
 function undeleteBranch(branchId: string, deleteId: string, taskContext: TaskContext<"undeleteNotes">) {
