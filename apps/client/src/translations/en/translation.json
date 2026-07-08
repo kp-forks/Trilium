@@ -417,11 +417,17 @@
   },
   "recent_changes": {
     "title": "Recent changes",
+    "deleted_notes_title": "Deleted notes",
     "erase_notes_button": "Erase deleted notes now",
+    "more_actions": "More actions",
+    "deleted_notes_settings": "Deleted Notes Settings",
     "deleted_notes_message": "Deleted notes have been erased.",
     "no_changes_message": "No changes yet...",
+    "no_deleted_notes_message": "No deleted notes.",
     "undelete_link": "undelete",
-    "confirm_undelete": "Do you want to undelete this note and its sub-notes?"
+    "confirm_undelete": "Do you want to undelete this note and its sub-notes?",
+    "cannot_undelete": "This note can't be restored because its parent has also been deleted. Restore the parent first.",
+    "undelete_failed": "The note could not be restored — it may have been permanently erased or its parent is no longer available."
   },
   "revisions": {
     "note_revisions": "Note Revisions",
@@ -858,6 +864,7 @@
     "zoom_in": "Zoom In",
     "configure_launchbar": "Configure Launchbar",
     "show_shared_notes_subtree": "Show Shared Notes Subtree",
+    "show_deleted_notes": "Show Deleted Notes",
     "advanced": "Advanced",
     "open_dev_tools": "Open Dev Tools",
     "open_sql_console": "Open SQL Console",
@@ -2280,9 +2287,6 @@
     "search_not_executed": "Search has not been executed yet.",
     "search_now": "Search now"
   },
-  "spacer": {
-    "configure_launchbar": "Configure Launchbar"
-  },
   "sql_result": {
     "not_executed": "The query has not been executed yet.",
     "no_rows": "No rows have been returned for this query",
@@ -2380,7 +2384,10 @@
     "duplicate-launcher": "Duplicate launcher <kbd data-command=\"duplicateSubtree\">"
   },
   "launcher_button_context_menu": {
-    "remove_from_launch_bar": "Remove from launch bar"
+    "remove_from_launch_bar": "Remove from launch bar",
+    "configure_launch_bar": "Configure launch bar",
+    "launch_bar_orientation": "Launch bar orientation",
+    "will_reload_frontend": "(will reload app)"
   },
   "highlighting": {
     "title": "Code Blocks",
@@ -2682,6 +2689,7 @@
   },
   "modal": {
     "close": "Close",
+    "cancel": "Cancel",
     "help_title": "Display more information about this screen"
   },
   "call_to_action": {

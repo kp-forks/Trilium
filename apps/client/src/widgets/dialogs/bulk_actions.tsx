@@ -58,7 +58,10 @@ export default function BulkActionsDialog() {
             className="bulk-actions-dialog"
             size="xl"
             title={t("bulk_actions.bulk_actions")}
-            footer={<Button text={t("bulk_actions.execute_bulk_actions")} kind="primary" />}
+            footer={<>
+                <Button text={t("modal.cancel")} onClick={() => setShown(false)} />
+                <Button text={t("bulk_actions.execute_bulk_actions")} kind="primary" />
+            </>}
             show={shown}
             onSubmit={async () => {
                 // Let actions surface a confirmation prompt (e.g. lossy conversions) before executing.

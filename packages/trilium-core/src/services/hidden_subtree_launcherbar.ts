@@ -41,6 +41,12 @@ export default function buildLaunchBarConfig() {
             command: "showRecentChanges",
             icon: "bx bx-history"
         },
+        deletedNotes: {
+            title: t("hidden-subtree.deleted-notes-title"),
+            type: "launcher",
+            command: "showDeletedNotes",
+            icon: "bx bx-trash-alt"
+        },
         searchNotes: {
             title: t("hidden-subtree.search-notes-title"),
             type: "launcher",
@@ -98,7 +104,8 @@ export default function buildLaunchBarConfig() {
             type: "launcher",
             builtinWidget: "sidebarChat",
             icon: "bx bx-message-square-dots"
-        }
+        },
+        { id: "_lbDeletedNotes", ...sharedLaunchers.deletedNotes }
     ];
 
     const desktopVisibleLaunchers: HiddenSubtreeItem[] = [

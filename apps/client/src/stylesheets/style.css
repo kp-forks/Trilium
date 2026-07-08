@@ -757,6 +757,13 @@ table.promoted-attributes-in-tooltip th {
     z-index: 32767 !important;
 }
 
+/* Note tooltips are appended to <body> and are frequently triggered from inside modals
+   (e.g. links or deleted-note entries in a dialog). The base .tooltip z-index sits below
+   Bootstrap's modal, so raise them above it — matching .tooltip-top. */
+.tooltip.note-tooltip {
+    z-index: 32767 !important;
+}
+
 
 /* Tooltip for text editor content, placed at the bottom of the screen to be less intruive when editing */
 .tooltip.text-editor-content-tooltip {
@@ -1591,6 +1598,14 @@ body.desktop li.dropdown-submenu:hover > ul.dropdown-menu {
     /* to make submenu scrollable https://github.com/zadam/trilium/issues/3136 */
     max-height: 600px;
     overflow: auto;
+}
+
+/* Flipped upward (added by ContextMenu.repositionSubmenu) when the submenu would overflow the bottom of the viewport. */
+.dropdown-submenu > .dropdown-menu.submenu-flip-up {
+    top: auto;
+    bottom: 0;
+    margin-top: 0;
+    margin-bottom: -10px;
 }
 
 body.desktop .dropdown-submenu > .dropdown-menu {

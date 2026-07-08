@@ -449,6 +449,14 @@ function getDefaultKeyboardActions() {
             scope: "window"
         },
         {
+            friendlyName: t("keyboard_action_names.show-deleted-notes"),
+            actionName: "showDeletedNotes",
+            iconClass: "bx bx-trash-alt",
+            defaultShortcuts: [],
+            description: t("keyboard_actions.show-deleted-notes"),
+            scope: "window"
+        },
+        {
             friendlyName: t("keyboard_action_names.show-sql-console"),
             actionName: "showSQLConsole",
             iconClass: "bx bx-data",

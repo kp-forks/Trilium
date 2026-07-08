@@ -5,6 +5,7 @@ enum Command {
     searchNotes,
     createNoteIntoInbox,
     showRecentChanges,
+    showDeletedNotes,
     showOptions,
     commandPalette,
     toggleZenMode

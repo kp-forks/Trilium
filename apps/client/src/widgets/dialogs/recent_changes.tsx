@@ -4,7 +4,8 @@ import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
-import Button from "../react/Button";
+import Dropdown from "../react/Dropdown";
+import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import Modal from "../react/Modal";
 import hoisted_note from "../../services/hoisted_note";
 import type { RecentChangeRow } from "@triliumnext/commons";
@@ -20,15 +21,23 @@ export default function RecentChangesDialog() {
     const [ groupedByDate, setGroupedByDate ] = useState<Map<string, RecentChangeRow[]>>();
     const [ refreshCounter, setRefreshCounter ] = useState(0);
     const [ shown, setShown ] = useState(false);
+    const [ deletedOnly, setDeletedOnly ] = useState(false);
 
     useTriliumEvent("showRecentChanges", ({ ancestorNoteId }) => {
         setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
+        setDeletedOnly(false);
+        setShown(true);
+    });
+
+    useTriliumEvent("showDeletedNotes", ({ ancestorNoteId }) => {
+        setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
+        setDeletedOnly(true);
         setShown(true);
     });
 
     useEffect(() => {
         if (!ancestorNoteId) return;
-        server.get<RecentChangeRow[]>(`recent-changes/${ancestorNoteId}`)
+        server.get<RecentChangeRow[]>(`recent-changes/${ancestorNoteId}?deletedOnly=${deletedOnly}`)
             .then(async (recentChanges) => {
                 // preload all notes into cache
                 await froca.getNotes(
@@ -39,26 +48,39 @@ export default function RecentChangesDialog() {
                 const groupedByDate = groupByDate(recentChanges);
                 setGroupedByDate(groupedByDate);
             });
-    }, [ shown, refreshCounter ])
+    }, [ shown, refreshCounter, deletedOnly ])
 
     return (
         <Modal
-            title={t("recent_changes.title")}
-            className="recent-changes-dialog"
+            title={deletedOnly ? t("recent_changes.deleted_notes_title") : t("recent_changes.title")}
+            className={`recent-changes-dialog ${deletedOnly ? "recent-changes-dialog-view-mode-deleted-only" : "recent-changes-dialog-view-mode-all-changes"}`}
             size="lg"
             scrollable
             header={
-                <Button
-                    text={t("recent_changes.erase_notes_button")}
-                    size="small"
-                    style={{ padding: "0 10px" }}
-                    onClick={() => {
-                        server.post("notes/erase-deleted-notes-now").then(() => {
-                            setRefreshCounter(refreshCounter + 1);
-                            toast.showMessage(t("recent_changes.deleted_notes_message"));
-                        });
-                    }}
-                />
+                <Dropdown
+                    className="recent-changes-actions"
+                    buttonClassName="custom-title-bar-button bx bx-dots-horizontal-rounded"
+                    title={t("recent_changes.more_actions")}
+                    hideToggleArrow
+                    noSelectButtonStyle
+                >
+                    <FormListItem
+                        icon="bx bx-trash"
+                        onClick={() => {
+                            server.post("notes/erase-deleted-notes-now").then(() => {
+                                setRefreshCounter(refreshCounter + 1);
+                                toast.showMessage(t("recent_changes.deleted_notes_message"));
+                            });
+                        }}
+                    >{t("recent_changes.erase_notes_button")}</FormListItem>
+                    {deletedOnly && <>
+                        <FormDropdownDivider />
+                        <FormListItem
+                            icon="bx bx-cog"
+                            onClick={() => appContext.tabManager.openContextWithNote("_optionsOther", { activate: true })}
+                        >{t("recent_changes.deleted_notes_settings")}</FormListItem>
+                    </>}
+                </Dropdown>
             }
             onHidden={() => setShown(false)}
             show={shown}
@@ -66,7 +88,7 @@ export default function RecentChangesDialog() {
             <div className="recent-changes-content">
                 {groupedByDate?.size
                     ? <RecentChangesTimeline groupedByDate={groupedByDate} setShown={setShown} />
-                    : <>{t("recent_changes.no_changes_message")}</>}
+                    : <>{deletedOnly ? t("recent_changes.no_deleted_notes_message") : t("recent_changes.no_changes_message")}</>}
             </div>
         </Modal>
     )
@@ -122,27 +144,35 @@ function NoteLink({ notePath, title }: { notePath: string, title: string }) {
 function DeletedNoteLink({ change, setShown }: { change: RecentChangeRow, setShown: Dispatch<StateUpdater<boolean>> }) {
     return (
         <>
-            <span className="note-title">{change.current_title}</span>
+            {/* `data-href` (not `href`, so it stays non-navigable) carries the note id to the global
+                tooltip; the trailing `?` marks it as a note link rather than an in-page anchor.
+                `data-note-deleted` tells the tooltip to resolve it via the deleted-content route. */}
+            <span className="note-title" data-href={`#${change.noteId}?`} data-note-deleted>{change.current_title}</span>
             &nbsp;
-            (<a href="javascript:"
-                onClick={async () => {
-                    const text = t("recent_changes.confirm_undelete");
-
-                    if (await dialog.confirm(text)) {
-                        await server.put(`notes/${change.noteId}/undelete`);
-                        setShown(false);
-                        await ws.waitForMaxKnownEntityChangeId();
-
-                        const activeContext = appContext.tabManager.getActiveContext();
-                        if (activeContext) {
-                            activeContext.setNote(change.noteId);
-                        }
-                    }
-                }}>
-                {t("recent_changes.undelete_link")})
-            </a>
+            {/* A note can only be restored if it still has a surviving (undeleted) parent to reattach to.
+                When it doesn't (its parent is itself deleted or erased) the undelete link is disabled. */}
+            ({change.canBeUndeleted
+                ? <a href="javascript:" onClick={() => undeleteNote(change, setShown)}>{t("recent_changes.undelete_link")}</a>
+                : <span className="undelete-disabled" title={t("recent_changes.cannot_undelete")}>{t("recent_changes.undelete_link")}</span>})
         </>
     );
+}
+
+async function undeleteNote(change: RecentChangeRow, setShown: Dispatch<StateUpdater<boolean>>) {
+    if (!await dialog.confirm(t("recent_changes.confirm_undelete"))) {
+        return;
+    }
+
+    // The note may fail to restore if it was erased since the dialog opened, so act on the reported result.
+    const { undeleted } = await server.put<{ undeleted: boolean }>(`notes/${change.noteId}/undelete`);
+    if (!undeleted) {
+        toast.showError(t("recent_changes.undelete_failed"));
+        return;
+    }
+
+    setShown(false);
+    await ws.waitForMaxKnownEntityChangeId();
+    appContext.tabManager.getActiveContext()?.setNote(change.noteId);
 }
 
 function groupByDate(rows: RecentChangeRow[]) {
