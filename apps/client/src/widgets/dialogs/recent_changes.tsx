@@ -130,7 +130,10 @@ function NoteLink({ notePath, title }: { notePath: string, title: string }) {
 function DeletedNoteLink({ change, setShown }: { change: RecentChangeRow, setShown: Dispatch<StateUpdater<boolean>> }) {
     return (
         <>
-            <span className="note-title">{change.current_title}</span>
+            {/* `data-href` (not `href`, so it stays non-navigable) carries the note id to the global
+                tooltip; the trailing `?` marks it as a note link rather than an in-page anchor.
+                `data-note-deleted` tells the tooltip to resolve it via the deleted-content route. */}
+            <span className="note-title" data-href={`#${change.noteId}?`} data-note-deleted>{change.current_title}</span>
             &nbsp;
             (<a href="javascript:"
                 onClick={async () => {

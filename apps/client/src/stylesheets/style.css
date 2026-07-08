@@ -757,6 +757,13 @@ table.promoted-attributes-in-tooltip th {
     z-index: 32767 !important;
 }
 
+/* Note tooltips are appended to <body> and are frequently triggered from inside modals
+   (e.g. links or deleted-note entries in a dialog). The base .tooltip z-index sits below
+   Bootstrap's modal, so raise them above it — matching .tooltip-top. */
+.tooltip.note-tooltip {
+    z-index: 32767 !important;
+}
+
 
 /* Tooltip for text editor content, placed at the bottom of the screen to be less intruive when editing */
 .tooltip.text-editor-content-tooltip {
