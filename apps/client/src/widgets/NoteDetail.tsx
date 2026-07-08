@@ -10,6 +10,7 @@ import FNote from "../entities/fnote";
 import type { PrintReport } from "../print";
 import attributes from "../services/attributes";
 import dialog from "../services/dialog";
+import froca from "../services/froca";
 import { t } from "../services/i18n";
 import protected_session_holder from "../services/protected_session_holder";
 import toast from "../services/toast.js";
@@ -416,7 +417,14 @@ export async function getExtendedWidgetType(note: FNote | null | undefined, note
     // saving the empty stub back over the real content on the server. Only content-backed types are
     // checked, so blobless notes (docs, launchers, books) don't trigger a needless blob fetch; the
     // fetch itself is froca-cached and coalesced with the render's own blob load.
-    if (BLOB_BACKED_TYPES.has(resultingType)) {
+    //
+    // The froca-cache check skips the fetch during delete teardown: when the active note is deleted, a
+    // re-render can still run with the (batched, not-yet-cleared) stale FNote reference. froca_updater
+    // removes the note from the cache before emitting entitiesReloaded, so a missing cache entry means the
+    // note is gone — don't fetch a blob for a note that no longer exists. (The 404 that surfaced this is
+    // actually issued by the still-cached modal-close render racing the delete; froca.getBlob's
+    // silentNotFound handling is what keeps that one quiet. This check just avoids the redundant later fetch.)
+    if (BLOB_BACKED_TYPES.has(resultingType) && froca.getNoteFromCache(note.noteId)) {
         const blob = await note.getBlob();
         if (blob?.isStubbed) {
             resultingType = "blobStub";

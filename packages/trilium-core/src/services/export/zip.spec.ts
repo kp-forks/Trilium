@@ -191,6 +191,26 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             expect(entries[rootMeta.dataFileName!].toString("utf-8")).toContain("## Heading");
         });
 
+        it("strips CKEditor's data-list-item-id from HTML and Markdown exports", async () => {
+            // A plain list converts to Markdown syntax (turndown drops attributes), but a list
+            // inside a table survives as raw HTML — both must come out without the editor-only id.
+            const content = `<ul><li data-list-item-id="e0123">Bullet</li></ul>`
+                + `<table><tbody><tr><td><ul><li data-list-item-id="e4567">Cell</li></ul></td></tr></tbody></table>`;
+            const { note } = createNote("root", { title: "ListIds", content });
+            const branch = note.getParentBranches()[0];
+
+            for (const format of ["html", "markdown"] as const) {
+                const { entries } = await exportSubtree(branch, format);
+                const dataFileName = parseMeta(entries).files[0].dataFileName ?? "";
+                const exported = entries[dataFileName].toString("utf-8");
+
+                expect(exported).not.toContain("data-list-item-id");
+                // The list content itself still round-trips.
+                expect(exported).toContain("Bullet");
+                expect(exported).toContain("Cell");
+            }
+        });
+
         it("carries owned attributes into the note meta but drops out-of-export relations", async () => {
             // A note living outside the exported subtree: a relation to it is valid
             // to save but must be filtered out of the export meta.

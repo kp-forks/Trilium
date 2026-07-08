@@ -245,6 +245,26 @@ $$`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
+    it("escapes HTML-significant characters in display math so they survive sanitization (#10418)", () => {
+        // The `<` in `k<K` used to be treated as the start of an HTML tag by the
+        // sanitizer, which stripped everything from `<K` onwards and truncated the
+        // formula. Escaping `<`/`>`/`&` (matching how CKEditor serializes the math
+        // text node) keeps the whole equation intact.
+        const input = `$$
+\\min_{0\\le k<K}\\|\\operatorname{grad}\\Phi(x_k)\\|^2 = O(1/K),
+$$`;
+        const expected = /*html*/`<span class="math-tex">\\[
+\\min_{0\\le k&lt;K}\\|\\operatorname{grad}\\Phi(x_k)\\|^2 = O(1/K),
+\\]</span>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
+    it("escapes HTML-significant characters in inline math (#10418)", () => {
+        const input = `Condition: $a<b$ and $c>d$ with $x \\& y$.`;
+        const expected = /*html*/`<p>Condition: <span class="math-tex">\\(a&lt;b\\)</span> and <span class="math-tex">\\(c&gt;d\\)</span> with <span class="math-tex">\\(x \\&amp; y\\)</span>.</p>`;
+        expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
+    });
+
     it("ignores math formulas inside code blocks and converts inline math expressions correctly", () => {
         const result = markdownService.renderToHtml(trimIndentation`\
             \`\`\`unknownlanguage
@@ -306,6 +326,34 @@ $$`;
     it("preserves colspan and rowspan together on header and body cells", () => {
         const html = /*html*/`<figure class="table"><table><thead><tr><th colspan="2">Header</th></tr></thead><tbody><tr><td rowspan="2">Side</td><td>A</td></tr><tr><td>B</td></tr></tbody></table></figure>`;
         expect(markdownService.renderToHtml(html, "Title")).toStrictEqual(html);
+    });
+
+    // The exporter keeps headerless tables (and heading-column-only tables) as raw
+    // HTML rather than inventing a phantom empty header row, pretty-printed across
+    // multiple indented lines. Confirm the import side passes that exact multi-line
+    // HTML through unchanged (no blank lines means it stays a single HTML block), so
+    // the round-trip introduces no blank row.
+    it("preserves a headerless table (heading columns only) without a phantom header row", () => {
+        // Exactly what the Markdown exporter emits for such a table.
+        const html = [
+            `<table>`,
+            `    <tbody>`,
+            `        <tr>`,
+            `            <th>Heading</th>`,
+            `            <td>Not a heading</td>`,
+            `        </tr>`,
+            `        <tr>`,
+            `            <td>Heading</td>`,
+            `            <td>Not a heading</td>`,
+            `        </tr>`,
+            `    </tbody>`,
+            `</table>`
+        ].join("\n");
+        const result = markdownService.renderToHtml(html, "Title");
+        expect(result).toStrictEqual(html);
+        // No synthesized empty header row leaked in.
+        expect(result).not.toContain("<thead>");
+        expect(result).not.toContain("<th></th>");
     });
 
     it("generates strike-through text", () => {

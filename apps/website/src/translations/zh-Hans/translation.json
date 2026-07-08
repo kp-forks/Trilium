@@ -23,8 +23,6 @@
         "sync_content": "使用自建或云端实例，可以轻松地在多设备之间同步笔记，并通过 PWA 从手机上访问它。",
         "protected_notes_title": "被保护的笔记",
         "protected_notes_content": "通过加密笔记并将其锁定在受密码保护的会话中，来保护敏感的个人信息。",
-        "jump_to_title": "快速的搜索和命令",
-        "jump_to_content": "通过搜索标题，可以在层级结构中快速跳转到笔记或 UI 命令；模糊匹配可容忍拼写错误或细微差异。",
         "search_content": "或者在笔记中搜索文本，并通过筛选父笔记或深度来缩小搜索范围。",
         "web_clipper_content": "抓取网页（或截图），并通过网页剪藏浏览器扩展直接保存到 Trilium 中。",
         "search_title": "强大的搜索功能",
@@ -43,22 +41,9 @@
         "mermaid_description": "使用 Mermaid 语法创建各种图表，例如流程图、类图和时序图、甘特图等。",
         "mindmap_title": "思维导图",
         "mindmap_description": "把你的想法用视觉方式整理出来，或者进行一次头脑风暴。",
-        "others_list": "以及其他内容：<0>笔记映射</0>、<1>关系映射</1>、<2>已保存的搜索</2>、<3>渲染笔记</3> 和 <4>网页视图</4>。",
         "title": "多种信息呈现方式"
     },
-    "extensibility_benefits": {
-        "title": "分享与可扩展性",
-        "import_export_title": "导入/导出",
-        "import_export_description": "使用 Markdown、ENEX、OML 格式即可轻松与其他应用程序交互。",
-        "share_title": "在网络上分享笔记",
-        "share_description": "如果你有一台服务器，它可以用来与他人共享你的一部分笔记。",
-        "scripting_title": "高级脚本编写",
-        "scripting_description": "在 Trilium 中通过自定义小部件或服务器端逻辑构建专属集成方案。",
-        "api_title": "REST API",
-        "api_description": "通过其内置的 REST API 以编程方式与 Trilium 进行交互。"
-    },
     "download_helper_server_hosted": {
-        "download_triliumcc": "也可以访问 trilium.cc",
         "title": "付费托管",
         "description": "Trilium Notes 托管于 PikaPods，该付费服务提供便捷访问与管理功能。与 Trilium 团队无直接关联。",
         "download_pikapod": "在 PikaPods 上设置"

@@ -31,8 +31,6 @@
         "sync_content": "Bain úsáid as cás féinóstáilte nó scamall chun do nótaí a shioncrónú go héasca ar fud ilghléasanna, agus chun rochtain a fháil orthu ó do ghuthán póca ag baint úsáide as PWA.",
         "protected_notes_title": "Nótaí faoi chosaint",
         "protected_notes_content": "Cosain faisnéis phearsanta íogair trí na nótaí a chriptiú agus iad a ghlasáil taobh thiar de sheisiún atá cosanta ag pasfhocal.",
-        "jump_to_title": "Cuardach tapa agus orduithe",
-        "jump_to_content": "Léim go tapa chuig nótaí nó orduithe UI ar fud an ordlathais trí chuardach a dhéanamh ar a dteideal, le meaitseáil doiléir chun clóscríobh nó difríochtaí beaga a chur san áireamh.",
         "search_title": "Cuardach cumhachtach",
         "search_content": "Nó déan cuardach ar théacs laistigh de nótaí agus caolaigh an cuardach trí scagadh a dhéanamh de réir an nóta tuismitheora, nó de réir doimhneachta.",
         "web_clipper_title": "Gearrthóir gréasáin",
@@ -51,19 +49,7 @@
         "mermaid_title": "Léaráidí maighdeana mara",
         "mermaid_description": "Cruthaigh léaráidí ar nós cairteacha sreafa, léaráidí ranga agus seicheamhacha, cairteacha Gantt agus go leor eile, ag baint úsáide as comhréir Mermaid.",
         "mindmap_title": "Léarscáil intinne",
-        "mindmap_description": "Eagraigh do chuid smaointe go hamhairc nó déan seisiún smaointeoireachta.",
-        "others_list": "agus cinn eile: <0>léarscáil nótaí</0>, <1>léarscáil gaoil</1>, <2>cuardaigh shábháilte</2>, <3>nóta rindreála</3>, agus <4>radhairc ghréasáin</4>."
-    },
-    "extensibility_benefits": {
-        "title": "Comhroinnt & inleathnú",
-        "import_export_title": "Iompórtáil/onnmhairiú",
-        "import_export_description": "Idirghníomhaigh go héasca le feidhmchláir eile ag baint úsáide as formáidí Markdown, ENEX, OML.",
-        "share_title": "Comhroinn nótaí ar an ngréasán",
-        "share_description": "Má tá freastalaí agat, is féidir é a úsáid chun fo-thacar de do nótaí a roinnt le daoine eile.",
-        "scripting_title": "Scriptiú ardleibhéil",
-        "scripting_description": "Tóg do chomhtháthú féin laistigh de Trilium le giuirléidí saincheaptha, nó loighic taobh an fhreastalaí.",
-        "api_title": "REST API",
-        "api_description": "Idirghníomhaigh le Trilium go ríomhchláraitheach ag baint úsáide as a REST API ionsuite."
+        "mindmap_description": "Eagraigh do chuid smaointe go hamhairc nó déan seisiún smaointeoireachta."
     },
     "collections": {
         "title": "Bailiúcháin",
@@ -196,8 +182,7 @@
     "download_helper_server_hosted": {
         "title": "Óstáil íoctha",
         "description": "Nótaí Trilium atá á n-óstáil ar PikaPods, seirbhís íoctha le haghaidh rochtana agus bainistíochta éasca. Níl baint dhíreach aige le foireann Trilium.",
-        "download_pikapod": "Socraigh ar PikaPods",
-        "download_triliumcc": "Nó féach ar trilium.cc"
+        "download_pikapod": "Socraigh ar PikaPods"
     },
     "resources": {
         "title": "Acmhainní",

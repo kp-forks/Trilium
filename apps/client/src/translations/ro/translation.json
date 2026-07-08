@@ -332,7 +332,7 @@
     "branch_prefix_saved": "Prefixul ramurii a fost salvat.",
     "edit_branch_prefix": "Editează prefixul ramurii",
     "help_on_tree_prefix": "Informații despre prefixe de ierarhie",
-    "prefix": "Prefix: ",
+    "prefix": "Prefix",
     "save": "Salvează",
     "edit_branch_prefix_multiple": "Editează prefixul pentru {{count}} ramuri",
     "branch_prefix_saved_multiple": "Prefixul a fost modificat pentru {{count}} ramuri.",
@@ -2728,5 +2728,22 @@
       "invalid-symbol": "simbolul markdown trebuie să fie un singur caracter, cu excepția „[”, „ ”, „X” și „]”",
       "duplicate-symbol": "simbol markdown duplicat"
     }
+  },
+  "keyboard_shortcut_keys": {
+    "ctrl": "Ctrl",
+    "alt": "Alt",
+    "shift": "Shift",
+    "meta": "Meta",
+    "enter": "Enter",
+    "escape": "Esc",
+    "delete": "Delete",
+    "backspace": "Backspace",
+    "space": "Spațiu",
+    "tab": "Tab",
+    "home": "Home",
+    "end": "End",
+    "page_up": "Page Up",
+    "page_down": "Page Down",
+    "insert": "Insert"
   }
 }
