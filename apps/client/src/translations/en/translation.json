@@ -2659,8 +2659,6 @@
     "search_history_description": "View previous searches",
     "configure_launch_bar_title": "Configure Launch Bar",
     "configure_launch_bar_description": "Open the launch bar configuration, to add or remove items.",
-    "show_deleted_notes_title": "Show Deleted Notes",
-    "show_deleted_notes_description": "View and restore recently deleted notes",
     "pin_tab_title": "Pin Tab",
     "pin_tab_description": "Always keep this note open in this tab at the start of the tab bar and prevent it from being accidentally closed",
     "unpin_tab_title": "Unpin Tab",

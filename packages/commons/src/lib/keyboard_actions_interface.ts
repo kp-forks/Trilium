@@ -53,6 +53,7 @@ const enum KeyboardActionNamesEnum {
     showOptions,
     showRevisions,
     showRecentChanges,
+    showDeletedNotes,
     showSQLConsole,
     showBackendLog,
     showCheatsheet,

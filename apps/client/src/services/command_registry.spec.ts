@@ -91,8 +91,7 @@ describe("CommandRegistry default commands", () => {
                 "search-notes",
                 "search-in-subtree",
                 "show-search-history",
-                "show-launch-bar",
-                "show-deleted-notes"
+                "show-launch-bar"
             ])
         );
         // getAllCommands returns a name-sorted list.
@@ -123,9 +122,6 @@ describe("CommandRegistry default commands", () => {
 
         await registry.executeCommand("show-launch-bar");
         expect(triggerCommand).toHaveBeenCalledWith("showLaunchBarSubtree");
-
-        await registry.executeCommand("show-deleted-notes");
-        expect(triggerCommand).toHaveBeenCalledWith("showDeletedNotes");
     });
 
     it("export-note and search-in-subtree skip triggering when there is no active note path", async () => {

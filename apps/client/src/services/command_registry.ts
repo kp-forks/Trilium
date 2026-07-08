@@ -97,14 +97,6 @@ export class CommandRegistry {
         });
 
         this.register({
-            id: "show-deleted-notes",
-            name: t("command_palette.show_deleted_notes_title"),
-            description: t("command_palette.show_deleted_notes_description"),
-            icon: "bx bx-trash-alt",
-            handler: () => appContext.triggerCommand("showDeletedNotes")
-        });
-
-        this.register({
             id: "pin-active-tab",
             name: t("command_palette.pin_tab_title"),
             description: t("command_palette.pin_tab_description"),
