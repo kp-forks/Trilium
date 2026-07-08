@@ -332,7 +332,7 @@
     "branch_prefix_saved": "Prefixul ramurii a fost salvat.",
     "edit_branch_prefix": "Editează prefixul ramurii",
     "help_on_tree_prefix": "Informații despre prefixe de ierarhie",
-    "prefix": "Prefix: ",
+    "prefix": "Prefix",
     "save": "Salvează",
     "edit_branch_prefix_multiple": "Editează prefixul pentru {{count}} ramuri",
     "branch_prefix_saved_multiple": "Prefixul a fost modificat pentru {{count}} ramuri.",
