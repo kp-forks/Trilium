@@ -30,7 +30,8 @@ vi.mock("@excalidraw/excalidraw", () => ({
     // Mirrors the real behavior closely enough for change tracking: the version of a scene
     // is derived from its elements, and an empty scene is always version 0.
     getSceneVersion: (elements: FakeElement[]) => elements.reduce((sum, el) => sum + (el.version ?? 0), 0),
-    exportToSvg: vi.fn(async () => ({ outerHTML: "<svg/>" }))
+    exportToSvg: vi.fn(async () => ({ outerHTML: "<svg/>" })),
+    CaptureUpdateAction: { IMMEDIATELY: "IMMEDIATELY", NEVER: "NEVER", EVENTUALLY: "EVENTUALLY" }
 }));
 
 vi.stubGlobal("logError", vi.fn());
@@ -174,6 +175,9 @@ describe("useCanvasPersistence content loading (#10279)", () => {
 
         expect(updateScene).toHaveBeenCalledTimes(1);
         expect(loadedElementIds(updateScene)).toEqual([ "b1" ]);
+        // A note-switch load is scene initialization: it must never enter the undo store,
+        // or undoing the first stroke would restore the previous note's scene (#7148).
+        expect(updateScene.mock.calls[0][0]).toMatchObject({ captureUpdate: "NEVER" });
     });
 
     it("stashes a subsequent note's content while the API is unavailable and replays it on arrival", async () => {

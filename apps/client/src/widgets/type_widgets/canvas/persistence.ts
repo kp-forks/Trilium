@@ -1,4 +1,4 @@
-import { exportToSvg, getSceneVersion } from "@excalidraw/excalidraw";
+import { CaptureUpdateAction, exportToSvg, getSceneVersion } from "@excalidraw/excalidraw";
 import { ExcalidrawElement, NonDeletedExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { AppState, BinaryFileData, BinaryFiles, ExcalidrawImperativeAPI, ExcalidrawInitialDataState, ExcalidrawProps, LibraryItem } from "@excalidraw/excalidraw/types";
 import { deferred, type DeferredPromise } from "@triliumnext/commons";
@@ -430,7 +430,11 @@ function loadData(api: ExcalidrawImperativeAPI, content: CanvasContent, theme: A
     // TODO: Fix type of sceneData
     api.updateScene({
         elements,
-        appState: appState as AppState
+        appState: appState as AppState,
+        // Scene initialization must be excluded from the undo store. The default (EVENTUALLY)
+        // folds this load into the user's next captured action, so undoing their first stroke
+        // would restore the previously displayed note's scene (#7148).
+        captureUpdate: CaptureUpdateAction.NEVER
     });
     api.addFiles(fileArray);
     api.history.clear();
