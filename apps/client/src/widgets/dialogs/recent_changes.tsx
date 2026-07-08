@@ -149,25 +149,30 @@ function DeletedNoteLink({ change, setShown }: { change: RecentChangeRow, setSho
                 `data-note-deleted` tells the tooltip to resolve it via the deleted-content route. */}
             <span className="note-title" data-href={`#${change.noteId}?`} data-note-deleted>{change.current_title}</span>
             &nbsp;
-            (<a href="javascript:"
-                onClick={async () => {
-                    const text = t("recent_changes.confirm_undelete");
-
-                    if (await dialog.confirm(text)) {
-                        await server.put(`notes/${change.noteId}/undelete`);
-                        setShown(false);
-                        await ws.waitForMaxKnownEntityChangeId();
-
-                        const activeContext = appContext.tabManager.getActiveContext();
-                        if (activeContext) {
-                            activeContext.setNote(change.noteId);
-                        }
-                    }
-                }}>
-                {t("recent_changes.undelete_link")})
-            </a>
+            {/* A note can only be restored if it still has a surviving (undeleted) parent to reattach to.
+                When it doesn't (its parent is itself deleted or erased) the undelete link is disabled. */}
+            ({change.canBeUndeleted
+                ? <a href="javascript:" onClick={() => undeleteNote(change, setShown)}>{t("recent_changes.undelete_link")}</a>
+                : <span className="undelete-disabled" title={t("recent_changes.cannot_undelete")}>{t("recent_changes.undelete_link")}</span>})
         </>
     );
+}
+
+async function undeleteNote(change: RecentChangeRow, setShown: Dispatch<StateUpdater<boolean>>) {
+    if (!await dialog.confirm(t("recent_changes.confirm_undelete"))) {
+        return;
+    }
+
+    // The note may fail to restore if it was erased since the dialog opened, so act on the reported result.
+    const { undeleted } = await server.put<{ undeleted: boolean }>(`notes/${change.noteId}/undelete`);
+    if (!undeleted) {
+        toast.showError(t("recent_changes.undelete_failed"));
+        return;
+    }
+
+    setShown(false);
+    await ws.waitForMaxKnownEntityChangeId();
+    appContext.tabManager.getActiveContext()?.setNote(change.noteId);
 }
 
 function groupByDate(rows: RecentChangeRow[]) {

@@ -262,6 +262,13 @@ div.tn-tool-dialog {
     text-decoration: underline;
 }
 
+/* Undelete affordance disabled because the note has no surviving parent to restore into. */
+.recent-changes-content ul li .undelete-disabled {
+    opacity: 0.5;
+    cursor: help;
+    text-decoration: underline dotted;
+}
+
 /* Item title for deleted notes */
 .recent-changes-dialog-view-mode-all-changes  ul li.deleted-note .note-title {
     text-decoration: line-through;

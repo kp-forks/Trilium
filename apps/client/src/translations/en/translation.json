@@ -425,7 +425,9 @@
     "no_changes_message": "No changes yet...",
     "no_deleted_notes_message": "No deleted notes.",
     "undelete_link": "undelete",
-    "confirm_undelete": "Do you want to undelete this note and its sub-notes?"
+    "confirm_undelete": "Do you want to undelete this note and its sub-notes?",
+    "cannot_undelete": "This note can't be restored because its parent has also been deleted. Restore the parent first.",
+    "undelete_failed": "The note could not be restored — it may have been permanently erased or its parent is no longer available."
   },
   "revisions": {
     "note_revisions": "Note Revisions",
