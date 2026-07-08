@@ -5,7 +5,7 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
 import Dropdown from "../react/Dropdown";
-import { FormListItem } from "../react/FormList";
+import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import Modal from "../react/Modal";
 import hoisted_note from "../../services/hoisted_note";
 import type { RecentChangeRow } from "@triliumnext/commons";
@@ -73,6 +73,13 @@ export default function RecentChangesDialog() {
                             });
                         }}
                     >{t("recent_changes.erase_notes_button")}</FormListItem>
+                    {deletedOnly && <>
+                        <FormDropdownDivider />
+                        <FormListItem
+                            icon="bx bx-cog"
+                            onClick={() => appContext.tabManager.openContextWithNote("_optionsOther", { activate: true })}
+                        >{t("recent_changes.deleted_notes_settings")}</FormListItem>
+                    </>}
                 </Dropdown>
             }
             onHidden={() => setShown(false)}
