@@ -419,6 +419,7 @@
     "title": "Recent changes",
     "deleted_notes_title": "Deleted notes",
     "erase_notes_button": "Erase deleted notes now",
+    "more_actions": "More actions",
     "deleted_notes_message": "Deleted notes have been erased.",
     "no_changes_message": "No changes yet...",
     "undelete_link": "undelete",

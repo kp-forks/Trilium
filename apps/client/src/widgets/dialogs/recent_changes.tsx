@@ -4,7 +4,8 @@ import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import toast from "../../services/toast";
-import Button from "../react/Button";
+import Dropdown from "../react/Dropdown";
+import { FormListItem } from "../react/FormList";
 import Modal from "../react/Modal";
 import hoisted_note from "../../services/hoisted_note";
 import type { RecentChangeRow } from "@triliumnext/commons";
@@ -56,17 +57,23 @@ export default function RecentChangesDialog() {
             size="lg"
             scrollable
             header={
-                <Button
-                    text={t("recent_changes.erase_notes_button")}
-                    size="small"
-                    style={{ padding: "0 10px" }}
-                    onClick={() => {
-                        server.post("notes/erase-deleted-notes-now").then(() => {
-                            setRefreshCounter(refreshCounter + 1);
-                            toast.showMessage(t("recent_changes.deleted_notes_message"));
-                        });
-                    }}
-                />
+                <Dropdown
+                    className="recent-changes-actions"
+                    buttonClassName="custom-title-bar-button bx bx-dots-horizontal-rounded"
+                    title={t("recent_changes.more_actions")}
+                    hideToggleArrow
+                    noSelectButtonStyle
+                >
+                    <FormListItem
+                        icon="bx bx-trash"
+                        onClick={() => {
+                            server.post("notes/erase-deleted-notes-now").then(() => {
+                                setRefreshCounter(refreshCounter + 1);
+                                toast.showMessage(t("recent_changes.deleted_notes_message"));
+                            });
+                        }}
+                    >{t("recent_changes.erase_notes_button")}</FormListItem>
+                </Dropdown>
             }
             onHidden={() => setShown(false)}
             show={shown}
