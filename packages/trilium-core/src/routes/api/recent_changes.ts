@@ -5,8 +5,9 @@ import type { Request } from "express";
 import type { RecentChangeRow } from "@triliumnext/commons";
 import { getSql } from "../../services/sql/index.js";
 
-function getRecentChanges(req: Request<{ ancestorNoteId: string }>) {
+function getRecentChanges(req: Request<{ ancestorNoteId: string }, unknown, unknown, { deletedOnly?: string }>) {
     const { ancestorNoteId } = req.params;
+    const deletedOnly = req.query.deletedOnly === "true";
 
     let recentChanges: RecentChangeRow[] = [];
 
@@ -68,6 +69,10 @@ function getRecentChanges(req: Request<{ ancestorNoteId: string }>) {
         if (ancestorNoteId === "root" || note?.hasAncestor(ancestorNoteId)) {
             recentChanges.push(noteRow);
         }
+    }
+
+    if (deletedOnly) {
+        recentChanges = recentChanges.filter((change) => change.current_isDeleted);
     }
 
     recentChanges.sort((a, b) => (a.utcDate > b.utcDate ? -1 : 1));

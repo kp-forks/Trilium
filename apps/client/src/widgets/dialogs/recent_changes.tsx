@@ -20,15 +20,17 @@ export default function RecentChangesDialog() {
     const [ groupedByDate, setGroupedByDate ] = useState<Map<string, RecentChangeRow[]>>();
     const [ refreshCounter, setRefreshCounter ] = useState(0);
     const [ shown, setShown ] = useState(false);
+    const [ deletedOnly, setDeletedOnly ] = useState(false);
 
-    useTriliumEvent("showRecentChanges", ({ ancestorNoteId }) => {
+    useTriliumEvent("showRecentChanges", ({ ancestorNoteId, deletedOnly }) => {
         setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
+        setDeletedOnly(deletedOnly ?? false);
         setShown(true);
     });
 
     useEffect(() => {
         if (!ancestorNoteId) return;
-        server.get<RecentChangeRow[]>(`recent-changes/${ancestorNoteId}`)
+        server.get<RecentChangeRow[]>(`recent-changes/${ancestorNoteId}?deletedOnly=${deletedOnly}`)
             .then(async (recentChanges) => {
                 // preload all notes into cache
                 await froca.getNotes(
@@ -39,12 +41,12 @@ export default function RecentChangesDialog() {
                 const groupedByDate = groupByDate(recentChanges);
                 setGroupedByDate(groupedByDate);
             });
-    }, [ shown, refreshCounter ])
+    }, [ shown, refreshCounter, deletedOnly ])
 
     return (
         <Modal
-            title={t("recent_changes.title")}
-            className="recent-changes-dialog"
+            title={deletedOnly ? t("recent_changes.deleted_notes_title") : t("recent_changes.title")}
+            className={`recent-changes-dialog ${deletedOnly ? "recent-changes-dialog-view-mode-deleted-only" : "recent-changes-dialog-view-mode-all-changes"}`}
             size="lg"
             scrollable
             header={

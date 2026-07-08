@@ -417,6 +417,7 @@
   },
   "recent_changes": {
     "title": "Recent changes",
+    "deleted_notes_title": "Deleted notes",
     "erase_notes_button": "Erase deleted notes now",
     "deleted_notes_message": "Deleted notes have been erased.",
     "no_changes_message": "No changes yet...",
@@ -858,6 +859,7 @@
     "zoom_in": "Zoom In",
     "configure_launchbar": "Configure Launchbar",
     "show_shared_notes_subtree": "Show Shared Notes Subtree",
+    "show_deleted_notes": "Show Deleted Notes",
     "advanced": "Advanced",
     "open_dev_tools": "Open Dev Tools",
     "open_sql_console": "Open SQL Console",
