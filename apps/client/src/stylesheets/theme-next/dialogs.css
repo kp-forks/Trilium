@@ -263,7 +263,7 @@ div.tn-tool-dialog {
 }
 
 /* Item title for deleted notes */
-.recent-changes-content ul li.deleted-note .note-title {
+.recent-changes-dialog-view-mode-all-changes  ul li.deleted-note .note-title {
     text-decoration: line-through;
 }
 
