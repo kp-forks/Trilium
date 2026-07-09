@@ -335,7 +335,7 @@ class OCRService {
                 await this.processOcrEntity(blob);
             } catch {
                 // Tolerate broken or undecodable files: count the failure and move on.
-                // The failure itself is already logged by processEntityOCR.
+                // The failure itself is already logged by processOcrEntity.
                 this.batchProcessingState.failed++;
             }
 
