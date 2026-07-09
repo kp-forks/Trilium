@@ -140,7 +140,26 @@
     "export_finished_successfully": "Esportazione terminata con successo.",
     "format_pdf": "PDF- allo scopo di stampa o esportazione.",
     "export_type_subtree": "Questa nota e tutti i suoi discendenti",
-    "export_type_single": "Solo questa nota, senza le sottostanti"
+    "export_type_single": "Solo questa nota",
+    "what_to_export": "Cosa esportare",
+    "format": "Formato",
+    "format_html_name": "HTML",
+    "format_html_description": "Mantiene tutta la formattazione",
+    "format_markdown_name": "Markdown",
+    "format_markdown_description": "Mantiene gran parte della formattazione",
+    "format_opml_name": "OPML",
+    "format_opml_description": "Formato di struttura con contenuto HTML",
+    "format_share_name": "HTML per il web",
+    "format_share_description": "Sito statico pubblicabile che utilizza il tema \"shared-notes\"",
+    "recommended": "Consigliato",
+    "result_subtree_html": "Un archivio ZIP in cui le note di testo vengono salvate in formato HTML. Il codice, le immagini e gli altri file mantengono il loro formato originale.",
+    "result_subtree_markdown": "Un archivio ZIP in cui le note di testo vengono salvate in formato Markdown. Il codice, le immagini e gli altri file mantengono il loro formato originale.",
+    "result_share": "Un archivio ZIP contenente un sito web statico pronto per la pubblicazione che utilizza il tema \"shared-notes\".",
+    "result_opml": "Un unico file OPML in formato struttura. Sono inclusi i titoli e il testo delle note; non sono invece incluse immagini, file di codice e allegati.",
+    "result_single_html": "Un unico file HTML. Le immagini e gli allegati sono incorporati al suo interno.",
+    "result_single_markdown": "Un singolo file Markdown (.md).",
+    "preparing_export": "Preparazione per l'esportazione…",
+    "export_in_progress_with_total": "Sono state esportate {{progressCount}} note su {{totalCount}}"
   },
   "password_not_set": {
     "body1": "Le note protette sono crittografate utilizzando una password utente, ma la password non è stata ancora impostata.",
@@ -702,9 +721,9 @@
     "importIntoNote": "Importa nella nota",
     "chooseImportFile": "Scegli file di importazione",
     "options": "Opzioni",
-    "safeImportTooltip": "I file di esportazione Trilium <code>.zip</code> possono contenere script eseguibili che potrebbero avere comportamenti dannosi. L'importazione sicura disattiverà l'esecuzione automatica di tutti gli script importati. Deseleziona “Importazione sicura” solo se l'archivio importato dovrebbe contenere script eseguibili e ti fidi completamente del contenuto del file di importazione.",
+    "safeImportTooltip": "I file di esportazione Trilium <code>.zip</code> possono contenere script eseguibili. L'importazione sicura li disabilita; deselezionare questa opzione solo se l'archivio è destinato all'esecuzione di script e si ha fiducia nel suo contenuto.",
     "safeImport": "Importazione sicura",
-    "explodeArchivesTooltip": "Se questa opzione è selezionata, Trilium leggerà i file <code>.zip</code>, <code>.enex</code> e <code>.opml</code> e creerà delle note dai file contenuti in tali archivi. Se l'opzione non è selezionata, Trilium allegherà gli archivi stessi alla nota.",
+    "explodeArchivesTooltip": "Crea note dai file contenuti negli archivi <code>.zip</code>, <code>.enex</code> e <code>.opml</code>. Se questa opzione è disattivata, gli archivi vengono allegati così come sono.",
     "shrinkImages": "Riduci immagini",
     "explodeArchives": "Leggi il contenuto degli archivi <code>.zip</code>, <code>.enex</code> e <code>.opml</code> .",
     "html_import_tags": {
@@ -713,16 +732,25 @@
       "placeholder": "Inserisci i tag HTML, uno per riga",
       "reset_button": "Ripristina elenco predefinito"
     },
-    "in-progress": "Importazione in corso: {{progress}}",
+    "in-progress": "Note {{progress}} importate",
     "successful": "Importazione completata con successo.",
-    "shrinkImagesTooltip": "<p>Se selezioni questa opzione, Trilium tenterà di ridurre le immagini importate tramite ridimensionamento e ottimizzazione, il che potrebbe influire sulla qualità percepita dell’immagine. Se non selezionata, le immagini verranno importate senza modifiche.</p><p>Questo non si applica alle importazioni <code>.zip</code> con metadati, poiché si presume che questi file siano già ottimizzati.</p>",
+    "shrinkImagesTooltip": "Ridimensiona e ottimizza le immagini per risparmiare spazio, il che potrebbe comportare una leggera riduzione della qualità. Non si applica alle importazioni da file <code>.zip</code> con metadati, che si presume siano già ottimizzate.",
     "textImportedAsText": "Importa HTML, Markdown e TXT come note di testo se non è chiaro dai metadati",
     "codeImportedAsCode": "Importa i file di codice riconosciuti (ad esempio <code>.json</code>) come note di codice se non è chiaro dai metadati",
     "replaceUnderscoresWithSpaces": "Sostituisci i trattini bassi con spazi nei nomi delle note importate",
     "import": "Importa",
     "failed": "Importazione fallita: {{message}}.",
     "importZipRecommendation": "Quando si importa un file ZIP, la gerarchia delle note rifletterà la struttura delle sottodirectory all'interno dell'archivio.",
-    "spreadsheetImportedAsSpreadsheet": "Importa i file CSV ed Excel come fogli di calcolo modificabili anziché come file"
+    "spreadsheetImportedAsSpreadsheet": "Importa i file CSV ed Excel come fogli di calcolo modificabili anziché come file",
+    "importIntoNoteNamed": "Importa in {{- title}}",
+    "import_from": "Importa da",
+    "cardName": "File e altri formati",
+    "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, immagini e altro ancora",
+    "shrinkImagesProviderTooltip": "Ridimensiona e ottimizza le immagini importate per risparmiare spazio, il che potrebbe comportare una leggera riduzione della qualità.",
+    "starting": "Importazione in corso…",
+    "in-progress-with-total": "Note importate {{progress}} su {{total}}",
+    "extracting": "Sono stati estratti {{progress}} elementi su {{total}}",
+    "processing": "Elaborate {{progress}} note su {{total}}"
   },
   "include_note": {
     "dialog_title": "Includi nota",
@@ -1685,7 +1713,7 @@
     "set_password_heading": "Imposta password",
     "set_password": "Imposta password",
     "password_mismatch": "Le nuove password non sono tutte uguali.",
-    "password_changed_success": "La password è stata modificata. Trilium verrà ricaricato dopo aver premuto OK.",
+    "password_changed_success": "La password è stata modificata con successo.",
     "change_password_description": "Aggiorna la tua password attuale",
     "reset_password": "Reimposta password",
     "reset_password_description": "Perdere definitivamente l'accesso alle note protette",
@@ -1699,8 +1727,8 @@
     "oauth_title": "OAuth/OpenID",
     "oauth_description": "OpenID è un metodo standardizzato che ti consente di accedere ai siti web utilizzando un account di un altro servizio, come Google, per verificare la tua identità. L'emittente predefinito è Google, ma puoi cambiarlo con qualsiasi altro provider OpenID. Per ulteriori informazioni, consulta <a href=\"#root/_hidden/_help/_help_Otzi9La2YAUX/_help_WOcw2SLH6tbX/_help_7DAiwaf8Z7Rz\">qui</a>. Segui queste <a href=\"https://developers.google.com/identity/openid-connect/openid-connect\">istruzioni</a> per configurare un servizio OpenID tramite Google.",
     "oauth_missing_vars": "Impostazioni mancanti: {{-variables}}",
-    "oauth_user_account": "Account utente: ",
-    "oauth_user_email": "Email utente: ",
+    "oauth_user_account": "Nome dell'account",
+    "oauth_user_email": "Indirizzo e-mail",
     "oauth_user_not_logged_in": "Non hai effettuato l'accesso!"
   },
   "spellcheck": {
@@ -1857,9 +1885,6 @@
     "no_notes_found": "Non sono state trovate note per i parametri di ricerca specificati.",
     "search_not_executed": "La ricerca non è stata ancora eseguita.",
     "search_now": "Cerca ora"
-  },
-  "spacer": {
-    "configure_launchbar": "Configura Launchbar"
   },
   "sql_result": {
     "no_rows": "Nessuna riga è stata restituita per questa query",
@@ -2794,5 +2819,74 @@
     "refresh-widget": "Aggiorna",
     "remove-widget": "Rimuovi dalla dashboard",
     "empty-hint": "Ogni nota secondaria diventa un widget. Trascina qui una nota dall'albero o creane una nuova."
+  },
+  "file_upload": {
+    "drop_or_browse_single": "Trascina un file qui, oppure clicca per selezionare un file",
+    "drop_or_browse_multiple": "Trascina i file qui oppure clicca per selezionarli",
+    "browse_single": "Tocca per selezionare un file",
+    "browse_multiple": "Tocca per selezionare i file",
+    "selected_one": "E' stato selezionato {{count}} file",
+    "selected_many": "Sono stati selezionati {{count}} files",
+    "selected_other": "Sono stati selezionati {{count}} files"
+  },
+  "import_provider": {
+    "choose_provider": "Scegli uno dei servizi sopra elencati da cui effettuare l'importazione."
+  },
+  "onenote_import": {
+    "name": "Microsoft OneNote",
+    "description": "Collega al tuo account",
+    "connect_description": "Accedi con il tuo account Microsoft per importare i tuoi blocchi appunti di OneNote.",
+    "connect": "Accedi con Microsoft",
+    "section_heading": "Microsoft OneNote",
+    "checking": "Verifica della connessione a OneNote…",
+    "connecting": "In attesa che l'accesso venga completato…",
+    "connected_as": "Connesso come {{name}}",
+    "disconnect": "Disconnetti",
+    "load_failed": "Impossibile caricare i tuoi blocchi appunti di OneNote.",
+    "no_notebooks": "In questo account non sono stati trovati quaderni.",
+    "select_sections": "Seleziona le sezioni da importare",
+    "select_sections_hint": "OneNote non include l'ordine originale nei dati importati, pertanto le sezioni e i gruppi vengono ordinati in base alla data di creazione e potrebbero non corrispondere alla loro disposizione in OneNote.",
+    "import": "Importa selezione",
+    "attach_source": "Allega il codice HTML originale (debug)",
+    "attach_source_hint": "Salva il codice HTML di OneNote non modificato di ciascuna pagina come allegato alla nota importata, per poterlo confrontare con il risultato della conversione."
+  },
+  "notion_import": {
+    "name": "Notion",
+    "description": "Da un'esportazione in HTML",
+    "description_long": "In Notion, esporta il tuo spazio di lavoro o una pagina in formato HTML, comprese le sottopagine, quindi seleziona qui il file .zip risultante.",
+    "choose_file": "Esportazione da Notion (.zip)",
+    "import": "Importa"
+  },
+  "login": {
+    "password": "Password",
+    "remember-me": "Ricordami",
+    "incorrect-totp": "La password monouso non è corretta. Riprova."
+  },
+  "set_password": {
+    "password": "Password"
+  },
+  "keep_import": {
+    "name": "Google Keep",
+    "description": "Da un'esportazione Takeout",
+    "description_long": "In Google Takeout, esporta i tuoi dati di Keep in un file .zip, quindi seleziona qui il file risultante.",
+    "choose_file": "Esportazione da Google Keep (.zip)",
+    "import": "Importa"
+  },
+  "anytype_import": {
+    "description": "Da un'esportazione JSON",
+    "description_long": "In Anytype, esporta il tuo spazio utilizzando il formato \"Any-Block\" con l'opzione \"JSON\" selezionata, quindi scegli qui il file .zip risultante. Per ora vengono importate solo le pagine e il loro testo.",
+    "choose_file": "Esportazione in formato Anytype (.zip)",
+    "import": "Importa"
+  },
+  "obsidian_import": {
+    "name": "Obsidian",
+    "description": "Da un caveau",
+    "description_long": "Comprimi la cartella \"Obsidian vault\" in un file .zip, quindi seleziona qui il file .zip ottenuto.",
+    "choose_file": "Archivio Obsidian (.zip)",
+    "import": "Importa"
+  },
+  "evernote_import": {
+    "name": "Evernote",
+    "description": "Da file .enex"
   }
 }

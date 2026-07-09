@@ -1642,9 +1642,6 @@
     "search_not_executed": "尚未執行搜尋。",
     "search_now": "立即搜尋"
   },
-  "spacer": {
-    "configure_launchbar": "設定啟動欄"
-  },
   "sql_result": {
     "no_rows": "此次查詢沒有返回任何數據",
     "not_executed": "查詢尚未執行。",

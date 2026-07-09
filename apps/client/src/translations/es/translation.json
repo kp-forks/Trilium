@@ -1694,9 +1694,6 @@
     "search_not_executed": "La búsqueda aún no se ha ejecutado.",
     "search_now": "Buscar ahora"
   },
-  "spacer": {
-    "configure_launchbar": "Configurar barra de lanzamiento"
-  },
   "sql_result": {
     "no_rows": "No se han devuelto filas para esta consulta",
     "not_executed": "La consulta aún no ha sido ejecutada.",

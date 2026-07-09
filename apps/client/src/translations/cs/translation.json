@@ -1677,9 +1677,6 @@
     "search_not_executed": "Hledání ještě nebylo provedeno.",
     "search_now": "Hledat nyní"
   },
-  "spacer": {
-    "configure_launchbar": "Konfigurovat Launchbar"
-  },
   "sql_result": {
     "not_executed": "Dotaz ještě nebyl proveden.",
     "no_rows": "Pro tento dotaz nebyly vráceny žádné řádky",

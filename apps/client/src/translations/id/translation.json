@@ -2057,9 +2057,6 @@
     "edited_notes": "Catatan yang diedit pada hari ini",
     "promoted_attributes": "Atribut yang dipromosikan"
   },
-  "spacer": {
-    "configure_launchbar": "Konfigurasikan Launchbar"
-  },
   "sql_result": {
     "not_executed": "Query belum dijalankan.",
     "no_rows": "Tidak ada baris yang dikembalikan untuk query ini",

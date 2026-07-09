@@ -1882,9 +1882,6 @@
     "search_not_executed": "Níl an cuardach curtha i gcrích fós.",
     "search_now": "Cuardaigh anois"
   },
-  "spacer": {
-    "configure_launchbar": "Cumraigh an Barra Seoladh"
-  },
   "sql_result": {
     "not_executed": "Níl an fiosrúchán curtha i gcrích fós.",
     "no_rows": "Níl aon rónna curtha ar ais don fhiosrúchán seo",

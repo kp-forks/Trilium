@@ -1838,9 +1838,6 @@
     "search_not_executed": "अभी खोज नहीं की गई है।",
     "search_now": "अभी खोजें"
   },
-  "spacer": {
-    "configure_launchbar": "लॉन्चबार (Launchbar) सेट करें"
-  },
   "sql_result": {
     "not_executed": "क्वेरी अभी रन नहीं हुई है।",
     "no_rows": "इस क्वेरी के लिए कोई डेटा नहीं मिला",
