@@ -1736,9 +1736,6 @@
     "search_not_executed": "La recherche n'a pas encore été exécutée.",
     "search_now": "Recherche maintenant"
   },
-  "spacer": {
-    "configure_launchbar": "Configurer la Barre de raccourcis"
-  },
   "sql_result": {
     "no_rows": "Aucune ligne n'a été renvoyée pour cette requête",
     "not_executed": "La requête n'a pas encore été exécutée.",

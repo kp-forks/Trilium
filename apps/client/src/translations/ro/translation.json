@@ -1667,9 +1667,6 @@
   "show_floating_buttons_button": {
     "button_title": "Afișează butoanele"
   },
-  "spacer": {
-    "configure_launchbar": "Configurează bara de lansare"
-  },
   "sql_result": {
     "no_rows": "Nu s-a găsit niciun rând pentru această interogare",
     "not_executed": "Această interogare nu a fost executată încă.",

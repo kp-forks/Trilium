@@ -1803,9 +1803,6 @@
     "search_not_executed": "尚未执行搜索。",
     "search_now": "立即搜索"
   },
-  "spacer": {
-    "configure_launchbar": "配置启动栏"
-  },
   "sql_result": {
     "no_rows": "此查询没有返回任何数据",
     "not_executed": "查询尚未执行。",

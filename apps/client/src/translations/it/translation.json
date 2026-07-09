@@ -1886,9 +1886,6 @@
     "search_not_executed": "La ricerca non è stata ancora eseguita.",
     "search_now": "Cerca ora"
   },
-  "spacer": {
-    "configure_launchbar": "Configura Launchbar"
-  },
   "sql_result": {
     "no_rows": "Nessuna riga è stata restituita per questa query",
     "not_executed": "La query non è stata ancora eseguita.",

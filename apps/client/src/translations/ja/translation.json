@@ -2208,9 +2208,6 @@
     "button-link-map": "リンクマップ",
     "button-tree-map": "ツリーマップ"
   },
-  "spacer": {
-    "configure_launchbar": "ランチャーバーを設定"
-  },
   "attachment_detail_2": {
     "will_be_deleted_in": "この添付ファイルは {{time}} 後に自動的に削除されます",
     "will_be_deleted_soon": "この添付ファイルはすぐに自動的に削除されます",

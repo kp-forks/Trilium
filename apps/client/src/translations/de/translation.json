@@ -1701,9 +1701,6 @@
     "search_not_executed": "Die Suche wurde noch nicht ausgeführt.",
     "search_now": "Jetzt suchen"
   },
-  "spacer": {
-    "configure_launchbar": "Starterleiste konfigurieren"
-  },
   "sql_result": {
     "no_rows": "Es wurden keine Zeilen für diese Abfrage zurückgegeben",
     "not_executed": "Die Abfrage wurde noch nicht ausgeführt.",

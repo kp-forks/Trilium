@@ -1670,9 +1670,6 @@
     "button-link-map": "خريطة الروابط",
     "button-tree-map": "خريطة الشجرة"
   },
-  "spacer": {
-    "configure_launchbar": "تهيئة شريط الاطلاق"
-  },
   "entrypoints": {
     "note-executed": "تم تنفيذ الملاحظة.",
     "save-named-revision-title": "حفظ نسخة باسم",

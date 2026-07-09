@@ -1930,9 +1930,6 @@
     "options_status": "Статус опций",
     "options_change_saved": "Изменения параметров сохранены."
   },
-  "spacer": {
-    "configure_launchbar": "Конфигурация лаунчбара"
-  },
   "entrypoints": {
     "note-executed": "Заметка выполнена.",
     "note-revision-created": "Снимок версии заметки создан успешно.",

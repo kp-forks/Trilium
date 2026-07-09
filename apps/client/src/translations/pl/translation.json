@@ -1829,9 +1829,6 @@
     "search_not_executed": "Nie przeprowadzono jeszcze wyszukiwania.",
     "search_now": "Szukaj teraz"
   },
-  "spacer": {
-    "configure_launchbar": "Konfiguruj pasek szybkiego dostępu"
-  },
   "sql_result": {
     "no_rows": "Dla tego zapytania nie zwrócono żadnych wierszy",
     "not_executed": "Zapytanie nie zostało jeszcze wykonane.",
