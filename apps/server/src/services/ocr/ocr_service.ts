@@ -341,8 +341,9 @@ class OCRService {
 
             this.batchProcessingState.processed++;
 
-            // Small delay to prevent overwhelming the system
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Small delay to keep the system responsive; recognition itself already runs
+            // in a worker thread, so this only needs to yield, not throttle.
+            await new Promise(resolve => setTimeout(resolve, 50));
         }
 
         getLog().info(`Batch OCR processing completed. Processed ${this.batchProcessingState.processed} files (${this.batchProcessingState.failed} failed).`);
