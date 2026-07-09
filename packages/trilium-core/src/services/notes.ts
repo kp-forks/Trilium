@@ -61,6 +61,12 @@ export interface NoteParams {
     notePosition?: number;
     dateCreated?: string;
     utcDateCreated?: string;
+    /**
+     * Set internally when the client requested no `type` and it was derived from the parent note instead.
+     * In that case a `child:template` of a different type is still applied (and converts the note), whereas
+     * an explicitly chosen type wins over such a template (#3015).
+     */
+    isTypeDefaulted?: boolean;
     ignoreForbiddenParents?: boolean;
     target?: "into";
     /** Attributes to be set on the note. These are set atomically on note creation, so entity changes are not sent for attributes defined here. */
@@ -100,16 +106,24 @@ function deriveMime(type: string, mime?: string) {
     return noteTypesService.getDefaultMimeForNoteType(type);
 }
 
-function copyChildAttributes(parentNote: BNote, childNote: BNote) {
+function copyChildAttributes(parentNote: BNote, childNote: BNote, isTypeDefaulted = false) {
     for (const attr of parentNote.getAttributes()) {
         if (attr.name.startsWith("child:")) {
             const name = attr.name.substring(6);
-            const hasAlreadyTemplate = childNote.hasRelation("template");
 
-            if (hasAlreadyTemplate && attr.type === "relation" && name === "template") {
-                // if the note already has a template, it means the template was chosen by the user explicitly
-                // in the menu. In that case, we should override the default templates defined in the child: attrs
-                continue;
+            if (attr.type === "relation" && name === "template") {
+                if (childNote.hasRelation("template")) {
+                    // if the note already has a template, it means the template was chosen by the user explicitly
+                    // in the menu. In that case, we should override the default templates defined in the child: attrs
+                    continue;
+                }
+
+                const templateNote = becca.getNote(attr.value);
+                if (!isTypeDefaulted && templateNote && templateNote.type !== childNote.type) {
+                    // the explicitly chosen note type wins over the default template, which would otherwise
+                    // convert the note and fill it with content of a different type (#3015)
+                    continue;
+                }
             }
 
             new BAttribute({
@@ -306,7 +320,7 @@ function createNewNote(params: NoteParams): {
             // no special handling for ~inherit since it doesn't matter if it's assigned with the note creation or later
         }
 
-        copyChildAttributes(parentNote, note);
+        copyChildAttributes(parentNote, note, params.isTypeDefaulted);
 
         eventService.emit(eventService.ENTITY_CREATED, { entityName: "notes", entity: note });
         eventService.emit(eventService.ENTITY_CHANGED, { entityName: "notes", entity: note });
@@ -330,14 +344,18 @@ function createNewNote(params: NoteParams): {
     });
 }
 
-function createNewNoteWithTarget(target: "into" | "after" | "before", targetBranchId: string | undefined, params: NoteParams) {
-    if (!params.type) {
-        const parentNote = becca.notes[params.parentNoteId];
+function createNewNoteWithTarget(target: "into" | "after" | "before", targetBranchId: string | undefined, rawParams: Omit<NoteParams, "type"> & { type?: NoteType }) {
+    if (!rawParams.type) {
+        const parentNote = becca.notes[rawParams.parentNoteId];
 
         // code note type can be inherited, otherwise "text" is the default
-        params.type = parentNote.type === "code" ? "code" : "text";
-        params.mime = parentNote.type === "code" ? parentNote.mime : "text/html";
+        rawParams.type = parentNote.type === "code" ? "code" : "text";
+        rawParams.mime = parentNote.type === "code" ? parentNote.mime : "text/html";
+        // the type is not an explicit user choice, so a child:template of another type may still convert the note
+        rawParams.isTypeDefaulted = true;
     }
+
+    const params = rawParams as NoteParams;
 
     if (target === "into") {
         return createNewNote(params);
