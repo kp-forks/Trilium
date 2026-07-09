@@ -22,7 +22,6 @@ OCR in Trilium supports the following formats:
     *   GIF (only non-animated)
     *   BMP
     *   WebP
-*   Currently only single-page TIFFs are supported. If you have multi-page TIFFs consider splitting them into individual images.
 *   Note that this feature works best for computer-rendered text rather than handwriting.
 *   The underlying technology is Tesseract.js.
 
