@@ -83,6 +83,13 @@ export class ImageProcessor extends FileProcessor {
         getLog().info(`Initializing Tesseract worker for language(s): ${language}`);
         this.worker = await Tesseract.createWorker(language, 1, {
             cachePath: dataDirs.OCR_CACHE_DIR,
+            // Without an errorHandler, tesseract.js rethrows job failures (e.g. undecodable
+            // images) from its worker message handler as uncaught exceptions — in the desktop
+            // app that surfaces as Electron's blocking "JavaScript error" dialog (#9754).
+            // The job promise still rejects, so callers handle the failure normally.
+            errorHandler: (error: unknown) => {
+                getLog().error(`Tesseract worker error: ${error}`);
+            },
             logger: (m: { status: string; progress: number }) => {
                 if (m.status === 'recognizing text') {
                     getLog().info(`Image OCR progress (${language}): ${Math.round(m.progress * 100)}%`);

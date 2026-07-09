@@ -1589,6 +1589,7 @@
     "batch_ocr_starting": "Starting batch processing...",
     "batch_ocr_progress": "Processing {{processed}} of {{total}} files...",
     "batch_ocr_completed": "Batch processing completed! Processed {{processed}} files.",
+    "batch_ocr_completed_with_failures": "Batch processing completed. Processed {{processed}} files, but {{failed}} could not be read (see logs for details).",
     "batch_ocr_error": "Error during batch processing: {{error}}"
   },
   "attachment_erasure_timeout": {

@@ -136,6 +136,23 @@ describe('ImageProcessor', () => {
         );
     });
 
+    it('passes an errorHandler that logs worker errors instead of rethrowing them', async () => {
+        const processor = new ImageProcessor();
+        mockWorker.recognize.mockResolvedValue({
+            data: { text: 'a', confidence: 50, words: [] }
+        });
+
+        await processor.extractText(buffer, { language: 'eng' });
+
+        // Without an errorHandler, tesseract.js turns job failures into uncaught
+        // exceptions, which surface as Electron's "JavaScript error" dialog (#9754).
+        const config = mockTesseract.createWorker.mock.calls[0][2];
+        expect(() => config.errorHandler('Error attempting to read image.')).not.toThrow();
+        expect(mockLog.error).toHaveBeenCalledWith(
+            'Tesseract worker error: Error attempting to read image.'
+        );
+    });
+
     it('propagates and logs recognition errors', async () => {
         const processor = new ImageProcessor();
         mockWorker.recognize.mockRejectedValue(new Error('recognize failed'));
