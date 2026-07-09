@@ -20,12 +20,22 @@ function injectGlobals() {
 }
 
 function mockWebsocket() {
+    function subscribeToMessages(_callback: (message: unknown) => void) {
+        // Do nothing.
+    }
+
+    function unsubscribeToMessage(_callback: (message: unknown) => void) {
+        // Do nothing.
+    }
+
     return {
         default: {
-            subscribeToMessages(callback: (message: unknown) => void) {
-                // Do nothing.
-            }
-        }
+            subscribeToMessages
+        },
+        // consumers also import these as named exports (e.g. useNoteIds); leaving them out makes
+        // the subscription effect throw, which silently skips every later effect of the component
+        subscribeToMessages,
+        unsubscribeToMessage
     };
 }
 
