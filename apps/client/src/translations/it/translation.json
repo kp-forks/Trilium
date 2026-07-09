@@ -240,11 +240,11 @@
     "title": "Anonimizzazione dei database",
     "full_anonymization": "Anonimizzazione completa",
     "full_anonymization_description": "Crea una copia del database da cui vengono rimossi tutti i contenuti delle note, lasciando solo la struttura e i metadati non sensibili. È sicuro da condividere online durante la risoluzione dei problemi.",
-    "save_fully_anonymized_database": "Salva database completamente anonimizzato",
+    "save_fully_anonymized_database": "Crea una copia",
     "light_anonymization_description": "Crea una copia in cui il contenuto delle note viene rimosso, mentre i titoli, gli attributi e gli script/widget personalizzati rimangono invariati. Fornisce maggiori informazioni di contesto per il debug.",
     "choose_anonymization": "Puoi decidere da solo se fornire un database completamente o parzialmente anonimizzato. Anche un database completamente anonimizzato è molto utile, sebbene in alcuni casi i database parzialmente anonimizzati possono accelerare il processo di identificazione dei bug e la loro correzione.",
     "no_anonymized_database_yet": "Ancora nessun database anonimizzato.",
-    "save_lightly_anonymized_database": "Salva database leggermente anonimizzato",
+    "save_lightly_anonymized_database": "Crea una copia",
     "successfully_created_fully_anonymized_database": "Database completamente anonimizzato creato in {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "Database parzialmente anonimizzato creato in {{anonymizedFilePath}}",
     "existing_anonymized_databases": "Database anonimizzati esistenti",
@@ -510,7 +510,7 @@
     "refresh": "Aggiorna"
   },
   "consistency_checks": {
-    "find_and_fix_button": "Trova e correggi i problemi di coerenza",
+    "find_and_fix_button": "Risolvere i problemi",
     "finding_and_fixing_message": "In cerca e correzione dei problemi di coerenza...",
     "issues_fixed_message": "Qualsiasi problema di coerenza che possa essere stato trovato ora è corretto.",
     "title": "Controlli di coerenza",
@@ -518,7 +518,7 @@
     "find_and_fix_description": "Esegue una scansione e risolve automaticamente eventuali problemi di coerenza dei dati nel database."
   },
   "database_integrity_check": {
-    "check_button": "Controllo dell'integrità del database",
+    "check_button": "Verifica dell'integrità",
     "checking_integrity": "Controllo dell'integrità del database in corso...",
     "title": "Controllo di Integrità del database",
     "integrity_check_failed": "Controllo di integrità fallito: {{results}}",
@@ -528,9 +528,9 @@
   },
   "sync": {
     "title": "Sincronizza",
-    "force_full_sync_button": "Forza una sincronizzazione completa",
+    "force_full_sync_button": "Sincronizzazione forzata",
     "failed": "Sincronizzazione fallita: {{message}}",
-    "fill_entity_changes_button": "Compila i record delle modifiche dell'entità",
+    "fill_entity_changes_button": "Modifiche al riempimento",
     "full_sync_triggered": "Sincronizzazione completa attivata",
     "filling_entity_changes": "Il riempimento delle righe modifica l'entità...",
     "sync_rows_filled_successfully": "Sincronizzazione righe compilate correttamente",
@@ -801,7 +801,13 @@
     "deleted_notes_message": "Le note eliminate sono state cancellate.",
     "no_changes_message": "Nessuna modifica ancora...",
     "undelete_link": "ripristinare",
-    "confirm_undelete": "Vuoi ripristinare questa nota e le sue sotto-note?"
+    "confirm_undelete": "Vuoi ripristinare questa nota e le sue sotto-note?",
+    "deleted_notes_title": "Note eliminate",
+    "more_actions": "Altre azioni",
+    "deleted_notes_settings": "Impostazioni delle note eliminate",
+    "no_deleted_notes_message": "Nessuna nota cancellata.",
+    "cannot_undelete": "Non è possibile ripristinare questa nota perché anche l'elemento padre è stato eliminato. Ripristina prima l'elemento padre.",
+    "undelete_failed": "Non è stato possibile ripristinare la nota: potrebbe essere stata cancellata definitivamente oppure il documento a cui era associata non è più disponibile."
   },
   "sort_child_notes": {
     "sort_children_by": "Ordina i bambini per...",
@@ -1053,7 +1059,7 @@
     "download": "Scaricamento",
     "rename_attachment": "Rinomina allegato",
     "upload_new_revision": "Carica nuova revisione",
-    "copy_link_to_clipboard": "Copia il collegamento negli appunti",
+    "copy_link_to_clipboard": "Copia il riferimento negli appunti",
     "convert_attachment_into_note": "Convertire l'allegato in nota",
     "delete_attachment": "Elimina allegato",
     "upload_success": "È stata caricata una nuova revisione dell'allegato.",
@@ -1098,7 +1104,12 @@
     "year_previous": "Anno precedente",
     "year_next": "L'anno prossimo",
     "list": "Lista",
-    "today": "Oggi"
+    "today": "Oggi",
+    "day": "Giorno",
+    "day_previous": "Giorno precedente",
+    "day_next": "Il giorno successivo",
+    "pin_date": "Aggiungi la data corrente ai preferiti in modo che il calendario si apra sempre in questo intervallo anziché oggi",
+    "unpin_date": "Sblocca la data in modo che il calendario si apra nuovamente sulla data di oggi"
   },
   "close_pane_button": {
     "close_this_pane": "Chiudi questo riquadro"
@@ -1141,7 +1152,8 @@
     "toggle-zen-mode": "Modalità Zen",
     "new-version-available": "Nuovo aggiornamento disponibile",
     "download-update": "Ottieni la versione {{latestVersion}}",
-    "search_notes": "Cerca note"
+    "search_notes": "Cerca note",
+    "show_deleted_notes": "Mostra le note eliminate"
   },
   "zen_mode": {
     "button_exit": "Esci dalla modalità Zen"
@@ -1194,7 +1206,13 @@
     "word_wrap_on": "On",
     "word_wrap_off": "Off",
     "save_named_revision": "Salva revisione con nome...",
-    "print_or_export_to_pdf": "Stampa/esporta in PDF..."
+    "print_or_export_to_pdf": "Stampa/esporta in PDF...",
+    "convert_to_markdown": "Converti in Markdown - Nota",
+    "convert_to_text": "Converti in nota di testo",
+    "convert_format_warning": "Durante la conversione potrebbero andare perse alcune impostazioni di formattazione e potrebbe essere necessario correggere alcuni dettagli in seguito. Verrà salvata in anticipo una versione precedente della nota attuale, in modo da poterla ripristinare. Vuoi continuare?",
+    "convert_format_warning_risky": "Stai effettuando una conversione tra due formati che non hanno le stesse funzionalità; pertanto, è possibile che alcune impostazioni di formattazione vadano perse e che alcuni elementi non supportati vengano eliminati.<br><br>Accetti pienamente questo rischio e desideri procedere con la conversione?<br><br>Verrà salvata in anticipo una versione di questa nota, in modo da poter tornare al formato originale.",
+    "convert_to_markdown_successful": "La nota è stata convertita in Markdown.",
+    "convert_to_text_successful": "La nota è stata convertita in una nota di testo."
   },
   "onclick_button": {
     "no_click_handler": "Il widget pulsante '{{componentId}}' non ha un gestore di clic definito"
@@ -1210,7 +1228,7 @@
     "update_available": "Aggiornamento disponibile"
   },
   "note_launcher": {
-    "this_launcher_doesnt_define_target_note": "Questo launcher non definisce la nota di destinazione."
+    "this_launcher_doesnt_define_target_note": "Questo launcher non ha alcuna nota di destinazione configurata, quindi non c'è nulla da aprire. Imposta la sua relazione \"target\" in modo che punti a una nota."
   },
   "code_buttons": {
     "execute_button_title": "Esegui script",
@@ -1504,7 +1522,7 @@
   "vacuum_database": {
     "title": "Pulizia del database",
     "description": "Questa operazione ricostruirà il database, generando in genere un file di dimensioni inferiori. In realtà, nessun dato verrà modificato.",
-    "button_text": "Pulizia del database",
+    "button_text": "Pulisci ora",
     "vacuuming_database": "Aspirazione del database...",
     "database_vacuumed": "Il database è stato svuotato",
     "vacuum_label": "Database Vacuum",
@@ -2349,7 +2367,13 @@
     "previous-video": "Video precedente: {{- title}}",
     "next-video": "Prossimo video: {{- title}}",
     "previous-audio": "Audio precedente: {{- title}}",
-    "next-audio": "Audio successivo: {{- title}}"
+    "next-audio": "Audio successivo: {{- title}}",
+    "seek": "Cerca (tasti freccia sinistra/destra)",
+    "forward-10s": "Avanti di 10 secondi (tasto freccia destra)",
+    "play-mode-title": "Modalità: {{mode}}",
+    "play-mode-once": "Riproduci una volta",
+    "play-mode-loop": "Ciclo",
+    "play-mode-next": "Riproduci il prossimo"
   },
   "mermaid": {
     "placeholder": "Digita il contenuto del tuo diagramma Mermaid oppure utilizza uno dei diagrammi di esempio riportati di seguito.",
@@ -2667,8 +2691,11 @@
     "placeholders": {
       "math": "equazione",
       "collapsible_summary": "Sommario",
-      "collapsible_details": "Dettagli"
-    }
+      "collapsible_details": "Dettagli",
+      "table_column": "Colonna {{number}}"
+    },
+    "page_break": "Inserisci un'interruzione di pagina (per la stampa)",
+    "table": "Inserisci una tabella"
   },
   "mobile_note_navigator": {
     "back": "Torna al livello superiore",
@@ -2876,7 +2903,8 @@
     "description": "Da un'esportazione JSON",
     "description_long": "In Anytype, esporta il tuo spazio utilizzando il formato \"Any-Block\" con l'opzione \"JSON\" selezionata, quindi scegli qui il file .zip risultante. Per ora vengono importate solo le pagine e il loro testo.",
     "choose_file": "Esportazione in formato Anytype (.zip)",
-    "import": "Importa"
+    "import": "Importa",
+    "name": "Anytype"
   },
   "obsidian_import": {
     "name": "Obsidian",
@@ -2887,6 +2915,34 @@
   },
   "evernote_import": {
     "name": "Evernote",
-    "description": "Da file .enex"
+    "description": "Da file .enex",
+    "description_long": "In Evernote, esporta un taccuino (o fino a 100 note alla volta) come file ENEX, quindi seleziona qui uno o più file .enex. Ogni file viene importato come taccuino separato.",
+    "choose_file": "Esportazione in formato Evernote (.enex)",
+    "import": "Importa"
+  },
+  "save_revision": {
+    "save_revision": "Salva revisione",
+    "revision_name_placeholder": "Nome della revisione (facoltativo)",
+    "help": "Per ogni nota corrispondente verrà salvata una revisione con nome, che ne registrerà il contenuto e il titolo attuali."
+  },
+  "convert_note": {
+    "convert_note": "Converti",
+    "convert_note_to": "Converti nota",
+    "choose_conversion": "(scegli una conversione)",
+    "conversion_htmlToMarkdown": "Note di testo → Note Markdown (con perdita di dati)",
+    "conversion_markdownToHtml": "Note in Markdown → Note di testo",
+    "help_text": "La conversione viene applicata solo alle note che corrispondono al tipo di origine; le altre note rimangono invariate. Prima della conversione viene salvata una versione di ciascuna nota convertita.",
+    "warning": "Durante la conversione delle note, è possibile che alcune impostazioni di formattazione vadano perse e che sia necessario apportare alcune correzioni in seguito. Verrà salvata in anticipo una versione precedente di ogni nota convertita, in modo da poterla ripristinare. Vuoi continuare?",
+    "warning_risky": "Stai effettuando una conversione tra due formati che non hanno le stesse funzionalità; pertanto, è possibile che alcune impostazioni di formattazione vadano perse e che alcuni elementi non supportati vengano eliminati.<br><br>Accetti pienamente questo rischio e desideri procedere con la conversione?<br><br>Verrà salvata in anticipo una versione di ciascuna nota convertita, in modo da poter ripristinare il formato originale."
+  },
+  "icon_pack": {
+    "preview_title": "Anteprima del pacchetto di icone",
+    "invalid_manifest": "Impossibile analizzare il manifesto del pacchetto di icone. Verificare che si tratti di un file JSON valido.",
+    "no_icons": "Questo pacchetto di icone non contiene icone.",
+    "tooltip": "Classe: {{- class}}\nCodice glifo: {{- code}}\nCondizioni: {{- terms}}"
+  },
+  "blob_stub": {
+    "not_synced": "Il contenuto di questa nota è troppo grande per essere sincronizzato su questo dispositivo. Puoi invece aprirlo sul server di sincronizzazione.",
+    "open_on_server": "Apri sul server"
   }
 }
