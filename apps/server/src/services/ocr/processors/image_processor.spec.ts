@@ -67,6 +67,8 @@ describe('ImageProcessor', () => {
         expect(processor.canProcess('image/PNG')).toBe(true);
         expect(processor.canProcess('image/jpeg')).toBe(true);
         expect(processor.canProcess('application/pdf')).toBe(false);
+        // tesseract.js cannot decode TIFF (Leptonica built without libtiff)
+        expect(processor.canProcess('image/tiff')).toBe(false);
         expect(processor.getSupportedMimeTypes()).toContain('image/png');
         expect(processor.getProcessingType()).toBe('image');
     });

@@ -13,13 +13,15 @@ import { FileProcessor } from './file_processor.js';
 export class ImageProcessor extends FileProcessor {
     private worker: Tesseract.Worker | null = null;
     private currentLanguage: string | null = null;
+    // Formats that tesseract.js can actually decode (see its docs/image-format.md);
+    // TIFF is deliberately absent — Leptonica in tesseract.js-core is built without libtiff,
+    // so TIFF buffers always fail with "Error attempting to read image".
     private readonly supportedTypes = [
         'image/jpeg',
         'image/jpg',
         'image/png',
         'image/gif',
         'image/bmp',
-        'image/tiff',
         'image/webp'
     ];
 
