@@ -423,10 +423,6 @@ div.tn-tool-dialog {
 
 /* DELETE NOTE PREVIEW DIALOG */
 
-.delete-notes-dialog .modal-dialog {
-    --bs-modal-width: fit-content;
-}
-
 .delete-notes-list .note-path {
     padding-inline-start: 8px;
     color: var(--muted-text-color)
