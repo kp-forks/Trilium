@@ -37,6 +37,7 @@ export function bootstrap(req: Request, res: Response) {
         isStandalone: false,
         isElectron,
         isDev,
+        platform: process.platform,
         triliumVersion: packageJson.version,
         device: view,
         TRILIUM_SAFE_MODE: !!process.env.TRILIUM_SAFE_MODE,
@@ -72,7 +73,6 @@ export function bootstrap(req: Request, res: Response) {
         res.send({
             ...commonItems,
             passwordSet: false,
-            platform: process.platform,
             hasNativeTitleBar: false,
             hasBackgroundEffects: false,
             isMainWindow: true
@@ -101,7 +101,6 @@ export function bootstrap(req: Request, res: Response) {
                 totpEnabled: totp.isTotpEnabled(),
                 ssoError
             },
-            platform: process.platform,
             hasNativeTitleBar: false,
             hasBackgroundEffects: false,
             isMainWindow: true
@@ -134,7 +133,6 @@ export function bootstrap(req: Request, res: Response) {
         loggedIn: true,
         csrfToken,
         oauthJustEnrolled,
-        platform: process.platform,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
             && isElectron
