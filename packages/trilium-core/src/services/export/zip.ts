@@ -6,6 +6,7 @@ import becca from "../../becca/becca.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import dateUtils from "../utils/date.js";
+import { getImageAttachmentTitle } from "../image_attachments.js";
 import { getLog } from "../log.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
@@ -210,7 +211,7 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         return meta as NoteMeta;
     }
 
-    function getNoteTargetUrl(targetNoteId: string, sourceMeta: NoteMeta): string | null {
+    function getNoteTargetUrl(targetNoteId: string, sourceMeta: NoteMeta, fileNameOverride?: string): string | null {
         const targetMeta = noteIdToMeta[targetNoteId];
 
         if (!targetMeta || !targetMeta.notePath || !sourceMeta.notePath) {
@@ -242,14 +243,31 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
         const meta = noteIdToMeta[targetPath[targetPath.length - 1]];
 
         // link can target note which is only "folder-note" and as such, will not have a file in an export
-        url += encodeURIComponent(meta.dataFileName || meta.dirFileName || "");
+        url += encodeURIComponent(fileNameOverride ?? (meta.dataFileName || meta.dirFileName || ""));
 
         return url;
     }
 
+    /**
+     * Resolves an `api/images/<noteId>` embed to the file that actually holds the image. For a
+     * mermaid or canvas note that is the exported `*-export.svg` attachment sitting next to the
+     * note's data file, not the data file itself — which holds the diagram source, or the note's
+     * own HTML page in a share export, and renders as a broken image.
+     */
+    function getEmbeddedImageUrl(targetNoteId: string, sourceMeta: NoteMeta): string | null {
+        const targetMeta = noteIdToMeta[targetNoteId];
+        const attachmentTitle = getImageAttachmentTitle(targetMeta?.type);
+        const attachmentMeta = attachmentTitle
+            ? (targetMeta.attachments || []).find((attMeta) => attMeta.title === attachmentTitle)
+            : undefined;
+
+        // Falls back to the note's own data file when the attachment was never generated.
+        return getNoteTargetUrl(targetNoteId, sourceMeta, attachmentMeta?.dataFileName);
+    }
+
     function rewriteLinks(content: string, noteMeta: NoteMeta): string {
         content = content.replace(/src="[^"]*api\/images\/([a-zA-Z0-9_]+)\/[^"]*"/g, (match, targetNoteId) => {
-            const url = getNoteTargetUrl(targetNoteId, noteMeta);
+            const url = getEmbeddedImageUrl(targetNoteId, noteMeta);
 
             return url ? `src="${url}"` : match;
         });

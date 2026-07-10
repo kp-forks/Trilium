@@ -8,6 +8,7 @@ import BAttribute from "../../becca/entities/battribute.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import attributeService from "../../services/attributes.js";
+import { getImageAttachmentTitle } from "../../services/image_attachments.js";
 import { getLog } from "../../services/log.js";
 import noteService from "../../services/notes.js";
 import { getNoteTitle, newEntityId, removeFileExtension, unescapeHtml } from "../../services/utils/index.js";
@@ -341,7 +342,12 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
             return {
                 attachmentId: getNewAttachmentId(attachmentMeta.attachmentId),
                 attachmentTitle: attachmentMeta.title,
-                noteId: getNewNoteId(noteMeta.noteId)
+                noteId: getNewNoteId(noteMeta.noteId),
+                // The rendered image of a mermaid/canvas note, which the export writes out as a
+                // sibling file. An <img> aimed at it belongs back on `api/images/<noteId>`: that
+                // keeps the embed tied to the live diagram instead of freezing it into a copy of
+                // the exported picture.
+                isRenderedNoteImage: getImageAttachmentTitle(noteMeta.type) === attachmentMeta.title
             };
         }
         // don't check for noteMeta since it's not mandatory for notes
@@ -391,7 +397,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
             const target = getEntityIdFromRelativeUrl(url, filePath);
 
-            if (target.attachmentId) {
+            if (target.attachmentId && !target.isRenderedNoteImage) {
                 return `src="api/attachments/${target.attachmentId}/image/${basename(url)}"`;
             } else if (target.noteId) {
                 return `src="api/images/${target.noteId}/${basename(url)}"`;
@@ -494,7 +500,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
             const target = getEntityIdFromRelativeUrl(url, filePath);
 
-            if (target.attachmentId) {
+            if (target.attachmentId && !target.isRenderedNoteImage) {
                 return `![${alt}](api/attachments/${target.attachmentId}/image/${encodeURIComponent(target.attachmentTitle || "image")})`;
             } else if (target.noteId) {
                 return `![${alt}](api/images/${target.noteId}/${basename(url)})`;
