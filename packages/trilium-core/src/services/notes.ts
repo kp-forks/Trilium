@@ -1,4 +1,4 @@
-import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, type NoteType } from "@triliumnext/commons";
+import { type AttachmentRow, type AttributeRow, type BranchRow, dayjs, type NoteRow, NOTE_TYPE_IMAGE_ATTACHMENTS, type NoteType } from "@triliumnext/commons";
 import { t } from "i18next";
 import { parse as parseHtml } from "node-html-parser";
 import url from "url";
@@ -438,20 +438,6 @@ function protectNote(note: BNote, protect: boolean) {
     }
 }
 
-/**
- * Title of the spreadsheet preview image. Unlike the inline drawing images, this attachment is not
- * referenced from the note content — it is the note's rendered thumbnail, looked up by title by the
- * image endpoint — so it must be exempt from the orphan-erasure scheduling below.
- */
-const SPREADSHEET_PREVIEW_ATTACHMENT_TITLE = "spreadsheet-export.png";
-
-/**
- * Title of the canvas SVG export image. Like the spreadsheet thumbnail, it is the note's rendered
- * preview (looked up by title, not referenced from the scene JSON), so it must be exempt from the
- * orphan-erasure scheduling below.
- */
-const CANVAS_EXPORT_ATTACHMENT_TITLE = "canvas-export.svg";
-
 export function checkImageAttachments(note: BNote, content: string) {
     // Canvas references images by the Excalidraw fileId stored as the attachment *title* in its
     // scene JSON, so orphans are detected by title; every other type references them by attachmentId
@@ -496,14 +482,15 @@ export function checkImageAttachments(note: BNote, content: string) {
             continue;
         }
 
-        // The spreadsheet preview thumbnail is never referenced from the content, so leave it alone
-        // (otherwise it would be scheduled for erasure on every save).
-        if (note.type === "spreadsheet" && attachment.title === SPREADSHEET_PREVIEW_ATTACHMENT_TITLE) {
+        // The spreadsheet preview thumbnail is never referenced from the content — it is the note's
+        // rendered image, looked up by title by the image endpoint — so leave it alone (otherwise it
+        // would be scheduled for erasure on every save).
+        if (note.type === "spreadsheet" && attachment.title === NOTE_TYPE_IMAGE_ATTACHMENTS.spreadsheet) {
             continue;
         }
 
-        // Likewise for the canvas SVG export preview.
-        if (isCanvas && attachment.title === CANVAS_EXPORT_ATTACHMENT_TITLE) {
+        // Likewise for the canvas SVG export preview, which the scene JSON never references.
+        if (isCanvas && attachment.title === NOTE_TYPE_IMAGE_ATTACHMENTS.canvas) {
             continue;
         }
 

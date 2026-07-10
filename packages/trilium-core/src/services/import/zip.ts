@@ -1,4 +1,4 @@
-import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
+import { ALLOWED_NOTE_TYPES, getImageAttachmentTitle, type NoteType } from "@triliumnext/commons";
 import { basename, dirname } from "../utils/path.js";
 import { getZipProvider, type ZipSource } from "../zip_provider.js";
 
@@ -341,7 +341,12 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
             return {
                 attachmentId: getNewAttachmentId(attachmentMeta.attachmentId),
                 attachmentTitle: attachmentMeta.title,
-                noteId: getNewNoteId(noteMeta.noteId)
+                noteId: getNewNoteId(noteMeta.noteId),
+                // The rendered image of a mermaid/canvas note, which the export writes out as a
+                // sibling file. An <img> aimed at it belongs back on `api/images/<noteId>`: that
+                // keeps the embed tied to the live diagram instead of freezing it into a copy of
+                // the exported picture.
+                isRenderedNoteImage: getImageAttachmentTitle(noteMeta.type) === attachmentMeta.title
             };
         }
         // don't check for noteMeta since it's not mandatory for notes
@@ -391,7 +396,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
             const target = getEntityIdFromRelativeUrl(url, filePath);
 
-            if (target.attachmentId) {
+            if (target.attachmentId && !target.isRenderedNoteImage) {
                 return `src="api/attachments/${target.attachmentId}/image/${basename(url)}"`;
             } else if (target.noteId) {
                 return `src="api/images/${target.noteId}/${basename(url)}"`;
@@ -494,7 +499,7 @@ async function importZip(taskContext: TaskContext<"importNotes">, source: ZipSou
 
             const target = getEntityIdFromRelativeUrl(url, filePath);
 
-            if (target.attachmentId) {
+            if (target.attachmentId && !target.isRenderedNoteImage) {
                 return `![${alt}](api/attachments/${target.attachmentId}/image/${encodeURIComponent(target.attachmentTitle || "image")})`;
             } else if (target.noteId) {
                 return `![${alt}](api/images/${target.noteId}/${basename(url)})`;

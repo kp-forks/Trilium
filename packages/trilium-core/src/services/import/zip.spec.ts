@@ -192,6 +192,57 @@ describe("processNoteContent", () => {
         expect(content).not.toContain("Markdown Note_image.jpg");
     });
 
+    it("restores an embedded mermaid diagram as a note reference, not as a raw attachment", async () => {
+        // The export points the <img> at the mermaid note's generated `mermaid-export.svg`.
+        // On the way back in that has to resolve to `api/images/<noteId>` — which re-renders the
+        // diagram and keeps the #imageLink to the mermaid note — rather than to the raw attachment,
+        // which would freeze the live diagram into a static image owned by nobody.
+        const metaFile = {
+            formatVersion: 2,
+            appVersion: "0.0.0",
+            files: [{
+                noteId: "mermaidHost1",
+                title: "MermaidHost",
+                type: "text",
+                mime: "text/html",
+                format: "html",
+                dataFileName: "MermaidHost.html",
+                dirFileName: "MermaidHost",
+                attachments: [],
+                children: [{
+                    noteId: "mermaidDiag1",
+                    title: "Diagram",
+                    type: "mermaid",
+                    mime: "text/mermaid",
+                    dataFileName: "Diagram.txt",
+                    attachments: [{
+                        attachmentId: "mermSvg1",
+                        title: "mermaid-export.svg",
+                        role: "image",
+                        mime: "image/svg+xml",
+                        position: 10,
+                        dataFileName: "Diagram_mermaid-export.svg"
+                    }]
+                }]
+            }]
+        };
+
+        const zipBuffer = await createZipBuffer({
+            "!!!meta.json": JSON.stringify(metaFile),
+            "MermaidHost.html": `<p><img src="MermaidHost/Diagram_mermaid-export.svg"></p>`,
+            "MermaidHost/Diagram.txt": "flowchart TD\n A --> B",
+            "MermaidHost/Diagram_mermaid-export.svg": "<svg/>"
+        });
+
+        const { importedNote } = await testImportBuffer(zipBuffer);
+        const diagram = importedNote.getChildNotes()[0];
+        expect(diagram.type).toBe("mermaid");
+
+        const content = importedNote.getContent() as string;
+        expect(content).toContain(`src="api/images/${diagram.noteId}/`);
+        expect(content).not.toContain("api/attachments/");
+    });
+
     it("imports a CSV entry as an editable spreadsheet note", async () => {
         const zipBuffer = await createZipBuffer({ "csv_import_sample.csv": "a,b\r\n1,2" });
         const { rootNote } = await testImportBuffer(zipBuffer, "import-csv", { spreadsheetImportedAsSpreadsheet: true });
