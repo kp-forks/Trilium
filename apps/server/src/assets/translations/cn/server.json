@@ -66,13 +66,15 @@
     "forward-in-note-history": "导航到历史记录的下一个笔记",
     "scroll-to-active-note": "滚动笔记树到当前笔记",
     "save-named-revision": "保存活动笔记的命名修订",
-    "toggle-archived-notes": "在笔记树中显示/隐藏已归档笔记"
+    "toggle-archived-notes": "在笔记树中显示/隐藏已归档笔记",
+    "show-deleted-notes": "显示“已删除的笔记”对话框",
+    "peek-right-pane": "将右侧面板以浮动面板的形式快速打开，失去焦点时自动关闭"
   },
   "login": {
     "title": "登录",
     "heading": "Trilium 登录",
     "incorrect-totp": "TOTP 不正确，请重试。",
-    "incorrect-password": "密码不正确，请重试。",
+    "incorrect-password": "密码不正确，请再试一次。",
     "password": "密码",
     "remember-me": "记住我",
     "button": "登录",
@@ -83,9 +85,9 @@
   "set_password": {
     "title": "设置密码",
     "heading": "设置密码",
-    "description": "在你能够从Web开始使用Trilium之前，你需要先设置一个密码。你之后将使用此密码登录。",
+    "description": "在开始使用 Trilium 网页版之前，需要先设置一个密码。之后您可以使用这个密码登录。",
     "password": "密码",
-    "password-confirmation": "密码确认",
+    "password-confirmation": "确认密码",
     "button": "设置密码"
   },
   "share_404": {
@@ -200,7 +202,9 @@
     "task-state-attr-color": "颜色",
     "task-state-attr-is-hidden": "在列表中隐藏",
     "security-title": "安全",
-    "desktop-title": "桌面"
+    "desktop-title": "桌面",
+    "deleted-notes-title": "已删除的笔记",
+    "color-scheme-switcher-title": "配色方案切换"
   },
   "notes": {
     "new-note": "新建笔记",
@@ -338,7 +342,9 @@
     "toggle-left-pane": "切换左侧面板",
     "toggle-full-screen": "切换全屏模式",
     "save-named-revision": "保存已命名的修订",
-    "toggle-archived-notes": "显示/隐藏已归档笔记"
+    "toggle-archived-notes": "显示/隐藏已归档笔记",
+    "show-deleted-notes": "显示已删除的笔记",
+    "peek-right-pane": "快速查看右侧面板"
   },
   "share_theme": {
     "site-theme": "网站主题",
@@ -350,7 +356,8 @@
     "expand": "展开",
     "toggle-navigation": "切换导航",
     "toggle-toc": "切换目录",
-    "logo-alt": "Logo"
+    "logo-alt": "Logo",
+    "login": "登录"
   },
   "hidden_subtree_templates": {
     "text-snippet": "文本片段",
@@ -428,9 +435,18 @@
     "root-title": "OneNote 导入"
   },
   "notion_import": {
-    "root-title": "Notion 导入"
+    "root-title": "Notion 导入",
+    "subpage-folders-disabled": "此次 Notion 导出是在没有勾选“为子页面创建文件夹”选项的情况下生成的，因此无法重建页面层级。请在 Notion 中重新导出，并勾选“为子页面创建文件夹”，然后再导入。"
   },
   "keep_import": {
     "root-title": "Google Keep 导入"
+  },
+  "note_conversion": {
+    "revision_before_markdown": "转换为 Markdown 之前",
+    "revision_before_text": "转换为文本笔记之前"
+  },
+  "anytype_import": {
+    "protobuf-export-unsupported": "这看起来是 Anytype 的“Protobuf”导出格式，Trilium 无法导入。请使用“Any-Block”格式并选择“JSON”重新导出你的 Anytype 空间，然后再导入该文件。",
+    "markdown-export-unsupported": "这看起来是 Anytype 的“Markdown”导出格式，Trilium 无法导入。请使用“Any-Block”格式并选择“JSON”重新导出你的 Anytype 空间，然后再导入该文件。"
   }
 }
