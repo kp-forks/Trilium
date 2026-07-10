@@ -478,6 +478,32 @@ describe('OCRService', () => {
             mockSql.getRows.mockReturnValueOnce(attachmentRows);
         }
 
+        /**
+         * `startBatchProcessing` kicks `processBlobs` off in the background and returns immediately,
+         * and the real `processBlobs` parks on a 50 ms timer between items. A test that starts it and
+         * walks away leaves that chain alive: it wakes up during a *later* test, and its `.finally`
+         * clears `batchProcessingState.inProgress` — on whatever state object is current by then,
+         * since `startBatchProcessing` replaces the object wholesale rather than mutating it. That is
+         * how the `processBlobs (background)` tests below intermittently lost their second item on
+         * CI, whose slower clock let the timer expire before the file was done.
+         *
+         * The tests using this only exercise `startBatchProcessing`'s own bookkeeping, so stub the
+         * background work out and settle the chain before the test returns.
+         */
+        function stubBackgroundBatch() {
+            let finishBatch: () => void = () => {};
+            const batch = new Promise<void>((resolve) => {
+                finishBatch = resolve;
+            });
+            vi.spyOn(ocrService as any, 'processBlobs').mockReturnValue(batch);
+
+            return async function settleBackgroundBatch() {
+                finishBatch();
+                // Let the .catch()/.finally() hanging off processBlobs run before the test ends.
+                await new Promise((resolve) => setImmediate(resolve));
+            };
+        }
+
         describe('startBatchProcessing', () => {
             beforeEach(() => {
                 ocrService.cancelBatchProcessing();
@@ -487,10 +513,13 @@ describe('OCRService', () => {
                 mockBlobsNeedingOCR(
                     [{ entityId: 'note1', mimeType: 'image/jpeg' }]
                 );
+                const settleBackgroundBatch = stubBackgroundBatch();
 
                 const result = await ocrService.startBatchProcessing();
 
                 expect(result).toEqual({ success: true });
+
+                await settleBackgroundBatch();
             });
 
             it('should return error if batch processing already in progress', async () => {
@@ -498,13 +527,7 @@ describe('OCRService', () => {
                 mockBlobsNeedingOCR(
                     [{ entityId: 'note1', mimeType: 'image/jpeg' }]
                 );
-                // Mock note for background processing
-                mockBecca.getNote.mockReturnValue({
-                    noteId: 'note1', type: 'image', mime: 'image/jpeg', blobId: 'blob1',
-                    getContent: vi.fn().mockReturnValue(Buffer.from('data')),
-                    getLabelValue: vi.fn().mockReturnValue(null)
-                });
-                mockWorker.recognize.mockResolvedValue({ data: { text: 'text', confidence: 90, words: [] } });
+                const settleBackgroundBatch = stubBackgroundBatch();
 
                 void ocrService.startBatchProcessing();
 
@@ -514,6 +537,8 @@ describe('OCRService', () => {
                     success: false,
                     message: 'Batch processing already in progress'
                 });
+
+                await settleBackgroundBatch();
             });
 
             it('should return error if no items need processing', async () => {
@@ -614,6 +639,7 @@ describe('OCRService', () => {
                 mockBlobsNeedingOCR(
                     Array.from({ length: 10 }, (_, i) => ({ entityId: `note${i}`, mimeType: 'image/jpeg' }))
                 );
+                const settleBackgroundBatch = stubBackgroundBatch();
 
                 void ocrService.startBatchProcessing();
 
@@ -624,6 +650,8 @@ describe('OCRService', () => {
                 expect(progress.processed).toBe(0);
                 expect(progress.percentage).toBe(0);
                 expect(progress.startTime).toBeInstanceOf(Date);
+
+                await settleBackgroundBatch();
             });
         });
 
@@ -632,6 +660,7 @@ describe('OCRService', () => {
                 mockBlobsNeedingOCR(
                     [{ entityId: 'note1', mimeType: 'image/jpeg' }]
                 );
+                const settleBackgroundBatch = stubBackgroundBatch();
 
                 void ocrService.startBatchProcessing();
 
@@ -641,6 +670,8 @@ describe('OCRService', () => {
 
                 expect(ocrService.getBatchProgress().inProgress).toBe(false);
                 expect(mockLog.info).toHaveBeenCalledWith('Batch OCR processing cancelled');
+
+                await settleBackgroundBatch();
             });
 
             it('should do nothing if no batch processing is running', () => {
