@@ -157,22 +157,14 @@ TriliumNext 也提供 Flatpak，惟尚未发布到 FlatHub。
 
 #### Pocket Trilium
 
-If you want a full-featured native Android app, check out [Pocket
-Trilium](https://github.com/Nriver/pocket-trilium). It runs a complete Trilium
-instance on your phone, supports full offline use, and allows you to sync with
-your server.
+如果你想要一个功能齐全的原生 Android 应用，不妨看看 [Pocket
+Trilium](https://github.com/Nriver/pocket-trilium)。它能在手机上运行一个完整的 Trilium
+实例，支持完全离线使用，还能与你的服务器同步。
 
 #### Trinote
 
-If you want a native iOS app, you can use
-[Trinote](https://apps.apple.com/us/app/trinote/id6761228249), an open-source
-client for your self-hosted Trilium / TriliumNext server. It lets you browse and
-organize your note tree, search for notes on the server, read and edit all note
-types (text, code, mindmap, spreadsheet, geomap, canvas, etc.), and keeps notes
-available and editable offline. Here's the
-[repo](https://github.com/StephenArg/Trinote) if you're interested in
-contributing and here's the [discord](https://discord.com/invite/ghjJG56EUS)
-server if you have any feedback or suggestions you want to discuss.
+如果你想要一个原生 iOS 应用，你可以使用
+[Trinote](https://apps.apple.com/us/app/trinote/id6761228249)，这是一个开源的客户端，用于连接你自托管的Trilium/TriliumNext服务器。它支持浏览和整理笔记树、在服务器上搜索笔记、阅读和编辑所有笔记类型（文本、代码、思维导图、电子表格、地理地图、画布等），并且可以离线保存和编辑笔记。如果你有兴趣参与贡献，这里是[仓库链接](https://github.com/StephenArg/Trinote)；如果你想讨论反馈或建议，这里是[Discord](https://discord.com/invite/ghjJG56EUS)。
 
 ### 服务器
 

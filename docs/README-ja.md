@@ -177,22 +177,16 @@ TriliumNext は Flatpak としても提供されていますが、FlatHub では
 
 #### Pocket Trilium
 
-If you want a full-featured native Android app, check out [Pocket
-Trilium](https://github.com/Nriver/pocket-trilium). It runs a complete Trilium
-instance on your phone, supports full offline use, and allows you to sync with
-your server.
+機能が充実した Android ネイティブアプリをお探しなら、[Pocket
+Trilium](https://github.com/Nriver/pocket-trilium) をチェックしてみてください。スマートフォン上で
+Trilium のインスタンスを完全に動作させることができ、完全なオフライン利用やサーバーとの同期にも対応しています。
 
 #### Trinote
 
-If you want a native iOS app, you can use
-[Trinote](https://apps.apple.com/us/app/trinote/id6761228249), an open-source
-client for your self-hosted Trilium / TriliumNext server. It lets you browse and
-organize your note tree, search for notes on the server, read and edit all note
-types (text, code, mindmap, spreadsheet, geomap, canvas, etc.), and keeps notes
-available and editable offline. Here's the
-[repo](https://github.com/StephenArg/Trinote) if you're interested in
-contributing and here's the [discord](https://discord.com/invite/ghjJG56EUS)
-server if you have any feedback or suggestions you want to discuss.
+iOS ネイティブアプリをお探しなら、[Trinote](https://apps.apple.com/us/app/trinote/id6761228249)
+が利用可能です。これは、セルフホスト型の Trilium または TriliumNext
+サーバー向けのオープンソースクライアントです。ノートツリーの閲覧・整理、サーバー上のノート検索、あらゆる種類のノート（テキスト、コード、マインドマップ、スプレッドシート、ジオマップ、キャンバスなど）の読み書きが可能なほか、オフラインでもノートの閲覧や編集が行えます。開発への貢献にご興味がある方はこちらの[リポジトリ](https://github.com/StephenArg/Trinote)を、フィードバックや提案について話し合いたい方はこちらの
+[Discord](https://discord.com/invite/ghjJG56EUS) サーバーをご覧ください。
 
 ### サーバー
 

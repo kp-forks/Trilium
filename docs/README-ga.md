@@ -226,24 +226,25 @@ fearr nuashonruithe uathoibríocha a dhíchumasú ar do shuiteáil freastalaí (
 thíos) agus TriliumDroid in úsáid agat ós rud é go gcaithfidh an leagan
 sioncrónaithe a bheith mar an gcéanna idir Trilium agus TriliumDroid.
 
-#### Pocket Trilium
+#### Trilium Póca
 
-If you want a full-featured native Android app, check out [Pocket
-Trilium](https://github.com/Nriver/pocket-trilium). It runs a complete Trilium
-instance on your phone, supports full offline use, and allows you to sync with
-your server.
+Más mian leat aip dhúchasach Android lánghnéitheach, féach ar [Pocket
+Trilium](https://github.com/Nriver/pocket-trilium). Ritheann sé sampla iomlán de
+Trilium ar do ghuthán, tacaíonn sé le húsáid iomlán as líne, agus ligeann sé
+duit sioncrónú le do fhreastalaí.
 
 #### Trinote
 
-If you want a native iOS app, you can use
-[Trinote](https://apps.apple.com/us/app/trinote/id6761228249), an open-source
-client for your self-hosted Trilium / TriliumNext server. It lets you browse and
-organize your note tree, search for notes on the server, read and edit all note
-types (text, code, mindmap, spreadsheet, geomap, canvas, etc.), and keeps notes
-available and editable offline. Here's the
-[repo](https://github.com/StephenArg/Trinote) if you're interested in
-contributing and here's the [discord](https://discord.com/invite/ghjJG56EUS)
-server if you have any feedback or suggestions you want to discuss.
+Más mian leat aip dhúchasach iOS, is féidir leat
+[Trinote](https://apps.apple.com/us/app/trinote/id6761228249) a úsáid, cliant
+foinse oscailte chun do fhreastalaí Trilium / TriliumNext féinóstáilte. Ligeann
+sé duit do chrann nótaí a bhrabhsáil agus a eagrú, nótaí a chuardach ar an
+bhfreastalaí, gach cineál nótaí (téacs, cód, léarscáil intinne, scarbhileog,
+léarscáil gheo, chanbhás, srl.) a léamh agus a chur in eagar, agus coinníonn sé
+nótaí ar fáil agus in-eagarthóireacht as líne. Seo an
+[stór](https://github.com/StephenArg/Trinote) más spéis leat cur leis agus seo
+an freastalaí [discord](https://discord.com/invite/ghjJG56EUS) má tá aon
+aiseolas nó moltaí agat ar mhaith leat a phlé.
 
 ### Freastalaí
 
