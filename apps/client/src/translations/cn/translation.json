@@ -11,7 +11,7 @@
     },
     "role_brief_history": {
       "lead-dev": "Elian Doran 于 2024 年创立了 TriliumNext，这是在 Zadam 从该项目退出后创建的一个社区分支。Zadam 后来将原始仓库转移给 TriliumNext 团队，将两个项目合并回一个。",
-      "original-dev": "2017年12月25日，Zadam发布了Trilium的第一个测试版（写作时只用一个“l”，不同于那种花）。由于对现有的笔记整理工具不满意，他构建了一个强大的自托管层次化知识库，该项目在GitHub上获得了超过22,000颗星。到了2024年，随着生活变得更加忙碌，他将该项目置于维护模式。"
+      "original-dev": "2017年12月25日，Zadam 发布了 Trilium 的第一个测试版（名字里只有一个\"l\"，不是那个叫\"trillium\"的花）。因为对市面上的笔记管理工具不满意，他自己动手打造了一款功能强大的自托管层级知识库，该项目在GitHub上累计获得超过22,000颗星。到了2024年，随着生活日益繁忙，他将该项目转为维护模式。"
     },
     "contributor_full_list": "查看整个社区",
     "github_tooltip": "在 GitHub 上报告错误、提出功能建议或贡献代码",
@@ -434,7 +434,7 @@
     "share_index": "含有此标签的笔记将列出所有分享笔记的根",
     "display_relations": "应显示的逗号分隔关系名称。将隐藏所有其他关系。",
     "hide_relations": "应隐藏的逗号分隔关系名称。将显示所有其他关系。",
-    "title_template": "创建为此笔记的子笔记时的默认标题。该值将作为 JavaScript 字符串评估\n                        并因此可以通过注入的 <code>now</code> 和 <code>parentNote</code> 变量丰富动态内容。示例：\n                        \n                        <ul>\n                            <li><code>${parentNote.getLabelValue('authorName')} 的文学作品</code></li>\n                            <li><code>${now.format('YYYY-MM-DD HH:mm:ss')} 的日志</code></li>\n                        </ul>\n                        \n                        有关详细信息，请参见<a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">含有详细信息的 wiki</a>、<a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> 和 <a href=\"https://day.js.org/docs/en/display/format\">now</a> 的 API 文档以获取详情。",
+    "title_template": "在此笔记下创建的子笔记的默认标题。该值将作为 JavaScript 字符串来解析\n                        并因此可以通过注入的 <code>now</code> 和 <code>parentNote</code> 变量来丰富动态内容。示例：\n                        \n                        <ul>\n                            <li><code>${parentNote.getLabelValue('authorName')} 的文学作品</code></li>\n                            <li><code>${now.format('YYYY-MM-DD HH:mm:ss')} 的日志</code></li>\n                        </ul>\n                        \n                        详见<a href=\"https://triliumnext.github.io/Docs/Wiki/default-note-title.html\">Wiki 文档</a>、<a href=\"https://zadam.github.io/trilium/backend_api/Note.html\">parentNote</a> 和 <a href=\"https://day.js.org/docs/en/display/format\">now</a> 的 API 文档。",
     "template": "此笔记在创建新笔记时，将出现在可用模板的可选列表中",
     "toc": "<code>#toc</code> 或 <code>#toc=show</code> 将强制显示目录。<code>#toc=hide</code> 将强制隐藏它。如果标签不存在，则遵守全局设置",
     "color": "定义笔记树、链接等中笔记的颜色。使用任何有效的 CSS 颜色值，如 'red' 或 #a13d5f",
