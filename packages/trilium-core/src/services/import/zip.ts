@@ -1,4 +1,4 @@
-import { ALLOWED_NOTE_TYPES, type NoteType } from "@triliumnext/commons";
+import { ALLOWED_NOTE_TYPES, getImageAttachmentTitle, type NoteType } from "@triliumnext/commons";
 import { basename, dirname } from "../utils/path.js";
 import { getZipProvider, type ZipSource } from "../zip_provider.js";
 
@@ -8,7 +8,6 @@ import BAttribute from "../../becca/entities/battribute.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import attributeService from "../../services/attributes.js";
-import { getImageAttachmentTitle } from "../../services/image_attachments.js";
 import { getLog } from "../../services/log.js";
 import noteService from "../../services/notes.js";
 import { getNoteTitle, newEntityId, removeFileExtension, unescapeHtml } from "../../services/utils/index.js";

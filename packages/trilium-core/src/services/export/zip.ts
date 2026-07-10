@@ -1,4 +1,4 @@
-import { NoteType } from "@triliumnext/commons";
+import { getImageAttachmentTitle, NoteType } from "@triliumnext/commons";
 import sanitize from "sanitize-filename";
 
 import packageInfo from "../../../package.json" with { type: "json" };
@@ -6,7 +6,6 @@ import becca from "../../becca/becca.js";
 import BBranch from "../../becca/entities/bbranch.js";
 import type BNote from "../../becca/entities/bnote.js";
 import dateUtils from "../utils/date.js";
-import { getImageAttachmentTitle } from "../image_attachments.js";
 import { getLog } from "../log.js";
 import protectedSessionService from "../protected_session.js";
 import TaskContext from "../task_context.js";
