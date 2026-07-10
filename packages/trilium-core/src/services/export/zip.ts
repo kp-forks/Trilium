@@ -254,9 +254,12 @@ async function exportToZip(taskContext: TaskContext<"export">, branch: BBranch, 
      * own HTML page in a share export, and renders as a broken image.
      */
     function getEmbeddedImageUrl(targetNoteId: string, sourceMeta: NoteMeta): string | null {
+        // `targetMeta` is undefined when the embedded note lies outside the exported subtree. It is
+        // typed as always present, so guard it explicitly rather than leaning on `attachmentTitle`
+        // happening to be undefined in that case.
         const targetMeta = noteIdToMeta[targetNoteId];
         const attachmentTitle = getImageAttachmentTitle(targetMeta?.type);
-        const attachmentMeta = attachmentTitle
+        const attachmentMeta = targetMeta && attachmentTitle
             ? (targetMeta.attachments || []).find((attMeta) => attMeta.title === attachmentTitle)
             : undefined;
 
