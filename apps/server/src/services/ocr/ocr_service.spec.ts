@@ -104,7 +104,8 @@ beforeEach(async () => {
     (ocrService as any).batchProcessingState = {
         inProgress: false,
         total: 0,
-        processed: 0
+        processed: 0,
+        failed: 0
     };
 });
 
@@ -606,6 +607,7 @@ describe('OCRService', () => {
                 expect(progress.inProgress).toBe(false);
                 expect(progress.total).toBe(0);
                 expect(progress.processed).toBe(0);
+                expect(progress.failed).toBe(0);
             });
 
             it('should return progress with percentage when total > 0', async () => {
@@ -652,7 +654,7 @@ describe('OCRService', () => {
             beforeEach(() => {
                 vi.useFakeTimers();
                 (ocrService as any).batchProcessingState = {
-                    inProgress: true, total: 2, processed: 0
+                    inProgress: true, total: 2, processed: 0, failed: 0
                 };
             });
 
@@ -660,7 +662,7 @@ describe('OCRService', () => {
                 vi.useRealTimers();
             });
 
-            it('processes notes and attachments, logging per-item errors', async () => {
+            it('processes notes and attachments, counting per-item errors without aborting', async () => {
                 const processNote = vi
                     .spyOn(ocrService, 'processNoteOCR')
                     .mockResolvedValue(null);
@@ -678,10 +680,8 @@ describe('OCRService', () => {
 
                 expect(processNote).toHaveBeenCalledWith('n1');
                 expect(processAttachment).toHaveBeenCalledWith('a1');
-                expect(mockLog.error).toHaveBeenCalledWith(
-                    expect.stringContaining('Failed to process OCR for attachment a1')
-                );
                 expect((ocrService as any).batchProcessingState.processed).toBe(2);
+                expect((ocrService as any).batchProcessingState.failed).toBe(1);
             });
 
             it('stops the loop when processing is cancelled mid-way', async () => {
