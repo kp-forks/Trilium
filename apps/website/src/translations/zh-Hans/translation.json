@@ -8,12 +8,13 @@
     },
     "organization_benefits": {
         "hoisting_description": "你可以通过将个人笔记和工作笔记分组到不同的工作区中，轻松地将它们分开。每个工作区会聚焦于特定的笔记集合，使你的笔记树仅显示相关内容。",
-        "title": "组织",
+        "title": "按你的方式，组织你的笔记",
         "note_structure_title": "笔记结构",
         "note_structure_description": "笔记可按层级排列。由于每条笔记均可包含子笔记，因此无需使用文件夹。单条笔记可在层级结构中的多个位置添加。",
         "attributes_title": "笔记标签及关系",
-        "attributes_description": "利用笔记间的关系或添加标签进行便捷分类。使用提升属性输入结构化信息，这些信息可用于表格和看板中。",
-        "hoisting_title": "工作区与提升"
+        "attributes_description": "利用笔记之间的关系或添加标签进行便捷分类。使用提升属性输入结构化信息，这些信息可用于表格和看板中。",
+        "hoisting_title": "工作区与提升",
+        "screenshot_alt": "Trilium 中的层级笔记树"
     },
     "productivity_benefits": {
         "title": "高效且安全",
@@ -68,7 +69,10 @@
         "get_started": "开始使用",
         "github": "GitHub",
         "dockerhub": "Docker Hub",
-        "screenshot_alt": "Trilium Notes 桌面应用程序的屏幕截图"
+        "screenshot_alt": "Trilium Notes 桌面应用程序的屏幕截图",
+        "tagline_license": "AGPL-3.0 许可",
+        "tagline_no_account": "无需账号",
+        "tagline_cross_platform": "支持离线"
     },
     "collections": {
         "title": "集合",
@@ -190,5 +194,16 @@
         "download": "下载",
         "website": "网站",
         "title": "资源"
+    },
+    "section_nav": {
+        "aria_label": "跳转到分区",
+        "organization": "整理",
+        "productivity": "功能",
+        "note_types": "笔记类型",
+        "import": "导入与导出",
+        "collections": "合集",
+        "scripting": "脚本",
+        "ai_integration": "AI",
+        "faq": "常见问题"
     }
 }

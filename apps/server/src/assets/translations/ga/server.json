@@ -67,7 +67,8 @@
     "toggle-zen-mode": "Cumasaíonn/díchumasaíonn sé an mód zen (comhad úsáideora íosta le haghaidh eagarthóireacht níos dírithe)",
     "save-named-revision": "Sábháil athbhreithniú ainmnithe den nóta gníomhach",
     "toggle-archived-notes": "Taispeáin/folaigh nótaí cartlannaithe sa chrann nótaí",
-    "peek-right-pane": "Féach ar an bpainéal ar dheis mar phainéal sealadach a shnámhann os cionn an ábhair agus a dhúnann nuair a chailleann sé fócas"
+    "peek-right-pane": "Féach ar an bpainéal ar dheis mar phainéal sealadach a shnámhann os cionn an ábhair agus a dhúnann nuair a chailleann sé fócas",
+    "show-deleted-notes": "Taispeáin an dialóg \"Nótaí Scriosta\""
   },
   "keyboard_action_names": {
     "back-in-note-history": "Ar ais i Stair na Nótaí",
@@ -167,7 +168,8 @@
     "force-save-revision": "Athbhreithniú Sábháilte Fórsála",
     "save-named-revision": "Sábháil Athbhreithniú Ainmnithe",
     "toggle-archived-notes": "Infheictheacht Nótaí Cartlainne a Athrú",
-    "peek-right-pane": "Féach ar an bPanáil Ar Dheis"
+    "peek-right-pane": "Féach ar an bPanáil Ar Dheis",
+    "show-deleted-notes": "Taispeáin Nótaí Scriosta"
   },
   "login": {
     "title": "Logáil Isteach",
@@ -301,7 +303,9 @@
     "task-state-attr-color": "Dath",
     "task-state-attr-is-hidden": "I bhfolach ón liosta",
     "security-title": "Slándáil",
-    "desktop-title": "Deasc"
+    "desktop-title": "Deasc",
+    "deleted-notes-title": "Nótaí scriosta",
+    "color-scheme-switcher-title": "Athraitheoir Scéim Dathanna"
   },
   "notes": {
     "new-note": "Nóta nua",
@@ -451,5 +455,9 @@
   },
   "import": {
     "invalid_file_grant": "Tá an rogha comhaid imithe in éag nó tá sé neamhbhailí. Roghnaigh an comhad arís le do thoil."
+  },
+  "note_conversion": {
+    "revision_before_markdown": "Roimh an gcomhshó go Markdown",
+    "revision_before_text": "Roimh an gcomhshó go Nóta Téacs"
   }
 }

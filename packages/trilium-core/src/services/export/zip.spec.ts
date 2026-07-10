@@ -323,6 +323,40 @@ describe.skipIf(isBrowserRuntime)("zip export (real DB)", () => {
             expect(Buffer.compare(entries[attFileName], binaryContent)).toBe(0);
         });
 
+        it("resolves embedded mermaid/canvas images to their rendered image attachment", async () => {
+            // A mermaid/canvas note is not an image itself: `api/images/<noteId>` serves its
+            // generated `*-export.svg` attachment. An <img> embedding such a note must therefore
+            // resolve to that attachment, not to the note's own data file (the mermaid source or,
+            // in the share export, the note's HTML page).
+            const cases = [
+                { type: "mermaid", mime: "text/mermaid", content: "flowchart TD\n A --> B", attachment: "mermaid-export.svg" },
+                { type: "canvas", mime: "application/json", content: "{}", attachment: "canvas-export.svg" }
+            ] as const;
+
+            for (const { type, mime, content, attachment } of cases) {
+                const hostTitle = `${type}Host`;
+                const { note: host } = createNote("root", { title: hostTitle, content: "" });
+                const { note: diagram } = createNote(host.noteId, { title: "Diagram", type, mime, content });
+
+                getContext().init(() => {
+                    diagram.saveAttachment({ role: "image", mime: "image/svg+xml", title: attachment, content: "<svg/>" });
+                    host.setContent(`<p><img src="api/images/${diagram.noteId}/Diagram"></p>`);
+                });
+
+                const { entries } = await exportSubtree(host.getParentBranches()[0], "html");
+                const rootMeta = parseMeta(entries).files[0];
+                const exported = entries[rootMeta.dataFileName ?? ""].toString("utf-8");
+
+                // The SVG really is in the archive, next to the diagram note's own data file.
+                const svgPath = `${hostTitle}/Diagram_${attachment}`;
+                expect(entries[svgPath], svgPath).toBeDefined();
+
+                expect(exported, type).toContain(`src="${svgPath}"`);
+                // ...and not at the diagram note's data file, which no browser can render as an image.
+                expect(exported, type).not.toMatch(/src="[^"]*Diagram\.(txt|json|html)"/);
+            }
+        });
+
         it("pipes the archive to the response before appending any content", async () => {
             // Memory efficiency: the archive must start streaming to the response
             // before note/attachment content is appended, so blobs drain to the

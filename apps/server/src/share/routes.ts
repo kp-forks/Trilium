@@ -1,3 +1,4 @@
+import { NOTE_TYPE_IMAGE_ATTACHMENTS } from "@triliumnext/commons";
 import { search as searchService, SearchContext, utils } from "@triliumnext/core";
 import type { NextFunction, Request, Response, Router } from "express";
 import safeCompare from "safe-compare";
@@ -297,11 +298,11 @@ function register(router: Router) {
                 res.send(image.getContent());
             }
         } else if (image.type === "canvas") {
-            renderImageAttachment(image, res, "canvas-export.svg");
+            renderImageAttachment(image, res, NOTE_TYPE_IMAGE_ATTACHMENTS.canvas);
         } else if (image.type === "mermaid") {
-            renderImageAttachment(image, res, "mermaid-export.svg");
+            renderImageAttachment(image, res, NOTE_TYPE_IMAGE_ATTACHMENTS.mermaid);
         } else if (image.type === "mindMap") {
-            renderImageAttachment(image, res, "mindmap-export.svg");
+            renderImageAttachment(image, res, NOTE_TYPE_IMAGE_ATTACHMENTS.mindMap);
         } else {
             res.status(400).json({ message: "Requested note is not a shareable image" });
         }
