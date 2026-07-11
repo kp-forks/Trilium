@@ -547,4 +547,140 @@ describe("TodoListMultistateEditing", () => {
             }
         });
     });
+
+    describe("caret-driven tooltip visibility", () => {
+        // Fixture: a plain paragraph then two todo items. The caret starts in the plain
+        // paragraph so we can move it into (and between) the todos to drive the listener.
+        const CARET_FIXTURE = '<paragraph>plain[]</paragraph>' +
+            '<paragraph listIndent="0" listItemId="t-a" listType="todo">A</paragraph>' +
+            '<paragraph listIndent="0" listItemId="t-b" listType="todo">B</paragraph>';
+
+        function inputs(): HTMLInputElement[] {
+            const domRoot = editor.editing.view.getDomRoot();
+            return Array.from(domRoot?.querySelectorAll<HTMLInputElement>('.todo-list__label input[type="checkbox"]') ?? []);
+        }
+
+        function moveCaretTo(blockIndex: number): void {
+            editor.model.change((writer) => {
+                const block = getBlock(editor, blockIndex);
+                writer.setSelection(writer.createPositionAt(block, 0));
+            });
+        }
+
+        beforeEach(async () => {
+            editor = await createEditor({ taskStates: CUSTOM_STATES });
+            setModelData(editor.model, CARET_FIXTURE);
+        });
+
+        it("shows the tooltip on the todo checkbox when the caret enters its <li>", () => {
+            const [checkboxA] = inputs();
+            const showSpy = vi.spyOn(Tooltip.getInstance(checkboxA)!, "show");
+
+            moveCaretTo(1); // <paragraph listType="todo"> ("A")
+
+            expect(showSpy).toHaveBeenCalled();
+        });
+
+        it("hides the shown tooltip when the caret leaves the todo item", () => {
+            const [checkboxA] = inputs();
+            moveCaretTo(1);
+            const hideSpy = vi.spyOn(Tooltip.getInstance(checkboxA)!, "hide");
+
+            moveCaretTo(0); // back to the plain paragraph
+
+            expect(hideSpy).toHaveBeenCalled();
+        });
+
+        it("switches the shown tooltip when the caret moves between two todo items", () => {
+            const [checkboxA, checkboxB] = inputs();
+            moveCaretTo(1); // enter A
+            const hideA = vi.spyOn(Tooltip.getInstance(checkboxA)!, "hide");
+            const showB = vi.spyOn(Tooltip.getInstance(checkboxB)!, "show");
+
+            moveCaretTo(2); // enter B
+
+            expect(hideA).toHaveBeenCalled();
+            expect(showB).toHaveBeenCalled();
+        });
+
+        it("does not re-show the tooltip when the caret moves within the same todo item", () => {
+            const [checkboxA] = inputs();
+            moveCaretTo(1);
+            const tooltipA = Tooltip.getInstance(checkboxA)!;
+            const showSpy = vi.spyOn(tooltipA, "show");
+            const hideSpy = vi.spyOn(tooltipA, "hide");
+
+            // Move the caret to a different position WITHIN the same todo item.
+            editor.model.change((writer) => {
+                writer.setSelection(writer.createPositionAt(getBlock(editor, 1), 1));
+            });
+
+            expect(showSpy).not.toHaveBeenCalled();
+            expect(hideSpy).not.toHaveBeenCalled();
+        });
+
+        it("re-shows the tooltip after a state change recreates it while the caret is inside", () => {
+            const [checkboxA] = inputs();
+            moveCaretTo(1); // caret in todo A
+            const showSpy = vi.spyOn(Tooltip.prototype, "show");
+
+            // 'doing' has isCompleted=false → the checkbox input stays the same DOM
+            // element, but its tooltip is disposed and recreated by the render listener.
+            editor.execute("setTaskState", { state: "doing" });
+
+            // Same input, new tooltip instance, and that new instance was shown.
+            const newTooltip = Tooltip.getInstance(checkboxA);
+            expect(newTooltip).not.toBeNull();
+            expect(showSpy).toHaveBeenCalled();
+            showSpy.mockRestore();
+        });
+
+        it("recovers cleanly when the checkbox under the caret is replaced by a reconvert", () => {
+            const [checkboxA] = inputs();
+            moveCaretTo(1);
+            expect(Tooltip.getInstance(checkboxA)).not.toBeNull();
+
+            // Toggling the native checkbox reconverts the todo item — the DOM input
+            // is replaced. The render listener disposes the old tooltip and its
+            // reaper nulls `_caretCheckbox`; `_syncCaretTooltip` then re-derives
+            // the target from the caret and re-attaches to the fresh input.
+            editor.execute("checkTodoList");
+            editor.editing.view.forceRender();
+
+            expect(checkboxA.isConnected).toBe(false);
+            // Moving the caret out and back in must not throw on the stale reference.
+            expect(() => moveCaretTo(0)).not.toThrow();
+        });
+
+        it("returns no target when the caret has no todo ancestor", () => {
+            const [checkboxA] = inputs();
+            moveCaretTo(1);
+            const hideA = vi.spyOn(Tooltip.getInstance(checkboxA)!, "hide");
+
+            moveCaretTo(0); // plain paragraph → no ancestor todo → target = null
+
+            expect(hideA).toHaveBeenCalled();
+        });
+
+        it("bails out safely when the position has no parent (defensive branch)", () => {
+            const selection = editor.model.document.selection;
+            const spy = vi.spyOn(selection, "getFirstPosition")
+                .mockReturnValueOnce(null as unknown as ReturnType<typeof selection.getFirstPosition>);
+            // Nudge the selection so `change:range` fires with the mocked getFirstPosition.
+            editor.model.change((writer) => {
+                writer.setSelection(writer.createPositionAt(getBlock(editor, 0), 0));
+            });
+            spy.mockRestore();
+        });
+
+        it("nulls the caret-shown reference on destroy", async () => {
+            moveCaretTo(1);
+            // No throw expected — destroy must clear internal state cleanly whether
+            // or not a caret-shown tooltip is currently tracked.
+            await editor.destroy();
+            expect(editor.state).toBe("destroyed");
+            // Recreate so the shared afterEach's destroy() does not double-destroy.
+            editor = await createEditor({ taskStates: CUSTOM_STATES });
+        });
+    });
 });

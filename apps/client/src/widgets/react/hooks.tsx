@@ -1111,13 +1111,19 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
                 tooltip.dispose();
             }
 
-            // Remove any lingering tooltip popup elements from the DOM. This must stay
-            // unconditional: delegated (`selector:`) configs spawn per-target Tooltip
-            // instances whose popups the parent's dispose() does not remove, and cleanups
-            // run before DOM removal, so a disconnected-only sweep would not catch them.
-            document
-                .querySelectorAll(".tooltip")
-                .forEach(t => t.remove());
+            // For delegated (`selector:`) configs, hovered children spawn per-target
+            // Tooltip instances whose popups the parent's dispose() does not remove;
+            // sweep them here. Non-delegated tooltips clean up their own popup in
+            // `tooltip.dispose()`, and a global sweep would wipe unrelated tooltips
+            // (e.g. CKEditor plugins' Bootstrap tooltips) every time this hook's
+            // effect re-runs — which is what caused the checkbox tooltip in
+            // `TodoListMultistateEditing` to vanish whenever the "note saved" badge
+            // transitioned states.
+            if (config?.selector) {
+                document
+                    .querySelectorAll(".tooltip")
+                    .forEach(t => t.remove());
+            }
         };
     }, [ elRef, config ]);
 }

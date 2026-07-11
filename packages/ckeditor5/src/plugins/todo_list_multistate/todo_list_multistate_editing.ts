@@ -37,6 +37,15 @@ export default class TodoListMultistateEditing extends Plugin {
      */
     private readonly _checkboxTooltips = new Map<HTMLInputElement, string | null>();
 
+    /**
+     * The checkbox whose tooltip is currently force-shown because the caret is in
+     * its todo item. Tracked so a follow-up selection change can `hide()` the
+     * previous tooltip before `show()`ing the next, and so a render that recreates
+     * the input can re-attach + re-show without a visible gap (same pattern as
+     * {@link CollapsibleEditing#registerSummaryTooltips}).
+     */
+    private _caretCheckbox: HTMLInputElement | null = null;
+
     init() {
         const editor = this.editor;
         const states = getConfiguredTaskStates(editor);
@@ -110,14 +119,21 @@ export default class TodoListMultistateEditing extends Plugin {
                 if (!input.isConnected) {
                     Tooltip.getInstance(input)?.dispose();
                     this._checkboxTooltips.delete(input);
+                    if (this._caretCheckbox === input) {
+                        this._caretCheckbox = null;
+                    }
                 }
             }
+            // Track inputs whose tooltip was (re)created this render so the caret
+            // sync can re-`show()` them even when the caret target didn't change.
+            const recreated = new Set<HTMLInputElement>();
             for (const input of domRoot.querySelectorAll<HTMLInputElement>(".todo-list__label input[type=\"checkbox\"]")) {
                 const currentState = readTaskState(input);
                 // Skip if the tooltip is already up to date for this state.
                 if (Tooltip.getInstance(input) && this._checkboxTooltips.get(input) === currentState) {
                     continue;
                 }
+                const wasTracked = this._checkboxTooltips.has(input);
                 Tooltip.getInstance(input)?.dispose();
                 const title = buildTooltipTitle(input, currentState, stateByName, translate);
                 new Tooltip(input, {
@@ -129,10 +145,40 @@ export default class TodoListMultistateEditing extends Plugin {
                     // (with user values interpolated through i18next's default
                     // escaping) so disabling the sanitizer is safe here.
                     sanitize: false,
+                    // Manual trigger — Bootstrap's default `hover focus` fires
+                    // `_leave` on stray focusout events (the checkbox has
+                    // `tabindex="-1"` and can receive programmatic focus during
+                    // reconversion), which raced our caret-driven `show()` and
+                    // dismissed the tooltip. Everything visibility-related is
+                    // driven from `_syncCaretTooltip` and the hover listeners
+                    // attached in `_attachHoverListeners`.
+                    trigger: "manual",
                     customClass: "text-editor-content-tooltip"
                 });
                 this._checkboxTooltips.set(input, currentState);
+                recreated.add(input);
+                // Attach hover listeners once per input — they use dynamic
+                // `Tooltip.getInstance(input)` so they keep working after a
+                // state-change refresh replaces the tooltip on the same element.
+                if (!wasTracked) {
+                    this._attachHoverListeners(input);
+                }
             }
+            // Re-derive the caret target from the model. Covers three cases:
+            //  a) same input, same tooltip — nothing to do;
+            //  b) same input, tooltip recreated (state change on the item) —
+            //     force `show()` so the hint stays up;
+            //  c) input recreated (Ctrl+Shift+Enter across isCompleted boundary)
+            //     — old ref was nulled in the reaper above; re-attach to the
+            //     new input and `show()` its fresh tooltip.
+            this._syncCaretTooltip(recreated);
+        });
+
+        // Keyboard-only navigation into an <li> doesn't move DOM focus (the editable
+        // root keeps it), so Bootstrap's focus trigger never fires. Drive the tooltip
+        // manually from the model selection so keyboard users see the hint too.
+        this.listenTo(editor.model.document.selection, "change:range", () => {
+            this._syncCaretTooltip();
         });
 
         // A new row split off with Enter inherits the previous row's `taskState` (writer.split
@@ -206,7 +252,105 @@ export default class TodoListMultistateEditing extends Plugin {
             Tooltip.getInstance(input)?.dispose();
         }
         this._checkboxTooltips.clear();
+        this._caretCheckbox = null;
         super.destroy();
+    }
+
+    /**
+     * Attach hover triggers on a freshly-tracked checkbox. Both handlers no-op
+     * when the caret is already inside the same todo item — the caret-driven
+     * flow already owns the tooltip's visibility there, and letting `show()` /
+     * `hide()` run again produced a rebuild-then-tear-down flicker.
+     * `Tooltip.getInstance(input)` is resolved lazily so the same closures keep
+     * working after a state-change refresh replaces the tooltip on the same
+     * DOM element.
+     */
+    private _attachHoverListeners(input: HTMLInputElement): void {
+        const isCaretInThisItem = () => {
+            const itemId = input.closest<HTMLElement>("li")?.getAttribute("data-list-item-id");
+            return !!itemId && this._isCaretInsideItem(itemId);
+        };
+        input.addEventListener("mouseenter", () => {
+            if (isCaretInThisItem()) {
+                return;
+            }
+            Tooltip.getInstance(input)?.show();
+        });
+        input.addEventListener("mouseleave", () => {
+            if (isCaretInThisItem()) {
+                return;
+            }
+            Tooltip.getInstance(input)?.hide();
+        });
+    }
+
+    /**
+     * Reconcile {@link _caretCheckbox} against the current model caret target and
+     * drive the corresponding Bootstrap tooltip's visibility. Called from the
+     * selection listener (target may change) AND from the render listener
+     * (tooltips may have been (re)created for the current target).
+     *
+     * `recreated` is the set of inputs whose tooltip was just replaced this render;
+     * when the caret target is in that set, `show()` is forced even if the target
+     * itself didn't change, so a state-change render keeps the hint visible.
+     */
+    private _syncCaretTooltip(recreated?: ReadonlySet<HTMLInputElement>): void {
+        const target = this._findCaretCheckbox();
+        const targetChanged = this._caretCheckbox !== target;
+        if (targetChanged && this._caretCheckbox) {
+            Tooltip.getInstance(this._caretCheckbox)?.hide();
+        }
+        this._caretCheckbox = target;
+        if (target && (targetChanged || recreated?.has(target))) {
+            Tooltip.getInstance(target)?.show();
+        }
+    }
+
+    /**
+     * True when the caret's model position sits inside a list item whose
+     * `listItemId` matches. Used by the mouseleave guard to keep the tooltip up
+     * while the caret is in the hovered item, without depending on DOM identity.
+     */
+    private _isCaretInsideItem(itemId: string): boolean {
+        const position = this.editor.model.document.selection.getFirstPosition();
+        let candidate = position?.parent ?? null;
+        while (candidate) {
+            if (candidate.is("element") && candidate.getAttribute("listItemId") === itemId) {
+                return true;
+            }
+            candidate = candidate.parent;
+        }
+        return false;
+    }
+
+    /**
+     * The <input> DOM checkbox of the todo item the caret is currently inside, or
+     * `null` when the caret isn't inside a todo item. Walks up the model to find
+     * an ancestor block with `listType == "todo"`, then queries the editing DOM
+     * for the matching <li data-list-item-id="…">.
+     */
+    private _findCaretCheckbox(): HTMLInputElement | null {
+        const position = this.editor.model.document.selection.getFirstPosition();
+        let node: ModelElement | null = null;
+        let candidate = position?.parent ?? null;
+        while (candidate) {
+            if (candidate.is("element") && candidate.getAttribute("listType") === "todo") {
+                node = candidate as ModelElement;
+                break;
+            }
+            candidate = candidate.parent;
+        }
+        if (!node) {
+            return null;
+        }
+        const itemId = node.getAttribute("listItemId");
+        if (typeof itemId !== "string" || !itemId) {
+            return null;
+        }
+        const domRoot = this.editor.editing.view.getDomRoot();
+        return domRoot?.querySelector<HTMLInputElement>(
+            `li[data-list-item-id="${CSS.escape(itemId)}"] .todo-list__label input[type="checkbox"]`
+        ) ?? null;
     }
 
 }
@@ -217,9 +361,16 @@ type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
  * The task state applied to the todo item that owns the given checkbox. Anchor
  * states (`none`/`done`) never carry a `data-trilium-task-state`, so this
  * returns `null` for them.
+ *
+ * The lookup must be scoped to the *nearest* <li>, not the nearest <li> that
+ * happens to carry the attribute — in nested todo lists the DOM is
+ * `<li outer data-trilium-task-state="doing">…<ul><li inner>…</li></ul></li>`,
+ * so a filtered `closest("li[data-trilium-task-state]")` on the inner
+ * checkbox walks straight past its own (unattributed) <li> and lands on the
+ * outer one, wrongly attributing the parent's state to the inner item.
  */
 function readTaskState(input: HTMLInputElement): string | null {
-    const li = input.closest<HTMLElement>("li[data-trilium-task-state]");
+    const li = input.closest<HTMLElement>("li");
     return li?.getAttribute("data-trilium-task-state") ?? null;
 }
 
