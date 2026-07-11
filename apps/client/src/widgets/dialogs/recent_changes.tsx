@@ -23,6 +23,7 @@ export default function RecentChangesDialog() {
     const [ refreshCounter, setRefreshCounter ] = useState(0);
     const [ shown, setShown ] = useState(false);
     const [ deletedOnly, setDeletedOnly ] = useState(false);
+    const [ ancestorTitle, setAncestorTitle ] = useState<string>();
 
     useTriliumEvent("showRecentChanges", ({ ancestorNoteId }) => {
         setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
@@ -35,6 +36,17 @@ export default function RecentChangesDialog() {
         setDeletedOnly(true);
         setShown(true);
     });
+
+    useEffect(() => {
+        // A scoped view (a hoisted note, or a subtree opened from the tree context menu) should say
+        // which subtree it covers. Root is the implicit default and needs no qualifier.
+        if (!ancestorNoteId || ancestorNoteId === "root") {
+            setAncestorTitle(undefined);
+            return;
+        }
+
+        froca.getNote(ancestorNoteId, true).then((note) => setAncestorTitle(note?.title));
+    }, [ ancestorNoteId ]);
 
     useEffect(() => {
         if (!ancestorNoteId) return;
@@ -51,9 +63,13 @@ export default function RecentChangesDialog() {
             });
     }, [ shown, refreshCounter, deletedOnly ])
 
+    const baseTitle = deletedOnly ? t("recent_changes.deleted_notes_title") : t("recent_changes.title");
+
     return (
         <Modal
-            title={deletedOnly ? t("recent_changes.deleted_notes_title") : t("recent_changes.title")}
+            title={ancestorTitle
+                ? t("recent_changes.title_with_ancestor", { title: baseTitle, ancestorTitle })
+                : baseTitle}
             className={`recent-changes-dialog ${deletedOnly ? "recent-changes-dialog-view-mode-deleted-only" : "recent-changes-dialog-view-mode-all-changes"}`}
             size="lg"
             scrollable

@@ -418,6 +418,7 @@
   "recent_changes": {
     "title": "Recent changes",
     "deleted_notes_title": "Deleted notes",
+    "title_with_ancestor": "{{- title}} - {{- ancestorTitle}}",
     "erase_notes_button": "Erase deleted notes now",
     "more_actions": "More actions",
     "deleted_notes_settings": "Deleted Notes Settings",
