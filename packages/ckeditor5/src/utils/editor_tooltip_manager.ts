@@ -21,6 +21,10 @@ import { Tooltip } from "bootstrap";
         dispose(): void;
         __editorTooltipManagerDisposePatched?: true;
     };
+    /* v8 ignore next -- the "already-patched" branch is unreachable in a
+       single-process test run: the module loads exactly once and the flag is
+       unset. The guard exists so the client's own copy of the patch (see
+       `apps/client/src/widgets/react/hooks.tsx`) can co-exist with this one. */
     if (!proto.__editorTooltipManagerDisposePatched) {
         const originalDispose = proto.dispose;
         const disposedPlaceholder = {
@@ -256,9 +260,17 @@ export class EditorTooltipManager {
     }
 
     private _render(): void {
+        /* v8 ignore start -- defensively unreachable. Every caller
+           (`_pushOrMoveTop`, `_removeEntry`, `setContent`, the auto-hide
+           timer) either checks `_destroyed` themselves or is disarmed by
+           `destroy`: `destroy` clears `_stack` (so `_removeEntry`/`setContent`
+           find no entry and skip the `_render` call) and cancels the auto-hide
+           timer (so its callback never fires). Kept as a belt-and-braces guard
+           in case a new call site is added later. */
         if (this._destroyed) {
             return;
         }
+        /* v8 ignore stop */
         // A push or setContent interrupts any fade currently in progress —
         // the user has done something, so we shouldn't tear the popup down.
         const wasFading = this._cancelPendingHide();
@@ -274,6 +286,11 @@ export class EditorTooltipManager {
         // Bootstrap's `setContent` avoids a dispose+recreate that would fade
         // the popup out and back in for a mere content change.
         if (this._currentElement === targetElement) {
+            /* v8 ignore next -- if we're in this branch, either both are the
+               same non-null element (then `_currentTooltip` is truthy and `top`
+               is defined) or both are null (then the outer `_render` was called
+               on an already-empty state, which no live code path does — pushes
+               always precede a same-element render). */
             if (this._currentTooltip && top) {
                 this._currentTooltip.setContent({ ".tooltip-inner": top.content });
                 if (wasFading) {
@@ -321,9 +338,18 @@ export class EditorTooltipManager {
         }
         this._autoHideTimer = setTimeout(() => {
             this._autoHideTimer = null;
+            /* v8 ignore start -- defensively unreachable. The timer is only
+               scheduled by `_resetAutoHide` when `_currentTooltip` is truthy,
+               i.e. the stack is non-empty. Every path that could empty the
+               stack (`hide`, `dispose`, `destroy`) runs synchronously and
+               either cancels this timer (`_cancelAutoHide`) or falls through
+               to `_render`, which re-runs `_resetAutoHide` after the mutation
+               and would clear us before we fire. Kept as a belt-and-braces
+               guard in case a new mutation path is added later. */
             if (this._stack.length === 0) {
                 return;
             }
+            /* v8 ignore stop */
             this._stack.pop();
             if (this._stack.length === 0) {
                 // Nothing left — fade the popup out with Bootstrap's transition.
@@ -352,14 +378,25 @@ export class EditorTooltipManager {
     private _hideWithTransition(): void {
         const tooltip = this._currentTooltip;
         const element = this._currentElement;
+        /* v8 ignore start -- defensively unreachable. `_hideWithTransition`
+           is only called from the auto-hide timer, which is only scheduled
+           when `_currentTooltip` is truthy; `_currentElement` is set alongside
+           `_currentTooltip` in every `_render` code path. Kept as a
+           belt-and-braces guard in case a new call site is added later. */
         if (!tooltip || !element) {
             return;
         }
+        /* v8 ignore stop */
         const onHidden = () => {
             element.removeEventListener("hidden.bs.tooltip", onHidden);
             this._pendingHideCleanup = null;
             // If we're still the current tooltip (no interrupting push landed)
             // then dispose ourselves and reset state.
+            /* v8 ignore next -- the false branch (currentTooltip changed while
+               the fade was in flight) is defensively unreachable: every
+               interruption path (`_render` on a push, `destroy`) first calls
+               `_cancelPendingHide`, which removes this listener before it can
+               fire. Kept for safety if a new interruption path forgets to. */
             if (this._currentTooltip === tooltip) {
                 tooltip.dispose();
                 this._currentTooltip = null;

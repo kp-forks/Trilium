@@ -154,6 +154,17 @@ describe("EditorTooltipManager", () => {
             vi.advanceTimersByTime(2000);
             expect(livePopup()).toBeNull();
         });
+
+        it("no-ops when the element is detached by the time the timer fires", () => {
+            // Element is still connected when we schedule; disconnected by the
+            // time the setTimeout callback runs. The callback's `isConnected`
+            // guard must swallow the push so no popup ever materializes.
+            const handle = manager.createHandle(a, "hello");
+            handle.showAfter(1000);
+            host.remove(); // detaches `a` mid-dwell
+            vi.advanceTimersByTime(1000);
+            expect(livePopup()).toBeNull();
+        });
     });
 
     describe("setContent", () => {

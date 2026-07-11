@@ -676,6 +676,104 @@ describe("TodoListMultistateEditing", () => {
         });
     });
 
+    describe("hover-driven tooltip visibility", () => {
+        // Two todos so we can hover one while the caret sits in a plain
+        // paragraph — the caret and hover flows must be independently
+        // exercised, since the `ownedByCaret` check yields different results
+        // in each case.
+        const HOVER_FIXTURE = '<paragraph>plain[]</paragraph>' +
+            '<paragraph listIndent="0" listItemId="t-a" listType="todo">A</paragraph>' +
+            '<paragraph listIndent="0" listItemId="t-b" listType="todo">B</paragraph>';
+
+        function moveCaretTo(blockIndex: number): void {
+            editor.model.change((writer) => {
+                const block = getBlock(editor, blockIndex);
+                writer.setSelection(writer.createPositionAt(block, 0));
+            });
+        }
+
+        function checkboxOfItem(itemId: string): HTMLInputElement {
+            const domRoot = editor.editing.view.getDomRoot();
+            const input = domRoot?.querySelector<HTMLInputElement>(
+                `li[data-list-item-id="${itemId}"] .todo-list__label input[type="checkbox"]`
+            );
+            if (!input) {
+                throw new Error(`No checkbox for item ${itemId}.`);
+            }
+            return input;
+        }
+
+        beforeEach(async () => {
+            editor = await createEditor({ taskStates: CUSTOM_STATES });
+            setModelData(editor.model, HOVER_FIXTURE);
+            vi.useFakeTimers({ shouldAdvanceTime: false });
+        });
+
+        function endFakeTimers(): void {
+            vi.runOnlyPendingTimers();
+            vi.useRealTimers();
+        }
+
+        it("mouseenter on a checkbox not owned by the caret schedules a delayed show; mouseleave cancels it", () => {
+            // Caret in the plain paragraph — no todo owns the caret, so the
+            // hover flow is fully in charge of the hovered checkbox's tooltip.
+            moveCaretTo(0);
+            const inputA = checkboxOfItem("t-a");
+            expect(livePopup()).toBeNull();
+
+            inputA.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+            expect(livePopup()).toBeNull(); // dwell not yet elapsed
+
+            vi.advanceTimersByTime(TOOLTIP_DWELL_MS);
+            expect(livePopup()).not.toBeNull();
+            const source = document.querySelector<HTMLElement>(
+                `[aria-describedby="${livePopup()?.id}"]`
+            );
+            expect(source?.closest("li")?.getAttribute("data-list-item-id")).toBe("t-a");
+
+            // Leaving the checkbox pops the hover handle → stack empties → popup gone.
+            inputA.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+            expect(livePopup()).toBeNull();
+
+            endFakeTimers();
+        });
+
+        it("mouseenter is a no-op when the caret is inside the hovered checkbox's item", () => {
+            // Caret is inside todo A → the caret handle already owns A's
+            // tooltip visibility. Hovering the same checkbox must not run the
+            // dwell-and-push cycle (the manager would flicker if it did).
+            moveCaretTo(1);
+            vi.advanceTimersByTime(TOOLTIP_DWELL_MS);
+            const beforeHover = livePopup();
+            expect(beforeHover).not.toBeNull(); // caret drove this popup
+
+            const inputA = checkboxOfItem("t-a");
+            inputA.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+            // Advance well past the dwell — no NEW render, and no manager churn.
+            vi.advanceTimersByTime(TOOLTIP_DWELL_MS * 2);
+            // Same popup element — the caret handle's tooltip was never disturbed.
+            expect(livePopup()).toBe(beforeHover);
+
+            endFakeTimers();
+        });
+
+        it("mouseleave is a no-op when the caret is inside the hovered checkbox's item", () => {
+            // The caret owns A's popup. Even if a mouseleave arrives (mouse
+            // sweeping across the checkbox during selection), the hover branch
+            // must not tear the popup down — the caret handle still wants it.
+            moveCaretTo(1);
+            vi.advanceTimersByTime(TOOLTIP_DWELL_MS);
+            const beforeLeave = livePopup();
+            expect(beforeLeave).not.toBeNull();
+
+            const inputA = checkboxOfItem("t-a");
+            inputA.dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
+            expect(livePopup()).toBe(beforeLeave);
+
+            endFakeTimers();
+        });
+    });
+
     // Pure-function tests for the tooltip HTML builder. Assert against the
     // returned string directly rather than introspecting Bootstrap Tooltip
     // instances — no `_config` peeking, no editor scaffolding needed.

@@ -312,6 +312,10 @@ export default class TodoListMultistateEditing extends Plugin {
                 this._hoverHandles.set(input, handle);
                 // Cache the enclosing item's id — stable for this input's life, and we
                 // need it on every hover event to decide whether to yield to the caret.
+                /* v8 ignore next -- CKEditor's list plugin guarantees every
+                   `<li>` inside a rendered todo list carries `data-list-item-id`
+                   and the checkbox is nested inside that `<li>`. The `?.` /
+                   `?? null` fallbacks are defensive. */
                 const ownItemId = input.closest<HTMLElement>("li")?.getAttribute("data-list-item-id") ?? null;
                 // Hover on the checkbox whose item already has the caret is a no-op:
                 // the caret handle already owns that item's tooltip visibility, and
@@ -374,11 +378,18 @@ export default class TodoListMultistateEditing extends Plugin {
                 this._caretHandle?.dispose();
                 this._caretHandle = null;
                 this._caretInput = target;
+                /* v8 ignore next -- inside the "same item, input changed"
+                   branch, `target` cannot be null: `!itemChanged` means
+                   `targetItemId === this._caretItemId`, and if `target` were
+                   null then `targetItemId` would be null too, forcing the
+                   `_caretItemId` we're comparing against to also be null —
+                   but then `_caretInput` was null too, so `inputChanged`
+                   would be false and we wouldn't be in this branch. */
                 if (target) {
                     this._caretHandle = this._tooltipManager.createHandle(target, this._computeContent(target));
                     this._caretHandle.show();
                 }
-            /* v8 ignore next 4 -- reachable only when `forceShowIfSameTarget`
+            /* v8 ignore start -- reachable only when `forceShowIfSameTarget`
                is true, which the render listener only sets when
                `_refreshHoverHandles` observes a state change on the caret's
                input WITHOUT the input being recreated — see the paired v8
@@ -387,6 +398,7 @@ export default class TodoListMultistateEditing extends Plugin {
                 this._caretHandle.setContent(this._computeContent(target));
                 this._caretHandle.show();
             }
+            /* v8 ignore stop */
             return;
         }
 
