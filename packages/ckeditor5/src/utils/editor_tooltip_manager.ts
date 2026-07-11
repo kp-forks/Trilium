@@ -91,6 +91,14 @@ export class EditorTooltipManager {
     private _autoHideTimer: ReturnType<typeof setTimeout> | null = null;
     /** Cleanup registered while a fade-out is in progress; call to cancel it mid-fade. */
     private _pendingHideCleanup: (() => void) | null = null;
+    /**
+     * Set to `true` by {@link destroy}. Once set, every path that could
+     * re-activate the manager (push, render, auto-hide scheduling) short-circuits
+     * so outstanding handles genuinely become inert — even if their
+     * `showAfter` timers fire late, or their consumer calls `show()` after
+     * teardown.
+     */
+    private _destroyed = false;
 
     constructor(options: EditorTooltipManagerOptions = {}) {
         this._baseOptions = options.tooltipOptions ?? {};
@@ -161,6 +169,7 @@ export class EditorTooltipManager {
      * be repopulated).
      */
     destroy(): void {
+        this._destroyed = true;
         this._cancelAutoHide();
         this._cancelPendingHide();
         if (this._currentTooltip) {
@@ -172,6 +181,12 @@ export class EditorTooltipManager {
     }
 
     private _pushOrMoveTop(handle: TooltipHandle, element: HTMLElement, content: string): void {
+        // The choke point for every path that could add or resurface an entry —
+        // fresh `show()`, `showAfter` timer fire, `show()` on a re-used handle.
+        // Gating here keeps handles inert after {@link destroy}.
+        if (this._destroyed) {
+            return;
+        }
         const existingIdx = this._stack.findIndex(e => e.handle === handle);
         if (existingIdx >= 0) {
             const [entry] = this._stack.splice(existingIdx, 1);
@@ -194,6 +209,9 @@ export class EditorTooltipManager {
     }
 
     private _render(): void {
+        if (this._destroyed) {
+            return;
+        }
         // A push or setContent interrupts any fade currently in progress —
         // the user has done something, so we shouldn't tear the popup down.
         const wasFading = this._cancelPendingHide();
