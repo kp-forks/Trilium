@@ -49,6 +49,15 @@ export interface EditorTooltipManagerOptions {
      * always forced to `true`.
      */
     tooltipOptions?: Partial<Tooltip.Options>;
+    /**
+     * If set, the visible tooltip is auto-popped after this many milliseconds
+     * of manager inactivity. Every push, content update, or top-change resets
+     * the timer, so the tooltip stays up as long as *something* is happening;
+     * once events stop, it dismisses itself. When it pops, whatever was
+     * underneath in the stack becomes visible (and starts its own timer).
+     * `null` / `undefined` disables auto-hide.
+     */
+    autoHideAfterMs?: number;
 }
 
 interface StackEntry {
@@ -78,9 +87,14 @@ export class EditorTooltipManager {
     private _currentElement: HTMLElement | null = null;
     private _currentTooltip: Tooltip | null = null;
     private readonly _baseOptions: Partial<Tooltip.Options>;
+    private readonly _autoHideAfterMs: number | null;
+    private _autoHideTimer: ReturnType<typeof setTimeout> | null = null;
+    /** Cleanup registered while a fade-out is in progress; call to cancel it mid-fade. */
+    private _pendingHideCleanup: (() => void) | null = null;
 
     constructor(options: EditorTooltipManagerOptions = {}) {
         this._baseOptions = options.tooltipOptions ?? {};
+        this._autoHideAfterMs = options.autoHideAfterMs ?? null;
     }
 
     /**
@@ -147,6 +161,8 @@ export class EditorTooltipManager {
      * be repopulated).
      */
     destroy(): void {
+        this._cancelAutoHide();
+        this._cancelPendingHide();
         if (this._currentTooltip) {
             this._currentTooltip.dispose();
         }
@@ -178,6 +194,10 @@ export class EditorTooltipManager {
     }
 
     private _render(): void {
+        // A push or setContent interrupts any fade currently in progress —
+        // the user has done something, so we shouldn't tear the popup down.
+        const wasFading = this._cancelPendingHide();
+
         // Reap dead entries anywhere in the stack — a source may have gone away
         // between pushes, and we don't want its stale slot resurfacing on pop.
         this._stack = this._stack.filter(e => e.element.isConnected);
@@ -191,7 +211,13 @@ export class EditorTooltipManager {
         if (this._currentElement === targetElement) {
             if (this._currentTooltip && top) {
                 this._currentTooltip.setContent({ ".tooltip-inner": top.content });
+                if (wasFading) {
+                    // We interrupted a fade-out — Bootstrap already removed the
+                    // `show` class, so call `show()` again to restore visibility.
+                    this._currentTooltip.show();
+                }
             }
+            this._resetAutoHide();
             return;
         }
 
@@ -212,6 +238,90 @@ export class EditorTooltipManager {
             });
             this._currentTooltip.show();
         }
+        this._resetAutoHide();
+    }
+
+    /**
+     * (Re)start the auto-hide countdown. Called after every `_render` that
+     * leaves state stable, so any push / setContent / re-order effectively
+     * "keeps the tooltip alive" for another `_autoHideAfterMs` ms. When the
+     * countdown fires it pops the current top; if nothing else is on the
+     * stack it fades the popup out (via {@link _hideWithTransition}),
+     * otherwise it delegates to `_render` for the swap.
+     */
+    private _resetAutoHide(): void {
+        this._cancelAutoHide();
+        if (this._autoHideAfterMs === null || !this._currentTooltip) {
+            return;
+        }
+        this._autoHideTimer = setTimeout(() => {
+            this._autoHideTimer = null;
+            if (this._stack.length === 0) {
+                return;
+            }
+            this._stack.pop();
+            if (this._stack.length === 0) {
+                // Nothing left — fade the popup out with Bootstrap's transition.
+                this._hideWithTransition();
+            } else {
+                // Reveal whatever's now on top. `_render` picks same-element vs
+                // different-element and does the appropriate thing.
+                this._render();
+            }
+        }, this._autoHideAfterMs);
+    }
+
+    private _cancelAutoHide(): void {
+        if (this._autoHideTimer !== null) {
+            clearTimeout(this._autoHideTimer);
+            this._autoHideTimer = null;
+        }
+    }
+
+    /**
+     * Play Bootstrap's built-in fade-out transition on the current tooltip and
+     * dispose it once the fade completes. Interruption-safe: a push arriving
+     * mid-fade cancels the cleanup via {@link _cancelPendingHide}, so the
+     * partly-faded popup can be re-shown in place instead of blinked out.
+     */
+    private _hideWithTransition(): void {
+        const tooltip = this._currentTooltip;
+        const element = this._currentElement;
+        if (!tooltip || !element) {
+            return;
+        }
+        const onHidden = () => {
+            element.removeEventListener("hidden.bs.tooltip", onHidden);
+            this._pendingHideCleanup = null;
+            // If we're still the current tooltip (no interrupting push landed)
+            // then dispose ourselves and reset state.
+            if (this._currentTooltip === tooltip) {
+                tooltip.dispose();
+                this._currentTooltip = null;
+                this._currentElement = null;
+            }
+        };
+        this._pendingHideCleanup = () => {
+            element.removeEventListener("hidden.bs.tooltip", onHidden);
+            this._pendingHideCleanup = null;
+        };
+        element.addEventListener("hidden.bs.tooltip", onHidden);
+        // `hide()` triggers Bootstrap's opacity transition; when it completes,
+        // the `hidden.bs.tooltip` event fires and `onHidden` disposes.
+        tooltip.hide();
+    }
+
+    /**
+     * Cancel a pending fade-out (if any). Returns `true` if a fade was actually
+     * cancelled — callers use that to re-`show()` the tooltip so it isn't left
+     * mid-transition with the `show` class removed.
+     */
+    private _cancelPendingHide(): boolean {
+        if (this._pendingHideCleanup) {
+            this._pendingHideCleanup();
+            return true;
+        }
+        return false;
     }
 
 }

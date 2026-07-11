@@ -90,7 +90,13 @@ export default class TodoListMultistateEditing extends Plugin {
                 // correct colour/glyph.
                 sanitize: false,
                 customClass: "text-editor-content-tooltip"
-            }
+            },
+            // Self-dismiss the tooltip 1s after the last relevant event (push,
+            // content update, top change). Anything that would legitimately
+            // keep the hint alive — hover crossing, caret movement, state
+            // change — pushes to the manager, so the timer resets and the
+            // popup stays. When events stop, it fades on its own.
+            autoHideAfterMs: 2000
         });
 
         editor.model.schema.extend("$block", {allowAttributes: TASK_STATE_ATTRIBUTE});
