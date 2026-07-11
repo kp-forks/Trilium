@@ -424,7 +424,7 @@
     "deleted_notes_settings": "Deleted Notes Settings",
     "deleted_notes_message": "Deleted notes have been erased.",
     "no_changes_message": "No changes yet...",
-    "no_deleted_notes_message": "No deleted notes.",
+    "no_deleted_notes_message": "There are no deleted notes to show. Deleted notes are kept for {{- duration}} before being permanently erased.",
     "undelete_link": "undelete",
     "confirm_undelete": "Do you want to undelete this note and its sub-notes?",
     "confirm_undelete_to_default_location": "The parent of this note no longer exists, so it can't be restored to its original location. Restore it to the default location for new notes instead?",
@@ -2494,6 +2494,16 @@
     "minutes": "Minutes",
     "hours": "Hours",
     "days": "Days"
+  },
+  "time_interval": {
+    "seconds_one": "{{count}} second",
+    "seconds_other": "{{count}} seconds",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
   },
   "share": {
     "title": "Share",

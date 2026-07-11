@@ -11,11 +11,11 @@ import Modal from "../react/Modal";
 import hoisted_note from "../../services/hoisted_note";
 import type { RecentChangeRow } from "@triliumnext/commons";
 import froca from "../../services/froca";
-import { formatDateTime } from "../../utils/formatters";
+import { formatDateTime, formatDuration } from "../../utils/formatters";
 import link from "../../services/link";
 import RawHtml from "../react/RawHtml";
 import ws from "../../services/ws";
-import { useTriliumEvent } from "../react/hooks";
+import { useTriliumEvent, useTriliumOptionInt } from "../react/hooks";
 
 export default function RecentChangesDialog() {
     const [ ancestorNoteId, setAncestorNoteId ] = useState<string>();
@@ -24,6 +24,8 @@ export default function RecentChangesDialog() {
     const [ shown, setShown ] = useState(false);
     const [ deletedOnly, setDeletedOnly ] = useState(false);
     const [ ancestorTitle, setAncestorTitle ] = useState<string>();
+    const [ eraseAfterSeconds ] = useTriliumOptionInt("eraseEntitiesAfterTimeInSeconds");
+    const [ eraseTimeScale ] = useTriliumOptionInt("eraseEntitiesAfterTimeScale");
 
     useTriliumEvent("showRecentChanges", ({ ancestorNoteId }) => {
         setAncestorNoteId(ancestorNoteId ?? hoisted_note.getHoistedNoteId());
@@ -105,7 +107,9 @@ export default function RecentChangesDialog() {
             <div className="recent-changes-content">
                 {groupedByDate?.size
                     ? <RecentChangesTimeline groupedByDate={groupedByDate} setShown={setShown} />
-                    : <>{deletedOnly ? t("recent_changes.no_deleted_notes_message") : t("recent_changes.no_changes_message")}</>}
+                    : <>{deletedOnly
+                        ? t("recent_changes.no_deleted_notes_message", { duration: formatDuration(eraseAfterSeconds, eraseTimeScale) })
+                        : t("recent_changes.no_changes_message")}</>}
             </div>
         </Modal>
     )
