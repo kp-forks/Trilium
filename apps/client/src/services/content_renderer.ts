@@ -13,6 +13,7 @@ import renderText, { postProcessRichContent, renderChildrenList } from "./conten
 import renderDoc from "./doc_renderer.js";
 import { loadElkIfNeeded, postprocessMermaidSvg } from "./mermaid.js";
 import openService from "./open.js";
+import { waitForPendingRenders } from "./pending_renders.js";
 import protectedSessionService from "./protected_session.js";
 import protectedSessionHolder from "./protected_session_holder.js";
 import renderService from "./render.js";
@@ -410,6 +411,12 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
 }
 
 /**
+ * How many messages a tooltip previews. A hover shows a ~300px-tall scroll box, so rendering the
+ * whole of a long conversation would parse hundreds of markdown bodies nobody will ever scroll to.
+ */
+const TOOLTIP_MAX_MESSAGES = 10;
+
+/**
  * Renders a saved AI chat conversation as a read-only preview: the stored messages painted with the
  * same {@link ChatMessage} components as the live timeline, but with no input bar, context menu, or
  * read-only notice — just the conversation. Mounted as a disposable Preact root (ChatMessage carries
@@ -417,8 +424,9 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
  * collection tiles that show these previews already do. Loaded lazily so the chat widget code is only
  * pulled in when a chat note is previewed.
  *
- * Tooltips get a static string rendering instead: they keep only the serialized HTML of the content
- * and never dispose it, so a mounted preview would leak a Preact root per hover.
+ * A tooltip keeps only the serialized HTML of the content and never disposes it, so it would leak a
+ * root per hover. It gets the same preview, snapshotted: mount it, let its async passes settle, take
+ * the markup, unmount. The tooltip has no use for the interactivity it drops.
  */
 async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>, options: RenderOptions) {
     const blob = await note.getBlob();
@@ -438,21 +446,29 @@ async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>,
     }
     if (messages.length === 0) return;
 
-    if (options.tooltip) {
-        const { renderChatPreviewHtml } = await import("../widgets/type_widgets/llm_chat/chat_preview_html");
-        const html = renderChatPreviewHtml(messages);
-        if (html) {
-            $renderedContent.append($('<div class="note-detail-llm-chat-preview">').html(html));
-        }
-        return;
-    }
-
     const ChatPreview = (await import("../widgets/type_widgets/llm_chat/ChatPreview")).default;
     const $container = $('<div class="note-detail-llm-chat-preview">');
     const container = $container.get(0);
-    if (container) {
-        await mountInteractiveWidget(h(ChatPreview, { messages }), container);
+    if (!container) return;
+
+    if (options.tooltip) {
+        messages = messages.slice(0, TOOLTIP_MAX_MESSAGES);
     }
+
+    await mountInteractiveWidget(h(ChatPreview, { messages }), container);
+
+    if (options.tooltip) {
+        // The chat's markdown renders through the read-only text pipeline, whose passes (mermaid,
+        // math, syntax highlighting) land after the mount — snapshotting before they settle would
+        // freeze half-rendered content into the tooltip.
+        await waitForPendingRenders();
+
+        const html = container.innerHTML;
+        render(null, container);
+        container.removeAttribute(INTERACTIVE_MOUNT_ATTR);
+        container.innerHTML = html;
+    }
+
     $renderedContent.append($container);
 }
 
