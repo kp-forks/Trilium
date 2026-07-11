@@ -2916,6 +2916,34 @@ iframe.print-iframe {
     height: var(--_checkbox-size);
 }
 
+/* Inline-block slot for using .tn-task-checkbox inside flowing text (e.g. the
+   task-state line in the checkbox tooltip). Without a block-formatting
+   ancestor the inner span is inline and its ::before / ::after collapse to
+   zero size, showing only the glyph. */
+.tn-task-checkbox-inline {
+    display: inline-block;
+    margin-inline-start: 8px;
+    vertical-align: middle;
+    line-height: 0;
+}
+
+.tn-task-checkbox-inline > .tn-task-checkbox {
+    /* Scale the checkbox (and, via `calc(var(--_checkbox-size) * ratio)`,
+       its glyph) to the surrounding text size so it fits the tooltip line
+       instead of forcing the default 18px. */
+    --_checkbox-size: 1.1em;
+    display: block;
+    transform: translateY(-0.05em);
+}
+
+/* Status line block above the checkbox tooltip's body. The 8px bottom margin
+   separates it from the "Right click…" hint when the line is present; when
+   the state is an anchor (unchecked/checked) the line is omitted entirely,
+   so no spacing is added. */
+.tn-task-tooltip-state {
+    margin-bottom: 8px;
+}
+
 /* Prevent variables from bleeding into nested items */
 .ck-content .todo-list .todo-list {
     --task-state-glyph: initial;
