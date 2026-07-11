@@ -88,7 +88,7 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
     const isExportableToXlsx = noteType === "spreadsheet";
     const isContentAvailable = note.isContentAvailable();
     const isPrintable = isContentAvailable && (
-        ["text", "code", "spreadsheet"].includes(noteType) ||
+        ["text", "code", "spreadsheet", "llmChat"].includes(noteType) ||
         (noteType === "book" && ["presentation", "list", "table"].includes(viewType ?? "")) ||
         (noteType === "file" && note.mime === "application/pdf")
     );
