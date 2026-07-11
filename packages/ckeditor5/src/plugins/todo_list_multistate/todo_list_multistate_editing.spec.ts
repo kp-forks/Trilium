@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../../test/editor-kit.js";
 import TodoListUncheckOnEnter from "../todo_list_uncheck_on_enter.js";
-import TodoListMultistateEditing, { getActiveTaskStates, getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
+import TodoListMultistateEditing, { buildTooltipTitle, getActiveTaskStates, getConfiguredTaskStates, TASK_STATE_ATTRIBUTE } from "./todo_list_multistate_editing.js";
 
 const TODO_LIST_CHECKED_ATTRIBUTE = "todoListChecked";
 
@@ -43,24 +43,17 @@ function pressCtrlShiftEnter(editor: ClassicEditor): void {
 }
 
 /**
- * The title string handed to Bootstrap Tooltip at construction time. Reading
- * the private `_config.title` is stable in Bootstrap 5 and lets specs inspect
- * the assembled HTML without triggering `show()`.
+ * Look up the Bootstrap Tooltip instance on a given checkbox, throwing with a
+ * meaningful message if it's missing. Used to keep spec assertions clear of
+ * `!` non-null assertions (see CLAUDE.md) while still failing fast when a
+ * precondition doesn't hold.
  */
-function readTooltipTitle(editor: ClassicEditor): string {
-    const input = editor.editing.view.getDomRoot()?.querySelector<HTMLInputElement>('.todo-list__label input[type="checkbox"]');
-    if (!input) {
-        throw new Error("No todo checkbox found in the editing view.");
+function getTooltip(input: HTMLInputElement): Tooltip {
+    const instance = Tooltip.getInstance(input);
+    if (!instance) {
+        throw new Error("Expected a Bootstrap tooltip on the input, but none was found.");
     }
-    const tooltip = Tooltip.getInstance(input);
-    if (!tooltip) {
-        throw new Error("No Bootstrap tooltip on the todo checkbox.");
-    }
-    const title = (tooltip as unknown as { _config: { title: string } })._config.title;
-    if (typeof title !== "string") {
-        throw new Error("Tooltip title is not a string.");
-    }
-    return title;
+    return instance;
 }
 
 describe("TodoListMultistateEditing", () => {
@@ -466,40 +459,19 @@ describe("TodoListMultistateEditing", () => {
             }
         });
 
-        it("prepends the state prefix to the tooltip title when a configured state is set", () => {
+        it("consults the state-label translation key when a configured state is set", () => {
             translate.mockClear();
             editor.execute("setTaskState", { state: "doing" });
             expect(translate).toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-label");
-            const title = readTooltipTitle(editor);
-            expect(title).toContain("<strong>Doing</strong>"); // state.title takes precedence
-            expect(title).toContain('data-trilium-task-state="doing"');
         });
 
-        it("falls back to state.name in the state prefix when the title is empty", async () => {
-            // Rebuild the editor with a state whose title is missing so the `state.title || state.name` fallback fires.
-            await editor.destroy();
-            const noTitleStates: TaskStateDef[] = [
-                { id: "_bare", name: "bare", title: "", markdownSymbol: "b", isCompleted: false, icon: "bx bx-x" }
-            ];
-            editor = await createEditor({ taskStates: noTitleStates, translate });
-            setModelData(editor.model, TODO_FIXTURE);
-
-            editor.execute("setTaskState", { state: "bare" });
-            const title = readTooltipTitle(editor);
-            expect(title).toContain("<strong>bare</strong>");
-        });
-
-        it("uses the unknown-state suffix translation when the state has no definition", () => {
+        it("consults the unknown-state suffix translation when the state has no definition", () => {
             translate.mockClear();
             editor.model.change((writer) => {
                 writer.setAttribute(TASK_STATE_ATTRIBUTE, "ghost", getBlock(editor, 0));
             });
             expect(translate).toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-label");
             expect(translate).toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-unknown-suffix");
-            const title = readTooltipTitle(editor);
-            // The state name is inlined as text (no bold, no icon) followed by the translated suffix.
-            expect(title).toContain("ghost");
-            expect(title).not.toContain('data-trilium-task-state="ghost"');
         });
 
         it("omits the state prefix entirely for anchor states (unchecked / checked)", () => {
@@ -574,7 +546,7 @@ describe("TodoListMultistateEditing", () => {
 
         it("shows the tooltip on the todo checkbox when the caret enters its <li>", () => {
             const [checkboxA] = inputs();
-            const showSpy = vi.spyOn(Tooltip.getInstance(checkboxA)!, "show");
+            const showSpy = vi.spyOn(getTooltip(checkboxA),"show");
 
             moveCaretTo(1); // <paragraph listType="todo"> ("A")
 
@@ -584,7 +556,7 @@ describe("TodoListMultistateEditing", () => {
         it("hides the shown tooltip when the caret leaves the todo item", () => {
             const [checkboxA] = inputs();
             moveCaretTo(1);
-            const hideSpy = vi.spyOn(Tooltip.getInstance(checkboxA)!, "hide");
+            const hideSpy = vi.spyOn(getTooltip(checkboxA),"hide");
 
             moveCaretTo(0); // back to the plain paragraph
 
@@ -594,8 +566,8 @@ describe("TodoListMultistateEditing", () => {
         it("switches the shown tooltip when the caret moves between two todo items", () => {
             const [checkboxA, checkboxB] = inputs();
             moveCaretTo(1); // enter A
-            const hideA = vi.spyOn(Tooltip.getInstance(checkboxA)!, "hide");
-            const showB = vi.spyOn(Tooltip.getInstance(checkboxB)!, "show");
+            const hideA = vi.spyOn(getTooltip(checkboxA),"hide");
+            const showB = vi.spyOn(getTooltip(checkboxB), "show");
 
             moveCaretTo(2); // enter B
 
@@ -606,7 +578,7 @@ describe("TodoListMultistateEditing", () => {
         it("does not re-show the tooltip when the caret moves within the same todo item", () => {
             const [checkboxA] = inputs();
             moveCaretTo(1);
-            const tooltipA = Tooltip.getInstance(checkboxA)!;
+            const tooltipA = getTooltip(checkboxA);
             const showSpy = vi.spyOn(tooltipA, "show");
             const hideSpy = vi.spyOn(tooltipA, "hide");
 
@@ -655,7 +627,7 @@ describe("TodoListMultistateEditing", () => {
         it("returns no target when the caret has no todo ancestor", () => {
             const [checkboxA] = inputs();
             moveCaretTo(1);
-            const hideA = vi.spyOn(Tooltip.getInstance(checkboxA)!, "hide");
+            const hideA = vi.spyOn(getTooltip(checkboxA),"hide");
 
             moveCaretTo(0); // plain paragraph → no ancestor todo → target = null
 
@@ -681,6 +653,61 @@ describe("TodoListMultistateEditing", () => {
             expect(editor.state).toBe("destroyed");
             // Recreate so the shared afterEach's destroy() does not double-destroy.
             editor = await createEditor({ taskStates: CUSTOM_STATES });
+        });
+    });
+
+    // Pure-function tests for the tooltip HTML builder. Assert against the
+    // returned string directly rather than introspecting Bootstrap Tooltip
+    // instances — no `_config` peeking, no editor scaffolding needed.
+    describe("buildTooltipTitle", () => {
+        const translate = (key: string, params: Record<string, unknown> = {}) => {
+            if (key === "text-editor.checkbox-tooltip") {
+                return `Right click for more task states.\nPress ${params.shortcut} to cycle between states.`;
+            }
+            if (key === "text-editor.checkbox-tooltip-state-label") {
+                return "Task state:";
+            }
+            if (key === "text-editor.checkbox-tooltip-state-unknown-suffix") {
+                return "(missing definition)";
+            }
+            return key;
+        };
+
+        it("returns just the body (with <br>-joined lines) for an anchor state (null)", () => {
+            const title = buildTooltipTitle(document, null, new Map(), translate);
+            expect(title).toContain("Right click for more task states.<br>Press");
+            expect(title).not.toContain("Task state:");
+        });
+
+        it("prepends the state prefix with a bold state title for a configured state", () => {
+            const stateByName = new Map(CUSTOM_STATES.map((state) => [state.name, state]));
+            const title = buildTooltipTitle(document, "doing", stateByName, translate);
+            expect(title).toContain("Task state:");
+            expect(title).toContain("<strong>Doing</strong>"); // state.title takes precedence over name
+            expect(title).toContain('data-trilium-task-state="doing"');
+            expect(title).toContain('class="tn-task-tooltip-state"');
+        });
+
+        it("falls back to state.name in the state prefix when the state's title is empty", () => {
+            const stateByName = new Map<string, TaskStateDef>([
+                ["bare", { id: "_bare", name: "bare", title: "", markdownSymbol: "b", isCompleted: false, icon: "bx bx-x" }]
+            ]);
+            const title = buildTooltipTitle(document, "bare", stateByName, translate);
+            expect(title).toContain("<strong>bare</strong>");
+        });
+
+        it("uses the unknown-state suffix for a state with no definition, without bold or icon", () => {
+            const title = buildTooltipTitle(document, "ghost", new Map(), translate);
+            expect(title).toContain("Task state:");
+            expect(title).toContain("ghost (missing definition)");
+            expect(title).not.toContain("<strong>");
+            expect(title).not.toContain('data-trilium-task-state="ghost"');
+        });
+
+        it("text-escapes the raw state name in the unknown-state suffix (no HTML injection)", () => {
+            const title = buildTooltipTitle(document, "<script>alert(1)</script>", new Map(), translate);
+            expect(title).not.toContain("<script>");
+            expect(title).toContain("&lt;script&gt;");
         });
     });
 });

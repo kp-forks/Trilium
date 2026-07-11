@@ -1113,16 +1113,22 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
 
             // For delegated (`selector:`) configs, hovered children spawn per-target
             // Tooltip instances whose popups the parent's dispose() does not remove;
-            // sweep them here. Non-delegated tooltips clean up their own popup in
-            // `tooltip.dispose()`, and a global sweep would wipe unrelated tooltips
-            // (e.g. CKEditor plugins' Bootstrap tooltips) every time this hook's
+            // sweep them here. Scope by walking the container's descendants that
+            // still carry `aria-describedby` — Bootstrap stamps that attribute
+            // while a tooltip is shown and clears it on hide, so the ids we find
+            // point exactly at the currently-visible popups this delegated config
+            // owns. A blanket `document.querySelectorAll(".tooltip")` would wipe
+            // unrelated tooltips (e.g. CKEditor plugins') every time this hook's
             // effect re-runs — which is what caused the checkbox tooltip in
             // `TodoListMultistateEditing` to vanish whenever the "note saved" badge
             // transitioned states.
             if (config?.selector) {
-                document
-                    .querySelectorAll(".tooltip")
-                    .forEach(t => t.remove());
+                for (const target of element.querySelectorAll<HTMLElement>("[aria-describedby]")) {
+                    const popupId = target.getAttribute("aria-describedby");
+                    if (popupId) {
+                        document.getElementById(popupId)?.remove();
+                    }
+                }
             }
         };
     }, [ elRef, config ]);

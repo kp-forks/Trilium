@@ -134,8 +134,15 @@ export default class TodoListMultistateEditing extends Plugin {
                     continue;
                 }
                 const wasTracked = this._checkboxTooltips.has(input);
+                // Bootstrap stamps `aria-describedby` while a tooltip is shown and
+                // clears it on hide, so this tells us whether we're about to tear
+                // down a currently-visible popup — regardless of whether it was
+                // driven by hover or by the caret. If we don't re-show after the
+                // rebuild, a state change on a hovered checkbox blanks the hint
+                // until the user moves the mouse out and back in.
+                const wasShown = input.hasAttribute("aria-describedby");
                 Tooltip.getInstance(input)?.dispose();
-                const title = buildTooltipTitle(input, currentState, stateByName, translate);
+                const title = buildTooltipTitle(input.ownerDocument, currentState, stateByName, translate);
                 new Tooltip(input, {
                     title,
                     html: true,
@@ -157,6 +164,14 @@ export default class TodoListMultistateEditing extends Plugin {
                 });
                 this._checkboxTooltips.set(input, currentState);
                 recreated.add(input);
+                // Preserve visibility across the dispose+recreate. This covers
+                // BOTH the hover-shown case (Bootstrap sets `aria-describedby`
+                // during `show()`) and the caret-shown case for the same input;
+                // for the checkbox-recreated case (fresh input, no aria yet),
+                // `_syncCaretTooltip(recreated)` below takes over.
+                if (wasShown) {
+                    Tooltip.getInstance(input)?.show();
+                }
                 // Attach hover listeners once per input — they use dynamic
                 // `Tooltip.getInstance(input)` so they keep working after a
                 // state-change refresh replaces the tooltip on the same element.
@@ -355,7 +370,7 @@ export default class TodoListMultistateEditing extends Plugin {
 
 }
 
-type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
+export type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 
 /**
  * The task state applied to the todo item that owns the given checkbox. Anchor
@@ -382,9 +397,12 @@ function readTaskState(input: HTMLInputElement): string | null {
  *  - configured state → the state's own checkbox glyph + bold name;
  *  - unknown state (attribute set but no matching definition) → the raw name
  *    followed by a translated "(missing definition)" note.
+ *
+ * Exported so specs can verify the assembled HTML directly, without having to
+ * introspect Bootstrap Tooltip's private `_config` field.
  */
-function buildTooltipTitle(
-    input: HTMLInputElement,
+export function buildTooltipTitle(
+    doc: Document,
     state: string | null,
     stateByName: Map<string, TaskStateDef>,
     translate: TranslateFn
@@ -397,9 +415,9 @@ function buildTooltipTitle(
     }
     const stateDef = stateByName.get(state);
     const suffix = stateDef
-        ? buildKnownStateSuffixHtml(input.ownerDocument, state, stateDef.title || stateDef.name)
+        ? buildKnownStateSuffixHtml(doc, state, stateDef.title || stateDef.name)
         : buildUnknownStateSuffixHtml(
-            input.ownerDocument,
+            doc,
             state,
             translate("text-editor.checkbox-tooltip-state-unknown-suffix")
         );
