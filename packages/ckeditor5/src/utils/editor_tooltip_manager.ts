@@ -25,13 +25,23 @@ import { Tooltip } from "bootstrap";
         const originalDispose = proto.dispose;
         const disposedPlaceholder = {
             activeTrigger: {} as Record<string, boolean>,
-            element: document.createElement("noscript")
+            element: document.createElement("noscript"),
+            // `_config.delay.hide` is read from within `_leave` (see the queued
+            // transitionend handler); nulling `_config` in Bootstrap's own
+            // `dispose` causes that call site to explode. A zero-delay,
+            // zero-trigger placeholder makes the code path a no-op.
+            config: { delay: { show: 0, hide: 0 }, trigger: "manual" }
         };
         proto.dispose = function (this: unknown) {
             originalDispose.call(this);
-            const self = this as { _activeTrigger: Record<string, boolean>; _element: Element };
+            const self = this as {
+                _activeTrigger: Record<string, boolean>;
+                _element: Element;
+                _config: { delay: { show: number; hide: number }; trigger: string };
+            };
             self._activeTrigger = disposedPlaceholder.activeTrigger;
             self._element = disposedPlaceholder.element;
+            self._config = disposedPlaceholder.config;
         };
         proto.__editorTooltipManagerDisposePatched = true;
     }
