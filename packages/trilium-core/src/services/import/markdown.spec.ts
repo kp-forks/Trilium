@@ -388,16 +388,19 @@ $$`;
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
     });
 
-    it("imports todo list multistate markers as data-trilium-task-state", () => {
+    it("imports todo list multistate markers as data-trilium-task-state and titles the <li> with the state's human name", () => {
+        // The `title` attribute mirrors what the CKEditor data downcast emits — it's
+        // the hover tooltip viewers of the shared page, the read-only preview and
+        // exported HTML rely on to name a custom task state.
         const input = trimIndentation`\
             - [/] Doing
             - [-] Cancelled
             - [?] Maybe`;
         const expected = [
             `<ul class="todo-list">`,
-            `<li data-trilium-task-state="doing"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span></label></li>`,
-            `<li data-trilium-task-state="cancelled"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span></label></li>`,
-            `<li data-trilium-task-state="maybe"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span></label></li>`,
+            `<li data-trilium-task-state="doing" title="Doing"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Doing</span></label></li>`,
+            `<li data-trilium-task-state="cancelled" title="Cancelled"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Cancelled</span></label></li>`,
+            `<li data-trilium-task-state="maybe" title="Maybe"><label class="todo-list__label"><input type="checkbox" disabled="disabled"><span class="todo-list__label__description">Maybe</span></label></li>`,
             `</ul>`
         ].join("");
         expect(markdownService.renderToHtml(input, "Title")).toStrictEqual(expected);
