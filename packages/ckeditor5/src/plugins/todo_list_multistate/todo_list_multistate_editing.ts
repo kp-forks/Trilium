@@ -1,5 +1,5 @@
-import { DEFAULT_TASK_STATES, DONE_STATE_NAME, isAnchorState, NONE_STATE_NAME, type TaskStateDef } from "@triliumnext/commons";
-import { Command, getEnvKeystrokeText, ListEditing, Plugin, TodoList, type Editor, type ModelElement, type ViewElement } from "ckeditor5";
+import { DEFAULT_TASK_STATES, DONE_STATE_NAME, formatShortcut, isAnchorState, joinShortcut, NONE_STATE_NAME, type TaskStateDef } from "@triliumnext/commons";
+import { Command, env, ListEditing, Plugin, TodoList, type Editor, type ModelElement, type ViewElement } from "ckeditor5";
 
 import { onTodoRowSplit } from "../todo_list_uncheck_on_enter.js";
 import { EditorTooltipManager, type TooltipHandle } from "../../utils/editor_tooltip_manager.js";
@@ -103,7 +103,7 @@ export default class TodoListMultistateEditing extends Plugin {
 
         editor.commands.add("setTaskState", new SetTaskStateCommand(editor));
 
-        editor.keystrokes.set("Ctrl+Shift+Enter", (_data, cancel) => {
+        editor.keystrokes.set(STATE_CYCLE_SHORTCUT, (_data, cancel) => {
             const command = editor.commands.get("setTaskState");
             if (!command?.isEnabled) {
                 return;
@@ -452,7 +452,7 @@ export function buildTooltipTitle(
     translate: TranslateFn
 ): string {
     const body = translate("text-editor.checkbox-tooltip", {
-        shortcut: getEnvKeystrokeText("Ctrl+Shift+Enter")
+        shortcut: renderCycleShortcut(translate)
     }).replace(/\n/g, "<br>");
     if (!state) {
         return body;
@@ -469,6 +469,26 @@ export function buildTooltipTitle(
     // The status line is a block-level <div> so it forces a line break before
     // the body and the CSS `margin-bottom: 8px` cleanly separates the two.
     return `<div class="tn-task-tooltip-state">${label} ${suffix}</div>${body}`;
+}
+
+/**
+ * Storage form of the state-cycle shortcut. Kept in sync with the
+ * `editor.keystrokes.set("Ctrl+Shift+Enter", …)` binding at the top of
+ * {@link TodoListMultistateEditing#init} — this string is the source of truth
+ * both places share, so a rebinding in one has to be mirrored in the other.
+ */
+const STATE_CYCLE_SHORTCUT = "Ctrl+Shift+Enter";
+
+/**
+ * Render the state-cycle shortcut as `<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd>`
+ * (or `<kbd>⌃</kbd><kbd>⇧</kbd><kbd>↩</kbd>` on macOS). Uses the shared
+ * `formatShortcut`/`joinShortcut` from `@triliumnext/commons` so key labels
+ * flow through the same i18n and Mac-glyph rules as the rest of the app.
+ */
+function renderCycleShortcut(translate: TranslateFn): string {
+    const kbdTokens = formatShortcut(STATE_CYCLE_SHORTCUT, translate, env.isMac)
+        .map((token) => `<kbd>${token}</kbd>`);
+    return joinShortcut(kbdTokens, env.isMac);
 }
 
 /**
