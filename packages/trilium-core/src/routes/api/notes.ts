@@ -201,14 +201,22 @@ function deleteNote(req: Request<{ noteId: string }>) {
 function undeleteNote(req: Request<{ noteId: string }>) {
     const taskContext = TaskContext.getInstance(randomString(10), "undeleteNotes", null);
 
-    // Report whether the note was actually restored: it may fail silently if the note was already
-    // erased or its parent is no longer available, so the client can give feedback instead of
-    // navigating to a note that was never brought back.
-    const undeleted = noteService.undeleteNote(req.params.noteId, taskContext);
+    // A note whose original parent is gone can only be restored by giving it a new home. The caller
+    // opts into that by naming a fallback parent (the client uses the inbox / default new-note
+    // location, after telling the user the original location no longer exists).
+    const { fallbackParentNoteId } = req.body ?? {};
+
+    if (fallbackParentNoteId !== undefined && typeof fallbackParentNoteId !== "string") {
+        throw new ValidationError("'fallbackParentNoteId' must be a note id.");
+    }
+
+    // Report whether the note was actually restored (and where): it may fail if the note was already
+    // erased, so the client can give feedback instead of navigating to a note that was never brought back.
+    const result = noteService.undeleteNote(req.params.noteId, taskContext, { fallbackParentNoteId });
 
     taskContext.taskSucceeded(null);
 
-    return { undeleted };
+    return result;
 }
 
 function sortChildNotes(req: Request<{ noteId: string }>) {

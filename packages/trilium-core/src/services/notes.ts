@@ -1098,39 +1098,86 @@ function updateNoteData(noteId: string, content: string, attachments: Attachment
     }
 }
 
+export interface UndeleteNoteOptions {
+    /**
+     * When the note's original parent no longer survives (it is itself deleted, or has been erased),
+     * reattach the note under this note instead — typically the inbox / default new-note location.
+     * Without it, such a note cannot be restored at all.
+     */
+    fallbackParentNoteId?: string;
+}
+
+export interface UndeleteNoteResult {
+    /** Whether the note (and its deleted subtree) was actually restored. */
+    undeleted: boolean;
+    /** True when the original location was gone and the note was reattached under the fallback parent. */
+    restoredToFallbackParent: boolean;
+}
+
 /**
  * Attempts to restore a soft-deleted note (and the deleted subtree below it, sharing its deleteId).
  *
- * @returns `true` if the note was restored, `false` if it could not be — because it has already been
- *          erased, is not actually deleted, or has no surviving (undeleted) parent to reattach to.
+ * Normally the note is reattached to whichever of its original parents is still alive. If none is —
+ * because the parent was itself deleted or already erased — the note is an orphan: it can only be
+ * restored by giving it a new home, via {@link UndeleteNoteOptions.fallbackParentNoteId}.
  */
-function undeleteNote(noteId: string, taskContext: TaskContext<"undeleteNotes">): boolean {
+function undeleteNote(
+    noteId: string,
+    taskContext: TaskContext<"undeleteNotes">,
+    opts: UndeleteNoteOptions = {}
+): UndeleteNoteResult {
+    const failed: UndeleteNoteResult = { undeleted: false, restoredToFallbackParent: false };
+
     // Use getRowOrNull: the note may have been erased (e.g. by the erasure scheduler or another client)
     // between the caller observing it and this call, in which case its row no longer exists.
     const noteRow = getSql().getRowOrNull<NoteRow>("SELECT * FROM notes WHERE noteId = ?", [noteId]);
 
     if (!noteRow) {
         getLog().info(`Note '${noteId}' no longer exists (has been erased) and thus cannot be undeleted.`);
-        return false;
+        return failed;
     }
 
     if (!noteRow.isDeleted || !noteRow.deleteId) {
         getLog().error(`Note '${noteId}' is not deleted and thus cannot be undeleted.`);
-        return false;
+        return failed;
     }
 
-    const undeletedParentBranchIds = getUndeletedParentBranchIds(noteId, noteRow.deleteId);
+    const deleteId = noteRow.deleteId;
+    const undeletedParentBranchIds = getUndeletedParentBranchIds(noteId, deleteId);
 
-    if (undeletedParentBranchIds.length === 0) {
-        // cannot undelete if there's no undeleted parent (its parent is itself still deleted or erased)
-        return false;
+    if (undeletedParentBranchIds.length > 0) {
+        for (const parentBranchId of undeletedParentBranchIds) {
+            undeleteBranch(parentBranchId, deleteId, taskContext);
+        }
+
+        return { undeleted: true, restoredToFallbackParent: false };
     }
 
-    for (const parentBranchId of undeletedParentBranchIds) {
-        undeleteBranch(parentBranchId, noteRow.deleteId, taskContext);
+    // The note is an orphan: none of its original parents survive.
+    if (!opts.fallbackParentNoteId) {
+        return failed;
     }
 
-    return true;
+    const fallbackParent = becca.getNote(opts.fallbackParentNoteId);
+
+    if (!fallbackParent) {
+        getLog().error(`Fallback parent '${opts.fallbackParentNoteId}' for undeleting note '${noteId}' was not found.`);
+        return failed;
+    }
+
+    // A fresh branch gives the orphan a new home. Constructing it also materialises the note's becca
+    // skeleton (see BBranch.childNote), which restoreNoteAndDescendants then fills in from the row.
+    new BBranch({
+        noteId,
+        parentNoteId: fallbackParent.noteId,
+        prefix: null
+    } as BranchRow).save();
+
+    taskContext.increaseProgressCount();
+
+    restoreNoteAndDescendants(noteRow, deleteId, taskContext);
+
+    return { undeleted: true, restoredToFallbackParent: true };
 }
 
 function undeleteBranch(branchId: string, deleteId: string, taskContext: TaskContext<"undeleteNotes">) {
@@ -1152,56 +1199,66 @@ function undeleteBranch(branchId: string, deleteId: string, taskContext: TaskCon
     taskContext.increaseProgressCount();
 
     if (noteRow.isDeleted && noteRow.deleteId === deleteId) {
-        // becca entity was already created as skeleton in "new Branch()" above
-        const noteEntity = becca.getNote(noteRow.noteId);
-        if (!noteEntity) {
-            throw new Error("Unable to find the just restored branch.");
-        }
+        restoreNoteAndDescendants(noteRow, deleteId, taskContext);
+    }
+}
 
-        noteEntity.updateFromRow(noteRow);
-        noteEntity.save();
+/**
+ * Restores a deleted note's row, attributes and attachments, then recurses into the branches of the
+ * subtree deleted alongside it. The note's becca skeleton must already exist — it is created as a
+ * side effect of saving a branch that points at it (see BBranch.childNote).
+ */
+function restoreNoteAndDescendants(noteRow: NoteRow, deleteId: string, taskContext: TaskContext<"undeleteNotes">) {
+    const sql = getSql();
+    const noteEntity = becca.getNote(noteRow.noteId);
 
-        const attributeRows = sql.getRows<AttributeRow>(
-            `
-                SELECT * FROM attributes
-                WHERE isDeleted = 1
-                AND deleteId = ?
-                AND (noteId = ?
-                            OR (type = 'relation' AND value = ?))`,
-            [deleteId, noteRow.noteId, noteRow.noteId]
-        );
+    if (!noteEntity) {
+        throw new Error("Unable to find the just restored note.");
+    }
 
-        for (const attributeRow of attributeRows) {
-            // relation might point to a note which hasn't been undeleted yet and would thus throw up
-            new BAttribute(attributeRow).save({ skipValidation: true });
-        }
+    noteEntity.updateFromRow(noteRow);
+    noteEntity.save();
 
-        const attachmentRows = sql.getRows<AttachmentRow>(
-            `
-            SELECT * FROM attachments
+    const attributeRows = sql.getRows<AttributeRow>(
+        `
+            SELECT * FROM attributes
             WHERE isDeleted = 1
             AND deleteId = ?
-            AND ownerId = ?`,
-            [deleteId, noteRow.noteId]
-        );
+            AND (noteId = ?
+                        OR (type = 'relation' AND value = ?))`,
+        [deleteId, noteRow.noteId, noteRow.noteId]
+    );
 
-        for (const attachmentRow of attachmentRows) {
-            new BAttachment(attachmentRow).save();
-        }
+    for (const attributeRow of attributeRows) {
+        // relation might point to a note which hasn't been undeleted yet and would thus throw up
+        new BAttribute(attributeRow).save({ skipValidation: true });
+    }
 
-        const childBranchIds = sql.getColumn<string>(
-            `
-            SELECT branches.branchId
-            FROM branches
-            WHERE branches.isDeleted = 1
-            AND branches.deleteId = ?
-            AND branches.parentNoteId = ?`,
-            [deleteId, noteRow.noteId]
-        );
+    const attachmentRows = sql.getRows<AttachmentRow>(
+        `
+        SELECT * FROM attachments
+        WHERE isDeleted = 1
+        AND deleteId = ?
+        AND ownerId = ?`,
+        [deleteId, noteRow.noteId]
+    );
 
-        for (const childBranchId of childBranchIds) {
-            undeleteBranch(childBranchId, deleteId, taskContext);
-        }
+    for (const attachmentRow of attachmentRows) {
+        new BAttachment(attachmentRow).save();
+    }
+
+    const childBranchIds = sql.getColumn<string>(
+        `
+        SELECT branches.branchId
+        FROM branches
+        WHERE branches.isDeleted = 1
+        AND branches.deleteId = ?
+        AND branches.parentNoteId = ?`,
+        [deleteId, noteRow.noteId]
+    );
+
+    for (const childBranchId of childBranchIds) {
+        undeleteBranch(childBranchId, deleteId, taskContext);
     }
 }
 
