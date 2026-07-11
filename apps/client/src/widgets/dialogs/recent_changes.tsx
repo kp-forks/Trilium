@@ -8,6 +8,7 @@ import toast from "../../services/toast";
 import Dropdown from "../react/Dropdown";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import Modal from "../react/Modal";
+import NoItems from "../react/NoItems";
 import hoisted_note from "../../services/hoisted_note";
 import type { RecentChangeRow } from "@triliumnext/commons";
 import froca from "../../services/froca";
@@ -107,9 +108,11 @@ export default function RecentChangesDialog() {
             <div className="recent-changes-content">
                 {groupedByDate?.size
                     ? <RecentChangesTimeline groupedByDate={groupedByDate} setShown={setShown} />
-                    : <>{deletedOnly
-                        ? t("recent_changes.no_deleted_notes_message", { duration: formatDuration(eraseAfterSeconds, eraseTimeScale) })
-                        : t("recent_changes.no_changes_message")}</>}
+                    : deletedOnly
+                        ? <NoItems icon="bx bx-trash-alt" text={t("recent_changes.no_deleted_notes_message")}>
+                            <small>{t("recent_changes.no_deleted_notes_erasure_hint", { duration: formatDuration(eraseAfterSeconds, eraseTimeScale) })}</small>
+                        </NoItems>
+                        : <NoItems icon="bx bx-history" text={t("recent_changes.no_changes_message")} />}
             </div>
         </Modal>
     )
