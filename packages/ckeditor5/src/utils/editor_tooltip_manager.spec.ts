@@ -279,13 +279,17 @@ describe("EditorTooltipManager", () => {
         });
 
         it("reveals the next handle in the stack when the top is auto-popped", () => {
+            // Different elements so `_render` takes the dispose+create path
+            // rather than Bootstrap's `setContent`, which mixes badly with the
+            // transition timers `showAfter`/auto-hide have already queued.
             const bottom = autoManager.createHandle(a, "bottom");
-            const top = autoManager.createHandle(a, "top");
+            const top = autoManager.createHandle(b, "top");
             bottom.show();
             top.show();
             expect(livePopupText()).toBe("top");
 
-            // Timer pops `top`; `_render` reveals `bottom` in place.
+            // Timer pops `top`; `_render` disposes the popup on `b` and creates
+            // a fresh one on `a` with the bottom entry's content.
             vi.advanceTimersByTime(1000);
             expect(livePopupText()).toBe("bottom");
         });
@@ -308,17 +312,15 @@ describe("EditorTooltipManager", () => {
         it("fades the last-remaining tooltip out via Bootstrap's transition and disposes it after `hidden.bs.tooltip`", () => {
             const handle = autoManager.createHandle(a, "hello");
             handle.show();
-            const popupBefore = livePopup();
-            expect(popupBefore).not.toBeNull();
+            expect(livePopup()).not.toBeNull();
 
             // Auto-hide fires — `_hideWithTransition` calls Bootstrap's `hide()`,
-            // which starts the opacity fade and queues `hidden.bs.tooltip`.
+            // which starts the opacity fade and queues `hidden.bs.tooltip` on
+            // the source element (`a`) — not on the popup.
             vi.advanceTimersByTime(1000);
-            // The popup is either still in the DOM but with the `show` class
-            // removed (mid-transition) or already gone — either way, the
-            // Bootstrap event we listen for is the source of truth for cleanup.
-            // Fire it synchronously so the `onHidden` callback disposes.
-            popupBefore?.dispatchEvent(new Event("hidden.bs.tooltip", { bubbles: true }));
+            // Drive the transitionend synchronously by dispatching the Bootstrap
+            // event on `a`, where `_hideWithTransition` registered its listener.
+            a.dispatchEvent(new Event("hidden.bs.tooltip", { bubbles: true }));
 
             // Sanity: the manager's stack is empty and pushing again works.
             expect(livePopup()).toBeNull();
