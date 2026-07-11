@@ -1008,7 +1008,8 @@
     "batch_ocr_starting": "バッチ処理を開始しています...",
     "batch_ocr_progress": "{{total}} ファイルのうち {{processed}} ファイルを処理中...",
     "batch_ocr_completed": "バッチ処理が完了しました！{{processed}} ファイルを処理しました。",
-    "batch_ocr_error": "バッチ処理中にエラーが発生しました: {{error}}"
+    "batch_ocr_error": "バッチ処理中にエラーが発生しました: {{error}}",
+    "batch_ocr_completed_with_failures": "バッチ処理が完了しました。{{processed}} 個のファイルを処理しましたが、{{failed}} 個は読み込めませんでした（詳細はログを参照してください）。"
   },
   "search_engine": {
     "title": "検索エンジン",
