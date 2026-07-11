@@ -1,6 +1,43 @@
 import { Tooltip } from "bootstrap";
 
 /**
+ * Workaround for https://github.com/twbs/bootstrap/issues/37474.
+ *
+ * Bootstrap's Tooltip.dispose() sets `_activeTrigger` and `_element` to null,
+ * but a fade transition disposed mid-flight will still fire its scheduled
+ * transitionend handler, which walks into `_isWithActiveTrigger` and crashes
+ * with `TypeError: Cannot convert undefined or null to object`. We hit this
+ * whenever the manager disposes the current tooltip before an in-progress
+ * fade completes (e.g. a fresh push targets a different element, or the
+ * manager is destroyed with a fade queued).
+ *
+ * Patch `dispose` once per module load to leave harmless placeholders behind
+ * so the stale transitionend handler falls through cleanly. Guarded so this
+ * file can be imported alongside the client's own copy of the patch in
+ * `apps/client/src/widgets/react/hooks.tsx` without double-wrapping.
+ */
+{
+    const proto = Tooltip.prototype as unknown as {
+        dispose(): void;
+        __editorTooltipManagerDisposePatched?: true;
+    };
+    if (!proto.__editorTooltipManagerDisposePatched) {
+        const originalDispose = proto.dispose;
+        const disposedPlaceholder = {
+            activeTrigger: {} as Record<string, boolean>,
+            element: document.createElement("noscript")
+        };
+        proto.dispose = function (this: unknown) {
+            originalDispose.call(this);
+            const self = this as { _activeTrigger: Record<string, boolean>; _element: Element };
+            self._activeTrigger = disposedPlaceholder.activeTrigger;
+            self._element = disposedPlaceholder.element;
+        };
+        proto.__editorTooltipManagerDisposePatched = true;
+    }
+}
+
+/**
  * A tooltip request registered with an {@link EditorTooltipManager}. Any number
  * of independent handles (hover, caret, keyboard-focus …) can be created and
  * pushed onto the manager's visibility stack independently; only the top of the
