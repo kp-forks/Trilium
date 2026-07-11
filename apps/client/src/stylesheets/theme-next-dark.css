@@ -329,7 +329,7 @@
     --task-checkbox-without-state-background: #ffffff26;
     --task-checkbox-without-state-hover-background: #ffffff59;
     --task-checkbox-with-state-background: #ffffff3b;
-    --task-checkbox-with-state-hover-background: var(--task-checkbox-with-state-hover-background);
+    --task-checkbox-with-state-hover-background: var(--task-checkbox-without-state-hover-background);
     --task-checkbox-done-color: #408b40;
     --task-checkbox-done-hover-color: #41b441;
     --task-checkbox-unknown-state-color: #e95d5d;
