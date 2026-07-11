@@ -119,7 +119,7 @@ export function SingleNoteRenderer({ note, onReady }: RendererProps) {
                 // passes — mermaid, syntax highlighting, included notes — in a layout effect that
                 // getRenderedContent does not await. Printing snapshots the page, so wait for those
                 // to settle first; otherwise they land after the capture and are missing from the PDF.
-                await waitForPendingRenders();
+                await waitForPendingRenders(container);
 
                 // Wait for all images to load.
                 const images = Array.from(container.querySelectorAll("img"));

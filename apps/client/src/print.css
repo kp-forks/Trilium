@@ -255,11 +255,11 @@ body[data-note-type="llmChat"] {
 }
 
 body[data-note-type="llmChat"] .llm-chat-message-wrapper {
-      contain: none !important;
+    contain: none !important;
 }
 
 body[data-note-type="llmChat"] .llm-chat-message-user {
-     background: #f0f0f0;
+    background: #f0f0f0;
     border: 0.5pt solid #ccc;
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;

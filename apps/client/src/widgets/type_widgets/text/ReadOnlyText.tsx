@@ -92,7 +92,7 @@ export function ReadOnlyTextContent({ html, ntxId, dir, className, contentRef: e
         // which render a whole note of their own — finish after this effect returns. On screen they
         // simply paint when ready; a caller that snapshots the DOM instead (printing) has to wait for
         // them, so the work is registered rather than dropped on the floor.
-        trackPendingRender(Promise.all([
+        trackPendingRender(container, Promise.all([
             rewriteMermaidDiagramsInContainer(container),
             applyInlineMermaid(container),
             applyIncludedNotes(container),

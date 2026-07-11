@@ -460,8 +460,9 @@ async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>,
     if (options.tooltip) {
         // The chat's markdown renders through the read-only text pipeline, whose passes (mermaid,
         // math, syntax highlighting) land after the mount — snapshotting before they settle would
-        // freeze half-rendered content into the tooltip.
-        await waitForPendingRenders();
+        // freeze half-rendered content into the tooltip. Scoped to this preview, so a hover never
+        // waits on a note rendering in another pane.
+        await waitForPendingRenders(container);
 
         const html = container.innerHTML;
         render(null, container);

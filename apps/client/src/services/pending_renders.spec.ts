@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 import { trackPendingRender, waitForPendingRenders } from "./pending_renders.js";
 
@@ -17,34 +17,47 @@ function flushMicrotasks() {
     return new Promise<void>((resolve) => setTimeout(resolve, 0));
 }
 
-/** Whether `waitForPendingRenders()` has resolved, without blocking on it. */
-function watchCompletion() {
+/** Whether `waitForPendingRenders(root)` has resolved, without blocking on it. */
+function watchCompletion(root: Node) {
     const state = { done: false };
-    void waitForPendingRenders().then(() => {
+    void waitForPendingRenders(root).then(() => {
         state.done = true;
     });
     return state;
 }
 
+let root: HTMLElement;
+/** A container rendering inside `root` — what a real transform pass registers itself against. */
+let child: HTMLElement;
+/** A container outside `root`, standing in for a note rendering in another pane. */
+let elsewhere: HTMLElement;
+
 describe("pending renders", () => {
-    it("resolves immediately when nothing is tracked", async () => {
-        await expect(waitForPendingRenders()).resolves.toBeUndefined();
+    beforeEach(() => {
+        root = document.createElement("div");
+        child = document.createElement("div");
+        root.appendChild(child);
+        elsewhere = document.createElement("div");
     });
 
-    it("waits for tracked work, including work scheduled by tracked work", async () => {
+    it("resolves immediately when nothing is tracked", async () => {
+        await expect(waitForPendingRenders(root)).resolves.toBeUndefined();
+    });
+
+    it("waits for work inside the root, including work scheduled by that work", async () => {
         const first = deferred();
         const second = deferred();
-        trackPendingRender(first.promise);
+        trackPendingRender(child, first.promise);
 
-        const completion = watchCompletion();
-        await Promise.resolve();
+        const completion = watchCompletion(root);
+        await flushMicrotasks();
         expect(completion.done).toBe(false);
 
         // An included note renders its own content: work that only gets tracked once the first
         // pass has finished must still be waited for.
         first.resolve();
-        trackPendingRender(second.promise);
-        await Promise.resolve();
+        trackPendingRender(child, second.promise);
+        await flushMicrotasks();
         expect(completion.done).toBe(false);
 
         second.resolve();
@@ -52,12 +65,22 @@ describe("pending renders", () => {
         expect(completion.done).toBe(true);
     });
 
+    it("ignores work rendering outside the root", async () => {
+        const unrelated = deferred();
+        trackPendingRender(elsewhere, unrelated.promise);
+
+        // Never resolved: a hover preview must not stall on another pane's render.
+        await expect(waitForPendingRenders(root)).resolves.toBeUndefined();
+
+        unrelated.resolve();
+    });
+
     it("does not stall or reject when tracked work fails", async () => {
         const failing = deferred();
-        trackPendingRender(failing.promise);
+        trackPendingRender(child, failing.promise);
 
         failing.reject(new Error("mermaid blew up"));
 
-        await expect(waitForPendingRenders()).resolves.toBeUndefined();
+        await expect(waitForPendingRenders(root)).resolves.toBeUndefined();
     });
 });
