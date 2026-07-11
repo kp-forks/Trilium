@@ -418,16 +418,19 @@
   "recent_changes": {
     "title": "Recent changes",
     "deleted_notes_title": "Deleted notes",
+    "title_with_ancestor": "{{- title}} - {{- ancestorTitle}}",
     "erase_notes_button": "Erase deleted notes now",
     "more_actions": "More actions",
     "deleted_notes_settings": "Deleted Notes Settings",
     "deleted_notes_message": "Deleted notes have been erased.",
     "no_changes_message": "No changes yet...",
-    "no_deleted_notes_message": "No deleted notes.",
+    "no_deleted_notes_message": "There are no deleted notes to show.",
+    "no_deleted_notes_erasure_hint": "Deleted notes are kept for {{- duration}} before being permanently erased.",
     "undelete_link": "undelete",
     "confirm_undelete": "Do you want to undelete this note and its sub-notes?",
-    "cannot_undelete": "This note can't be restored because its parent has also been deleted. Restore the parent first.",
-    "undelete_failed": "The note could not be restored — it may have been permanently erased or its parent is no longer available."
+    "confirm_undelete_to_default_location": "The parent of this note no longer exists, so it can't be restored to its original location. Restore it to the default location for new notes instead?",
+    "undeleted_to_default_location": "Its original location no longer exists, so the note was restored to \"{{- title}}\".",
+    "undelete_failed": "The note could not be restored — it may have been permanently erased."
   },
   "revisions": {
     "note_revisions": "Note Revisions",
@@ -2493,6 +2496,16 @@
     "minutes": "Minutes",
     "hours": "Hours",
     "days": "Days"
+  },
+  "time_interval": {
+    "seconds_one": "{{count}} second",
+    "seconds_other": "{{count}} seconds",
+    "minutes_one": "{{count}} minute",
+    "minutes_other": "{{count}} minutes",
+    "hours_one": "{{count}} hour",
+    "hours_other": "{{count}} hours",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days"
   },
   "share": {
     "title": "Share",

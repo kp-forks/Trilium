@@ -141,6 +141,63 @@ describe("Notes API (core)", () => {
             expect(noteIsDeleted(child.noteId)).toBe(1);
         });
 
+        it("restores an orphaned note under the fallback parent when one is given", async () => {
+            const parent = await createTextNote(api, { title: "Doomed parent" });
+            const child = await createTextNote(api, { parentNoteId: parent.noteId, title: "Rehomed child" });
+            const newHome = await createTextNote(api, { title: "Inbox stand-in" });
+
+            // Deleting the parent orphans the child: its only original location is gone.
+            const del = await api.delete(`/api/notes/${parent.noteId}`, {
+                query: { taskId: "test-fallback-delete", last: "true" }
+            });
+            expect(del.status).toBe(204);
+            expect(noteIsDeleted(child.noteId)).toBe(1);
+
+            const undel = await api.put<{ undeleted: boolean; restoredToFallbackParent: boolean }>(
+                `/api/notes/${child.noteId}/undelete`,
+                { body: { fallbackParentNoteId: newHome.noteId } }
+            );
+
+            expect(undel.status).toBe(200);
+            expect(undel.body.undeleted).toBe(true);
+            expect(undel.body.restoredToFallbackParent).toBe(true);
+
+            // The child is alive again under its new home; the original parent stays deleted.
+            expect(noteIsDeleted(child.noteId)).toBe(0);
+            expect(noteIsDeleted(parent.noteId)).toBe(1);
+            expect(becca.getNote(child.noteId)?.getParentNotes().map((note) => note.noteId))
+                .toContain(newHome.noteId);
+        });
+
+        it("re-links an inbox-restored orphan under its original parent when that parent is later restored", async () => {
+            const parent = await createTextNote(api, { title: "Parent restored later" });
+            const child = await createTextNote(api, { parentNoteId: parent.noteId, title: "Orphan rehomed" });
+            const inbox = await createTextNote(api, { title: "Inbox stand-in 2" });
+
+            // Deleting the parent orphans the child.
+            await api.delete(`/api/notes/${parent.noteId}`, {
+                query: { taskId: "test-relink-delete", last: "true" }
+            });
+
+            // The user restores just the child, into the inbox.
+            const undelChild = await api.put<{ restoredToFallbackParent: boolean }>(
+                `/api/notes/${child.noteId}/undelete`,
+                { body: { fallbackParentNoteId: inbox.noteId } }
+            );
+            expect(undelChild.body.restoredToFallbackParent).toBe(true);
+
+            // Later, the user restores the whole parent.
+            const undelParent = await api.put<{ undeleted: boolean }>(`/api/notes/${parent.noteId}/undelete`);
+            expect(undelParent.body.undeleted).toBe(true);
+            expect(noteIsDeleted(parent.noteId)).toBe(0);
+
+            // The child is the SAME note (not a copy), now cloned under both its new home and its
+            // original parent — so restoring the parent brings back a complete subtree.
+            const parentIds = becca.getNote(child.noteId)?.getParentNotes().map((note) => note.noteId);
+            expect(parentIds).toContain(inbox.noteId);
+            expect(parentIds).toContain(parent.noteId);
+        });
+
         it("reports failure (instead of crashing) when undeleting an already-erased note", async () => {
             const { noteId } = await createTextNote(api, { title: "Erase then undelete" });
             const del = await api.delete(`/api/notes/${noteId}`, {
