@@ -109,8 +109,8 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         $renderedContent.append($("<div>").append("<div>This note is protected and to access it you need to enter password.</div>").append("<br/>").append($button));
     } else if (type === "webView" && options.interactive && !options.tooltip && entity instanceof FNote && entity.hasLabel("webViewSrc")) {
         await renderWebView(entity, $renderedContent);
-    } else if (type === "llmChat" && !options.tooltip && entity instanceof FNote) {
-        await renderLlmChat(entity, $renderedContent);
+    } else if (type === "llmChat" && entity instanceof FNote) {
+        await renderLlmChat(entity, $renderedContent, options);
     } else if (entity instanceof FNote) {
         $renderedContent.addClass("no-preview");
         $renderedContent.append(
@@ -416,8 +416,11 @@ async function renderWebView(note: FNote, $renderedContent: JQuery<HTMLElement>)
  * effects), so the embedding caller must tear it down via {@link disposeInteractiveContent} — the
  * collection tiles that show these previews already do. Loaded lazily so the chat widget code is only
  * pulled in when a chat note is previewed.
+ *
+ * Tooltips get a static string rendering instead: they keep only the serialized HTML of the content
+ * and never dispose it, so a mounted preview would leak a Preact root per hover.
  */
-async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>) {
+async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>, options: RenderOptions) {
     const blob = await note.getBlob();
     const source = blob?.content ?? "";
 
@@ -434,6 +437,15 @@ async function renderLlmChat(note: FNote, $renderedContent: JQuery<HTMLElement>)
         }
     }
     if (messages.length === 0) return;
+
+    if (options.tooltip) {
+        const { renderChatPreviewHtml } = await import("../widgets/type_widgets/llm_chat/chat_preview_html");
+        const html = renderChatPreviewHtml(messages);
+        if (html) {
+            $renderedContent.append($('<div class="note-detail-llm-chat-preview">').html(html));
+        }
+        return;
+    }
 
     const ChatPreview = (await import("../widgets/type_widgets/llm_chat/ChatPreview")).default;
     const $container = $('<div class="note-detail-llm-chat-preview">');

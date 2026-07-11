@@ -568,6 +568,47 @@ describe("generic FNote fallback / webView", () => {
         expect(noSrc.$renderedContent.find(".note-detail-web-view").length).toBe(0);
         expect(noSrc.$renderedContent.hasClass("no-preview")).toBe(true);
     });
+
+    it("renders an AI chat in a tooltip as a static preview, without mounting the widget", async () => {
+        const content = JSON.stringify({
+            version: 1,
+            messages: [{ id: "m1", role: "user", content: "Ping?", createdAt: "2026-01-01T00:00:00.000Z" }]
+        });
+        const { $renderedContent } = await getRenderedContent(
+            buildNote({ title: "Chat", type: "llmChat", content }),
+            { tooltip: true }
+        );
+
+        expect($renderedContent.find(".llm-chat-preview").text()).toContain("Ping?");
+        expect($renderedContent.find("[data-interactive-mount]").length).toBe(0);
+    });
+
+    it("keeps a title-only tooltip for an AI chat with nothing to preview", async () => {
+        const empty = await getRenderedContent(
+            buildNote({ title: "Chat", type: "llmChat", content: JSON.stringify({ version: 1, messages: [] }) }),
+            { tooltip: true }
+        );
+        // Only tool calls: no text to show, so the preview stays empty rather than rendering a blank bubble.
+        const toolOnly = await getRenderedContent(
+            buildNote({
+                title: "Chat",
+                type: "llmChat",
+                content: JSON.stringify({
+                    version: 1,
+                    messages: [{
+                        id: "m1",
+                        role: "assistant",
+                        createdAt: "2026-01-01T00:00:00.000Z",
+                        content: [{ type: "tool_call", toolCall: { id: "t1", toolName: "search_notes", input: {} } }]
+                    }]
+                })
+            }),
+            { tooltip: true }
+        );
+
+        expect(empty.$renderedContent.html()).toBe("");
+        expect(toolOnly.$renderedContent.html()).toBe("");
+    });
 });
 
 describe("interactive content disposal", () => {
