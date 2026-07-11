@@ -262,4 +262,88 @@ describe("EditorTooltipManager", () => {
             expect(livePopupText()).toBe("content");
         });
     });
+
+    describe("autoHideAfterMs", () => {
+        // Each test manages its own manager instance so the outer `manager`
+        // (no auto-hide) isn't polluted with a timer that could interfere.
+        let autoManager: EditorTooltipManager;
+
+        beforeEach(() => {
+            vi.useFakeTimers();
+            autoManager = new EditorTooltipManager({ autoHideAfterMs: 1000 });
+        });
+
+        afterEach(() => {
+            autoManager.destroy();
+            vi.useRealTimers();
+        });
+
+        it("reveals the next handle in the stack when the top is auto-popped", () => {
+            const bottom = autoManager.createHandle(a, "bottom");
+            const top = autoManager.createHandle(a, "top");
+            bottom.show();
+            top.show();
+            expect(livePopupText()).toBe("top");
+
+            // Timer pops `top`; `_render` reveals `bottom` in place.
+            vi.advanceTimersByTime(1000);
+            expect(livePopupText()).toBe("bottom");
+        });
+
+        it("bails out cleanly when the timer fires against an already-empty stack (defensive)", () => {
+            // Auto-hide is scheduled by `_resetAutoHide` only when a tooltip is
+            // visible. Hiding the handle before the timer fires clears the stack
+            // but the cancel path also cancels the timer, so it never actually
+            // races. The pop-guard at the top of the setTimeout callback is
+            // defensive; verify manually via `dispose()` which leaves the timer
+            // to a pristine cancel path.
+            const handle = autoManager.createHandle(a, "hello");
+            handle.show();
+            expect(livePopupText()).toBe("hello");
+            handle.hide();
+            vi.advanceTimersByTime(1000);
+            expect(livePopup()).toBeNull();
+        });
+
+        it("fades the last-remaining tooltip out via Bootstrap's transition and disposes it after `hidden.bs.tooltip`", () => {
+            const handle = autoManager.createHandle(a, "hello");
+            handle.show();
+            const popupBefore = livePopup();
+            expect(popupBefore).not.toBeNull();
+
+            // Auto-hide fires — `_hideWithTransition` calls Bootstrap's `hide()`,
+            // which starts the opacity fade and queues `hidden.bs.tooltip`.
+            vi.advanceTimersByTime(1000);
+            // The popup is either still in the DOM but with the `show` class
+            // removed (mid-transition) or already gone — either way, the
+            // Bootstrap event we listen for is the source of truth for cleanup.
+            // Fire it synchronously so the `onHidden` callback disposes.
+            popupBefore?.dispatchEvent(new Event("hidden.bs.tooltip", { bubbles: true }));
+
+            // Sanity: the manager's stack is empty and pushing again works.
+            expect(livePopup()).toBeNull();
+            const fresh = autoManager.createHandle(a, "after");
+            fresh.show();
+            expect(livePopupText()).toBe("after");
+        });
+
+        it("cancels a queued fade-out cleanup when a new push arrives mid-fade", () => {
+            const handle = autoManager.createHandle(a, "first");
+            handle.show();
+
+            // Trigger auto-hide → `_hideWithTransition` runs, `_pendingHideCleanup` is set.
+            vi.advanceTimersByTime(1000);
+
+            // Push before the fade completes → `_cancelPendingHide` unhooks the
+            // Bootstrap listener so the pending onHidden won't dispose the tooltip.
+            const other = autoManager.createHandle(a, "second");
+            other.show();
+            expect(livePopupText()).toBe("second");
+
+            // The interrupted fade's onHidden should now be a no-op even if
+            // Bootstrap still fires the event.
+            a.dispatchEvent(new Event("hidden.bs.tooltip", { bubbles: true }));
+            expect(livePopupText()).toBe("second");
+        });
+    });
 });

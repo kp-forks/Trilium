@@ -325,12 +325,18 @@ export default class TodoListMultistateEditing extends Plugin {
                     if (ownedByCaret()) return;
                     handle.hide();
                 });
+            /* v8 ignore start -- taskState is scope:"item", so any state change
+               triggers a full item reconvert and gives us a fresh `<input>`. The
+               old input is reaped by the disconnected loop above before we get
+               here, so this branch is defensive: it would only fire if CKEditor
+               ever stopped reconverting on scope:"item" attribute changes. */
             } else if (currentState !== previousState) {
                 this._hoverHandles.get(input)?.setContent(this._computeContent(input));
                 if (input === this._caretInput) {
                     caretItemStateChanged = true;
                 }
             }
+            /* v8 ignore stop */
         }
 
         return caretItemStateChanged;
@@ -372,6 +378,11 @@ export default class TodoListMultistateEditing extends Plugin {
                     this._caretHandle = this._tooltipManager.createHandle(target, this._computeContent(target));
                     this._caretHandle.show();
                 }
+            /* v8 ignore next 4 -- reachable only when `forceShowIfSameTarget`
+               is true, which the render listener only sets when
+               `_refreshHoverHandles` observes a state change on the caret's
+               input WITHOUT the input being recreated — see the paired v8
+               ignore in `_refreshHoverHandles`. Defensive counterpart. */
             } else if (target && this._caretHandle && options.forceShowIfSameTarget) {
                 this._caretHandle.setContent(this._computeContent(target));
                 this._caretHandle.show();
@@ -420,6 +431,8 @@ export default class TodoListMultistateEditing extends Plugin {
             return null;
         }
         const itemId = node.getAttribute("listItemId");
+        /* v8 ignore next 3 -- CKEditor's list plugin guarantees `listItemId`
+           is a non-empty string on every todo item; defensive fallback. */
         if (typeof itemId !== "string" || !itemId) {
             return null;
         }
