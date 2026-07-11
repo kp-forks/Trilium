@@ -42,6 +42,27 @@ function pressCtrlShiftEnter(editor: ClassicEditor): void {
     });
 }
 
+/**
+ * The title string handed to Bootstrap Tooltip at construction time. Reading
+ * the private `_config.title` is stable in Bootstrap 5 and lets specs inspect
+ * the assembled HTML without triggering `show()`.
+ */
+function readTooltipTitle(editor: ClassicEditor): string {
+    const input = editor.editing.view.getDomRoot()?.querySelector<HTMLInputElement>('.todo-list__label input[type="checkbox"]');
+    if (!input) {
+        throw new Error("No todo checkbox found in the editing view.");
+    }
+    const tooltip = Tooltip.getInstance(input);
+    if (!tooltip) {
+        throw new Error("No Bootstrap tooltip on the todo checkbox.");
+    }
+    const title = (tooltip as unknown as { _config: { title: string } })._config.title;
+    if (typeof title !== "string") {
+        throw new Error("Tooltip title is not a string.");
+    }
+    return title;
+}
+
 describe("TodoListMultistateEditing", () => {
     let editor: ClassicEditor;
 
@@ -442,6 +463,87 @@ describe("TodoListMultistateEditing", () => {
             expect(currentInput).not.toBeNull();
             if (currentInput) {
                 expect(Tooltip.getInstance(currentInput)).not.toBeNull();
+            }
+        });
+
+        it("prepends the state prefix to the tooltip title when a configured state is set", () => {
+            translate.mockClear();
+            editor.execute("setTaskState", { state: "doing" });
+            expect(translate).toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-label");
+            const title = readTooltipTitle(editor);
+            expect(title).toContain("<strong>Doing</strong>"); // state.title takes precedence
+            expect(title).toContain('data-trilium-task-state="doing"');
+        });
+
+        it("falls back to state.name in the state prefix when the title is empty", async () => {
+            // Rebuild the editor with a state whose title is missing so the `state.title || state.name` fallback fires.
+            await editor.destroy();
+            const noTitleStates: TaskStateDef[] = [
+                { id: "_bare", name: "bare", title: "", markdownSymbol: "b", isCompleted: false, icon: "bx bx-x" }
+            ];
+            editor = await createEditor({ taskStates: noTitleStates, translate });
+            setModelData(editor.model, TODO_FIXTURE);
+
+            editor.execute("setTaskState", { state: "bare" });
+            const title = readTooltipTitle(editor);
+            expect(title).toContain("<strong>bare</strong>");
+        });
+
+        it("uses the unknown-state suffix translation when the state has no definition", () => {
+            translate.mockClear();
+            editor.model.change((writer) => {
+                writer.setAttribute(TASK_STATE_ATTRIBUTE, "ghost", getBlock(editor, 0));
+            });
+            expect(translate).toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-label");
+            expect(translate).toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-unknown-suffix");
+            const title = readTooltipTitle(editor);
+            // The state name is inlined as text (no bold, no icon) followed by the translated suffix.
+            expect(title).toContain("ghost");
+            expect(title).not.toContain('data-trilium-task-state="ghost"');
+        });
+
+        it("omits the state prefix entirely for anchor states (unchecked / checked)", () => {
+            // Starting fixture has no taskState → anchor. Re-render explicitly and assert
+            // neither state-prefix key was consulted.
+            translate.mockClear();
+            editor.editing.view.forceRender();
+            expect(translate).not.toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-label");
+            expect(translate).not.toHaveBeenCalledWith("text-editor.checkbox-tooltip-state-unknown-suffix");
+        });
+
+        it("refreshes the tooltip when only the state changes (the checkbox itself is not recreated)", () => {
+            const input = editor.editing.view.getDomRoot()?.querySelector<HTMLInputElement>('.todo-list__label input[type="checkbox"]');
+            expect(input).not.toBeNull();
+            const originalTooltip = input ? Tooltip.getInstance(input) : null;
+            expect(originalTooltip).not.toBeNull();
+            const disposeSpy = originalTooltip ? vi.spyOn(originalTooltip, "dispose") : null;
+
+            // 'doing' has isCompleted=false; the native checkbox stays unchecked, so the
+            // itemMarker downcast does NOT recreate the input element. The tooltip must
+            // still refresh to pick up the new state prefix.
+            editor.execute("setTaskState", { state: "doing" });
+
+            if (input) {
+                expect(input.isConnected).toBe(true);
+                const refreshed = Tooltip.getInstance(input);
+                expect(refreshed).not.toBeNull();
+                expect(refreshed).not.toBe(originalTooltip);
+            }
+            if (disposeSpy) {
+                expect(disposeSpy).toHaveBeenCalled();
+            }
+        });
+
+        it("keeps the same tooltip instance when a render fires without any state change", () => {
+            const input = editor.editing.view.getDomRoot()?.querySelector<HTMLInputElement>('.todo-list__label input[type="checkbox"]');
+            expect(input).not.toBeNull();
+            const before = input ? Tooltip.getInstance(input) : null;
+            expect(before).not.toBeNull();
+
+            editor.editing.view.forceRender();
+
+            if (input) {
+                expect(Tooltip.getInstance(input)).toBe(before);
             }
         });
     });

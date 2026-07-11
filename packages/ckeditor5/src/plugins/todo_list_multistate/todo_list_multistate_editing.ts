@@ -30,8 +30,12 @@ export default class TodoListMultistateEditing extends Plugin {
         return [TodoList, ListEditing] as const;
     }
 
-    /** Checkboxes that currently have a tooltip attached, so stale ones can be disposed. */
-    private readonly _checkboxTooltips = new Set<HTMLInputElement>();
+    /**
+     * Checkboxes that currently have a tooltip attached, mapped to the task state
+     * baked into their tooltip title. Used to dispose stale tooltips on detached
+     * checkboxes AND to refresh a tooltip when its checkbox's state changes.
+     */
+    private readonly _checkboxTooltips = new Map<HTMLInputElement, string | null>();
 
     init() {
         const editor = this.editor;
@@ -102,20 +106,32 @@ export default class TodoListMultistateEditing extends Plugin {
             }
             // CKEditor recreates the checkbox element when a todo item reconverts
             // (e.g. on click); dispose tooltips left on the detached old checkboxes.
-            for (const input of this._checkboxTooltips) {
+            for (const input of this._checkboxTooltips.keys()) {
                 if (!input.isConnected) {
                     Tooltip.getInstance(input)?.dispose();
                     this._checkboxTooltips.delete(input);
                 }
             }
             for (const input of domRoot.querySelectorAll<HTMLInputElement>(".todo-list__label input[type=\"checkbox\"]")) {
-                if (!Tooltip.getInstance(input)) {
-                    const title = translate("text-editor.checkbox-tooltip", {
-                        shortcut: getEnvKeystrokeText("Ctrl+Shift+Enter")
-                    });
-                    new Tooltip(input, {title, customClass: "text-editor-content-tooltip"});
-                    this._checkboxTooltips.add(input);
+                const currentState = readTaskState(input);
+                // Skip if the tooltip is already up to date for this state.
+                if (Tooltip.getInstance(input) && this._checkboxTooltips.get(input) === currentState) {
+                    continue;
                 }
+                Tooltip.getInstance(input)?.dispose();
+                const title = buildTooltipTitle(input, currentState, stateByName, translate);
+                new Tooltip(input, {
+                    title,
+                    html: true,
+                    // Bootstrap's default sanitizer strips `data-*` attributes, which
+                    // the tooltip's state-icon span relies on to render the correct
+                    // colour/glyph. The HTML is built from translations we control
+                    // (with user values interpolated through i18next's default
+                    // escaping) so disabling the sanitizer is safe here.
+                    sanitize: false,
+                    customClass: "text-editor-content-tooltip"
+                });
+                this._checkboxTooltips.set(input, currentState);
             }
         });
 
@@ -186,13 +202,92 @@ export default class TodoListMultistateEditing extends Plugin {
     }
 
     override destroy() {
-        for (const input of this._checkboxTooltips) {
+        for (const input of this._checkboxTooltips.keys()) {
             Tooltip.getInstance(input)?.dispose();
         }
         this._checkboxTooltips.clear();
         super.destroy();
     }
 
+}
+
+type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
+
+/**
+ * The task state applied to the todo item that owns the given checkbox. Anchor
+ * states (`none`/`done`) never carry a `data-trilium-task-state`, so this
+ * returns `null` for them.
+ */
+function readTaskState(input: HTMLInputElement): string | null {
+    const li = input.closest<HTMLElement>("li[data-trilium-task-state]");
+    return li?.getAttribute("data-trilium-task-state") ?? null;
+}
+
+/**
+ * Build the checkbox tooltip HTML. The base body (right-click hint + keyboard
+ * shortcut) is always present. For a non-anchor state, a "Task state: …" line
+ * is prepended. The state-line HTML is assembled here via the DOM API rather
+ * than in the translation, so translations stay plain text.
+ *  - configured state → the state's own checkbox glyph + bold name;
+ *  - unknown state (attribute set but no matching definition) → the raw name
+ *    followed by a translated "(missing definition)" note.
+ */
+function buildTooltipTitle(
+    input: HTMLInputElement,
+    state: string | null,
+    stateByName: Map<string, TaskStateDef>,
+    translate: TranslateFn
+): string {
+    const body = translate("text-editor.checkbox-tooltip", {
+        shortcut: getEnvKeystrokeText("Ctrl+Shift+Enter")
+    }).replace(/\n/g, "<br>");
+    if (!state) {
+        return body;
+    }
+    const stateDef = stateByName.get(state);
+    const suffix = stateDef
+        ? buildKnownStateSuffixHtml(input.ownerDocument, state, stateDef.title || stateDef.name)
+        : buildUnknownStateSuffixHtml(
+            input.ownerDocument,
+            state,
+            translate("text-editor.checkbox-tooltip-state-unknown-suffix")
+        );
+    const label = translate("text-editor.checkbox-tooltip-state-label");
+    return `${label} ${suffix}<br><br>${body}`;
+}
+
+/**
+ * "<mini-checkbox> <strong>Name</strong>" — the icon and name flow inline
+ * after the "Task state:" label. Built via the DOM API so the state name
+ * is text-escaped by the browser rather than by hand.
+ */
+function buildKnownStateSuffixHtml(doc: Document, state: string, name: string): string {
+    const strong = doc.createElement("strong");
+    strong.textContent = name;
+    return `${buildStateIconElement(doc, state).outerHTML} ${strong.outerHTML}`;
+}
+
+/** "wontdo (missing definition)" — text-escaped via textContent. */
+function buildUnknownStateSuffixHtml(doc: Document, state: string, missingSuffix: string): string {
+    const span = doc.createElement("span");
+    span.textContent = `${state} ${missingSuffix}`;
+    return span.outerHTML;
+}
+
+/**
+ * A miniature checkbox glyph the tooltip can inline. `.tn-task-checkbox` provides
+ * the box + glyph rendering but needs an inline-block context (the class itself
+ * carries only width/height/position). The `.tn-task-checkbox-inline` wrapper
+ * gives it that slot so it renders correctly inside a text tooltip.
+ */
+function buildStateIconElement(doc: Document, state: string): HTMLSpanElement {
+    const wrapper = doc.createElement("span");
+    wrapper.className = "tn-task-checkbox-inline";
+    const inner = doc.createElement("span");
+    inner.className = "tn-task-checkbox";
+    inner.setAttribute("data-trilium-task-state", state);
+    wrapper.appendChild(inner);
+    return wrapper;
 }
 
 class SetTaskStateCommand extends Command {
