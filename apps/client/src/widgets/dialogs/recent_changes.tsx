@@ -1,5 +1,6 @@
 import { Dispatch, StateUpdater, useEffect, useState } from "preact/hooks";
 import appContext from "../../components/app_context";
+import dateNoteService from "../../services/date_notes";
 import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
@@ -149,22 +150,43 @@ function DeletedNoteLink({ change, setShown }: { change: RecentChangeRow, setSho
                 `data-note-deleted` tells the tooltip to resolve it via the deleted-content route. */}
             <span className="note-title" data-href={`#${change.noteId}?`} data-note-deleted>{change.current_title}</span>
             &nbsp;
-            {/* A note can only be restored if it still has a surviving (undeleted) parent to reattach to.
-                When it doesn't (its parent is itself deleted or erased) the undelete link is disabled. */}
-            ({change.canBeUndeleted
-                ? <a href="javascript:" onClick={() => undeleteNote(change, setShown)}>{t("recent_changes.undelete_link")}</a>
-                : <span className="undelete-disabled" title={t("recent_changes.cannot_undelete")}>{t("recent_changes.undelete_link")}</span>})
+            (<a href="javascript:" onClick={() => undeleteNote(change, setShown)}>{t("recent_changes.undelete_link")}</a>)
         </>
     );
 }
 
+/**
+ * Restores a deleted note. When its original parent is gone (deleted or erased) there is no location
+ * to put it back into, so — after telling the user — the note is restored into the default new-note
+ * location (the inbox) instead. On success the dialog closes and the restored note is opened.
+ */
 async function undeleteNote(change: RecentChangeRow, setShown: Dispatch<StateUpdater<boolean>>) {
-    if (!await dialog.confirm(t("recent_changes.confirm_undelete"))) {
+    const hasOriginalLocation = !!change.canBeUndeleted;
+
+    const confirmed = await dialog.confirm(hasOriginalLocation
+        ? t("recent_changes.confirm_undelete")
+        : t("recent_changes.confirm_undelete_to_default_location"));
+
+    if (!confirmed) {
         return;
     }
 
-    // The note may fail to restore if it was erased since the dialog opened, so act on the reported result.
-    const { undeleted } = await server.put<{ undeleted: boolean }>(`notes/${change.noteId}/undelete`);
+    let fallbackParentNoteId: string | undefined;
+
+    if (!hasOriginalLocation) {
+        const inboxNote = await dateNoteService.getInboxNote();
+
+        if (!inboxNote) {
+            toast.showError(t("recent_changes.undelete_failed"));
+            return;
+        }
+
+        fallbackParentNoteId = inboxNote.noteId;
+    }
+
+    // The note may still fail to restore if it was erased since the dialog opened, so act on the reported result.
+    const { undeleted } = await server.put<UndeleteResponse>(`notes/${change.noteId}/undelete`, { fallbackParentNoteId });
+
     if (!undeleted) {
         toast.showError(t("recent_changes.undelete_failed"));
         return;
@@ -173,6 +195,11 @@ async function undeleteNote(change: RecentChangeRow, setShown: Dispatch<StateUpd
     setShown(false);
     await ws.waitForMaxKnownEntityChangeId();
     appContext.tabManager.getActiveContext()?.setNote(change.noteId);
+}
+
+interface UndeleteResponse {
+    undeleted: boolean;
+    restoredToFallbackParent: boolean;
 }
 
 function groupByDate(rows: RecentChangeRow[]) {
