@@ -138,6 +138,23 @@ export default class TodoListMultistateEditing extends Plugin {
                 } else {
                     writer.removeClass("tn-unknown-task-state", element);
                 }
+
+                // Data pipeline only: emit a native `title` tooltip so viewers of
+                // the shared page, the read-only preview, and exported HTML see
+                // the state's human name when they hover the task item. Skipped
+                // for anchor states (`none`/`done` — no explanation needed) and
+                // for unknown states (no definition to name). We intentionally
+                // do NOT set `title` in the editing pipeline: CKEditor's own
+                // hover would then race the plugin's Bootstrap tooltip.
+                const stateDef = typeof value === "string" && !isAnchorState(value)
+                    ? stateByName.get(value)
+                    : undefined;
+                const title = stateDef?.title || stateDef?.name;
+                if (title && options?.dataPipeline) {
+                    writer.setAttribute("title", title, element);
+                } else {
+                    writer.removeAttribute("title", element);
+                }
             }
         });
 
