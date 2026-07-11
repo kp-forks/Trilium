@@ -429,6 +429,7 @@
     "undelete_link": "undelete",
     "confirm_undelete": "Do you want to undelete this note and its sub-notes?",
     "confirm_undelete_to_default_location": "The parent of this note no longer exists, so it can't be restored to its original location. Restore it to the default location for new notes instead?",
+    "undeleted_to_default_location": "Its original location no longer exists, so the note was restored to \"{{- title}}\".",
     "undelete_failed": "The note could not be restored — it may have been permanently erased."
   },
   "revisions": {

@@ -17,8 +17,17 @@ const SECONDS_PER_DAY = 86400;
  * raw seconds, so it always matches what the settings page shows. A fuzzy humanizer would instead
  * collapse distinct windows (both 30 and 45 days become "a month") — misleading for a setting that
  * governs when data is destroyed.
+ *
+ * @returns `null` when the duration is unknown. Options load asynchronously, so `useTriliumOptionInt`
+ *          yields `NaN` until the fetch resolves; returning `null` (rather than a string) makes callers
+ *          drop the whole phrase instead of rendering "NaN days" — or an empty gap — inside a sentence.
  */
-export function formatDuration(seconds: number, timeScale: number) {
+export function formatDuration(seconds: number, timeScale: number): string | null {
+    if (!Number.isFinite(seconds) || seconds < 0) {
+        return null;
+    }
+
+    // A NaN/absent scale fails this comparison and falls back to days.
     const scale = timeScale > 0 ? timeScale : SECONDS_PER_DAY;
     const count = Math.round(seconds / scale);
 

@@ -1,5 +1,6 @@
 import { Dispatch, StateUpdater, useEffect, useState } from "preact/hooks";
 import appContext from "../../components/app_context";
+import type FNote from "../../entities/fnote";
 import dateNoteService from "../../services/date_notes";
 import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
@@ -48,9 +49,24 @@ export default function RecentChangesDialog() {
             return;
         }
 
-        froca.getNote(ancestorNoteId, true).then((note) => setAncestorTitle(note?.title));
+        // Reopening the dialog for another subtree while this lookup is in flight would otherwise let
+        // the stale title win, so ignore a resolution that arrives after the ancestor changed.
+        let active = true;
+
+        froca.getNote(ancestorNoteId, true).then((note) => {
+            if (active) {
+                setAncestorTitle(note?.title);
+            }
+        });
+
+        return () => {
+            active = false;
+        };
     }, [ ancestorNoteId ]);
 
+    // `ancestorNoteId` is a dependency: the dialog can already be open when it is re-triggered for a
+    // different subtree (e.g. from the tree context menu), and without it the list would keep showing
+    // the previous ancestor's results under the newly updated heading.
     useEffect(() => {
         if (!ancestorNoteId) return;
         server.get<RecentChangeRow[]>(`recent-changes/${ancestorNoteId}?deletedOnly=${deletedOnly}`)
@@ -64,9 +80,12 @@ export default function RecentChangesDialog() {
                 const groupedByDate = groupByDate(recentChanges);
                 setGroupedByDate(groupedByDate);
             });
-    }, [ shown, refreshCounter, deletedOnly ])
+    }, [ shown, refreshCounter, deletedOnly, ancestorNoteId ])
 
     const baseTitle = deletedOnly ? t("recent_changes.deleted_notes_title") : t("recent_changes.title");
+    // Null until the options have loaded, in which case the retention hint is omitted rather than
+    // stating an unknown window.
+    const erasePeriod = formatDuration(eraseAfterSeconds, eraseTimeScale);
 
     return (
         <Modal
@@ -110,7 +129,7 @@ export default function RecentChangesDialog() {
                     ? <RecentChangesTimeline groupedByDate={groupedByDate} setShown={setShown} />
                     : deletedOnly
                         ? <NoItems icon="bx bx-trash-alt" text={t("recent_changes.no_deleted_notes_message")}>
-                            <small>{t("recent_changes.no_deleted_notes_erasure_hint", { duration: formatDuration(eraseAfterSeconds, eraseTimeScale) })}</small>
+                            {erasePeriod && <small>{t("recent_changes.no_deleted_notes_erasure_hint", { duration: erasePeriod })}</small>}
                         </NoItems>
                         : <NoItems icon="bx bx-history" text={t("recent_changes.no_changes_message")} />}
             </div>
@@ -194,25 +213,32 @@ async function undeleteNote(change: RecentChangeRow, setShown: Dispatch<StateUpd
         return;
     }
 
-    let fallbackParentNoteId: string | undefined;
+    let fallbackParent: FNote | null = null;
 
     if (!hasOriginalLocation) {
-        const inboxNote = await dateNoteService.getInboxNote();
+        fallbackParent = await dateNoteService.getInboxNote();
 
-        if (!inboxNote) {
+        if (!fallbackParent) {
             toast.showError(t("recent_changes.undelete_failed"));
             return;
         }
-
-        fallbackParentNoteId = inboxNote.noteId;
     }
 
     // The note may still fail to restore if it was erased since the dialog opened, so act on the reported result.
-    const { undeleted } = await server.put<UndeleteResponse>(`notes/${change.noteId}/undelete`, { fallbackParentNoteId });
+    const { undeleted, restoredToFallbackParent } = await server.put<UndeleteResponse>(
+        `notes/${change.noteId}/undelete`,
+        { fallbackParentNoteId: fallbackParent?.noteId }
+    );
 
     if (!undeleted) {
         toast.showError(t("recent_changes.undelete_failed"));
         return;
+    }
+
+    if (restoredToFallbackParent && fallbackParent) {
+        // The note could not go back where it was, so name where it actually landed — the user only
+        // saw a prompt about the fallback, never a confirmation of it.
+        toast.showMessage(t("recent_changes.undeleted_to_default_location", { title: fallbackParent.title }));
     }
 
     setShown(false);

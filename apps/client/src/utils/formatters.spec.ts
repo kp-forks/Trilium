@@ -118,6 +118,18 @@ describe("formatters", () => {
         it("falls back to days when the scale is missing or unusable", () => {
             expect(formatDuration(604800, 0)).toBe("time_interval.days|7");
             expect(formatDuration(604800, -1)).toBe("time_interval.days|7");
+            // useTriliumOptionInt yields NaN for an option that hasn't loaded; the scale still degrades
+            // to days rather than producing a NaN count.
+            expect(formatDuration(604800, NaN)).toBe("time_interval.days|7");
+        });
+
+        it("returns null when the duration itself is unknown, so callers omit the phrase", () => {
+            // Options load asynchronously, so useTriliumOptionInt yields NaN until the fetch resolves.
+            // Returning null keeps "NaN days" (or a gap mid-sentence) out of the UI.
+            expect(formatDuration(NaN, 86400)).toBeNull();
+            expect(formatDuration(undefined as unknown as number, 86400)).toBeNull();
+            expect(formatDuration(Infinity, 86400)).toBeNull();
+            expect(formatDuration(-1, 86400)).toBeNull();
         });
 
         it("reports an unrecognized scale in days derived from the raw seconds", () => {
