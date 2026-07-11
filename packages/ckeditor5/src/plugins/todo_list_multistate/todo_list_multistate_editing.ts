@@ -253,7 +253,9 @@ function buildTooltipTitle(
             translate("text-editor.checkbox-tooltip-state-unknown-suffix")
         );
     const label = translate("text-editor.checkbox-tooltip-state-label");
-    return `${label} ${suffix}<br><br>${body}`;
+    // The status line is a block-level <div> so it forces a line break before
+    // the body and the CSS `margin-bottom: 8px` cleanly separates the two.
+    return `<div class="tn-task-tooltip-state">${label} ${suffix}</div>${body}`;
 }
 
 /**

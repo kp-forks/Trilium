@@ -2936,6 +2936,14 @@ iframe.print-iframe {
     transform: translateY(-0.05em);
 }
 
+/* Status line block above the checkbox tooltip's body. The 8px bottom margin
+   separates it from the "Right click…" hint when the line is present; when
+   the state is an anchor (unchecked/checked) the line is omitted entirely,
+   so no spacing is added. */
+.tn-task-tooltip-state {
+    margin-bottom: 8px;
+}
+
 /* Prevent variables from bleeding into nested items */
 .ck-content .todo-list .todo-list {
     --task-state-glyph: initial;
