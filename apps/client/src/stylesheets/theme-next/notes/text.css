@@ -620,7 +620,7 @@ button.ck.ck-button:is(.ck-button-action, .ck-button-save, .ck-button-cancel).ck
     outline: none;
 
     &:before {
-        outline: 2px solid var(--task-checkbox-unknown-state-outline-color);
+        outline: 2px solid var(--task-checkbox-unknown-state-color);
     }
 }
 
