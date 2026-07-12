@@ -616,11 +616,11 @@ export function createImageSrcUrl(note: FNote) {
  * @param svgContent the content of the SVG file to download.
  */
 function downloadSvg(nameWithoutExtension: string, svgContent: string) {
-    const blob = new Blob([ svgContent ], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    triggerDownload(`${nameWithoutExtension}.svg`, url);
-    // Defer revocation so the in-flight download isn't cancelled (as downloadImage in image.ts).
-    setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    // The download MUST go through a data: URL, not a blob URL: export runs after awaits have
+    // consumed the transient user-activation, and a blob-URL anchor click without activation is
+    // silently blocked (same constraint documented in spreadsheet/export.tsx `download()`).
+    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`;
+    triggerDownload(`${nameWithoutExtension}.svg`, dataUrl);
 }
 
 /**

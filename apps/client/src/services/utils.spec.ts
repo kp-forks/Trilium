@@ -683,15 +683,16 @@ describe("SVG downloads (default export)", () => {
         return blobs;
     }
 
-    it("downloadSvg downloads the SVG string as a blob URL", async () => {
+    it("downloadSvg downloads the SVG string as a data URL (a blob-URL anchor click after " +
+        "the export's awaits is silently blocked without user activation)", () => {
         const downloads = captureDownload();
-        const blobs = captureObjectUrls();
         utils.downloadSvg("diagram", `<svg><text>a & b</text></svg>`);
 
-        expect(downloads).toEqual([ { name: "diagram.svg", href: "blob:mock-1" } ]);
-        expect(blobs).toHaveLength(1);
-        expect(blobs[0].type).toContain("image/svg+xml");
-        expect(await blobs[0].text()).toBe(`<svg><text>a & b</text></svg>`);
+        expect(downloads).toHaveLength(1);
+        expect(downloads[0].name).toBe("diagram.svg");
+        const href = downloads[0].href ?? "";
+        expect(href.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
+        expect(decodeURIComponent(href.split(",")[1])).toBe(`<svg><text>a & b</text></svg>`);
     });
 
     it("downloadSvgAsPng rasterizes at the given scale and downloads a PNG", async () => {
