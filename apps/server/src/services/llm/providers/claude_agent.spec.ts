@@ -10,7 +10,10 @@ vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
 
 vi.mock("@triliumnext/core", () => ({
     getLog: () => ({ info: vi.fn(), error: vi.fn() }),
-    options: { getOptionOrNull: getOptionOrNullMock }
+    options: { getOptionOrNull: getOptionOrNullMock },
+    // buildSystemPrompt (reached via composeSystemPrompt) reads the workspace
+    // task states; no custom states in this unit test.
+    task_states: { getTaskStates: () => [] }
 }));
 
 vi.mock("../../data_dir.js", async () => {
@@ -207,6 +210,20 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(options.settingSources).toEqual([]);
     });
 
+    it("uses Trilium's shared system prompt (skill/link/markdown guidance) when note tools are live", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableNoteTools: true }));
+
+        const systemPrompt = queryMock.mock.calls[0][0].options.systemPrompt;
+        // Parity with the AI-SDK providers: the shared buildSystemPrompt content.
+        expect(systemPrompt).toContain("load_skill");
+        expect(systemPrompt).toContain("wiki-link format [[noteId]]");
+        expect(systemPrompt).toContain("Mermaid diagrams");
+        // Note tools ARE live, so no "turned off" degradation notice.
+        expect(systemPrompt).not.toContain("MCP server is turned off");
+    });
+
     it("isolates the agent cwd from enclosing projects with a .git marker", async () => {
         scriptAgent([successResult()]);
         const provider = new ClaudeAgentProvider();
@@ -232,6 +249,9 @@ describe("ClaudeAgentProvider.chatChunks", () => {
 
         const options = queryMock.mock.calls[0][0].options;
         expect(options.systemPrompt).toContain("MCP server is turned off");
+        // The prompt must not promise note tools that aren't actually wired.
+        expect(options.systemPrompt).not.toContain("load_skill");
+        expect(options.systemPrompt).toContain("do not have access to the user's notes");
     });
 
     it("omits MCP wiring when the MCP server is disabled, and enables web search on request", async () => {

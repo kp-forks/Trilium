@@ -26,6 +26,7 @@ import dataDirs from "../../data_dir.js";
 import port from "../../port.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { buildModelList } from "./base_provider.js";
+import { buildSystemPrompt } from "./system_prompt.js";
 
 /**
  * Models offered under a Claude subscription. Pricing is zero because usage is
@@ -143,6 +144,7 @@ export class ClaudeAgentProvider implements LlmProvider {
                 prompt,
                 options: {
                     ...this.buildBaseOptions(config),
+                    systemPrompt: this.composeSystemPrompt(messages, config),
                     model,
                     resume,
                     includePartialMessages: true,
@@ -284,6 +286,7 @@ export class ClaudeAgentProvider implements LlmProvider {
                 prompt: `Generate a short title (at most 5 words) summarizing this chat message. Reply with only the title, no quotes or punctuation around it:\n\n${firstMessage.substring(0, 500)}`,
                 options: {
                     ...this.buildBaseOptions({ enableNoteTools: false }),
+                    systemPrompt: "You generate short, descriptive titles. Reply with only the title text — no quotes, no punctuation around it.",
                     model: TITLE_MODEL,
                     maxTurns: 1,
                     persistSession: false
@@ -301,16 +304,39 @@ export class ClaudeAgentProvider implements LlmProvider {
         return "";
     }
 
+    /**
+     * Build the same Trilium system prompt the AI-SDK providers use (skill
+     * guidance, [[noteId]] links, Markdown-rendering capabilities), reflecting
+     * this path's *actual* tool availability.
+     */
+    private composeSystemPrompt(messages: LlmMessage[], config: LlmProviderConfig): string {
+        const noteToolsAvailable = areNoteToolsAvailable(config);
+
+        // The shared prompt promises note tools whenever `enableNoteTools` is
+        // set — but on this path they only exist if MCP is also on, so gate on
+        // the effective availability. `contextNoteId` is cleared because this
+        // provider does not yet inject the current-note metadata (the API
+        // providers do, via applyNoteHint); leaving it set would make the
+        // "you can see the current note's metadata above" notice a lie.
+        const promptConfig: LlmProviderConfig = { ...config, enableNoteTools: noteToolsAvailable, contextNoteId: undefined };
+        let systemPrompt = buildSystemPrompt(messages, promptConfig) ?? "";
+
+        // Note tools were requested but unavailable — tell the model why so it
+        // explains the fix instead of guessing at its lack of note access.
+        if (config.enableNoteTools !== false && !noteToolsAvailable) {
+            systemPrompt += "\n\nNote tools are currently unavailable because Trilium's MCP server is turned off. If the user asks about their notes, tell them to enable the MCP server in Options → AI / LLM and start a new message.";
+        }
+
+        return systemPrompt;
+    }
+
     /** Options shared by every agent invocation, independent of the turn. */
-    private buildBaseOptions(config: Pick<LlmProviderConfig, "enableNoteTools" | "enableWebSearch" | "systemPrompt">): AgentOptions {
+    private buildBaseOptions(config: Pick<LlmProviderConfig, "enableNoteTools" | "enableWebSearch">): AgentOptions {
         // Built-in Claude Code tools (file access, bash, …) stay disabled — the
         // agent runs on the server host and must only ever touch notes. Web
         // search is the one opt-in exception.
         const builtinTools = config.enableWebSearch ? ["WebSearch", "WebFetch"] : [];
         const allowedTools = [...builtinTools];
-
-        let systemPrompt = config.systemPrompt
-            || "You are an AI assistant integrated into Trilium Notes, a hierarchical note-taking application. Help the user with their notes: answer questions, find and summarize information, and use the available note tools when they are relevant. Be concise and helpful.";
 
         const options: AgentOptions = {
             cwd: getAgentCwd(),
@@ -320,30 +346,32 @@ export class ClaudeAgentProvider implements LlmProvider {
             permissionMode: "dontAsk"
         };
 
-        if (config.enableNoteTools !== false) {
-            if (optionService.getOptionOrNull("mcpEnabled") === "true") {
-                options.mcpServers = {
-                    trilium: {
-                        type: "http",
-                        url: `http://127.0.0.1:${port}/mcp`,
-                        alwaysLoad: true
-                    }
-                };
-                // Bare server prefix auto-allows every tool from that server.
-                allowedTools.push("mcp__trilium");
-            } else {
-                getLog().info("Claude Agent provider: note tools requested but the MCP server is disabled — enable it in Options → AI / LLM to let the agent access notes.");
-                // Let the model explain the misconfiguration instead of
-                // guessing at why it cannot see any notes.
-                systemPrompt += "\n\nNote tools are currently unavailable because Trilium's MCP server is turned off. If the user asks about their notes, tell them to enable the MCP server in Options → AI / LLM and start a new message.";
-            }
+        if (areNoteToolsAvailable(config)) {
+            options.mcpServers = {
+                trilium: {
+                    type: "http",
+                    url: `http://127.0.0.1:${port}/mcp`,
+                    alwaysLoad: true
+                }
+            };
+            // Bare server prefix auto-allows every tool from that server.
+            allowedTools.push("mcp__trilium");
+        } else if (config.enableNoteTools !== false) {
+            getLog().info("Claude Agent provider: note tools requested but the MCP server is disabled — enable it in Options → AI / LLM to let the agent access notes.");
         }
-
-        options.systemPrompt = systemPrompt;
 
         options.allowedTools = allowedTools;
         return options;
     }
+}
+
+/**
+ * Note tools are available on this path only when the chat requested them AND
+ * Trilium's MCP server (which exposes them) is enabled. Both the tool wiring
+ * and the system prompt gate on this so they never disagree.
+ */
+function areNoteToolsAvailable(config: Pick<LlmProviderConfig, "enableNoteTools">): boolean {
+    return config.enableNoteTools !== false && optionService.getOptionOrNull("mcpEnabled") === "true";
 }
 
 /**
