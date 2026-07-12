@@ -143,13 +143,12 @@ export default function MindMap({ note, ntxId, noteContext }: TypeWidgetProps) {
     // Export as PNG or SVG.
     useTriliumEvents([ "exportSvg", "exportPng" ], async ({ ntxId: eventNtxId }, eventName) => {
         if (eventNtxId !== ntxId || !apiRef.current) return;
-        const nodes = apiRef.current.nodes;
+        const svg = await renderMindMapPreviewSvg(apiRef.current);
         if (eventName === "exportSvg") {
-            await utils.downloadAsSvg(note.title, nodes);
+            utils.downloadSvg(note.title, svg);
         } else {
-            await utils.downloadAsPng(note.title, nodes);
+            await utils.downloadSvgAsPng(note.title, svg);
         }
-
     });
 
     const onKeyDown = useCallback((e: KeyboardEvent) => {
