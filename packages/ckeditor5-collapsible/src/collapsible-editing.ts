@@ -1,23 +1,23 @@
 import { Plugin, Enter, Delete, enableViewPlaceholder, getEnvKeystrokeText, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
-import { EditorTooltipManager, type TooltipHandle } from "@triliumnext/ckeditor5-utils";
+import { ContentHintManager, type HintHandle } from "@triliumnext/ckeditor5-utils";
 import BlockDragHandle from "./block-drag-handle.js";
 import CollapsibleCommand from "./collapsible-command.js";
 
 type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 
 /**
- * Dwell delay before hover or a stationary caret pops a summary/handle tooltip.
+ * Dwell delay before hover or a stationary caret pops a summary/handle hint.
  * Long enough that mouse flyovers don't spawn a popup, short enough that
  * intentional attention still produces one.
  */
-const TOOLTIP_DWELL_MS = 200;
+const HINT_DWELL_MS = 200;
 
 /**
- * How long a tooltip stays visible without any new event (push, content
- * refresh, caret movement) before it fades itself out. Matches the todo-list
- * multistate plugin's cadence so the two feel consistent.
+ * How long a hint stays visible without any new event (push, content refresh,
+ * caret movement) before it fades itself out. Matches the todo-list multistate
+ * plugin's cadence so the two feel consistent.
  */
-const TOOLTIP_AUTO_HIDE_MS = 2000;
+const HINT_AUTO_HIDE_MS = 2000;
 
 /**
  * Schema, conversion and key handling for collapsible blocks.
@@ -52,26 +52,26 @@ export default class CollapsibleEditing extends Plugin {
      */
     private readonly preserveOpenOnNextInsert = new Map<any, boolean>();
     /**
-     * Shared visibility stack for the summary tooltips (screen-corner hint on
+     * Shared visibility stack for the summary hints (screen-corner popup on
      * each <summary>). One hover handle per rendered summary plus one caret
      * handle push/pop against it — only the top of the stack is on screen at a
-     * time. See {@link EditorTooltipManager} for the rationale.
+     * time. See {@link ContentHintManager} for the rationale.
      */
-    private summaryTooltipManager?: EditorTooltipManager;
+    private summaryHintManager?: ContentHintManager;
     /** Hover-driven handle per rendered <summary>. Disposed when the summary detaches. */
-    private readonly summaryHoverHandles = new Map<HTMLElement, TooltipHandle>();
+    private readonly summaryHoverHandles = new Map<HTMLElement, HintHandle>();
     /** Caret-driven handle, if the caret is currently inside a <summary>. */
-    private summaryCaretHandle?: TooltipHandle;
+    private summaryCaretHandle?: HintHandle;
     /** DOM <summary> the caret handle is currently attached to. */
     private summaryCaretDom?: HTMLElement;
     /**
-     * Shared visibility stack for the drag-handle tooltips. Handles use default
-     * near-element placement (no `text-editor-content-tooltip` class), so they
-     * live in their own manager with its own `tooltipOptions`.
+     * Shared visibility stack for the drag-handle hints. Drag handles use
+     * default near-element placement (no `text-editor-content-tooltip` class),
+     * so they live in their own manager with plain `tooltipOptions`.
      */
-    private handleTooltipManager?: EditorTooltipManager;
+    private handleHintManager?: ContentHintManager;
     /** Hover-driven handle per rendered drag-handle. Disposed when the handle detaches. */
-    private readonly handleHoverHandles = new Map<HTMLElement, TooltipHandle>();
+    private readonly handleHoverHandles = new Map<HTMLElement, HintHandle>();
 
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
@@ -105,8 +105,8 @@ export default class CollapsibleEditing extends Plugin {
         this.registerDomListeners();
         this.registerAutoOpenNewDetails();
         this.registerPostFixers();
-        this.registerSummaryTooltips();
-        this.registerHandleTooltips();
+        this.registerSummaryHints();
+        this.registerHandleHints();
     }
 
     public override destroy(): void {
@@ -129,14 +129,14 @@ export default class CollapsibleEditing extends Plugin {
         this.summaryCaretHandle?.dispose();
         this.summaryCaretHandle = undefined;
         this.summaryCaretDom = undefined;
-        this.summaryTooltipManager?.destroy();
-        this.summaryTooltipManager = undefined;
+        this.summaryHintManager?.destroy();
+        this.summaryHintManager = undefined;
         for (const handle of this.handleHoverHandles.values()) {
             handle.dispose();
         }
         this.handleHoverHandles.clear();
-        this.handleTooltipManager?.destroy();
-        this.handleTooltipManager = undefined;
+        this.handleHintManager?.destroy();
+        this.handleHintManager = undefined;
         this.dragHandle?.cancel();
         this.preserveOpenOnNextInsert.clear();
         super.destroy();
@@ -825,27 +825,27 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     // -----------------------------------------------------------------
-    // Summary tooltip (screen-corner hint) — driven by EditorTooltipManager
+    // Summary hint (screen-corner popup) — driven by ContentHintManager
     // -----------------------------------------------------------------
 
     /**
-     * Attach a manager-mediated hover tooltip to every <summary> DOM element,
+     * Attach a manager-mediated hover hint to every <summary> DOM element,
      * plus a caret-driven handle that follows the model selection into and
      * out of summaries. Hover on the summary the caret currently owns is a
      * no-op (same coordination rule as the todo-list multistate plugin), so
      * the two flows can never race the same popup.
      */
-    private registerSummaryTooltips() {
+    private registerSummaryHints() {
         const editor = this.editor;
         const t = this.translate();
         const title = t("text-editor.collapsible-tooltip", {
             shortcut: getEnvKeystrokeText("Ctrl+Enter")
         });
-        const manager = new EditorTooltipManager({
+        const manager = new ContentHintManager({
             tooltipOptions: { customClass: "text-editor-content-tooltip" },
-            autoHideAfterMs: TOOLTIP_AUTO_HIDE_MS
+            autoHideAfterMs: HINT_AUTO_HIDE_MS
         });
-        this.summaryTooltipManager = manager;
+        this.summaryHintManager = manager;
 
         this.listenTo(editor.editing.view, "render", () => {
             // Reap handles whose <summary> CKEditor has detached.
@@ -873,7 +873,7 @@ export default class CollapsibleEditing extends Plugin {
                     const ownedByCaret = () => this.summaryCaretDom === summary;
                     summary.addEventListener("mouseenter", () => {
                         if (ownedByCaret()) return;
-                        handle.showAfter(TOOLTIP_DWELL_MS);
+                        handle.showAfter(HINT_DWELL_MS);
                     });
                     summary.addEventListener("mouseleave", () => {
                         if (ownedByCaret()) return;
@@ -884,7 +884,7 @@ export default class CollapsibleEditing extends Plugin {
         });
 
         // The caret moving into a <summary> doesn't fire DOM focus (the editable
-        // root keeps focus), so a hover-only tooltip would miss keyboard-into-summary
+        // root keeps focus), so a hover-only hint would miss keyboard-into-summary
         // navigation. Push a caret handle on selection changes to cover it.
         this.listenTo(editor.model.document.selection, "change:range", () => {
             const summaryModel = editor.model.document.selection.getFirstPosition()?.findAncestor("summary");
@@ -906,18 +906,18 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     /**
-     * Attach a manager-mediated hover tooltip to each drag handle. Handles
+     * Attach a manager-mediated hover hint to each drag handle. Drag handles
      * use default near-element Bootstrap placement (no screen-corner CSS),
      * so they live in their own manager with plain `tooltipOptions`.
      */
-    private registerHandleTooltips() {
+    private registerHandleHints() {
         const editor = this.editor;
         const t = this.translate();
         const title = t("text-editor.collapsible-handle-tooltip");
-        const manager = new EditorTooltipManager({
-            autoHideAfterMs: TOOLTIP_AUTO_HIDE_MS
+        const manager = new ContentHintManager({
+            autoHideAfterMs: HINT_AUTO_HIDE_MS
         });
-        this.handleTooltipManager = manager;
+        this.handleHintManager = manager;
 
         this.listenTo(editor.editing.view, "render", () => {
             for (const [dragHandle, handle] of this.handleHoverHandles) {
@@ -932,7 +932,7 @@ export default class CollapsibleEditing extends Plugin {
                     if (this.handleHoverHandles.has(dragHandle)) continue;
                     const handle = manager.createHandle(dragHandle, title);
                     this.handleHoverHandles.set(dragHandle, handle);
-                    dragHandle.addEventListener("mouseenter", () => handle.showAfter(TOOLTIP_DWELL_MS));
+                    dragHandle.addEventListener("mouseenter", () => handle.showAfter(HINT_DWELL_MS));
                     dragHandle.addEventListener("mouseleave", () => handle.hide());
                 }
             });

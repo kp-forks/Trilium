@@ -1,1 +1,1 @@
-export { EditorTooltipManager, type EditorTooltipManagerOptions, type TooltipHandle } from "./editor_tooltip_manager.js";
+export { ContentHintManager, type ContentHintManagerOptions, type HintHandle } from "./content_hint_manager.js";
