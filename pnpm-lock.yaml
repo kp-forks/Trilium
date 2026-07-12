@@ -192,8 +192,8 @@ importers:
         specifier: 0.28.20
         version: 0.28.20(typescript@6.0.3)
       typedoc-plugin-missing-exports:
-        specifier: 4.1.3
-        version: 4.1.3(typedoc@0.28.20(typescript@6.0.3))
+        specifier: 4.1.4
+        version: 4.1.4(typedoc@0.28.20(typescript@6.0.3))
 
   apps/client:
     dependencies:
@@ -12971,8 +12971,8 @@ packages:
   typedarray@0.0.6:
     resolution: {integrity: sha512-/aCDEGatGvZ2BIk+HmLf4ifCJFwvKFNb9/JeZPMulfgFracn9QFcAf5GO8B/mweUjSoblS5In0cWhqpfs/5PQA==}
 
-  typedoc-plugin-missing-exports@4.1.3:
-    resolution: {integrity: sha512-tgrlnwzXbqMP2/3BaZk0atddPsD7UnpCoeQ0cUCtk624gODT1bLYOLBEJLXQyVmbnP8HZCMhHpRiR+rxSdZqhg==}
+  typedoc-plugin-missing-exports@4.1.4:
+    resolution: {integrity: sha512-tIay6z6MRb/4+mfWgKNPR6qEM5rz9S8rTiz0JWmSb/66A6AlZIl9q+1lAFygj4n8GHH1fsqKYQNt9JbNcuE0Uw==}
     peerDependencies:
       typedoc: ^0.28.1
 
@@ -28142,7 +28142,7 @@ snapshots:
 
   typedarray@0.0.6: {}
 
-  typedoc-plugin-missing-exports@4.1.3(typedoc@0.28.20(typescript@6.0.3)):
+  typedoc-plugin-missing-exports@4.1.4(typedoc@0.28.20(typescript@6.0.3)):
     dependencies:
       typedoc: 0.28.20(typescript@6.0.3)
 
