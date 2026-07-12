@@ -141,6 +141,15 @@ export class ContentHintManager {
     private _stack: StackEntry[] = [];
     private _currentElement: HTMLElement | null = null;
     private _currentTooltip: Tooltip | null = null;
+    /**
+     * The content the current tooltip was last rendered with. Used to skip
+     * Bootstrap's `setContent` when the top-of-stack push is a no-op — that
+     * call disposes the popper and re-runs `show()`, which redraws the popup
+     * and restarts its fade-in (~150-300 ms of visible glitch). Idempotent
+     * pushes on the same element with the same content are effectively
+     * free.
+     */
+    private _currentContent: string | null = null;
     private readonly _baseOptions: Partial<Tooltip.Options>;
     private readonly _autoHideAfterMs: number | null;
     private _autoHideTimer: ReturnType<typeof setTimeout> | null = null;
@@ -232,6 +241,7 @@ export class ContentHintManager {
         }
         this._currentTooltip = null;
         this._currentElement = null;
+        this._currentContent = null;
         this._stack.length = 0;
     }
 
@@ -286,9 +296,13 @@ export class ContentHintManager {
         const top: StackEntry | undefined = this._stack[this._stack.length - 1];
         const targetElement = top?.element ?? null;
 
-        // Same element on top → just refresh content on the existing popup.
-        // Bootstrap's `setContent` avoids a dispose+recreate that would fade
-        // the popup out and back in for a mere content change.
+        // Same element on top → refresh content on the existing popup, but
+        // ONLY if content actually changed. Bootstrap's `setContent` does a
+        // full `_disposePopper()` + `show()` internally, which redraws the
+        // tip and restarts the fade-in transition (~150-300 ms of visible
+        // glitch). Skipping when content is unchanged makes idempotent
+        // pushes (e.g. hover + caret driving the same handle with the same
+        // title) free.
         if (this._currentElement === targetElement) {
             /* v8 ignore next -- if we're in this branch, either both are the
                same non-null element (then `_currentTooltip` is truthy and `top`
@@ -296,7 +310,10 @@ export class ContentHintManager {
                on an already-empty state, which no live code path does — pushes
                always precede a same-element render). */
             if (this._currentTooltip && top) {
-                this._currentTooltip.setContent({ ".tooltip-inner": top.content });
+                if (top.content !== this._currentContent) {
+                    this._currentTooltip.setContent({ ".tooltip-inner": top.content });
+                    this._currentContent = top.content;
+                }
                 if (wasFading) {
                     // We interrupted a fade-out — Bootstrap already removed the
                     // `show` class, so call `show()` again to restore visibility.
@@ -314,6 +331,7 @@ export class ContentHintManager {
             this._currentTooltip = null;
         }
         this._currentElement = targetElement;
+        this._currentContent = top?.content ?? null;
 
         if (top) {
             this._currentTooltip = new Tooltip(top.element, {
@@ -405,6 +423,7 @@ export class ContentHintManager {
                 tooltip.dispose();
                 this._currentTooltip = null;
                 this._currentElement = null;
+                this._currentContent = null;
             }
         };
         this._pendingHideCleanup = () => {
