@@ -20,10 +20,23 @@ export function preloadFor(environment: MediaEnvironment): "auto" | "metadata" {
 }
 
 /**
- * Classes for a player's root element. A preview sits inside a clickable host (a collection card is itself a
- * link), so it opts out of link navigation — otherwise pressing play, seeking or opening the speed dropdown
- * would also open the note. See `no-link-navigation` in services/link.ts.
+ * Classes for a player's root element:
+ * - `media-compact` styles the compact chrome, keeping {@link usesCompactControls} the one thing that decides
+ *   who wears it (the markup and the stylesheet both follow from it).
+ * - `no-link-navigation` is only for a preview, which sits inside a clickable host (a collection card is itself
+ *   a link): without it, pressing play or seeking would also open the note. See services/link.ts.
  */
 export function playerRootClasses(environment: MediaEnvironment): string {
-    return `media-env-${environment}${environment === "preview" ? " no-link-navigation" : ""}`;
+    const classes = [ `media-env-${environment}` ];
+    if (usesCompactControls(environment)) classes.push("media-compact");
+    if (environment === "preview") classes.push("no-link-navigation");
+    return classes.join(" ");
+}
+
+/**
+ * Whether the player wears its compact chrome: only the note detail has room for the full control set, so
+ * everywhere else keeps just what a small host needs — play, seek, volume — and drops the rest.
+ */
+export function usesCompactControls(environment: MediaEnvironment): boolean {
+    return environment !== "standalone";
 }

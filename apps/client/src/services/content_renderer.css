@@ -31,6 +31,12 @@
     min-height: 120px;
 }
 
+/* A media player fills the height its host provides — a dashboard tile is resized freely, so the player has
+   to follow it. In a content-sized host (a list row) this resolves to auto, leaving the floor below to apply. */
+.rendered-content:has(.rendered-media) {
+    height: 100%;
+}
+
 /* The mounted media player (placeholder or full) takes the space its host gives it, above the file footer,
    down to a floor that keeps it usable in a short host such as a collection tile. */
 .rendered-content .rendered-media {

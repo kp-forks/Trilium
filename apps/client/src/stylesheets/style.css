@@ -1341,6 +1341,17 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     height: 10em;
 }
 
+/* The small box has room for the compact audio player's visualizer band (which carries a floor of its own) or
+   for its controls row and the file footer below it — not for all three. Drop the band, and release the floor
+   so the box shrinks to what is left instead of overflowing onto the Download / Open buttons. */
+.include-note[data-box-size="small"] .include-note-content.type-audio .audio-preview-visualization-wrapper {
+    display: none;
+}
+
+.include-note[data-box-size="small"] .include-note-content.type-audio .rendered-media {
+    min-height: 0;
+}
+
 .include-note[data-box-size="medium"] .include-note-content {
     max-height: 20em;
     overflow: auto;

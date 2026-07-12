@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The audio player's extras reach for the network and the Web Audio API, neither of which exists here —
 // and neither is what these tests are about (they're covered by audio_waveform.spec / audio_visualizer.spec).
+// Hoisted: Audio.tsx imports the visualizer statically, so the factory runs before this module's body.
+const { audioVisualizer } = vi.hoisted(() => ({ audioVisualizer: vi.fn((_props: { compact?: boolean }) => null) }));
 vi.mock("./audio_waveform", () => ({ loadWaveform: vi.fn(async () => null) }));
-vi.mock("./AudioVisualizer", () => ({ AudioVisualizer: () => null }));
+vi.mock("./AudioVisualizer", () => ({ AudioVisualizer: audioVisualizer }));
 
 import type FAttachment from "../../../entities/fattachment";
 import type FNote from "../../../entities/fnote";
@@ -106,6 +108,51 @@ describe("MediaPreview", () => {
     it("hides the folder play mode outside the note detail, where there is no folder to set it on", async () => {
         await act(async () => render(<MediaPreview entity={videoNote} environment="embedded" />, container));
         expect(container.querySelector(".play-mode-dropdown")).toBeNull();
+    });
+
+    describe("compact audio chrome", () => {
+        /** The compact chrome is worn everywhere but the note detail — an activated preview and an embed alike. */
+        const renderCompactAudio = async (environment: "preview" | "embedded") => {
+            await act(async () => render(<MediaPreview entity={audioNote} environment={environment} />, container));
+            if (environment === "preview") {
+                await act(async () => proxyPlayButton()?.click());
+            }
+        };
+
+        it.each([ "preview", "embedded" ] as const)("lays %s out as a single play / seek / volume row", async (environment) => {
+            await renderCompactAudio(environment);
+
+            expect(container.querySelector(".audio-preview-wrapper.media-compact")).not.toBeNull();
+            const row = container.querySelector(".media-compact-row");
+            expect(row).not.toBeNull();
+            expect(row?.querySelector(".play-button")).not.toBeNull();
+            expect(row?.querySelector(".waveform-seekbar")).not.toBeNull();
+            expect(row?.querySelector(".media-volume-row")).not.toBeNull();
+
+            // Everything a small host has no room for is gone, along with the full player's stacked rows.
+            expect(container.querySelector(".speed-dropdown")).toBeNull();
+            expect(container.querySelector(".media-buttons-row")).toBeNull();
+        });
+
+        it.each([ "preview", "embedded" ] as const)("gives %s's whole band to a half-scale visualizer, dropping the music icon", async (environment) => {
+            await renderCompactAudio(environment);
+
+            expect(container.querySelector(".audio-preview-icon")).toBeNull();
+            expect(audioVisualizer).toHaveBeenCalledWith(
+                expect.objectContaining({ compact: true }), expect.anything());
+        });
+
+        it("leaves the note detail with the full controls and the icon", async () => {
+            await act(async () => render(<MediaPreview entity={audioNote} environment="standalone" />, container));
+
+            expect(container.querySelector(".media-compact")).toBeNull();
+            expect(container.querySelector(".media-compact-row")).toBeNull();
+            expect(container.querySelector(".media-buttons-row")).not.toBeNull();
+            expect(container.querySelector(".speed-dropdown")).not.toBeNull();
+            expect(container.querySelector(".audio-preview-icon")).not.toBeNull();
+            expect(audioVisualizer).toHaveBeenCalledWith(
+                expect.objectContaining({ compact: false }), expect.anything());
+        });
     });
 
     it("keeps a preview's clicks to itself, so pressing play in a collection card doesn't open the note", async () => {

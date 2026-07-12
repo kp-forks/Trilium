@@ -5,7 +5,7 @@ import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { loadWaveform } from "./audio_waveform";
 import { AudioVisualizer } from "./AudioVisualizer";
-import { playerRootClasses, preloadFor } from "./media_environment";
+import { playerRootClasses, preloadFor, usesCompactControls } from "./media_environment";
 import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 import { WaveformSeekBar } from "./WaveformSeekBar";
 
@@ -43,6 +43,8 @@ export default function AudioPreview({ source, environment, note, noteContext, i
         return <NoItems icon="bx bx-volume-mute" text={t("media.unsupported-format", { mime: source.mime.replace("/", "-") })} />;
     }
 
+    const compact = usesCompactControls(environment);
+
     return (
         <div ref={wrapperRef} className={`audio-preview-wrapper ${playerRootClasses(environment)}`} onKeyDown={onKeyDown} tabIndex={0}>
             <audio
@@ -57,32 +59,43 @@ export default function AudioPreview({ source, environment, note, noteContext, i
                 onError={onError}
             />
             <div className="audio-preview-visualization-wrapper">
-                <AudioVisualizer mediaRef={audioRef} isPlaying={playing} />
-                <Icon icon="bx bx-music" className="audio-preview-icon" />
+                <AudioVisualizer mediaRef={audioRef} isPlaying={playing} compact={compact} />
+                {/* The compact player gives the whole band to the visualizer instead. */}
+                {!compact && <Icon icon="bx bx-music" className="audio-preview-icon" />}
             </div>
             <div className="media-preview-controls">
-                <WaveformSeekBar mediaRef={audioRef} peaks={waveformPeaks} />
-
-                <div class="media-buttons-row">
-                    <div className="left">
-                        <PlaybackSpeed mediaRef={audioRef} />
-                        {/* The play mode lives on the parent folder, which only the note detail knows. */}
-                        {noteContext && <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />}
-                    </div>
-
-                    <div className="center">
-                        <div className="spacer" />
-                        <MediaSiblingButton navigation={siblingNavigation} direction="previous" tooltipI18nKey="media.previous-audio" />
-                        <SkipButton mediaRef={audioRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
+                {compact ? (
+                    <div class="media-compact-row">
                         <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
-                        <SkipButton mediaRef={audioRef} seconds={10} icon="bx bx-fast-forward" text={t("media.forward-10s")} />
-                        <MediaSiblingButton navigation={siblingNavigation} direction="next" tooltipI18nKey="media.next-audio" />
-                    </div>
-
-                    <div className="right">
+                        <WaveformSeekBar mediaRef={audioRef} peaks={waveformPeaks} />
                         <VolumeControl mediaRef={audioRef} />
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <WaveformSeekBar mediaRef={audioRef} peaks={waveformPeaks} />
+
+                        <div class="media-buttons-row">
+                            <div className="left">
+                                <PlaybackSpeed mediaRef={audioRef} />
+                                {/* The play mode lives on the parent folder, which only the note detail knows. */}
+                                {noteContext && <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />}
+                            </div>
+
+                            <div className="center">
+                                <div className="spacer" />
+                                <MediaSiblingButton navigation={siblingNavigation} direction="previous" tooltipI18nKey="media.previous-audio" />
+                                <SkipButton mediaRef={audioRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
+                                <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
+                                <SkipButton mediaRef={audioRef} seconds={10} icon="bx bx-fast-forward" text={t("media.forward-10s")} />
+                                <MediaSiblingButton navigation={siblingNavigation} direction="next" tooltipI18nKey="media.next-audio" />
+                            </div>
+
+                            <div className="right">
+                                <VolumeControl mediaRef={audioRef} />
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
