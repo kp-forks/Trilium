@@ -963,7 +963,29 @@ function saveAttachments(note: BNote, content: string) {
     // we also omit / at the beginning to keep the paths relative
     content = content.replace(/src="[^"]*\/api\/attachments\//g, 'src="api/attachments/');
 
+    content = stripStaleSrcset(content);
+
     return content;
+}
+
+/**
+ * When an image is pasted from the web its `src` is localized to a Trilium
+ * attachment, but the copied HTML often still carries the original `srcset`
+ * (and its companion `sizes`) pointing at external URLs. Browsers prefer
+ * `srcset` over `src`, so once those external URLs disappear the image breaks
+ * even though the local attachment is intact. Drop `srcset`/`sizes` from any
+ * `<img>` already backed by a local attachment so the valid `src` is used.
+ * Images whose `src` is still external keep their `srcset` — there it is the
+ * legitimate (and only) source.
+ */
+function stripStaleSrcset(content: string): string {
+    return content.replace(/<img\b[^>]*>/gi, (imgTag) => {
+        if (!/\ssrc=["']api\/attachments\/[^"']+["']/i.test(imgTag)) {
+            return imgTag;
+        }
+
+        return imgTag.replace(/\s(?:srcset|sizes)=["'][^"']*["']/gi, "");
+    });
 }
 
 
