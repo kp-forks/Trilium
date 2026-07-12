@@ -780,7 +780,7 @@ describe("TodoListMultistateEditing", () => {
     describe("buildTooltipTitle", () => {
         const translate = (key: string, params: Record<string, unknown> = {}) => {
             if (key === "text-editor.checkbox-tooltip") {
-                return `Right click for more task states.\nPress ${params.shortcut} to cycle between states.`;
+                return `Right-click or press ${params.shortcut} to change state.`;
             }
             if (key === "text-editor.checkbox-tooltip-state-label") {
                 return "Task state:";
@@ -791,9 +791,10 @@ describe("TodoListMultistateEditing", () => {
             return key;
         };
 
-        it("returns just the body (with <br>-joined lines) for an anchor state (null)", () => {
+        it("returns just the body for an anchor state (null)", () => {
             const title = buildTooltipTitle(document, null, new Map(), translate);
-            expect(title).toContain("Right click for more task states.<br>Press");
+            expect(title).toContain("Right-click or press");
+            expect(title).toContain("to change state.");
             expect(title).not.toContain("Task state:");
         });
 

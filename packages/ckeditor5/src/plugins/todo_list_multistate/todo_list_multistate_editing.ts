@@ -495,7 +495,7 @@ export function buildTooltipTitle(
 ): string {
     const body = translate("text-editor.checkbox-tooltip", {
         shortcut: renderCycleShortcut(translate)
-    }).replace(/\n/g, "<br>");
+    });
     if (!state) {
         return body;
     }
