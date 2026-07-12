@@ -353,7 +353,6 @@
     "more_actions": "Tuilleadh gníomhartha",
     "deleted_notes_settings": "Socruithe Nótaí Scriosta",
     "no_deleted_notes_message": "Gan aon nótaí scriosta.",
-    "cannot_undelete": "Ní féidir an nóta seo a athchóiriú mar gur scriosadh a thuismitheoir freisin. Athchóirigh an tuismitheoir ar dtús.",
     "undelete_failed": "Níorbh fhéidir an nóta a athchóiriú — b’fhéidir gur scriosadh go buan é nó nach bhfuil a thuismitheoir ar fáil a thuilleadh."
   },
   "sort_child_notes": {
