@@ -1067,7 +1067,7 @@
     "drag_locked_title": "鎖定編輯",
     "drag_locked_message": "無法拖曳，因為此集合已被鎖定編輯。",
     "archived_notes_hidden_one": "{{count}} 則已歸檔的筆記已複製至此，但除非您啟用「顯示已歸檔筆記」功能，否則它將保持隱藏狀態。",
-    "archived_notes_hidden_other": ""
+    "archived_notes_hidden_other": "{{count}} 則已歸檔的筆記已複製至此，但除非您啟用「顯示已歸檔筆記」功能，否則它將保持隱藏狀態。"
   },
   "editable_code": {
     "placeholder": "在這裡輸入您的程式碼筆記內容…"
@@ -2678,7 +2678,7 @@
     "browse_single": "點擊以選擇檔案",
     "browse_multiple": "點擊以選擇多個檔案",
     "selected_one": "已選擇 {{count}} 個檔案",
-    "selected_other": ""
+    "selected_other": "已選擇 {{count}} 個檔案"
   },
   "import_provider": {
     "choose_provider": "請從上方選擇要匯入的服務。"
@@ -2815,6 +2815,6 @@
     "no_icons": "此圖示包中沒有任何圖示。",
     "tooltip": "類別：{{- class}}\n圖示代碼：{{- code}}\n關鍵詞：{{- terms}}",
     "count_one": "{{count}} 個圖示",
-    "count_other": ""
+    "count_other": "{{count}} 個圖示"
   }
 }
