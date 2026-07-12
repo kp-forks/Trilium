@@ -1,7 +1,7 @@
 import { Tooltip } from "bootstrap";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ContentHintManager, type HintHandle } from "./content_hint_manager.js";
+import { CONTENT_HINT_CLASS, ContentHintManager, type HintHandle } from "./content_hint_manager.js";
 
 /**
  * The visible `.tooltip` popup that Bootstrap adds to the body when a tooltip
@@ -219,14 +219,23 @@ describe("ContentHintManager", () => {
     });
 
     describe("tooltip options", () => {
-        it("applies the base options to every popup", () => {
+        it("applies the base options to every popup, alongside the content-hint marker class", () => {
             const scoped = new ContentHintManager({
                 tooltipOptions: { customClass: "test-scope" }
             });
             const handle = scoped.createHandle(a, "hello");
             handle.show();
             expect(livePopup()?.classList.contains("test-scope")).toBe(true);
+            expect(livePopup()?.classList.contains(CONTENT_HINT_CLASS)).toBe(true);
             scoped.destroy();
+        });
+
+        it("marks the popup as a content hint even when the consumer passes no customClass", () => {
+            // Zen mode hides content hints as a group via this class, so it can't depend on
+            // consumers opting in — the collapsible drag-handle hints pass no customClass.
+            const handle = manager.createHandle(a, "hello");
+            handle.show();
+            expect(livePopup()?.classList.contains(CONTENT_HINT_CLASS)).toBe(true);
         });
 
         it("uses `manual` trigger regardless of what the caller passes", () => {

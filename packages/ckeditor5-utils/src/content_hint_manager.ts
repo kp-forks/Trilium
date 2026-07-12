@@ -92,12 +92,21 @@ export interface HintHandle {
     dispose(): void;
 }
 
+/**
+ * Stamped on every popup a manager renders, on top of whatever `customClass` the
+ * consumer asked for. Gives content hints — which are spread across several plugins
+ * and use different placements — a single hook to address as a group (zen mode hides
+ * them with it).
+ */
+export const CONTENT_HINT_CLASS = "content-hint";
+
 export interface ContentHintManagerOptions {
     /**
      * Bootstrap Tooltip config applied to the popup this manager renders each
      * hint into. `trigger` is always forced to `"manual"` because the stack,
      * not Bootstrap's hover/focus event bindings, decides when a hint is
-     * visible. `html` is always forced to `true`.
+     * visible. `html` is always forced to `true`, and {@link CONTENT_HINT_CLASS}
+     * is always added to `customClass`.
      */
     tooltipOptions?: Partial<Tooltip.Options>;
     /**
@@ -336,6 +345,7 @@ export class ContentHintManager {
         if (top) {
             this._currentTooltip = new Tooltip(top.element, {
                 ...this._baseOptions,
+                customClass: this._customClass(),
                 title: top.content,
                 html: true,
                 trigger: "manual"
@@ -343,6 +353,20 @@ export class ContentHintManager {
             this._currentTooltip.show();
         }
         this._resetAutoHide();
+    }
+
+    /**
+     * The consumer's `customClass` with {@link CONTENT_HINT_CLASS} prepended.
+     * Bootstrap also accepts a function form, so preserve that shape when given one.
+     */
+    private _customClass(): Tooltip.Options["customClass"] {
+        const base = this._baseOptions.customClass;
+        if (typeof base === "function") {
+            return function (this: unknown) {
+                return `${CONTENT_HINT_CLASS} ${base.call(this)}`;
+            };
+        }
+        return base ? `${CONTENT_HINT_CLASS} ${base}` : CONTENT_HINT_CLASS;
     }
 
     /**
