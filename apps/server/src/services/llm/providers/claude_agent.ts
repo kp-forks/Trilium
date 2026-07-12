@@ -26,6 +26,7 @@ import dataDirs from "../../data_dir.js";
 import port from "../../port.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { buildModelList } from "./base_provider.js";
+import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt } from "./system_prompt.js";
 
 /**
@@ -114,8 +115,16 @@ export class ClaudeAgentProvider implements LlmProvider {
         }
 
         const history = conversation.slice(0, -1);
-        const lastText = flattenContent(lastMessage.content);
         const historyHash = hashTranscript(history);
+
+        // Prepend the current-note metadata hint to *this* user message (not the
+        // stored transcript), mirroring the AI-SDK providers' applyNoteHint. It's
+        // volatile context — kept out of the hash so a later turn's unhinted
+        // transcript still matches and can resume.
+        const hasAttachments = Array.isArray(lastMessage.content) && lastMessage.content.some(p => p.type !== "text");
+        const noteHint = config.contextNoteId ? buildNoteHint(config.contextNoteId, hasAttachments) : null;
+        const lastText = flattenContent(lastMessage.content);
+        const currentMessage = noteHint ? `${noteHint}\n\n${lastText}` : lastText;
 
         // Resume the existing agent session only when the transcript the client
         // sent still matches what that session last saw; any divergence (edited
@@ -123,8 +132,8 @@ export class ClaudeAgentProvider implements LlmProvider {
         const stored = config.chatNoteId ? sessionsByChatNote.get(config.chatNoteId) : undefined;
         const resume = stored && stored.transcriptHash === historyHash ? stored.sessionId : undefined;
         const prompt = (resume || history.length === 0)
-            ? lastText
-            : buildSeededPrompt(history, lastText);
+            ? currentMessage
+            : buildSeededPrompt(history, currentMessage);
 
         const abortController = new AbortController();
         const onAbort = () => abortController.abort();
@@ -314,11 +323,10 @@ export class ClaudeAgentProvider implements LlmProvider {
 
         // The shared prompt promises note tools whenever `enableNoteTools` is
         // set — but on this path they only exist if MCP is also on, so gate on
-        // the effective availability. `contextNoteId` is cleared because this
-        // provider does not yet inject the current-note metadata (the API
-        // providers do, via applyNoteHint); leaving it set would make the
-        // "you can see the current note's metadata above" notice a lie.
-        const promptConfig: LlmProviderConfig = { ...config, enableNoteTools: noteToolsAvailable, contextNoteId: undefined };
+        // the effective availability. `contextNoteId` passes through: chatChunks
+        // injects the note metadata into the user turn (see buildNoteHint), so
+        // the "you can see the current note's metadata above" notice is accurate.
+        const promptConfig: LlmProviderConfig = { ...config, enableNoteTools: noteToolsAvailable };
         let systemPrompt = buildSystemPrompt(messages, promptConfig) ?? "";
 
         // Note tools were requested but unavailable — tell the model why so it

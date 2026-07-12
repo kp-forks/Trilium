@@ -24,6 +24,9 @@ vi.mock("../../data_dir.js", async () => {
 
 vi.mock("../../port.js", () => ({ default: 8080 }));
 
+const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string) => `NOTE_META(${noteId})`));
+vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
+
 const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript } = await import("./claude_agent.js");
 
 /** Make query() replay the given SDK messages and record its invocation. */
@@ -195,6 +198,53 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(secondCall.prompt).toContain("User: edited");
         expect(secondCall.prompt).toContain("Assistant: reply");
         expect(secondCall.prompt).toContain("follow-up");
+    });
+
+    it("prepends the current-note metadata hint to the user message when contextNoteId is set", async () => {
+        buildNoteHintMock.mockClear();
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks(
+            [{ role: "user", content: "what is this note about?" }],
+            { contextNoteId: "note-abc" }
+        ));
+
+        expect(buildNoteHintMock).toHaveBeenCalledWith("note-abc", false);
+        const prompt = queryMock.mock.calls[0][0].prompt;
+        expect(prompt).toBe("NOTE_META(note-abc)\n\nwhat is this note about?");
+    });
+
+    it("does not prepend a hint when the context note no longer exists", async () => {
+        buildNoteHintMock.mockReturnValueOnce(null);
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks(
+            [{ role: "user", content: "hello" }],
+            { contextNoteId: "gone" }
+        ));
+
+        expect(queryMock.mock.calls[0][0].prompt).toBe("hello");
+    });
+
+    it("keeps the note hint out of the session hash so a later turn still resumes", async () => {
+        const provider = new ClaudeAgentProvider();
+        const config = { contextNoteId: "note-abc", chatNoteId: "note-hint-resume" };
+
+        scriptAgent([textDelta("first reply"), successResult("sess-H")]);
+        await collect(provider.chatChunks([{ role: "user", content: "q1" }], config));
+
+        // Turn 2: transcript matches turn 1 (unhinted) → resume, and the new
+        // message still carries the freshly-built hint.
+        scriptAgent([textDelta("second reply"), successResult("sess-H")]);
+        await collect(provider.chatChunks([
+            { role: "user", content: "q1" },
+            { role: "assistant", content: "first reply" },
+            { role: "user", content: "q2" }
+        ], config));
+
+        const secondCall = queryMock.mock.calls[1][0];
+        expect(secondCall.options.resume).toBe("sess-H");
+        expect(secondCall.prompt).toBe("NOTE_META(note-abc)\n\nq2");
     });
 
     it("points the agent at Trilium's MCP server and disables built-in tools", async () => {
