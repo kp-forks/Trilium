@@ -380,10 +380,9 @@ div.tn-tool-dialog {
     margin-top: 0.4em;
 }
 
-/* Keyboard shortcut */
+/* Keyboard shortcut. Tooltips have their own palette — see the TOOLTIPS section in base.css. */
 .help-dialog .help-cards kbd,
-.ck-content kbd,
-.text-editor-content-tooltip kbd {
+.ck-content kbd {
     display: inline-block;
     margin: 0 2px 2px !important;
     border: 1px solid var(--help-kbd-shortcut-border);

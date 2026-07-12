@@ -72,6 +72,9 @@ vi.mock("../widgets/type_widgets/file/PdfViewer", () => ({ default: pdfViewerCom
 const webViewComponent = vi.fn((_props: any): VNode<any> => h("span", { class: "mock-webview-marker" }));
 vi.mock("../widgets/type_widgets/WebView", () => ({ default: webViewComponent }));
 
+const mediaPreviewComponent = vi.fn((_props: any): VNode<any> => h("span", { class: "mock-media-marker" }));
+vi.mock("../widgets/type_widgets/file/MediaPreview", () => ({ default: mediaPreviewComponent }));
+
 const embeddedNoteListComponent = vi.fn((_props: any) => null);
 vi.mock("../widgets/collections/NoteList", () => ({ EmbeddedNoteList: embeddedNoteListComponent }));
 
@@ -301,20 +304,53 @@ describe("getRenderedContent file rendering", () => {
         expect($renderedContent.hasClass("no-preview")).toBe(true);
     });
 
-    it("renders an audio file note", async () => {
+    it("mounts a lazy media player for an audio or video note, streaming nothing until it is played", async () => {
         const note = buildNote({ title: "A", type: "file" });
         note.mime = "audio/mpeg";
         const { type, $renderedContent } = await getRenderedContent(note);
         expect(type).toBe("audio");
-        expect($renderedContent.find("audio").attr("src")).toBe(getUrlForDownload(`api/notes/${note.noteId}/open-partial`));
+        expect($renderedContent.find(".rendered-media").length).toBe(1);
+        expect(mediaPreviewComponent).toHaveBeenCalledWith(
+            expect.objectContaining({ entity: note, environment: "preview" }), expect.anything());
+        // No media element is emitted here at all — the placeholder creates one only once it is clicked.
+        expect($renderedContent.find("audio, video").length).toBe(0);
     });
 
-    it("renders a video file note", async () => {
+    it("mounts the full media player when the caller embeds the note, and drops the footer it carries itself", async () => {
         const note = buildNote({ title: "V", type: "file" });
         note.mime = "video/mp4";
-        const { type, $renderedContent } = await getRenderedContent(note);
+        const { type, $renderedContent } = await getRenderedContent(note, { mediaEnvironment: "embedded" });
         expect(type).toBe("video");
-        expect($renderedContent.find("video").length).toBe(1);
+        expect(mediaPreviewComponent).toHaveBeenCalledWith(
+            expect.objectContaining({ entity: note, environment: "embedded" }), expect.anything());
+        // An embed has no room for a footer: the player takes Download / Open into its own controls.
+        expect($renderedContent.find(".file-footer").length).toBe(0);
+    });
+
+    it("keeps the footer for a media preview, and for the file types that have no player", async () => {
+        const video = buildNote({ title: "V", type: "file" });
+        video.mime = "video/mp4";
+        expect((await getRenderedContent(video)).$renderedContent.find(".file-footer").length).toBe(1);
+
+        const pdf = buildNote({ title: "P", type: "file" });
+        pdf.mime = "application/pdf";
+        expect((await getRenderedContent(pdf, { mediaEnvironment: "embedded" })).$renderedContent.find(".file-footer").length).toBe(1);
+    });
+
+    it("renders the plain media element for callers that serialize to HTML (presentation, printing)", async () => {
+        const note = buildNote({ title: "V", type: "file" });
+        note.mime = "video/mp4";
+        const { $renderedContent } = await getRenderedContent(note, { mediaEnvironment: "native" });
+        expect(mediaPreviewComponent).not.toHaveBeenCalled();
+
+        const $video = $renderedContent.find("video");
+        expect($video.attr("src")).toBe(getUrlForDownload(`api/notes/${note.noteId}/open-partial`));
+        expect($video.attr("controls")).toBeDefined();
+
+        const audio = buildNote({ title: "A", type: "file" });
+        audio.mime = "audio/mpeg";
+        const rendered = await getRenderedContent(audio, { mediaEnvironment: "native" });
+        expect(rendered.$renderedContent.find("audio").attr("src")).toBe(getUrlForDownload(`api/notes/${audio.noteId}/open-partial`));
     });
 
     it("hides the open button for protected file notes", async () => {

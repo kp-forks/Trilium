@@ -1,3 +1,4 @@
+import { join as pathJoin } from "node:path";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type Handler = (...args: unknown[]) => unknown;
@@ -620,7 +621,10 @@ describe("getUserData()", () => {
     it("joins appData with name-port when the env var is unset", async () => {
         delete process.env.TRILIUM_ELECTRON_DATA_DIR;
         const { getUserData } = await importMain();
-        expect(getUserData()).toBe("/appData/Trilium-37740");
+        // Use `path.join` so the assertion matches the platform-native separator
+        // — `getUserData` calls `join(app.getPath("appData"), ...)`, so on Windows
+        // it produces `\appData\Trilium-37740` and on POSIX `/appData/Trilium-37740`.
+        expect(getUserData()).toBe(pathJoin("/appData", "Trilium-37740"));
     });
 });
 

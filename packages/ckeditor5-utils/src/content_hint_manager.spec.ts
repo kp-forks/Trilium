@@ -1,7 +1,7 @@
 import { Tooltip } from "bootstrap";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { EditorTooltipManager, type TooltipHandle } from "./editor_tooltip_manager.js";
+import { CONTENT_HINT_CLASS, ContentHintManager, type HintHandle } from "./content_hint_manager.js";
 
 /**
  * The visible `.tooltip` popup that Bootstrap adds to the body when a tooltip
@@ -17,11 +17,11 @@ function livePopupText(): string | null {
     return livePopup()?.textContent?.trim() ?? null;
 }
 
-describe("EditorTooltipManager", () => {
+describe("ContentHintManager", () => {
     let host: HTMLDivElement;
     let a: HTMLButtonElement;
     let b: HTMLButtonElement;
-    let manager: EditorTooltipManager;
+    let manager: ContentHintManager;
 
     beforeEach(() => {
         host = document.createElement("div");
@@ -32,7 +32,7 @@ describe("EditorTooltipManager", () => {
         host.appendChild(a);
         host.appendChild(b);
         document.body.appendChild(host);
-        manager = new EditorTooltipManager();
+        manager = new ContentHintManager();
     });
 
     afterEach(() => {
@@ -219,18 +219,27 @@ describe("EditorTooltipManager", () => {
     });
 
     describe("tooltip options", () => {
-        it("applies the base options to every popup", () => {
-            const scoped = new EditorTooltipManager({
+        it("applies the base options to every popup, alongside the content-hint marker class", () => {
+            const scoped = new ContentHintManager({
                 tooltipOptions: { customClass: "test-scope" }
             });
             const handle = scoped.createHandle(a, "hello");
             handle.show();
             expect(livePopup()?.classList.contains("test-scope")).toBe(true);
+            expect(livePopup()?.classList.contains(CONTENT_HINT_CLASS)).toBe(true);
             scoped.destroy();
         });
 
+        it("marks the popup as a content hint even when the consumer passes no customClass", () => {
+            // Zen mode hides content hints as a group via this class, so it can't depend on
+            // consumers opting in — the collapsible drag-handle hints pass no customClass.
+            const handle = manager.createHandle(a, "hello");
+            handle.show();
+            expect(livePopup()?.classList.contains(CONTENT_HINT_CLASS)).toBe(true);
+        });
+
         it("uses `manual` trigger regardless of what the caller passes", () => {
-            const scoped = new EditorTooltipManager({
+            const scoped = new ContentHintManager({
                 tooltipOptions: { trigger: "hover" as Tooltip.Options["trigger"] }
             });
             const handle = scoped.createHandle(a, "hello");
@@ -257,8 +266,8 @@ describe("EditorTooltipManager", () => {
     describe("handle usage patterns", () => {
         it("supports independent hover + caret handles on the same element without flicker", () => {
             // Simulate the multistate plugin's hover + caret pair on one checkbox.
-            const hover: TooltipHandle = manager.createHandle(a, "content");
-            const caret: TooltipHandle = manager.createHandle(a, "content");
+            const hover: HintHandle = manager.createHandle(a, "content");
+            const caret: HintHandle = manager.createHandle(a, "content");
 
             caret.show();
             expect(livePopupText()).toBe("content");
@@ -277,11 +286,11 @@ describe("EditorTooltipManager", () => {
     describe("autoHideAfterMs", () => {
         // Each test manages its own manager instance so the outer `manager`
         // (no auto-hide) isn't polluted with a timer that could interfere.
-        let autoManager: EditorTooltipManager;
+        let autoManager: ContentHintManager;
 
         beforeEach(() => {
             vi.useFakeTimers();
-            autoManager = new EditorTooltipManager({ autoHideAfterMs: 1000 });
+            autoManager = new ContentHintManager({ autoHideAfterMs: 1000 });
         });
 
         afterEach(() => {

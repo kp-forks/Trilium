@@ -1,7 +1,25 @@
 import { describe, expect, it } from "vitest";
 
 import { buildNote } from "../test/easy-froca";
-import { isAlwaysFullWidthByType, isFullWidthNote } from "./note_wrapper";
+import NoteWrapperWidget, { isAlwaysFullWidthByType, isFullWidthNote } from "./note_wrapper";
+
+describe("NoteWrapperWidget", () => {
+    it("preserves the classes owned by SplitNoteContainer through the class reset in refresh()", () => {
+        const widget = new NoteWrapperWidget();
+        widget.render();
+        widget.$widget.addClass("active last-visible");
+        widget.toggleExt(false);
+
+        widget.refresh();
+
+        expect(widget.$widget.hasClass("active")).toBe(true);
+        expect(widget.$widget.hasClass("last-visible")).toBe(true);
+        expect(widget.$widget.hasClass("hidden-ext")).toBe(true);
+        // Without a note context, the split renders as empty — the note-derived classes still apply.
+        expect(widget.$widget.hasClass("note-split")).toBe(true);
+        expect(widget.$widget.hasClass("empty-note")).toBe(true);
+    });
+});
 
 describe("isAlwaysFullWidthByType", () => {
     it("is false for a regular text note regardless of the fullContentWidth label", () => {

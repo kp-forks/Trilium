@@ -129,6 +129,7 @@ function EditorFeatures() {
     const [emojiCompletionEnabled, setEmojiCompletionEnabled] = useTriliumOptionBool("textNoteEmojiCompletionEnabled");
     const [noteCompletionEnabled, setNoteCompletionEnabled] = useTriliumOptionBool("textNoteCompletionEnabled");
     const [slashCommandsEnabled, setSlashCommandsEnabled] = useTriliumOptionBool("textNoteSlashCommandsEnabled");
+    const [contentHintsEnabled, setContentHintsEnabled] = useTriliumOptionBool("textNoteContentHintsEnabled");
 
     return (
         <OptionsSection title={t("editorfeatures.title")}>
@@ -154,6 +155,14 @@ function EditorFeatures() {
                 description={t("editorfeatures.slash_commands_description")}
                 currentValue={slashCommandsEnabled}
                 onChange={setSlashCommandsEnabled}
+            />
+
+            <OptionsRowWithToggle
+                name="content-hints-enabled"
+                label={t("editorfeatures.content_hints_enabled")}
+                description={t("editorfeatures.content_hints_description")}
+                currentValue={contentHintsEnabled}
+                onChange={setContentHintsEnabled}
             />
         </OptionsSection>
     );
