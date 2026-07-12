@@ -1,9 +1,18 @@
-import { Plugin, Enter, Delete, enableViewPlaceholder, getEnvKeystrokeText, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
+import { Plugin, Enter, Delete, enableViewPlaceholder, env, type ViewDocumentEnterEvent, type ViewDocumentDeleteEvent, type ViewDocumentArrowKeyEvent } from "ckeditor5";
+import { formatShortcut, joinShortcut } from "@triliumnext/commons";
 import { ContentHintManager, type HintHandle } from "@triliumnext/ckeditor5-utils";
 import BlockDragHandle from "./block-drag-handle.js";
 import CollapsibleCommand from "./collapsible-command.js";
 
 type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
+
+/**
+ * The keyboard shortcut for toggling a collapsible's `open` state. Shared as
+ * a single source of truth between the `Ctrl+Enter` DOM keydown handler in
+ * {@link CollapsibleEditing#onDomKeydown} and the summary hint's rendered
+ * label — a rebinding in one has to be mirrored in the other.
+ */
+const TOGGLE_SHORTCUT = "Ctrl+Enter";
 
 /**
  * Dwell delay before hover or a stationary caret pops a summary/handle hint.
@@ -871,10 +880,13 @@ export default class CollapsibleEditing extends Plugin {
         const editor = this.editor;
         const t = this.translate();
         const title = t("text-editor.collapsible-tooltip", {
-            shortcut: getEnvKeystrokeText("Ctrl+Enter")
+            shortcut: renderToggleShortcut(t)
         });
         const manager = new ContentHintManager({
-            tooltipOptions: { customClass: "text-editor-content-tooltip" },
+            tooltipOptions: {
+                sanitize: false,
+                customClass: "text-editor-content-tooltip"
+            },
             autoHideAfterMs: HINT_AUTO_HIDE_MS
         });
         this.summaryHintManager = manager;
@@ -1251,4 +1263,16 @@ export default class CollapsibleEditing extends Plugin {
         writer.setSelection(summary, "end");
         return true;
     }
+}
+
+/**
+ * Render the toggle shortcut as `<kbd>Ctrl</kbd>+<kbd>Enter</kbd>` (or
+ * `<kbd>⌃</kbd><kbd>↩</kbd>` on macOS). Uses the shared `formatShortcut` /
+ * `joinShortcut` from `@triliumnext/commons` so key labels flow through the
+ * same i18n and Mac-glyph rules as the rest of the app.
+ */
+function renderToggleShortcut(translate: TranslateFn): string {
+    const kbdTokens = formatShortcut(TOGGLE_SHORTCUT, translate, env.isMac)
+        .map((token: string) => `<kbd>${token}</kbd>`);
+    return joinShortcut(kbdTokens, env.isMac);
 }

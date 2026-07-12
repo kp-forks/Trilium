@@ -3133,7 +3133,7 @@
     "collapsible-select-label": "Select collapsible block",
     "collapsible-title-placeholder": "Summary",
     "collapsible-toggle-label": "Toggle collapsible block",
-    "collapsible-tooltip": "Click on the arrow or press {{shortcut}} to collapse/expand.",
+    "collapsible-tooltip": "Click on the arrow or press {{- shortcut}} to collapse/expand.",
     "edit-states-tooltip": "Edit task states",
     "unknown-task-state": "Undefined custom task state",
     "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",

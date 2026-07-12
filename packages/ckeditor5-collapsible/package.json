@@ -25,7 +25,8 @@
     "vitest": "4.1.10"
   },
   "dependencies": {
-    "@triliumnext/ckeditor5-utils": "workspace:*"
+    "@triliumnext/ckeditor5-utils": "workspace:*",
+    "@triliumnext/commons": "workspace:*"
   },
   "peerDependencies": {
     "bootstrap": "^5.3.0",
