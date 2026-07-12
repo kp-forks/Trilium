@@ -27,22 +27,6 @@ const MIME_TYPES = {
     ".wasm": "application/wasm"
 };
 
-// pdf.js v6 relies on Map.prototype.getOrInsertComputed and Math.sumPrecise
-// (Chromium >= 143). The main thread is polyfilled from the spec via
-// addInitScript, but that does not reach the worker, so older browsers need the
-// polyfill prepended to the worker bundle itself. No-op on current browsers.
-const WORKER_POLYFILLS = `
-if (!Map.prototype.getOrInsertComputed) {
-    Map.prototype.getOrInsertComputed = function (key, cb) {
-        if (!this.has(key)) this.set(key, cb(key));
-        return this.get(key);
-    };
-}
-if (!Math.sumPrecise) {
-    Math.sumPrecise = function (values) { let s = 0; for (const v of values) s += v; return s; };
-}
-`;
-
 const samplePdf = buildBlankPdf();
 
 const server = createServer(async (req, res) => {
@@ -56,10 +40,7 @@ const server = createServer(async (req, res) => {
         }
         if (url.pathname.startsWith("/web/") || url.pathname.startsWith("/build/")) {
             const relative = normalize(url.pathname).split(sep).filter(part => part && part !== "..").join(sep);
-            let content = await readFile(join(DIST_DIR, relative));
-            if (url.pathname === "/build/pdf.worker.mjs") {
-                content = Buffer.concat([Buffer.from(WORKER_POLYFILLS), content]);
-            }
+            const content = await readFile(join(DIST_DIR, relative));
             return send(res, MIME_TYPES[extname(relative)] ?? "application/octet-stream", content);
         }
         res.writeHead(404).end("Not found");

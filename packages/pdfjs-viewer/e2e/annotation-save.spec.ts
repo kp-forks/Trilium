@@ -80,7 +80,6 @@ test("annotations survive reopening the saved document", async ({ page, context 
         contentType: "application/pdf"
     }));
     const reopened = await context.newPage();
-    await addPolyfills(reopened);
     await reopened.goto("/web/viewer.html?v=e2e&file=/saved.pdf&locale=en&editable=1&toolbar=1");
     await reopened.locator(".page canvas").first().waitFor({ state: "visible" });
 
@@ -93,33 +92,7 @@ test("annotations survive reopening the saved document", async ({ page, context 
     expect(inkCount).toBe(1);
 });
 
-/**
- * pdf.js v6 requires Map.prototype.getOrInsertComputed and Math.sumPrecise
- * (Chromium >= 143); polyfill them so the tests also run on older browsers.
- * The worker gets the same polyfills from the harness server.
- */
-async function addPolyfills(page: Page) {
-    await page.addInitScript(() => {
-        const mapPrototype = Map.prototype as any;
-        if (!mapPrototype.getOrInsertComputed) {
-            mapPrototype.getOrInsertComputed = function (key: unknown, cb: (key: unknown) => unknown) {
-                if (!this.has(key)) this.set(key, cb(key));
-                return this.get(key);
-            };
-        }
-        const math = Math as any;
-        if (!math.sumPrecise) {
-            math.sumPrecise = (values: Iterable<number>) => {
-                let sum = 0;
-                for (const value of values) sum += value;
-                return sum;
-            };
-        }
-    });
-}
-
 async function openHarness(page: Page): Promise<FrameLocator> {
-    await addPolyfills(page);
     await page.goto("/parent.html");
     const viewer = page.frameLocator("#viewer");
     await viewer.locator(".page canvas").first().waitFor({ state: "visible" });
