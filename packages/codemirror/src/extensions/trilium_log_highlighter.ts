@@ -61,7 +61,12 @@ const logHighlightTheme = EditorView.baseTheme({
     ".cm-log-status-3xx": { color: "var(--log-status-redirect-color, var(--muted-text-color))" },
     ".cm-log-status-4xx": { color: "var(--log-status-client-error-color, #d29922)" },
     ".cm-log-status-5xx": { color: "var(--log-status-server-error-color, #e5534b)" },
-    ".cm-log-error": { color: "var(--log-error-color, #e5534b)", backgroundColor: "transparent" },
+    ".cm-log-error": {
+        color: "var(--log-error-color, #e5534b)",
+        // Transparent by default — set `--log-error-line-background-color` to tint the whole line
+        // the way `.cm-log-http` is.
+        backgroundColor: "var(--log-error-line-background-color, transparent)"
+    },
     // Placeholder: no colour yet — set `--log-info-color` to activate.
     ".cm-log-info": { color: "var(--log-info-color, inherit)" }
 });

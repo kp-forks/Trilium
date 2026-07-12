@@ -276,6 +276,7 @@
     --log-status-client-error-color: #9a6700;
     --log-status-server-error-color: #cf222e;
     --log-error-color: #cf222e;
+    --log-error-line-background-color: transparent; /* Placeholder: give it a tint to highlight the whole error line. */
     --log-info-color: inherit; /* Placeholder: give it a colour to make info lines stand out. */
 
     --card-background-color: #0000000d;
