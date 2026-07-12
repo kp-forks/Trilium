@@ -353,7 +353,22 @@ describe("notes service (real DB)", () => {
 
             const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
 
-            expect(newContent).toContain("srcset=");
+            // Assert the full srcset value survived intact, not merely that a srcset= token is present.
+            expect(newContent).toContain(`srcset="https://example.com/a.png 1290w, https://example.com/a-300.png 300w"`);
+        });
+
+        it("strips a srcset containing the opposite quote character without corrupting the tag", () => {
+            const source = createNote("root", { title: "spec-srcset-quote" });
+
+            // A single quote inside the double-quoted srcset value must not truncate the strip
+            // (a naive [^"']* would stop at the apostrophe and leave a dangling fragment).
+            const content =
+                `<p><img src="api/attachments/aBc/image/x.png" ` +
+                `srcset="https://example.com/it's-a-photo.png 1x"> after</p>`;
+
+            const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
+
+            expect(newContent).toBe(`<p><img src="api/attachments/aBc/image/x.png"> after</p>`);
         });
 
         it("extracts an inline base64 attachment, deriving its title via prepareTitle", () => {

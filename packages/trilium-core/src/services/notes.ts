@@ -980,11 +980,13 @@ function saveAttachments(note: BNote, content: string) {
  */
 function stripStaleSrcset(content: string): string {
     return content.replace(/<img\b[^>]*>/gi, (imgTag) => {
-        if (!/\ssrc=["']api\/attachments\/[^"']+["']/i.test(imgTag)) {
+        // Match quotes as balanced pairs (and allow optional whitespace around `=`) so a value
+        // containing the opposite quote character doesn't truncate the match and corrupt the tag.
+        if (!/\ssrc\s*=\s*(?:"api\/attachments\/[^"]+"|'api\/attachments\/[^']+')/i.test(imgTag)) {
             return imgTag;
         }
 
-        return imgTag.replace(/\s(?:srcset|sizes)=["'][^"']*["']/gi, "");
+        return imgTag.replace(/\s(?:srcset|sizes)\s*=\s*(?:"[^"]*"|'[^']*')/gi, "");
     });
 }
 
