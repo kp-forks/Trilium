@@ -318,7 +318,6 @@
     "more_actions": "更多操作",
     "deleted_notes_settings": "已刪除的筆記設定",
     "no_deleted_notes_message": "無已刪除的筆記。",
-    "cannot_undelete": "由於此筆記的父級筆記也已刪除，因此無法還原。請先還原父級筆記。",
     "undelete_failed": "無法還原該筆記——該筆記可能已被永久刪除，或其父級項目已不存在。"
   },
   "sort_child_notes": {
@@ -1067,7 +1066,8 @@
     "no_children_help": "此集合沒有任何子筆記，因此沒有內容可顯示。",
     "drag_locked_title": "鎖定編輯",
     "drag_locked_message": "無法拖曳，因為此集合已被鎖定編輯。",
-    "archived_notes_hidden_one": "{{count}} 則已歸檔的筆記已複製至此，但除非您啟用「顯示已歸檔筆記」功能，否則它將保持隱藏狀態。"
+    "archived_notes_hidden_one": "{{count}} 則已歸檔的筆記已複製至此，但除非您啟用「顯示已歸檔筆記」功能，否則它將保持隱藏狀態。",
+    "archived_notes_hidden_other": ""
   },
   "editable_code": {
     "placeholder": "在這裡輸入您的程式碼筆記內容…"
@@ -2677,7 +2677,8 @@
     "drop_or_browse_multiple": "將檔案拖曳至此處，或點擊瀏覽並選擇",
     "browse_single": "點擊以選擇檔案",
     "browse_multiple": "點擊以選擇多個檔案",
-    "selected_one": "已選擇 {{count}} 個檔案"
+    "selected_one": "已選擇 {{count}} 個檔案",
+    "selected_other": ""
   },
   "import_provider": {
     "choose_provider": "請從上方選擇要匯入的服務。"
@@ -2813,6 +2814,7 @@
     "invalid_manifest": "無法解析圖示包的清單檔案。請確認其為有效的 JSON 格式。",
     "no_icons": "此圖示包中沒有任何圖示。",
     "tooltip": "類別：{{- class}}\n圖示代碼：{{- code}}\n關鍵詞：{{- terms}}",
-    "count_one": "{{count}} 個圖示"
+    "count_one": "{{count}} 個圖示",
+    "count_other": ""
   }
 }

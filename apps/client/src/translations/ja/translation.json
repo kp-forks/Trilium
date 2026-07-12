@@ -443,7 +443,6 @@
     "more_actions": "その他の操作",
     "deleted_notes_settings": "削除されたノートの設定",
     "no_deleted_notes_message": "削除されたノートはありません。",
-    "cannot_undelete": "親となるノートも削除されているため、このノートを復元できません。先に親のノートを復元してください。",
     "undelete_failed": "ノートを復元できませんでした。完全に削除されたか、親となるノートが利用できなくなっている可能性があります。"
   },
   "sort_child_notes": {

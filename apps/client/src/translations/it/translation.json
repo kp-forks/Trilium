@@ -808,7 +808,6 @@
     "more_actions": "Altre azioni",
     "deleted_notes_settings": "Impostazioni delle note eliminate",
     "no_deleted_notes_message": "Nessuna nota cancellata.",
-    "cannot_undelete": "Non è possibile ripristinare questa nota perché anche l'elemento padre è stato eliminato. Ripristina prima l'elemento padre.",
     "undelete_failed": "Non è stato possibile ripristinare la nota: potrebbe essere stata cancellata definitivamente oppure il documento a cui era associata non è più disponibile."
   },
   "sort_child_notes": {
