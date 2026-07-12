@@ -4,7 +4,7 @@ import "./RightPanelContainer.css";
 import Split from "@triliumnext/split.js";
 import clsx from "clsx";
 import { VNode } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import { useLayoutEffect, useRef } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import { WidgetsByParent } from "../../services/bundle";
@@ -183,7 +183,12 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent) {
 }
 
 function useSplit(mode: PaneMode) {
-    useEffect(() => {
+    // A layout effect, not an effect: Preact flushes effects *after* paint, which would leave one
+    // frame where the host is already laid out (absolute and full-width in peek mode) but neither
+    // the spacer nor the pane has Split's inline width yet — the pane collapses to its content width
+    // against the host's left edge, then jumps right. The peek fade-in used to mask that frame; with
+    // motion disabled it's plainly visible.
+    useLayoutEffect(() => {
         if (mode === "closed") return;
 
         // We are intentionally omitting useTriliumOption to avoid re-render due to size change.
