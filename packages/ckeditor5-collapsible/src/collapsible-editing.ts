@@ -20,6 +20,23 @@ const HINT_DWELL_MS = 200;
 const HINT_AUTO_HIDE_MS = 2000;
 
 /**
+ * Per-summary hint state. Combines a single {@link HintHandle} with the two
+ * independent visibility drivers — hover and caret — so both can coexist
+ * without racing the manager's element-swap logic. `handle.show()` /
+ * `handle.hide()` are called from a single derived predicate
+ * (`hoverActive || caretActive`), never from either driver directly, so the
+ * handle's element identity is stable for as long as the summary lives.
+ */
+interface SummaryHintState {
+    /** Currently-mapped DOM element for this summary. Kept in sync on every render. */
+    dom: HTMLElement;
+    handle: HintHandle;
+    hoverActive: boolean;
+    caretActive: boolean;
+}
+
+
+/**
  * Schema, conversion and key handling for collapsible blocks.
  *
  * Model:        <details><summary>title</summary>…blocks…</details>
@@ -52,18 +69,24 @@ export default class CollapsibleEditing extends Plugin {
      */
     private readonly preserveOpenOnNextInsert = new Map<any, boolean>();
     /**
-     * Shared visibility stack for the summary hints (screen-corner popup on
-     * each <summary>). One hover handle per rendered summary plus one caret
-     * handle push/pop against it — only the top of the stack is on screen at a
-     * time. See {@link ContentHintManager} for the rationale.
+     * Shared manager for summary hints (screen-corner popup on each <summary>).
+     * Each summary owns ONE handle in {@link summaryHints}; visibility is
+     * driven by the two booleans on {@link SummaryHintState} (hover, caret)
+     * rather than by stacking two handles against the manager. This matters
+     * because pushing distinct hover + caret handles risks pointing them at
+     * different DOM nodes for the same summary (`getDom` may return a fresh
+     * DOM element after a reconvert while the hover map still holds the old
+     * one), which would make the manager dispose the current tooltip and
+     * create a new one — a visible ~150ms fade-out overlapping a ~150ms
+     * fade-in when caret entry overlaps hover.
      */
     private summaryHintManager?: ContentHintManager;
-    /** Hover-driven handle per rendered <summary>. Disposed when the summary detaches. */
-    private readonly summaryHoverHandles = new Map<HTMLElement, HintHandle>();
-    /** Caret-driven handle, if the caret is currently inside a <summary>. */
-    private summaryCaretHandle?: HintHandle;
-    /** DOM <summary> the caret handle is currently attached to. */
-    private summaryCaretDom?: HTMLElement;
+    /**
+     * Per-summary hint state, keyed by the model element so DOM churn doesn't
+     * lose it. Updated on every view render — new summaries get a state,
+     * detached ones are reaped.
+     */
+    private readonly summaryHints = new Map<any, SummaryHintState>();
     /**
      * Shared visibility stack for the drag-handle hints. Drag handles use
      * default near-element placement (no `text-editor-content-tooltip` class),
@@ -128,13 +151,10 @@ export default class CollapsibleEditing extends Plugin {
             clearTimeout(this.autoOpenTimer);
             this.autoOpenTimer = undefined;
         }
-        for (const handle of this.summaryHoverHandles.values()) {
-            handle.dispose();
+        for (const state of this.summaryHints.values()) {
+            state.handle.dispose();
         }
-        this.summaryHoverHandles.clear();
-        this.summaryCaretHandle?.dispose();
-        this.summaryCaretHandle = undefined;
-        this.summaryCaretDom = undefined;
+        this.summaryHints.clear();
         this.summaryHintManager?.destroy();
         this.summaryHintManager = undefined;
         for (const handle of this.handleHoverHandles.values()) {
@@ -835,11 +855,17 @@ export default class CollapsibleEditing extends Plugin {
     // -----------------------------------------------------------------
 
     /**
-     * Attach a manager-mediated hover hint to every <summary> DOM element,
-     * plus a caret-driven handle that follows the model selection into and
-     * out of summaries. Hover on the summary the caret currently owns is a
-     * no-op (same coordination rule as the todo-list multistate plugin), so
-     * the two flows can never race the same popup.
+     * Register the summary-hint plumbing:
+     *  - hover-driven show/hide on every rendered <summary>;
+     *  - caret-driven show/hide following the model selection;
+     *  - one handle per summary, `hoverActive || caretActive` drives visibility.
+     *
+     * The single-handle design (instead of pushing separate hover + caret
+     * handles onto the manager stack) avoids the fade-out+fade-in flicker
+     * that occurs when hover has already pushed on one DOM node and caret
+     * pushes on a different DOM node for the same model summary (e.g. after
+     * a CKEditor reconvert). Only one Bootstrap Tooltip is ever created per
+     * summary, and its target element is stable across combined interactions.
      */
     private registerSummaryHints() {
         const editor = this.editor;
@@ -853,61 +879,119 @@ export default class CollapsibleEditing extends Plugin {
         });
         this.summaryHintManager = manager;
 
-        this.listenTo(editor.editing.view, "render", () => {
-            // Reap handles whose <summary> CKEditor has detached.
-            for (const [summary, handle] of this.summaryHoverHandles) {
-                if (!summary.isConnected) {
-                    handle.dispose();
-                    this.summaryHoverHandles.delete(summary);
-                    if (this.summaryCaretDom === summary) {
-                        this.summaryCaretHandle?.dispose();
-                        this.summaryCaretHandle = undefined;
-                        this.summaryCaretDom = undefined;
-                    }
-                }
-            }
+        // Re-sync on every render: adopt fresh <summary> DOM nodes, drop
+        // stale ones, and refresh caret ownership so a reconvert-in-flight
+        // doesn't leave a handle pointing at a detached element.
+        this.listenTo(editor.editing.view, "render", () => this.syncSummaryHints(manager, title));
 
-            // Wire up hover handles on newly-appeared summaries.
-            this.forEachDomRoot(root => {
-                for (const summary of root.querySelectorAll<HTMLElement>("details.trilium-collapsible > summary")) {
-                    if (this.summaryHoverHandles.has(summary)) continue;
-                    const handle = manager.createHandle(summary, title);
-                    this.summaryHoverHandles.set(summary, handle);
-                    // Hover on the <summary> whose caret we already own is a no-op:
-                    // the caret handle owns visibility, and running the dwell + push
-                    // cycle on top of it only confuses the stack.
-                    const ownedByCaret = () => this.summaryCaretDom === summary;
-                    summary.addEventListener("mouseenter", () => {
-                        if (ownedByCaret()) return;
-                        handle.showAfter(HINT_DWELL_MS);
-                    });
-                    summary.addEventListener("mouseleave", () => {
-                        if (ownedByCaret()) return;
-                        handle.hide();
-                    });
-                }
-            });
+        // The caret moving into a <summary> doesn't fire DOM focus (the
+        // editable root keeps focus), so a hover-only trigger would miss
+        // keyboard-into-summary navigation. Re-sync on selection changes to
+        // update `caretActive` across every tracked summary.
+        this.listenTo(editor.model.document.selection, "change:range", () => this.syncSummaryCaret());
+    }
+
+    /**
+     * Reap dead summaries, adopt new ones (wiring up mouse listeners and a
+     * fresh handle), and re-run caret sync so `caretActive` reflects the
+     * current selection against the current DOM.
+     */
+    private syncSummaryHints(manager: ContentHintManager, title: string): void {
+        // Collect the current summaries and their model elements. Do this
+        // BEFORE the reap loop so we can detect summaries whose DOM was
+        // replaced (model still present, DOM changed) and rebind their state
+        // to the new element in place — no dispose+create flicker.
+        const current = new Map<any, HTMLElement>();
+        const mapper = this.editor.editing.mapper;
+        const domConverter = this.editor.editing.view.domConverter;
+        this.forEachDomRoot(root => {
+            for (const dom of root.querySelectorAll<HTMLElement>("details.trilium-collapsible > summary")) {
+                const view = domConverter.mapDomToView(dom);
+                const model = view ? mapper.toModelElement(view as any) : null;
+                if (model) current.set(model, dom);
+            }
         });
 
-        // The caret moving into a <summary> doesn't fire DOM focus (the editable
-        // root keeps focus), so a hover-only hint would miss keyboard-into-summary
-        // navigation. Push a caret handle on selection changes to cover it.
-        this.listenTo(editor.model.document.selection, "change:range", () => {
-            const summaryModel = editor.model.document.selection.getFirstPosition()?.findAncestor("summary");
-            const targetDom = summaryModel ? this.getDom<HTMLElement>(summaryModel) : null;
-
-            // No-op when the target hasn't changed — selection moves on every
-            // keystroke while typing in the summary, and rebuilding the handle
-            // would restart the auto-hide countdown for no reason.
-            if (this.summaryCaretDom === targetDom) return;
-
-            this.summaryCaretHandle?.dispose();
-            this.summaryCaretHandle = undefined;
-            this.summaryCaretDom = targetDom ?? undefined;
-            if (targetDom) {
-                this.summaryCaretHandle = manager.createHandle(targetDom, title);
-                this.summaryCaretHandle.show();
+        // Drop states whose model is no longer in the rendered tree.
+        for (const [model, state] of this.summaryHints) {
+            if (!current.has(model)) {
+                state.handle.dispose();
+                this.summaryHints.delete(model);
             }
+        }
+
+        // For each current summary: adopt (fresh state) or refresh (existing
+        // state, possibly with a new DOM node after a reconvert).
+        for (const [model, dom] of current) {
+            const existing = this.summaryHints.get(model);
+            if (existing) {
+                if (existing.dom !== dom) {
+                    // Model persisted but its DOM was regenerated. Rebind:
+                    // dispose the old handle (it's on the detached DOM node)
+                    // and create a new one on the fresh DOM. The visibility
+                    // booleans carry over so `applyVisibility` restores it.
+                    existing.handle.dispose();
+                    existing.dom = dom;
+                    existing.handle = manager.createHandle(dom, title);
+                    this.attachSummaryHoverListeners(existing);
+                    this.applyVisibility(existing);
+                }
+                continue;
+            }
+            const state: SummaryHintState = {
+                dom,
+                handle: manager.createHandle(dom, title),
+                hoverActive: false,
+                caretActive: false
+            };
+            this.summaryHints.set(model, state);
+            this.attachSummaryHoverListeners(state);
+        }
+
+        this.syncSummaryCaret();
+    }
+
+    /**
+     * Recompute `caretActive` for every tracked summary from the current
+     * model selection. Idempotent: only touches handles whose caret ownership
+     * actually flipped, so a keystroke inside a summary that doesn't cross a
+     * boundary is free.
+     */
+    private syncSummaryCaret(): void {
+        const caretSummary = this.editor.model.document.selection.getFirstPosition()?.findAncestor("summary") ?? null;
+        for (const [model, state] of this.summaryHints) {
+            const shouldBeActive = model === caretSummary;
+            if (state.caretActive === shouldBeActive) continue;
+            state.caretActive = shouldBeActive;
+            this.applyVisibility(state);
+        }
+    }
+
+    /**
+     * Apply the derived predicate `hoverActive || caretActive` to a state's
+     * handle. Hover has a dwell delay; caret is immediate — pushing without
+     * dwell when caret takes ownership matches user intent (keyboard/click
+     * navigation should reveal the hint promptly).
+     */
+    private applyVisibility(state: SummaryHintState): void {
+        if (state.caretActive) {
+            // Caret entering trumps any pending hover dwell — show now.
+            state.handle.show();
+        } else if (state.hoverActive) {
+            state.handle.showAfter(HINT_DWELL_MS);
+        } else {
+            state.handle.hide();
+        }
+    }
+
+    private attachSummaryHoverListeners(state: SummaryHintState): void {
+        state.dom.addEventListener("mouseenter", () => {
+            state.hoverActive = true;
+            this.applyVisibility(state);
+        });
+        state.dom.addEventListener("mouseleave", () => {
+            state.hoverActive = false;
+            this.applyVisibility(state);
         });
     }
 
