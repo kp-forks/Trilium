@@ -89,14 +89,13 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
         }).catch(e => console.error("Failed to get attachments for SVGSplitEditor", e));
     }, [ note, svg, attachmentTitle, onSave ]);
 
-    // Import/export
-    useTriliumEvent("exportSvg", async({ ntxId: eventNtxId }) => {
+    // Import/export. The renderer's `svg` string is exported rather than the on-screen element,
+    // which svg-pan-zoom has wrapped in a viewport transform reflecting the current pan/zoom.
+    useTriliumEvent("exportSvg", ({ ntxId: eventNtxId }) => {
         if (eventNtxId !== ntxId || !svg) return;
 
         try {
-            const svgEl = containerRef.current?.querySelector("svg");
-            if (!svgEl) throw new Error("SVG element not found");
-            await utils.downloadAsSvg(note.title, svgEl);
+            utils.downloadSvg(note.title, svg);
         } catch (e) {
             console.warn(e);
             toast.showError(t("svg.export_to_svg"));
@@ -106,9 +105,7 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
     useTriliumEvent("exportPng", async ({ ntxId: eventNtxId }) => {
         if (eventNtxId !== ntxId || !svg) return;
         try {
-            const svgEl = containerRef.current?.querySelector("svg");
-            if (!svgEl) throw new Error("SVG element not found");
-            await utils.downloadAsPng(note.title, svgEl);
+            await utils.downloadSvgAsPng(note.title, svg);
         } catch (e) {
             console.warn(e);
             toast.showError(t("svg.export_to_png"));
