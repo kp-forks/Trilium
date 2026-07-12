@@ -1,10 +1,11 @@
 import { createPortal } from "preact/compat";
 import { useMemo, useRef, useState } from "preact/hooks";
-import Modal from "../../../react/Modal";
+
+import { t } from "../../../../services/i18n";
 import FormGroup from "../../../react/FormGroup";
 import FormSelect from "../../../react/FormSelect";
 import FormTextBox from "../../../react/FormTextBox";
-import { t } from "../../../../services/i18n";
+import Modal from "../../../react/Modal";
 
 export interface LlmProviderConfig {
     id: string;
@@ -18,12 +19,16 @@ export interface ProviderType {
     id: string;
     name: string;
     defaultBaseUrl: string;
+    /** When false, the provider needs no API key or base URL (e.g. subscription-based auth). */
+    usesApiKey?: boolean;
 }
 
 export const PROVIDER_TYPES: ProviderType[] = [
     { id: "anthropic", name: "Anthropic", defaultBaseUrl: "https://api.anthropic.com/v1" },
     { id: "openai", name: "OpenAI", defaultBaseUrl: "https://api.openai.com/v1" },
-    { id: "google", name: "Google Gemini", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta" }
+    { id: "google", name: "Google Gemini", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta" },
+    // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`).
+    { id: "claude-agent", name: "Claude Code (Pro/Max subscription)", defaultBaseUrl: "", usesApiKey: false }
 ];
 
 function isValidBaseUrl(value: string): boolean {
@@ -54,9 +59,10 @@ export default function AddProviderModal({ show, onHidden, onSave }: AddProvider
         () => PROVIDER_TYPES.find(p => p.id === selectedProvider),
         [selectedProvider]
     );
+    const usesApiKey = providerType?.usesApiKey !== false;
     const trimmedBaseUrl = baseUrl.trim();
     const baseUrlIsValid = isValidBaseUrl(trimmedBaseUrl);
-    const canSubmit = !!apiKey.trim() && baseUrlIsValid;
+    const canSubmit = usesApiKey ? !!apiKey.trim() && baseUrlIsValid : true;
 
     function handleSubmit() {
         if (!canSubmit) {
@@ -67,8 +73,8 @@ export default function AddProviderModal({ show, onHidden, onSave }: AddProvider
             id: `${selectedProvider}_${Date.now()}`,
             name: providerType?.name || selectedProvider,
             provider: selectedProvider,
-            apiKey: apiKey.trim(),
-            ...(trimmedBaseUrl && { baseURL: trimmedBaseUrl })
+            apiKey: usesApiKey ? apiKey.trim() : "",
+            ...(usesApiKey && trimmedBaseUrl && { baseURL: trimmedBaseUrl })
         };
 
         onSave(newProvider);
@@ -118,32 +124,38 @@ export default function AddProviderModal({ show, onHidden, onSave }: AddProvider
                 />
             </FormGroup>
 
-            <FormGroup
-                name="base-url"
-                label={t("llm.base_url")}
-                description={
-                    !baseUrlIsValid
-                        ? <span className="text-danger">{t("llm.base_url_invalid")}</span>
-                        : t("llm.base_url_description")
-                }
-            >
-                <FormTextBox
-                    type="text"
-                    currentValue={baseUrl}
-                    onChange={setBaseUrl}
-                    placeholder={providerType?.defaultBaseUrl}
-                />
-            </FormGroup>
+            {usesApiKey ? (
+                <>
+                    <FormGroup
+                        name="base-url"
+                        label={t("llm.base_url")}
+                        description={
+                            !baseUrlIsValid
+                                ? <span className="text-danger">{t("llm.base_url_invalid")}</span>
+                                : t("llm.base_url_description")
+                        }
+                    >
+                        <FormTextBox
+                            type="text"
+                            currentValue={baseUrl}
+                            onChange={setBaseUrl}
+                            placeholder={providerType?.defaultBaseUrl}
+                        />
+                    </FormGroup>
 
-            <FormGroup name="api-key" label={t("llm.api_key")}>
-                <FormTextBox
-                    type="password"
-                    currentValue={apiKey}
-                    onChange={setApiKey}
-                    placeholder={t("llm.api_key_placeholder")}
-                    autoFocus
-                />
-            </FormGroup>
+                    <FormGroup name="api-key" label={t("llm.api_key")}>
+                        <FormTextBox
+                            type="password"
+                            currentValue={apiKey}
+                            onChange={setApiKey}
+                            placeholder={t("llm.api_key_placeholder")}
+                            autoFocus
+                        />
+                    </FormGroup>
+                </>
+            ) : (
+                <p>{t("llm.claude_agent_description")}</p>
+            )}
         </Modal>,
         document.body
     );
