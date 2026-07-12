@@ -47,6 +47,10 @@ const statusMarks: Record<string, Decoration> = {
     "5": Decoration.mark({ class: "cm-log-status cm-log-status-5xx" })
 };
 
+/**
+ * The Next themes own the palette (`--log-*` in theme-next-light.css / theme-next-dark.css). The
+ * fallbacks below are what the legacy themes — which don't define those variables — render with.
+ */
 const logHighlightTheme = EditorView.baseTheme({
     ".cm-log-timestamp": { color: "var(--muted-text-color)" },
     ".cm-log-http": { backgroundColor: "var(--log-http-line-background-color, color-mix(in srgb, var(--main-text-color) 3%, transparent))" },
@@ -57,7 +61,7 @@ const logHighlightTheme = EditorView.baseTheme({
     ".cm-log-status-3xx": { color: "var(--log-status-redirect-color, var(--muted-text-color))" },
     ".cm-log-status-4xx": { color: "var(--log-status-client-error-color, #d29922)" },
     ".cm-log-status-5xx": { color: "var(--log-status-server-error-color, #e5534b)" },
-    ".cm-log-error": { color: "var(--log-error-color, #e5534b)" },
+    ".cm-log-error": { color: "var(--log-error-color, #e5534b)", backgroundColor: "transparent" },
     // Placeholder: no colour yet — set `--log-info-color` to activate.
     ".cm-log-info": { color: "var(--log-info-color, inherit)" }
 });
