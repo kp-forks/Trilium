@@ -6,7 +6,7 @@ import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hoo
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import NoItems from "../../react/NoItems";
-import { preloadFor } from "./media_environment";
+import { playerRootClasses, preloadFor } from "./media_environment";
 import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
@@ -70,7 +70,7 @@ export default function VideoPreview({ source, environment, note, noteContext, i
     }
 
     return (
-        <div ref={wrapperRef} className={`video-preview-wrapper media-env-${environment} ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove}>
+        <div ref={wrapperRef} className={`video-preview-wrapper ${playerRootClasses(environment)} ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove}>
             <video
                 ref={videoRef}
                 class="video-preview"

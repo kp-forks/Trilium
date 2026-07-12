@@ -107,4 +107,17 @@ describe("MediaPreview", () => {
         await act(async () => render(<MediaPreview entity={videoNote} environment="embedded" />, container));
         expect(container.querySelector(".play-mode-dropdown")).toBeNull();
     });
+
+    it("keeps a preview's clicks to itself, so pressing play in a collection card doesn't open the note", async () => {
+        // Both the placeholder and the player it becomes opt out of link navigation (see services/link.ts).
+        await act(async () => render(<MediaPreview entity={videoNote} environment="preview" />, container));
+        expect(container.querySelector(".media-proxy.no-link-navigation")).not.toBeNull();
+
+        await act(async () => proxyPlayButton()?.click());
+        expect(container.querySelector(".video-preview-wrapper.no-link-navigation")).not.toBeNull();
+
+        // An embedded player isn't inside a link, and must not suppress navigation.
+        await act(async () => render(<MediaPreview entity={videoNote} environment="embedded" />, container));
+        expect(container.querySelector(".no-link-navigation")).toBeNull();
+    });
 });

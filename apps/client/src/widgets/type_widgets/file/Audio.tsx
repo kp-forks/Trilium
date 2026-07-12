@@ -5,7 +5,7 @@ import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { loadWaveform } from "./audio_waveform";
 import { AudioVisualizer } from "./AudioVisualizer";
-import { preloadFor } from "./media_environment";
+import { playerRootClasses, preloadFor } from "./media_environment";
 import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 import { WaveformSeekBar } from "./WaveformSeekBar";
 
@@ -44,7 +44,7 @@ export default function AudioPreview({ source, environment, note, noteContext, i
     }
 
     return (
-        <div ref={wrapperRef} className={`audio-preview-wrapper media-env-${environment}`} onKeyDown={onKeyDown} tabIndex={0}>
+        <div ref={wrapperRef} className={`audio-preview-wrapper ${playerRootClasses(environment)}`} onKeyDown={onKeyDown} tabIndex={0}>
             <audio
                 class="audio-preview"
                 src={source.streamUrl}

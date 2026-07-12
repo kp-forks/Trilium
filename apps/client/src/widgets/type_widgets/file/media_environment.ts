@@ -18,3 +18,12 @@ export function loadsEagerly(environment: MediaEnvironment): boolean {
 export function preloadFor(environment: MediaEnvironment): "auto" | "metadata" {
     return environment === "standalone" ? "auto" : "metadata";
 }
+
+/**
+ * Classes for a player's root element. A preview sits inside a clickable host (a collection card is itself a
+ * link), so it opts out of link navigation — otherwise pressing play, seeking or opening the speed dropdown
+ * would also open the note. See `no-link-navigation` in services/link.ts.
+ */
+export function playerRootClasses(environment: MediaEnvironment): string {
+    return `media-env-${environment}${environment === "preview" ? " no-link-navigation" : ""}`;
+}
