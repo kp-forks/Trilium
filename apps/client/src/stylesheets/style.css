@@ -3015,7 +3015,6 @@ iframe.print-iframe {
 
     &:disabled {
         opacity: 1;
-        cursor: not-allowed;
     }
 }
 
