@@ -155,6 +155,50 @@ describe("MediaPreview", () => {
         });
     });
 
+    describe("compact video chrome", () => {
+        const renderCompactVideo = async (environment: "preview" | "embedded") => {
+            await act(async () => render(<MediaPreview entity={videoNote} environment={environment} />, container));
+            if (environment === "preview") {
+                await act(async () => proxyPlayButton()?.click());
+            }
+        };
+
+        it.each([ "preview", "embedded" ] as const)("collapses %s's overlay to a single play / seek / volume row", async (environment) => {
+            await renderCompactVideo(environment);
+
+            const row = container.querySelector(".video-preview-wrapper.media-compact .media-compact-row");
+            expect(row).not.toBeNull();
+            expect(row?.querySelector(".play-button")).not.toBeNull();
+            expect(row?.querySelector(".media-seekbar-row")).not.toBeNull();
+            expect(row?.querySelector(".media-volume-row")).not.toBeNull();
+
+            // Speed, rotate and the ±10s skips are gone, along with the full player's stacked rows.
+            expect(container.querySelector(".speed-dropdown")).toBeNull();
+            expect(container.querySelector(".bx-rotate-right")).toBeNull();
+            expect(container.querySelector(".bx-rewind")).toBeNull();
+            expect(container.querySelector(".bx-fast-forward")).toBeNull();
+            expect(container.querySelector(".media-buttons-row")).toBeNull();
+        });
+
+        it("offers fullscreen from an embed, but not from a preview tile", async () => {
+            await renderCompactVideo("embedded");
+            expect(container.querySelector(".bx-fullscreen")).not.toBeNull();
+
+            await renderCompactVideo("preview");
+            expect(container.querySelector(".bx-fullscreen")).toBeNull();
+        });
+
+        it("leaves the note detail with the full overlay", async () => {
+            await act(async () => render(<MediaPreview entity={videoNote} environment="standalone" />, container));
+
+            expect(container.querySelector(".media-compact-row")).toBeNull();
+            expect(container.querySelector(".media-buttons-row")).not.toBeNull();
+            expect(container.querySelector(".speed-dropdown")).not.toBeNull();
+            expect(container.querySelector(".bx-rotate-right")).not.toBeNull();
+            expect(container.querySelector(".bx-fullscreen")).not.toBeNull();
+        });
+    });
+
     it("keeps a preview's clicks to itself, so pressing play in a collection card doesn't open the note", async () => {
         // Both the placeholder and the player it becomes opt out of link navigation (see services/link.ts).
         await act(async () => render(<MediaPreview entity={videoNote} environment="preview" />, container));

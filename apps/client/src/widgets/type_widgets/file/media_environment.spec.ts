@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadsEagerly, playerRootClasses, preloadFor, usesCompactControls } from "./media_environment";
+import { loadsEagerly, playerRootClasses, preloadFor, showsViewportControls, usesCompactControls } from "./media_environment";
 
 describe("media environment", () => {
     it("only a preview is lazy — it must not create a media element until the user asks for one", () => {
@@ -25,5 +25,11 @@ describe("media environment", () => {
         expect(usesCompactControls("preview")).toBe(true);
         expect(usesCompactControls("embedded")).toBe(true);
         expect(usesCompactControls("standalone")).toBe(false);
+    });
+
+    it("withholds the escape-to-a-bigger-viewport controls from a preview tile only", () => {
+        expect(showsViewportControls("preview")).toBe(false);
+        expect(showsViewportControls("embedded")).toBe(true);
+        expect(showsViewportControls("standalone")).toBe(true);
     });
 });

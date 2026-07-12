@@ -101,9 +101,47 @@
     flex-direction: column;
 }
 
-/* The compact audio player, worn everywhere but the note detail: a full-height visualizer band above a single
-   play / seek / volume row. A collection tile or an included note has no room for the speed, skip and
-   play-mode controls. */
+/* The compact chrome, worn by audio and video alike everywhere but the note detail: the whole control set
+   collapses to a single play / seek / volume row. A collection tile or an included note has no room for the
+   speed, skip, rotate and play-mode controls. */
+.media-compact {
+    .media-preview-controls {
+        padding: 0.5em;
+    }
+
+    .media-compact-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+
+        .play-button {
+            --icon-button-size: 36px;
+        }
+
+        /* The seek bar (plain for video, waveform for audio) takes whatever the buttons leave. */
+        .media-seekbar-row {
+            flex: 1;
+            min-width: 0;
+        }
+
+        /* A range input has an intrinsic minimum width, so without this the seek bar refuses to shrink past it
+           and runs over the volume slider in a narrow player. */
+        .media-trackbar {
+            min-width: 0;
+        }
+
+        /* The volume control holds its width; the seek bar is what gives way. */
+        .media-volume-row {
+            flex-shrink: 0;
+        }
+
+        .waveform-canvas {
+            height: 28px;
+        }
+    }
+}
+
+/* The compact audio player adds a visualizer band above that row, in place of the full player's icon. */
 .audio-preview-wrapper.media-compact {
     .audio-preview-visualization-wrapper {
         /* The icon this player drops was the band's only in-flow child (the canvas is absolutely positioned),
@@ -121,28 +159,5 @@
         left: 12px;
         width: calc(100% - 24px);
         height: calc(100% - 12px);
-    }
-
-    .media-preview-controls {
-        padding: 0.5em;
-    }
-
-    .media-compact-row {
-        display: flex;
-        align-items: center;
-        gap: 0.5em;
-
-        .play-button {
-            --icon-button-size: 36px;
-        }
-
-        .media-seekbar-row {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .waveform-canvas {
-            height: 28px;
-        }
     }
 }

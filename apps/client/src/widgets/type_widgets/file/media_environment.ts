@@ -40,3 +40,12 @@ export function playerRootClasses(environment: MediaEnvironment): string {
 export function usesCompactControls(environment: MediaEnvironment): boolean {
     return environment !== "standalone";
 }
+
+/**
+ * Whether the player offers a way out to a bigger viewport (picture-in-picture, fullscreen). A preview is an
+ * incidental tile in a list of many and stays put; an embedded player is a deliberate placement, where being
+ * able to escape a small box is worth the two buttons.
+ */
+export function showsViewportControls(environment: MediaEnvironment): boolean {
+    return environment !== "preview";
+}

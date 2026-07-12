@@ -6,7 +6,7 @@ import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hoo
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import NoItems from "../../react/NoItems";
-import { playerRootClasses, preloadFor } from "./media_environment";
+import { playerRootClasses, preloadFor, showsViewportControls, usesCompactControls } from "./media_environment";
 import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
@@ -64,6 +64,7 @@ export default function VideoPreview({ source, environment, note, noteContext, i
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, videoRef);
     const siblingNavigation = useMediaSessionController({ source, environment, note, noteContext, isVisible, autoPlay, mimePrefix: "video/", mediaRef: videoRef, playMode });
+    const compact = usesCompactControls(environment);
 
     if (error) {
         return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: source.mime.replace("/", "-") })} />;
@@ -85,29 +86,45 @@ export default function VideoPreview({ source, environment, note, noteContext, i
             />
 
             <div className="media-preview-controls">
-                <SeekBar mediaRef={videoRef} />
-                <div class="media-buttons-row">
-                    <div className="left">
-                        <PlaybackSpeed mediaRef={videoRef} />
-                        {/* The play mode lives on the parent folder, which only the note detail knows. */}
-                        {noteContext && <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />}
-                        <RotateButton videoRef={videoRef} />
-                    </div>
-                    <div className="center">
-                        <div className="spacer" />
-                        <MediaSiblingButton navigation={siblingNavigation} direction="previous" tooltipI18nKey="media.previous-video" />
-                        <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
+                {compact ? (
+                    <div class="media-compact-row">
                         <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
-                        <SkipButton mediaRef={videoRef} seconds={10} icon="bx bx-fast-forward" text={t("media.forward-10s")} />
-                        <MediaSiblingButton navigation={siblingNavigation} direction="next" tooltipI18nKey="media.next-video" />
-                    </div>
-                    <div className="right">
+                        <SeekBar mediaRef={videoRef} />
                         <VolumeControl mediaRef={videoRef} />
-                        <ZoomToFitButton videoRef={videoRef} />
-                        <PictureInPictureButton videoRef={videoRef} />
-                        <FullscreenButton targetRef={wrapperRef} />
+                        {showsViewportControls(environment) && (
+                            <>
+                                <PictureInPictureButton videoRef={videoRef} />
+                                <FullscreenButton targetRef={wrapperRef} />
+                            </>
+                        )}
                     </div>
-                </div>
+                ) : (
+                    <>
+                        <SeekBar mediaRef={videoRef} />
+                        <div class="media-buttons-row">
+                            <div className="left">
+                                <PlaybackSpeed mediaRef={videoRef} />
+                                {/* The play mode lives on the parent folder, which only the note detail knows. */}
+                                {noteContext && <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />}
+                                <RotateButton videoRef={videoRef} />
+                            </div>
+                            <div className="center">
+                                <div className="spacer" />
+                                <MediaSiblingButton navigation={siblingNavigation} direction="previous" tooltipI18nKey="media.previous-video" />
+                                <SkipButton mediaRef={videoRef} seconds={-10} icon="bx bx-rewind" text={t("media.back-10s")} />
+                                <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
+                                <SkipButton mediaRef={videoRef} seconds={10} icon="bx bx-fast-forward" text={t("media.forward-10s")} />
+                                <MediaSiblingButton navigation={siblingNavigation} direction="next" tooltipI18nKey="media.next-video" />
+                            </div>
+                            <div className="right">
+                                <VolumeControl mediaRef={videoRef} />
+                                <ZoomToFitButton videoRef={videoRef} />
+                                <PictureInPictureButton videoRef={videoRef} />
+                                <FullscreenButton targetRef={wrapperRef} />
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
