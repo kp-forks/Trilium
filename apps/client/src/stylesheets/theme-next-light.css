@@ -288,6 +288,9 @@
     --tooltip-background-color: rgba(0, 0, 0, 0.818);
     --tooltip-foreground-color: #ffffffeb;
     --tooltip-shadow-color: rgba(0, 0, 0, 0.2);
+    --tooltip-kbd-color: white;
+    --tooltip-kbd-background: #ffffff32;
+    --tooltip-kbd-border: #00000060;
 
     --note-tooltip-background-color: white;
 

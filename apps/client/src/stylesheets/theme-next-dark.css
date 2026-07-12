@@ -289,7 +289,10 @@
     --tooltip-background-color: rgba(67, 67, 67, 0.86);
     --tooltip-foreground-color: #ffffffeb;
     --tooltip-shadow-color: rgba(0, 0, 0, 0.4);
-    
+    --tooltip-kbd-color: white;
+    --tooltip-kbd-background: #ffffff32;
+    --tooltip-kbd-border: #00000060;
+
     --note-tooltip-background-color: #3d3d3d;
     
     --help-background-color: var(--menu-background-color);
