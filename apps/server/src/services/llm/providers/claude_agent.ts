@@ -309,10 +309,11 @@ export class ClaudeAgentProvider implements LlmProvider {
         const builtinTools = config.enableWebSearch ? ["WebSearch", "WebFetch"] : [];
         const allowedTools = [...builtinTools];
 
+        let systemPrompt = config.systemPrompt
+            || "You are an AI assistant integrated into Trilium Notes, a hierarchical note-taking application. Help the user with their notes: answer questions, find and summarize information, and use the available note tools when they are relevant. Be concise and helpful.";
+
         const options: AgentOptions = {
             cwd: getAgentCwd(),
-            systemPrompt: config.systemPrompt
-                || "You are an AI assistant integrated into Trilium Notes, a hierarchical note-taking application. Help the user with their notes: answer questions, find and summarize information, and use the available note tools when they are relevant. Be concise and helpful.",
             tools: builtinTools,
             settingSources: [],
             strictMcpConfig: true,
@@ -332,8 +333,13 @@ export class ClaudeAgentProvider implements LlmProvider {
                 allowedTools.push("mcp__trilium");
             } else {
                 getLog().info("Claude Agent provider: note tools requested but the MCP server is disabled — enable it in Options → AI / LLM to let the agent access notes.");
+                // Let the model explain the misconfiguration instead of
+                // guessing at why it cannot see any notes.
+                systemPrompt += "\n\nNote tools are currently unavailable because Trilium's MCP server is turned off. If the user asks about their notes, tell them to enable the MCP server in Options → AI / LLM and start a new message.";
             }
         }
+
+        options.systemPrompt = systemPrompt;
 
         options.allowedTools = allowedTools;
         return options;
@@ -348,8 +354,25 @@ export class ClaudeAgentProvider implements LlmProvider {
 let agentCwd: string | undefined;
 function getAgentCwd(): string {
     if (!agentCwd) {
-        agentCwd = path.join(dataDirs.TRILIUM_DATA_DIR, "claude-agent");
+        // Resolve to an absolute path — TRILIUM_DATA_DIR may be relative (dev
+        // runs use TRILIUM_DATA_DIR=data) and a relative spawn cwd would move
+        // with the server process's own cwd.
+        agentCwd = path.resolve(dataDirs.TRILIUM_DATA_DIR, "claude-agent");
         fs.mkdirSync(agentCwd, { recursive: true });
+
+        // Claude Code resolves its "project" by walking up to the nearest git
+        // root. If the data dir sits inside a repository (again, the dev-run
+        // case), the agent inherits that repo's project state: its .mcp.json
+        // approval list (a `disabledMcpjsonServers: ["trilium"]` entry silently
+        // disables our MCP server by name), its CLAUDE.md, and its auto-memory
+        // — none of which belong in a notes chat. A .git marker makes the agent
+        // directory its own project root, isolating it from any enclosing repo.
+        const gitMarker = path.join(agentCwd, ".git");
+        if (!fs.existsSync(gitMarker)) {
+            fs.mkdirSync(path.join(gitMarker, "objects"), { recursive: true });
+            fs.mkdirSync(path.join(gitMarker, "refs"), { recursive: true });
+            fs.writeFileSync(path.join(gitMarker, "HEAD"), "ref: refs/heads/main\n");
+        }
     }
     return agentCwd;
 }

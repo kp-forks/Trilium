@@ -207,6 +207,33 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(options.settingSources).toEqual([]);
     });
 
+    it("isolates the agent cwd from enclosing projects with a .git marker", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        const path = await import("path");
+        const fs = await import("fs");
+        const cwd = queryMock.mock.calls[0][0].options.cwd;
+        // Absolute cwd (TRILIUM_DATA_DIR may be relative in dev runs) with a
+        // .git marker so Claude Code never resolves an enclosing repo as the
+        // agent's project — that would apply the repo's disabledMcpjsonServers
+        // list (silently disabling the "trilium" server by name), CLAUDE.md,
+        // and auto-memory to note chats.
+        expect(path.isAbsolute(cwd)).toBe(true);
+        expect(fs.existsSync(path.join(cwd, ".git", "HEAD"))).toBe(true);
+    });
+
+    it("tells the model why note tools are missing when the MCP server is disabled", async () => {
+        getOptionOrNullMock.mockReturnValue(null);
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        const options = queryMock.mock.calls[0][0].options;
+        expect(options.systemPrompt).toContain("MCP server is turned off");
+    });
+
     it("omits MCP wiring when the MCP server is disabled, and enables web search on request", async () => {
         getOptionOrNullMock.mockReturnValue(null);
         scriptAgent([successResult()]);
