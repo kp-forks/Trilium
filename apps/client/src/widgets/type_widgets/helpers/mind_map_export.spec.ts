@@ -5,7 +5,7 @@
 import MindElixir, { type MindElixirData, type MindElixirInstance } from "mind-elixir";
 import { describe, expect, it } from "vitest";
 
-import { injectSvgLabels, renderMindMapPreviewSvg } from "./mind_map_export";
+import { postProcessExportedSvg, renderMindMapPreviewSvg } from "./mind_map_export";
 
 // mind-elixir touches these browser APIs at construction time; jsdom lacks them.
 window.matchMedia = window.matchMedia ?? ((query: string) => ({
@@ -53,11 +53,11 @@ function buildMind({ labels = [] as string[], exportedSvg = buildExportedSvg() }
     } as unknown as MindElixirInstance;
 }
 
-describe("injectSvgLabels", () => {
+describe("postProcessExportedSvg", () => {
     it("appends a foreignObject per label to the inner svg, carrying the label content", () => {
         const mind = buildMind({ labels: [ "first label", "second <b>label</b>" ] });
 
-        const result = injectSvgLabels(mind, buildExportedSvg());
+        const result = postProcessExportedSvg(mind, buildExportedSvg());
         const doc = new DOMParser().parseFromString(result, "image/svg+xml");
         const innerSvg = doc.documentElement.querySelector(":scope > svg");
         const foreignObjects = innerSvg?.querySelectorAll("foreignObject") ?? [];
@@ -73,20 +73,38 @@ describe("injectSvgLabels", () => {
         const dirtyLabel = `safe<img src="x" onerror="alert(1)"><script>alert(2)</script>`;
         const mind = buildMind({ labels: [ dirtyLabel ] });
 
-        const result = injectSvgLabels(mind, buildExportedSvg());
+        const result = postProcessExportedSvg(mind, buildExportedSvg());
 
         expect(result).toContain("safe");
         expect(result).not.toContain("onerror");
         expect(result).not.toContain("<script>");
     });
 
-    it("returns the input unchanged when there are no labels or no inner svg", () => {
-        const noLabels = buildMind();
-        expect(injectSvgLabels(noLabels, buildExportedSvg())).toBe(buildExportedSvg());
+    it("adds anti-clipping slack to the exporter's exact-fit foreignObject sizes", () => {
+        // Exact-fit boxes + pre-wrap clip text when rasterization resolves fonts a hair
+        // wider than the page did ("Hi there" → "Hi") — sizes must gain slack.
+        const exportedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="400px"
+            height="300px"><rect x="0" y="0" width="400" height="300" fill="#fff"/>
+            <svg x="100" y="100" overflow="visible"><foreignObject x="10" y="10"
+            width="86.3167px" height="37.5px"><div>Hi there</div></foreignObject></svg></svg>`;
+        const result = postProcessExportedSvg(buildMind(), exportedSvg);
+
+        const doc = new DOMParser().parseFromString(result, "image/svg+xml");
+        const foreignObject = doc.querySelector("foreignObject");
+        expect(foreignObject?.getAttribute("width")).toBe(String(Math.ceil(86.3167 * 1.02 + 2)));
+        expect(foreignObject?.getAttribute("height")).toBe(String(Math.ceil(37.5 * 1.02 + 2)));
+        // The background rect and the svg dimensions must stay untouched.
+        expect(doc.querySelector("rect")?.getAttribute("width")).toBe("400");
+    });
+
+    it("adds no labels when the map has none, and returns unparseable input unchanged", () => {
+        const noLabels = postProcessExportedSvg(buildMind(), buildExportedSvg());
+        const doc = new DOMParser().parseFromString(noLabels, "image/svg+xml");
+        expect(doc.querySelectorAll("foreignObject")).toHaveLength(0);
 
         const withLabels = buildMind({ labels: [ "a label" ] });
         const flatSvg = `<svg xmlns="http://www.w3.org/2000/svg"><rect/></svg>`;
-        expect(injectSvgLabels(withLabels, flatSvg)).toBe(flatSvg);
+        expect(postProcessExportedSvg(withLabels, flatSvg)).toBe(flatSvg);
     });
 });
 
@@ -215,14 +233,18 @@ describe("renderMindMapPreviewSvg (real mind-elixir)", () => {
         expect(labelDivs).toContain(`label & "quoted"`);
     });
 
-    it("a map without arrows or summaries exports without injection", async () => {
+    it("a map without arrows or summaries exports without label injection", async () => {
         const mind = initRealMindMap({
             nodeData: { id: "root", topic: "Just a root", children: [] }
         });
         const result = await renderMindMapPreviewSvg(mind);
+        const rawExport = await mind.exportSvg().text();
 
         expect(result).toContain("Just a root");
-        expect(result).not.toContain("foreignObject><div"); // no injected labels
-        expect(await mind.exportSvg().text()).toBe(result);
+        // Post-processing must not add foreignObjects beyond the exporter's own
+        // (it only resizes them).
+        const countForeignObjects = (svg: string) => new DOMParser()
+            .parseFromString(svg, "image/svg+xml").querySelectorAll("foreignObject").length;
+        expect(countForeignObjects(result)).toBe(countForeignObjects(rawExport));
     });
 });

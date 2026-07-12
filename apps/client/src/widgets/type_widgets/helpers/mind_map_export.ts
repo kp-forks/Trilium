@@ -14,7 +14,8 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  * demo map, see #10478) — but it has one known gap: labels of arrows ("custom links")
  * and summaries live in an HTML overlay (`.label-container`) rather than in the SVG
  * layers it clones, so they are missing from its output (the reason the preview was
- * previously generated with snapdom). {@link injectSvgLabels} re-adds them.
+ * previously generated with snapdom). {@link postProcessExportedSvg} re-adds them and
+ * relaxes the exporter's exact-fit text boxes so rasterization cannot clip them.
  *
  * Note that upstream considers `exportSvg()` deprecated in favor of DOM screenshot
  * libraries and will not fix the label gap (see
@@ -27,29 +28,35 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  */
 export async function renderMindMapPreviewSvg(mind: MindElixirInstance): Promise<string> {
     const svgText = await mind.exportSvg().text();
-    return injectSvgLabels(mind, svgText);
+    return postProcessExportedSvg(mind, svgText);
 }
 
+// The exporter emits exact-fit foreignObject boxes: the text's measured width in the
+// page's font, to the third decimal, with `white-space: pre-wrap`. Any context that
+// resolves fonts even fractionally wider — PNG rasterization at scale, an <img> on a
+// machine with different fonts — soft-wraps the text and the exact-fit height clips the
+// wrapped line ("Hi there" renders as "Hi"). The boxes are invisible and the text is
+// left-anchored, so widening them slightly is visually free.
+const SIZE_SLACK_RATIO = 1.02;
+const SIZE_SLACK_PX = 2;
+
 /**
- * Re-adds the arrow/summary labels missing from mind-elixir's `exportSvg()` output.
+ * Post-processes mind-elixir's `exportSvg()` output to make it robust and complete:
  *
- * Labels are absolutely positioned `div.svg-label` elements inside `mind.nodes`
- * (their offset parent is the `position: relative` `me-nodes` element), so their
- * `offsetLeft`/`offsetTop` are in the same coordinate space as the exported SVG
- * layers. Each label is appended to the exporter's inner `<svg>` (the one holding
- * the map layers) as a `<foreignObject>` replicating the label's box and text style.
+ * - Re-adds the arrow/summary labels the exporter misses. Labels are absolutely
+ *   positioned `div.svg-label` elements inside `mind.nodes` (their offset parent is the
+ *   `position: relative` `me-nodes` element), so their `offsetLeft`/`offsetTop` are in
+ *   the same coordinate space as the exported SVG layers. Each label is appended to the
+ *   exporter's inner `<svg>` (the one holding the map layers) as a `<foreignObject>`
+ *   replicating the label's box and text style.
+ * - Adds slack to every `<foreignObject>`'s exact-fit size so text is not clipped when
+ *   the SVG is rasterized with slightly different font metrics (see the slack constants).
  *
  * @param mind the live mind map instance the SVG was exported from.
  * @param svgText the output of `mind.exportSvg().text()`.
- * @returns the SVG with the labels injected, or the input unchanged if there are no
- *          labels or it cannot be parsed.
+ * @returns the post-processed SVG, or the input unchanged if it cannot be parsed.
  */
-export function injectSvgLabels(mind: MindElixirInstance, svgText: string): string {
-    const labels = mind.nodes.querySelectorAll<HTMLElement>(".svg-label");
-    if (labels.length === 0) {
-        return svgText;
-    }
-
+export function postProcessExportedSvg(mind: MindElixirInstance, svgText: string): string {
     const doc = new DOMParser().parseFromString(svgText, "image/svg+xml");
     // The exporter produces <svg> [ <rect background>, <svg map layers> ] — label
     // coordinates are relative to the inner svg.
@@ -58,11 +65,25 @@ export function injectSvgLabels(mind: MindElixirInstance, svgText: string): stri
         return svgText;
     }
 
+    const labels = mind.nodes.querySelectorAll<HTMLElement>(".svg-label");
     for (const label of Array.from(labels)) {
         contentSvg.appendChild(doc.importNode(buildLabelForeignObject(label), true));
     }
 
+    for (const foreignObject of Array.from(doc.querySelectorAll("foreignObject"))) {
+        addSizeSlack(foreignObject, "width");
+        addSizeSlack(foreignObject, "height");
+    }
+
     return new XMLSerializer().serializeToString(doc);
+}
+
+function addSizeSlack(element: Element, attribute: "width" | "height") {
+    const value = Number.parseFloat(element.getAttribute(attribute) ?? "");
+    if (!Number.isFinite(value) || value <= 0) {
+        return;
+    }
+    element.setAttribute(attribute, String(Math.ceil(value * SIZE_SLACK_RATIO + SIZE_SLACK_PX)));
 }
 
 /**
@@ -76,15 +97,15 @@ function buildLabelForeignObject(label: HTMLElement): SVGElement {
 
     // The computed width/height carry the fractional used value, but degrade to "auto" when the
     // element is not rendered (e.g. a hidden tab) — fall back to the always-numeric offset size
-    // then. Round up so the foreignObject is never narrower than the text it must fit.
+    // then. The anti-clipping slack is applied later by the shared foreignObject pass.
     const width = Number.parseFloat(style.width) || label.offsetWidth;
     const height = Number.parseFloat(style.height) || label.offsetHeight;
 
     const foreignObject = document.createElementNS(SVG_NS, "foreignObject");
     foreignObject.setAttribute("x", String(label.offsetLeft));
     foreignObject.setAttribute("y", String(label.offsetTop));
-    foreignObject.setAttribute("width", String(Math.ceil(width)));
-    foreignObject.setAttribute("height", String(Math.ceil(height)));
+    foreignObject.setAttribute("width", String(width));
+    foreignObject.setAttribute("height", String(height));
 
     const div = document.createElementNS(XHTML_NS, "div") as HTMLElement;
     div.setAttribute("style",
