@@ -112,7 +112,7 @@ export function SingleNoteRenderer({ note, onReady }: RendererProps) {
                     await import("@triliumnext/ckeditor5/src/theme/ck-content.css");
                 }
                 // Printing preserves full include-note nesting (see expandNestedIncludes).
-                const { $renderedContent } = await content_renderer.getRenderedContent(note, { noChildrenList: true, expandNestedIncludes: true });
+                const { $renderedContent } = await content_renderer.getRenderedContent(note, { noChildrenList: true, expandNestedIncludes: true, mediaEnvironment: "native" });
                 container.replaceChildren(...$renderedContent);
 
                 // Note types rendered as a mounted component (an AI chat) start their transform

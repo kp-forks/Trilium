@@ -1318,6 +1318,7 @@
   },
   "media": {
     "play": "Play (Space)",
+    "activate": "Play {{- title}}",
     "pause": "Pause (Space)",
     "seek": "Seek (Left/Right arrow keys)",
     "back-10s": "Back 10s (Left arrow key)",

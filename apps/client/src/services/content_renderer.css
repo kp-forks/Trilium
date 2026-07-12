@@ -30,3 +30,10 @@
     height: 100%;
     min-height: 120px;
 }
+
+/* The mounted media player (placeholder or full) takes the space its host gives it, above the file footer,
+   down to a floor that keeps it usable in a short host such as a collection tile. */
+.rendered-content .rendered-media {
+    flex: 1;
+    min-height: 8rem;
+}

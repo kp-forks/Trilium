@@ -3,17 +3,15 @@ import "./Video.css";
 import { RefObject } from "preact";
 import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hooks";
 
-import type NoteContext from "../../../components/note_context";
-import FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
-import { getUrlForDownload } from "../../../services/open";
 import ActionButton from "../../react/ActionButton";
 import NoItems from "../../react/NoItems";
-import { MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { preloadFor } from "./media_environment";
+import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
-export default function VideoPreview({ note, noteContext, isVisible = true }: { note: FNote, noteContext?: NoteContext, isVisible?: boolean }) {
+export default function VideoPreview({ source, environment, note, noteContext, isVisible = true, autoPlay }: MediaPlayerProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -25,7 +23,7 @@ export default function VideoPreview({ note, noteContext, isVisible = true }: { 
         // The player instance is reused across notes (just a new src), which stops playback but doesn't
         // reliably fire "pause" — reset so the controls don't keep showing the previous note's playing state.
         setPlaying(false);
-    }, [note.noteId]);
+    }, [source.id]);
     const onError = useCallback(() => setError(true), []);
     // Mirror the element's real play state on every transition: "pause" isn't fired reliably when a track
     // ends or its src is swapped, so derive from `paused` rather than assuming play→true / pause→false.
@@ -65,19 +63,20 @@ export default function VideoPreview({ note, noteContext, isVisible = true }: { 
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, videoRef);
-    const siblingNavigation = useMediaSessionController(note, noteContext, "video/", videoRef, isVisible, playMode);
+    const siblingNavigation = useMediaSessionController({ source, environment, note, noteContext, isVisible, autoPlay, mimePrefix: "video/", mediaRef: videoRef, playMode });
 
     if (error) {
-        return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: note.mime.replace("/", "-") })} />;
+        return <NoItems icon="bx bx-video-off" text={t("media.unsupported-format", { mime: source.mime.replace("/", "-") })} />;
     }
 
     return (
-        <div ref={wrapperRef} className={`video-preview-wrapper ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove}>
+        <div ref={wrapperRef} className={`video-preview-wrapper media-env-${environment} ${controlsVisible ? "" : "controls-hidden"}`} tabIndex={0} onClick={onVideoClick} onKeyDown={onKeyDown} onPointerDown={onPointerDown} onPointerMove={onPointerMove}>
             <video
                 ref={videoRef}
                 class="video-preview"
-                src={getUrlForDownload(`api/notes/${note.noteId}/open-partial`)}
-                datatype={note?.mime}
+                src={source.streamUrl}
+                preload={preloadFor(environment)}
+                datatype={source.mime}
                 onPlay={syncPlaying}
                 onPause={syncPlaying}
                 onEnded={syncPlaying}
@@ -90,7 +89,8 @@ export default function VideoPreview({ note, noteContext, isVisible = true }: { 
                 <div class="media-buttons-row">
                     <div className="left">
                         <PlaybackSpeed mediaRef={videoRef} />
-                        <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />
+                        {/* The play mode lives on the parent folder, which only the note detail knows. */}
+                        {noteContext && <PlayModeButton mode={playMode} onSelectMode={setPlayMode} />}
                         <RotateButton videoRef={videoRef} />
                     </div>
                     <div className="center">
