@@ -15,7 +15,8 @@ export default function MediaProxy({ source, onActivate }: { source: MediaSource
 
     return (
         <div className="media-proxy no-link-navigation">
-            <Icon icon={isVideo ? "bx bx-movie-play" : "bx bx-music"} className="media-proxy-icon" />
+            {/* Not bx-movie-play: its play glyph would double up with the button in front of it. */}
+            <Icon icon={isVideo ? "bx bx-movie" : "bx bx-music"} className="media-proxy-icon" />
             <ActionButton
                 className="media-proxy-play"
                 icon="bx bx-play"

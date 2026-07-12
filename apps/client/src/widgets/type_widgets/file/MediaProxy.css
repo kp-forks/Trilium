@@ -1,5 +1,5 @@
 .media-proxy {
-    --media-proxy-icon-size: 4rem;
+    --media-proxy-icon-size: 6rem;
 
     position: relative;
     width: 100%;
@@ -8,8 +8,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--accented-background-color);
-    border-radius: 0.5em;
+    /* Transparent: the placeholder sits on the host's own background (card, tile, note) rather than
+       painting a panel of its own. `overflow: hidden` still clips the oversized icon in a short host. */
     overflow: hidden;
 
     .media-proxy-icon {
@@ -18,11 +18,9 @@
         opacity: 0.15;
     }
 
+    /* A plain icon-action button, only larger: it keeps the standard hover and adds no chrome of its own. */
     .media-proxy-play {
         --icon-button-size: 56px;
         position: relative;
-        background-color: var(--main-background-color);
-        border-radius: 50%;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
     }
 }
