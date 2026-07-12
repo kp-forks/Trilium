@@ -34,9 +34,9 @@ export default function MediaPreview({ entity, environment = "standalone", noteC
     }
 
     const props = {
+        entity,
         source,
         environment,
-        note: "noteId" in entity ? entity : undefined,
         noteContext,
         isVisible,
         // We only got here from the user pressing play on the placeholder, so honour that press.

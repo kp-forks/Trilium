@@ -199,6 +199,33 @@ describe("MediaPreview", () => {
         });
     });
 
+    describe("file actions", () => {
+        const fileActions = () => ({
+            download: container.querySelector(".media-compact-row .bx-download"),
+            open: container.querySelector(".media-compact-row .bx-link-external")
+        });
+
+        it.each([ "audio", "video" ] as const)("puts Download / Open at the end of an embedded %s player's controls", async (kind) => {
+            const entity = kind === "audio" ? audioNote : videoNote;
+            await act(async () => render(<MediaPreview entity={entity} environment="embedded" />, container));
+
+            const { download, open } = fileActions();
+            expect(download).not.toBeNull();
+            expect(open).not.toBeNull();
+            // They come last, after the playback controls.
+            expect(download?.previousElementSibling).not.toBeNull();
+        });
+
+        it("leaves them out of a preview, which keeps the renderer's footer below the player instead", async () => {
+            await act(async () => render(<MediaPreview entity={audioNote} environment="preview" />, container));
+            await act(async () => proxyPlayButton()?.click());
+
+            const { download, open } = fileActions();
+            expect(download).toBeNull();
+            expect(open).toBeNull();
+        });
+    });
+
     it("keeps a preview's clicks to itself, so pressing play in a collection card doesn't open the note", async () => {
         // Both the placeholder and the player it becomes opt out of link navigation (see services/link.ts).
         await act(async () => render(<MediaPreview entity={videoNote} environment="preview" />, container));

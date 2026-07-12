@@ -5,11 +5,12 @@ import Icon from "../../react/Icon";
 import NoItems from "../../react/NoItems";
 import { loadWaveform } from "./audio_waveform";
 import { AudioVisualizer } from "./AudioVisualizer";
-import { playerRootClasses, preloadFor, usesCompactControls } from "./media_environment";
+import MediaFileActions from "./MediaFileActions";
+import { playerRootClasses, preloadFor, showsFileActions, usesCompactControls } from "./media_environment";
 import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 import { WaveformSeekBar } from "./WaveformSeekBar";
 
-export default function AudioPreview({ source, environment, note, noteContext, isVisible = true, autoPlay }: MediaPlayerProps) {
+export default function AudioPreview({ source, entity, environment, noteContext, isVisible = true, autoPlay }: MediaPlayerProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -36,7 +37,7 @@ export default function AudioPreview({ source, environment, note, noteContext, i
     // ends or its src is swapped, so derive from `paused` rather than assuming play→true / pause→false.
     const syncPlaying = useCallback(() => setPlaying(!!audioRef.current && !audioRef.current.paused), []);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, audioRef);
-    const siblingNavigation = useMediaSessionController({ source, environment, note, noteContext, isVisible, autoPlay, mimePrefix: "audio/", mediaRef: audioRef, playMode });
+    const siblingNavigation = useMediaSessionController({ source, entity, environment, noteContext, isVisible, autoPlay, mimePrefix: "audio/", mediaRef: audioRef, playMode });
     const waveformPeaks = useWaveformPeaks(source.fullUrl);
 
     if (error) {
@@ -69,6 +70,7 @@ export default function AudioPreview({ source, environment, note, noteContext, i
                         <PlayPauseButton playing={playing} togglePlayback={togglePlayback} />
                         <WaveformSeekBar mediaRef={audioRef} peaks={waveformPeaks} />
                         <VolumeControl mediaRef={audioRef} />
+                        {showsFileActions(environment) && <MediaFileActions entity={entity} />}
                     </div>
                 ) : (
                     <>

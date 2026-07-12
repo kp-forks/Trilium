@@ -6,12 +6,13 @@ import { MutableRef, useCallback, useEffect, useRef, useState } from "preact/hoo
 import { t } from "../../../services/i18n";
 import ActionButton from "../../react/ActionButton";
 import NoItems from "../../react/NoItems";
-import { playerRootClasses, preloadFor, showsViewportControls, usesCompactControls } from "./media_environment";
+import MediaFileActions from "./MediaFileActions";
+import { playerRootClasses, preloadFor, showsFileActions, showsViewportControls, usesCompactControls } from "./media_environment";
 import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 
 const AUTO_HIDE_DELAY = 3000;
 
-export default function VideoPreview({ source, environment, note, noteContext, isVisible = true, autoPlay }: MediaPlayerProps) {
+export default function VideoPreview({ source, entity, environment, noteContext, isVisible = true, autoPlay }: MediaPlayerProps) {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const videoRef = useRef<HTMLVideoElement>(null);
     const [playing, setPlaying] = useState(false);
@@ -63,7 +64,7 @@ export default function VideoPreview({ source, environment, note, noteContext, i
 
     const onKeyDown = useKeyboardShortcuts(videoRef, wrapperRef, togglePlayback, flashControls);
     const { mode: playMode, setMode: setPlayMode } = useMediaPlayMode(noteContext, videoRef);
-    const siblingNavigation = useMediaSessionController({ source, environment, note, noteContext, isVisible, autoPlay, mimePrefix: "video/", mediaRef: videoRef, playMode });
+    const siblingNavigation = useMediaSessionController({ source, entity, environment, noteContext, isVisible, autoPlay, mimePrefix: "video/", mediaRef: videoRef, playMode });
     const compact = usesCompactControls(environment);
 
     if (error) {
@@ -97,6 +98,7 @@ export default function VideoPreview({ source, environment, note, noteContext, i
                                 <FullscreenButton targetRef={wrapperRef} />
                             </>
                         )}
+                        {showsFileActions(environment) && <MediaFileActions entity={entity} />}
                     </div>
                 ) : (
                     <>

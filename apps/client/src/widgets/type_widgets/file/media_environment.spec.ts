@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { loadsEagerly, playerRootClasses, preloadFor, showsViewportControls, usesCompactControls } from "./media_environment";
+import { loadsEagerly, playerRootClasses, preloadFor, showsFileActions, showsViewportControls, usesCompactControls } from "./media_environment";
 
 describe("media environment", () => {
     it("only a preview is lazy — it must not create a media element until the user asks for one", () => {
@@ -31,5 +31,11 @@ describe("media environment", () => {
         expect(showsViewportControls("preview")).toBe(false);
         expect(showsViewportControls("embedded")).toBe(true);
         expect(showsViewportControls("standalone")).toBe(true);
+    });
+
+    it("has only an embed carry Download / Open in its controls, in place of the renderer's footer", () => {
+        expect(showsFileActions("embedded")).toBe(true);
+        expect(showsFileActions("preview")).toBe(false);
+        expect(showsFileActions("standalone")).toBe(false);
     });
 });

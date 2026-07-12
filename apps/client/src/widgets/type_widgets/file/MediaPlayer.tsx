@@ -4,6 +4,7 @@ import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import type NoteContext from "../../../components/note_context";
+import type FAttachment from "../../../entities/fattachment";
 import type FNote from "../../../entities/fnote";
 import attributes from "../../../services/attributes";
 import froca from "../../../services/froca";
@@ -24,14 +25,14 @@ const NO_KEYS: readonly string[] = [];
 
 /** What {@link AudioPreview} and {@link VideoPreview} are given, whichever environment they render in. */
 export interface MediaPlayerProps {
+    /** What is being played: a file note, or an attachment. {@link source} is its resolved media. */
+    entity: FNote | FAttachment;
     source: MediaSource;
     environment: MediaEnvironment;
     /**
-     * The note being played, and the tab showing it. Only the note detail has them; they enable sibling
-     * navigation, the folder-level play mode and OS media session ownership, all of which are silently
-     * skipped without them.
+     * The tab showing the note. Only the note detail has one; it enables sibling navigation, the folder-level
+     * play mode and OS media session ownership, all of which are silently skipped without it.
      */
-    note?: FNote;
     noteContext?: NoteContext;
     isVisible?: boolean;
     /** Start playing as soon as the media is ready — the user just activated a lazy preview. */
@@ -202,11 +203,13 @@ const OWNED_MEDIA_ACTIONS: MediaSessionAction[] = [ "previoustrack", "nexttrack"
  * playing in the background). It releases the session — and, when its tab switches to a different note type so
  * this player is hidden/cached, also stops playing — on that navigation, on a handover, or on unmount.
  */
-export function useMediaSessionController({ source, note, noteContext, mimePrefix, mediaRef, isVisible = true, playMode, autoPlay }: MediaPlayerProps & {
+export function useMediaSessionController({ source, entity, noteContext, mimePrefix, mediaRef, isVisible = true, playMode, autoPlay }: MediaPlayerProps & {
     mimePrefix: string;
     mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement>;
     playMode: MediaPlayMode;
 }) {
+    // Siblings are a note-tree notion, so an attachment has none (and neither has a note without a tab).
+    const note = "noteId" in entity ? entity : undefined;
     const navigation = useSiblingNavigation(noteSiblingProvider(note, noteContext, { mimePrefix }));
     // Stable identity for this player instance, used to coordinate with the other mounted players.
     const self = useRef<object>({}).current;

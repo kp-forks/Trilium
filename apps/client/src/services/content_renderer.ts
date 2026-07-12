@@ -8,7 +8,7 @@ import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
 import { t } from "../services/i18n.js";
-import type { MediaEnvironment } from "../widgets/type_widgets/file/media_environment.js";
+import { type MediaEnvironment, showsFileActions } from "../widgets/type_widgets/file/media_environment.js";
 import type { LlmChatContent, StoredMessage } from "../widgets/type_widgets/llm_chat/llm_chat_types.js";
 import renderText, { postProcessRichContent, renderChildrenList } from "./content_renderer_text.js";
 import renderDoc from "./doc_renderer.js";
@@ -303,6 +303,9 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
     }
 
     const $content = $('<div style="display: flex; flex-direction: column; height: 100%; justify-content: end;">');
+    // An embedded player has no room for a footer below it, so it carries Download / Open in its own controls
+    // instead (see showsFileActions) — and this footer stands down.
+    let mediaOwnsFileActions = false;
 
     if (type === "pdf") {
         const url = `../../api/${entityType}/${entityId}/open`;
@@ -324,6 +327,7 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
 
             $content.append($nativePreview);
         } else {
+            mediaOwnsFileActions = showsFileActions(environment);
             await renderMedia(entity, environment, $content);
         }
     }
@@ -332,7 +336,7 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
         await addOCRTextIfAvailable(entity, $content);
     }
 
-    if (entityType === "notes" && "noteId" in entity) {
+    if (entityType === "notes" && "noteId" in entity && !mediaOwnsFileActions) {
         // TODO: we should make this available also for attachments, but there's a problem with "Open externally" support
         //       in attachment list
         const $downloadButton = $(`

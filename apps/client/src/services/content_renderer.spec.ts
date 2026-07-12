@@ -316,13 +316,25 @@ describe("getRenderedContent file rendering", () => {
         expect($renderedContent.find("audio, video").length).toBe(0);
     });
 
-    it("mounts the full media player when the caller embeds the note", async () => {
+    it("mounts the full media player when the caller embeds the note, and drops the footer it carries itself", async () => {
         const note = buildNote({ title: "V", type: "file" });
         note.mime = "video/mp4";
-        const { type } = await getRenderedContent(note, { mediaEnvironment: "embedded" });
+        const { type, $renderedContent } = await getRenderedContent(note, { mediaEnvironment: "embedded" });
         expect(type).toBe("video");
         expect(mediaPreviewComponent).toHaveBeenCalledWith(
             expect.objectContaining({ entity: note, environment: "embedded" }), expect.anything());
+        // An embed has no room for a footer: the player takes Download / Open into its own controls.
+        expect($renderedContent.find(".file-footer").length).toBe(0);
+    });
+
+    it("keeps the footer for a media preview, and for the file types that have no player", async () => {
+        const video = buildNote({ title: "V", type: "file" });
+        video.mime = "video/mp4";
+        expect((await getRenderedContent(video)).$renderedContent.find(".file-footer").length).toBe(1);
+
+        const pdf = buildNote({ title: "P", type: "file" });
+        pdf.mime = "application/pdf";
+        expect((await getRenderedContent(pdf, { mediaEnvironment: "embedded" })).$renderedContent.find(".file-footer").length).toBe(1);
     });
 
     it("renders the plain media element for callers that serialize to HTML (presentation, printing)", async () => {

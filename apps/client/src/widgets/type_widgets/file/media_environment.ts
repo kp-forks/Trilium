@@ -49,3 +49,12 @@ export function usesCompactControls(environment: MediaEnvironment): boolean {
 export function showsViewportControls(environment: MediaEnvironment): boolean {
     return environment !== "preview";
 }
+
+/**
+ * Whether the player carries the Download / Open-externally actions at the end of its own controls. An embed
+ * is tight on height, so it takes them into the controls row instead of letting the content renderer append
+ * its `.file-footer` below — which is why the renderer consults this too, and drops the footer when it does.
+ */
+export function showsFileActions(environment: MediaEnvironment): boolean {
+    return environment === "embedded";
+}
