@@ -64,6 +64,36 @@ test("does not cut short a stroke that is mid-draw when a save happens", async (
     expect(countInkAnnotations(await requestBlob(page, 3))).toBe(2);
 });
 
+test("does not ask to confirm leaving after the annotation was saved", async ({ page }) => {
+    const viewer = await openHarness(page);
+    await enterInkMode(viewer);
+    const box = await pageBox(viewer);
+
+    await drawStroke(page, box, [[200, 200], [320, 260]]);
+    await page.waitForTimeout(500);
+    await requestBlob(page, 1);
+
+    // The stock viewer prompts whenever annotationStorage is non-empty, which stays true
+    // for the rest of the session — so a reload would prompt even after a completed save.
+    // Trilium owns that prompt (the parent blocks unloading while a save is pending), so
+    // the viewer's own handler must never fire.
+    const frame = page.frame({ url: /viewer\.html/ });
+    expect(frame).not.toBeNull();
+    if (!frame) throw new Error("Viewer frame not found");
+    const { stockWouldPrompt, prompted } = await frame.evaluate(() => {
+        const event = new Event("beforeunload", { cancelable: true });
+        window.dispatchEvent(event);
+        return {
+            stockWouldPrompt: (window as any).PDFViewerApplication._hasChanges(),
+            prompted: event.defaultPrevented
+        };
+    });
+    // Guards the assertion below against passing vacuously: the stock prompt condition
+    // really is met, the prompt only stays away because it is suppressed.
+    expect(stockWouldPrompt).toBe(true);
+    expect(prompted).toBe(false);
+});
+
 test("annotations survive reopening the saved document", async ({ page, context }) => {
     const viewer = await openHarness(page);
     await enterInkMode(viewer);

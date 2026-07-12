@@ -68,3 +68,22 @@ export function commitPendingAnnotationEdits(isPointerDown: boolean, uiManager: 
         console.warn("Could not commit pending annotation edits:", e);
     }
 }
+
+/**
+ * Suppresses the stock viewer's "confirm that you want to leave" prompt. pdf.js prompts
+ * whenever `annotationStorage` is non-empty (`onBeforeUnload`/`_hasChanges()` in viewer.mjs),
+ * and the storage keeps its entries for the lifetime of the document — so once anything has
+ * been annotated, every reload prompts forever, even long after Trilium stored the document.
+ * The prompt is also redundant in this embedding: every modification is announced to the
+ * parent via `pdfjs-viewer-document-modified`, and the Trilium client's own beforeunload
+ * guard already blocks unloading until the resulting upload has finished.
+ *
+ * Must be called while custom.mjs is still evaluating, before viewer.mjs registers its own
+ * listener: beforeunload listeners run in registration order, and only an earlier listener
+ * can cancel the stock one via `stopImmediatePropagation()`.
+ */
+export function suppressViewerUnloadPrompt(target: EventTarget = window) {
+    target.addEventListener("beforeunload", (event) => {
+        event.stopImmediatePropagation();
+    });
+}

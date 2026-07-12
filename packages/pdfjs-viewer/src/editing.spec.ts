@@ -5,7 +5,8 @@ import {
     commitPendingAnnotationEdits,
     getAnnotationEditorUIManager,
     isAnnotationEditingActive,
-    setAnnotationEditorUIManager
+    setAnnotationEditorUIManager,
+    suppressViewerUnloadPrompt
 } from "./editing";
 
 const INK_MODE = 15; // AnnotationEditorType.INK
@@ -73,6 +74,28 @@ describe("isAnnotationEditingActive", () => {
         expect(isAnnotationEditingActive(null)).toBe(false);
         expect(isAnnotationEditingActive(buildManager({ getMode: () => ANNOTATION_EDITOR_MODE_NONE }))).toBe(false);
         expect(isAnnotationEditingActive(buildManager())).toBe(true);
+    });
+});
+
+describe("suppressViewerUnloadPrompt", () => {
+    it("stops the stock beforeunload prompt, but only when registered ahead of it", () => {
+        // custom.mjs evaluates before viewer.mjs, so our listener registers first and can
+        // cancel the stock one before it calls preventDefault().
+        const windowTarget = new EventTarget();
+        suppressViewerUnloadPrompt(windowTarget);
+        windowTarget.addEventListener("beforeunload", (event) => event.preventDefault());
+        const suppressed = new Event("beforeunload", { cancelable: true });
+        windowTarget.dispatchEvent(suppressed);
+        expect(suppressed.defaultPrevented).toBe(false);
+
+        // Registration order is load-bearing: registered after the stock listener, the
+        // suppression would come too late.
+        const lateTarget = new EventTarget();
+        lateTarget.addEventListener("beforeunload", (event) => event.preventDefault());
+        suppressViewerUnloadPrompt(lateTarget);
+        const tooLate = new Event("beforeunload", { cancelable: true });
+        lateTarget.dispatchEvent(tooLate);
+        expect(tooLate.defaultPrevented).toBe(true);
     });
 });
 

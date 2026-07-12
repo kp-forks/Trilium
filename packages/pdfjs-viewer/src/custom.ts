@@ -4,7 +4,7 @@ import { setupPdfPages } from "./pages";
 import { setupPdfAttachments } from "./attachments";
 import { setupPdfLayers } from "./layers";
 import { setupPdfAnnotations, setupAnnotationLiveUpdates, extractFromSavedData } from "./annotations";
-import { commitPendingAnnotationEdits, isAnnotationEditingActive, setAnnotationEditorUIManager } from "./editing";
+import { commitPendingAnnotationEdits, isAnnotationEditingActive, setAnnotationEditorUIManager, suppressViewerUnloadPrompt } from "./editing";
 
 async function main() {
     const urlParams = new URLSearchParams(window.location.search);
@@ -22,6 +22,10 @@ async function main() {
 
     if (isEditable) {
         interceptPersistence();
+        // Trilium owns the unsaved-changes prompt; pdf.js' own one would fire on every
+        // reload once an annotation exists, even after saving. Must stay before the first
+        // await so it registers ahead of viewer.mjs' listener.
+        suppressViewerUnloadPrompt();
     }
 
     configurePdfViewerOptions();
