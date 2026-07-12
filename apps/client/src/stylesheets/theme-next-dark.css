@@ -270,15 +270,15 @@
     --code-block-box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.6);
 
     /* Backend log (the `text/x-trilium-log` code note MIME) */
-    --log-http-line-background-color: rgba(255, 255, 255, 0.03);
-    --log-http-verb-color: #539bf5;
-    --log-http-url-color: #268a8a;
-    --log-status-success-color: #2ea043;
-    --log-status-redirect-color: var(--muted-text-color);
-    --log-status-client-error-color: #d29922;
-    --log-status-server-error-color: #e5534b;
-    --log-error-color: #e5534b;
-    --log-error-line-background-color: transparent; /* Placeholder: give it a tint to highlight the whole error line. */
+    --log-http-line-background-color: rgba(255, 255, 255, 0.02);
+    --log-http-verb-color: #d99bf4;
+    --log-http-url-color: #d0b6e4;
+    --log-status-success-color: #74d369;
+    --log-status-redirect-color: #69b8d3;
+    --log-status-client-error-color: #d3c769;
+    --log-status-server-error-color: #d36969;
+    --log-error-color: #FF867F;
+    --log-error-line-background-color: #d44b4b1f;
     --log-info-color: inherit; /* Placeholder: give it a colour to make info lines stand out. */
 
     --card-background-color: #ffffff12;
