@@ -2587,7 +2587,9 @@
     "note_completion_enabled": "Note auto-completion",
     "note_completion_description": "Links to notes can be created by typing `@` followed by the title of a note.",
     "slash_commands_enabled": "Slash commands",
-    "slash_commands_description": "Editing commands such as inserting line breaks or headings can be toggled by typing `/`."
+    "slash_commands_description": "Editing commands such as inserting line breaks or headings can be toggled by typing `/`.",
+    "content_hints_enabled": "Content hints",
+    "content_hints_description": "Show short hints in the bottom corner of the editor that explain how to interact with the element under the caret or pointer."
   },
   "table_view": {
     "new-row": "New row",

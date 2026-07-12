@@ -105,8 +105,14 @@ export default class CollapsibleEditing extends Plugin {
         this.registerDomListeners();
         this.registerAutoOpenNewDetails();
         this.registerPostFixers();
-        this.registerSummaryHints();
-        this.registerHandleHints();
+        // Global user preference: skip all content-hint wiring when off. The
+        // rest of `init()` (schema, key handlers, drag, post-fixers) stays
+        // intact — hints are additive UX, not a load-bearing feature. Missing
+        // config (external CKEditor consumers, tests) → hints on.
+        if (this.editor.config.get("contentHintsEnabled") !== false) {
+            this.registerSummaryHints();
+            this.registerHandleHints();
+        }
     }
 
     public override destroy(): void {

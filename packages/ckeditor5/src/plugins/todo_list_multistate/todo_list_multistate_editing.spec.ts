@@ -774,6 +774,51 @@ describe("TodoListMultistateEditing", () => {
         });
     });
 
+    describe("contentHintsEnabled config", () => {
+        // With hints off, neither the hover nor the caret flow should spawn
+        // a popup — the plugin's core editing behavior (state cycle, native
+        // toggle) must still work, but the on-screen hint is fully muted.
+        beforeEach(async () => {
+            editor = await createEditor({
+                taskStates: CUSTOM_STATES,
+                contentHintsEnabled: false
+            });
+            setModelData(editor.model,
+                '<paragraph>plain[]</paragraph>' +
+                '<paragraph listIndent="0" listItemId="t-a" listType="todo">A</paragraph>');
+            vi.useFakeTimers({ shouldAdvanceTime: false });
+        });
+
+        it("no popup appears when the caret enters a todo (dwell elapses silently)", () => {
+            editor.model.change((writer) => {
+                writer.setSelection(writer.createPositionAt(getBlock(editor, 1), 0));
+            });
+            vi.advanceTimersByTime(TOOLTIP_DWELL_MS * 5);
+            expect(livePopup()).toBeNull();
+
+            vi.runOnlyPendingTimers();
+            vi.useRealTimers();
+        });
+
+        it("no popup appears on hover, and the core state-cycle still works", () => {
+            const domRoot = editor.editing.view.getDomRoot();
+            const input = domRoot?.querySelector<HTMLInputElement>('.todo-list__label input[type="checkbox"]');
+            input?.dispatchEvent(new MouseEvent("mouseenter", { bubbles: true }));
+            vi.advanceTimersByTime(TOOLTIP_DWELL_MS * 5);
+            expect(livePopup()).toBeNull();
+
+            // Core editing surface still functions — hints are additive UX only.
+            editor.model.change((writer) => {
+                writer.setSelection(writer.createPositionAt(getBlock(editor, 1), 0));
+            });
+            editor.execute("setTaskState", { state: "doing" });
+            expect(getBlock(editor, 1).getAttribute(TASK_STATE_ATTRIBUTE)).toBe("doing");
+
+            vi.runOnlyPendingTimers();
+            vi.useRealTimers();
+        });
+    });
+
     // Pure-function tests for the tooltip HTML builder. Assert against the
     // returned string directly rather than introspecting Bootstrap Tooltip
     // instances — no `_config` peeking, no editor scaffolding needed.

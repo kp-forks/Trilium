@@ -43,7 +43,7 @@ export default class TodoListMultistateEditing extends Plugin {
      * against it — only the top of the stack is on screen at a time. See
      * {@link ContentHintManager} for the rationale.
      */
-    private _hintManager!: ContentHintManager;
+    private _hintManager?: ContentHintManager;
 
     /** Hover-driven handle per rendered checkbox. Disposed when the checkbox detaches. */
     private readonly _hoverHandles = new Map<HTMLInputElement, HintHandle>();
@@ -83,21 +83,28 @@ export default class TodoListMultistateEditing extends Plugin {
         this._translate = (editor.config.get("translate") as TranslateFn | undefined)
             ?? ((key: string) => key);
         const stateByName = this._stateByName;
-        this._hintManager = new ContentHintManager({
-            tooltipOptions: {
-                // Bootstrap's default sanitizer strips `data-*` attributes, which
-                // the state-icon span in the tooltip relies on to render the
-                // correct colour/glyph.
-                sanitize: false,
-                customClass: "text-editor-content-tooltip"
-            },
-            // Self-dismiss the tooltip 1s after the last relevant event (push,
-            // content update, top change). Anything that would legitimately
-            // keep the hint alive — hover crossing, caret movement, state
-            // change — pushes to the manager, so the timer resets and the
-            // popup stays. When events stop, it fades on its own.
-            autoHideAfterMs: 2000
-        });
+        // Global user preference: skip all content-hint wiring when off. The
+        // rest of `init()` (schema, keystroke, downcast/upcast, post-fixer)
+        // stays intact — hints are additive UX, not a load-bearing feature.
+        // Missing config (external CKEditor consumers, tests) → hints on.
+        const hintsEnabled = editor.config.get("contentHintsEnabled") !== false;
+        if (hintsEnabled) {
+            this._hintManager = new ContentHintManager({
+                tooltipOptions: {
+                    // Bootstrap's default sanitizer strips `data-*` attributes, which
+                    // the state-icon span in the tooltip relies on to render the
+                    // correct colour/glyph.
+                    sanitize: false,
+                    customClass: "text-editor-content-tooltip"
+                },
+                // Self-dismiss the tooltip 1s after the last relevant event (push,
+                // content update, top change). Anything that would legitimately
+                // keep the hint alive — hover crossing, caret movement, state
+                // change — pushes to the manager, so the timer resets and the
+                // popup stays. When events stop, it fades on its own.
+                autoHideAfterMs: 2000
+            });
+        }
 
         editor.model.schema.extend("$block", {allowAttributes: TASK_STATE_ATTRIBUTE});
 
@@ -171,25 +178,27 @@ export default class TodoListMultistateEditing extends Plugin {
             }
         });
 
-        this.listenTo(editor.editing.view, "render", () => {
-            const domRoot = editor.editing.view.getDomRoot();
-            if (!domRoot) {
-                return;
-            }
-            // Refresh handles first; the return value tells `_syncCaretTooltip`
-            // whether the caret's item changed state on this render (Ctrl+Shift+Enter,
-            // native toggle, etc.) so it can force an immediate `show()` instead
-            // of waiting out the dwell timer again.
-            const caretItemStateChanged = this._refreshHoverHandles(domRoot);
-            this._syncCaretTooltip({ forceShowIfSameTarget: caretItemStateChanged });
-        });
+        if (hintsEnabled) {
+            this.listenTo(editor.editing.view, "render", () => {
+                const domRoot = editor.editing.view.getDomRoot();
+                if (!domRoot) {
+                    return;
+                }
+                // Refresh handles first; the return value tells `_syncCaretTooltip`
+                // whether the caret's item changed state on this render (Ctrl+Shift+Enter,
+                // native toggle, etc.) so it can force an immediate `show()` instead
+                // of waiting out the dwell timer again.
+                const caretItemStateChanged = this._refreshHoverHandles(domRoot);
+                this._syncCaretTooltip({ forceShowIfSameTarget: caretItemStateChanged });
+            });
 
-        // Keyboard-only navigation into an <li> doesn't move DOM focus (the editable
-        // root keeps it), so the manager needs to be driven from model-selection
-        // changes to catch the keyboard-into-todo case.
-        this.listenTo(editor.model.document.selection, "change:range", () => {
-            this._syncCaretTooltip({ forceShowIfSameTarget: false });
-        });
+            // Keyboard-only navigation into an <li> doesn't move DOM focus (the editable
+            // root keeps it), so the manager needs to be driven from model-selection
+            // changes to catch the keyboard-into-todo case.
+            this.listenTo(editor.model.document.selection, "change:range", () => {
+                this._syncCaretTooltip({ forceShowIfSameTarget: false });
+            });
+        }
 
         // A new row split off with Enter inherits the previous row's `taskState` (writer.split
         // copies block attributes). Drop it so each new task starts in the plain "none" state.
@@ -283,6 +292,14 @@ export default class TodoListMultistateEditing extends Plugin {
      * immediately, per the "reappear on state change" spec).
      */
     private _refreshHoverHandles(domRoot: HTMLElement): boolean {
+        const manager = this._hintManager;
+        // The two callers that reach this method are gated on `hintsEnabled`
+        // in `init()`, so `_hintManager` is set here in practice. The guard
+        // keeps TypeScript happy and documents the contract.
+        /* v8 ignore next 3 */
+        if (!manager) {
+            return false;
+        }
         // Reap detached checkboxes.
         for (const input of Array.from(this._hoverHandles.keys())) {
             if (!input.isConnected) {
@@ -308,7 +325,7 @@ export default class TodoListMultistateEditing extends Plugin {
             this._knownState.set(input, currentState);
 
             if (isNew) {
-                const handle = this._hintManager.createHandle(input, this._computeContent(input));
+                const handle = manager.createHandle(input, this._computeContent(input));
                 this._hoverHandles.set(input, handle);
                 // Cache the enclosing item's id — stable for this input's life, and we
                 // need it on every hover event to decide whether to yield to the caret.
@@ -366,6 +383,11 @@ export default class TodoListMultistateEditing extends Plugin {
      *     `showAfter(TOOLTIP_DWELL_MS)`, so drive-throughs don't spawn a tooltip.
      */
     private _syncCaretTooltip(options: { forceShowIfSameTarget: boolean }): void {
+        const manager = this._hintManager;
+        /* v8 ignore next 3 -- gated same as _refreshHoverHandles, see there. */
+        if (!manager) {
+            return;
+        }
         const target = this._findCaretCheckbox();
         const targetItemId = target?.closest<HTMLElement>("li")?.getAttribute("data-list-item-id") ?? null;
         const itemChanged = targetItemId !== this._caretItemId;
@@ -386,7 +408,7 @@ export default class TodoListMultistateEditing extends Plugin {
                    but then `_caretInput` was null too, so `inputChanged`
                    would be false and we wouldn't be in this branch. */
                 if (target) {
-                    this._caretHandle = this._hintManager.createHandle(target, this._computeContent(target));
+                    this._caretHandle = manager.createHandle(target, this._computeContent(target));
                     this._caretHandle.show();
                 }
             /* v8 ignore start -- reachable only when `forceShowIfSameTarget`
@@ -407,7 +429,7 @@ export default class TodoListMultistateEditing extends Plugin {
         this._caretInput = target;
         this._caretItemId = targetItemId;
         if (target) {
-            this._caretHandle = this._hintManager.createHandle(target, this._computeContent(target));
+            this._caretHandle = manager.createHandle(target, this._computeContent(target));
             this._caretHandle.showAfter(TOOLTIP_DWELL_MS);
         }
     }
