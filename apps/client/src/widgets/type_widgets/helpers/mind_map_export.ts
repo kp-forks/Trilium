@@ -18,12 +18,12 @@ const XHTML_NS = "http://www.w3.org/1999/xhtml";
  *
  * Note that upstream considers `exportSvg()` deprecated in favor of DOM screenshot
  * libraries and will not fix the label gap (see
- * https://github.com/SSShooter/mind-elixir-core/issues/359) — that advice is intended
- * for user-triggered exports (where Trilium does use snapdom, see the exportSvg/exportPng
- * handlers in MindMap.tsx), but a screenshot pass is far too slow to run on every save.
- * We deliberately keep the native exporter here for performance; if a future mind-elixir
- * release removes it (a loud, type-level break), vendor the exporter instead of
- * switching the save path back to a screenshot library.
+ * https://github.com/SSShooter/mind-elixir-core/issues/359) — but a screenshot pass is
+ * far too slow to run on every save (it once did, via snapdom — see #10478), so Trilium
+ * deliberately uses the native exporter everywhere: this helper also feeds the
+ * user-triggered SVG/PNG export actions in MindMap.tsx. If a future mind-elixir release
+ * removes `exportSvg()` (a loud, type-level break), vendor the exporter instead of
+ * switching back to a screenshot library.
  */
 export async function renderMindMapPreviewSvg(mind: MindElixirInstance): Promise<string> {
     const svgText = await mind.exportSvg().text();
@@ -74,11 +74,17 @@ export function injectSvgLabels(mind: MindElixirInstance, svgText: string): stri
 function buildLabelForeignObject(label: HTMLElement): SVGElement {
     const style = getComputedStyle(label);
 
+    // The computed width/height carry the fractional used value, but degrade to "auto" when the
+    // element is not rendered (e.g. a hidden tab) — fall back to the always-numeric offset size
+    // then. Round up so the foreignObject is never narrower than the text it must fit.
+    const width = Number.parseFloat(style.width) || label.offsetWidth;
+    const height = Number.parseFloat(style.height) || label.offsetHeight;
+
     const foreignObject = document.createElementNS(SVG_NS, "foreignObject");
     foreignObject.setAttribute("x", String(label.offsetLeft));
     foreignObject.setAttribute("y", String(label.offsetTop));
-    foreignObject.setAttribute("width", style.width);
-    foreignObject.setAttribute("height", style.height);
+    foreignObject.setAttribute("width", String(Math.ceil(width)));
+    foreignObject.setAttribute("height", String(Math.ceil(height)));
 
     const div = document.createElementNS(XHTML_NS, "div") as HTMLElement;
     div.setAttribute("style",

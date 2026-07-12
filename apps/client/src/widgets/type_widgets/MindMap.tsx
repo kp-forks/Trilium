@@ -12,6 +12,7 @@ import { HTMLAttributes, RefObject } from "preact";
 import { useCallback, useEffect, useRef } from "preact/hooks";
 
 import { sanitizeNoteContentHtml } from "../../services/sanitize_content";
+import toast from "../../services/toast";
 import utils from "../../services/utils";
 import { useColorScheme, useEditorSpacedUpdate, useEffectiveReadOnly, useSyncedRef, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
 import { refToJQuerySelector } from "../react/react_utils";
@@ -143,11 +144,16 @@ export default function MindMap({ note, ntxId, noteContext }: TypeWidgetProps) {
     // Export as PNG or SVG.
     useTriliumEvents([ "exportSvg", "exportPng" ], async ({ ntxId: eventNtxId }, eventName) => {
         if (eventNtxId !== ntxId || !apiRef.current) return;
-        const svg = await renderMindMapPreviewSvg(apiRef.current);
-        if (eventName === "exportSvg") {
-            utils.downloadSvg(note.title, svg);
-        } else {
-            await utils.downloadSvgAsPng(note.title, svg);
+        try {
+            const svg = await renderMindMapPreviewSvg(apiRef.current);
+            if (eventName === "exportSvg") {
+                utils.downloadSvg(note.title, svg);
+            } else {
+                await utils.downloadSvgAsPng(note.title, svg);
+            }
+        } catch (e) {
+            console.warn(e);
+            toast.showError(t(eventName === "exportSvg" ? "svg.export_to_svg" : "svg.export_to_png"));
         }
     });
 

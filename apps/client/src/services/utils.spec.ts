@@ -673,19 +673,30 @@ describe("SVG downloads (default export)", () => {
         return downloads;
     }
 
-    it("downloadSvg downloads the SVG string as a data URL", () => {
+    function captureObjectUrls() {
+        const blobs: Blob[] = [];
+        vi.spyOn(URL, "createObjectURL").mockImplementation((blob) => {
+            blobs.push(blob as Blob);
+            return `blob:mock-${blobs.length}`;
+        });
+        vi.spyOn(URL, "revokeObjectURL").mockImplementation(() => {});
+        return blobs;
+    }
+
+    it("downloadSvg downloads the SVG string as a blob URL", async () => {
         const downloads = captureDownload();
+        const blobs = captureObjectUrls();
         utils.downloadSvg("diagram", `<svg><text>a & b</text></svg>`);
 
-        expect(downloads).toHaveLength(1);
-        expect(downloads[0].name).toBe("diagram.svg");
-        const href = downloads[0].href ?? "";
-        expect(href.startsWith("data:image/svg+xml;charset=utf-8,")).toBe(true);
-        expect(decodeURIComponent(href.split(",")[1])).toBe(`<svg><text>a & b</text></svg>`);
+        expect(downloads).toEqual([ { name: "diagram.svg", href: "blob:mock-1" } ]);
+        expect(blobs).toHaveLength(1);
+        expect(blobs[0].type).toContain("image/svg+xml");
+        expect(await blobs[0].text()).toBe(`<svg><text>a & b</text></svg>`);
     });
 
     it("downloadSvgAsPng rasterizes at the given scale and downloads a PNG", async () => {
         const downloads = captureDownload();
+        captureObjectUrls();
         const drawImage = vi.fn();
         const canvasSizes: { width: number, height: number }[] = [];
         vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue({ drawImage } as unknown as RenderingContext);
@@ -704,9 +715,9 @@ describe("SVG downloads (default export)", () => {
             vi.unstubAllGlobals();
         }
 
-        expect(canvasSizes).toEqual([{ width: 200, height: 100 }]); // default scale is 2
+        expect(canvasSizes).toEqual([ { width: 200, height: 100 } ]); // default scale is 2
         expect(drawImage).toHaveBeenCalled();
-        expect(downloads).toEqual([{ name: "diagram.png", href: "data:image/png;base64,BBB" }]);
+        expect(downloads).toEqual([ { name: "diagram.png", href: "data:image/png;base64,BBB" } ]);
     });
 
     it("downloadSvgAsPng rejects when the SVG has no usable dimensions", async () => {

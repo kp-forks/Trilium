@@ -616,8 +616,11 @@ export function createImageSrcUrl(note: FNote) {
  * @param svgContent the content of the SVG file to download.
  */
 function downloadSvg(nameWithoutExtension: string, svgContent: string) {
-    const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`;
-    triggerDownload(`${nameWithoutExtension}.svg`, dataUrl);
+    const blob = new Blob([ svgContent ], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    triggerDownload(`${nameWithoutExtension}.svg`, url);
+    // Defer revocation so the in-flight download isn't cancelled (as downloadImage in image.ts).
+    setTimeout(() => URL.revokeObjectURL(url), 10_000);
 }
 
 /**
@@ -657,10 +660,17 @@ async function downloadSvgAsPng(nameWithoutExtension: string, svgContent: string
         throw new Error("Could not determine the dimensions of the SVG.");
     }
 
-    // Decode through an <img> element — the browser's own SVG renderer.
+    // Decode through an <img> element — the browser's own SVG renderer. A blob URL avoids the
+    // encoding overhead and URL length limits of a data: URL for large diagrams.
+    const blob = new Blob([ svgContent ], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     const image = new Image();
-    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgContent)}`;
-    await image.decode();
+    image.src = url;
+    try {
+        await image.decode();
+    } finally {
+        URL.revokeObjectURL(url);
+    }
 
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(size.width * scale);
