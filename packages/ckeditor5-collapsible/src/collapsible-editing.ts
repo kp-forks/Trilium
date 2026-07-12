@@ -42,6 +42,15 @@ interface SummaryHintState {
     handle: HintHandle;
     hoverActive: boolean;
     caretActive: boolean;
+    /**
+     * Bound mouseenter/mouseleave listeners for {@link dom}. Held so we can
+     * `removeEventListener` on the old DOM before re-attaching to a fresh one
+     * after a CKEditor reconvert — without these references the listeners
+     * would linger on the detached node, keeping their `state` closures alive
+     * until GC and silently mutating shared state if the node ever re-attaches.
+     */
+    mouseEnter?: (event: MouseEvent) => void;
+    mouseLeave?: (event: MouseEvent) => void;
 }
 
 
@@ -161,6 +170,7 @@ export default class CollapsibleEditing extends Plugin {
             this.autoOpenTimer = undefined;
         }
         for (const state of this.summaryHints.values()) {
+            this.detachSummaryHoverListeners(state, state.dom);
             state.handle.dispose();
         }
         this.summaryHints.clear();
@@ -924,9 +934,27 @@ export default class CollapsibleEditing extends Plugin {
             }
         });
 
+        // Fast-path: `render` fires after every keystroke, so most invocations
+        // find the summary set completely unchanged (same models, same DOM
+        // nodes). Bail before the reap+adopt loops when nothing structural
+        // changed — caret sync is driven by `change:range` and doesn't need
+        // to run again here.
+        let structuralChange = current.size !== this.summaryHints.size;
+        if (!structuralChange) {
+            for (const [model, dom] of current) {
+                const existing = this.summaryHints.get(model);
+                if (!existing || existing.dom !== dom) {
+                    structuralChange = true;
+                    break;
+                }
+            }
+        }
+        if (!structuralChange) return;
+
         // Drop states whose model is no longer in the rendered tree.
         for (const [model, state] of this.summaryHints) {
             if (!current.has(model)) {
+                this.detachSummaryHoverListeners(state, state.dom);
                 state.handle.dispose();
                 this.summaryHints.delete(model);
             }
@@ -939,12 +967,19 @@ export default class CollapsibleEditing extends Plugin {
             if (existing) {
                 if (existing.dom !== dom) {
                     // Model persisted but its DOM was regenerated. Rebind:
-                    // dispose the old handle (it's on the detached DOM node)
-                    // and create a new one on the fresh DOM. The visibility
-                    // booleans carry over so `applyVisibility` restores it.
+                    // remove the old listeners (their closures would otherwise
+                    // pin the detached DOM), dispose the old handle, then wire
+                    // fresh listeners + handle on the new element.
+                    this.detachSummaryHoverListeners(existing, existing.dom);
                     existing.handle.dispose();
                     existing.dom = dom;
                     existing.handle = manager.createHandle(dom, title);
+                    // Rederive `hoverActive` from the new DOM — the mouse
+                    // may or may not still be over the fresh element, and
+                    // carrying over the boolean would strand a "phantom
+                    // hover" popup when the pointer already left during the
+                    // reconvert.
+                    existing.hoverActive = dom.matches(":hover");
                     this.attachSummaryHoverListeners(existing);
                     this.applyVisibility(existing);
                 }
@@ -953,7 +988,10 @@ export default class CollapsibleEditing extends Plugin {
             const state: SummaryHintState = {
                 dom,
                 handle: manager.createHandle(dom, title),
-                hoverActive: false,
+                // Same reasoning as the rebind path: adopt the DOM's actual
+                // hover state so a summary that mounted under an already-
+                // hovering pointer picks up correctly.
+                hoverActive: dom.matches(":hover"),
                 caretActive: false
             };
             this.summaryHints.set(model, state);
@@ -997,14 +1035,21 @@ export default class CollapsibleEditing extends Plugin {
     }
 
     private attachSummaryHoverListeners(state: SummaryHintState): void {
-        state.dom.addEventListener("mouseenter", () => {
+        state.mouseEnter = () => {
             state.hoverActive = true;
             this.applyVisibility(state);
-        });
-        state.dom.addEventListener("mouseleave", () => {
+        };
+        state.mouseLeave = () => {
             state.hoverActive = false;
             this.applyVisibility(state);
-        });
+        };
+        state.dom.addEventListener("mouseenter", state.mouseEnter);
+        state.dom.addEventListener("mouseleave", state.mouseLeave);
+    }
+
+    private detachSummaryHoverListeners(state: SummaryHintState, previousDom: HTMLElement): void {
+        if (state.mouseEnter) previousDom.removeEventListener("mouseenter", state.mouseEnter);
+        if (state.mouseLeave) previousDom.removeEventListener("mouseleave", state.mouseLeave);
     }
 
     /**
