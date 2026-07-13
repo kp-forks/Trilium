@@ -52,7 +52,7 @@ const statusMarks: Record<string, Decoration> = {
  * fallbacks below are what the legacy themes — which don't define those variables — render with.
  */
 const logHighlightTheme = EditorView.baseTheme({
-    ".cm-log-timestamp": { color: "var(--muted-text-color)" },
+    ".cm-log-timestamp": { color: "var(--log-timestamp-color, var(--muted-text-color))" },
     ".cm-log-http": { backgroundColor: "var(--log-http-line-background-color, color-mix(in srgb, var(--main-text-color) 3%, transparent))" },
     ".cm-log-verb": { fontWeight: "bold", color: "var(--log-http-verb-color, #539bf5)" },
     ".cm-log-url": { color: "var(--log-http-url-color, #268a8a)" },
