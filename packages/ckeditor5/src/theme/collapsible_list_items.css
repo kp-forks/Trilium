@@ -19,7 +19,7 @@
      * fills the gap between the start of the list's indent (2.5em before the text) and the
      * bullet (~1em before it), so the arrow never spills into the page margin — which is only
      * 8px wide on mobile — and never covers the marker. */
-    --_arrow-inset: -1.8em;
+    --_arrow-inset: -1.6em;
     --_arrow-rotation: 90deg; /* chevron pointing down: expanded */
 
     content: "\ea50"; /* lookup code for "chevron-right" in boxicons.css */
