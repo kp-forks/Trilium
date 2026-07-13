@@ -204,27 +204,47 @@ function useSplit(mode: PaneMode) {
         };
         const onDragEnd = (sizes: number[]) => options.save("rightPaneWidth", Math.round(sizes[1]));
 
-        // Docked: resize the host (and thus the content) against #center-pane.
-        // Peek: resize the pane against the spacer inside the absolute host — the content (#center-pane)
-        // is untouched, so it never reflows.
-        splitInstance = mode === "docked"
-            ? Split(["#center-pane", "#right-pane-host"], {
-                sizes: [100 - rightPaneWidth, rightPaneWidth],
-                gutterSize: DEFAULT_GUTTER_SIZE,
-                minSize: [300, 180],
-                rtl: glob.isRtl,
-                onDrag,
-                onDragEnd
-            })
-            : Split([".right-pane-peek-spacer", "#right-pane"], {
-                sizes: [100 - rightPaneWidth, rightPaneWidth],
-                gutterSize: DEFAULT_GUTTER_SIZE,
-                minSize: [0, 180],
-                rtl: glob.isRtl,
-                onDrag,
-                onDragEnd
+        // Docked: resize the host (and thus the content) against #center-pane — which lives outside this
+        // island, so on the initial mount it may not be committed yet when this layout effect runs.
+        // Peek: resize the pane against the spacer inside the absolute host — both are rendered here, so
+        // they're always present; #center-pane is untouched, so it never reflows.
+        const selectors = mode === "docked"
+            ? [ "#center-pane", "#right-pane-host" ]
+            : [ ".right-pane-peek-spacer", "#right-pane" ];
+        const minSize = mode === "docked" ? [ 300, 180 ] : [ 0, 180 ];
+
+        const createSplit = () => Split(selectors, {
+            sizes: [100 - rightPaneWidth, rightPaneWidth],
+            gutterSize: DEFAULT_GUTTER_SIZE,
+            minSize,
+            rtl: glob.isRtl,
+            onDrag,
+            onDragEnd
+        });
+
+        // Split throws if any target selector isn't in the DOM. When everything is present, create it
+        // synchronously so the panes carry Split's inline widths before paint (no flicker — see above).
+        // Otherwise defer a frame until the sibling layout has been committed, mirroring the left/note
+        // split resizers in resizer.ts; re-check on the next frame so a still-missing target is skipped
+        // rather than throwing.
+        let rafId: number | undefined;
+        if (selectors.every((selector) => document.querySelector(selector))) {
+            splitInstance = createSplit();
+        } else {
+            rafId = requestAnimationFrame(() => {
+                rafId = undefined;
+                if (selectors.every((selector) => document.querySelector(selector))) {
+                    splitInstance = createSplit();
+                }
             });
-        return () => splitInstance?.destroy();
+        }
+
+        return () => {
+            if (rafId !== undefined) {
+                cancelAnimationFrame(rafId);
+            }
+            splitInstance?.destroy();
+        };
     }, [ mode ]);
 }
 
