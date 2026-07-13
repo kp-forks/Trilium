@@ -24,7 +24,40 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        electron = pkgs."electron_${lib.versions.major packageJsonDesktop.devDependencies.electron}";
+
+        electronVersion = packageJsonDesktop.devDependencies.electron;
+        electronFromNixpkgs = pkgs."electron_${lib.versions.major electronVersion}";
+
+        # nixpkgs lags behind the Electron version pinned in apps/desktop/package.json
+        # (electron_42 is still 42.5.1), and its source build cannot be bumped without
+        # upstream's Chromium dependency hashes. Build the exact pinned version from
+        # Electron's official binary release instead, reusing the nixpkgs builder.
+        #
+        # When bumping Electron, refresh these hashes:
+        #   zips:    curl -sL https://github.com/electron/electron/releases/download/v<version>/SHASUMS256.txt
+        #   headers: nix-prefetch-url --unpack https://artifacts.electronjs.org/headers/dist/v<version>/node-v<version>-headers.tar.gz
+        pinnedElectronVersion = "42.6.1";
+        pinnedElectronHashes = {
+          x86_64-linux = "a29d1bd495b523d711114ac5b09b5e2916a5e148aad71f2e44a48cf90939d673";
+          armv7l-linux = "6ea70bd18ade38e8dcf653fb43eeebe1f54f3f5fec31c901d30dc5bf67f88915";
+          aarch64-linux = "950898615ade19644f4e369cdf0fb801124a91759d78d8f9a2e91abd7abe3a1f";
+          x86_64-darwin = "1c2856c659089734004b6abcffa216a9b68dbbad2f683d8e611f122e01b06ada";
+          aarch64-darwin = "52d96caea8edf9fab6f8c2c2ec77357f907146a60a1a1360f9b9079ab0df57b8";
+          headers = "1aidb6q7hfz0569qm8ah77dgw2zzp157ls1kbs0ylsifgvxc0zkd";
+        };
+        mkElectronBin = pkgs.callPackage (
+          pkgs.path + "/pkgs/development/tools/electron/binary/generic.nix"
+        ) { };
+
+        electron =
+          if electronFromNixpkgs.version == electronVersion then
+            electronFromNixpkgs
+          else
+            lib.throwIf (pinnedElectronVersion != electronVersion) ''
+              flake.nix pins Electron ${pinnedElectronVersion}, but apps/desktop/package.json wants ${electronVersion}.
+              Refresh pinnedElectronVersion/pinnedElectronHashes in flake.nix, or drop the override if nixpkgs ships ${electronVersion}.
+            '' (mkElectronBin pinnedElectronVersion pinnedElectronHashes);
+
         nodejs = pkgs.nodejs_24;
         # pnpm creates an overly long PATH env variable for child processes.
         # This patch deduplicates entries in PATH, which results in an equivalent but shorter entry.
