@@ -2980,7 +2980,7 @@
     "sync-from-desktop-allow-access": "Ceadaigh rochtain líonra & atosú"
   },
   "text-editor": {
-    "checkbox-tooltip": "Cliceáil ar dheis le haghaidh tuilleadh staideanna tascanna.\nBrúigh {{-shortcut}} chun dul idir staideanna.",
+    "checkbox-tooltip": "Cliceáil ar dheis le haghaidh tuilleadh staideanna tascanna.\nBrúigh {{- shortcut}} chun dul idir staideanna.",
     "edit-states-tooltip": "Cuir stáit tascanna in eagar",
     "unknown-task-state": "Stádas tasc saincheaptha neamhshainithe",
     "task-state-dropped": "Sainmhíniú stádais tasc saincheaptha \"{{title}}\" ({{id}}) curtha ar leataobh mar gheall ar: {{reason}}",
