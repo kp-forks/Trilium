@@ -240,6 +240,8 @@
     --floating-button-hide-button-background: #0000000d;
     --floating-button-hide-button-color: gray;
 
+    --overlay-button-shadow-color: #00000048;
+
     --new-tab-button-background: #d8d8d8;
     --new-tab-button-color: #3a3a3a;
     --new-tab-button-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);

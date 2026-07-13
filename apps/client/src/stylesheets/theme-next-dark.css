@@ -248,6 +248,8 @@
     --floating-button-hide-button-background: #00000029;
     --floating-button-hide-button-color: #ffffff63;
 
+    --overlay-button-shadow-color: #00000048;
+
     --right-pane-background-color: var(--main-background-color);
     --right-pane-background-color-bgfx: #0c0c0c24; /* Only for the vertical layout */
     --right-pane-item-hover-background: #ffffff26;
