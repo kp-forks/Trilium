@@ -132,6 +132,7 @@ const MIME_TYPES_DICT_RAW = [
     { title: "MUMPS", mime: "text/x-mumps" },
     { title: "MySQL", mime: "text/x-mysql", mdLanguageCode: "sql", icon: "bx bx-data" },
     { title: "Nix", mime: "text/x-nix", mdLanguageCode: "nix" },
+    { title: "Nim", mime: "text/x-nim", mdLanguageCode: "nim" },
     { title: "Nginx", mime: "text/x-nginx-conf", mdLanguageCode: "nginx" },
     { title: "NSIS", mime: "text/x-nsis", mdLanguageCode: "nsis" },
     { title: "NTriples", mime: "application/n-triples" },

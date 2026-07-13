@@ -1503,6 +1503,9 @@ importers:
       codemirror-lang-mermaid:
         specifier: 0.5.0
         version: 0.5.0
+      codemirror-lang-nim:
+        specifier: 0.1.0
+        version: 0.1.0
       typescript:
         specifier: 6.0.3
         version: 6.0.3
@@ -7544,6 +7547,9 @@ packages:
 
   codemirror-lang-mermaid@0.5.0:
     resolution: {integrity: sha512-Taw/2gPCyNArQJCxIP/HSUif+3zrvD+6Ugt7KJZ2dUKou/8r3ZhcfG8krNTZfV2iu8AuGnymKuo7bLPFyqsh/A==}
+
+  codemirror-lang-nim@0.1.0:
+    resolution: {integrity: sha512-HL++tDpTLx+gmIWl6uMpdREhR9RX74SZ1M3CM/ZDV+GywHjjiiQJ0mVx5wiw3wOghY72DMq8FCRy4S1TmotqCg==}
 
   collapse-white-space@2.1.0:
     resolution: {integrity: sha512-loKTxY1zCOuG4j9f6EPnuyyYkf58RnhhWTvRoZEokgB+WbdXehfjFviyOVYkqzEWz1Q5kRiZdBYS5SwxbQYwzw==}
@@ -21804,6 +21810,12 @@ snapshots:
       '@lezer/lr': 1.4.10
 
   codemirror-lang-mermaid@0.5.0:
+    dependencies:
+      '@codemirror/language': 6.12.4
+      '@lezer/highlight': 1.2.3
+      '@lezer/lr': 1.4.10
+
+  codemirror-lang-nim@0.1.0:
     dependencies:
       '@codemirror/language': 6.12.4
       '@lezer/highlight': 1.2.3
