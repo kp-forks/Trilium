@@ -337,6 +337,22 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(options.settingSources).toEqual([]);
     });
 
+    it("enables adaptive extended thinking when the turn requests it", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableExtendedThinking: true }));
+
+        expect(queryMock.mock.calls[0][0].options.thinking).toEqual({ type: "adaptive", display: "summarized" });
+    });
+
+    it("disables extended thinking by default", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock.mock.calls[0][0].options.thinking).toEqual({ type: "disabled" });
+    });
+
     it("drives the user's resolved claude binary (bring-your-own-binary)", async () => {
         resolveClaudeBinaryMock.mockReturnValueOnce("/opt/homebrew/bin/claude");
         scriptAgent([successResult()]);

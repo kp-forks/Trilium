@@ -367,8 +367,8 @@ export class ClaudeAgentProvider implements LlmProvider {
         return systemPrompt;
     }
 
-    /** Options shared by every agent invocation, independent of the turn. */
-    private buildBaseOptions(config: Pick<LlmProviderConfig, "enableNoteTools" | "enableWebSearch">): AgentOptions {
+    /** Options shared by every agent invocation. */
+    private buildBaseOptions(config: Pick<LlmProviderConfig, "enableNoteTools" | "enableWebSearch" | "enableExtendedThinking">): AgentOptions {
         // Built-in Claude Code tools (file access, bash, …) stay disabled — the
         // agent runs on the server host and must only ever touch notes. Web
         // search is the one opt-in exception.
@@ -383,7 +383,14 @@ export class ClaudeAgentProvider implements LlmProvider {
             tools: builtinTools,
             settingSources: [],
             strictMcpConfig: true,
-            permissionMode: "dontAsk"
+            permissionMode: "dontAsk",
+            // Extended thinking: `adaptive` lets these (modern) models decide how
+            // much to think and stream summarized reasoning, mirroring the metered
+            // Anthropic provider. Adaptive is the SDK's default for supporting
+            // models, so the toggle's meaningful effect is the disabled path.
+            thinking: config.enableExtendedThinking
+                ? { type: "adaptive", display: "summarized" }
+                : { type: "disabled" }
         };
 
         if (areNoteToolsAvailable(config)) {
