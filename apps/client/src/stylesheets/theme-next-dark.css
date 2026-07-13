@@ -271,6 +271,7 @@
 
     /* Backend log (the `text/x-trilium-log` code note MIME) */
     --log-timestamp-color: #818181;
+    --log-slow-color: #ff9d7f;
     --log-http-line-background-color: rgba(255, 255, 255, 0.02);
     --log-http-verb-color: #d99bf4;
     --log-http-url-color: #d0b6e4;
@@ -350,6 +351,7 @@
     --task-checkbox-done-hover-color: #41b441;
     --task-checkbox-unknown-state-color: #e95d5d;
     --task-checkbox-glyph-color: white;
+    
 }
 
 /*

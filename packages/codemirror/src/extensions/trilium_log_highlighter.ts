@@ -15,8 +15,9 @@ import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
  *
  * Recognised entries:
  *  - the leading timestamp (muted, on every entry)
- *  - HTTP request lines `<ts> <status> <VERB> …` — the whole line is tinted, the verb bolded and
- *    the status colour-coded by class (2xx/3xx/4xx/5xx)
+ *  - HTTP request lines `<ts> [Slow ]<status> <VERB> <url> …` — the whole line is tinted, the verb
+ *    bolded, the URL coloured and the status colour-coded by class (2xx/3xx/4xx/5xx). The optional
+ *    `Slow` marker (prepended by the server for requests taking >= 10ms) is flagged as a warning.
  *  - `<ts> JS Error: …` and `<ts> ERROR: …` lines — coloured red, together with their following
  *    continuation lines (e.g. wrapped stack traces), which carry no timestamp of their own
  *  - `<ts> JS Info: …` lines (and their continuation lines) — placeholder class, no colour yet
@@ -25,9 +26,13 @@ import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
 // Length of the leading `HH:MM:SS.mmm` timestamp.
 const TIMESTAMP_LENGTH = 12;
 const TIMESTAMP = /^\d{2}:\d{2}:\d{2}\.\d{3}/;
-// After `<ts> `: a 3-digit status, a space, a known HTTP verb, a space, then the request URL (a
-// single whitespace-free token). The fixed-width prefix lets us derive the offsets without a rescan.
-const HTTP_REQUEST = /^\d{2}:\d{2}:\d{2}\.\d{3} (\d{3}) (GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) (\S+)/;
+// After `<ts> `: an optional `Slow ` marker (the server prepends it when the request took >= 10ms),
+// a 3-digit status, a space, a known HTTP verb, a space, then the request URL (a single
+// whitespace-free token). Everything up to the URL is fixed-width once the optional marker's length
+// is known, so the offsets can be derived without a rescan.
+const HTTP_REQUEST = /^\d{2}:\d{2}:\d{2}\.\d{3} (Slow )?(\d{3}) (GET|POST|PUT|PATCH|DELETE|HEAD|OPTIONS) (\S+)/;
+/** Length of the `Slow` word itself (the capture group includes its trailing space). */
+const SLOW_LENGTH = 4;
 const ERROR_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} (?:JS Error|ERROR):/;
 const INFO_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} JS Info:/;
 
@@ -35,6 +40,7 @@ const INFO_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} JS Info:/;
 export const MAX_HIGHLIGHTED_LINES = 10_000;
 
 const timestampMark = Decoration.mark({ class: "cm-log-timestamp" });
+const slowMark = Decoration.mark({ class: "cm-log-slow" });
 const verbMark = Decoration.mark({ class: "cm-log-verb" });
 const urlMark = Decoration.mark({ class: "cm-log-url" });
 const httpLine = Decoration.line({ class: "cm-log-http" });
@@ -54,6 +60,7 @@ const statusMarks: Record<string, Decoration> = {
 const logHighlightTheme = EditorView.baseTheme({
     ".cm-log-timestamp": { color: "var(--log-timestamp-color, var(--muted-text-color))" },
     ".cm-log-http": { backgroundColor: "var(--log-http-line-background-color, color-mix(in srgb, var(--main-text-color) 3%, transparent))" },
+    ".cm-log-slow": { fontWeight: "bold", color: "var(--log-slow-color, #d29922)" },
     ".cm-log-verb": { fontWeight: "bold", color: "var(--log-http-verb-color, #539bf5)" },
     ".cm-log-url": { color: "var(--log-http-url-color, #268a8a)" },
     ".cm-log-status": { fontWeight: "bold" },
@@ -140,16 +147,23 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
     builder.add(lineStart, lineStart + TIMESTAMP_LENGTH, timestampMark);
 
     if (httpMatch) {
-        // Fixed layout: `<12-char ts><space><3-char status><space><verb>`.
-        const statusStart = lineStart + TIMESTAMP_LENGTH + 1;
-        const verbStart = statusStart + 4;
-        const statusMark = statusMarks[httpMatch[1][0]];
+        // Layout: `<12-char ts><space>[Slow ]<3-char status><space><verb><space><url>`. The optional
+        // `Slow ` capture includes its trailing space, so its length shifts everything after it.
+        const [ , slowPrefix = "", , verb, url ] = httpMatch;
+        const slowStart = lineStart + TIMESTAMP_LENGTH + 1;
+        const statusStart = slowStart + slowPrefix.length;
+        const verbStart = statusStart + 4; // 3-digit status + space
+        const urlStart = verbStart + verb.length + 1;
+
+        if (slowPrefix) {
+            builder.add(slowStart, slowStart + SLOW_LENGTH, slowMark);
+        }
+        const statusMark = statusMarks[httpMatch[2][0]];
         if (statusMark) {
             builder.add(statusStart, statusStart + 3, statusMark);
         }
-        builder.add(verbStart, verbStart + httpMatch[2].length, verbMark);
-        const urlStart = verbStart + httpMatch[2].length + 1;
-        builder.add(urlStart, urlStart + httpMatch[3].length, urlMark);
+        builder.add(verbStart, verbStart + verb.length, verbMark);
+        builder.add(urlStart, urlStart + url.length, urlMark);
     }
 
     return newBlockLine;

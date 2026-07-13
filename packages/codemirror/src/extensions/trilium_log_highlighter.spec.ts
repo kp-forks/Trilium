@@ -82,6 +82,22 @@ describe("triliumLogHighlighter", () => {
         }
     });
 
+    it("handles the `Slow` marker the server prepends to slow requests", () => {
+        // The `Slow ` prefix shifts the status/verb/URL offsets, so assert each span exactly.
+        const doc = "00:10:01.540 Slow 304 GET /api/notes/kwjrB3G4TbPY/blob with 209 bytes took 147ms";
+        const spans = decorationsOf(state(doc));
+
+        expect(sliceOf(doc, spans, "cm-log-slow")).toBe("Slow");
+        expect(sliceOf(doc, spans, "cm-log-status cm-log-status-3xx")).toBe("304");
+        expect(sliceOf(doc, spans, "cm-log-verb")).toBe("GET");
+        expect(sliceOf(doc, spans, "cm-log-url")).toBe("/api/notes/kwjrB3G4TbPY/blob");
+        expect(sliceOf(doc, spans, "cm-log-timestamp")).toBe("00:10:01.540");
+        expect(classesOf(doc)).toContain("cm-log-http"); // still treated as an HTTP line
+
+        // A non-slow line carries no marker.
+        expect(classesOf("18:18:38.904 204 PUT /api/options with 0 bytes took 2ms")).not.toContain("cm-log-slow");
+    });
+
     it("handles ERROR: blocks, closes them at the next entry, and carries JS Info across lines", () => {
         const doc = [
             "17:34:08.519 ERROR: boom",          // 1: error header (ERROR: variant)
