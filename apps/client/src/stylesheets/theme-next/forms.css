@@ -228,7 +228,7 @@ button.tn-low-profile:hover {
  * Overlay buttons
  */
 
-.tn-overlay-control-group {
+:where(.tn-overlay-control-group) {
     display: flex;
     align-items: stretch;
     gap: 0px;
@@ -236,7 +236,7 @@ button.tn-low-profile:hover {
     border-right: 1px solid var(--overlay-button-shadow-color);
     border-bottom: 1px solid var(--overlay-button-shadow-color);
 
-    button {
+    :where(button) {
         display: inline-flex;
         justify-content: center;
         align-items: center;
@@ -246,7 +246,7 @@ button.tn-low-profile:hover {
         background-color: var(--overlay-button-background);
         color: var(--overlay-button-color);
 
-        &:hover {
+        &:not(:disabled):hover {
             background-color: var(--opaque-icon-button-hover-background-color);
             color: var(--opaque-icon-button-hover-color);
         }
