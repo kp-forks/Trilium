@@ -240,6 +240,8 @@
     --floating-button-hide-button-background: #0000000d;
     --floating-button-hide-button-color: gray;
 
+    --overlay-button-shadow-color: #00000048;
+
     --new-tab-button-background: #d8d8d8;
     --new-tab-button-color: #3a3a3a;
     --new-tab-button-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
@@ -268,15 +270,20 @@
     --code-block-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), 0px 0px 2px rgba(0, 0, 0, 0.2);
 
     /* Backend log (the `text/x-trilium-log` code note MIME) */
-    --log-http-line-background-color: rgba(0, 0, 0, 0.03);
-    --log-http-verb-color: #0969da;
-    --log-http-url-color: #1b6b6b;
-    --log-status-success-color: #1a7f37;
-    --log-status-redirect-color: var(--muted-text-color);
-    --log-status-client-error-color: #9a6700;
-    --log-status-server-error-color: #cf222e;
-    --log-error-color: #cf222e;
-    --log-error-line-background-color: transparent; /* Placeholder: give it a tint to highlight the whole error line. */
+    --log-timestamp-color: #00000077;
+    --log-slow-color: #db9345;
+    --log-http-line-background-color: #6c96d00b;
+    --log-http-verb-color: #9157ab;
+    --log-http-url-color: #8057a0;
+    --log-status-success-color: #32b323;
+    --log-status-redirect-color: #238db3;
+    --log-status-client-error-color: #b7bd10;
+    --log-status-server-error-color: #b32323;
+    --log-query-line-background-color: #edbe670b;
+    --log-query-verb-color: #ce4f7f;
+    --log-sql-color: #df5815;
+    --log-error-color: #b32017;
+    --log-error-line-background-color: #ff000017;
     --log-info-color: inherit; /* Placeholder: give it a colour to make info lines stand out. */
 
     --card-background-color: #0000000d;

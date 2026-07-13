@@ -66,6 +66,14 @@
     --floating-button-icon-size: 20px;
     --floating-button-show-hide-button-size: 26px;
 
+    --overlay-button-height: 28px;
+    --overlay-button-border-radius: 6px;
+    --overlay-button-background: var(--opaque-icon-button-background);
+    --overlay-button-backdrop-filter: var(--opaque-icon-button-backdrop-filter);
+    --overlay-button-color: var(--opaque-icon-button-color);
+    --overlay-button-icon-size: 16px;
+    --overlay-button-text-size: 14px;
+
     --menu-padding-size: 8px;
     --menu-item-icon-vert-offset: -2px;
     --menu-submenu-mobile-background-color: rgba(255, 255, 255, 0.15);
