@@ -279,8 +279,8 @@
     --log-status-redirect-color: #69b8d3;
     --log-status-client-error-color: #d3c769;
     --log-status-server-error-color: #d36969;
-    --log-query-line-background-color: transparent;
     --log-query-verb-color: #f4c79b;
+    --log-query-line-background-color: transparent;
     --log-sql-color: #f4c8ae;
     --log-error-color: #FF867F;
     --log-error-line-background-color: #d44b4b1f;
