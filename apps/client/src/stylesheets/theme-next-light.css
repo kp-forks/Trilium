@@ -268,18 +268,18 @@
     --code-block-box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.1), 0px 0px 2px rgba(0, 0, 0, 0.2);
 
     /* Backend log (the `text/x-trilium-log` code note MIME) */
-    --log-timestamp-color: #9a9a9a;
-    --log-slow-color: #e99b48;
-    --log-http-line-background-color: rgba(255, 255, 255, 0.02);
+    --log-timestamp-color: #00000077;
+    --log-slow-color: #db9345;
+    --log-http-line-background-color: #6c96d00b;
     --log-http-verb-color: #9157ab;
     --log-http-url-color: #8057a0;
     --log-status-success-color: #32b323;
     --log-status-redirect-color: #238db3;
     --log-status-client-error-color: #b7bd10;
     --log-status-server-error-color: #b32323;
-    --log-query-line-background-color: transparent;
-    --log-query-verb-color: #c99060;
-    --log-sql-color: #da6905;
+    --log-query-line-background-color: #edbe670b;
+    --log-query-verb-color: #ce4f7f;
+    --log-sql-color: #df5815;
     --log-error-color: #b32017;
     --log-error-line-background-color: #ff000017;
     --log-info-color: inherit; /* Placeholder: give it a colour to make info lines stand out. */
