@@ -1,4 +1,5 @@
-import { deferred, isDisplayableLocale, OptionRow } from "@triliumnext/commons";
+import { deferred, isDisplayableLocale, OptionRow, setDayjsLocale } from "@triliumnext/commons";
+import i18next from "i18next";
 import { getSql } from "./sql";
 import { getLog } from "./log";
 import { getBackup } from "./backup";
@@ -170,6 +171,18 @@ async function createInitialDatabase(skipDemoDb?: boolean, locale?: string) {
         }
         passwordService.resetPassword();
     });
+
+    // Persisting the `locale` option above only records the choice in the DB; it does not switch the
+    // active i18next language. Because `initTranslations` runs before `initSql` inside `initializeCore`
+    // (options_init needs translations), i18next is still on the boot default "en" at this point. Switch
+    // it to the chosen locale now, before `checkHiddenSubtree` builds the built-in titles with t() —
+    // otherwise every system note (Options, Launch Bar, templates, Help) is created in English regardless
+    // of the language selected during setup. No forced name restore is needed: the notes are being created
+    // here for the first time, so there is nothing to clobber.
+    if (isDisplayableLocale(locale)) {
+        await i18next.changeLanguage(locale);
+        await setDayjsLocale(locale);
+    }
 
     // Check hidden subtree.
     // This ensures the existence of system templates, for the demo content.
