@@ -19,8 +19,9 @@ import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
  *    bolded, the URL coloured and the status colour-coded by class (2xx/3xx/4xx/5xx). The optional
  *    `Slow` marker (prepended by the server for requests taking >= 10ms) is flagged as a warning.
  *  - slow SQL query lines `<ts> Slow [recursive ]query took <n>ms[: <sql>]` — the whole line is
- *    tinted, `Slow` flagged as a warning, `query` bolded as the entry's verb (its own colour, not the
- *    HTTP method's), and the statement (absent for recursive queries) coloured
+ *    tinted, the entire `Slow [recursive ]query` phrase bolded as the entry's verb (its own colour,
+ *    not the HTTP method's), and the statement (absent for recursive queries) coloured. Unlike HTTP,
+ *    `Slow` is not flagged as a warning here: queries are only logged when slow, so it is uninformative.
  *  - `<ts> JS Error: …` and `<ts> ERROR: …` lines — coloured red, together with their following
  *    continuation lines (e.g. wrapped stack traces), which carry no timestamp of their own
  *  - `<ts> JS Info: …` lines (and their continuation lines) — placeholder class, no colour yet
@@ -41,10 +42,12 @@ const INFO_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} JS Info:/;
 // Slow SQL queries (logged when a query takes >= 20ms). Two shapes:
 //   `Slow query took 78ms: SELECT …`      — the statement follows, whitespace-normalised to one line
 //   `Slow recursive query took 45ms.`     — the statement is omitted entirely
+// `Slow` is part of the phrase here, not a conditional marker as on HTTP lines: a query is only
+// logged *at all* when it is slow, so the whole `Slow [recursive ]query` is captured as one verb.
 // The fixed words are captured (rather than matched literally) so their lengths give the offsets of
 // the parts that follow. Anchored on `query` so sibling timings — `Slow autocomplete took …ms`,
 // `Becca (note cache) load took …ms`, `Content hash computation took …ms` — are not caught.
-const SLOW_QUERY = /^\d{2}:\d{2}:\d{2}\.\d{3} (Slow) ((?:recursive )?)(query)( took )(\d+ms)(?:: (.+))?/;
+const SLOW_QUERY = /^\d{2}:\d{2}:\d{2}\.\d{3} (Slow (?:recursive )?query)( took )(\d+ms)(?:: (.+))?/;
 
 /** Upper bound on how many (trailing) lines are highlighted, to cap the per-rebuild work. */
 export const MAX_HIGHLIGHTED_LINES = 10_000;
@@ -184,18 +187,17 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
         builder.add(verbStart, verbStart + verb.length, verbMark);
         builder.add(urlStart, urlStart + url.length, urlMark);
     } else if (queryMatch) {
-        // Layout: `<12-char ts><space>Slow [recursive ]query took <n>ms[: <sql>]`. `query` is the verb
-        // of the entry (the counterpart of an HTTP method), but carries its own colour. The duration
-        // is left undecorated; it is captured only because its length locates the statement after it.
-        const [ , slow, recursive, queryWord, tookWord, duration, sql ] = queryMatch;
-        const slowStart = lineStart + TIMESTAMP_LENGTH + 1;
-        const queryStart = slowStart + slow.length + 1 + recursive.length;
+        // Layout: `<12-char ts><space><verb> took <n>ms[: <sql>]`, where the verb is the whole
+        // `Slow [recursive ]query` phrase — the counterpart of an HTTP method, with its own colour.
+        // The duration is left undecorated; it is captured only because its length locates the
+        // statement after it.
+        const [ , queryVerb, tookWord, duration, sql ] = queryMatch;
+        const verbStart = lineStart + TIMESTAMP_LENGTH + 1;
+        const verbEnd = verbStart + queryVerb.length;
 
-        builder.add(slowStart, slowStart + slow.length, slowMark);
-        builder.add(queryStart, queryStart + queryWord.length, queryVerbMark);
+        builder.add(verbStart, verbEnd, queryVerbMark);
         if (sql) {
-            const durationStart = queryStart + queryWord.length + tookWord.length;
-            const sqlStart = durationStart + duration.length + 2; // ": "
+            const sqlStart = verbEnd + tookWord.length + duration.length + 2; // ": "
             builder.add(sqlStart, sqlStart + sql.length, sqlMark);
         }
     }

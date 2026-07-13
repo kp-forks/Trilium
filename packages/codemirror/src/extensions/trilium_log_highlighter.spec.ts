@@ -70,24 +70,24 @@ describe("triliumLogHighlighter", () => {
         expect(plain).toEqual([ "cm-log-timestamp" ]);
     });
 
-    it("highlights a slow SQL query: Slow marker, `query` verb and the statement", () => {
+    it("highlights a slow SQL query: the whole `Slow query` verb and the statement", () => {
         const doc = "00:10:01.540 Slow query took 78ms: SELECT content FROM blobs WHERE blobId = ?";
         const spans = decorationsOf(state(doc));
 
         expect(classesOf(doc)).toContain("cm-log-query"); // whole-line tint
-        expect(sliceOf(doc, spans, "cm-log-slow")).toBe("Slow");
-        expect(sliceOf(doc, spans, "cm-log-query-verb")).toBe("query");
-        expect(classesOf(doc)).not.toContain("cm-log-verb"); // has its own colour, not the HTTP verb's
-        // The duration is deliberately left undecorated.
+        expect(sliceOf(doc, spans, "cm-log-query-verb")).toBe("Slow query");
         expect(sliceOf(doc, spans, "cm-log-sql")).toBe("SELECT content FROM blobs WHERE blobId = ?");
+        // `Slow` is part of the verb here, not the conditional warning marker used on HTTP lines; and
+        // the query verb has its own colour rather than the HTTP method's. The duration is undecorated.
+        expect(classesOf(doc)).not.toContain("cm-log-slow");
+        expect(classesOf(doc)).not.toContain("cm-log-verb");
     });
 
-    it("handles recursive queries, which carry no statement", () => {
+    it("handles recursive queries, whose verb spans `recursive` and which carry no statement", () => {
         const doc = "00:10:02.113 Slow recursive query took 45ms.";
         const spans = decorationsOf(state(doc));
 
-        expect(sliceOf(doc, spans, "cm-log-slow")).toBe("Slow");
-        expect(sliceOf(doc, spans, "cm-log-query-verb")).toBe("query"); // offset shifted by `recursive `
+        expect(sliceOf(doc, spans, "cm-log-query-verb")).toBe("Slow recursive query");
         expect(classesOf(doc)).not.toContain("cm-log-sql");
     });
 
