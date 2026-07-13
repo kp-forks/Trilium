@@ -27,7 +27,26 @@ vi.mock("../../port.js", () => ({ default: 8080 }));
 const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string) => `NOTE_META(${noteId})`));
 vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
 
+// Attachment resolution reads bytes out of Becca, which the core mock above
+// omits — stub it so the multimodal tests drive block construction directly.
+const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
+vi.mock("./attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
+
 const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript } = await import("./claude_agent.js");
+
+/** Drain the query prompt into the single user message it streams (multimodal path). */
+async function drainPrompt(prompt: unknown): Promise<{ role: string; content: unknown[] }> {
+    const iterator = (prompt as AsyncIterable<unknown>)?.[Symbol.asyncIterator];
+    if (typeof prompt === "string" || typeof iterator !== "function") {
+        throw new Error("expected a streamed multimodal prompt, got a plain string");
+    }
+    const messages: { message: { role: string; content: unknown[] } }[] = [];
+    for await (const message of prompt as AsyncIterable<{ message: { role: string; content: unknown[] } }>) {
+        messages.push(message);
+    }
+    expect(messages).toHaveLength(1);
+    return messages[0].message;
+}
 
 /** Make query() replay the given SDK messages and record its invocation. */
 function scriptAgent(messages: unknown[]) {
@@ -72,6 +91,7 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         queryMock.mockReset();
         getOptionOrNullMock.mockReset();
         getOptionOrNullMock.mockReturnValue("true"); // mcpEnabled
+        resolveAttachmentPartMock.mockReset();
     });
 
     it("maps stream events, tool calls, results, and usage to chunks in order", async () => {
@@ -245,6 +265,57 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         const secondCall = queryMock.mock.calls[1][0];
         expect(secondCall.options.resume).toBe("sess-H");
         expect(secondCall.prompt).toBe("NOTE_META(note-abc)\n\nq2");
+    });
+
+    it("sends a supported image as a base64 block via a one-message stream", async () => {
+        resolveAttachmentPartMock.mockReturnValue({ kind: "image", bytes: new Uint8Array([1, 2, 3]), mime: "image/png" });
+        scriptAgent([textDelta("I see it"), successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [
+                { type: "text", text: "what is this?" },
+                { type: "image", attachmentId: "att-1", mime: "image/png" }
+            ] }
+        ], {}));
+
+        const message = await drainPrompt(queryMock.mock.calls[0][0].prompt);
+        expect(message.role).toBe("user");
+        expect(message.content).toEqual([
+            { type: "text", text: "what is this?" },
+            { type: "image", source: { type: "base64", media_type: "image/png", data: "AQID" } }
+        ]);
+    });
+
+    it("sends a PDF as a document block and leads with the note hint", async () => {
+        resolveAttachmentPartMock.mockReturnValue({ kind: "file", bytes: new Uint8Array([37, 80, 68, 70]), mime: "application/pdf", filename: "report.pdf" });
+        scriptAgent([textDelta("summary"), successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [{ type: "file", attachmentId: "att-2", mime: "application/pdf", filename: "report.pdf" }] }
+        ], { contextNoteId: "note-abc" }));
+
+        const message = await drainPrompt(queryMock.mock.calls[0][0].prompt);
+        expect(message.content).toEqual([
+            { type: "text", text: "NOTE_META(note-abc)" },
+            { type: "document", title: "report.pdf", source: { type: "base64", media_type: "application/pdf", data: "JVBERg==" } }
+        ]);
+    });
+
+    it("degrades unsupported attachments to text and keeps the plain string prompt", async () => {
+        // An SVG resolves to inlined text; the string path (not the stream) is used.
+        resolveAttachmentPartMock.mockReturnValue({ kind: "text", text: "<file name=\"d.svg\">\n<svg/>\n</file>" });
+        scriptAgent([textDelta("ok"), successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [
+                { type: "text", text: "read this" },
+                { type: "image", attachmentId: "att-3", mime: "image/svg+xml" }
+            ] }
+        ], {}));
+
+        const prompt = queryMock.mock.calls[0][0].prompt;
+        expect(typeof prompt).toBe("string");
+        expect(prompt).toBe("read this\n\n<file name=\"d.svg\">\n<svg/>\n</file>");
     });
 
     it("points the agent at Trilium's MCP server and disables built-in tools", async () => {

@@ -15,9 +15,11 @@
  *     with every built-in Claude Code tool (file access, bash, …) disabled.
  */
 
-import { type Options as AgentOptions, query, type SDKAssistantMessage, type SDKMessage } from "@anthropic-ai/claude-agent-sdk";
-import type { LlmMessage, LlmMessagePart, LlmStreamChunk } from "@triliumnext/commons";
+import { type Options as AgentOptions, query, type SDKAssistantMessage, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
+import type { ContentBlockParam } from "@anthropic-ai/sdk/resources";
+import type { LlmFilePart, LlmImagePart, LlmMessage, LlmMessagePart, LlmStreamChunk, LlmTextAttachmentPart } from "@triliumnext/commons";
 import { getLog, options as optionService } from "@triliumnext/core";
+import { encodeBase64 } from "@triliumnext/core/src/services/utils/binary.js";
 import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
@@ -25,9 +27,14 @@ import path from "path";
 import dataDirs from "../../data_dir.js";
 import port from "../../port.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
+import { resolveAttachmentPart } from "./attachment_content.js";
 import { buildModelList } from "./base_provider.js";
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt } from "./system_prompt.js";
+
+/** Image media types Anthropic accepts as a base64 image block. */
+type SupportedImageMime = "image/png" | "image/jpeg" | "image/gif" | "image/webp";
+const SUPPORTED_IMAGE_MIMES = new Set<string>(["image/png", "image/jpeg", "image/gif", "image/webp"]);
 
 /**
  * Models offered under a Claude subscription. Pricing is zero because usage is
@@ -127,23 +134,30 @@ export class ClaudeAgentProvider implements LlmProvider {
         const history = conversation.slice(0, -1);
         const historyHash = hashTranscript(history);
 
-        // Prepend the current-note metadata hint to *this* user message (not the
-        // stored transcript), mirroring the AI-SDK providers' applyNoteHint. It's
-        // volatile context — kept out of the hash so a later turn's unhinted
-        // transcript still matches and can resume.
-        const hasAttachments = Array.isArray(lastMessage.content) && lastMessage.content.some(p => p.type !== "text");
-        const noteHint = config.contextNoteId ? buildNoteHint(config.contextNoteId, hasAttachments) : null;
-        const lastText = flattenContent(lastMessage.content);
-        const currentMessage = noteHint ? `${noteHint}\n\n${lastText}` : lastText;
-
         // Resume the existing agent session only when the transcript the client
         // sent still matches what that session last saw; any divergence (edited
         // history, lost mapping, server restart) reseeds a fresh session.
         const stored = config.chatNoteId ? sessionsByChatNote.get(config.chatNoteId) : undefined;
         const resume = stored && stored.transcriptHash === historyHash ? stored.sessionId : undefined;
-        const prompt = (resume || history.length === 0)
-            ? currentMessage
-            : buildSeededPrompt(history, currentMessage);
+
+        // Text that precedes *this* user turn's own content: the replayed
+        // transcript when reseeding a lost/diverged session, then the volatile
+        // current-note metadata hint. The hint mirrors the AI-SDK providers'
+        // applyNoteHint and is kept out of the session hash so a later turn's
+        // unhinted transcript still matches and can resume.
+        const hasAttachments = Array.isArray(lastMessage.content) && lastMessage.content.some(p => p.type !== "text");
+        const noteHint = config.contextNoteId ? buildNoteHint(config.contextNoteId, hasAttachments) : null;
+        const prefix = [
+            (!resume && history.length > 0) ? buildHistoryReplay(history) : null,
+            noteHint
+        ].filter((s): s is string => Boolean(s)).join("\n\n");
+
+        // Attachments the model can consume natively (images, PDFs) are sent as
+        // real content blocks via a one-message stream — the only prompt form
+        // the Agent SDK accepts them in. Text-only turns (including messages
+        // whose attachments all degrade to text, e.g. SVG or text files) stay on
+        // the simpler string-prompt path.
+        const prompt = buildPrompt(lastMessage.content, prefix, hasAttachments);
 
         const abortController = new AbortController();
         const onAbort = () => abortController.abort();
@@ -423,21 +437,89 @@ function getAgentCwd(): string {
     return agentCwd;
 }
 
-/** Flatten possibly-multimodal message content to plain text. */
+/**
+ * Build the prompt for the current user turn. When the turn carries attachments
+ * the model can consume natively, this returns a one-message stream of Anthropic
+ * content blocks (the SDK's only multimodal input form); otherwise it returns a
+ * plain string. `prefix` (reseed transcript + note hint) always leads.
+ */
+function buildPrompt(content: string | LlmMessagePart[], prefix: string, hasAttachments: boolean): string | AsyncIterable<SDKUserMessage> {
+    if (hasAttachments && Array.isArray(content)) {
+        const blocks = buildContentBlocks(content, prefix);
+        if (blocks.some(b => b.type === "image" || b.type === "document")) {
+            return streamSingleUserMessage(blocks);
+        }
+        // Nothing the model can take natively — collapse back to text so the
+        // turn stays on the well-worn string path (and out of streaming-input
+        // mode). Text blocks still carry inlined SVG/text-file content.
+        return blocks.map(b => (b.type === "text" ? b.text : "")).filter(Boolean).join("\n\n");
+    }
+    const lastText = flattenContent(content);
+    return prefix ? `${prefix}\n\n${lastText}` : lastText;
+}
+
+/**
+ * Map the current user turn to Anthropic content blocks: real image/document
+ * blocks for natively-supported attachments, text for everything else (plain
+ * text parts, inlined SVG/text files, and placeholders for anything unresolved
+ * or of a type no block accepts). `prefix` leads as a text block when non-empty.
+ */
+function buildContentBlocks(content: LlmMessagePart[], prefix: string): ContentBlockParam[] {
+    const blocks: ContentBlockParam[] = [];
+    if (prefix) {
+        blocks.push({ type: "text", text: prefix });
+    }
+    for (const part of content) {
+        if (part.type === "text") {
+            blocks.push({ type: "text", text: part.text });
+            continue;
+        }
+        const resolved = resolveAttachmentPart(part);
+        if (!resolved || resolved.kind === "text") {
+            // Unresolved (missing/protected/corrupt) or a type that degrades to
+            // text (SVG source, inlined text file) — a placeholder keeps the
+            // turn self-describing even when the bytes can't be sent.
+            blocks.push({ type: "text", text: resolved?.kind === "text" ? resolved.text : attachmentPlaceholder(part) });
+        } else if (resolved.kind === "image" && SUPPORTED_IMAGE_MIMES.has(resolved.mime)) {
+            blocks.push({
+                type: "image",
+                source: { type: "base64", media_type: resolved.mime as SupportedImageMime, data: encodeBase64(resolved.bytes) }
+            });
+        } else if (resolved.kind === "file" && resolved.mime === "application/pdf") {
+            blocks.push({
+                type: "document",
+                title: resolved.filename,
+                source: { type: "base64", media_type: "application/pdf", data: encodeBase64(resolved.bytes) }
+            });
+        } else {
+            // Resolvable bytes but a type no Anthropic block accepts (e.g. a
+            // TIFF image or a .docx) — degrade to a text placeholder.
+            blocks.push({ type: "text", text: attachmentPlaceholder(part) });
+        }
+    }
+    return blocks;
+}
+
+/** One-shot streaming-input prompt: a single user message, then end of input. */
+async function* streamSingleUserMessage(content: ContentBlockParam[]): AsyncIterable<SDKUserMessage> {
+    yield { type: "user", message: { role: "user", content }, parent_tool_use_id: null };
+}
+
+/** Flatten possibly-multimodal message content to plain text (attachments as placeholders). */
 function flattenContent(content: string | LlmMessagePart[]): string {
     if (typeof content === "string") {
         return content;
     }
     return content
-        .map(part => {
-            if (part.type === "text") {
-                return part.text;
-            }
-            // Attachment parts are resolved server-side for API providers; the
-            // agent path is text-only for now.
-            return `[attached ${part.type === "image" ? "image" : "file"}${"filename" in part ? `: ${part.filename}` : ""}]`;
-        })
+        .map(part => (part.type === "text" ? part.text : attachmentPlaceholder(part)))
         .join("\n");
+}
+
+/** Short "[attached …]" stand-in used wherever an attachment's bytes aren't sent. */
+function attachmentPlaceholder(part: LlmImagePart | LlmFilePart | LlmTextAttachmentPart): string {
+    const kind = part.type === "image" ? "image" : "file";
+    const name = "filename" in part ? `: ${part.filename}` : "";
+    return `[attached ${kind}${name}]`;
 }
 
 /**
@@ -455,10 +537,15 @@ export function hashTranscript(messages: LlmMessage[]): string {
  * diverged (edited history, server restart).
  */
 export function buildSeededPrompt(history: LlmMessage[], lastText: string): string {
+    return `${buildHistoryReplay(history)}\n\n${lastText}`;
+}
+
+/** The `<conversation_history>` replay block, without any trailing user message. */
+function buildHistoryReplay(history: LlmMessage[]): string {
     const transcript = history
         .map(m => `${m.role === "user" ? "User" : "Assistant"}: ${flattenContent(m.content)}`)
         .join("\n\n");
-    return `<conversation_history>\nThis is the prior conversation between the user and you. Continue it naturally; do not mention this replay.\n\n${transcript}\n</conversation_history>\n\n${lastText}`;
+    return `<conversation_history>\nThis is the prior conversation between the user and you. Continue it naturally; do not mention this replay.\n\n${transcript}\n</conversation_history>`;
 }
 
 /** Strip the MCP prefix so the client shows "search_notes", not "mcp__trilium__search_notes". */
