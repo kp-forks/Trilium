@@ -37,6 +37,33 @@ export async function changeLanguage(locale: string) {
     hidden_subtree.checkHiddenSubtree(true, { restoreNames: true });
 }
 
+/**
+ * Re-syncs the active i18next (and dayjs) language with the document's stored `locale` option.
+ *
+ * `initTranslations` runs before `initSql` inside `initializeCore` (options_init needs translations), so
+ * on the server/desktop boot path i18next is always initialized to the fallback "en" regardless of the
+ * stored locale — it cannot read the option before the DB is open. Call this once the DB is initialized
+ * and becca is loaded to bring i18next in line with the stored locale, so server-generated content (e.g.
+ * the hidden-subtree titles rebuilt by the scheduler) is produced in the right language.
+ *
+ * This is language-only: it does not rebuild the hidden subtree, so user-renamed system notes are left
+ * untouched (unlike {@link changeLanguage}). It is a no-op when the DB is uninitialized or the stored
+ * locale already matches the active language.
+ */
+export async function reconcileLanguageAfterDbInit() {
+    if (!sql_init.isDbInitialized()) {
+        return;
+    }
+
+    const locale = options.getOptionOrNull("locale");
+    if (!locale || locale === i18next.language) {
+        return;
+    }
+
+    await i18next.changeLanguage(locale);
+    await setDayjsLocale(locale as LOCALE_IDS);
+}
+
 export function getCurrentLocale() {
     if (!sql_init.isDbInitialized()) {
         // If DB is not initialized, we cannot get the locale from options, so we return English as a default.
