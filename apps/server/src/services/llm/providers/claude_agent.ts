@@ -22,14 +22,14 @@
 import { type Options as AgentOptions, query, type SDKAssistantMessage, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk";
 import type { ContentBlockParam } from "@anthropic-ai/sdk/resources";
 import type { LlmFilePart, LlmImagePart, LlmMessage, LlmMessagePart, LlmStreamChunk, LlmTextAttachmentPart } from "@triliumnext/commons";
-import { getLog, options as optionService } from "@triliumnext/core";
+import { getLog } from "@triliumnext/core";
 import { encodeBase64 } from "@triliumnext/core/src/services/utils/binary.js";
 import { createHash } from "crypto";
 import fs from "fs";
 import path from "path";
 
 import dataDirs from "../../data_dir.js";
-import port from "../../port.js";
+import { createMcpServer } from "../../mcp/mcp_server.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { resolveAttachmentPart } from "./attachment_content.js";
 import { buildModelList } from "./base_provider.js";
@@ -294,6 +294,21 @@ export class ClaudeAgentProvider implements LlmProvider {
                         break;
                     }
 
+                    case "system": {
+                        // Diagnose a broken in-process MCP bridge: the init event
+                        // reports each MCP server's connection status. If the
+                        // note-tools server was wired but didn't connect, tool
+                        // calls will silently fail — surface it in the log rather
+                        // than leaving a mystery "the agent ignored my notes".
+                        if (message.subtype === "init") {
+                            const trilium = message.mcp_servers?.find(s => s.name === "trilium");
+                            if (trilium && trilium.status !== "connected") {
+                                getLog().error(`Claude Agent provider: note-tools MCP server failed to connect (status: ${trilium.status}); the agent has no note access this turn.`);
+                            }
+                        }
+                        break;
+                    }
+
                     default:
                         break;
                 }
@@ -350,21 +365,13 @@ export class ClaudeAgentProvider implements LlmProvider {
     private composeSystemPrompt(messages: LlmMessage[], config: LlmProviderConfig): string {
         const noteToolsAvailable = areNoteToolsAvailable(config);
 
-        // The shared prompt promises note tools whenever `enableNoteTools` is
-        // set — but on this path they only exist if MCP is also on, so gate on
-        // the effective availability. `contextNoteId` passes through: chatChunks
+        // Coerce enableNoteTools to the effective boolean so the prompt's
+        // note-tools guidance matches the wired tools exactly (buildBaseOptions
+        // gates on the same predicate). `contextNoteId` passes through: chatChunks
         // injects the note metadata into the user turn (see buildNoteHint), so
         // the "you can see the current note's metadata above" notice is accurate.
         const promptConfig: LlmProviderConfig = { ...config, enableNoteTools: noteToolsAvailable };
-        let systemPrompt = buildSystemPrompt(messages, promptConfig) ?? "";
-
-        // Note tools were requested but unavailable — tell the model why so it
-        // explains the fix instead of guessing at its lack of note access.
-        if (config.enableNoteTools !== false && !noteToolsAvailable) {
-            systemPrompt += "\n\nNote tools are currently unavailable because Trilium's MCP server is turned off. If the user asks about their notes, tell them to enable the MCP server in Options → AI / LLM and start a new message.";
-        }
-
-        return systemPrompt;
+        return buildSystemPrompt(messages, promptConfig) ?? "";
     }
 
     /** Options shared by every agent invocation. */
@@ -394,17 +401,18 @@ export class ClaudeAgentProvider implements LlmProvider {
         };
 
         if (areNoteToolsAvailable(config)) {
+            // In-process MCP: hand the agent Trilium's own MCP server instance
+            // (the same one createMcpServer builds for the /mcp HTTP endpoint,
+            // with cls.init + sql.transactional wrapping baked in). The SDK
+            // tunnels tool calls from the CLI subprocess back to this instance
+            // over its stdio control channel — no localhost HTTP endpoint, no
+            // open port, and no dependency on the user-facing `mcpEnabled`
+            // toggle (which exists to expose notes to *external* clients).
             options.mcpServers = {
-                trilium: {
-                    type: "http",
-                    url: `http://127.0.0.1:${port}/mcp`,
-                    alwaysLoad: true
-                }
+                trilium: { type: "sdk", name: "trilium", instance: createMcpServer() }
             };
             // Bare server prefix auto-allows every tool from that server.
             allowedTools.push("mcp__trilium");
-        } else if (config.enableNoteTools !== false) {
-            getLog().info("Claude Agent provider: note tools requested but the MCP server is disabled — enable it in Options → AI / LLM to let the agent access notes.");
         }
 
         options.allowedTools = allowedTools;
@@ -413,12 +421,12 @@ export class ClaudeAgentProvider implements LlmProvider {
 }
 
 /**
- * Note tools are available on this path only when the chat requested them AND
- * Trilium's MCP server (which exposes them) is enabled. Both the tool wiring
- * and the system prompt gate on this so they never disagree.
+ * Whether the chat requested note tools. With in-process MCP the tools have no
+ * external dependency, so this is simply the chat toggle — the tool wiring and
+ * the system prompt both gate on it so they never disagree.
  */
 function areNoteToolsAvailable(config: Pick<LlmProviderConfig, "enableNoteTools">): boolean {
-    return config.enableNoteTools !== false && optionService.getOptionOrNull("mcpEnabled") === "true";
+    return config.enableNoteTools !== false;
 }
 
 /**

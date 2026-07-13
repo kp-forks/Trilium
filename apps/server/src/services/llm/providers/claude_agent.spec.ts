@@ -2,19 +2,23 @@ import type { LlmStreamChunk } from "@triliumnext/commons";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const queryMock = vi.hoisted(() => vi.fn());
-const getOptionOrNullMock = vi.hoisted(() => vi.fn());
+const errorLogMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
     query: queryMock
 }));
 
 vi.mock("@triliumnext/core", () => ({
-    getLog: () => ({ info: vi.fn(), error: vi.fn() }),
-    options: { getOptionOrNull: getOptionOrNullMock },
+    getLog: () => ({ info: vi.fn(), error: errorLogMock }),
     // buildSystemPrompt (reached via composeSystemPrompt) reads the workspace
     // task states; no custom states in this unit test.
     task_states: { getTaskStates: () => [] }
 }));
+
+// In-process MCP: the provider hands the agent Trilium's own MCP server
+// instance; stub the factory so tests don't build the real tool registry.
+const createMcpServerMock = vi.hoisted(() => vi.fn(() => ({ mcpServerInstance: true })));
+vi.mock("../../mcp/mcp_server.js", () => ({ createMcpServer: createMcpServerMock }));
 
 vi.mock("../../data_dir.js", async () => {
     const os = await import("os");
@@ -95,8 +99,8 @@ function successResult(sessionId = "sess-1") {
 describe("ClaudeAgentProvider.chatChunks", () => {
     beforeEach(() => {
         queryMock.mockReset();
-        getOptionOrNullMock.mockReset();
-        getOptionOrNullMock.mockReturnValue("true"); // mcpEnabled
+        errorLogMock.mockReset();
+        createMcpServerMock.mockClear(); // clear calls, keep the instance impl
         resolveAttachmentPartMock.mockReset();
     });
 
@@ -324,7 +328,7 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(prompt).toBe("read this\n\n<file name=\"d.svg\">\n<svg/>\n</file>");
     });
 
-    it("points the agent at Trilium's MCP server and disables built-in tools", async () => {
+    it("wires Trilium's in-process MCP server instance and disables built-in tools", async () => {
         scriptAgent([successResult()]);
         const provider = new ClaudeAgentProvider();
         await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
@@ -332,7 +336,11 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         const options = queryMock.mock.calls[0][0].options;
         expect(options.tools).toEqual([]);
         expect(options.allowedTools).toEqual(["mcp__trilium"]);
-        expect(options.mcpServers.trilium.url).toBe("http://127.0.0.1:8080/mcp");
+        // In-process (sdk) transport, not an HTTP endpoint — the instance is
+        // Trilium's own createMcpServer(), tunneled over the SDK control channel.
+        expect(options.mcpServers.trilium.type).toBe("sdk");
+        expect(options.mcpServers.trilium.instance).toEqual({ mcpServerInstance: true });
+        expect(createMcpServerMock).toHaveBeenCalled();
         expect(options.permissionMode).toBe("dontAsk");
         expect(options.settingSources).toEqual([]);
     });
@@ -406,29 +414,41 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(fs.existsSync(path.join(cwd, ".git", "HEAD"))).toBe(true);
     });
 
-    it("tells the model why note tools are missing when the MCP server is disabled", async () => {
-        getOptionOrNullMock.mockReturnValue(null);
+    it("omits note-tools wiring (and its prompt guidance) when the chat disables note tools, and enables web search", async () => {
         scriptAgent([successResult()]);
         const provider = new ClaudeAgentProvider();
-        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableNoteTools: false, enableWebSearch: true }));
 
         const options = queryMock.mock.calls[0][0].options;
-        expect(options.systemPrompt).toContain("MCP server is turned off");
-        // The prompt must not promise note tools that aren't actually wired.
+        expect(options.mcpServers).toBeUndefined();
+        expect(createMcpServerMock).not.toHaveBeenCalled();
+        expect(options.tools).toEqual(["WebSearch", "WebFetch"]);
+        expect(options.allowedTools).toEqual(["WebSearch", "WebFetch"]);
+        // Prompt matches the wiring: no note-tools guidance when they're off.
         expect(options.systemPrompt).not.toContain("load_skill");
         expect(options.systemPrompt).toContain("do not have access to the user's notes");
     });
 
-    it("omits MCP wiring when the MCP server is disabled, and enables web search on request", async () => {
-        getOptionOrNullMock.mockReturnValue(null);
-        scriptAgent([successResult()]);
+    it("logs a diagnostic when the in-process MCP bridge fails to connect", async () => {
+        scriptAgent([
+            { type: "system", subtype: "init", session_id: "s", mcp_servers: [{ name: "trilium", status: "failed" }] },
+            successResult()
+        ]);
         const provider = new ClaudeAgentProvider();
-        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
 
-        const options = queryMock.mock.calls[0][0].options;
-        expect(options.mcpServers).toBeUndefined();
-        expect(options.tools).toEqual(["WebSearch", "WebFetch"]);
-        expect(options.allowedTools).toEqual(["WebSearch", "WebFetch"]);
+        expect(errorLogMock).toHaveBeenCalledWith(expect.stringContaining("failed to connect"));
+    });
+
+    it("does not log a bridge diagnostic on a healthy connected init", async () => {
+        scriptAgent([
+            { type: "system", subtype: "init", session_id: "s", mcp_servers: [{ name: "trilium", status: "connected" }] },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(errorLogMock).not.toHaveBeenCalled();
     });
 
     it("surfaces authentication failures with a login hint", async () => {
@@ -475,8 +495,6 @@ describe("ClaudeAgentProvider.chatChunks", () => {
 describe("generateTitle", () => {
     beforeEach(() => {
         queryMock.mockReset();
-        getOptionOrNullMock.mockReset();
-        getOptionOrNullMock.mockReturnValue(null);
     });
 
     it("returns the agent's one-shot result with surrounding quotes stripped", async () => {
