@@ -18,6 +18,9 @@ import { Decoration, type DecorationSet, EditorView } from "@codemirror/view";
  *  - HTTP request lines `<ts> [Slow ]<status> <VERB> <url> …` — the whole line is tinted, the verb
  *    bolded, the URL coloured and the status colour-coded by class (2xx/3xx/4xx/5xx). The optional
  *    `Slow` marker (prepended by the server for requests taking >= 10ms) is flagged as a warning.
+ *  - slow SQL query lines `<ts> Slow [recursive ]query took <n>ms[: <sql>]` — the whole line is
+ *    tinted, `Slow` flagged as a warning, `query` bolded as the entry's verb (its own colour, not the
+ *    HTTP method's), and the statement (absent for recursive queries) coloured
  *  - `<ts> JS Error: …` and `<ts> ERROR: …` lines — coloured red, together with their following
  *    continuation lines (e.g. wrapped stack traces), which carry no timestamp of their own
  *  - `<ts> JS Info: …` lines (and their continuation lines) — placeholder class, no colour yet
@@ -35,6 +38,13 @@ const HTTP_REQUEST = /^\d{2}:\d{2}:\d{2}\.\d{3} (Slow )?(\d{3}) (GET|POST|PUT|PA
 const SLOW_LENGTH = 4;
 const ERROR_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} (?:JS Error|ERROR):/;
 const INFO_LINE = /^\d{2}:\d{2}:\d{2}\.\d{3} JS Info:/;
+// Slow SQL queries (logged when a query takes >= 20ms). Two shapes:
+//   `Slow query took 78ms: SELECT …`      — the statement follows, whitespace-normalised to one line
+//   `Slow recursive query took 45ms.`     — the statement is omitted entirely
+// The fixed words are captured (rather than matched literally) so their lengths give the offsets of
+// the parts that follow. Anchored on `query` so sibling timings — `Slow autocomplete took …ms`,
+// `Becca (note cache) load took …ms`, `Content hash computation took …ms` — are not caught.
+const SLOW_QUERY = /^\d{2}:\d{2}:\d{2}\.\d{3} (Slow) ((?:recursive )?)(query)( took )(\d+ms)(?:: (.+))?/;
 
 /** Upper bound on how many (trailing) lines are highlighted, to cap the per-rebuild work. */
 export const MAX_HIGHLIGHTED_LINES = 10_000;
@@ -43,7 +53,10 @@ const timestampMark = Decoration.mark({ class: "cm-log-timestamp" });
 const slowMark = Decoration.mark({ class: "cm-log-slow" });
 const verbMark = Decoration.mark({ class: "cm-log-verb" });
 const urlMark = Decoration.mark({ class: "cm-log-url" });
+const queryVerbMark = Decoration.mark({ class: "cm-log-query-verb" });
+const sqlMark = Decoration.mark({ class: "cm-log-sql" });
 const httpLine = Decoration.line({ class: "cm-log-http" });
+const queryLine = Decoration.line({ class: "cm-log-query" });
 const errorLine = Decoration.line({ class: "cm-log-error" });
 const infoLine = Decoration.line({ class: "cm-log-info" });
 const statusMarks: Record<string, Decoration> = {
@@ -63,6 +76,9 @@ const logHighlightTheme = EditorView.baseTheme({
     ".cm-log-slow": { fontWeight: "bold", color: "var(--log-slow-color, #d29922)" },
     ".cm-log-verb": { fontWeight: "bold", color: "var(--log-http-verb-color, #539bf5)" },
     ".cm-log-url": { color: "var(--log-http-url-color, #268a8a)" },
+    ".cm-log-query": { backgroundColor: "var(--log-query-line-background-color, color-mix(in srgb, var(--main-text-color) 3%, transparent))" },
+    ".cm-log-query-verb": { fontWeight: "bold", color: "var(--log-query-verb-color, #bf3989)" },
+    ".cm-log-sql": { color: "var(--log-sql-color, #8957e5)" },
     ".cm-log-status": { fontWeight: "bold" },
     ".cm-log-status-2xx": { color: "var(--log-status-success-color, #2ea043)" },
     ".cm-log-status-3xx": { color: "var(--log-status-redirect-color, var(--muted-text-color))" },
@@ -136,10 +152,13 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
     }
 
     const httpMatch = HTTP_REQUEST.exec(text);
+    const queryMatch = httpMatch ? null : SLOW_QUERY.exec(text);
     const newBlockLine = httpMatch ? null : blockLineFor(text);
     // Line decorations must be added at the line start before any mark that begins there.
     if (httpMatch) {
         builder.add(lineStart, lineStart, httpLine);
+    } else if (queryMatch) {
+        builder.add(lineStart, lineStart, queryLine);
     } else if (newBlockLine) {
         builder.add(lineStart, lineStart, newBlockLine);
     }
@@ -164,6 +183,21 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
         }
         builder.add(verbStart, verbStart + verb.length, verbMark);
         builder.add(urlStart, urlStart + url.length, urlMark);
+    } else if (queryMatch) {
+        // Layout: `<12-char ts><space>Slow [recursive ]query took <n>ms[: <sql>]`. `query` is the verb
+        // of the entry (the counterpart of an HTTP method), but carries its own colour. The duration
+        // is left undecorated; it is captured only because its length locates the statement after it.
+        const [ , slow, recursive, queryWord, tookWord, duration, sql ] = queryMatch;
+        const slowStart = lineStart + TIMESTAMP_LENGTH + 1;
+        const queryStart = slowStart + slow.length + 1 + recursive.length;
+
+        builder.add(slowStart, slowStart + slow.length, slowMark);
+        builder.add(queryStart, queryStart + queryWord.length, queryVerbMark);
+        if (sql) {
+            const durationStart = queryStart + queryWord.length + tookWord.length;
+            const sqlStart = durationStart + duration.length + 2; // ": "
+            builder.add(sqlStart, sqlStart + sql.length, sqlMark);
+        }
     }
 
     return newBlockLine;
