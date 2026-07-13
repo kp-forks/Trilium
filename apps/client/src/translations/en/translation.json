@@ -2116,6 +2116,7 @@
     "sources_summary": "{{count}} sources from {{sites}} sites",
     "extended_thinking": "Extended thinking",
     "legacy_models": "Legacy models",
+    "model_cost_included": "Subscription",
     "thinking": "Thinking...",
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",

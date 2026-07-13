@@ -37,28 +37,32 @@ import { buildSystemPrompt } from "./system_prompt.js";
 const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
     {
         id: "claude-fable-5",
-        name: "Claude Fable 5 (subscription)",
+        name: "Claude Fable 5",
         pricing: { input: 0, output: 0 },
-        contextWindow: 1000000
+        contextWindow: 1000000,
+        isSubscription: true
     },
     {
         id: "claude-sonnet-5",
-        name: "Claude Sonnet 5 (subscription)",
+        name: "Claude Sonnet 5",
         pricing: { input: 0, output: 0 },
         contextWindow: 1000000,
-        isDefault: true
+        isDefault: true,
+        isSubscription: true
     },
     {
         id: "claude-opus-4-8",
-        name: "Claude Opus 4.8 (subscription)",
+        name: "Claude Opus 4.8",
         pricing: { input: 0, output: 0 },
-        contextWindow: 1000000
+        contextWindow: 1000000,
+        isSubscription: true
     },
     {
         id: "claude-haiku-4-5-20251001",
-        name: "Claude Haiku 4.5 (subscription)",
+        name: "Claude Haiku 4.5",
         pricing: { input: 0, output: 0 },
-        contextWindow: 200000
+        contextWindow: 200000,
+        isSubscription: true
     }
 ]);
 

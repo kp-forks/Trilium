@@ -2,6 +2,7 @@ import type { LlmCitation, LlmMessage, LlmMessagePart, LlmModelInfo, LlmUsage } 
 import { RefObject } from "preact";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
+import { t } from "../../../services/i18n.js";
 import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
@@ -268,7 +269,9 @@ export function useLlmChat(
         getAvailableModels().then(models => {
             const modelsWithDescription = models.map(m => ({
                 ...m,
-                costDescription: m.costMultiplier ? `${m.costMultiplier}x` : undefined
+                costDescription: m.isSubscription
+                    ? t("llm_chat.model_cost_included")
+                    : m.costMultiplier ? `${m.costMultiplier}x` : undefined
             }));
             setAvailableModels(modelsWithDescription);
             setHasProvider(models.length > 0);

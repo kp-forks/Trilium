@@ -50,6 +50,8 @@ export interface ModelInfo {
     contextWindow?: number;
     /** Whether this is a legacy/older model */
     isLegacy?: boolean;
+    /** Whether usage is covered by a subscription plan rather than metered per token */
+    isSubscription?: boolean;
 }
 
 export interface LlmProvider {
