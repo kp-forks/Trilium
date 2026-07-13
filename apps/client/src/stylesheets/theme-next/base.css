@@ -598,6 +598,28 @@ li.dropdown-item a.dropdown-item-button:focus-visible {
     margin: 0;
 }
 
+/* Keyboard shortcut. Note tooltips are excluded: their body is rendered note content, so
+   any <kbd> in there is styled as content (see `.ck-content kbd` in dialogs.css). */
+.tooltip:not(.note-tooltip) .tooltip-inner kbd {
+    display: inline-block;
+    margin: 0 2px 2px;
+    border: 1px solid var(--tooltip-kbd-border);
+    border-radius: 5px;
+    padding: 2px 8px;
+    background: var(--tooltip-kbd-background);
+    box-shadow:
+        0 2px 0 var(--tooltip-kbd-border),
+        inset 0 -1px 0 var(--tooltip-kbd-border);
+    color: var(--tooltip-kbd-color);
+    font-family: var(--main-font-family);
+    font-size: 0.75em;
+    font-weight: normal;
+    line-height: 1.4;
+    letter-spacing: 0.5pt;
+    vertical-align: 1px;
+    white-space: nowrap;
+}
+
 /*
  * NOTE TOOLTIPS
  */

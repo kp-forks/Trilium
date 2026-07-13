@@ -8,6 +8,7 @@ import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
 import { t } from "../services/i18n.js";
+import { type MediaEnvironment, showsFileActions } from "../widgets/type_widgets/file/media_environment.js";
 import type { LlmChatContent, StoredMessage } from "../widgets/type_widgets/llm_chat/llm_chat_types.js";
 import renderText, { postProcessRichContent, renderChildrenList } from "./content_renderer_text.js";
 import renderDoc from "./doc_renderer.js";
@@ -54,6 +55,14 @@ export interface RenderOptions {
      * default and intentionally left off for lightweight previews such as tooltips and the note list.
      */
     interactive?: boolean;
+    /**
+     * How audio/video renders. `preview` (the default) shows a click-to-load placeholder, so that a screen
+     * full of media notes doesn't have every one of them streaming from the server at once; `embedded`
+     * mounts the full player straight away. `native` emits a plain `<audio>`/`<video>` element instead of
+     * the player, for the callers that serialize the rendered content into an HTML string or into a separate
+     * document (presentation, printing) — a mounted player would be dead markup there.
+     */
+    mediaEnvironment?: "preview" | "embedded" | "native";
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
@@ -294,6 +303,9 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
     }
 
     const $content = $('<div style="display: flex; flex-direction: column; height: 100%; justify-content: end;">');
+    // An embedded player has no room for a footer below it, so it carries Download / Open in its own controls
+    // instead (see showsFileActions) — and this footer stands down.
+    let mediaOwnsFileActions = false;
 
     if (type === "pdf") {
         const url = `../../api/${entityType}/${entityId}/open`;
@@ -304,27 +316,27 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
         $content.append($viewer);
 
 
-    } else if (type === "audio") {
-        const $audioPreview = $("<audio controls></audio>")
-            .attr("src", openService.getUrlForDownload(`api/${entityType}/${entityId}/open-partial`))
-            .attr("type", entity.mime)
-            .css("width", "100%");
+    } else if (type === "audio" || type === "video") {
+        const environment = options.mediaEnvironment ?? "preview";
 
-        $content.append($audioPreview);
-    } else if (type === "video") {
-        const $videoPreview = $("<video controls></video>")
-            .attr("src", openService.getUrlForDownload(`api/${entityType}/${entityId}/open-partial`))
-            .attr("type", entity.mime)
-            .css("width", "100%");
+        if (environment === "native") {
+            const $nativePreview = $(type === "audio" ? "<audio controls></audio>" : "<video controls></video>")
+                .attr("src", openService.getUrlForDownload(`api/${entityType}/${entityId}/open-partial`))
+                .attr("type", entity.mime)
+                .css("width", "100%");
 
-        $content.append($videoPreview);
+            $content.append($nativePreview);
+        } else {
+            mediaOwnsFileActions = showsFileActions(environment);
+            await renderMedia(entity, environment, $content);
+        }
     }
 
     if (entity instanceof FNote && options.showTextRepresentation) {
         await addOCRTextIfAvailable(entity, $content);
     }
 
-    if (entityType === "notes" && "noteId" in entity) {
+    if (entityType === "notes" && "noteId" in entity && !mediaOwnsFileActions) {
         // TODO: we should make this available also for attachments, but there's a problem with "Open externally" support
         //       in attachment list
         const $downloadButton = $(`
@@ -361,6 +373,22 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
     }
 
     $renderedContent.append($content);
+}
+
+/**
+ * Mounts the Trilium media player for an audio/video note or attachment. In a `preview` it starts as a
+ * placeholder and only loads the media once the user presses play (see {@link MediaPreview}); an `embedded`
+ * one loads straight away. Like every other mounted widget here, the embedding caller must tear it down via
+ * {@link disposeInteractiveContent} — otherwise the Preact root leaks and its media keeps playing.
+ */
+async function renderMedia(entity: FNote | FAttachment, environment: MediaEnvironment, $content: JQuery<HTMLElement>) {
+    const MediaPreview = (await import("../widgets/type_widgets/file/MediaPreview")).default;
+    const $container = $('<div class="rendered-media">');
+    const container = $container.get(0);
+    if (container) {
+        await mountInteractiveWidget(h(MediaPreview, { entity, environment }), container);
+    }
+    $content.append($container);
 }
 
 async function renderMermaid(note: FNote | FAttachment, $renderedContent: JQuery<HTMLElement>) {

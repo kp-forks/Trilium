@@ -318,6 +318,59 @@ describe("notes service (real DB)", () => {
             expect(code.note.getRelations().some((r) => r.name === "internalLink")).toBe(false);
         });
 
+        it("strips a stale external srcset from an image already pointing at a local attachment (#srcset)", () => {
+            const source = createNote("root", { title: "spec-srcset" });
+
+            // Real-world paste: the image was saved as a local attachment (src rewritten),
+            // but the copied HTML still carries a srcset of external URLs. Browsers prefer
+            // srcset over src, so once upstream removes those URLs the image vanishes even
+            // though the local attachment is still valid.
+            const content =
+                `<figure class="image image_resized" style="width:49.35%;">` +
+                `<img style="aspect-ratio:1290/238;" src="api/attachments/gbsXLfqQwo4a/image/asas.png" alt="" ` +
+                `srcset="https://example.com/wp-content/uploads/2025/02/asas.png 1290w, ` +
+                `https://example.com/wp-content/uploads/2025/02/asas-300x55.png 300w" ` +
+                `sizes="100vw" width="1290" height="238"></figure>`;
+
+            const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
+
+            // The local src is preserved…
+            expect(newContent).toContain(`src="api/attachments/gbsXLfqQwo4a/image/asas.png"`);
+            // …but the external srcset/sizes are removed so the browser falls back to it.
+            expect(newContent).not.toContain("srcset=");
+            expect(newContent).not.toContain("example.com");
+            expect(newContent).not.toContain("sizes=");
+        });
+
+        it("keeps the srcset on an image whose src is still an external URL", () => {
+            const source = createNote("root", { title: "spec-srcset-external" });
+
+            // Nothing was localized here (e.g. downloadImagesAutomatically off): the src is
+            // still external, so the srcset is the legitimate/only source and must survive.
+            const content =
+                `<img src="https://example.com/a.png" ` +
+                `srcset="https://example.com/a.png 1290w, https://example.com/a-300.png 300w" sizes="100vw">`;
+
+            const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
+
+            // Assert the full srcset value survived intact, not merely that a srcset= token is present.
+            expect(newContent).toContain(`srcset="https://example.com/a.png 1290w, https://example.com/a-300.png 300w"`);
+        });
+
+        it("strips a srcset containing the opposite quote character without corrupting the tag", () => {
+            const source = createNote("root", { title: "spec-srcset-quote" });
+
+            // A single quote inside the double-quoted srcset value must not truncate the strip
+            // (a naive [^"']* would stop at the apostrophe and leave a dangling fragment).
+            const content =
+                `<p><img src="api/attachments/aBc/image/x.png" ` +
+                `srcset="https://example.com/it's-a-photo.png 1x"> after</p>`;
+
+            const { content: newContent } = getContext().init(() => saveLinks(source.note, content));
+
+            expect(newContent).toBe(`<p><img src="api/attachments/aBc/image/x.png"> after</p>`);
+        });
+
         it("extracts an inline base64 attachment, deriving its title via prepareTitle", () => {
             const source = createNote("root", { title: "spec-inline-attachment" });
 

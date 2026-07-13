@@ -317,7 +317,6 @@
     "more_actions": "更多操作",
     "deleted_notes_settings": "已删除笔记设置",
     "no_deleted_notes_message": "没有已删除的笔记。",
-    "cannot_undelete": "此笔记无法还原，因为它的父笔记也已被删除。请先还原父笔记。",
     "undelete_failed": "该笔记无法还原——可能已被永久清理，或其父笔记已不可用。"
   },
   "sort_child_notes": {

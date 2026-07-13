@@ -160,10 +160,18 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     const isZoomableImage = !!isFullDetail && attachment.role === "image";
     const imageSrc = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}?${attachment.utcDateModified}`;
 
+    /** Unmounts whatever the content renderer previously mounted here (a media player), so that replacing
+     *  or discarding the content doesn't leak its Preact root — or leave its audio playing. */
+    function disposeContent() {
+        const wrapper = contentWrapper.current;
+        if (wrapper) content_renderer.disposeInteractiveContent($(wrapper));
+    }
+
     function refresh() {
         if (!isZoomableImage) {
             content_renderer.getRenderedContent(attachment)
                 .then(({ $renderedContent }) => {
+                    disposeContent();
                     contentWrapper.current?.replaceChildren(...$renderedContent);
                 });
         }
@@ -176,7 +184,10 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
         setScheduledForErasureSince(attachment.utcDateScheduledForErasureSince);
     }
 
-    useEffect(refresh, [ attachment, isZoomableImage ]);
+    useEffect(() => {
+        refresh();
+        return disposeContent;
+    }, [ attachment, isZoomableImage ]);
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.getAttachmentRows().find(attachment => attachment.attachmentId)) {
             refresh();

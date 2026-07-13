@@ -1318,6 +1318,7 @@
   },
   "media": {
     "play": "Play (Space)",
+    "activate": "Play {{- title}}",
     "pause": "Pause (Space)",
     "seek": "Seek (Left/Right arrow keys)",
     "back-10s": "Back 10s (Left arrow key)",
@@ -2587,7 +2588,9 @@
     "note_completion_enabled": "Note auto-completion",
     "note_completion_description": "Links to notes can be created by typing `@` followed by the title of a note.",
     "slash_commands_enabled": "Slash commands",
-    "slash_commands_description": "Editing commands such as inserting line breaks or headings can be toggled by typing `/`."
+    "slash_commands_description": "Editing commands such as inserting line breaks or headings can be toggled by typing `/`.",
+    "content_hints_enabled": "Content hints",
+    "content_hints_description": "Show short hints in the bottom corner of the editor that explain how to interact with the element under the caret or pointer."
   },
   "table_view": {
     "new-row": "New row",
@@ -3122,7 +3125,7 @@
     "export-csv-failed": "Failed to export the spreadsheet to CSV."
   },
   "text-editor": {
-    "checkbox-tooltip": "Right click for more task states.\nPress {{- shortcut}} to cycle between states.",
+    "checkbox-tooltip": "Right-click or press {{- shortcut}} to change state.",
     "checkbox-tooltip-state-label": "Task state:",
     "checkbox-tooltip-state-unknown-suffix": "(missing definition)",
     "collapsible-body-placeholder": "Type the content here...",
@@ -3131,7 +3134,7 @@
     "collapsible-select-label": "Select collapsible block",
     "collapsible-title-placeholder": "Summary",
     "collapsible-toggle-label": "Toggle collapsible block",
-    "collapsible-tooltip": "Click on the arrow or press {{shortcut}} to collapse/expand.",
+    "collapsible-tooltip": "Click on the arrow or press {{- shortcut}} to collapse/expand.",
     "edit-states-tooltip": "Edit task states",
     "unknown-task-state": "Undefined custom task state",
     "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",
