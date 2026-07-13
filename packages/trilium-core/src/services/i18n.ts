@@ -1,4 +1,4 @@
-import { dayjs, Dayjs, Locale, LOCALE_IDS, LOCALES, setDayjsLocale } from "@triliumnext/commons";
+import { dayjs, Dayjs, isDisplayableLocale, Locale, LOCALE_IDS, LOCALES, setDayjsLocale } from "@triliumnext/commons";
 import sql_init from "./sql_init";
 import options from "./options";
 import i18next from "i18next";
@@ -56,12 +56,12 @@ export async function reconcileLanguageAfterDbInit() {
     }
 
     const locale = options.getOptionOrNull("locale");
-    if (!locale || locale === i18next.language) {
+    if (!isDisplayableLocale(locale) || locale === i18next.language) {
         return;
     }
 
     await i18next.changeLanguage(locale);
-    await setDayjsLocale(locale as LOCALE_IDS);
+    await setDayjsLocale(locale);
 }
 
 export function getCurrentLocale() {
