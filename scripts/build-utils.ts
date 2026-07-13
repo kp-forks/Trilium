@@ -79,6 +79,17 @@ export default class BuildHelper {
             },
             define: {
                 "process.env.NODE_ENV": JSON.stringify("production"),
+                // CJS output has no `import.meta`, so esbuild rewrites
+                // `import.meta.url` to `{}` (→ undefined). Bundled ESM deps
+                // (e.g. @anthropic-ai/claude-agent-sdk) call
+                // `createRequire(import.meta.url)` at module top level, which
+                // then throws `ERR_INVALID_ARG_VALUE`. Redirect it to the
+                // bundle's own file so createRequire()/`.resolve()` anchor at
+                // dist/ and can still locate sibling node_modules packages.
+                "import.meta.url": "__bundleImportMetaUrl",
+            },
+            banner: {
+                js: `const __bundleImportMetaUrl = require("node:url").pathToFileURL(__filename).href;`
             },
             minify: true
         });

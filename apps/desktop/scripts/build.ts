@@ -18,6 +18,15 @@ async function main() {
 
     // Copy node modules dependencies
     build.copyNodeModules([ "better-sqlite3", "bindings", "file-uri-to-path" ]);
+
+    // The Claude Agent SDK's JavaScript is bundled into main.cjs, but at
+    // query time it spawns a native `claude` binary shipped as a per-platform
+    // optional dependency (@anthropic-ai/claude-agent-sdk-<platform>-<arch>).
+    // That binary can't be bundled — ship the host platform's package so the
+    // SDK's runtime `createRequire(import.meta.url).resolve(...)` finds it in
+    // dist/node_modules. (Cross-platform release builds must ship the target's
+    // package; on musl Linux the `-musl` variant is installed instead.)
+    build.copyNodeModules([ `@anthropic-ai/claude-agent-sdk-${process.platform}-${process.arch}` ]);
     build.copy("/node_modules/ckeditor5/dist/ckeditor5-content.css", "ckeditor5-content.css");
 
     build.buildFrontend();
