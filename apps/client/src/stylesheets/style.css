@@ -2906,6 +2906,17 @@ iframe.print-iframe {
 }
 
 /*
+ * COLLAPSIBLE LIST ITEMS
+ */
+
+:where(:root) {
+    --text-editor-collapsible-list-arrow-color: var(--muted-text-color);
+    /* Neutral by design: a translucent grey reads on both light and dark backgrounds. */
+    --text-editor-collapsible-list-arrow-hover-background: rgba(128, 128, 128, 0.25);
+    --text-editor-collapsible-list-arrow-hover-color: var(--main-text-color);
+}
+
+/*
  * TASK STATES
  */
 
