@@ -24,6 +24,12 @@ const ADAPTIVE_THINKING_MODELS = /^claude-(?:opus-4-[678]|sonnet-(?:4-6|5))/;
 const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
     // ===== Current Models =====
     {
+        id: "claude-fable-5",
+        name: "Claude Fable 5",
+        pricing: { input: 10, output: 50 },
+        contextWindow: 1000000
+    },
+    {
         id: "claude-opus-4-8",
         name: "Claude Opus 4.8",
         pricing: { input: 5, output: 25 },

@@ -36,6 +36,12 @@ import { buildSystemPrompt } from "./system_prompt.js";
  */
 const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
     {
+        id: "claude-fable-5",
+        name: "Claude Fable 5 (subscription)",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 1000000
+    },
+    {
         id: "claude-sonnet-5",
         name: "Claude Sonnet 5 (subscription)",
         pricing: { input: 0, output: 0 },
