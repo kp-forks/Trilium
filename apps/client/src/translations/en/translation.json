@@ -3081,7 +3081,7 @@
     "base_url": "Base URL",
     "base_url_description": "Optional. Override the default API endpoint — useful for self-hosted models (Ollama, LM Studio, vLLM) or proxies.",
     "base_url_invalid": "Base URL must be a valid http:// or https:// URL",
-    "claude_agent_description": "Uses your Claude Pro/Max subscription through Claude Code — no API key needed. Sign in once by running \"claude /login\" on the machine where the Trilium server runs. To let the AI access your notes, also enable the MCP server below.",
+    "claude_agent_description": "Uses your Claude Pro/Max subscription through Claude Code — no API key needed. Claude Code must be installed on the machine running the Trilium server; sign in once by running \"claude /login\" there. To let the AI access your notes, also enable the MCP server below.",
     "cancel": "Cancel",
     "mcp_title": "MCP (Model Context Protocol)",
     "mcp_enabled": "MCP server",

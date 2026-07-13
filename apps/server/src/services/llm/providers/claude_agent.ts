@@ -5,6 +5,10 @@
  * authentication is owned entirely by Claude Code (`claude /login` once on the
  * machine running the server), and billing goes to the subscription.
  *
+ * Bring-your-own-binary: the SDK's ~250 MB bundled native binary is stripped at
+ * install time (root .pnpmfile.cjs); the provider drives the user's own
+ * installed `claude` CLI (see claude_binary.ts), keeping the server lean.
+ *
  * Unlike the AI-SDK providers, the Agent SDK runs its own agentic loop and is
  * session-based (it owns conversation history). This provider therefore:
  *   - implements `chatChunks()` (chunk-native streaming) instead of `chat()`,
@@ -29,6 +33,7 @@ import port from "../../port.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { resolveAttachmentPart } from "./attachment_content.js";
 import { buildModelList } from "./base_provider.js";
+import { resolveClaudeBinaryPath } from "./claude_binary.js";
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt } from "./system_prompt.js";
 
@@ -371,6 +376,9 @@ export class ClaudeAgentProvider implements LlmProvider {
         const allowedTools = [...builtinTools];
 
         const options: AgentOptions = {
+            // Bring-your-own-binary: the SDK's bundled native binary is stripped
+            // at install time; drive the user's own installed Claude Code CLI.
+            pathToClaudeCodeExecutable: resolveClaudeBinaryPath(),
             cwd: getAgentCwd(),
             tools: builtinTools,
             settingSources: [],

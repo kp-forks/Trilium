@@ -27,6 +27,12 @@ vi.mock("../../port.js", () => ({ default: 8080 }));
 const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string) => `NOTE_META(${noteId})`));
 vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
 
+// BYO binary resolution shells out to the user's `claude`; stub it so tests
+// don't depend on a real install. Returns a path by default; can be made to
+// throw (missing binary) per-test.
+const resolveClaudeBinaryMock = vi.hoisted(() => vi.fn(() => "/usr/bin/claude"));
+vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBinaryMock }));
+
 // Attachment resolution reads bytes out of Becca, which the core mock above
 // omits — stub it so the multimodal tests drive block construction directly.
 const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
@@ -329,6 +335,28 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(options.mcpServers.trilium.url).toBe("http://127.0.0.1:8080/mcp");
         expect(options.permissionMode).toBe("dontAsk");
         expect(options.settingSources).toEqual([]);
+    });
+
+    it("drives the user's resolved claude binary (bring-your-own-binary)", async () => {
+        resolveClaudeBinaryMock.mockReturnValueOnce("/opt/homebrew/bin/claude");
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock.mock.calls[0][0].options.pathToClaudeCodeExecutable).toBe("/opt/homebrew/bin/claude");
+    });
+
+    it("surfaces a friendly error (and never spawns) when Claude Code isn't installed", async () => {
+        resolveClaudeBinaryMock.mockImplementationOnce(() => {
+            throw new Error("Claude Code CLI not found. Install it and run `claude /login`...");
+        });
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock).not.toHaveBeenCalled();
+        const errors = chunks.filter(c => c.type === "error");
+        expect(errors).toHaveLength(1);
+        expect(errors[0].error).toContain("Claude Code CLI not found");
     });
 
     it("uses Trilium's shared system prompt (skill/link/markdown guidance) when note tools are live", async () => {
