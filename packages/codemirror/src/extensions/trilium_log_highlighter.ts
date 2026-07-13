@@ -171,7 +171,7 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
     if (httpMatch) {
         // Layout: `<12-char ts><space>[Slow ]<3-char status><space><verb><space><url>`. The optional
         // `Slow ` capture includes its trailing space, so its length shifts everything after it.
-        const [ , slowPrefix = "", , verb, url ] = httpMatch;
+        const [ , slowPrefix = "", status, verb, url ] = httpMatch;
         const slowStart = lineStart + TIMESTAMP_LENGTH + 1;
         const statusStart = slowStart + slowPrefix.length;
         const verbStart = statusStart + 4; // 3-digit status + space
@@ -180,7 +180,7 @@ function decorateLine(builder: RangeSetBuilder<Decoration>, line: { from: number
         if (slowPrefix) {
             builder.add(slowStart, slowStart + SLOW_LENGTH, slowMark);
         }
-        const statusMark = statusMarks[httpMatch[2][0]];
+        const statusMark = statusMarks[status[0]];
         if (statusMark) {
             builder.add(statusStart, statusStart + 3, statusMark);
         }
