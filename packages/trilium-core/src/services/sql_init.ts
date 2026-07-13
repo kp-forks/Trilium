@@ -1,4 +1,5 @@
-import { deferred, isDisplayableLocale, OptionRow } from "@triliumnext/commons";
+import { deferred, isDisplayableLocale, OptionRow, setDayjsLocale } from "@triliumnext/commons";
+import i18next from "i18next";
 import { getSql } from "./sql";
 import { getLog } from "./log";
 import { getBackup } from "./backup";
@@ -171,6 +172,12 @@ async function createInitialDatabase(skipDemoDb?: boolean, locale?: string) {
         passwordService.resetPassword();
     });
 
+    // Persisting the `locale` option above only records the choice in the DB; it does not switch the
+    // active i18next language. Switch it now, before `checkHiddenSubtree` builds the built-in titles,
+    // otherwise every system note (Options, Launch Bar, templates, Help) is created in English regardless
+    // of the language selected during setup.
+    await applySetupLanguage(locale);
+
     // Check hidden subtree.
     // This ensures the existence of system templates, for the demo content.
     console.log("Checking hidden subtree at first start.");
@@ -222,6 +229,24 @@ async function createInitialDatabase(skipDemoDb?: boolean, locale?: string) {
     // which goes through `setDbAsInitialized` via `syncFinished`.
     eventService.emit(eventService.DB_INITIALIZED);
     log.info("Database initialization completed, emitted DB_INITIALIZED event");
+}
+
+/**
+ * Applies the display language chosen during initial setup to the running i18next (and dayjs) instance.
+ *
+ * `createInitialDatabase` persists the choice as the `locale` option, but that is only a DB write: because
+ * `initTranslations` runs before `initSql` inside `initializeCore` (options_init needs translations),
+ * i18next is still on the boot default "en" at setup time. Switching here, before the hidden subtree is
+ * built, ensures the built-in note titles are generated in the selected language. Undefined or
+ * non-displayable locales are ignored so the default is kept.
+ */
+export async function applySetupLanguage(locale: string | undefined) {
+    if (!isDisplayableLocale(locale)) {
+        return;
+    }
+
+    await i18next.changeLanguage(locale);
+    await setDayjsLocale(locale);
 }
 
 async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", syncProxy = "", syncMaxBlobContentSize = 0) {

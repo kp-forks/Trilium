@@ -68,10 +68,22 @@ function checkNoteAccess(noteId: string, req: Request, res: Response) {
         return false;
     }
 
+    if (!hasCredentialAccess(note, req)) {
+        return false;
+    }
+
+    return note;
+}
+
+// Returns true when the request is allowed to read the given note: either the
+// note (including inherited attributes) carries no shareCredentials, or the
+// request presents matching HTTP Basic credentials. Pure predicate — does not
+// touch the response, so it can also be reused to filter search results.
+function hasCredentialAccess(note: SNote, req: Request) {
     const credentials = note.getCredentials();
 
     if (credentials.length === 0) {
-        return note;
+        return true;
     }
 
     const header = req.header("Authorization");
@@ -84,13 +96,31 @@ function checkNoteAccess(noteId: string, req: Request, res: Response) {
     const buffer = Buffer.from(base64Str, "base64");
     const authString = buffer.toString("utf-8");
 
-    for (const credentialLabel of credentials) {
-        if (safeCompare(authString, credentialLabel.value)) {
-            return note; // success;
+    return credentials.some((credentialLabel) => safeCompare(authString, credentialLabel.value));
+}
+
+// Returns true when the note reached via `notePathArray` is actually visible in
+// the public share tree below `ancestorNoteId`: every hop from the ancestor down
+// to the note must be a non-hidden branch whose child note is not
+// `shareHiddenFromTree`. Mirrors SNote.getVisibleChildBranches() so that search
+// cannot enumerate notes the navigation tree deliberately hides.
+function isVisibleInShareTree(ancestorNoteId: string, notePathArray: string[]) {
+    const startIndex = notePathArray.indexOf(ancestorNoteId);
+
+    if (startIndex < 0) {
+        return false;
+    }
+
+    for (let i = startIndex + 1; i < notePathArray.length; i++) {
+        const childNote = shaca.notes[notePathArray[i]];
+        const branch = shaca.getBranchFromChildAndParent(notePathArray[i], notePathArray[i - 1]);
+
+        if (!childNote || !branch || branch.isHidden || childNote.isLabelTruthy("shareHiddenFromTree")) {
+            return false;
         }
     }
 
-    return false;
+    return true;
 }
 
 // Like checkNoteAccess, but additionally refuses protected notes. Used by the
@@ -403,13 +433,23 @@ function register(router: Router) {
 
         const searchContext = new SearchContext({ ancestorNoteId });
         const searchResults = searchService.findResultsWithQuery(search, searchContext);
-        const filteredResults = searchResults.map((sr) => {
-            const fullNote = shaca.notes[sr.noteId];
-            const startIndex = sr.notePathArray.indexOf(ancestorNoteId);
-            const localPathArray = sr.notePathArray.slice(startIndex + 1).filter((id) => shaca.notes[id]);
-            const pathTitle = localPathArray.map((id) => shaca.notes[id].title).join(" / ");
-            return { id: fullNote.shareId, title: fullNote.title, score: sr.score, path: pathTitle };
-        });
+        const filteredResults = searchResults
+            // Apply the same per-note authorization as the direct content routes:
+            // keep only results the caller may access and that are visible in the tree.
+            .filter((sr) => {
+                const fullNote = shaca.notes[sr.noteId];
+
+                return fullNote
+                    && hasCredentialAccess(fullNote, req)
+                    && isVisibleInShareTree(ancestorNoteId, sr.notePathArray);
+            })
+            .map((sr) => {
+                const fullNote = shaca.notes[sr.noteId];
+                const startIndex = sr.notePathArray.indexOf(ancestorNoteId);
+                const localPathArray = sr.notePathArray.slice(startIndex + 1).filter((id) => shaca.notes[id]);
+                const pathTitle = localPathArray.map((id) => shaca.notes[id].title).join(" / ");
+                return { id: fullNote.shareId, title: fullNote.title, score: sr.score, path: pathTitle };
+            });
 
         res.json({ results: filteredResults });
     });

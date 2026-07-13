@@ -38,16 +38,14 @@ export default class NoteWrapperWidget extends FlexContainer<BasicWidget> {
     }
 
     refresh() {
-        const isHiddenExt = this.isHiddenExt(); // preserve through class reset
-        const isActive = this.$widget.hasClass("active");
+        // These are owned by SplitNoteContainer, not by the note — preserve them through the reset below.
+        const isHiddenExt = this.isHiddenExt();
+        const containerClasses = CONTAINER_OWNED_CLASSES.filter((cls) => this.$widget.hasClass(cls));
 
         this.$widget.removeClass();
 
         this.toggleExt(!isHiddenExt);
-
-        if (isActive) {
-            this.$widget.addClass("active");
-        }
+        this.$widget.addClass(containerClasses.join(" "));
 
         this.$widget.addClass("component note-split");
 
@@ -111,6 +109,9 @@ export default class NoteWrapperWidget extends FlexContainer<BasicWidget> {
         }
     }
 }
+
+/** Classes set on the split by `SplitNoteContainer`, based on the split's position among its siblings. */
+const CONTAINER_OWNED_CLASSES = [ "active", "last-visible" ];
 
 /**
  * Whether a note is full width purely because of its type (e.g. canvas, collections, media),

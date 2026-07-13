@@ -15,7 +15,7 @@
 .ck-content.ck-editor__editable li:has(> ul, > ol)::before {
     content: "";
     position: absolute;
-    inset-inline-start: -2.1em;
+    inset-inline-start: -2.3em;
     /* Centre the arrow on the first line: half a line-height, minus half the box, so it
      * tracks the text's vertical centre across font sizes and line-heights instead of a
      * fixed offset that only looks right near line-height 1.5. */
@@ -41,7 +41,7 @@
  * little below the text line's centre, so nudge the arrow down to line up with the checkbox
  * rather than the text. The offset is font-size-proportional, hence em (not lh). */
 .ck-content.ck-editor__editable .todo-list > li:has(> ul, > ol)::before {
-    top: calc(0.5lh - 0.1em);
+    top: calc(0.5lh - 0.075em);
 }
 
 .ck-content.ck-editor__editable li:hover::before {

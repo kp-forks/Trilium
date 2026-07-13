@@ -54,13 +54,13 @@ export function getImageAttachmentTitle(type: NoteType | null | undefined): stri
     return (NOTE_TYPE_IMAGE_ATTACHMENTS as Partial<Record<NoteType, string>>)[type];
 }
 
-const FILE_MIME_MAPPINGS = {
+const FILE_MIME_MAPPINGS: Record<string, string> = {
     "application/pdf": "bx bxs-file-pdf",
     "application/vnd.oasis.opendocument.text": "bx bxs-file-doc",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document": "bx bxs-file-doc",
 };
 
-const IMAGE_MIME_MAPPINGS = {
+const IMAGE_MIME_MAPPINGS: Record<string, string> = {
     "image/gif": "bx bxs-file-gif",
 };
 

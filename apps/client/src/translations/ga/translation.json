@@ -352,8 +352,12 @@
     "deleted_notes_title": "Nótaí scriosta",
     "more_actions": "Tuilleadh gníomhartha",
     "deleted_notes_settings": "Socruithe Nótaí Scriosta",
-    "no_deleted_notes_message": "Gan aon nótaí scriosta.",
-    "undelete_failed": "Níorbh fhéidir an nóta a athchóiriú — b’fhéidir gur scriosadh go buan é nó nach bhfuil a thuismitheoir ar fáil a thuilleadh."
+    "no_deleted_notes_message": "Níl aon nótaí scriosta le taispeáint.",
+    "undelete_failed": "Níorbh fhéidir an nóta a athchóiriú — b'fhéidir gur scriosadh go buan é.",
+    "title_with_ancestor": "{{- title}} - {{- ancestorTitle}}",
+    "no_deleted_notes_erasure_hint": "Coinnítear nótaí scriosta ar feadh {{- duration}} sula scriostar go buan iad.",
+    "confirm_undelete_to_default_location": "Níl tuismitheoir an nóta seo ann a thuilleadh, mar sin ní féidir é a athchóiriú chuig a shuíomh bunaidh. Ar mhaith leat é a athchóiriú chuig an suíomh réamhshocraithe le haghaidh nótaí nua ina ionad?",
+    "undeleted_to_default_location": "Níl a shuíomh bunaidh ann a thuilleadh, mar sin athchóiríodh an nóta go \"{{- title}}\"."
   },
   "sort_child_notes": {
     "sort_children_by": "Sórtáil páistí de réir...",
@@ -1345,7 +1349,8 @@
     "batch_ocr_starting": "Ag tosú próiseáil bhaisc...",
     "batch_ocr_progress": "Ag próiseáil {{processed}} de {{total}} comhad...",
     "batch_ocr_completed": "Próiseáil bhaisc críochnaithe! Próiseáladh {{processed}} comhad.",
-    "batch_ocr_error": "Earráid le linn próiseála baisce: {{error}}"
+    "batch_ocr_error": "Earráid le linn próiseála baisce: {{error}}",
+    "batch_ocr_completed_with_failures": "Próiseáil bhaisc críochnaithe. Próiseáladh {{processed}} comhad, ach níorbh fhéidir {{failed}} a léamh (féach na logaí le haghaidh sonraí)."
   },
   "attachment_erasure_timeout": {
     "attachment_erasure_timeout": "Ceangaltáin Neamhúsáidte",
@@ -2975,7 +2980,7 @@
     "sync-from-desktop-allow-access": "Ceadaigh rochtain líonra & atosú"
   },
   "text-editor": {
-    "checkbox-tooltip": "Cliceáil ar dheis le haghaidh tuilleadh staideanna tascanna.\nBrúigh {{shortcut}} chun dul idir staideanna.",
+    "checkbox-tooltip": "Cliceáil ar dheis le haghaidh tuilleadh staideanna tascanna.\nBrúigh {{- shortcut}} chun dul idir staideanna.",
     "edit-states-tooltip": "Cuir stáit tascanna in eagar",
     "unknown-task-state": "Stádas tasc saincheaptha neamhshainithe",
     "task-state-dropped": "Sainmhíniú stádais tasc saincheaptha \"{{title}}\" ({{id}}) curtha ar leataobh mar gheall ar: {{reason}}",
@@ -2994,7 +2999,9 @@
     "collapsible-select-label": "Roghnaigh bloc infhillte",
     "collapsible-title-placeholder": "Achoimre",
     "collapsible-toggle-label": "Bloc infhillte a scoránaigh",
-    "collapsible-tooltip": "Cliceáil ar an tsaighead nó brúigh {{shortcut}} chun é a dhúnadh/a leathnú."
+    "collapsible-tooltip": "Cliceáil ar an tsaighead nó brúigh {{shortcut}} chun é a dhúnadh/a leathnú.",
+    "checkbox-tooltip-state-label": "Stádas na tascanna:",
+    "checkbox-tooltip-state-unknown-suffix": "(sainmhíniú ar iarraidh)"
   },
   "slash_commands": {
     "bulleted_list_description": "Cruthaigh liosta le hurchair",
@@ -3216,5 +3223,27 @@
     "page_up": "Leathanach Suas",
     "page_down": "Leathanach Síos",
     "insert": "Iionsáigh"
+  },
+  "time_interval": {
+    "seconds_one": "{{count}} soicind",
+    "seconds_two": "{{count}} soicind",
+    "seconds_few": "{{count}} soicind",
+    "seconds_many": "{{count}} soicind",
+    "seconds_other": "{{count}} soicind",
+    "minutes_one": "{{count}} nóiméad",
+    "minutes_two": "{{count}} nóiméad",
+    "minutes_few": "{{count}} nóiméad",
+    "minutes_many": "{{count}} nóiméad",
+    "minutes_other": "{{count}} nóiméad",
+    "hours_one": "{{count}} uair an chloig",
+    "hours_two": "{{count}} uair an chloig",
+    "hours_few": "{{count}} uair an chloig",
+    "hours_many": "{{count}} uair an chloig",
+    "hours_other": "{{count}} uair an chloig",
+    "days_one": "{{count}} lá",
+    "days_two": "{{count}} lá",
+    "days_few": "{{count}} lá",
+    "days_many": "{{count}} lá",
+    "days_other": "{{count}} lá"
   }
 }
