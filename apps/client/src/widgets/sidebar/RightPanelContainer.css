@@ -186,3 +186,8 @@ body.experimental-feature-new-layout #right-pane {
         padding-top: 0;
     }
 }
+
+/* Backdrop effects are disabled, so peek mode needs a solid background. */
+body.experimental-feature-new-layout.backdrop-effects-disabled #right-pane.right-pane-mode-peek {
+    background: var(--right-pane-background-color);
+}

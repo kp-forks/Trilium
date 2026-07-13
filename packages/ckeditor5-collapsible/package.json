@@ -24,6 +24,10 @@
     "vite-plugin-svgo": "2.0.0",
     "vitest": "4.1.10"
   },
+  "dependencies": {
+    "@triliumnext/ckeditor5-utils": "workspace:*",
+    "@triliumnext/commons": "workspace:*"
+  },
   "peerDependencies": {
     "bootstrap": "^5.3.0",
     "ckeditor5": "48.2.0"
