@@ -150,6 +150,14 @@ export interface LlmChatContent {
     version: 1;
     messages: StoredMessage[];
     selectedModel?: string;
+    /**
+     * Provider type owning {@link selectedModel}. Disambiguates providers that
+     * expose the same model ID (e.g. an Anthropic API key and a Claude
+     * subscription both offering "claude-sonnet-5"). Absent in chats saved
+     * before this field existed — the sender falls back to resolving the
+     * provider by model ID in that case.
+     */
+    selectedProvider?: string;
     enableWebSearch?: boolean;
     enableNoteTools?: boolean;
     enableExtendedThinking?: boolean;

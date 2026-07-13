@@ -24,7 +24,7 @@ vi.mock("../../data_dir.js", async () => {
 
 vi.mock("../../port.js", () => ({ default: 8080 }));
 
-const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string) => `NOTE_META(${noteId})`));
+const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string): string | null => `NOTE_META(${noteId})`));
 vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
 
 const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript } = await import("./claude_agent.js");

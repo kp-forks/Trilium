@@ -18,7 +18,7 @@ import { insertNewBlock as insertNewBlockCommand, isSelectionInCodeBlock, outden
 import { editorHtmlToMarkdown } from "./chat_input_markdown.js";
 import { SafeImage } from "./retry_image.js";
 import { useChatAttachments } from "./useChatAttachments.js";
-import type { UseLlmChatReturn } from "./useLlmChat.js";
+import type { ModelOption, UseLlmChatReturn } from "./useLlmChat.js";
 
 const READ_ONLY_LOCK = "llm-chat-streaming";
 
@@ -150,8 +150,8 @@ export default function ChatInputBar({
         onExtendedThinkingChange?.();
     };
 
-    const handleModelSelect = (model: string) => {
-        chat.setSelectedModel(model);
+    const handleModelSelect = (model: string, provider?: string) => {
+        chat.setSelectedModel(model, provider);
         onModelChange?.(model);
     };
 
@@ -174,7 +174,14 @@ export default function ChatInputBar({
 
     const isNoteContextEnabled = !!chat.contextNoteId && !!activeNoteId;
 
-    const currentModel = chat.availableModels.find(m => m.id === chat.selectedModel);
+    // Two providers can expose the same model ID (e.g. an Anthropic API key and
+    // a Claude subscription both offering "claude-sonnet-5"), so identify the
+    // active model by provider too. Mirror the sender's resolution: prefer the
+    // recorded provider, else fall back to the first ID match (pre-existing chats).
+    const effectiveProvider = chat.selectedProvider
+        ?? chat.availableModels.find(m => m.id === chat.selectedModel)?.provider;
+    const isSelectedModel = (m: ModelOption) => m.id === chat.selectedModel && m.provider === effectiveProvider;
+    const currentModel = chat.availableModels.find(isSelectedModel);
     const currentModels = chat.availableModels.filter(m => !m.isLegacy);
     const legacyModels = chat.availableModels.filter(m => m.isLegacy);
     // Gemini 2.x cannot combine googleSearch with function tools in a single
@@ -338,9 +345,9 @@ export default function ChatInputBar({
                     >
                         {currentModels.map(model => (
                             <FormListItem
-                                key={model.id}
-                                onClick={() => handleModelSelect(model.id)}
-                                checked={chat.selectedModel === model.id}
+                                key={`${model.provider}:${model.id}`}
+                                onClick={() => handleModelSelect(model.id, model.provider)}
+                                checked={isSelectedModel(model)}
                             >
                                 {model.name} <small>({model.costDescription})</small>
                             </FormListItem>
@@ -354,9 +361,9 @@ export default function ChatInputBar({
                                 >
                                     {legacyModels.map(model => (
                                         <FormListItem
-                                            key={model.id}
-                                            onClick={() => handleModelSelect(model.id)}
-                                            checked={chat.selectedModel === model.id}
+                                            key={`${model.provider}:${model.id}`}
+                                            onClick={() => handleModelSelect(model.id, model.provider)}
+                                            checked={isSelectedModel(model)}
                                         >
                                             {model.name} <small>({model.costDescription})</small>
                                         </FormListItem>
