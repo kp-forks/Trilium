@@ -872,12 +872,7 @@
     "open_all_confirm_few": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
     "open_all_confirm_many": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
     "open_all_confirm_other": "Osclóidh sé seo {{count}} nótaí i gcluaisíní nua. Lean ar aghaidh?",
-    "dashboard": "Painéal Rialaithe",
-    "open_all_too_one": "",
-    "open_all_too_two": "",
-    "open_all_too_few": "",
-    "open_all_too_many": "",
-    "open_all_too_other": ""
+    "dashboard": "Painéal Rialaithe"
   },
   "edited_notes": {
     "no_edited_notes_found": "Gan aon nótaí eagarthóireachta ar an lá seo go fóill...",
