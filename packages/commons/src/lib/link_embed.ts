@@ -52,14 +52,39 @@ export function isUrlAloneInBlock(children: Iterable<BlockChildLike>, url: strin
     return text.trim() === url;
 }
 
-export type LinkPreviewKind = "embed" | "mention";
+export type LinkPreviewKind = "embed" | "card" | "mention";
+
+/** Where an auto-detected URL sits, and what the user did right after typing it. */
+export interface LinkPreviewPlacement {
+    /** The URL is the block's only content (see {@link isUrlAloneInBlock}). */
+    urlAloneInBlock: boolean;
+    /**
+     * The block is a plain top-level paragraph — not a list item, table cell, quote or heading.
+     * A block-level preview inside those reads as a layout accident, so they stay inline.
+     */
+    blockIsStandalone: boolean;
+    /**
+     * The caret has left the block, which is what pressing Enter does. While the caret is still
+     * there the user is plausibly mid-sentence, so the URL has not (yet) been *left* alone.
+     */
+    caretLeftBlock: boolean;
+}
 
 /**
- * Chooses how an auto-detected URL should be previewed: a block embed (e.g. a
- * YouTube player) only for an embeddable URL that stands alone in its block;
- * every other URL — including an embeddable one surrounded by text — becomes an
- * inline mention.
+ * Chooses how an auto-detected URL should be previewed.
+ *
+ * A URL only becomes a block-level preview when the user deliberately left it alone on its own
+ * line — sole content of a plain paragraph, then Enter. That gesture is the signal; anything else
+ * (text either side, a list/table/quote, or a caret still sitting in the block because the user is
+ * still typing) yields an unobtrusive inline mention.
+ *
+ * Given that gesture, the URL decides which block form: an embeddable one (e.g. YouTube) becomes a
+ * player, everything else a card.
  */
-export function chooseLinkPreviewKind(embedType: string, urlAloneInBlock: boolean): LinkPreviewKind {
-    return embedType !== "opengraph" && urlAloneInBlock ? "embed" : "mention";
+export function chooseLinkPreviewKind(embedType: string, placement: LinkPreviewPlacement): LinkPreviewKind {
+    if (!placement.urlAloneInBlock || !placement.blockIsStandalone || !placement.caretLeftBlock) {
+        return "mention";
+    }
+
+    return embedType !== "opengraph" ? "embed" : "card";
 }

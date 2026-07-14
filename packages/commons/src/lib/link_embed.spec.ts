@@ -74,12 +74,28 @@ describe("isUrlAloneInBlock", () => {
 });
 
 describe("chooseLinkPreviewKind", () => {
-    it("uses a block embed only for an embeddable URL standing alone in its block", () => {
-        expect(chooseLinkPreviewKind("youtube", true)).toBe("embed");
-        // Embeddable but surrounded by text -> inline mention (a block can't go mid-sentence).
-        expect(chooseLinkPreviewKind("youtube", false)).toBe("mention");
-        // Non-embeddable URLs are always inline mentions, alone or not.
-        expect(chooseLinkPreviewKind("opengraph", true)).toBe("mention");
-        expect(chooseLinkPreviewKind("opengraph", false)).toBe("mention");
+    /** The full gesture: a URL left alone on its own line, then Enter. */
+    const leftAloneOnItsOwnLine = {
+        urlAloneInBlock: true,
+        blockIsStandalone: true,
+        caretLeftBlock: true
+    };
+
+    it("gives a URL left alone on its own line a block preview, keyed by the URL", () => {
+        // An embeddable URL becomes a player; anything else becomes a card.
+        expect(chooseLinkPreviewKind("youtube", leftAloneOnItsOwnLine)).toBe("embed");
+        expect(chooseLinkPreviewKind("opengraph", leftAloneOnItsOwnLine)).toBe("card");
+    });
+
+    it("keeps every other placement inline, embeddable or not", () => {
+        for (const embedType of ["youtube", "opengraph"]) {
+            // Text either side of it: a block preview cannot go mid-sentence.
+            expect(chooseLinkPreviewKind(embedType, { ...leftAloneOnItsOwnLine, urlAloneInBlock: false })).toBe("mention");
+            // Inside a list, table, quote or heading.
+            expect(chooseLinkPreviewKind(embedType, { ...leftAloneOnItsOwnLine, blockIsStandalone: false })).toBe("mention");
+            // The caret is still in the block, so the user may yet type on that line — the URL has
+            // not been *left* alone, it merely happens to be alone right now.
+            expect(chooseLinkPreviewKind(embedType, { ...leftAloneOnItsOwnLine, caretLeftBlock: false })).toBe("mention");
+        }
     });
 });

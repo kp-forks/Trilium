@@ -362,13 +362,19 @@ class RemoveLinkEmbedCommand extends Command {
 }
 
 // ---------------------------------------------------------------------------
-// Auto-convert pasted URLs to link preview widgets.
+// Auto-convert typed/pasted URLs to link preview widgets.
 // Piggybacks on CKEditor's AutoLink plugin: when AutoLink sets `linkHref` on
-// text whose content matches the href (i.e. a raw pasted URL, not
-// "[label](url)"), we fetch metadata and replace it with a preview widget.
-// An embeddable URL (e.g. YouTube) standing alone in its block becomes a block
-// linkEmbed (Embed mode); every other URL — including an embeddable one
-// surrounded by text — becomes an inline linkMention.
+// text whose content matches the href (i.e. a raw URL, not "[label](url)"), we
+// fetch metadata and replace it with a preview widget.
+//
+// The shape follows the gesture (see chooseLinkPreviewKind):
+//   * a URL left alone on its own line — sole content of a plain paragraph, then
+//     Enter — becomes a block preview: a player if the URL is embeddable
+//     (YouTube), a card otherwise;
+//   * anything else — text either side of it, a list/table/quote/heading, or a
+//     caret still in the block because the user is mid-sentence — becomes an
+//     inline linkMention.
+//
 // The user can Ctrl+Z to revert back to a plain link.
 // ---------------------------------------------------------------------------
 
@@ -475,22 +481,17 @@ class AutoLinkToMention extends Plugin {
                     if (item.item.data.trim() !== url) continue;
                     if (item.item.getAttribute('linkHref') !== url) continue;
 
-                    // An embeddable URL (YouTube) becomes a block embed only when
-                    // it stands alone in its block; otherwise — or for any other
-                    // URL — it becomes an inline mention. Computed before deleting
-                    // (deletion would empty the block) and at insertion time, since
-                    // the metadata fetch is async and the user may have typed more.
-                    const alone = isUrlAloneInBlock(this._blockChildren(parentEl), url);
-                    const kind = chooseLinkPreviewKind(metadata.embedType, alone);
+                    // Where the URL sits decides its shape. Evaluated here — at insertion time, not
+                    // when the URL was detected — because the metadata fetch is async and the user
+                    // may have kept typing meanwhile. Also before deleting anything, since deletion
+                    // would empty the block and make it look like the URL was never alone.
+                    const kind = chooseLinkPreviewKind(metadata.embedType, {
+                        urlAloneInBlock: isUrlAloneInBlock(this._blockChildren(parentEl), url),
+                        blockIsStandalone: this._isStandaloneBlock(parentEl),
+                        caretLeftBlock: this._caretLeftBlock(parentEl)
+                    });
 
-                    const start = writer.createPositionAt(parentEl, item.item.startOffset!);
-                    const end = writer.createPositionAt(parentEl, item.item.startOffset! + item.item.data.length);
-
-                    const urlRange = writer.createRange(start, end);
-                    writer.setSelection(urlRange);
-                    editor.model.deleteContent(editor.model.document.selection);
-
-                    editor.model.insertContent(writer.createElement(kind === 'embed' ? 'linkEmbed' : 'linkMention', {
+                    const attributes = {
                         url: metadata.url,
                         embedType: metadata.embedType,
                         title: metadata.title,
@@ -498,13 +499,55 @@ class AutoLinkToMention extends Plugin {
                         favicon: metadata.favicon,
                         siteName: metadata.siteName,
                         image: metadata.image
-                    }));
+                    };
+
+                    if (kind === 'mention') {
+                        const urlRange = writer.createRangeOn(item.item);
+                        writer.setSelection(urlRange);
+                        editor.model.deleteContent(editor.model.document.selection);
+                        editor.model.insertContent(writer.createElement('linkMention', attributes));
+                        return;
+                    }
+
+                    // A card or an embed takes over the whole paragraph, which by now holds nothing
+                    // but the URL. Swapped with writer.insert/remove rather than insertContent: the
+                    // caret has moved on to the next line (that is what made this a block preview in
+                    // the first place) and may already be mid-word, so it must not be dragged back.
+                    // 'card' vs 'embed' needs no branch here — the renderer keys off embedType,
+                    // which is "opengraph" for a card and the provider's own type for an embed.
+                    writer.insert(writer.createElement('linkEmbed', attributes), parentEl, 'before');
+                    writer.remove(parentEl);
                     return;
                 }
             });
 
             this._converting = false;
         });
+    }
+
+    /**
+     * True for a plain top-level paragraph — the only block a card or an embed may take over.
+     * A list item is a paragraph carrying list attributes; a table cell, a quote and every other
+     * container nest their paragraphs below the root; a heading is not a paragraph at all. In each
+     * of those the URL keeps its inline mention, since a block preview there reads as an accident.
+     */
+    private _isStandaloneBlock(blockEl: any): boolean {
+        if (blockEl.name !== 'paragraph') return false;
+        if (blockEl.hasAttribute('listItemId')) return false;
+
+        return blockEl.parent === this.editor.model.document.getRoot();
+    }
+
+    /**
+     * True when the caret is no longer in the block — which is exactly what pressing Enter after the
+     * URL does. While it is still there the user may yet type on that line, so the URL has not been
+     * *left* alone and stays an inline mention.
+     */
+    private _caretLeftBlock(blockEl: any): boolean {
+        const position = this.editor.model.document.selection.getFirstPosition();
+
+        /* v8 ignore next -- the document selection always has a position */
+        return position?.parent !== blockEl;
     }
 
     /**

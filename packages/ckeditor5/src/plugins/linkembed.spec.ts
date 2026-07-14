@@ -5,7 +5,9 @@ import {
     BlockQuote,
     ClassicEditor,
     Essentials,
+    Heading,
     Link,
+    List,
     Paragraph,
     Undo,
     type ViewElement
@@ -55,7 +57,9 @@ describe("LinkEmbed", () => {
             })
         });
 
-        editor = await createTestEditor([Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed]);
+        // Heading, List and BlockQuote are loaded so the placement rules (which keep a URL inline
+        // inside a heading, list item, table cell or quote) can be exercised against a real schema.
+        editor = await createTestEditor([Essentials, Paragraph, Heading, List, BlockQuote, Link, Undo, LinkEmbed]);
     });
 
     // -----------------------------------------------------------------------
@@ -494,18 +498,101 @@ describe("LinkEmbed", () => {
         expect(findElement(editor, "linkMention")).toBeDefined();
     });
 
-    it("converts an embeddable URL standing alone in its block into a block linkEmbed", async () => {
-        const url = "https://youtube.com/watch?v=abc12345678";
-        fetchLinkMetadata.mockResolvedValueOnce({ ...META, url, embedType: "youtube" });
+    // -----------------------------------------------------------------------
+    // Placement: what shape an auto-detected URL takes, and why
+    // -----------------------------------------------------------------------
 
-        addLinkedText(editor, url);
-        await flushFetch();
+    describe("placement", () => {
+        const PLAIN_URL = "https://example.com/article";
+        const VIDEO_URL = "https://youtube.com/watch?v=abc12345678";
 
-        // Embeddable + alone in its block => the player, not an inline pill.
-        expect(findElement(editor, "linkMention")).toBeUndefined();
-        const embed = findElement(editor, "linkEmbed");
-        expect(embed?.getAttribute("url")).toBe(url);
-        expect(embed?.getAttribute("embedType")).toBe("youtube");
+        /** Makes the next fetch report `url` as embeddable, the way a YouTube link comes back. */
+        function embeddable(url: string) {
+            fetchLinkMetadata.mockResolvedValueOnce({ ...META, url, embedType: "youtube" });
+        }
+
+        it("turns a URL left alone on its own line into a card", async () => {
+            autoLinkIn(editor, urlLeftAloneOnItsOwnLine(PLAIN_URL), PLAIN_URL);
+            await flushFetch();
+
+            expect(findElement(editor, "linkMention")).toBeUndefined();
+            const embed = findElement(editor, "linkEmbed");
+            expect(embed?.getAttribute("url")).toBe(PLAIN_URL);
+            // "opengraph" is what the renderer shows as a card rather than a player.
+            expect(embed?.getAttribute("embedType")).toBe("opengraph");
+        });
+
+        it("turns an embeddable URL left alone on its own line into a player", async () => {
+            embeddable(VIDEO_URL);
+
+            autoLinkIn(editor, urlLeftAloneOnItsOwnLine(VIDEO_URL), VIDEO_URL);
+            await flushFetch();
+
+            expect(findElement(editor, "linkMention")).toBeUndefined();
+            expect(findElement(editor, "linkEmbed")?.getAttribute("embedType")).toBe("youtube");
+        });
+
+        it("keeps the URL inline while the caret is still on its line, embeddable or not", async () => {
+            // The user typed a space, not Enter: they may still be writing that sentence, so the URL
+            // is alone only by accident. Nothing has been *left* alone yet.
+            embeddable(VIDEO_URL);
+            addLinkedText(editor, VIDEO_URL);
+            await flushFetch();
+
+            expect(findElement(editor, "linkEmbed")).toBeUndefined();
+            expect(findElement(editor, "linkMention")?.getAttribute("url")).toBe(VIDEO_URL);
+        });
+
+        it("keeps the URL inline when text sits beside it on the line", async () => {
+            autoLinkIn(editor, `<paragraph>See ${PLAIN_URL}</paragraph><paragraph>[]</paragraph>`, PLAIN_URL);
+            await flushFetch();
+
+            expect(findElement(editor, "linkEmbed")).toBeUndefined();
+            expect(findElement(editor, "linkMention")).toBeDefined();
+        });
+
+        it("keeps the URL inline inside a list item, a quote and a heading", async () => {
+            // A block preview inside these reads as a layout accident, so they stay inline — even
+            // though the URL is alone in its block and the caret has moved on.
+            const blocks = {
+                "list item": `<paragraph listIndent="0" listItemId="a" listType="bulleted">${PLAIN_URL}</paragraph>`,
+                quote: `<blockQuote><paragraph>${PLAIN_URL}</paragraph></blockQuote>`,
+                heading: `<heading2>${PLAIN_URL}</heading2>`
+            };
+
+            for (const block of Object.values(blocks)) {
+                autoLinkIn(editor, `${block}<paragraph>[]</paragraph>`, PLAIN_URL);
+                await flushFetch();
+
+                expect(findElement(editor, "linkEmbed")).toBeUndefined();
+                expect(findElement(editor, "linkMention")).toBeDefined();
+            }
+        });
+
+        it("leaves the caret where the user moved it, even if they typed while the fetch was in flight", async () => {
+            const { resolveFetch } = useDeferredFetch();
+            autoLinkIn(editor, urlLeftAloneOnItsOwnLine(PLAIN_URL), PLAIN_URL);
+
+            // The user carries on typing on the new line while the metadata is still being fetched.
+            editor.model.change((writer) => {
+                const caret = editor.model.document.selection.getFirstPosition();
+                if (!caret) {
+                    throw new Error("Expected a caret position.");
+                }
+                writer.insertText("hello", caret);
+            });
+
+            resolveFetch({ ...META, url: PLAIN_URL });
+            await flushFetch();
+
+            // The card took over the URL's paragraph without dragging the caret back into it: the
+            // typed text is intact and the caret still sits after it.
+            expect(findElement(editor, "linkEmbed")).toBeDefined();
+            expect(editor.getData()).toContain("<p>hello</p>");
+
+            const caretBlock = editor.model.document.selection.getFirstPosition()?.parent;
+            expect(caretBlock?.is("element", "paragraph")).toBe(true);
+        });
     });
 
     it("ignores a labeled link whose text differs from the href", async () => {
@@ -773,9 +860,53 @@ function findElement(editor: ClassicEditor, name: string) {
 }
 
 /**
+ * Sets up `modelData` and then, in a separate change, applies `linkHref` to the text node holding
+ * `href` — exactly what AutoLink does. Where `modelData` leaves the caret *is* the gesture under
+ * test: still inside the URL's block (the user typed a space and may keep going), or in the block
+ * after it (the user pressed Enter, which splits the paragraph and carries the caret onward).
+ */
+function autoLinkIn(editor: ClassicEditor, modelData: string, href: string): void {
+    setModelData(editor.model, modelData);
+
+    editor.model.change((writer) => {
+        const root = editor.model.document.getRoot();
+        if (!root) {
+            throw new Error("Expected a document root.");
+        }
+
+        for (const item of writer.createRangeIn(root).getWalker()) {
+            if (!item.item.is("$textProxy")) continue;
+
+            // AutoLink links the URL itself, not the whole text node it happens to share with the
+            // words around it — so link exactly the URL's slice of the node.
+            const index = item.item.data.indexOf(href);
+            if (index < 0) continue;
+
+            const parent = item.item.parent;
+            if (!parent || !parent.is("element") || item.item.startOffset === null) continue;
+
+            const start = item.item.startOffset + index;
+            writer.setAttribute("linkHref", href, writer.createRange(
+                writer.createPositionAt(parent, start),
+                writer.createPositionAt(parent, start + href.length)
+            ));
+            return;
+        }
+
+        throw new Error(`No text node holds ${href}.`);
+    });
+}
+
+/** The model data for a URL left alone on its own line, with the caret carried to the next one. */
+function urlLeftAloneOnItsOwnLine(url: string): string {
+    return `<paragraph>${url}</paragraph><paragraph>[]</paragraph>`;
+}
+
+/**
  * Inserts text into the paragraph and applies a `linkHref` attribute to it via a
  * writer change (null -> url), exactly as CKEditor's AutoLink plugin does when a
  * raw URL is pasted/typed. This drives the `AutoLinkToMention` `change:data` listener.
+ * The caret is left in the block, as it is when the user types a space after the URL.
  */
 function addLinkedText(editor: ClassicEditor, href: string, text = href): void {
     // First insert the plain text in its own batch.
