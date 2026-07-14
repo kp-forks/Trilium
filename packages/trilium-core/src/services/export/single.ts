@@ -13,19 +13,27 @@ import mdService from "./markdown.js";
 import { stripListItemIds } from "./strip_list_item_ids.js";
 import { ExportFormat } from "../../meta.js";
 import { encodeBase64 } from "../utils/binary.js";
+import { ValidationError } from "../../errors.js";
 
 function exportSingleNote(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Response) {
     const note = branch.getNote();
 
     if (note.type === "image" || note.type === "file") {
-        return [400, `Note type '${note.type}' cannot be exported as single file.`];
+        throw new ValidationError(`Note type '${note.type}' cannot be exported as a single file.`);
     }
 
     if (format !== "html" && format !== "markdown") {
-        return [400, `Unrecognized format '${format}'`];
+        throw new ValidationError(`Unrecognized format '${format}'`);
     }
 
     const { payload, extension, mime } = mapByNoteType(note, note.getContent(), format);
+
+    // Safety net: any note type mapByNoteType doesn't handle leaves these undefined. Reject with a
+    // clear error rather than sending `undefined` — which produced a "<title>.undefined", zero-byte file.
+    if (payload === undefined || extension === undefined) {
+        throw new ValidationError(`Note type '${note.type}' cannot be exported as a single file.`);
+    }
+
     const fileName = `${note.title}.${extension}`;
 
     res.setHeader("Content-Disposition", getContentDisposition(fileName));

@@ -71,4 +71,19 @@ describe("Export API (core)", () => {
         expect(res.status).toBe(500);
         expect(res.headers["Content-Type"]).toBe("text/plain");
     });
+
+    it("rejects single-export of an unhandled note type instead of emitting a zero-byte .undefined file", async () => {
+        // Regression: note types mapByNoteType doesn't handle (book, webView, mindMap, …) used to fall
+        // through to res.send(undefined), producing a "<title>.undefined", zero-byte download. The safety
+        // net now rejects them with a clear error rather than a corrupt file.
+        const created = await api.post<{ branch: { branchId: string } }>(
+            "/api/notes/root/children?target=into",
+            { body: { title: "My book", type: "book", content: "" } }
+        );
+        expect(created.status).toBe(200);
+
+        const res = await api.get<string>(`/api/branches/${created.body.branch.branchId}/export/single/html/exportTask`);
+        expect(res.status).toBe(500);
+        expect(res.headers["Content-Type"]).toBe("text/plain");
+    });
 });
