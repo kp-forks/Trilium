@@ -285,6 +285,7 @@ export function removeFileExtension(filePath: string, mime?: string) {
         case ".pdf":
         case ".xlsx":
         case ".csv":
+        case ".triliumsheet":
             return filePath.substring(0, filePath.length - extension.length);
         default:
             return filePath;
