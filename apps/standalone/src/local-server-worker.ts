@@ -308,8 +308,15 @@ async function initialize(): Promise<void> {
                 }
             } else {
                 logService.info("[Worker] Database not initialized, skipping becca load (will be loaded during DB initialization)");
+
+                // An interrupted initial sync (schema present but not yet
+                // initialized) is resumed by startSyncTimer()'s kickoff below:
+                // sync() calls setDbAsInitialized() once it converges, and the
+                // client stays on the sync-in-progress screen via the
+                // `syncInProgress` bootstrap flag. No explicit trigger needed here.
             }
 
+            coreModule.sync.startSyncTimer();
             coreModule.scheduler.startScheduler();
 
             logService.info("[Worker] Initialization complete");

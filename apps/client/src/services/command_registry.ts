@@ -3,6 +3,7 @@ import appContext, { type CommandNames } from "../components/app_context.js";
 import type NoteTreeWidget from "../widgets/note_tree.js";
 import { t, translationsInitializedPromise } from "./i18n.js";
 import keyboardActions from "./keyboard_actions.js";
+import { formatShortcut, joinShortcut } from "./keyboard_shortcut_display.js";
 import utils from "./utils.js";
 
 export interface CommandDefinition {
@@ -95,6 +96,32 @@ export class CommandRegistry {
             icon: "bx bx-sidebar",
             handler: () => appContext.triggerCommand("showLaunchBarSubtree")
         });
+
+        this.register({
+            id: "pin-active-tab",
+            name: t("command_palette.pin_tab_title"),
+            description: t("command_palette.pin_tab_description"),
+            icon: "bx bx-pin",
+            handler: () => {
+                const ntxId = appContext.tabManager.getActiveMainContext()?.ntxId;
+                if (ntxId) {
+                    appContext.triggerCommand("pinTab", { ntxId });
+                }
+            }
+        });
+
+        this.register({
+            id: "unpin-active-tab",
+            name: t("command_palette.unpin_tab_title"),
+            description: t("command_palette.unpin_tab_description"),
+            icon: "bx bx-pin",
+            handler: () => {
+                const ntxId = appContext.tabManager.getActiveMainContext()?.ntxId;
+                if (ntxId) {
+                    appContext.triggerCommand("unpinTab", { ntxId });
+                }
+            }
+        });
     }
 
     private async loadKeyboardActionsAsync() {
@@ -110,11 +137,6 @@ export class CommandRegistry {
         for (const action of actions) {
             // Skip actions that we've already manually registered
             if (this.commands.has(action.actionName)) {
-                continue;
-            }
-
-            // Skip actions that don't have a description (likely separators)
-            if (!action.description) {
                 continue;
             }
 
@@ -142,7 +164,8 @@ export class CommandRegistry {
                 name,
                 description: action.description,
                 icon: action.iconClass,
-                shortcut: primaryShortcut ? this.formatShortcut(primaryShortcut) : undefined,
+                // Render the primary shortcut in the command-palette style (spaced +, or concatenated on macOS).
+                shortcut: primaryShortcut ? joinShortcut(formatShortcut(primaryShortcut), " + ") : undefined,
                 commandName: action.actionName as CommandNames,
                 source: "keyboard-action",
                 keyboardAction: action
@@ -150,13 +173,6 @@ export class CommandRegistry {
 
             this.register(commandDef);
         }
-    }
-
-    private formatShortcut(shortcut: string): string {
-        // Convert electron accelerator format to display format
-        return shortcut
-            .replace(/CommandOrControl/g, 'Ctrl')
-            .replace(/\+/g, ' + ');
     }
 
     register(command: CommandDefinition) {

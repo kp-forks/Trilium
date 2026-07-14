@@ -11,14 +11,6 @@ import { getContext } from "./context.js";
 import noteService from "./notes.js";
 import { getSql } from "./sql/index.js";
 
-/**
- * Wraps a callback in a CLS context. Entity mutations (createNewNote,
- * note.save(), attribute.save()) require CLS to be initialised.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
-
 let counter = 0;
 
 /**
@@ -28,7 +20,7 @@ let counter = 0;
  */
 function createNote(parentNoteId: string): { note: BNote; branch: BBranch } {
     counter++;
-    return withContext(() =>
+    return getContext().init(() =>
         noteService.createNewNote({
             parentNoteId,
             title: `bulk-actions-spec-${counter}`,
@@ -54,7 +46,7 @@ describe("bulk_actions service (real DB)", () => {
         it("skips note IDs that don't resolve to a note", () => {
             // No note exists for this id, so nothing should throw and no handler runs.
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     bulkActionService.executeActions(
                         [{ name: "addLabel", labelName: "foo", labelValue: "bar" }],
                         ["doesNotExist123"]
@@ -67,7 +59,7 @@ describe("bulk_actions service (real DB)", () => {
             const a = createNote("root");
             const b = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "addLabel", labelName: "fromSet" }],
                     new Set([a.note.noteId, b.note.noteId])
@@ -88,7 +80,7 @@ describe("bulk_actions service (real DB)", () => {
                 { name: "addLabel", labelName: "appliedAfterFailure" }
             ];
 
-            expect(() => withContext(() => bulkActionService.executeActions(actions, [note.note.noteId]))).not.toThrow();
+            expect(() => getContext().init(() => bulkActionService.executeActions(actions, [note.note.noteId]))).not.toThrow();
             expect(note.note.hasLabel("appliedAfterFailure")).toBe(true);
         });
     });
@@ -97,7 +89,7 @@ describe("bulk_actions service (real DB)", () => {
         it("addLabel / updateLabelValue / renameLabel / deleteLabel", () => {
             const note = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "addLabel", labelName: "color", labelValue: "red" }],
                     [note.note.noteId]
@@ -105,7 +97,7 @@ describe("bulk_actions service (real DB)", () => {
             );
             expect(note.note.getOwnedLabelValue("color")).toBe("red");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "updateLabelValue", labelName: "color", labelValue: "blue" }],
                     [note.note.noteId]
@@ -113,7 +105,7 @@ describe("bulk_actions service (real DB)", () => {
             );
             expect(note.note.getOwnedLabelValue("color")).toBe("blue");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "renameLabel", oldLabelName: "color", newLabelName: "shade" }],
                     [note.note.noteId]
@@ -122,7 +114,7 @@ describe("bulk_actions service (real DB)", () => {
             expect(note.note.hasOwnedLabel("color")).toBe(false);
             expect(note.note.getOwnedLabelValue("shade")).toBe("blue");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions([{ name: "deleteLabel", labelName: "shade" }], [note.note.noteId])
             );
             expect(note.note.hasOwnedLabel("shade")).toBe(false);
@@ -135,7 +127,7 @@ describe("bulk_actions service (real DB)", () => {
             const targetA = createNote("root");
             const targetB = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "addRelation", relationName: "link", targetNoteId: targetA.note.noteId }],
                     [note.note.noteId]
@@ -143,7 +135,7 @@ describe("bulk_actions service (real DB)", () => {
             );
             expect(note.note.getOwnedRelationValue("link")).toBe(targetA.note.noteId);
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "updateRelationTarget", relationName: "link", targetNoteId: targetB.note.noteId }],
                     [note.note.noteId]
@@ -151,7 +143,7 @@ describe("bulk_actions service (real DB)", () => {
             );
             expect(note.note.getOwnedRelationValue("link")).toBe(targetB.note.noteId);
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "renameRelation", oldRelationName: "link", newRelationName: "ref" }],
                     [note.note.noteId]
@@ -160,7 +152,7 @@ describe("bulk_actions service (real DB)", () => {
             expect(note.note.getOwnedRelations("link").length).toBe(0);
             expect(note.note.getOwnedRelationValue("ref")).toBe(targetB.note.noteId);
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions([{ name: "deleteRelation", relationName: "ref" }], [note.note.noteId])
             );
             expect(note.note.getOwnedRelations("ref").length).toBe(0);
@@ -171,7 +163,7 @@ describe("bulk_actions service (real DB)", () => {
         it("evaluates the new title as a template with `note` in scope", () => {
             const note = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "renameNote", newTitle: "Prefix - ${note.noteId}" }],
                     [note.note.noteId]
@@ -185,7 +177,7 @@ describe("bulk_actions service (real DB)", () => {
             const note = createNote("root");
             const original = note.note.title;
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "renameNote", newTitle: original }],
                     [note.note.noteId]
@@ -200,7 +192,7 @@ describe("bulk_actions service (real DB)", () => {
         it("runs the script against the note and persists changes", () => {
             const note = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "executeScript", script: "note.setLabel('scripted', 'yes')" }],
                     [note.note.noteId]
@@ -217,7 +209,7 @@ describe("bulk_actions service (real DB)", () => {
             // mutation regardless of whether save() ran).
             const note = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "executeScript", script: "note.title = 'renamed by script';\nreturn;" }],
                     [note.note.noteId]
@@ -233,7 +225,7 @@ describe("bulk_actions service (real DB)", () => {
             const labelsBefore = note.note.getOwnedAttributes().length;
 
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     bulkActionService.executeActions([{ name: "executeScript", script: "   " }], [note.note.noteId])
                 )
             ).not.toThrow();
@@ -245,7 +237,7 @@ describe("bulk_actions service (real DB)", () => {
         it("marks the targeted note as deleted", () => {
             const note = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions([{ name: "deleteNote" }], [note.note.noteId])
             );
 
@@ -253,14 +245,42 @@ describe("bulk_actions service (real DB)", () => {
         });
     });
 
+    describe("saveRevision", () => {
+        it("saves a named revision capturing the note's current content", () => {
+            const note = createNote("root");
+            expect(note.note.getRevisions().length).toBe(0);
+
+            getContext().init(() =>
+                bulkActionService.executeActions([{ name: "saveRevision", revisionName: "milestone" }], [note.note.noteId])
+            );
+
+            const revisions = note.note.getRevisions();
+            expect(revisions.length).toBe(1);
+            // The revision "name" is stored in its description field.
+            expect(revisions[0].description).toBe("milestone");
+        });
+
+        it("saves an unnamed revision when no name is provided", () => {
+            const note = createNote("root");
+
+            getContext().init(() =>
+                bulkActionService.executeActions([{ name: "saveRevision" }], [note.note.noteId])
+            );
+
+            const revisions = note.note.getRevisions();
+            expect(revisions.length).toBe(1);
+            expect(revisions[0].description).toBe("");
+        });
+    });
+
     describe("deleteRevisions", () => {
         it("erases all revisions of the targeted note", () => {
             const note = createNote("root");
 
-            withContext(() => note.note.saveRevision());
+            getContext().init(() => note.note.saveRevision());
             expect(note.note.getRevisions().length).toBeGreaterThan(0);
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions([{ name: "deleteRevisions" }], [note.note.noteId])
             );
 
@@ -273,7 +293,7 @@ describe("bulk_actions service (real DB)", () => {
             const note = createNote("root");
             const target = createNote("root");
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "moveNote", targetParentNoteId: target.note.noteId }],
                     [note.note.noteId]
@@ -290,12 +310,12 @@ describe("bulk_actions service (real DB)", () => {
             const target = createNote("root");
 
             // Give the note a second branch so getParentBranches().length > 1.
-            withContext(() =>
+            getContext().init(() =>
                 cloningService.cloneNoteToParentNote(note.note.noteId, secondParent.note.noteId)
             );
             expect(note.note.getParentBranches().length).toBeGreaterThan(1);
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActions(
                     [{ name: "moveNote", targetParentNoteId: target.note.noteId }],
                     [note.note.noteId]
@@ -311,7 +331,7 @@ describe("bulk_actions service (real DB)", () => {
             const note = createNote("root");
 
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     bulkActionService.executeActions(
                         [{ name: "moveNote", targetParentNoteId: "doesNotExist123" }],
                         [note.note.noteId]
@@ -329,12 +349,12 @@ describe("bulk_actions service (real DB)", () => {
             const definitionNote = createNote("root");
             const target = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 definitionNote.note.addLabel("action", JSON.stringify({ name: "addLabel", labelName: "fromDefinition", labelValue: "1" }));
                 definitionNote.note.addLabel("action", JSON.stringify({ name: "addLabel", labelName: "second", labelValue: "2" }));
             });
 
-            withContext(() =>
+            getContext().init(() =>
                 bulkActionService.executeActionsFromNote(definitionNote.note, [target.note.noteId])
             );
 
@@ -346,7 +366,7 @@ describe("bulk_actions service (real DB)", () => {
             const definitionNote = createNote("root");
             const target = createNote("root");
 
-            withContext(() => {
+            getContext().init(() => {
                 // Invalid JSON.
                 definitionNote.note.addLabel("action", "{ not valid json");
                 // Unknown handler name.
@@ -356,12 +376,76 @@ describe("bulk_actions service (real DB)", () => {
             });
 
             expect(() =>
-                withContext(() =>
+                getContext().init(() =>
                     bulkActionService.executeActionsFromNote(definitionNote.note, [target.note.noteId])
                 )
             ).not.toThrow();
 
             expect(target.note.getOwnedLabelValue("valid")).toBe("ok");
+        });
+    });
+
+    describe("convertNote", () => {
+        function createMarkdownNote(): BNote {
+            counter++;
+            return getContext().init(() =>
+                noteService.createNewNote({
+                    parentNoteId: "root",
+                    title: `bulk-convert-md-${counter}`,
+                    content: "# Heading",
+                    type: "code",
+                    mime: "text/x-markdown"
+                }).note
+            );
+        }
+
+        it("converts only notes matching the conversion's source type, skipping the rest", () => {
+            const textNote = createNote("root").note;
+            const markdownNote = createMarkdownNote();
+
+            getContext().init(() =>
+                bulkActionService.executeActions(
+                    [{ name: "convertNote", conversion: "htmlToMarkdown" }],
+                    [textNote.noteId, markdownNote.noteId]
+                )
+            );
+
+            // The text note is converted to a Markdown code note...
+            expect(textNote.type).toBe("code");
+            expect(textNote.mime).toBe("text/x-markdown");
+            // ...while the already-Markdown note is left untouched.
+            expect(markdownNote.type).toBe("code");
+            expect(markdownNote.getContent()).toBe("# Heading");
+        });
+
+        it("converts a Markdown note back to a text note", () => {
+            const markdownNote = createMarkdownNote();
+
+            getContext().init(() =>
+                bulkActionService.executeActions(
+                    [{ name: "convertNote", conversion: "markdownToHtml" }],
+                    [markdownNote.noteId]
+                )
+            );
+
+            expect(markdownNote.type).toBe("text");
+            expect(markdownNote.mime).toBe("text/html");
+            expect(markdownNote.getContent()).toContain("<h2>Heading</h2>");
+        });
+
+        it("does nothing for an unknown or unset conversion", () => {
+            const textNote = createNote("root").note;
+
+            expect(() =>
+                getContext().init(() =>
+                    bulkActionService.executeActions(
+                        [{ name: "convertNote", conversion: "" as never }],
+                        [textNote.noteId]
+                    )
+                )
+            ).not.toThrow();
+
+            expect(textNote.type).toBe("text");
         });
     });
 });

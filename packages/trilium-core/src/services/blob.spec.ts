@@ -1,3 +1,4 @@
+import { EMPTY_BLOB_ID } from "@triliumnext/commons";
 import { describe, expect, it } from "vitest";
 
 import becca from "../becca/becca.js";
@@ -8,25 +9,9 @@ import { getContext } from "./context.js";
 import protectedSessionService from "./protected_session.js";
 import dataEncryption from "./encryption/data_encryption.js";
 import notesService from "./notes.js";
+import { getSql } from "./sql/index.js";
 import { decodeUtf8, encodeUtf8 } from "./utils/binary.js";
-import { hash } from "./utils/index.js";
-
-// These specs run through the server suite (apps/server/spec/setup.ts), which
-// boots an in-memory fixture DB and calls initializeCore. getBlobPojo reads
-// notes from becca and blobs from SQL, and createNewNote (used to seed test
-// content) is a write path, so anything touching the DB is wrapped in a CLS
-// context via getContext().init(...).
-function withContext<T>(fn: () => T): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-        getContext().init(async () => {
-            try {
-                resolve(await fn());
-            } catch (e) {
-                reject(e);
-            }
-        });
-    });
-}
+import { hash, hashedBlobId } from "./utils/index.js";
 
 const PROTECTED_KEY = encodeUtf8("0123456789abcdef"); // exactly 16 bytes
 
@@ -141,12 +126,12 @@ describe("blob", () => {
     });
 
     describe("getBlobPojo", () => {
-        it("throws NotFoundError when the entity does not exist", async () => {
-            await expect(withContext(() => blob.getBlobPojo("notes", "doesNotExist123"))).rejects.toBeInstanceOf(NotFoundError);
+        it("throws NotFoundError when the entity does not exist", () => {
+            expect(() => getContext().init(() => blob.getBlobPojo("notes", "doesNotExist123"))).toThrow(NotFoundError);
         });
 
-        it("returns the decoded string content of a text note's blob", async () => {
-            const { noteId, content, blobId } = await withContext(() => {
+        it("returns the decoded string content of a text note's blob", () => {
+            const { noteId, content, blobId } = getContext().init(() => {
                 const { note } = notesService.createNewNote({
                     parentNoteId: "root",
                     title: "blob spec text note",
@@ -164,10 +149,10 @@ describe("blob", () => {
             expect(becca.notes[noteId]).toBeDefined();
         });
 
-        it("nulls out the content for a note with binary (non-string) content", async () => {
+        it("nulls out the content for a note with binary (non-string) content", () => {
             const binary = Uint8Array.from([0, 1, 2, 3, 4, 5]);
 
-            const { pojoContent, contentLength } = await withContext(() => {
+            const { pojoContent, contentLength } = getContext().init(() => {
                 const { note } = notesService.createNewNote({
                     parentNoteId: "root",
                     title: "blob spec image note",
@@ -186,6 +171,136 @@ describe("blob", () => {
             // Binary blobs come back with content nulled but contentLength preserved.
             expect(pojoContent).toBeNull();
             expect(contentLength).toBeGreaterThan(0);
+        });
+
+        it("marks a blob as stubbed when content is empty but the blobId is not the empty-content hash", () => {
+            const { isStubbed, blobId } = getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "blob spec stub note",
+                    content: "<p>content that was withheld by the sync server</p>",
+                    type: "text"
+                });
+
+                // Simulate a sync stub: the server delivered empty content, but the (content-derived)
+                // blobId is still the original non-empty hash.
+                getSql().execute("UPDATE blobs SET content = '' WHERE blobId = ?", [note.blobId]);
+
+                const pojo = blob.getBlobPojo("notes", note.noteId);
+                return { isStubbed: pojo.isStubbed, blobId: pojo.blobId };
+            });
+
+            expect(blobId).not.toBe(EMPTY_BLOB_ID);
+            expect(isStubbed).toBe(true);
+        });
+
+        it("does not mark a normal (non-empty) blob as stubbed", () => {
+            const isStubbed = getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "blob spec normal note",
+                    content: "<p>ordinary content</p>",
+                    type: "text"
+                });
+                return blob.getBlobPojo("notes", note.noteId).isStubbed;
+            });
+
+            expect(isStubbed).toBe(false);
+        });
+
+        it("does not mark a genuinely empty blob as stubbed", () => {
+            const { isStubbed, blobId } = getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "blob spec empty note",
+                    content: "<p>temporary</p>",
+                    type: "text"
+                });
+                // Empty content hashes to EMPTY_BLOB_ID, so this is a legitimately empty blob, not a stub.
+                note.setContent("");
+
+                const pojo = blob.getBlobPojo("notes", note.noteId);
+                return { isStubbed: pojo.isStubbed, blobId: pojo.blobId };
+            });
+
+            expect(blobId).toBe(EMPTY_BLOB_ID);
+            expect(isStubbed).toBe(false);
+        });
+    });
+
+    describe("getDeletedNoteBlobPojo", () => {
+        function createDeletedNote(overrides: { content?: string | Uint8Array; type?: string; mime?: string } = {}) {
+            const { note } = notesService.createNewNote({
+                parentNoteId: "root",
+                title: "deleted blob spec note",
+                content: overrides.content ?? "<p>deleted note body</p>",
+                type: (overrides.type ?? "text") as any,
+                mime: overrides.mime
+            });
+            // Soft-delete only: the row and its blob survive, so the content stays readable.
+            getSql().execute("UPDATE notes SET isDeleted = 1 WHERE noteId = ?", [note.noteId]);
+            return note;
+        }
+
+        it("throws NotFoundError for a live (not soft-deleted) note", () => {
+            expect(() => getContext().init(() => {
+                const { note } = notesService.createNewNote({
+                    parentNoteId: "root",
+                    title: "live note",
+                    content: "<p>alive</p>",
+                    type: "text"
+                });
+                return blob.getDeletedNoteBlobPojo(note.noteId);
+            })).toThrow(NotFoundError);
+        });
+
+        it("throws NotFoundError for an unknown note", () => {
+            expect(() => getContext().init(() => blob.getDeletedNoteBlobPojo("doesNotExist123"))).toThrow(NotFoundError);
+        });
+
+        it("returns the decoded string content of a soft-deleted text note", () => {
+            const content = getContext().init(() => blob.getDeletedNoteBlobPojo(createDeletedNote().noteId).content);
+            expect(content).toBe("<p>deleted note body</p>");
+        });
+
+        it("nulls out the content for a soft-deleted binary note", () => {
+            const { content, contentLength } = getContext().init(() => {
+                const note = createDeletedNote({ content: Uint8Array.from([0, 1, 2, 3]), type: "image", mime: "image/png" });
+                const pojo = blob.getDeletedNoteBlobPojo(note.noteId);
+                return { content: pojo.content, contentLength: pojo.contentLength };
+            });
+            expect(content).toBeNull();
+            expect(contentLength).toBeGreaterThan(0);
+        });
+
+        it("decrypts a soft-deleted protected note's content when a protected session is available, and blanks it otherwise", () => {
+            const noteId = getContext().init(() => {
+                const note = createDeletedNote();
+                // Turn it into a protected note whose blob holds the encrypted content.
+                const cipher = dataEncryption.encrypt(PROTECTED_KEY, "<p>secret deleted body</p>");
+                getSql().execute("UPDATE notes SET isProtected = 1 WHERE noteId = ?", [note.noteId]);
+                getSql().execute("UPDATE blobs SET content = ? WHERE blobId = ?", [cipher, note.blobId]);
+                return note.noteId;
+            });
+
+            // Without a session the content is blanked, not leaked.
+            protectedSessionService.resetDataKey();
+            expect(getContext().init(() => blob.getDeletedNoteBlobPojo(noteId).content)).toBe("");
+
+            // With a session it is decrypted.
+            protectedSessionService.setDataKey(PROTECTED_KEY);
+            try {
+                expect(getContext().init(() => blob.getDeletedNoteBlobPojo(noteId).content)).toBe("<p>secret deleted body</p>");
+            } finally {
+                protectedSessionService.resetDataKey();
+            }
+        });
+    });
+
+    describe("EMPTY_BLOB_ID", () => {
+        it("equals hashedBlobId of empty content", () => {
+            // Guards the hard-coded constant in commons (which cannot call hashedBlobId at module load).
+            expect(hashedBlobId("")).toBe(EMPTY_BLOB_ID);
         });
     });
 });

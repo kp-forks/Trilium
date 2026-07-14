@@ -1,17 +1,10 @@
-import { beforeAll, describe, expect, it } from "vitest";
+import i18next from "i18next";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import { getContext } from "./context.js";
 import eventService from "./events.js";
 import { getSql } from "./sql/index.js";
-import sqlInit from "./sql_init.js";
-
-/**
- * Wraps a callback in a CLS context. Some sql_init code paths
- * (initDbConnection, optionService.setOption) require an initialised context.
- */
-function withContext<T>(fn: () => T): T {
-    return getContext().init(fn);
-}
+import sqlInit, { applySetupLanguage } from "./sql_init.js";
 
 describe("sql_init (real DB)", () => {
     beforeAll(() => {
@@ -80,9 +73,34 @@ describe("sql_init (real DB)", () => {
         });
     });
 
+    describe("applySetupLanguage", () => {
+        afterEach(() => {
+            vi.restoreAllMocks();
+        });
+
+        it("switches i18next to the locale chosen during setup", async () => {
+            const changeLanguage = vi.spyOn(i18next, "changeLanguage").mockResolvedValue((() => "") as never);
+
+            await applySetupLanguage("de");
+
+            // Persisting the `locale` option is not enough — the running i18next instance must be switched
+            // before the hidden subtree is built, otherwise the built-in titles are generated in English.
+            expect(changeLanguage).toHaveBeenCalledWith("de");
+        });
+
+        it("leaves the language untouched for an undefined or non-displayable locale", async () => {
+            const changeLanguage = vi.spyOn(i18next, "changeLanguage").mockResolvedValue((() => "") as never);
+
+            await applySetupLanguage(undefined);
+            await applySetupLanguage("zz-not-a-locale");
+
+            expect(changeLanguage).not.toHaveBeenCalled();
+        });
+    });
+
     describe("initDbConnection", () => {
         it("creates the param_list and user_data tables and resolves dbReady", async () => {
-            await withContext(() => sqlInit.initDbConnection());
+            await getContext().init(() => sqlInit.initDbConnection());
 
             // The connection setup creates these auxiliary tables idempotently.
             expect(

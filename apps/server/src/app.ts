@@ -5,7 +5,6 @@ import compression from "compression";
 import cookieParser from "cookie-parser";
 import ejs from "ejs";
 import express from "express";
-import { auth } from "express-openid-connect";
 import helmet from "helmet";
 import { t } from "i18next";
 import path from "path";
@@ -19,7 +18,7 @@ import mcpRoutes from "./routes/mcp.js";
 import routes from "./routes/routes.js";
 import config from "./services/config.js";
 import { getLog } from "@triliumnext/core";
-import openID from "./services/open_id.js";
+import { createReactiveOidcMiddleware } from "./services/open_id.js";
 import { RESOURCE_DIR } from "./services/resource_dir.js";
 import utils, { getResourceDir, isDev } from "./services/utils.js";
 
@@ -111,16 +110,29 @@ export default async function buildApp() {
     startSessionCleanup();
     app.use(favicon(path.join(assetsDir, isDev ? "icon-dev.ico" : "icon.ico")));
 
-    if (openID.isOpenIDEnabled())
-        app.use(auth(openID.generateOAuthConfig()));
+    // Always mount the OIDC middleware, but have it activate reactively from the current `mfaMethod`
+    // option rather than from a one-time startup check. This lets a switch to (or away from) OpenID take
+    // effect without a server restart; the underlying express-openid-connect handler is built lazily on
+    // first use, so it costs nothing while OAuth is unselected. See createReactiveOidcMiddleware.
+    app.use(createReactiveOidcMiddleware());
 
     await assets.register(app);
     routes.register(app);
     custom.register(app);
     error_handlers.register(app);
 
-    const { sync, consistency_checks, scheduler } = await import("@triliumnext/core");
+    const { sync, consistency_checks, scheduler, sql_init, becca_loader, i18n } = await import("@triliumnext/core");
     sync.startSyncTimer();
+
+    // Server-side i18next always boots on "en" (initTranslations runs before initSql in initializeCore),
+    // so re-sync it with the document's stored locale before the scheduler's dbReady.then(checkHiddenSubtree)
+    // rebuilds the built-in titles — otherwise they are (re-)generated in English on every start. The read
+    // goes through becca, so wait for it; guard on isDbInitialized so we don't await beccaLoaded (which never
+    // resolves pre-setup) on a fresh install. Desktop reaches this via the same www.js → buildApp path.
+    if (sql_init.isDbInitialized()) {
+        await becca_loader.beccaLoaded;
+        await i18n.reconcileLanguageAfterDbInit();
+    }
 
     consistency_checks.startConsistencyChecks();
     scheduler.startScheduler();

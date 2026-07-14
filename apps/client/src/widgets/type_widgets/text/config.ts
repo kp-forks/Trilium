@@ -1,6 +1,6 @@
 import { buildExtraCommands, type EditorConfig, getCkLocale, loadPremiumPlugins, TemplateDefinition } from "@triliumnext/ckeditor5";
 import emojiDefinitionsUrl from "@triliumnext/ckeditor5/src/emoji_definitions/en.json?url";
-import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
+import { ALLOWED_PROTOCOLS, DISPLAYABLE_LOCALE_IDS, KATEX_MACROS, MIME_TYPE_AUTO, normalizeMimeTypeForCKEditor } from "@triliumnext/commons";
 
 import { copyTextWithToast } from "../../../services/clipboard_ext.js";
 import { t } from "../../../services/i18n.js";
@@ -41,7 +41,10 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
                 (window as any).katex = (await import("../../../services/math.js")).default;
             },
             forceOutputType: false, // forces output to use outputType
-            enablePreview: true // Enable preview view
+            enablePreview: true, // Enable preview view
+            // Map MathLive-only commands (e.g. \differentialD) onto KaTeX equivalents so
+            // formulas produced by the visual editor render instead of erroring out (#9523).
+            katexRenderOptions: { macros: KATEX_MACROS }
         },
         mermaid: {
             lazyLoad: async () => (await import("mermaid")).default, // FIXME
@@ -189,6 +192,12 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
     // The app's i18n translate function, so plugins can resolve Trilium translation keys.
     (config as Record<string, unknown>).translate = (key: string, params?: Record<string, unknown>) => t(key, params);
 
+    // Global on/off switch for content-area hints (bottom-corner popups on task
+    // checkboxes, collapsible summaries, drag handles). Plugins consult this via
+    // `editor.config.get("contentHintsEnabled")` and skip registering their hint
+    // managers when it's false.
+    (config as Record<string, unknown>).contentHintsEnabled = options.get("textNoteContentHintsEnabled") === "true";
+
     // Image toolbar actions (copy / download), handled by the ImageActions plugin. The copy
     // button is only added where copying the raw image is supported (Electron or a secure
     // context); elsewhere the browser's own context menu still offers a "Copy image" entry.
@@ -255,6 +264,10 @@ function buildListOfLanguages() {
     const userLanguages = mimeTypesService
         .getMimeTypes()
         .filter((mt) => mt.enabled)
+        // The `env=frontend`/`env=backend` JavaScript variants are Trilium script environments,
+        // which are meaningless inside a (display-only) code block. Plain `text/javascript`
+        // already provides JavaScript highlighting, so omit the script-specific variants here.
+        .filter((mt) => mt.mime && !mt.mime.startsWith("application/javascript;env="))
         .map((mt) => ({
             language: normalizeMimeTypeForCKEditor(mt.mime),
             label: mt.title

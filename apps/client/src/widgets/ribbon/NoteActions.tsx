@@ -1,3 +1,5 @@
+import "./NoteActions.css";
+
 import { ConvertToAttachmentResponse } from "@triliumnext/commons";
 import { Dropdown as BootstrapDropdown } from "bootstrap";
 import { ComponentChildren, RefObject } from "preact";
@@ -19,6 +21,7 @@ import ws from "../../services/ws";
 import ClosePaneButton from "../buttons/close_pane_button";
 import CreatePaneButton from "../buttons/create_pane_button";
 import MovePaneButton from "../buttons/move_pane_button";
+import { isAlwaysFullWidthByType } from "../note_wrapper";
 import ActionButton from "../react/ActionButton";
 import Dropdown from "../react/Dropdown";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListHeader, FormListItem, FormListToggleableItem } from "../react/FormList";
@@ -82,15 +85,16 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
         || (note.noteId === "_backendLog");
     const isInOptionsOrHelp = note?.noteId.startsWith("_options") || note?.noteId.startsWith("_help");
     const isExportableToImage = ["mermaid", "mindMap"].includes(noteType);
+    const isExportableToXlsx = noteType === "spreadsheet";
     const isContentAvailable = note.isContentAvailable();
     const isPrintable = isContentAvailable && (
-        ["text", "code", "spreadsheet"].includes(noteType) ||
+        ["text", "code", "spreadsheet", "llmChat"].includes(noteType) ||
         (noteType === "book" && ["presentation", "list", "table"].includes(viewType ?? "")) ||
         (noteType === "file" && note.mime === "application/pdf")
     );
     const isElectron = getIsElectron();
     const isMac = getIsMac();
-    const hasSource = ["text", "code", "relationMap", "mermaid", "canvas", "mindMap", "spreadsheet", "llmChat"].includes(noteType);
+    const hasSource = ["text", "code", "relationMap", "mermaid", "canvas", "mindMap", "spreadsheet", "llmChat"].includes(noteType) || note.isSvg();
     const isSearchOrBook = ["search", "book"].includes(noteType);
     const isHelpPage = note.noteId.startsWith("_help");
     const [syncServerHost] = useTriliumOption("syncServerHost");
@@ -151,6 +155,18 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                         defaultType: "single"
                     })} />
                 {isExportableToImage && isNormalViewMode && isContentAvailable && <ExportAsImage ntxId={noteContext.ntxId} parentComponent={parentComponent} />}
+                {isExportableToXlsx && isNormalViewMode && isContentAvailable && (
+                    <>
+                        <FormListItem
+                            icon="bx bxs-spreadsheet"
+                            onClick={() => parentComponent?.triggerEvent("exportXlsx", { ntxId: noteContext.ntxId })}
+                        >{t("spreadsheet.export-xlsx")}</FormListItem>
+                        <FormListItem
+                            icon="bx bxs-spreadsheet"
+                            onClick={() => parentComponent?.triggerEvent("exportCsv", { ntxId: noteContext.ntxId })}
+                        >{t("spreadsheet.export-csv")}</FormListItem>
+                    </>
+                )}
                 <CommandItem command="printActiveNote" icon="bx bx-printer" disabled={!isPrintable}
                     text={isElectron ? t("note_actions.print_or_export_to_pdf") : t("note_actions.print_note")}
                 />
@@ -171,6 +187,8 @@ export function NoteContextMenu({ note, noteContext, itemsAtStart, itemsNearNote
                     <CommandItem command="openNoteExternally" icon="bx bx-file-find" disabled={isSearchOrBook || !isElectron} text={t("note_actions.open_note_externally")} title={t("note_actions.open_note_externally_title")} />
                     <CommandItem command="openNoteCustom" icon="bx bx-customize" disabled={isSearchOrBook || isMac || !isElectron} text={t("note_actions.open_note_custom")} />
                     <CommandItem command="showNoteSource" icon="bx bx-code" disabled={!hasSource} text={t("note_actions.note_source")} />
+                    {(note.type === "text" || note.isMarkdown()) && isContentAvailable && !isInOptionsOrHelp &&
+                        <ConvertNoteFormat note={note} />}
                     <CommandItem command="showNoteOCRText" icon="bx bx-text" disabled={!["image", "file"].includes(noteType)} text={t("note_actions.view_ocr_text")} />
                     {(syncServerHost && isElectron) &&
                         <CommandItem command="openNoteOnServer" icon="bx bx-world" disabled={!syncServerHost} text={t("note_actions.open_note_on_server")} />
@@ -219,6 +237,7 @@ function NoteBasicProperties({ note, focus }: {
     const [ isBookmarked, setIsBookmarked ] = useNoteBookmarkState(note);
     const [ isShared, switchShareState ] = useShareState(note);
     const [ isTemplate, setIsTemplate ] = useNoteLabelBoolean(note, "template");
+    const [ isFullContentWidth, setIsFullContentWidth ] = useNoteLabelBoolean(note, "fullContentWidth");
     const isProtected = useNoteProperty(note, "isProtected");
 
     useEffect(() => {
@@ -260,6 +279,13 @@ function NoteBasicProperties({ note, focus }: {
             helpPage="KC1HB96bqqHX"
             disabled={note?.noteId.startsWith("_options")}
         />
+        {!isAlwaysFullWidthByType(note) &&
+            <FormListToggleableItem
+                icon="bx bx-expand-horizontal"
+                title={t("full_content_width_switch.title")}
+                currentValue={isFullContentWidth} onChange={setIsFullContentWidth}
+            />
+        }
     </>;
 }
 
@@ -356,6 +382,31 @@ function ConvertToAttachment({ note }: { note: FNote }) {
                 });
             }}
         >{t("note_actions.convert_into_attachment")}</FormListItem>
+    );
+}
+
+function ConvertNoteFormat({ note }: { note: FNote }) {
+    const isMarkdown = note.isMarkdown();
+
+    return (
+        <FormListItem
+            icon="bx bxl-markdown"
+            onClick={async () => {
+                // Text → Markdown is lossy; Markdown → Text is not, so use the milder warning there.
+                const warning = isMarkdown
+                    ? t("note_actions.convert_format_warning")
+                    : t("note_actions.convert_format_warning_risky");
+                if (!(await dialog.confirm(warning))) {
+                    return;
+                }
+
+                await server.post(`notes/${note.noteId}/convert-format`);
+                await ws.waitForMaxKnownEntityChangeId();
+                toast.showMessage(isMarkdown
+                    ? t("note_actions.convert_to_text_successful")
+                    : t("note_actions.convert_to_markdown_successful"));
+            }}
+        >{isMarkdown ? t("note_actions.convert_to_text") : t("note_actions.convert_to_markdown")}</FormListItem>
     );
 }
 

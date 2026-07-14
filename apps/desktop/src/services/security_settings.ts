@@ -9,6 +9,7 @@ const SECURITY_JSON_PATH = path.join(dataDirs.TRILIUM_DATA_DIR, "security.json")
 interface SecuritySettings {
     backendScriptingEnabled?: boolean;
     sqlConsoleEnabled?: boolean;
+    allowLanAccess?: boolean;
 }
 
 function readSettings(): SecuritySettings {
@@ -74,46 +75,57 @@ async function confirmDisable(settingLabel: string): Promise<ConfirmResult> {
 // to suppress all security dialogs for the rest of the session. Resets on restart.
 let suppressedForSession = false;
 
+/**
+ * Registers an IPC handler that gates a single security toggle behind a
+ * confirmation dialog and persists it to `security.json`. `labelKey` and
+ * `warningKey` are i18next keys resolved at invocation time so the dialog
+ * follows runtime language changes.
+ */
+function registerToggleHandler(
+    channel: string,
+    settingKey: keyof SecuritySettings,
+    labelKey: string,
+    warningKey: string
+): void {
+    electron.ipcMain.handle(channel, async (_event, enabled: boolean) => {
+        if (suppressedForSession) {
+            return false;
+        }
+
+        const settingLabel = t(labelKey);
+        const { confirmed, suppressFurtherDialogs } = enabled
+            ? await confirmEnable(settingLabel, t(warningKey))
+            : await confirmDisable(settingLabel);
+        // Latch the session-wide suppression flag; never clears it once set.
+        suppressedForSession = suppressFurtherDialogs || suppressedForSession;
+        if (!confirmed) {
+            return false;
+        }
+
+        const settings = readSettings();
+        settings[settingKey] = enabled;
+        writeSettings(settings);
+        return true;
+    });
+}
+
 export function registerSecurityIpcHandlers(): void {
-    electron.ipcMain.handle("security-set-backend-scripting", async (_event, enabled: boolean) => {
-        if (suppressedForSession) {
-            return false;
-        }
-
-        const { confirmed, suppressFurtherDialogs } = enabled
-            ? await confirmEnable(t("security-dialog.backend-scripting"), t("security-dialog.backend-scripting-warning"))
-            : await confirmDisable(t("security-dialog.backend-scripting"));
-        if (suppressFurtherDialogs) {
-            suppressedForSession = true;
-        }
-        if (!confirmed) {
-            return false;
-        }
-
-        const settings = readSettings();
-        settings.backendScriptingEnabled = enabled;
-        writeSettings(settings);
-        return true;
-    });
-
-    electron.ipcMain.handle("security-set-sql-console", async (_event, enabled: boolean) => {
-        if (suppressedForSession) {
-            return false;
-        }
-
-        const { confirmed, suppressFurtherDialogs } = enabled
-            ? await confirmEnable(t("security-dialog.sql-console"), t("security-dialog.sql-console-warning"))
-            : await confirmDisable(t("security-dialog.sql-console"));
-        if (suppressFurtherDialogs) {
-            suppressedForSession = true;
-        }
-        if (!confirmed) {
-            return false;
-        }
-
-        const settings = readSettings();
-        settings.sqlConsoleEnabled = enabled;
-        writeSettings(settings);
-        return true;
-    });
+    registerToggleHandler(
+        "security-set-backend-scripting",
+        "backendScriptingEnabled",
+        "security-dialog.backend-scripting",
+        "security-dialog.backend-scripting-warning"
+    );
+    registerToggleHandler(
+        "security-set-sql-console",
+        "sqlConsoleEnabled",
+        "security-dialog.sql-console",
+        "security-dialog.sql-console-warning"
+    );
+    registerToggleHandler(
+        "security-set-lan-access",
+        "allowLanAccess",
+        "security-dialog.lan-access",
+        "security-dialog.lan-access-warning"
+    );
 }

@@ -84,4 +84,31 @@ describe("Custom request/resource handlers", () => {
         const res = await supertest(app).get("/custom/no-such-path").expect(404);
         expect(res.text).toContain("No handler matched");
     });
+
+    // A resource provider executes no code — it only serves a note's static content. It should
+    // therefore remain accessible even when backend scripting (code execution) is disabled, unlike
+    // customRequestHandler. Currently the /custom route gates the whole surface behind the scripting
+    // toggle, so this fails until the resource provider is decoupled from backendScriptingEnabled.
+    it("serves a custom resource provider note even when backend scripting is disabled", async () => {
+        config.Security.backendScriptingEnabled = false;
+
+        try {
+            const res = await supertest(app).get("/custom/resource").expect(200);
+            expect(res.text).toContain("resource body");
+        } finally {
+            config.Security.backendScriptingEnabled = true;
+        }
+    });
+
+    // The flip side of the decoupling: a request handler executes code, so it must stay gated.
+    it("rejects a custom request handler when backend scripting is disabled", async () => {
+        config.Security.backendScriptingEnabled = false;
+
+        try {
+            const res = await supertest(app).get("/custom/greet/world").expect(403);
+            expect(res.text).toContain("Backend script execution is disabled");
+        } finally {
+            config.Security.backendScriptingEnabled = true;
+        }
+    });
 });

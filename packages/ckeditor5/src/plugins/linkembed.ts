@@ -1,5 +1,5 @@
 import { type BlockChildLike, chooseLinkPreviewKind, isUrlAloneInBlock } from '@triliumnext/commons';
-import { ButtonView, Command, Plugin, toWidget, Widget, type Observable } from 'ckeditor5';
+import { ButtonView, Command, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Observable } from 'ckeditor5';
 import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
 
@@ -37,6 +37,7 @@ class LinkEmbedUI extends Plugin {
                 tooltip: true
             });
 
+            /* v8 ignore next -- LinkEmbedEditing always registers LINK_EMBED_COMMAND (both are required by LinkEmbed), so the no-command branch is unreachable */
             if (command) {
                 buttonView.bind('isOn', 'isEnabled').to(
                     command as Observable & { value: boolean } & { isEnabled: boolean },
@@ -62,6 +63,16 @@ class LinkEmbedEditing extends Plugin {
     init() {
         this._defineSchema();
         this._defineConverters();
+
+        // linkMention is an empty inline object whose editing view holds a UIElement child, so a
+        // view position inside the rendered widget would otherwise resolve to a degenerate model
+        // position *inside* the atomic element. Map it just outside the mention instead (mirrors
+        // ReferenceLink). The block linkEmbed is a $block object and needs no such mapping.
+        this.editor.editing.mapper.on(
+            'viewToModelPosition',
+            viewToModelPositionOutsideModelElement(this.editor.model, viewElement => viewElement.hasClass('link-mention'))
+        );
+
         this.editor.commands.add(LINK_EMBED_COMMAND, new InsertLinkEmbedCommand(this.editor));
         this.editor.commands.add(CHANGE_LINK_DISPLAY_COMMAND, new ChangeLinkDisplayCommand(this.editor));
         this.editor.commands.add(REMOVE_LINK_EMBED_COMMAND, new RemoveLinkEmbedCommand(this.editor));
@@ -404,6 +415,7 @@ class AutoLinkToMention extends Plugin {
                     if (item.item.data.trim() !== href) continue;
 
                     const parent = item.item.parent;
+                    /* v8 ignore next -- a $textProxy always has an element parent, so this guard never fires */
                     if (!parent?.is('element')) continue;
 
                     this._replaceWithPreview(href, parent.getPath());
@@ -423,6 +435,7 @@ class AutoLinkToMention extends Plugin {
 
             editor.model.change((writer) => {
                 const root = editor.model.document.getRoot();
+                /* v8 ignore next -- the document always has a root once the editor is created */
                 if (!root) return;
 
                 // Re-resolve the parent from the stored path.

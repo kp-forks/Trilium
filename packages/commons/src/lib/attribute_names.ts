@@ -4,6 +4,7 @@
 type Labels = {
     color: string;
     iconClass: string;
+    iconPack: string;
     workspace: boolean;
     workspaceTabBackgroundColor: string;
     workspaceIconClass: string;
@@ -27,6 +28,7 @@ type Labels = {
     run: string;
     widget: boolean;
     "disabled:widget": boolean;
+    customRequestHandler: string;
 
     // Tree specific
     subtreeHidden: boolean;
@@ -52,6 +54,8 @@ type Labels = {
     "calendar:weekNumbers": boolean;
     "calendar:view": string;
     "calendar:initialDate": string;
+    "calendar:slotDuration": string;
+    "calendar:slotLabelInterval": string;
     "map:style": string;
     "map:scale": boolean;
     "map:hideLabels": boolean;
@@ -71,6 +75,7 @@ type Labels = {
     webViewSrc: string;
     "disabled:webViewSrc": string;
     readOnly: boolean;
+    fullContentWidth: boolean;
     displayMode: string;
     tabWidth: number;
     indentWithTabs: boolean;

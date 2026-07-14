@@ -15,13 +15,16 @@ function getStatus() {
 
 async function setupNewDocument(req: Request) {
     const { skipDemoDb } = req.query;
-    await sqlInit.createInitialDatabase(skipDemoDb !== undefined);
+    const locale = req.body?.locale;
+    await sqlInit.createInitialDatabase(skipDemoDb !== undefined, locale);
 }
 
 function setupSyncFromServer(req: Request): Promise<SetupSyncFromServerResponse> {
-    const { syncServerHost, syncProxy, password } = req.body;
+    const { syncServerHost, syncProxy, password, syncMaxBlobContentSize } = req.body;
 
-    return setupService.setupSyncFromSyncServer(syncServerHost, syncProxy, password);
+    const maxBlobContentSize = Number.isFinite(syncMaxBlobContentSize) && syncMaxBlobContentSize > 0 ? syncMaxBlobContentSize : 0;
+
+    return setupService.setupSyncFromSyncServer(syncServerHost, syncProxy, password, maxBlobContentSize);
 }
 
 function saveSyncSeed(req: Request) {

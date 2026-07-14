@@ -9,6 +9,7 @@ const {
     getComponentByEl,
     getActiveContextNotePath,
     getActiveContext,
+    getActiveMainContext,
     getActions,
     isElectron
 } = vi.hoisted(() => ({
@@ -16,6 +17,7 @@ const {
     getComponentByEl: vi.fn(),
     getActiveContextNotePath: vi.fn<() => string | null | undefined>(() => "root/abc"),
     getActiveContext: vi.fn(),
+    getActiveMainContext: vi.fn<() => { ntxId?: string } | undefined>(() => ({ ntxId: "ntx-main" })),
     getActions: vi.fn<() => Promise<ActionKeyboardShortcut[]>>(async () => []),
     isElectron: vi.fn(() => false)
 }));
@@ -24,8 +26,16 @@ const {
 // async loadCommands() proceeds. t() is made a deterministic stub.
 vi.mock("./i18n.js", () => ({
     translationsInitializedPromise: Promise.resolve(),
-    t: (key: string, opts?: Record<string, unknown>) =>
-        opts && "name" in opts ? `${key}:${opts.name}` : key
+    t: (key: string, opts?: Record<string, unknown>) => {
+        // Resolve the keyboard-shortcut key labels the way the real translation files do.
+        if (key.startsWith("keyboard_shortcut_keys.")) {
+            const labels: Record<string, string> = {
+                ctrl: "Ctrl", alt: "Alt", shift: "Shift", meta: "Meta"
+            };
+            return labels[key.slice("keyboard_shortcut_keys.".length)] ?? key;
+        }
+        return opts && "name" in opts ? `${key}:${opts.name}` : key;
+    }
 }));
 
 vi.mock("../components/app_context.js", () => ({
@@ -35,7 +45,8 @@ vi.mock("../components/app_context.js", () => ({
         tabManager: {
             activeNtxId: "ntx-1",
             getActiveContextNotePath,
-            getActiveContext
+            getActiveContext,
+            getActiveMainContext
         }
     }
 }));
@@ -45,7 +56,9 @@ vi.mock("./keyboard_actions.js", () => ({
 }));
 
 vi.mock("./utils.js", () => ({
-    default: { isElectron }
+    default: { isElectron },
+    // keyboard_shortcut_display imports the named isMac; keep the command palette on the non-Mac path.
+    isMac: () => false
 }));
 
 // Imported AFTER the mocks (vi.mock is hoisted).
@@ -74,6 +87,7 @@ afterEach(() => {
     getActions.mockImplementation(async () => []);
     isElectron.mockImplementation(() => false);
     getActiveContextNotePath.mockImplementation(() => "root/abc");
+    getActiveMainContext.mockImplementation(() => ({ ntxId: "ntx-main" }));
 });
 
 describe("CommandRegistry default commands", () => {
@@ -128,6 +142,25 @@ describe("CommandRegistry default commands", () => {
         await registry.executeCommand("search-in-subtree");
         expect(triggerCommand).not.toHaveBeenCalled();
     });
+
+    it("pin/unpin-active-tab trigger pinTab/unpinTab with the active main context ntxId", async () => {
+        const registry = await freshRegistry();
+
+        await registry.executeCommand("pin-active-tab");
+        expect(triggerCommand).toHaveBeenCalledWith("pinTab", { ntxId: "ntx-main" });
+
+        await registry.executeCommand("unpin-active-tab");
+        expect(triggerCommand).toHaveBeenCalledWith("unpinTab", { ntxId: "ntx-main" });
+    });
+
+    it("pin/unpin-active-tab skip triggering when there is no active main context", async () => {
+        const registry = await freshRegistry();
+        getActiveMainContext.mockImplementation(() => undefined);
+
+        await registry.executeCommand("pin-active-tab");
+        await registry.executeCommand("unpin-active-tab");
+        expect(triggerCommand).not.toHaveBeenCalled();
+    });
 });
 
 describe("CommandRegistry keyboard actions", () => {
@@ -159,11 +192,11 @@ describe("CommandRegistry keyboard actions", () => {
         expect(treeCmd.name).toBe("command_palette.tree-action-name:Tree Action");
     });
 
-    it("skips already-registered, description-less, electron-only and ignored actions", async () => {
+    it("skips already-registered, electron-only and ignored actions, but registers description-less ones", async () => {
         getActions.mockImplementation(async () => [
             // Collides with a manually-registered default command id -> skipped.
             action({ actionName: "export-note" }),
-            // No description -> skipped.
+            // No description -> still registered (separators are filtered out upstream).
             action({ actionName: "noDesc", description: undefined }),
             // Electron-only while not in electron -> skipped.
             action({ actionName: "electronOnly", isElectronOnly: true }),
@@ -177,7 +210,8 @@ describe("CommandRegistry keyboard actions", () => {
 
         // export-note stays the manually-registered command (has a handler).
         expect(registry.getCommand("export-note")!.handler).toBeTypeOf("function");
-        expect(registry.getCommand("noDesc")).toBeUndefined();
+        expect(registry.getCommand("noDesc")).toBeDefined();
+        expect(registry.getCommand("noDesc")!.description).toBeUndefined();
         expect(registry.getCommand("electronOnly")).toBeUndefined();
         expect(registry.getCommand("ignored")).toBeUndefined();
 
