@@ -12,6 +12,7 @@ import attributes from "../services/attributes";
 import dialog from "../services/dialog";
 import froca from "../services/froca";
 import { t } from "../services/i18n";
+import { stopBackgroundMedia } from "../services/media_playback";
 import protected_session_holder from "../services/protected_session_holder";
 import toast from "../services/toast.js";
 import { isElectron } from "../services/utils";
@@ -264,6 +265,7 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
     // inside a closed popup stop, just like one in a navigated-away tab.
     const containerVisible = useContext(ContainerVisibilityContext);
     const [ cachedProps, setCachedProps ] = useState(props);
+    const wrapperRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (isVisible) {
@@ -272,9 +274,20 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
         // When not visible, keep the old props to avoid re-rendering in the background.
     }, [ props, isVisible ]);
 
+    // This widget stays mounted (just hidden) when the user switches note type —
+    // e.g. read-only ↔ editable text — and also when an enclosing dialog such as the quick-edit
+    // popup is closed but kept in the DOM. A hidden but still-mounted embedded player keeps playing
+    // audio/video in the background, so stop it in either case.
+    useEffect(() => {
+        if (!isVisible || !containerVisible) {
+            stopBackgroundMedia(wrapperRef.current);
+        }
+    }, [ isVisible, containerVisible ]);
+
     const typeMapping = TYPE_MAPPINGS[type];
     return (
         <div
+            ref={wrapperRef}
             className={`${typeMapping.className} ${typeMapping.printable ? "note-detail-printable" : ""} ${isVisible ? "visible" : "hidden-ext"}`}
             style={{
                 height: isFullHeight ? "100%" : ""

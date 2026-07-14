@@ -39,6 +39,7 @@ const h = vi.hoisted(() => ({
     streamErrorHandlers: [] as Handler[],
     // Captured commandLine.appendSwitch calls.
     appendSwitch: vi.fn(),
+    onBeforeSendHeaders: vi.fn(),
     setName: vi.fn(),
     quit: vi.fn(),
     exit: vi.fn(),
@@ -102,12 +103,22 @@ vi.mock("electron", () => {
         on: (channel: string, fn: Handler) => h.ipcOn.set(channel, fn),
         handle: (channel: string, fn: Handler) => h.ipcHandle.set(channel, fn)
     };
+    // onReady() installs the embed-Referer hook, whose default argument reads
+    // `electron.session.defaultSession` (see services/embed_referer.ts).
+    const session = {
+        defaultSession: {
+            webRequest: {
+                onBeforeSendHeaders: (...a: unknown[]) => h.onBeforeSendHeaders(...a)
+            }
+        }
+    };
     return {
         app: appObj,
         BrowserWindow,
         globalShortcut,
         ipcMain,
-        default: { app: appObj, BrowserWindow, globalShortcut, ipcMain }
+        session,
+        default: { app: appObj, BrowserWindow, globalShortcut, ipcMain, session }
     };
 });
 

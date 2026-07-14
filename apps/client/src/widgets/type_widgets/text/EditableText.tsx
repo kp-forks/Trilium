@@ -135,13 +135,8 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             });
         },
         loadIncludedNote,
-        // Link embed functionality
-        addLinkEmbedToTextCommand() {
-            if (!editorApiRef.current) return;
-            parentComponent?.triggerCommand("showLinkEmbedDialog", {
-                editorApi: editorApiRef.current,
-            });
-        },
+        // Link preview functionality. The insert flow itself lives in the editor (a balloon form),
+        // so the host only has to supply the metadata and the rendering.
         async fetchLinkMetadata(url: string) {
             return await linkEmbedService.fetchMetadata(url);
         },

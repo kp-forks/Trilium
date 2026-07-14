@@ -2449,6 +2449,16 @@
     "failed_to_open": "Failed to open link '{{- href}}': {{- message}}",
     "copy_url": "Copy URL"
   },
+  "link_embed": {
+    "play_video": "Play video",
+    "title": "Link preview",
+    "url": "URL",
+    "insert": "Insert",
+    "display": "Display",
+    "mode_inline": "Inline",
+    "mode_card": "Card",
+    "mode_embed": "Embed"
+  },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",
     "open_note_in_new_split": "Open note in a new split",
@@ -2590,7 +2600,9 @@
     "slash_commands_enabled": "Slash commands",
     "slash_commands_description": "Editing commands such as inserting line breaks or headings can be toggled by typing `/`.",
     "content_hints_enabled": "Content hints",
-    "content_hints_description": "Show short hints in the bottom corner of the editor that explain how to interact with the element under the caret or pointer."
+    "content_hints_description": "Show short hints in the bottom corner of the editor that explain how to interact with the element under the caret or pointer.",
+    "auto_link_previews_enabled": "Autogenerate link previews",
+    "auto_link_previews_description": "Automatically turn a detected link into a preview showing the title, description and image of the web page. Inserting a preview from the toolbar always works, regardless of this setting."
   },
   "table_view": {
     "new-row": "New row",
