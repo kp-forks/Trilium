@@ -20,7 +20,12 @@ const EMBED_PROVIDER_URLS = [
     "*://*.youtube-nocookie.com/*"
 ];
 
-let installed = false;
+/**
+ * Sessions already carrying the hook. Keyed on the session rather than a module-wide flag so that a
+ * second session (and each test) can install its own — Electron allows one `onBeforeSendHeaders`
+ * listener per session, not one per process.
+ */
+const installedSessions = new WeakSet<Session>();
 
 /**
  * Installs a single `onBeforeSendHeaders` hook on the session (default: the
@@ -33,17 +38,26 @@ let installed = false;
  * provider's own domain (`https://www.youtube.com`): YouTube rejects that as an
  * invalid embed host (Error 152).
  *
- * Must be called after `app.ready`. Idempotent — only the first call registers
- * the hook (Electron allows a single `onBeforeSendHeaders` listener per session).
+ * Must be called after `app.ready`. Idempotent per session — a repeat call for a session that
+ * already has the hook does nothing.
  */
 export function setupEmbedReferer(appOrigin: string, session: Session = electron.session.defaultSession) {
-    if (installed) {
+    if (installedSessions.has(session)) {
         return;
     }
-    installed = true;
+    installedSessions.add(session);
 
     session.webRequest.onBeforeSendHeaders({ urls: EMBED_PROVIDER_URLS }, (details, callback) => {
+        // Header names are case-insensitive, but `requestHeaders` is a plain object with
+        // case-sensitive keys: assigning "Referer" alongside an existing "referer" would send the
+        // header twice, and YouTube rejects a request whose embed host it cannot pin down.
+        for (const name of Object.keys(details.requestHeaders)) {
+            if (name.toLowerCase() === "referer") {
+                delete details.requestHeaders[name];
+            }
+        }
         details.requestHeaders["Referer"] = appOrigin;
+
         callback({ requestHeaders: details.requestHeaders });
     });
 }

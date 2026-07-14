@@ -146,15 +146,19 @@ class LinkEmbedLinkButton extends Plugin {
 
     public init() {
         const editor = this.editor;
-        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as Command & { url: string | null };
+        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as (Command & { url: string | null }) | undefined;
 
         editor.ui.componentFactory.add("linkEmbedLink", locale => {
             const button = new LinkEmbedPreviewButtonView(locale);
 
             button.set("tooltip", locale.t("Open link in new tab"));
-            button.bind("isEnabled").to(command, "url", url => !!url);
-            button.bind("label").to(command, "url", url => url ?? undefined);
-            button.bind("href").to(command, "url", url => url ?? undefined);
+
+            /* v8 ignore next -- LinkEmbedEditing always registers CHANGE_LINK_DISPLAY_COMMAND (this plugin requires LinkEmbed), so the no-command branch is unreachable */
+            if (command) {
+                button.bind("isEnabled").to(command, "url", url => !!url);
+                button.bind("label").to(command, "url", url => url ?? undefined);
+                button.bind("href").to(command, "url", url => url ?? undefined);
+            }
 
             return button;
         });
@@ -173,10 +177,10 @@ class LinkEmbedCopyUrlButton extends Plugin {
 
     public init() {
         const editor = this.editor;
-        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as Command & { url: string | null };
+        const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND) as (Command & { url: string | null }) | undefined;
 
         editor.ui.componentFactory.add("linkEmbedCopyUrl", locale =>
-            createCopyUrlButton(editor, locale, () => command.url)
+            createCopyUrlButton(editor, locale, () => command?.url)
         );
     }
 }
@@ -204,6 +208,7 @@ class LinkEmbedUnlinkButton extends Plugin {
                 tooltip: true
             });
 
+            /* v8 ignore next -- LinkEmbedEditing always registers REMOVE_LINK_EMBED_COMMAND (this plugin requires LinkEmbed), so the no-command branch is unreachable */
             if (command) {
                 button.bind("isEnabled").to(command, "isEnabled");
             }
@@ -242,6 +247,7 @@ class LinkEmbedPreviewButtonView extends ButtonView {
             }
         });
 
+        /* v8 ignore next -- ButtonView always builds a template, and extendTemplate() above would have thrown otherwise, so the no-template branch is unreachable */
         if (this.template) {
             this.template.tag = "a";
         }

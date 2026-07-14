@@ -275,13 +275,14 @@ function NoteDetailWrapper({ Element, type, isVisible, isFullHeight, props }: { 
     }, [ props, isVisible ]);
 
     // This widget stays mounted (just hidden) when the user switches note type —
-    // e.g. read-only ↔ editable text. A hidden but still-mounted embedded player
-    // keeps playing audio/video in the background, so stop it whenever it's hidden.
+    // e.g. read-only ↔ editable text — and also when an enclosing dialog such as the quick-edit
+    // popup is closed but kept in the DOM. A hidden but still-mounted embedded player keeps playing
+    // audio/video in the background, so stop it in either case.
     useEffect(() => {
-        if (!isVisible) {
+        if (!isVisible || !containerVisible) {
             stopBackgroundMedia(wrapperRef.current);
         }
-    }, [ isVisible ]);
+    }, [ isVisible, containerVisible ]);
 
     const typeMapping = TYPE_MAPPINGS[type];
     return (

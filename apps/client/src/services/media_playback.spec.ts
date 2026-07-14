@@ -28,8 +28,8 @@ describe("stopBackgroundMedia", () => {
             <iframe class="pdf" src="blob:pdf"></iframe>
         `;
 
-        const video = container.querySelector("video")!;
-        const audio = container.querySelector("audio")!;
+        const video = container.querySelector("video") as HTMLVideoElement;
+        const audio = container.querySelector("audio") as HTMLAudioElement;
         video.pause = vi.fn();
         audio.pause = vi.fn();
 

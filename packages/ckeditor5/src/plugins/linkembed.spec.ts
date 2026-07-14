@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
 import { installGlobMock } from "../../test/globals-test-kit.js";
-import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND } from "./linkembed.js";
+import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND, REMOVE_LINK_EMBED_COMMAND } from "./linkembed.js";
 
 const META = {
     url: "https://example.com/",
@@ -383,6 +383,45 @@ describe("LinkEmbed", () => {
     });
 
     // -----------------------------------------------------------------------
+    // RemoveLinkEmbedCommand (the toolbar's unlink button)
+    // -----------------------------------------------------------------------
+
+    it("unlinks a selected linkMention, leaving the bare URL as plain text", () => {
+        setModelData(editor.model, '<paragraph>[<linkMention url="https://e.com/" title="T"></linkMention>]</paragraph>');
+
+        editor.execute(REMOVE_LINK_EMBED_COMMAND);
+
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        // Mirrors the default link's unlink: the URL survives as plain, non-linked text.
+        expect(editor.getData()).toBe("<p>https://e.com/</p>");
+    });
+
+    it("unlinks a selected block linkEmbed the same way", () => {
+        setModelData(editor.model, '[<linkEmbed url="https://e.com/" embedType="youtube"></linkEmbed>]');
+
+        editor.execute(REMOVE_LINK_EMBED_COMMAND);
+
+        expect(findElement(editor, "linkEmbed")).toBeUndefined();
+        expect(editor.getData()).toBe("<p>https://e.com/</p>");
+    });
+
+    it("is disabled with no link widget selected, and does nothing if executed anyway", () => {
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        const before = editor.getData();
+
+        const command = editor.commands.get(REMOVE_LINK_EMBED_COMMAND);
+        expect(command?.isEnabled).toBe(false);
+
+        // Command swallows execute() while disabled, so force it enabled to exercise the early return.
+        if (command) {
+            command.isEnabled = true;
+        }
+        command?.execute();
+
+        expect(editor.getData()).toBe(before);
+    });
+
+    // -----------------------------------------------------------------------
     // AutoLinkToMention
     // -----------------------------------------------------------------------
 
@@ -421,7 +460,7 @@ describe("LinkEmbed", () => {
         const url = "https://example.com/article";
         editor = await createTestEditor(
             [Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed],
-            { autoLinkPreviewsEnabled: false }
+            hostConfig({ autoLinkPreviewsEnabled: false })
         );
 
         addLinkedText(editor, url);
@@ -441,7 +480,7 @@ describe("LinkEmbed", () => {
         let enabled = false;
         editor = await createTestEditor(
             [Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed],
-            { autoLinkPreviewsEnabled: () => enabled }
+            hostConfig({ autoLinkPreviewsEnabled: () => enabled })
         );
 
         addLinkedText(editor, "https://example.com/off");
@@ -453,6 +492,20 @@ describe("LinkEmbed", () => {
         addLinkedText(editor, "https://example.com/on");
         await flushFetch();
         expect(findElement(editor, "linkMention")).toBeDefined();
+    });
+
+    it("converts an embeddable URL standing alone in its block into a block linkEmbed", async () => {
+        const url = "https://youtube.com/watch?v=abc12345678";
+        fetchLinkMetadata.mockResolvedValueOnce({ ...META, url, embedType: "youtube" });
+
+        addLinkedText(editor, url);
+        await flushFetch();
+
+        // Embeddable + alone in its block => the player, not an inline pill.
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        const embed = findElement(editor, "linkEmbed");
+        expect(embed?.getAttribute("url")).toBe(url);
+        expect(embed?.getAttribute("embedType")).toBe("youtube");
     });
 
     it("ignores a labeled link whose text differs from the href", async () => {
@@ -695,6 +748,14 @@ function changeCommand(editor: ClassicEditor): {
         throw new Error("changeLinkDisplay command is not registered.");
     }
     return command as unknown as { isEnabled: boolean; value: string | null; embedAvailable: boolean };
+}
+
+/**
+ * Editor config entries the host supplies but the CKEditor config type does not declare — the host
+ * sets them through the same kind of cast (see the client's `buildConfig`).
+ */
+function hostConfig(entries: Record<string, unknown>): Parameters<typeof createTestEditor>[1] {
+    return entries as Parameters<typeof createTestEditor>[1];
 }
 
 function findElement(editor: ClassicEditor, name: string) {
