@@ -119,7 +119,10 @@ describe("link-embed getMetadata", () => {
                 return fakeResponse(page(image), { contentType: "text/html" });
             });
             await linkEmbedRoute.getMetadata(req("https://example.com/blog/post"));
-            return safeFetch.mock.calls.map((call) => call[0]).find((url: string) => url.endsWith(".png"));
+            // Ignore the site-icon fallback, which kicks in whenever the og:image yields nothing.
+            return safeFetch.mock.calls
+                .map((call) => call[0])
+                .find((url: string) => url.endsWith(".png") && !url.includes("apple-touch-icon"));
         };
 
         expect(await requestedImageUrl("/img/cover.png")).toBe("https://example.com/img/cover.png");
@@ -205,6 +208,78 @@ describe("link-embed getMetadata", () => {
         it("does not embed a non-image response served in place of the image", async () => {
             serveImage({ payload: "<html>404</html>", contentType: "text/html" });
             expect(await imageOf()).toBeUndefined();
+        });
+    });
+
+    describe("falling back to the site icon when there is no og:image", () => {
+        /** Serves a page whose <head> is `head`, plus a PNG of the given size for every icon URL. */
+        function servePage(head: string, icons: Record<string, { width: number; height: number }>) {
+            const html = `<html><head><title>T</title>${head}</head></html>`;
+            safeFetch.mockImplementation(async (url: string) => {
+                for (const [path, size] of Object.entries(icons)) {
+                    if (url.endsWith(path)) {
+                        return fakeResponse(await makePng(size.width, size.height, 0xff0000ff), { contentType: "image/png" });
+                    }
+                }
+                if (url.endsWith("/page")) return fakeResponse(html, { contentType: "text/html" });
+                return fakeResponse("", { ok: false });
+            });
+        }
+
+        const metadataFor = () => linkEmbedRoute.getMetadata(req("https://example.com/page"));
+
+        it("uses a large apple-touch-icon as the image", async () => {
+            servePage(`<link rel="apple-touch-icon" href="/touch.png">`, { "/touch.png": { width: 180, height: 180 } });
+
+            const result = await metadataFor();
+            expect(result.image).toMatch(/^data:image\//);
+
+            const decoded = await Jimp.read(parseDataUri(result.image ?? "").buffer);
+            expect(decoded.bitmap.width).toBe(180);
+        });
+
+        it("ignores an icon that is too small to serve as a card image", async () => {
+            servePage(`<link rel="icon" sizes="32x32" href="/small.png">`, { "/small.png": { width: 32, height: 32 } });
+
+            // The declared size rules it out without even downloading it, and the undeclared
+            // /apple-touch-icon.png convention is not served here either.
+            expect((await metadataFor()).image).toBeUndefined();
+        });
+
+        it("rejects an icon whose real size is below the floor even when it claims otherwise", async () => {
+            // The `sizes` attribute is a hint, not a fact: the decoded bytes decide.
+            servePage(`<link rel="icon" sizes="192x192" href="/lying.png">`, { "/lying.png": { width: 48, height: 48 } });
+
+            expect((await metadataFor()).image).toBeUndefined();
+        });
+
+        it("tries the largest declared icon first", async () => {
+            servePage(
+                `<link rel="icon" sizes="96x96" href="/medium.png">`
+                + `<link rel="icon" sizes="192x192" href="/large.png">`,
+                { "/medium.png": { width: 96, height: 96 }, "/large.png": { width: 192, height: 192 } }
+            );
+
+            const decoded = await Jimp.read(parseDataUri((await metadataFor()).image ?? "").buffer);
+            expect(decoded.bitmap.width).toBe(192);
+        });
+
+        it("falls back to the conventional /apple-touch-icon.png when none is declared", async () => {
+            servePage("", { "/apple-touch-icon.png": { width: 180, height: 180 } });
+
+            expect((await metadataFor()).image).toMatch(/^data:image\//);
+        });
+
+        it("prefers a real og:image over the site icon", async () => {
+            servePage(
+                `<meta property="og:image" content="/cover.png"><link rel="apple-touch-icon" href="/touch.png">`,
+                { "/cover.png": { width: 600, height: 300 }, "/touch.png": { width: 180, height: 180 } }
+            );
+
+            const decoded = await Jimp.read(parseDataUri((await metadataFor()).image ?? "").buffer);
+            // The og:image is 2:1, the icon is square — the aspect ratio identifies which one was used.
+            expect(decoded.bitmap.width).toBe(256);
+            expect(decoded.bitmap.height).toBe(128);
         });
     });
 

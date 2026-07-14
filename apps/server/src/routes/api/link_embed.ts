@@ -21,6 +21,14 @@ const MAX_IMAGE_DOWNLOAD_SIZE = 5 * 1024 * 1024; // 5MB
  * so rasterising it would only lose quality) or a format Jimp cannot decode (WebP, AVIF).
  */
 const MAX_VERBATIM_IMAGE_SIZE = 200 * 1024; // 200KB
+/**
+ * Smallest site icon accepted as a stand-in for a missing `og:image`. Above the usual 16/32/48/64
+ * favicon sizes, so only a genuinely large icon qualifies — in practice the mobile home-screen one
+ * (`apple-touch-icon`, typically 180x180, or a 192x192 web-manifest icon).
+ */
+const MIN_ICON_AS_IMAGE_DIMENSION = 96;
+/** How many icon candidates to try before giving up, so a page full of <link rel="icon"> costs little. */
+const MAX_ICON_CANDIDATES = 3;
 
 /**
  * Reads the response body as text, stopping after maxBytes to avoid
@@ -114,15 +122,19 @@ async function downloadFaviconAsDataUri(faviconUrl: string): Promise<string | un
  *
  * Returns undefined when the image cannot be had at a reasonable size, in which case the preview is
  * still shown without it — the title and description carry the value, not the picture.
+ *
+ * `minSourceDimension` rejects a source whose longest edge is below it, used when falling back to a
+ * site icon: a 16x16 favicon blown up into a card thumbnail looks worse than no image at all.
  */
-async function downloadImageAsDataUri(imageUrl: string): Promise<string | undefined> {
+async function downloadImageAsDataUri(imageUrl: string, minSourceDimension = 0): Promise<string | undefined> {
     const downloaded = await downloadBinary(imageUrl, MAX_IMAGE_DOWNLOAD_SIZE, "image/jpeg");
     if (!downloaded) return undefined;
 
     const { buffer, contentType } = downloaded;
     const isSmallEnoughToKeepVerbatim = buffer.byteLength <= MAX_VERBATIM_IMAGE_SIZE;
 
-    // An SVG scales natively, so it is kept as-is rather than rasterised (Jimp cannot read it anyway).
+    // An SVG scales natively, so it is kept as-is rather than rasterised (Jimp cannot read it anyway),
+    // and it satisfies any minimum dimension by definition.
     // The isSvg() sniff only runs on a buffer we would be willing to keep, to avoid stringifying megabytes.
     if (contentType.includes("svg") || (isSmallEnoughToKeepVerbatim && isSvg(buffer.toString()))) {
         return isSmallEnoughToKeepVerbatim ? toDataUri("image/svg+xml", buffer) : undefined;
@@ -130,6 +142,10 @@ async function downloadImageAsDataUri(imageUrl: string): Promise<string | undefi
 
     try {
         const image = await Jimp.read(buffer);
+
+        if (Math.max(image.bitmap.width, image.bitmap.height) < minSourceDimension) {
+            return undefined;
+        }
 
         // Only ever scale down: scaleToFit() would happily enlarge a smaller image.
         if (image.bitmap.width > IMAGE_MAX_DIMENSION || image.bitmap.height > IMAGE_MAX_DIMENSION) {
@@ -145,9 +161,10 @@ async function downloadImageAsDataUri(imageUrl: string): Promise<string | undefi
         // Jimp bundles decoders for PNG/JPEG/GIF/BMP/TIFF only, so a WebP or AVIF lands here. Keep
         // the original bytes when they are small enough — unresized, but still not hotlinked. The
         // content type is checked so that an error page served in place of the image (an undecodable
-        // response that is not an image at all) is dropped rather than embedded.
+        // response that is not an image at all) is dropped rather than embedded. A caller that
+        // requires a minimum size gets nothing: undecodable means unverifiable.
         getLog().info(`Could not decode link preview image ${imageUrl}: ${e}`);
-        return isSmallEnoughToKeepVerbatim && contentType.startsWith("image/")
+        return isSmallEnoughToKeepVerbatim && contentType.startsWith("image/") && !minSourceDimension
             ? toDataUri(contentType, buffer)
             : undefined;
     }
@@ -166,6 +183,70 @@ function toAbsoluteUrl(href: string | undefined, pageUrl: string): string | unde
     } catch {
         return undefined;
     }
+}
+
+/**
+ * Falls back to the site's own icon when the page advertises no usable `og:image`. Sites routinely
+ * ship a large home-screen icon (`apple-touch-icon`, usually 180x180) even when they carry no social
+ * preview image, and that beats an empty card.
+ *
+ * Candidates are tried largest-first, and one is only accepted if the image really is at least
+ * {@link MIN_ICON_AS_IMAGE_DIMENSION} across — the declared `sizes` attribute is a hint used for
+ * ordering, never trusted as fact, since the actual bytes decide.
+ */
+async function resolveIconAsImage(document: ReturnType<typeof parse>, pageUrl: string): Promise<string | undefined> {
+    for (const candidate of collectIconCandidates(document, pageUrl).slice(0, MAX_ICON_CANDIDATES)) {
+        const image = await downloadImageAsDataUri(candidate, MIN_ICON_AS_IMAGE_DIMENSION);
+        if (image) return image;
+    }
+
+    return undefined;
+}
+
+/**
+ * The page's icon URLs, best-first. An icon whose declared `sizes` is below the threshold is dropped
+ * outright (no point downloading a 32x32); an icon with no `sizes` is kept, ranked by convention —
+ * `apple-touch-icon` is 180x180 by platform convention, a bare `icon` is usually tiny. The
+ * conventional `/apple-touch-icon.png` path is tried last, since sites often serve it undeclared.
+ */
+function collectIconCandidates(document: ReturnType<typeof parse>, pageUrl: string): string[] {
+    const candidates: { url: string; size: number }[] = [];
+
+    for (const link of document.querySelectorAll("link")) {
+        const rel = (link.getAttribute("rel") || "").toLowerCase();
+        if (!rel.includes("icon")) continue;
+
+        const url = toAbsoluteUrl(link.getAttribute("href"), pageUrl);
+        if (!url) continue;
+
+        const declared = largestDeclaredSize(link.getAttribute("sizes"));
+        // Trust the declaration only when it rules a candidate *out*: it costs a download otherwise.
+        if (declared > 0 && declared < MIN_ICON_AS_IMAGE_DIMENSION) continue;
+
+        candidates.push({ url, size: declared || (rel.includes("apple-touch-icon") ? 180 : 0) });
+    }
+
+    candidates.sort((a, b) => b.size - a.size);
+
+    const urls = candidates.map((candidate) => candidate.url);
+    const conventional = toAbsoluteUrl("/apple-touch-icon.png", pageUrl);
+    if (conventional && !urls.includes(conventional)) {
+        urls.push(conventional);
+    }
+
+    return urls;
+}
+
+/** Largest edge in a `sizes` attribute ("16x16 32x32", "180x180", "any"), or 0 when unusable. */
+function largestDeclaredSize(sizes: string | undefined): number {
+    if (!sizes) return 0;
+    // "any" means a scalable (SVG) icon — treat it as the best possible candidate.
+    if (sizes.toLowerCase().includes("any")) return Number.MAX_SAFE_INTEGER;
+
+    const edges = [...sizes.matchAll(/(\d+)x(\d+)/gi)]
+        .flatMap((match) => [Number(match[1]), Number(match[2])]);
+
+    return edges.length ? Math.max(...edges) : 0;
 }
 
 /**
@@ -253,7 +334,10 @@ async function fetchOpenGraphData(url: string) {
     const favicon = await resolveFavicon(document, url);
 
     const imageUrl = toAbsoluteUrl(getMeta("og:image"), url);
-    const image = imageUrl ? await downloadImageAsDataUri(imageUrl) : undefined;
+    // A site with no og:image (or one that fails to download) still usually has a large home-screen
+    // icon, which makes a far better card than an empty placeholder.
+    const image = (imageUrl ? await downloadImageAsDataUri(imageUrl) : undefined)
+        ?? await resolveIconAsImage(document, url);
 
     return {
         title: getMeta("og:title") || document.querySelector("title")?.textContent?.trim() || undefined,
