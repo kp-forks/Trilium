@@ -30,6 +30,22 @@ describe("Note type mappings", () => {
         }
     });
 
+    it("exports a spreadsheet note verbatim with a .triliumsheet extension", () => {
+        // Like canvas/mermaid, single-note spreadsheet export is a lossless raw dump of the stored
+        // Univer workbook JSON — no conversion (the editor's own CSV/XLSX buttons cover interchange).
+        const content = JSON.stringify({ workbook: { id: "wb", sheetOrder: ["s1"], sheets: { s1: {} } } });
+        const note = buildNote({ type: "spreadsheet", mime: "text/x-spreadsheet", title: "Budget" });
+
+        const result = mapByNoteType(note, content, "html");
+
+        expect(result).toMatchObject({
+            extension: "triliumsheet",
+            mime: "application/json"
+        });
+        // Byte-for-byte: the payload is the stored workbook, untouched.
+        expect(result.payload).toBe(content);
+    });
+
     it("exports markdown code notes with a .md extension", () => {
         // `mime-types` doesn't recognize Trilium's custom `text/x-markdown`;
         // without the explicit fallback this was exporting as `.code`.

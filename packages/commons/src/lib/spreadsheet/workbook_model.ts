@@ -355,3 +355,23 @@ export function getFloatingDrawings(workbook: IWorkbookData, sheetId: string): I
     const order = Array.isArray(sheetEntry?.order) ? sheetEntry.order : Object.keys(data);
     return order.map((id) => data[id]).filter((d): d is ISheetDrawing => Boolean(d));
 }
+
+/**
+ * Extracts the data-validation rules for one sheet from the `SHEET_DATA_VALIDATION_PLUGIN` resource.
+ * The resource `data` is a JSON string keyed by sheet id: `{ [sheetId]: DataValidationRule[] }`.
+ * Returns an empty array when the resource is absent, unparseable, or carries none for the sheet.
+ */
+export function getDataValidations(workbook: IWorkbookData, sheetId: string): DataValidationRule[] {
+    const resource = workbook.resources?.find((r) => r.name === SHEET_DATA_VALIDATION_RESOURCE);
+    if (!resource?.data) return [];
+
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(resource.data);
+    } catch {
+        return [];
+    }
+
+    const rules = (parsed as Record<string, DataValidationRule[]> | null)?.[sheetId];
+    return Array.isArray(rules) ? rules.filter((r): r is DataValidationRule => Boolean(r)) : [];
+}

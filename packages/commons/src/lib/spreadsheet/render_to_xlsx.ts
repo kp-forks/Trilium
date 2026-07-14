@@ -14,6 +14,8 @@ import ExcelJS from "exceljs";
 
 import {
     BorderStyle,
+    type DataValidationRule,
+    getDataValidations,
     getFloatingDrawings,
     getVisibleSheets,
     HorizontalAlign,
@@ -21,6 +23,7 @@ import {
     type ICellData,
     type IDrawingCellAnchor,
     isFiniteNumber,
+    type IRange,
     type IStyleData,
     type IWorkbookData,
     type IWorksheetData,
@@ -80,6 +83,7 @@ export async function renderSpreadsheetToXlsx(jsonContent: string, opts: XlsxRen
     const usedNames = new Set<string>();
     for (const sheet of visibleSheets) {
         const ws = writeSheet(out, sheet, uniqueSheetName(sheet.name, usedNames), styles);
+        applyDataValidations(ws, workbook, sheet.id);
         if (opts.resolveImage) {
             await embedImages(out, ws, sheet, workbook, opts.resolveImage);
         }
