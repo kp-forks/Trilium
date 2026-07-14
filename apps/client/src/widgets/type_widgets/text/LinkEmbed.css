@@ -58,11 +58,17 @@
 /* ---------- Block embed wrapper ---------- */
 
 .link-embed {
-    margin: 8px 0;
+    border-bottom: 3px solid transparent;
 }
-
 .link-embed-preview-wrapper {
     display: block;
+}
+
+.link-embed-preview-wrapper:has(> .link-embed-video) {
+    display: flex;
+    justify-content: center;
+    background: black;
+    border-radius: 8px;
 }
 
 /* ---------- Video embed (YouTube iframe) ---------- */
@@ -136,21 +142,51 @@
 
 /* ---------- Card embed (Notion-style) ---------- */
 
-.link-embed-card {
+a.link-embed-card {
+    all: unset;
     display: flex;
-    border: 1px solid var(--muted-text-color, #ccc);
     border-radius: 4px;
     overflow: hidden;
     color: inherit;
     cursor: pointer;
-    transition: background-color 0.15s ease;
     max-height: 120px;
+
+    background: var(--card-background-color);
+    border-radius: var(--_link-embed-top-border-radius, 8px)
+                   var(--_link-embed-top-border-radius, 8px)
+                   var(--_link-embed-bottom-border-radius, 8px)
+                   var(--_link-embed-bottom-border-radius, 8px);
 }
 
-.link-embed-card:hover {
-    background-color: var(--hover-item-background-color, rgba(0, 0, 0, 0.03));
-    text-decoration: none !important;
-    color: inherit;
+a.link-embed-card:hover {
+    background: var(--card-background-hover-color) !important;
+    text-decoration: none;
+    box-shadow: none;
+
+    & img {
+        filter: brightness(1.25);
+    }
+}
+
+a.link-embed-card::after {
+    display: none !important;
+}
+
+/* The first card in series */
+section.link-embed:not(section.link-embed + section.link-embed) {
+    --_link-embed-bottom-border-radius: 0;
+}
+
+section.link-embed + section.link-embed {
+    --_link-embed-top-border-radius: 0;
+    --_link-embed-bottom-border-radius: 0;
+}
+
+/* The last card in series */
+section.link-embed:not(:has(+ section.link-embed)) {
+    --_link-embed-top-border-radius: 0;
+    --_link-embed-bottom-border-radius: 8px;
+
 }
 
 .link-embed-card-image-wrapper {
