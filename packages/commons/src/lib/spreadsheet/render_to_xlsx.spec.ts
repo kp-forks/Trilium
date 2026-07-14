@@ -569,7 +569,8 @@ describe("renderSpreadsheetToXlsx", () => {
             const dv = ws?.getCell("B2").dataValidation;
             expect(dv?.type).toBe("whole");
             expect(dv?.operator).toBe("between");
-            expect(dv?.formulae).toEqual(["1", "10"]);
+            // exceljs coerces the numeric formula text back to numbers on read.
+            expect(dv?.formulae).toEqual([1, 10]);
         });
 
         it("passes a range-referenced list through as a formula, not an inline list", async () => {
@@ -604,6 +605,33 @@ describe("renderSpreadsheetToXlsx", () => {
             expect(ws?.getCell("F6").dataValidation?.type).toBe("list");
             // A cell between the two ranges is untouched.
             expect(ws?.getCell("E3").dataValidation).toBeUndefined();
+        });
+
+        it("writes a custom-formula validation (a formula, no operator)", async () => {
+            const ws = (await roundTrip(validationWorkbook([
+                {
+                    uid: "dv1",
+                    type: "custom",
+                    formula1: "=B2>0",
+                    ranges: [{ startRow: 1, endRow: 1, startColumn: 1, endColumn: 1 }]
+                }
+            ]))).getWorksheet("Sheet1");
+
+            const dv = ws?.getCell("B2").dataValidation;
+            expect(dv?.type).toBe("custom");
+            expect(dv?.formulae).toEqual(["=B2>0"]);
+            expect(dv?.operator).toBeUndefined();
+        });
+
+        it("skips a list validation that has no options", async () => {
+            const ws = (await roundTrip(validationWorkbook([
+                {
+                    uid: "dv1",
+                    type: "list",
+                    ranges: [{ startRow: 0, endRow: 0, startColumn: 0, endColumn: 0 }]
+                }
+            ]))).getWorksheet("Sheet1");
+            expect(ws?.getCell("A1").dataValidation).toBeUndefined();
         });
 
         it("skips a validation type Excel cannot represent", async () => {
