@@ -628,69 +628,73 @@ class AutoLinkToMention extends Plugin {
                 return;
             }
 
+            // Restored in the `finally`: were a model change ever to throw, a flag left raised would
+            // silently switch auto-detection off for the rest of the session.
             this._converting = true;
 
-            editor.model.change((writer) => {
-                const root = editor.model.document.getRoot();
-                /* v8 ignore next -- the document always has a root once the editor is created */
-                if (!root) return;
+            try {
+                editor.model.change((writer) => {
+                    const root = editor.model.document.getRoot();
+                    /* v8 ignore next -- the document always has a root once the editor is created */
+                    if (!root) return;
 
-                // Re-resolve the parent from the stored path.
-                let parentEl: any = root;
-                for (const idx of parentPath) {
-                    if (!parentEl || typeof parentEl.getChild !== 'function') return;
-                    parentEl = parentEl.getChild(idx);
-                }
-                if (!parentEl || !parentEl.is('element')) return;
+                    // Re-resolve the parent from the stored path.
+                    let parentEl: any = root;
+                    for (const idx of parentPath) {
+                        if (!parentEl || typeof parentEl.getChild !== 'function') return;
+                        parentEl = parentEl.getChild(idx);
+                    }
+                    if (!parentEl || !parentEl.is('element')) return;
 
-                // Find the text node that still contains the URL.
-                const range = writer.createRangeIn(parentEl);
-                for (const item of range.getWalker()) {
-                    if (!item.item.is('$textProxy')) continue;
-                    if (item.item.data.trim() !== url) continue;
-                    if (item.item.getAttribute('linkHref') !== url) continue;
+                    // Find the text node that still contains the URL.
+                    const range = writer.createRangeIn(parentEl);
+                    for (const item of range.getWalker()) {
+                        if (!item.item.is('$textProxy')) continue;
+                        if (item.item.data.trim() !== url) continue;
+                        if (item.item.getAttribute('linkHref') !== url) continue;
 
-                    // Where the URL sits decides its shape. Evaluated here — at insertion time, not
-                    // when the URL was detected — because the metadata fetch is async and the user
-                    // may have kept typing meanwhile. Also before deleting anything, since deletion
-                    // would empty the block and make it look like the URL was never alone.
-                    const kind = chooseLinkPreviewKind(metadata.embedType, {
-                        urlAloneInBlock: isUrlAloneInBlock(this._blockChildren(parentEl), url),
-                        blockIsStandalone: this._isStandaloneBlock(parentEl),
-                        caretLeftBlock: this._caretLeftBlock(parentEl)
-                    });
+                        // Where the URL sits decides its shape. Evaluated here — at insertion time, not
+                        // when the URL was detected — because the metadata fetch is async and the user
+                        // may have kept typing meanwhile. Also before deleting anything, since deletion
+                        // would empty the block and make it look like the URL was never alone.
+                        const kind = chooseLinkPreviewKind(metadata.embedType, {
+                            urlAloneInBlock: isUrlAloneInBlock(this._blockChildren(parentEl), url),
+                            blockIsStandalone: this._isStandaloneBlock(parentEl),
+                            caretLeftBlock: this._caretLeftBlock(parentEl)
+                        });
 
-                    const attributes = {
-                        url: metadata.url,
-                        embedType: metadata.embedType,
-                        title: metadata.title,
-                        description: metadata.description,
-                        favicon: metadata.favicon,
-                        siteName: metadata.siteName,
-                        image: metadata.image
-                    };
+                        const attributes = {
+                            url: metadata.url,
+                            embedType: metadata.embedType,
+                            title: metadata.title,
+                            description: metadata.description,
+                            favicon: metadata.favicon,
+                            siteName: metadata.siteName,
+                            image: metadata.image
+                        };
 
-                    if (kind === 'mention') {
-                        const urlRange = writer.createRangeOn(item.item);
-                        writer.setSelection(urlRange);
-                        editor.model.deleteContent(editor.model.document.selection);
-                        editor.model.insertContent(writer.createElement('linkMention', attributes));
+                        if (kind === 'mention') {
+                            const urlRange = writer.createRangeOn(item.item);
+                            writer.setSelection(urlRange);
+                            editor.model.deleteContent(editor.model.document.selection);
+                            editor.model.insertContent(writer.createElement('linkMention', attributes));
+                            return;
+                        }
+
+                        // A card or an embed takes over the whole paragraph, which by now holds nothing
+                        // but the URL. Swapped with writer.insert/remove rather than insertContent: the
+                        // caret has moved on to the next line (that is what made this a block preview in
+                        // the first place) and may already be mid-word, so it must not be dragged back.
+                        // 'card' vs 'embed' needs no branch here — the renderer keys off embedType,
+                        // which is "opengraph" for a card and the provider's own type for an embed.
+                        writer.insert(writer.createElement('linkEmbed', attributes), parentEl, 'before');
+                        writer.remove(parentEl);
                         return;
                     }
-
-                    // A card or an embed takes over the whole paragraph, which by now holds nothing
-                    // but the URL. Swapped with writer.insert/remove rather than insertContent: the
-                    // caret has moved on to the next line (that is what made this a block preview in
-                    // the first place) and may already be mid-word, so it must not be dragged back.
-                    // 'card' vs 'embed' needs no branch here — the renderer keys off embedType,
-                    // which is "opengraph" for a card and the provider's own type for an embed.
-                    writer.insert(writer.createElement('linkEmbed', attributes), parentEl, 'before');
-                    writer.remove(parentEl);
-                    return;
-                }
-            });
-
-            this._converting = false;
+                });
+            } finally {
+                this._converting = false;
+            }
         });
     }
 
