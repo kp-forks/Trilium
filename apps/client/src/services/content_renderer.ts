@@ -63,6 +63,12 @@ export interface RenderOptions {
      * document (presentation, printing) — a mounted player would be dead markup there.
      */
     mediaEnvironment?: "preview" | "embedded" | "native";
+    /**
+     * If enabled, PDFs render with the pdf.js toolbar (zoom, page navigation, print, download).
+     * Off by default so that lightweight previews (attachment list, tooltips, embeds) stay bare;
+     * the attachment full-detail view opts in. The viewer remains read-only either way.
+     */
+    pdfToolbar?: boolean;
 }
 
 const CODE_MIME_TYPES = new Set(["application/json"]);
@@ -311,7 +317,7 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
         const url = `../../api/${entityType}/${entityId}/open`;
         const $viewer = $(`<div style="height: 100%">`);
         const PdfViewer = (await import("../widgets/type_widgets/file/PdfViewer")).default;
-        render(h(PdfViewer, {pdfUrl: url, editable: false, toolbar: false}), $viewer.get(0)!);
+        render(h(PdfViewer, {pdfUrl: url, editable: false, toolbar: options.pdfToolbar ?? false}), $viewer.get(0)!);
 
         $content.append($viewer);
 

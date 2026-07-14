@@ -4,12 +4,11 @@
  */
 
 import { type LlmMessage, type LlmMessagePart } from "@triliumnext/commons";
-import { becca, getLog } from "@triliumnext/core";
-import { decodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
+import { resolveAttachmentPart } from "./attachment_content.js";
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt as composeSystemPrompt } from "./system_prompt.js";
 
@@ -25,72 +24,22 @@ function effectiveCost(pricing: ModelPricing): number {
 }
 
 /**
- * Resolve a single LlmMessagePart to its AI SDK ModelMessage part form.
- * For image/file parts, this reads the attachment bytes out of Becca. Text
- * attachments are decoded as UTF-8 and emitted as a labelled TextPart so the
- * file's content travels inline (works across all providers). Failures are
- * logged and the part is dropped so the rest of the message still goes through.
+ * Resolve a single LlmMessagePart to its AI SDK ModelMessage part form, mapping
+ * the provider-neutral {@link resolveAttachmentPart} result into `ai`'s block
+ * shapes. Returns null (and the caller drops the part) when it can't resolve.
  */
 function resolveMessagePart(part: LlmMessagePart): TextPart | ImagePart | FilePart | null {
-    if (part.type === "text") {
-        return { type: "text", text: part.text };
-    }
-    try {
-        const attachment = becca.getAttachment(part.attachmentId);
-        if (!attachment) {
-            getLog().error(`LLM message references missing attachment ${part.attachmentId}`);
-            return null;
-        }
-        if (!attachment.isContentAvailable()) {
-            getLog().error(`LLM message references protected attachment ${part.attachmentId} without an unlocked session`);
-            return null;
-        }
-        // Read attachment bytes once — `getContent()` hits the blob store and
-        // (for protected attachments) decrypts, so callers shouldn't repeat it.
-        const content = attachment.getContent();
-        if (part.type === "image") {
-            const mime = part.mime || attachment.mime;
-            // SVG isn't accepted by any major provider's vision input, but every
-            // LLM is fluent in SVG markup — send the XML source as a text part so
-            // the model can actually read and reason about it.
-            if (mime === "image/svg+xml") {
-                const filename = attachment.title || "image.svg";
-                const text = decodeUtf8(content);
-                return {
-                    type: "text",
-                    text: `<file name="${filename}">\n${text}\n</file>`
-                };
-            }
-            return {
-                type: "image",
-                image: content,
-                mediaType: mime
-            };
-        }
-        if (part.type === "file") {
-            return {
-                type: "file",
-                data: content,
-                mediaType: part.mime || attachment.mime,
-                filename: part.filename || attachment.title
-            };
-        }
-        // type === "text_attachment" — decode the bytes and wrap in a labelled
-        // XML-style block. Anthropic recommends this shape and other providers
-        // handle it fine; the filename gives the model context about what it's
-        // reading without needing provider-specific file APIs.
-        const filename = part.filename || attachment.title;
-        const text = decodeUtf8(content);
-        return {
-            type: "text",
-            text: `<file name="${filename}">\n${text}\n</file>`
-        };
-    } catch (err) {
-        // A single unreadable attachment (corrupt blob, decryption failure,
-        // invalid UTF-8) shouldn't crash the whole chat turn — drop the part
-        // and log so the rest of the message still reaches the model.
-        getLog().error(`Failed to resolve message part for attachment ${part.attachmentId}: ${err}`);
+    const resolved = resolveAttachmentPart(part);
+    if (!resolved) {
         return null;
+    }
+    switch (resolved.kind) {
+        case "text":
+            return { type: "text", text: resolved.text };
+        case "image":
+            return { type: "image", image: resolved.bytes, mediaType: resolved.mime };
+        case "file":
+            return { type: "file", data: resolved.bytes, mediaType: resolved.mime, filename: resolved.filename };
     }
 }
 

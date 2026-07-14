@@ -169,7 +169,8 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
 
     function refresh() {
         if (!isZoomableImage) {
-            content_renderer.getRenderedContent(attachment)
+            // The full-detail view gets the pdf.js toolbar; list-view previews stay bare.
+            content_renderer.getRenderedContent(attachment, { pdfToolbar: !!isFullDetail })
                 .then(({ $renderedContent }) => {
                     disposeContent();
                     contentWrapper.current?.replaceChildren(...$renderedContent);

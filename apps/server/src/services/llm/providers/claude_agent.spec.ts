@@ -2,19 +2,23 @@ import type { LlmStreamChunk } from "@triliumnext/commons";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const queryMock = vi.hoisted(() => vi.fn());
-const getOptionOrNullMock = vi.hoisted(() => vi.fn());
+const errorLogMock = vi.hoisted(() => vi.fn());
 
 vi.mock("@anthropic-ai/claude-agent-sdk", () => ({
     query: queryMock
 }));
 
 vi.mock("@triliumnext/core", () => ({
-    getLog: () => ({ info: vi.fn(), error: vi.fn() }),
-    options: { getOptionOrNull: getOptionOrNullMock },
+    getLog: () => ({ info: vi.fn(), error: errorLogMock }),
     // buildSystemPrompt (reached via composeSystemPrompt) reads the workspace
     // task states; no custom states in this unit test.
     task_states: { getTaskStates: () => [] }
 }));
+
+// In-process MCP: the provider hands the agent Trilium's own MCP server
+// instance; stub the factory so tests don't build the real tool registry.
+const createMcpServerMock = vi.hoisted(() => vi.fn(() => ({ mcpServerInstance: true })));
+vi.mock("../../mcp/mcp_server.js", () => ({ createMcpServer: createMcpServerMock }));
 
 vi.mock("../../data_dir.js", async () => {
     const os = await import("os");
@@ -27,7 +31,32 @@ vi.mock("../../port.js", () => ({ default: 8080 }));
 const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string): string | null => `NOTE_META(${noteId})`));
 vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
 
+// BYO binary resolution shells out to the user's `claude`; stub it so tests
+// don't depend on a real install. Returns a path by default; can be made to
+// throw (missing binary) per-test.
+const resolveClaudeBinaryMock = vi.hoisted(() => vi.fn(() => "/usr/bin/claude"));
+vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBinaryMock }));
+
+// Attachment resolution reads bytes out of Becca, which the core mock above
+// omits — stub it so the multimodal tests drive block construction directly.
+const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
+vi.mock("./attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
+
 const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript } = await import("./claude_agent.js");
+
+/** Drain the query prompt into the single user message it streams (multimodal path). */
+async function drainPrompt(prompt: unknown): Promise<{ role: string; content: unknown[] }> {
+    const iterator = (prompt as AsyncIterable<unknown>)?.[Symbol.asyncIterator];
+    if (typeof prompt === "string" || typeof iterator !== "function") {
+        throw new Error("expected a streamed multimodal prompt, got a plain string");
+    }
+    const messages: { message: { role: string; content: unknown[] } }[] = [];
+    for await (const message of prompt as AsyncIterable<{ message: { role: string; content: unknown[] } }>) {
+        messages.push(message);
+    }
+    expect(messages).toHaveLength(1);
+    return messages[0].message;
+}
 
 /** Make query() replay the given SDK messages and record its invocation. */
 function scriptAgent(messages: unknown[]) {
@@ -70,8 +99,9 @@ function successResult(sessionId = "sess-1") {
 describe("ClaudeAgentProvider.chatChunks", () => {
     beforeEach(() => {
         queryMock.mockReset();
-        getOptionOrNullMock.mockReset();
-        getOptionOrNullMock.mockReturnValue("true"); // mcpEnabled
+        errorLogMock.mockReset();
+        createMcpServerMock.mockClear(); // clear calls, keep the instance impl
+        resolveAttachmentPartMock.mockReset();
     });
 
     it("maps stream events, tool calls, results, and usage to chunks in order", async () => {
@@ -247,7 +277,58 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(secondCall.prompt).toBe("NOTE_META(note-abc)\n\nq2");
     });
 
-    it("points the agent at Trilium's MCP server and disables built-in tools", async () => {
+    it("sends a supported image as a base64 block via a one-message stream", async () => {
+        resolveAttachmentPartMock.mockReturnValue({ kind: "image", bytes: new Uint8Array([1, 2, 3]), mime: "image/png" });
+        scriptAgent([textDelta("I see it"), successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [
+                { type: "text", text: "what is this?" },
+                { type: "image", attachmentId: "att-1", mime: "image/png" }
+            ] }
+        ], {}));
+
+        const message = await drainPrompt(queryMock.mock.calls[0][0].prompt);
+        expect(message.role).toBe("user");
+        expect(message.content).toEqual([
+            { type: "text", text: "what is this?" },
+            { type: "image", source: { type: "base64", media_type: "image/png", data: "AQID" } }
+        ]);
+    });
+
+    it("sends a PDF as a document block and leads with the note hint", async () => {
+        resolveAttachmentPartMock.mockReturnValue({ kind: "file", bytes: new Uint8Array([37, 80, 68, 70]), mime: "application/pdf", filename: "report.pdf" });
+        scriptAgent([textDelta("summary"), successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [{ type: "file", attachmentId: "att-2", mime: "application/pdf", filename: "report.pdf" }] }
+        ], { contextNoteId: "note-abc" }));
+
+        const message = await drainPrompt(queryMock.mock.calls[0][0].prompt);
+        expect(message.content).toEqual([
+            { type: "text", text: "NOTE_META(note-abc)" },
+            { type: "document", title: "report.pdf", source: { type: "base64", media_type: "application/pdf", data: "JVBERg==" } }
+        ]);
+    });
+
+    it("degrades unsupported attachments to text and keeps the plain string prompt", async () => {
+        // An SVG resolves to inlined text; the string path (not the stream) is used.
+        resolveAttachmentPartMock.mockReturnValue({ kind: "text", text: "<file name=\"d.svg\">\n<svg/>\n</file>" });
+        scriptAgent([textDelta("ok"), successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [
+                { type: "text", text: "read this" },
+                { type: "image", attachmentId: "att-3", mime: "image/svg+xml" }
+            ] }
+        ], {}));
+
+        const prompt = queryMock.mock.calls[0][0].prompt;
+        expect(typeof prompt).toBe("string");
+        expect(prompt).toBe("read this\n\n<file name=\"d.svg\">\n<svg/>\n</file>");
+    });
+
+    it("wires Trilium's in-process MCP server instance and disables built-in tools", async () => {
         scriptAgent([successResult()]);
         const provider = new ClaudeAgentProvider();
         await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
@@ -255,9 +336,51 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         const options = queryMock.mock.calls[0][0].options;
         expect(options.tools).toEqual([]);
         expect(options.allowedTools).toEqual(["mcp__trilium"]);
-        expect(options.mcpServers.trilium.url).toBe("http://127.0.0.1:8080/mcp");
+        // In-process (sdk) transport, not an HTTP endpoint — the instance is
+        // Trilium's own createMcpServer(), tunneled over the SDK control channel.
+        expect(options.mcpServers.trilium.type).toBe("sdk");
+        expect(options.mcpServers.trilium.instance).toEqual({ mcpServerInstance: true });
+        expect(createMcpServerMock).toHaveBeenCalled();
         expect(options.permissionMode).toBe("dontAsk");
         expect(options.settingSources).toEqual([]);
+    });
+
+    it("enables adaptive extended thinking when the turn requests it", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableExtendedThinking: true }));
+
+        expect(queryMock.mock.calls[0][0].options.thinking).toEqual({ type: "adaptive", display: "summarized" });
+    });
+
+    it("disables extended thinking by default", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock.mock.calls[0][0].options.thinking).toEqual({ type: "disabled" });
+    });
+
+    it("drives the user's resolved claude binary (bring-your-own-binary)", async () => {
+        resolveClaudeBinaryMock.mockReturnValueOnce("/opt/homebrew/bin/claude");
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock.mock.calls[0][0].options.pathToClaudeCodeExecutable).toBe("/opt/homebrew/bin/claude");
+    });
+
+    it("surfaces a friendly error (and never spawns) when Claude Code isn't installed", async () => {
+        resolveClaudeBinaryMock.mockImplementationOnce(() => {
+            throw new Error("Claude Code CLI not found. Install it and run `claude /login`...");
+        });
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock).not.toHaveBeenCalled();
+        const errors = chunks.filter(c => c.type === "error");
+        expect(errors).toHaveLength(1);
+        expect(errors[0].error).toContain("Claude Code CLI not found");
     });
 
     it("uses Trilium's shared system prompt (skill/link/markdown guidance) when note tools are live", async () => {
@@ -291,29 +414,41 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(fs.existsSync(path.join(cwd, ".git", "HEAD"))).toBe(true);
     });
 
-    it("tells the model why note tools are missing when the MCP server is disabled", async () => {
-        getOptionOrNullMock.mockReturnValue(null);
+    it("omits note-tools wiring (and its prompt guidance) when the chat disables note tools, and enables web search", async () => {
         scriptAgent([successResult()]);
         const provider = new ClaudeAgentProvider();
-        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableNoteTools: false, enableWebSearch: true }));
 
         const options = queryMock.mock.calls[0][0].options;
-        expect(options.systemPrompt).toContain("MCP server is turned off");
-        // The prompt must not promise note tools that aren't actually wired.
+        expect(options.mcpServers).toBeUndefined();
+        expect(createMcpServerMock).not.toHaveBeenCalled();
+        expect(options.tools).toEqual(["WebSearch", "WebFetch"]);
+        expect(options.allowedTools).toEqual(["WebSearch", "WebFetch"]);
+        // Prompt matches the wiring: no note-tools guidance when they're off.
         expect(options.systemPrompt).not.toContain("load_skill");
         expect(options.systemPrompt).toContain("do not have access to the user's notes");
     });
 
-    it("omits MCP wiring when the MCP server is disabled, and enables web search on request", async () => {
-        getOptionOrNullMock.mockReturnValue(null);
-        scriptAgent([successResult()]);
+    it("logs a diagnostic when the in-process MCP bridge fails to connect", async () => {
+        scriptAgent([
+            { type: "system", subtype: "init", session_id: "s", mcp_servers: [{ name: "trilium", status: "failed" }] },
+            successResult()
+        ]);
         const provider = new ClaudeAgentProvider();
-        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
 
-        const options = queryMock.mock.calls[0][0].options;
-        expect(options.mcpServers).toBeUndefined();
-        expect(options.tools).toEqual(["WebSearch", "WebFetch"]);
-        expect(options.allowedTools).toEqual(["WebSearch", "WebFetch"]);
+        expect(errorLogMock).toHaveBeenCalledWith(expect.stringContaining("failed to connect"));
+    });
+
+    it("does not log a bridge diagnostic on a healthy connected init", async () => {
+        scriptAgent([
+            { type: "system", subtype: "init", session_id: "s", mcp_servers: [{ name: "trilium", status: "connected" }] },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(errorLogMock).not.toHaveBeenCalled();
     });
 
     it("surfaces authentication failures with a login hint", async () => {
@@ -360,8 +495,6 @@ describe("ClaudeAgentProvider.chatChunks", () => {
 describe("generateTitle", () => {
     beforeEach(() => {
         queryMock.mockReset();
-        getOptionOrNullMock.mockReset();
-        getOptionOrNullMock.mockReturnValue(null);
     });
 
     it("returns the agent's one-shot result with surrounding quotes stripped", async () => {
