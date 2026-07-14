@@ -2590,7 +2590,9 @@
     "slash_commands_enabled": "Slash commands",
     "slash_commands_description": "Editing commands such as inserting line breaks or headings can be toggled by typing `/`.",
     "content_hints_enabled": "Content hints",
-    "content_hints_description": "Show short hints in the bottom corner of the editor that explain how to interact with the element under the caret or pointer."
+    "content_hints_description": "Show short hints in the bottom corner of the editor that explain how to interact with the element under the caret or pointer.",
+    "auto_link_previews_enabled": "Autogenerate link previews",
+    "auto_link_previews_description": "Automatically turn a detected link into a preview showing the title, description and image of the web page. Inserting a preview from the toolbar always works, regardless of this setting."
   },
   "table_view": {
     "new-row": "New row",

@@ -1,3 +1,4 @@
+import type { LinkEmbedMetadata } from "@triliumnext/commons";
 import {
     _getViewData as getViewData,
     _setModelData as setModelData,
@@ -26,7 +27,7 @@ const META = {
     favicon: "https://example.com/favicon.ico",
     siteName: "Example",
     image: "https://example.com/image.png"
-};
+} satisfies LinkEmbedMetadata;
 
 describe("LinkEmbed", () => {
     let editor: ClassicEditor;
@@ -69,7 +70,7 @@ describe("LinkEmbed", () => {
     });
 
     it("binds the button to the insert command and executes it on click", () => {
-        const view = editor.ui.componentFactory.create("linkEmbed") as {
+        const view = editor.ui.componentFactory.create("linkEmbed") as unknown as {
             isOn: boolean;
             isEnabled: boolean;
             fire(name: string): void;
@@ -414,6 +415,44 @@ describe("LinkEmbed", () => {
         expect(warn).toHaveBeenCalledWith(expect.stringContaining(url));
 
         warn.mockRestore();
+    });
+
+    it("does not auto-convert when autoLinkPreviewsEnabled is false, but still offers the insert command", async () => {
+        const url = "https://example.com/article";
+        editor = await createTestEditor(
+            [Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed],
+            { autoLinkPreviewsEnabled: false }
+        );
+
+        addLinkedText(editor, url);
+        await flushFetch();
+
+        // The URL is not even looked up: the check runs before the metadata request.
+        expect(fetchLinkMetadata).not.toHaveBeenCalled();
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        expect(editor.getData()).toContain(`<a href="${url}">${url}</a>`);
+
+        // The dialog route is unaffected by the option.
+        editor.execute(LINK_EMBED_COMMAND);
+        expect(triggerCommand).toHaveBeenCalledWith("addLinkEmbedToText");
+    });
+
+    it("re-reads a getter on every detected URL, so toggling the option needs no new editor", async () => {
+        let enabled = false;
+        editor = await createTestEditor(
+            [Essentials, Paragraph, BlockQuote, Link, Undo, LinkEmbed],
+            { autoLinkPreviewsEnabled: () => enabled }
+        );
+
+        addLinkedText(editor, "https://example.com/off");
+        await flushFetch();
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+
+        // Flip the option on the same editor instance — the next detected URL converts.
+        enabled = true;
+        addLinkedText(editor, "https://example.com/on");
+        await flushFetch();
+        expect(findElement(editor, "linkMention")).toBeDefined();
     });
 
     it("ignores a labeled link whose text differs from the href", async () => {

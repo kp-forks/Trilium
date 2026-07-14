@@ -383,6 +383,7 @@ class AutoLinkToMention extends Plugin {
 
         editor.model.document.on('change:data', (_evt, batch) => {
             if (this._converting) return;
+            if (!this._autoDetectEnabled()) return;
 
             // When the user undoes our conversion, the undo batch re-inserts
             // the original linked text. Record its URL so we don't re-convert.
@@ -423,6 +424,19 @@ class AutoLinkToMention extends Plugin {
                 }
             }
         });
+    }
+
+    /**
+     * Whether auto-detection is on (Options → Text Notes → Features). Consulted on every detected
+     * URL rather than once at startup, so the host can supply a getter and have the option apply to
+     * already-open editors. A plain boolean is honoured too, and an absent config means enabled.
+     *
+     * Only auto-detection is gated: inserting a preview from the toolbar dialog goes through
+     * {@link InsertLinkEmbedCommand} and stays available either way.
+     */
+    private _autoDetectEnabled(): boolean {
+        const setting = this.editor.config.get('autoLinkPreviewsEnabled') as boolean | (() => boolean) | undefined;
+        return (typeof setting === 'function' ? setting() : setting) !== false;
     }
 
     private _replaceWithPreview(url: string, parentPath: number[]) {

@@ -189,6 +189,8 @@ export interface OptionDefinitions extends KeyboardShortcutsOptions<KeyboardActi
     textNoteSlashCommandsEnabled: boolean;
     /** Whether the editor surfaces content-area hints (bottom-corner popups that document how to interact with the element under the caret or pointer, e.g. task-state cycle, collapsible-summary shortcut, drag-handle label). */
     textNoteContentHintsEnabled: boolean;
+    /** Whether a URL typed or pasted into a text note is automatically turned into a link preview. The "Link preview" dialog is unaffected and always inserts one on request. */
+    textNoteAutoLinkPreviewsEnabled: boolean;
     backgroundEffects: boolean;
     newLayout: boolean;
 
