@@ -5,6 +5,7 @@ import {
     chooseLinkPreviewKind,
     extractYouTubeVideoId,
     isUrlAloneInBlock,
+    redactUrlForLog,
     YOUTUBE_REGEX
 } from "./link_embed.js";
 
@@ -43,6 +44,24 @@ describe("YOUTUBE_REGEX", () => {
         const match = "https://www.youtube.com/watch?v=dQw4w9WgXcQ".match(YOUTUBE_REGEX);
         expect(match).not.toBeNull();
         expect(match?.[1]).toBe("dQw4w9WgXcQ");
+    });
+});
+
+describe("redactUrlForLog", () => {
+    it("drops the query and fragment, where the secrets live", () => {
+        // A password-reset token, a signed S3 signature, a doc-sharing key — none of it belongs in a
+        // log file. The trailing marker records that parameters were there.
+        expect(redactUrlForLog("https://example.com/reset?token=s3cr3t")).toBe("https://example.com/reset?…");
+        expect(redactUrlForLog("https://example.com/doc#key=s3cr3t")).toBe("https://example.com/doc?…");
+    });
+
+    it("keeps a URL that has nothing to hide intact", () => {
+        expect(redactUrlForLog("https://example.com/blog/post")).toBe("https://example.com/blog/post");
+        expect(redactUrlForLog("http://localhost:8080/x")).toBe("http://localhost:8080/x");
+    });
+
+    it("does not throw on an unparseable URL", () => {
+        expect(redactUrlForLog("not-a-url")).toBe("<unparseable URL>");
     });
 });
 

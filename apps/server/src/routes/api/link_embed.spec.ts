@@ -63,10 +63,13 @@ describe("extractYouTubeVideoId", () => {
 });
 
 describe("link-embed getMetadata", () => {
-    function req(url?: unknown) { return { query: { url } } as unknown as Request; }
+    // The URL is POSTed in the body, never in the query string: a query string ends up in every
+    // access log along the way, and a pasted URL can carry a one-time token or a signature.
+    function req(url?: unknown) { return { body: { url } } as unknown as Request; }
 
-    it("requires a url query parameter", async () => {
+    it("requires a url in the body", async () => {
         await expect(linkEmbedRoute.getMetadata(req())).rejects.toBeInstanceOf(ValidationError);
+        await expect(linkEmbedRoute.getMetadata({} as unknown as Request)).rejects.toBeInstanceOf(ValidationError);
     });
 
     it("returns YouTube metadata via the oEmbed endpoint", async () => {

@@ -181,7 +181,10 @@ function register(app: express.Application) {
     asyncRoute(PST, "/api/sender/note", [auth.checkEtapiToken], senderRoute.saveNote, apiResultHandler);
 
     route(GET, "/api/fonts", [auth.checkApiAuthOrElectron], fontsRoute.getFontCss);
-    asyncApiRoute(GET, "/api/link-embed/metadata", linkEmbedRoute.getMetadata);
+    // POST rather than GET: the URL would otherwise sit in the query string of every access-log
+    // line (Trilium's own, and any reverse proxy in front of it), and a pasted URL can carry a
+    // one-time token or a signed signature. The body is not logged.
+    asyncApiRoute(PST, "/api/link-embed/metadata", linkEmbedRoute.getMetadata);
 
     apiRoute(GET, "/api/onenote-import/auth-url", onenoteImportRoute.getAuthUrl);
     // Plain GET (no CSRF/auth headers): this is a top-level browser redirect back from Microsoft.

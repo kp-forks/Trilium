@@ -37,7 +37,9 @@ export function safeHostname(url: string): string {
  */
 export async function fetchMetadata(url: string): Promise<EmbedMetadata> {
     try {
-        const metadata = await server.get<LinkEmbedMetadata>(`link-embed/metadata?url=${encodeURIComponent(url)}`);
+        // POSTed rather than passed in the query string: a URL can carry a one-time token or a
+        // signed signature, and a query string ends up in every access log along the way.
+        const metadata = await server.post<LinkEmbedMetadata>("link-embed/metadata", { url });
         return {
             url: metadata.url,
             embedType: metadata.embedType,

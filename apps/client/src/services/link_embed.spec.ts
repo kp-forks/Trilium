@@ -60,7 +60,7 @@ describe("safeHostname", () => {
 });
 
 describe("fetchMetadata", () => {
-    it("maps server metadata into the embed shape and encodes the URL", async () => {
+    it("maps server metadata into the embed shape, POSTing the URL in the body", async () => {
         const url = "https://example.com/path?a=b&c=d";
         const fromServer = {
             url: "https://canonical.example.com",
@@ -71,20 +71,20 @@ describe("fetchMetadata", () => {
             siteName: "Example",
             image: "https://example.com/img.png"
         };
-        server.get = vi.fn(async () => fromServer) as typeof server.get;
+        server.post = vi.fn(async () => fromServer) as typeof server.post;
 
         const result = await fetchMetadata(url);
 
-        expect(server.get).toHaveBeenCalledWith(
-            `link-embed/metadata?url=${encodeURIComponent(url)}`
-        );
+        // The URL travels in the body, so it never reaches an access log — a pasted URL can carry a
+        // one-time token or a signature in its query string.
+        expect(server.post).toHaveBeenCalledWith("link-embed/metadata", { url });
         expect(result).toEqual(fromServer);
     });
 
     it("falls back to local detection when the server request fails", async () => {
-        server.get = vi.fn(async () => {
+        server.post = vi.fn(async () => {
             throw new Error("network down");
-        }) as typeof server.get;
+        }) as typeof server.post;
 
         const result = await fetchMetadata("https://youtu.be/abcdefghijk");
         expect(result).toEqual({
@@ -97,12 +97,12 @@ describe("fetchMetadata", () => {
     });
 
     it("passes the server's unresolved flag through", async () => {
-        server.get = vi.fn(async () => ({
+        server.post = vi.fn(async () => ({
             url: "https://blocked.example.com/x",
             embedType: "opengraph",
             title: "blocked.example.com",
             unresolved: true
-        })) as typeof server.get;
+        })) as typeof server.post;
 
         const result = await fetchMetadata("https://blocked.example.com/x");
         expect(result.unresolved).toBe(true);

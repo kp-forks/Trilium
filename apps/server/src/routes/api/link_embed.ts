@@ -1,4 +1,4 @@
-import { extractYouTubeVideoId, type LinkEmbedMetadata } from "@triliumnext/commons";
+import { extractYouTubeVideoId, type LinkEmbedMetadata, redactUrlForLog } from "@triliumnext/commons";
 import { getLog, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import isSvg from "is-svg";
@@ -163,7 +163,7 @@ async function downloadImageAsDataUri(imageUrl: string, minSourceDimension = 0):
         // content type is checked so that an error page served in place of the image (an undecodable
         // response that is not an image at all) is dropped rather than embedded. A caller that
         // requires a minimum size gets nothing: undecodable means unverifiable.
-        getLog().info(`Could not decode link preview image ${imageUrl}: ${e}`);
+        getLog().info(`Could not decode link preview image ${redactUrlForLog(imageUrl)}: ${e}`);
         return isSmallEnoughToKeepVerbatim && contentType.startsWith("image/") && !minSourceDimension
             ? toDataUri(contentType, buffer)
             : undefined;
@@ -349,10 +349,11 @@ async function fetchOpenGraphData(url: string) {
 }
 
 async function getMetadata(req: Request) {
-    const urlParam = req.query.url;
+    // Taken from the body, not the query string: see the route registration for why.
+    const urlParam = req.body?.url;
 
     if (!urlParam || typeof urlParam !== "string") {
-        throw new ValidationError("'url' query parameter is required");
+        throw new ValidationError("'url' is required");
     }
 
     const validatedUrl = validateUrl(urlParam);
@@ -384,7 +385,7 @@ async function getMetadata(req: Request) {
             embedType: "opengraph"
         } satisfies LinkEmbedMetadata;
     } catch (e: unknown) {
-        getLog().info(`Failed to fetch metadata for ${url}: ${e}`);
+        getLog().info(`Failed to fetch metadata for ${redactUrlForLog(url)}: ${e}`);
         return unresolvedMetadata(validatedUrl);
     }
 }
