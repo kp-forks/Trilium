@@ -308,6 +308,21 @@ describe("content_renderer", () => {
             expect(content).toContain(`<div class="link-embed-card-url"><span class="link-embed-mention-dot"></span><span>example.com</span></div>`);
         });
 
+        it("renders a video as a click-to-play facade, without contacting YouTube", () => {
+            const note = buildShareNote({
+                content: `<section class="link-embed" data-url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"`
+                    + ` data-embed-type="youtube" data-title="A video" data-image="data:image/jpeg;base64,BBB"></section>`
+            });
+
+            const content = String(getContent(note).content);
+            // A visitor who merely reads the page sends nothing to YouTube: no iframe, just the
+            // thumbnail already stored in the note. The theme's script swaps in the player on click.
+            expect(content).not.toContain("<iframe");
+            expect(content).not.toContain("youtube-nocookie.com");
+            expect(content).toContain(`<button type="button" class="link-embed-video-facade" data-video-id="dQw4w9WgXcQ"`);
+            expect(content).toContain(`<img class="link-embed-video-thumbnail" src="data:image/jpeg;base64,BBB"`);
+        });
+
         it("renders an inline mention with the same favicon markup", () => {
             const note = buildShareNote({
                 content: `<p><span class="link-mention" data-url="https://example.com/page" data-title="A title" data-favicon="${FAVICON}"></span></p>`

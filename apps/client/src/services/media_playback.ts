@@ -8,8 +8,8 @@
  * - HTML5 `<video>` / `<audio>` are paused directly.
  * - Cross-origin embeds (YouTube, Vimeo, …) expose no pause API to the host page,
  *   so the iframe is reloaded by reassigning its `src`. This tears down the
- *   player and stops the audio; because the embeds don't autoplay, the reloaded
- *   iframe simply shows its thumbnail again when the container is shown later.
+ *   player and stops the audio, and the reloaded iframe simply shows its
+ *   thumbnail again when the container is shown later.
  *
  * Scoped to the known video-embed containers — Trilium's Link Preview
  * (`.link-embed-video`) and `figure.media` — so unrelated iframes (PDFs,
@@ -26,7 +26,26 @@ export function stopBackgroundMedia(container: HTMLElement | null | undefined) {
         const src = iframe.src;
         if (src) {
             // Reassigning src (even to the same value) reloads the frame.
-            iframe.src = src;
+            iframe.src = withoutAutoplay(src);
         }
+    }
+}
+
+/**
+ * Strips `autoplay=1` from an embed URL. The link-preview player carries it — the user's click on
+ * the click-to-play facade *is* the play command — but reloading a hidden iframe with autoplay still
+ * set would start the video playing again in the background, which is the very thing being
+ * prevented here.
+ */
+function withoutAutoplay(src: string): string {
+    if (!src.includes("autoplay=1")) return src;
+
+    try {
+        const url = new URL(src);
+        url.searchParams.delete("autoplay");
+        return url.toString();
+    } catch {
+        /* v8 ignore next -- an iframe's resolved `src` is always a valid absolute URL */
+        return src;
     }
 }

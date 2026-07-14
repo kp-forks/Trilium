@@ -110,17 +110,42 @@ describe("fetchMetadata", () => {
 });
 
 describe("renderEmbedPreview", () => {
-    it("renders a YouTube iframe when embedType is not opengraph and the URL is a video", () => {
+    it("shows a click-to-play facade for a video, contacting YouTube only once clicked", async () => {
+        const root = makeContainer();
+        renderEmbedPreview(root, {
+            url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            embedType: "youtube",
+            image: "data:image/jpeg;base64,AAA"
+        });
+
+        // Nothing is loaded from YouTube until the user asks for it: no iframe, just the thumbnail
+        // stored in the note.
+        expect(root.querySelector("iframe")).toBeNull();
+        expect(root.querySelector("a.link-embed-card")).toBeNull();
+        const facade = root.querySelector<HTMLButtonElement>("button.link-embed-video-facade");
+        expect(facade).not.toBeNull();
+        expect(root.querySelector("img.link-embed-video-thumbnail")?.getAttribute("src")).toBe("data:image/jpeg;base64,AAA");
+
+        facade?.click();
+        await new Promise((resolve) => setTimeout(resolve, 0));
+
+        const iframe = root.querySelector("iframe");
+        expect(iframe).not.toBeNull();
+        expect(iframe?.getAttribute("src")).toContain("youtube-nocookie.com/embed/dQw4w9WgXcQ");
+        // The click was the play command, so the player starts straight away.
+        expect(iframe?.getAttribute("src")).toContain("autoplay=1");
+        expect(root.querySelector("button.link-embed-video-facade")).toBeNull();
+    });
+
+    it("shows the facade without a thumbnail when the note stores no image", () => {
         const root = makeContainer();
         renderEmbedPreview(root, {
             url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             embedType: "youtube"
         });
 
-        const iframe = root.querySelector("iframe");
-        expect(iframe).not.toBeNull();
-        expect(iframe!.getAttribute("src")).toContain("youtube-nocookie.com/embed/dQw4w9WgXcQ");
-        expect(root.querySelector("a.link-embed-card")).toBeNull();
+        expect(root.querySelector("button.link-embed-video-facade")).not.toBeNull();
+        expect(root.querySelector("img.link-embed-video-thumbnail")).toBeNull();
     });
 
     it("renders a card (not an iframe) for a YouTube URL forced to opengraph", () => {

@@ -380,7 +380,19 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
         if (embedType === "youtube") {
             const videoId = extractYouTubeVideoId(url);
             if (videoId) {
-                embedEl.innerHTML = `<div class="link-embed-video"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0" frameborder="0" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:none;"></iframe></div>`;
+                // Click-to-play: the shared page shows the thumbnail stored in the note and only
+                // loads YouTube's player once a visitor asks for it, so simply reading the page does
+                // not hand every visitor's IP to Google. The swap is done by the share theme's
+                // video_facade script, which reads data-video-id.
+                const image = embedEl.getAttribute("data-image");
+                const thumbnailHtml = image
+                    ? `<img class="link-embed-video-thumbnail" src="${escapeHtml(image)}" alt="" loading="lazy">`
+                    : "";
+                embedEl.innerHTML = `<div class="link-embed-video">`
+                    + `<button type="button" class="link-embed-video-facade" data-video-id="${escapeHtml(videoId)}" aria-label="Play video" title="Play video">`
+                    + thumbnailHtml
+                    + `<span class="link-embed-video-play" aria-hidden="true"></span>`
+                    + `</button></div>`;
             }
         } else {
             const title = embedEl.getAttribute("data-title") || safeHostnameForShare(url);

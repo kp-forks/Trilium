@@ -55,6 +55,12 @@ describe("validateUrl", () => {
         expect(() => validateUrl("not-a-url")).toThrow("Invalid URL");
         expect(() => validateUrl("")).toThrow("Invalid URL");
     });
+
+    it("rejects URLs carrying credentials, which must not reach the wire, the note or the log", () => {
+        expect(() => validateUrl("https://user:secret@example.com/page")).toThrow("credentials");
+        expect(() => validateUrl("https://user@example.com/page")).toThrow("credentials");
+        expect(() => validateUrl("http://:secret@example.com/page")).toThrow("credentials");
+    });
 });
 
 describe("validateHostResolution", () => {

@@ -68,6 +68,13 @@ function validateUrl(urlString: string): URL {
         throw new ValidationError("Only http and https URLs are supported");
     }
 
+    // `https://user:pass@host/` would put the credentials on the wire, and — for a link preview —
+    // into the note's stored URL and the server log along with them. Nothing here needs to
+    // authenticate, so refuse the URL rather than carry a secret around.
+    if (parsed.username || parsed.password) {
+        throw new ValidationError("URLs containing credentials are not supported");
+    }
+
     return parsed;
 }
 

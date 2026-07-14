@@ -50,6 +50,26 @@ describe("stopBackgroundMedia", () => {
         expect(pdfSets()).toBe(0);
     });
 
+    it("drops autoplay when reloading, so a hidden player does not start over", () => {
+        // The link-preview player carries autoplay=1 (the click on the facade was the play command).
+        // Reloading with it intact would restart the video in the background — the very thing being
+        // prevented here.
+        const container = document.createElement("div");
+        container.innerHTML = `
+            <div class="link-embed-video">
+                <iframe src="https://www.youtube-nocookie.com/embed/abc?rel=0&autoplay=1&origin=http%3A%2F%2Flocalhost"></iframe>
+            </div>
+        `;
+        const iframe = container.querySelector("iframe") as HTMLIFrameElement;
+
+        stopBackgroundMedia(container);
+
+        expect(iframe.src).not.toContain("autoplay");
+        // The rest of the embed URL is preserved, so showing the note again restores the player.
+        expect(iframe.src).toContain("youtube-nocookie.com/embed/abc");
+        expect(iframe.src).toContain("rel=0");
+    });
+
     it("is a no-op for null/empty containers", () => {
         expect(() => stopBackgroundMedia(null)).not.toThrow();
         expect(() => stopBackgroundMedia(document.createElement("div"))).not.toThrow();
