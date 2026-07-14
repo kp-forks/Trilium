@@ -20,7 +20,7 @@ const MAX_IMAGE_DOWNLOAD_SIZE = 5 * 1024 * 1024; // 5MB
  * Cap for an image kept byte-for-byte instead of being re-encoded — an SVG (which scales natively,
  * so rasterising it would only lose quality) or a format Jimp cannot decode (WebP, AVIF).
  */
-const MAX_VERBATIM_IMAGE_SIZE = 200 * 1024; // 200KB
+const MAX_VERBATIM_IMAGE_SIZE = 100 * 1024; // 100KB
 /**
  * Smallest site icon accepted as a stand-in for a missing `og:image`. Above the usual 16/32/48/64
  * favicon sizes, so only a genuinely large icon qualifies — in practice the mobile home-screen one

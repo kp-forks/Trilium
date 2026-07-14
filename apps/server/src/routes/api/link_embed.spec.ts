@@ -180,12 +180,12 @@ describe("link-embed getMetadata", () => {
             expect(decoded.bitmap.height).toBe(32);
         });
 
-        it("embeds an SVG verbatim, but drops one over 200KB", async () => {
+        it("embeds an SVG verbatim, but drops one over 100KB", async () => {
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>`;
             serveImage({ payload: svg, contentType: "image/svg+xml" });
             expect(parseDataUri(await imageOf() ?? "")).toMatchObject({ contentType: "image/svg+xml" });
 
-            const hugeSvg = svg.replace("<rect", `<!--${"x".repeat(200 * 1024)}--><rect`);
+            const hugeSvg = svg.replace("<rect", `<!--${"x".repeat(100 * 1024)}--><rect`);
             serveImage({ payload: hugeSvg, contentType: "image/svg+xml" });
             expect(await imageOf()).toBeUndefined();
         });
@@ -196,7 +196,7 @@ describe("link-embed getMetadata", () => {
             serveImage({ payload: Buffer.from("RIFF????WEBPVP8 not-really"), contentType: "image/webp" });
             expect(await imageOf()).toMatch(/^data:image\/webp;base64,/);
 
-            serveImage({ payload: Buffer.alloc(300 * 1024, 1), contentType: "image/webp" });
+            serveImage({ payload: Buffer.alloc(150 * 1024, 1), contentType: "image/webp" });
             expect(await imageOf()).toBeUndefined();
         });
 
