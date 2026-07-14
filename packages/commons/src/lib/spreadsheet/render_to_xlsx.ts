@@ -13,6 +13,8 @@
 
 import ExcelJS from "exceljs";
 
+import "./exceljs_augmentation.js";
+
 import {
     BorderStyle,
     type DataValidationRule,

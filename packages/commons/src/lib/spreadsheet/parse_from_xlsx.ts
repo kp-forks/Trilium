@@ -19,6 +19,8 @@
 
 import ExcelJS from "exceljs";
 
+import "./exceljs_augmentation.js";
+
 import {
     BorderStyle,
     CellValueType,
@@ -339,9 +341,7 @@ interface CellRef {
  * sheet has none.
  */
 function readDataValidations(ws: ExcelJS.Worksheet, sheetId: string): DataValidationRule[] {
-    const model = (ws.dataValidations as { model?: Record<string, ExcelJS.DataValidation | undefined> } | undefined)?.model;
-    /* v8 ignore next -- defensive: exceljs always exposes a (possibly empty) dataValidations model */
-    if (!model) return [];
+    const model = ws.dataValidations.model;
 
     // Group cells by an identical validation config; the key is order-stable across the sheet.
     const groups = new Map<string, { config: ExcelJS.DataValidation; cells: CellRef[] }>();
