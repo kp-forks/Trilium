@@ -1,4 +1,4 @@
-import { type BlockChildLike, chooseLinkPreviewKind, isUrlAloneInBlock, redactUrlForLog } from '@triliumnext/commons';
+import { type BlockChildLike, chooseLinkPreviewKind, isUrlAloneInBlock } from '@triliumnext/commons';
 import { ButtonView, Command, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Observable } from 'ckeditor5';
 import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
@@ -455,7 +455,9 @@ class AutoLinkToMention extends Plugin {
             // plain link AutoLink already created. A preview built from a hostname placeholder would
             // show strictly less than the URL it replaced.
             if (metadata.unresolved) {
-                console.warn(`Link preview dropped for ${redactUrlForLog(url)}: no metadata could be read from the page (kept as a plain link).`);
+                // The URL is left out on purpose — a browser console gets screenshotted and pasted
+                // into bug reports too, and the link is right there in the note anyway.
+                console.warn('Link preview dropped: no metadata could be read from the page (the link was kept as a plain link).');
                 return;
             }
 

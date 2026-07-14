@@ -5,26 +5,6 @@ export function extractYouTubeVideoId(url: string): string | null {
     return match ? match[1] : null;
 }
 
-/**
- * A URL trimmed to origin + path for logging.
- *
- * The query and fragment are where the secrets live — a password-reset token, a signed S3
- * signature, a document-sharing key — and a log line is exactly the wrong place for them: logs get
- * rotated, backed up, shipped to aggregators and pasted into bug reports. The `?…` marks that
- * parameters were present, which is all a reader of the log needs to know.
- */
-export function redactUrlForLog(url: string): string {
-    let parsed: URL;
-    try {
-        parsed = new URL(url);
-    } catch {
-        return "<unparseable URL>";
-    }
-
-    const withoutParams = `${parsed.origin}${parsed.pathname}`;
-    return parsed.search || parsed.hash ? `${withoutParams}?…` : withoutParams;
-}
-
 export interface LinkEmbedMetadata {
     url: string;
     title?: string;

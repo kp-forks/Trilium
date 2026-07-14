@@ -455,7 +455,10 @@ describe("LinkEmbed", () => {
         expect(findElement(editor, "linkEmbed")).toBeUndefined();
         // The link AutoLink created is still there, as plain linked text.
         expect(editor.getData()).toContain(`<a href="${url}">${url}</a>`);
-        expect(warn).toHaveBeenCalledWith(expect.stringContaining(url));
+        // The warning says what happened but never names the URL: a console gets screenshotted and
+        // pasted into bug reports, and a pasted link can carry a one-time token.
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining("Link preview dropped"));
+        expect(warn).not.toHaveBeenCalledWith(expect.stringContaining(url));
 
         warn.mockRestore();
     });

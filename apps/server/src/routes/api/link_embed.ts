@@ -1,4 +1,4 @@
-import { extractYouTubeVideoId, type LinkEmbedMetadata, redactUrlForLog } from "@triliumnext/commons";
+import { extractYouTubeVideoId, type LinkEmbedMetadata } from "@triliumnext/commons";
 import { getLog, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import isSvg from "is-svg";
@@ -163,7 +163,10 @@ async function downloadImageAsDataUri(imageUrl: string, minSourceDimension = 0):
         // content type is checked so that an error page served in place of the image (an undecodable
         // response that is not an image at all) is dropped rather than embedded. A caller that
         // requires a minimum size gets nothing: undecodable means unverifiable.
-        getLog().info(`Could not decode link preview image ${redactUrlForLog(imageUrl)}: ${e}`);
+        // The URL is deliberately left out of the log: it is the user's private browsing, and a
+        // pasted link can carry a one-time token in its path or query. The timestamp is enough to
+        // match a log line against the paste that caused it.
+        getLog().info(`Could not decode a link preview image: ${e}`);
         return isSmallEnoughToKeepVerbatim && contentType.startsWith("image/") && !minSourceDimension
             ? toDataUri(contentType, buffer)
             : undefined;
@@ -385,7 +388,8 @@ async function getMetadata(req: Request) {
             embedType: "opengraph"
         } satisfies LinkEmbedMetadata;
     } catch (e: unknown) {
-        getLog().info(`Failed to fetch metadata for ${redactUrlForLog(url)}: ${e}`);
+        // No URL here either — see the note above the image-decode log.
+        getLog().info(`Failed to fetch link preview metadata: ${e}`);
         return unresolvedMetadata(validatedUrl);
     }
 }
