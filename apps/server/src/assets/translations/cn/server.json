@@ -68,12 +68,12 @@
     "save-named-revision": "保存活动笔记的命名修订",
     "toggle-archived-notes": "在笔记树中显示/隐藏已归档笔记",
     "show-deleted-notes": "显示“已删除的笔记”对话框",
-    "peek-right-pane": "将右侧面板以浮动面板的形式快速打开，失去焦点时自动关闭"
+    "peek-right-pane": "将右侧面板以浮动面板的形式预览，失去焦点时自动关闭"
   },
   "login": {
     "title": "登录",
     "heading": "Trilium 登录",
-    "incorrect-totp": "TOTP 不正确，请重试。",
+    "incorrect-totp": "TOTP 不正确，请再试一次。",
     "incorrect-password": "密码不正确，请再试一次。",
     "password": "密码",
     "remember-me": "记住我",

@@ -2184,7 +2184,9 @@
     "note_completion_enabled": "Uath-chomhlánú nótaí",
     "note_completion_description": "Is féidir naisc chuig nótaí a chruthú trí `@` a chlóscríobh agus teideal an nóta ina dhiaidh sin.",
     "slash_commands_enabled": "Orduithe slaise",
-    "slash_commands_description": "Is féidir orduithe eagarthóireachta amhail briseadh líne nó ceannteidil a chur isteach a athrú trí `/` a chlóscríobh."
+    "slash_commands_description": "Is féidir orduithe eagarthóireachta amhail briseadh líne nó ceannteidil a chur isteach a athrú trí `/` a chlóscríobh.",
+    "content_hints_enabled": "Leideanna ábhair",
+    "content_hints_description": "Taispeáin leideanna gearra i gcúinne íochtarach an eagarthóra a mhíníonn conas idirghníomhú leis an eilimint faoin gcairéad nó faoin bpointeoir."
   },
   "table_view": {
     "new-row": "Sraith nua",
@@ -2555,7 +2557,8 @@
     "play-mode-once": "Seinn uair amháin",
     "play-mode-loop": "Lúb",
     "play-mode-next": "Seinn ina dhiaidh sin",
-    "forward-10s": "Ar Aghaidh 10s (Eochair saighead ar dheis)"
+    "forward-10s": "Ar Aghaidh 10s (Eochair saighead ar dheis)",
+    "activate": "Seinn {{- title}}"
   },
   "mermaid": {
     "placeholder": "Clóscríobh ábhar do léaráid Maighdean Mhara nó bain úsáid as ceann de na léaráidí samplacha thíos.",
@@ -2980,7 +2983,7 @@
     "sync-from-desktop-allow-access": "Ceadaigh rochtain líonra & atosú"
   },
   "text-editor": {
-    "checkbox-tooltip": "Cliceáil ar dheis le haghaidh tuilleadh staideanna tascanna.\nBrúigh {{- shortcut}} chun dul idir staideanna.",
+    "checkbox-tooltip": "Cliceáil ar dheis nó brúigh {{- shortcut}} chun an stát a athrú.",
     "edit-states-tooltip": "Cuir stáit tascanna in eagar",
     "unknown-task-state": "Stádas tasc saincheaptha neamhshainithe",
     "task-state-dropped": "Sainmhíniú stádais tasc saincheaptha \"{{title}}\" ({{id}}) curtha ar leataobh mar gheall ar: {{reason}}",
@@ -2999,7 +3002,7 @@
     "collapsible-select-label": "Roghnaigh bloc infhillte",
     "collapsible-title-placeholder": "Achoimre",
     "collapsible-toggle-label": "Bloc infhillte a scoránaigh",
-    "collapsible-tooltip": "Cliceáil ar an tsaighead nó brúigh {{shortcut}} chun é a dhúnadh/a leathnú.",
+    "collapsible-tooltip": "Cliceáil ar an tsaighead nó brúigh {{- shortcut}} chun é a dhúnadh/a leathnú.",
     "checkbox-tooltip-state-label": "Stádas na tascanna:",
     "checkbox-tooltip-state-unknown-suffix": "(sainmhíniú ar iarraidh)"
   },
