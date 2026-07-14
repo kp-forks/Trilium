@@ -4,6 +4,7 @@ import {
     _setModelData as setModelData,
     BlockQuote,
     ClassicEditor,
+    ContextualBalloon,
     Essentials,
     Heading,
     Link,
@@ -16,6 +17,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
 import { installGlobMock } from "../../test/globals-test-kit.js";
+import LinkEmbedFormView from "./link_embed_form.js";
 import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND, REMOVE_LINK_EMBED_COMMAND } from "./linkembed.js";
 
 const META = {
@@ -73,29 +75,56 @@ describe("LinkEmbed", () => {
         expect(editor.ui.componentFactory.has("linkEmbed")).toBe(true);
     });
 
-    it("binds the button to the insert command and executes it on click", () => {
+    it("binds the button to the insert command and opens the balloon form on click", () => {
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+
         const view = editor.ui.componentFactory.create("linkEmbed") as unknown as {
-            isOn: boolean;
             isEnabled: boolean;
             fire(name: string): void;
         };
         const command = editor.commands.get(LINK_EMBED_COMMAND);
-
         expect(view.isEnabled).toBe(command?.isEnabled);
 
-        const spy = vi.spyOn(editor, "execute");
+        const balloon = editor.plugins.get(ContextualBalloon);
+        expect(balloon.visibleView).toBeNull();
+
+        // The insert flow now happens in the editor's own balloon, not in a Trilium modal.
         view.fire("execute");
-        expect(spy).toHaveBeenCalledWith(LINK_EMBED_COMMAND);
+        expect(balloon.visibleView).toBeInstanceOf(LinkEmbedFormView);
     });
 
     // -----------------------------------------------------------------------
     // InsertLinkEmbedCommand
     // -----------------------------------------------------------------------
 
-    it("triggers addLinkEmbedToText on the component when executed", () => {
-        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
-        editor.execute(LINK_EMBED_COMMAND);
-        expect(triggerCommand).toHaveBeenCalledWith("addLinkEmbedToText");
+    it("inserts a preview for a URL, storing all the metadata whatever the mode", async () => {
+        const url = "https://example.com/article";
+        setModelData(editor.model, "<paragraph>[]</paragraph>");
+
+        // An inline mention keeps the description and image it does not itself show, so switching it
+        // to a card later never has to go back to the network.
+        await editor.execute(LINK_EMBED_COMMAND, { url, mode: "inline" });
+
+        expect(fetchLinkMetadata).toHaveBeenCalledWith(url);
+        const mention = findElement(editor, "linkMention");
+        expect(mention?.getAttribute("url")).toBe(url);
+        expect(mention?.getAttribute("description")).toBe(META.description);
+        expect(mention?.getAttribute("image")).toBe(META.image);
+        expect(mention?.getAttribute("siteName")).toBe(META.siteName);
+    });
+
+    it("forces the opengraph type for a card, and keeps the detected one for an embed", async () => {
+        const url = "https://youtube.com/watch?v=abc12345678";
+        fetchLinkMetadata.mockResolvedValue({ ...META, url, embedType: "youtube" });
+
+        setModelData(editor.model, "<paragraph>[]</paragraph>");
+        await editor.execute(LINK_EMBED_COMMAND, { url, mode: "card" });
+        // A card is an embed that declines to play.
+        expect(findElement(editor, "linkEmbed")?.getAttribute("embedType")).toBe("opengraph");
+
+        setModelData(editor.model, "<paragraph>[]</paragraph>");
+        await editor.execute(LINK_EMBED_COMMAND, { url, mode: "embed" });
+        expect(findElement(editor, "linkEmbed")?.getAttribute("embedType")).toBe("youtube");
     });
 
     it("is enabled in a paragraph and disabled when read-only", () => {
@@ -488,9 +517,9 @@ describe("LinkEmbed", () => {
         expect(findElement(editor, "linkMention")).toBeUndefined();
         expect(editor.getData()).toContain(`<a href="${url}">${url}</a>`);
 
-        // The dialog route is unaffected by the option.
-        editor.execute(LINK_EMBED_COMMAND);
-        expect(triggerCommand).toHaveBeenCalledWith("addLinkEmbedToText");
+        // Inserting a preview by hand is unaffected by the option: only auto-detection is gated.
+        await editor.execute(LINK_EMBED_COMMAND, { url, mode: "card" });
+        expect(findElement(editor, "linkEmbed")?.getAttribute("url")).toBe(url);
     });
 
     it("re-reads a getter on every detected URL, so toggling the option needs no new editor", async () => {

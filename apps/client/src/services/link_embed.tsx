@@ -7,9 +7,6 @@ import { useState } from "preact/hooks";
 import { t } from "./i18n.js";
 import server from "./server.js";
 
-/** Paste mode chosen by user from the floating popup. */
-export type LinkPasteMode = "mention" | "url" | "embed";
-
 export interface EmbedMetadata {
     url: string;
     embedType: string;

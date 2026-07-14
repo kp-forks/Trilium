@@ -21,6 +21,7 @@ import LinkEmbed, {
     type LinkDisplayMode
 } from "./linkembed.js";
 import { createCopyUrlButton } from "./copy_link_url.js";
+import { translate } from "./translate.js";
 
 export default class LinkEmbedToolbar extends Plugin {
 
@@ -76,18 +77,20 @@ class LinkEmbedDisplayDropdown extends Plugin {
         componentFactory.add("linkEmbedDisplayDropdown", _locale => {
             const dropdownView = createDropdown(editor.locale, DropdownButtonView);
 
+            const displayLabel = translate(editor, "link_embed.display", "Display");
+
             dropdownView.buttonView.set({
                 withText: true,
                 tooltip: true,
-                label: "Display"
+                label: displayLabel
             });
 
             dropdownView.bind("isEnabled").to(command, "isEnabled");
 
             dropdownView.buttonView.bind("label").to(command, "value", (value) => {
-                if (!value) return "Display";
+                if (!value) return displayLabel;
                 const mode = LINK_DISPLAY_MODES.find(m => m.value === value);
-                return mode?.label ?? value;
+                return mode ? translate(editor, mode.labelKey, mode.label) : value;
             });
 
             dropdownView.on("execute", evt => {
@@ -111,7 +114,7 @@ class LinkEmbedDisplayDropdown extends Plugin {
                 type: "button",
                 model: new ViewModel({
                     _displayMode: modeDef.value,
-                    label: modeDef.label,
+                    label: translate(this.editor, modeDef.labelKey, modeDef.label),
                     role: "menuitemradio",
                     withText: true
                 })

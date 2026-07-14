@@ -2450,7 +2450,14 @@
     "copy_url": "Copy URL"
   },
   "link_embed": {
-    "play_video": "Play video"
+    "play_video": "Play video",
+    "title": "Link preview",
+    "url": "URL",
+    "insert": "Insert",
+    "display": "Display",
+    "mode_inline": "Inline",
+    "mode_card": "Card",
+    "mode_embed": "Embed"
   },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",
