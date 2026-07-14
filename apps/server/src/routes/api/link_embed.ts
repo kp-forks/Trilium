@@ -76,6 +76,21 @@ async function downloadFaviconAsDataUri(faviconUrl: string): Promise<string | un
 }
 
 /**
+ * Resolves a URL found in the page (`og:image` content, favicon `href`, …) against the page's own
+ * address, so a root-relative or relative one — both legal and common — becomes absolute. Without
+ * this the value would later be resolved against Trilium's origin instead of the site's.
+ * Returns undefined when the value cannot form a URL at all.
+ */
+function toAbsoluteUrl(href: string | undefined, pageUrl: string): string | undefined {
+    if (!href) return undefined;
+    try {
+        return new URL(href, pageUrl).toString();
+    } catch {
+        return undefined;
+    }
+}
+
+/**
  * Resolves a favicon URL from the parsed HTML, then downloads it as a data URI.
  */
 async function resolveFavicon(document: ReturnType<typeof parse>, pageUrl: string): Promise<string | undefined> {
@@ -83,15 +98,9 @@ async function resolveFavicon(document: ReturnType<typeof parse>, pageUrl: strin
         || document.querySelector('link[rel="shortcut icon"]')
         || document.querySelector('link[rel="apple-touch-icon"]');
 
-    let faviconUrl: string | undefined;
-    if (faviconEl) {
-        const href = faviconEl.getAttribute("href");
-        if (href) {
-            try { faviconUrl = new URL(href, pageUrl).toString(); } catch { /* ignore */ }
-        }
-    }
+    let faviconUrl = toAbsoluteUrl(faviconEl?.getAttribute("href"), pageUrl);
     if (!faviconUrl) {
-        try { faviconUrl = `${new URL(pageUrl).origin}/favicon.ico`; } catch { /* ignore */ }
+        faviconUrl = toAbsoluteUrl("/favicon.ico", pageUrl);
     }
 
     if (!faviconUrl) return undefined;
@@ -163,7 +172,7 @@ async function fetchOpenGraphData(url: string) {
     return {
         title: getMeta("og:title") || document.querySelector("title")?.textContent?.trim() || undefined,
         description: getMeta("og:description") || getMeta("description") || undefined,
-        image: getMeta("og:image") || undefined,
+        image: toAbsoluteUrl(getMeta("og:image"), url),
         siteName: getMeta("og:site_name") || undefined,
         favicon
     };

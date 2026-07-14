@@ -86,6 +86,25 @@ describe("link-embed getMetadata", () => {
         expect(result.title).toBe("OG Title");
         expect(result.description).toBe("OG Desc");
         expect(result.siteName).toBe("Example");
+        expect(result.image).toBe("https://site/img.png");
+    });
+
+    it("resolves a relative og:image against the page URL", async () => {
+        // A relative or protocol-relative og:image would otherwise be resolved against Trilium's own
+        // origin when the card renders, silently yielding a broken image.
+        const page = (image: string) => `<html><head><title>T</title><meta property="og:image" content="${image}"></head></html>`;
+        const imageFor = async (image: string) => {
+            safeFetch.mockResolvedValue(fakeResponse(page(image), { contentType: "text/html" }));
+            const result = await linkEmbedRoute.getMetadata(req("https://example.com/blog/post"));
+            return result.image;
+        };
+
+        expect(await imageFor("/img/cover.png")).toBe("https://example.com/img/cover.png");
+        expect(await imageFor("cover.png")).toBe("https://example.com/blog/cover.png");
+        expect(await imageFor("//cdn.example.com/cover.png")).toBe("https://cdn.example.com/cover.png");
+        expect(await imageFor("https://cdn.example.com/cover.png")).toBe("https://cdn.example.com/cover.png");
+        // Malformed enough that it cannot form a URL even against a valid base.
+        expect(await imageFor("http://[")).toBeUndefined();
     });
 
     it("falls back to the hostname when the fetch fails, flagging the result unresolved", async () => {
