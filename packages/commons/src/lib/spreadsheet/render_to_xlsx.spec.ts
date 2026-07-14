@@ -629,9 +629,18 @@ describe("renderSpreadsheetToXlsx", () => {
                     uid: "dv1",
                     type: "list",
                     ranges: [{ startRow: 0, endRow: 0, startColumn: 0, endColumn: 0 }]
+                },
+                // An option array that parses but is empty — what importing an inline list of only
+                // empty tokens (`",,"`) yields. It must be skipped, not written as an empty list.
+                {
+                    uid: "dv2",
+                    type: "list",
+                    formula1: "[]",
+                    ranges: [{ startRow: 0, endRow: 0, startColumn: 2, endColumn: 2 }]
                 }
             ]))).getWorksheet("Sheet1");
             expect(ws?.getCell("A1").dataValidation).toBeUndefined();
+            expect(ws?.getCell("C1").dataValidation).toBeUndefined();
         });
 
         it("skips a validation type Excel cannot represent", async () => {

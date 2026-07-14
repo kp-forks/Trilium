@@ -291,7 +291,9 @@ const EXCEL_VALIDATION_TYPES: ReadonlySet<string> = new Set(["list", "whole", "d
 function buildExcelValidation(rule: DataValidationRule): ExcelJS.DataValidation | null {
     if (rule.type === "list" || rule.type === "listMultiple") {
         const options = parseListOptions(rule.formula1);
-        if (options) return { type: "list", allowBlank: true, formulae: [`"${options.join(",")}"`] };
+        // An option array that parses but is empty (an import of an inline list of only empty
+        // tokens, e.g. `",,"`) has no dropdown to write, and Excel rejects an empty inline list.
+        if (options) return options.length > 0 ? { type: "list", allowBlank: true, formulae: [`"${options.join(",")}"`] } : null;
         // A range/name reference passes through; an absent/empty formula has no dropdown to write.
         if (rule.formula1) return { type: "list", allowBlank: true, formulae: [rule.formula1] };
         return null;
