@@ -283,6 +283,42 @@ describe("content_renderer", () => {
         });
     });
 
+    describe("Link previews", () => {
+        const FAVICON = "data:image/png;base64,AAA";
+
+        it("renders a card, showing the stored favicon beside the site name", () => {
+            const note = buildShareNote({
+                content: `<section class="link-embed" data-url="https://example.com/page" data-embed-type="opengraph"`
+                    + ` data-title="A title" data-description="A description" data-site-name="Example"`
+                    + ` data-favicon="${FAVICON}" data-image="data:image/jpeg;base64,BBB"></section>`
+            });
+
+            const content = String(getContent(note).content);
+            expect(content).toContain(`<div class="link-embed-card-url">`
+                + `<img class="link-embed-mention-favicon" src="${FAVICON}" width="16" height="16">`
+                + `<span>Example</span></div>`);
+        });
+
+        it("falls back to a dot when the site has no favicon", () => {
+            const note = buildShareNote({
+                content: `<section class="link-embed" data-url="https://example.com/page" data-embed-type="opengraph" data-title="A title"></section>`
+            });
+
+            const content = String(getContent(note).content);
+            expect(content).toContain(`<div class="link-embed-card-url"><span class="link-embed-mention-dot"></span><span>example.com</span></div>`);
+        });
+
+        it("renders an inline mention with the same favicon markup", () => {
+            const note = buildShareNote({
+                content: `<p><span class="link-mention" data-url="https://example.com/page" data-title="A title" data-favicon="${FAVICON}"></span></p>`
+            });
+
+            const content = String(getContent(note).content);
+            expect(content).toContain(`<img class="link-embed-mention-favicon" src="${FAVICON}" width="16" height="16">`);
+            expect(content).toContain(`<span class="link-embed-mention-title">A title</span>`);
+        });
+    });
+
     describe("renderCode", () => {
         it("identifies empty content", () => {
             const emptyResult: Result = {

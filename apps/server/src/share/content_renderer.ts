@@ -355,17 +355,19 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
     };
     const document = parse(result.content || "", parseOpts);
 
+    // The site's favicon, or a neutral dot when it has none — shown by both the inline mention and
+    // the card's URL line, from the one `data-favicon` the element already carries.
+    const renderFavicon = (favicon: string | undefined) => (favicon
+        ? `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">`
+        : `<span class="link-embed-mention-dot"></span>`);
+
     // Process link mentions (inline) — metadata is stored in data attributes.
     for (const mentionEl of document.querySelectorAll("span.link-mention")) {
         const url = mentionEl.getAttribute("data-url");
         if (!url) continue;
         const title = mentionEl.getAttribute("data-title") || safeHostnameForShare(url);
-        const favicon = mentionEl.getAttribute("data-favicon");
-        const faviconHtml = favicon
-            ? `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">`
-            : `<span class="link-embed-mention-dot"></span>`;
         mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
-            faviconHtml +
+            renderFavicon(mentionEl.getAttribute("data-favicon")) +
             `<span class="link-embed-mention-title">${escapeHtml(title)}</span></a>`;
     }
 
@@ -390,10 +392,13 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
                 ? `<div class="link-embed-card-image-wrapper"><img class="link-embed-card-image" src="${escapeHtml(image)}" alt="" loading="lazy"></div>`
                 : `<div class="link-embed-card-image-wrapper"><div class="link-embed-card-image-placeholder">&#128279;</div></div>`;
             const descHtml = description ? `<div class="link-embed-card-description">${escapeHtml(description)}</div>` : "";
+            const urlHtml = `<div class="link-embed-card-url">`
+                + renderFavicon(embedEl.getAttribute("data-favicon"))
+                + `<span>${escapeHtml(siteName)}</span></div>`;
 
             embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
                 imageHtml +
-                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}<div class="link-embed-card-url">${escapeHtml(siteName)}</div></div></a>`;
+                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}${urlHtml}</div></a>`;
         }
     }
 

@@ -145,7 +145,12 @@ function EmbedPreview({ meta, editable }: { meta: EmbedMetadata; editable?: bool
             <div className="link-embed-card-content">
                 {meta.title && <div className="link-embed-card-title">{meta.title}</div>}
                 {meta.description && <div className="link-embed-card-description">{meta.description}</div>}
-                <div className="link-embed-card-url">{meta.siteName || safeHostname(meta.url)}</div>
+                <div className="link-embed-card-url">
+                    {/* The same favicon the inline mention shows, read from the metadata already stored
+                        on the element — the data URI is not duplicated. */}
+                    <Favicon src={meta.favicon} />
+                    <span>{meta.siteName || safeHostname(meta.url)}</span>
+                </div>
             </div>
         </a>
     );

@@ -246,10 +246,29 @@
 }
 
 .link-embed-card-url {
+    display: flex;
+    align-items: center;
+    gap: 5px;
     font-size: 0.78em;
     color: var(--muted-text-color, #999);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    min-width: 0;
     margin-top: auto;
+
+    /* The favicon keeps its size; only the site name is truncated. */
+    & > span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* Scaled down from the inline mention's 16px: it sits next to 0.78em text here. */
+    & .link-embed-mention-favicon {
+        width: 14px;
+        height: 14px;
+    }
+
+    & .link-embed-mention-dot {
+        width: 6px;
+        height: 6px;
+    }
 }

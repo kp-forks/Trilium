@@ -145,6 +145,31 @@ describe("renderEmbedPreview", () => {
         expect(root.querySelector(".link-embed-card-image-placeholder")).toBeNull();
     });
 
+    it("shows the stored favicon beside the site name, falling back to a dot without one", () => {
+        const root = makeContainer();
+        const meta = {
+            url: "https://example.com/page",
+            embedType: "opengraph",
+            siteName: "Example",
+            favicon: "data:image/png;base64,AAA"
+        };
+
+        renderEmbedPreview(root, meta);
+
+        // The card reuses the favicon the inline mention shows, straight from the stored metadata.
+        const urlLine = root.querySelector(".link-embed-card-url")!;
+        const favicon = urlLine.querySelector("img.link-embed-mention-favicon")!;
+        expect(favicon.getAttribute("src")).toBe(meta.favicon);
+        expect(urlLine.textContent).toBe("Example");
+        // The favicon leads the line, so it renders to the left of the site name.
+        expect(urlLine.firstElementChild).toBe(favicon);
+
+        const withoutFavicon = document.createElement("div");
+        renderEmbedPreview(withoutFavicon, { ...meta, favicon: undefined });
+        expect(withoutFavicon.querySelector(".link-embed-card-url .link-embed-mention-dot")).not.toBeNull();
+        expect(withoutFavicon.querySelector(".link-embed-card-url img")).toBeNull();
+    });
+
     it("omits optional fields and falls back to hostname, and drops target when editable", () => {
         const root = makeContainer();
         renderEmbedPreview(
