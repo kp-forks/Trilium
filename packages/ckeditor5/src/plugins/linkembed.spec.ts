@@ -314,6 +314,16 @@ describe("LinkEmbed", () => {
         expect(command.embedAvailable).toBe(true);
     });
 
+    it("exposes an http(s) URL but withholds a hostile one, so the toolbar cannot arm it", () => {
+        setModelData(editor.model, '[<linkEmbed url="https://e.com/page" embedType="opengraph"></linkEmbed>]');
+        expect(changeCommand(editor).url).toBe("https://e.com/page");
+
+        // `url` comes from the stored data-url, which the sanitizers keep verbatim. Withholding it
+        // leaves the "open link in new tab" and copy buttons disabled rather than armed.
+        setModelData(editor.model, '[<linkEmbed url="javascript:alert(document.cookie)" embedType="opengraph"></linkEmbed>]');
+        expect(changeCommand(editor).url).toBeNull();
+    });
+
     it("reports 'card' for an opengraph linkEmbed and 'embed' otherwise", () => {
         setModelData(editor.model, '[<linkEmbed url="https://e.com/" embedType="opengraph"></linkEmbed>]');
         expect(changeCommand(editor).value).toBe("card");
@@ -832,12 +842,13 @@ function changeCommand(editor: ClassicEditor): {
     isEnabled: boolean;
     value: string | null;
     embedAvailable: boolean;
+    url: string | null;
 } {
     const command = editor.commands.get(CHANGE_LINK_DISPLAY_COMMAND);
     if (!command) {
         throw new Error("changeLinkDisplay command is not registered.");
     }
-    return command as unknown as { isEnabled: boolean; value: string | null; embedAvailable: boolean };
+    return command as unknown as { isEnabled: boolean; value: string | null; embedAvailable: boolean; url: string | null };
 }
 
 /**

@@ -1,6 +1,6 @@
 import "../widgets/type_widgets/text/LinkEmbed.css";
 
-import { type LinkEmbedMetadata, YOUTUBE_REGEX, extractYouTubeVideoId } from "@triliumnext/commons";
+import { type LinkEmbedMetadata, YOUTUBE_REGEX, extractYouTubeVideoId, safeLinkPreviewHref } from "@triliumnext/commons";
 import { render } from "preact";
 import { useState } from "preact/hooks";
 
@@ -173,7 +173,7 @@ function EmbedPreview({ meta, editable }: { meta: EmbedMetadata; editable?: bool
     const target = editable ? undefined : "_blank";
 
     return (
-        <a className="link-embed-card" href={meta.url} target={target} rel="noopener noreferrer">
+        <a className="link-embed-card" href={safeLinkPreviewHref(meta.url)} target={target} rel="noopener noreferrer">
             <div className="link-embed-card-image-wrapper">
                 <CardImage src={meta.image} />
             </div>
@@ -195,7 +195,7 @@ function MentionPreview({ meta, editable }: { meta: { url: string; title?: strin
     const target = editable ? undefined : "_blank";
 
     return (
-        <a className="link-embed-mention" href={meta.url} target={target} rel="noopener noreferrer">
+        <a className="link-embed-mention" href={safeLinkPreviewHref(meta.url)} target={target} rel="noopener noreferrer">
             <Favicon src={meta.favicon} />
             <span className="link-embed-mention-title">{meta.title || safeHostname(meta.url)}</span>
         </a>

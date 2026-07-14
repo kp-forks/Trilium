@@ -4,7 +4,9 @@ import {
     type BlockChildLike,
     chooseLinkPreviewKind,
     extractYouTubeVideoId,
+    isHttpUrl,
     isUrlAloneInBlock,
+    safeLinkPreviewHref,
     YOUTUBE_REGEX
 } from "./link_embed.js";
 
@@ -43,6 +45,30 @@ describe("YOUTUBE_REGEX", () => {
         const match = "https://www.youtube.com/watch?v=dQw4w9WgXcQ".match(YOUTUBE_REGEX);
         expect(match).not.toBeNull();
         expect(match?.[1]).toBe("dQw4w9WgXcQ");
+    });
+});
+
+describe("isHttpUrl / safeLinkPreviewHref", () => {
+    it("accepts only http(s), which is all the metadata endpoint can ever produce", () => {
+        expect(isHttpUrl("https://example.com/page")).toBe(true);
+        expect(isHttpUrl("http://localhost:8080/x")).toBe(true);
+
+        expect(isHttpUrl("javascript:alert(1)")).toBe(false);
+        expect(isHttpUrl("JavaScript:alert(1)")).toBe(false);
+        expect(isHttpUrl("data:text/html,<script>alert(1)</script>")).toBe(false);
+        expect(isHttpUrl("vbscript:msgbox(1)")).toBe(false);
+        expect(isHttpUrl("file:///etc/passwd")).toBe(false);
+        // Not absolute, so not something a stored preview may point at.
+        expect(isHttpUrl("/relative/path")).toBe(false);
+        expect(isHttpUrl("not-a-url")).toBe(false);
+        expect(isHttpUrl(undefined)).toBe(false);
+        expect(isHttpUrl("")).toBe(false);
+    });
+
+    it("renders a hostile scheme inert instead of linking to it", () => {
+        expect(safeLinkPreviewHref("https://example.com/page")).toBe("https://example.com/page");
+        expect(safeLinkPreviewHref("javascript:alert(document.cookie)")).toBe("about:blank");
+        expect(safeLinkPreviewHref(undefined)).toBe("about:blank");
     });
 });
 

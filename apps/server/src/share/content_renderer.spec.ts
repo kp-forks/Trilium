@@ -323,6 +323,23 @@ describe("content_renderer", () => {
             expect(content).toContain(`<img class="link-embed-video-thumbnail" src="data:image/jpeg;base64,BBB"`);
         });
 
+        it("neuters a hostile scheme in the stored URL, on a page served to anyone", () => {
+            // `data-*` values pass through the save-time sanitizer verbatim, so a note that arrives
+            // by import, ETAPI or sync can carry `data-url="javascript:…"`. It must not become a
+            // live link on the public share page.
+            const note = buildShareNote({
+                content: `<section class="link-embed" data-url="javascript:alert(document.cookie)" data-embed-type="opengraph" data-title="Evil"></section>`
+                    + `<p><span class="link-mention" data-url="javascript:alert(1)" data-title="Evil"></span></p>`
+            });
+
+            const content = String(getContent(note).content);
+            // The element keeps its inert data-url attribute — nothing reads it on the shared page —
+            // but no href points at the payload.
+            expect(content).not.toContain(`href="javascript:`);
+            expect(content).toContain(`<a class="link-embed-card" href="about:blank"`);
+            expect(content).toContain(`<a class="link-embed-mention" href="about:blank"`);
+        });
+
         it("renders an inline mention with the same favicon markup", () => {
             const note = buildShareNote({
                 content: `<p><span class="link-mention" data-url="https://example.com/page" data-title="A title" data-favicon="${FAVICON}"></span></p>`

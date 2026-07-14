@@ -5,6 +5,39 @@ export function extractYouTubeVideoId(url: string): string | null {
     return match ? match[1] : null;
 }
 
+/**
+ * True when the URL is one a link preview may ever point at.
+ *
+ * A preview's URL reaches the renderers as a `data-url` attribute of the stored note HTML, and the
+ * HTML sanitizers (both `sanitize-html` on save and DOMPurify on render) pass `data-*` values
+ * through untouched — they check attribute *names*, not the contents of custom ones. So a note
+ * carrying `data-url="javascript:…"`, whether it arrived by import, ETAPI, sync from a compromised
+ * instance, or hand-edited HTML, would otherwise be rendered as a live `<a href="javascript:…">`
+ * — in the app *and* on the public share page. The metadata endpoint only ever produces http(s)
+ * URLs, so anything else is illegitimate by construction.
+ */
+export function isHttpUrl(url: string | undefined | null): boolean {
+    if (!url) {
+        return false;
+    }
+
+    try {
+        const { protocol } = new URL(url);
+        return protocol === "http:" || protocol === "https:";
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * The URL to put in a link preview's `href`, or `about:blank` when it is not one we may link to.
+ * Mirrors what the share view's `sanitizeUrl` does with a hostile scheme: render the element, make
+ * the link inert. See {@link isHttpUrl}.
+ */
+export function safeLinkPreviewHref(url: string | undefined | null): string {
+    return isHttpUrl(url) ? String(url) : "about:blank";
+}
+
 export interface LinkEmbedMetadata {
     url: string;
     title?: string;

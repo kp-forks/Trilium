@@ -1,4 +1,4 @@
-import { extractYouTubeVideoId } from "@triliumnext/commons";
+import { extractYouTubeVideoId, safeLinkPreviewHref } from "@triliumnext/commons";
 import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
 import { type BAttachment, type BBranch, becca, BNote, getLog, icon_packs as iconPackService, options, sanitize, task_states, utils } from "@triliumnext/core";
@@ -366,7 +366,10 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
         const url = mentionEl.getAttribute("data-url");
         if (!url) continue;
         const title = mentionEl.getAttribute("data-title") || safeHostnameForShare(url);
-        mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+        // escapeHtml() makes the value safe to *place* in the attribute; it says nothing about the
+        // scheme. `data-*` survives the save-time sanitizer untouched, so a stored
+        // `data-url="javascript:…"` would otherwise become a live link on a public page.
+        mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(safeLinkPreviewHref(url))}" target="_blank" rel="noopener noreferrer">` +
             renderFavicon(mentionEl.getAttribute("data-favicon")) +
             `<span class="link-embed-mention-title">${escapeHtml(title)}</span></a>`;
     }
@@ -408,7 +411,7 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
                 + renderFavicon(embedEl.getAttribute("data-favicon"))
                 + `<span>${escapeHtml(siteName)}</span></div>`;
 
-            embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+            embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(safeLinkPreviewHref(url))}" target="_blank" rel="noopener noreferrer">` +
                 imageHtml +
                 `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}${urlHtml}</div></a>`;
         }

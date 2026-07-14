@@ -1,4 +1,4 @@
-import { type BlockChildLike, chooseLinkPreviewKind, isUrlAloneInBlock } from '@triliumnext/commons';
+import { type BlockChildLike, chooseLinkPreviewKind, isHttpUrl, isUrlAloneInBlock } from '@triliumnext/commons';
 import { ButtonView, Command, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Observable } from 'ckeditor5';
 import linkEmbedIcon from '../icons/link-embed.svg?raw';
 import { preventCKEditorHandling } from './widget_utils.js';
@@ -320,7 +320,11 @@ class ChangeLinkDisplayCommand extends Command {
         if (selected) {
             const url = selected.getAttribute('url') as string;
             this.embedAvailable = this._detectEmbedType(url) !== 'opengraph';
-            this.url = url;
+            // Only ever hand out an http(s) URL. `url` comes from the stored `data-url`, which the
+            // HTML sanitizers pass through unexamined, so a note carrying `data-url="javascript:…"`
+            // would otherwise reach the toolbar's "open link" button as a live href. Withholding it
+            // here disables that button (and the copy one) instead of arming them.
+            this.url = isHttpUrl(url) ? url : null;
         } else {
             this.embedAvailable = false;
             this.url = null;

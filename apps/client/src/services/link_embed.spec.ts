@@ -170,6 +170,18 @@ describe("renderEmbedPreview", () => {
         expect(root.querySelector(".link-embed-card-image-placeholder")).toBeNull();
     });
 
+    it("renders a hostile scheme inert rather than as a live link", () => {
+        // `data-url` reaches here straight from the stored note HTML — the sanitizers keep `data-*`
+        // values verbatim — so a crafted note must not become <a href="javascript:...">.
+        const card = makeContainer();
+        renderEmbedPreview(card, { url: "javascript:alert(document.cookie)", embedType: "opengraph", title: "Evil" });
+        expect(card.querySelector("a.link-embed-card")?.getAttribute("href")).toBe("about:blank");
+
+        const mention = document.createElement("div");
+        renderMentionPreview(mention, { url: "javascript:alert(1)", title: "Evil" });
+        expect(mention.querySelector("a.link-embed-mention")?.getAttribute("href")).toBe("about:blank");
+    });
+
     it("shows the stored favicon beside the site name, falling back to a dot without one", () => {
         const root = makeContainer();
         const meta = {
