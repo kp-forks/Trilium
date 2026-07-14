@@ -318,7 +318,11 @@
     "more_actions": "更多操作",
     "deleted_notes_settings": "已刪除的筆記設定",
     "no_deleted_notes_message": "無已刪除的筆記。",
-    "undelete_failed": "無法還原該筆記——該筆記可能已被永久刪除，或其父級項目已不存在。"
+    "undelete_failed": "無法還原該筆記——該筆記可能已被永久刪除，或其父級項目已不存在。",
+    "title_with_ancestor": "{{- title}} - {{- ancestorTitle}}",
+    "no_deleted_notes_erasure_hint": "已刪除的筆記會在 {{- duration}} 之後才會被永久刪除。",
+    "confirm_undelete_to_default_location": "此筆記的父筆記已不存在，因此無法還原至原始位置。是否要將其還原至新筆記的預設位置？",
+    "undeleted_to_default_location": "由於其原始位置已不存在，因此該筆記已還原至 \"{{- title}}\"。"
   },
   "sort_child_notes": {
     "sort_children_by": "依…排序子筆記",
@@ -1146,7 +1150,9 @@
     "successfully_created_fully_anonymized_database": "成功新增完全匿名化的資料庫，路徑為 {{anonymizedFilePath}}",
     "successfully_created_lightly_anonymized_database": "成功新增輕度匿名化的資料庫，路徑為 {{anonymizedFilePath}}",
     "no_anonymized_database_yet": "尚無匿名化資料庫。",
-    "description": "建立資料庫的匿名化副本，以便在除錯時與開發人員分享，同時避免洩露個人資料。"
+    "description": "建立資料庫的匿名化副本，以便在除錯時與開發人員分享，同時避免洩露個人資料。",
+    "anonymized_databases_location": "匿名化後的資料庫儲存於 {{- anonymizedFolder}}。",
+    "download": "下載"
   },
   "database_integrity_check": {
     "title": "資料庫完整性檢查",
@@ -1237,7 +1243,13 @@
     "triliumnext-dark": "深色",
     "modern_themes": "現代",
     "legacy_themes": "傳統",
-    "custom_themes": "自訂"
+    "custom_themes": "自訂",
+    "recommended": "推薦",
+    "color_scheme": "配色方案",
+    "color_scheme_system": "系統",
+    "color_scheme_light": "淺色",
+    "color_scheme_dark": "深色",
+    "color_scheme_custom_disabled": "色彩方案覆寫功能不適用於自訂主題"
   },
   "zoom_factor": {
     "title": "縮放係數（僅桌面版有效）",
@@ -2372,7 +2384,18 @@
     "exit-fullscreen": "退出全螢幕",
     "unsupported-format": "此檔案格式不支援媒體預覽：\n{{mime}}",
     "zoom-to-fit": "放大至填滿畫面",
-    "zoom-reset": "重設放大至填滿畫面"
+    "zoom-reset": "重設放大至填滿畫面",
+    "activate": "播放 {{- title}}",
+    "seek": "定位（左/右方向鍵）",
+    "forward-10s": "快進 10 秒（右方向鍵）",
+    "previous-video": "上一部影片：{{- title}}",
+    "next-video": "下一部影片：{{- title}}",
+    "previous-audio": "上一段音訊：{{- title}}",
+    "next-audio": "下一段音訊：{{- title}}",
+    "play-mode-title": "播放模式：{{mode}}",
+    "play-mode-once": "單次播放",
+    "play-mode-loop": "循環播放",
+    "play-mode-next": "播放下一個"
   },
   "mermaid": {
     "placeholder": "請輸入您的美人魚圖表內容，或選用下方其中一個範例圖表。",
@@ -2816,5 +2839,9 @@
     "tooltip": "類別：{{- class}}\n圖示代碼：{{- code}}\n關鍵詞：{{- terms}}",
     "count_one": "{{count}} 個圖示",
     "count_other": "{{count}} 個圖示"
+  },
+  "blob_stub": {
+    "not_synced": "此筆記的內容過大，無法同步至此裝置。您可以改在同步伺服器上開啟它。",
+    "open_on_server": "在伺服器上開啟"
   }
 }
