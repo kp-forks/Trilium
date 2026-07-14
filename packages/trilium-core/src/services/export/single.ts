@@ -13,27 +13,19 @@ import mdService from "./markdown.js";
 import { stripListItemIds } from "./strip_list_item_ids.js";
 import { ExportFormat } from "../../meta.js";
 import { encodeBase64 } from "../utils/binary.js";
-import { ValidationError } from "../../errors.js";
 
 function exportSingleNote(taskContext: TaskContext<"export">, branch: BBranch, format: ExportFormat, res: Response) {
     const note = branch.getNote();
 
     if (note.type === "image" || note.type === "file") {
-        throw new ValidationError(`Note type '${note.type}' cannot be exported as a single file.`);
+        return [400, `Note type '${note.type}' cannot be exported as single file.`];
     }
 
     if (format !== "html" && format !== "markdown") {
-        throw new ValidationError(`Unrecognized format '${format}'`);
+        return [400, `Unrecognized format '${format}'`];
     }
 
     const { payload, extension, mime } = mapByNoteType(note, note.getContent(), format);
-
-    // Safety net: any note type mapByNoteType doesn't handle leaves these undefined. Reject with a
-    // clear error rather than sending `undefined` — which produced a "<title>.undefined", zero-byte file.
-    if (payload === undefined || extension === undefined) {
-        throw new ValidationError(`Note type '${note.type}' cannot be exported as a single file.`);
-    }
-
     const fileName = `${note.title}.${extension}`;
 
     res.setHeader("Content-Disposition", getContentDisposition(fileName));
@@ -113,6 +105,13 @@ export function mapByNoteType(note: BNote, content: string | Uint8Array, format:
         payload = content;
         extension = "json";
         mime = "application/json";
+    } else {
+        // Any other note type: dump the raw content with a generic extension, so single-note export
+        // produces a real (if opaque) file rather than a zero-byte `.undefined`. Mirrors the `dat`
+        // fallback the zip export uses for unrecognised MIME types.
+        payload = content;
+        extension = "dat";
+        mime = note.mime || "application/octet-stream";
     }
 
     return { payload, extension, mime };
