@@ -1,9 +1,8 @@
-import { extractYouTubeVideoId,type LinkEmbedMetadata } from "@triliumnext/commons";
-import { ValidationError } from "@triliumnext/core";
+import { extractYouTubeVideoId, type LinkEmbedMetadata } from "@triliumnext/commons";
+import { getLog, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 import { parse } from "node-html-parser";
 
-import { getLog } from "@triliumnext/core";
 import { safeFetch, validateUrl } from "../../services/safe_fetch.js";
 
 const MAX_RESPONSE_SIZE = 512 * 1024; // 512KB
@@ -181,12 +180,21 @@ async function getMetadata(req: Request) {
     const url = validatedUrl.toString();
     const videoId = extractYouTubeVideoId(url);
 
+    // A YouTube link stays resolved even when oEmbed is unreachable: the player embeds from the
+    // video ID alone, so the preview is worth showing with or without the title and channel.
     if (videoId) {
         return await fetchYouTubeMetadata(url, videoId);
     }
 
     try {
         const ogData = await fetchOpenGraphData(url);
+
+        // A page that answered but names itself nowhere (no og:title, no <title>) leaves us with
+        // the hostname we already had, which is no better than a failed fetch.
+        if (!ogData.title) {
+            return unresolvedMetadata(validatedUrl);
+        }
+
         return {
             url,
             title: ogData.title,
@@ -198,12 +206,22 @@ async function getMetadata(req: Request) {
         } satisfies LinkEmbedMetadata;
     } catch (e: unknown) {
         getLog().info(`Failed to fetch metadata for ${url}: ${e}`);
-        return {
-            url,
-            title: validatedUrl.hostname,
-            embedType: "opengraph"
-        } satisfies LinkEmbedMetadata;
+        return unresolvedMetadata(validatedUrl);
     }
+}
+
+/**
+ * The degraded result for a URL whose page told us nothing: everything the caller gets back is
+ * derived from the URL itself. Flagged so the caller can keep a plain link instead of rendering a
+ * preview that would show less than the link did.
+ */
+function unresolvedMetadata(url: URL): LinkEmbedMetadata {
+    return {
+        url: url.toString(),
+        title: url.hostname,
+        embedType: "opengraph",
+        unresolved: true
+    };
 }
 
 export default { getMetadata };

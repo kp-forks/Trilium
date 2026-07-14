@@ -88,10 +88,26 @@ describe("link-embed getMetadata", () => {
         expect(result.siteName).toBe("Example");
     });
 
-    it("falls back to the hostname when the fetch fails", async () => {
+    it("falls back to the hostname when the fetch fails, flagging the result unresolved", async () => {
         safeFetch.mockResolvedValue(fakeResponse("", { ok: false }));
         const result = await linkEmbedRoute.getMetadata(req("https://broken.example.com/x"));
-        expect(result).toEqual({ url: "https://broken.example.com/x", title: "broken.example.com", embedType: "opengraph" });
+        expect(result).toEqual({ url: "https://broken.example.com/x", title: "broken.example.com", embedType: "opengraph", unresolved: true });
+    });
+
+    it("treats a page carrying no title of its own as unresolved", async () => {
+        // A bot-challenge interstitial (or any titleless page) answers 200 with HTML but names
+        // nothing, leaving us with the hostname we already had.
+        safeFetch.mockResolvedValue(fakeResponse("<html><head></head><body>nope</body></html>", { contentType: "text/html" }));
+        const result = await linkEmbedRoute.getMetadata(req("https://example.com/page"));
+        expect(result).toEqual({ url: "https://example.com/page", title: "example.com", embedType: "opengraph", unresolved: true });
+    });
+
+    it("does not flag a successfully scraped page", async () => {
+        const html = `<html><head><title>Real Page</title></head></html>`;
+        safeFetch.mockResolvedValue(fakeResponse(html, { contentType: "text/html" }));
+        const result = await linkEmbedRoute.getMetadata(req("https://example.com/page"));
+        expect(result.title).toBe("Real Page");
+        expect(result.unresolved).toBeUndefined();
     });
 
     it("uses a generic YouTube title when oEmbed is unavailable", async () => {
@@ -107,7 +123,13 @@ describe("link-embed getMetadata", () => {
     it("falls back when the page is not HTML", async () => {
         safeFetch.mockResolvedValue(fakeResponse("not html", { contentType: "application/json" }));
         const result = await linkEmbedRoute.getMetadata(req("https://example.com/data.json"));
-        expect(result).toEqual({ url: "https://example.com/data.json", title: "example.com", embedType: "opengraph" });
+        expect(result).toEqual({ url: "https://example.com/data.json", title: "example.com", embedType: "opengraph", unresolved: true });
+    });
+
+    it("keeps a YouTube link resolved even when oEmbed fails, since the player needs no metadata", async () => {
+        safeFetch.mockResolvedValue(fakeResponse("", { ok: false }));
+        const result = await linkEmbedRoute.getMetadata(req("https://youtu.be/dQw4w9WgXcQ"));
+        expect(result.unresolved).toBeUndefined();
     });
 
     it("ignores a favicon that advertises a size over the limit", async () => {

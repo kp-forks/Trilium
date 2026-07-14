@@ -13,6 +13,14 @@ export interface LinkEmbedMetadata {
     favicon?: string;
     siteName?: string;
     embedType: "youtube" | "opengraph";
+    /**
+     * True when the page could not be read at all — a network error, a bot challenge (many sites
+     * answer a server-side fetch with a Cloudflare interstitial), a non-HTML response, or a page
+     * carrying no title of its own. The remaining fields then hold nothing but a hostname-derived
+     * placeholder, so an auto-detected URL is left as a plain link rather than becoming a preview
+     * that shows less than the URL itself did. Never persisted into the note's HTML.
+     */
+    unresolved?: boolean;
 }
 
 /**

@@ -17,6 +17,8 @@ export interface EmbedMetadata {
     favicon?: string;
     siteName?: string;
     image?: string;
+    /** See {@link LinkEmbedMetadata.unresolved}. Not persisted into the note's HTML. */
+    unresolved?: boolean;
 }
 
 
@@ -42,13 +44,15 @@ export async function fetchMetadata(url: string): Promise<EmbedMetadata> {
             description: metadata.description,
             favicon: metadata.favicon,
             siteName: metadata.siteName,
-            image: metadata.image
+            image: metadata.image,
+            unresolved: metadata.unresolved
         };
     } catch {
         return {
             url,
             embedType: detectEmbedType(url),
-            title: safeHostname(url)
+            title: safeHostname(url),
+            unresolved: true
         };
     }
 }

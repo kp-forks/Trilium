@@ -431,6 +431,14 @@ class AutoLinkToMention extends Plugin {
         const component = glob.getComponentByEl<EditorComponent>(editorEl);
 
         component.fetchLinkMetadata(url).then((metadata: LinkEmbedMetadata) => {
+            // The page told us nothing (bot challenge, network error, no title of its own): leave the
+            // plain link AutoLink already created. A preview built from a hostname placeholder would
+            // show strictly less than the URL it replaced.
+            if (metadata.unresolved) {
+                console.warn(`Link preview dropped for ${url}: no metadata could be read from the page (kept as a plain link).`);
+                return;
+            }
+
             this._converting = true;
 
             editor.model.change((writer) => {

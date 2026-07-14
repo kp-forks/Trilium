@@ -17,7 +17,10 @@ import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND } from "./li
 
 const META = {
     url: "https://example.com/",
-    embedType: "web",
+    // The host only ever reports "youtube" or "opengraph". It matters here that this is the real
+    // thing: chooseLinkPreviewKind() treats anything other than "opengraph" as embeddable, so a made-up
+    // type would send a URL standing alone in its block down the block-embed path instead of the mention one.
+    embedType: "opengraph",
     title: "Example title",
     description: "Some description",
     favicon: "https://example.com/favicon.ico",
@@ -395,6 +398,24 @@ describe("LinkEmbed", () => {
         expect(mention?.getAttribute("title")).toBe(META.title);
     });
 
+    it("leaves the plain link untouched when the metadata could not be resolved, and says why", async () => {
+        const url = "https://blocked.example.com/article";
+        fetchLinkMetadata.mockResolvedValueOnce({ url, embedType: "opengraph", title: "blocked.example.com", unresolved: true });
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+        addLinkedText(editor, url);
+        await flushFetch();
+
+        expect(fetchLinkMetadata).toHaveBeenCalledWith(url);
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        expect(findElement(editor, "linkEmbed")).toBeUndefined();
+        // The link AutoLink created is still there, as plain linked text.
+        expect(editor.getData()).toContain(`<a href="${url}">${url}</a>`);
+        expect(warn).toHaveBeenCalledWith(expect.stringContaining(url));
+
+        warn.mockRestore();
+    });
+
     it("ignores a labeled link whose text differs from the href", async () => {
         addLinkedText(editor, "https://example.com/article", "click here");
 
@@ -671,9 +692,12 @@ function addLinkedText(editor: ClassicEditor, href: string, text = href): void {
     });
 }
 
-/** Lets the `fetchLinkMetadata().then(...)` microtask chain resolve. */
+/**
+ * Lets the `fetchLinkMetadata().then(...)` chain resolve and the resulting model change apply.
+ * A task turn is awaited rather than a fixed number of microtasks: the latter is a guess at the
+ * chain's depth that silently under-waits, which makes a conversion test fail and — worse — makes a
+ * test asserting that NO conversion happened pass for the wrong reason.
+ */
 async function flushFetch(): Promise<void> {
-    await Promise.resolve();
-    await Promise.resolve();
-    await Promise.resolve();
+    await new Promise((resolve) => setTimeout(resolve, 0));
 }

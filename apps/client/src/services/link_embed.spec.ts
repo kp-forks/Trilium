@@ -90,8 +90,22 @@ describe("fetchMetadata", () => {
         expect(result).toEqual({
             url: "https://youtu.be/abcdefghijk",
             embedType: "youtube",
-            title: "youtu.be"
+            title: "youtu.be",
+            // Nothing was actually read about the page, so callers can keep a plain link instead.
+            unresolved: true
         });
+    });
+
+    it("passes the server's unresolved flag through", async () => {
+        server.get = vi.fn(async () => ({
+            url: "https://blocked.example.com/x",
+            embedType: "opengraph",
+            title: "blocked.example.com",
+            unresolved: true
+        })) as typeof server.get;
+
+        const result = await fetchMetadata("https://blocked.example.com/x");
+        expect(result.unresolved).toBe(true);
     });
 });
 
