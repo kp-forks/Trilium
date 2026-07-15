@@ -343,8 +343,9 @@ export class ClaudeAgentProvider implements LlmProvider {
                                 promptTokens: message.usage.input_tokens,
                                 completionTokens: message.usage.output_tokens,
                                 totalTokens: message.usage.input_tokens + message.usage.output_tokens,
-                                // API-equivalent cost; informational under a subscription.
-                                cost: message.total_cost_usd,
+                                // No cost is reported: usage is covered by the subscription,
+                                // so a per-turn dollar figure would only imply billing that
+                                // doesn't happen. (The SDK's total_cost_usd is API-equivalent.)
                                 model: modelDisplayName
                             }
                         };
