@@ -42,14 +42,30 @@ type SupportedImageMime = "image/png" | "image/jpeg" | "image/gif" | "image/webp
 const SUPPORTED_IMAGE_MIMES = new Set<string>(["image/png", "image/jpeg", "image/gif", "image/webp"]);
 
 /**
- * Models offered under a Claude subscription. Pricing is zero because usage is
+ * Models offered under a Claude subscription, mirroring Claude Code's own `/model`
+ * picker (the Agent SDK accepts any of these). Pricing is zero because usage is
  * covered by the subscription — the per-turn `usage` chunk still reports the
  * API-equivalent cost as informational metadata from the agent's result.
  */
 const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
+    // ===== Current Models =====
     {
         id: "claude-fable-5",
         name: "Claude Fable 5",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 1000000,
+        isSubscription: true
+    },
+    {
+        id: "claude-opus-4-8",
+        name: "Claude Opus 4.8",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 1000000,
+        isSubscription: true
+    },
+    {
+        id: "claude-opus-4-7",
+        name: "Claude Opus 4.7",
         pricing: { input: 0, output: 0 },
         contextWindow: 1000000,
         isSubscription: true
@@ -63,17 +79,43 @@ const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
         isSubscription: true
     },
     {
-        id: "claude-opus-4-8",
-        name: "Claude Opus 4.8",
-        pricing: { input: 0, output: 0 },
-        contextWindow: 1000000,
-        isSubscription: true
-    },
-    {
         id: "claude-haiku-4-5-20251001",
         name: "Claude Haiku 4.5",
         pricing: { input: 0, output: 0 },
         contextWindow: 200000,
+        isSubscription: true
+    },
+    // ===== Legacy Models =====
+    {
+        id: "claude-sonnet-4-6",
+        name: "Claude Sonnet 4.6",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 1000000,
+        isLegacy: true,
+        isSubscription: true
+    },
+    {
+        id: "claude-opus-4-6",
+        name: "Claude Opus 4.6",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 1000000,
+        isLegacy: true,
+        isSubscription: true
+    },
+    {
+        id: "claude-sonnet-4-5-20250929",
+        name: "Claude Sonnet 4.5",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 200000,
+        isLegacy: true,
+        isSubscription: true
+    },
+    {
+        id: "claude-opus-4-5-20251101",
+        name: "Claude Opus 4.5",
+        pricing: { input: 0, output: 0 },
+        contextWindow: 200000,
+        isLegacy: true,
         isSubscription: true
     }
 ]);
