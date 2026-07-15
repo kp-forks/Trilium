@@ -2,6 +2,21 @@
    Link previews - inline mention, card, video embed
    ========================================================================== */
 
+:where(:root) {
+    --link-preview-stack-gap: 3px;
+    --link-preview-video-max-height: 70vh;
+    --link-preview-video-facade-blur-radius: 20px;
+
+
+    --link-preview-card-background-color: var(--card-background-color);
+    --link-preview-card-hover-background-color: var(--card-background-hover-color);
+    --link-preview-card-image-background-color: var(--accented-background-color);
+    --link-preview-card-image-hover-filter: brightness(1.15);
+    --link-preview-card-title-color: var(--link-color);
+    --link-preview-card-description-text-color: var(--muted-text-color);
+    --link-preview-card-url-text-color: var(--muted-text-color);
+}
+
 /* ---------- Inline mention (favicon + title) ---------- */
 
 .link-mention {
@@ -63,18 +78,13 @@
 /* ---------- Block embed wrapper ---------- */
 
 .link-embed {
-    border-bottom: 3px solid transparent;
+    border-bottom: var(--link-preview-stack-gap) solid transparent;
 }
 
 .ck-widget.link-embed {
-    margin-bottom: 3px;
+    margin-bottom: var(--link-preview-stack-gap);
     border-bottom: 0;
-    border-radius: var(--_link-embed-top-border-radius, 8px)
-                   var(--_link-embed-top-border-radius, 8px)
-                   var(--_link-embed-bottom-border-radius, 8px)
-                   var(--_link-embed-bottom-border-radius, 8px);
     --ck-color-focus-border: var(--link-color);
-    cursor: busy;
 }
 
 .link-embed-preview-wrapper {
@@ -105,11 +115,10 @@
 .link-embed-video iframe {
     width: 100%;
     height: 100%;
-    max-height: 70vh;
+    max-height: var(--link-preview-video-max-height);
     aspect-ratio: 16 / 9;
     border: none;
     display: block;
-    border-radius: 8px;
 }
 
 /* ---------- Click-to-play facade ----------
@@ -122,17 +131,16 @@
     display: block;
     width: 100%;
     height: 100%;
-    max-height: 70vh;
+    max-height: var(--link-preview-video-max-height);
     aspect-ratio: 16 / 9;
     padding: 0;
     border: none;
-    border-radius: 8px;
     background: #000;
     cursor: pointer;
     overflow: hidden;
 
     &:hover .link-embed-video-thumbnail {
-        filter: blur(20px) brightness(0.65);
+        filter: blur(var(--link-preview-video-facade-blur-radius)) brightness(0.65);
     }
 }
 
@@ -141,7 +149,7 @@
     height: 100%;
     object-fit: contain;
     display: block;
-    filter: blur(20px) brightness(0.5);
+    filter: blur(var(--link-preview-video-facade-blur-radius)) brightness(0.5);
 }
 
 .link-embed-video-play {
@@ -178,17 +186,12 @@
 :root a.link-embed-card {
     all: unset;
     display: flex;
-    border-radius: 4px;
     overflow: hidden;
     color: inherit;
     cursor: pointer;
     max-height: 120px;
 
-    background: var(--card-background-color);
-    border-radius: var(--_link-embed-top-border-radius, 8px)
-                   var(--_link-embed-top-border-radius, 8px)
-                   var(--_link-embed-bottom-border-radius, 8px)
-                   var(--_link-embed-bottom-border-radius, 8px);
+    background: var(--link-preview-card-background-color);
 }
 
 /* The hover effect is applied to the card, but not in editable mode */
@@ -196,7 +199,7 @@
     background: var(--card-background-hover-color);
 
     & img {
-        filter: brightness(1.15);
+        filter: var(--link-preview-card-image-hover-filter);
     }
 }
 
@@ -217,6 +220,20 @@ section.link-embed:has(+ section.link-embed) {
     --_link-embed-bottom-border-radius: 0;
 }
 
+/* Shared rounded-corner treatment for every previewable surface — the editing widget, the video
+   iframe/facade, and the card. --_link-embed-*-border-radius default to 8px and get squared to 0
+   on the touching edges of stacked cards (above), so all surfaces round alike. Kept after the card
+   rule so it outweighs that block's `all: unset` at the same specificity. */
+.ck-widget.link-embed,
+.link-embed-video iframe,
+.link-embed-video-facade,
+:root a.link-embed-card {
+    border-radius: var(--_link-embed-top-border-radius, 8px)
+                   var(--_link-embed-top-border-radius, 8px)
+                   var(--_link-embed-bottom-border-radius, 8px)
+                   var(--_link-embed-bottom-border-radius, 8px);
+}
+
 .link-embed-card-image-wrapper {
     width: 160px;
     min-height: 100px;
@@ -225,7 +242,7 @@ section.link-embed:has(+ section.link-embed) {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--accented-background-color, #f5f5f5);
+    background: var(--link-preview-card-image-background-color);
 }
 
 .link-embed-card-image {
@@ -261,12 +278,12 @@ section.link-embed:has(+ section.link-embed) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    color: var(--link-color);
+    color: var(--link-preview-card-title-color);
 }
 
 .link-embed-card-description {
     font-size: 0.82em;
-    color: var(--muted-text-color, #888);
+    color: var(--link-preview-card-description-text-color);
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -279,7 +296,7 @@ section.link-embed:has(+ section.link-embed) {
     align-items: center;
     gap: 5px;
     font-size: 0.78em;
-    color: var(--muted-text-color, #999);
+    color: var(--link-preview-card-url-text-color);
     min-width: 0;
     margin-top: auto;
 
