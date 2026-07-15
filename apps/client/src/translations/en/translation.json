@@ -3074,6 +3074,7 @@
     "provider_name": "Name",
     "provider_type": "Provider",
     "connection_details": "Connection",
+    "advanced_options": "Advanced options",
     "provider_desc_anthropic": "Claude models via the Anthropic API. Requires an API key.",
     "provider_desc_claude_agent": "Uses your Claude Pro/Max subscription, no API key. Requires Claude Code on the Trilium server.",
     "provider_desc_openai": "GPT models via the OpenAI API. Requires an API key.",

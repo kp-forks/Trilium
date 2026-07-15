@@ -148,39 +148,43 @@ export default function AddProviderModal({ show, onHidden, onSave }: AddProvider
             <Card heading={t("llm.connection_details")}>
                 <CardSection>
                     {usesApiKey ? (
-                        <>
-                            <FormGroup
-                                name="base-url"
-                                label={t("llm.base_url")}
-                                description={
-                                    !baseUrlIsValid
-                                        ? <span className="text-danger">{t("llm.base_url_invalid")}</span>
-                                        : t("llm.base_url_description")
-                                }
-                            >
-                                <FormTextBox
-                                    type="text"
-                                    currentValue={baseUrl}
-                                    onChange={setBaseUrl}
-                                    placeholder={providerType?.defaultBaseUrl}
-                                />
-                            </FormGroup>
-
-                            <FormGroup name="api-key" label={t("llm.api_key")}>
-                                <FormTextBox
-                                    type="password"
-                                    currentValue={apiKey}
-                                    onChange={setApiKey}
-                                    placeholder={t("llm.api_key_placeholder")}
-                                    autoFocus
-                                />
-                            </FormGroup>
-                        </>
+                        <FormGroup name="api-key" label={t("llm.api_key")}>
+                            <FormTextBox
+                                type="password"
+                                currentValue={apiKey}
+                                onChange={setApiKey}
+                                placeholder={t("llm.api_key_placeholder")}
+                                autoFocus
+                            />
+                        </FormGroup>
                     ) : (
                         <p>{t("llm.claude_agent_description")}</p>
                     )}
                 </CardSection>
             </Card>
+
+            {usesApiKey && (
+                <Card heading={t("llm.advanced_options")}>
+                    <CardSection>
+                        <FormGroup
+                            name="base-url"
+                            label={t("llm.base_url")}
+                            description={
+                                !baseUrlIsValid
+                                    ? <span className="text-danger">{t("llm.base_url_invalid")}</span>
+                                    : t("llm.base_url_description")
+                            }
+                        >
+                            <FormTextBox
+                                type="text"
+                                currentValue={baseUrl}
+                                onChange={setBaseUrl}
+                                placeholder={providerType?.defaultBaseUrl}
+                            />
+                        </FormGroup>
+                    </CardSection>
+                </Card>
+            )}
         </Modal>,
         document.body
     );
