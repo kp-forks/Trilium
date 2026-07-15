@@ -71,6 +71,8 @@ interface ChatInputBarProps {
     onExtendedThinkingChange?: () => void;
     /** Callback when model changes */
     onModelChange?: (model: string) => void;
+    /** Rendered inside the narrow right sidebar — opens the model submenu leftwards so it doesn't overflow. */
+    inSidebar?: boolean;
 }
 
 export default function ChatInputBar({
@@ -81,7 +83,8 @@ export default function ChatInputBar({
     onWebSearchChange,
     onNoteToolsChange,
     onExtendedThinkingChange,
-    onModelChange
+    onModelChange,
+    inSidebar
 }: ChatInputBarProps) {
     const [showAddProviderModal, setShowAddProviderModal] = useState(false);
     const editorApiRef = useRef<CKEditorApi>();
@@ -345,6 +348,13 @@ export default function ChatInputBar({
                         text={<>{currentModel?.name}</>}
                         disabled={chat.isStreaming}
                         buttonClassName="llm-chat-model-select"
+                        className="llm-chat-model-dropdown"
+                        // In the sidebar the menu lives inside `.sidebar-chat-container`'s
+                        // `overflow: hidden`, which clips the leftward-opening legacy submenu.
+                        // Portal it to the body (with a fixed popper) so it can extend past the
+                        // sidebar edge, matching the sidebar's other dropdowns.
+                        portalToBody={inSidebar}
+                        dropdownOptions={inSidebar ? { popperConfig: { strategy: "fixed" } } : undefined}
                     >
                         {currentModelGroups.map(group => (
                             <Fragment key={group.key}>
@@ -366,6 +376,7 @@ export default function ChatInputBar({
                                 <FormDropdownSubmenu
                                     icon="bx bx-history"
                                     title={t("llm_chat.legacy_models")}
+                                    dropStart={inSidebar}
                                 >
                                     {legacyModelGroups.map(group => (
                                         <Fragment key={group.key}>
