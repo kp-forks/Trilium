@@ -19,7 +19,7 @@
 
 /* ---------- Inline mention (favicon + title) ---------- */
 
-.link-mention {
+:root span.link-mention {
     display: inline;
     border-radius: 4px;
     outline: none !important;
@@ -27,6 +27,10 @@
     &.ck-widget.ck-widget_selected {
         box-shadow: 0 0 0 2px var(--link-selection-outline-color);
         background-color: var(--link-hover-background);
+    }
+
+    a {
+        cursor: default !important;
     }
 }
 
@@ -194,10 +198,14 @@
     display: flex;
     overflow: hidden;
     color: inherit;
-    cursor: pointer;
     max-height: 120px;
 
     background: var(--link-preview-card-background-color);
+}
+
+.link-embed-card-image-wrapper,
+.link-embed-card-content {
+    cursor: default;
 }
 
 /* The hover effect is applied to the card, but not in editable mode */
