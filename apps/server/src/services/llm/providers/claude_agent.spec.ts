@@ -32,9 +32,9 @@ const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string): string | null
 vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
 
 // BYO binary resolution shells out to the user's `claude`; stub it so tests
-// don't depend on a real install. Returns a path by default; can be made to
-// throw (missing binary) per-test.
-const resolveClaudeBinaryMock = vi.hoisted(() => vi.fn(() => "/usr/bin/claude"));
+// don't depend on a real install. Resolves a path by default; can be made to
+// reject (missing binary) per-test.
+const resolveClaudeBinaryMock = vi.hoisted(() => vi.fn(async () => "/usr/bin/claude"));
 vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBinaryMock }));
 
 // Attachment resolution reads bytes out of Becca, which the core mock above
@@ -371,9 +371,9 @@ describe("ClaudeAgentProvider.chatChunks", () => {
     });
 
     it("surfaces a friendly error (and never spawns) when Claude Code isn't installed", async () => {
-        resolveClaudeBinaryMock.mockImplementationOnce(() => {
-            throw new Error("Claude Code CLI not found. Install it and run `claude /login`...");
-        });
+        resolveClaudeBinaryMock.mockRejectedValueOnce(
+            new Error("Claude Code CLI not found. Install it and run `claude /login`...")
+        );
         const provider = new ClaudeAgentProvider();
         const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
 
@@ -482,6 +482,19 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         const errors = chunks.filter(c => c.type === "error");
         expect(errors).toHaveLength(1);
         expect(errors[0].error).toContain("Failed to start Claude Code");
+    });
+
+    it("does not spawn the agent when the signal is already aborted at entry", async () => {
+        // An abort listener alone would never fire for a pre-aborted signal —
+        // the provider must bail out before spawning the subprocess.
+        const controller = new AbortController();
+        controller.abort();
+
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}, controller.signal));
+
+        expect(chunks).toEqual([]);
+        expect(queryMock).not.toHaveBeenCalled();
     });
 
     it("rejects a conversation that does not end with a user message", async () => {

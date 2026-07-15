@@ -171,6 +171,13 @@ export class ClaudeAgentProvider implements LlmProvider {
     }
 
     async *chatChunks(messages: LlmMessage[], config: LlmProviderConfig, signal?: AbortSignal): AsyncIterable<LlmStreamChunk> {
+        if (signal?.aborted) {
+            // The abort listener below would never fire for an already-aborted
+            // signal — and the client is gone anyway, so don't spawn an agent
+            // subprocess nobody will read from.
+            return;
+        }
+
         const conversation = messages.filter(m => m.role !== "system");
         const lastMessage = conversation[conversation.length - 1];
         if (!lastMessage || lastMessage.role !== "user") {
@@ -223,7 +230,7 @@ export class ClaudeAgentProvider implements LlmProvider {
             const response = query({
                 prompt,
                 options: {
-                    ...this.buildBaseOptions(config),
+                    ...await this.buildBaseOptions(config),
                     systemPrompt: this.composeSystemPrompt(messages, config),
                     model,
                     resume,
@@ -380,7 +387,7 @@ export class ClaudeAgentProvider implements LlmProvider {
             const response = query({
                 prompt: `Generate a short title (at most 5 words) summarizing this chat message. Reply with only the title, no quotes or punctuation around it:\n\n${firstMessage.substring(0, 500)}`,
                 options: {
-                    ...this.buildBaseOptions({ enableNoteTools: false }),
+                    ...await this.buildBaseOptions({ enableNoteTools: false }),
                     systemPrompt: "You generate short, descriptive titles. Reply with only the title text — no quotes, no punctuation around it.",
                     model: TITLE_MODEL,
                     maxTurns: 1,
@@ -417,7 +424,7 @@ export class ClaudeAgentProvider implements LlmProvider {
     }
 
     /** Options shared by every agent invocation. */
-    private buildBaseOptions(config: Pick<LlmProviderConfig, "enableNoteTools" | "enableWebSearch" | "enableExtendedThinking">): AgentOptions {
+    private async buildBaseOptions(config: Pick<LlmProviderConfig, "enableNoteTools" | "enableWebSearch" | "enableExtendedThinking">): Promise<AgentOptions> {
         // Built-in Claude Code tools (file access, bash, …) stay disabled — the
         // agent runs on the server host and must only ever touch notes. Web
         // search is the one opt-in exception.
@@ -427,7 +434,7 @@ export class ClaudeAgentProvider implements LlmProvider {
         const options: AgentOptions = {
             // Bring-your-own-binary: the SDK's bundled native binary is stripped
             // at install time; drive the user's own installed Claude Code CLI.
-            pathToClaudeCodeExecutable: resolveClaudeBinaryPath(),
+            pathToClaudeCodeExecutable: await resolveClaudeBinaryPath(),
             cwd: getAgentCwd(),
             tools: builtinTools,
             settingSources: [],

@@ -15,38 +15,52 @@
  */
 
 import { getLog } from "@triliumnext/core";
-import { execFileSync } from "child_process";
+import { execFile } from "child_process";
 import { existsSync } from "fs";
 import path from "path";
+import { promisify } from "util";
 
-/** Cached only on success, so a later install is picked up without a restart. */
-let cachedPath: string | undefined;
+const execFileAsync = promisify(execFile);
 
-export function resolveClaudeBinaryPath(): string {
-    if (cachedPath) {
-        return cachedPath;
+/**
+ * The in-flight/successful resolution. Caching the promise lets concurrent
+ * first calls share one probe; a failed probe clears it so a later install is
+ * picked up without a restart.
+ */
+let cachedResolution: Promise<string> | undefined;
+
+export function resolveClaudeBinaryPath(): Promise<string> {
+    if (!cachedResolution) {
+        cachedResolution = probeBinary().catch((err: unknown) => {
+            cachedResolution = undefined;
+            throw err;
+        });
     }
+    return cachedResolution;
+}
 
+/** For tests: forget the probed binary so the next call re-resolves. */
+export function resetClaudeBinaryCache(): void {
+    cachedResolution = undefined;
+}
+
+async function probeBinary(): Promise<string> {
     const binary = locateBinary();
 
     // Probe once: confirms the binary actually runs on this host (catches a
     // wrong-arch/broken install) and records the version for diagnostics.
+    // Async on purpose — this runs on the first chat request, and a sync probe
+    // would freeze the whole server for up to the 15 s timeout.
     let version: string;
     try {
-        version = execFileSync(binary, ["--version"], { timeout: 15000, encoding: "utf8" }).trim();
+        version = (await execFileAsync(binary, ["--version"], { timeout: 15000, encoding: "utf8" })).stdout.trim();
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         throw new Error(`Found Claude Code at "${binary}" but it failed to run (${detail}). Ensure it is installed correctly and that you've run \`claude /login\` on the machine running the Trilium server.`);
     }
 
     getLog().info(`Claude Agent provider: using Claude Code at ${binary} (${version})`);
-    cachedPath = binary;
     return binary;
-}
-
-/** For tests: forget the probed binary so the next call re-resolves. */
-export function resetClaudeBinaryCache(): void {
-    cachedPath = undefined;
 }
 
 function locateBinary(): string {
