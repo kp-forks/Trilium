@@ -66,8 +66,8 @@
 
 .link-embed-video {
     position: relative;
-    width: 100%;
     max-width: 640px;
+    margin: auto;
     border-radius: 8px;
     overflow: hidden;
     background: #000;
@@ -100,6 +100,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    filter: blur(20px) brightness(.65);
 }
 
 .link-embed-video-play {
@@ -135,6 +136,7 @@
 
 .link-embed-card {
     display: flex;
+    width: 100%;
     border: 1px solid var(--background-highlight);
     border-radius: 4px;
     overflow: hidden;
