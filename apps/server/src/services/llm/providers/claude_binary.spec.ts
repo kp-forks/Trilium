@@ -104,8 +104,11 @@ describe("resolveClaudeBinaryPath", () => {
 
         it("probes PATHEXT-style extensions on Windows (finds claude.cmd)", async () => {
             stubPlatform("win32");
-            const hit = path.join("C:\\npm", "claude.cmd");
-            process.env.PATH = ["C:\\npm"].join(path.delimiter);
+            // No drive letter: a `C:` prefix would be split apart by the POSIX
+            // `:` PATH delimiter when this spec runs on a non-Windows host.
+            const dir = path.join("npm", "prefix");
+            const hit = path.join(dir, "claude.cmd");
+            process.env.PATH = dir;
             existsSyncMock.mockImplementation((candidate: string) => candidate === hit);
             probeSucceeds();
 
