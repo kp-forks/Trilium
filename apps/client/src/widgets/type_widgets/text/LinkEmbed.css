@@ -266,6 +266,17 @@ section.link-embed:has(+ section.link-embed) {
     object-fit: cover;
 }
 
+/* Let a click/double-click land on the wrapping anchor (card) or button (facade), not the image
+   itself. Without this, Firefox treats an inline data: image in a contenteditable as a draggable,
+   openable resource and a double-click navigates the tab to the base64 URI instead of following
+   the card's link. The wrappers carry the interaction; the images never need pointer events. */
+.link-embed-card-image,
+.link-embed-video-thumbnail {
+    pointer-events: none;
+    -webkit-user-drag: none;
+    user-select: none;
+}
+
 .link-embed-card-image-placeholder {
     display: flex;
     align-items: center;
