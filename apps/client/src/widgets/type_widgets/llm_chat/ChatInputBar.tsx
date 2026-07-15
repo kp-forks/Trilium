@@ -1,6 +1,7 @@
 import "./ChatInputBar.css";
 
 import { AttributeEditor as CKEditorAttributeEditor, CHAT_INPUT_PLUGINS, type CKTextEditor, type MentionFeed } from "@triliumnext/ckeditor5";
+import { Fragment } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
@@ -11,9 +12,9 @@ import ActionButton from "../../react/ActionButton.js";
 import Button from "../../react/Button.js";
 import CKEditor, { type CKEditorApi } from "../../react/CKEditor.js";
 import Dropdown from "../../react/Dropdown.js";
-import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
+import { FormDropdownDivider, FormDropdownSubmenu, FormListHeader, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
-import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
+import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "../options/llm/AddProviderModal.js";
 import { insertNewBlock as insertNewBlockCommand, isSelectionInCodeBlock, outdentListItemAtStart } from "./chat_input_editing.js";
 import { editorHtmlToMarkdown } from "./chat_input_markdown.js";
 import { SafeImage } from "./retry_image.js";
@@ -183,7 +184,9 @@ export default function ChatInputBar({
     const isSelectedModel = (m: ModelOption) => m.id === chat.selectedModel && m.provider === effectiveProvider;
     const currentModel = chat.availableModels.find(isSelectedModel);
     const currentModels = chat.availableModels.filter(m => !m.isLegacy);
+    const currentModelGroups = groupModelsByProvider(currentModels);
     const legacyModels = chat.availableModels.filter(m => m.isLegacy);
+    const legacyModelGroups = groupModelsByProvider(legacyModels);
     // Gemini 2.x cannot combine googleSearch with function tools in a single
     // request. When note tools are enabled on a Gemini model we silently drop
     // web search server-side; reflect that here by disabling the toggle so the
@@ -343,14 +346,19 @@ export default function ChatInputBar({
                         disabled={chat.isStreaming}
                         buttonClassName="llm-chat-model-select"
                     >
-                        {currentModels.map(model => (
-                            <FormListItem
-                                key={`${model.provider}:${model.id}`}
-                                onClick={() => handleModelSelect(model.id, model.provider)}
-                                checked={isSelectedModel(model)}
-                            >
-                                {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
-                            </FormListItem>
+                        {currentModelGroups.map(group => (
+                            <Fragment key={group.key}>
+                                {group.providerName && <FormListHeader text={group.providerName} />}
+                                {group.models.map(model => (
+                                    <FormListItem
+                                        key={`${model.provider}:${model.id}`}
+                                        onClick={() => handleModelSelect(model.id, model.provider)}
+                                        checked={isSelectedModel(model)}
+                                    >
+                                        {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
+                                    </FormListItem>
+                                ))}
+                            </Fragment>
                         ))}
                         {legacyModels.length > 0 && (
                             <>
@@ -359,14 +367,19 @@ export default function ChatInputBar({
                                     icon="bx bx-history"
                                     title={t("llm_chat.legacy_models")}
                                 >
-                                    {legacyModels.map(model => (
-                                        <FormListItem
-                                            key={`${model.provider}:${model.id}`}
-                                            onClick={() => handleModelSelect(model.id, model.provider)}
-                                            checked={isSelectedModel(model)}
-                                        >
-                                            {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
-                                        </FormListItem>
+                                    {legacyModelGroups.map(group => (
+                                        <Fragment key={group.key}>
+                                            {group.providerName && <FormListHeader text={group.providerName} />}
+                                            {group.models.map(model => (
+                                                <FormListItem
+                                                    key={`${model.provider}:${model.id}`}
+                                                    onClick={() => handleModelSelect(model.id, model.provider)}
+                                                    checked={isSelectedModel(model)}
+                                                >
+                                                    {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
+                                                </FormListItem>
+                                            ))}
+                                        </Fragment>
                                     ))}
                                 </FormDropdownSubmenu>
                             </>
@@ -441,4 +454,37 @@ export default function ChatInputBar({
             </div>
         </form>
     );
+}
+
+interface ProviderModelGroup {
+    /** Stable key for the group (the provider id). */
+    key: string;
+    /** Friendly provider name shown in the group header. */
+    providerName: string;
+    models: ModelOption[];
+}
+
+/**
+ * Groups models by their owning provider, preserving the order in which each provider first
+ * appears. The provider's friendly name (from {@link PROVIDER_TYPES}) heads each group.
+ */
+function groupModelsByProvider(models: ModelOption[]): ProviderModelGroup[] {
+    const groups: ProviderModelGroup[] = [];
+    const byProvider = new Map<string | undefined, ProviderModelGroup>();
+
+    for (const model of models) {
+        let group = byProvider.get(model.provider);
+        if (!group) {
+            group = {
+                key: model.provider ?? "",
+                providerName: PROVIDER_TYPES.find(p => p.id === model.provider)?.name ?? model.provider ?? "",
+                models: []
+            };
+            byProvider.set(model.provider, group);
+            groups.push(group);
+        }
+        group.models.push(model);
+    }
+
+    return groups;
 }
