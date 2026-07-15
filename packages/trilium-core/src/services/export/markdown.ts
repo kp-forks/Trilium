@@ -236,6 +236,11 @@ function buildFigureFilter(): Rule {
  * nested lists indent too; inline wrappers (<summary>, list-item <span>s, etc.)
  * are emitted verbatim on a single line, and a node holding direct text is kept
  * verbatim as well so its content is never dropped.
+ *
+ * The Trilium-only `trilium-collapsible` styling hook is dropped from the
+ * exported <details> (any user-added classes are kept). It is not needed to
+ * round-trip: the importer upcasts <details> by tag name and the collapsible
+ * plugin re-stamps the class on the next save.
  */
 function buildDetailsFilter(): Rule {
     // Block containers whose children are themselves blocks. Inline-content
@@ -248,7 +253,12 @@ function buildDetailsFilter(): Rule {
             return node.nodeName === "DETAILS";
         },
         replacement(_content, node) {
-            return `\n\n${serializeStructuralHtml(node as HTMLElement, DETAILS_CONTAINER_TAGS)}\n\n`;
+            const details = node as HTMLElement;
+            details.classList.remove("trilium-collapsible");
+            if (details.classList.length === 0) {
+                details.removeAttribute("class");
+            }
+            return `\n\n${serializeStructuralHtml(details, DETAILS_CONTAINER_TAGS)}\n\n`;
         }
     };
 }

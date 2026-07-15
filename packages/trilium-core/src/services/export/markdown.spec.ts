@@ -299,15 +299,25 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
-    it("preserves collapsible details blocks as pretty-printed raw HTML", () => {
+    it("preserves collapsible details blocks as pretty-printed raw HTML, dropping the trilium-collapsible class", () => {
         const html = /*html*/`<details class="trilium-collapsible"><summary>Click to expand</summary><p>Body content</p></details>`;
         // Kept as raw HTML (Markdown has no disclosure syntax) but pretty-printed one
-        // child per line, mirroring how raw-HTML tables are serialized. Still
-        // round-trips losslessly through the markdown importer.
+        // child per line, mirroring how raw-HTML tables are serialized. The Trilium-only
+        // styling hook is stripped; it still round-trips through the markdown importer.
         const expected = trimIndentation`\
-            <details class="trilium-collapsible">
+            <details>
                 <summary>Click to expand</summary>
                 <p>Body content</p>
+            </details>`;
+        expect(markdownExportService.toMarkdown(html)).toBe(expected);
+    });
+
+    it("keeps user-added classes on a details block while dropping trilium-collapsible", () => {
+        const html = /*html*/`<details class="custom trilium-collapsible"><summary>S</summary><p>B</p></details>`;
+        const expected = trimIndentation`\
+            <details class="custom">
+                <summary>S</summary>
+                <p>B</p>
             </details>`;
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
