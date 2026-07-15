@@ -17,10 +17,7 @@
     align-items: center;
     gap: 4px;
     padding: 1px 6px 1px 4px;
-    border-radius: 4px;
-    background: var(--accented-background-color, rgba(0, 0, 0, 0.04));
     text-decoration: none;
-    color: var(--main-text-color, #333);
     font-size: 0.92em;
     line-height: 1.5;
     vertical-align: baseline;
@@ -29,9 +26,7 @@
 }
 
 .link-embed-mention:hover {
-    background: var(--hover-item-background-color, rgba(0, 0, 0, 0.08));
     text-decoration: none;
-    color: var(--main-text-color, #333);
 }
 
 .link-embed-mention-favicon {
@@ -60,6 +55,18 @@
 .link-embed {
     border-bottom: 3px solid transparent;
 }
+
+.ck-widget.link-embed {
+    margin-bottom: 3px;
+    border-bottom: 0;
+    border-radius: var(--_link-embed-top-border-radius, 8px)
+                   var(--_link-embed-top-border-radius, 8px)
+                   var(--_link-embed-bottom-border-radius, 8px)
+                   var(--_link-embed-bottom-border-radius, 8px);
+    --ck-color-focus-border: var(--link-color);
+    cursor: busy;
+}
+
 .link-embed-preview-wrapper {
     display: block;
 }
@@ -76,14 +83,19 @@
 .link-embed-video {
     position: relative;
     width: 100%;
-    max-width: 640px;
+    max-height: 70vh;
     border-radius: 8px;
     overflow: hidden;
-    background: #000;
+}
+
+.link-embed-preview-wrapper > .link-embed-video {
+    padding: 12px;
+    background: white;
 }
 
 .link-embed-video iframe {
     width: 100%;
+    height: 100%;
     aspect-ratio: 16 / 9;
     border: none;
     display: block;
@@ -92,16 +104,19 @@
 /* ---------- Click-to-play facade ----------
    Shown in place of the player until the user asks for it, so opening a note never contacts
    YouTube. The thumbnail is the one stored in the note, not a remote one. */
+   
 
 .link-embed-video-facade {
     position: relative;
     display: block;
     width: 100%;
+    height: 100%;
     aspect-ratio: 16 / 9;
     padding: 0;
     border: none;
     background: #000;
     cursor: pointer;
+    overflow: hidden;
 }
 
 .link-embed-video-thumbnail {
@@ -109,6 +124,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
+    filter: blur(20px) brightness(0.5);
 }
 
 .link-embed-video-play {
@@ -142,7 +158,7 @@
 
 /* ---------- Card embed (Notion-style) ---------- */
 
-a.link-embed-card {
+:root a.link-embed-card {
     all: unset;
     display: flex;
     border-radius: 4px;
@@ -158,13 +174,12 @@ a.link-embed-card {
                    var(--_link-embed-bottom-border-radius, 8px);
 }
 
-a.link-embed-card:hover {
-    background: var(--card-background-hover-color) !important;
-    text-decoration: none;
-    box-shadow: none;
+/* The hover effect is applied to the card, but not in editable mode */
+:root *:not(.link-embed-preview-wrapper) > a.link-embed-card:hover {
+    background: var(--card-background-hover-color);
 
     & img {
-        filter: brightness(1.25);
+        filter: brightness(1.15);
     }
 }
 
@@ -172,21 +187,17 @@ a.link-embed-card::after {
     display: none !important;
 }
 
-/* The first card in series */
-section.link-embed:not(section.link-embed + section.link-embed) {
-    --_link-embed-bottom-border-radius: 0;
-}
+/* Cards in a series share flush edges; only the outer corners stay rounded. A card that
+   stands alone matches neither rule below and keeps the default 8px on every corner. */
 
+/* Square off the top when another card sits directly above. */
 section.link-embed + section.link-embed {
     --_link-embed-top-border-radius: 0;
-    --_link-embed-bottom-border-radius: 0;
 }
 
-/* The last card in series */
-section.link-embed:not(:has(+ section.link-embed)) {
-    --_link-embed-top-border-radius: 0;
-    --_link-embed-bottom-border-radius: 8px;
-
+/* Square off the bottom when another card sits directly below. */
+section.link-embed:has(+ section.link-embed) {
+    --_link-embed-bottom-border-radius: 0;
 }
 
 .link-embed-card-image-wrapper {
@@ -233,6 +244,7 @@ section.link-embed:not(:has(+ section.link-embed)) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--link-color);
 }
 
 .link-embed-card-description {
