@@ -89,7 +89,7 @@
 }
 
 .link-embed-preview-wrapper > .link-embed-video {
-    padding: 12px;
+    padding: 8px;
     background: white;
 }
 
@@ -99,6 +99,7 @@
     aspect-ratio: 16 / 9;
     border: none;
     display: block;
+    border-radius: 8px;
 }
 
 /* ---------- Click-to-play facade ----------
