@@ -163,10 +163,25 @@ describe("ClaudeAgentProvider.chatChunks", () => {
             { type: "text", content: "world" },
             {
                 type: "usage",
-                usage: { promptTokens: 100, completionTokens: 40, totalTokens: 140, cost: 0.05, model: "claude-sonnet-5" }
+                usage: { promptTokens: 100, completionTokens: 40, totalTokens: 140, cost: 0.05, model: "Claude Sonnet 5" }
             },
             { type: "done" }
         ]);
+    });
+
+    it("reports the friendly model name in usage, falling back to the raw ID for unknown models", async () => {
+        const provider = new ClaudeAgentProvider();
+        const usageModel = async (config: { model?: string }) => {
+            scriptAgent([successResult()]);
+            const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], config));
+            const usage = chunks.find(c => c.type === "usage");
+            return usage?.type === "usage" ? usage.usage.model : undefined;
+        };
+
+        // A known model ID is mapped to its display name (the chat pane renders it verbatim).
+        expect(await usageModel({ model: "claude-fable-5" })).toBe("Claude Fable 5");
+        // An unrecognized ID passes through unchanged rather than becoming undefined.
+        expect(await usageModel({ model: "some-unknown-model" })).toBe("some-unknown-model");
     });
 
     it("ignores subagent traffic (non-null parent_tool_use_id)", async () => {

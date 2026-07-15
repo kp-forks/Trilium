@@ -218,6 +218,9 @@ export class ClaudeAgentProvider implements LlmProvider {
         signal?.addEventListener("abort", onAbort, { once: true });
 
         const model = config.model || AVAILABLE_MODELS.find(m => m.isDefault)?.id;
+        // Report the friendly name in usage metadata (the chat pane renders it
+        // verbatim); `model` itself must stay the raw ID for the query() call.
+        const modelDisplayName = AVAILABLE_MODELS.find(m => m.id === model)?.name ?? model;
         let sessionId: string | undefined;
         let assistantText = "";
         // tool_use id → name, for labelling results; also serves as the guard
@@ -342,7 +345,7 @@ export class ClaudeAgentProvider implements LlmProvider {
                                 totalTokens: message.usage.input_tokens + message.usage.output_tokens,
                                 // API-equivalent cost; informational under a subscription.
                                 cost: message.total_cost_usd,
-                                model
+                                model: modelDisplayName
                             }
                         };
                         break;
