@@ -1,3 +1,4 @@
+import path from "path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // The probe drives the real execFile through util.promisify's callback
@@ -15,6 +16,8 @@ const { resetClaudeBinaryCache, resolveClaudeBinaryPath } = await import("./clau
 
 describe("resolveClaudeBinaryPath", () => {
     const originalOverride = process.env.TRILIUM_CLAUDE_CODE_PATH;
+    const originalPath = process.env.PATH;
+    const originalPlatform = Object.getOwnPropertyDescriptor(process, "platform");
 
     beforeEach(() => {
         resetClaudeBinaryCache();
@@ -30,7 +33,15 @@ describe("resolveClaudeBinaryPath", () => {
         } else {
             process.env.TRILIUM_CLAUDE_CODE_PATH = originalOverride;
         }
+        process.env.PATH = originalPath;
+        if (originalPlatform) {
+            Object.defineProperty(process, "platform", originalPlatform);
+        }
     });
+
+    function stubPlatform(platform: NodeJS.Platform) {
+        Object.defineProperty(process, "platform", { ...originalPlatform, value: platform });
+    }
 
     function probeSucceeds() {
         execFileMock.mockImplementation((_binary, _args, _options, cb) => cb(null, { stdout: "2.0.1\n", stderr: "" }));
@@ -61,10 +72,53 @@ describe("resolveClaudeBinaryPath", () => {
         expect(execFileMock).toHaveBeenCalledTimes(2);
     });
 
+    it("stringifies non-Error probe failures into the actionable message", async () => {
+        execFileMock.mockImplementationOnce((_binary, _args, _options, cb) => cb("killed by signal" as unknown as Error));
+
+        await expect(resolveClaudeBinaryPath()).rejects.toThrow(/failed to run \(killed by signal\)/);
+    });
+
     it("rejects when TRILIUM_CLAUDE_CODE_PATH points at a missing file, without probing", async () => {
         existsSyncMock.mockReturnValue(false);
 
         await expect(resolveClaudeBinaryPath()).rejects.toThrow(/TRILIUM_CLAUDE_CODE_PATH/);
         expect(execFileMock).not.toHaveBeenCalled();
+    });
+
+    describe("PATH fallback (no override)", () => {
+        beforeEach(() => {
+            delete process.env.TRILIUM_CLAUDE_CODE_PATH;
+        });
+
+        it("finds the bare `claude` binary on POSIX, skipping empty PATH segments", async () => {
+            stubPlatform("linux");
+            const hit = path.join("/home/user/bin", "claude");
+            // Leading empty segment exercises the `if (!dir) continue` guard.
+            process.env.PATH = ["", "/usr/local/bin", "/home/user/bin"].join(path.delimiter);
+            existsSyncMock.mockImplementation((candidate: string) => candidate === hit);
+            probeSucceeds();
+
+            await expect(resolveClaudeBinaryPath()).resolves.toBe(hit);
+            expect(execFileMock.mock.calls[0][0]).toBe(hit);
+        });
+
+        it("probes PATHEXT-style extensions on Windows (finds claude.cmd)", async () => {
+            stubPlatform("win32");
+            const hit = path.join("C:\\npm", "claude.cmd");
+            process.env.PATH = ["C:\\npm"].join(path.delimiter);
+            existsSyncMock.mockImplementation((candidate: string) => candidate === hit);
+            probeSucceeds();
+
+            await expect(resolveClaudeBinaryPath()).resolves.toBe(hit);
+        });
+
+        it("rejects with install instructions when `claude` is nowhere on PATH (or PATH is unset)", async () => {
+            stubPlatform("linux");
+            delete process.env.PATH;
+            existsSyncMock.mockReturnValue(false);
+
+            await expect(resolveClaudeBinaryPath()).rejects.toThrow(/Claude Code CLI not found/);
+            expect(execFileMock).not.toHaveBeenCalled();
+        });
     });
 });

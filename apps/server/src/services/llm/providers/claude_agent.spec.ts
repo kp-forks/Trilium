@@ -42,7 +42,7 @@ vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBin
 const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
 vi.mock("./attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
 
-const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript } = await import("./claude_agent.js");
+const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript, resetAgentCwdForTests } = await import("./claude_agent.js");
 
 /** Drain the query prompt into the single user message it streams (multimodal path). */
 async function drainPrompt(prompt: unknown): Promise<{ role: string; content: unknown[] }> {
@@ -484,6 +484,22 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(errors[0].error).toContain("Failed to start Claude Code");
     });
 
+    it("forwards a mid-stream abort to the agent's abort controller", async () => {
+        scriptAgent([textDelta("partial"), successResult()]);
+        const controller = new AbortController();
+        const provider = new ClaudeAgentProvider();
+        const stream = provider.chatChunks([{ role: "user", content: "hi" }], {}, controller.signal);
+
+        const chunks: LlmStreamChunk[] = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
+            // Fire the abort after the first chunk; the mocked SDK stream keeps
+            // yielding, proving the listener path itself doesn't break the loop.
+            controller.abort();
+        }
+        expect(chunks.some(c => c.type === "text")).toBe(true);
+    });
+
     it("does not spawn the agent when the signal is already aborted at entry", async () => {
         // An abort listener alone would never fire for a pre-aborted signal —
         // the provider must bail out before spawning the subprocess.
@@ -497,11 +513,287 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         expect(queryMock).not.toHaveBeenCalled();
     });
 
-    it("rejects a conversation that does not end with a user message", async () => {
+    it("rejects a conversation that does not end with a user message (or is empty)", async () => {
         const provider = new ClaudeAgentProvider();
-        const chunks = await collect(provider.chatChunks([{ role: "assistant", content: "hi" }], {}));
-        expect(chunks).toEqual([{ type: "error", error: "The last message must be a user message." }]);
+        const expected = [{ type: "error", error: "The last message must be a user message." }];
+        expect(await collect(provider.chatChunks([{ role: "assistant", content: "hi" }], {}))).toEqual(expected);
+        expect(await collect(provider.chatChunks([], {}))).toEqual(expected);
         expect(queryMock).not.toHaveBeenCalled();
+    });
+
+    it("exposes the subscription model list, zero pricing, and no chat() implementation", () => {
+        const provider = new ClaudeAgentProvider();
+        const models = provider.getAvailableModels();
+        expect(models.some(m => m.id === "claude-sonnet-5" && m.isDefault)).toBe(true);
+        expect(provider.getModelPricing("claude-sonnet-5")).toEqual(expect.objectContaining({ input: 0, output: 0 }));
+        expect(provider.getModelPricing("no-such-model")).toBeUndefined();
+        expect(() => provider.chat()).toThrow(/chatChunks/);
+    });
+
+    it("streams thinking deltas as thinking chunks", async () => {
+        scriptAgent([
+            {
+                type: "stream_event",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                event: { type: "content_block_delta", index: 0, delta: { type: "thinking_delta", thinking: "pondering…" } }
+            },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(chunks).toContainEqual({ type: "thinking", content: "pondering…" });
+    });
+
+    it("ignores stream noise: non-tool block starts, unknown deltas, unmapped tool indexes, other events", async () => {
+        scriptAgent([
+            // content_block_start for a plain text block — no chunk.
+            {
+                type: "stream_event",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                event: { type: "content_block_start", index: 0, content_block: { type: "text", text: "" } }
+            },
+            // A delta type the provider doesn't map — no chunk.
+            {
+                type: "stream_event",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                event: { type: "content_block_delta", index: 0, delta: { type: "signature_delta", signature: "sig" } }
+            },
+            // input_json_delta for a block index that never had a tool_use start.
+            {
+                type: "stream_event",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                event: { type: "content_block_delta", index: 9, delta: { type: "input_json_delta", partial_json: "{}" } }
+            },
+            // A stream event that is neither block start nor delta.
+            {
+                type: "stream_event",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                event: { type: "message_start" }
+            },
+            // An SDK message type the provider doesn't know (and no session_id).
+            { type: "diagnostic" },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(chunks.map(c => c.type)).toEqual(["usage", "done"]);
+    });
+
+    it("ignores assistant/user messages from subagents and non-array user content", async () => {
+        scriptAgent([
+            {
+                type: "assistant",
+                parent_tool_use_id: "toolu_parent",
+                session_id: "sess-1",
+                message: { content: [{ type: "tool_use", id: "toolu_sub", name: "sub_tool", input: {} }] }
+            },
+            {
+                type: "user",
+                parent_tool_use_id: "toolu_parent",
+                session_id: "sess-1",
+                message: { content: [{ type: "tool_result", tool_use_id: "toolu_sub", content: "sub result" }] }
+            },
+            {
+                type: "user",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                message: { content: "a plain string user echo" }
+            },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(chunks.map(c => c.type)).toEqual(["usage", "done"]);
+    });
+
+    it("flattens tool results of every content shape and skips non-result blocks", async () => {
+        // No `input` field — exercises the `block.input ?? {}` fallback on the tool_use chunk.
+        const toolUse = (id: string) => ({ type: "tool_use", id, name: `mcp__trilium__t_${id}` });
+        scriptAgent([
+            {
+                type: "assistant",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                message: { content: [toolUse("t1"), toolUse("t2"), toolUse("t3"), toolUse("t4")] }
+            },
+            {
+                type: "user",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                message: {
+                    content: [
+                        // A non-result block and an id-less result must both be skipped.
+                        { type: "text", text: "interleaved commentary" },
+                        { type: "tool_result", content: "no id" },
+                        { type: "tool_result", tool_use_id: "t1", content: "plain string" },
+                        { type: "tool_result", tool_use_id: "t2" }, // no content
+                        { type: "tool_result", tool_use_id: "t3", content: [{ type: "image" }] },
+                        { type: "tool_result", tool_use_id: "t4", content: { odd: true } }
+                    ]
+                }
+            },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+
+        const results = chunks.filter(c => c.type === "tool_result");
+        expect(results.map(r => [r.toolName, r.result])).toEqual([
+            ["t_t1", "plain string"],
+            ["t_t2", ""],
+            ["t_t3", ""], // array without text blocks flattens to nothing
+            ["t_t4", '{"odd":true}']
+        ]);
+    });
+
+    it("reports a stop reason when the agent fails without an error list", async () => {
+        scriptAgent([
+            { ...successResult(), subtype: "error_max_turns", is_error: true }
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        const errors = chunks.filter(c => c.type === "error");
+        expect(errors).toEqual([{ type: "error", error: "Agent stopped: error_max_turns" }]);
+    });
+
+    it("maps oauth failures to the login hint and other assistant errors to a generic message", async () => {
+        scriptAgent([
+            {
+                type: "assistant",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                error: "oauth_org_not_allowed",
+                message: { content: [] }
+            },
+            {
+                type: "assistant",
+                parent_tool_use_id: null,
+                session_id: "sess-1",
+                error: "billing_issue",
+                message: { content: [] }
+            },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        const errors = chunks.filter(c => c.type === "error").map(c => c.error);
+        expect(errors[0]).toContain("claude /login");
+        expect(errors[1]).toBe("Claude Agent error: billing_issue");
+    });
+
+    it("stringifies non-Error throws from the SDK", async () => {
+        queryMock.mockImplementation(() => {
+            throw "subprocess exploded";
+        });
+        const provider = new ClaudeAgentProvider();
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(chunks).toContainEqual({ type: "error", error: "subprocess exploded" });
+    });
+
+    it("ignores non-init system messages and inits without a trilium MCP entry", async () => {
+        scriptAgent([
+            { type: "system", subtype: "compact_boundary", session_id: "s" },
+            { type: "system", subtype: "init", session_id: "s" }, // no mcp_servers at all
+            { type: "system", subtype: "init", session_id: "s", mcp_servers: [{ name: "other", status: "failed" }] },
+            successResult()
+        ]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(errorLogMock).not.toHaveBeenCalled();
+    });
+
+    it("degrades unresolved and natively-unsupported attachments to placeholders around real blocks", async () => {
+        resolveAttachmentPartMock
+            .mockReturnValueOnce({ kind: "image", bytes: new Uint8Array([1]), mime: "image/png" })
+            .mockReturnValueOnce(null) // missing/protected attachment
+            .mockReturnValueOnce({ kind: "image", bytes: new Uint8Array([2]), mime: "image/tiff" })
+            .mockReturnValueOnce({ kind: "file", bytes: new Uint8Array([3]), mime: "application/zip", filename: "a.zip" });
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [
+                { type: "image", attachmentId: "png", mime: "image/png" },
+                { type: "image", attachmentId: "gone", mime: "image/png" },
+                { type: "image", attachmentId: "tiff", mime: "image/tiff" },
+                { type: "file", attachmentId: "zip", mime: "application/zip", filename: "a.zip" }
+            ] }
+        ], {}));
+
+        const message = await drainPrompt(queryMock.mock.calls[0][0].prompt);
+        expect(message.content).toEqual([
+            { type: "image", source: { type: "base64", media_type: "image/png", data: "AQ==" } },
+            { type: "text", text: "[attached image]" },
+            { type: "text", text: "[attached image]" },
+            { type: "text", text: "[attached file: a.zip]" }
+        ]);
+    });
+
+    it("keeps the plain string prompt for parts-form content without attachments", async () => {
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([
+            { role: "user", content: [{ type: "text", text: "line one" }, { type: "text", text: "line two" }] }
+        ], {}));
+        expect(queryMock.mock.calls[0][0].prompt).toBe("line one\nline two");
+    });
+
+    it("creates the isolating .git marker only when it is absent", async () => {
+        const path = await import("path");
+        const fs = await import("fs");
+        const os = await import("os");
+        const agentDir = path.join(os.tmpdir(), "trilium-claude-agent-spec", "claude-agent");
+
+        resetAgentCwdForTests();
+        fs.rmSync(agentDir, { recursive: true, force: true });
+        scriptAgent([successResult()]);
+        const provider = new ClaudeAgentProvider();
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(fs.existsSync(path.join(agentDir, ".git", "HEAD"))).toBe(true);
+
+        // Second initialization finds the marker in place and leaves it alone.
+        const headBefore = fs.statSync(path.join(agentDir, ".git", "HEAD")).mtimeMs;
+        resetAgentCwdForTests();
+        scriptAgent([successResult()]);
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(fs.statSync(path.join(agentDir, ".git", "HEAD")).mtimeMs).toBe(headBefore);
+    });
+
+    it("evicts the oldest chat-note mapping once the session cap is exceeded", async () => {
+        const provider = new ClaudeAgentProvider();
+
+        scriptAgent([textDelta("r"), successResult("sess-victim")]);
+        await collect(provider.chatChunks([{ role: "user", content: "q" }], { chatNoteId: "victim" }));
+
+        // 200 further distinct chat notes push "victim" past the cap.
+        for (let i = 0; i < 200; i++) {
+            scriptAgent([textDelta("r"), successResult(`sess-${i}`)]);
+            await collect(provider.chatChunks([{ role: "user", content: "q" }], { chatNoteId: `filler-${i}` }));
+        }
+
+        // Despite a perfectly matching transcript, the victim can no longer resume.
+        scriptAgent([successResult()]);
+        await collect(provider.chatChunks([
+            { role: "user", content: "q" },
+            { role: "assistant", content: "r" },
+            { role: "user", content: "q2" }
+        ], { chatNoteId: "victim" }));
+        const lastCall = queryMock.mock.calls[queryMock.mock.calls.length - 1][0];
+        expect(lastCall.options.resume).toBeUndefined();
+
+        // A recent filler still resumes — only the oldest entry was dropped.
+        scriptAgent([successResult()]);
+        await collect(provider.chatChunks([
+            { role: "user", content: "q" },
+            { role: "assistant", content: "r" },
+            { role: "user", content: "q2" }
+        ], { chatNoteId: "filler-199" }));
+        const fillerCall = queryMock.mock.calls[queryMock.mock.calls.length - 1][0];
+        expect(fillerCall.options.resume).toBe("sess-199");
     });
 });
 
@@ -528,6 +820,15 @@ describe("generateTitle", () => {
         const provider = new ClaudeAgentProvider();
         await expect(provider.generateTitle("hello")).resolves.toBe("");
     });
+
+    it("skips non-result messages and returns empty on a non-success result", async () => {
+        scriptAgent([textDelta("streamed noise"), { ...successResult(), result: "The Title" }]);
+        const provider = new ClaudeAgentProvider();
+        await expect(provider.generateTitle("hello")).resolves.toBe("The Title");
+
+        scriptAgent([{ ...successResult(), subtype: "error_during_execution", is_error: true, errors: [] }]);
+        await expect(provider.generateTitle("hello")).resolves.toBe("");
+    });
 });
 
 describe("transcript helpers", () => {
@@ -536,6 +837,9 @@ describe("transcript helpers", () => {
         const partsForm = hashTranscript([{ role: "user", content: [{ type: "text", text: "hello" }] }]);
         expect(stringForm).toBe(partsForm);
         expect(hashTranscript([{ role: "user", content: "hello!" }])).not.toBe(stringForm);
+        // Attachment parts flatten to stable placeholders, so re-sent bytes don't break resume.
+        const withImage = hashTranscript([{ role: "user", content: [{ type: "image", attachmentId: "a", mime: "image/png" }] }]);
+        expect(withImage).toBe(hashTranscript([{ role: "user", content: "[attached image]" }]));
     });
 
     it("buildSeededPrompt replays the transcript with role labels", () => {

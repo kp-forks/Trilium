@@ -1,4 +1,14 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// Delegates to the real getTaskStates by default; individual tests override it
+// to inject custom task states (the namespace re-export is frozen, so a plain
+// spy can't patch it).
+const getTaskStatesMock = vi.hoisted(() => vi.fn());
+vi.mock("@triliumnext/core", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@triliumnext/core")>();
+    getTaskStatesMock.mockImplementation(actual.task_states.getTaskStates);
+    return { ...actual, task_states: { ...actual.task_states, getTaskStates: getTaskStatesMock } };
+});
 
 import { buildSystemPrompt } from "./system_prompt.js";
 
@@ -51,5 +61,20 @@ describe("buildSystemPrompt", () => {
         expect(prompt).toContain("`- [/]` — Doing");
         expect(prompt).toContain("`- [?]` — Maybe");
         expect(prompt).toContain("`- [-]` — Cancelled");
+    });
+
+    it("keeps just the native open/completed hint when no custom states are defined", () => {
+        getTaskStatesMock.mockReturnValueOnce([]);
+        const prompt = buildSystemPrompt([], {}) ?? "";
+        expect(prompt).toContain("`- [ ]` for an open task");
+        expect(prompt).not.toContain("also defines extra task states");
+    });
+
+    it("suffixes custom task states that mark a task as completed", () => {
+        getTaskStatesMock.mockReturnValueOnce([
+            { name: "verified", title: "Verified", markdownSymbol: "v", isCompleted: true, icon: "bx bx-check-double" }
+        ]);
+        const prompt = buildSystemPrompt([], {}) ?? "";
+        expect(prompt).toContain("`- [v]` — Verified (completed)");
     });
 });

@@ -147,9 +147,9 @@ function rememberSession(chatNoteId: string, entry: SessionEntry) {
     sessionsByChatNote.delete(chatNoteId);
     sessionsByChatNote.set(chatNoteId, entry);
     if (sessionsByChatNote.size > MAX_TRACKED_SESSIONS) {
-        const oldest = sessionsByChatNote.keys().next().value;
-        if (oldest !== undefined) {
+        for (const oldest of sessionsByChatNote.keys()) {
             sessionsByChatNote.delete(oldest);
+            break;
         }
     }
 }
@@ -307,17 +307,22 @@ export class ClaudeAgentProvider implements LlmProvider {
                             break;
                         }
                         for (const block of content) {
+                            if (block.type !== "tool_result" || !block.tool_use_id) {
+                                continue;
+                            }
                             // Only surface results for tool calls made this turn —
                             // this also filters any replayed history on resume.
-                            if (block.type === "tool_result" && block.tool_use_id && toolNamesById.has(block.tool_use_id)) {
-                                yield {
-                                    type: "tool_result",
-                                    toolCallId: block.tool_use_id,
-                                    toolName: friendlyToolName(toolNamesById.get(block.tool_use_id) ?? "tool"),
-                                    result: flattenToolResult(block.content),
-                                    isError: block.is_error === true
-                                };
+                            const toolName = toolNamesById.get(block.tool_use_id);
+                            if (toolName === undefined) {
+                                continue;
                             }
+                            yield {
+                                type: "tool_result",
+                                toolCallId: block.tool_use_id,
+                                toolName: friendlyToolName(toolName),
+                                result: flattenToolResult(block.content),
+                                isError: block.is_error === true
+                            };
                         }
                         break;
                     }
@@ -420,6 +425,9 @@ export class ClaudeAgentProvider implements LlmProvider {
         // injects the note metadata into the user turn (see buildNoteHint), so
         // the "you can see the current note's metadata above" notice is accurate.
         const promptConfig: LlmProviderConfig = { ...config, enableNoteTools: noteToolsAvailable };
+        // buildSystemPrompt only returns undefined in its own documented-unreachable
+        // no-parts case (the markdown hints are always appended).
+        /* v8 ignore next */
         return buildSystemPrompt(messages, promptConfig) ?? "";
     }
 
@@ -509,6 +517,11 @@ function getAgentCwd(): string {
     return agentCwd;
 }
 
+/** For tests: forget the initialized agent cwd so the next call re-runs setup. */
+export function resetAgentCwdForTests(): void {
+    agentCwd = undefined;
+}
+
 /**
  * Build the prompt for the current user turn. When the turn carries attachments
  * the model can consume natively, this returns a one-message stream of Anthropic
@@ -523,7 +536,9 @@ function buildPrompt(content: string | LlmMessagePart[], prefix: string, hasAtta
         }
         // Nothing the model can take natively — collapse back to text so the
         // turn stays on the well-worn string path (and out of streaming-input
-        // mode). Text blocks still carry inlined SVG/text-file content.
+        // mode). Text blocks still carry inlined SVG/text-file content. The
+        // non-text arm is unreachable: any image/document block returns above.
+        /* v8 ignore next */
         return blocks.map(b => (b.type === "text" ? b.text : "")).filter(Boolean).join("\n\n");
     }
     const lastText = flattenContent(content);
