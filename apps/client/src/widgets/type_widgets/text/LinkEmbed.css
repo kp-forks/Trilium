@@ -21,6 +21,13 @@
 
 .link-mention {
     display: inline;
+    border-radius: 4px;
+    outline: none !important;
+
+    &.ck-widget.ck-widget_selected {
+        box-shadow: 0 0 0 2px var(--link-selection-outline-color);
+        background-color: var(--link-hover-background);
+    }
 }
 
 .link-mention-inner {
