@@ -306,7 +306,11 @@ class LinkEmbedEditing extends Plugin {
                 });
 
                 writer.insert(writer.createPositionAt(section, 0), preview);
-                return toWidget(section, writer, { label: 'link embed widget' });
+                // hasSelectionHandle gives the block preview (both card and video) CKEditor's own
+                // widget drag handle — the same one tables use. Without a handle the user grabs the
+                // preview's own content and the browser's native drag tears the image and text apart;
+                // the handle moves the whole widget atomically instead.
+                return toWidget(section, writer, { label: 'link embed widget', hasSelectionHandle: true });
             }
         });
 

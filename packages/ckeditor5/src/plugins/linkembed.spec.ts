@@ -211,6 +211,9 @@ describe("LinkEmbed", () => {
         const view = getViewData(editor.editing.view);
         expect(view).toContain("link-embed");
         expect(view).toContain("ck-widget");
+        // The block preview carries CKEditor's own drag handle (as tables do), so the whole widget
+        // moves as one instead of the user tearing its image and text apart.
+        expect(view).toContain("ck-widget_with-selection-handle");
 
         expect(renderLinkEmbed).toHaveBeenCalled();
         const [container, metadata, editable] = renderLinkEmbed.mock.calls[0];
