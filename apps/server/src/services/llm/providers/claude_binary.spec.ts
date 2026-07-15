@@ -7,7 +7,7 @@ type ExecFileCallback = (err: Error | null, result?: { stdout: string; stderr: s
 const execFileMock = vi.hoisted(() => vi.fn<(binary: string, args: string[], options: object, cb: ExecFileCallback) => void>());
 vi.mock("child_process", () => ({ execFile: execFileMock }));
 
-const existsSyncMock = vi.hoisted(() => vi.fn(() => true));
+const existsSyncMock = vi.hoisted(() => vi.fn((_path: string) => true));
 vi.mock("fs", () => ({ existsSync: existsSyncMock }));
 
 vi.mock("@triliumnext/core", () => ({ getLog: () => ({ info: vi.fn(), error: vi.fn() }) }));

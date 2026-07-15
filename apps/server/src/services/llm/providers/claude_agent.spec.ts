@@ -379,7 +379,7 @@ describe("ClaudeAgentProvider.chatChunks", () => {
     });
 
     it("drives the user's resolved claude binary (bring-your-own-binary)", async () => {
-        resolveClaudeBinaryMock.mockReturnValueOnce("/opt/homebrew/bin/claude");
+        resolveClaudeBinaryMock.mockResolvedValueOnce("/opt/homebrew/bin/claude");
         scriptAgent([successResult()]);
         const provider = new ClaudeAgentProvider();
         await collect(provider.chatChunks([{ role: "user", content: "hi" }], {}));
