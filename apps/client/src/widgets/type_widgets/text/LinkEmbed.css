@@ -110,7 +110,6 @@
 .link-embed-video {
     position: relative;
     width: 100%;
-    border-radius: 8px;
     overflow: hidden;
 }
 
@@ -232,6 +231,7 @@ section.link-embed:has(+ section.link-embed) {
    on the touching edges of stacked cards (above), so all surfaces round alike. Kept after the card
    rule so it outweighs that block's `all: unset` at the same specificity. */
 .ck-widget.link-embed,
+.link-embed-video,
 .link-embed-video iframe,
 .link-embed-video-facade,
 :root a.link-embed-card {
