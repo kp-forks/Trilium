@@ -4,6 +4,7 @@ import { createPortal } from "preact/compat";
 import { useMemo, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../../services/i18n";
+import { Badge } from "../../../react/Badge";
 import { Card, CardSection } from "../../../react/Card";
 import FormGroup from "../../../react/FormGroup";
 import FormTextBox from "../../../react/FormTextBox";
@@ -30,6 +31,8 @@ export interface ProviderType {
     iconUrl: string;
     /** Short blurb shown under the provider name on its selectable card. */
     description: string;
+    /** Marks the provider as beta, shown as a badge next to its name. */
+    beta?: boolean;
     /** When false, the provider needs no API key or base URL (e.g. subscription-based auth). */
     usesApiKey?: boolean;
 }
@@ -39,7 +42,7 @@ export interface ProviderType {
 export const PROVIDER_TYPES: ProviderType[] = [
     { id: "anthropic", name: "Anthropic", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon, description: t("llm.provider_desc_anthropic") },
     // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`).
-    { id: "claude-agent", name: "Claude Code", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), usesApiKey: false },
+    { id: "claude-agent", name: "Claude Code", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, usesApiKey: false },
     { id: "openai", name: "OpenAI", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon, description: t("llm.provider_desc_openai") },
     { id: "google", name: "Google Gemini", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon, description: t("llm.provider_desc_google") }
 ];
@@ -135,7 +138,9 @@ export default function AddProviderModal({ show, onHidden, onSave }: AddProvider
                             <SelectableCard
                                 key={provider.id}
                                 iconUrl={provider.iconUrl}
-                                title={provider.name}
+                                title={provider.beta
+                                    ? <span className="add-provider-card-heading">{provider.name}<Badge text={t("llm.beta")} className="add-provider-beta-badge" outline /></span>
+                                    : provider.name}
                                 description={provider.description}
                                 selected={selectedProvider === provider.id}
                                 onSelect={() => setSelectedProvider(provider.id)}

@@ -12,4 +12,15 @@
     .tn-card-section .form-group:last-child {
         margin-bottom: 0;
     }
+
+    /* Provider name + its beta badge sitting inline on the card. */
+    .add-provider-card-heading {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5em;
+    }
+
+    .add-provider-beta-badge {
+        --color: var(--link-color, var(--main-text-color));
+    }
 }
