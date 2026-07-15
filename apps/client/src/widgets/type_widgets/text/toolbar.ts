@@ -86,7 +86,10 @@ export function buildClassicToolbar(multilineToolbar: boolean) {
                 "|",
                 "insertTemplate",
                 "markdownImport",
-                "cuttonote"
+                "cuttonote",
+                "|",
+                "undo",
+                "redo"
             ],
             shouldNotGroupWhenFull: multilineToolbar
         }
