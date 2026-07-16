@@ -29,7 +29,9 @@
         background-color: var(--link-hover-background);
     }
 
-    a {
+    /* In the editor the mention is a widget, not a live link, so suppress the pointer.
+       In read mode (no .ck-widget) the anchor keeps its cursor: pointer below. */
+    &.ck-widget a {
         cursor: default !important;
     }
 }
@@ -206,6 +208,11 @@
 .link-embed-preview-wrapper .link-embed-card-image-wrapper,
 .link-embed-preview-wrapper .link-embed-card-content {
     cursor: default;
+}
+
+/* In read mode the card is a real link, so show a pointer (all: unset above clears it). */
+:root *:not(.link-embed-preview-wrapper) > a.link-embed-card {
+    cursor: pointer;
 }
 
 /* The hover effect is applied to the card, but not in editable mode */
