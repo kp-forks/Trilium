@@ -1,4 +1,4 @@
-import { ClassicEditor, Essentials, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
+import { ClassicEditor, Essentials, Link, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../test/editor-kit.js";
@@ -93,7 +93,7 @@ describe("LinkEmbedToolbar", () => {
             })
         });
 
-        editor = await createTestEditor([Essentials, Paragraph, LinkEmbed, LinkEmbedToolbar]);
+        editor = await createTestEditor([Essentials, Paragraph, Link, LinkEmbed, LinkEmbedToolbar]);
     });
 
     // -----------------------------------------------------------------------
@@ -369,6 +369,19 @@ describe("LinkEmbedToolbar", () => {
         });
         const dropdown = editor.ui.componentFactory.create("linkEmbedDisplayDropdown") as unknown as DropdownView;
         expect(dropdown.isEnabled).toBe(true);
+    });
+
+    it("hides itself (ck-hidden) while the command is disabled, for the native link balloon", () => {
+        // The dropdown also sits in the native link balloon, which opens for links that cannot be
+        // previewed (an internal note link, say) — there it must hide, not show permanently greyed.
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        const dropdown = editor.ui.componentFactory.create("linkEmbedDisplayDropdown") as unknown as DropdownView;
+        expect(dropdown.isEnabled).toBe(false);
+        expect(dropdown.class).toBe("ck-hidden");
+
+        setModelData(editor.model, '<paragraph><$text linkHref="https://e.com/">https://e.[]com/</$text></paragraph>');
+        expect(dropdown.isEnabled).toBe(true);
+        expect(dropdown.class).toBe("");
     });
 
     it("button label shows 'Display' when command value is null (no widget selected)", () => {

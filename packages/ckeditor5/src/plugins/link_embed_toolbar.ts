@@ -86,6 +86,10 @@ class LinkEmbedDisplayDropdown extends Plugin {
             });
 
             dropdownView.bind("isEnabled").to(command, "isEnabled");
+            // The dropdown also sits in the native link balloon (see `link.toolbar` in the client
+            // config), which opens for links that cannot be previewed at all — an internal note
+            // link, say. There it hides rather than showing permanently disabled.
+            dropdownView.bind("class").to(command, "isEnabled", (isEnabled) => (isEnabled ? "" : "ck-hidden"));
 
             dropdownView.buttonView.bind("label").to(command, "value", (value) => {
                 if (!value) return displayLabel;

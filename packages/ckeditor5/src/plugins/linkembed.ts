@@ -1,5 +1,5 @@
 import { type BlockChildLike, chooseLinkPreviewKind, isHttpUrl, isUrlAloneInBlock } from '@triliumnext/commons';
-import { ButtonView, clickOutsideHandler, Command, ContextualBalloon, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Editor, type Observable } from 'ckeditor5';
+import { ButtonView, clickOutsideHandler, Command, ContextualBalloon, findAttributeRange, ModelLiveRange, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Editor, type Observable } from 'ckeditor5';
 import linkPreviewIcon from '../icons/link-preview.svg?raw';
 import LinkEmbedFormView from './link_embed_form.js';
 import { translate } from './translate.js';
@@ -464,10 +464,15 @@ class ChangeLinkDisplayCommand extends Command {
         this.set('url', null);
     }
 
-    override execute(options: { value: LinkDisplayMode }) {
+    override async execute(options: { value: LinkDisplayMode }) {
         const model = this.editor.model;
         const selected = getSelectedLinkWidget(this.editor);
-        if (!selected) return;
+
+        // No widget selected means the dropdown sits in the link balloon, over a native link.
+        if (!selected) {
+            await this._convertNativeLink(options.value);
+            return;
+        }
 
         const targetMode = options.value;
         const currentMode = this._getMode(selected);
@@ -512,10 +517,10 @@ class ChangeLinkDisplayCommand extends Command {
 
     override refresh() {
         const selected = getSelectedLinkWidget(this.editor);
-        this.isEnabled = !!selected;
-        this.value = selected ? this._getMode(selected) : null;
 
         if (selected) {
+            this.isEnabled = true;
+            this.value = this._getMode(selected);
             const url = selected.getAttribute('url') as string;
             this.embedAvailable = this._detectEmbedType(url) !== 'opengraph';
             // Only ever hand out an http(s) URL. `url` comes from the stored `data-url`, which the
@@ -523,10 +528,82 @@ class ChangeLinkDisplayCommand extends Command {
             // would otherwise reach the toolbar's "open link" button as a live href. Withholding it
             // here disables that button (and the copy one) instead of arming them.
             this.url = isHttpUrl(url) ? url : null;
-        } else {
-            this.embedAvailable = false;
-            this.url = null;
+            return;
         }
+
+        // A native link under the caret: the same dropdown, hosted in the link balloon this time,
+        // offers to convert it into a preview. Its current display mode is by definition "plain".
+        const href = this.editor.model.document.selection.getAttribute('linkHref');
+        if (typeof href === 'string' && EMBEDDABLE_URL_REGEX.test(href)) {
+            this.isEnabled = true;
+            this.value = 'plain';
+            this.embedAvailable = this._detectEmbedType(href) !== 'opengraph';
+            this.url = href;
+            return;
+        }
+
+        this.isEnabled = false;
+        this.value = null;
+        this.embedAvailable = false;
+        this.url = null;
+    }
+
+    /**
+     * Converts the native link under the caret — the one whose balloon toolbar hosts the dropdown —
+     * into the chosen preview shape: the deliberate inverse of "Plain link". Unlike auto-detection
+     * there is no gesture to interpret and no unresolved-page veto: the mode was picked outright,
+     * so the conversion always happens (Ctrl+Z brings the link back), and a labeled link's display
+     * text is replaced by the preview.
+     */
+    private async _convertNativeLink(targetMode: LinkDisplayMode) {
+        const editor = this.editor;
+        const model = editor.model;
+        const position = model.document.selection.getFirstPosition();
+        const href = model.document.selection.getAttribute('linkHref');
+        /* v8 ignore next -- refresh() disables the command unless the selection carries a linkHref */
+        if (typeof href !== 'string' || !position) return;
+        // The link already is one.
+        if (targetMode === 'plain') return;
+
+        const editorEl = editor.editing.view.getDomRoot();
+        const component = glob.getComponentByEl<EditorComponent>(editorEl);
+
+        // The linked text is tracked as a live range: the metadata fetch reads the page server-side
+        // and can take seconds, and edits made meanwhile must not shift what gets replaced.
+        const liveRange = ModelLiveRange.fromRange(findAttributeRange(position, 'linkHref', href, model));
+        const metadata = await component.fetchLinkMetadata(href);
+        const range = liveRange.toRange();
+        liveRange.detach();
+
+        model.change(writer => {
+            // The link may have been edited away while the fetch was in flight.
+            let linkStillThere = false;
+            for (const { item } of range.getWalker()) {
+                if (item.is('$textProxy') && item.getAttribute('linkHref') === href) {
+                    linkStillThere = true;
+                    break;
+                }
+            }
+            if (!linkStillThere) return;
+
+            const element = writer.createElement(targetMode === 'inline' ? 'linkMention' : 'linkEmbed', {
+                url: metadata.url,
+                // Same rule as the widget path below: a card is an embed that declines to play.
+                embedType: targetMode === 'card' ? 'opengraph'
+                    : targetMode === 'embed' ? this._detectEmbedType(href)
+                    : metadata.embedType,
+                title: metadata.title,
+                description: metadata.description,
+                favicon: metadata.favicon,
+                siteName: metadata.siteName,
+                image: metadata.image
+            });
+
+            model.insertContent(element, range);
+            // Leave the new widget selected, so its toolbar — this same dropdown included — takes
+            // over from the link balloon.
+            writer.setSelection(element, 'on');
+        });
     }
 
     private _getMode(element: any): LinkDisplayMode {

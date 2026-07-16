@@ -561,6 +561,88 @@ describe("LinkEmbed", () => {
     });
 
     // -----------------------------------------------------------------------
+    // ChangeLinkDisplayCommand on a native link (the link balloon's Display dropdown)
+    // -----------------------------------------------------------------------
+
+    it("offers itself on a native http(s) link, reporting 'plain' as the current mode", () => {
+        const command = changeCommand(editor);
+
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        expect(command.isEnabled).toBe(false);
+        expect(command.value).toBeNull();
+
+        setModelData(editor.model, '<paragraph><$text linkHref="https://youtube.com/watch">https://youtube.[]com/watch</$text></paragraph>');
+        expect(command.isEnabled).toBe(true);
+        expect(command.value).toBe("plain");
+        expect(command.embedAvailable).toBe(true);
+        expect(command.url).toBe("https://youtube.com/watch");
+
+        // An internal reference link has no page to preview.
+        setModelData(editor.model, '<paragraph><$text linkHref="#root/someNoteId">some[]note</$text></paragraph>');
+        expect(command.isEnabled).toBe(false);
+        expect(command.value).toBeNull();
+    });
+
+    it("converts a labeled native link into an inline mention, keeping the surrounding text", async () => {
+        const url = "https://example.com/article";
+        setModelData(editor.model, `<paragraph>see <$text linkHref="${url}">the []article</$text> here</paragraph>`);
+
+        await editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "inline" });
+
+        expect(fetchLinkMetadata).toHaveBeenCalledWith(url);
+        const mention = findElement(editor, "linkMention");
+        expect(mention?.getAttribute("url")).toBe(url);
+        expect(mention?.getAttribute("title")).toBe(META.title);
+        // The label is replaced by the pill; the text around the link survives (spaces adjacent to
+        // an inline object serialize as &nbsp;), and the new widget is left selected so its toolbar
+        // — this same dropdown included — takes over from the link balloon.
+        expect(editor.getData()).toContain("<p>see&nbsp;<span");
+        expect(editor.getData()).toContain("</span>&nbsp;here</p>");
+        expect(editor.model.document.selection.getSelectedElement()).toBe(mention);
+    });
+
+    it("converts a native link to the chosen block shape: card forces opengraph, embed keeps the detected type", async () => {
+        const url = "https://youtube.com/watch?v=abc12345678";
+        fetchLinkMetadata.mockImplementation(async () => ({ ...META, url, embedType: "youtube" }));
+
+        setModelData(editor.model, `<paragraph><$text linkHref="${url}">watch [] this</$text></paragraph>`);
+        await editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "card" });
+        expect(findElement(editor, "linkEmbed")?.getAttribute("embedType")).toBe("opengraph");
+
+        setModelData(editor.model, `<paragraph><$text linkHref="${url}">watch [] this</$text></paragraph>`);
+        await editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "embed" });
+        const embed = findElement(editor, "linkEmbed");
+        expect(embed?.getAttribute("embedType")).toBe("youtube");
+        expect(editor.model.document.selection.getSelectedElement()).toBe(embed);
+    });
+
+    it("does nothing for 'plain' on a native link — it already is one", async () => {
+        setModelData(editor.model, '<paragraph><$text linkHref="https://e.com/">https://e.[]com/</$text></paragraph>');
+        const before = editor.getData();
+
+        await editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "plain" });
+
+        expect(fetchLinkMetadata).not.toHaveBeenCalled();
+        expect(editor.getData()).toBe(before);
+    });
+
+    it("does nothing when the linked text was deleted while the metadata was being fetched", async () => {
+        const url = "https://example.com/";
+        let resolveFetch: (meta: unknown) => void = () => {};
+        fetchLinkMetadata.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+        setModelData(editor.model, `<paragraph><$text linkHref="${url}">https://exa[]mple.com/</$text></paragraph>`);
+
+        const executed = editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "inline" }) as unknown as Promise<void>;
+        setModelData(editor.model, "<paragraph>replaced[]</paragraph>");
+        resolveFetch({ ...META, url });
+        await executed;
+
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        expect(findElement(editor, "linkEmbed")).toBeUndefined();
+        expect(editor.getData()).toBe("<p>replaced</p>");
+    });
+
+    // -----------------------------------------------------------------------
     // AutoLinkToMention
     // -----------------------------------------------------------------------
 
