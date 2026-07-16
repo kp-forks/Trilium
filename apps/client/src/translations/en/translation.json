@@ -1362,7 +1362,20 @@
     "exit-fullscreen": "Exit fullscreen",
     "unsupported-format": "Media preview is not available for this file format:\n{{mime}}",
     "zoom-to-fit": "Zoom to fill",
-    "zoom-reset": "Reset zoom to fill"
+    "zoom-reset": "Reset zoom to fill",
+    "hints": {
+      "playback": "Playback",
+      "play_pause": "Play/Pause",
+      "back_10s": "Back 10s",
+      "forward_10s": "Forward 10s",
+      "jump_start": "Jump to start",
+      "jump_end": "Jump to end",
+      "mute": "Mute",
+      "fullscreen": "Fullscreen",
+      "navigation": "Navigation",
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "protected_session": {
     "enter_password_instruction": "Showing protected note requires entering your password:",
