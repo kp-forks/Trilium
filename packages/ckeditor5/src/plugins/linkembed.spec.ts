@@ -279,6 +279,38 @@ describe("LinkEmbed", () => {
         expect(data).not.toContain("data-site-name");
     });
 
+    it("upcasts link previews carrying the Markdown-export fallback anchor, dropping the anchor", () => {
+        // The Markdown exporter injects an <a> child into the otherwise empty elements so the
+        // export stays readable outside Trilium; on reimport the anchor must vanish into the
+        // widget instead of leaking as stray text.
+        editor.setData(
+            '<section class="link-embed" data-url="https://e.com/" data-embed-type="opengraph" data-title="T">' +
+            '<a href="https://e.com/">T</a></section>' +
+            '<p>See <span class="link-mention" data-url="https://e.com/" data-title="T">' +
+            '<a href="https://e.com/">T</a></span> for details.</p>'
+        );
+
+        const root = editor.model.document.getRoot();
+        expect(root?.childCount).toBe(2);
+
+        const embed = root?.getChild(0);
+        expect(embed?.is("element", "linkEmbed")).toBe(true);
+        if (embed?.is("element")) {
+            expect(embed.getAttribute("url")).toBe("https://e.com/");
+            expect(embed.childCount).toBe(0);
+        }
+
+        const paragraph = root?.getChild(1);
+        const mention = paragraph?.is("element") ? paragraph.getChild(1) : undefined;
+        expect(mention?.is("element", "linkMention")).toBe(true);
+
+        // Saving again produces the canonical childless elements — the anchor does not survive,
+        // let alone accumulate.
+        const data = editor.getData();
+        expect(data).not.toContain("<a");
+        expect(data).toContain('data-url="https://e.com/"');
+    });
+
     it("editing-downcasts a linkMention to an inline widget and renders it via the component", () => {
         setModelData(
             editor.model,

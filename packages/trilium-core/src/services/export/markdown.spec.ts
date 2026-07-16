@@ -65,6 +65,61 @@ describe("Markdown export", () => {
         expect(markdownExportService.toMarkdown(html)).toBe(expected);
     });
 
+    it("exports link previews as raw HTML with a fallback anchor", () => {
+        // Block card/embed: kept as a section (the importer + editor upcast round-trip it), with a
+        // fallback link inside so external Markdown renderers show something instead of nothing.
+        expect(markdownExportService.toMarkdown(
+            '<p>before</p>' +
+            '<section class="link-embed" data-url="https://e.com/" data-embed-type="opengraph" data-title="Example"></section>' +
+            '<p>after</p>'
+        )).toBe(
+            'before\n\n' +
+            '<section class="link-embed" data-url="https://e.com/" data-embed-type="opengraph" data-title="Example"><a href="https://e.com/">Example</a></section>' +
+            '\n\nafter'
+        );
+
+        // Video embeds share the same element; without a title the URL doubles as the link text.
+        expect(markdownExportService.toMarkdown(
+            '<section class="link-embed" data-url="https://www.youtube.com/watch?v=abc" data-embed-type="youtube"></section>'
+        )).toBe(
+            '<section class="link-embed" data-url="https://www.youtube.com/watch?v=abc" data-embed-type="youtube">' +
+            '<a href="https://www.youtube.com/watch?v=abc">https://www.youtube.com/watch?v=abc</a></section>'
+        );
+
+        // Inline mention: stays inline within the sentence.
+        expect(markdownExportService.toMarkdown(
+            '<p>See <span class="link-mention" data-url="https://e.com/" data-title="Example"></span> for details.</p>'
+        )).toBe(
+            'See <span class="link-mention" data-url="https://e.com/" data-title="Example"><a href="https://e.com/">Example</a></span> for details.'
+        );
+    });
+
+    it("replaces an existing link preview fallback anchor instead of accumulating it", () => {
+        // Content imported from Markdown (and never re-saved by the editor) already carries the
+        // fallback anchor, so the element is non-blank and goes through the rule instead of
+        // blankReplacement. The anchor is regenerated from the (possibly edited) data attributes.
+        const exported = markdownExportService.toMarkdown(
+            '<section class="link-embed" data-url="https://e.com/" data-embed-type="opengraph" data-title="New title">' +
+            '<a href="https://e.com/">Stale title</a></section>'
+        );
+
+        expect(exported).toBe(
+            '<section class="link-embed" data-url="https://e.com/" data-embed-type="opengraph" data-title="New title">' +
+            '<a href="https://e.com/">New title</a></section>'
+        );
+    });
+
+    it("escapes HTML in link preview fallback anchors", () => {
+        const exported = markdownExportService.toMarkdown(
+            '<section class="link-embed" data-url="https://e.com/?a=1&amp;b=2" data-embed-type="opengraph" data-title="A &amp; B &lt;x&gt;"></section>'
+        );
+
+        expect(exported).toBe(
+            '<section class="link-embed" data-url="https://e.com/?a=1&amp;b=2" data-embed-type="opengraph" data-title="A &amp; B &lt;x&gt;">' +
+            '<a href="https://e.com/?a=1&amp;b=2">A &amp; B &lt;x&gt;</a></section>'
+        );
+    });
+
     it("exports strikethrough text correctly", () => {
         const html = "<s>hello</s>Hello <s>world</s>";
         const expected = "~~hello~~Hello ~~world~~";
