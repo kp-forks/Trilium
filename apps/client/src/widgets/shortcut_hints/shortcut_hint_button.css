@@ -1,4 +1,5 @@
 .shortcut-hint-button {
+    padding-inline: 8px;
     gap: 5px;
     white-space: nowrap;
 
