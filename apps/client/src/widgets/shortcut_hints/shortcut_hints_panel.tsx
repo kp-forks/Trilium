@@ -126,10 +126,13 @@ function HintRow({ hint }: { hint: ShortcutHint }) {
             return;
         }
         // `action` hints resolve to the user's current, rebindable binding.
+        let cancelled = false;
         keyboard_actions.getAction(hint.action).then(action => {
+            if (cancelled) return;
             setShortcuts(action?.effectiveShortcuts ?? []);
             setFriendlyName(action?.friendlyName);
         });
+        return () => { cancelled = true; };
     }, [ hint ]);
 
     const description = hint.labelKey ? t(hint.labelKey) : friendlyName ?? "";
