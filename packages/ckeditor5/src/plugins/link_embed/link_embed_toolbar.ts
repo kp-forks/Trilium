@@ -19,9 +19,9 @@ import LinkEmbed, {
     LINK_DISPLAY_MODES,
     REMOVE_LINK_EMBED_COMMAND,
     type LinkDisplayMode
-} from "./linkembed.js";
-import { createCopyUrlButton } from "./copy_link_url.js";
-import { translate } from "./translate.js";
+} from "./link_embed.js";
+import { createCopyUrlButton } from "../copy_link_url.js";
+import { translate } from "../translate.js";
 
 export default class LinkEmbedToolbar extends Plugin {
 

@@ -1,10 +1,10 @@
 import { ClassicEditor, Essentials, Link, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestEditor } from "../../test/editor-kit.js";
-import { installGlobMock } from "../../test/globals-test-kit.js";
+import { createTestEditor } from "../../../test/editor-kit.js";
+import { installGlobMock } from "../../../test/globals-test-kit.js";
+import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./link_embed.js";
 import LinkEmbedToolbar from "./link_embed_toolbar.js";
-import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./linkembed.js";
 
 // ---------------------------------------------------------------------------
 // Helpers

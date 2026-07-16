@@ -20,7 +20,7 @@ import {
     ViewModel
 } from "ckeditor5";
 
-import { LINK_DISPLAY_MODES, type LinkDisplayMode } from "./linkembed.js";
+import { LINK_DISPLAY_MODES, type LinkDisplayMode } from "./link_embed_commands.js";
 
 /** Resolves a translation key, falling back to the given English text. See `translate.ts`. */
 type Translate = (key: string, fallback: string) => string;

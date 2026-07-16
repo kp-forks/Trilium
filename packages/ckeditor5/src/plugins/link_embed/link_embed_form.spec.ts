@@ -1,10 +1,10 @@
 import { BlockQuote, ClassicEditor, ContextualBalloon, Essentials, Link, Paragraph, Undo, _setModelData as setModelData } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestEditor } from "../../test/editor-kit.js";
-import { installGlobMock } from "../../test/globals-test-kit.js";
+import { createTestEditor } from "../../../test/editor-kit.js";
+import { installGlobMock } from "../../../test/globals-test-kit.js";
+import LinkEmbed, { LINK_EMBED_COMMAND } from "./link_embed.js";
 import LinkEmbedFormView from "./link_embed_form.js";
-import LinkEmbed, { LINK_EMBED_COMMAND } from "./linkembed.js";
 
 const META = {
     url: "https://example.com/",
