@@ -997,7 +997,28 @@
     "next": "Next image: {{- title}}"
   },
   "image_viewer": {
-    "loading_error": "There was an error loading the image."
+    "loading_error": "There was an error loading the image.",
+    "hints": {
+      "zoom": "Zoom",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "reset_zoom": "Reset zoom",
+      "pan": "Pan",
+      "pan_up": "Up",
+      "pan_down": "Down",
+      "pan_left": "Left",
+      "pan_right": "Right",
+      "pan_fast": "Faster panning",
+      "navigation": "Navigation",
+      "next_image": "Next image",
+      "previous_image": "Previous image",
+      "first_image": "First image",
+      "last_image": "Last image"
+    }
+  },
+  "shortcut_hints": {
+    "show_button": "Show shortcut hints",
+    "esc_hint": "to close"
   },
   "zpetne_odkazy": {
     "backlink_one": "{{count}} Backlink",
@@ -1317,18 +1338,18 @@
     "too_big": "The preview only shows the first {{maxNumChars}} characters of the file for performance reasons. Download the file and open it externally to be able to see the entire content."
   },
   "media": {
-    "play": "Play (Space)",
+    "play": "Play",
     "activate": "Play {{- title}}",
-    "pause": "Pause (Space)",
-    "seek": "Seek (Left/Right arrow keys)",
-    "back-10s": "Back 10s (Left arrow key)",
-    "forward-10s": "Forward 10s (Right arrow key)",
+    "pause": "Pause",
+    "seek": "Seek",
+    "back-10s": "Back 10s",
+    "forward-10s": "Forward 10s",
     "previous-video": "Previous video: {{- title}}",
     "next-video": "Next video: {{- title}}",
     "previous-audio": "Previous audio: {{- title}}",
     "next-audio": "Next audio: {{- title}}",
-    "mute": "Mute (M)",
-    "unmute": "Unmute (M)",
+    "mute": "Mute",
+    "unmute": "Unmute",
     "playback-speed": "Playback speed",
     "play-mode-title": "Play mode: {{mode}}",
     "play-mode-once": "Play once",
@@ -1337,11 +1358,24 @@
     "rotate": "Rotate",
     "picture-in-picture": "Picture-in-picture",
     "exit-picture-in-picture": "Exit picture-in-picture",
-    "fullscreen": "Fullscreen (F)",
+    "fullscreen": "Fullscreen",
     "exit-fullscreen": "Exit fullscreen",
     "unsupported-format": "Media preview is not available for this file format:\n{{mime}}",
     "zoom-to-fit": "Zoom to fill",
-    "zoom-reset": "Reset zoom to fill"
+    "zoom-reset": "Reset zoom to fill",
+    "hints": {
+      "playback": "Playback",
+      "play_pause": "Play/Pause",
+      "back_10s": "Back 10s",
+      "forward_10s": "Forward 10s",
+      "jump_start": "Jump to start",
+      "jump_end": "Jump to end",
+      "mute": "Mute",
+      "fullscreen": "Fullscreen",
+      "navigation": "Navigation",
+      "previous": "Previous",
+      "next": "Next"
+    }
   },
   "protected_session": {
     "enter_password_instruction": "Showing protected note requires entering your password:",
