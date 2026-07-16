@@ -215,6 +215,15 @@ describe("LinkEmbed", () => {
         // moves as one instead of the user tearing its image and text apart.
         expect(view).toContain("ck-widget_with-selection-handle");
 
+        // The editing wrapper must carry the full metadata, not just the URL: a copy that starts
+        // inside the rendered preview bypasses CKEditor's clipboard pipeline and serializes the
+        // editing DOM, and upcast rebuilds the widget purely from these attributes.
+        expect(view).toContain('data-title="T"');
+        expect(view).toContain('data-description="D"');
+        expect(view).toContain('data-favicon="F"');
+        expect(view).toContain('data-site-name="S"');
+        expect(view).toContain('data-image="I"');
+
         expect(renderLinkEmbed).toHaveBeenCalled();
         const [container, metadata, editable] = renderLinkEmbed.mock.calls[0];
         expect(container).toBeInstanceOf(HTMLElement);
@@ -273,11 +282,22 @@ describe("LinkEmbed", () => {
     it("editing-downcasts a linkMention to an inline widget and renders it via the component", () => {
         setModelData(
             editor.model,
-            '<paragraph><linkMention url="https://e.com/" title="T" favicon="F"></linkMention></paragraph>'
+            '<paragraph><linkMention url="https://e.com/" embedType="web" title="T" description="D"' +
+            ' favicon="F" siteName="S" image="I"></linkMention></paragraph>'
         );
 
         const view = getViewData(editor.editing.view);
         expect(view).toContain("link-mention");
+
+        // Same rationale as for the block embed: a native browser copy of the editing DOM (a copy
+        // starting inside the rendered preview) must round-trip the metadata through upcast, so the
+        // wrapper carries all of it — this is what used to drop the favicon/title of a pasted mention.
+        expect(view).toContain('data-embed-type="web"');
+        expect(view).toContain('data-title="T"');
+        expect(view).toContain('data-description="D"');
+        expect(view).toContain('data-favicon="F"');
+        expect(view).toContain('data-site-name="S"');
+        expect(view).toContain('data-image="I"');
 
         expect(renderLinkMention).toHaveBeenCalled();
         const [container, metadata, editable] = renderLinkMention.mock.calls[0];

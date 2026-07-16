@@ -260,19 +260,7 @@ class LinkEmbedEditing extends Plugin {
         conversion.for('dataDowncast').elementToElement({
             model: 'linkEmbed',
             view: (modelElement, { writer }) => {
-                const attrs: Record<string, string> = {
-                    class: 'link-embed',
-                    'data-url': modelElement.getAttribute('url') as string,
-                    'data-embed-type': modelElement.getAttribute('embedType') as string
-                };
-                for (const key of ['title', 'description', 'favicon', 'siteName', 'image'] as const) {
-                    const val = modelElement.getAttribute(key) as string | undefined;
-                    if (val) {
-                        const attrName = key === 'siteName' ? 'data-site-name' : `data-${key}`;
-                        attrs[attrName] = val;
-                    }
-                }
-                return writer.createContainerElement('section', attrs);
+                return writer.createContainerElement('section', metadataViewAttributes(modelElement, 'link-embed', ['url', 'embedType']));
             }
         });
 
@@ -287,11 +275,7 @@ class LinkEmbedEditing extends Plugin {
                 const siteName = modelElement.getAttribute('siteName') as string | undefined;
                 const image = modelElement.getAttribute('image') as string | undefined;
 
-                const section = writer.createContainerElement('section', {
-                    class: 'link-embed',
-                    'data-url': url,
-                    'data-embed-type': embedType
-                });
+                const section = writer.createContainerElement('section', metadataViewAttributes(modelElement, 'link-embed', ['url', 'embedType']));
 
                 const preview = writer.createUIElement('div', {
                     class: 'link-embed-preview-wrapper',
@@ -334,20 +318,7 @@ class LinkEmbedEditing extends Plugin {
         conversion.for('dataDowncast').elementToElement({
             model: 'linkMention',
             view: (modelElement, { writer }) => {
-                const attrs: Record<string, string> = {
-                    class: 'link-mention',
-                    'data-url': modelElement.getAttribute('url') as string
-                };
-                for (const key of ['embedType', 'title', 'description', 'favicon', 'siteName', 'image'] as const) {
-                    const val = modelElement.getAttribute(key) as string | undefined;
-                    if (val) {
-                        const attrName = key === 'embedType' ? 'data-embed-type'
-                            : key === 'siteName' ? 'data-site-name'
-                            : `data-${key}`;
-                        attrs[attrName] = val;
-                    }
-                }
-                return writer.createContainerElement('span', attrs);
+                return writer.createContainerElement('span', metadataViewAttributes(modelElement, 'link-mention', ['url']));
             }
         });
 
@@ -358,10 +329,7 @@ class LinkEmbedEditing extends Plugin {
                 const title = modelElement.getAttribute('title') as string | undefined;
                 const favicon = modelElement.getAttribute('favicon') as string | undefined;
 
-                const span = writer.createContainerElement('span', {
-                    class: 'link-mention',
-                    'data-url': url
-                });
+                const span = writer.createContainerElement('span', metadataViewAttributes(modelElement, 'link-mention', ['url']));
 
                 const inner = writer.createUIElement('span', {
                     class: 'link-mention-inner',
@@ -422,6 +390,43 @@ class InsertLinkEmbedCommand extends Command {
 }
 
 const META_KEYS = ['url', 'embedType', 'title', 'description', 'favicon', 'siteName', 'image'] as const;
+
+type MetaKey = (typeof META_KEYS)[number];
+
+const DATA_ATTR_NAMES: Record<MetaKey, string> = {
+    url: 'data-url',
+    embedType: 'data-embed-type',
+    title: 'data-title',
+    description: 'data-description',
+    favicon: 'data-favicon',
+    siteName: 'data-site-name',
+    image: 'data-image'
+};
+
+/**
+ * Builds the widget wrapper's class + `data-*` attributes from a linkEmbed/linkMention element.
+ *
+ * Shared by the data AND the editing downcast on purpose: a copy gesture that starts inside the
+ * rendered preview (a `data-cke-ignore-events` subtree, which CKEditor's clipboard pipeline
+ * deliberately ignores) is handled natively by the browser and puts the *editing* markup on the
+ * clipboard. Since upcast rebuilds the widget purely from the wrapper's `data-*` attributes, any
+ * metadata missing from the editing wrapper would be silently lost on paste — historically the
+ * favicon and title of a copied mention.
+ */
+function metadataViewAttributes(
+    modelElement: { getAttribute(key: string): unknown },
+    className: string,
+    requiredKeys: readonly MetaKey[]
+): Record<string, string> {
+    const attrs: Record<string, string> = { class: className };
+    for (const key of META_KEYS) {
+        const val = modelElement.getAttribute(key) as string | undefined;
+        if (val || requiredKeys.includes(key)) {
+            attrs[DATA_ATTR_NAMES[key]] = val as string;
+        }
+    }
+    return attrs;
+}
 
 /** Returns the currently selected linkEmbed/linkMention element, or null. */
 function getSelectedLinkWidget(editor: any) {
