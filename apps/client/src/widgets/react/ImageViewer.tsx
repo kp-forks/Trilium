@@ -32,11 +32,20 @@ const REVEAL_FALLBACK_MS = 1000;
 
 const IMAGE_VIEWER_HINTS: ShortcutHintDefinition = [
     {
-        titleKey: "image_viewer.hints.title",
+        titleKey: "image_viewer.hints.zoom",
         hints: [
             { keys: ["Ctrl++", "E"], labelKey: "image_viewer.hints.zoom_in" },
             { keys: ["Ctrl+-", "Q"], labelKey: "image_viewer.hints.zoom_out" },
-            { keys: ["W", "A", "S", "D", "Up", "Down", "Left", "Right"], labelKey: "image_viewer.hints.pan" },
+            { keys: ["/", "Numpad /"], labelKey: "image_viewer.hints.reset_zoom" }
+        ]
+    },
+    {
+        titleKey: "image_viewer.hints.pan",
+        hints: [
+            { keys: ["Up", "W"], labelKey: "image_viewer.hints.pan_up" },
+            { keys: ["Down", "S"], labelKey: "image_viewer.hints.pan_down" },
+            { keys: ["Left", "A"], labelKey: "image_viewer.hints.pan_left" },
+            { keys: ["Right", "D"], labelKey: "image_viewer.hints.pan_right" },
             { keys: ["Shift"], labelKey: "image_viewer.hints.pan_fast" }
         ]
     },

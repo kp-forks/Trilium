@@ -66,14 +66,20 @@ describe("ImageViewer", () => {
         ));
 
         const sections = collectShortcutHints(host);
-        expect(sections).toHaveLength(2);
+        expect(sections).toHaveLength(3);
         expect(sections[0].hints.map(h => h.labelKey)).toEqual([
             "image_viewer.hints.zoom_in",
             "image_viewer.hints.zoom_out",
-            "image_viewer.hints.pan",
-            "image_viewer.hints.pan_fast"
+            "image_viewer.hints.reset_zoom"
         ]);
         expect(sections[1].hints.map(h => h.labelKey)).toEqual([
+            "image_viewer.hints.pan_up",
+            "image_viewer.hints.pan_down",
+            "image_viewer.hints.pan_left",
+            "image_viewer.hints.pan_right",
+            "image_viewer.hints.pan_fast"
+        ]);
+        expect(sections[2].hints.map(h => h.labelKey)).toEqual([
             "image_viewer.hints.next_image",
             "image_viewer.hints.previous_image",
             "image_viewer.hints.first_image",

@@ -999,10 +999,15 @@
   "image_viewer": {
     "loading_error": "There was an error loading the image.",
     "hints": {
-      "title": "Zoom & Pan",
+      "zoom": "Zoom",
       "zoom_in": "Zoom in",
       "zoom_out": "Zoom out",
+      "reset_zoom": "Reset zoom",
       "pan": "Pan",
+      "pan_up": "Up",
+      "pan_down": "Down",
+      "pan_left": "Left",
+      "pan_right": "Right",
       "pan_fast": "Faster panning",
       "navigation": "Navigation",
       "next_image": "Next image",
