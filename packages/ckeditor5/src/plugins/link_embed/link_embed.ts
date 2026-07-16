@@ -5,6 +5,7 @@ import LinkEmbedUI from './link_embed_ui.js';
 
 export {
     CHANGE_LINK_DISPLAY_COMMAND,
+    CHANGE_LINK_PREVIEW_TITLE_COMMAND,
     LINK_DISPLAY_MODES,
     LINK_EMBED_COMMAND,
     REMOVE_LINK_EMBED_COMMAND,

@@ -10,7 +10,7 @@ import {
     META,
     type LinkEmbedComponentMocks
 } from "../../../test/link-embed-kit.js";
-import { CHANGE_LINK_DISPLAY_COMMAND, LINK_EMBED_COMMAND, REMOVE_LINK_EMBED_COMMAND } from "./link_embed_commands.js";
+import { CHANGE_LINK_DISPLAY_COMMAND, CHANGE_LINK_PREVIEW_TITLE_COMMAND, LINK_EMBED_COMMAND, REMOVE_LINK_EMBED_COMMAND } from "./link_embed_commands.js";
 
 describe("LinkEmbed commands", () => {
     let editor: ClassicEditor;
@@ -233,6 +233,67 @@ describe("LinkEmbed commands", () => {
         }
         command?.execute();
 
+        expect(editor.getData()).toBe(before);
+    });
+
+    // -----------------------------------------------------------------------
+    // ChangeLinkPreviewTitleCommand (the widget toolbar's Edit title button)
+    // -----------------------------------------------------------------------
+
+    it("edits the displayed title, keeping every other attribute and the selection", () => {
+        setModelData(
+            editor.model,
+            '<paragraph>[<linkMention url="https://e.com/page" embedType="opengraph" title="Old | Site | Blog" favicon="F"></linkMention>]</paragraph>'
+        );
+        const command = editor.commands.get(CHANGE_LINK_PREVIEW_TITLE_COMMAND);
+        expect(command?.isEnabled).toBe(true);
+        // The stored title is what the edit form prefills with.
+        expect(command?.value).toBe("Old | Site | Blog");
+
+        editor.execute(CHANGE_LINK_PREVIEW_TITLE_COMMAND, { title: "My own words" });
+
+        const mention = findElement(editor, "linkMention");
+        expect(mention?.getAttribute("title")).toBe("My own words");
+        expect(mention?.getAttribute("url")).toBe("https://e.com/page");
+        expect(mention?.getAttribute("favicon")).toBe("F");
+        // The widget stays selected, so its toolbar stays up after the edit.
+        expect(editor.model.document.selection.getSelectedElement()).toBe(mention);
+
+        // A block card edits the same way — it is the same attribute.
+        setModelData(editor.model, '[<linkEmbed url="https://e.com/" embedType="opengraph" title="T"></linkEmbed>]');
+        editor.execute(CHANGE_LINK_PREVIEW_TITLE_COMMAND, { title: "Card title" });
+        expect(findElement(editor, "linkEmbed")?.getAttribute("title")).toBe("Card title");
+    });
+
+    it("reports the renderers' hostname fallback when no title is stored, and the raw URL when it cannot parse", () => {
+        setModelData(editor.model, '[<linkEmbed url="https://e.com/page" embedType="opengraph"></linkEmbed>]');
+        expect(editor.commands.get(CHANGE_LINK_PREVIEW_TITLE_COMMAND)?.value).toBe("e.com");
+
+        setModelData(editor.model, '[<linkEmbed url="not-a-url" embedType="opengraph"></linkEmbed>]');
+        expect(editor.commands.get(CHANGE_LINK_PREVIEW_TITLE_COMMAND)?.value).toBe("not-a-url");
+    });
+
+    it("treats an unchanged or blank title as a no-op, and is disabled without a widget", () => {
+        setModelData(editor.model, '<paragraph>[<linkMention url="https://e.com/" title="T"></linkMention>]</paragraph>');
+        const original = findElement(editor, "linkMention");
+
+        // Saving the prefilled value back, or a blank one, must not even replace the element.
+        editor.execute(CHANGE_LINK_PREVIEW_TITLE_COMMAND, { title: "T" });
+        expect(findElement(editor, "linkMention")).toBe(original);
+        editor.execute(CHANGE_LINK_PREVIEW_TITLE_COMMAND, { title: "   " });
+        expect(findElement(editor, "linkMention")).toBe(original);
+
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        const command = editor.commands.get(CHANGE_LINK_PREVIEW_TITLE_COMMAND);
+        expect(command?.isEnabled).toBe(false);
+        expect(command?.value).toBeNull();
+
+        // Command swallows execute() while disabled, so force it enabled to exercise the early return.
+        const before = editor.getData();
+        if (command) {
+            command.isEnabled = true;
+        }
+        command?.execute({ title: "anything" });
         expect(editor.getData()).toBe(before);
     });
 

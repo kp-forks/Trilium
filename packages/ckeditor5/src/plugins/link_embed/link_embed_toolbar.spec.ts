@@ -1,9 +1,10 @@
-import { ClassicEditor, Essentials, Link, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
+import { ClassicEditor, ContextualBalloon, Essentials, Link, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../../test/editor-kit.js";
 import { installGlobMock } from "../../../test/globals-test-kit.js";
 import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./link_embed.js";
+import LinkEmbedTitleFormView from "./link_embed_title_form.js";
 import LinkEmbedToolbar from "./link_embed_toolbar.js";
 
 // ---------------------------------------------------------------------------
@@ -690,6 +691,42 @@ describe("LinkEmbedToolbar", () => {
 
             // The widget is gone, leaving the bare URL as plain text.
             expect(editor.getData()).toBe(`<p>${URL}</p>`);
+        });
+
+        it("linkEmbedEditTitle opens a balloon form prefilled with the current title and saves the edit", () => {
+            const button = createButton("linkEmbedEditTitle");
+            expect(button.isEnabled).toBe(false);
+
+            selectLinkMention();
+            expect(button.isEnabled).toBe(true);
+
+            // Put the widget toolbar in the balloon first, as it necessarily is when the user
+            // clicks the pencil inside it — otherwise it would stack itself over the form when
+            // focusing the form flips the UI focus tracker.
+            editor.ui.focusTracker.isFocused = true;
+            editor.ui.fire("update");
+
+            const balloon = editor.plugins.get(ContextualBalloon);
+            button.fire("execute");
+
+            const form = balloon.visibleView as LinkEmbedTitleFormView;
+            expect(form).toBeInstanceOf(LinkEmbedTitleFormView);
+            // Prefilled with what the pill currently shows, so an untouched save changes nothing.
+            expect(form.title).toBe("T");
+
+            form.title = "My words";
+            form.fire("submit");
+
+            // The form is gone and the title took: the widget re-rendered with the new title.
+            expect(balloon.hasView(form)).toBe(false);
+            const mention = editor.model.document.selection.getSelectedElement();
+            expect(mention?.getAttribute("title")).toBe("My words");
+
+            // Esc dismisses without saving: reopening prefills with the widget's current title.
+            button.fire("execute");
+            expect(form.title).toBe("My words");
+            form.keystrokes.press({ keyCode: 27, preventDefault: () => {}, stopPropagation: () => {} } as unknown as Parameters<typeof form.keystrokes.press>[0]);
+            expect(balloon.hasView(form)).toBe(false);
         });
     });
 });

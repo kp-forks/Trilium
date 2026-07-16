@@ -2459,7 +2459,10 @@
     "mode_inline": "Inline",
     "mode_card": "Card",
     "mode_embed": "Embed",
-    "mode_plain": "Plain link"
+    "mode_plain": "Plain link",
+    "edit_title": "Edit title",
+    "title_label": "Title",
+    "save": "Save"
   },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",

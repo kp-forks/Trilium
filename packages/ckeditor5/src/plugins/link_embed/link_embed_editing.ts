@@ -2,7 +2,9 @@ import { Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget } from
 import { preventCKEditorHandling } from '../widget_utils.js';
 import {
     CHANGE_LINK_DISPLAY_COMMAND,
+    CHANGE_LINK_PREVIEW_TITLE_COMMAND,
     ChangeLinkDisplayCommand,
+    ChangeLinkPreviewTitleCommand,
     InsertLinkEmbedCommand,
     LINK_EMBED_COMMAND,
     META_KEYS,
@@ -35,6 +37,7 @@ export default class LinkEmbedEditing extends Plugin {
         this.editor.commands.add(LINK_EMBED_COMMAND, new InsertLinkEmbedCommand(this.editor));
         this.editor.commands.add(CHANGE_LINK_DISPLAY_COMMAND, new ChangeLinkDisplayCommand(this.editor));
         this.editor.commands.add(REMOVE_LINK_EMBED_COMMAND, new RemoveLinkEmbedCommand(this.editor));
+        this.editor.commands.add(CHANGE_LINK_PREVIEW_TITLE_COMMAND, new ChangeLinkPreviewTitleCommand(this.editor));
     }
 
     _defineSchema() {

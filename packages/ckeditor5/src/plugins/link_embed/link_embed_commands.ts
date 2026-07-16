@@ -4,6 +4,7 @@ import { Command, findAttributeRange, ModelLiveRange } from 'ckeditor5';
 export const LINK_EMBED_COMMAND = 'insertLinkEmbed';
 export const CHANGE_LINK_DISPLAY_COMMAND = 'changeLinkDisplay';
 export const REMOVE_LINK_EMBED_COMMAND = 'removeLinkEmbed';
+export const CHANGE_LINK_PREVIEW_TITLE_COMMAND = 'changeLinkPreviewTitle';
 
 export const LINK_DISPLAY_MODES = [
     { value: 'inline', label: 'Inline', labelKey: 'link_embed.mode_inline' },
@@ -264,6 +265,67 @@ export class RemoveLinkEmbedCommand extends Command {
 
     override refresh() {
         this.isEnabled = !!getSelectedLinkWidget(this.editor);
+    }
+}
+
+/**
+ * Edits the title a link preview displays — the pill text of a mention, the heading of a card.
+ * The preview counterpart of the "Displayed text" field the editor's own link form offers for
+ * native links: the fetched title is often noisy ("Article | Site | Section"), and converting a
+ * labeled link replaces the user's wording, so both need a way back to words of the user's choosing.
+ *
+ * `value` is what the preview currently shows (the stored title, or the hostname the renderers
+ * fall back to), for the edit form to prefill. As in the official form, saving it back unchanged —
+ * or blank — changes nothing.
+ */
+export class ChangeLinkPreviewTitleCommand extends Command {
+    declare value: string | null;
+
+    override execute({ title }: { title: string }) {
+        const model = this.editor.model;
+        const selected = getSelectedLinkWidget(this.editor);
+        if (!selected) return;
+
+        const newTitle = title.trim();
+        if (!newTitle || newTitle === effectiveTitle(selected)) return;
+
+        model.change(writer => {
+            const attrs: Record<string, unknown> = {};
+            for (const key of META_KEYS) {
+                const val = selected.getAttribute(key);
+                if (val != null) attrs[key] = val;
+            }
+            attrs.title = newTitle;
+
+            // Clone-replace rather than setAttribute: the editing downcast is elementToElement,
+            // which does not re-render on attribute changes — replacing does (and it is how mode
+            // switching already works). The widget stays selected, so its toolbar stays up.
+            const replacement = writer.createElement(selected.name, attrs);
+            model.insertContent(replacement, writer.createRangeOn(selected));
+            writer.setSelection(replacement, 'on');
+        });
+    }
+
+    override refresh() {
+        const selected = getSelectedLinkWidget(this.editor);
+        this.isEnabled = !!selected;
+        this.value = selected ? effectiveTitle(selected) : null;
+    }
+}
+
+/**
+ * The title a preview currently displays: its stored title, or — mirroring the renderers'
+ * fallback (see MentionPreview in the client) — the hostname of its URL.
+ */
+function effectiveTitle(element: any): string {
+    const title = element.getAttribute('title') as string | undefined;
+    if (title) return title;
+
+    const url = element.getAttribute('url') as string | undefined;
+    try {
+        return new URL(url ?? '').hostname;
+    } catch {
+        return url ?? '';
     }
 }
 
