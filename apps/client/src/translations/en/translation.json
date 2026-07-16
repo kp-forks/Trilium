@@ -1012,7 +1012,8 @@
     }
   },
   "shortcut_hints": {
-    "show_button": "Show shortcut hints"
+    "show_button": "Show shortcut hints",
+    "esc_hint": "to close"
   },
   "zpetne_odkazy": {
     "backlink_one": "{{count}} Backlink",

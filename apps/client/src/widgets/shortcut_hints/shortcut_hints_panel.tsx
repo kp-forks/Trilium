@@ -90,6 +90,12 @@ export default function ShortcutHintsPanel() {
     return createPortal(
         <div ref={panelRef} className="shortcut-hints-panel tn-shortcut-hints-kbd" style={style} onMouseEnter={clearTimer} onMouseLeave={startTimer}>
             <ShortcutHintsSections sections={state.sections} />
+            {/* Keyboard users get the Esc reminder; mouse users (opened via the button) click away. */}
+            {!state.anchor && (
+                <div className="shortcut-hints-footer">
+                    {renderShortcutKbds("Escape")} {t("shortcut_hints.esc_hint")}
+                </div>
+            )}
         </div>,
         document.body
     );

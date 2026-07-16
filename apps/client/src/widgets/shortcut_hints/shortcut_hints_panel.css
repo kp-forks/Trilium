@@ -59,4 +59,10 @@
         content: ",";
         margin-inline-end: 8px;
     }
+
+    .shortcut-hints-footer {
+        margin-top: 0.6rem;
+        color: var(--muted-text-color);
+        font-size: 0.8em;
+    }
 }

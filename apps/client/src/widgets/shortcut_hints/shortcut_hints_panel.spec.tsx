@@ -69,6 +69,12 @@ describe("ShortcutHintsPanel", () => {
         expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
     });
 
+    it("shows the Esc footer only when opened by keyboard (no anchor)", () => {
+        const host = mountPanel();
+        request(host, SECTIONS);
+        expect(document.querySelector(".shortcut-hints-footer")).not.toBeNull();
+    });
+
     it("does not open when there are no sections", () => {
         const host = mountPanel();
         request(host, []);
@@ -118,6 +124,8 @@ describe("ShortcutHintsPanel", () => {
             // Anchored positioning uses top/bottom-auto instead of the corner's bottom offset.
             expect(panel?.style.top).toBe("6px");
             expect(panel?.style.bottom).toBe("auto");
+            // No Esc footer when opened via the button (mouse users click away).
+            expect(document.querySelector(".shortcut-hints-footer")).toBeNull();
 
             // A mousedown on the anchor is left for its own toggle — the pane must not close.
             act(() => { anchor.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); });
