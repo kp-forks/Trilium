@@ -11,7 +11,7 @@
     color: var(--help-kbd-shortcut-color);
     font-family: var(--main-font-family);
     font-size: 0.7em;
-    font-weight: normal;
+    font-weight: 500;
     line-height: 1.4;
     letter-spacing: 0.5pt;
 }

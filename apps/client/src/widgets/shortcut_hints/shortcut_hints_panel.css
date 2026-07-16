@@ -13,7 +13,6 @@
     border: 1px solid var(--main-border-color);
     border-radius: 6px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
-    font-size: 0.9em;
 
     .shortcut-hints-section {
         &:not(:last-child) {
@@ -22,8 +21,12 @@
     }
 
     .shortcut-hints-section-title {
-        font-weight: bold;
+        text-transform: uppercase;
+        font-weight: 600;
         margin-bottom: 0.25rem;
+        font-size: .75em;
+        letter-spacing: 0.5pt;
+        border-bottom: 2px solid var(--main-border-color);
     }
 
     /* Borderless two-column table: action label (max-content) then shortcut keys (fills the rest). */
@@ -34,10 +37,11 @@
         row-gap: 0.25rem;
         align-items: baseline;
         margin: 0;
+        font-size: .85em;
 
         dt,
         dd {
-            margin: 0;
+            margin: 2px 0;
         }
 
         /* `dt` is bold by default (Bootstrap reboot); action names should read as normal text. */
