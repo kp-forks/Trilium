@@ -50,7 +50,7 @@ function toMarkdown(content: string) {
                 // Only reached by a link preview without a data-url (the fallback anchor injected
                 // by `injectLinkPreviewFallbacks` makes every other one non-blank).
                 if (isLinkPreview(node)) {
-                    return linkPreviewReplacement(node as HTMLElement);
+                    return linkPreviewReplacement(node);
                 }
 
                 // Original implementation as per https://github.com/mixmark-io/turndown/blob/master/src/turndown.js.
@@ -262,12 +262,22 @@ function injectLinkPreviewFallbacks(content: string): string {
     return root.toString();
 }
 
-function isLinkPreview(node: HTMLElement): boolean {
+/**
+ * The slice of a DOM node the link-preview rules read. Turndown hands its callbacks its own
+ * ExtendedNode — not a real HTMLElement — so the helpers ask only for what they use.
+ */
+interface LinkPreviewNodeLike {
+    nodeName: string;
+    classList: { contains(className: string): boolean };
+    outerHTML: string;
+}
+
+function isLinkPreview(node: LinkPreviewNodeLike): boolean {
     return (node.nodeName === "SECTION" && node.classList.contains("link-embed"))
         || (node.nodeName === "SPAN" && node.classList.contains("link-mention"));
 }
 
-function linkPreviewReplacement(node: HTMLElement): string {
+function linkPreviewReplacement(node: LinkPreviewNodeLike): string {
     return node.nodeName === "SECTION" ? `\n\n${node.outerHTML}\n\n` : node.outerHTML;
 }
 
@@ -277,7 +287,7 @@ function buildLinkPreviewFilter(): Rule {
             return isLinkPreview(node);
         },
         replacement(_content, node) {
-            return linkPreviewReplacement(node as HTMLElement);
+            return linkPreviewReplacement(node);
         }
     };
 }
