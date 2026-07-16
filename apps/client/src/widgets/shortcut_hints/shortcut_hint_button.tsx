@@ -13,11 +13,24 @@ import { useStaticTooltip } from "../react/hooks.js";
 import { ParentComponent } from "../react/react_utils.js";
 
 /**
- * Overlay button that opens the contextual shortcut-hints pane as a dropdown, collecting the hints
- * from its own widget context. Reusable across widgets (image viewer, media player, …); the caller
- * positions it via `className` on the overlay group.
+ * Standalone shortcut-hints button in its own overlay group; `className` positions the group. Use
+ * this when the widget has no existing overlay controls. To add the button to an *existing*
+ * `.tn-overlay-control-group`, use the {@link ShortcutHintOverlayButton} named export instead.
  */
 export default function ShortcutHintButton({ className }: { className?: string }) {
+    return (
+        <div className={clsx("tn-overlay-control-group", "shortcut-hint-button-group", className)}>
+            <ShortcutHintOverlayButton />
+        </div>
+    );
+}
+
+/**
+ * Just the overlay `<button>` (no group wrapper), for placing alongside other buttons inside an
+ * existing `.tn-overlay-control-group`. It opens the contextual shortcut-hints pane as a dropdown,
+ * collecting the hints from its own widget context.
+ */
+export function ShortcutHintOverlayButton() {
     const parentComponent = useContext(ParentComponent);
     const buttonRef = useRef<HTMLButtonElement>(null);
     const [ shortcut, setShortcut ] = useState("Alt+F1");
@@ -37,17 +50,15 @@ export default function ShortcutHintButton({ className }: { className?: string }
     }, [ parentComponent ]);
 
     return (
-        <div className={clsx("tn-overlay-control-group", "shortcut-hint-button-group", className)}>
-            <button
-                ref={buttonRef}
-                type="button"
-                className="tn-overlay-text-button shortcut-hint-button tn-shortcut-hints-kbd"
-                aria-label={t("shortcut_hints.show_button")}
-                onClick={onClick}
-            >
-                <span className="shortcut-hint-button-key">{shortcut}</span>
-                <kbd>?</kbd>
-            </button>
-        </div>
+        <button
+            ref={buttonRef}
+            type="button"
+            className="tn-overlay-text-button shortcut-hint-button tn-shortcut-hints-kbd"
+            aria-label={t("shortcut_hints.show_button")}
+            onClick={onClick}
+        >
+            <kbd>?</kbd>
+            <span className="shortcut-hint-button-key">{shortcut}</span>
+        </button>
     );
 }
