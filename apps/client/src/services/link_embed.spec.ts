@@ -137,6 +137,30 @@ describe("renderEmbedPreview", () => {
         expect(root.querySelector("button.link-embed-video-facade")).toBeNull();
     });
 
+    it("omits the player's origin param when not served from a web origin (desktop custom protocol)", async () => {
+        // On desktop the renderer is served from trilium-app://app, which YouTube's player rejects
+        // as an `origin` value — the param must be left out entirely there.
+        const happyDOM = (window as unknown as { happyDOM: { setURL(url: string): void } }).happyDOM;
+        const previousUrl = window.location.href;
+        happyDOM.setURL("trilium-app://app/index.html");
+
+        try {
+            const root = makeContainer();
+            renderEmbedPreview(root, {
+                url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                embedType: "youtube"
+            });
+            root.querySelector<HTMLButtonElement>("button.link-embed-video-facade")?.click();
+            await new Promise((resolve) => setTimeout(resolve, 0));
+
+            const src = root.querySelector("iframe")?.getAttribute("src") ?? "";
+            expect(src).toContain("youtube-nocookie.com/embed/dQw4w9WgXcQ");
+            expect(src).not.toContain("origin=");
+        } finally {
+            happyDOM.setURL(previousUrl);
+        }
+    });
+
     it("shows the facade without a thumbnail when the note stores no image", () => {
         const root = makeContainer();
         renderEmbedPreview(root, {

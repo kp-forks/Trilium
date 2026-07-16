@@ -379,6 +379,50 @@ describe("LinkEmbed commands", () => {
         expect(editor.getData()).toBe("<p>replaced</p>");
     });
 
+    it("does not convert when the link was repointed at a different URL while the metadata was being fetched", async () => {
+        const url = "https://example.com/";
+        let resolveFetch: (meta: unknown) => void = () => {};
+        fetchLinkMetadata.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+        setModelData(editor.model, `<paragraph><$text linkHref="${url}">https://exa[]mple.com/</$text></paragraph>`);
+
+        const executed = editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "inline" }) as unknown as Promise<void>;
+        editor.model.change((writer) => {
+            const paragraph = editor.model.document.getRoot()?.getChild(0);
+            if (!paragraph?.is("element")) throw new Error("Expected a paragraph.");
+            writer.setAttribute("linkHref", "https://other.example.com/", writer.createRangeIn(paragraph));
+        });
+        resolveFetch({ ...META, url });
+        await executed;
+
+        // The text is still there but no longer carries the fetched URL: converting it would
+        // attach one page's metadata to another page's link.
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+    });
+
+    it("still converts when the linked text survives behind an inserted element and a repointed prefix", async () => {
+        const url = "https://example.com/";
+        let resolveFetch: (meta: unknown) => void = () => {};
+        fetchLinkMetadata.mockReturnValue(new Promise((resolve) => { resolveFetch = resolve; }));
+        setModelData(editor.model, `<paragraph><$text linkHref="${url}">https://exa[]mple.com/</$text></paragraph>`);
+
+        const executed = editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "inline" }) as unknown as Promise<void>;
+        editor.model.change((writer) => {
+            const paragraph = editor.model.document.getRoot()?.getChild(0);
+            if (!paragraph?.is("element")) throw new Error("Expected a paragraph.");
+            // Repoint the first five characters and wedge a soft break after them: the range
+            // walker must skip both before finding text that still carries the original link.
+            writer.setAttribute("linkHref", "https://other.example.com/", writer.createRange(
+                writer.createPositionAt(paragraph, 0),
+                writer.createPositionAt(paragraph, 5)
+            ));
+            writer.insertElement("softBreak", paragraph, 5);
+        });
+        resolveFetch({ ...META, url });
+        await executed;
+
+        expect(findElement(editor, "linkMention")?.getAttribute("url")).toBe(url);
+    });
+
     it("does nothing when executed without a selected link widget or a native link", () => {
         setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
         const before = editor.getData();

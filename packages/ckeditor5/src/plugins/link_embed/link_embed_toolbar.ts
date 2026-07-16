@@ -284,8 +284,9 @@ class LinkEmbedEditTitleButton extends Plugin {
         if (balloon.hasView(form)) return;
 
         // Prefill with what the preview currently shows, so a save without edits changes nothing.
-        const command = editor.commands.get(CHANGE_LINK_PREVIEW_TITLE_COMMAND) as (Command & { value: string | null }) | undefined;
-        form.reset(command?.value ?? "");
+        // The command always exists: LinkEmbedEditing registers it and this plugin requires LinkEmbed.
+        const command = editor.commands.get(CHANGE_LINK_PREVIEW_TITLE_COMMAND) as Command & { value: string | null };
+        form.reset(command.value ?? "");
 
         balloon.add({
             view: form,

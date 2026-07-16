@@ -321,11 +321,12 @@ function effectiveTitle(element: any): string {
     const title = element.getAttribute('title') as string | undefined;
     if (title) return title;
 
-    const url = element.getAttribute('url') as string | undefined;
+    /* v8 ignore next -- every linkEmbed/linkMention is created with a url attribute (a widget without one does not even render), so the fallback arm is unreachable */
+    const url = (element.getAttribute('url') ?? '') as string;
     try {
-        return new URL(url ?? '').hostname;
+        return new URL(url).hostname;
     } catch {
-        return url ?? '';
+        return url;
     }
 }
 

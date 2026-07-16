@@ -728,6 +728,32 @@ describe("LinkEmbedToolbar", () => {
             form.keystrokes.press({ keyCode: 27, preventDefault: () => {}, stopPropagation: () => {} } as unknown as Parameters<typeof form.keystrokes.press>[0]);
             expect(balloon.hasView(form)).toBe(false);
         });
+
+        it("linkEmbedEditTitle guards reopening, closes on outside click, and opens blank without a widget", () => {
+            const button = createButton("linkEmbedEditTitle");
+            selectLinkMention();
+            editor.ui.focusTracker.isFocused = true;
+            editor.ui.fire("update");
+
+            const balloon = editor.plugins.get(ContextualBalloon);
+            button.fire("execute");
+            const form = balloon.visibleView as LinkEmbedTitleFormView;
+            expect(form).toBeInstanceOf(LinkEmbedTitleFormView);
+
+            // A second click while the form is open is a no-op, not a second balloon entry.
+            button.fire("execute");
+            expect(balloon.visibleView).toBe(form);
+
+            // A click outside the balloon dismisses the form without saving.
+            document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            expect(balloon.hasView(form)).toBe(false);
+            expect(editor.model.document.selection.getSelectedElement()?.getAttribute("title")).toBe("T");
+
+            // Fired with no widget under the selection, the form opens blank (the command reports null).
+            setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+            button.fire("execute");
+            expect(form.title).toBe("");
+        });
     });
 });
 
