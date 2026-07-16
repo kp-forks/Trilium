@@ -127,6 +127,18 @@ describe("LinkEmbed", () => {
         expect(findElement(editor, "linkEmbed")?.getAttribute("embedType")).toBe("youtube");
     });
 
+    it("inserts an ordinary link for the 'plain' mode, without fetching any metadata", async () => {
+        const url = "https://example.com/article";
+        setModelData(editor.model, "<paragraph>[]</paragraph>");
+
+        await editor.execute(LINK_EMBED_COMMAND, { url, mode: "plain" });
+
+        expect(fetchLinkMetadata).not.toHaveBeenCalled();
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        expect(findElement(editor, "linkEmbed")).toBeUndefined();
+        expect(editor.getData()).toBe(`<p><a href="${url}">${url}</a></p>`);
+    });
+
     it("is enabled in a paragraph and disabled when read-only", () => {
         setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
         const command = editor.commands.get(LINK_EMBED_COMMAND);
@@ -452,6 +464,35 @@ describe("LinkEmbed", () => {
         expect(mention).toBeDefined();
         expect(mention?.getAttribute("url")).toBe("https://e.com/");
         expect(mention?.getAttribute("title")).toBe("T");
+    });
+
+    it("converts a link widget to a plain, ordinary link — and never re-converts it", async () => {
+        setModelData(editor.model, '<paragraph>[<linkMention url="https://e.com/" title="T"></linkMention>]</paragraph>');
+
+        editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "plain" });
+
+        expect(findElement(editor, "linkMention")).toBeUndefined();
+        expect(editor.getData()).toBe('<p><a href="https://e.com/">https://e.com/</a></p>');
+
+        // The linked text arrives as an insertion, not a linkHref attribute change, so
+        // AutoLinkToMention must not have kicked in and fetched the preview straight back.
+        await Promise.resolve();
+        expect(fetchLinkMetadata).not.toHaveBeenCalled();
+
+        // A block preview converts the same way, gaining a wrapping paragraph.
+        setModelData(editor.model, '[<linkEmbed url="https://e.com/" embedType="opengraph"></linkEmbed>]');
+        editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "plain" });
+        expect(editor.getData()).toBe('<p><a href="https://e.com/">https://e.com/</a></p>');
+    });
+
+    it("degrades a non-http(s) URL to bare text when converting to a plain link", () => {
+        // A data-url the sanitizers pass through verbatim must not become a live href
+        // (same rule as the toolbar's open-link button; see isHttpUrl).
+        setModelData(editor.model, '[<linkEmbed url="javascript:alert(1)" embedType="opengraph"></linkEmbed>]');
+
+        editor.execute(CHANGE_LINK_DISPLAY_COMMAND, { value: "plain" });
+
+        expect(editor.getData()).toBe("<p>javascript:alert(1)</p>");
     });
 
     it("does nothing when the target mode equals the current mode", () => {

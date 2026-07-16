@@ -12,7 +12,10 @@ export const REMOVE_LINK_EMBED_COMMAND = 'removeLinkEmbed';
 export const LINK_DISPLAY_MODES = [
     { value: 'inline', label: 'Inline', labelKey: 'link_embed.mode_inline' },
     { value: 'card', label: 'Card', labelKey: 'link_embed.mode_card' },
-    { value: 'embed', label: 'Embed', labelKey: 'link_embed.mode_embed' }
+    { value: 'embed', label: 'Embed', labelKey: 'link_embed.mode_embed' },
+    // The way out of the preview system: an ordinary <a> link, no widget. Offered in the same
+    // dropdowns as the real modes so "back to a normal URL" is found where the user looks for it.
+    { value: 'plain', label: 'Plain link', labelKey: 'link_embed.mode_plain' }
 ] as const;
 
 export type LinkDisplayMode = typeof LINK_DISPLAY_MODES[number]['value'];
@@ -360,6 +363,16 @@ class LinkEmbedEditing extends Plugin {
 class InsertLinkEmbedCommand extends Command {
     override async execute({ url, mode }: { url: string; mode: LinkDisplayMode }) {
         const editor = this.editor;
+
+        // A plain link is not a preview at all, so no metadata is fetched: the URL becomes an
+        // ordinary link, exactly as the editor's own link balloon would have inserted it.
+        if (mode === 'plain') {
+            editor.model.change((writer) => {
+                editor.model.insertContent(writer.createText(url, { linkHref: url }));
+            });
+            return;
+        }
+
         const editorEl = editor.editing.view.getDomRoot();
         const component = glob.getComponentByEl<EditorComponent>(editorEl);
 
@@ -467,8 +480,21 @@ class ChangeLinkDisplayCommand extends Command {
             if (val != null) attrs[key] = val;
         }
 
-        // Detect the actual embed type from the URL via the client service.
         const url = attrs.url as string;
+
+        // "Plain link" leaves the preview system: the widget becomes an ordinary link whose text is
+        // the URL. Inserted as new content (not an attribute change), so AutoLinkToMention does not
+        // see it and immediately convert it back. A URL we would never link to (see the isHttpUrl
+        // note in refresh()) degrades to bare text instead, as the unlink button does.
+        if (targetMode === 'plain') {
+            model.change(writer => {
+                const text = isHttpUrl(url) ? writer.createText(url, { linkHref: url }) : writer.createText(url);
+                model.insertContent(text, writer.createRangeOn(selected));
+            });
+            return;
+        }
+
+        // Detect the actual embed type from the URL via the client service.
         const detectedType = this._detectEmbedType(url);
 
         model.change(writer => {
