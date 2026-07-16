@@ -1,3 +1,4 @@
+import "./shortcut_hints_kbd.css";
 import "./shortcut_hint_button.css";
 
 import clsx from "clsx";
@@ -40,7 +41,7 @@ export default function ShortcutHintButton({ className }: { className?: string }
             <button
                 ref={buttonRef}
                 type="button"
-                className="tn-overlay-text-button shortcut-hint-button"
+                className="tn-overlay-text-button shortcut-hint-button tn-shortcut-hints-kbd"
                 aria-label={t("shortcut_hints.show_button")}
                 onClick={onClick}
             >

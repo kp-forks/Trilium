@@ -1,6 +1,6 @@
+import "./shortcut_hints_kbd.css";
 import "./shortcut_hints_panel.css";
 
-import { Fragment } from "preact";
 import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
@@ -8,7 +8,6 @@ import { t } from "../../services/i18n.js";
 import keyboard_actions from "../../services/keyboard_actions.js";
 import type { ShortcutHint, ShortcutHintSection } from "../../services/shortcut_hints.js";
 import { useTriliumEvent } from "../react/hooks.js";
-import { joinElements } from "../react/react_utils.js";
 import { renderShortcutKbds } from "../react/shortcut_kbd.js";
 
 /** How long the panel stays up when left untouched. Paused while hovered; other signals dismiss it sooner. */
@@ -89,7 +88,7 @@ export default function ShortcutHintsPanel() {
     // Portal to <body> so no transformed / contained / overflow-clipped ancestor breaks the fixed
     // positioning or hides it behind content.
     return createPortal(
-        <div ref={panelRef} className="shortcut-hints-panel" style={style} onMouseEnter={clearTimer} onMouseLeave={startTimer}>
+        <div ref={panelRef} className="shortcut-hints-panel tn-shortcut-hints-kbd" style={style} onMouseEnter={clearTimer} onMouseLeave={startTimer}>
             <ShortcutHintsSections sections={state.sections} />
         </div>,
         document.body
@@ -102,9 +101,9 @@ export function ShortcutHintsSections({ sections }: { sections: ShortcutHintSect
             {sections.map((section, i) => (
                 <div className="shortcut-hints-section" key={i}>
                     {section.titleKey && <div className="shortcut-hints-section-title">{t(section.titleKey)}</div>}
-                    <ul>
+                    <dl className="shortcut-hints-list">
                         {section.hints.map((hint, j) => <HintRow hint={hint} key={j} />)}
-                    </ul>
+                    </dl>
                 </div>
             ))}
         </>
@@ -129,12 +128,16 @@ function HintRow({ hint }: { hint: ShortcutHint }) {
 
     const description = hint.labelKey ? t(hint.labelKey) : friendlyName ?? "";
 
+    // `dt`/`dd` are direct children of the section's `dl`, so they align as the two grid columns:
+    // action label (left) then shortcut keys (right).
     return (
-        <li className="shortcut-hint">
-            <span className="shortcut-hint-keys">
-                {joinElements(shortcuts.map((shortcut, i) => <Fragment key={i}>{renderShortcutKbds(shortcut)}</Fragment>), ", ")}
-            </span>
-            <span className="shortcut-hint-description">{description}</span>
-        </li>
+        <>
+            <dt className="shortcut-hint-description">{description}</dt>
+            <dd className="shortcut-hint-keys">
+                {shortcuts.map((shortcut, i) => (
+                    <span className="shortcut-hint-alt" key={i}>{renderShortcutKbds(shortcut)}</span>
+                ))}
+            </dd>
+        </>
     );
 }
