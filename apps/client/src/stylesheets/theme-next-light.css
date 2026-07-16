@@ -272,7 +272,7 @@
     /* Backend log (the `text/x-trilium-log` code note MIME) */
     --log-timestamp-color: #00000077;
     --log-slow-color: #db9345;
-    --log-http-line-background-color: #6c96d00b;
+    --log-http-line-background-color: #826cd00b;
     --log-http-verb-color: #9157ab;
     --log-http-url-color: #8057a0;
     --log-status-success-color: #32b323;
