@@ -17,8 +17,8 @@
 
     /* inline (not inline-flex) so a long link wraps line-by-line through the paragraph;
        clone keeps each wrapped fragment's padding/rounded corners and background. */
-    box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
 .link-embed-mention:hover {
@@ -100,7 +100,7 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    filter: blur(20px) brightness(.65);
+    filter: blur(20px) brightness(0.65);
 }
 
 .link-embed-video-play {

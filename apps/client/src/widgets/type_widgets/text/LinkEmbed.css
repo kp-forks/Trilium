@@ -49,8 +49,8 @@
 
     /* inline (not inline-flex) so a long link wraps line-by-line through the paragraph;
        clone keeps each wrapped fragment's padding/rounded corners where a background applies. */
-    box-decoration-break: clone;
     -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
 }
 
 .link-embed-mention:hover {
@@ -203,8 +203,8 @@
     background: var(--link-preview-card-background-color);
 }
 
-.link-embed-card-image-wrapper,
-.link-embed-card-content {
+.link-embed-preview-wrapper .link-embed-card-image-wrapper,
+.link-embed-preview-wrapper .link-embed-card-content {
     cursor: default;
 }
 
