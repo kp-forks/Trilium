@@ -1011,6 +1011,9 @@
       "last_image": "Last image"
     }
   },
+  "shortcut_hints": {
+    "show_button": "Show shortcut hints"
+  },
   "zpetne_odkazy": {
     "backlink_one": "{{count}} Backlink",
     "backlink_other": "{{count}} Backlinks",

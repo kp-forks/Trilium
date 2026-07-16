@@ -7,6 +7,7 @@ import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from 
 import { t } from "../../services/i18n";
 import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
 import { isMobile } from "../../services/utils";
+import ShortcutHintButton from "../shortcut_hints/shortcut_hint_button";
 import ContentErrorMessage from "./ContentErrorMessage";
 import { useContextualShortcutHints, useStaticTooltip } from "./hooks";
 import { useImageViewerKeyboard } from "./image_viewer_keyboard";
@@ -177,6 +178,10 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
 
             {loadingError && (
                 <ContentErrorMessage message={t("image_viewer.loading_error")} />
+            )}
+
+            {!isMobile() && loaded && (
+                <ShortcutHintButton className="image-viewer-hint-button" />
             )}
 
             {!isMobile() && loaded && (

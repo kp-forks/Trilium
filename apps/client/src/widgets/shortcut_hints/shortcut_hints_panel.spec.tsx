@@ -106,4 +106,28 @@ describe("ShortcutHintsPanel", () => {
         act(() => { host.handleEvent("activeContextChanged", { noteContext: {} as never }); });
         expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
     });
+
+    it("opens as a dropdown positioned under an anchor, and clicking the anchor does not dismiss it", () => {
+        const host = mountPanel();
+        const anchor = document.createElement("button");
+        document.body.appendChild(anchor);
+        try {
+            act(() => { host.handleEvent("shortcutHintsRequested", { sections: SECTIONS, anchor }); });
+
+            const panel = document.querySelector<HTMLElement>(".shortcut-hints-panel");
+            // Anchored positioning uses top/bottom-auto instead of the corner's bottom offset.
+            expect(panel?.style.top).toBe("6px");
+            expect(panel?.style.bottom).toBe("auto");
+
+            // A mousedown on the anchor is left for its own toggle — the pane must not close.
+            act(() => { anchor.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); });
+            expect(document.querySelector(".shortcut-hints-panel")).not.toBeNull();
+
+            // A mousedown elsewhere dismisses it.
+            act(() => { document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true })); });
+            expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
+        } finally {
+            anchor.remove();
+        }
+    });
 });

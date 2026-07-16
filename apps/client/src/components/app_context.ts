@@ -451,10 +451,13 @@ type EventMappings = {
     activeContextChanged: {
         noteContext: NoteContext;
     };
-    /** Emitted by the {@link CommandMappings.showShortcutHints} handler with the hints collected from
-     * the focused component chain, for the shortcut-hints pane to render. */
+    /** Emitted with the hints collected from the focused component chain (via the
+     * {@link CommandMappings.showShortcutHints} handler) or from a widget's help button, for the
+     * shortcut-hints pane to render. When `anchor` is set the pane opens as a dropdown by it;
+     * otherwise it opens in the bottom-right corner. */
     shortcutHintsRequested: {
         sections: ShortcutHintSection[];
+        anchor?: HTMLElement | null;
     };
     beforeNoteSwitch: {
         noteContext: NoteContext;

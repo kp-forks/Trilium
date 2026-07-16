@@ -13,14 +13,25 @@ import { renderShortcutKbds } from "../react/shortcut_kbd.js";
 
 /** How long the panel stays up when left untouched. Paused while hovered; other signals dismiss it sooner. */
 const AUTO_DISMISS_MS = 5000;
+/** Gap between an anchor (help button) and the dropdown. */
+const ANCHOR_GAP = 6;
+
+interface OpenState {
+    sections: ShortcutHintSection[];
+    /** When set, the pane is a dropdown anchored to this element; otherwise it sits in the corner. */
+    anchor: HTMLElement | null;
+}
 
 export default function ShortcutHintsPanel() {
-    // `undefined` means closed. Only ever set to a non-empty array, so presence == open.
-    const [ sections, setSections ] = useState<ShortcutHintSection[]>();
+    // `undefined` means closed. Only ever set with a non-empty section list, so presence == open.
+    const [ state, setState ] = useState<OpenState>();
     const panelRef = useRef<HTMLDivElement>(null);
     const timerRef = useRef<number>();
+    // Kept in a ref so the outside-click handler always sees the current anchor without re-subscribing.
+    const anchorRef = useRef<HTMLElement | null>(null);
+    anchorRef.current = state?.anchor ?? null;
 
-    const close = useCallback(() => setSections(undefined), []);
+    const close = useCallback(() => setState(undefined), []);
     const clearTimer = useCallback(() => {
         if (timerRef.current !== undefined) {
             window.clearTimeout(timerRef.current);
@@ -32,13 +43,13 @@ export default function ShortcutHintsPanel() {
         timerRef.current = window.setTimeout(close, AUTO_DISMISS_MS);
     }, [ clearTimer, close ]);
 
-    // Alt+F1 toggles: close if open, otherwise open (unless there's nothing to show).
-    useTriliumEvent("shortcutHintsRequested", useCallback(({ sections: incoming }) => {
-        setSections(prev => (prev !== undefined || incoming.length === 0) ? undefined : incoming);
+    // Toggle: close if open, otherwise open (unless there's nothing to show).
+    useTriliumEvent("shortcutHintsRequested", useCallback(({ sections, anchor }) => {
+        setState(prev => (prev !== undefined || sections.length === 0) ? undefined : { sections, anchor: anchor ?? null });
     }, []));
     useTriliumEvent("activeContextChanged", close);
 
-    const isOpen = sections !== undefined;
+    const isOpen = state !== undefined;
     useEffect(() => {
         if (!isOpen) {
             clearTimer();
@@ -50,7 +61,10 @@ export default function ShortcutHintsPanel() {
             if (e.key === "Escape") close();
         }
         function onMouseDown(e: MouseEvent) {
-            if (panelRef.current && !panelRef.current.contains(e.target as Node)) close();
+            const target = e.target as Node;
+            // Clicks on the panel keep it open; clicks on the anchor are handled by its own toggle.
+            if (panelRef.current?.contains(target) || anchorRef.current?.contains(target)) return;
+            close();
         }
         document.addEventListener("keydown", onKeyDown);
         document.addEventListener("mousedown", onMouseDown);
@@ -61,15 +75,22 @@ export default function ShortcutHintsPanel() {
         };
     }, [ isOpen, startTimer, clearTimer, close ]);
 
-    if (!sections) {
+    if (!state) {
         return null;
     }
+
+    // Anchored: position the dropdown under the anchor, right edges aligned. The rect is a genuinely
+    // dynamic value, so it belongs in an inline style rather than CSS.
+    const anchorRect = state.anchor?.getBoundingClientRect();
+    const style = anchorRect
+        ? { top: `${anchorRect.bottom + ANCHOR_GAP}px`, right: `${Math.max(ANCHOR_GAP, window.innerWidth - anchorRect.right)}px`, bottom: "auto" }
+        : undefined;
 
     // Portal to <body> so no transformed / contained / overflow-clipped ancestor breaks the fixed
     // positioning or hides it behind content.
     return createPortal(
-        <div ref={panelRef} className="shortcut-hints-panel" onMouseEnter={clearTimer} onMouseLeave={startTimer}>
-            <ShortcutHintsSections sections={sections} />
+        <div ref={panelRef} className="shortcut-hints-panel" style={style} onMouseEnter={clearTimer} onMouseLeave={startTimer}>
+            <ShortcutHintsSections sections={state.sections} />
         </div>,
         document.body
     );
