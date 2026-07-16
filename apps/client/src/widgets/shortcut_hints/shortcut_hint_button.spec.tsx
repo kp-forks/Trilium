@@ -12,7 +12,7 @@ import appContext from "../../components/app_context.js";
 import Component from "../../components/component.js";
 import type { ShortcutHintSection } from "../../services/shortcut_hints.js";
 import { ParentComponent } from "../react/react_utils.js";
-import ShortcutHintButton from "./shortcut_hint_button.js";
+import ShortcutHintButton, { ShortcutHintOverlayButton } from "./shortcut_hint_button.js";
 
 let container: HTMLDivElement;
 
@@ -41,6 +41,20 @@ describe("ShortcutHintButton", () => {
         expect(button?.getAttribute("aria-label")).toBe("shortcut_hints.show_button");
         expect(button?.querySelector("kbd")?.textContent).toBe("?");
         expect(button?.querySelector(".shortcut-hint-button-key")).not.toBeNull();
+    });
+
+    it("exposes a bare overlay button (no group wrapper) for existing overlay groups", () => {
+        container = document.createElement("div");
+        document.body.appendChild(container);
+        act(() => render(
+            <ParentComponent.Provider value={new Component()}><ShortcutHintOverlayButton /></ParentComponent.Provider>,
+            container
+        ));
+
+        expect(container.querySelector(".tn-overlay-control-group")).toBeNull();
+        const button = container.querySelector("button");
+        expect(button?.classList.contains("tn-overlay-text-button")).toBe(true);
+        expect(button?.querySelector("kbd")?.textContent).toBe("?");
     });
 
     it("collects its context's hints and opens the pane anchored to itself on click", () => {

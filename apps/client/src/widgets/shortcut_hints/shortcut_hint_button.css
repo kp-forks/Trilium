@@ -6,5 +6,7 @@
 
     .shortcut-hint-button-key {
         font-size: 0.85em;
+        font-family: monospace;
+        letter-spacing: .5pt;
     }
 }
