@@ -5,9 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 import { t } from "../../services/i18n";
+import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
 import { isMobile } from "../../services/utils";
 import ContentErrorMessage from "./ContentErrorMessage";
-import { useStaticTooltip } from "./hooks";
+import { useContextualShortcutHints, useStaticTooltip } from "./hooks";
 import { useImageViewerKeyboard } from "./image_viewer_keyboard";
 
 interface ImageViewerProps {
@@ -27,6 +28,17 @@ const CRISP_NATIVE_SCALE = 4;
 const BUTTON_ZOOM_STEP = 0.5;
 /** Reveal the image even if `decode()` never settles (it can stall for some images, e.g. SVGs). */
 const REVEAL_FALLBACK_MS = 1000;
+
+const IMAGE_VIEWER_HINTS: ShortcutHintDefinition = [
+    {
+        titleKey: "image_viewer.hints.title",
+        hints: [
+            { keys: ["Ctrl++", "E"], labelKey: "image_viewer.hints.zoom_in" },
+            { keys: ["Ctrl+-", "Q"], labelKey: "image_viewer.hints.zoom_out" },
+            { keys: ["W", "A", "S", "D", "Up", "Down", "Left", "Right"], labelKey: "image_viewer.hints.pan" }
+        ]
+    }
+];
 
 /**
  * Derives the zoom-driven values: whether the image is pannable (zoomed past the fitted size),
@@ -114,6 +126,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     }, [ src ]);
 
     useImageViewerKeyboard(zoomRef, rootRef);
+    useContextualShortcutHints(IMAGE_VIEWER_HINTS);
     useStaticTooltip(zoomOutRef, { title: t("image_buttons.zoom_out"), placement: "top" });
     useStaticTooltip(zoomLevelRef, { title: t("image_buttons.reset_zoom"), placement: "top" });
     useStaticTooltip(zoomInRef, { title: t("image_buttons.zoom_in"), placement: "top" });

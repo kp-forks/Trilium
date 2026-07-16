@@ -55,41 +55,44 @@ describe("ShortcutHintsSections", () => {
 });
 
 describe("ShortcutHintsPanel", () => {
+    const request = (host: Component, sections: ShortcutHintSection[]) =>
+        act(() => { host.handleEvent("shortcutHintsRequested", { sections }); });
+
     it("stays closed until summoned, opens on the event, and toggles closed on the next", () => {
         const host = mountPanel();
-        expect(container.querySelector(".shortcut-hints-panel")).toBeNull();
+        expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
 
-        act(() => host.handleEvent("shortcutHintsRequested", { sections: SECTIONS }));
-        expect(container.querySelector(".shortcut-hints-panel")).not.toBeNull();
+        request(host, SECTIONS);
+        expect(document.querySelector(".shortcut-hints-panel")).not.toBeNull();
 
-        act(() => host.handleEvent("shortcutHintsRequested", { sections: SECTIONS }));
-        expect(container.querySelector(".shortcut-hints-panel")).toBeNull();
+        request(host, SECTIONS);
+        expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
     });
 
     it("does not open when there are no sections", () => {
         const host = mountPanel();
-        act(() => host.handleEvent("shortcutHintsRequested", { sections: [] }));
-        expect(container.querySelector(".shortcut-hints-panel")).toBeNull();
+        request(host, []);
+        expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
     });
 
     it("closes on Escape", () => {
         const host = mountPanel();
-        act(() => host.handleEvent("shortcutHintsRequested", { sections: SECTIONS }));
-        expect(container.querySelector(".shortcut-hints-panel")).not.toBeNull();
+        request(host, SECTIONS);
+        expect(document.querySelector(".shortcut-hints-panel")).not.toBeNull();
 
-        act(() => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })));
-        expect(container.querySelector(".shortcut-hints-panel")).toBeNull();
+        act(() => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
+        expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
     });
 
     it("auto-dismisses after the timeout", () => {
         vi.useFakeTimers();
         try {
             const host = mountPanel();
-            act(() => host.handleEvent("shortcutHintsRequested", { sections: SECTIONS }));
-            expect(container.querySelector(".shortcut-hints-panel")).not.toBeNull();
+            request(host, SECTIONS);
+            expect(document.querySelector(".shortcut-hints-panel")).not.toBeNull();
 
-            act(() => vi.advanceTimersByTime(5000));
-            expect(container.querySelector(".shortcut-hints-panel")).toBeNull();
+            act(() => { vi.advanceTimersByTime(5000); });
+            expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
         } finally {
             vi.useRealTimers();
         }
@@ -97,10 +100,10 @@ describe("ShortcutHintsPanel", () => {
 
     it("closes when the active note context changes", () => {
         const host = mountPanel();
-        act(() => host.handleEvent("shortcutHintsRequested", { sections: SECTIONS }));
-        expect(container.querySelector(".shortcut-hints-panel")).not.toBeNull();
+        request(host, SECTIONS);
+        expect(document.querySelector(".shortcut-hints-panel")).not.toBeNull();
 
-        act(() => host.handleEvent("activeContextChanged", { noteContext: {} }));
-        expect(container.querySelector(".shortcut-hints-panel")).toBeNull();
+        act(() => { host.handleEvent("activeContextChanged", { noteContext: {} as never }); });
+        expect(document.querySelector(".shortcut-hints-panel")).toBeNull();
     });
 });

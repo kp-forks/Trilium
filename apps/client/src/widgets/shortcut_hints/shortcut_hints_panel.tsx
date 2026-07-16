@@ -1,6 +1,7 @@
 import "./shortcut_hints_panel.css";
 
 import { Fragment } from "preact";
+import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../services/i18n.js";
@@ -64,10 +65,13 @@ export default function ShortcutHintsPanel() {
         return null;
     }
 
-    return (
+    // Portal to <body> so no transformed / contained / overflow-clipped ancestor breaks the fixed
+    // positioning or hides it behind content.
+    return createPortal(
         <div ref={panelRef} className="shortcut-hints-panel" onMouseEnter={clearTimer} onMouseLeave={startTimer}>
             <ShortcutHintsSections sections={sections} />
-        </div>
+        </div>,
+        document.body
     );
 }
 
