@@ -1,4 +1,4 @@
-import { type TaskStateDef } from "@triliumnext/commons";
+import { safeLinkPreviewHref, type TaskStateDef } from "@triliumnext/commons";
 import { ADMONITION_TYPE_MAPPINGS } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { gfm, serializeStructuralHtml } from "@triliumnext/turndown-plugin-gfm";
 import escapeHtml from "escape-html";
@@ -255,7 +255,10 @@ function injectLinkPreviewFallbacks(content: string): string {
         const url = element.getAttribute("data-url");
         if (url) {
             const title = element.getAttribute("data-title") || url;
-            element.innerHTML = `<a href="${escapeHtml(url)}">${escapeHtml(title)}</a>`;
+            // `safeLinkPreviewHref` renders a hostile scheme (`javascript:`, `data:`) inert —
+            // stored `data-url` values reach here unsanitized (see its JSDoc); `escapeHtml` on top
+            // stops an otherwise-valid http(s) URL containing a quote from breaking out of the attribute.
+            element.innerHTML = `<a href="${escapeHtml(safeLinkPreviewHref(url))}">${escapeHtml(title)}</a>`;
         }
     }
 

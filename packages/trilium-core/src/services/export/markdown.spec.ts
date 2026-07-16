@@ -126,6 +126,21 @@ describe("Markdown export", () => {
         expect(exported).toContain('<section class="link-embed" data-url="https://e.com/?a=1&amp;b=2" data-embed-type="opengraph"');
     });
 
+    it("renders a hostile-scheme link preview URL inert in the fallback anchor", () => {
+        // `data-url` reaches export unsanitized (the sanitizers pass `data-*` through untouched), so a
+        // stored `javascript:` scheme must not become a live anchor in the exported Markdown.
+        // `safeLinkPreviewHref` maps it to `about:blank`; the escaping asserted in the test above still
+        // guards a valid http(s) URL that happens to contain a quote.
+        const exported = markdownExportService.toMarkdown(
+            '<section class="link-embed" data-url="javascript:alert(1)" data-embed-type="opengraph" data-title="Evil"></section>'
+        );
+
+        // The live fallback href is neutralised. The original scheme survives only in the inert
+        // `data-url` attribute (which round-trips losslessly on reimport), never as a linkable href.
+        expect(exported).toContain('<a href="about:blank">Evil</a>');
+        expect(exported).not.toContain('href="javascript:');
+    });
+
     it("exports strikethrough text correctly", () => {
         const html = "<s>hello</s>Hello <s>world</s>";
         const expected = "~~hello~~Hello ~~world~~";
