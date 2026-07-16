@@ -187,6 +187,32 @@ describe("AutoLinkToMention", () => {
             const caretBlock = editor.model.document.selection.getFirstPosition()?.parent;
             expect(caretBlock?.is("element", "paragraph")).toBe(true);
         });
+
+        it("does not drag the caret back when an inline mention lands mid-typing", async () => {
+            const { resolveFetch } = useDeferredFetch(fetchLinkMetadata);
+            // Text beside the URL makes this a mention; the caret has already moved to the next line.
+            autoLinkIn(editor, `<paragraph>see ${PLAIN_URL}</paragraph><paragraph>[]</paragraph>`, PLAIN_URL);
+
+            // The user keeps typing on the second line while the metadata is still being fetched.
+            editor.model.change((writer) => {
+                const caret = editor.model.document.selection.getFirstPosition();
+                if (!caret) {
+                    throw new Error("Expected a caret position.");
+                }
+                writer.insertText("hello", caret);
+            });
+
+            resolveFetch({ ...META, url: PLAIN_URL });
+            await flushFetch();
+
+            // The mention replaced the URL up on the first line...
+            expect(findElement(editor, "linkMention")?.getAttribute("url")).toBe(PLAIN_URL);
+            expect(editor.getData()).toContain("<p>hello</p>");
+
+            // ...while the caret stayed down where the user was typing.
+            const caretBlock = editor.model.document.selection.getFirstPosition()?.parent;
+            expect(caretBlock).toBe(editor.model.document.getRoot()?.getChild(1));
+        });
     });
 
     it("ignores a labeled link whose text differs from the href", async () => {

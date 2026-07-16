@@ -246,6 +246,22 @@ describe("LinkEmbedFormView", () => {
         expect(editor.getData()).toBe(before);
     });
 
+    it("follows the URL again after a dismissal, forgetting the earlier mode pick", () => {
+        const form = openForm();
+        typeUrl(form, "https://example.com/article");
+        form.modeDropdownView.fire("execute", { source: { _displayMode: "inline" } });
+        form.mode = "inline";
+
+        // Dismiss without inserting: the pick was for that URL only.
+        form.keystrokes.press({ keyCode: 27, preventDefault: () => {}, stopPropagation: () => {} } as unknown as KeyboardEvent);
+        expect(isInBalloon(form)).toBe(false);
+
+        // Reopened with an embeddable URL, the mode follows the URL again instead of the old pick.
+        openForm();
+        typeUrl(form, "https://youtube.com/watch?v=abc12345678");
+        expect(form.mode).toBe("embed");
+    });
+
     it("closes when the user clicks away from it", () => {
         const form = openForm();
         expect(isInBalloon(form)).toBe(true);

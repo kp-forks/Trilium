@@ -146,10 +146,11 @@ export default class AutoLinkToMention extends Plugin {
                         };
 
                         if (kind === 'mention') {
+                            // The URL's own range is passed to insertContent rather than selected
+                            // first: the fetch was async and the caret may be words away by now, so
+                            // the replacement must not drag it back to the mention.
                             const urlRange = writer.createRangeOn(item.item);
-                            writer.setSelection(urlRange);
-                            editor.model.deleteContent(editor.model.document.selection);
-                            editor.model.insertContent(writer.createElement('linkMention', attributes));
+                            editor.model.insertContent(writer.createElement('linkMention', attributes), urlRange);
                             return;
                         }
 

@@ -79,6 +79,9 @@ export default class LinkEmbedUI extends Plugin {
         if (!form || !balloon.hasView(form)) return;
 
         balloon.remove(form);
+        // Whatever mode the user picked was for the URL of this session — however it ended, the
+        // next form opening follows its own URL again.
+        this._modePickedByUser = false;
         this.editor.editing.view.focus();
     }
 
@@ -145,7 +148,6 @@ export default class LinkEmbedUI extends Plugin {
             form.isFetching = false;
         }
 
-        this._modePickedByUser = false;
         this._hideForm();
     }
 }
