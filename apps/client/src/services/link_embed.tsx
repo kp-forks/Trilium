@@ -99,6 +99,7 @@ function CardImage({ src }: { src?: string }) {
             src={src}
             alt=""
             loading="lazy"
+            draggable={false}
             onError={() => setFailed(true)}
         />
     );
@@ -124,7 +125,7 @@ function VideoEmbed({ meta, videoId }: { meta: EmbedMetadata; videoId: string })
                     title={t("link_embed.play_video")}
                     onClick={() => setPlaying(true)}
                 >
-                    {meta.image && <img className="link-embed-video-thumbnail" src={meta.image} alt="" />}
+                    {meta.image && <img className="link-embed-video-thumbnail" src={meta.image} alt="" draggable={false} />}
                     <span className="link-embed-video-play" aria-hidden="true" />
                 </button>
             </div>

@@ -1,6 +1,6 @@
 import { type BlockChildLike, chooseLinkPreviewKind, isHttpUrl, isUrlAloneInBlock } from '@triliumnext/commons';
 import { ButtonView, clickOutsideHandler, Command, ContextualBalloon, Plugin, toWidget, viewToModelPositionOutsideModelElement, Widget, type Editor, type Observable } from 'ckeditor5';
-import linkEmbedIcon from '../icons/link-embed.svg?raw';
+import linkPreviewIcon from '../icons/link-preview.svg?raw';
 import LinkEmbedFormView from './link_embed_form.js';
 import { translate } from './translate.js';
 import { preventCKEditorHandling } from './widget_utils.js';
@@ -49,7 +49,7 @@ class LinkEmbedUI extends Plugin {
 
             buttonView.set({
                 label: editor.t('Link preview'),
-                icon: linkEmbedIcon,
+                icon: linkPreviewIcon,
                 tooltip: true
             });
 
@@ -306,7 +306,11 @@ class LinkEmbedEditing extends Plugin {
                 });
 
                 writer.insert(writer.createPositionAt(section, 0), preview);
-                return toWidget(section, writer, { label: 'link embed widget' });
+                // hasSelectionHandle gives the block preview (both card and video) CKEditor's own
+                // widget drag handle — the same one tables use. Without a handle the user grabs the
+                // preview's own content and the browser's native drag tears the image and text apart;
+                // the handle moves the whole widget atomically instead.
+                return toWidget(section, writer, { label: 'link embed widget', hasSelectionHandle: true });
             }
         });
 
