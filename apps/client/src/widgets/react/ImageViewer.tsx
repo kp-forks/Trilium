@@ -35,7 +35,17 @@ const IMAGE_VIEWER_HINTS: ShortcutHintDefinition = [
         hints: [
             { keys: ["Ctrl++", "E"], labelKey: "image_viewer.hints.zoom_in" },
             { keys: ["Ctrl+-", "Q"], labelKey: "image_viewer.hints.zoom_out" },
-            { keys: ["W", "A", "S", "D", "Up", "Down", "Left", "Right"], labelKey: "image_viewer.hints.pan" }
+            { keys: ["W", "A", "S", "D", "Up", "Down", "Left", "Right"], labelKey: "image_viewer.hints.pan" },
+            { keys: ["Shift"], labelKey: "image_viewer.hints.pan_fast" }
+        ]
+    },
+    {
+        titleKey: "image_viewer.hints.navigation",
+        hints: [
+            { keys: ["Space", "PageDown"], labelKey: "image_viewer.hints.next_image" },
+            { keys: ["Backspace", "PageUp"], labelKey: "image_viewer.hints.previous_image" },
+            { keys: ["Home"], labelKey: "image_viewer.hints.first_image" },
+            { keys: ["End"], labelKey: "image_viewer.hints.last_image" }
         ]
     }
 ];
