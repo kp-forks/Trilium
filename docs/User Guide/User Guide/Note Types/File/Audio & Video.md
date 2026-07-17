@@ -51,7 +51,7 @@ The bottom bar has the following features:
 <a class="reference-link" href="../Text.md">Text</a> and <a class="reference-link" href="../Markdown.md">Markdown</a> notes can embed an interactive media player directly in the note content. To do so, include the audio or video file:
 
 *   **Text notes:** in the formatting toolbar, click “**Insert”** → **“Include”.**
-*   **Markdown notes:** type `/include` press <kbd spellcheck="false">Enter</kbd>.
+*   **Markdown notes:** type `/include` press <kbd>Enter</kbd>.
 
 Then select the audio/video file note to be included.
 
@@ -74,4 +74,4 @@ The following keyboard shortcuts are supported by the media player:
 | <kbd>End</kbd> | Go to the end of the media |
 | <kbd>Up</kbd> | Increase volume by 5% |
 | <kbd>Down</kbd> | Decrease volume by 5% |
-| <kbd spellcheck="false">Alt+F1</kbd> (customizable) | Show this list of keyboard shortcuts on screen. |
+| <kbd>Alt+F1</kbd> (customizable) | Show this list of keyboard shortcuts on screen. |

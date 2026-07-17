@@ -10556,6 +10556,13 @@
                                             "value": "lists",
                                             "isInheritable": false,
                                             "position": 20
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "fASfBrYnquKU",
+                                            "isInheritable": false,
+                                            "position": 30
                                         }
                                     ],
                                     "format": "markdown",
@@ -11081,71 +11088,7 @@
                                             "isExpanded": false,
                                             "type": "text",
                                             "mime": "text/html",
-                                            "attributes": [
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "gLt3vA97tMcp",
-                                                    "isInheritable": false,
-                                                    "position": 30
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "KC1HB96bqqHX",
-                                                    "isInheritable": false,
-                                                    "position": 40
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "oPVyFC7WL2Lp",
-                                                    "isInheritable": false,
-                                                    "position": 50
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "OFXdgB2nNk1F",
-                                                    "isInheritable": false,
-                                                    "position": 60
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "nRhnJkTT8cPs",
-                                                    "isInheritable": false,
-                                                    "position": 70
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "ZlN4nump6EbW",
-                                                    "isInheritable": false,
-                                                    "position": 80
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "s8alTXmpFR61",
-                                                    "isInheritable": false,
-                                                    "position": 90
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "wy8So3yZZlH9",
-                                                    "isInheritable": false,
-                                                    "position": 100
-                                                },
-                                                {
-                                                    "type": "relation",
-                                                    "name": "internalLink",
-                                                    "value": "9sRHySam5fXb",
-                                                    "isInheritable": false,
-                                                    "position": 110
-                                                }
-                                            ],
+                                            "attributes": [],
                                             "format": "markdown",
                                             "dataFileName": "Text Snippets.md",
                                             "attachments": [
@@ -11518,6 +11461,64 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "14_Tables_image.png"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "isClone": false,
+                                    "noteId": "fASfBrYnquKU",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "KSZ04uQ2D1St",
+                                        "iPIMuisry3hd",
+                                        "fASfBrYnquKU"
+                                    ],
+                                    "title": "To-do Lists",
+                                    "notePosition": 240,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "text",
+                                    "mime": "text/html",
+                                    "attributes": [
+                                        {
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bx-checkbox-checked",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "iPIMuisry3hd",
+                                            "isInheritable": false,
+                                            "position": 40
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "6RM1Q7ppFVoj",
+                                            "isInheritable": false,
+                                            "position": 50
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "i16PM6A7GXdU",
+                                            "isInheritable": false,
+                                            "position": 60
+                                        }
+                                    ],
+                                    "format": "markdown",
+                                    "dataFileName": "To-do Lists.md",
+                                    "attachments": [
+                                        {
+                                            "attachmentId": "kBveaG9GP9QP",
+                                            "title": "image.png",
+                                            "role": "image",
+                                            "mime": "image/png",
+                                            "position": 10,
+                                            "dataFileName": "To-do Lists_image.png"
                                         }
                                     ]
                                 }
@@ -12652,39 +12653,39 @@
                                     "mime": "text/html",
                                     "attributes": [
                                         {
-                                            "type": "label",
-                                            "name": "iconClass",
-                                            "value": "bx bx-video",
-                                            "isInheritable": false,
-                                            "position": 50
-                                        },
-                                        {
                                             "type": "relation",
                                             "name": "internalLink",
                                             "value": "wX4HbRucYSDD",
                                             "isInheritable": false,
-                                            "position": 60
+                                            "position": 10
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
                                             "value": "ODY7qQn5m2FT",
                                             "isInheritable": false,
-                                            "position": 70
+                                            "position": 20
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
                                             "value": "iPIMuisry3hd",
                                             "isInheritable": false,
-                                            "position": 80
+                                            "position": 30
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
                                             "value": "6RM1Q7ppFVoj",
                                             "isInheritable": false,
-                                            "position": 90
+                                            "position": 40
+                                        },
+                                        {
+                                            "type": "label",
+                                            "name": "iconClass",
+                                            "value": "bx bx-video",
+                                            "isInheritable": false,
+                                            "position": 50
                                         }
                                     ],
                                     "format": "markdown",
@@ -12991,11 +12992,27 @@
                                     "value": "markdown",
                                     "isInheritable": false,
                                     "position": 40
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "i16PM6A7GXdU",
+                                    "isInheritable": false,
+                                    "position": 220
                                 }
                             ],
                             "format": "markdown",
                             "dataFileName": "Markdown.md",
-                            "attachments": []
+                            "attachments": [
+                                {
+                                    "attachmentId": "rQvNsweFhcNH",
+                                    "title": "image.png",
+                                    "role": "image",
+                                    "mime": "image/png",
+                                    "position": 10,
+                                    "dataFileName": "Markdown_image.png"
+                                }
+                            ]
                         },
                         {
                             "isClone": false,
@@ -13005,7 +13022,7 @@
                                 "KSZ04uQ2D1St",
                                 "jludwdW7N4hg"
                             ],
-                            "title": "Converting Between Note Types",
+                            "title": "Converting between note types",
                             "notePosition": 240,
                             "prefix": null,
                             "isExpanded": false,
@@ -13049,7 +13066,7 @@
                                 }
                             ],
                             "format": "markdown",
-                            "dataFileName": "Converting Between Note Types.md",
+                            "dataFileName": "Converting between note types.md",
                             "attachments": []
                         }
                     ]
@@ -16654,7 +16671,7 @@
                                 "5668rwcirq1t"
                             ],
                             "title": "Advanced Showcases",
-                            "notePosition": 90,
+                            "notePosition": 100,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17041,6 +17058,40 @@
                         },
                         {
                             "isClone": false,
+                            "noteId": "i16PM6A7GXdU",
+                            "notePath": [
+                                "pOsGYCXsbNQG",
+                                "tC7s2alapj8V",
+                                "i16PM6A7GXdU"
+                            ],
+                            "title": "Customizing to-do task states",
+                            "notePosition": 110,
+                            "prefix": null,
+                            "isExpanded": false,
+                            "type": "text",
+                            "mime": "text/html",
+                            "attributes": [
+                                {
+                                    "type": "label",
+                                    "name": "iconClass",
+                                    "value": "bx bx-list-check",
+                                    "isInheritable": false,
+                                    "position": 30
+                                },
+                                {
+                                    "type": "label",
+                                    "name": "shareAlias",
+                                    "value": "customizing-to-do-task-states",
+                                    "isInheritable": false,
+                                    "position": 40
+                                }
+                            ],
+                            "format": "markdown",
+                            "dataFileName": "Customizing to-do task states.md",
+                            "attachments": []
+                        },
+                        {
+                            "isClone": false,
                             "noteId": "J5Ex1ZrMbyJ6",
                             "notePath": [
                                 "pOsGYCXsbNQG",
@@ -17048,7 +17099,7 @@
                                 "J5Ex1ZrMbyJ6"
                             ],
                             "title": "Custom Request Handler",
-                            "notePosition": 100,
+                            "notePosition": 120,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17117,7 +17168,7 @@
                                 "d3fAXQ2diepH"
                             ],
                             "title": "Custom Resource Providers",
-                            "notePosition": 110,
+                            "notePosition": 130,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17151,7 +17202,7 @@
                                 "pgxEVkzLl1OP"
                             ],
                             "title": "ETAPI (REST API)",
-                            "notePosition": 120,
+                            "notePosition": 140,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17229,7 +17280,7 @@
                                 "47ZrP6FNuoG8"
                             ],
                             "title": "Default Note Title",
-                            "notePosition": 150,
+                            "notePosition": 170,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17284,7 +17335,7 @@
                                 "wX4HbRucYSDD"
                             ],
                             "title": "Database",
-                            "notePosition": 170,
+                            "notePosition": 190,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17583,7 +17634,7 @@
                                 "Gzjqa934BdH4"
                             ],
                             "title": "Configuration (config.ini or environment variables)",
-                            "notePosition": 180,
+                            "notePosition": 200,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17704,7 +17755,7 @@
                                 "ivYnonVFBxbQ"
                             ],
                             "title": "Bulk Actions",
-                            "notePosition": 190,
+                            "notePosition": 220,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17803,7 +17854,7 @@
                                 "4FahAwuGTAwC"
                             ],
                             "title": "Note source",
-                            "notePosition": 200,
+                            "notePosition": 230,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -17923,7 +17974,7 @@
                                 "1YeN2MzFUluU"
                             ],
                             "title": "Technologies used",
-                            "notePosition": 210,
+                            "notePosition": 240,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18170,7 +18221,7 @@
                                 "m1lbrzyKDaRB"
                             ],
                             "title": "Note ID",
-                            "notePosition": 220,
+                            "notePosition": 250,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18211,7 +18262,7 @@
                                 "0vTSyvhPTAOz"
                             ],
                             "title": "Internal API",
-                            "notePosition": 230,
+                            "notePosition": 260,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18281,7 +18332,7 @@
                                 "2mUhVmZK8RF3"
                             ],
                             "title": "Hidden Notes",
-                            "notePosition": 240,
+                            "notePosition": 270,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18520,7 +18571,7 @@
                                 "uYF7pmepw27K"
                             ],
                             "title": "Metrics",
-                            "notePosition": 250,
+                            "notePosition": 280,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18616,7 +18667,7 @@
                                 "64ZTlUPgEPtW"
                             ],
                             "title": "Safe mode",
-                            "notePosition": 260,
+                            "notePosition": 290,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18650,7 +18701,7 @@
                                 "HAIOFBoYIIdO"
                             ],
                             "title": "Nightly release",
-                            "notePosition": 270,
+                            "notePosition": 310,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18684,7 +18735,7 @@
                                 "ZmT9ln8XJX2o"
                             ],
                             "title": "Read-only database",
-                            "notePosition": 280,
+                            "notePosition": 320,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",
@@ -18760,7 +18811,7 @@
                                 "TiQbQDgP8L5t"
                             ],
                             "title": "Text Extraction (OCR)",
-                            "notePosition": 290,
+                            "notePosition": 330,
                             "prefix": null,
                             "isExpanded": false,
                             "type": "text",

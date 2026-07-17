@@ -32,16 +32,11 @@
 <p>The following features are supported by Trilium's Markdown format and
   will show up in the preview pane:</p>
 <ul>
-  <li>
-    <p>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).</p>
-  </li>
-  <li>
-    <p>Basic HTML is also supported (e.g. collapsible blocks using <code spellcheck="false">&lt;details&gt;</code> and
-      <code
-      spellcheck="false">&lt;summary&gt;</code>).</p>
-  </li>
-  <li>
-    <p>Code blocks with syntax highlight.</p>
+  <li>All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).</li>
+  <li>Basic HTML is also supported (e.g. collapsible blocks using <code spellcheck="false">&lt;details&gt;</code> and
+    <code
+    spellcheck="false">&lt;summary&gt;</code>).</li>
+  <li>Code blocks with syntax highlight.
     <ul>
       <li>The language must be specified for syntax highlight to be applied (e.g.
         <code
@@ -51,19 +46,13 @@
         href="#root/_help_4TIF1oA4VQRO">Options</a>.</li>
     </ul>
   </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
-    </p>
+  <li><a class="reference-link" href="#root/_help_NwBbFdNZ9h7O">Block quotes &amp; admonitions</a>
   </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(both
-      inline and block)</p>
-  </li>
-  <li>
-    <p><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
-      <code
-      spellcheck="false">```mermaid</code>
-    </p>
+  <li><a class="reference-link" href="#root/_help_YfYAtQBcfo5V">Math Equations</a>&nbsp;(both
+    inline and block)</li>
+  <li><a class="reference-link" href="#root/_help_s1aBHPd79XYj">Mermaid Diagrams</a>&nbsp;using
+    <code
+    spellcheck="false">```mermaid</code>
   </li>
   <li>
     <p><a class="reference-link" href="#root/_help_nBAXQFj20hS1">Include Note</a>&nbsp;(no
@@ -80,6 +69,39 @@
       its HTML syntax, or through a <em>Wikilinks</em>-like format (only&nbsp;
       <a
       class="reference-link" href="#root/_help_m1lbrzyKDaRB">Note ID</a>):</p><pre><code class="language-text-x-trilium-auto">[[Hg8TS5ZOxti6]]</code></pre>
+  </li>
+  <li>
+    <p>To-do lists with extended task states:</p>
+    <figure class="table" style="width:100%;">
+      <table class="ck-table-resized" style="border-style:none;">
+        <colgroup>
+          <col style="width:80.6%;">
+            <col style="width:19.4%;">
+        </colgroup>
+        <tbody>
+          <tr>
+            <td style="border-style:none;"><pre><code class="language-text-x-markdown">- [ ] None
+- [/] Doing
+- [X] Done
+- [?] Maybe
+- [-] Cancelled</code></pre>
+            </td>
+            <td style="border-style:none;">
+              <figure class="image image-style-align-right">
+                <img style="aspect-ratio:218/221;" src="Markdown_image.png"
+                width="218" height="221">
+              </figure>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </figure>
+    <p>Task states are customizable: you can reorder them, create new ones with
+      different colors and symbols, or delete the ones you don't need. See&nbsp;
+      <a
+      class="reference-link" href="#root/pOsGYCXsbNQG/tC7s2alapj8V/_help_i16PM6A7GXdU">Customizing to-do task states</a>&nbsp;for more details.</p>
+    <p>Note that to-do items with task states other than "None" and "Done" are
+      Trilium-specific and may not work well with other Markdown software.</p>
   </li>
   <li>
     <p><a class="reference-link" href="#root/_help_AgjCISero73a">Footnotes</a>&nbsp;are

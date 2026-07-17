@@ -1,4 +1,4 @@
-# Converting Between Note Types
+# Converting between note types
 A note's type may be converted to another:
 
 *   <a class="reference-link" href="Text.md">Text</a> notes to <a class="reference-link" href="Markdown.md">Markdown</a> notes
