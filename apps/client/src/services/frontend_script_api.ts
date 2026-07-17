@@ -830,7 +830,7 @@ function showBackendScriptingDisabledToast() {
             {
                 text: t("frontend_script_api.backend_scripting_disabled_open_settings"),
                 onClick: ({ dismissToast }) => {
-                    appContext.tabManager.openInNewTab("_optionsSecurity", "_hidden", true);
+                    appContext.triggerCommand("showOptions", { section: "_optionsSecurity" });
                     dismissToast();
                 }
             }

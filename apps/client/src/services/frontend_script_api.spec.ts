@@ -192,6 +192,11 @@ describe("runOnBackend / __runOnBackendInner", () => {
         // No server round-trip, and a single deduplicated toast (fixed id) is shown instead of a 500.
         expect(post).not.toHaveBeenCalled();
         expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled" }));
+
+        // The toast's action opens Security settings in the options modal, not a hoisted tab.
+        const triggerCommand = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined as never);
+        showPersistent.mock.calls[0][0].buttons?.[0].onClick({ dismissToast: vi.fn() });
+        expect(triggerCommand).toHaveBeenCalledWith("showOptions", { section: "_optionsSecurity" });
     });
 
     it("serializes a sync function, posts it, waits for sync and returns the result", async () => {
