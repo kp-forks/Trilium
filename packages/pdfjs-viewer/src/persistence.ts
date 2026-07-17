@@ -62,7 +62,7 @@ function saveHistory(value: string) {
 }
 
 /**
- * Persists the reusable signature library. pdf.js writes the full library to `localStorage` on every
+ * Persists the reusable signature library. pdf.js writes the library to `localStorage` on every
  * add/remove; we mirror it into the injected `TRILIUM_SIGNATURES` global (so in-session reads stay
  * consistent) and forward it to the parent, which stores it in the synced `pdfSignatures` option.
  * These are discrete user actions, so — unlike view history — no debounce is needed.
@@ -71,7 +71,10 @@ function saveSignatures(value: string) {
     try {
         window.TRILIUM_SIGNATURES = JSON.parse(value);
     } catch {
-        // Malformed payload should never reach here; keep the previous in-memory copy if it does.
+        // Malformed payload should never reach here (pdf.js always serializes valid JSON). If it
+        // somehow does, abort rather than forward it — persisting broken JSON into the synced
+        // option would make `getJson` fall back to `{}` and silently wipe every saved signature.
+        return;
     }
 
     window.parent.postMessage({

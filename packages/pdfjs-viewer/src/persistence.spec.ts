@@ -80,6 +80,18 @@ describe("signature-library interception", () => {
         expect(readRealStore(SIGNATURE_KEY)).toBeNull();
     });
 
+    it("aborts on a malformed payload instead of forwarding broken JSON", () => {
+        window.TRILIUM_SIGNATURES = { abc: ENTRY };
+        interceptPersistence();
+
+        // A non-JSON value must not be forwarded — persisting it would make the parent's getJson
+        // fall back to {} and wipe every saved signature. The prior library stays untouched.
+        localStorage.setItem(SIGNATURE_KEY, "not json{");
+
+        expect(postMessageSpy).not.toHaveBeenCalled();
+        expect(window.TRILIUM_SIGNATURES).toEqual({ abc: ENTRY });
+    });
+
     it("leaves unrelated keys and the view-history channel working", () => {
         interceptPersistence();
 
