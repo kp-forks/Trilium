@@ -9,6 +9,7 @@ import FrontendScriptApi, { BackendScriptingDisabledError, type Api, type Entity
 import { preactAPI } from "./frontend_script_api_preact.js";
 import froca from "./froca.js";
 import linkService from "./link.js";
+import noteCreateService from "./note_create.js";
 import noteTooltipService from "./note_tooltip.js";
 import options from "./options.js";
 import protectedSessionService from "./protected_session.js";
@@ -451,6 +452,20 @@ describe("froca passthroughs", () => {
     it("getInstanceName reads from window.glob", () => {
         window.glob.instanceName = "inst-A";
         expect(makeApi().getInstanceName()).toBe("inst-A");
+    });
+
+    it("createNote delegates to the note-create service and defaults opts to {}", async () => {
+        const note = buildNote({ title: "Created" });
+        const createNote = vi.spyOn(noteCreateService, "createNote").mockResolvedValue({ note, branch: undefined });
+        const api = makeApi();
+
+        const result = await api.createNote("root", { title: "Created", type: "text" });
+        expect(createNote).toHaveBeenCalledWith("root", { title: "Created", type: "text" });
+        expect(result).toEqual({ note, branch: undefined });
+
+        // opts defaults to an empty object when omitted
+        await (api.createNote as (p: string) => Promise<unknown>)("root");
+        expect(createNote).toHaveBeenLastCalledWith("root", {});
     });
 });
 

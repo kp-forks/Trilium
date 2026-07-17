@@ -223,6 +223,13 @@ Concrete examples:
 - `searchForNotes(searchString)` - search with full query syntax
 - `searchForNote(searchString)` - search returning first result
 
+### Note creation
+- `createNote(parentNotePath, opts?)` - create a note under `parentNotePath` (a noteId or path) **entirely on the frontend — no backend scripting required.** `opts` accepts `{ title, content, type, mime, templateNoteId, isProtected, activate, focus, target, attributes }` and returns `{ note, branch }` from the cache. The new note is activated with its title focused by default; pass `{ activate: false }` to create it silently. **Prefer this over `runOnBackend(() => api.createTextNote(...))`** — the backend variant needs backend scripting, which is off by default.
+
+```jsx
+const { note } = await createNote(parentNoteId, { title: "New task", type: "text" });
+```
+
 ### Calendar/date notes
 - `getTodayNote()` - get/create today's note
 - `getDayNote(date)` / `getWeekNote(date)` / `getMonthNote(month)` / `getYearNote(year)`

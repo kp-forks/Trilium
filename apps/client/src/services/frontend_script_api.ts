@@ -5,6 +5,7 @@ import DOMPurify from "dompurify";
 import appContext from "../components/app_context.js";
 import type Component from "../components/component.js";
 import type NoteContext from "../components/note_context.js";
+import type FBranch from "../entities/fbranch.js";
 import type FNote from "../entities/fnote.js";
 import BasicWidget, { ReactWrappedWidget } from "../widgets/basic_widget.js";
 import NoteContextAwareWidget from "../widgets/note_context_aware_widget.js";
@@ -15,6 +16,7 @@ import froca from "./froca.js";
 import { preactAPI } from "./frontend_script_api_preact.js";
 import { t } from "./i18n.js";
 import linkService from "./link.js";
+import noteCreateService, { type CreateNoteOpts } from "./note_create.js";
 import noteTooltipService from "./note_tooltip.js";
 import options from "./options.js";
 import protectedSessionService from "./protected_session.js";
@@ -231,6 +233,18 @@ export interface Api {
      * Update frontend tree (note) cache from the backend.
      */
     reloadNotes(noteIds: string[]): Promise<void>;
+
+    /**
+     * Creates a new note as a child of the given parent, entirely on the frontend — no backend
+     * scripting required (unlike `api.runOnBackend(() => api.createTextNote(...))`). By default the
+     * new note is activated in the current tab with its title focused for editing; pass
+     * `{ activate: false }` to create it silently.
+     *
+     * @param parentNotePath note path (or noteId) of the parent under which to create the note
+     * @param opts creation options — e.g. `{ title, content, type, mime, activate }`
+     * @returns the created note and its branch, resolved from the frontend cache
+     */
+    createNote(parentNotePath: string, opts?: CreateNoteOpts): Promise<{ note: FNote | null; branch: FBranch | undefined }>;
 
     /**
      * Instance name identifies particular Trilium instance. It can be useful for scripts
@@ -661,6 +675,7 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
     this.getNote = async (noteId) => await froca.getNote(noteId);
     this.getNotes = async (noteIds, silentNotFoundError = false) => await froca.getNotes(noteIds, silentNotFoundError);
     this.reloadNotes = async (noteIds) => await froca.reloadNotes(noteIds);
+    this.createNote = async (parentNotePath, opts = {}) => await noteCreateService.createNote(parentNotePath, opts);
     this.getInstanceName = () => window.glob.instanceName;
     this.formatDateISO = utils.formatDateISO;
     this.parseDate = utils.parseDate;
