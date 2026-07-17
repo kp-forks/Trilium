@@ -199,6 +199,44 @@ describe("runOnBackend / __runOnBackendInner", () => {
         expect(triggerCommand).toHaveBeenCalledWith("showOptions", { section: "_optionsSecurity" });
     });
 
+    it("lists the attempting scripts as reference notes and accumulates them across attempts", async () => {
+        vi.spyOn(options, "is").mockReturnValue(false);
+        const showPersistent = vi.spyOn(toastService, "showPersistent").mockImplementation(() => {});
+        const noteA = buildNote({ title: "Script A" });
+        const noteB = buildNote({ title: "Script B" });
+        const attempt = (startNote: FNote) =>
+            expect(makeApi({ startNote }).runOnBackend(() => {}, [])).rejects.toBeInstanceOf(BackendScriptingDisabledError);
+
+        // Start from a clean list: trigger one attempt then remove the toast, clearing any residue
+        // accumulated by earlier tests sharing this module-level set.
+        await attempt(noteA);
+        showPersistent.mock.calls.at(-1)?.[0].onRemove?.();
+
+        await attempt(noteA);
+        await attempt(noteB);
+
+        // The latest (deduplicated) toast lists both attempting scripts as reference notes.
+        const lastOptions = showPersistent.mock.calls.at(-1)?.[0];
+        expect(lastOptions?.noteIds).toEqual([ noteA.noteId, noteB.noteId ]);
+        expect(lastOptions?.onRemove).toBeTypeOf("function");
+    });
+
+    it("clears the accumulated scripts when the toast is removed", async () => {
+        vi.spyOn(options, "is").mockReturnValue(false);
+        const showPersistent = vi.spyOn(toastService, "showPersistent").mockImplementation(() => {});
+        const noteA = buildNote({ title: "Script A" });
+        const noteB = buildNote({ title: "Script B" });
+        const attempt = (startNote: FNote) =>
+            expect(makeApi({ startNote }).runOnBackend(() => {}, [])).rejects.toBeInstanceOf(BackendScriptingDisabledError);
+
+        await attempt(noteA);
+        // Simulate the toast being removed (auto-hide or dismiss) — this should reset the list.
+        showPersistent.mock.calls.at(-1)?.[0].onRemove?.();
+
+        await attempt(noteB);
+        expect(showPersistent.mock.calls.at(-1)?.[0].noteIds).toEqual([ noteB.noteId ]);
+    });
+
     it("serializes a sync function, posts it, waits for sync and returns the result", async () => {
         const post = vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 42 } as never);
         const start = buildNote({ title: "S" });

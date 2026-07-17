@@ -18,6 +18,18 @@ export interface ToastOptions {
      * dismissable × there reads as "cancel", which it isn't. Defaults to dismissable.
      */
     dismissible?: boolean;
+    /**
+     * Notes to render as reference links in the toast body — e.g. the notes an action affected or that
+     * triggered the message. Each is shown with its icon and title and navigates to the note on click.
+     */
+    noteIds?: string[];
+    /** Optional heading rendered above the {@link noteIds} reference-link list. */
+    notesHeading?: string;
+    /**
+     * Invoked once when the toast is removed, whether it auto-hid after its timeout or was dismissed by the
+     * user. Useful for resetting state that accumulated while the toast was live (see {@link noteIds}).
+     */
+    onRemove?: () => void;
     buttons?: {
         text: string;
         onClick: (api: { dismissToast: () => void }) => void;
@@ -108,6 +120,14 @@ function updateToast(id: string, partial: Partial<ToastOptions>) {
 }
 
 export function removeToastFromStore(id: string) {
+    // Centralized removal point, so onRemove fires exactly once regardless of the removal path
+    // (auto-hide timeout, close button, or closePersistent). find-then-filter guards against a
+    // double fire when both the timeout and a manual dismiss race for the same id.
+    const removed = toasts.value.find(toast => toast.id === id);
+    if (!removed) {
+        return;
+    }
+    removed.onRemove?.();
     toasts.value = toasts.value.filter(toast => toast.id !== id);
 }
 //#endregion

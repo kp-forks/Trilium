@@ -599,7 +599,7 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
         // server never returns a 500, show a single deduplicated toast (fixed id) instead of one
         // generic HTTP-error toast per failing script, and throw a typed error callers can detect.
         if (!options.is("backendScriptingEnabled")) {
-            showBackendScriptingDisabledToast();
+            showBackendScriptingDisabledToast(startNote.noteId);
             throw new BackendScriptingDisabledError();
         }
 
@@ -819,13 +819,21 @@ export class BackendScriptingDisabledError extends Error {
     }
 }
 
-function showBackendScriptingDisabledToast() {
+// The scripts that attempted a backend call while it was disabled, accumulated so the single
+// deduplicated toast can list all of them as reference links. Cleared when the toast is removed.
+const backendScriptingAttempts = new Set<string>();
+
+function showBackendScriptingDisabledToast(noteId: string) {
+    backendScriptingAttempts.add(noteId);
     toastService.showPersistent({
         id: "backend-scripting-disabled",
         icon: "bx bx-code-block",
         title: t("frontend_script_api.backend_scripting_disabled_title"),
         message: t("frontend_script_api.backend_scripting_disabled_message"),
-        timeout: 15_000,
+        notesHeading: t("frontend_script_api.backend_scripting_disabled_notes_heading"),
+        noteIds: [ ...backendScriptingAttempts ],
+        timeout: 60_000,
+        onRemove: () => backendScriptingAttempts.clear(),
         buttons: [
             {
                 text: t("frontend_script_api.backend_scripting_disabled_open_settings"),

@@ -2402,6 +2402,7 @@
     "sync_warning": "You're passing a synchronous function to `api.runAsyncOnBackendWithManualTransactionHandling()`,\\nwhile you should likely use `api.runOnBackend()` instead.",
     "backend_scripting_disabled_title": "Backend scripting is disabled",
     "backend_scripting_disabled_message": "A script tried to run code on the server, but backend scripting is turned off for security reasons. Enable it in Options → Security if you trust this script.",
+    "backend_scripting_disabled_notes_heading": "Scripts that tried to run backend code:",
     "backend_scripting_disabled_open_settings": "Open security settings"
   },
   "ws": {

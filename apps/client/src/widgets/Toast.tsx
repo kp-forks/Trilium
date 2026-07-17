@@ -6,6 +6,7 @@ import { useEffect } from "preact/hooks";
 import { removeToastFromStore, ToastOptionsWithRequiredId, toasts } from "../services/toast";
 import Button from "./react/Button";
 import Icon from "./react/Icon";
+import NoteLink from "./react/NoteLink";
 
 export default function ToastContainer() {
     return (
@@ -15,7 +16,7 @@ export default function ToastContainer() {
     );
 }
 
-function Toast({ id, title, timeout, progress, message, icon, buttons, dismissible }: ToastOptionsWithRequiredId) {
+function Toast({ id, title, timeout, progress, message, icon, buttons, dismissible, noteIds, notesHeading }: ToastOptionsWithRequiredId) {
     // Autohide.
     useEffect(() => {
         if (!timeout || timeout <= 0) return;
@@ -59,6 +60,17 @@ function Toast({ id, title, timeout, progress, message, icon, buttons, dismissib
                     <div class="toast-icon">{toastIcon}</div>
                     <div className="toast-body">{message}</div>
                     {closeButton && <div class="toast-close">{closeButton}</div>}
+                </div>
+            )}
+
+            {noteIds && noteIds.length > 0 && (
+                <div class="toast-notes">
+                    {notesHeading && <div class="toast-notes-heading">{notesHeading}</div>}
+                    <div class="toast-notes-list">
+                        {noteIds.map(noteId => (
+                            <NoteLink key={noteId} notePath={noteId} showNoteIcon noPreview showNotePath />
+                        ))}
+                    </div>
                 </div>
             )}
 

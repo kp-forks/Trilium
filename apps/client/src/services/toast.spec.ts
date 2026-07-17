@@ -95,6 +95,25 @@ describe("toast store", () => {
         expect(toasts.value).toHaveLength(0);
     });
 
+    it("fires onRemove exactly once when a toast is removed", () => {
+        const onRemove = vi.fn();
+        toast.showPersistent({ id: "with-callback", icon: "i", message: "M", onRemove });
+
+        removeToastFromStore("with-callback");
+        expect(onRemove).toHaveBeenCalledTimes(1);
+        expect(toasts.value).toHaveLength(0);
+
+        // A second removal for the same (now absent) id must not fire the callback again.
+        removeToastFromStore("with-callback");
+        expect(onRemove).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not require onRemove and skips it for toasts without one", () => {
+        toast.showPersistent({ id: "no-callback", icon: "i", message: "M" });
+        expect(() => removeToastFromStore("no-callback")).not.toThrow();
+        expect(toasts.value).toHaveLength(0);
+    });
+
     it("showErrorForScriptNote uses note title/icon and wires the open-script button", async () => {
         const note = buildNote({ title: "My Script" });
         // Force a deterministic icon for assertion.
