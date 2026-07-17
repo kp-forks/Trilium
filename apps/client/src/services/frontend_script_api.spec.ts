@@ -10,6 +10,7 @@ import { preactAPI } from "./frontend_script_api_preact.js";
 import froca from "./froca.js";
 import linkService from "./link.js";
 import noteTooltipService from "./note_tooltip.js";
+import options from "./options.js";
 import protectedSessionService from "./protected_session.js";
 import searchService from "./search.js";
 import server from "./server.js";
@@ -282,6 +283,30 @@ describe("runAsyncOnBackendWithManualTransactionHandling", () => {
         // Passing null params exercises the `if (!params) return params;` early-return branch.
         await makeApi().runAsyncOnBackendWithManualTransactionHandling("async () => {}", null as unknown as unknown[]);
         expect((post.mock.calls[0][1] as Record<string, unknown>).params).toBeNull();
+    });
+});
+
+describe("scripting availability detection", () => {
+    it("isBackendScriptingEnabled reflects the backendScriptingEnabled option", () => {
+        const is = vi.spyOn(options, "is").mockImplementation((key) => key === "backendScriptingEnabled");
+        const api = makeApi();
+
+        expect(api.isBackendScriptingEnabled()).toBe(true);
+        expect(is).toHaveBeenCalledWith("backendScriptingEnabled");
+
+        is.mockReturnValue(false);
+        expect(api.isBackendScriptingEnabled()).toBe(false);
+    });
+
+    it("isSqlConsoleEnabled reflects the sqlConsoleEnabled option", () => {
+        const is = vi.spyOn(options, "is").mockImplementation((key) => key === "sqlConsoleEnabled");
+        const api = makeApi();
+
+        expect(api.isSqlConsoleEnabled()).toBe(true);
+        expect(is).toHaveBeenCalledWith("sqlConsoleEnabled");
+
+        is.mockReturnValue(false);
+        expect(api.isSqlConsoleEnabled()).toBe(false);
     });
 });
 

@@ -16,6 +16,7 @@ import { preactAPI } from "./frontend_script_api_preact.js";
 import { t } from "./i18n.js";
 import linkService from "./link.js";
 import noteTooltipService from "./note_tooltip.js";
+import options from "./options.js";
 import protectedSessionService from "./protected_session.js";
 import searchService from "./search.js";
 import server from "./server.js";
@@ -181,6 +182,23 @@ export interface Api {
      * @returns return value of the executed function on the backend
      */
     runAsyncOnBackendWithManualTransactionHandling(func: Func, params: unknown[]): unknown;
+
+    /**
+     * Whether backend script execution is enabled on the server (the
+     * `[Security] backendScriptingEnabled` config toggle). When it's disabled,
+     * `api.runOnBackend()` / `api.runAsyncOnBackendWithManualTransactionHandling()`
+     * reject with a "Backend script execution is disabled" error, so check this
+     * first to let a script degrade gracefully instead of throwing.
+     */
+    isBackendScriptingEnabled(): boolean;
+
+    /**
+     * Whether the SQL console is enabled on the server (the
+     * `[Security] sqlConsoleEnabled` config toggle). When it's disabled, backend
+     * scripts that run raw SQL (`api.sql.*`) fail, so check this before invoking
+     * SQL-backed logic via `api.runOnBackend()`.
+     */
+    isSqlConsoleEnabled(): boolean;
 
     /**
      * This is a powerful search method - you can search by attributes and their values, e.g.:
@@ -618,6 +636,9 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
 
         return await this.__runOnBackendInner(func, params, false);
     };
+
+    this.isBackendScriptingEnabled = () => options.is("backendScriptingEnabled");
+    this.isSqlConsoleEnabled = () => options.is("sqlConsoleEnabled");
 
     this.searchForNotes = async (searchString) => {
         return await searchService.searchForNotes(searchString);

@@ -398,6 +398,22 @@ export interface FrontendApi {
     runAsyncOnBackendWithManualTransactionHandling(func: Func, params?: unknown[]): Promise<unknown>;
 
     /**
+     * Whether backend script execution is enabled on the server (the
+     * `[Security] backendScriptingEnabled` config toggle). When it's disabled,
+     * `api.runOnBackend()` / `api.runAsyncOnBackendWithManualTransactionHandling()`
+     * reject with a "Backend script execution is disabled" error, so check this
+     * first to let a script degrade gracefully instead of throwing.
+     */
+    isBackendScriptingEnabled(): boolean;
+    /**
+     * Whether the SQL console is enabled on the server (the
+     * `[Security] sqlConsoleEnabled` config toggle). When it's disabled, backend
+     * scripts that run raw SQL (`api.sql.*`) fail, so check this before invoking
+     * SQL-backed logic via `api.runOnBackend()`.
+     */
+    isSqlConsoleEnabled(): boolean;
+
+    /**
      * This is a powerful search method - you can search by attributes and their values, e.g.:
      * "#dateModified =* MONTH AND #log". See full documentation for all options at: https://triliumnext.github.io/Docs/Wiki/search.html
      */
