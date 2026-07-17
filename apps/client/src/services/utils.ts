@@ -847,6 +847,28 @@ export function getErrorMessage(e: unknown) {
 
 }
 
+/**
+ * The script bundler wraps each script note's thrown errors as
+ * `Load of script note "<title>" (<noteId>) failed with: <inner>` and attaches the original error
+ * as the `cause` (see the bundle template in trilium-core's `script.ts`). That prefix is useful in
+ * backend logs but redundant in the UI, where the failing note is already shown as a reference link,
+ * so we surface the underlying error instead — walking the `cause` chain to the bottom also unwraps
+ * the nested errors produced when a `require()`d module fails.
+ */
+export function rootCauseMessage(e: unknown): string {
+    let error = e;
+    while (error instanceof Error && error.cause !== undefined) {
+        error = error.cause;
+    }
+    if (typeof error === "string") {
+        return error;
+    }
+    if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
+        return error.message;
+    }
+    return String(error);
+}
+
 export function replaceHtmlEscapedSlashes(str: string) {
     return str.replace(/&#x2F;/g, "/");
 }

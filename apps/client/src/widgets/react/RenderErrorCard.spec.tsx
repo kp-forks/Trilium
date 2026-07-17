@@ -32,6 +32,16 @@ describe("RenderErrorCard", () => {
         expect(container.querySelector(".render-error-message")?.textContent).toBe("kaput");
     });
 
+    it("unwraps the bundler's wrapper via the cause chain and shows only the root cause", () => {
+        const wrapped = new Error(
+            `Load of script note "My script" (abc123) failed with: boom`,
+            { cause: new Error("boom") }
+        );
+        const container = mount(<RenderErrorCard error={wrapped} noteId="abc123" />);
+
+        expect(container.querySelector(".render-error-message")?.textContent).toBe("boom");
+    });
+
     it("links to the failing script note when a noteId is given", () => {
         const container = mount(<RenderErrorCard error="boom" noteId="abc123" />);
 

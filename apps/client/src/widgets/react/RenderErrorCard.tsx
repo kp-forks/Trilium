@@ -1,7 +1,7 @@
 import "./RenderErrorCard.css";
 
 import { t } from "../../services/i18n";
-import { getErrorMessage } from "../../services/utils";
+import { rootCauseMessage } from "../../services/utils";
 import { ExtendedAdmonition } from "./Admonition";
 import NoteLink from "./NoteLink";
 
@@ -9,11 +9,14 @@ import NoteLink from "./NoteLink";
  * The error card shown when a render/script note fails to run. Shared by the render-note
  * type widget and the (jQuery-based) content renderer so both surfaces look identical.
  *
+ * The underlying error is surfaced via {@link rootCauseMessage}, so the bundler's
+ * `Load of script note ... failed with:` wrapper never reaches the card — the failing
+ * note is already identified by the reference link below the message.
+ *
  * @param noteId the script note that failed, linked below the message so the user can jump to it.
  */
 export default function RenderErrorCard({ error, noteId }: { error: unknown; noteId?: string }) {
-    const message = typeof error === "string" ? error : getErrorMessage(error);
-    const { summary, details } = splitRenderError(message);
+    const { summary, details } = splitRenderError(rootCauseMessage(error));
 
     return (
         <ExtendedAdmonition
