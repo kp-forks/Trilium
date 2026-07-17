@@ -30,7 +30,7 @@ Selecting any state other than "None" and "Done" (which cannot be modified) from
         </tr>
         <tr>
             <td><strong>Identifier</strong> (required)</td>
-            <td><p>A short name for the state, using only letters, digits, "-" and "_". It is stored as metadata in the note's markup and used to identify the task state. Two task states cannot share the same identifier.</p><aside class="admonition warning"><p><span style="background-color:color(srgb0.8862750.6666670.0117647/0.15);color:rgb(204,204,204);">Prefix the identifiers of your custom task states with an underscore (</span><code spellcheck="false">_</code><span style="background-color:color(srgb0.8862750.6666670.0117647/0.15);color:rgb(204,204,204);">) or a hyphen (</span><code spellcheck="false">-</code><span style="background-color:color(srgb0.8862750.6666670.0117647/0.15);color:rgb(204,204,204);">) to avoid clashes with task states that may be introduced in future versions of Trilium.</span></p></aside></td>
+            <td><p>A short name for the state, using only letters, digits, "-" and "_". It is stored as metadata in the note's markup and used to identify the task state. Two task states cannot share the same identifier.</p><aside class="admonition warning"><p><span style="color:rgb(204,204,204)">Prefix the identifiers of your custom task states with an underscore (</span><code spellcheck="false">_</code><span style="color:rgb(204,204,204)">) or a hyphen (</span><code spellcheck="false">-</code><span style="color:rgb(204,204,204)">) to avoid clashes with task states that may be introduced in future versions of Trilium.</span></p></aside></td>
         </tr>
         <tr>
             <td><strong>Markdown symbol</strong></td>

@@ -17,7 +17,7 @@ To do so, go to the note menu → “**Advanced”** and select "**Convert to Te
 ### Text Note to Markdown
 
 > [!WARNING]
-> Since Markdown does not support all the capabilities of Text notes, this conversion is lossy in terms of formatting: some formatting may be lost, and some unsupported elements may even be dropped. It's strongly recommended for you inspect the content for any information that might have gone missing after the conversion.
+> Since Markdown does not support all the capabilities of Text notes, this conversion is lossy in terms of formatting: some formatting may be lost, and some unsupported elements may even be dropped. It's strongly recommended that you inspect the content for any information that might have gone missing after the conversion.
 
 To convert a text note to Markdown, go to the note menu → **“Advanced”** and select **"Convert to Markdown Note"**.
 
