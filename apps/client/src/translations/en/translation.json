@@ -250,8 +250,7 @@
     "drop_or_browse_multiple": "Drag and drop files here, or click to browse",
     "browse_single": "Tap to choose a file",
     "browse_multiple": "Tap to choose files",
-    "selected_one": "{{count}} file selected",
-    "selected_other": "{{count}} files selected"
+    "remove_file": "Remove file"
   },
   "import_provider": {
     "choose_provider": "Choose a service above to import from."

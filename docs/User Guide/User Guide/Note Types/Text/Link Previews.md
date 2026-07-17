@@ -34,10 +34,10 @@ There are two ways to create one:
 
 A link preview is automatically created:
 
-*   By pasting the URL and pressing <kbd spellcheck="false">Space</kbd>. This will create an _inline_ link preview.
-*   When at the start of a new paragraph, pressing <kbd spellcheck="false">Enter</kbd> will create a _card_ or an _embed_ for YouTube URLs.
+*   By pasting the URL and pressing <kbd>Space</kbd>. This will create an _inline_ link preview.
+*   When at the start of a new paragraph, pressing <kbd>Enter</kbd> will create a _card_ or an _embed_ for YouTube URLs.
 
-To undo an automatic link preview, press <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">Z</kbd> immediately afterwards which keeps it as a plain link instead. Alternatively, once a link preview was created, click on the link and select _Plain link_ from the link preview toolbar.
+To undo an automatic link preview, press <kbd>Ctrl</kbd>+<kbd>Z</kbd> immediately afterwards which keeps it as a plain link instead. Alternatively, once a link preview was created, click on the link and select _Plain link_ from the link preview toolbar.
 
 This automatic conversion can be disabled by going to <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a> → _Text Notes_ and unchecking _Autogenerate link previews_ from the _Features_ section.
 
