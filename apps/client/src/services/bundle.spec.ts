@@ -2,7 +2,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { buildNote } from "../test/easy-froca";
 import { ReactWrappedWidget } from "../widgets/basic_widget.js";
-import bundleService, { Bundle, executeBundle, executeBundleWithoutErrorHandling, WidgetsByParent } from "./bundle";
+import bundleService, { Bundle, executeBundle, executeBundleWithoutErrorHandling, isBackendScriptingDisabled, WidgetsByParent } from "./bundle";
 import server from "./server.js";
 import * as toast from "./toast";
 import ws from "./ws.js";
@@ -57,6 +57,14 @@ describe("executeBundle / executeBundleWithoutErrorHandling", () => {
         expect(spy.mock.calls[0][0]).toBe(id);
         expect((window as any).logError).toHaveBeenCalled();
         spy.mockRestore();
+    });
+
+    it("isBackendScriptingDisabled detects the error anywhere in the cause chain", async () => {
+        const { BackendScriptingDisabledError } = await import("./frontend_script_api.js");
+        // The bundler nests the real error as a cause under its "Load of script note …" wrapper.
+        const wrapped = new Error(`Load of script note "X" (id) failed with: disabled`, { cause: new BackendScriptingDisabledError() });
+        expect(isBackendScriptingDisabled(wrapped)).toBe(true);
+        expect(isBackendScriptingDisabled(new Error("some other failure"))).toBe(false);
     });
 
     it("executeBundle rethrows after reporting when opts.rethrow is set", async () => {

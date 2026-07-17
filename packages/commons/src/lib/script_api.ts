@@ -485,7 +485,7 @@ export interface FrontendApi {
      * @param opts creation options — e.g. `{ title, content, type, mime, activate }`
      * @returns the created note and its branch, resolved from the frontend cache
      */
-    createNote(parentNotePath: string, opts?: ScriptCreateNoteOpts): Promise<{ note: ScriptFNote | null; branch: ScriptFBranch | null }>;
+    createNote(parentNotePath: string, opts?: ScriptCreateNoteOpts): Promise<{ note: ScriptFNote | null; branch: ScriptFBranch | undefined }>;
     /**
      * Instance name identifies particular Trilium instance. It can be useful for scripts
      * if some action needs to happen on only one specific instance.

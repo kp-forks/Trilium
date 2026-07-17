@@ -856,17 +856,31 @@ export function getErrorMessage(e: unknown) {
  * the nested errors produced when a `require()`d module fails.
  */
 export function rootCauseMessage(e: unknown): string {
-    let error = e;
-    while (error instanceof Error && error.cause !== undefined) {
-        error = error.cause;
+    let root: unknown = e;
+    for (const error of causeChain(e)) {
+        root = error;
     }
-    if (typeof error === "string") {
-        return error;
+    if (typeof root === "string") {
+        return root;
     }
-    if (error && typeof error === "object" && "message" in error && typeof error.message === "string") {
-        return error.message;
+    if (root && typeof root === "object" && "message" in root && typeof root.message === "string") {
+        return root.message;
     }
-    return String(error);
+    return String(root);
+}
+
+/**
+ * Walks an error's `cause` chain, yielding each error from `e` down to the root. Guards against
+ * cyclic chains (e.g. `err.cause === err`, or a longer loop) so callers can't spin forever.
+ */
+export function* causeChain(e: unknown): Generator<unknown> {
+    const seen = new Set<unknown>();
+    let error: unknown = e;
+    while (error !== undefined && !seen.has(error)) {
+        seen.add(error);
+        yield error;
+        error = error instanceof Error ? error.cause : undefined;
+    }
 }
 
 export function replaceHtmlEscapedSlashes(str: string) {

@@ -4,13 +4,13 @@ import { h, VNode } from "preact";
 import FNote from "../entities/fnote.js";
 import BasicWidget, { ReactWrappedWidget } from "../widgets/basic_widget.js";
 import RightPanelWidget from "../widgets/right_panel_widget.js";
-import type { Entity } from "./frontend_script_api.js";
+import { BackendScriptingDisabledError, type Entity } from "./frontend_script_api.js";
 import { WidgetDefinitionWithType } from "./frontend_script_api_preact.js";
 import { t } from "./i18n.js";
 import ScriptContext from "./script_context.js";
 import server from "./server.js";
 import toastService, { showErrorForScriptNote } from "./toast.js";
-import utils, { getErrorMessage, rootCauseMessage } from "./utils.js";
+import utils, { causeChain, getErrorMessage, rootCauseMessage } from "./utils.js";
 
 // TODO: Deduplicate with server.
 export interface Bundle {
@@ -59,8 +59,10 @@ export async function executeBundle(bundle: Bundle, originEntity?: Entity | null
     try {
         return await executeBundleWithoutErrorHandling(bundle, originEntity, $container);
     } catch (e: unknown) {
-        showErrorForScriptNote(bundle.noteId, rootCauseMessage(e), { monospace: true });
-        logError("Widget initialization failed: ", e);
+        if (!isBackendScriptingDisabled(e)) {
+            showErrorForScriptNote(bundle.noteId, rootCauseMessage(e), { monospace: true });
+            logError("Widget initialization failed: ", e);
+        }
         if (opts?.rethrow) {
             throw e;
         }
@@ -156,10 +158,10 @@ async function getWidgetBundlesByParent() {
                     widgetsByParent.add(widget);
                 }
             } catch (e: any) {
-                const noteId = bundle.noteId;
-                showErrorForScriptNote(noteId, rootCauseMessage(e), { monospace: true });
-
-                logError("Widget initialization failed: ", e);
+                if (!isBackendScriptingDisabled(e)) {
+                    showErrorForScriptNote(bundle.noteId, rootCauseMessage(e), { monospace: true });
+                    logError("Widget initialization failed: ", e);
+                }
                 continue;
             }
         }
@@ -181,3 +183,16 @@ export default {
     executeStartupBundles,
     getWidgetBundlesByParent
 };
+
+/**
+ * Whether the failure was a disabled backend script (anywhere in its cause chain). Those already
+ * raise a single consolidated toast in `runOnBackend`, so the per-note toast here is redundant.
+ */
+export function isBackendScriptingDisabled(e: unknown): boolean {
+    for (const error of causeChain(e)) {
+        if (error instanceof BackendScriptingDisabledError) {
+            return true;
+        }
+    }
+    return false;
+}

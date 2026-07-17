@@ -820,6 +820,18 @@ describe("rootCauseMessage", () => {
         expect(rootCauseMessage(42)).toBe("42");
         expect(rootCauseMessage(new Error("outer", { cause: "string cause" }))).toBe("string cause");
     });
+
+    it("does not loop forever on a cyclic cause chain", () => {
+        const self = new Error("self-cycle");
+        self.cause = self;
+        expect(rootCauseMessage(self)).toBe("self-cycle");
+
+        // A longer cycle: a -> b -> a. Walking stops once a repeat is seen.
+        const a = new Error("a");
+        const b = new Error("b", { cause: a });
+        a.cause = b;
+        expect(rootCauseMessage(b)).toBe("a");
+    });
 });
 
 describe("handleRightToLeftPlacement", () => {
