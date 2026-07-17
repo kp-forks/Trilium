@@ -1,9 +1,9 @@
 import { CreateChildrenResponse, SqlExecuteResponse } from "@triliumnext/commons";
 
+import { showBackendScriptingDisabledToast } from "../services/backend_scripting.js";
 import bundleService from "../services/bundle.js";
 import dialog from "../services/dialog.js";
 import dateNoteService from "../services/date_notes.js";
-import { showBackendScriptingDisabledToast } from "../services/frontend_script_api.js";
 import froca from "../services/froca.js";
 import { t } from "../services/i18n.js";
 import linkService from "../services/link.js";

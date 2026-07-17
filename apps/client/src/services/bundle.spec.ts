@@ -60,7 +60,7 @@ describe("executeBundle / executeBundleWithoutErrorHandling", () => {
     });
 
     it("isBackendScriptingDisabled detects the error anywhere in the cause chain", async () => {
-        const { BackendScriptingDisabledError } = await import("./frontend_script_api.js");
+        const { BackendScriptingDisabledError } = await import("./backend_scripting.js");
         // The bundler nests the real error as a cause under its "Load of script note …" wrapper.
         const wrapped = new Error(`Load of script note "X" (id) failed with: disabled`, { cause: new BackendScriptingDisabledError() });
         expect(isBackendScriptingDisabled(wrapped)).toBe(true);

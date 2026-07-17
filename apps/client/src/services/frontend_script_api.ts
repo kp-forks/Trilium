@@ -10,6 +10,7 @@ import type FNote from "../entities/fnote.js";
 import BasicWidget, { ReactWrappedWidget } from "../widgets/basic_widget.js";
 import NoteContextAwareWidget from "../widgets/note_context_aware_widget.js";
 import RightPanelWidget from "../widgets/right_panel_widget.js";
+import { BackendScriptingDisabledError, showBackendScriptingDisabledToast } from "./backend_scripting.js";
 import dateNotesService from "./date_notes.js";
 import dialogService from "./dialog.js";
 import froca from "./froca.js";
@@ -25,7 +26,7 @@ import server from "./server.js";
 import shortcutService from "./shortcuts.js";
 import SpacedUpdate from "./spaced_update.js";
 import toastService from "./toast.js";
-import utils, { openInAppHelpFromUrl } from "./utils.js";
+import utils from "./utils.js";
 import ws from "./ws.js";
 
 /**
@@ -821,59 +822,6 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
 export default FrontendScriptApi as any as {
     new(startNote: FNote, currentNote: FNote, originEntity: Entity | null, $container: JQuery<HTMLElement> | null): Api;
 };
-
-/**
- * Thrown by {@link Api.runOnBackend} / {@link Api.runAsyncOnBackendWithManualTransactionHandling}
- * when backend scripting is disabled on the server. The bundle executor recognizes this so it can
- * skip its per-note error toast — the single deduplicated toast raised alongside it is enough.
- */
-export class BackendScriptingDisabledError extends Error {
-    constructor() {
-        super("Backend script execution is disabled.");
-        this.name = "BackendScriptingDisabledError";
-    }
-}
-
-// The notes that attempted to run backend code while it was disabled, accumulated so the single
-// deduplicated toast can list them all as reference links. Cleared when the toast is removed.
-const backendScriptingAttempts = new Set<string>();
-
-/**
- * Shows the single deduplicated "backend scripting is disabled" toast, adding the given note to the
- * list of scripts that tried to run backend code. Exported so any backend-execution entry point can
- * reuse it — a frontend `runOnBackend()` call, or executing a backend code note directly.
- */
-export function showBackendScriptingDisabledToast(noteId: string) {
-    backendScriptingAttempts.add(noteId);
-    toastService.showPersistent({
-        id: "backend-scripting-disabled",
-        icon: "bx bx-code-block",
-        title: t("frontend_script_api.backend_scripting_disabled_title"),
-        message: t("frontend_script_api.backend_scripting_disabled_message"),
-        notesHeading: t("frontend_script_api.backend_scripting_disabled_notes_heading"),
-        noteIds: [ ...backendScriptingAttempts ],
-        wide: true,
-        timeout: 60_000,
-        onRemove: () => backendScriptingAttempts.clear(),
-        buttons: [
-            {
-                text: t("frontend_script_api.backend_scripting_disabled_open_settings"),
-                onClick: ({ dismissToast }) => {
-                    appContext.triggerCommand("showOptions", { section: "_optionsSecurity" });
-                    dismissToast();
-                }
-            },
-            {
-                text: t("frontend_script_api.backend_scripting_disabled_more_info"),
-                onClick: ({ dismissToast }) => {
-                    // openInAppHelpFromUrl takes the help note ID without the "_help_" prefix.
-                    openInAppHelpFromUrl("fiHicjpHjIRJ");
-                    dismissToast();
-                }
-            }
-        ]
-    });
-}
 
 // --- Drift guards -----------------------------------------------------------
 // The public script API surface lives in @triliumnext/commons (self-contained so
