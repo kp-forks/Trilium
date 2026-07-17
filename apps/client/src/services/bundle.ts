@@ -28,13 +28,13 @@ type WithNoteId<T> = T & {
 };
 export type Widget = WithNoteId<(LegacyWidget | WidgetDefinitionWithType)>;
 
-async function getAndExecuteBundle(noteId: string, originEntity: FNote | null = null, script: string | null = null, params: ScriptParams | null = null) {
+async function getAndExecuteBundle(noteId: string, originEntity: FNote | null = null, script: string | null = null, params: ScriptParams | null = null, opts?: ExecuteBundleOpts) {
     const bundle = await server.post<Bundle>(`script/bundle/${noteId}`, {
         script,
         params
     });
 
-    return await executeBundle(bundle, originEntity);
+    return await executeBundle(bundle, originEntity, undefined, opts);
 }
 
 export type ParentName = WidgetDefinitionWithType["parent"];
@@ -46,12 +46,24 @@ export async function executeBundleWithoutErrorHandling(bundle: Bundle, originEn
     }.call(apiContext);
 }
 
-export async function executeBundle(bundle: Bundle, originEntity?: Entity | null, $container?: JQuery<HTMLElement>) {
+export interface ExecuteBundleOpts {
+    /**
+     * When `true`, the caught error is re-thrown after being reported, so the caller can tell the
+     * bundle failed (e.g. to avoid claiming success). Defaults to `false` — errors are swallowed,
+     * which is what widget/startup callers rely on.
+     */
+    rethrow?: boolean;
+}
+
+export async function executeBundle(bundle: Bundle, originEntity?: Entity | null, $container?: JQuery<HTMLElement>, opts?: ExecuteBundleOpts) {
     try {
         return await executeBundleWithoutErrorHandling(bundle, originEntity, $container);
     } catch (e: unknown) {
         showErrorForScriptNote(bundle.noteId, rootCauseMessage(e), { monospace: true });
         logError("Widget initialization failed: ", e);
+        if (opts?.rethrow) {
+            throw e;
+        }
     }
 }
 

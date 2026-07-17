@@ -58,6 +58,22 @@ describe("executeBundle / executeBundleWithoutErrorHandling", () => {
         expect((window as any).logError).toHaveBeenCalled();
         spy.mockRestore();
     });
+
+    it("executeBundle rethrows after reporting when opts.rethrow is set", async () => {
+        const id = buildNote({ title: "Throwing note" }).noteId;
+        const spy = vi.spyOn(toast, "showErrorForScriptNote").mockReturnValue(undefined);
+        const bundle: Bundle = {
+            script: `throw new Error("kaboom");`,
+            html: "",
+            noteId: id,
+            allNoteIds: [id]
+        };
+        // The error is still reported (toast + log), but rethrown so the caller can react.
+        await expect(executeBundle(bundle, null, undefined, { rethrow: true })).rejects.toThrow("kaboom");
+        expect(spy).toHaveBeenCalled();
+        expect((window as any).logError).toHaveBeenCalled();
+        spy.mockRestore();
+    });
 });
 
 describe("getAndExecuteBundle (default export)", () => {

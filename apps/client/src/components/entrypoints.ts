@@ -174,7 +174,13 @@ export default class Entrypoints extends Component {
 
         // TODO: use note.executeScript()
         if (note.mime.endsWith("env=frontend")) {
-            await bundleService.getAndExecuteBundle(note.noteId);
+            try {
+                // rethrow so a failed script doesn't fall through to the "Note executed" confirmation;
+                // executeBundle has already surfaced the error toast.
+                await bundleService.getAndExecuteBundle(note.noteId, null, null, null, { rethrow: true });
+            } catch {
+                return;
+            }
         } else if (note.mime.endsWith("env=backend")) {
             await server.post(`script/run/${note.noteId}`);
         } else if (note.mime === "text/x-sqlite;schema=trilium") {
