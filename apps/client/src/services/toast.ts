@@ -1,6 +1,5 @@
 import { signal } from "@preact/signals";
 
-import appContext from "../components/app_context.js";
 import froca from "./froca.js";
 import { t } from "./i18n.js";
 import utils, { randomString } from "./utils.js";
@@ -93,15 +92,12 @@ export async function showErrorForScriptNote(noteId: string, message: string) {
     showPersistent({
         id: `custom-widget-failure-${noteId}`,
         title: t("toast.scripting-error", { title: note?.title ?? "" }),
-        icon: note?.getIcon() ?? "bx bx-error-circle",
+        icon: "bx bx-error-circle",
         message,
-        timeout: 15_000,
-        buttons: [
-            {
-                text: t("toast.open-script-note"),
-                onClick: () => appContext.tabManager.openInNewTab(noteId, null, true)
-            }
-        ]
+        // The script note is shown as a reference link (icon + title, click to navigate) rather
+        // than a bespoke "open note" button; ctrl/middle-click still opens it in a new tab.
+        noteIds: [ noteId ],
+        timeout: 15_000
     });
 }
 

@@ -114,28 +114,23 @@ describe("toast store", () => {
         expect(toasts.value).toHaveLength(0);
     });
 
-    it("showErrorForScriptNote uses note title/icon and wires the open-script button", async () => {
+    it("showErrorForScriptNote shows the script note as a reference link with a generic error icon", async () => {
         const note = buildNote({ title: "My Script" });
-        // Force a deterministic icon for assertion.
-        note.getIcon = () => "bx bx-code";
 
         await showErrorForScriptNote(note.noteId, "it failed");
 
         const created = toasts.value.find(t => t.id === `custom-widget-failure-${note.noteId}`);
-        expect(created).toBeDefined();
         expect(created).toMatchObject({
-            icon: "bx bx-code",
+            icon: "bx bx-error-circle",
             message: "it failed",
-            timeout: 15000
+            timeout: 15000,
+            // The script note is attached as a reference link instead of a bespoke open-note button.
+            noteIds: [ note.noteId ]
         });
-        expect(created?.buttons).toHaveLength(1);
-
-        // Invoking the button delegates to the tab manager.
-        created!.buttons![0].onClick({ dismissToast: () => {} });
-        expect(openInNewTab).toHaveBeenCalledWith(note.noteId, null, true);
+        expect(created?.buttons).toBeUndefined();
     });
 
-    it("showErrorForScriptNote falls back when the note cannot be found", async () => {
+    it("showErrorForScriptNote still renders when the note cannot be found", async () => {
         const froca = (await import("./froca.js")).default;
         const original = froca.getNote;
         froca.getNote = vi.fn(async () => null) as typeof froca.getNote;
@@ -143,10 +138,11 @@ describe("toast store", () => {
         try {
             await showErrorForScriptNote("missing-note", "nope");
             const created = toasts.value.find(t => t.id === "custom-widget-failure-missing-note");
-            expect(created).toBeDefined();
-            // Falls back to the default error icon.
-            expect(created?.icon).toBe("bx bx-error-circle");
-            expect(created?.message).toBe("nope");
+            expect(created).toMatchObject({
+                icon: "bx bx-error-circle",
+                message: "nope",
+                noteIds: [ "missing-note" ]
+            });
         } finally {
             froca.getNote = original;
         }
