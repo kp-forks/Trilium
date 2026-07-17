@@ -23,7 +23,7 @@ import server from "./server.js";
 import shortcutService from "./shortcuts.js";
 import SpacedUpdate from "./spaced_update.js";
 import toastService from "./toast.js";
-import utils from "./utils.js";
+import utils, { openInAppHelpFromUrl } from "./utils.js";
 import ws from "./ws.js";
 
 /**
@@ -840,6 +840,14 @@ function showBackendScriptingDisabledToast(noteId: string) {
                 text: t("frontend_script_api.backend_scripting_disabled_open_settings"),
                 onClick: ({ dismissToast }) => {
                     appContext.triggerCommand("showOptions", { section: "_optionsSecurity" });
+                    dismissToast();
+                }
+            },
+            {
+                text: t("frontend_script_api.backend_scripting_disabled_more_info"),
+                onClick: ({ dismissToast }) => {
+                    // openInAppHelpFromUrl takes the help note ID without the "_help_" prefix.
+                    openInAppHelpFromUrl("fiHicjpHjIRJ");
                     dismissToast();
                 }
             }

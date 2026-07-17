@@ -67,13 +67,15 @@
 
 .toast {
     .toast-buttons {
-        padding: 0 var(--bs-toast-padding-x) var(--bs-toast-padding-y) var(--bs-toast-padding-x);
+        padding: 0.5em var(--bs-toast-padding-x) var(--bs-toast-padding-y) var(--bs-toast-padding-x);
         display: flex;
-        flex-direction: column;
-        gap: 0.5em;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 1em;
 
         .btn {
-            width: 100%;
+            /* Share the row equally; a lone button still spans the full width. */
+            flex: 1;
             color: var(--bs-toast-color);
             background: var(--modal-control-button-background);
 

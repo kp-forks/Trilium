@@ -16,7 +16,7 @@ import searchService from "./search.js";
 import server from "./server.js";
 import shortcutService from "./shortcuts.js";
 import toastService from "./toast.js";
-import utils from "./utils.js";
+import utils, * as clientUtils from "./utils.js";
 import ws from "./ws.js";
 
 // The global ws mock from setup.ts does not define waitForMaxKnownEntityChangeId.
@@ -193,10 +193,15 @@ describe("runOnBackend / __runOnBackendInner", () => {
         expect(post).not.toHaveBeenCalled();
         expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled", wide: true }));
 
-        // The toast's action opens Security settings in the options modal, not a hoisted tab.
+        // The first action opens Security settings in the options modal, not a hoisted tab.
         const triggerCommand = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined as never);
         showPersistent.mock.calls[0][0].buttons?.[0].onClick({ dismissToast: vi.fn() });
         expect(triggerCommand).toHaveBeenCalledWith("showOptions", { section: "_optionsSecurity" });
+
+        // The second action opens the corresponding help note.
+        const openHelp = vi.spyOn(clientUtils, "openInAppHelpFromUrl").mockReturnValue(undefined as never);
+        showPersistent.mock.calls[0][0].buttons?.[1].onClick({ dismissToast: vi.fn() });
+        expect(openHelp).toHaveBeenCalledWith("fiHicjpHjIRJ");
     });
 
     it("lists the attempting scripts as reference notes and accumulates them across attempts", async () => {
