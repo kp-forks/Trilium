@@ -27,7 +27,6 @@ The following features are supported by Trilium's Markdown format and will show 
 *   All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).
 *   Basic HTML is also supported (e.g. collapsible blocks using `<details>` and `<summary>`).
 *   Code blocks with syntax highlight.
-    
     *   The language must be specified for syntax highlight to be applied (e.g. ` ```js `).
     *   Code blocks will respect the text wrapping from the <a class="reference-link" href="Text.md">Text</a> section in <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a>.
 *   <a class="reference-link" href="Text/Block%20quotes%20%26%20admonitions.md">Block quotes &amp; admonitions</a>
@@ -194,20 +193,7 @@ If the Markdown note contains attachments, a ZIP export will rewrite the links t
 
 ## Conversion between text notes and Markdown notes
 
-Currently there is no built-in functionality to convert a <a class="reference-link" href="Text.md">Text</a> note into a Markdown note or vice-versa. We do have plans to address this in the future.
-
-This can be achieved manually, for a single note:
-
-1.  Export the file as Markdown, with single format.
-2.  Import the file again, but unchecking _Import HTML, Markdown and TXT as text notes if it's unclear from the metadata_.
-
-For multiple notes, the process is slightly more involved:
-
-1.  Export the file as Markdown, ZIP.
-2.  Extract the archive.
-3.  Remove the `!!!meta.json` file.
-4.  Compress the extracted files back into an archive.
-5.  Import the newly create archive, but unchecking _Import HTML, Markdown and TXT as text notes if it's unclear from the metadata_.
+<a class="reference-link" href="Text.md">Text</a> notes can be converted into Markdown notes and vice versa. See <a class="reference-link" href="Converting%20Between%20Note%20Types.md">Converting Between Note Types</a>.
 
 ## Sync-scrolling & block highlight
 
