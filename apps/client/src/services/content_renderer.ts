@@ -8,6 +8,7 @@ import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
 import { t } from "../services/i18n.js";
+import RenderErrorCard from "../widgets/react/RenderErrorCard.js";
 import { type MediaEnvironment, showsFileActions } from "../widgets/type_widgets/file/media_environment.js";
 import type { LlmChatContent, StoredMessage } from "../widgets/type_widgets/llm_chat/llm_chat_types.js";
 import renderText, { postProcessRichContent, renderChildrenList } from "./content_renderer_text.js";
@@ -20,7 +21,6 @@ import protectedSessionHolder from "./protected_session_holder.js";
 import renderService from "./render.js";
 import server from "./server.js";
 import { applySingleBlockSyntaxHighlight } from "./syntax_highlight.js";
-import { getErrorMessage } from "./utils.js";
 
 let idCounter = 1;
 
@@ -111,8 +111,10 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         const $content = $("<div>");
 
         await renderService.render(entity, $content, (e) => {
-            const $error = $("<div>").addClass("admonition caution").text(typeof e === "string" ? e : getErrorMessage(e));
-            $content.empty().append($error);
+            const container = $content.empty().get(0);
+            if (container) {
+                render(h(RenderErrorCard, { error: e }), container);
+            }
         });
 
         $renderedContent.append($content);
