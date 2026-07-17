@@ -36,7 +36,7 @@ export function showBackendScriptingDisabledToast(noteId: string) {
         title: t("frontend_script_api.backend_scripting_disabled_title"),
         message: t("frontend_script_api.backend_scripting_disabled_message"),
         notesHeading: t("frontend_script_api.backend_scripting_disabled_notes_heading"),
-        noteIds: [ ...attempts ],
+        notes: [ ...attempts ],
         wide: true,
         timeout: 60_000,
         onRemove: () => attempts.clear(),

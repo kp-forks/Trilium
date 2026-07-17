@@ -3203,7 +3203,11 @@
     "collapsible-tooltip": "Click on the arrow or press {{- shortcut}} to collapse/expand.",
     "edit-states-tooltip": "Edit task states",
     "unknown-task-state": "Undefined custom task state",
-    "task-state-dropped": "Dropped custom task state definition \"{{title}}\" ({{id}}) due to: {{reason}}",
+    "task-state-dropped-title": "Invalid task states",
+    "task-state-dropped-message_one": "A custom task state definition is invalid and was ignored.",
+    "task-state-dropped-message_other": "{{count}} custom task state definitions are invalid and were ignored.",
+    "task-state-dropped-heading": "Ignored definitions:",
+    "task-state-dropped-configure": "Configure task states",
     "validation-errors": {
       "undefined-name": "undefined identifier",
       "invalid-name": "invalid identifier",

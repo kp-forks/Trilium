@@ -16,7 +16,7 @@ export default function ToastContainer() {
     );
 }
 
-function Toast({ id, title, timeout, progress, message, messageMonospace, icon, buttons, dismissible, wide, noteIds, notesHeading }: ToastOptionsWithRequiredId) {
+function Toast({ id, title, timeout, progress, message, messageMonospace, icon, buttons, dismissible, wide, notes, notesHeading }: ToastOptionsWithRequiredId) {
     // Autohide.
     useEffect(() => {
         if (!timeout || timeout <= 0) return;
@@ -63,13 +63,15 @@ function Toast({ id, title, timeout, progress, message, messageMonospace, icon, 
                 </div>
             )}
 
-            {noteIds && noteIds.length > 0 && (
+            {notes && notes.length > 0 && (
                 <div class="toast-notes">
                     {notesHeading && <div class="toast-notes-heading">{notesHeading}</div>}
                     <div class="toast-notes-list">
-                        {noteIds.map(noteId => (
-                            <NoteLink key={noteId} notePath={noteId} showNoteIcon noPreview showNotePath />
-                        ))}
+                        {notes
+                            .map(note => (typeof note === "string" ? { noteId: note } : note))
+                            .map(({ noteId, description }) => (
+                                <NoteLink key={noteId} notePath={noteId} showNoteIcon noPreview showNotePath titleSuffix={description} />
+                            ))}
                     </div>
                 </div>
             )}

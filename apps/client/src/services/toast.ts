@@ -3,6 +3,13 @@ import { signal } from "@preact/signals";
 import { t } from "./i18n.js";
 import utils, { randomString } from "./utils.js";
 
+/** A note rendered as a reference link in a toast body, with an optional annotation. */
+export interface ToastNoteReference {
+    noteId: string;
+    /** Short muted text rendered next to the link — e.g. why this note is being surfaced. */
+    description?: string;
+}
+
 export interface ToastOptions {
     id?: string;
     icon: string;
@@ -20,19 +27,20 @@ export interface ToastOptions {
     dismissible?: boolean;
     /**
      * When `true`, the toast renders with a wider maximum width than the default. Use for toasts with
-     * richer content — e.g. a {@link noteIds} reference-link list — that reads poorly cramped.
+     * richer content — e.g. a {@link notes} reference-link list — that reads poorly cramped.
      */
     wide?: boolean;
     /**
      * Notes to render as reference links in the toast body — e.g. the notes an action affected or that
      * triggered the message. Each is shown with its icon and title and navigates to the note on click.
+     * A plain string is shorthand for a {@link ToastNoteReference} without annotation.
      */
-    noteIds?: string[];
-    /** Optional heading rendered above the {@link noteIds} reference-link list. */
+    notes?: (string | ToastNoteReference)[];
+    /** Optional heading rendered above the {@link notes} reference-link list. */
     notesHeading?: string;
     /**
      * Invoked once when the toast is removed, whether it auto-hid after its timeout or was dismissed by the
-     * user. Useful for resetting state that accumulated while the toast was live (see {@link noteIds}).
+     * user. Useful for resetting state that accumulated while the toast was live (see {@link notes}).
      */
     onRemove?: () => void;
     buttons?: {
@@ -97,7 +105,7 @@ export function showErrorForScriptNote(noteId: string, message: string, opts?: {
         messageMonospace: opts?.monospace,
         // The script note is shown as a reference link (icon + title, click to navigate) rather
         // than a bespoke "open note" button; ctrl/middle-click still opens it in a new tab.
-        noteIds: [ noteId ],
+        notes: [ noteId ],
         timeout: 15_000
     });
 }
