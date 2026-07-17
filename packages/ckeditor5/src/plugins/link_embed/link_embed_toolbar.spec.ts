@@ -1,10 +1,11 @@
-import { ClassicEditor, Essentials, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
+import { ClassicEditor, ContextualBalloon, Essentials, Link, Paragraph, WidgetToolbarRepository, _setModelData as setModelData } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestEditor } from "../../test/editor-kit.js";
-import { installGlobMock } from "../../test/globals-test-kit.js";
+import { createTestEditor } from "../../../test/editor-kit.js";
+import { installGlobMock } from "../../../test/globals-test-kit.js";
+import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./link_embed.js";
+import LinkEmbedTitleFormView from "./link_embed_title_form.js";
 import LinkEmbedToolbar from "./link_embed_toolbar.js";
-import LinkEmbed, { CHANGE_LINK_DISPLAY_COMMAND, LINK_DISPLAY_MODES } from "./linkembed.js";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -93,7 +94,7 @@ describe("LinkEmbedToolbar", () => {
             })
         });
 
-        editor = await createTestEditor([Essentials, Paragraph, LinkEmbed, LinkEmbedToolbar]);
+        editor = await createTestEditor([Essentials, Paragraph, Link, LinkEmbed, LinkEmbedToolbar]);
     });
 
     // -----------------------------------------------------------------------
@@ -369,6 +370,19 @@ describe("LinkEmbedToolbar", () => {
         });
         const dropdown = editor.ui.componentFactory.create("linkEmbedDisplayDropdown") as unknown as DropdownView;
         expect(dropdown.isEnabled).toBe(true);
+    });
+
+    it("hides itself (ck-hidden) while the command is disabled, for the native link balloon", () => {
+        // The dropdown also sits in the native link balloon, which opens for links that cannot be
+        // previewed (an internal note link, say) — there it must hide, not show permanently greyed.
+        setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+        const dropdown = editor.ui.componentFactory.create("linkEmbedDisplayDropdown") as unknown as DropdownView;
+        expect(dropdown.isEnabled).toBe(false);
+        expect(dropdown.class).toBe("ck-hidden");
+
+        setModelData(editor.model, '<paragraph><$text linkHref="https://e.com/">https://e.[]com/</$text></paragraph>');
+        expect(dropdown.isEnabled).toBe(true);
+        expect(dropdown.class).toBe("");
     });
 
     it("button label shows 'Display' when command value is null (no widget selected)", () => {
@@ -677,6 +691,68 @@ describe("LinkEmbedToolbar", () => {
 
             // The widget is gone, leaving the bare URL as plain text.
             expect(editor.getData()).toBe(`<p>${URL}</p>`);
+        });
+
+        it("linkEmbedEditTitle opens a balloon form prefilled with the current title and saves the edit", () => {
+            const button = createButton("linkEmbedEditTitle");
+            expect(button.isEnabled).toBe(false);
+
+            selectLinkMention();
+            expect(button.isEnabled).toBe(true);
+
+            // Put the widget toolbar in the balloon first, as it necessarily is when the user
+            // clicks the pencil inside it — otherwise it would stack itself over the form when
+            // focusing the form flips the UI focus tracker.
+            editor.ui.focusTracker.isFocused = true;
+            editor.ui.fire("update");
+
+            const balloon = editor.plugins.get(ContextualBalloon);
+            button.fire("execute");
+
+            const form = balloon.visibleView as LinkEmbedTitleFormView;
+            expect(form).toBeInstanceOf(LinkEmbedTitleFormView);
+            // Prefilled with what the pill currently shows, so an untouched save changes nothing.
+            expect(form.title).toBe("T");
+
+            form.title = "My words";
+            form.fire("submit");
+
+            // The form is gone and the title took: the widget re-rendered with the new title.
+            expect(balloon.hasView(form)).toBe(false);
+            const mention = editor.model.document.selection.getSelectedElement();
+            expect(mention?.getAttribute("title")).toBe("My words");
+
+            // Esc dismisses without saving: reopening prefills with the widget's current title.
+            button.fire("execute");
+            expect(form.title).toBe("My words");
+            form.keystrokes.press({ keyCode: 27, preventDefault: () => {}, stopPropagation: () => {} } as unknown as Parameters<typeof form.keystrokes.press>[0]);
+            expect(balloon.hasView(form)).toBe(false);
+        });
+
+        it("linkEmbedEditTitle guards reopening, closes on outside click, and opens blank without a widget", () => {
+            const button = createButton("linkEmbedEditTitle");
+            selectLinkMention();
+            editor.ui.focusTracker.isFocused = true;
+            editor.ui.fire("update");
+
+            const balloon = editor.plugins.get(ContextualBalloon);
+            button.fire("execute");
+            const form = balloon.visibleView as LinkEmbedTitleFormView;
+            expect(form).toBeInstanceOf(LinkEmbedTitleFormView);
+
+            // A second click while the form is open is a no-op, not a second balloon entry.
+            button.fire("execute");
+            expect(balloon.visibleView).toBe(form);
+
+            // A click outside the balloon dismisses the form without saving.
+            document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+            expect(balloon.hasView(form)).toBe(false);
+            expect(editor.model.document.selection.getSelectedElement()?.getAttribute("title")).toBe("T");
+
+            // Fired with no widget under the selection, the form opens blank (the command reports null).
+            setModelData(editor.model, "<paragraph>foo[]bar</paragraph>");
+            button.fire("execute");
+            expect(form.title).toBe("");
         });
     });
 });

@@ -45,7 +45,7 @@
     },
     "widget-missing-parent": "Custom widget does not have mandatory '{{property}}' property defined.\n\nIf this script is meant to be run without a UI element, use '#run=frontendStartup' instead.",
     "open-script-note": "Open script note",
-    "scripting-error": "Custom script error: {{title}}"
+    "scripting-error": "The script note failed to run"
   },
   "add_link": {
     "add_link": "Add link",
@@ -250,8 +250,7 @@
     "drop_or_browse_multiple": "Drag and drop files here, or click to browse",
     "browse_single": "Tap to choose a file",
     "browse_multiple": "Tap to choose files",
-    "selected_one": "{{count}} file selected",
-    "selected_other": "{{count}} files selected"
+    "remove_file": "Remove file"
   },
   "import_provider": {
     "choose_provider": "Choose a service above to import from."
@@ -1411,7 +1410,10 @@
     "setup_create_sample_html": "Create sample note with HTML",
     "setup_sample_created": "A sample note was created as a child note.",
     "disabled_description": "This render notes comes from an external source. To protect you from malicious content, it is not enabled by default. Make sure you trust the source before enabling it.",
-    "disabled_button_enable": "Enable render note"
+    "disabled_button_enable": "Enable render note",
+    "error_title": "The script note failed to run",
+    "error_show_details": "Show details",
+    "error_note_label": "Script note:"
   },
   "web_view_setup": {
     "title": "Create a live view of a webpage directly into Trilium",
@@ -2399,7 +2401,12 @@
   },
   "frontend_script_api": {
     "async_warning": "You're passing an async function to `api.runOnBackend()` which will likely not work as you intended.\\nEither make the function synchronous (by removing `async` keyword), or use `api.runAsyncOnBackendWithManualTransactionHandling()`.",
-    "sync_warning": "You're passing a synchronous function to `api.runAsyncOnBackendWithManualTransactionHandling()`,\\nwhile you should likely use `api.runOnBackend()` instead."
+    "sync_warning": "You're passing a synchronous function to `api.runAsyncOnBackendWithManualTransactionHandling()`,\\nwhile you should likely use `api.runOnBackend()` instead.",
+    "backend_scripting_disabled_title": "Backend scripting is disabled",
+    "backend_scripting_disabled_message": "A script tried to run code on the server, but backend scripting is turned off for security reasons. Enable it in Options → Security if you trust this script.",
+    "backend_scripting_disabled_notes_heading": "Scripts that tried to run backend code:",
+    "backend_scripting_disabled_open_settings": "Open security settings",
+    "backend_scripting_disabled_more_info": "More info"
   },
   "ws": {
     "sync-check-failed": "Sync check failed!",
@@ -2492,7 +2499,11 @@
     "display": "Display",
     "mode_inline": "Inline",
     "mode_card": "Card",
-    "mode_embed": "Embed"
+    "mode_embed": "Embed",
+    "mode_plain": "Plain link",
+    "edit_title": "Edit title",
+    "title_label": "Title",
+    "save": "Save"
   },
   "link_context_menu": {
     "open_note_in_new_tab": "Open note in a new tab",

@@ -109,6 +109,8 @@ To create a link, either:
 *   Type it manually using the syntax described above.
 *   Use the _Add link_ dialog by pressing <kbd>Ctrl</kbd>+<kbd>L</kbd> or typing the `/link` command.
 
+<a class="reference-link" href="Text/Link%20Previews.md">Link Previews</a> are also rendered, but there is no mechanism to insert them automatically as of now, they have to be copied from a <a class="reference-link" href="Text.md">Text</a> note instead.
+
 ### Keyboard shortcuts
 
 The Markdown notes share some of the keyboard shortcuts from <a class="reference-link" href="Text.md">Text</a> notes:
