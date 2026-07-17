@@ -832,6 +832,7 @@ function showBackendScriptingDisabledToast(noteId: string) {
         message: t("frontend_script_api.backend_scripting_disabled_message"),
         notesHeading: t("frontend_script_api.backend_scripting_disabled_notes_heading"),
         noteIds: [ ...backendScriptingAttempts ],
+        wide: true,
         timeout: 60_000,
         onRemove: () => backendScriptingAttempts.clear(),
         buttons: [

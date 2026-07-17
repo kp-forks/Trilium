@@ -18,6 +18,12 @@
     overflow: hidden;
 }
 
+/* Wider variant for toasts with richer content (e.g. a reference-note list); capped to the
+   viewport so it stays within bounds on narrow screens. */
+.toast.wide {
+    --bs-toast-max-width: min(500px, 90vw);
+}
+
 .toast-header {
     background-color: var(--more-accented-background-color) !important;
     color: var(--main-text-color) !important;

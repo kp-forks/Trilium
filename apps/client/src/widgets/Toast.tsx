@@ -16,7 +16,7 @@ export default function ToastContainer() {
     );
 }
 
-function Toast({ id, title, timeout, progress, message, icon, buttons, dismissible, noteIds, notesHeading }: ToastOptionsWithRequiredId) {
+function Toast({ id, title, timeout, progress, message, icon, buttons, dismissible, wide, noteIds, notesHeading }: ToastOptionsWithRequiredId) {
     // Autohide.
     useEffect(() => {
         if (!timeout || timeout <= 0) return;
@@ -40,7 +40,7 @@ function Toast({ id, title, timeout, progress, message, icon, buttons, dismissib
 
     return (
         <div
-            class={clsx("toast", !title && "no-title", dismissible === false && "not-dismissible")}
+            class={clsx("toast", !title && "no-title", dismissible === false && "not-dismissible", wide && "wide")}
             role="alert" aria-live="assertive" aria-atomic="true"
             id={`toast-${id}`}
         >

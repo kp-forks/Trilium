@@ -19,6 +19,11 @@ export interface ToastOptions {
      */
     dismissible?: boolean;
     /**
+     * When `true`, the toast renders with a wider maximum width than the default. Use for toasts with
+     * richer content — e.g. a {@link noteIds} reference-link list — that reads poorly cramped.
+     */
+    wide?: boolean;
+    /**
      * Notes to render as reference links in the toast body — e.g. the notes an action affected or that
      * triggered the message. Each is shown with its icon and title and navigates to the note on click.
      */

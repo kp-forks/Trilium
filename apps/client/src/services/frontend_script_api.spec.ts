@@ -191,7 +191,7 @@ describe("runOnBackend / __runOnBackendInner", () => {
 
         // No server round-trip, and a single deduplicated toast (fixed id) is shown instead of a 500.
         expect(post).not.toHaveBeenCalled();
-        expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled" }));
+        expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled", wide: true }));
 
         // The toast's action opens Security settings in the options modal, not a hoisted tab.
         const triggerCommand = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined as never);
@@ -320,7 +320,7 @@ describe("runAsyncOnBackendWithManualTransactionHandling", () => {
         await expect(makeApi().runAsyncOnBackendWithManualTransactionHandling(async () => {}, [])).rejects.toBeInstanceOf(BackendScriptingDisabledError);
 
         expect(post).not.toHaveBeenCalled();
-        expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled" }));
+        expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled", wide: true }));
     });
 
     it("warns when passed a sync function reference, then runs non-transactionally", async () => {
