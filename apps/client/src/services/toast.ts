@@ -1,6 +1,5 @@
 import { signal } from "@preact/signals";
 
-import froca from "./froca.js";
 import { t } from "./i18n.js";
 import utils, { randomString } from "./utils.js";
 
@@ -9,6 +8,8 @@ export interface ToastOptions {
     icon: string;
     title?: string;
     message: string;
+    /** When `true`, the {@link message} is rendered in a monospace font — e.g. a raw error string. */
+    messageMonospace?: boolean;
     timeout?: number;
     progress?: number;
     /**
@@ -86,14 +87,14 @@ function showErrorTitleAndMessage(title: string, message: string, timeout = 1000
     });
 }
 
-export async function showErrorForScriptNote(noteId: string, message: string) {
-    const note = await froca.getNote(noteId, true);
-
+export function showErrorForScriptNote(noteId: string, message: string, opts?: { monospace?: boolean }) {
     showPersistent({
         id: `custom-widget-failure-${noteId}`,
-        title: t("toast.scripting-error", { title: note?.title ?? "" }),
+        title: t("toast.scripting-error"),
         icon: "bx bx-error-circle",
         message,
+        // Raw error strings are shown verbatim, so render them monospace.
+        messageMonospace: opts?.monospace,
         // The script note is shown as a reference link (icon + title, click to navigate) rather
         // than a bespoke "open note" button; ctrl/middle-click still opens it in a new tab.
         noteIds: [ noteId ],

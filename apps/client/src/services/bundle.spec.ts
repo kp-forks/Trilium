@@ -44,7 +44,7 @@ describe("executeBundle / executeBundleWithoutErrorHandling", () => {
 
     it("executeBundle swallows errors and reports them via showErrorForScriptNote + logError", async () => {
         const id = buildNote({ title: "Throwing note" }).noteId;
-        const spy = vi.spyOn(toast, "showErrorForScriptNote").mockResolvedValue(undefined);
+        const spy = vi.spyOn(toast, "showErrorForScriptNote").mockReturnValue(undefined);
         const bundle: Bundle = {
             script: `throw new Error("kaboom");`,
             html: "",
@@ -122,7 +122,7 @@ describe("WidgetsByParent", () => {
     let errorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-        errorSpy = vi.spyOn(toast, "showErrorForScriptNote").mockResolvedValue(undefined);
+        errorSpy = vi.spyOn(toast, "showErrorForScriptNote").mockReturnValue(undefined);
         errorSpy.mockClear();
     });
 
@@ -270,7 +270,7 @@ describe("getWidgetBundlesByParent (default export)", () => {
 
     it("reports a per-bundle error when executing a single bundle throws", async () => {
         const id = buildNote({ title: "Bad widget note" }).noteId;
-        const errorSpy = vi.spyOn(toast, "showErrorForScriptNote").mockResolvedValue(undefined);
+        const errorSpy = vi.spyOn(toast, "showErrorForScriptNote").mockReturnValue(undefined);
         // executeBundleWithoutErrorHandling needs the note to resolve in froca; force the per-bundle
         // try/catch by making add() throw on a widget that has neither parent nor parentWidget while
         // also having a falsy _noteId is not enough — instead throw during execution by referencing
@@ -331,7 +331,7 @@ function getBundle(script: string) {
             `try {`,
             `${script}`,
             `;`,
-            `} catch (e) { throw new Error(\"Load of script note \\\"Client\\\" (${id}) failed with: \" + e.message); }`,
+            `} catch (e) { throw new Error(\"Load of script note \\\"Client\\\" (${id}) failed with: \" + e.message, { cause: e }); }`,
             `for (const exportKey in exports) module.exports[exportKey] = exports[exportKey];`,
             `return module.exports;`,
             `}).call({}, {}, apiContext.modules['${id}'], apiContext.require([]), apiContext.apis['${id}']));`,

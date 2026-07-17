@@ -1,7 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { buildNote } from "../test/easy-froca";
-
 const openInNewTab = vi.fn();
 vi.mock("../components/app_context.js", () => ({
     default: {
@@ -114,37 +112,27 @@ describe("toast store", () => {
         expect(toasts.value).toHaveLength(0);
     });
 
-    it("showErrorForScriptNote shows the script note as a reference link with a generic error icon", async () => {
-        const note = buildNote({ title: "My Script" });
+    it("showErrorForScriptNote shows the script note as a reference link with a generic error icon", () => {
+        showErrorForScriptNote("scriptNote1", "it failed");
 
-        await showErrorForScriptNote(note.noteId, "it failed");
-
-        const created = toasts.value.find(t => t.id === `custom-widget-failure-${note.noteId}`);
+        const created = toasts.value.find(t => t.id === "custom-widget-failure-scriptNote1");
         expect(created).toMatchObject({
             icon: "bx bx-error-circle",
             message: "it failed",
             timeout: 15000,
             // The script note is attached as a reference link instead of a bespoke open-note button.
-            noteIds: [ note.noteId ]
+            noteIds: [ "scriptNote1" ]
         });
         expect(created?.buttons).toBeUndefined();
     });
 
-    it("showErrorForScriptNote still renders when the note cannot be found", async () => {
-        const froca = (await import("./froca.js")).default;
-        const original = froca.getNote;
-        froca.getNote = vi.fn(async () => null) as typeof froca.getNote;
+    it("showErrorForScriptNote renders the message monospace when requested", () => {
+        showErrorForScriptNote("scriptNote2", "api.logg is not a function", { monospace: true });
 
-        try {
-            await showErrorForScriptNote("missing-note", "nope");
-            const created = toasts.value.find(t => t.id === "custom-widget-failure-missing-note");
-            expect(created).toMatchObject({
-                icon: "bx bx-error-circle",
-                message: "nope",
-                noteIds: [ "missing-note" ]
-            });
-        } finally {
-            froca.getNote = original;
-        }
+        const created = toasts.value.find(t => t.id === "custom-widget-failure-scriptNote2");
+        expect(created).toMatchObject({
+            message: "api.logg is not a function",
+            messageMonospace: true
+        });
     });
 });

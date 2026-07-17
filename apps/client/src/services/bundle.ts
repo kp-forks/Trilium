@@ -50,7 +50,7 @@ export async function executeBundle(bundle: Bundle, originEntity?: Entity | null
     try {
         return await executeBundleWithoutErrorHandling(bundle, originEntity, $container);
     } catch (e: unknown) {
-        showErrorForScriptNote(bundle.noteId, t("toast.bundle-error.message", { message: getErrorMessage(e) }));
+        showErrorForScriptNote(bundle.noteId, rootCauseMessage(e), { monospace: true });
         logError("Widget initialization failed: ", e);
     }
 }
@@ -145,7 +145,7 @@ async function getWidgetBundlesByParent() {
                 }
             } catch (e: any) {
                 const noteId = bundle.noteId;
-                showErrorForScriptNote(noteId, t("toast.bundle-error.message", { message: e.message }));
+                showErrorForScriptNote(noteId, rootCauseMessage(e), { monospace: true });
 
                 logError("Widget initialization failed: ", e);
                 continue;
@@ -169,3 +169,19 @@ export default {
     executeStartupBundles,
     getWidgetBundlesByParent
 };
+
+/**
+ * The script bundler wraps each script note's thrown errors as
+ * `Load of script note "<title>" (<noteId>) failed with: <inner>` and attaches the original error
+ * as the `cause` (see the bundle template in trilium-core's `script.ts`). That prefix is useful in
+ * backend logs but redundant in the UI, where the failing note is already shown as a reference link,
+ * so we surface the underlying error instead — walking the `cause` chain to the bottom also unwraps
+ * the nested errors produced when a `require()`d module fails.
+ */
+function rootCauseMessage(e: unknown): string {
+    let error = e;
+    while (error instanceof Error && error.cause !== undefined) {
+        error = error.cause;
+    }
+    return error instanceof Error ? error.message : String(error);
+}

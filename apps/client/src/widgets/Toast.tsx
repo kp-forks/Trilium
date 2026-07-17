@@ -16,7 +16,7 @@ export default function ToastContainer() {
     );
 }
 
-function Toast({ id, title, timeout, progress, message, icon, buttons, dismissible, wide, noteIds, notesHeading }: ToastOptionsWithRequiredId) {
+function Toast({ id, title, timeout, progress, message, messageMonospace, icon, buttons, dismissible, wide, noteIds, notesHeading }: ToastOptionsWithRequiredId) {
     // Autohide.
     useEffect(() => {
         if (!timeout || timeout <= 0) return;
@@ -53,12 +53,12 @@ function Toast({ id, title, timeout, progress, message, icon, buttons, dismissib
                         </strong>
                         {closeButton}
                     </div>
-                    <div className="toast-body">{message}</div>
+                    <div className={clsx("toast-body", messageMonospace && "monospace")}>{message}</div>
                 </>
             ) : (
                 <div class="toast-main-row">
                     <div class="toast-icon">{toastIcon}</div>
-                    <div className="toast-body">{message}</div>
+                    <div className={clsx("toast-body", messageMonospace && "monospace")}>{message}</div>
                     {closeButton && <div class="toast-close">{closeButton}</div>}
                 </div>
             )}

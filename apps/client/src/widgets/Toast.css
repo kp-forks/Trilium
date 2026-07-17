@@ -35,6 +35,12 @@
     overflow: hidden;
 }
 
+.toast-body.monospace {
+    font-family: var(--monospace-font-family);
+    font-size: var(--monospace-font-size);
+    overflow-wrap: anywhere;
+}
+
 .toast.no-title .toast-main-row {
     display: flex;
     flex-direction: row;
