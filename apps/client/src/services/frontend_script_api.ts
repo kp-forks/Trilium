@@ -834,11 +834,16 @@ export class BackendScriptingDisabledError extends Error {
     }
 }
 
-// The scripts that attempted a backend call while it was disabled, accumulated so the single
-// deduplicated toast can list all of them as reference links. Cleared when the toast is removed.
+// The notes that attempted to run backend code while it was disabled, accumulated so the single
+// deduplicated toast can list them all as reference links. Cleared when the toast is removed.
 const backendScriptingAttempts = new Set<string>();
 
-function showBackendScriptingDisabledToast(noteId: string) {
+/**
+ * Shows the single deduplicated "backend scripting is disabled" toast, adding the given note to the
+ * list of scripts that tried to run backend code. Exported so any backend-execution entry point can
+ * reuse it — a frontend `runOnBackend()` call, or executing a backend code note directly.
+ */
+export function showBackendScriptingDisabledToast(noteId: string) {
     backendScriptingAttempts.add(noteId);
     toastService.showPersistent({
         id: "backend-scripting-disabled",
