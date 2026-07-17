@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import $ from "jquery";
 
 // --- Mocks (hoisted above imports) ---
@@ -142,6 +142,64 @@ describe("dialog service", () => {
 
             // Should not throw.
             expect(() => $dialog.trigger("hidden.bs.modal")).not.toThrow();
+        });
+    });
+
+    describe("lifting dialogs above a stacked popup", () => {
+        afterEach(() => {
+            document.body.className = "";
+            document.body.innerHTML = "";
+        });
+
+        function openStackedPopup(zIndex = "1100") {
+            const popup = document.createElement("div");
+            popup.className = "modal show tree-popup-editor-dialog";
+            popup.style.zIndex = zIndex;
+            document.body.appendChild(popup);
+            return popup;
+        }
+
+        it("lifts the dialog above the stacked popup and raises its backdrop just below it", async () => {
+            document.body.classList.add("tree-popup-stacked");
+            openStackedPopup("1100");
+            // The backdrop Bootstrap would append during show() (show is mocked, so pre-place it).
+            const backdrop = document.createElement("div");
+            backdrop.className = "modal-backdrop";
+            document.body.appendChild(backdrop);
+
+            const $dialog = makeDialog().appendTo(document.body);
+            await openDialog($dialog, true);
+
+            expect($dialog[0].style.zIndex).toBe("1110");
+            expect(backdrop.style.zIndex).toBe("1109");
+        });
+
+        it("does not lift when no popup is stacked", async () => {
+            openStackedPopup("999"); // popup present but body lacks the -stacked class (non-stacked case)
+
+            const $dialog = makeDialog().appendTo(document.body);
+            await openDialog($dialog, true);
+
+            expect($dialog[0].style.zIndex).toBe("");
+        });
+
+        it("never lifts a self-managed popup dialog, even while another popup is stacked", async () => {
+            document.body.classList.add("tree-popup-stacked");
+            openStackedPopup("1100");
+
+            const $popup = $("<div class='modal tree-popup-editor-dialog'></div>").appendTo(document.body);
+            await openDialog($popup, false);
+
+            expect($popup[0].style.zIndex).toBe("");
+        });
+
+        it("clears a stale inline z-index when reopened without a stacked popup", async () => {
+            const $dialog = makeDialog().appendTo(document.body);
+            $dialog[0].style.zIndex = "1110"; // leftover from a previous stacked open
+
+            await openDialog($dialog, true);
+
+            expect($dialog[0].style.zIndex).toBe("");
         });
     });
 

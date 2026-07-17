@@ -14,7 +14,21 @@ export async function openDialog($dialog: JQuery<HTMLElement>, closeActDialog = 
     }
 
     saveFocusedElement();
+
+    // Lift this dialog above a stacked quick-edit / tree popup if one is open (see raiseAboveStackedPopup).
+    const bumpedZIndex = raiseAboveStackedPopup($dialog[0]);
+
     Modal.getOrCreateInstance($dialog[0], config).show();
+
+    // Bootstrap appends the backdrop during show(); raise it alongside the lifted dialog so the popup
+    // behind is dimmed and click-blocked rather than remaining interactive.
+    if (bumpedZIndex !== null) {
+        const backdrops = document.querySelectorAll<HTMLElement>(".modal-backdrop");
+        const ownBackdrop = backdrops[backdrops.length - 1];
+        if (ownBackdrop) {
+            ownBackdrop.style.zIndex = String(bumpedZIndex - 1);
+        }
+    }
 
     $dialog.on("hidden.bs.modal", () => {
         const $autocompleteEl = $(".aa-input");
@@ -37,6 +51,38 @@ export function closeActiveDialog() {
         Modal.getOrCreateInstance(glob.activeDialog[0]).hide();
         glob.activeDialog = null;
     }
+}
+
+/** Self-managing popups (quick-edit, tree popup) set their own z-index via CSS; never lift them. */
+const SELF_MANAGED_POPUP_SELECTOR = ".popup-editor-dialog, .tree-popup-editor-dialog";
+
+/**
+ * When a quick-edit / tree popup is stacked on top of another modal it sits at z-index 1100 — above
+ * the standard dialog layer (1055). A dialog opened from within it (delete/confirm/prompt/…) would
+ * then render *behind* the popup. Detect that case and give the incoming dialog an inline z-index
+ * just above the current top-most modal so it clears the popup.
+ *
+ * Always clears any prior inline z-index first, so a dialog reused later in a non-stacked context
+ * returns to the default layer. Returns the assigned z-index (for the caller to match the backdrop),
+ * or `null` when no lift was applied.
+ */
+function raiseAboveStackedPopup(dialogEl: HTMLElement): number | null {
+    // Reset any bump left over from a previous stacked open.
+    dialogEl.style.zIndex = "";
+
+    const hasStackedPopup = document.body.classList.contains("popup-editor-stacked")
+        || document.body.classList.contains("tree-popup-stacked");
+    if (!hasStackedPopup || dialogEl.matches(SELF_MANAGED_POPUP_SELECTOR)) {
+        return null;
+    }
+
+    const others = Array.from(document.querySelectorAll<HTMLElement>(".modal.show"))
+        .filter((modal) => modal !== dialogEl);
+    const maxZIndex = others.reduce((max, modal) => Math.max(max, parseInt(getComputedStyle(modal).zIndex, 10) || 0), 0);
+
+    const zIndex = maxZIndex + 10;
+    dialogEl.style.zIndex = String(zIndex);
+    return zIndex;
 }
 
 async function info(message: MessageType, extraProps?: InfoExtraProps) {
