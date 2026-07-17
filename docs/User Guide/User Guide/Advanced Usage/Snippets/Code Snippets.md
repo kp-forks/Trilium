@@ -1,7 +1,7 @@
 # Code Snippets
 Code Snippets are closely related to <a class="reference-link" href="../Templates.md">Templates</a>, but instead of defining the content of an entire note, a snippet is a reusable piece of code that can easily be inserted into a <a class="reference-link" href="../../Note%20Types/Code.md">Code</a> note.
 
-## Creating a Markdown snippet
+## Creating a Code snippet
 
 In the <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/UI%20Elements/Note%20Tree.md">Note Tree</a>: 
 
