@@ -239,8 +239,24 @@ Concrete examples:
 - `showPromptDialog(msg)` - prompt dialog (returns user input)
 
 ### Backend integration
+
+Backend script execution is **disabled by default** (a security setting, since backend scripts have full server access). When it is off, `runOnBackend` and `runAsyncOnBackendWithManualTransactionHandling` reject with *"Backend script execution is disabled"*. **Prefer doing the work on the frontend** whenever possible (most `api.*` note/search/date operations are available on the frontend too). When the backend is genuinely required, guard the call with the check below and tell the user to enable it in **Options → Security**.
+
+- `isBackendScriptingEnabled()` - returns whether backend script execution is enabled (the `[Security] backendScriptingEnabled` config toggle). Check this before calling `runOnBackend` / `runAsyncOnBackendWithManualTransactionHandling` so the script can degrade gracefully instead of throwing.
+- `isSqlConsoleEnabled()` - returns whether the SQL console is enabled (the `[Security] sqlConsoleEnabled` config toggle). Check this before running raw SQL on the backend (`api.sql.*`).
 - `runOnBackend(func, params)` - execute a function on the backend. The function **MUST be synchronous** — do NOT pass an `async` function. `runOnBackend` wraps the call in a SQL transaction, which does not support async; passing an `async` function triggers the warning *"You're passing an async function to `api.runOnBackend()` which will likely not work as you intended"* and the transaction will not behave correctly.
 - `runAsyncOnBackendWithManualTransactionHandling(func, params)` - use this instead when the backend function genuinely needs to be `async` (e.g. it `await`s a `fetch()`). Automatic transaction management is disabled, so wrap any DB writes in `api.transactional(...)` yourself inside the function.
+
+```jsx
+// Guard backend work so a disabled instance shows a friendly message instead of an error toast
+import { isBackendScriptingEnabled, runOnBackend, showError } from "trilium:api";
+
+if (!isBackendScriptingEnabled()) {
+    showError("This feature needs backend scripting — enable it in Options → Security.");
+    return;
+}
+const title = await runOnBackend((noteId) => api.getNote(noteId).title, [noteId]);
+```
 
 ```jsx
 // ✅ Synchronous backend work — use runOnBackend
