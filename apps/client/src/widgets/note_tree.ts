@@ -234,7 +234,12 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
             } else if (target.classList.contains("add-note-button")) {
                 const node = $.ui.fancytree.getNode(e as unknown as Event);
                 const parentNotePath = treeService.getNotePath(node);
-                noteCreateService.createNote(parentNotePath, { isProtected: node.data.isProtected });
+                noteCreateService.createNote(parentNotePath, {
+                    isProtected: node.data.isProtected,
+                    // Activate in this tree's own context — in popup dialogs (e.g. the task states
+                    // tree popup) it is not the tab manager's active context.
+                    noteContext: this.noteContext
+                });
             } else if (target.classList.contains("enter-workspace-button")) {
                 const node = $.ui.fancytree.getNode(e as unknown as Event);
                 this.triggerCommand("hoistNote", { noteId: node.data.noteId });
