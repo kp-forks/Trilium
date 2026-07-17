@@ -595,6 +595,14 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
     }
 
     this.__runOnBackendInner = async (func, params, transactional) => {
+        // Short-circuit when backend scripting is disabled: skip the request entirely so the
+        // server never returns a 500, show a single deduplicated toast (fixed id) instead of one
+        // generic HTTP-error toast per failing script, and throw a typed error callers can detect.
+        if (!options.is("backendScriptingEnabled")) {
+            showBackendScriptingDisabledToast();
+            throw new BackendScriptingDisabledError();
+        }
+
         if (typeof func === "function") {
             func = func.toString();
         }
@@ -798,6 +806,37 @@ function FrontendScriptApi(this: Api, startNote: FNote, currentNote: FNote, orig
 export default FrontendScriptApi as any as {
     new(startNote: FNote, currentNote: FNote, originEntity: Entity | null, $container: JQuery<HTMLElement> | null): Api;
 };
+
+/**
+ * Thrown by {@link Api.runOnBackend} / {@link Api.runAsyncOnBackendWithManualTransactionHandling}
+ * when backend scripting is disabled on the server. The bundle executor recognizes this so it can
+ * skip its per-note error toast — the single deduplicated toast raised alongside it is enough.
+ */
+export class BackendScriptingDisabledError extends Error {
+    constructor() {
+        super("Backend script execution is disabled.");
+        this.name = "BackendScriptingDisabledError";
+    }
+}
+
+function showBackendScriptingDisabledToast() {
+    toastService.showPersistent({
+        id: "backend-scripting-disabled",
+        icon: "bx bx-code-block",
+        title: t("frontend_script_api.backend_scripting_disabled_title"),
+        message: t("frontend_script_api.backend_scripting_disabled_message"),
+        timeout: 15_000,
+        buttons: [
+            {
+                text: t("frontend_script_api.backend_scripting_disabled_open_settings"),
+                onClick: ({ dismissToast }) => {
+                    appContext.tabManager.openInNewTab("_optionsSecurity", "_hidden", true);
+                    dismissToast();
+                }
+            }
+        ]
+    });
+}
 
 // --- Drift guards -----------------------------------------------------------
 // The public script API surface lives in @triliumnext/commons (self-contained so

@@ -5,7 +5,7 @@ import type FNote from "../entities/fnote.js";
 import { buildNote } from "../test/easy-froca.js";
 import dateNotesService from "./date_notes.js";
 import dialogService from "./dialog.js";
-import FrontendScriptApi, { type Api, type Entity } from "./frontend_script_api.js";
+import FrontendScriptApi, { BackendScriptingDisabledError, type Api, type Entity } from "./frontend_script_api.js";
 import { preactAPI } from "./frontend_script_api_preact.js";
 import froca from "./froca.js";
 import linkService from "./link.js";
@@ -176,7 +176,23 @@ describe("addButtonToToolbar", () => {
 });
 
 describe("runOnBackend / __runOnBackendInner", () => {
-    beforeEach(() => vi.clearAllMocks());
+    beforeEach(() => {
+        vi.clearAllMocks();
+        // Backend scripting enabled by default; the disabled case is covered explicitly below.
+        vi.spyOn(options, "is").mockReturnValue(true);
+    });
+
+    it("short-circuits without posting and throws when backend scripting is disabled", async () => {
+        vi.spyOn(options, "is").mockReturnValue(false);
+        const post = vi.spyOn(server, "post");
+        const showPersistent = vi.spyOn(toastService, "showPersistent").mockImplementation(() => {});
+
+        await expect(makeApi().runOnBackend(() => {}, [])).rejects.toBeInstanceOf(BackendScriptingDisabledError);
+
+        // No server round-trip, and a single deduplicated toast (fixed id) is shown instead of a 500.
+        expect(post).not.toHaveBeenCalled();
+        expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled" }));
+    });
 
     it("serializes a sync function, posts it, waits for sync and returns the result", async () => {
         const post = vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 42 } as never);
@@ -248,7 +264,21 @@ describe("runOnBackend / __runOnBackendInner", () => {
 });
 
 describe("runAsyncOnBackendWithManualTransactionHandling", () => {
-    beforeEach(() => vi.clearAllMocks());
+    beforeEach(() => {
+        vi.clearAllMocks();
+        vi.spyOn(options, "is").mockReturnValue(true);
+    });
+
+    it("short-circuits without posting and throws when backend scripting is disabled", async () => {
+        vi.spyOn(options, "is").mockReturnValue(false);
+        const post = vi.spyOn(server, "post");
+        const showPersistent = vi.spyOn(toastService, "showPersistent").mockImplementation(() => {});
+
+        await expect(makeApi().runAsyncOnBackendWithManualTransactionHandling(async () => {}, [])).rejects.toBeInstanceOf(BackendScriptingDisabledError);
+
+        expect(post).not.toHaveBeenCalled();
+        expect(showPersistent).toHaveBeenCalledWith(expect.objectContaining({ id: "backend-scripting-disabled" }));
+    });
 
     it("warns when passed a sync function reference, then runs non-transactionally", async () => {
         const post = vi.spyOn(server, "post").mockResolvedValue({ success: true, executionResult: 7 } as never);
