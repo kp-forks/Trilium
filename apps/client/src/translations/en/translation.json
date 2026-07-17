@@ -1413,7 +1413,8 @@
     "disabled_description": "This render notes comes from an external source. To protect you from malicious content, it is not enabled by default. Make sure you trust the source before enabling it.",
     "disabled_button_enable": "Enable render note",
     "error_title": "The script note failed to run",
-    "error_show_details": "Show details"
+    "error_show_details": "Show details",
+    "error_note_label": "Script note:"
   },
   "web_view_setup": {
     "title": "Create a live view of a webpage directly into Trilium",

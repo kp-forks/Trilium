@@ -48,12 +48,12 @@ export default function Render(props: TypeWidgetProps) {
 
 function RenderContent({ note, noteContext, ntxId }: TypeWidgetProps) {
     const contentRef = useRef<HTMLDivElement>(null);
-    const [ error, setError ] = useState<unknown | null>(null);
+    const [ error, setError ] = useState<{ error: unknown; noteId?: string } | null>(null);
 
     function refresh() {
         if (!contentRef) return;
         setError(null);
-        render.render(note, refToJQuerySelector(contentRef), setError);
+        render.render(note, refToJQuerySelector(contentRef), (e, noteId) => setError({ error: e, noteId }));
     }
 
     useEffect(refresh, [ note ]);
@@ -85,7 +85,7 @@ function RenderContent({ note, noteContext, ntxId }: TypeWidgetProps) {
 
     return (
         <>
-            {error && <RenderErrorCard error={error} />}
+            {error && <RenderErrorCard error={error.error} noteId={error.noteId} />}
             <div ref={contentRef} className="note-detail-render-content" />
         </>
     );

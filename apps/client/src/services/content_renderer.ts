@@ -110,10 +110,10 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
     } else if (type === "render" && entity instanceof FNote) {
         const $content = $("<div>");
 
-        await renderService.render(entity, $content, (e) => {
+        await renderService.render(entity, $content, (e, noteId) => {
             const container = $content.empty().get(0);
             if (container) {
-                render(h(RenderErrorCard, { error: e }), container);
+                render(h(RenderErrorCard, { error: e, noteId }), container);
             }
         });
 

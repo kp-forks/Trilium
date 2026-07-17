@@ -3,12 +3,15 @@ import "./RenderErrorCard.css";
 import { t } from "../../services/i18n";
 import { getErrorMessage } from "../../services/utils";
 import { ExtendedAdmonition } from "./Admonition";
+import NoteLink from "./NoteLink";
 
 /**
  * The error card shown when a render/script note fails to run. Shared by the render-note
  * type widget and the (jQuery-based) content renderer so both surfaces look identical.
+ *
+ * @param noteId the script note that failed, linked below the message so the user can jump to it.
  */
-export default function RenderErrorCard({ error }: { error: unknown }) {
+export default function RenderErrorCard({ error, noteId }: { error: unknown; noteId?: string }) {
     const message = typeof error === "string" ? error : getErrorMessage(error);
     const { summary, details } = splitRenderError(message);
 
@@ -22,6 +25,12 @@ export default function RenderErrorCard({ error }: { error: unknown }) {
             details={details && <pre>{details}</pre>}
         >
             <div className="render-error-message">{summary}</div>
+            {noteId && (
+                <div className="render-error-note">
+                    <span className="render-error-note-label">{t("render.error_note_label")}</span>
+                    <NoteLink notePath={noteId} showNoteIcon noPreview />
+                </div>
+            )}
         </ExtendedAdmonition>
     );
 }
