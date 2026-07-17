@@ -75,5 +75,5 @@ When accessing a <a class="reference-link" href="../../Installation%20%26%20Set
 ## Known limitations
 
 *   The Embed display mode currently only supports YouTube. Other video and media platforms fall back to a Card preview.
-*   Pages that block automated fetches or that don't expose OpenGraph metadata may produce a minimal preview (hostname only).
+*   Pages that block automated fetches may produce a minimal preview (hostname only).
 *   Link previews require the Trilium server to reach the target URL, so they won't generate previews for pages on networks the server can't see.

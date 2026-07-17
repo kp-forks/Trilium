@@ -89,7 +89,7 @@ For readability purposes on wider screens, the width of text notes is limited vi
 
 ## Converting to a Markdown note
 
-Text notes can be converted to <a class="reference-link" href="Markdown.md">Markdown</a> notes. See <a class="reference-link" href="Converting%20between%20note%20types.md">Converting Between Note Types</a>.
+Text notes can be converted to <a class="reference-link" href="Markdown.md">Markdown</a> notes. See <a class="reference-link" href="Converting%20between%20note%20types.md">Converting between note types</a>.
 
 ## Technical details
 

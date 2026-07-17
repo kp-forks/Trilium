@@ -10,7 +10,7 @@
 
 In Trilium, to-do items aren't limited to a simple "done" or "not done." Tasks can also be marked as in progress, under consideration, or cancelled, giving a more accurate picture of where things actually stand. And when these built-in states don't fit a particular workflow, custom ones can be created as needed.
 
-Right-click the checkbox and select the desired state. Alternatively, press <kbd spellcheck="false">Ctrl</kbd>+<kbd spellcheck="false">Shift</kbd>+<kbd spellcheck="false">Enter </kbd> to cycle through the task states. Tapping or left-clicking the checkbox will always toggle between "None" and "Done".
+Right-click the checkbox and select the desired state. Alternatively, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter </kbd> to cycle through the task states. Tapping or left-clicking the checkbox will always toggle between "None" and "Done".
 
 Task states are fully preserved when converting between <a class="reference-link" href="../Text.md">Text</a> and <a class="reference-link" href="../Markdown.md">Markdown</a> notes, in both directions.
 
