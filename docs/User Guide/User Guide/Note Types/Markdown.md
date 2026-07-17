@@ -27,7 +27,6 @@ The following features are supported by Trilium's Markdown format and will show 
 *   All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).
 *   Basic HTML is also supported (e.g. collapsible blocks using `<details>` and `<summary>`).
 *   Code blocks with syntax highlight.
-    
     *   The language must be specified for syntax highlight to be applied (e.g. ` ```js `).
     *   Code blocks will respect the text wrapping from the <a class="reference-link" href="Text.md">Text</a> section in <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a>.
 *   <a class="reference-link" href="Text/Block%20quotes%20%26%20admonitions.md">Block quotes &amp; admonitions</a>
@@ -87,6 +86,8 @@ To create a link, either:
 
 *   Type it manually using the syntax described above.
 *   Use the _Add link_ dialog by pressing <kbd>Ctrl</kbd>+<kbd>L</kbd> or typing the `/link` command.
+
+<a class="reference-link" href="Text/Link%20Previews.md">Link Previews</a> are also rendered, but there is no mechanism to insert them automatically as of now, they have to be copied from a <a class="reference-link" href="Text.md">Text</a> note instead.
 
 ### Keyboard shortcuts
 

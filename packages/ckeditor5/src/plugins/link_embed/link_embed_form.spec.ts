@@ -1,10 +1,10 @@
 import { BlockQuote, ClassicEditor, ContextualBalloon, Essentials, Link, Paragraph, Undo, _setModelData as setModelData } from "ckeditor5";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { createTestEditor } from "../../test/editor-kit.js";
-import { installGlobMock } from "../../test/globals-test-kit.js";
+import { createTestEditor } from "../../../test/editor-kit.js";
+import { installGlobMock } from "../../../test/globals-test-kit.js";
+import LinkEmbed, { LINK_EMBED_COMMAND } from "./link_embed.js";
 import LinkEmbedFormView from "./link_embed_form.js";
-import LinkEmbed, { LINK_EMBED_COMMAND } from "./linkembed.js";
 
 const META = {
     url: "https://example.com/",
@@ -244,6 +244,22 @@ describe("LinkEmbedFormView", () => {
         expect(isInBalloon(form)).toBe(false);
         expect(fetchLinkMetadata).not.toHaveBeenCalled();
         expect(editor.getData()).toBe(before);
+    });
+
+    it("follows the URL again after a dismissal, forgetting the earlier mode pick", () => {
+        const form = openForm();
+        typeUrl(form, "https://example.com/article");
+        form.modeDropdownView.fire("execute", { source: { _displayMode: "inline" } });
+        form.mode = "inline";
+
+        // Dismiss without inserting: the pick was for that URL only.
+        form.keystrokes.press({ keyCode: 27, preventDefault: () => {}, stopPropagation: () => {} } as unknown as KeyboardEvent);
+        expect(isInBalloon(form)).toBe(false);
+
+        // Reopened with an embeddable URL, the mode follows the URL again instead of the old pick.
+        openForm();
+        typeUrl(form, "https://youtube.com/watch?v=abc12345678");
+        expect(form.mode).toBe("embed");
     });
 
     it("closes when the user clicks away from it", () => {
