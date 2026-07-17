@@ -8,7 +8,6 @@ import FAttachment from "../entities/fattachment.js";
 import FNote from "../entities/fnote.js";
 import imageContextMenuService from "../menus/image_context_menu.js";
 import { t } from "../services/i18n.js";
-import RenderErrorCard from "../widgets/react/RenderErrorCard.js";
 import { type MediaEnvironment, showsFileActions } from "../widgets/type_widgets/file/media_environment.js";
 import type { LlmChatContent, StoredMessage } from "../widgets/type_widgets/llm_chat/llm_chat_types.js";
 import renderText, { postProcessRichContent, renderChildrenList } from "./content_renderer_text.js";
@@ -111,10 +110,7 @@ export async function getRenderedContent(this: {} | { ctx: string }, entity: FNo
         const $content = $("<div>");
 
         await renderService.render(entity, $content, (e, noteId) => {
-            const container = $content.empty().get(0);
-            if (container) {
-                render(h(RenderErrorCard, { error: e, noteId }), container);
-            }
+            showRenderError($content, e, noteId).catch((cardError) => console.error("Failed to render the script error card:", cardError));
         });
 
         $renderedContent.append($content);
@@ -586,6 +582,20 @@ async function renderCollection(note: FNote, $renderedContent: JQuery<HTMLElemen
         }), container);
     }
     $renderedContent.append($container);
+}
+
+/**
+ * Replaces the failed render note's content with the shared error card. The card is imported
+ * lazily: this module is loaded early (via the app-context graph), and an eager import of
+ * `RenderErrorCard` drags in the react widget tree (`Admonition` → `Collapsible` → `hooks`),
+ * which circles back into `basic_widget` before it finishes initializing.
+ */
+async function showRenderError($content: JQuery<HTMLElement>, error: unknown, noteId?: string) {
+    const { default: RenderErrorCard } = await import("../widgets/react/RenderErrorCard.js");
+    const container = $content.empty().get(0);
+    if (container) {
+        render(h(RenderErrorCard, { error, noteId }), container);
+    }
 }
 
 function getRenderingType(entity: FNote | FAttachment) {

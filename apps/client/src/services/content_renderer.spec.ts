@@ -394,6 +394,8 @@ describe("getRenderedContent render / doc / protectedSession / mermaid", () => {
         });
         const note = buildNote({ title: "RErr", type: "render" });
         const { $renderedContent } = await getRenderedContent(note);
+        // The error card component itself is imported (and mounted) asynchronously.
+        await vi.dynamicImportSettled();
         const $err = $renderedContent.find(".admonition.caution.render-error-card");
         expect($err.length).toBe(1);
         expect($err.find(".render-error-message").text()).toContain("kaput");
@@ -405,6 +407,7 @@ describe("getRenderedContent render / doc / protectedSession / mermaid", () => {
         });
         const note = buildNote({ title: "RErrStr", type: "render" });
         const { $renderedContent } = await getRenderedContent(note);
+        await vi.dynamicImportSettled();
         expect($renderedContent.find(".render-error-card .render-error-message").text()).toBe("plain-string-error");
     });
 
