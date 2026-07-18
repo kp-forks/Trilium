@@ -29,7 +29,8 @@ export default function TreePopupEditor() {
     useTriliumEvent("openInTreePopup", async ({ noteIdOrPath, hoistedNoteId }) => {
         // Fresh context per open so the sidebar tree is hoisted to the requested subtree.
         const newContext = new NoteContext("_tree-popup", hoistedNoteId);
-        setStacked(!!document.querySelector(".modal.show"));
+        // Exclude our own modal so re-opening while already shown doesn't count as stacking.
+        setStacked(Array.from(document.querySelectorAll(".modal.show")).some((modal) => modal !== modalRef.current));
         await newContext.setNote(noteIdOrPath, { keepActiveDialog: true });
 
         // Events triggered at note-context level (e.g. the save indicator) would not work since this

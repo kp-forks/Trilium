@@ -138,14 +138,14 @@ describe("getTaskStateDefinitions", () => {
         ]);
 
         // Its button opens the task-states config popup and dismisses the toast.
-        const triggerCommand = vi.fn();
-        (appContext as unknown as { triggerCommand: typeof triggerCommand }).triggerCommand = triggerCommand;
+        const triggerCommand = vi.spyOn(appContext, "triggerCommand").mockImplementation(() => undefined);
         const dismissToast = vi.fn();
         options.buttons?.[0].onClick({ dismissToast });
         expect(triggerCommand).toHaveBeenCalledWith("openInTreePopup", expect.objectContaining({
             noteIdOrPath: TASK_STATES_CONTAINER_ID
         }));
         expect(dismissToast).toHaveBeenCalled();
+        triggerCommand.mockRestore();
 
         // An unchanged error set is not re-reported...
         await getTaskStateDefinitions();
@@ -166,8 +166,7 @@ describe("getTaskStateDefinitions", () => {
 
 describe("openCustomTaskStateConfig", () => {
     it("opens the task-states container hoisted in the tree popup", () => {
-        const triggerCommand = vi.fn();
-        (appContext as unknown as { triggerCommand: typeof triggerCommand }).triggerCommand = triggerCommand;
+        const triggerCommand = vi.spyOn(appContext, "triggerCommand").mockImplementation(() => undefined);
 
         openCustomTaskStateConfig();
 
@@ -175,5 +174,6 @@ describe("openCustomTaskStateConfig", () => {
             noteIdOrPath: TASK_STATES_CONTAINER_ID,
             hoistedNoteId: TASK_STATES_CONTAINER_ID
         });
+        triggerCommand.mockRestore();
     });
 });
