@@ -262,6 +262,21 @@ async function createDatabaseForSync(options: OptionRow[], syncServerHost = "", 
     const { initNotSyncedOptions } = await import("./options_init.js");
 
     sql.transactional(() => {
+        if (schemaExists()) {
+            // A previous sync-from-server attempt failed mid-way (schema created, sync never
+            // converged) and the user re-submitted the setup form — possibly pointing at a
+            // DIFFERENT server. Rebuild from scratch: the partially pulled rows belong to the
+            // old seed and would poison the new sync (#10548).
+            log.info("Schema exists from a previous unfinished sync setup — wiping it before re-creating.");
+
+            const objects = sql.getRows<{ name: string; type: string }>(
+                /*sql*/`SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'`
+            );
+            for (const { name, type } of objects) {
+                sql.execute(`DROP ${type === "view" ? "VIEW" : "TABLE"} IF EXISTS "${name.replace(/"/g, '""')}"`);
+            }
+        }
+
         sql.executeScript(schema);
 
         initNotSyncedOptions(false, { syncServerHost, syncProxy, syncMaxBlobContentSize });
