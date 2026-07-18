@@ -37,7 +37,68 @@ describe("Help button", () => {
             }
         }
     });
+
+    // The in-app help client (doc_renderer.ts) requests `doc_notes/<lang>/<docName>.html`, and the
+    // server filesystem is case-sensitive. A doc whose title casing was changed on a case-insensitive
+    // OS (Windows/macOS) can be committed with a stale-cased filename that git's core.ignorecase hides,
+    // so the meta points at one casing while the file on disk has another → 404 in production.
+    it("Every docName resolves to an on-disk file with exact casing", () => {
+        const docNotesEnRoot = path.resolve(path.join(__dirname, "../../../server/src/assets/doc_notes/en"));
+        const meta: HiddenSubtreeItem[] = JSON.parse(fs.readFileSync(path.join(docNotesEnRoot, "User Guide/!!!meta.json"), "utf-8"));
+
+        const problems: string[] = [];
+        for (const docName of collectDocNames(meta)) {
+            if (!existsWithExactCase(docNotesEnRoot, `${docName}.html`)) {
+                problems.push(docName);
+            }
+        }
+
+        if (problems.length) {
+            expect.fail(
+                `The following help docNames do not resolve to an on-disk .html file with exact casing ` +
+                `(the meta and the committed filename disagree — likely a case-only rename dropped by git core.ignorecase):\n` +
+                problems.map((p) => `  - ${p}`).join("\n")
+            );
+        }
+    });
 });
+
+/** Collects every `docName` label value from the help meta tree. */
+function collectDocNames(items: HiddenSubtreeItem[]): string[] {
+    const docNames: string[] = [];
+    for (const item of items) {
+        const docName = item.attributes?.find((a) => a.name === "docName")?.value;
+        if (docName) {
+            docNames.push(docName);
+        }
+        if (item.children) {
+            docNames.push(...collectDocNames(item.children as HiddenSubtreeItem[]));
+        }
+    }
+    return docNames;
+}
+
+/**
+ * Resolves `relativePath` under `rootDir` one segment at a time via `readdirSync`, which reports the
+ * real on-disk names regardless of filesystem case sensitivity. `fs.existsSync` alone would wrongly
+ * pass a mis-cased path on case-insensitive dev machines, so this makes the check meaningful everywhere.
+ */
+function existsWithExactCase(rootDir: string, relativePath: string): boolean {
+    let current = rootDir;
+    for (const segment of relativePath.split("/")) {
+        let entries: string[];
+        try {
+            entries = fs.readdirSync(current);
+        } catch {
+            return false;
+        }
+        if (!entries.includes(segment)) {
+            return false;
+        }
+        current = path.join(current, segment);
+    }
+    return true;
+}
 
 describe("getHelpUrlForNote", () => {
     it("returns undefined for null/undefined notes", () => {
