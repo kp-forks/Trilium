@@ -8,7 +8,9 @@
 
 <figure class="image image-style-align-left"><img style="aspect-ratio:303/264;" src="To-do Lists_image.png" width="303" height="264"></figure>
 
-In Trilium, to-do items aren't limited to a simple "done" or "not done." Tasks can also be marked as in progress, under consideration, or cancelled, giving a more accurate picture of where things actually stand. And when these built-in states don't fit a particular workflow, custom ones can be created as needed.
+In Trilium, to-do items aren't limited to a simple "done" or "not done." Tasks can also be marked as _in progress_ ("doing"), _under consideration_ ("maybe"), or _cancelled_ ("won't do"), thus giving a more accurate picture of where things actually stand.
+
+When the built-in states don't fit a particular workflow, custom ones can be created as needed.
 
 Right-click the checkbox and select the desired state. Alternatively, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter </kbd> to cycle through the task states. Tapping or left-clicking the checkbox will always toggle between "None" and "Done".
 
