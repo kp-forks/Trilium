@@ -27,7 +27,6 @@ The following features are supported by Trilium's Markdown format and will show 
 *   All standard and GitHub-flavored syntax (basic formatting, tables, blockquotes).
 *   Basic HTML is also supported (e.g. collapsible blocks using `<details>` and `<summary>`).
 *   Code blocks with syntax highlight.
-    
     *   The language must be specified for syntax highlight to be applied (e.g. ` ```js `).
     *   Code blocks will respect the text wrapping from the <a class="reference-link" href="Text.md">Text</a> section in <a class="reference-link" href="../Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a>.
 *   <a class="reference-link" href="Text/Block%20quotes%20%26%20admonitions.md">Block quotes &amp; admonitions</a>
@@ -49,7 +48,7 @@ The following features are supported by Trilium's Markdown format and will show 
     ```
 *   To-do lists with extended task states:
     
-    <table class="ck-table-resized" style="border-style:none">
+    <table class="ck-table-resized" style="border-style:none;">
         <colgroup>
             <col style="width:80.6%;">
             <col style="width:19.4%;">
@@ -79,7 +78,7 @@ The following features are supported by Trilium's Markdown format and will show 
     ```
     
     *   These can also be quickly created using the `/footnote` command.
-*   Page breaks for <a class="reference-link" href="#root/jdjRLhLV3TtI/yeqU0zo0ZQ83/W0msUwLxm40d">Printing and exporting to PDF</a>:
+*   Page breaks for <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Notes/Printing%20%26%20Exporting%20as%20PDF.md">Printing &amp; Exporting as PDF</a>:
     
     ```
     <div class="page-break"></div>
@@ -218,7 +217,7 @@ If the Markdown note contains attachments, a ZIP export will rewrite the links t
 
 ## Conversion between text notes and Markdown notes
 
-<a class="reference-link" href="Text.md">Text</a> notes can be converted into Markdown notes and vice versa. See <a class="reference-link" href="Converting%20between%20note%20types.md">Converting Between Note Types</a>.
+<a class="reference-link" href="Text.md">Text</a> notes can be converted into Markdown notes and vice versa. See <a class="reference-link" href="Converting%20between%20note%20types.md">Converting between note types</a>.
 
 ## Sync-scrolling & block highlight
 

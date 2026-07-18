@@ -4,7 +4,7 @@ A note's type may be converted to another:
 *   <a class="reference-link" href="Text.md">Text</a> notes to <a class="reference-link" href="Markdown.md">Markdown</a> notes
 *   Markdown notes to Text notes
 
-Before conversion, a revision is saved automatically, so you can restore the original or recover any missing elements from it if the conversion produces undesired results. Read more about <a class="reference-link" href="#root/jdjRLhLV3TtI/yeqU0zo0ZQ83/qjQNyaYXSNWu">Note Revisions</a>.
+Before conversion, a revision is saved automatically, so you can restore the original or recover any missing elements from it if the conversion produces undesired results. Read more about <a class="reference-link" href="../Basic%20Concepts%20and%20Features/Notes/Note%20Revisions.md">Note Revisions</a>.
 
 ## Converting individual notes
 
