@@ -6,7 +6,8 @@
  * machine running the server), and billing goes to the subscription.
  *
  * Bring-your-own-binary: the SDK's ~250 MB bundled native binary is stripped at
- * install time (root .pnpmfile.cjs); the provider drives the user's own
+ * install time (`ignoredOptionalDependencies` in the root pnpm-workspace.yaml);
+ * the provider drives the user's own
  * installed `claude` CLI (see claude_binary.ts), keeping the server lean.
  *
  * Unlike the AI-SDK providers, the Agent SDK runs its own agentic loop and is

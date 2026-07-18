@@ -2,8 +2,9 @@
  * Resolves the Claude Code CLI binary the Claude Agent provider drives.
  *
  * The provider runs in "bring-your-own-binary" mode: the ~250 MB native binary
- * that the SDK would otherwise bundle is stripped at install time (see the
- * root .pnpmfile.cjs), so we point the SDK at the user's own installed CLI via
+ * that the SDK would otherwise bundle is stripped at install time (see
+ * `ignoredOptionalDependencies` in the root pnpm-workspace.yaml), so we point
+ * the SDK at the user's own installed CLI via
  * `pathToClaudeCodeExecutable`. This keeps the server install lean and lets each
  * platform provide a binary that actually runs there (e.g. the nixpkgs wrapper
  * on NixOS, which needs no glibc/nix-ld shim — unlike the SDK's bundled ELF).

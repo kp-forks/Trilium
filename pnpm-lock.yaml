@@ -81,8 +81,6 @@ overrides:
   basic-ftp@=5.2.0: '>=5.2.1'
   extract-zip>yauzl: 3.4.0
 
-pnpmfileChecksum: sha256-Y+CmGTGmFhNZN6QTL8GJnY/EuBOU2KPY66OgOmzHWqw=
-
 patchedDependencies:
   '@ckeditor/ckeditor5-code-block': 1530be090e4f5235e197fb6208a8e8230e3355d5633fc7cad2b2e892659e9c04
   '@ckeditor/ckeditor5-mention': 70377e48a04e2f45abba79aa35f3d5527ec7aa7ffce44056f9957a49a24a4a60
@@ -13892,6 +13890,9 @@ packages:
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
+
+ignoredOptionalDependencies:
+  - '@anthropic-ai/claude-agent-sdk-*'
 
 snapshots:
 
