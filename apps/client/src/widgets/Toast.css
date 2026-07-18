@@ -115,6 +115,17 @@
                 opacity: 0.5;
                 margin-inline-start: 2.1em;
             }
+
+            /* Annotation injected inline after the note title (see NoteLink's titleSuffix). It rides
+               the title's line; the block-level .note-path drops below both. */
+            .note-link-suffix {
+                opacity: 0.75;
+                font-size: 0.9em;
+
+                &::before {
+                    content: " — ";
+                }
+            }
         }
     }
 

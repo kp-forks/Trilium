@@ -5,7 +5,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 // know that one is rendered per noteId.
 vi.mock("./react/NoteLink", async () => {
     const { h } = await import("preact");
-    return { default: (props: { notePath: string }) => h("span", { class: "note-link-stub", "data-note-id": props.notePath }) };
+    return {
+        default: (props: { notePath: string; titleSuffix?: string }) => h(
+            "span",
+            { class: "note-link-stub", "data-note-id": props.notePath },
+            props.titleSuffix ? h("span", { class: "note-link-suffix" }, props.titleSuffix) : null
+        )
+    };
 });
 
 import { toasts, type ToastOptionsWithRequiredId } from "../services/toast";
@@ -39,7 +45,8 @@ describe("Toast rendering", () => {
             message: "api.logg is not a function",
             messageMonospace: true,
             notesHeading: "Scripts that failed:",
-            noteIds: [ "noteA", "noteB" ]
+            // One plain entry, one annotated — both render a link, only the latter a description.
+            notes: [ "noteA", { noteId: "noteB", description: "duplicate identifier" } ]
         } ]);
 
         const body = el.querySelector(".toast-body");
@@ -50,6 +57,13 @@ describe("Toast rendering", () => {
         expect(notes).not.toBeNull();
         expect(notes?.querySelector(".toast-notes-heading")?.textContent).toBe("Scripts that failed:");
         expect(el.querySelectorAll(".note-link-stub")).toHaveLength(2);
+
+        // The annotation is injected inside the note link (as titleSuffix), not a sibling — only the
+        // annotated entry gets one, and it lives on that note's link.
+        const suffixes = el.querySelectorAll(".note-link-suffix");
+        expect(suffixes).toHaveLength(1);
+        expect(suffixes[0].textContent).toBe("duplicate identifier");
+        expect(suffixes[0].closest(".note-link-stub")?.getAttribute("data-note-id")).toBe("noteB");
     });
 
     it("omits the notes section and the monospace class when neither is provided", () => {

@@ -121,7 +121,7 @@ describe("toast store", () => {
             message: "it failed",
             timeout: 15000,
             // The script note is attached as a reference link instead of a bespoke open-note button.
-            noteIds: [ "scriptNote1" ]
+            notes: [ "scriptNote1" ]
         });
         expect(created?.buttons).toBeUndefined();
     });

@@ -224,7 +224,7 @@ describe("runOnBackend / __runOnBackendInner", () => {
 
         // The latest (deduplicated) toast lists both attempting scripts as reference notes.
         const lastOptions = showPersistent.mock.calls.at(-1)?.[0];
-        expect(lastOptions?.noteIds).toEqual([ noteA.noteId, noteB.noteId ]);
+        expect(lastOptions?.notes).toEqual([ noteA.noteId, noteB.noteId ]);
         expect(lastOptions?.onRemove).toBeTypeOf("function");
     });
 
@@ -241,7 +241,7 @@ describe("runOnBackend / __runOnBackendInner", () => {
         showPersistent.mock.calls.at(-1)?.[0].onRemove?.();
 
         await attempt(noteB);
-        expect(showPersistent.mock.calls.at(-1)?.[0].noteIds).toEqual([ noteB.noteId ]);
+        expect(showPersistent.mock.calls.at(-1)?.[0].notes).toEqual([ noteB.noteId ]);
     });
 
     it("serializes a sync function, posts it, waits for sync and returns the result", async () => {

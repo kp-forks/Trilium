@@ -40,7 +40,3 @@ Exporting notes to another Trilium database instance preserves the task states o
 
 > [!NOTE]
 > This is a known limitation of the current version. If there is enough interest in the community for transferring notes between Trilium database instances more easily, the Trilium team may consider a better state definition mechanism.
-
-## See also
-
-*   <a class="reference-link" href="#root/jdjRLhLV3TtI/HMrVxa1lJBKv/dSgzBgbagtYP">Exported content with extended task states</a>
