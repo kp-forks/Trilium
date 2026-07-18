@@ -96,7 +96,10 @@ export class OllamaProvider extends BaseProvider {
     }
 
     protected createModel(modelId: string) {
-        return this.openai(modelId);
+        // Use the Chat Completions API explicitly — calling `this.openai(modelId)`
+        // defaults to the OpenAI Responses API, which Ollama only supports
+        // since 0.13.3. Chat Completions works on all Ollama versions.
+        return this.openai.chat(modelId);
     }
 
     override getAvailableModels(): ModelInfo[] {

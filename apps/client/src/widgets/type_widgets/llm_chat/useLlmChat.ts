@@ -11,6 +11,16 @@ export interface ModelOption extends LlmModelInfo {
     costDescription?: string;
 }
 
+function getCostDescription(model: LlmModelInfo): string | undefined {
+    if (model.costMultiplier) {
+        return `${model.costMultiplier}x`;
+    }
+    if (model.pricing.input === 0 && model.pricing.output === 0) {
+        return t("llm_chat.free");
+    }
+    return undefined;
+}
+
 export interface LlmChatOptions {
     /** Default value for enableNoteTools */
     defaultEnableNoteTools?: boolean;
@@ -123,11 +133,7 @@ export function useLlmChat(
         getAvailableModels().then(models => {
             const modelsWithDescription = models.map(m => ({
                 ...m,
-                costDescription: m.costMultiplier
-                    ? `${m.costMultiplier}x`
-                    : m.pricing.input === 0 && m.pricing.output === 0
-                        ? t("llm_chat.free")
-                        : undefined
+                costDescription: getCostDescription(m)
             }));
             setAvailableModels(modelsWithDescription);
             setHasProvider(models.length > 0);
