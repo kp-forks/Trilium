@@ -43,9 +43,11 @@ export const helpTools = defineTools({
 
             // Strip punctuation (models happily send "cloning?" despite the
             // schema hint) and deduplicate so repeated words don't skew scoring.
-            const words = [...new Set(
-                query.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean)
-            )];
+            const words = query.toLowerCase()
+                .replace(/[^\p{L}\p{N}\s]/gu, " ")
+                .split(/\s+/)
+                .filter(Boolean)
+                .filter((word, index, all) => all.indexOf(word) === index);
             if (words.length === 0) {
                 return { error: "Empty search query." };
             }
