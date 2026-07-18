@@ -29,6 +29,8 @@ describe("createDatabaseForSync on a partially set-up database", () => {
         expect(sqlInit.isDbInitialized()).toBe(false);
         const staleNoteCount = sql.getValue<number>("SELECT COUNT(*) FROM notes") ?? 0;
         expect(staleNoteCount).toBeGreaterThan(0);
+        // Views must be wiped through DROP VIEW, not DROP TABLE.
+        sql.execute("CREATE VIEW stale_view AS SELECT 1 AS x");
 
         // cls.init mirrors the route context this runs under in production.
         await cls.init(() => sqlInit.createDatabaseForSync(
@@ -42,6 +44,7 @@ describe("createDatabaseForSync on a partially set-up database", () => {
         // The schema is back and pristine: no leftovers from the previous partial pull.
         expect(sqlInit.schemaExists()).toBe(true);
         expect(sql.getValue<number>("SELECT COUNT(*) FROM notes")).toBe(0);
+        expect(sql.getValue<number>("SELECT COUNT(*) FROM sqlite_master WHERE name = 'stale_view'")).toBe(0);
 
         // The new seed and sync options won.
         expect(sql.getValue<string>("SELECT value FROM options WHERE name = 'documentId'")).toBe("resetup-doc-id");
@@ -65,5 +68,27 @@ describe("createDatabaseForSync on a partially set-up database", () => {
         expect(sqlInit.isDbInitialized()).toBe(true);
         expect(sql.getValue<number>("SELECT COUNT(*) FROM notes WHERE noteId = 'root'")).toBe(1);
         expect(sql.getValue<number>("SELECT COUNT(*) FROM notes WHERE noteId = 'stalePulled1'")).toBe(0);
+    });
+
+    it("is a no-op wipe on a virgin database (no schema at all)", async () => {
+        const sql = getSql();
+
+        // Reduce the DB to a truly empty file, as on a first-ever run.
+        sql.execute("UPDATE options SET value = 'false' WHERE name = 'initialized'");
+        const objects = sql.getRows<{ name: string; type: string }>(
+            /*sql*/`SELECT name, type FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%'`
+        );
+        for (const { name, type } of objects) {
+            sql.execute(`DROP ${type === "view" ? "VIEW" : "TABLE"} IF EXISTS "${name}"`);
+        }
+        expect(sqlInit.schemaExists()).toBe(false);
+
+        await cls.init(() => sqlInit.createDatabaseForSync(
+            [{ name: "documentSecret", value: "virgin-secret", isSynced: true, utcDateModified: "2026-07-18 00:00:00.000Z" }],
+            "http://sync-server:8080"
+        ));
+
+        expect(sqlInit.schemaExists()).toBe(true);
+        expect(sql.getValue<string>("SELECT value FROM options WHERE name = 'documentSecret'")).toBe("virgin-secret");
     });
 });

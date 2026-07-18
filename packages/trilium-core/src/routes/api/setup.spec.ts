@@ -1,6 +1,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import appInfo from "../../services/app_info";
+import optionService from "../../services/options";
 import setupService from "../../services/setup";
 import sqlInit from "../../services/sql_init";
 import { CoreApiTester } from "../../test/api_tester";
@@ -44,6 +45,14 @@ describe("Setup API (core)", () => {
     it("omits the sync server once initialized — setup/status is unauthenticated", async () => {
         const res = await api.get<{ syncServerHost?: string }>("/api/setup/status");
         expect(res.body.syncServerHost).toBeUndefined();
+    });
+
+    it("falls back to empty strings when the sync options are absent", async () => {
+        vi.spyOn(sqlInit, "isDbInitialized").mockReturnValue(false);
+        vi.spyOn(optionService, "getOptionOrNull").mockReturnValue(null);
+        const res = await api.get<{ syncServerHost?: string; syncProxy?: string }>("/api/setup/status");
+        expect(res.body.syncServerHost).toBe("");
+        expect(res.body.syncProxy).toBe("");
     });
 
     it("creates a new document (createInitialDatabase stubbed)", async () => {

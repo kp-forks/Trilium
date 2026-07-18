@@ -36,7 +36,7 @@ type State = "selectLanguage" | "firstOptions" | "createNewDocumentOptions" | "c
 
 const STATE_ORDER: State[] = ["selectLanguage", "firstOptions", "createNewDocumentOptions", "createNewDocumentWithDemo", "createNewDocumentEmpty", "syncFromDesktop", "syncFromServer", "syncFromServerInProgress", "syncFromDesktopInProgress", "syncFailed"];
 
-function renderState(state: State, setState: (state: State) => void) {
+export function renderState(state: State, setState: (state: State) => void) {
     switch (state) {
         case "selectLanguage": return <SelectLanguage setState={setState} />;
         case "firstOptions": return <SetupOptions setState={setState} />;
@@ -228,7 +228,7 @@ function useWakeLock() {
     }, []);
 }
 
-function SyncInProgress({ device, setState }: { device: "server" | "desktop"; setState: (state: State) => void }) {
+export function SyncInProgress({ device, setState }: { device: "server" | "desktop"; setState: (state: State) => void }) {
     const stats = useOutstandingSyncInfo();
     const step = getSyncStep(stats);
     useWakeLock();
@@ -296,7 +296,7 @@ function SyncInProgress({ device, setState }: { device: "server" | "desktop"; se
     );
 }
 
-function SyncFailed({ setState }: { setState: (state: State) => void }) {
+export function SyncFailed({ setState }: { setState: (state: State) => void }) {
     const stats = useOutstandingSyncInfo();
     // Freeze the last seen error: when a retry starts, the server clears it before the
     // attempt runs, and the text must not blank out while this page transitions away.
@@ -406,7 +406,7 @@ function CreateNewDocumentInProgress({ withDemo = false }: { withDemo?: boolean 
     );
 }
 
-function SyncFromServer({ setState }: { setState: (state: State) => void }) {
+export function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [ syncServerHost, setSyncServerHost ] = useState("");
     const [ password, setPassword ] = useState("");
     const [ syncProxy, setSyncProxy ] = useState("");
@@ -672,4 +672,7 @@ function onSetupFinished() {
     }
 }
 
-main();
+// Skip the bootstrap render under test, where the components are imported directly.
+if (import.meta.env.MODE !== "test") {
+    void main();
+}
