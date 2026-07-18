@@ -100,7 +100,7 @@ describe("NoteTreeWidget", () => {
         vi.spyOn(widget, "isEnabled").mockReturnValue(false);
         vi.spyOn(widget, "activityDetected").mockImplementation(() => {});
         vi.spyOn(widget, "getActiveNode").mockReturnValue(null);
-        vi.spyOn(widget, "getNodeFromPath").mockResolvedValue(null);
+        vi.spyOn(widget, "getNodeFromPath").mockResolvedValue(undefined);
         vi.spyOn(widget, "filterHoistedBranch").mockResolvedValue(undefined);
         const isHoisted = vi.spyOn(hoistedNoteService, "isHoistedInHiddenSubtree").mockResolvedValue(false);
 
