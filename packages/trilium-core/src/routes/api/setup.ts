@@ -27,7 +27,7 @@ function setupSyncFromServer(req: Request): Promise<SetupSyncFromServerResponse>
     return setupService.setupSyncFromSyncServer(syncServerHost, syncProxy, password, maxBlobContentSize);
 }
 
-function saveSyncSeed(req: Request) {
+async function saveSyncSeed(req: Request) {
     const { options, syncVersion } = req.body;
 
     const log = getLog();
@@ -46,7 +46,9 @@ function saveSyncSeed(req: Request) {
 
     log.info("Saved sync seed.");
 
-    sqlInit.createDatabaseForSync(options);
+    // Awaited so a failure surfaces as an error response to the pushing desktop
+    // instead of an unhandled rejection with a 2xx already sent.
+    await sqlInit.createDatabaseForSync(options);
 }
 
 /**

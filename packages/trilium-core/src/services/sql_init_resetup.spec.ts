@@ -5,16 +5,17 @@ import { getSql } from "./sql/index.js";
 import sqlInit from "./sql_init.js";
 
 /**
- * Re-running the sync-from-server setup after a FAILED first attempt (#10548).
+ * Re-running setup after a FAILED sync-from-server attempt (#10548).
  *
  * A failed initial sync leaves the database in a half-way state: the schema and the
  * seed options exist, but `initialized` is still false. The user must be able to go
- * back in the setup wizard, correct the server address/credentials and submit again —
- * which calls createDatabaseForSync a second time. That call must rebuild the database
- * from scratch (the partial pull may contain rows from a *different* server) instead of
- * failing on the already-existing schema.
+ * back in the setup wizard and take ANY path again — resubmit the sync form
+ * (createDatabaseForSync), or give up on syncing and create a new document instead
+ * (createInitialDatabase). Both must rebuild the database from scratch (the partial
+ * pull may contain rows from a *different* server) instead of failing on the
+ * already-existing schema.
  *
- * Own spec file: this test intentionally destroys and rebuilds the fixture DB, and the
+ * Own spec file: these tests intentionally destroy and rebuild the fixture DB, and the
  * per-file fork isolation keeps that away from every other suite.
  */
 describe("createDatabaseForSync on a partially set-up database", () => {
@@ -46,5 +47,23 @@ describe("createDatabaseForSync on a partially set-up database", () => {
         expect(sql.getValue<string>("SELECT value FROM options WHERE name = 'documentId'")).toBe("resetup-doc-id");
         expect(sql.getValue<string>("SELECT value FROM options WHERE name = 'documentSecret'")).toBe("resetup-doc-secret");
         expect(sql.getValue<string>("SELECT value FROM options WHERE name = 'syncServerHost'")).toBe("http://corrected-server:8080");
+    });
+
+    it("also rebuilds when the user gives up on syncing and creates a new document instead", async () => {
+        const sql = getSql();
+
+        // Failed-setup state again, with a marker row standing in for partially pulled data.
+        sql.execute("UPDATE options SET value = 'false' WHERE name = 'initialized'");
+        sql.execute(/*sql*/`INSERT INTO notes (noteId, title, type, mime, isProtected, isDeleted, dateCreated, dateModified, utcDateCreated, utcDateModified)
+            VALUES ('stalePulled1', 'stale', 'text', 'text/html', 0, 0, '2026-07-18', '2026-07-18', '2026-07-18', '2026-07-18')`);
+        expect(sqlInit.schemaExists()).toBe(true);
+        expect(sqlInit.isDbInitialized()).toBe(false);
+
+        await cls.init(() => sqlInit.createInitialDatabase(true, "en"));
+
+        // A pristine new document: initialized, root note present, no leftovers.
+        expect(sqlInit.isDbInitialized()).toBe(true);
+        expect(sql.getValue<number>("SELECT COUNT(*) FROM notes WHERE noteId = 'root'")).toBe(1);
+        expect(sql.getValue<number>("SELECT COUNT(*) FROM notes WHERE noteId = 'stalePulled1'")).toBe(0);
     });
 });
