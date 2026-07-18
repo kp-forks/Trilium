@@ -123,7 +123,7 @@ async function sync() {
 
         ws.syncFailed();
 
-        lastSyncError = e.message;
+        lastSyncError = redactUrlHosts(e.message);
 
         return {
             success: false,
@@ -131,6 +131,17 @@ async function sync() {
         };
 
     }
+}
+
+/**
+ * Replaces the host (and any port/credentials) of every URL in the message with
+ * `[redacted]`, keeping the scheme and path. The recorded sync error is shown on the
+ * setup wizard's failure screen, which users paste as screenshots into bug reports —
+ * the private server host must not leak, while the endpoint path and status code (the
+ * diagnostically useful parts) stay visible. The full message still goes to the log.
+ */
+function redactUrlHosts(message: string) {
+    return message.replace(/(https?:\/\/)[^/\s]+/gi, "$1[redacted]");
 }
 
 /**

@@ -341,11 +341,16 @@ describe("sync service", () => {
         // is returned to whoever *triggered* the sync (often a fire-and-forget). The last
         // error must therefore be queryable so the wizard can leave its progress screen
         // instead of spinning forever (#10548).
-        it("records the failure message of the last sync attempt", async () => {
-            config.loginThrows = new Error("Request to PUT /api/sync/update failed, error: 401 Logged in session not found");
+        it("records the failure message with the sync server's host redacted", async () => {
+            // The setup wizard displays this message and users paste screenshots of it
+            // into bug reports — the private host/port must not leak, while the path and
+            // status (the diagnostically useful parts) stay visible.
+            config.loginThrows = new Error(
+                "Request to PUT https://trilium.private-domain.example:8443/api/sync/update?logMarkerId=x failed, error: 401 Logged in session not found"
+            );
             await expect(runSync()).resolves.toMatchObject({ success: false });
             expect(syncService.getLastSyncError()).toBe(
-                "Request to PUT /api/sync/update failed, error: 401 Logged in session not found"
+                "Request to PUT https://[redacted]/api/sync/update?logMarkerId=x failed, error: 401 Logged in session not found"
             );
         });
 

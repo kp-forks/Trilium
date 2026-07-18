@@ -508,6 +508,9 @@ body[dir=rtl] .slide-in-backward {
         white-space: pre-wrap;
         word-break: break-word;
         margin: 0 0 0.5rem;
+        /* The error is meant to be copied into bug reports — opt back out of the
+           app-wide `body { user-select: none }`. */
+        user-select: text;
     }
 
     .admonition-body p {
