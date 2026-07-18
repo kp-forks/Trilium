@@ -415,6 +415,23 @@ function SyncFromServer({ setState }: { setState: (state: State) => void }) {
     const [ isWrongPassword, setIsWrongPassword ] = useState(false);
     const isValid = syncServerHost.trim() !== "" && password !== "";
 
+    useEffect(() => {
+        // After a failed attempt the sync options are already stored in the partial DB
+        // and exposed by setup/status — prefill so the user coming back from the failure
+        // screen only has to correct what's wrong (the password is never stored). The
+        // functional updates keep anything the user already typed.
+        server.get<{ syncServerHost?: string; syncProxy?: string }>("setup/status").then((status) => {
+            if (status.syncServerHost) {
+                setSyncServerHost((current) => current || status.syncServerHost || "");
+            }
+            if (status.syncProxy) {
+                setSyncProxy((current) => current || status.syncProxy || "");
+            }
+        }).catch(() => {
+            // Prefill is best-effort only.
+        });
+    }, []);
+
     function raiseError(message: string) {
         setError(message);
         setErrorId(id => id + 1);

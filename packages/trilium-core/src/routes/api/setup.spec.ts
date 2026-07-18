@@ -33,6 +33,19 @@ describe("Setup API (core)", () => {
         expect(res.body.syncVersion).toBe(appInfo.syncVersion);
     });
 
+    it("includes the stored sync server so a failed setup can prefill the form, but only pre-initialization", async () => {
+        vi.spyOn(sqlInit, "isDbInitialized").mockReturnValue(false);
+        const res = await api.get<{ syncServerHost?: string; syncProxy?: string }>("/api/setup/status");
+        // The fixture stores empty strings; presence of the keys is the contract.
+        expect(res.body.syncServerHost).toBeDefined();
+        expect(res.body.syncProxy).toBeDefined();
+    });
+
+    it("omits the sync server once initialized — setup/status is unauthenticated", async () => {
+        const res = await api.get<{ syncServerHost?: string }>("/api/setup/status");
+        expect(res.body.syncServerHost).toBeUndefined();
+    });
+
     it("creates a new document (createInitialDatabase stubbed)", async () => {
         const createInitial = vi.spyOn(sqlInit, "createInitialDatabase").mockResolvedValue(undefined);
         const res = await api.post("/api/setup/new-document", { query: { skipDemoDb: "1" } });

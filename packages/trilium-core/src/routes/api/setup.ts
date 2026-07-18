@@ -2,14 +2,28 @@ import sqlInit from "../../services/sql_init.js";
 import setupService from "../../services/setup.js";
 import { getLog } from "../../services/log.js";
 import appInfo from "../../services/app_info.js";
+import optionService from "../../services/options.js";
 import type { Request } from "express";
 import { SetupSyncFromServerResponse } from "@triliumnext/commons";
 
 function getStatus() {
+    const isInitialized = sqlInit.isDbInitialized();
+    const schemaExists = sqlInit.schemaExists();
+
     return {
-        isInitialized: sqlInit.isDbInitialized(),
-        schemaExists: sqlInit.schemaExists(),
-        syncVersion: appInfo.syncVersion
+        isInitialized,
+        schemaExists,
+        syncVersion: appInfo.syncVersion,
+        // After a FAILED sync-from-server attempt the sync options are already stored in
+        // the partial DB; expose them so the wizard can prefill the form when the user
+        // goes back to correct it (#10548). Pre-initialization only: this endpoint is
+        // unauthenticated, and once the instance is live the host must not leak here.
+        ...(schemaExists && !isInitialized
+            ? {
+                syncServerHost: optionService.getOptionOrNull("syncServerHost") ?? "",
+                syncProxy: optionService.getOptionOrNull("syncProxy") ?? ""
+            }
+            : {})
     };
 }
 
