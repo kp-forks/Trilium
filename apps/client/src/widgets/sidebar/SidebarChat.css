@@ -57,6 +57,13 @@
     margin: 0 0 0.5em 0;
 }
 
+/* Explicitly restate the margin for the last paragraph: ChatMessage.css zeroes it via
+   `.llm-chat-markdown p:last-child`, which ties this file's rule on specificity (0,2,1),
+   so the winner would otherwise depend on CSS chunk load order (differs dev vs prod). */
+.sidebar-chat-messages .llm-chat-markdown p:last-child {
+    margin-bottom: 0.5em;
+}
+
 .sidebar-chat-messages .llm-chat-markdown pre {
     padding: 0.5rem;
     font-size: 0.8rem;
