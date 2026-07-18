@@ -211,6 +211,18 @@ describe("dialog service", () => {
             expect($dialog[0].style.zIndex).toBe("");
         });
 
+        it("treats popups without a numeric z-index as layer 0 and excludes the dialog itself from the scan", async () => {
+            document.body.classList.add("tree-popup-stacked");
+            // No inline z-index -> getComputedStyle returns a non-numeric value -> parseInt NaN -> 0.
+            openStackedPopup("");
+
+            // The dialog itself matches `.modal.show`; it must be filtered out of the max-z scan.
+            const $dialog = makeDialog().addClass("show").appendTo(document.body);
+            await openDialog($dialog, true);
+
+            expect($dialog[0].style.zIndex).toBe("10"); // max(0) + 10
+        });
+
         it("never lifts a self-managed popup dialog, even while another popup is stacked", async () => {
             document.body.classList.add("tree-popup-stacked");
             openStackedPopup("1100");
