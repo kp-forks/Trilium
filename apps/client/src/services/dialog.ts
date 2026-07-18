@@ -20,13 +20,17 @@ export async function openDialog($dialog: JQuery<HTMLElement>, closeActDialog = 
 
     Modal.getOrCreateInstance($dialog[0], config).show();
 
-    // Bootstrap appends the backdrop during show(); raise it alongside the lifted dialog so the popup
-    // behind is dimmed and click-blocked rather than remaining interactive.
-    if (bumpedZIndex !== null) {
+    // Normalise the just-shown dialog's backdrop z-index. Bootstrap appends the backdrop during
+    // show(), and reuses the *same* element across shows of a kept-in-DOM modal — so a lift applied on
+    // a previous open would otherwise persist as a stale inline z-index and leave the backdrop
+    // floating above unrelated content on a later, non-lifted open. Always set it: raised alongside a
+    // lifted dialog (so the popup behind is dimmed and click-blocked), or cleared back to the default
+    // layer otherwise. Skipped when this dialog has no backdrop, so we never touch another modal's.
+    if (config?.backdrop !== false) {
         const backdrops = document.querySelectorAll<HTMLElement>(".modal-backdrop");
         const ownBackdrop = backdrops[backdrops.length - 1];
         if (ownBackdrop) {
-            ownBackdrop.style.zIndex = String(bumpedZIndex - 1);
+            ownBackdrop.style.zIndex = bumpedZIndex !== null ? String(bumpedZIndex - 1) : "";
         }
     }
 

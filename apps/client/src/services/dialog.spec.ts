@@ -174,6 +174,34 @@ describe("dialog service", () => {
             expect(backdrop.style.zIndex).toBe("1109");
         });
 
+        it("clears a stale backdrop z-index left by a prior lift when reopened without a popup", async () => {
+            // Bootstrap reuses the same backdrop element across shows; simulate one carrying the inline
+            // z-index a previous lift assigned.
+            const backdrop = document.createElement("div");
+            backdrop.className = "modal-backdrop";
+            backdrop.style.zIndex = "1109";
+            document.body.appendChild(backdrop);
+
+            const $dialog = makeDialog().appendTo(document.body);
+            await openDialog($dialog, true); // no stacked popup this time
+
+            expect($dialog[0].style.zIndex).toBe("");
+            expect(backdrop.style.zIndex).toBe("");
+        });
+
+        it("does not touch backdrops when the dialog itself has none", async () => {
+            const backdrop = document.createElement("div");
+            backdrop.className = "modal-backdrop";
+            backdrop.style.zIndex = "1109";
+            document.body.appendChild(backdrop);
+
+            const $dialog = makeDialog().appendTo(document.body);
+            await openDialog($dialog, true, { backdrop: false });
+
+            // Another modal's backdrop must be left alone.
+            expect(backdrop.style.zIndex).toBe("1109");
+        });
+
         it("does not lift when no popup is stacked", async () => {
             openStackedPopup("999"); // popup present but body lacks the -stacked class (non-stacked case)
 
