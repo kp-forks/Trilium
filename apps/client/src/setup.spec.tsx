@@ -12,13 +12,13 @@ const serverMock = vi.hoisted(() => ({
     // Default implementation serves the module-load-time requests transitively imported
     // modules fire (e.g. keyboard_actions fetches its shortcut list on import) — the
     // per-test routing installed in beforeEach overrides it.
-    get: vi.fn(async (url: string) => {
+    get: vi.fn(async (url: string): Promise<unknown> => {
         if (url === "keyboard-actions") {
             return [];
         }
         return {};
     }),
-    post: vi.fn(async () => ({}))
+    post: vi.fn(async (): Promise<unknown> => ({}))
 }));
 vi.mock("./services/server", () => ({ default: serverMock }));
 
