@@ -12,44 +12,14 @@ Click the plus icon next to Task States in the left-side pane, then define the t
 
 Selecting any state other than "None" and "Done" (which cannot be modified) from the side pane reveals the following editable fields:
 
-<table>
-    <thead>
-        <tr>
-            <th>Field</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><strong>Icon</strong> (required)</td>
-            <td>The symbol shown inside the checkbox. You can pick an icon just as you would for any regular note, including from custom icon packs.</td>
-        </tr>
-        <tr>
-            <td><strong>Title</strong> (required)</td>
-            <td>The name of the task state shown in the UI. For example: "Doing", "Postponed".</td>
-        </tr>
-        <tr>
-            <td><strong>Identifier</strong> (required)</td>
-            <td><p>A short name for the state, using only letters, digits, "-" and "_". It is stored as metadata in the note's markup and used to identify the task state. Two task states cannot share the same identifier.</p><aside class="admonition warning"><p><span style="color:rgb(204,204,204)">Prefix the identifiers of your custom task states with an underscore (</span><code spellcheck="false">_</code><span style="color:rgb(204,204,204)">) or a hyphen (</span><code spellcheck="false">-</code><span style="color:rgb(204,204,204)">) to avoid clashes with task states that may be introduced in future versions of Trilium.</span></p></aside></td>
-        </tr>
-        <tr>
-            <td><strong>Markdown symbol</strong></td>
-            <td>A single character used to represent the state in Markdown syntax. For example, "#" creates a task state that can be applied in Markdown using " - [#] ". Make sure no other task state uses the same symbol.</td>
-        </tr>
-        <tr>
-            <td><strong>Counts as completed</strong></td>
-            <td>If checked, the task is treated as completed.</td>
-        </tr>
-        <tr>
-            <td><strong>Color</strong></td>
-            <td>The color of the checkbox. Its lightness and saturation are adjusted automatically to match the current color scheme or theme.</td>
-        </tr>
-        <tr>
-            <td><strong>Hidden from toolbar</strong></td>
-            <td>The state is not listed in the UI. This is useful when you want existing notes to keep rendering the state correctly but no longer need to apply it yourself.</td>
-        </tr>
-    </tbody>
-</table>
+*   **Icon** (required): The symbol shown inside the checkbox. You can pick an icon just as you would for any regular note, including from custom icon packs.
+*   **Title** (required): The name of the task state shown in the UI. For example: "Doing", "Postponed".
+*   **Identifier** (required): A short name for the state, using only letters, digits, "`-`" and "`_`". It is stored as metadata in the note's markup and used to identify the task state. Two task states cannot share the same identifier.  
+    Prefix the identifiers of your custom task states with an underscore "`_`" or a hyphen “`-`” to avoid clashes with task states that may be introduced in future versions of Trilium.
+*   **Markdown symbol:** A single character used to represent the state in Markdown syntax. For example, "`#`" creates a task state that can be applied in Markdown using " `- [#]` ". Make sure no other task state uses the same symbol.
+*   **Counts as completed:** If checked, the task is treated as completed.
+*   **Color:** The color of the checkbox. Its lightness and saturation are adjusted automatically to match the current color scheme or theme.
+*   **Hidden from toolbar:** The state is not listed in the UI. This is useful when you want existing notes to keep rendering the state correctly but no longer need to apply it yourself.
 
 > [!NOTE]
 > The task definition details are validated at startup. If errors are found, a toast provides the details and the affected task definition is ignored.
