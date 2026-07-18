@@ -34,14 +34,18 @@ export const helpTools = defineTools({
         ].join(" "),
         inputSchema: z.object({
             query: z.string().describe("Keyword search query (a few plain words, not a full question)"),
-            limit: z.number().optional().describe("Maximum number of results to return. Defaults to 10.")
+            limit: z.number().int().positive().optional().describe("Maximum number of results to return. Defaults to 10.")
         }),
         execute: ({ query, limit = DEFAULT_SEARCH_LIMIT }) => {
             if (!isHelpAvailable()) {
                 return { error: "The built-in User Guide is not available in this installation." };
             }
 
-            const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+            // Strip punctuation (models happily send "cloning?" despite the
+            // schema hint) and deduplicate so repeated words don't skew scoring.
+            const words = [...new Set(
+                query.toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter(Boolean)
+            )];
             if (words.length === 0) {
                 return { error: "Empty search query." };
             }
@@ -152,7 +156,13 @@ function scorePage(page: HelpPageIndexEntry, words: string[]): number {
 }
 
 function countOccurrences(haystack: string, needle: string): number {
-    return haystack.split(needle).length - 1;
+    let count = 0;
+    let index = haystack.indexOf(needle);
+    while (index !== -1) {
+        count++;
+        index = haystack.indexOf(needle, index + needle.length);
+    }
+    return count;
 }
 
 /** Crude tag stripping — good enough for keyword matching, not for display. */

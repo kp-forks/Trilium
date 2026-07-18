@@ -110,9 +110,23 @@ describe("help_tools", () => {
             expect(limited.results).toHaveLength(1);
         });
 
+        it("strips punctuation and deduplicates query words", () => {
+            buildHelpTree();
+
+            // "locations?" would never match as-is; repeated words must not double-count.
+            const punctuated = getTool("search_help").execute({ query: "multiple locations?" }) as SearchHelpResult;
+            expect(punctuated.results.map(r => r.noteId)).toEqual(["_help_cloning"]);
+
+            const deduped = getTool("search_help").execute({ query: "installation installation" }) as SearchHelpResult;
+            // Title match still outranks body match — the duplicate word doesn't skew scoring.
+            expect(deduped.results.map(r => r.noteId)).toEqual(["_help_install", "_help_cloning"]);
+        });
+
         it("rejects an empty query", () => {
             buildHelpTree();
             expect(getTool("search_help").execute({ query: "   " }))
+                .toEqual({ error: "Empty search query." });
+            expect(getTool("search_help").execute({ query: "?!" }))
                 .toEqual({ error: "Empty search query." });
         });
 
