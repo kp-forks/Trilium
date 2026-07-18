@@ -1158,7 +1158,9 @@ export default class NoteTreeWidget extends NoteContextAwareWidget {
 
         const newActiveNode =
             this.noteContext?.notePath &&
-            (!treeService.isNotePathInHiddenSubtree(this.noteContext.notePath) || (await hoistedNoteService.isHoistedInHiddenSubtree())) &&
+            // Pass this tree's own hoisted note (e.g. a popup hoisted into the hidden subtree) rather
+            // than the active tab's — otherwise a hidden-subtree note never gets an active node here.
+            (!treeService.isNotePathInHiddenSubtree(this.noteContext.notePath) || (await hoistedNoteService.isHoistedInHiddenSubtree(this.hoistedNoteId))) &&
             (await this.getNodeFromPath(this.noteContext.notePath));
 
         if (this.spotlightedNode && newActiveNode !== this.spotlightedNode) {
