@@ -54,7 +54,14 @@ async function probeBinary(): Promise<string> {
     // would freeze the whole server for up to the 15 s timeout.
     let version: string;
     try {
-        version = (await execFileAsync(binary, ["--version"], { timeout: 15000, encoding: "utf8" })).stdout.trim();
+        version = (await execFileAsync(binary, ["--version"], {
+            timeout: 15000,
+            encoding: "utf8",
+            // On Windows the resolved binary is typically a .cmd batch file
+            // (npm shim); Node's execFile cannot run .cmd files directly —
+            // it must delegate to cmd.exe via `shell: true`.
+            shell: process.platform === "win32"
+        })).stdout.trim();
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         throw new Error(`Found Claude Code at "${binary}" but it failed to run (${detail}). Ensure it is installed correctly and that you've run \`claude /login\` on the machine running the Trilium server.`);
@@ -82,8 +89,11 @@ function locateBinary(): string {
 }
 
 function findOnPath(binary: string): string | undefined {
-    // Windows resolves executables via PATHEXT; on POSIX the bare name suffices.
-    const extensions = process.platform === "win32" ? ["", ".cmd", ".exe", ".bat"] : [""];
+    // On Windows, npm-installed packages create a bare extensionless file (a
+    // POSIX bash script for Git Bash/WSL) alongside the real .cmd/.exe shims.
+    // The bash script can't be executed by Node's execFile/spawn, so we must
+    // try the Windows-native extensions first and skip the bare name entirely.
+    const extensions = process.platform === "win32" ? [".cmd", ".exe", ".bat"] : [""];
     for (const dir of (process.env.PATH ?? "").split(path.delimiter)) {
         if (!dir) {
             continue;
