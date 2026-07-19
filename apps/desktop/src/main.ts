@@ -82,7 +82,6 @@ export async function main() {
 
     // needed for excalidraw export https://github.com/zadam/trilium/issues/4271
     app.commandLine.appendSwitch("enable-experimental-web-platform-features");
-    app.commandLine.appendSwitch("lang", getElectronLocale());
 
     // In dev mode, disable Chromium's HTTP cache so stale assets cached from a
     // previous production run (which served `max-age: 1y` headers) don't shadow
@@ -181,11 +180,12 @@ export async function main() {
     dbProvider.loadFromFile(dataDirs.DOCUMENT_PATH, config.General.readOnly);
     markStartupMetric("database-opened");
 
-    // Disable smooth scrolling if the option is off. This Chromium switch must be applied
-    // before `ready`; the prologue above is await-free, so `ready` cannot have fired yet.
-    // The value is read straight from the provider we just opened (and reuse for the whole
-    // app below) because the core options service isn't wired up until initializeCore() runs
-    // — reading via options.getOptionOrNull() here would always return null (#10559).
+    // These Chromium switches must be applied before `ready`; the prologue above is
+    // await-free, so `ready` cannot have fired yet. Their option values are read straight
+    // from the provider we just opened (and reuse for the whole app below) because the core
+    // options service isn't wired up until initializeCore() runs — reading via
+    // options.getOptionOrNull() here would always return null (#10559).
+    app.commandLine.appendSwitch("lang", getElectronLocale(dbProvider));
     if (readDbOption(dbProvider, "smoothScrollEnabled") === "false") {
         app.commandLine.appendSwitch("disable-smooth-scrolling");
     }
@@ -339,9 +339,9 @@ async function onReady() {
     await windowService.registerGlobalShortcuts();
 }
 
-export function getElectronLocale() {
-    const uiLocale = options.getOptionOrNull("locale");
-    const formattingLocale = options.getOptionOrNull("formattingLocale");
+export function getElectronLocale(provider: BetterSqlite3Provider) {
+    const uiLocale = readDbOption(provider, "locale");
+    const formattingLocale = readDbOption(provider, "formattingLocale");
     const correspondingLocale = LOCALES.find(l => l.id === uiLocale);
 
     // For RTL, we have to force the UI locale to align the window buttons properly.

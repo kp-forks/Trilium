@@ -1,5 +1,6 @@
 import { join as pathJoin } from "node:path";
 
+import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 type Handler = (...args: unknown[]) => unknown;
@@ -142,14 +143,10 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
             return Promise.resolve();
         }),
         options: {
-            // NB: smoothScrollEnabled is deliberately NOT served here — it is read before
-            // core init straight from the shared provider (see the sql_provider mock), so
-            // getOptionOrNull() returns null for it at that point, as in production.
-            getOptionOrNull: (key: string) => {
-                if (key === "locale") return h.locale;
-                if (key === "formattingLocale") return h.formattingLocale;
-                return null;
-            },
+            // NB: smoothScrollEnabled / locale / formattingLocale are deliberately NOT served
+            // here — they are read before core init straight from the shared provider (see the
+            // sql_provider mock), so getOptionOrNull() returns null for them, as in production.
+            getOptionOrNull: () => null,
             getOptionBool: (key: string) => (key === "disableTray" ? h.disableTray : false)
         },
         sql_init: { isDbInitialized: () => h.isDbInitialized, dbReady: Promise.resolve() },
@@ -177,17 +174,21 @@ vi.mock("@triliumnext/server/src/crypto_provider.js", () => ({ default: class {}
 vi.mock("@triliumnext/server/src/in_app_help_provider.js", () => ({ default: class {} }));
 vi.mock("@triliumnext/server/src/log_provider.js", () => ({ default: class {} }));
 // readDbOption() reads the pre-`ready` switch options from this shared provider via
-// prepare().pluck().get(name). Back it with h.smoothScroll, and let h.dbUninitialized
+// prepare().pluck().get(name). Back it with the h.* option values, and let h.dbUninitialized
 // simulate a first run where the schema (and so the options table) does not exist yet.
 vi.mock("@triliumnext/server/src/sql_provider.js", () => ({
     default: class {
         loadFromFile = vi.fn();
         prepare() {
             if (h.dbUninitialized) throw new Error("no such table: options");
+            const values: Record<string, string | null> = {
+                smoothScrollEnabled: h.smoothScroll,
+                locale: h.locale,
+                formattingLocale: h.formattingLocale
+            };
             return {
                 pluck: () => ({
-                    get: (name: string) =>
-                        (name === "smoothScrollEnabled" && h.smoothScroll !== null ? h.smoothScroll : undefined)
+                    get: (name: string) => values[name] ?? undefined
                 })
             };
         }
@@ -403,6 +404,19 @@ describe("main() bootstrap", () => {
         await main();
         const switches = h.appendSwitch.mock.calls.map((c) => c[0]);
         expect(switches).not.toContain("disable-smooth-scrolling");
+    });
+
+    // Regression for #10559 (sibling of the smooth-scroll bug): the --lang switch is set
+    // before core init from the same provider, so it must reflect the configured locale
+    // instead of always falling back to "en".
+    it("sets the --lang switch to the configured locale read from the DB", async () => {
+        setPlatform("darwin");
+        h.locale = "de";
+        h.formattingLocale = null;
+        h.locales = [{ id: "de", rtl: false }];
+        const { main } = await importMain();
+        await main();
+        expect(h.appendSwitch).toHaveBeenCalledWith("lang", "de");
     });
 
     it("exits when it is not the primary instance", async () => {
@@ -691,12 +705,14 @@ describe("getUserData()", () => {
 });
 
 describe("getElectronLocale()", () => {
+    // The locale options are read from the shared provider (core options are not wired up
+    // before `ready`), so each test drives them through a mocked provider instance.
     it("returns the formatting locale when its corresponding UI locale is not RTL", async () => {
         h.locale = "en";
         h.formattingLocale = "de";
         h.locales = [{ id: "en", rtl: false }];
         const { getElectronLocale } = await importMain();
-        expect(getElectronLocale()).toBe("de");
+        expect(getElectronLocale(new BetterSqlite3Provider())).toBe("de");
     });
 
     it("falls back to the UI locale when the corresponding locale is RTL", async () => {
@@ -704,7 +720,7 @@ describe("getElectronLocale()", () => {
         h.formattingLocale = "de";
         h.locales = [{ id: "ar", rtl: true }];
         const { getElectronLocale } = await importMain();
-        expect(getElectronLocale()).toBe("ar");
+        expect(getElectronLocale(new BetterSqlite3Provider())).toBe("ar");
     });
 
     it("returns the UI locale when there is no formatting locale", async () => {
@@ -712,7 +728,7 @@ describe("getElectronLocale()", () => {
         h.formattingLocale = null;
         h.locales = [{ id: "fr", rtl: false }];
         const { getElectronLocale } = await importMain();
-        expect(getElectronLocale()).toBe("fr");
+        expect(getElectronLocale(new BetterSqlite3Provider())).toBe("fr");
     });
 
     it("defaults to 'en' when neither locale is set", async () => {
@@ -720,6 +736,6 @@ describe("getElectronLocale()", () => {
         h.formattingLocale = null;
         h.locales = [];
         const { getElectronLocale } = await importMain();
-        expect(getElectronLocale()).toBe("en");
+        expect(getElectronLocale(new BetterSqlite3Provider())).toBe("en");
     });
 });
