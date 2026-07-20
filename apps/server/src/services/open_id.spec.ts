@@ -548,11 +548,13 @@ describe("createReactiveOidcMiddleware", () => {
         };
     }
 
-    async function run(middleware: RequestHandler) {
+    async function run(middleware: RequestHandler, url = "/authenticate") {
         const next = vi.fn() as unknown as NextFunction;
         // A failed round-trip redirects back to the app root and flags the session, so both have to be
-        // present for the middleware to drive them.
-        const req = { method: "GET", url: "/authenticate", session: {} } as ExpressRequest;
+        // present for the middleware to drive them. `path` mirrors Express's query-stripped getter,
+        // which decides whether a failure is answered with a redirect or handed to the error chain.
+        const [path] = url.split("?");
+        const req = { method: "GET", url, path, session: {} } as ExpressRequest;
         const res = { headersSent: false, redirect: vi.fn() } as unknown as ExpressResponse;
         await middleware(req, res, next);
         return { next, req, res, redirect: res.redirect as unknown as ReturnType<typeof vi.fn> };
@@ -714,6 +716,50 @@ describe("createReactiveOidcMiddleware", () => {
 
         expect(redirect).toHaveBeenCalledWith("/");
         expect(req.session.ssoConnectionFailed).toBeTruthy();
+    });
+
+    // This middleware is mounted ahead of every route, so a failed lazy init is reached by ordinary
+    // traffic too. Redirecting those would hand an XHR a 302 to HTML where it expects JSON, so only the
+    // provider round-trip — a full-page navigation — is answered that way.
+    it("hands non-navigation requests to the error chain instead of redirecting", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        const failure = new Error("fetch failed");
+        t.oidcHandler.mockImplementation(((_req, _res, next) => next(failure)) as RequestHandler);
+
+        const { req, redirect, next } = await run(t.middleware, "/api/notes/root");
+
+        expect(redirect).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(failure);
+        expect(req.session.ssoConnectionFailed).toBeUndefined();
+    });
+
+    // The redirect target is itself covered by this middleware. A transient failure self-heals (the init
+    // promise is reset, so the next request retries), but a persistent one — a malformed oauthBaseUrl
+    // that auth() rejects every time — would bounce "/" to "/" until the browser gave up, turning a JSON
+    // error that named the bad config into an opaque ERR_TOO_MANY_REDIRECTS.
+    it("does not redirect the app root to itself", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        const failure = new Error("invalid config");
+        t.isRpInitiatedLogoutSupported.mockRejectedValue(failure);
+
+        const { redirect, next } = await run(t.middleware, "/");
+
+        expect(redirect).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(failure);
+    });
+
+    // The callback carries ?code=&state=, so the guard has to compare against the query-stripped path.
+    it("still redirects the callback when it arrives with query parameters", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        t.oidcHandler.mockImplementation(((_req, _res, next) => next(new Error("token exchange failed"))) as RequestHandler);
+
+        const { req, redirect } = await run(t.middleware, "/callback?code=abc&state=xyz");
+
+        expect(redirect).toHaveBeenCalledWith("/");
+        expect(req.session.ssoConnectionFailed).toContain("token exchange failed");
     });
 
     // Once the library has begun answering (e.g. it already started the redirect to the provider), we

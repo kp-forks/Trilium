@@ -133,14 +133,18 @@ function deriveFaviconUrl(baseUrl: string) {
     }
 }
 
-function generateOAuthConfig(endSessionSupported = false) {
-    const authRoutes = {
-        callback: "/callback",
-        login: "/authenticate",
-        postLogoutRedirect: "/login",
-        logout: "/logout",
-    };
+/**
+ * The routes express-openid-connect owns. Hoisted out of {@link generateOAuthConfig} so
+ * {@link OIDC_NAVIGATION_PATHS} is derived from the same source rather than repeating the literals.
+ */
+const OIDC_ROUTES = {
+    callback: "/callback",
+    login: "/authenticate",
+    postLogoutRedirect: "/login",
+    logout: "/logout",
+} as const;
 
+function generateOAuthConfig(endSessionSupported = false) {
     const logoutParams = {
     };
 
@@ -157,7 +161,7 @@ function generateOAuthConfig(endSessionSupported = false) {
             response_type: "code",
             scope: "openid profile email",
         },
-        routes: authRoutes,
+        routes: { ...OIDC_ROUTES },
         // Only enable RP-Initiated Logout when the provider actually advertises an end_session_endpoint
         // (see isRpInitiatedLogoutSupported). With idpLogout on, express-openid-connect unconditionally
         // builds a redirect to that endpoint at logout; providers without one (e.g. Google, Authelia)
@@ -355,11 +359,36 @@ function failRoundTrip(req: Request, res: Response, next: NextFunction, error: u
         return next(error);
     }
 
+    // Redirecting only makes sense for the provider round-trip itself, which is a full-page navigation.
+    // This middleware is mounted ahead of every route, so without this guard two things break:
+    //
+    // - An `/api/*` XHR caught by a failed lazy init would receive a 302 to HTML where it expects JSON.
+    // - A failure on `/` would redirect `/` to `/`. Transient failures self-heal (the init promise is
+    //   reset, so the next request retries), but a persistent one — a malformed `oauthBaseUrl` that
+    //   `auth()` rejects on every build, say — would loop the browser until it gave up, replacing a
+    //   JSON error that named the bad config with an opaque ERR_TOO_MANY_REDIRECTS.
+    //
+    // Everything else keeps the old behaviour and goes to the generic handler, which answers JSON.
+    if (!OIDC_NAVIGATION_PATHS.has(req.path)) {
+        return next(error);
+    }
+
     // Bounded: this rides in the session store until the next bootstrap consumes it, and a deep cause
     // chain would otherwise be unbounded.
     req.session.ssoConnectionFailed = detail.slice(0, MAX_CONNECTION_FAILURE_DETAIL_LENGTH);
     return res.redirect("/");
 }
+
+/**
+ * The subset of {@link OIDC_ROUTES} the user reaches by navigating, and therefore the only paths where
+ * answering a failure with a redirect (rather than an error) is right. `postLogoutRedirect` is excluded:
+ * it is where the library sends the browser afterwards, not a route it handles.
+ */
+const OIDC_NAVIGATION_PATHS = new Set<string>([
+    OIDC_ROUTES.login,
+    OIDC_ROUTES.callback,
+    OIDC_ROUTES.logout
+]);
 
 /** Upper bound on the technical detail carried to the client; enough for a full cause chain. */
 const MAX_CONNECTION_FAILURE_DETAIL_LENGTH = 300;
