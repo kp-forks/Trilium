@@ -132,7 +132,7 @@ function deriveFaviconUrl(baseUrl: string) {
     }
 }
 
-function generateOAuthConfig(endSessionSupported = false) {
+function generateOAuthConfig(capabilities: ProviderCapabilities = DEFAULT_PROVIDER_CAPABILITIES) {
     const authRoutes = {
         callback: "/callback",
         login: "/authenticate",
@@ -151,18 +151,18 @@ function generateOAuthConfig(endSessionSupported = false) {
         issuerBaseURL: config.MultiFactorAuthentication.oauthIssuerBaseUrl,
         secret: config.MultiFactorAuthentication.oauthClientSecret,
         clientSecret: config.MultiFactorAuthentication.oauthClientSecret,
-        clientAuthMethod: resolveClientAuthMethod(),
+        clientAuthMethod: capabilities.clientAuthMethod,
         authorizationParams: {
             response_type: "code",
             scope: "openid profile email",
         },
         routes: authRoutes,
         // Only enable RP-Initiated Logout when the provider actually advertises an end_session_endpoint
-        // (see isRpInitiatedLogoutSupported). With idpLogout on, express-openid-connect unconditionally
+        // (see probeProviderCapabilities). With idpLogout on, express-openid-connect unconditionally
         // builds a redirect to that endpoint at logout; providers without one (e.g. Google, Authelia)
         // would otherwise crash POST /logout with a 500. When false, logout falls back to clearing the
         // local session and redirecting to postLogoutRedirect.
-        idpLogout: endSessionSupported,
+        idpLogout: capabilities.endSessionSupported,
         logoutParams,
         afterCallback: async (req: Request, res: Response, session: Session) => {
             if (!sqlInit.isDbInitialized()) return session;
@@ -251,10 +251,10 @@ type AuthBuilder = typeof import("express-openid-connect").auth;
 interface ReactiveOidcDeps {
     /** Whether OAuth is currently configured and selected as the sign-in method. Re-checked per request. */
     isConfigured: () => boolean;
-    /** Discovery probe deciding whether RP-Initiated Logout (idpLogout) can be safely enabled. */
-    isRpInitiatedLogoutSupported: () => Promise<boolean>;
+    /** Single discovery probe resolving everything we negotiate with the provider. */
+    probeProviderCapabilities: () => Promise<ProviderCapabilities>;
     /** Builds the express-openid-connect config for the current provider settings. */
-    generateOAuthConfig: (endSessionSupported: boolean) => Parameters<AuthBuilder>[0];
+    generateOAuthConfig: (capabilities: ProviderCapabilities) => Parameters<AuthBuilder>[0];
     /** The express-openid-connect `auth()` factory (injectable so the middleware is unit-testable). */
     buildAuth: AuthBuilder;
 }
@@ -269,14 +269,14 @@ interface ReactiveOidcDeps {
  * This middleware is mounted unconditionally and instead re-evaluates `isOpenIDConfigured()` on every
  * request: while OAuth is unselected it simply passes through, and the first time OAuth is actually in
  * use it lazily builds the underlying express-openid-connect handler and caches it. The discovery probe
- * (endSessionSupported) only depends on the issuer — which is fixed in config and changes solely on
- * restart — so it is resolved once on that first use. An in-flight guard ensures concurrent first
- * requests build the handler exactly once.
+ * (see {@link probeProviderCapabilities}) only depends on the issuer — which is fixed in config and
+ * changes solely on restart — so it is resolved once on that first use. An in-flight guard ensures
+ * concurrent first requests build the handler exactly once.
  */
 export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {}): RequestHandler {
     const {
         isConfigured = isOpenIDConfigured,
-        isRpInitiatedLogoutSupported: probeRpLogout = isRpInitiatedLogoutSupported,
+        probeProviderCapabilities: probeCapabilities = probeProviderCapabilities,
         generateOAuthConfig: buildOAuthConfig = generateOAuthConfig,
         buildAuth
     } = deps;
@@ -297,8 +297,8 @@ export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {
                 // OAuth unselected. The sole static reference to the package is the erased `Session` type
                 // import, so the bundler keeps it out of the eager-init graph (see scripts/build-utils.ts).
                 const authFactory = buildAuth ?? (await import("express-openid-connect")).auth;
-                const endSessionSupported = await probeRpLogout();
-                oidcMiddleware = authFactory(buildOAuthConfig(endSessionSupported));
+                const capabilities = await probeCapabilities();
+                oidcMiddleware = authFactory(buildOAuthConfig(capabilities));
             })();
             try {
                 await oidcInit;
@@ -332,25 +332,55 @@ export default {
     clearSavedUser,
     isTokenValid,
     isUserSaved,
-    isRpInitiatedLogoutSupported,
+    probeProviderCapabilities,
 };
-
-const GOOGLE_ISSUER = "https://accounts.google.com";
 
 // Cap the startup discovery probe so a slow/unreachable provider can't stall server boot.
 const DISCOVERY_TIMEOUT_MS = 10_000;
 
+/** Everything we negotiate with the provider from its discovery document. */
+export interface ProviderCapabilities {
+    /** Whether RP-Initiated Logout (`idpLogout`) can be safely enabled. */
+    endSessionSupported: boolean;
+    /** How to authenticate to the token endpoint. */
+    clientAuthMethod: ClientAuthMethod;
+}
+
 /**
- * Probes the configured OIDC issuer's discovery document to decide whether RP-Initiated Logout is
- * available, i.e. whether `idpLogout` can be safely enabled in {@link generateOAuthConfig}. The issuer
- * is fixed in config.ini/env and only changes on restart, so this is resolved once at startup rather
- * than per logout. Any fetch/parse failure is treated as "unsupported" so a transient network blip
- * degrades to a working local logout rather than breaking it.
+ * What we assume when discovery is unavailable: no RP-Initiated Logout (so logout degrades to clearing
+ * the local session rather than crashing on a missing endpoint), and the OIDC Core default token-endpoint
+ * auth method. Both are the conservative, spec-default choices.
  */
-async function isRpInitiatedLogoutSupported() {
+const DEFAULT_PROVIDER_CAPABILITIES: ProviderCapabilities = {
+    endSessionSupported: false,
+    clientAuthMethod: "client_secret_basic"
+};
+
+/**
+ * Probes the configured OIDC issuer's discovery document once and derives every provider-dependent
+ * setting from it. The issuer is fixed in config.ini/env and only changes on restart, so this resolves
+ * a single time on first OAuth use rather than per request. Any fetch/parse failure degrades to
+ * {@link DEFAULT_PROVIDER_CAPABILITIES} so a transient network blip doesn't break login outright.
+ */
+async function probeProviderCapabilities(): Promise<ProviderCapabilities> {
+    const metadata = await fetchDiscoveryMetadata();
+    if (metadata === undefined) {
+        return DEFAULT_PROVIDER_CAPABILITIES;
+    }
+
+    return {
+        endSessionSupported: supportsRpInitiatedLogout(metadata),
+        clientAuthMethod: resolveClientAuthMethod(metadata)
+    };
+}
+
+/**
+ * Fetches the issuer's OIDC discovery document, or `undefined` when it can't be retrieved or parsed.
+ */
+async function fetchDiscoveryMetadata(): Promise<unknown> {
     const issuer = config.MultiFactorAuthentication.oauthIssuerBaseUrl.replace(/\/+$/, "");
     if (!issuer) {
-        return false;
+        return undefined;
     }
 
     // The discovery document lives at `{issuer}/.well-known/openid-configuration` — appended to the full
@@ -361,26 +391,26 @@ async function isRpInitiatedLogoutSupported() {
     try {
         const response = await fetch(metadataUrl, { signal: controller.signal });
         if (!response.ok) {
-            getLog().info(`OAuth: discovery for ${issuer} returned HTTP ${response.status}; treating RP-Initiated Logout as unsupported.`);
-            return false;
+            getLog().info(`OAuth: discovery for ${issuer} returned HTTP ${response.status}; falling back to default provider settings.`);
+            return undefined;
         }
-        const metadata: unknown = await response.json();
-        return supportsRpInitiatedLogout(metadata);
+        return await response.json();
     } catch (error) {
-        getLog().info(`OAuth: discovery fetch for ${issuer} failed, treating RP-Initiated Logout as unsupported. ${error instanceof Error ? error.message : error}`);
-        return false;
+        getLog().info(`OAuth: discovery fetch for ${issuer} failed, falling back to default provider settings. ${error instanceof Error ? error.message : error}`);
+        return undefined;
     } finally {
         clearTimeout(timeout);
     }
 }
 
 /**
- * The single field of the OIDC discovery document we consume. The full metadata is large and arrives as
+ * The fields of the OIDC discovery document we consume. The full metadata is large and arrives as
  * untrusted network JSON, so rather than pull in (and pin) openid-client's transitive `ServerMetadata`
- * type for one property, we mirror just what we read and validate it at runtime.
+ * type, we mirror just what we read and validate it at runtime.
  */
 interface OidcDiscoveryMetadata {
     end_session_endpoint?: string;
+    token_endpoint_auth_methods_supported?: string[];
 }
 
 /**
@@ -395,22 +425,39 @@ export function supportsRpInitiatedLogout(metadata: unknown) {
     return typeof end_session_endpoint === "string" && end_session_endpoint.length > 0;
 }
 
+export type ClientAuthMethod = "client_secret_basic" | "client_secret_post";
+
 /**
- * Chooses the token-endpoint client authentication method based on the issuer.
+ * Chooses the token-endpoint client authentication method from the provider's own discovery document,
+ * preferring `client_secret_post` whenever it is advertised.
  *
- * - **Google** → `client_secret_post`. express-openid-connect defaults to `client_secret_basic`,
- *   whose oauth4webapi implementation form-url-encodes the client_id/secret per RFC 6749 §2.3.1
- *   ("-" → %2D, "." → %2E) inside the HTTP Basic header. Google does not decode Basic credentials, so
- *   a Google client_id (which always contains "-" and ".") arrives corrupted and the token exchange
- *   fails with "invalid_client: The OAuth client was not found." Posting the credentials in the body
- *   sidesteps the Basic-auth encoding.
- * - **Any other issuer** → `client_secret_basic`, the OIDC default a spec-compliant provider expects
- *   (e.g. Authelia/Keycloak register confidential clients as `client_secret_basic` and reject a
- *   mismatched method).
+ * `client_secret_basic` — the OIDC Core default, and what express-openid-connect picks on its own — is
+ * unsafe for credentials containing `- _ . ! ~ * ' ( )`. Its oauth4webapi implementation form-url-encodes
+ * the client_id/secret per RFC 6749 §2.3.1 ("-" → %2D, "." → %2E) *inside* the HTTP Basic header, but
+ * providers routinely base64-decode that header without percent-decoding it, so the credentials arrive
+ * corrupted. This has broken two providers already: Google (whose client_ids always contain "-" and ".";
+ * "invalid_client: The OAuth client was not found") and GitLab (whose secrets are `gloas-` prefixed;
+ * OAUTH_WWW_AUTHENTICATE_CHALLENGE — see #10585, a regression from the openid-client v5 → v6 upgrade,
+ * where v5's plainer `encodeURIComponent` left those characters intact).
+ *
+ * Posting the credentials in the request body sidesteps the Basic-auth encoding entirely, so it is the
+ * safe choice for *any* provider that accepts it — hence a capability check rather than an issuer
+ * allowlist. Providers that only register confidential clients as `client_secret_basic` (Authelia,
+ * Keycloak) still get basic, as does a provider whose discovery document is missing or malformed.
  */
-function resolveClientAuthMethod() {
-    const issuer = config.MultiFactorAuthentication.oauthIssuerBaseUrl.replace(/\/+$/, "");
-    return issuer === GOOGLE_ISSUER ? "client_secret_post" : "client_secret_basic";
+export function resolveClientAuthMethod(metadata: unknown): ClientAuthMethod {
+    if (typeof metadata !== "object" || metadata === null) {
+        return DEFAULT_PROVIDER_CAPABILITIES.clientAuthMethod;
+    }
+
+    const { token_endpoint_auth_methods_supported } = metadata as OidcDiscoveryMetadata;
+    if (!Array.isArray(token_endpoint_auth_methods_supported)) {
+        return DEFAULT_PROVIDER_CAPABILITIES.clientAuthMethod;
+    }
+
+    return token_endpoint_auth_methods_supported.includes("client_secret_post")
+        ? "client_secret_post"
+        : "client_secret_basic";
 }
 
 /**
