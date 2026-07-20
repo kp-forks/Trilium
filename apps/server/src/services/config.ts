@@ -11,7 +11,7 @@
  * ║      2     │ config.ini File                 │ [Network]                   ║
  * ║      ↓     │ (User Configuration)            │ port=8080                   ║
  * ║            │                                                                ║
- * ║      3     │ Default Values                  │ port='3000'                 ║
+ * ║      3     │ Default Values                  │ port='8080'                 ║
  * ║            │ (Lowest Priority - Fallback)    │ (hardcoded defaults)        ║
  * ║                                                                            ║
  * ╠════════════════════════════════════════════════════════════════════════════╣
@@ -163,6 +163,17 @@ export interface TriliumConfig {
  * After this period, old log files are automatically deleted during rotation.
  */
 export const LOGGING_DEFAULT_RETENTION_DAYS = 90;
+
+/**
+ * Port the server listens on when neither an environment variable nor a
+ * `port=` entry in config.ini supplies one.
+ *
+ * In practice this fallback is rarely reached: `config-sample.ini` ships
+ * `port=8080` and is copied into the data directory on first run, so a fresh
+ * install already has the value set. Keep the two in sync — a mismatch here
+ * reads as "the default port changed" to anyone inspecting this file.
+ */
+export const DEFAULT_NETWORK_PORT = "8080";
 
 /**
  * Configuration value source with precedence handling.
@@ -342,7 +353,7 @@ const configMapping = {
         port: {
             standardEnvVar: 'TRILIUM_NETWORK_PORT',
             iniGetter: () => getIniSection("Network")?.port,
-            defaultValue: '3000'
+            defaultValue: DEFAULT_NETWORK_PORT
         },
         https: {
             standardEnvVar: 'TRILIUM_NETWORK_HTTPS',
