@@ -92,9 +92,12 @@ export function bootstrap(req: Request, res: Response) {
             delete req.session.ssoError;
         }
         // A round-trip that failed before the user was ever logged in lands here rather than on the
-        // authenticated bootstrap below, so consume its one-shot detail too. It isn't surfaced on the
-        // login screen (which has its own `ssoError` messaging); leaving it would otherwise fire as a
-        // stale, confusing toast after a later successful password login.
+        // authenticated bootstrap below, so consume its one-shot detail too and surface it as a bare
+        // flag — in SSO-only mode the login screen is the only place left to explain the bounce. The
+        // technical detail is deliberately NOT forwarded: this payload is served pre-auth, and the
+        // failure reason (TLS trust, DNS, refused connection) would leak infrastructure details to
+        // anonymous visitors. It's already in the server log.
+        const ssoConnectionFailed = Boolean(req.session.ssoConnectionFailed);
         delete req.session.ssoConnectionFailed;
         res.send({
             ...commonItems,
@@ -104,7 +107,8 @@ export function bootstrap(req: Request, res: Response) {
                 ssoIssuerName: openID.getSSOIssuerName(),
                 ssoIssuerIcon: openID.getSSOIssuerIcon(),
                 totpEnabled: totp.isTotpEnabled(),
-                ssoError
+                ssoError,
+                ssoConnectionFailed
             },
             hasNativeTitleBar: false,
             hasBackgroundEffects: false,

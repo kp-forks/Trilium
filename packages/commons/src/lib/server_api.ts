@@ -417,6 +417,12 @@ export type BootstrapDefinition = {
         totpEnabled: boolean;
         /** One-shot SSO error from a failed OIDC round-trip ("wrong_account" / "not_enrolled"). */
         ssoError?: string | false;
+        /**
+         * One-shot flag set when the OIDC provider couldn't be reached at all during an
+         * unauthenticated round-trip, so the login screen can explain the bounce back. Deliberately
+         * a boolean: the technical detail stays in the server log rather than being exposed pre-auth.
+         */
+        ssoConnectionFailed?: boolean;
     };
     baseApiUrl: string;
     assetPath: string;
