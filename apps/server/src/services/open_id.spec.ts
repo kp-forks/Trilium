@@ -718,6 +718,21 @@ describe("createReactiveOidcMiddleware", () => {
         expect(req.session.ssoConnectionFailed).toBeTruthy();
     });
 
+    it("falls back to a generic detail when the thrown value stringifies to nothing", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        // A thrown empty string reaches failRoundTrip through the init catch (the round-trip wrapper
+        // treats falsy as "no error"). describeError yields null and String() yields "" for it, so
+        // only the final fallback keeps the session marker non-empty — and its presence is what marks
+        // the failure downstream.
+        t.isRpInitiatedLogoutSupported.mockRejectedValueOnce("");
+
+        const { req, redirect } = await run(t.middleware);
+
+        expect(redirect).toHaveBeenCalledWith("/");
+        expect(req.session.ssoConnectionFailed).toBe("unknown error");
+    });
+
     // This middleware is mounted ahead of every route, so a failed lazy init is reached by ordinary
     // traffic too. Redirecting those would hand an XHR a 302 to HTML where it expects JSON, so only the
     // provider round-trip — a full-page navigation — is answered that way.

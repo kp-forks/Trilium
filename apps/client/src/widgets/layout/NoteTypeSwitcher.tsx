@@ -100,7 +100,7 @@ function CollectionNoteTypes({ noteId, collectionTemplates }: { noteId: string, 
     );
 }
 
-function TemplateNoteTypes({ noteId, builtinTemplates }: { noteId: string, builtinTemplates: FNote[] }) {
+export function TemplateNoteTypes({ noteId, builtinTemplates }: { noteId: string, builtinTemplates: FNote[] }) {
     const [ userTemplates, setUserTemplates ] = useState<FNote[]>([]);
 
     async function refreshTemplates() {

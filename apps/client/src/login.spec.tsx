@@ -156,6 +156,12 @@ describe("login App — SSO branch", () => {
         expect(c.textContent).toContain("login.sso-wrong-account");
     });
 
+    it("maps any non-wrong-account SSO error to the not-enrolled message", () => {
+        window.glob.login = { ssoEnabled: true, ssoIssuerName: "Google", totpEnabled: false, ssoError: "not_enrolled" };
+        const c = renderInto(<App />);
+        expect(c.textContent).toContain("login.sso-not-enrolled");
+    });
+
     it("shows the generic connection-failure message when the provider was unreachable", () => {
         window.glob.login = { ssoEnabled: true, ssoIssuerName: "Google", totpEnabled: false, ssoConnectionFailed: true };
         const c = renderInto(<App />);
