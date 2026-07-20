@@ -1,43 +1,38 @@
 <h2>GitLab</h2>
 <ol>
-  <li>
-    <p>Go to user settings on <a href="https://gitlab.com/-/user_settings/applications">gitlab.com</a> or
-      your own self-hosted instance.</p>
+  <li>Go to user settings on <a href="https://gitlab.com/-/user_settings/applications">gitlab.com</a> or
+    your own self-hosted instance.</li>
+  <li>Press <em>Add new application</em>.</li>
+  <li>Give it a name (e.g. Trilium).</li>
+  <li>Set <em>Redirect URI</em> to <code spellcheck="false">https://&lt;server&gt;/callback</code>
   </li>
-  <li>
-    <p>Press <em>Add new application</em>.</p>
-  </li>
-  <li>
-    <p>Give it a name (e.g. Trilium).</p>
-  </li>
-  <li>
-    <p>Set <em>Redirect URI</em> to <code spellcheck="false">https://&lt;server&gt;/callback</code>
-    </p>
-  </li>
-  <li>
-    <p>Make sure <em>Confidential</em> is checked and <em>Device authorization grant</em> is
-      unchecked.</p>
-  </li>
-  <li>
-    <p>Under scopes, check <em>openid</em>, <em>profile</em> and <em>email</em> (they
-      should be near the end).</p>
-  </li>
-  <li>
-    <p>Save the application and copy the <em>Application ID</em> and <em>Secret</em>.</p>
-  </li>
+  <li>Make sure <em>Confidential</em> is checked and <em>Device authorization grant</em> is
+    unchecked.</li>
+  <li>Under scopes, check <em>openid</em>, <em>profile</em> and <em>email</em> (they
+    should be near the end).</li>
+  <li>Save the application and copy the <em>Application ID</em> and <em>Secret</em>.</li>
 </ol>
 <p>Adjust <code spellcheck="false">config.ini</code> as follows, replacing
   <code
   spellcheck="false">&lt;ApplicationId&gt;</code>and <code spellcheck="false">&lt;Secret&gt;</code> with
     the values from the last step as well as the <code spellcheck="false">&lt;server&gt;</code> with
-    a URL to your Trilium instance. If you are using a self-hosted instance
-    of GitLab, make sure to also update <code spellcheck="false">oauthIssuerBaseUrl</code>.</p><pre><code class="language-text-x-trilium-auto">[MultiFactorAuthentication]
+    a URL to your Trilium instance.</p><pre><code class="language-text-x-trilium-auto">[MultiFactorAuthentication]
 oauthBaseUrl=https://&lt;server&gt;
-
 oauthClientId=&lt;ApplicationId&gt;
-
 oauthClientSecret=&lt;Secret&gt;
-
 oauthIssuerBaseUrl=https://gitlab.com
-
-oauthIssuerName=GitLab</code></pre>
+oauthIssuerName=GitLab
+oauthClientAuthMethod=client_secret_post
+</code></pre>
+<aside class="admonition important">
+  <p>If you are using a self-hosted instance of GitLab, make sure to also update
+    <code
+    spellcheck="false">oauthIssuerBaseUrl</code>, and keep the <code spellcheck="false">oauthClientAuthMethod</code> line
+      above.</p>
+  <p>GitLab's token endpoint does not decode credentials sent via HTTP Basic,
+    so without <code spellcheck="false">oauthClientAuthMethod</code>, sign-in
+    fails with a <code spellcheck="false">server responded with a challenge in the WWW-Authenticate HTTP Header</code> error.
+    Trilium applies this automatically for <code spellcheck="false">gitlab.com</code>,
+    but a self-hosted issuer URL cannot be detected.</p>
+</aside>
+<p>&nbsp;</p>

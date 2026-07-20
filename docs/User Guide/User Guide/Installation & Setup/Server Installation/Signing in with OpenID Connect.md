@@ -22,6 +22,7 @@ Setting up authentication with OpenID connect is a two-step process:
     | Base URL\* | `oauthBaseUrl` | `TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHBASEURL` | The URL of your Trilium instance (e.g. `https://example.com`). |
     | Client ID\* | `oauthClientId` | `TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTID` | The client ID from your provider configuration. |
     | Client Secret\* | `oauthClientSecret` | `TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTSECRET` | The client secret from your provider configuration. |
+    | Client auth method | `oauthClientAuthMethod` | `TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTAUTHMETHOD` | Token-endpoint auth method: `client_secret_basic` or `client_secret_post`. Empty auto-detects.  Only needed if sign-in fails with a `WWW-Authenticate` or `invalid_client` error. |
     
     Asterisk (\*) marks a required field
 3.  The default OAuth issuer is Google. To use other services such as Authentik or Auth0, you can configure the settings via `oauthIssuerBaseUrl`, `oauthIssuerName`, and `oauthIssuerIcon` in the `config.ini` file. Alternatively, these values can be set using environment variables:
@@ -36,7 +37,7 @@ Setting up authentication with OpenID connect is a two-step process:
 4.  Restart the server so that the changes are applied.
 
 > [!NOTE]
-> Legacy environment variables are also supported: `TRILIUM_OAUTH_BASE_URL`, `TRILIUM_OAUTH_CLIENT_ID`, `TRILIUM_OAUTH_CLIENT_SECRET`, and for customizing the provider: `TRILIUM_OAUTH_ISSUER_BASE_URL`, `TRILIUM_OAUTH_ISSUER_NAME`, `TRILIUM_OAUTH_ISSUER_ICON`
+> Legacy environment variables are also supported: `TRILIUM_OAUTH_BASE_URL`, `TRILIUM_OAUTH_CLIENT_ID`, `TRILIUM_OAUTH_CLIENT_SECRET`, and for customizing the provider: `TRILIUM_OAUTH_ISSUER_BASE_URL`, `TRILIUM_OAUTH_ISSUER_NAME`, `TRILIUM_OAUTH_ISSUER_ICON`, `TRILIUM_OAUTH_CLIENT_AUTH_METHOD`.
 
 ## Connecting to the authentication provider
 
@@ -81,9 +82,13 @@ To disable the OpenID Connect authentication and instead rely on the local passw
 
 ## Troubleshooting
 
-### Setup fails with “invalid user”
+### Setup fails with a `WWW-Authenticate` or `invalid_client` error
 
-If you are running behind a [reverse proxy](2.%20Reverse%20proxy.md), a buffer overflow can cause this issue. Here is a sample fix for <a class="reference-link" href="2.%20Reverse%20proxy/Nginx.md">Nginx</a>: 
+Your provider disagrees with Trilium about how client credentials should be sent to the token endpoint. Set `oauthClientAuthMethod` to `client_secret_post` (or `client_secret_basic` if it's already set to post) and restart. Providers vary: some reject `client_secret_post` outright because the method is fixed when the client is registered (e.g. Authelia), so if one value doesn't work, try the other.
+
+### Setup fails with `invalid user`
+
+If you are running behind a [reverse proxy](2.%20Reverse%20proxy.md), a buffer overflow can also cause this issue. Here is a sample fix for <a class="reference-link" href="2.%20Reverse%20proxy/Nginx.md">Nginx</a>: 
 
 ```
 proxy_buffer_size 128k;
