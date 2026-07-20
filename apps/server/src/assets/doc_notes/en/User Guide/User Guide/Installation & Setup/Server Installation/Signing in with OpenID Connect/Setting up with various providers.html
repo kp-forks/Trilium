@@ -1,0 +1,43 @@
+<h2>GitLab</h2>
+<ol>
+  <li>
+    <p>Go to user settings on <a href="https://gitlab.com/-/user_settings/applications">gitlab.com</a> or
+      your own self-hosted instance.</p>
+  </li>
+  <li>
+    <p>Press <em>Add new application</em>.</p>
+  </li>
+  <li>
+    <p>Give it a name (e.g. Trilium).</p>
+  </li>
+  <li>
+    <p>Set <em>Redirect URI</em> to <code spellcheck="false">https://&lt;server&gt;/callback</code>
+    </p>
+  </li>
+  <li>
+    <p>Make sure <em>Confidential</em> is checked and <em>Device authorization grant</em> is
+      unchecked.</p>
+  </li>
+  <li>
+    <p>Under scopes, check <em>openid</em>, <em>profile</em> and <em>email</em> (they
+      should be near the end).</p>
+  </li>
+  <li>
+    <p>Save the application and copy the <em>Application ID</em> and <em>Secret</em>.</p>
+  </li>
+</ol>
+<p>Adjust <code spellcheck="false">config.ini</code> as follows, replacing
+  <code
+  spellcheck="false">&lt;ApplicationId&gt;</code>and <code spellcheck="false">&lt;Secret&gt;</code> with
+    the values from the last step as well as the <code spellcheck="false">&lt;server&gt;</code> with
+    a URL to your Trilium instance. If you are using a self-hosted instance
+    of GitLab, make sure to also update <code spellcheck="false">oauthIssuerBaseUrl</code>.</p><pre><code class="language-text-x-trilium-auto">[MultiFactorAuthentication]
+oauthBaseUrl=https://&lt;server&gt;
+
+oauthClientId=&lt;ApplicationId&gt;
+
+oauthClientSecret=&lt;Secret&gt;
+
+oauthIssuerBaseUrl=https://gitlab.com
+
+oauthIssuerName=GitLab</code></pre>
