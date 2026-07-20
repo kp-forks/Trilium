@@ -1052,9 +1052,11 @@ export function useTooltip(elRef: RefObject<HTMLElement>, config: Partial<Toolti
         const tooltip = Tooltip.getInstance(element);
 
         return () => {
-            if (element.isConnected) {
-                tooltip?.dispose();
-            }
+            // Dispose even when the trigger element is already detached (e.g. a keyed remount
+            // replaced it before this cleanup ran) — dispose() also removes a currently-shown
+            // popup from the DOM, and with the trigger gone nothing else ever would (#10567).
+            // The pending-callback crash of bootstrap#37474 is handled by the dispose() patch above.
+            tooltip?.dispose();
         };
     }, [ elRef, config ]);
 
@@ -1108,9 +1110,11 @@ export function useStaticTooltip(elRef: RefObject<Element>, config?: Partial<Too
 
         return () => {
             tooltips.delete(tooltip);
-            if (element.isConnected) {
-                tooltip.dispose();
-            }
+            // Dispose even when the trigger element is already detached (e.g. a keyed remount
+            // replaced it before this cleanup ran) — dispose() also removes a currently-shown
+            // popup from the DOM, and with the trigger gone nothing else ever would (#10567).
+            // The pending-callback crash of bootstrap#37474 is handled by the dispose() patch above.
+            tooltip.dispose();
 
             // For delegated (`selector:`) configs, hovered children spawn per-target
             // Tooltip instances whose popups the parent's dispose() does not remove;
