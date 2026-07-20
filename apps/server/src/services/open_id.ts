@@ -2,6 +2,7 @@ import { getLog, options } from "@triliumnext/core";
 import type { NextFunction, Request, RequestHandler, Response } from "express";
 import type { Session } from "express-openid-connect";
 
+import { describeError } from "../routes/error_handlers.js";
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
 import sql from "./sql.js";
@@ -307,7 +308,7 @@ export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {
                 // discovery-probe failure, malformed config, etc.) would leave the rejected promise
                 // cached and break every subsequent OAuth request until a server restart.
                 oidcInit = null;
-                throw error;
+                return failRoundTrip(req, res, next, error);
             }
         }
 
@@ -318,9 +319,50 @@ export function createReactiveOidcMiddleware(deps: Partial<ReactiveOidcDeps> = {
         if (!oidcMiddleware) {
             return next();
         }
-        return oidcMiddleware(req, res, next);
+
+        // The library reports a broken round-trip by calling next(err) rather than by rejecting, so the
+        // interception has to happen on `next` — a try/catch around this call would never see it. A bare
+        // next() (the pass-through for non-OIDC routes) must still propagate untouched.
+        return oidcMiddleware(req, res, (error?: unknown) => {
+            if (!error) {
+                return next();
+            }
+            return failRoundTrip(req, res, next, error);
+        });
     };
 }
+
+/**
+ * Handles an OIDC round-trip that failed outright — as opposed to one that completed with a rejection
+ * (wrong account, not enrolled), which `afterCallback` already reports via `ssoError`.
+ *
+ * Previously such a failure fell through to the generic error handler, which answers with JSON. Since
+ * `/authenticate` is a full-page navigation, that stranded the user on a raw `{"message":"fetch failed"}`
+ * page with no way back — particularly unhelpful during first-time setup, where reaching the provider is
+ * exactly what's being configured. Instead we mirror the success path: flag the session and redirect to
+ * the app root, letting the client surface a toast carrying the technical detail.
+ */
+function failRoundTrip(req: Request, res: Response, next: NextFunction, error: unknown) {
+    // `describeError` unwraps the `.cause` chain, which is where the actionable reason actually lives:
+    // undici surfaces only "fetch failed" at the top level, with e.g. "self-signed certificate
+    // [DEPTH_ZERO_SELF_SIGNED_CERT]" nested underneath. Kept non-empty — its presence is what marks the
+    // failure downstream, so an error that describes to nothing must not read as "no failure".
+    const detail = describeError(error) || String(error) || "unknown error";
+    getLog().error(`OAuth provider round-trip failed on ${req.method} ${req.url}: ${detail}`);
+
+    // Nothing to redirect if the library already started answering; let Express finish it.
+    if (res.headersSent) {
+        return next(error);
+    }
+
+    // Bounded: this rides in the session store until the next bootstrap consumes it, and a deep cause
+    // chain would otherwise be unbounded.
+    req.session.ssoConnectionFailed = detail.slice(0, MAX_CONNECTION_FAILURE_DETAIL_LENGTH);
+    return res.redirect("/");
+}
+
+/** Upper bound on the technical detail carried to the client; enough for a full cause chain. */
+const MAX_CONNECTION_FAILURE_DETAIL_LENGTH = 300;
 
 export default {
     generateOAuthConfig,

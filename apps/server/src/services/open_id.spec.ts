@@ -550,10 +550,12 @@ describe("createReactiveOidcMiddleware", () => {
 
     async function run(middleware: RequestHandler) {
         const next = vi.fn() as unknown as NextFunction;
-        const req = {} as ExpressRequest;
-        const res = {} as ExpressResponse;
+        // A failed round-trip redirects back to the app root and flags the session, so both have to be
+        // present for the middleware to drive them.
+        const req = { method: "GET", url: "/authenticate", session: {} } as ExpressRequest;
+        const res = { headersSent: false, redirect: vi.fn() } as unknown as ExpressResponse;
         await middleware(req, res, next);
-        return { next, req, res };
+        return { next, req, res, redirect: res.redirect as unknown as ReturnType<typeof vi.fn> };
     }
 
     it("passes through without building the OIDC handler when OAuth is not selected", async () => {
@@ -664,13 +666,72 @@ describe("createReactiveOidcMiddleware", () => {
         t.setConfigured(true);
         t.isRpInitiatedLogoutSupported.mockRejectedValueOnce(new Error("transient discovery failure"));
 
-        await expect(run(t.middleware)).rejects.toThrow("transient discovery failure");
+        // The failure is reported to the user via the redirect-and-flag path rather than thrown at the
+        // generic error handler, which would answer this full-page navigation with raw JSON.
+        const failed = await run(t.middleware);
+        expect(failed.redirect).toHaveBeenCalledWith("/");
+        expect(failed.req.session.ssoConnectionFailed).toContain("transient discovery failure");
         expect(t.oidcHandler).not.toHaveBeenCalled();
 
         // Second request: the probe succeeds and the handler is finally built and delegated to.
         const { req, res } = await run(t.middleware);
         expect(t.buildAuth).toHaveBeenCalledOnce();
         expect(t.oidcHandler).toHaveBeenCalledWith(req, res, expect.any(Function));
+    });
+
+    // The provider round-trip failing outright (unreachable host, untrusted TLS certificate, token
+    // exchange error) used to fall through to the generic JSON error handler, stranding the user on a
+    // `{"message":"fetch failed"}` page mid-way through connecting an account.
+    it("redirects back to the app root and flags the session when the round-trip fails", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        // express-openid-connect reports a broken round-trip through next(err), not by rejecting. The
+        // shape mirrors undici's: an opaque top-level message with the real reason nested in `.cause`.
+        const tlsFailure = Object.assign(new Error("self-signed certificate"), { code: "DEPTH_ZERO_SELF_SIGNED_CERT" });
+        t.oidcHandler.mockImplementation(((_req, _res, next) =>
+            next(new Error("fetch failed", { cause: tlsFailure }))) as RequestHandler);
+
+        const { req, redirect, next } = await run(t.middleware);
+
+        expect(redirect).toHaveBeenCalledWith("/");
+        // The detail travels to the client verbatim, so the actionable reason buried in the cause chain
+        // reaches the user rather than only the opaque top-level "fetch failed".
+        expect(req.session.ssoConnectionFailed).toBe("fetch failed ← caused by: self-signed certificate [DEPTH_ZERO_SELF_SIGNED_CERT]");
+        // The error must not also continue down the chain, or Express would answer the request twice.
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    // The detail's presence is what marks the failure downstream, so an error that describes to nothing
+    // must still produce a non-empty string — otherwise the client would read it as "no failure" and the
+    // user would land back on the app root with no explanation at all.
+    it("still records a detail for an error that describes to nothing", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        // An object with neither a message nor any system/OAuth field — describeError yields null for it.
+        t.oidcHandler.mockImplementation(((_req, _res, next) => next({})) as RequestHandler);
+
+        const { req, redirect } = await run(t.middleware);
+
+        expect(redirect).toHaveBeenCalledWith("/");
+        expect(req.session.ssoConnectionFailed).toBeTruthy();
+    });
+
+    // Once the library has begun answering (e.g. it already started the redirect to the provider), we
+    // can't redirect on top of it — the error has to go to Express instead of causing a double response.
+    it("defers to the error chain when the response has already started", async () => {
+        const t = setup();
+        t.setConfigured(true);
+        const failure = new Error("fetch failed");
+        t.oidcHandler.mockImplementation(((_req, res, next) => {
+            (res as { headersSent: boolean }).headersSent = true;
+            next(failure);
+        }) as RequestHandler);
+
+        const { req, redirect, next } = await run(t.middleware);
+
+        expect(redirect).not.toHaveBeenCalled();
+        expect(next).toHaveBeenCalledWith(failure);
+        expect(req.session.ssoConnectionFailed).toBeUndefined();
     });
 });
 

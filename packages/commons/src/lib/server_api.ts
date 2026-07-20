@@ -470,6 +470,13 @@ export type BootstrapDefinition = {
      * one-shot "account connected" toast once the post-enrollment redirect lands on the app root.
      */
     oauthJustEnrolled?: boolean;
+    /**
+     * Set for exactly one bootstrap after an OAuth round-trip failed to reach the provider at all,
+     * letting the client explain the bounce back to the app root with a one-shot error toast. Carries
+     * the technical reason (e.g. `fetch failed ← caused by: self-signed certificate
+     * [DEPTH_ZERO_SELF_SIGNED_CERT]`), shown verbatim in monospace; non-empty whenever present.
+     */
+    oauthConnectionFailed?: string;
 };
 
 /**

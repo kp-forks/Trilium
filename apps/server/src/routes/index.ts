@@ -91,6 +91,11 @@ export function bootstrap(req: Request, res: Response) {
         if (ssoError) {
             delete req.session.ssoError;
         }
+        // A round-trip that failed before the user was ever logged in lands here rather than on the
+        // authenticated bootstrap below, so consume its one-shot detail too. It isn't surfaced on the
+        // login screen (which has its own `ssoError` messaging); leaving it would otherwise fire as a
+        // stale, confusing toast after a later successful password login.
+        delete req.session.ssoConnectionFailed;
         res.send({
             ...commonItems,
             loggedIn: false,
@@ -126,6 +131,13 @@ export function bootstrap(req: Request, res: Response) {
         delete req.session.ssoJustEnrolled;
     }
 
+    // Likewise one-shot: the counterpart detail set when the provider round-trip failed outright, so the
+    // client can explain why the user was bounced back here instead of connecting.
+    const oauthConnectionFailed = req.session.ssoConnectionFailed;
+    if (oauthConnectionFailed) {
+        delete req.session.ssoConnectionFailed;
+    }
+
     res.send({
         ...commonItems,
         dbInitialized: true,
@@ -133,6 +145,7 @@ export function bootstrap(req: Request, res: Response) {
         loggedIn: true,
         csrfToken,
         oauthJustEnrolled,
+        oauthConnectionFailed,
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
             && isElectron

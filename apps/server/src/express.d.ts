@@ -45,6 +45,15 @@ export declare module "express-session" {
          */
         ssoJustEnrolled?: true;
         /**
+         * One-shot technical detail set when the OIDC provider round-trip fails outright (the provider
+         * is unreachable, its TLS certificate isn't trusted, the token exchange errors, …) rather than
+         * completing with a rejection. Read and cleared by /bootstrap so the client can show a single
+         * "connection failed" toast after we redirect back to the app root instead of leaving the user
+         * on a raw JSON error page. Always non-empty when set, since its presence is what marks the
+         * failure; bounded in length because it is held in the session store.
+         */
+        ssoConnectionFailed?: string;
+        /**
          * Transient state for the OneNote importer's delegated-Graph OAuth flow. During sign-in it
          * holds the PKCE verifier + state + redirect URI; after a successful callback it holds the
          * access/refresh tokens and the connected account. Session-scoped only — never synced.

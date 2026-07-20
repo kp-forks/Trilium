@@ -1952,6 +1952,7 @@
     "oauth_disconnected": "Disconnected {{account}} from {{provider}}.",
     "oauth_connect_success": "Connected to {{provider}} as {{account}}.",
     "oauth_connect_success_generic": "Account connected successfully.",
+    "oauth_connect_failed": "Could not connect to the OpenID provider",
     "oauth_account_unknown": "your account"
   },
   "shortcuts": {
