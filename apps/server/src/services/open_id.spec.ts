@@ -1,11 +1,11 @@
-import { cls, options } from "@triliumnext/core";
+import { cls, getLog, options } from "@triliumnext/core";
 import type { NextFunction, Request as ExpressRequest, RequestHandler, Response as ExpressResponse } from "express";
 import { ClientSecretBasic, ClientSecretPost } from "openid-client";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 
 import config from "./config.js";
 import openIDEncryption from "./encryption/open_id_encryption.js";
-import openID, { createReactiveOidcMiddleware, type ProviderCapabilities, resolveClientAuthMethod, resolveOAuthIdentity, supportsRpInitiatedLogout } from "./open_id.js";
+import openID, { createReactiveOidcMiddleware, resolveClientAuthMethod, resolveOAuthIdentity, supportsRpInitiatedLogout } from "./open_id.js";
 import sql from "./sql.js";
 import sqlInit from "./sql_init.js";
 
@@ -19,6 +19,7 @@ function setOauthConfig(complete: boolean) {
     mfa.oauthIssuerBaseUrl = "https://issuer.example.com";
     mfa.oauthIssuerName = "Acme";
     mfa.oauthIssuerIcon = "icon.png";
+    mfa.oauthClientAuthMethod = "";
 }
 
 describe("open_id", () => {
@@ -175,22 +176,20 @@ describe("open_id", () => {
             expect(typeof cfg.afterCallback).toBe("function");
         });
 
-        it("passes the probed provider capabilities through to express-openid-connect", () => {
+        it("passes the resolved token-endpoint auth method through to express-openid-connect", () => {
             setOauthConfig(true);
+            expect(openID.generateOAuthConfig().clientAuthMethod).toBe("client_secret_basic");
 
-            // Without a probe result, both settings fall back to the conservative spec defaults.
-            expect(openID.generateOAuthConfig()).toMatchObject({
-                clientAuthMethod: "client_secret_basic",
-                idpLogout: false
-            });
+            mfa.oauthIssuerBaseUrl = "https://gitlab.com";
+            expect(openID.generateOAuthConfig().clientAuthMethod).toBe("client_secret_post");
+        });
 
-            expect(openID.generateOAuthConfig({
-                endSessionSupported: true,
-                clientAuthMethod: "client_secret_post"
-            })).toMatchObject({
-                clientAuthMethod: "client_secret_post",
-                idpLogout: true
-            });
+        it("enables RP-Initiated Logout (idpLogout) only when the provider supports it", () => {
+            setOauthConfig(true);
+            // Default off, and on only when discovery confirmed an end_session_endpoint at startup.
+            expect(openID.generateOAuthConfig().idpLogout).toBe(false);
+            expect(openID.generateOAuthConfig(false).idpLogout).toBe(false);
+            expect(openID.generateOAuthConfig(true).idpLogout).toBe(true);
         });
 
         it("returns the session unchanged when the DB is not initialized", async () => {
@@ -382,83 +381,94 @@ describe("open_id", () => {
 
     /**
      * Regression cover for #10585: OIDC login against GitLab broke in v0.104.0 with
-     * `OAUTH_WWW_AUTHENTICATE_CHALLENGE`.
-     *
-     * The cause is the express-openid-connect 2.20.2 → 3.2.0 bump (openid-client v5 → v6/oauth4webapi).
-     * v6's `ClientSecretBasic` applies strict RFC 6749 §2.3.1 form-encoding *inside* the HTTP Basic
-     * header, escaping `- _ . ! ~ * ' ( )`; v5 used plain `encodeURIComponent`, which leaves them alone.
-     * GitLab's client secrets are prefixed `gloas-`, so the hyphen becomes `%2D` and GitLab's Doorkeeper
-     * token endpoint — which base64-decodes the header but does not percent-decode it — sees a wrong
-     * secret and answers 401 + `WWW-Authenticate`.
-     *
-     * The method must therefore be picked from the provider's own discovery document rather than
-     * hardcoded per issuer (the previous Google-only special case had the identical root cause).
+     * `OAUTH_WWW_AUTHENTICATE_CHALLENGE`, caused by the express-openid-connect 2.20.2 → 3.2.0 bump
+     * (openid-client v5 → v6/oauth4webapi). v6's `ClientSecretBasic` applies strict RFC 6749 §2.3.1
+     * form-encoding *inside* the HTTP Basic header, escaping `- _ . ! ~ * ' ( )`; v5 used plain
+     * `encodeURIComponent`, which leaves them alone.
      */
     describe("resolveClientAuthMethod", () => {
-        // Verbatim from https://gitlab.com/.well-known/openid-configuration.
-        const GITLAB = { token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"] };
-        const GOOGLE = { token_endpoint_auth_methods_supported: ["client_secret_post", "client_secret_basic"] };
-        const BASIC_ONLY = { token_endpoint_auth_methods_supported: ["client_secret_basic"] };
+        it("uses client_secret_post only for issuers that can't decode Basic credentials", () => {
+            setOauthConfig(true);
 
-        it("prefers client_secret_post whenever the provider advertises it", () => {
-            // Body-posted credentials are form-encoded by the transport and arrive intact, so post is
-            // the safe choice for any provider that accepts it — regardless of issuer.
-            expect(resolveClientAuthMethod(GITLAB)).toBe("client_secret_post");
-            expect(resolveClientAuthMethod(GOOGLE)).toBe("client_secret_post");
+            // GitLab's secrets are `gloas-` prefixed; Google's client_ids always carry "-" and ".".
+            mfa.oauthIssuerBaseUrl = "https://gitlab.com";
+            expect(resolveClientAuthMethod()).toBe("client_secret_post");
+            mfa.oauthIssuerBaseUrl = "https://accounts.google.com/"; // trailing slash tolerated
+            expect(resolveClientAuthMethod()).toBe("client_secret_post");
+
+            // Everyone else keeps the OIDC Core default. Critically this includes providers that
+            // *advertise* client_secret_post but register the client as basic and reject a mismatch
+            // (Authelia responds 401 invalid_client), which is why this is an issuer table and not a
+            // reading of token_endpoint_auth_methods_supported.
+            mfa.oauthIssuerBaseUrl = "https://auth.example.com:9091";
+            expect(resolveClientAuthMethod()).toBe("client_secret_basic");
+
+            // A self-hosted instance is not the public issuer, so it does not match the table.
+            mfa.oauthIssuerBaseUrl = "https://gitlab.example.com";
+            expect(resolveClientAuthMethod()).toBe("client_secret_basic");
         });
 
-        it("falls back to client_secret_basic when post is unavailable or discovery is unusable", () => {
-            // A provider that registers confidential clients as basic-only must still get basic.
-            expect(resolveClientAuthMethod(BASIC_ONLY)).toBe("client_secret_basic");
-            // Field absent → the OIDC Core default for the token endpoint is client_secret_basic.
-            expect(resolveClientAuthMethod({ issuer: "https://idp.example" })).toBe("client_secret_basic");
-            // Malformed / missing metadata (a failed discovery probe) fails safe to the spec default
-            // rather than silently switching every provider's authentication method.
-            expect(resolveClientAuthMethod({ token_endpoint_auth_methods_supported: "client_secret_post" })).toBe("client_secret_basic");
-            expect(resolveClientAuthMethod(null)).toBe("client_secret_basic");
-            expect(resolveClientAuthMethod(undefined)).toBe("client_secret_basic");
+        it("lets an explicit oauthClientAuthMethod override the issuer table", () => {
+            setOauthConfig(true);
+
+            // The escape hatch for self-hosted GitLab and any provider we don't know about.
+            mfa.oauthIssuerBaseUrl = "https://gitlab.example.com";
+            mfa.oauthClientAuthMethod = "client_secret_post";
+            expect(resolveClientAuthMethod()).toBe("client_secret_post");
+
+            // It overrides in both directions, so a table entry can be undone if a provider changes.
+            mfa.oauthIssuerBaseUrl = "https://gitlab.com";
+            mfa.oauthClientAuthMethod = "  client_secret_basic  ";
+            expect(resolveClientAuthMethod()).toBe("client_secret_basic");
+
+            // An unrecognised value is logged and ignored rather than passed to express-openid-connect,
+            // whose Joi schema would otherwise reject it and take the whole server down at first use.
+            const logSpy = vi.spyOn(getLog(), "error").mockImplementation(() => {});
+            mfa.oauthClientAuthMethod = "private_key_jwt";
+            expect(resolveClientAuthMethod()).toBe("client_secret_post");
+            expect(logSpy).toHaveBeenCalledWith(expect.stringContaining("private_key_jwt"));
         });
 
         /**
-         * The end-to-end property the fix actually has to hold: whatever method we select, the
-         * credentials must reach the token endpoint byte-identical to what the user configured. This
-         * drives the real openid-client encoders, so a future dependency bump that reintroduces the
-         * mangling fails here rather than in production.
+         * The property the issuer table exists to protect. `client_secret_post` puts the credentials in
+         * the form body, which every provider form-decodes, so they always arrive intact. Under
+         * `client_secret_basic` they arrive intact *only* if the provider percent-decodes per spec —
+         * both halves are pinned so the tradeoff stays explicit.
          */
-        it("delivers a GitLab-style secret to the token endpoint intact", () => {
+        it("delivers credentials to the token endpoint intact under the selected method", () => {
+            setOauthConfig(true);
+
             // GitLab: 64-hex Application ID, `gloas-` prefixed secret (the hyphen is what breaks Basic).
             const clientId = "a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2";
             const clientSecret = "gloas-4f3a2b1c-9d8e-7f6a-5b4c-3d2e1f0a9b8c";
+            mfa.oauthIssuerBaseUrl = "https://gitlab.com";
 
-            const received = credentialsAtTokenEndpoint(resolveClientAuthMethod(GITLAB), clientId, clientSecret);
+            expect(credentialsAtTokenEndpoint(resolveClientAuthMethod(), clientId, clientSecret))
+                .toEqual({ clientId, clientSecret });
 
-            expect(received).toEqual({ clientId, clientSecret });
+            // Had GitLab been left on basic, Doorkeeper would have compared against a mangled secret —
+            // this is the exact corruption behind #10585.
+            expect(credentialsAtTokenEndpoint("client_secret_basic", clientId, clientSecret))
+                .toEqual({ clientId, clientSecret: "gloas%2D4f3a2b1c%2D9d8e%2D7f6a%2D5b4c%2D3d2e1f0a9b8c" });
         });
 
-        /**
-         * The basic-only fallback has no safer method to fall back *to*, so it stays correct only for a
-         * provider that percent-decodes per spec. Both halves are pinned here so the tradeoff is explicit:
-         * choosing basic is safe for a compliant provider and lossy for a non-compliant one — which is
-         * precisely why post is preferred wherever it's on offer.
-         */
-        it("relies on the provider decoding per spec when it only offers basic", () => {
+        it("relies on the provider decoding per spec when it stays on basic", () => {
+            setOauthConfig(true);
             // The credentials from Trilium's own Authelia dev harness; the "_" is what Basic escapes.
             const clientId = "trilium";
             const clientSecret = "insecure_secret";
-            const method = resolveClientAuthMethod(BASIC_ONLY);
+            mfa.oauthIssuerBaseUrl = "https://auth.example.com:9091";
+            const method = resolveClientAuthMethod();
+            expect(method).toBe("client_secret_basic");
 
+            // Authelia percent-decodes per RFC 6749, so the credentials round-trip correctly.
             expect(credentialsAtTokenEndpoint(method, clientId, clientSecret, { percentDecodes: true }))
                 .toEqual({ clientId, clientSecret });
-
-            // A provider that skips the percent-decoding step sees a corrupted secret instead.
-            expect(credentialsAtTokenEndpoint(method, clientId, clientSecret))
-                .toEqual({ clientId, clientSecret: "insecure%5Fsecret" });
         });
     });
 
-    describe("probeProviderCapabilities", () => {
+    describe("isRpInitiatedLogoutSupported", () => {
         const wellKnownUrl = "https://issuer.example.com/.well-known/openid-configuration";
-        const DEFAULTS = { endSessionSupported: false, clientAuthMethod: "client_secret_basic" };
 
         function mockFetch(impl: (url: string) => Partial<Response> | Promise<Partial<Response>>) {
             return vi.spyOn(globalThis, "fetch").mockImplementation(
@@ -466,40 +476,31 @@ describe("open_id", () => {
             );
         }
 
-        // One fetch has to serve both settings — probing the same document twice would double the
-        // startup cost and could observe an inconsistent provider between the two reads.
-        it("derives every capability from a single discovery fetch", async () => {
+        it("fetches the issuer's discovery document and reflects end_session_endpoint", async () => {
             setOauthConfig(true);
             const fetchSpy = mockFetch(() => ({
                 ok: true,
-                json: () => Promise.resolve({
-                    end_session_endpoint: "https://issuer.example.com/logout",
-                    token_endpoint_auth_methods_supported: ["client_secret_basic", "client_secret_post"]
-                })
+                json: () => Promise.resolve({ end_session_endpoint: "https://issuer.example.com/logout" })
             }));
 
-            expect(await openID.probeProviderCapabilities()).toEqual({
-                endSessionSupported: true,
-                clientAuthMethod: "client_secret_post"
-            });
-            expect(fetchSpy).toHaveBeenCalledOnce();
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(true);
             expect(fetchSpy).toHaveBeenCalledWith(wellKnownUrl, expect.anything());
         });
 
-        it("falls back to the spec defaults when discovery advertises neither capability", async () => {
+        it("is false when discovery omits end_session_endpoint", async () => {
             setOauthConfig(true);
             mockFetch(() => ({ ok: true, json: () => Promise.resolve({}) }));
-            expect(await openID.probeProviderCapabilities()).toEqual(DEFAULTS);
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
         });
 
-        it("fails safe on a non-OK response or a thrown fetch", async () => {
+        it("fails closed (false) on a non-OK response or a thrown fetch", async () => {
             setOauthConfig(true);
 
             mockFetch(() => ({ ok: false, status: 404, json: () => Promise.resolve({}) }));
-            expect(await openID.probeProviderCapabilities()).toEqual(DEFAULTS);
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
 
             vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network down"));
-            expect(await openID.probeProviderCapabilities()).toEqual(DEFAULTS);
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
         });
 
         it("does not attempt discovery when no issuer is configured", async () => {
@@ -507,7 +508,7 @@ describe("open_id", () => {
             mfa.oauthIssuerBaseUrl = "";
             const fetchSpy = mockFetch(() => ({ ok: true, json: () => Promise.resolve({}) }));
 
-            expect(await openID.probeProviderCapabilities()).toEqual(DEFAULTS);
+            expect(await openID.isRpInitiatedLogoutSupported()).toBe(false);
             expect(fetchSpy).not.toHaveBeenCalled();
         });
     });
@@ -520,27 +521,18 @@ describe("open_id", () => {
  * every request, and lazily builds (and caches) the underlying handler the first time OAuth is used.
  */
 describe("createReactiveOidcMiddleware", () => {
-    const BASIC_CAPABILITIES: ProviderCapabilities = {
-        endSessionSupported: false,
-        clientAuthMethod: "client_secret_basic"
-    };
-    const POST_CAPABILITIES: ProviderCapabilities = {
-        endSessionSupported: true,
-        clientAuthMethod: "client_secret_post"
-    };
-
     function setup() {
         let configured = false;
 
         const oidcHandler = vi.fn(((_req, _res, next) => next()) as RequestHandler);
         const buildAuth = vi.fn(() => oidcHandler);
-        const probeProviderCapabilities = vi.fn().mockResolvedValue(BASIC_CAPABILITIES);
-        const generateOAuthConfig = vi.fn((capabilities: ProviderCapabilities) => ({ capabilities }) as never);
+        const isRpInitiatedLogoutSupported = vi.fn().mockResolvedValue(false);
+        const generateOAuthConfig = vi.fn((endSessionSupported: boolean) => ({ endSessionSupported }) as never);
         const isConfigured = vi.fn(() => configured);
 
         const middleware = createReactiveOidcMiddleware({
             isConfigured,
-            probeProviderCapabilities,
+            isRpInitiatedLogoutSupported,
             generateOAuthConfig,
             buildAuth
         });
@@ -549,7 +541,7 @@ describe("createReactiveOidcMiddleware", () => {
             middleware,
             oidcHandler,
             buildAuth,
-            probeProviderCapabilities,
+            isRpInitiatedLogoutSupported,
             generateOAuthConfig,
             isConfigured,
             setConfigured: (value: boolean) => { configured = value; }
@@ -573,7 +565,7 @@ describe("createReactiveOidcMiddleware", () => {
         expect(t.buildAuth).not.toHaveBeenCalled();
         expect(t.oidcHandler).not.toHaveBeenCalled();
         // No work is done while OAuth is unselected — not even the discovery probe.
-        expect(t.probeProviderCapabilities).not.toHaveBeenCalled();
+        expect(t.isRpInitiatedLogoutSupported).not.toHaveBeenCalled();
     });
 
     it("builds and delegates to the OIDC handler when OAuth is selected", async () => {
@@ -582,8 +574,8 @@ describe("createReactiveOidcMiddleware", () => {
 
         const { req, res, next } = await run(t.middleware);
 
-        expect(t.probeProviderCapabilities).toHaveBeenCalledOnce();
-        expect(t.generateOAuthConfig).toHaveBeenCalledWith(BASIC_CAPABILITIES);
+        expect(t.isRpInitiatedLogoutSupported).toHaveBeenCalledOnce();
+        expect(t.generateOAuthConfig).toHaveBeenCalledWith(false);
         expect(t.buildAuth).toHaveBeenCalledOnce();
         expect(t.oidcHandler).toHaveBeenCalledWith(req, res, expect.any(Function));
         // The wrapper must hand off to the OIDC handler and NOT call next() itself — calling it again
@@ -600,18 +592,18 @@ describe("createReactiveOidcMiddleware", () => {
         await run(t.middleware);
 
         expect(t.buildAuth).toHaveBeenCalledOnce();
-        expect(t.probeProviderCapabilities).toHaveBeenCalledOnce();
+        expect(t.isRpInitiatedLogoutSupported).toHaveBeenCalledOnce();
         expect(t.oidcHandler).toHaveBeenCalledTimes(2);
     });
 
     it("passes the discovery-probe result into the OAuth config", async () => {
         const t = setup();
-        t.probeProviderCapabilities.mockResolvedValue(POST_CAPABILITIES);
+        t.isRpInitiatedLogoutSupported.mockResolvedValue(true);
         t.setConfigured(true);
 
         await run(t.middleware);
 
-        expect(t.generateOAuthConfig).toHaveBeenCalledWith(POST_CAPABILITIES);
+        expect(t.generateOAuthConfig).toHaveBeenCalledWith(true);
     });
 
     // This is the regression the whole change exists to fix: with the old startup-only mount, flipping
@@ -652,12 +644,12 @@ describe("createReactiveOidcMiddleware", () => {
 
         // A deferred discovery probe keeps the first build in flight while a second request arrives,
         // exercising the in-flight-init guard (otherwise both requests would each build a handler).
-        let resolveProbe: (value: ProviderCapabilities) => void = () => {};
-        t.probeProviderCapabilities.mockReturnValue(new Promise<ProviderCapabilities>((resolve) => { resolveProbe = resolve; }));
+        let resolveProbe: (value: boolean) => void = () => {};
+        t.isRpInitiatedLogoutSupported.mockReturnValue(new Promise<boolean>((resolve) => { resolveProbe = resolve; }));
 
         const first = run(t.middleware);
         const second = run(t.middleware);
-        resolveProbe(BASIC_CAPABILITIES);
+        resolveProbe(false);
         await Promise.all([first, second]);
 
         expect(t.buildAuth).toHaveBeenCalledOnce();
@@ -670,7 +662,7 @@ describe("createReactiveOidcMiddleware", () => {
     it("retries the build on a subsequent request after a failed init", async () => {
         const t = setup();
         t.setConfigured(true);
-        t.probeProviderCapabilities.mockRejectedValueOnce(new Error("transient discovery failure"));
+        t.isRpInitiatedLogoutSupported.mockRejectedValueOnce(new Error("transient discovery failure"));
 
         await expect(run(t.middleware)).rejects.toThrow("transient discovery failure");
         expect(t.oidcHandler).not.toHaveBeenCalled();

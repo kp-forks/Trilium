@@ -134,6 +134,11 @@ export interface TriliumConfig {
         oauthIssuerName: string;
         /** URL to the OAuth provider's icon/logo */
         oauthIssuerIcon: string;
+        /**
+         * How to authenticate to the provider's token endpoint: 'client_secret_basic' or
+         * 'client_secret_post'. Leave empty to auto-detect from the issuer.
+         */
+        oauthClientAuthMethod: string;
     };
     /** Logging configuration */
     Logging: {
@@ -483,6 +488,13 @@ const configMapping = {
             aliasEnvVars: ['TRILIUM_OAUTH_ISSUER_ICON'],
             iniGetter: () => getIniSection("MultiFactorAuthentication")?.oauthIssuerIcon,
             defaultValue: ''
+        },
+        oauthClientAuthMethod: {
+            standardEnvVar: 'TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTAUTHMETHOD',
+            // alternative format
+            aliasEnvVars: ['TRILIUM_OAUTH_CLIENT_AUTH_METHOD'],
+            iniGetter: () => getIniSection("MultiFactorAuthentication")?.oauthClientAuthMethod,
+            defaultValue: ''
         }
     },
     Logging: {
@@ -566,7 +578,8 @@ const config: TriliumConfig = {
         oauthClientSecret: getConfigValue(configMapping.MultiFactorAuthentication.oauthClientSecret),
         oauthIssuerBaseUrl: getConfigValue(configMapping.MultiFactorAuthentication.oauthIssuerBaseUrl),
         oauthIssuerName: getConfigValue(configMapping.MultiFactorAuthentication.oauthIssuerName),
-        oauthIssuerIcon: getConfigValue(configMapping.MultiFactorAuthentication.oauthIssuerIcon)
+        oauthIssuerIcon: getConfigValue(configMapping.MultiFactorAuthentication.oauthIssuerIcon),
+        oauthClientAuthMethod: getConfigValue(configMapping.MultiFactorAuthentication.oauthClientAuthMethod)
     },
     Logging: {
         retentionDays: getConfigValue(configMapping.Logging.retentionDays)
@@ -630,6 +643,7 @@ const config: TriliumConfig = {
  * - TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERBASEURL : OAuth issuer URL
  * - TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERNAME    : OAuth provider name
  * - TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHISSUERICON    : OAuth provider icon
+ * - TRILIUM_MULTIFACTORAUTHENTICATION_OAUTHCLIENTAUTHMETHOD : Token-endpoint auth method
  *
  * Logging Section:
  * - TRILIUM_LOGGING_RETENTIONDAYS        : Log retention period in days
