@@ -95,3 +95,7 @@ proxy_buffer_size 128k;
 proxy_buffers 4 256k;
 proxy_busy_buffers_size 256k;
 ```
+
+### Setup fails with `OAUTH_RESPONSE_IS_NOT_CONFORM`
+
+Make sure the base URL is correct and that the identity provider actually supports OpenID Connect. Some providers such as GitHub offer only OAuth 2.0.

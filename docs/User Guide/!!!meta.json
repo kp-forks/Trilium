@@ -1648,6 +1648,13 @@
                                                     "value": "setup",
                                                     "isInheritable": false,
                                                     "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "x1lQNKQBqLcA",
+                                                    "isInheritable": false,
+                                                    "position": 40
                                                 }
                                             ],
                                             "format": "markdown",
