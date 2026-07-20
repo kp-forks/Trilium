@@ -793,6 +793,9 @@ importers:
       officeparser:
         specifier: 7.3.0
         version: 7.3.0(encoding@0.1.13)
+      openid-client:
+        specifier: 6.8.4
+        version: 6.8.4
       rand-token:
         specifier: 1.0.1
         version: 1.0.1
