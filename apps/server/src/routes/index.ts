@@ -9,7 +9,7 @@ import config from "../services/config.js";
 import { getLog } from "@triliumnext/core";
 import port from "../services/port.js";
 import openID from "../services/open_id.js";
-import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
+import { isDev, isElectron, isMac, supportsBackgroundMaterial } from "../services/utils.js";
 import totp from "../services/totp.js";
 import { generateCsrfToken } from "./csrf_protection.js";
 
@@ -55,7 +55,7 @@ export function bootstrap(req: Request, res: Response) {
         res.send({
             ...commonItems,
             hasNativeTitleBar: false,
-            hasBackgroundEffects: isElectron && (isWindows11 || isMac),
+            hasBackgroundEffects: isElectron && (supportsBackgroundMaterial || isMac),
             isMainWindow: true,
             appCssNoteIds: []
         } satisfies BootstrapDefinition);
@@ -153,7 +153,7 @@ export function bootstrap(req: Request, res: Response) {
         hasNativeTitleBar: isElectron && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
             && isElectron
-            && (isWindows11 || isMac)
+            && (supportsBackgroundMaterial || isMac)
             && !nativeTitleBarVisible,
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
         iconPackCss: [
