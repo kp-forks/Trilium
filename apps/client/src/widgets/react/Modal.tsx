@@ -132,13 +132,13 @@ export default function Modal({ children, className, size, title, customTitleBar
             elementToFocus.current = document.activeElement;
             openDialog($(modalRef.current), !stackable, {
                 focus: !noFocus
-            }).then(($widget) => {
+            }, zIndex).then(($widget) => {
                 modalInstanceRef.current = BootstrapModal.getOrCreateInstance($widget[0]);
             });
         } else {
             modalInstanceRef.current?.hide();
         }
-    }, [ show, modalRef.current, noFocus ]);
+    }, [ show, modalRef.current, noFocus, zIndex ]);
 
     // Memoize styles to prevent recreation on every render
     const dialogStyle = useMemo<CSSProperties>(() => {
