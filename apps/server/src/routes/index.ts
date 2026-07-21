@@ -7,6 +7,7 @@ import appPath from "../services/app_path.js";
 import assetPath from "../services/asset_path.js";
 import config from "../services/config.js";
 import { getLog } from "@triliumnext/core";
+import { isInternalElectronRequest } from "../services/electron_request.js";
 import port from "../services/port.js";
 import openID from "../services/open_id.js";
 import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
@@ -30,6 +31,15 @@ export function bootstrap(req: Request, res: Response) {
     // When auth is disabled the user is implicitly authenticated, so the set-password
     // and login pre-auth screens never apply — fall through to the full payload.
     const noAuthentication = config.General?.noAuthentication === true;
+    // Whether *this request* is the trusted desktop renderer (arriving via the
+    // trilium-app:// custom protocol, which tags it — see electron_request.ts).
+    // The pre-auth screens and the Electron-only window chrome are gated on this
+    // per-request marker, not the process-wide `isElectron` flag: on a desktop
+    // build, a browser hitting the same HTTP listener is NOT the renderer and must
+    // still go through the login screen and get a real session (#10589). Using the
+    // global flag told every such browser it was already logged in, so it skipped
+    // login and then had every API call rejected with "Logged in session not found".
+    const isElectronRenderer = isInternalElectronRequest(req);
     const commonItems = {
         ...getSharedBootstrapItems(assetPath, isDbInitialized),
         baseApiUrl: "api/",
@@ -55,19 +65,20 @@ export function bootstrap(req: Request, res: Response) {
         res.send({
             ...commonItems,
             hasNativeTitleBar: false,
-            hasBackgroundEffects: isElectron && (isWindows11 || isMac),
+            hasBackgroundEffects: isElectronRenderer && (isWindows11 || isMac),
             isMainWindow: true,
             appCssNoteIds: []
         } satisfies BootstrapDefinition);
         return;
     }
 
-    if (!isElectron && !noAuthentication && !passwordService.isPasswordSet()) {
+    if (!isElectronRenderer && !noAuthentication && !passwordService.isPasswordSet()) {
         // Pre-auth window: the DB is initialized but no password has been set yet.
-        // This screen is web/server-only — the desktop app manages its protected-notes
-        // password through the options UI and never gates the app on it — so we exclude
-        // Electron here, which also means the Electron-only title-bar / background-effect
-        // flags are unconditionally false. We serve a minimal payload (no CSRF token /
+        // The desktop renderer manages its protected-notes password through the options
+        // UI and never gates the app on it — so we exclude only the trusted renderer here
+        // (a browser hitting the desktop's HTTP listener still gets this screen), which
+        // also means the Electron-only title-bar / background-effect flags are
+        // unconditionally false. We serve a minimal payload (no CSRF token /
         // session data) carrying `passwordSet: false`; theme and icon-pack CSS still come
         // from commonItems so the screen matches the rest of the app.
         res.send({
@@ -80,9 +91,10 @@ export function bootstrap(req: Request, res: Response) {
         return;
     }
 
-    if (!isElectron && !noAuthentication && !req.session.loggedIn) {
-        // Pre-auth window: a password is set but the user hasn't logged in. Web/server
-        // only — the desktop app doesn't gate on a web session. Serve a minimal payload
+    if (!isElectronRenderer && !noAuthentication && !req.session.loggedIn) {
+        // Pre-auth window: a password is set but the user hasn't logged in. Skipped only
+        // for the trusted desktop renderer, which doesn't gate on a web session; a browser
+        // reaching the desktop's HTTP listener still logs in here. Serve a minimal payload
         // (no CSRF token / session data) carrying `loggedIn: false` plus the login-screen
         // config, which the client uses to render the login screen. The one-shot SSO error
         // left by a failed OIDC round-trip is read and cleared here (previously done by the
@@ -133,9 +145,9 @@ export function bootstrap(req: Request, res: Response) {
         loggedIn: true,
         csrfToken,
         oauthJustEnrolled,
-        hasNativeTitleBar: isElectron && nativeTitleBarVisible,
+        hasNativeTitleBar: isElectronRenderer && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
-            && isElectron
+            && isElectronRenderer
             && (isWindows11 || isMac)
             && !nativeTitleBarVisible,
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
