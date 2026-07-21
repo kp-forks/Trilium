@@ -10,7 +10,7 @@ import { getLog } from "@triliumnext/core";
 import { isInternalElectronRequest } from "../services/electron_request.js";
 import port from "../services/port.js";
 import openID from "../services/open_id.js";
-import { isDev, isElectron, isMac, isWindows11 } from "../services/utils.js";
+import { isDev, isElectron, isMac, supportsBackgroundMaterial } from "../services/utils.js";
 import totp from "../services/totp.js";
 import { generateCsrfToken } from "./csrf_protection.js";
 
@@ -71,7 +71,7 @@ export function bootstrap(req: Request, res: Response) {
         res.send({
             ...commonItems,
             hasNativeTitleBar: false,
-            hasBackgroundEffects: isElectronRenderer && (isWindows11 || isMac),
+            hasBackgroundEffects: isElectronRenderer && (supportsBackgroundMaterial || isMac),
             isMainWindow: true,
             appCssNoteIds: []
         } satisfies BootstrapDefinition);
@@ -109,6 +109,14 @@ export function bootstrap(req: Request, res: Response) {
         if (ssoError) {
             delete req.session.ssoError;
         }
+        // A round-trip that failed before the user was ever logged in lands here rather than on the
+        // authenticated bootstrap below, so consume its one-shot detail too and surface it as a bare
+        // flag — in SSO-only mode the login screen is the only place left to explain the bounce. The
+        // technical detail is deliberately NOT forwarded: this payload is served pre-auth, and the
+        // failure reason (TLS trust, DNS, refused connection) would leak infrastructure details to
+        // anonymous visitors. It's already in the server log.
+        const ssoConnectionFailed = Boolean(req.session.ssoConnectionFailed);
+        delete req.session.ssoConnectionFailed;
         res.send({
             ...commonItems,
             loggedIn: false,
@@ -117,7 +125,8 @@ export function bootstrap(req: Request, res: Response) {
                 ssoIssuerName: openID.getSSOIssuerName(),
                 ssoIssuerIcon: openID.getSSOIssuerIcon(),
                 totpEnabled: totp.isTotpEnabled(),
-                ssoError
+                ssoError,
+                ssoConnectionFailed
             },
             hasNativeTitleBar: false,
             hasBackgroundEffects: false,
@@ -144,6 +153,13 @@ export function bootstrap(req: Request, res: Response) {
         delete req.session.ssoJustEnrolled;
     }
 
+    // Likewise one-shot: the counterpart detail set when the provider round-trip failed outright, so the
+    // client can explain why the user was bounced back here instead of connecting.
+    const oauthConnectionFailed = req.session.ssoConnectionFailed;
+    if (oauthConnectionFailed) {
+        delete req.session.ssoConnectionFailed;
+    }
+
     res.send({
         ...commonItems,
         dbInitialized: true,
@@ -151,10 +167,11 @@ export function bootstrap(req: Request, res: Response) {
         loggedIn: true,
         csrfToken,
         oauthJustEnrolled,
+        oauthConnectionFailed,
         hasNativeTitleBar: isElectronRenderer && nativeTitleBarVisible,
         hasBackgroundEffects: options.backgroundEffects === "true"
             && isElectronRenderer
-            && (isWindows11 || isMac)
+            && (supportsBackgroundMaterial || isMac)
             && !nativeTitleBarVisible,
         isMainWindow: view === "mobile" ? true : !req.query.extraWindow,
         iconPackCss: [

@@ -1639,11 +1639,57 @@
                                             "value": "openid-connect",
                                             "isInheritable": false,
                                             "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "IgkTHSaFfq6A",
+                                            "isInheritable": false,
+                                            "position": 80
                                         }
                                     ],
                                     "format": "markdown",
                                     "dataFileName": "Signing in with OpenID Connect.md",
-                                    "attachments": []
+                                    "attachments": [],
+                                    "dirFileName": "Signing in with OpenID Connect",
+                                    "children": [
+                                        {
+                                            "isClone": false,
+                                            "noteId": "IgkTHSaFfq6A",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "Otzi9La2YAUX",
+                                                "WOcw2SLH6tbX",
+                                                "x1lQNKQBqLcA",
+                                                "IgkTHSaFfq6A"
+                                            ],
+                                            "title": "Setting up with various providers",
+                                            "notePosition": 10,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "setup",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "x1lQNKQBqLcA",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Setting up with various providers.md",
+                                            "attachments": []
+                                        }
+                                    ]
                                 },
                                 {
                                     "isClone": false,
@@ -17834,6 +17880,13 @@
                                     "value": "bx bx-cog",
                                     "isInheritable": false,
                                     "position": 30
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "x1lQNKQBqLcA",
+                                    "isInheritable": false,
+                                    "position": 40
                                 }
                             ],
                             "format": "markdown",

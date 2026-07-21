@@ -1952,6 +1952,7 @@
     "oauth_disconnected": "Disconnected {{account}} from {{provider}}.",
     "oauth_connect_success": "Connected to {{provider}} as {{account}}.",
     "oauth_connect_success_generic": "Account connected successfully.",
+    "oauth_connect_failed": "Could not connect to the OpenID provider",
     "oauth_account_unknown": "your account"
   },
   "shortcuts": {
@@ -3040,7 +3041,8 @@
     "connection-error": "Couldn't reach the server. Check your connection and try again.",
     "sign_in_with_sso": "Sign in with {{ssoIssuerName}}",
     "sso-wrong-account": "That account isn't the one linked to this Trilium instance. Sign in with the linked account.",
-    "sso-not-enrolled": "Single sign-on isn't set up yet. Sign in with your password first, then link your account from the settings."
+    "sso-not-enrolled": "Single sign-on isn't set up yet. Sign in with your password first, then link your account from the settings.",
+    "sso-connection-failed": "Couldn't reach the authentication provider. Try again, or check the server logs for details."
   },
   "set_password": {
     "heading": "Set password",

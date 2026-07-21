@@ -67,6 +67,28 @@
           postInstall = prev.postInstall + ''
             patch $out/libexec/pnpm/dist/pnpm.mjs ${./patches/pnpm-PATH-reduction.patch}
           '';
+          # pnpm sometimes fails with ERR_PNPM_ENOENT
+          # https://github.com/pnpm/pnpm/issues/12880
+          # "fix" from https://github.com/dniku/selfhostblocks/commit/ee6fc4f04fe34714fb8676704048d8d76aba85b7
+          postFixup = (prev.postFixup or "") + (if pkgs.stdenv.hostPlatform.isLinux then ''
+            mv "$out/bin/pnpm" "$out/bin/.pnpm-unwrapped"
+            cat > "$out/bin/pnpm" <<EOF
+            #!${stdenv.shell}
+            if [ "\''${1-}" = install ]; then
+              cpuMask="\$(${lib.getExe' pkgs.util-linux "taskset"} -cp "\$\$")"
+              # Keep only the cpuset reported after the colon.
+              cpuMask="\''${cpuMask##*: }"
+              # Pick the first comma-separated segment from the cpuset.
+              firstCpu="\''${cpuMask%%,*}"
+              # If that segment is a range, pick its first CPU.
+              firstCpu="\''${firstCpu%%-*}"
+              exec ${lib.getExe' pkgs.util-linux "taskset"} -c "\$firstCpu" "$out/bin/.pnpm-unwrapped" "\$@"
+            else
+              exec "$out/bin/.pnpm-unwrapped" "\$@"
+            fi
+            EOF
+            chmod +x "$out/bin/pnpm"
+          '' else "");
         }));
         inherit (pkgs)
           copyDesktopItems
@@ -154,6 +176,9 @@ removeReferencesTo
                 value = ./patches;
               }
             ];
+
+            # avoid ERR_PNPM_RESOLUTION_SHAPE_MISMATCH errors
+            env.PNPM_CONFIG_TRUST_LOCKFILE = "true";
 
             # remove pnpm version override
             preConfigure = ''

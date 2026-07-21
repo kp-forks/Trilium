@@ -178,9 +178,10 @@ export async function listPages(accessToken: string, sectionId: string): Promise
  * back as plain HTML, which the parser handles by returning the whole body as `html`.
  */
 export async function getPageContent(accessToken: string, pageId: string): Promise<{ html: string; inkml: string }> {
-    const response = await graphFetch(accessToken, `${GRAPH_BASE}/me/onenote/pages/${pageId}/content?includeInkML=true`);
+    const url = `${GRAPH_BASE}/me/onenote/pages/${pageId}/content?includeInkML=true`;
+    const response = await graphFetch(accessToken, url);
     if (!response.ok) {
-        throw new Error(`Failed to fetch OneNote page content (HTTP ${response.status})`);
+        throw await graphRequestError("Failed to fetch OneNote page content", url, response);
     }
     return parsePageContent(await response.text());
 }
@@ -224,7 +225,7 @@ export function parsePageContent(raw: string): { html: string; inkml: string } {
 export async function getResource(accessToken: string, url: string): Promise<{ content: Uint8Array; contentType: string }> {
     const response = await graphFetch(accessToken, url);
     if (!response.ok) {
-        throw new Error(`Failed to fetch OneNote resource (HTTP ${response.status})`);
+        throw await graphRequestError("Failed to fetch OneNote resource", url, response);
     }
     const buffer = new Uint8Array(await response.arrayBuffer());
     const contentType = response.headers.get("content-type") ?? "application/octet-stream";
@@ -271,9 +272,10 @@ interface RawPage {
 }
 
 async function graphGet<T>(accessToken: string, path: string): Promise<T> {
-    const response = await graphFetch(accessToken, `${GRAPH_BASE}${path}`);
+    const url = `${GRAPH_BASE}${path}`;
+    const response = await graphFetch(accessToken, url);
     if (!response.ok) {
-        throw new Error(`Microsoft Graph request failed: ${path} (HTTP ${response.status})`);
+        throw await graphRequestError("Microsoft Graph request failed", url, response);
     }
     return response.json() as Promise<T>;
 }
@@ -286,7 +288,9 @@ async function graphGetAll<T>(accessToken: string, pathOrUrl: string): Promise<T
     while (next) {
         const response: Response = await graphFetch(accessToken, next);
         if (!response.ok) {
-            throw new Error(`Microsoft Graph request failed: ${pathOrUrl} (HTTP ${response.status})`);
+            // `next` rather than `pathOrUrl`: on a paginated collection the failing request may be a
+            // follow-up @odata.nextLink, not the original URL.
+            throw await graphRequestError("Microsoft Graph request failed", next, response);
         }
         const json = (await response.json()) as { value?: T[]; "@odata.nextLink"?: string };
         results.push(...(json.value ?? []));
@@ -294,6 +298,35 @@ async function graphGetAll<T>(accessToken: string, pathOrUrl: string): Promise<T
     }
 
     return results;
+}
+
+/**
+ * Builds the error for a failed Graph request. A bare HTTP status is not actionable when an import of
+ * thousands of pages fails on one of them, so the message carries the request URL plus whatever error
+ * code/message Graph itself returned in the response body.
+ */
+async function graphRequestError(summary: string, url: string, response: Response): Promise<Error> {
+    let body = "";
+    try {
+        body = await response.text();
+    } catch {
+        // The status and URL are still worth reporting when the body cannot be read.
+    }
+    const detail = extractGraphErrorDetail(body);
+    return new Error(`${summary} (HTTP ${response.status}${detail ? `: ${detail}` : ""}) from ${url}`);
+}
+
+/**
+ * Extracts "code: message" from Graph's standard JSON error envelope
+ * (`{"error": {"code": "...", "message": "..."}}`), or "" when the body is not one.
+ */
+export function extractGraphErrorDetail(body: string): string {
+    try {
+        const parsed = JSON.parse(body) as { error?: { code?: string; message?: string } };
+        return [parsed?.error?.code, parsed?.error?.message].filter(Boolean).join(": ");
+    } catch {
+        return "";
+    }
 }
 
 export default {

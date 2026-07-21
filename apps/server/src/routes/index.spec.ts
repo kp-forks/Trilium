@@ -9,7 +9,7 @@ import { markAsInternalElectronRequest } from "../services/electron_request.js";
 // exactly what the assertions below verify.
 vi.mock("../services/utils.js", async (orig) => {
     const actual = await orig<typeof import("../services/utils.js")>();
-    return { ...actual, isElectron: true, isDev: true, isMac: false, isWindows11: false };
+    return { ...actual, isElectron: true, isDev: true, isMac: false, supportsBackgroundMaterial: false };
 });
 
 vi.mock("../services/config.js", () => ({ default: { General: {}, Network: {} } }));
