@@ -16,6 +16,12 @@ function makeRes() {
     return res as unknown as Response & { status: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> };
 }
 
+// A plain-object stand-in for an external (unmarked) request: the middleware reads the
+// path and the Host header via req.get("host").
+function makeReq(path: string, host: string | undefined): Request {
+    return { path, get: (name: string) => (name.toLowerCase() === "host" ? host : undefined) } as unknown as Request;
+}
+
 describe("isLocalIntegrationPath", () => {
     it("matches the MCP and clipper endpoints (and only those)", () => {
         expect(isLocalIntegrationPath("/mcp")).toBe(true);
@@ -89,7 +95,7 @@ describe("desktopNetworkAccessGate (desktop build, network access off)", () => {
         const res = makeRes();
         const next = vi.fn() as unknown as NextFunction;
         // A plain object carries no internal-electron marker → treated as external/TCP.
-        desktopNetworkAccessGate({ path: "/", headers: { host: "localhost:37742" } } as unknown as Request, res, next);
+        desktopNetworkAccessGate(makeReq("/", "localhost:37742"), res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(next).not.toHaveBeenCalled();
@@ -98,7 +104,7 @@ describe("desktopNetworkAccessGate (desktop build, network access off)", () => {
     it("passes localhost-integration requests through to the next handler", () => {
         const res = makeRes();
         const next = vi.fn() as unknown as NextFunction;
-        desktopNetworkAccessGate({ path: "/api/clipper/handshake", headers: { host: "localhost:37742" } } as unknown as Request, res, next);
+        desktopNetworkAccessGate(makeReq("/api/clipper/handshake", "localhost:37742"), res, next);
 
         expect(next).toHaveBeenCalled();
         expect(res.status).not.toHaveBeenCalled();

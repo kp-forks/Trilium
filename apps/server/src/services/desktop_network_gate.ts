@@ -85,7 +85,7 @@ export function desktopNetworkAccessGate(req: Request, res: Response, next: Next
         allowLanAccess: config.Security?.allowLanAccess === true,
         isInternal: isInternalElectronRequest(req),
         path: req.path,
-        host: req.headers.host
+        host: req.get("host")
     });
 
     if (blocked) {
