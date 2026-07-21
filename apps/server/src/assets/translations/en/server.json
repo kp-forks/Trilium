@@ -460,6 +460,6 @@
     "sql-console": "SQL console",
     "sql-console-warning": "The SQL console allows executing arbitrary SQL queries against the database.",
     "lan-access": "network access",
-    "lan-access-warning": "Other devices on your local network will be able to connect to this Trilium instance."
+    "lan-access-warning": "The app and your shared notes will be served over the network — reachable from a browser on this computer and from other devices on your local network."
   }
 }

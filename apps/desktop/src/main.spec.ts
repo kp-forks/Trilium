@@ -647,6 +647,25 @@ describe("security settings override", () => {
         };
         expect(config.Security.allowLanAccess).toBe(true);
     });
+
+    it("uses an IPC-only messaging provider (no WebSocket endpoint) when LAN access is off", async () => {
+        h.securitySettings = { allowLanAccess: false };
+        const { main } = await importMain();
+        await main();
+        // An IPC-only provider is not HTTP-attachable, so www.ts binds no WS port.
+        const messaging = h.initConfig?.messaging as { attachToHttpServer?: unknown };
+        expect(messaging).toBeDefined();
+        expect(typeof messaging.attachToHttpServer).not.toBe("function");
+    });
+
+    it("adds a WebSocket transport (composite) when LAN access is on", async () => {
+        h.securitySettings = { allowLanAccess: true };
+        const { main } = await importMain();
+        await main();
+        // The composite is HTTP-attachable; www.ts binds the WS endpoint for browsers.
+        const messaging = h.initConfig?.messaging as { attachToHttpServer?: unknown };
+        expect(typeof messaging.attachToHttpServer).toBe("function");
+    });
 });
 
 describe("initializeCore dbConfig callbacks + getDemoArchive", () => {
