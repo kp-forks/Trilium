@@ -65,6 +65,10 @@ describe("bootstrap auth gating (desktop build, #10589)", () => {
         expect(body().loggedIn).toBe(false);
         expect(body().login).toBeTruthy();
         expect(body().csrfToken).toBeUndefined();
+        // ...and it must NOT be told it's the Electron renderer (no `electron` body
+        // class, no renderer-only trilium-app:// URLs).
+        expect(body().isElectron).toBe(false);
+        expect(body().wsBaseUrl).toBeUndefined();
     });
 
     it("treats a browser as logged in once it has a real session", () => {
@@ -82,5 +86,9 @@ describe("bootstrap auth gating (desktop build, #10589)", () => {
         // The trilium-app:// renderer is trusted and never gates on a web session.
         expect(body().loggedIn).toBe(true);
         expect(body().csrfToken).toBe("csrf-test-token");
+        // It IS the Electron renderer, so it keeps the electron flag and the
+        // absolute renderer-only URLs it can't derive from trilium-app://.
+        expect(body().isElectron).toBe(true);
+        expect(body().wsBaseUrl).toBeTruthy();
     });
 });

@@ -45,7 +45,11 @@ export function bootstrap(req: Request, res: Response) {
         baseApiUrl: "api/",
         appPath,
         isStandalone: false,
-        isElectron,
+        // Reflects whether *this client* is the trusted desktop renderer, not whether
+        // the server is a desktop build: a browser hitting the desktop's HTTP listener
+        // is a plain web client and must not get the `electron` body class (which drops
+        // web-only chrome like the login margins — #10589) or the renderer-only URLs below.
+        isElectron: isElectronRenderer,
         isDev,
         platform: process.platform,
         triliumVersion: packageJson.version,
@@ -54,10 +58,12 @@ export function bootstrap(req: Request, res: Response) {
         instanceName: config.General ? config.General.instanceName : null,
         // The desktop renderer loads from trilium-app://, so location-based
         // ws:// URL derivation no longer works there. Send an absolute URL.
-        wsBaseUrl: isElectron ? `ws://127.0.0.1:${port}/` : undefined,
+        // A browser has a real HTTP origin and derives its own, so only the
+        // renderer gets this.
+        wsBaseUrl: isElectronRenderer ? `ws://127.0.0.1:${port}/` : undefined,
         // Same reason for HTTP-origin-dependent UI (e.g. the MCP URL shown
         // in Options) — give the renderer a real loopback origin to display.
-        httpBaseUrl: isElectron
+        httpBaseUrl: isElectronRenderer
             ? `${config["Network"]["https"] ? "https" : "http"}://127.0.0.1:${port}`
             : undefined
     };
