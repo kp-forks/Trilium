@@ -10,7 +10,7 @@ describe("buildShareLink", () => {
     });
 
     function setGlob(patch: Record<string, unknown>) {
-        window.glob = { ...patch } as typeof window.glob;
+        window.glob = { ...patch } as unknown as typeof window.glob;
     }
 
     it("uses the configured sync server host when set (regardless of the local origin)", () => {
