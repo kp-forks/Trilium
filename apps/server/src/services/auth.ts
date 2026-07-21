@@ -75,8 +75,17 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
         // which lands right back in this branch (#10589 follow-up). Treat the session as logged
         // out and serve the SPA, which renders the login screen from the bootstrap
         // loggedIn:false payload. The API stays protected separately via checkApiAuth.
+        //
+        // Persist the flip explicitly before handing off: express-session's implicit save
+        // only runs on res.end(), so with an async store the SPA's immediately-following
+        // /bootstrap sub-request could otherwise read the still-loggedIn session and bounce
+        // back through this branch instead of seeing loggedIn:false.
         req.session.loggedIn = false;
-        return next();
+        req.session.save((err) => {
+            if (err) console.error("Error saving session after OIDC session lapse:", err);
+            next();
+        });
+        return;
     } else {
         next();
     }

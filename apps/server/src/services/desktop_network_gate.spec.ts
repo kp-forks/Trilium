@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("./utils.js", async (orig) => ({ ...(await orig<typeof import("./utils.js")>()), isElectron: true }));
 vi.mock("./config.js", () => ({ default: { Security: { allowLanAccess: false } } }));
 
-import { desktopNetworkAccessGate, isLocalIntegrationPath, shouldBlockDesktopWebRequest } from "./desktop_network_gate.js";
+import { desktopNetworkAccessGate, isLocalIntegrationPath, isLoopbackHost, shouldBlockDesktopWebRequest } from "./desktop_network_gate.js";
 
 function makeRes() {
     const res = {} as Record<string, unknown>;
@@ -35,8 +35,19 @@ describe("isLocalIntegrationPath", () => {
     });
 });
 
+describe("isLoopbackHost", () => {
+    it("accepts loopback host headers (with or without port / brackets) and rejects the rest", () => {
+        for (const host of ["localhost", "localhost:37742", "127.0.0.1", "127.0.0.1:37742", "127.5.5.5", "[::1]", "[::1]:37742"]) {
+            expect(isLoopbackHost(host)).toBe(true);
+        }
+        for (const host of [undefined, "", "evil.example.com", "evil.example.com:37742", "192.168.1.9:37742", "localhost.evil.com"]) {
+            expect(isLoopbackHost(host)).toBe(false);
+        }
+    });
+});
+
 describe("shouldBlockDesktopWebRequest", () => {
-    const base = { isElectron: true, allowLanAccess: false, isInternal: false, path: "/" };
+    const base = { isElectron: true, allowLanAccess: false, isInternal: false, path: "/", host: "localhost:37742" };
 
     it("never blocks on the server build", () => {
         expect(shouldBlockDesktopWebRequest({ ...base, isElectron: false })).toBe(false);
@@ -60,10 +71,16 @@ describe("shouldBlockDesktopWebRequest", () => {
         expect(shouldBlockDesktopWebRequest({ ...base, path: "/share/abc" })).toBe(true);
     });
 
-    it("still allows the localhost integrations (MCP, clipper) when network access is off", () => {
+    it("still allows the localhost integrations (MCP, clipper, ETAPI) from a loopback host", () => {
         expect(shouldBlockDesktopWebRequest({ ...base, path: "/mcp" })).toBe(false);
         expect(shouldBlockDesktopWebRequest({ ...base, path: "/api/clipper/handshake" })).toBe(false);
         expect(shouldBlockDesktopWebRequest({ ...base, path: "/etapi/notes" })).toBe(false);
+    });
+
+    it("blocks the localhost integrations when the Host header is non-loopback (DNS rebinding)", () => {
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/api/clipper/handshake", host: "evil.example.com" })).toBe(true);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/etapi/notes", host: "evil.example.com:37742" })).toBe(true);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/mcp", host: undefined })).toBe(true);
     });
 });
 
@@ -72,7 +89,7 @@ describe("desktopNetworkAccessGate (desktop build, network access off)", () => {
         const res = makeRes();
         const next = vi.fn() as unknown as NextFunction;
         // A plain object carries no internal-electron marker → treated as external/TCP.
-        desktopNetworkAccessGate({ path: "/" } as Request, res, next);
+        desktopNetworkAccessGate({ path: "/", headers: { host: "localhost:37742" } } as unknown as Request, res, next);
 
         expect(res.status).toHaveBeenCalledWith(403);
         expect(next).not.toHaveBeenCalled();
@@ -81,7 +98,7 @@ describe("desktopNetworkAccessGate (desktop build, network access off)", () => {
     it("passes localhost-integration requests through to the next handler", () => {
         const res = makeRes();
         const next = vi.fn() as unknown as NextFunction;
-        desktopNetworkAccessGate({ path: "/api/clipper/handshake" } as Request, res, next);
+        desktopNetworkAccessGate({ path: "/api/clipper/handshake", headers: { host: "localhost:37742" } } as unknown as Request, res, next);
 
         expect(next).toHaveBeenCalled();
         expect(res.status).not.toHaveBeenCalled();

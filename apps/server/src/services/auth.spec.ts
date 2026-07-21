@@ -244,7 +244,9 @@ describe("Auth", () => {
 
             const res = makeRes();
             const next = vi.fn();
-            const session = { loggedIn: true, lastAuthState: { totpEnabled: false, ssoEnabled: true } };
+            // save() flushes the loggedIn:false flip before handoff; invoke its callback so next() runs.
+            const save = vi.fn((cb: (err?: unknown) => void) => cb());
+            const session = { loggedIn: true, lastAuthState: { totpEnabled: false, ssoEnabled: true }, save };
             auth.checkAuth(
                 makeReq({ session, oidc: { isAuthenticated: () => false } }),
                 res as never,
@@ -255,8 +257,9 @@ describe("Auth", () => {
             expect(res.redirectedTo).not.toBe("login");
             // Instead fall through so the SPA renders the login screen in place.
             expect(next).toHaveBeenCalled();
-            // And the stale flag is cleared so subsequent requests take the plain logged-out path.
+            // And the stale flag is cleared (and persisted) so subsequent requests take the logged-out path.
             expect(session.loggedIn).toBe(false);
+            expect(save).toHaveBeenCalled();
         });
 
         it("checkAuth falls through to next on the normal logged-in path", () => {

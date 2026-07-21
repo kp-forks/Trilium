@@ -24,6 +24,23 @@ export function isLocalIntegrationPath(path: string): boolean {
 }
 
 /**
+ * Whether an HTTP `Host` header names a loopback address. Used to keep the local
+ * integrations reachable only from genuine same-machine clients: a page that has
+ * DNS-rebound its own domain to 127.0.0.1 still connects from loopback (so an IP
+ * check passes) but sends its original host, so the Host header is what exposes it
+ * — the same defence MCP applies (see routes/mcp.ts). Guards the unauthenticated
+ * web-clipper endpoint in particular.
+ */
+export function isLoopbackHost(host: string | undefined): boolean {
+    if (!host) {
+        return false;
+    }
+    // Strip any :port and IPv6 brackets: "127.0.0.1:37742" → "127.0.0.1", "[::1]:37742" → "::1".
+    const hostname = host.replace(/:\d+$/, "").replace(/^\[|\]$/g, "");
+    return hostname === "localhost" || hostname === "::1" || hostname.startsWith("127.");
+}
+
+/**
  * Pure decision for {@link desktopNetworkAccessGate}, extracted so the branching is
  * unit-testable without a live Electron build (isElectron is a process constant).
  *
@@ -36,17 +53,23 @@ export function shouldBlockDesktopWebRequest(opts: {
     allowLanAccess: boolean;
     isInternal: boolean;
     path: string;
+    host: string | undefined;
 }): boolean {
     if (!opts.isElectron) {
         return false; // server build — web access is the whole point
     }
     if (opts.allowLanAccess) {
-        return false; // opted into network access — serve everything
+        return false; // opted into network access — serve everything (LAN clients included)
     }
     if (opts.isInternal) {
         return false; // our own renderer, dispatched in-process — never gated
     }
-    return !isLocalIntegrationPath(opts.path);
+    if (!isLocalIntegrationPath(opts.path)) {
+        return true; // the web app / share — gated behind the network-access opt-in
+    }
+    // A local integration on the loopback-only listener: additionally require a loopback
+    // Host header so a DNS-rebound attacker domain can't drive the unauthenticated clipper.
+    return !isLoopbackHost(opts.host);
 }
 
 /**
@@ -61,7 +84,8 @@ export function desktopNetworkAccessGate(req: Request, res: Response, next: Next
         isElectron,
         allowLanAccess: config.Security?.allowLanAccess === true,
         isInternal: isInternalElectronRequest(req),
-        path: req.path
+        path: req.path,
+        host: req.headers.host
     });
 
     if (blocked) {
