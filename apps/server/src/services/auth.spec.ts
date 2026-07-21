@@ -206,29 +206,57 @@ describe("Auth", () => {
             errSpy.mockRestore();
         });
 
-        it("checkAuth handles the SSO-enabled path (authenticated vs not)", () => {
+        it("checkAuth passes through when SSO is enabled and the OIDC session is authenticated", () => {
             vi.spyOn(totp, "isTotpEnabled").mockReturnValue(false);
             vi.spyOn(openID, "isOpenIDEnabled").mockReturnValue(true);
-            const base = {
-                loggedIn: true,
-                lastAuthState: { totpEnabled: false, ssoEnabled: true }
-            };
 
             const nextOk = vi.fn();
             auth.checkAuth(
-                makeReq({ session: { ...base }, oidc: { isAuthenticated: () => true } }),
+                makeReq({
+                    session: { loggedIn: true, lastAuthState: { totpEnabled: false, ssoEnabled: true } },
+                    oidc: { isAuthenticated: () => true }
+                }),
                 makeRes() as never,
                 nextOk
             );
             expect(nextOk).toHaveBeenCalled();
+            // The unauthenticated / lapsed-OIDC case is covered by the regression test below.
+        });
 
-            const resRedirect = makeRes();
+        it("checkAuth does not bounce a stale SSO session to /login (regression: infinite /↔/login loop)", () => {
+            // Repro of the redirect loop shipped in v0.104.0. When OIDC/SSO is enabled and the
+            // Trilium session still carries loggedIn:true but the OIDC appSession has lapsed
+            // (oidc.isAuthenticated() === false), checkAuth 302s to "login" — but loginPage
+            // (routes/login.ts) 302s straight back to "." (the SPA root), so the browser
+            // ping-pongs /↔/login until it aborts with ERR_TOO_MANY_REDIRECTS.
+            //
+            // This desync is reachable by any active OAuth user, not just a stale-cookie dev
+            // artifact: the OIDC appSession has a hard absolute cap (express-openid-connect
+            // default 7d) that activity can't extend, while trilium.sid is rolling with a much
+            // longer window (default cookieMaxAge 21d). Once the OIDC cap lapses on a still-live
+            // trilium session, every navigation loops.
+            //
+            // Correct behaviour: treat the stale session as logged out and fall through to serve
+            // the SPA, which renders the login screen from the bootstrap loggedIn:false payload —
+            // no redirect, so no loop.
+            vi.spyOn(totp, "isTotpEnabled").mockReturnValue(false);
+            vi.spyOn(openID, "isOpenIDEnabled").mockReturnValue(true);
+
+            const res = makeRes();
+            const next = vi.fn();
+            const session = { loggedIn: true, lastAuthState: { totpEnabled: false, ssoEnabled: true } };
             auth.checkAuth(
-                makeReq({ session: { ...base }, oidc: { isAuthenticated: () => false } }),
-                resRedirect as never,
-                vi.fn()
+                makeReq({ session, oidc: { isAuthenticated: () => false } }),
+                res as never,
+                next
             );
-            expect(resRedirect.redirectedTo).toBe("login");
+
+            // The loop half we must break: never 302 to the login route (which comes right back).
+            expect(res.redirectedTo).not.toBe("login");
+            // Instead fall through so the SPA renders the login screen in place.
+            expect(next).toHaveBeenCalled();
+            // And the stale flag is cleared so subsequent requests take the plain logged-out path.
+            expect(session.loggedIn).toBe(false);
         });
 
         it("checkAuth falls through to next on the normal logged-in path", () => {
