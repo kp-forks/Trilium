@@ -1,0 +1,89 @@
+import type { NextFunction, Request, Response } from "express";
+import { describe, expect, it, vi } from "vitest";
+
+// Simulate the desktop build with network access off — the only configuration in
+// which the middleware actually gates anything.
+vi.mock("./utils.js", async (orig) => ({ ...(await orig<typeof import("./utils.js")>()), isElectron: true }));
+vi.mock("./config.js", () => ({ default: { Security: { allowLanAccess: false } } }));
+
+import { desktopNetworkAccessGate, isLocalIntegrationPath, shouldBlockDesktopWebRequest } from "./desktop_network_gate.js";
+
+function makeRes() {
+    const res = {} as Record<string, unknown>;
+    res.status = vi.fn(() => res);
+    res.type = vi.fn(() => res);
+    res.send = vi.fn(() => res);
+    return res as unknown as Response & { status: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> };
+}
+
+describe("isLocalIntegrationPath", () => {
+    it("matches the MCP and clipper endpoints (and only those)", () => {
+        expect(isLocalIntegrationPath("/mcp")).toBe(true);
+        expect(isLocalIntegrationPath("/mcp/messages")).toBe(true);
+        expect(isLocalIntegrationPath("/api/clipper")).toBe(true);
+        expect(isLocalIntegrationPath("/api/clipper/handshake")).toBe(true);
+        expect(isLocalIntegrationPath("/etapi")).toBe(true);
+        expect(isLocalIntegrationPath("/etapi/notes")).toBe(true);
+
+        expect(isLocalIntegrationPath("/")).toBe(false);
+        expect(isLocalIntegrationPath("/bootstrap")).toBe(false);
+        expect(isLocalIntegrationPath("/api/tree")).toBe(false);
+        expect(isLocalIntegrationPath("/share/abc")).toBe(false);
+        // Must not be fooled by a prefix that isn't a path segment boundary.
+        expect(isLocalIntegrationPath("/mcp-evil")).toBe(false);
+        expect(isLocalIntegrationPath("/api/clipperx")).toBe(false);
+    });
+});
+
+describe("shouldBlockDesktopWebRequest", () => {
+    const base = { isElectron: true, allowLanAccess: false, isInternal: false, path: "/" };
+
+    it("never blocks on the server build", () => {
+        expect(shouldBlockDesktopWebRequest({ ...base, isElectron: false })).toBe(false);
+        expect(shouldBlockDesktopWebRequest({ ...base, isElectron: false, path: "/share/x" })).toBe(false);
+    });
+
+    it("serves everything once network access is enabled", () => {
+        expect(shouldBlockDesktopWebRequest({ ...base, allowLanAccess: true })).toBe(false);
+        expect(shouldBlockDesktopWebRequest({ ...base, allowLanAccess: true, path: "/share/x" })).toBe(false);
+    });
+
+    it("never blocks the trusted renderer (internal trilium-app:// request)", () => {
+        expect(shouldBlockDesktopWebRequest({ ...base, isInternal: true })).toBe(false);
+        expect(shouldBlockDesktopWebRequest({ ...base, isInternal: true, path: "/share/x" })).toBe(false);
+    });
+
+    it("blocks the web app and share for external requests when network access is off", () => {
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/" })).toBe(true);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/bootstrap" })).toBe(true);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/api/tree" })).toBe(true);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/share/abc" })).toBe(true);
+    });
+
+    it("still allows the localhost integrations (MCP, clipper) when network access is off", () => {
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/mcp" })).toBe(false);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/api/clipper/handshake" })).toBe(false);
+        expect(shouldBlockDesktopWebRequest({ ...base, path: "/etapi/notes" })).toBe(false);
+    });
+});
+
+describe("desktopNetworkAccessGate (desktop build, network access off)", () => {
+    it("responds 403 to an external web request and does not continue", () => {
+        const res = makeRes();
+        const next = vi.fn() as unknown as NextFunction;
+        // A plain object carries no internal-electron marker → treated as external/TCP.
+        desktopNetworkAccessGate({ path: "/" } as Request, res, next);
+
+        expect(res.status).toHaveBeenCalledWith(403);
+        expect(next).not.toHaveBeenCalled();
+    });
+
+    it("passes localhost-integration requests through to the next handler", () => {
+        const res = makeRes();
+        const next = vi.fn() as unknown as NextFunction;
+        desktopNetworkAccessGate({ path: "/api/clipper/handshake" } as Request, res, next);
+
+        expect(next).toHaveBeenCalled();
+        expect(res.status).not.toHaveBeenCalled();
+    });
+});
