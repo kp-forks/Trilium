@@ -17,12 +17,17 @@ const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 // be large and slow. Allow a generous per-request budget instead.
 const GRAPH_TIMEOUT_MS = 60_000;
 
-// Graph throttles aggressively under load (HTTP 429, occasionally 503). OneNote's 429s carry no
-// Retry-After header, so retry with exponential backoff before giving up — otherwise a large import
-// would silently drop most of its pages/resources once throttling kicks in.
-const MAX_RETRIES = 8;
+// Graph throttles aggressively under load (HTTP 429, occasionally 503). When the response carries a
+// Retry-After header that wait is used verbatim — but OneNote's 429s usually omit it
+// (https://learn.microsoft.com/en-us/graph/throttling), so retries mostly fall back to exponential
+// backoff. A request only gives up once it has spent MAX_THROTTLE_WAIT_MS waiting out throttles: a
+// fixed retry count proved too small for huge imports. Microsoft publishes no hard OneNote limits —
+// throttling is per app+user and time-based ("simply waiting will eventually reset the limit"), and
+// a heavily-throttled user can stay throttled for the better part of an hour, so the budget must
+// cover that; one page giving up aborts the whole import.
 const BASE_RETRY_DELAY_MS = 2000;
-const MAX_RETRY_DELAY_MS = 30_000;
+const MAX_RETRY_DELAY_MS = 60_000;
+const MAX_THROTTLE_WAIT_MS = 60 * 60_000;
 
 // Shared throttle gate. Graph throttles per app/tenant, so a 429 on one request means every other
 // in-flight and subsequent request is being throttled too. Rather than each request independently
@@ -36,9 +41,12 @@ let throttledUntilMs = 0;
  * must not be trusted to point at the public Graph host. The bearer token is sent on every hop.
  *
  * Retries on throttling (429/503) via the shared {@link throttledUntilMs} gate, so concurrent
- * requests pause together instead of dog-piling the throttle.
+ * requests pause together instead of dog-piling the throttle. Gives up only once this request has
+ * spent {@link MAX_THROTTLE_WAIT_MS} waiting, returning the throttled response for the caller to
+ * report as an error.
  */
 async function graphFetch(accessToken: string, url: string): Promise<Response> {
+    const giveUpAtMs = Date.now() + MAX_THROTTLE_WAIT_MS;
     for (let attempt = 0; ; attempt++) {
         const gateWaitMs = throttledUntilMs - Date.now();
         if (gateWaitMs > 0) {
@@ -50,7 +58,14 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
             signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
         });
 
-        if ((response.status !== 429 && response.status !== 503) || attempt >= MAX_RETRIES) {
+        if (response.status !== 429 && response.status !== 503) {
+            return response;
+        }
+
+        // Graph's Retry-After, when present, states exactly how long the throttle lasts — trust it
+        // over the computed backoff.
+        const waitMs = retryAfterMs(response.headers.get("retry-after")) ?? backoffDelayMs(attempt);
+        if (Date.now() + waitMs > giveUpAtMs) {
             return response;
         }
 
@@ -59,15 +74,36 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
 
         // Extend the shared gate (Math.max: simultaneous 429s converge on one window rather than
         // stacking). The wait itself happens at the top of the next iteration, shared across the pool.
-        const waitMs = backoffDelayMs(attempt);
         throttledUntilMs = Math.max(throttledUntilMs, Date.now() + waitMs);
-        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1}/${MAX_RETRIES} after ${waitMs}ms`);
+        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1} after ${waitMs}ms (${Math.round((giveUpAtMs - Date.now()) / 60_000)}min of wait budget left)`);
     }
 }
 
 /** Exponential backoff before a throttling retry, capped at {@link MAX_RETRY_DELAY_MS}. */
 export function backoffDelayMs(attempt: number): number {
     return Math.min(BASE_RETRY_DELAY_MS * 2 ** attempt, MAX_RETRY_DELAY_MS);
+}
+
+/**
+ * Parses a Retry-After header (delta-seconds or HTTP-date) into a wait in milliseconds, or null when
+ * the header is absent or unparseable.
+ */
+export function retryAfterMs(header: string | null): number | null {
+    const trimmed = header?.trim();
+    if (!trimmed) {
+        return null;
+    }
+    const seconds = Number(trimmed);
+    if (Number.isFinite(seconds)) {
+        return Math.max(0, seconds * 1000);
+    }
+    const dateMs = Date.parse(trimmed);
+    return Number.isNaN(dateMs) ? null : Math.max(0, dateMs - Date.now());
+}
+
+/** Resets the shared throttle gate; exported for tests only. */
+export function resetThrottleGate(): void {
+    throttledUntilMs = 0;
 }
 
 function delay(ms: number): Promise<void> {

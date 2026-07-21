@@ -1,15 +1,15 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../safe_fetch.js", () => ({ safeFetch: vi.fn() }));
 
 import { safeFetch } from "../../safe_fetch.js";
-import { backoffDelayMs, extractGraphErrorDetail, getAccount, getPageContent, getResource, listPages } from "./graph.js";
+import { backoffDelayMs, extractGraphErrorDetail, getAccount, getPageContent, getResource, listPages, resetThrottleGate, retryAfterMs } from "./graph.js";
 
 const safeFetchMock = vi.mocked(safeFetch);
 
 /** Builds a Graph HTTP response as the mocked safeFetch returns it. */
-function graphResponse(status: number, body: string): Awaited<ReturnType<typeof safeFetch>> {
-    return new Response(body, { status }) as unknown as Awaited<ReturnType<typeof safeFetch>>;
+function graphResponse(status: number, body: string, headers?: Record<string, string>): Awaited<ReturnType<typeof safeFetch>> {
+    return new Response(body, { status, headers }) as unknown as Awaited<ReturnType<typeof safeFetch>>;
 }
 
 describe("backoffDelayMs", () => {
@@ -20,8 +20,98 @@ describe("backoffDelayMs", () => {
         expect(backoffDelayMs(3)).toBe(16000);
     });
 
-    it("caps the delay at the maximum", () => {
-        expect(backoffDelayMs(10)).toBe(30_000);
+    it("caps the delay at one minute", () => {
+        expect(backoffDelayMs(10)).toBe(60_000);
+    });
+});
+
+describe("retryAfterMs", () => {
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
+    it("parses a delta-seconds value", () => {
+        expect(retryAfterMs("120")).toBe(120_000);
+        expect(retryAfterMs("0")).toBe(0);
+    });
+
+    it("parses an HTTP-date relative to now", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-07-21T12:00:00Z"));
+        expect(retryAfterMs("Tue, 21 Jul 2026 12:01:30 GMT")).toBe(90_000);
+        // A date in the past means the throttle already expired.
+        expect(retryAfterMs("Tue, 21 Jul 2026 11:59:00 GMT")).toBe(0);
+    });
+
+    it("returns null for absent or malformed headers", () => {
+        expect(retryAfterMs(null)).toBeNull();
+        expect(retryAfterMs("")).toBeNull();
+        expect(retryAfterMs("   ")).toBeNull();
+        expect(retryAfterMs("soon")).toBeNull();
+    });
+});
+
+describe("throttling retries", () => {
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        resetThrottleGate();
+    });
+
+    afterEach(() => {
+        resetThrottleGate();
+        vi.useRealTimers();
+        safeFetchMock.mockReset();
+    });
+
+    it("keeps retrying well past eight attempts while the wait budget lasts", async () => {
+        let calls = 0;
+        safeFetchMock.mockImplementation(async () => {
+            calls++;
+            return calls <= 12 ? graphResponse(429, "") : graphResponse(200, JSON.stringify({ displayName: "Ada" }));
+        });
+
+        const promise = getAccount("token");
+        await vi.runAllTimersAsync();
+
+        await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
+        expect(safeFetchMock).toHaveBeenCalledTimes(13);
+    });
+
+    it("waits out Graph's Retry-After header instead of the computed backoff", async () => {
+        safeFetchMock
+            .mockResolvedValueOnce(graphResponse(429, "", { "Retry-After": "120" }))
+            .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
+
+        const promise = getAccount("token");
+
+        // The plain exponential backoff for a first attempt is 2s; Retry-After must override it,
+        // so just before the 120s mark the retry must not have fired yet.
+        await vi.advanceTimersByTimeAsync(119_000);
+        expect(safeFetchMock).toHaveBeenCalledTimes(1);
+
+        await vi.advanceTimersByTimeAsync(1_000);
+        await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
+        expect(safeFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("gives up with the throttled response once the wait budget is exhausted", async () => {
+        safeFetchMock.mockImplementation(async () =>
+            graphResponse(429, JSON.stringify({ error: { code: "20166", message: "Too many requests" } })));
+
+        const promise = getAccount("token").catch((e: unknown) => e);
+        await vi.runAllTimersAsync();
+        const error = await promise;
+
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("HTTP 429: 20166: Too many requests");
+        // The budget bounds total waiting: with the fake clock starting at 0, now === total waited.
+        // OneNote throttle windows have been observed to last the better part of an hour for a
+        // heavily-throttled user, so the budget must tolerate at least that before giving up.
+        expect(Date.now()).toBeGreaterThan(30 * 60_000);
+        expect(Date.now()).toBeLessThanOrEqual(60 * 60_000);
+        // ...and it must be attempt-count agnostic — far more patient than the old 8-retry limit.
+        expect(safeFetchMock.mock.calls.length).toBeGreaterThan(10);
     });
 });
 
