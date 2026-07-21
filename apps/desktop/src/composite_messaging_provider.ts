@@ -55,11 +55,12 @@ export default class CompositeMessagingProvider implements MessagingProvider {
     }
 
     getClientCount(): number {
-        return (this.ipc.getClientCount?.() ?? 0) + (this.ws.getClientCount?.() ?? 0);
+        // Both concrete legs implement these unconditionally, so no optional-call guard.
+        return this.ipc.getClientCount() + this.ws.getClientCount();
     }
 
     dispose(): void {
-        this.ipc.dispose?.();
-        this.ws.dispose?.();
+        this.ipc.dispose();
+        this.ws.dispose();
     }
 }

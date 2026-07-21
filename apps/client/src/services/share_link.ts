@@ -16,12 +16,5 @@ export function buildShareLink(shareId: string, syncServerHost: string | null | 
         return new URL(`/share/${shareId}`, window.glob.httpBaseUrl).href;
     }
 
-    let host = location.host;
-    if (host.endsWith("/")) {
-        // seems like IE has trailing slash
-        // https://github.com/zadam/trilium/issues/3782
-        host = host.substring(0, host.length - 1);
-    }
-
-    return `${location.protocol}//${host}${location.pathname}share/${shareId}`;
+    return `${location.protocol}//${location.host}${location.pathname}share/${shareId}`;
 }
