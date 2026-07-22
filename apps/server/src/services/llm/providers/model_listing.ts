@@ -69,8 +69,38 @@ export function mergeModelLists(curated: ModelInfo[], remote: RemoteModel[]): Mo
  */
 const OPENAI_NON_CHAT = /embedding|whisper|tts|dall-e|moderation|realtime|audio|transcribe|image|sora|computer-use|codex|instruct|deep-research|babbage|davinci|search/i;
 
+/**
+ * Pinned-snapshot suffixes that duplicate a rolling base id — `-2024-05-13`
+ * (dated) and `-0125` / `-1106` (legacy MMDD). Dropped so the list shows
+ * `gpt-4o`, not `gpt-4o` plus five of its dated revisions.
+ */
+const OPENAI_SNAPSHOT = /-\d{4}(-\d{2}-\d{2})?$/;
+
 export function isOpenAiChatModel(id: string): boolean {
-    return !OPENAI_NON_CHAT.test(id);
+    // `chat-latest` is a bare rolling alias (current ChatGPT Instant model) —
+    // redundant with the versioned `gpt-*-chat-latest` handles and uninformative
+    // on its own, so it's dropped.
+    return id !== "chat-latest" && !OPENAI_NON_CHAT.test(id) && !OPENAI_SNAPSHOT.test(id);
+}
+
+/**
+ * Friendly display name for an OpenAI model id, since the `/models` endpoint
+ * returns none. Only the GPT family is reshaped — `gpt-4.1-mini` →
+ * "GPT-4.1 Mini", `gpt-5.6-sol` → "GPT-5.6 Sol". The o-series keeps OpenAI's
+ * canonical lowercase-hyphenated form (`o4-mini`, `o1-pro`), which is both its
+ * proper style and what keeps it visually distinct from "GPT-4o Mini".
+ * Non-OpenAI ids (self-hosted `llama3.2`) are left untouched.
+ */
+export function openAiModelName(id: string): string {
+    const gptMatch = /^gpt-([^-]+)(?:-(.+))?$/.exec(id);
+    if (!gptMatch) {
+        return id;
+    }
+    const [, version, suffix] = gptMatch;
+    const suffixName = suffix
+        ? ` ${suffix.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}`
+        : "";
+    return `GPT-${version}${suffixName}`;
 }
 
 /**

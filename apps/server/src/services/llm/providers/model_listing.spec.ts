@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ModelInfo } from "../types.js";
-import { isGoogleChatModel, isOpenAiChatModel, isRecommendedByDefault, mergeModelLists } from "./model_listing.js";
+import { isGoogleChatModel, isOpenAiChatModel, isRecommendedByDefault, mergeModelLists, openAiModelName } from "./model_listing.js";
 
 const CURATED: ModelInfo[] = [
     { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, contextWindow: 1047576, isDefault: true, costMultiplier: 1 },
@@ -78,10 +78,57 @@ describe("isOpenAiChatModel", () => {
             "o3-deep-research",
             "babbage-002",
             "davinci-002",
-            "gpt-4o-search-preview"
+            "gpt-4o-search-preview",
+            "chat-latest" // bare rolling alias, dropped; versioned gpt-*-chat-latest are kept
         ]) {
             expect(isOpenAiChatModel(id), id).toBe(false);
         }
+    });
+
+    it("drops pinned snapshots that duplicate a rolling base id", () => {
+        for (const id of [
+            "gpt-4o-2024-05-13",
+            "gpt-5-2025-08-07",
+            "gpt-4.1-mini-2025-04-14",
+            "gpt-4-turbo-2024-04-09",
+            "o3-2025-04-16",
+            "o4-mini-2025-04-16",
+            "gpt-3.5-turbo-0125",
+            "gpt-3.5-turbo-1106",
+            "gpt-4-0613"
+        ]) {
+            expect(isOpenAiChatModel(id), id).toBe(false);
+        }
+        // ...but the rolling base ids and non-snapshot suffixes survive.
+        for (const id of ["gpt-4o", "gpt-5", "gpt-4.1-mini", "gpt-3.5-turbo-16k", "gpt-5-chat-latest"]) {
+            expect(isOpenAiChatModel(id), id).toBe(true);
+        }
+    });
+});
+
+describe("openAiModelName", () => {
+    it("prettifies gpt-* ids into friendly names", () => {
+        expect(openAiModelName("gpt-4.1")).toBe("GPT-4.1");
+        expect(openAiModelName("gpt-4.1-mini")).toBe("GPT-4.1 Mini");
+        expect(openAiModelName("gpt-4o")).toBe("GPT-4o");
+        expect(openAiModelName("gpt-4o-mini")).toBe("GPT-4o Mini");
+        expect(openAiModelName("gpt-5.6-sol")).toBe("GPT-5.6 Sol");
+        expect(openAiModelName("gpt-3.5-turbo")).toBe("GPT-3.5 Turbo");
+        expect(openAiModelName("gpt-5-chat-latest")).toBe("GPT-5 Chat Latest");
+    });
+
+    it("leaves the o-series in OpenAI's canonical lowercase-hyphenated form", () => {
+        // Kept distinct from "GPT-4o Mini"; only the GPT family is reshaped.
+        expect(openAiModelName("o1")).toBe("o1");
+        expect(openAiModelName("o3")).toBe("o3");
+        expect(openAiModelName("o3-mini")).toBe("o3-mini");
+        expect(openAiModelName("o4-mini")).toBe("o4-mini");
+        expect(openAiModelName("o1-pro")).toBe("o1-pro");
+    });
+
+    it("leaves non-OpenAI ids untouched", () => {
+        expect(openAiModelName("llama3.2")).toBe("llama3.2"); // self-hosted endpoint
+        expect(openAiModelName("chatgpt-4o-latest")).toBe("chatgpt-4o-latest");
     });
 });
 

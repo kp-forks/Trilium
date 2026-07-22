@@ -95,8 +95,14 @@ describe("OpenAiProvider model listing", () => {
 
     const okJson = (body: unknown) => ({ ok: true, json: async () => body });
 
-    it("fetches the official endpoint with the API key and filters non-chat models", async () => {
-        fetchMock.mockResolvedValue(okJson({ data: [{ id: "gpt-4.1" }, { id: "whisper-1" }, { id: "text-embedding-3-large" }, { id: "gpt-9" }] }));
+    it("filters non-chat models, drops dated snapshots, and names unknown models", async () => {
+        fetchMock.mockResolvedValue(okJson({ data: [
+            { id: "gpt-4.1" },
+            { id: "whisper-1" }, // non-chat
+            { id: "text-embedding-3-large" }, // non-chat
+            { id: "gpt-4.1-2025-04-14" }, // dated snapshot of gpt-4.1
+            { id: "gpt-9" }
+        ] }));
         const provider = new OpenAiProvider("sk-test");
 
         const models = await provider.listModels();
@@ -105,8 +111,10 @@ describe("OpenAiProvider model listing", () => {
             expect.objectContaining({ headers: { Authorization: "Bearer sk-test" } })
         );
         expect(models.map((m) => m.id)).toEqual(["gpt-4.1", "gpt-9"]);
-        // Curated metadata survives the merge; unknown models have none.
+        // Curated metadata survives the merge...
         expect(models[0]).toMatchObject({ name: "GPT-4.1", isDefault: true });
+        // ...and an unknown model gets a generated friendly name, no pricing.
+        expect(models[1]).toMatchObject({ id: "gpt-9", name: "GPT-9" });
         expect(models[1].pricing).toBeUndefined();
     });
 

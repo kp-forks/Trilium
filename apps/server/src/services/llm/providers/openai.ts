@@ -2,7 +2,7 @@ import { createOpenAI, type OpenAIProvider as OpenAISDKProvider } from "@ai-sdk/
 import type { ToolSet } from "ai";
 
 import { BaseProvider, buildModelList } from "./base_provider.js";
-import { isOpenAiChatModel, type RemoteModel } from "./model_listing.js";
+import { isOpenAiChatModel, openAiModelName, type RemoteModel } from "./model_listing.js";
 
 const OFFICIAL_BASE_URL = "https://api.openai.com/v1";
 
@@ -95,10 +95,14 @@ export class OpenAiProvider extends BaseProvider {
         if (!Array.isArray(data)) {
             throw new Error("Unexpected /models response shape");
         }
-        const models = data
+        const ids = data
             .filter((m): m is { id: string } => typeof (m as { id?: unknown }).id === "string")
-            .map(m => ({ id: m.id }));
-        return this.baseURL ? models : models.filter(m => isOpenAiChatModel(m.id));
+            .map(m => m.id);
+        // Custom endpoints list exactly what they serve; the official one is
+        // filtered to chat models and deduped of pinned snapshots.
+        const chatIds = this.baseURL ? ids : ids.filter(isOpenAiChatModel);
+        // OpenAI's /models has no display names, so derive friendly ones.
+        return chatIds.map(id => ({ id, name: openAiModelName(id) }));
     }
 
     protected override addWebSearchTool(tools: ToolSet): void {
