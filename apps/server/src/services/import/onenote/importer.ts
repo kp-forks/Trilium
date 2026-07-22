@@ -12,7 +12,7 @@ import { parse } from "node-html-parser";
 
 import sql from "../../sql.js";
 import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
-import graph, { type OneNotePage } from "./graph.js";
+import graph, { type OneNotePage, sanitizeGraphUrl } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
 import { type FailedPageReport, type ImportReportData, renderImportReport } from "./report.js";
@@ -423,7 +423,7 @@ async function downloadPageResources(accessToken: string, pageTitle: string, htm
             const { content, contentType } = await graph.getResource(accessToken, ref.url);
             return { ...ref, mime: ref.mime || contentType, content };
         } catch (e: unknown) {
-            getLog().error(`OneNote import: could not download resource ${ref.url}: ${e instanceof Error ? e.message : e}`);
+            getLog().error(`OneNote import: could not download resource ${sanitizeGraphUrl(ref.url)}: ${e instanceof Error ? e.message : e}`);
             return null;
         }
     });

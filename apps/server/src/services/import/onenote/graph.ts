@@ -88,7 +88,7 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
 
             // Drain the failed response so its connection is released before we back off.
             await response.body?.cancel();
-            getLog().info(`OneNote import: Graph gateway timeout (HTTP 504) on ${url}; retry ${gatewayTimeoutRetry}/${MAX_GATEWAY_TIMEOUT_RETRIES} after ${waitMs}ms`);
+            getLog().info(`OneNote import: Graph gateway timeout (HTTP 504) on ${sanitizeGraphUrl(url)}; retry ${gatewayTimeoutRetry}/${MAX_GATEWAY_TIMEOUT_RETRIES} after ${waitMs}ms`);
             await delay(waitMs);
             continue;
         }
@@ -113,7 +113,7 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
         throttleWaitMs += Math.max(0, Date.now() + waitMs - Math.max(throttledUntilMs, Date.now()));
         throttledUntilMs = Math.max(throttledUntilMs, Date.now() + waitMs);
         throttleAttempt++;
-        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${throttleAttempt} after ${waitMs}ms (${Math.round((giveUpAtMs - Date.now()) / 60_000)}min of wait budget left)`);
+        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${sanitizeGraphUrl(url)}; retry ${throttleAttempt} after ${waitMs}ms (${Math.round((giveUpAtMs - Date.now()) / 60_000)}min of wait budget left)`);
     }
 }
 
@@ -314,7 +314,7 @@ export async function getResource(accessToken: string, url: string): Promise<{ c
     }
     const buffer = new Uint8Array(await response.arrayBuffer());
     const contentType = response.headers.get("content-type") ?? "application/octet-stream";
-    getLog().info(`OneNote import: downloaded resource (${contentType}, ${buffer.length} bytes) from ${url}`);
+    getLog().info(`OneNote import: downloaded resource (${contentType}, ${buffer.length} bytes) from ${sanitizeGraphUrl(url)}`);
     return { content: buffer, contentType };
 }
 
@@ -398,7 +398,21 @@ async function graphRequestError(summary: string, url: string, response: Respons
         // The status and URL are still worth reporting when the body cannot be read.
     }
     const detail = extractGraphErrorDetail(body);
-    return new Error(`${summary} (HTTP ${response.status}${detail ? `: ${detail}` : ""}) from ${url}`);
+    return new Error(`${summary} (HTTP ${response.status}${detail ? `: ${detail}` : ""}) from ${sanitizeGraphUrl(url)}`);
+}
+
+/**
+ * Redacts personal data from a Graph URL before it is logged or embedded in an error message. OneNote
+ * resource URLs (taken from page HTML) address the mailbox by the signed-in user's email — e.g.
+ * `…/users('jane@example.com')/onenote/resources/…` — so the raw URL is PII. The email (or user id) in
+ * the `users('…')` / `users/{id}` segment is replaced with a placeholder; the rest of the path, which
+ * is what makes the log line useful for debugging, is kept. The importer's own calls use the `/me`
+ * alias and pass through unchanged.
+ */
+export function sanitizeGraphUrl(url: string): string {
+    return url
+        .replace(/users\('[^']*'\)/gi, "users('<redacted>')")
+        .replace(/users\/[^/?#]+/gi, "users/<redacted>");
 }
 
 /**

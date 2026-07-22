@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../../safe_fetch.js", () => ({ safeFetch: vi.fn() }));
 
 import { safeFetch } from "../../safe_fetch.js";
-import { backoffDelayMs, extractGraphErrorDetail, getAccount, getPageContent, getResource, getThrottleStats, listPages, resetThrottleGate, resetThrottleStats, retryAfterMs } from "./graph.js";
+import { backoffDelayMs, extractGraphErrorDetail, getAccount, getPageContent, getResource, getThrottleStats, listPages, resetThrottleGate, resetThrottleStats, retryAfterMs, sanitizeGraphUrl } from "./graph.js";
 
 const safeFetchMock = vi.mocked(safeFetch);
 
@@ -263,6 +263,29 @@ describe("failed Graph requests", () => {
         await expect(getResource("token", url)).rejects.toThrow(
             `Failed to fetch OneNote resource (HTTP 502) from ${url}`
         );
+    });
+});
+
+describe("sanitizeGraphUrl", () => {
+    it("redacts the email in a users('...') resource URL", () => {
+        expect(sanitizeGraphUrl("https://graph.microsoft.com/v1.0/users('jane.doe@outlook.com')/onenote/resources/0-abc!1-DEF!42/$value"))
+            .toBe("https://graph.microsoft.com/v1.0/users('<redacted>')/onenote/resources/0-abc!1-DEF!42/$value");
+    });
+
+    it("redacts a users/{id} path segment (guid or email)", () => {
+        expect(sanitizeGraphUrl("https://graph.microsoft.com/v1.0/users/8f3a-guid-1234/onenote/pages"))
+            .toBe("https://graph.microsoft.com/v1.0/users/<redacted>/onenote/pages");
+    });
+
+    it("leaves URLs without an identity segment untouched", () => {
+        // The importer's own calls use the /me alias, which carries no PII.
+        const url = "https://graph.microsoft.com/v1.0/me/onenote/pages/1-abc/content?includeInkML=true";
+        expect(sanitizeGraphUrl(url)).toBe(url);
+    });
+
+    it("redacts every occurrence and preserves the rest of the path", () => {
+        expect(sanitizeGraphUrl("/users('a@b.com')/x/users('a@b.com')/y"))
+            .toBe("/users('<redacted>')/x/users('<redacted>')/y");
     });
 });
 
