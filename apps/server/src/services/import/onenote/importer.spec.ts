@@ -17,6 +17,19 @@ vi.mock("./graph.js", () => ({
     }
 }));
 
+// Delegates to the real converter, but lets a test force a content-processing failure for pages whose
+// HTML carries the sentinel — the way to exercise "fetched fine, but processing threw".
+vi.mock("./converter.js", async (importActual) => {
+    const actual = await importActual<typeof import("./converter.js")>();
+    const convertPageHtml = (html: string) => {
+        if (html.includes("PROCESSING_BOOM")) {
+            throw new Error("content conversion failed");
+        }
+        return actual.convertPageHtml(html);
+    };
+    return { ...actual, default: { ...actual.default, convertPageHtml } };
+});
+
 const graphMock = vi.mocked(graph);
 
 describe("resolveSubpageParents", () => {
@@ -213,5 +226,38 @@ describe("importSelection (real DB)", () => {
         // import aborts without creating any notes (a placeholder-only tree would be worthless).
         expect(graphMock.getPageContent).toHaveBeenCalledTimes(6);
         expect(parent.getChildNotes()).toHaveLength(0);
+    });
+
+    it("does not trip the breaker when pages fetch but fail local processing", async () => {
+        // All eight pages fetch successfully (Graph is healthy) but every one fails to convert. These
+        // are isolated bad pages, not a systemic outage, so the import must finish with placeholders
+        // rather than aborting the way a run of fetch failures does.
+        graphMock.listPages.mockResolvedValue(
+            Array.from({ length: 8 }, (_, i) => ({ id: `1-pf${i}`, title: `PF Page ${i}`, level: 0 }))
+        );
+        graphMock.getPageContent.mockClear();
+        graphMock.getPageContent.mockResolvedValue({ html: "<p>PROCESSING_BOOM</p>", inkml: "" });
+
+        const parent = cls.init(() => noteService.createNewNote({
+            parentNoteId: "root",
+            title: "processing failure parent",
+            content: "",
+            type: "text",
+            mime: "text/html"
+        }).note);
+
+        await cls.init(() => importSelection({
+            getAccessToken: () => Promise.resolve("token"),
+            parentNoteId: parent.noteId,
+            sections: [{ id: "sec-5", title: "PF Section", groupPath: [], notebookId: "nb-5", notebookTitle: "PF Notebook" }],
+            taskId: "task-processing-failure"
+        }));
+
+        // Every page was fetched (no early abort) and imported as a placeholder.
+        expect(graphMock.getPageContent).toHaveBeenCalledTimes(8);
+        const pages = new Map(Object.values(becca.notes).filter((note) => /^PF Page \d+$/.test(note.title)).map((note) => [note.noteId, note]));
+        expect(pages.size).toBe(8);
+        expect([...pages.values()].every((note) => note.hasOwnedLabel("oneNoteImportFailed"))).toBe(true);
+        expect([...pages.values()][0]?.getContent()).toContain("could not be imported");
     });
 });

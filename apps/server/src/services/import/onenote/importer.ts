@@ -109,11 +109,15 @@ export async function importSelection({ getAccessToken, parentNoteId, sections, 
         for (const { section, pages } of sectionPages) {
             const fetchedPages: FetchedPage[] = [];
             for (const page of pages) {
+                // The Graph fetch and the local processing (HTML/InkML conversion, resource discovery)
+                // are guarded separately. Only a failed *fetch* counts toward the circuit breaker: a run
+                // of fetch failures means a systemic problem (expired auth, Graph outage) worth aborting
+                // for, whereas a page that fetches but fails to convert is an isolated bad page that must
+                // become a placeholder without dragging the whole import down.
+                let rawHtml: string;
+                let inkml: string;
                 try {
-                    const { html: rawHtml, inkml } = await graph.getPageContent(getAccessToken, page.id);
-                    const html = converter.convertPageHtml(rawHtml);
-                    const { resources, failedResourceCount } = await downloadPageResources(getAccessToken, page.title, html);
-                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                    ({ html: rawHtml, inkml } = await graph.getPageContent(getAccessToken, page.id));
                     consecutivePageFailures = 0;
                 } catch (e: unknown) {
                     consecutivePageFailures++;
@@ -122,7 +126,19 @@ export async function importSelection({ getAccessToken, parentNoteId, sections, 
                     if (consecutivePageFailures > MAX_CONSECUTIVE_PAGE_FAILURES) {
                         throw new Error(`Aborting the OneNote import: ${consecutivePageFailures} pages in a row failed to fetch, which points to a systemic problem rather than individual broken pages. Last error: ${message}`);
                     }
-                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html: "", rawHtml: "", rawInkml: "", inkSvg: null, resources: [], failedResourceCount: 0, fetchError: message, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                    fetchedPages.push(buildPlaceholderPage(page, message));
+                    taskContext.increaseProgressCount();
+                    continue;
+                }
+
+                try {
+                    const html = converter.convertPageHtml(rawHtml);
+                    const { resources, failedResourceCount } = await downloadPageResources(getAccessToken, page.title, html);
+                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                } catch (e: unknown) {
+                    const message = e instanceof Error ? e.message : String(e);
+                    getLog().error(`OneNote import: fetched page '${page.title}' (${page.id}) but could not process its content; a placeholder note will be imported instead: ${message}`);
+                    fetchedPages.push(buildPlaceholderPage(page, message));
                 }
                 taskContext.increaseProgressCount();
             }
@@ -147,6 +163,12 @@ export async function importSelection({ getAccessToken, parentNoteId, sections, 
         getLog().error(`OneNote import failed: ${e instanceof Error ? (e.stack ?? e.message) : e}`);
         taskContext.reportError(e instanceof Error ? e.message : String(e));
     }
+}
+
+/** A content-less stand-in for a page that could not be fetched or processed; imported so the tree and
+ *  cross-page links stay intact and the failure is reported (see {@link FetchedPage.fetchError}). */
+function buildPlaceholderPage(page: OneNotePage, error: string): FetchedPage {
+    return { id: page.id, title: page.title, level: page.level, pageId: page.pageId, html: "", rawHtml: "", rawInkml: "", inkSvg: null, resources: [], failedResourceCount: 0, fetchError: error, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime };
 }
 
 function createNotes(parentNoteId: string, sections: FetchedSection[], debug: boolean, shrinkImages: boolean, startedAtMs: number): string {

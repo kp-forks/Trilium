@@ -119,6 +119,43 @@ describe("devicePoll", () => {
         expect(stored?.deviceCode).toBeUndefined();
     });
 
+    it("keeps the connection when the profile lookup fails after tokens are issued", async () => {
+        // The device code is consumed on success, so the tokens cannot be re-fetched by polling again;
+        // a transient getAccount failure must not throw the just-established connection away.
+        oauthMock.pollDeviceToken.mockResolvedValue({
+            status: "success",
+            tokens: { token_type: "Bearer", access_token: "access-token", refresh_token: "refresh-token", expires_in: 3600 }
+        });
+        graphMock.getAccount.mockRejectedValue(new Error("Graph timed out"));
+        const req = fakeRequest({ deviceCode: "device-secret", deviceCodeExpiresAt: Date.now() + 900_000 });
+
+        const result = await onenoteImportRoute.devicePoll(req);
+
+        expect(result).toEqual({ status: "connected", account: { name: "", email: "" } });
+        // Tokens are persisted despite the profile failure, so the import can proceed.
+        expect(req.session.oneNoteImport?.accessToken).toBe("access-token");
+        expect(req.session.oneNoteImport?.deviceCode).toBeUndefined();
+    });
+
+    it("passes slowDown through so the client can widen its polling interval", async () => {
+        oauthMock.pollDeviceToken.mockResolvedValue({ status: "pending", slowDown: true });
+        const req = fakeRequest({ deviceCode: "device-secret", deviceCodeExpiresAt: Date.now() + 900_000 });
+
+        expect(await onenoteImportRoute.devicePoll(req)).toEqual({ status: "pending", slowDown: true });
+    });
+
+    it("reports the existing connection instead of re-polling a consumed device code", async () => {
+        // Models an overlapping poll: a prior poll already stored the tokens. This one must not poll the
+        // now-dead device code (which would fail and wipe the good session).
+        const req = fakeRequest({ accessToken: "access-token", account: { name: "Ada", email: "ada@example.com" }, deviceCode: "device-secret" });
+
+        const result = await onenoteImportRoute.devicePoll(req);
+
+        expect(result).toEqual({ status: "connected", account: { name: "Ada", email: "ada@example.com" } });
+        expect(oauthMock.pollDeviceToken).not.toHaveBeenCalled();
+        expect(req.session.oneNoteImport?.accessToken).toBe("access-token");
+    });
+
     it("fails and clears the pending sign-in on a terminal error (declined, disabled tenant, ...)", async () => {
         oauthMock.pollDeviceToken.mockRejectedValue(new Error("The sign-in was declined."));
         const req = fakeRequest({ deviceCode: "device-secret", deviceCodeExpiresAt: Date.now() + 900_000 });

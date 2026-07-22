@@ -26,11 +26,15 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const [shrinkImages, setShrinkImages] = useState(compressImages);
     // Set while a web (device-flow) sign-in is pending; null on desktop, whose sign-in needs no code.
     const [deviceLogin, setDeviceLogin] = useState<OneNoteDeviceLogin | null>(null);
-    const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    // Bumped whenever polling stops; an in-flight poll compares against it to know it has been
+    // superseded (cancelled, or the sign-in already completed) and must not reschedule.
+    const pollGenRef = useRef(0);
 
     const stopPolling = useCallback(() => {
+        pollGenRef.current++;
         if (pollRef.current) {
-            clearInterval(pollRef.current);
+            clearTimeout(pollRef.current);
             pollRef.current = null;
         }
     }, []);
@@ -88,27 +92,49 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
             const login = await onenoteImport.deviceLogin();
             setDeviceLogin(login);
             setPhase("connecting");
+
+            // Self-scheduling poll (not setInterval): the next poll is queued only after the current one
+            // resolves, so slow responses never overlap — overlapping polls could race and one clearing
+            // its pending state could wipe another's completed sign-in.
             stopPolling();
-            pollRef.current = setInterval(async () => {
+            const generation = pollGenRef.current;
+            let intervalMs = (login.intervalSeconds || 5) * 1000;
+
+            const poll = async () => {
+                let result: Awaited<ReturnType<typeof onenoteImport.devicePoll>> | null = null;
                 try {
-                    const result = await onenoteImport.devicePoll();
-                    if (result.status === "connected") {
-                        stopPolling();
-                        setDeviceLogin(null);
-                        setAccount(result.account);
-                        await loadNotebooks();
-                        setPhase("ready");
-                    } else if (result.status === "failed") {
-                        stopPolling();
-                        setDeviceLogin(null);
-                        toast.showError(result.error);
-                        setPhase("disconnected");
-                    }
+                    result = await onenoteImport.devicePoll();
                 } catch (e) {
                     // A transient poll failure shouldn't surface a toast on every tick; keep polling.
                     console.error("Failed to poll OneNote sign-in:", e);
                 }
-            }, (login.intervalSeconds || 5) * 1000);
+
+                // Bail if this poll loop was superseded (cancelled, or a prior poll already finished).
+                if (pollGenRef.current !== generation) {
+                    return;
+                }
+                if (result?.status === "connected") {
+                    stopPolling();
+                    setDeviceLogin(null);
+                    setAccount(result.account);
+                    await loadNotebooks();
+                    setPhase("ready");
+                    return;
+                }
+                if (result?.status === "failed") {
+                    stopPolling();
+                    setDeviceLogin(null);
+                    toast.showError(result.error);
+                    setPhase("disconnected");
+                    return;
+                }
+                // RFC 8628: on slow_down the provider is asking us to poll less often.
+                if (result?.status === "pending" && result.slowDown) {
+                    intervalMs += 5000;
+                }
+                pollRef.current = setTimeout(() => void poll(), intervalMs);
+            };
+            pollRef.current = setTimeout(() => void poll(), intervalMs);
         } catch (e) {
             toast.showError(e instanceof Error ? e.message : String(e));
             setPhase("disconnected");

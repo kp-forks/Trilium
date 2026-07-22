@@ -51,7 +51,10 @@ export interface DeviceCodeResponse {
     message?: string;
 }
 
-export type DevicePollResult = { status: "pending" } | { status: "success"; tokens: TokenResponse };
+export type DevicePollResult =
+    /** Not finished yet — poll again. `slowDown` asks the caller to widen its polling interval. */
+    | { status: "pending"; slowDown?: boolean }
+    | { status: "success"; tokens: TokenResponse };
 
 export interface Pkce {
     verifier: string;
@@ -121,31 +124,47 @@ export async function requestDeviceCode(config: OAuthProviderConfig): Promise<De
 
 /**
  * One poll of the token endpoint for a pending device authorization. Returns `pending` while the user
- * has not finished signing in (the caller schedules the next poll) and the tokens once they have;
- * throws on terminal outcomes (declined, code expired, provider errors).
+ * has not finished signing in (the caller schedules the next poll) and the tokens once they have.
+ *
+ * Only a *known terminal* OAuth outcome throws (the user declined, or the code expired) — these mean
+ * the device code is dead and the sign-in must restart. Everything else the caller can't recover from
+ * a single failed poll — a network blip, a 5xx from the token endpoint, an unrecognised error — is
+ * reported as `pending` so a transient hiccup does not abandon an otherwise valid sign-in; the device
+ * code's own expiry bounds how long polling can continue.
  */
 export async function pollDeviceToken(config: OAuthProviderConfig, deviceCode: string): Promise<DevicePollResult> {
-    const { response, json } = await postForm<TokenResponse>(config.tokenEndpoint, {
-        client_id: config.clientId,
-        grant_type: "urn:ietf:params:oauth:grant-type:device_code",
-        device_code: deviceCode
-    });
+    let response: Response;
+    let json: Partial<TokenResponse> & OAuthErrorFields;
+    try {
+        ({ response, json } = await postForm<TokenResponse>(config.tokenEndpoint, {
+            client_id: config.clientId,
+            grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+            device_code: deviceCode
+        }));
+    } catch {
+        // Couldn't reach the token endpoint at all: transient, keep polling.
+        return { status: "pending" };
+    }
 
     if (response.ok && json.access_token) {
         return { status: "success", tokens: json as TokenResponse };
     }
-    // `slow_down` also means "not finished yet", just polled too eagerly; the poll cadence is driven by
-    // the client at the provider's requested interval, so treating it as pending is enough.
-    if (json.error === "authorization_pending" || json.error === "slow_down") {
+    // `slow_down` means "keep polling, but less often" — ask the caller to widen its interval (RFC 8628).
+    if (json.error === "slow_down") {
+        return { status: "pending", slowDown: true };
+    }
+    if (json.error === "authorization_pending") {
         return { status: "pending" };
     }
-    if (json.error === "authorization_declined") {
+    if (json.error === "authorization_declined" || json.error === "access_denied") {
         throw new Error("The sign-in was declined.");
     }
     if (json.error === "expired_token") {
         throw new Error("The sign-in code expired before the sign-in was completed. Please try again.");
     }
-    throw new Error(`OAuth token request failed: ${errorDetail(response, json)}`);
+    // Anything else (5xx, a transient proxy error, an unrecognised code) is not a proven terminal
+    // outcome, so keep polling rather than discarding the sign-in on one bad response.
+    return { status: "pending" };
 }
 
 async function postToken(config: OAuthProviderConfig, body: Record<string, string>): Promise<TokenResponse> {

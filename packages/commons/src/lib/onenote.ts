@@ -17,7 +17,8 @@ export interface OneNoteDeviceLogin {
 
 /** One round of polling a pending device-flow sign-in. `failed` is terminal — start a new sign-in. */
 export type OneNoteDevicePollResult =
-    | { status: "pending" }
+    /** Not finished yet — poll again; `slowDown` asks the client to widen its polling interval. */
+    | { status: "pending"; slowDown?: boolean }
     | { status: "connected"; account: { name: string; email: string } }
     | { status: "failed"; error: string };
 

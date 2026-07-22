@@ -19,7 +19,7 @@
  */
 
 import type { OneNoteDeviceLogin, OneNoteDevicePollResult, OneNoteSectionSelection } from "@triliumnext/commons";
-import { becca, ValidationError } from "@triliumnext/core";
+import { becca, getLog, ValidationError } from "@triliumnext/core";
 import type { Request } from "express";
 
 import { isInternalElectronRequest } from "../../services/electron_request.js";
@@ -28,7 +28,7 @@ import graph, { type AccessTokenProvider } from "../../services/import/onenote/g
 import importer from "../../services/import/onenote/importer.js";
 import { ONENOTE_OAUTH } from "../../services/import/onenote/oauth.js";
 import { createGraphTokenProvider } from "../../services/import/onenote/token_provider.js";
-import oauth from "../../services/oauth/oauth.js";
+import oauth, { type DevicePollResult } from "../../services/oauth/oauth.js";
 
 async function deviceLogin(req: Request): Promise<OneNoteDeviceLogin> {
     const device = await oauth.requestDeviceCode(ONENOTE_OAUTH);
@@ -52,6 +52,12 @@ async function deviceLogin(req: Request): Promise<OneNoteDeviceLogin> {
 
 async function devicePoll(req: Request): Promise<OneNoteDevicePollResult | [number, string]> {
     const pending = req.session.oneNoteImport;
+
+    // A concurrent/earlier poll may have already completed the sign-in. Report that instead of polling
+    // the now-consumed device code again (which would fail and could wipe the good tokens).
+    if (pending?.accessToken) {
+        return { status: "connected", account: pending.account ?? EMPTY_ACCOUNT };
+    }
     if (!pending?.deviceCode) {
         return [400, "No sign-in is in progress."];
     }
@@ -66,29 +72,46 @@ async function devicePoll(req: Request): Promise<OneNoteDevicePollResult | [numb
         return { status: "failed", error: "The sign-in code expired before the sign-in was completed. Please try again." };
     }
 
+    let result: DevicePollResult;
     try {
-        const result = await oauth.pollDeviceToken(ONENOTE_OAUTH, pending.deviceCode);
-        if (result.status === "pending") {
-            return { status: "pending" };
-        }
-
-        const account = await graph.getAccount(() => Promise.resolve(result.tokens.access_token));
-        req.session.oneNoteImport = {
-            accessToken: result.tokens.access_token,
-            refreshToken: result.tokens.refresh_token,
-            expiresAt: Date.now() + result.tokens.expires_in * 1000,
-            account
-        };
-        await saveSession(req);
-
-        return { status: "connected", account };
+        result = await oauth.pollDeviceToken(ONENOTE_OAUTH, pending.deviceCode);
     } catch (e) {
-        // Terminal outcome (declined, expired, tenant policy, ...): the device code is dead, so the
-        // pending state is too. The client offers a fresh sign-in rather than continuing to poll.
+        // pollDeviceToken throws only on a known terminal outcome (declined, code expired): the device
+        // code is dead, so the pending state is too and the client offers a fresh sign-in. Transient
+        // failures come back as `pending`, never here, so a network blip won't cancel a valid sign-in.
         await clearPending();
         return { status: "failed", error: e instanceof Error ? e.message : String(e) };
     }
+
+    if (result.status === "pending") {
+        return { status: "pending", slowDown: result.slowDown };
+    }
+
+    // Success consumes the device code, so the tokens can't be re-fetched by polling again — persist
+    // them immediately, before the (fallible, non-essential) profile lookup, so a transient failure
+    // there can't discard a completed sign-in.
+    req.session.oneNoteImport = {
+        accessToken: result.tokens.access_token,
+        refreshToken: result.tokens.refresh_token,
+        expiresAt: Date.now() + result.tokens.expires_in * 1000
+    };
+    await saveSession(req);
+
+    let account = EMPTY_ACCOUNT;
+    try {
+        account = await graph.getAccount(() => Promise.resolve(result.tokens.access_token));
+        req.session.oneNoteImport = { ...req.session.oneNoteImport, account };
+        await saveSession(req);
+    } catch (e) {
+        // The connection stands (tokens are stored); only the display name is missing. Leave it blank
+        // rather than failing the whole sign-in over a cosmetic profile fetch.
+        getLog().info(`OneNote sign-in connected but the profile lookup failed: ${e instanceof Error ? e.message : String(e)}`);
+    }
+
+    return { status: "connected", account };
 }
+
+const EMPTY_ACCOUNT = { name: "", email: "" };
 
 function getStatus(req: Request) {
     const session = tokenStore(req).read();

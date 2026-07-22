@@ -93,16 +93,20 @@ describe("pollDeviceToken", () => {
     it("reports pending while the user has not finished signing in", async () => {
         // `authorization_pending` is the normal keep-polling response; `slow_down` also means "not yet"
         // (just poll less eagerly), so both map to pending rather than an error.
-        for (const error of ["authorization_pending", "slow_down"]) {
-            fetchMock.mockResolvedValue(jsonResponse(400, { error }));
-            await expect(pollDeviceToken(CONFIG, "device-secret")).resolves.toEqual({ status: "pending" });
-        }
+        fetchMock.mockResolvedValue(jsonResponse(400, { error: "authorization_pending" }));
+        await expect(pollDeviceToken(CONFIG, "device-secret")).resolves.toEqual({ status: "pending" });
     });
 
-    it("throws a friendly error when the user declined the sign-in", async () => {
-        fetchMock.mockResolvedValue(jsonResponse(400, { error: "authorization_declined" }));
+    it("reports pending with slowDown so the caller widens its polling interval", async () => {
+        fetchMock.mockResolvedValue(jsonResponse(400, { error: "slow_down" }));
+        await expect(pollDeviceToken(CONFIG, "device-secret")).resolves.toEqual({ status: "pending", slowDown: true });
+    });
 
-        await expect(pollDeviceToken(CONFIG, "device-secret")).rejects.toThrow(/declined/);
+    it("throws a friendly error when the user declined (authorization_declined or access_denied)", async () => {
+        for (const error of ["authorization_declined", "access_denied"]) {
+            fetchMock.mockResolvedValue(jsonResponse(400, { error }));
+            await expect(pollDeviceToken(CONFIG, "device-secret")).rejects.toThrow(/declined/);
+        }
     });
 
     it("throws a friendly error when the code expired before the user signed in", async () => {
@@ -111,9 +115,19 @@ describe("pollDeviceToken", () => {
         await expect(pollDeviceToken(CONFIG, "device-secret")).rejects.toThrow(/expired/);
     });
 
-    it("surfaces unexpected token errors with the provider's description", async () => {
-        fetchMock.mockResolvedValue(jsonResponse(400, { error: "invalid_grant", error_description: "Device code flow is disabled for this tenant." }));
+    it("keeps polling (does not abandon the sign-in) on a transient network failure", async () => {
+        fetchMock.mockRejectedValue(new Error("ECONNRESET"));
 
-        await expect(pollDeviceToken(CONFIG, "device-secret")).rejects.toThrow("Device code flow is disabled for this tenant.");
+        await expect(pollDeviceToken(CONFIG, "device-secret")).resolves.toEqual({ status: "pending" });
+    });
+
+    it("keeps polling on an unrecognised or 5xx error rather than treating it as terminal", async () => {
+        // A server-side hiccup at the token endpoint must not kill an otherwise valid sign-in; only the
+        // known terminal outcomes (declined, expired) end it.
+        fetchMock.mockResolvedValue(jsonResponse(500, { error: "temporarily_unavailable" }));
+        await expect(pollDeviceToken(CONFIG, "device-secret")).resolves.toEqual({ status: "pending" });
+
+        fetchMock.mockResolvedValue(new Response("<html>502 Bad Gateway</html>", { status: 502 }));
+        await expect(pollDeviceToken(CONFIG, "device-secret")).resolves.toEqual({ status: "pending" });
     });
 });
