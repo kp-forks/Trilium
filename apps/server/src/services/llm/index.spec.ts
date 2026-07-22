@@ -151,10 +151,11 @@ describe("llm/index provider registry", () => {
     });
 
     describe("listProviderModels", () => {
-        it("lists models for ad-hoc credentials, falling back to the curated list", async () => {
+        it("lists models for ad-hoc credentials, tagged with the default-recommended flag", async () => {
             // No saved config needed — the add/edit flow passes raw credentials.
             const models = await listProviderModels("openai", "sk-test", "http://localhost:11434/v1");
-            expect(models).toEqual([{ id: "openai-model", name: "openai Model" }]);
+            // The curated (fallback) model is non-legacy → recommended by default.
+            expect(models).toEqual([{ id: "openai-model", name: "openai Model", recommended: true }]);
         });
 
         it("throws for an unknown provider type", async () => {

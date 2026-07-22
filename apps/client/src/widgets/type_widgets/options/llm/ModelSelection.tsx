@@ -45,7 +45,7 @@ export default function ModelSelection({ query, selected, onChange, autoSelectDe
                 setModels(fetched);
                 setLoading(false);
                 if (autoSelectDefaults && selected.length === 0 && fetched.length > 0) {
-                    onChange(fetched.filter(m => !m.isLegacy));
+                    onChange(defaultSelectedModels(fetched));
                 }
             })
             .catch(err => {
@@ -82,9 +82,14 @@ export default function ModelSelection({ query, selected, onChange, autoSelectDe
         <div className="model-selection">
             <div className="model-selection-toolbar">
                 <span className="model-selection-count">{t("llm.models_selected_count", { count: selected.length, total: models.length })}</span>
-                <button type="button" className="btn btn-sm btn-secondary" onClick={() => onChange(allSelected ? [] : [...models])}>
-                    {allSelected ? t("llm.models_select_none") : t("llm.models_select_all")}
-                </button>
+                <div className="model-selection-actions">
+                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => onChange(defaultSelectedModels(models))}>
+                        {t("llm.models_reset_defaults")}
+                    </button>
+                    <button type="button" className="btn btn-sm btn-secondary" onClick={() => onChange(allSelected ? [] : [...models])}>
+                        {allSelected ? t("llm.models_select_none") : t("llm.models_select_all")}
+                    </button>
+                </div>
             </div>
             <div className="model-selection-list">
                 {models.map(model => (
@@ -99,6 +104,15 @@ export default function ModelSelection({ query, selected, onChange, autoSelectDe
             </div>
         </div>
     );
+}
+
+/**
+ * The models pre-selected by default (fresh provider, or "Reset to defaults").
+ * The recommendation rule lives on the server (see isRecommendedByDefault); the
+ * client just honours the `recommended` flag it tags each model with.
+ */
+function defaultSelectedModels(models: LlmModelInfo[]): LlmModelInfo[] {
+    return models.filter(model => model.recommended);
 }
 
 /** Row label: model name plus curated hints (cost, legacy) when available. */

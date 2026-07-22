@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ModelInfo } from "../types.js";
-import { isGoogleChatModel, isOpenAiChatModel, mergeModelLists } from "./model_listing.js";
+import { isGoogleChatModel, isOpenAiChatModel, isRecommendedByDefault, mergeModelLists } from "./model_listing.js";
 
 const CURATED: ModelInfo[] = [
     { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, contextWindow: 1047576, isDefault: true, costMultiplier: 1 },
@@ -139,5 +139,25 @@ describe("isGoogleChatModel", () => {
         for (const id of ["gemini-flash-latest", "gemini-pro-latest", "gemini-flash-lite-latest", "gemini-2.0-flash-lite-001"]) {
             expect(isGoogleChatModel(id), id).toBe(false);
         }
+    });
+});
+
+describe("isRecommendedByDefault", () => {
+    it("recommends current models and rejects legacy ones for any provider", () => {
+        expect(isRecommendedByDefault({ id: "gpt-4.1" }, "openai")).toBe(true);
+        expect(isRecommendedByDefault({ id: "claude-sonnet-5" }, "anthropic")).toBe(true);
+        expect(isRecommendedByDefault({ id: "gpt-4o", isLegacy: true }, "openai")).toBe(false);
+    });
+
+    it("excludes Gemini preview models, but keeps the stable line-up", () => {
+        expect(isRecommendedByDefault({ id: "gemini-2.5-flash" }, "google")).toBe(true);
+        expect(isRecommendedByDefault({ id: "gemini-3.6-flash" }, "google")).toBe(true);
+        expect(isRecommendedByDefault({ id: "gemini-3-flash-preview" }, "google")).toBe(false);
+        expect(isRecommendedByDefault({ id: "gemini-3.1-pro-preview" }, "google")).toBe(false);
+    });
+
+    it("does not apply the preview rule to non-Google providers", () => {
+        // A hypothetical OpenAI-compatible endpoint serving a "preview" id.
+        expect(isRecommendedByDefault({ id: "some-preview-model" }, "openai")).toBe(true);
     });
 });

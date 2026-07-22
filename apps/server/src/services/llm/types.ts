@@ -54,6 +54,8 @@ export interface ModelInfo {
     contextWindow?: number;
     /** Whether this is a legacy/older model */
     isLegacy?: boolean;
+    /** Whether this model is pre-selected by default when adding a provider (e.g. excludes legacy and, for Gemini, preview models) */
+    recommended?: boolean;
     /** Whether usage is covered by a subscription plan rather than metered per token */
     isSubscription?: boolean;
 }

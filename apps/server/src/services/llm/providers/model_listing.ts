@@ -95,3 +95,19 @@ export function isGoogleChatModel(id: string): boolean {
         && !/-latest$/.test(id)
         && !/-\d{3}$/.test(id);
 }
+
+/**
+ * Whether a model should be pre-selected by default when adding/resetting a
+ * provider. Legacy models are never recommended; per-provider tweaks refine it
+ * further — for Google, preview models are excluded so only the stable line-up
+ * is suggested (the user can still tick previews manually).
+ */
+export function isRecommendedByDefault(model: { id: string; isLegacy?: boolean }, provider: string): boolean {
+    if (model.isLegacy) {
+        return false;
+    }
+    if (provider === "google" && /preview/i.test(model.id)) {
+        return false;
+    }
+    return true;
+}

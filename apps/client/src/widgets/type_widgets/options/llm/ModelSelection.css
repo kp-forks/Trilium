@@ -17,6 +17,11 @@
     font-size: 0.9em;
 }
 
+.model-selection-actions {
+    display: flex;
+    gap: 0.5em;
+}
+
 .model-selection-list {
     max-height: 40vh;
     overflow-y: auto;

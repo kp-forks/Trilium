@@ -21,21 +21,28 @@ vi.mock("../../../react/FormCheckbox", () => ({
 
 import ModelSelection from "./ModelSelection";
 
+// `recommended` is set by the server (listProviderModels); the picker only honours it.
 const MODELS: LlmModelInfo[] = [
-    { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true, costMultiplier: 1 },
-    { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, isLegacy: true, costMultiplier: 1.2 },
-    { id: "custom", name: "Custom" }
+    { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true, costMultiplier: 1, recommended: true },
+    { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, isLegacy: true, costMultiplier: 1.2, recommended: false },
+    { id: "custom", name: "Custom", recommended: true }
 ];
 
 let container: HTMLDivElement | undefined;
 
-async function renderSelection(props: Parameters<typeof ModelSelection>[0]) {
+async function renderSelection(props: Parameters<typeof ModelSelection>[0]): Promise<HTMLDivElement> {
     container = document.createElement("div");
     document.body.appendChild(container);
     const target = container;
     await act(async () => { render(<ModelSelection {...props} />, target); });
     // Flush the fetch promise + the state updates it schedules.
     await act(async () => {});
+    return target;
+}
+
+/** Find a toolbar button by its (echoed i18n key) label. */
+function buttonByLabel(el: HTMLElement, label: string): HTMLButtonElement | undefined {
+    return [...el.querySelectorAll("button")].find(b => b.textContent?.includes(label));
 }
 
 describe("ModelSelection", () => {
@@ -55,17 +62,17 @@ describe("ModelSelection", () => {
 
     it("fetches the provider's models and renders one checkbox per model", async () => {
         const query = { provider: "openai", apiKey: "sk-test", baseURL: "http://x/v1" };
-        await renderSelection({ query, selected: MODELS, onChange: vi.fn() });
+        const el = await renderSelection({ query, selected: MODELS, onChange: vi.fn() });
 
         expect(fetchProviderModelsMock).toHaveBeenCalledWith(query);
-        const names = [...container!.querySelectorAll(".checkbox-stub")].map(el => el.getAttribute("data-name"));
+        const names = [...el.querySelectorAll(".checkbox-stub")].map(node => node.getAttribute("data-name"));
         expect(names).toEqual(["model-gpt-4.1", "model-gpt-4o", "model-custom"]);
     });
 
-    it("auto-selects only non-legacy models when nothing is selected yet", async () => {
+    it("auto-selects the server-recommended models when nothing is selected yet", async () => {
         const onChange = vi.fn();
         await renderSelection({ query: { provider: "openai" }, selected: [], onChange, autoSelectDefaults: true });
-        expect(onChange).toHaveBeenCalledWith([MODELS[0], MODELS[2]]); // gpt-4o (legacy) excluded
+        expect(onChange).toHaveBeenCalledWith([MODELS[0], MODELS[2]]); // gpt-4o (recommended: false) excluded
     });
 
     it("does not auto-select when a selection already exists", async () => {
@@ -87,22 +94,32 @@ describe("ModelSelection", () => {
 
     it("select-all / select-none toggles the whole list", async () => {
         const onChange = vi.fn();
-        await renderSelection({ query: { provider: "openai" }, selected: [], onChange });
+        const el = await renderSelection({ query: { provider: "openai" }, selected: [], onChange });
 
-        const button = container!.querySelector("button") as HTMLButtonElement;
-        act(() => button.click());
+        const selectAll = buttonByLabel(el, "llm.models_select_all");
+        act(() => selectAll?.click());
         expect(onChange).toHaveBeenLastCalledWith(MODELS);
+    });
+
+    it("reset-to-defaults re-applies the recommended selection, dropping the rest", async () => {
+        const onChange = vi.fn();
+        // Start with everything selected, including the non-recommended model.
+        const el = await renderSelection({ query: { provider: "openai" }, selected: MODELS, onChange });
+
+        const reset = buttonByLabel(el, "llm.models_reset_defaults");
+        act(() => reset?.click());
+        expect(onChange).toHaveBeenLastCalledWith([MODELS[0], MODELS[2]]); // gpt-4o (recommended: false) dropped
     });
 
     it("renders an error state when the fetch fails", async () => {
         fetchProviderModelsMock.mockRejectedValue(new Error("bad key"));
-        await renderSelection({ query: { provider: "openai" }, selected: [], onChange: vi.fn() });
-        expect(container!.textContent).toContain("llm.models_load_failed");
+        const el = await renderSelection({ query: { provider: "openai" }, selected: [], onChange: vi.fn() });
+        expect(el.textContent).toContain("llm.models_load_failed");
     });
 
     it("renders an empty state when the provider returns no models", async () => {
         fetchProviderModelsMock.mockResolvedValue([]);
-        await renderSelection({ query: { provider: "openai" }, selected: [], onChange: vi.fn() });
-        expect(container!.textContent).toContain("llm.models_none_available");
+        const el = await renderSelection({ query: { provider: "openai" }, selected: [], onChange: vi.fn() });
+        expect(el.textContent).toContain("llm.models_none_available");
     });
 });
