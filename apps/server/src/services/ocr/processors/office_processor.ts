@@ -17,7 +17,8 @@ const SUPPORTED_MIME_TYPES = new Set([
     'application/rtf',
     'text/rtf',
     // E-book
-    'application/epub+zip'
+    'application/epub+zip',
+    'application/x-epub+zip'
 ]);
 
 const PARSER_CONFIG: OfficeParserConfig = {
@@ -36,7 +37,8 @@ const PARSER_CONFIG: OfficeParserConfig = {
 const MIME_TYPE_TO_FILE_TYPE: Record<string, SupportedFileType> = {
     'application/rtf': 'rtf',
     'text/rtf': 'rtf',
-    'application/epub+zip': 'epub'
+    'application/epub+zip': 'epub',
+    'application/x-epub+zip': 'epub'
 };
 
 /**

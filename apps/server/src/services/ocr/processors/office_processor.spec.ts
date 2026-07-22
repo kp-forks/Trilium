@@ -45,6 +45,7 @@ describe('OfficeProcessor', () => {
         expect(processor.canProcess(RTF)).toBe(true);
         expect(processor.canProcess('text/rtf')).toBe(true);
         expect(processor.canProcess(EPUB)).toBe(true);
+        expect(processor.canProcess('application/x-epub+zip')).toBe(true);
         expect(processor.canProcess('application/pdf')).toBe(false);
         expect(processor.getSupportedMimeTypes()).toContain(DOCX);
         expect(processor.getProcessingType()).toBe('office');

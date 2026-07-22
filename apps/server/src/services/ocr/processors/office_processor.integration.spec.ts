@@ -69,8 +69,8 @@ const EPUB_PHRASES = [
 // Each sample exercises a distinct officeparser code path: DOCX -> WordParser,
 // XLSX -> ExcelParser, PPTX -> PowerPointParser, ODT/ODS/ODP -> OpenOfficeParser
 // (text / spreadsheet / presentation element handling), RTF -> RtfParser and
-// EPUB -> EpubParser (both routed via an explicit fileType hint), with OOXML vs.
-// ODF vs. EPUB magic-byte detection on top.
+// EPUB -> EpubParser (both routed via an explicit fileType hint to bypass the
+// ambiguous ZIP/PK magic bytes shared with OOXML and ODF).
 const SAMPLES = [
     { label: 'DOCX', file: 'demo.docx', mimeType: DOCX, phrases: DOCUMENT_PHRASES },
     { label: 'XLSX', file: 'demo.xlsx', mimeType: XLSX, phrases: SPREADSHEET_PHRASES },
