@@ -156,6 +156,7 @@ jobs:
         with:
           name: TriliumNotes mobile nightly
           path: apps/mobile/android/app/build/outputs/apk/release/*.apk
+          archive: false
 
   nightly-server:
     if: ${{ github.repository == vars.REPO_MAIN }}
