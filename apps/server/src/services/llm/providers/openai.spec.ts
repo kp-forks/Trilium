@@ -130,17 +130,21 @@ describe("OpenAiProvider model listing", () => {
         expect(models[0].isDefault).toBe(true);
     });
 
-    it("falls back to the curated list on HTTP errors", async () => {
+    it("propagates HTTP errors so a bad key/endpoint surfaces in the modal", async () => {
         fetchMock.mockResolvedValue({ ok: false, status: 500 });
         const provider = new OpenAiProvider("sk-test");
-        const models = await provider.listModels();
-        expect(models.map((m) => m.id)).toContain("gpt-4.1-mini");
+        await expect(provider.listModels()).rejects.toThrow("HTTP 500");
     });
 
-    it("falls back to the curated list on a malformed response body", async () => {
+    it("reports a friendly authentication error on a 401", async () => {
+        fetchMock.mockResolvedValue({ ok: false, status: 401 });
+        const provider = new OpenAiProvider("sk-test");
+        await expect(provider.listModels()).rejects.toThrow(/Authentication failed/);
+    });
+
+    it("propagates a malformed response body", async () => {
         fetchMock.mockResolvedValue(okJson({ nope: true }));
         const provider = new OpenAiProvider("sk-test");
-        const models = await provider.listModels();
-        expect(models.map((m) => m.id)).toContain("gpt-4.1");
+        await expect(provider.listModels()).rejects.toThrow(/Unexpected .* response shape/);
     });
 });

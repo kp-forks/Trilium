@@ -319,8 +319,11 @@ describe("AnthropicProvider model listing", () => {
             })
         );
         expect(models.map((m) => m.id)).toEqual(["claude-sonnet-5", "claude-omega-6"]);
-        // Curated entry keeps its metadata; the unknown one uses the API's display name.
-        expect(models[0]).toMatchObject({ isDefault: true, pricing: { input: 3, output: 15 } });
+        // Known model is flagged default and carries price-table pricing (exact
+        // values live in the committed model_prices.json, so only assert presence);
+        // the unknown one uses the API's display name and has no pricing.
+        expect(models[0]).toMatchObject({ isDefault: true });
+        expect(models[0].pricing).toBeDefined();
         expect(models[1]).toMatchObject({ name: "Claude Omega 6" });
         expect(models[1].pricing).toBeUndefined();
     });
@@ -332,10 +335,9 @@ describe("AnthropicProvider model listing", () => {
         expect(fetchMock).toHaveBeenCalledWith("https://proxy.example/v1/models?limit=1000", expect.anything());
     });
 
-    it("falls back to the curated list when the fetch fails", async () => {
+    it("propagates a failed fetch so the modal can surface it", async () => {
         fetchMock.mockRejectedValue(new Error("offline"));
         const provider = new AnthropicProvider("sk-ant");
-        const models = await provider.listModels();
-        expect(models.map((m) => m.id)).toContain("claude-opus-4-8");
+        await expect(provider.listModels()).rejects.toThrow("offline");
     });
 });

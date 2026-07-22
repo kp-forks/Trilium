@@ -3147,6 +3147,7 @@
     "models_load_failed": "Could not load models: {{error}}",
     "models_none_available": "This provider returned no models.",
     "models_selected_count": "{{count}} of {{total}} selected",
+    "model_cost_per_mtok": "${{input}} / ${{output}} per Mtok",
     "models_select_all": "Select all",
     "models_select_none": "Select none",
     "models_reset_defaults": "Reset to defaults",

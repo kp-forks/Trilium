@@ -61,6 +61,18 @@ describe("fetchProviderModels", () => {
         server.post = vi.fn(async () => ({})) as typeof server.post;
         await expect(fetchProviderModels({ provider: "openai" })).resolves.toEqual([]);
     });
+
+    it("surfaces the server error message when the request fails", async () => {
+        // server.post rejects with the raw response body (a { message } JSON string).
+        server.post = vi.fn(async () => { throw '{"message":"Authentication failed (HTTP 401) — check the API key."}'; }) as typeof server.post;
+        await expect(fetchProviderModels({ provider: "openai", apiKey: "bad" }))
+            .rejects.toThrow("Authentication failed (HTTP 401) — check the API key.");
+    });
+
+    it("falls back to the raw rejection when it isn't a JSON error body", async () => {
+        server.post = vi.fn(async () => { throw "rejected by browser"; }) as typeof server.post;
+        await expect(fetchProviderModels({ provider: "openai" })).rejects.toThrow("rejected by browser");
+    });
 });
 
 describe("streamChatCompletion", () => {

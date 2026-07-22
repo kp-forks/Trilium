@@ -4,33 +4,30 @@
  */
 
 import { type LlmMessage, type LlmMessagePart } from "@triliumnext/commons";
-import { getLog } from "@triliumnext/core";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { resolveAttachmentPart } from "./attachment_content.js";
-import { mergeModelLists, type RemoteModel } from "./model_listing.js";
+import { mergeModelLists, type ModelPriceTable, type ProviderPrices, type RemoteModel } from "./model_listing.js";
+import MODEL_PRICES_JSON from "./model_prices.json" with { type: "json" };
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt as composeSystemPrompt } from "./system_prompt.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
 const TITLE_MAX_TOKENS = 30;
 
+/**
+ * The committed pricing/context table — the single source of truth for cost
+ * metadata now that per-provider model arrays are gone. Keyed by provider name
+ * then model id; regenerated from LiteLLM by `scripts/update-model-prices.ts`.
+ */
+const MODEL_PRICES = MODEL_PRICES_JSON as ModelPriceTable;
+
 /** How long a successfully fetched dynamic model list is served from cache. */
 const MODEL_LIST_TTL_MS = 60 * 60 * 1000;
-/** After a failed fetch, don't retry for this long — avoids re-stalling the UI on a dead endpoint. */
-const MODEL_LIST_FAILURE_COOLDOWN_MS = 60 * 1000;
 /** Timeout for a single models-endpoint request. */
 const MODEL_LIST_TIMEOUT_MS = 10_000;
-
-/**
- * Calculate effective cost for comparison (weighted average: 1 input + 3 output).
- * Output is weighted more heavily as it's typically the dominant cost factor.
- */
-function effectiveCost(pricing: ModelPricing): number {
-    return (pricing.input + 3 * pricing.output) / 4;
-}
 
 /**
  * Resolve a single LlmMessagePart to its AI SDK ModelMessage part form, mapping
@@ -74,31 +71,22 @@ export function buildModelMessage(m: LlmMessage): ModelMessage {
 }
 
 /**
- * A curated (hard-coded) model definition. Unlike dynamically discovered
- * models, curated entries always carry pricing.
+ * A hard-coded model definition that always carries pricing. Used only by the
+ * Claude Agent (subscription) provider, whose fixed catalog and zero pricing
+ * come from the CLI rather than the metered LiteLLM price table.
  */
-type CuratedModel = Omit<ModelInfo, "costMultiplier"> & { pricing: ModelPricing };
+type CuratedModel = ModelInfo & { pricing: ModelPricing };
 
 /**
- * Build the model list with cost multipliers from a base model definition array.
+ * Split a curated model array into the `{ models, pricing }` pair the subscription
+ * provider needs (the model list plus an id → pricing lookup).
  */
 export function buildModelList(baseModels: CuratedModel[]): {
     models: ModelInfo[];
     pricing: Record<string, ModelPricing>;
 } {
-    const baselineModel = baseModels.find(m => m.isDefault) || baseModels[0];
-    const baselineCost = effectiveCost(baselineModel.pricing);
-
-    const models = baseModels.map(m => ({
-        ...m,
-        costMultiplier: Math.round((effectiveCost(m.pricing) / baselineCost) * 10) / 10
-    }));
-
-    const pricing = Object.fromEntries(
-        models.map(m => [m.id, m.pricing])
-    );
-
-    return { models, pricing };
+    const pricing = Object.fromEntries(baseModels.map(m => [m.id, m.pricing]));
+    return { models: baseModels, pricing };
 }
 
 export abstract class BaseProvider implements LlmProvider {
@@ -106,8 +94,6 @@ export abstract class BaseProvider implements LlmProvider {
 
     protected abstract defaultModel: string;
     protected abstract titleModel: string;
-    protected abstract availableModels: ModelInfo[];
-    protected abstract modelPricing: Record<string, ModelPricing>;
 
     protected apiKey: string;
     /** Custom endpoint override (self-hosted Ollama/vLLM, proxies). Normalized without a trailing slash. */
@@ -115,7 +101,6 @@ export abstract class BaseProvider implements LlmProvider {
 
     private modelListCache?: { models: ModelInfo[]; fetchedAt: number };
     private modelListInFlight?: Promise<ModelInfo[]>;
-    private modelListFailedAt?: number;
 
     constructor(apiKey = "", baseURL?: string) {
         this.apiKey = apiKey;
@@ -128,7 +113,7 @@ export abstract class BaseProvider implements LlmProvider {
     /**
      * Fetch the raw model list from the provider's models endpoint. Returns
      * null when the provider doesn't support dynamic listing. Overridden by
-     * providers that do; errors are handled by {@link listModels}.
+     * providers that do; a fetch failure propagates to {@link listModels}' caller.
      */
     protected async fetchRemoteModels(): Promise<RemoteModel[] | null> {
         return null;
@@ -136,11 +121,16 @@ export abstract class BaseProvider implements LlmProvider {
 
     /**
      * GET a JSON document with the standard model-listing timeout. Shared
-     * helper for {@link fetchRemoteModels} implementations.
+     * helper for {@link fetchRemoteModels} implementations. An auth failure is
+     * reported as such so the add/edit-provider screen can tell the user their
+     * API key (or base URL) is wrong rather than a generic HTTP error.
      */
     protected async fetchJson(url: string, headers: Record<string, string>): Promise<unknown> {
         const response = await fetch(url, { headers, signal: AbortSignal.timeout(MODEL_LIST_TIMEOUT_MS) });
         if (!response.ok) {
+            if (response.status === 401 || response.status === 403) {
+                throw new Error(`Authentication failed (HTTP ${response.status}) — check the API key${this.baseURL ? " and base URL" : ""}.`);
+            }
             throw new Error(`HTTP ${response.status} from ${url}`);
         }
         return await response.json();
@@ -148,17 +138,16 @@ export abstract class BaseProvider implements LlmProvider {
 
     /**
      * Dynamic model listing: the live endpoint list merged with curated
-     * metadata, cached for {@link MODEL_LIST_TTL_MS}. Falls back to the curated
-     * list when the provider doesn't support listing or the fetch fails (with a
-     * cooldown so a dead endpoint isn't re-probed on every dropdown open).
+     * metadata, cached for {@link MODEL_LIST_TTL_MS}. Returns the curated list
+     * when the provider doesn't support dynamic listing, but a listing *failure*
+     * (bad API key, unreachable endpoint) propagates — the sole caller is the
+     * add/edit-provider screen, which must surface a bad credential instead of
+     * masking it as success by quietly showing the curated defaults.
      */
     async listModels(): Promise<ModelInfo[]> {
         const now = Date.now();
         if (this.modelListCache && now - this.modelListCache.fetchedAt < MODEL_LIST_TTL_MS) {
             return this.modelListCache.models;
-        }
-        if (this.modelListFailedAt && now - this.modelListFailedAt < MODEL_LIST_FAILURE_COOLDOWN_MS) {
-            return this.availableModels;
         }
         if (!this.modelListInFlight) {
             this.modelListInFlight = this.fetchAndMergeModels().finally(() => {
@@ -169,20 +158,15 @@ export abstract class BaseProvider implements LlmProvider {
     }
 
     private async fetchAndMergeModels(): Promise<ModelInfo[]> {
-        try {
-            const remote = await this.fetchRemoteModels();
-            if (!remote || remote.length === 0) {
-                return this.availableModels;
-            }
-            const merged = mergeModelLists(this.availableModels, remote);
-            this.modelListCache = { models: merged, fetchedAt: Date.now() };
-            this.modelListFailedAt = undefined;
-            return merged;
-        } catch (e) {
-            this.modelListFailedAt = Date.now();
-            getLog().info(`Dynamic model listing failed for provider ${this.name}, falling back to the curated list: ${e}`);
-            return this.availableModels;
+        const remote = await this.fetchRemoteModels();
+        if (!remote || remote.length === 0) {
+            // The provider doesn't support dynamic listing, or the endpoint
+            // returned nothing — the price-table catalog is the answer, not an error.
+            return this.getAvailableModels();
         }
+        const merged = mergeModelLists(this.getAvailableModels(), remote);
+        this.modelListCache = { models: merged, fetchedAt: Date.now() };
+        return merged;
     }
 
     /**
@@ -308,12 +292,43 @@ export abstract class BaseProvider implements LlmProvider {
         return streamText(streamOptions);
     }
 
-    getModelPricing(model: string): ModelPricing | undefined {
-        return this.modelPricing[model];
+    /**
+     * This provider's slice of the committed price table. Overridable so tests
+     * can inject a table without a real JSON file.
+     */
+    protected getProviderPrices(): ProviderPrices {
+        return MODEL_PRICES[this.name] ?? {};
     }
 
+    /**
+     * Friendly display name for a model id when the endpoint doesn't supply one
+     * (offline fallback / OpenAI, whose `/models` has no names). Defaults to the
+     * raw id; overridden per provider.
+     */
+    protected modelName(id: string): string {
+        return id;
+    }
+
+    getModelPricing(model: string): ModelPricing | undefined {
+        const price = this.getProviderPrices()[model];
+        return price ? { input: price.input, output: price.output } : undefined;
+    }
+
+    /**
+     * The static, offline-safe model list, built from the price table. Also the
+     * base list {@link listModels} merges the live endpoint against. The model
+     * matching {@link defaultModel} is flagged so `find(m => m.isDefault)` works.
+     */
     getAvailableModels(): ModelInfo[] {
-        return this.availableModels;
+        return Object.entries(this.getProviderPrices())
+            .map(([id, price]) => ({
+                id,
+                name: this.modelName(id),
+                pricing: { input: price.input, output: price.output },
+                contextWindow: price.ctx,
+                ...(id === this.defaultModel ? { isDefault: true } : {})
+            }))
+            .sort((a, b) => a.id.localeCompare(b.id));
     }
 
     async generateTitle(firstMessage: string): Promise<string> {

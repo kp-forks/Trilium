@@ -44,7 +44,7 @@ vi.mock("../tools/index.js", () => ({
 }));
 
 import { BaseProvider, buildModelList, buildModelMessage } from "./base_provider.js";
-import type { RemoteModel } from "./model_listing.js";
+import type { ProviderPrices, RemoteModel } from "./model_listing.js";
 
 const TEST_MODELS: Parameters<typeof buildModelList>[0] = [
     { id: "cheap", name: "Cheap", pricing: { input: 1, output: 2 } },
@@ -52,14 +52,22 @@ const TEST_MODELS: Parameters<typeof buildModelList>[0] = [
     { id: "spendy", name: "Spendy", pricing: { input: 10, output: 30 } }
 ];
 
-const { models: BUILT_MODELS, pricing: BUILT_PRICING } = buildModelList(TEST_MODELS);
+const { pricing: BUILT_PRICING } = buildModelList(TEST_MODELS);
+
+/** Injected price-table slice — the base class reads this instead of the JSON file. */
+const TEST_PRICES: ProviderPrices = {
+    cheap: { input: 1, output: 2 },
+    mid: { input: 2, output: 4, ctx: 1000 },
+    spendy: { input: 10, output: 30 }
+};
 
 class TestProvider extends BaseProvider {
     name = "test";
     protected defaultModel = "mid";
     protected titleModel = "cheap";
-    protected availableModels = BUILT_MODELS;
-    protected modelPricing = BUILT_PRICING;
+    protected override getProviderPrices(): ProviderPrices {
+        return TEST_PRICES;
+    }
 
     public createdModelIds: string[] = [];
     public fetchRemoteModelsMock = vi.fn<() => Promise<RemoteModel[] | null>>(async () => null);
@@ -94,25 +102,6 @@ function makeAttachment(over: Partial<Record<string, unknown>> = {}) {
 }
 
 describe("buildModelList", () => {
-    it("derives cost multipliers relative to the default (baseline) model", () => {
-        // Baseline = mid: effective = (2 + 3*4)/4 = 3.5
-        const byId = Object.fromEntries(BUILT_MODELS.map((m) => [m.id, m]));
-        expect(byId.mid.costMultiplier).toBe(1);
-        // cheap: (1 + 3*2)/4 = 1.75 → 1.75/3.5 = 0.5
-        expect(byId.cheap.costMultiplier).toBe(0.5);
-        // spendy: (10 + 3*30)/4 = 25 → 25/3.5 = 7.14 → rounded to 7.1
-        expect(byId.spendy.costMultiplier).toBe(7.1);
-    });
-
-    it("falls back to the first model as baseline when none is marked default", () => {
-        const { models } = buildModelList([
-            { id: "a", name: "A", pricing: { input: 2, output: 4 } },
-            { id: "b", name: "B", pricing: { input: 4, output: 8 } }
-        ]);
-        expect(models[0].costMultiplier).toBe(1);
-        expect(models[1].costMultiplier).toBe(2);
-    });
-
     it("maps each model id to its pricing", () => {
         expect(BUILT_PRICING).toMatchObject({
             cheap: { input: 1, output: 2 },
@@ -122,19 +111,37 @@ describe("buildModelList", () => {
     });
 });
 
-describe("listModels", () => {
-    it("returns the curated list when the provider has no dynamic listing", async () => {
-        const provider = new TestProvider();
-        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
+describe("getAvailableModels / getModelPricing (from the price table)", () => {
+    it("builds the model list from the price table, sorted, with the default flagged", () => {
+        const models = new TestProvider().getAvailableModels();
+        expect(models.map((m) => m.id)).toEqual(["cheap", "mid", "spendy"]);
+        expect(models[1]).toMatchObject({ id: "mid", pricing: { input: 2, output: 4 }, contextWindow: 1000, isDefault: true });
+        // Non-default models carry no isDefault flag.
+        expect(models[0].isDefault).toBeUndefined();
     });
 
-    it("merges the remote list with curated metadata and caches the result", async () => {
+    it("looks pricing up by model id, undefined for unknown", () => {
+        const provider = new TestProvider();
+        expect(provider.getModelPricing("spendy")).toEqual({ input: 10, output: 30 });
+        expect(provider.getModelPricing("nope")).toBeUndefined();
+    });
+});
+
+describe("listModels", () => {
+    it("returns the price-table list when the provider has no dynamic listing", async () => {
+        const models = await new TestProvider().listModels();
+        expect(models.map((m) => m.id)).toEqual(["cheap", "mid", "spendy"]);
+    });
+
+    it("merges the remote list with price-table metadata and caches the result", async () => {
         const provider = new TestProvider();
         provider.fetchRemoteModelsMock.mockResolvedValue([{ id: "mid" }, { id: "brand-new" }]);
 
         const models = await provider.listModels();
         expect(models.map((m) => m.id)).toEqual(["mid", "brand-new"]);
-        expect(models[0]).toMatchObject({ name: "Mid", isDefault: true });
+        // Known model keeps its price-table pricing + default flag...
+        expect(models[0]).toMatchObject({ id: "mid", pricing: { input: 2, output: 4 }, isDefault: true });
+        // ...unknown one has no pricing.
         expect(models[1].pricing).toBeUndefined();
 
         // Second call is served from the cache — no second fetch.
@@ -151,20 +158,16 @@ describe("listModels", () => {
         expect(provider.fetchRemoteModelsMock).toHaveBeenCalledTimes(1);
     });
 
-    it("falls back to the curated list on fetch failure and cools down before retrying", async () => {
+    it("propagates a fetch failure (e.g. a bad API key) so the add/edit modal can surface it", async () => {
         const provider = new TestProvider();
-        provider.fetchRemoteModelsMock.mockRejectedValue(new Error("boom"));
-
-        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
-        // Within the failure cooldown the endpoint is not probed again.
-        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
-        expect(provider.fetchRemoteModelsMock).toHaveBeenCalledTimes(1);
+        provider.fetchRemoteModelsMock.mockRejectedValue(new Error("HTTP 401"));
+        await expect(provider.listModels()).rejects.toThrow("HTTP 401");
     });
 
-    it("falls back to the curated list when the remote list is empty", async () => {
+    it("falls back to the price-table list when the remote list is empty", async () => {
         const provider = new TestProvider();
         provider.fetchRemoteModelsMock.mockResolvedValue([]);
-        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
+        expect((await provider.listModels()).map((m) => m.id)).toEqual(["cheap", "mid", "spendy"]);
     });
 });
 
@@ -425,17 +428,6 @@ describe("BaseProvider chat / pricing / models / title", () => {
         const provider2 = new TestProvider();
         provider2.chat([{ role: "user", content: "hi" }], { model: "spendy" });
         expect(provider2.createdModelIds).toContain("spendy");
-    });
-
-    it("getModelPricing returns known pricing and undefined for unknown models", () => {
-        const provider = new TestProvider();
-        expect(provider.getModelPricing("mid")).toEqual({ input: 2, output: 4 });
-        expect(provider.getModelPricing("nope")).toBeUndefined();
-    });
-
-    it("getAvailableModels returns the configured model list", () => {
-        const provider = new TestProvider();
-        expect(provider.getAvailableModels().map((m) => m.id)).toEqual(["cheap", "mid", "spendy"]);
     });
 
     it("generateTitle uses the title model and trims the result", async () => {

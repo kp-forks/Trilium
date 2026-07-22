@@ -133,8 +133,6 @@ export interface LlmModelInfo {
     isLegacy?: boolean;
     /** Whether this model is pre-selected by default when adding a provider (e.g. excludes legacy and, for Gemini, preview models) */
     recommended?: boolean;
-    /** Cost multiplier relative to the cheapest model (1x = cheapest) */
-    costMultiplier?: number;
     /** Maximum context window size in tokens */
     contextWindow?: number;
     /** Whether usage is covered by a subscription plan rather than metered per token */

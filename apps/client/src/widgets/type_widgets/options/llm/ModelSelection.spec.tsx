@@ -23,8 +23,8 @@ import ModelSelection from "./ModelSelection";
 
 // `recommended` is set by the server (listProviderModels); the picker only honours it.
 const MODELS: LlmModelInfo[] = [
-    { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true, costMultiplier: 1, recommended: true },
-    { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, isLegacy: true, costMultiplier: 1.2, recommended: false },
+    { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true, recommended: true },
+    { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, isLegacy: true, recommended: false },
     { id: "custom", name: "Custom", recommended: true }
 ];
 

@@ -15,7 +15,9 @@ const state = vi.hoisted(() => ({
     providerIdRequested: undefined as string | undefined,
     providerTypeRequested: undefined as string | undefined,
     // Records the credentials passed to listProviderModels by the provider-models route.
-    providerModelsArgs: undefined as unknown[] | undefined
+    providerModelsArgs: undefined as unknown[] | undefined,
+    // When set, listProviderModels rejects with this (simulates a bad key).
+    providerModelsThrows: undefined as unknown
 }));
 
 vi.mock("../../services/llm/index.js", () => {
@@ -32,7 +34,11 @@ vi.mock("../../services/llm/index.js", () => {
     });
     return {
         hasConfiguredProviders: () => state.configured,
-        listProviderModels: async (...args: unknown[]) => { state.providerModelsArgs = args; return state.models; },
+        listProviderModels: async (...args: unknown[]) => {
+            state.providerModelsArgs = args;
+            if (state.providerModelsThrows !== undefined) throw state.providerModelsThrows;
+            return state.models;
+        },
         getSelectedModel: () => undefined,
         getProvider: (id: string) => { state.providerIdRequested = id; return makeProvider(); },
         getProviderByType: (type: string) => { state.providerTypeRequested = type; return makeProvider(); }
@@ -87,7 +93,8 @@ describe("LLM chat API", () => {
             chunkSignal: undefined,
             providerIdRequested: undefined,
             providerTypeRequested: undefined,
-            providerModelsArgs: undefined
+            providerModelsArgs: undefined,
+            providerModelsThrows: undefined
         });
         generateChatTitle.mockClear();
     });
@@ -103,6 +110,12 @@ describe("LLM chat API", () => {
         it("throws when no provider is given", async () => {
             const req = { body: {} } as unknown as Request;
             await expect(llmChatRoute.getProviderModels(req, {} as Response)).rejects.toThrow(/provider is required/);
+        });
+
+        it("surfaces a listing failure (e.g. a bad API key) instead of masking it", async () => {
+            state.providerModelsThrows = new Error("Authentication failed (HTTP 401) — check the API key.");
+            const req = { body: { provider: "openai", apiKey: "bad-key" } } as unknown as Request;
+            await expect(llmChatRoute.getProviderModels(req, {} as Response)).rejects.toThrow(/Authentication failed \(HTTP 401\)/);
         });
 
         it("defaults a missing apiKey to an empty string", async () => {

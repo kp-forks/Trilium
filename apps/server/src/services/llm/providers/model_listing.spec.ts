@@ -4,13 +4,13 @@ import type { ModelInfo } from "../types.js";
 import { isGoogleChatModel, isOpenAiChatModel, mergeModelLists, openAiModelName, recommendedModelIds } from "./model_listing.js";
 
 const CURATED: ModelInfo[] = [
-    { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, contextWindow: 1047576, isDefault: true, costMultiplier: 1 },
-    { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", pricing: { input: 0.4, output: 1.6 }, contextWindow: 1047576, costMultiplier: 0.2 },
-    { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, contextWindow: 128000, isLegacy: true, costMultiplier: 1.2 }
+    { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, contextWindow: 1047576, isDefault: true },
+    { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", pricing: { input: 0.4, output: 1.6 }, contextWindow: 1047576 },
+    { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, contextWindow: 128000, isLegacy: true }
 ];
 
 describe("mergeModelLists", () => {
-    it("keeps curated metadata for known models and appends unknown ones alphabetically", () => {
+    it("keeps base metadata for known models and appends unknown ones alphabetically", () => {
         const merged = mergeModelLists(CURATED, [
             { id: "gpt-9" },
             { id: "gpt-4.1-mini" },
@@ -18,10 +18,18 @@ describe("mergeModelLists", () => {
             { id: "gpt-4.1" }
         ]);
         expect(merged.map(m => m.id)).toEqual(["gpt-4.1", "gpt-4.1-mini", "gpt-5", "gpt-9"]);
-        // Curated entries keep their full metadata...
-        expect(merged[0]).toMatchObject({ name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true, costMultiplier: 1 });
-        // ...unknown ones carry no pricing/cost badge data.
+        // Base entries keep their pricing/default metadata...
+        expect(merged[0]).toMatchObject({ name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true });
+        // ...unknown ones carry no pricing.
         expect(merged[2]).toEqual({ id: "gpt-5", name: "gpt-5", contextWindow: undefined });
+    });
+
+    it("prefers the endpoint's display name over the base list's for known models", () => {
+        const merged = mergeModelLists(
+            [{ id: "gpt-4.1", name: "gpt-4.1", pricing: { input: 2, output: 8 } }],
+            [{ id: "gpt-4.1", name: "GPT-4.1 (from endpoint)" }]
+        );
+        expect(merged[0].name).toBe("GPT-4.1 (from endpoint)");
     });
 
     it("drops curated models absent from the remote list", () => {

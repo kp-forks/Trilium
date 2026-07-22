@@ -1,5 +1,5 @@
 import type { LlmMessage, LlmStreamChunk } from "@triliumnext/commons";
-import { getLog } from "@triliumnext/core";
+import { getLog, ValidationError } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import { generateChatTitle } from "../../services/llm/chat_title.js";
@@ -136,9 +136,16 @@ interface ProviderModelsRequest {
 async function getProviderModels(req: Request, _res: Response) {
     const { provider, apiKey, baseURL } = req.body as ProviderModelsRequest;
     if (!provider) {
-        throw new Error("provider is required");
+        throw new ValidationError("provider is required");
     }
-    return { models: await listProviderModels(provider, apiKey ?? "", baseURL) };
+    try {
+        return { models: await listProviderModels(provider, apiKey ?? "", baseURL) };
+    } catch (error) {
+        // A live-listing failure is almost always a bad credential or an
+        // unreachable endpoint the user just entered — surface it as a 400 so
+        // the model-selection screen shows the reason instead of a generic 500.
+        throw new ValidationError(error instanceof Error ? error.message : String(error));
+    }
 }
 
 export default {

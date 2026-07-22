@@ -48,8 +48,6 @@ export interface ModelInfo {
     pricing?: ModelPricing;
     /** Whether this is the default model */
     isDefault?: boolean;
-    /** Cost multiplier relative to the cheapest model (1x = cheapest) */
-    costMultiplier?: number;
     /** Maximum context window size in tokens */
     contextWindow?: number;
     /** Whether this is a legacy/older model */
@@ -106,8 +104,10 @@ export interface LlmProvider {
      * where known. Optional — providers with a fixed catalog (agent/subscription
      * providers) omit it and callers fall back to {@link getAvailableModels}.
      *
-     * Implementations must degrade gracefully: on fetch failure they return
-     * the curated list rather than throwing.
+     * Returns the curated list when dynamic listing is unsupported, but a
+     * listing *failure* (bad credentials, unreachable endpoint) rejects so the
+     * add/edit-provider screen can surface it instead of masking a bad
+     * credential as success.
      */
     listModels?(): Promise<ModelInfo[]>;
 

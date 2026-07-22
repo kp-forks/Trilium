@@ -39,7 +39,7 @@ const PROVIDERS = [
         { id: "sonnet", name: "Sonnet", isDefault: true, isSubscription: true }
     ] },
     { id: "a_1", name: "Anthropic", provider: "anthropic", selectedModels: [
-        { id: "opus", name: "Opus", costMultiplier: 5 }
+        { id: "opus", name: "Opus", pricing: { input: 3, output: 15 } }
     ] },
     { id: "o_1", name: "OpenAI", provider: "openai", selectedModels: [
         { id: "mini", name: "Mini" }
@@ -105,8 +105,8 @@ describe("useLlmChat", () => {
 
         const costById = new Map(api().availableModels.map((m) => [m.id, m.costDescription]));
         expect(costById.get("sonnet")).toBe("llm_chat.model_cost_included"); // subscription → "included" label
-        expect(costById.get("opus")).toBe("5x"); // metered multiplier
-        expect(costById.get("mini")).toBeUndefined(); // baseline cost — no annotation
+        expect(costById.get("opus")).toBe("llm.model_cost_per_mtok"); // metered → per-Mtok price label (key echoed by the i18n mock)
+        expect(costById.get("mini")).toBeUndefined(); // unknown pricing — no annotation
     });
 
     it("groups models per provider, keeping a provider with no selected models as an empty group", async () => {

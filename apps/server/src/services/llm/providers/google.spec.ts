@@ -206,10 +206,9 @@ describe("GoogleProvider model listing", () => {
         expect(models[1]).toMatchObject({ name: "Gemini 3 Pro", contextWindow: 2097152 });
     });
 
-    it("falls back to the curated list when the fetch fails", async () => {
+    it("propagates a failed fetch as an authentication error the modal can surface", async () => {
         fetchMock.mockResolvedValue({ ok: false, status: 403 });
         const provider = new GoogleProvider("g-key");
-        const models = await provider.listModels();
-        expect(models.map((m) => m.id)).toContain("gemini-2.5-pro");
+        await expect(provider.listModels()).rejects.toThrow(/Authentication failed/);
     });
 });

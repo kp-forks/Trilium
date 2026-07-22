@@ -875,9 +875,9 @@ describe("transcript helpers", () => {
 
 describe("buildSubscriptionModelList", () => {
     const curated = [
-        { id: "claude-sonnet-5", name: "Claude Sonnet 5", pricing: { input: 0, output: 0 }, contextWindow: 1000000, isDefault: true, isSubscription: true, costMultiplier: 1 },
-        { id: "claude-opus-4-6", name: "Claude Opus 4.6", pricing: { input: 0, output: 0 }, contextWindow: 1000000, isLegacy: true, isSubscription: true, costMultiplier: 1 },
-        { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", pricing: { input: 0, output: 0 }, contextWindow: 200000, isSubscription: true, costMultiplier: 1 }
+        { id: "claude-sonnet-5", name: "Claude Sonnet 5", pricing: { input: 0, output: 0 }, contextWindow: 1000000, isDefault: true, isSubscription: true },
+        { id: "claude-opus-4-6", name: "Claude Opus 4.6", pricing: { input: 0, output: 0 }, contextWindow: 1000000, isLegacy: true, isSubscription: true },
+        { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", pricing: { input: 0, output: 0 }, contextWindow: 200000, isSubscription: true }
     ];
 
     it("resolves aliases to canonical ids, dedupes, and keeps curated metadata", () => {
@@ -888,8 +888,8 @@ describe("buildSubscriptionModelList", () => {
         ], curated);
 
         expect(merged.map(m => m.id)).toEqual(["claude-sonnet-5", "claude-opus-4-6"]);
-        // Curated name wins over the CLI's display name; flags/context window survive.
-        expect(merged[0]).toMatchObject({ name: "Claude Sonnet 5", isDefault: true, isSubscription: true, contextWindow: 1000000, pricing: { input: 0, output: 0 } });
+        // The CLI's display name wins; curated flags/context window survive.
+        expect(merged[0]).toMatchObject({ name: "Sonnet 5", isDefault: true, isSubscription: true, contextWindow: 1000000, pricing: { input: 0, output: 0 } });
         expect(merged[1]).toMatchObject({ id: "claude-opus-4-6", isLegacy: true });
         // Haiku is curated but absent from the live catalog → dropped.
         expect(merged.some(m => m.id === "claude-haiku-4-5-20251001")).toBe(false);
@@ -951,24 +951,19 @@ describe("ClaudeAgentProvider.listModels", () => {
         expect(queryMock).toHaveBeenCalledTimes(1);
     });
 
-    it("falls back to the curated list when the probe fails, then honors the cooldown", async () => {
+    it("propagates the probe failure so the modal can surface it (e.g. not authenticated)", async () => {
         scriptSupportedModels(async () => {
             throw new Error("Claude Code is not authenticated");
         });
         const provider = new ClaudeAgentProvider();
-
-        const models = await provider.listModels();
-        expect(models).toBe(provider.getAvailableModels());
-        // Cooldown: the immediate retry returns curated without re-probing.
-        expect(await provider.listModels()).toBe(provider.getAvailableModels());
-        expect(queryMock).toHaveBeenCalledTimes(1);
+        await expect(provider.listModels()).rejects.toThrow("not authenticated");
     });
 
-    it("falls back to the curated list when Claude Code isn't installed (no probe spawned)", async () => {
+    it("propagates when Claude Code isn't installed, without spawning a probe", async () => {
         resolveClaudeBinaryMock.mockRejectedValueOnce(new Error("Claude Code CLI not found"));
         const provider = new ClaudeAgentProvider();
 
-        expect(await provider.listModels()).toBe(provider.getAvailableModels());
+        await expect(provider.listModels()).rejects.toThrow("not found");
         expect(queryMock).not.toHaveBeenCalled();
     });
 });

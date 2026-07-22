@@ -4,7 +4,7 @@ import { getLog } from "@triliumnext/core";
 import { stepCountIs, streamText, type ToolSet } from "ai";
 
 import type { LlmProviderConfig, StreamResult } from "../types.js";
-import { BaseProvider, buildModelList } from "./base_provider.js";
+import { BaseProvider } from "./base_provider.js";
 import { isGoogleChatModel, type RemoteModel } from "./model_listing.js";
 
 const OFFICIAL_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -21,46 +21,10 @@ function geminiHasToolConflict(config: LlmProviderConfig): boolean {
     return !!(config.enableWebSearch && config.enableNoteTools);
 }
 
-/**
- * Available Google Gemini models with pricing (USD per million tokens).
- * Source: https://ai.google.dev/gemini-api/docs/pricing
- */
-const { models: AVAILABLE_MODELS, pricing: MODEL_PRICING } = buildModelList([
-    // ===== Current Models =====
-    {
-        id: "gemini-2.5-pro",
-        name: "Gemini 2.5 Pro",
-        pricing: { input: 1.25, output: 10 },
-        contextWindow: 1048576
-    },
-    {
-        id: "gemini-2.5-flash",
-        name: "Gemini 2.5 Flash",
-        pricing: { input: 0.3, output: 2.5 },
-        contextWindow: 1048576,
-        isDefault: true
-    },
-    {
-        id: "gemini-2.5-flash-lite",
-        name: "Gemini 2.5 Flash-Lite",
-        pricing: { input: 0.1, output: 0.4 },
-        contextWindow: 1048576
-    },
-    {
-        id: "gemini-2.0-flash",
-        name: "Gemini 2.0 Flash",
-        pricing: { input: 0.1, output: 0.4 },
-        contextWindow: 1048576,
-        isLegacy: true
-    }
-]);
-
 export class GoogleProvider extends BaseProvider {
     name = "google";
     protected defaultModel = "gemini-2.5-flash";
     protected titleModel = "gemini-2.5-flash-lite";
-    protected availableModels = AVAILABLE_MODELS;
-    protected modelPricing = MODEL_PRICING;
 
     private google: GoogleGenerativeAIProvider;
 

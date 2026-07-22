@@ -12,11 +12,35 @@ export interface ProviderModelsQuery {
 /**
  * Fetch the live model list for a provider from its credentials. Used by the
  * model-selection screen while adding or editing a provider — the config need
- * not be saved yet.
+ * not be saved yet. A server-side failure (e.g. a bad API key) rejects with a
+ * clean message the screen can display.
  */
 export async function fetchProviderModels(query: ProviderModelsQuery): Promise<LlmModelInfo[]> {
-    const response = await server.post<{ models?: LlmModelInfo[] }>("llm-chat/provider-models", query);
-    return response.models ?? [];
+    try {
+        const response = await server.post<{ models?: LlmModelInfo[] }>("llm-chat/provider-models", query);
+        return response.models ?? [];
+    } catch (error) {
+        throw new Error(serverErrorMessage(error));
+    }
+}
+
+/**
+ * Extract a human-readable message from a rejected `server.post`, which surfaces
+ * the raw response body (a `{ "message": … }` JSON string) rather than an Error.
+ */
+function serverErrorMessage(error: unknown): string {
+    if (typeof error === "string") {
+        try {
+            const parsed = JSON.parse(error);
+            if (parsed && typeof parsed.message === "string") {
+                return parsed.message;
+            }
+        } catch {
+            // Not JSON — the raw string is the best message we have.
+        }
+        return error;
+    }
+    return error instanceof Error ? error.message : String(error);
 }
 
 export interface StreamCallbacks {

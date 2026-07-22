@@ -136,8 +136,6 @@ const MAX_TURNS = 25;
 
 /** How long a successfully probed subscription model list is served from cache. */
 const SUBSCRIPTION_MODEL_TTL_MS = 60 * 60 * 1000;
-/** After a failed probe, don't re-spawn Claude Code for this long. */
-const SUBSCRIPTION_MODEL_FAILURE_COOLDOWN_MS = 60 * 1000;
 /** Upper bound on how long the init handshake may take to surface the catalog. */
 const SUBSCRIPTION_MODEL_PROBE_TIMEOUT_MS = 15_000;
 
@@ -149,7 +147,6 @@ const SUBSCRIPTION_MODEL_PROBE_TIMEOUT_MS = 15_000;
  * correct and avoids re-spawning the CLI subprocess on each dropdown open.
  */
 let subscriptionModelCache: { models: ModelInfo[]; fetchedAt: number } | undefined;
-let subscriptionModelFailedAt: number | undefined;
 let subscriptionModelInFlight: Promise<ModelInfo[]> | undefined;
 
 /** Session mappings kept per chat note; bounded to avoid unbounded growth. */
@@ -199,17 +196,16 @@ export class ClaudeAgentProvider implements LlmProvider {
      * the logged-in account (tier, version, any managed `availableModels`
      * allowlist), which the Agent SDK hands over via the `initialize` handshake.
      *
-     * Cached for {@link SUBSCRIPTION_MODEL_TTL_MS}; falls back to the curated
-     * list (with a cooldown) when Claude Code isn't installed, isn't logged in,
-     * or the probe otherwise fails.
+     * Cached for {@link SUBSCRIPTION_MODEL_TTL_MS}. A probe *failure* (Claude
+     * Code not installed, not logged in, or timed out) propagates so the
+     * add/edit-provider screen surfaces an actionable error rather than masking
+     * it as success with the curated defaults. The curated list stays available
+     * via {@link getAvailableModels} as the static catalog used elsewhere.
      */
     async listModels(): Promise<ModelInfo[]> {
         const now = Date.now();
         if (subscriptionModelCache && now - subscriptionModelCache.fetchedAt < SUBSCRIPTION_MODEL_TTL_MS) {
             return subscriptionModelCache.models;
-        }
-        if (subscriptionModelFailedAt && now - subscriptionModelFailedAt < SUBSCRIPTION_MODEL_FAILURE_COOLDOWN_MS) {
-            return AVAILABLE_MODELS;
         }
         if (!subscriptionModelInFlight) {
             subscriptionModelInFlight = this.fetchAndMergeModels().finally(() => {
@@ -220,16 +216,17 @@ export class ClaudeAgentProvider implements LlmProvider {
     }
 
     private async fetchAndMergeModels(): Promise<ModelInfo[]> {
+        let sdkModels: SubscriptionModelSource[];
         try {
-            const merged = buildSubscriptionModelList(await this.probeSupportedModels(), AVAILABLE_MODELS);
-            subscriptionModelCache = { models: merged, fetchedAt: Date.now() };
-            subscriptionModelFailedAt = undefined;
-            return merged;
+            sdkModels = await this.probeSupportedModels();
         } catch (error) {
-            subscriptionModelFailedAt = Date.now();
-            getLog().info(`Dynamic model listing failed for the Claude subscription provider, falling back to the curated list: ${describeAgentError(error)}`);
-            return AVAILABLE_MODELS;
+            // Report why the probe failed (missing binary, not logged in, timeout)
+            // so the caller can show an actionable message.
+            throw new Error(describeAgentError(error));
         }
+        const merged = buildSubscriptionModelList(sdkModels, AVAILABLE_MODELS);
+        subscriptionModelCache = { models: merged, fetchedAt: Date.now() };
+        return merged;
     }
 
     /**
@@ -657,10 +654,9 @@ export function resetAgentCwdForTests(): void {
     agentCwd = undefined;
 }
 
-/** For tests: forget the cached/failed dynamic model list so the next call re-probes. */
+/** For tests: forget the cached dynamic model list so the next call re-probes. */
 export function resetSubscriptionModelCacheForTests(): void {
     subscriptionModelCache = undefined;
-    subscriptionModelFailedAt = undefined;
     subscriptionModelInFlight = undefined;
 }
 
@@ -680,10 +676,11 @@ interface SubscriptionModelSource {
  * The canonical wire id (`resolvedModel`) is preferred over the picker alias
  * (`value`) so a chat stores a stable, concrete model id that matches the
  * metered Anthropic provider's ids; aliases resolving to the same model are
- * deduped. Curated entries supply names, context windows and the legacy flag
- * for models they know; unknown models come through with whatever the CLI
- * reported. Every row is a subscription model, so the plan-covered invariants
- * (zero pricing, no metered cost) are re-asserted across the merged list.
+ * deduped. The CLI's display name wins; curated entries supply the context
+ * window and legacy flag for models they know, and unknown models come through
+ * with whatever the CLI reported. Every row is a subscription model, so the
+ * plan-covered invariants (zero pricing, no metered cost) are re-asserted
+ * across the merged list.
  */
 export function buildSubscriptionModelList(sdkModels: SubscriptionModelSource[], curated: ModelInfo[]): ModelInfo[] {
     const remote: RemoteModel[] = [];

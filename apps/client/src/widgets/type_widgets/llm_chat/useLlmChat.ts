@@ -2,8 +2,8 @@ import type { LlmCitation, LlmMessage, LlmMessagePart, LlmModelInfo, LlmUsage } 
 import { RefObject } from "preact";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
-import { t } from "../../../services/i18n.js";
 import { streamChatCompletion } from "../../../services/llm_chat.js";
+import { formatModelCost } from "../../../services/llm_model_cost.js";
 import options from "../../../services/options.js";
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
@@ -975,9 +975,7 @@ function readSelectedModels(): { models: ModelOption[]; groups: ModelProviderGro
             provider: config.provider,
             providerId: config.id,
             providerName: config.name,
-            costDescription: model.isSubscription
-                ? t("llm_chat.model_cost_included")
-                : model.costMultiplier ? `${model.costMultiplier}x` : undefined
+            costDescription: formatModelCost(model)
         }))
     }));
     const models = groups.flatMap(g => g.models);

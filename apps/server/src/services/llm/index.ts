@@ -127,8 +127,10 @@ export function hasConfiguredProviders(): boolean {
  * List the models available for a provider described by raw credentials —
  * used by the model-selection screen during the add/edit flow, where the
  * provider config isn't necessarily persisted yet. Instantiates the provider
- * ad-hoc (bypassing the config cache) and queries it live, falling back to its
- * curated list when it doesn't support dynamic listing.
+ * ad-hoc (bypassing the config cache) and queries it live — a listing failure
+ * (bad credentials, unreachable endpoint) propagates so the caller can surface
+ * it — falling back to the curated list only when the provider doesn't support
+ * dynamic listing.
  */
 export async function listProviderModels(provider: string, apiKey: string, baseURL?: string): Promise<ModelInfo[]> {
     const factory = providerFactories[provider];

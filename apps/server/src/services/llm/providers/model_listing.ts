@@ -20,18 +20,42 @@ export interface RemoteModel {
 }
 
 /**
- * Merge a live-fetched model list with the curated metadata list.
+ * Per-model pricing/metadata, sourced from the committed `model_prices.json`
+ * (pruned from LiteLLM — see `scripts/update-model-prices.ts`). This is the
+ * single source of truth for cost/context data now that the hand-curated
+ * per-provider model arrays are gone; the endpoint (dynamic listing) remains the
+ * source of truth for which models exist and their display names.
+ */
+export interface ModelPrice {
+    /** USD per million input tokens. */
+    input: number;
+    /** USD per million output tokens. */
+    output: number;
+    /** Context window in tokens, when known. */
+    ctx?: number;
+}
+
+/** One provider's pricing, keyed by model id. */
+export type ProviderPrices = Record<string, ModelPrice>;
+
+/** The whole committed price table: provider name → model id → pricing. */
+export type ModelPriceTable = Record<string, ProviderPrices>;
+
+/**
+ * Merge a live-fetched model list with a base metadata list (the provider's
+ * price-table slice, see {@link BaseProvider.getAvailableModels}).
  *
- * The remote list is the source of truth for *availability*: curated models
- * absent from it are dropped, remote models unknown to the curated list are
- * included with whatever metadata the endpoint reported (no pricing, no cost
- * multiplier). Curated entries supply name, pricing, context window and the
- * legacy flag for models they know.
+ * The remote list is the source of truth for *availability* and *display name*:
+ * base entries absent from it are dropped, remote models unknown to the base
+ * list are included with whatever metadata the endpoint reported (no pricing).
+ * The base list supplies pricing and context window (and, offline, a fallback
+ * name) for the models it knows; the endpoint's display name always wins when
+ * present.
  *
- * Ordering: curated-known models first (in curated order), then unknown remote
- * models alphabetically. The curated default keeps its flag when present;
- * otherwise the first merged model becomes the default so callers relying on
- * `find(m => m.isDefault)` keep working.
+ * Ordering: base-known models first (in base order), then unknown remote models
+ * alphabetically. An existing default keeps its flag; otherwise the first merged
+ * model becomes the default so callers relying on `find(m => m.isDefault)` keep
+ * working.
  */
 export function mergeModelLists(curated: ModelInfo[], remote: RemoteModel[]): ModelInfo[] {
     const remoteById = new Map(remote.map(m => [m.id, m]));
@@ -40,7 +64,13 @@ export function mergeModelLists(curated: ModelInfo[], remote: RemoteModel[]): Mo
         .filter(m => remoteById.has(m.id))
         .map(m => {
             const remoteModel = remoteById.get(m.id);
-            return { ...m, contextWindow: m.contextWindow ?? remoteModel?.contextWindow };
+            return {
+                ...m,
+                // The endpoint is authoritative for display names (e.g. Anthropic's
+                // `display_name`); the base name is only an offline fallback.
+                name: remoteModel?.name ?? m.name,
+                contextWindow: m.contextWindow ?? remoteModel?.contextWindow
+            };
         });
 
     const curatedIds = new Set(curated.map(m => m.id));

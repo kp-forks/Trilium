@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../../services/i18n";
 import { fetchProviderModels, type ProviderModelsQuery } from "../../../../services/llm_chat";
+import { formatModelCost } from "../../../../services/llm_model_cost";
 import FormCheckbox from "../../../react/FormCheckbox";
 import NoItems from "../../../react/NoItems";
 
@@ -114,11 +115,9 @@ function defaultSelectedModels(models: LlmModelInfo[]): LlmModelInfo[] {
     return models.filter(model => model.recommended);
 }
 
-/** Row label: model name plus curated cost hint when available. */
+/** Row label: model name plus a cost hint (per-Mtok price / subscription) when known. */
 function ModelLabel({ model }: { model: LlmModelInfo }) {
-    const cost = model.isSubscription
-        ? t("llm_chat.model_cost_included")
-        : model.costMultiplier ? `${model.costMultiplier}x` : undefined;
+    const cost = formatModelCost(model);
     return (
         <span className="model-selection-label">
             <span className="model-selection-name">{model.name}</span>
