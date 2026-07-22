@@ -138,10 +138,12 @@ export function isGoogleChatModel(id: string): boolean {
  * gpt-4 through 5.5 and o1/o3 models (which stay in the picker, unchecked).
  * When gpt-5.7 / o5 ship they win automatically.
  *
- * For Anthropic we recommend the newest version within each Claude family
- * (Opus, Sonnet, Haiku, Fable, and any future one) — one model per family,
- * so today's Opus 4.8, Sonnet 5, Haiku 4.5 and Fable 5. Older revisions and
- * dated snapshots stay in the picker, unchecked.
+ * For Anthropic — both the metered API (`anthropic`) and the Claude Code
+ * subscription (`claude-agent`), which share the same `claude-*` id shape — we
+ * recommend the newest version within each Claude family (Opus, Sonnet, Haiku,
+ * Fable, and any future one) — one model per family, so today's Opus 4.8,
+ * Sonnet 5, Haiku 4.5 and Fable 5. Older revisions and dated snapshots stay in
+ * the picker, unchecked.
  *
  * Other providers fall back to "everything that isn't a preview or legacy".
  */
@@ -149,7 +151,7 @@ export function recommendedModelIds(models: RecommendCandidate[], provider: stri
     if (provider === "openai") {
         return openAiRecommendedIds(models);
     }
-    if (provider === "anthropic") {
+    if (provider === "anthropic" || provider === "claude-agent") {
         return anthropicRecommendedIds(models);
     }
     return new Set(models.filter(m => !m.isLegacy && !/preview/i.test(m.id)).map(m => m.id));

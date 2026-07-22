@@ -42,7 +42,7 @@ vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBin
 const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
 vi.mock("./attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
 
-const { buildSeededPrompt, ClaudeAgentProvider, hashTranscript, resetAgentCwdForTests } = await import("./claude_agent.js");
+const { buildSeededPrompt, buildSubscriptionModelList, ClaudeAgentProvider, hashTranscript, resetAgentCwdForTests, resetSubscriptionModelCacheForTests } = await import("./claude_agent.js");
 
 /** Drain the query prompt into the single user message it streams (multimodal path). */
 async function drainPrompt(prompt: unknown): Promise<{ role: string; content: unknown[] }> {
@@ -870,5 +870,105 @@ describe("transcript helpers", () => {
         expect(prompt).toContain("User: q1");
         expect(prompt).toContain("Assistant: a1");
         expect(prompt.endsWith("q2")).toBe(true);
+    });
+});
+
+describe("buildSubscriptionModelList", () => {
+    const curated = [
+        { id: "claude-sonnet-5", name: "Claude Sonnet 5", pricing: { input: 0, output: 0 }, contextWindow: 1000000, isDefault: true, isSubscription: true, costMultiplier: 1 },
+        { id: "claude-opus-4-6", name: "Claude Opus 4.6", pricing: { input: 0, output: 0 }, contextWindow: 1000000, isLegacy: true, isSubscription: true, costMultiplier: 1 },
+        { id: "claude-haiku-4-5-20251001", name: "Claude Haiku 4.5", pricing: { input: 0, output: 0 }, contextWindow: 200000, isSubscription: true, costMultiplier: 1 }
+    ];
+
+    it("resolves aliases to canonical ids, dedupes, and keeps curated metadata", () => {
+        const merged = buildSubscriptionModelList([
+            { value: "sonnet", resolvedModel: "claude-sonnet-5", displayName: "Sonnet 5" },
+            { value: "claude-sonnet-5", displayName: "Sonnet 5 (again)" }, // dup of the resolved alias → dropped
+            { value: "claude-opus-4-6", displayName: "Opus 4.6" }
+        ], curated);
+
+        expect(merged.map(m => m.id)).toEqual(["claude-sonnet-5", "claude-opus-4-6"]);
+        // Curated name wins over the CLI's display name; flags/context window survive.
+        expect(merged[0]).toMatchObject({ name: "Claude Sonnet 5", isDefault: true, isSubscription: true, contextWindow: 1000000, pricing: { input: 0, output: 0 } });
+        expect(merged[1]).toMatchObject({ id: "claude-opus-4-6", isLegacy: true });
+        // Haiku is curated but absent from the live catalog → dropped.
+        expect(merged.some(m => m.id === "claude-haiku-4-5-20251001")).toBe(false);
+    });
+
+    it("passes through unknown models with subscription invariants and no pricing/context window", () => {
+        const merged = buildSubscriptionModelList([
+            { value: "sonnet", resolvedModel: "claude-sonnet-5", displayName: "Sonnet 5" },
+            { value: "claude-fable-9", displayName: "Claude Fable 9" }
+        ], curated);
+
+        const fable = merged.find(m => m.id === "claude-fable-9");
+        expect(fable).toEqual({ id: "claude-fable-9", name: "Claude Fable 9", contextWindow: undefined, isSubscription: true, pricing: { input: 0, output: 0 } });
+    });
+});
+
+describe("ClaudeAgentProvider.listModels", () => {
+    function scriptSupportedModels(models: unknown[] | (() => Promise<unknown[]>)) {
+        queryMock.mockReturnValue({
+            supportedModels: typeof models === "function" ? models : async () => models
+        });
+    }
+
+    beforeEach(() => {
+        queryMock.mockReset();
+        resetSubscriptionModelCacheForTests();
+        resolveClaudeBinaryMock.mockClear();
+    });
+
+    it("probes the live catalog without running a chat turn", async () => {
+        scriptSupportedModels([
+            { value: "sonnet", resolvedModel: "claude-sonnet-5", displayName: "Sonnet 5" },
+            { value: "claude-fable-9", displayName: "Claude Fable 9" }
+        ]);
+        const provider = new ClaudeAgentProvider();
+        const models = await provider.listModels();
+
+        expect(models.map(m => m.id)).toEqual(["claude-sonnet-5", "claude-fable-9"]);
+        expect(models.every(m => m.isSubscription)).toBe(true);
+        // Curated models the CLI didn't report are gone (unlike getAvailableModels).
+        expect(models.some(m => m.id === "claude-haiku-4-5-20251001")).toBe(false);
+
+        // The probe uses a streaming prompt that yields nothing — never a string,
+        // so no user turn (and no tokens) is sent — capped at a single turn.
+        const { prompt, options } = queryMock.mock.calls[0][0];
+        expect(typeof prompt).not.toBe("string");
+        expect(prompt[Symbol.asyncIterator]).toBeTypeOf("function");
+        expect(options.maxTurns).toBe(1);
+    });
+
+    it("serves the cached list on the next call without re-spawning", async () => {
+        scriptSupportedModels([{ value: "claude-sonnet-5", displayName: "Sonnet 5" }]);
+        const provider = new ClaudeAgentProvider();
+        const first = await provider.listModels();
+        // A fresh instance still hits the shared module-level cache.
+        const second = await new ClaudeAgentProvider().listModels();
+
+        expect(second).toBe(first);
+        expect(queryMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("falls back to the curated list when the probe fails, then honors the cooldown", async () => {
+        scriptSupportedModels(async () => {
+            throw new Error("Claude Code is not authenticated");
+        });
+        const provider = new ClaudeAgentProvider();
+
+        const models = await provider.listModels();
+        expect(models).toBe(provider.getAvailableModels());
+        // Cooldown: the immediate retry returns curated without re-probing.
+        expect(await provider.listModels()).toBe(provider.getAvailableModels());
+        expect(queryMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("falls back to the curated list when Claude Code isn't installed (no probe spawned)", async () => {
+        resolveClaudeBinaryMock.mockRejectedValueOnce(new Error("Claude Code CLI not found"));
+        const provider = new ClaudeAgentProvider();
+
+        expect(await provider.listModels()).toBe(provider.getAvailableModels());
+        expect(queryMock).not.toHaveBeenCalled();
     });
 });

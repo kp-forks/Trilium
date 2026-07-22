@@ -233,6 +233,17 @@ describe("recommendedModelIds", () => {
         ]);
     });
 
+    it("uses the same per-family newest-version rule for the Claude Code subscription provider", () => {
+        // The claude-agent provider shares Anthropic's id shape, so it recommends
+        // one model per family — not the generic non-legacy default.
+        const ids = recommendedModelIds([
+            "claude-fable-5", "claude-opus-4-8", "claude-opus-4-7", "claude-sonnet-5", "claude-haiku-4-5-20251001"
+        ].map(id => ({ id })), "claude-agent");
+        expect([...ids].sort()).toEqual([
+            "claude-fable-5", "claude-haiku-4-5-20251001", "claude-opus-4-8", "claude-sonnet-5"
+        ]);
+    });
+
     it("treats an Anthropic snapshot date as the version, not a minor bump", () => {
         // sonnet-4-20250514 is 4.0, so sonnet-4-6 (4.6) must outrank it.
         const ids = recommendedModelIds([{ id: "claude-sonnet-4-20250514" }, { id: "claude-sonnet-4-6" }], "anthropic");
