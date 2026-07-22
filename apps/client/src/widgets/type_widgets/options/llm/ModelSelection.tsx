@@ -5,7 +5,6 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../../services/i18n";
 import { fetchProviderModels, type ProviderModelsQuery } from "../../../../services/llm_chat";
-import { Badge } from "../../../react/Badge";
 import FormCheckbox from "../../../react/FormCheckbox";
 import NoItems from "../../../react/NoItems";
 
@@ -115,7 +114,7 @@ function defaultSelectedModels(models: LlmModelInfo[]): LlmModelInfo[] {
     return models.filter(model => model.recommended);
 }
 
-/** Row label: model name plus curated hints (cost, legacy) when available. */
+/** Row label: model name plus curated cost hint when available. */
 function ModelLabel({ model }: { model: LlmModelInfo }) {
     const cost = model.isSubscription
         ? t("llm_chat.model_cost_included")
@@ -124,7 +123,6 @@ function ModelLabel({ model }: { model: LlmModelInfo }) {
         <span className="model-selection-label">
             <span className="model-selection-name">{model.name}</span>
             {cost && <small className="model-selection-cost">({cost})</small>}
-            {model.isLegacy && <Badge text={t("llm_chat.legacy_models")} className="model-selection-legacy-badge" outline />}
         </span>
     );
 }

@@ -39,7 +39,3 @@
 .model-selection-cost {
     color: var(--muted-text-color);
 }
-
-.model-selection-legacy-badge {
-    --color: var(--muted-text-color);
-}
