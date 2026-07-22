@@ -2,11 +2,16 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const getAvailableModelsMock = vi.hoisted(() => vi.fn());
 const streamChatCompletionMock = vi.hoisted(() => vi.fn());
 vi.mock("../../../services/llm_chat.js", () => ({
-    getAvailableModels: getAvailableModelsMock,
     streamChatCompletion: streamChatCompletionMock
+}));
+
+// The chat picker now reads the user's selected models straight from the
+// `llmProviders` option (no server fetch), so stub that service.
+const optionsGetJsonMock = vi.hoisted(() => vi.fn());
+vi.mock("../../../services/options.js", () => ({
+    default: { getJson: optionsGetJsonMock }
 }));
 
 // useTriliumEvent subscribes to the app-wide event bus; stub it so the hook
@@ -27,10 +32,18 @@ import { useLlmChat } from "./useLlmChat.js";
 type LlmChatApi = ReturnType<typeof useLlmChat>;
 type LlmChatOptions = Parameters<typeof useLlmChat>[1];
 
-const MODELS = [
-    { id: "sonnet", name: "Sonnet", provider: "claude-agent", providerId: "ca_1", isDefault: true, isSubscription: true },
-    { id: "opus", name: "Opus", provider: "anthropic", providerId: "a_1", costMultiplier: 5 },
-    { id: "mini", name: "Mini", provider: "openai", providerId: "o_1" }
+// Provider configs as stored in the llmProviders option; provider/providerId/
+// providerName are applied from the config when the hook flattens selectedModels.
+const PROVIDERS = [
+    { id: "ca_1", name: "Claude Code", provider: "claude-agent", selectedModels: [
+        { id: "sonnet", name: "Sonnet", isDefault: true, isSubscription: true }
+    ] },
+    { id: "a_1", name: "Anthropic", provider: "anthropic", selectedModels: [
+        { id: "opus", name: "Opus", costMultiplier: 5 }
+    ] },
+    { id: "o_1", name: "OpenAI", provider: "openai", selectedModels: [
+        { id: "mini", name: "Mini" }
+    ] }
 ];
 
 describe("useLlmChat", () => {
@@ -62,7 +75,7 @@ describe("useLlmChat", () => {
     }
 
     beforeEach(() => {
-        getAvailableModelsMock.mockResolvedValue(MODELS);
+        optionsGetJsonMock.mockReturnValue(PROVIDERS);
         // Minimal successful stream: finish immediately with no content.
         streamChatCompletionMock.mockImplementation(async (_messages, _options, callbacks) => {
             callbacks.onDone();
@@ -76,7 +89,7 @@ describe("useLlmChat", () => {
             host = undefined;
         }
         captured = undefined;
-        getAvailableModelsMock.mockReset();
+        optionsGetJsonMock.mockReset();
         streamChatCompletionMock.mockReset();
     });
 

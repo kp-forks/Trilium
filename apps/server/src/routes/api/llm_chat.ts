@@ -3,7 +3,7 @@ import { getLog } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import { generateChatTitle } from "../../services/llm/chat_title.js";
-import { getAllModels, getProvider, getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
+import { getProvider, getProviderByType, getSelectedModel, hasConfiguredProviders, listProviderModels, type LlmProviderConfig } from "../../services/llm/index.js";
 import { streamToChunks } from "../../services/llm/stream.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
@@ -64,8 +64,14 @@ async function streamChat(req: Request, res: Response) {
             return;
         }
 
-        const pricing = provider.getModelPricing(modelId);
-        const modelDisplayName = provider.getAvailableModels().find(m => m.id === modelId)?.name || modelId;
+        // Prefer the config's stored selection for name/pricing — it carries the
+        // denormalized metadata even for dynamically discovered models the curated
+        // list doesn't know. Fall back to the provider's curated list, then the id.
+        const selectedModel = getSelectedModel(config.providerId, modelId);
+        const pricing = selectedModel?.pricing ?? provider.getModelPricing(modelId);
+        const modelDisplayName = selectedModel?.name
+            ?? provider.getAvailableModels().find(m => m.id === modelId)?.name
+            ?? modelId;
 
         let chunks: AsyncIterable<LlmStreamChunk>;
         if (provider.chatChunks) {
@@ -116,20 +122,26 @@ async function streamChat(req: Request, res: Response) {
     }
 }
 
-/**
- * Get available models from all configured providers. Providers that support
- * dynamic listing are queried live (with server-side caching); the rest report
- * their curated list.
- */
-async function getModels(_req: Request, _res: Response) {
-    if (!hasConfiguredProviders()) {
-        return { models: [] };
-    }
+interface ProviderModelsRequest {
+    provider: string;
+    apiKey?: string;
+    baseURL?: string;
+}
 
-    return { models: await getAllModels() };
+/**
+ * List the live models for a provider described by raw credentials. Used by the
+ * model-selection screen while adding or editing a provider — the config need
+ * not be saved yet, so credentials come in the request body rather than by id.
+ */
+async function getProviderModels(req: Request, _res: Response) {
+    const { provider, apiKey, baseURL } = req.body as ProviderModelsRequest;
+    if (!provider) {
+        throw new Error("provider is required");
+    }
+    return { models: await listProviderModels(provider, apiKey ?? "", baseURL) };
 }
 
 export default {
     streamChat,
-    getModels
+    getProviderModels
 };

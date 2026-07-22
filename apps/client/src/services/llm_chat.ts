@@ -2,11 +2,20 @@ import type { LlmChatConfig, LlmCitation, LlmMessage, LlmModelInfo,LlmUsage } fr
 
 import server from "./server.js";
 
+/** Credentials describing a provider whose live model list should be fetched. */
+export interface ProviderModelsQuery {
+    provider: string;
+    apiKey?: string;
+    baseURL?: string;
+}
+
 /**
- * Fetch available models from all configured providers.
+ * Fetch the live model list for a provider from its credentials. Used by the
+ * model-selection screen while adding or editing a provider — the config need
+ * not be saved yet.
  */
-export async function getAvailableModels(): Promise<LlmModelInfo[]> {
-    const response = await server.get<{ models?: LlmModelInfo[] }>("llm-chat/models");
+export async function fetchProviderModels(query: ProviderModelsQuery): Promise<LlmModelInfo[]> {
+    const response = await server.post<{ models?: LlmModelInfo[] }>("llm-chat/provider-models", query);
     return response.models ?? [];
 }
 

@@ -12,7 +12,7 @@ import ActionButton from "../../react/ActionButton.js";
 import Button from "../../react/Button.js";
 import CKEditor, { type CKEditorApi } from "../../react/CKEditor.js";
 import Dropdown from "../../react/Dropdown.js";
-import { FormDropdownDivider, FormDropdownSubmenu, FormListHeader, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
+import { FormDropdownDivider, FormListHeader, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
 import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "../options/llm/AddProviderModal.js";
 import { insertNewBlock as insertNewBlockCommand, isSelectionInCodeBlock, outdentListItemAtStart } from "./chat_input_editing.js";
@@ -188,10 +188,9 @@ export default function ChatInputBar({
         && (!chat.selectedProvider || m.provider === chat.selectedProvider)
         && (!chat.selectedProviderId || m.providerId === chat.selectedProviderId));
     const isSelectedModel = (m: ModelOption) => m === currentModel;
-    const currentModels = chat.availableModels.filter(m => !m.isLegacy);
-    const currentModelGroups = groupModelsByProvider(currentModels);
-    const legacyModels = chat.availableModels.filter(m => m.isLegacy);
-    const legacyModelGroups = groupModelsByProvider(legacyModels);
+    // The dropdown shows exactly the models the user selected per provider (in
+    // provider settings). Legacy demotion happens there now, not here.
+    const currentModelGroups = groupModelsByProvider(chat.availableModels);
     // Gemini 2.x cannot combine googleSearch with function tools in a single
     // request. When note tools are enabled on a Gemini model we silently drop
     // web search server-side; reflect that here by disabling the toggle so the
@@ -372,31 +371,6 @@ export default function ChatInputBar({
                                 ))}
                             </Fragment>
                         ))}
-                        {legacyModels.length > 0 && (
-                            <>
-                                <FormDropdownDivider />
-                                <FormDropdownSubmenu
-                                    icon="bx bx-history"
-                                    title={t("llm_chat.legacy_models")}
-                                    dropStart={inSidebar}
-                                >
-                                    {legacyModelGroups.map(group => (
-                                        <Fragment key={group.key}>
-                                            {group.providerName && <FormListHeader text={group.providerName} />}
-                                            {group.models.map(model => (
-                                                <FormListItem
-                                                    key={`${model.providerId ?? model.provider}:${model.id}`}
-                                                    onClick={() => handleModelSelect(model)}
-                                                    checked={isSelectedModel(model)}
-                                                >
-                                                    {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
-                                                </FormListItem>
-                                            ))}
-                                        </Fragment>
-                                    ))}
-                                </FormDropdownSubmenu>
-                            </>
-                        )}
                         <FormDropdownDivider />
                         <FormListToggleableItem
                             icon="bx bx-globe"

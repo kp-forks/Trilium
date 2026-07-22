@@ -34,10 +34,11 @@ vi.mock("./providers/claude_agent.js", () => ({ ClaudeAgentProvider: makeProvide
 
 import {
     clearProviderCache,
-    getAllModels,
     getProvider,
     getProviderByType,
-    hasConfiguredProviders
+    getSelectedModel,
+    hasConfiguredProviders,
+    listProviderModels
 } from "./index.js";
 
 function setProviders(configs: unknown) {
@@ -149,52 +150,33 @@ describe("llm/index provider registry", () => {
         });
     });
 
-    describe("getAllModels", () => {
-        it("aggregates models across providers, tagged with type and config id/name", async () => {
-            setProviders(TWO);
-            const models = await getAllModels();
-            expect(models).toEqual([
-                { id: "anthropic-model", name: "anthropic Model", provider: "anthropic", providerId: "a1", providerName: "My Claude" },
-                { id: "openai-model", name: "openai Model", provider: "openai", providerId: "o1", providerName: "My GPT" }
-            ]);
+    describe("listProviderModels", () => {
+        it("lists models for ad-hoc credentials, falling back to the curated list", async () => {
+            // No saved config needed — the add/edit flow passes raw credentials.
+            const models = await listProviderModels("openai", "sk-test", "http://localhost:11434/v1");
+            expect(models).toEqual([{ id: "openai-model", name: "openai Model" }]);
         });
 
-        it("lists every config separately, even two of the same type", async () => {
-            // e.g. a real OpenAI key plus a self-hosted Ollama endpoint.
+        it("throws for an unknown provider type", async () => {
+            await expect(listProviderModels("mystery", "k")).rejects.toThrow(/Unknown LLM provider type: mystery/);
+        });
+    });
+
+    describe("getSelectedModel", () => {
+        it("finds a stored selected model by config id and model id", () => {
             setProviders([
-                { id: "o1", name: "OpenAI", provider: "openai", apiKey: "k1" },
-                { id: "o2", name: "My Ollama", provider: "openai", apiKey: "k2", baseURL: "http://localhost:11434/v1" }
+                { id: "o1", name: "My GPT", provider: "openai", apiKey: "k", selectedModels: [
+                    { id: "gpt-9", name: "GPT-9", pricing: { input: 1, output: 2 } }
+                ] }
             ]);
-            const models = await getAllModels();
-            expect(models.map(m => [m.providerId, m.providerName])).toEqual([
-                ["o1", "OpenAI"],
-                ["o2", "My Ollama"]
-            ]);
+            expect(getSelectedModel("o1", "gpt-9")).toMatchObject({ name: "GPT-9", pricing: { input: 1, output: 2 } });
         });
 
-        it("prefers dynamic listModels() when the provider implements it", async () => {
-            setProviders(TWO);
-            const provider = getProvider("a1") as { listModels?: () => Promise<unknown> };
-            provider.listModels = vi.fn().mockResolvedValue([{ id: "dyn-model", name: "Dynamic Model" }]);
-            const models = await getAllModels();
-            expect(models[0]).toEqual({
-                id: "dyn-model",
-                name: "Dynamic Model",
-                provider: "anthropic",
-                providerId: "a1",
-                providerName: "My Claude"
-            });
-        });
-
-        it("skips and logs a provider whose model lookup throws, keeping the rest", async () => {
-            setProviders([
-                { id: "x", name: "X", provider: "mystery", apiKey: "k" },
-                { id: "o1", name: "My GPT", provider: "openai", apiKey: "k2" }
-            ]);
-            // Unknown type → getProvider throws inside getAllModels and is caught.
-            const models = await getAllModels();
-            expect(models.map(m => m.providerId)).toEqual(["o1"]);
-            expect(errorMock).toHaveBeenCalled();
+        it("returns undefined for a missing provider, model, or providerId", () => {
+            setProviders([{ id: "o1", name: "My GPT", provider: "openai", apiKey: "k", selectedModels: [{ id: "gpt-9", name: "GPT-9" }] }]);
+            expect(getSelectedModel("o1", "absent")).toBeUndefined();
+            expect(getSelectedModel("nope", "gpt-9")).toBeUndefined();
+            expect(getSelectedModel(undefined, "gpt-9")).toBeUndefined();
         });
     });
 });

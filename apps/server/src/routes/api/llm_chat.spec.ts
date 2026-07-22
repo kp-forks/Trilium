@@ -13,7 +13,9 @@ const state = vi.hoisted(() => ({
     chunkSignal: undefined as AbortSignal | undefined,
     // Records how streamChat resolved the provider.
     providerIdRequested: undefined as string | undefined,
-    providerTypeRequested: undefined as string | undefined
+    providerTypeRequested: undefined as string | undefined,
+    // Records the credentials passed to listProviderModels by the provider-models route.
+    providerModelsArgs: undefined as unknown[] | undefined
 }));
 
 vi.mock("../../services/llm/index.js", () => {
@@ -30,7 +32,8 @@ vi.mock("../../services/llm/index.js", () => {
     });
     return {
         hasConfiguredProviders: () => state.configured,
-        getAllModels: async () => state.models,
+        listProviderModels: async (...args: unknown[]) => { state.providerModelsArgs = args; return state.models; },
+        getSelectedModel: () => undefined,
         getProvider: (id: string) => { state.providerIdRequested = id; return makeProvider(); },
         getProviderByType: (type: string) => { state.providerTypeRequested = type; return makeProvider(); }
     };
@@ -83,20 +86,29 @@ describe("LLM chat API", () => {
             chunkNative: false,
             chunkSignal: undefined,
             providerIdRequested: undefined,
-            providerTypeRequested: undefined
+            providerTypeRequested: undefined,
+            providerModelsArgs: undefined
         });
         generateChatTitle.mockClear();
     });
 
-    describe("getModels", () => {
-        it("returns no models when no provider is configured", async () => {
-            state.configured = false;
-            await expect(llmChatRoute.getModels({} as Request, {} as Response)).resolves.toEqual({ models: [] });
+    describe("getProviderModels", () => {
+        it("lists models for the credentials in the request body", async () => {
+            state.models = [{ id: "m1" }];
+            const req = { body: { provider: "openai", apiKey: "sk-test", baseURL: "http://localhost:11434/v1" } } as unknown as Request;
+            await expect(llmChatRoute.getProviderModels(req, {} as Response)).resolves.toEqual({ models: [{ id: "m1" }] });
+            expect(state.providerModelsArgs).toEqual(["openai", "sk-test", "http://localhost:11434/v1"]);
         });
 
-        it("returns all models when configured", async () => {
-            state.models = [{ id: "m1" }];
-            await expect(llmChatRoute.getModels({} as Request, {} as Response)).resolves.toEqual({ models: [{ id: "m1" }] });
+        it("throws when no provider is given", async () => {
+            const req = { body: {} } as unknown as Request;
+            await expect(llmChatRoute.getProviderModels(req, {} as Response)).rejects.toThrow(/provider is required/);
+        });
+
+        it("defaults a missing apiKey to an empty string", async () => {
+            const req = { body: { provider: "claude-agent" } } as unknown as Request;
+            await llmChatRoute.getProviderModels(req, {} as Response);
+            expect(state.providerModelsArgs).toEqual(["claude-agent", "", undefined]);
         });
     });
 

@@ -17,6 +17,12 @@ export interface LlmProviderSetup {
     apiKey: string;
     /** Optional override for the SDK's default API endpoint (e.g. for self-hosted Ollama, vLLM, or proxies). */
     baseURL?: string;
+    /**
+     * Models the user selected for this provider, with full metadata denormalized
+     * so the chat picker renders them without a live fetch. Absent in configs
+     * saved before model selection existed.
+     */
+    selectedModels?: ModelInfo[];
 }
 
 /** Factory functions for creating provider instances */
@@ -117,33 +123,33 @@ export function hasConfiguredProviders(): boolean {
 }
 
 /**
- * Get all models from every configured provider instance, tagged with the
- * provider type and the owning config's id/name. Each config is listed
- * separately (not deduped by type) so e.g. a real OpenAI key and a self-hosted
- * Ollama endpoint each contribute their own models. Providers that support
- * dynamic listing are queried live (in parallel); the rest — and any provider
- * whose lookup fails — contribute their curated list or are skipped.
+ * List the models available for a provider described by raw credentials —
+ * used by the model-selection screen during the add/edit flow, where the
+ * provider config isn't necessarily persisted yet. Instantiates the provider
+ * ad-hoc (bypassing the config cache) and queries it live, falling back to its
+ * curated list when it doesn't support dynamic listing.
  */
-export async function getAllModels(): Promise<ModelInfo[]> {
-    const configs = getConfiguredProviders();
+export async function listProviderModels(provider: string, apiKey: string, baseURL?: string): Promise<ModelInfo[]> {
+    const factory = providerFactories[provider];
+    if (!factory) {
+        throw new Error(`Unknown LLM provider type: ${provider}. Available: ${Object.keys(providerFactories).join(", ")}`);
+    }
+    const instance = factory(apiKey, baseURL);
+    return await (instance.listModels?.() ?? instance.getAvailableModels());
+}
 
-    const modelsPerConfig = await Promise.all(configs.map(async config => {
-        try {
-            const provider = getProvider(config.id);
-            const models = await (provider.listModels?.() ?? provider.getAvailableModels());
-            return models.map(model => ({
-                ...model,
-                provider: config.provider,
-                providerId: config.id,
-                providerName: config.name
-            }));
-        } catch (e) {
-            getLog().error(`Failed to get models from provider ${config.provider} (${config.id}): ${e}`);
-            return [];
-        }
-    }));
-
-    return modelsPerConfig.flat();
+/**
+ * Find the model a chat is targeting within its provider config's stored
+ * selection — the denormalized source of display name and pricing for the
+ * response's usage/cost, working even for dynamically discovered models the
+ * curated list doesn't know. Returns undefined when the model isn't stored.
+ */
+export function getSelectedModel(providerId: string | undefined, modelId: string): ModelInfo | undefined {
+    if (!providerId) {
+        return undefined;
+    }
+    const config = getConfiguredProviders().find(c => c.id === providerId);
+    return config?.selectedModels?.find(m => m.id === modelId);
 }
 
 /**

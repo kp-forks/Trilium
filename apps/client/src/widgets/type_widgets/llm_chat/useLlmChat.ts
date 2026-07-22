@@ -3,7 +3,8 @@ import { RefObject } from "preact";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import { getAvailableModels, streamChatCompletion } from "../../../services/llm_chat.js";
+import { streamChatCompletion } from "../../../services/llm_chat.js";
+import options from "../../../services/options.js";
 import { randomString } from "../../../services/utils.js";
 import { useTriliumEvent } from "../../react/hooks.js";
 import { stripQuoteSources } from "./chat_quote.js";
@@ -283,30 +284,21 @@ export function useLlmChat(
         setSelectedProviderId(providerId);
     }, []);
 
-    // Fetch available models on mount
+    // Read the user's selected models straight from the synced `llmProviders`
+    // option — no server round-trip, no live provider fetch. The models were
+    // picked (with full metadata) when the provider was configured; dynamic
+    // listing only runs in the provider-settings model picker.
     const refreshModels = useCallback(() => {
-        setIsCheckingProvider(true);
-        getAvailableModels().then(models => {
-            const modelsWithDescription = models.map(m => ({
-                ...m,
-                costDescription: m.isSubscription
-                    ? t("llm_chat.model_cost_included")
-                    : m.costMultiplier ? `${m.costMultiplier}x` : undefined
-            }));
-            setAvailableModels(modelsWithDescription);
-            setHasProvider(models.length > 0);
-            setIsCheckingProvider(false);
-            if (!selectedModel) {
-                const defaultModel = models.find(m => m.isDefault) || models[0];
-                if (defaultModel) {
-                    selectModel(defaultModel.id, defaultModel.provider, defaultModel.providerId);
-                }
+        const { models, hasProvider } = readSelectedModels();
+        setAvailableModels(models);
+        setHasProvider(hasProvider);
+        setIsCheckingProvider(false);
+        if (!selectedModel) {
+            const defaultModel = models.find(m => m.isDefault) || models[0];
+            if (defaultModel) {
+                selectModel(defaultModel.id, defaultModel.provider, defaultModel.providerId);
             }
-        }).catch(err => {
-            console.error("Failed to fetch available models:", err);
-            setHasProvider(false);
-            setIsCheckingProvider(false);
-        });
+        }
     }, [selectedModel, selectModel]);
 
     useEffect(() => {
@@ -936,4 +928,37 @@ export function useLlmChat(
         retryLast,
         regenerateLastReply
     };
+}
+
+/** Minimal shape of a provider config as stored in the `llmProviders` option. */
+interface StoredProviderConfig {
+    id: string;
+    name: string;
+    provider: string;
+    selectedModels?: LlmModelInfo[];
+}
+
+/**
+ * Flatten the user's selected models across all configured providers, tagging
+ * each with its owning config (provider type, id, name) and a cost description.
+ * `hasProvider` reflects whether any provider is configured at all, independent
+ * of whether it has models selected.
+ */
+function readSelectedModels(): { models: ModelOption[]; hasProvider: boolean } {
+    const configs = (options.getJson("llmProviders") as StoredProviderConfig[] | null) ?? [];
+    const models: ModelOption[] = [];
+    for (const config of configs) {
+        for (const model of config.selectedModels ?? []) {
+            models.push({
+                ...model,
+                provider: config.provider,
+                providerId: config.id,
+                providerName: config.name,
+                costDescription: model.isSubscription
+                    ? t("llm_chat.model_cost_included")
+                    : model.costMultiplier ? `${model.costMultiplier}x` : undefined
+            });
+        }
+    }
+    return { models, hasProvider: configs.length > 0 };
 }
