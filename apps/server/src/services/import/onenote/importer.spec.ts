@@ -1,6 +1,21 @@
-import { describe, expect, it } from "vitest";
+import { becca, cls } from "@triliumnext/core";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 
-import { mapWithConcurrency, resolveSubpageParents } from "./importer.js";
+import sqlInit from "../../sql_init.js";
+import graph from "./graph.js";
+import { importSelection, mapWithConcurrency, resolveSubpageParents } from "./importer.js";
+
+vi.mock("./graph.js", () => ({
+    default: {
+        getAccount: vi.fn(),
+        listNotebooks: vi.fn(),
+        listPages: vi.fn(),
+        getPageContent: vi.fn(),
+        getResource: vi.fn()
+    }
+}));
+
+const graphMock = vi.mocked(graph);
 
 describe("resolveSubpageParents", () => {
     it("keeps top-level pages directly under the section", () => {
@@ -54,5 +69,38 @@ describe("mapWithConcurrency", () => {
 
     it("handles an empty list", async () => {
         expect(await mapWithConcurrency([], 4, async (x) => x)).toEqual([]);
+    });
+});
+
+describe("importSelection (real DB)", () => {
+    beforeAll(async () => {
+        sqlInit.initializeDb();
+        await sqlInit.dbReady;
+    });
+
+    it("labels every imported page note with its Graph page id", async () => {
+        graphMock.listPages.mockResolvedValue([
+            { id: "1-abc", title: "Page One", level: 0 },
+            { id: "1-def", title: "Page Two", level: 1 }
+        ]);
+        graphMock.getPageContent.mockResolvedValue({ html: "<p>hello</p>", inkml: "" });
+
+        await cls.init(() => importSelection({
+            accessToken: "token",
+            parentNoteId: "root",
+            sections: [{ id: "sec-1", title: "Section", groupPath: [], notebookId: "nb-1", notebookTitle: "Notebook" }],
+            taskId: "task-page-id-label"
+        }));
+
+        const pageOne = Object.values(becca.notes).find((note) => note.title === "Page One");
+        const pageTwo = Object.values(becca.notes).find((note) => note.title === "Page Two");
+        // The Graph page id enables a future "retry failed pages" / re-import dedup pass to map an
+        // imported note back to its OneNote page.
+        expect(pageOne?.getOwnedLabelValue("oneNotePageId")).toBe("1-abc");
+        expect(pageTwo?.getOwnedLabelValue("oneNotePageId")).toBe("1-def");
+
+        // Container notes (section, notebook) are not OneNote pages and must not carry the label.
+        const sectionNote = Object.values(becca.notes).find((note) => note.title === "Section");
+        expect(sectionNote?.getOwnedLabelValue("oneNotePageId")).toBeNull();
     });
 });

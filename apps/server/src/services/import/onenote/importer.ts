@@ -17,6 +17,12 @@ import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
 
 interface FetchedPage {
+    /**
+     * The Graph API page id, preserved on the imported note as `#oneNotePageId` so a later pass
+     * (re-import dedup, retrying failed pages) can map the note back to its OneNote page. Distinct
+     * from {@link pageId}, the GUID OneNote uses in `onenote:` links.
+     */
+    id: string;
     title: string;
     /** OneNote's indentation level in the page list: 0 for a top-level page, 1+ for a subpage. */
     level: number;
@@ -87,7 +93,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
                 const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
                 const html = converter.convertPageHtml(rawHtml);
                 const resources = await downloadPageResources(accessToken, page.title, html);
-                fetchedPages.push({ title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
                 taskContext.increaseProgressCount();
             }
             fetched.push({
@@ -173,6 +179,7 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
                 isProtected
             });
             pageNoteIds[index] = pageNote.noteId;
+            pageNote.addLabel("oneNotePageId", page.id);
 
             // Resources and ink both need the page note to exist (attachments hang off it), so build
             // the per-page content now: swap Graph URLs for local attachment references, then append
