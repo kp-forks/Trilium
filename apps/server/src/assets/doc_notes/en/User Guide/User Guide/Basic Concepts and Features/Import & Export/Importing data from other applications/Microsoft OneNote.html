@@ -6,8 +6,15 @@
   <li>In the&nbsp;<a class="reference-link" href="#root/_help_oPVyFC7WL2Lp">Note Tree</a>,
     right click and select <em>Import into note</em>.</li>
   <li>In the <em>Import from</em> section, select <em>OneNote</em>.</li>
-  <li>Press the <em>Connect</em> button, you will be redirected to Microsoft's
-    authentication screen where you can log into your account.</li>
+  <li>Press the <em>Connect</em> button:
+    <ol>
+      <li>On the desktop app, you will be redirected to Microsoft's authentication
+        screen where you can log into your account.</li>
+      <li>On the web app, the process is slightly more involved as it requires copying
+        the code to clipboard, accessing the link, pasting the code and then signing
+        in once more.</li>
+    </ol>
+  </li>
   <li>After the connection is successful, you should be able to see a list of
     sections that can be imported. Simply check the ones to import and press
     the <em>Import selected</em> button.</li>
@@ -69,21 +76,11 @@
 <p>At the end of the import, the top-level note called <em>OneNote</em>  <em>import</em> will
   contain information about how the import went:</p>
 <ul>
-  <li>
-    <p>The number of notes imported;</p>
-  </li>
-  <li>
-    <p>The success rate;</p>
-  </li>
-  <li>
-    <p>A list of notes that could not be imported, as well as the failure reason;</p>
-  </li>
-  <li>
-    <p>Pages whose images/attachments failed to download</p>
-  </li>
-  <li>
-    <p>How long the import spent waiting out throttling.</p>
-  </li>
+  <li>The number of notes imported;</li>
+  <li>The success rate;</li>
+  <li>A list of notes that could not be imported, as well as the failure reason;</li>
+  <li>Pages whose images/attachments failed to download</li>
+  <li>How long the import spent waiting out throttling.</li>
 </ul>
 <p>To avoid cases in which the import is fundamentally broken (e.g. an expired
   sign-in), the import will error out if it fails to import 6 pages in a
@@ -91,17 +88,13 @@
 <h2>Attributes</h2>
 <p>Pages imported from OneNote have a few built-in <a href="#root/pOsGYCXsbNQG/tC7s2alapj8V/zEY4DaJG4YT5/_help_HI6GBBIduIgv">labels</a>:</p>
 <ul>
-  <li>
-    <p><code spellcheck="false">oneNotePageId</code>, with the corresponding
-      page ID in OneNote. This can be used to identify the original OneNote page.
-      Trilium doesn't use it in any way at this moment.</p>
-  </li>
-  <li>
-    <p><code spellcheck="false">oneNoteImportFailed</code> attached to notes that
-      couldn't be imported. This can be used to quickly&nbsp;<a class="reference-link"
-      href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/wArbEsdSae6g/_help_eIg8jdvaoNNd">Search</a>&nbsp;for
-      failed notes.</p>
-  </li>
+  <li><code spellcheck="false">oneNotePageId</code>, with the corresponding
+    page ID in OneNote. This can be used to identify the original OneNote page.
+    Trilium doesn't use it in any way at this moment.</li>
+  <li><code spellcheck="false">oneNoteImportFailed</code> attached to notes that
+    couldn't be imported. This can be used to quickly&nbsp;<a class="reference-link"
+    href="#root/pOsGYCXsbNQG/gh7bpGYxajRS/wArbEsdSae6g/_help_eIg8jdvaoNNd">Search</a>&nbsp;for
+    failed notes.</li>
 </ul>
 <h2>Limitations</h2>
 <h3>Regarding OneNote's freehand structure</h3>
