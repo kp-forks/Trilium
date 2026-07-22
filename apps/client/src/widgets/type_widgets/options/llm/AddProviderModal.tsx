@@ -69,12 +69,14 @@ interface AddProviderModalProps {
     onSave: (provider: LlmProviderConfig) => void;
     /** When provided, the modal edits this provider in place instead of adding a new one. */
     existingProvider?: LlmProviderConfig;
+    /** Step to open on. Pass 2 to jump straight to model selection (e.g. editing from the chat picker). */
+    initialStep?: 1 | 2;
 }
 
-export default function AddProviderModal({ show, onHidden, onSave, existingProvider }: AddProviderModalProps) {
+export default function AddProviderModal({ show, onHidden, onSave, existingProvider, initialStep = 1 }: AddProviderModalProps) {
     const isEdit = !!existingProvider;
     // Connection details first, then model selection. Editing keeps the same two steps.
-    const [step, setStep] = useState<1 | 2>(1);
+    const [step, setStep] = useState<1 | 2>(initialStep);
     const [selectedProvider, setSelectedProvider] = useState(existingProvider?.provider ?? PROVIDER_TYPES[0].id);
     const [apiKey, setApiKey] = useState(existingProvider?.apiKey ?? "");
     const [baseUrl, setBaseUrl] = useState(existingProvider?.baseURL ?? "");
@@ -97,7 +99,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
     );
 
     function reset() {
-        setStep(1);
+        setStep(initialStep);
         setSelectedProvider(existingProvider?.provider ?? PROVIDER_TYPES[0].id);
         setApiKey(existingProvider?.apiKey ?? "");
         setBaseUrl(existingProvider?.baseURL ?? "");
