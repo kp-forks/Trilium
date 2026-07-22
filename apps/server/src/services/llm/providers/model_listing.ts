@@ -127,17 +127,60 @@ export function isGoogleChatModel(id: string): boolean {
 }
 
 /**
- * Whether a model should be pre-selected by default when adding/resetting a
- * provider. Legacy models are never recommended; per-provider tweaks refine it
- * further — for Google, preview models are excluded so only the stable line-up
- * is suggested (the user can still tick previews manually).
+ * The ids pre-selected by default when adding/resetting a provider. Derived
+ * purely from the model ids the endpoint returns — no curated list, no
+ * hardcoded model names.
+ *
+ * For OpenAI the recency signal is the version number, across two parallel
+ * lines (the GPT line `gpt-<version>` and the reasoning o-series `o<n>`): we
+ * recommend only the newest generation of each line, core tiers only — so
+ * today's `gpt-5.6-{sol,terra,luna}` and `o4-mini`, not the dozens of older
+ * gpt-4 through 5.5 and o1/o3 models (which stay in the picker, unchecked).
+ * When gpt-5.7 / o5 ship they win automatically.
+ *
+ * Other providers fall back to "everything that isn't a preview or legacy".
  */
-export function isRecommendedByDefault(model: { id: string; isLegacy?: boolean }, provider: string): boolean {
-    if (model.isLegacy) {
-        return false;
+export function recommendedModelIds(models: RecommendCandidate[], provider: string): Set<string> {
+    if (provider === "openai") {
+        return openAiRecommendedIds(models);
     }
-    if (provider === "google" && /preview/i.test(model.id)) {
-        return false;
+    return new Set(models.filter(m => !m.isLegacy && !/preview/i.test(m.id)).map(m => m.id));
+}
+
+interface RecommendCandidate {
+    id: string;
+    isLegacy?: boolean;
+}
+
+/** Newest generation of each OpenAI line (GPT + o-series), excluding -pro/-chat-latest variants. */
+function openAiRecommendedIds(models: RecommendCandidate[]): Set<string> {
+    // Premium (`-pro`) and rolling-alias (`-chat-latest`) variants are never a
+    // default; drop them before picking the newest generation.
+    const core = models.filter(m => !/-pro$/.test(m.id) && !/-chat-latest$/.test(m.id));
+    return new Set([
+        ...newestOfLine(core, /^gpt-/, gptVersion),
+        ...newestOfLine(core, /^o\d/, oSeriesVersion)
+    ]);
+}
+
+/** Ids in `models` matching `line` whose parsed version equals the line's maximum. */
+function newestOfLine(models: RecommendCandidate[], line: RegExp, version: (id: string) => number): string[] {
+    const family = models.filter(m => line.test(m.id));
+    if (family.length === 0) {
+        return [];
     }
-    return true;
+    const max = Math.max(...family.map(m => version(m.id)));
+    return family.filter(m => version(m.id) === max).map(m => m.id);
+}
+
+/** `gpt-5.6-sol` → 5.6, `gpt-4.1` → 4.1, `gpt-4o` → 4. */
+function gptVersion(id: string): number {
+    const match = /^gpt-(\d+(?:\.\d+)?)/.exec(id);
+    return match ? parseFloat(match[1]) : 0;
+}
+
+/** `o4-mini` → 4, `o3` → 3. */
+function oSeriesVersion(id: string): number {
+    const match = /^o(\d+)/.exec(id);
+    return match ? parseInt(match[1], 10) : 0;
 }

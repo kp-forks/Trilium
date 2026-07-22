@@ -24,6 +24,14 @@ function makeProviderMock(tag: string) {
         getAvailableModels() {
             return [{ id: `${tag}-model`, name: `${tag} Model` }];
         }
+        listModels() {
+            // A current model plus a preview one — the fallback recommendation
+            // rule (non-openai) keeps the former and drops the latter.
+            return Promise.resolve([
+                { id: `${tag}-model`, name: `${tag} Model` },
+                { id: `${tag}-preview`, name: `${tag} Preview` }
+            ]);
+        }
     };
 }
 
@@ -151,11 +159,14 @@ describe("llm/index provider registry", () => {
     });
 
     describe("listProviderModels", () => {
-        it("lists models for ad-hoc credentials, tagged with the default-recommended flag", async () => {
+        it("lists models for ad-hoc credentials, tagged with the recommended flag", async () => {
             // No saved config needed — the add/edit flow passes raw credentials.
-            const models = await listProviderModels("openai", "sk-test", "http://localhost:11434/v1");
-            // The curated (fallback) model is non-legacy → recommended by default.
-            expect(models).toEqual([{ id: "openai-model", name: "openai Model", recommended: true }]);
+            // (Provider-specific recommendation rules are covered in model_listing.spec.)
+            const models = await listProviderModels("anthropic", "k");
+            expect(models).toEqual([
+                { id: "anthropic-model", name: "anthropic Model", recommended: true },
+                { id: "anthropic-preview", name: "anthropic Preview", recommended: false }
+            ]);
         });
 
         it("throws for an unknown provider type", async () => {

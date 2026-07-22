@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ModelInfo } from "../types.js";
-import { isGoogleChatModel, isOpenAiChatModel, isRecommendedByDefault, mergeModelLists, openAiModelName } from "./model_listing.js";
+import { isGoogleChatModel, isOpenAiChatModel, mergeModelLists, openAiModelName, recommendedModelIds } from "./model_listing.js";
 
 const CURATED: ModelInfo[] = [
     { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, contextWindow: 1047576, isDefault: true, costMultiplier: 1 },
@@ -189,22 +189,43 @@ describe("isGoogleChatModel", () => {
     });
 });
 
-describe("isRecommendedByDefault", () => {
-    it("recommends current models and rejects legacy ones for any provider", () => {
-        expect(isRecommendedByDefault({ id: "gpt-4.1" }, "openai")).toBe(true);
-        expect(isRecommendedByDefault({ id: "claude-sonnet-5" }, "anthropic")).toBe(true);
-        expect(isRecommendedByDefault({ id: "gpt-4o", isLegacy: true }, "openai")).toBe(false);
+describe("recommendedModelIds", () => {
+    // A representative slice of a live OpenAI /models response.
+    const OPENAI = [
+        "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4", "gpt-3.5-turbo",
+        "gpt-5", "gpt-5-mini", "gpt-5-chat-latest", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-pro",
+        "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+        "o1", "o1-pro", "o3", "o3-mini", "o4-mini"
+    ].map(id => ({ id }));
+
+    it("recommends only the newest generation of each OpenAI line, core tiers only", () => {
+        const ids = recommendedModelIds(OPENAI, "openai");
+        // Newest GPT generation (5.6) + newest o-series (o4) — nothing older.
+        expect([...ids].sort()).toEqual(["gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "o4-mini"]);
     });
 
-    it("excludes Gemini preview models, but keeps the stable line-up", () => {
-        expect(isRecommendedByDefault({ id: "gemini-2.5-flash" }, "google")).toBe(true);
-        expect(isRecommendedByDefault({ id: "gemini-3.6-flash" }, "google")).toBe(true);
-        expect(isRecommendedByDefault({ id: "gemini-3-flash-preview" }, "google")).toBe(false);
-        expect(isRecommendedByDefault({ id: "gemini-3.1-pro-preview" }, "google")).toBe(false);
+    it("excludes -pro and -chat-latest even within the newest generation", () => {
+        const ids = recommendedModelIds([
+            { id: "gpt-9-sol" }, { id: "gpt-9-pro" }, { id: "gpt-9-chat-latest" }
+        ], "openai");
+        expect([...ids]).toEqual(["gpt-9-sol"]);
     });
 
-    it("does not apply the preview rule to non-Google providers", () => {
-        // A hypothetical OpenAI-compatible endpoint serving a "preview" id.
-        expect(isRecommendedByDefault({ id: "some-preview-model" }, "openai")).toBe(true);
+    it("degrades to the newest available generation for an older-only endpoint", () => {
+        const ids = recommendedModelIds([{ id: "gpt-4" }, { id: "gpt-4.1" }, { id: "gpt-4o" }], "openai");
+        expect([...ids]).toEqual(["gpt-4.1"]); // 4.1 > 4o (4.0) > 4
+    });
+
+    it("recommends nothing for an OpenAI-compatible endpoint with no gpt/o models", () => {
+        expect(recommendedModelIds([{ id: "llama3.2" }, { id: "qwen2.5" }], "openai").size).toBe(0);
+    });
+
+    it("falls back to non-preview, non-legacy models for other providers", () => {
+        const ids = recommendedModelIds([
+            { id: "gemini-2.5-flash" },
+            { id: "gemini-3-flash-preview" },
+            { id: "gemini-2.0-flash", isLegacy: true }
+        ], "google");
+        expect([...ids]).toEqual(["gemini-2.5-flash"]);
     });
 });
