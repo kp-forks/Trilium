@@ -115,6 +115,72 @@ describe("throttling retries", () => {
     });
 });
 
+describe("gateway timeout retries", () => {
+    beforeEach(() => {
+        vi.useFakeTimers();
+        vi.setSystemTime(0);
+        resetThrottleGate();
+    });
+
+    afterEach(() => {
+        resetThrottleGate();
+        vi.useRealTimers();
+        safeFetchMock.mockReset();
+    });
+
+    it("retries a transient 504 with backoff and succeeds", async () => {
+        safeFetchMock
+            .mockResolvedValueOnce(graphResponse(504, ""))
+            .mockResolvedValueOnce(graphResponse(504, ""))
+            .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
+
+        const promise = getAccount("token");
+        await vi.runAllTimersAsync();
+
+        await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
+        expect(safeFetchMock).toHaveBeenCalledTimes(3);
+    });
+
+    it("gives up on a persistent 504 after a bounded number of retries, not the hour-long throttle budget", async () => {
+        // mockImplementation rather than mockResolvedValue: each retry cancels the response body, so
+        // every call must produce a fresh Response for the final error to still have a readable body.
+        safeFetchMock.mockImplementation(async () => graphResponse(504, JSON.stringify({
+            error: { code: "UnknownError", message: "Gateway timeout." }
+        })));
+
+        const promise = getPageContent("token", "page-1").catch((e: unknown) => e);
+        await vi.runAllTimersAsync();
+        const error = await promise;
+
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("HTTP 504: UnknownError: Gateway timeout.");
+        // A page that 504s on every fetch is a documented OneNote pattern (the backend cannot render
+        // that one resource); it must fail within minutes, not stall the import for the throttle
+        // budget's full hour.
+        expect(safeFetchMock).toHaveBeenCalledTimes(6);
+        expect(Date.now()).toBeLessThan(5 * 60_000);
+    });
+
+    it("does not extend the shared throttle gate — a 504 backoff is private to its request", async () => {
+        safeFetchMock
+            .mockResolvedValueOnce(graphResponse(504, ""))
+            .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
+
+        const first = getAccount("token");
+        await vi.runAllTimersAsync();
+        await expect(first).resolves.toEqual({ name: "Ada", email: "" });
+
+        // A 504 is specific to one resource, not the app+user pool, so a follow-up request must fire
+        // immediately instead of waiting out a shared gate (no timer advancement beyond a microtask
+        // flush).
+        safeFetchMock.mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Bob" })));
+        const second = getAccount("token");
+        await vi.advanceTimersByTimeAsync(0);
+        await expect(second).resolves.toEqual({ name: "Bob", email: "" });
+        expect(safeFetchMock).toHaveBeenCalledTimes(3);
+    });
+});
+
 describe("failed Graph requests", () => {
     afterEach(() => {
         safeFetchMock.mockReset();

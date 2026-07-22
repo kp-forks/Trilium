@@ -29,6 +29,13 @@ const BASE_RETRY_DELAY_MS = 2000;
 const MAX_RETRY_DELAY_MS = 60_000;
 const MAX_THROTTLE_WAIT_MS = 60 * 60_000;
 
+// A 504 means the OneNote backend behind the Graph gateway timed out producing this one response.
+// Usually transient (Microsoft's own SDK retry handlers treat 504 like 429/503), but a permanent
+// per-resource variant is well documented — some pages/sections 504 on every fetch — so unlike
+// throttling these retries are bounded by a small attempt count, not the hour-long wait budget: a
+// poisoned page must fail within minutes instead of stalling the import for an hour.
+const MAX_GATEWAY_TIMEOUT_RETRIES = 5;
+
 // Shared throttle gate. Graph throttles per app/tenant, so a 429 on one request means every other
 // in-flight and subsequent request is being throttled too. Rather than each request independently
 // retrying — which just keeps hammering Graph and prolongs the throttle — a 429 pushes back a shared
@@ -44,10 +51,17 @@ let throttledUntilMs = 0;
  * requests pause together instead of dog-piling the throttle. Gives up only once this request has
  * spent {@link MAX_THROTTLE_WAIT_MS} waiting, returning the throttled response for the caller to
  * report as an error.
+ *
+ * Also retries gateway timeouts (504), but privately: the backoff is slept here rather than pushed
+ * onto the shared gate — a 504 is specific to the resource being fetched, not the app+user pool —
+ * and gives up after {@link MAX_GATEWAY_TIMEOUT_RETRIES} attempts rather than drawing on the
+ * hour-long throttle budget.
  */
 async function graphFetch(accessToken: string, url: string): Promise<Response> {
     const giveUpAtMs = Date.now() + MAX_THROTTLE_WAIT_MS;
-    for (let attempt = 0; ; attempt++) {
+    let throttleAttempt = 0;
+    let gatewayTimeoutRetry = 0;
+    for (;;) {
         const gateWaitMs = throttledUntilMs - Date.now();
         if (gateWaitMs > 0) {
             await delay(gateWaitMs);
@@ -58,13 +72,27 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
             signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
         });
 
+        if (response.status === 504) {
+            if (gatewayTimeoutRetry >= MAX_GATEWAY_TIMEOUT_RETRIES) {
+                return response;
+            }
+            const waitMs = backoffDelayMs(gatewayTimeoutRetry);
+            gatewayTimeoutRetry++;
+
+            // Drain the failed response so its connection is released before we back off.
+            await response.body?.cancel();
+            getLog().info(`OneNote import: Graph gateway timeout (HTTP 504) on ${url}; retry ${gatewayTimeoutRetry}/${MAX_GATEWAY_TIMEOUT_RETRIES} after ${waitMs}ms`);
+            await delay(waitMs);
+            continue;
+        }
+
         if (response.status !== 429 && response.status !== 503) {
             return response;
         }
 
         // Graph's Retry-After, when present, states exactly how long the throttle lasts — trust it
         // over the computed backoff.
-        const waitMs = retryAfterMs(response.headers.get("retry-after")) ?? backoffDelayMs(attempt);
+        const waitMs = retryAfterMs(response.headers.get("retry-after")) ?? backoffDelayMs(throttleAttempt);
         if (Date.now() + waitMs > giveUpAtMs) {
             return response;
         }
@@ -75,7 +103,8 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
         // Extend the shared gate (Math.max: simultaneous 429s converge on one window rather than
         // stacking). The wait itself happens at the top of the next iteration, shared across the pool.
         throttledUntilMs = Math.max(throttledUntilMs, Date.now() + waitMs);
-        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${attempt + 1} after ${waitMs}ms (${Math.round((giveUpAtMs - Date.now()) / 60_000)}min of wait budget left)`);
+        throttleAttempt++;
+        getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${throttleAttempt} after ${waitMs}ms (${Math.round((giveUpAtMs - Date.now()) / 60_000)}min of wait budget left)`);
     }
 }
 
