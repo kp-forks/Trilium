@@ -138,11 +138,19 @@ export function isGoogleChatModel(id: string): boolean {
  * gpt-4 through 5.5 and o1/o3 models (which stay in the picker, unchecked).
  * When gpt-5.7 / o5 ship they win automatically.
  *
+ * For Anthropic we recommend the newest version within each Claude family
+ * (Opus, Sonnet, Haiku, Fable, and any future one) — one model per family,
+ * so today's Opus 4.8, Sonnet 5, Haiku 4.5 and Fable 5. Older revisions and
+ * dated snapshots stay in the picker, unchecked.
+ *
  * Other providers fall back to "everything that isn't a preview or legacy".
  */
 export function recommendedModelIds(models: RecommendCandidate[], provider: string): Set<string> {
     if (provider === "openai") {
         return openAiRecommendedIds(models);
+    }
+    if (provider === "anthropic") {
+        return anthropicRecommendedIds(models);
     }
     return new Set(models.filter(m => !m.isLegacy && !/preview/i.test(m.id)).map(m => m.id));
 }
@@ -183,4 +191,47 @@ function gptVersion(id: string): number {
 function oSeriesVersion(id: string): number {
     const match = /^o(\d+)/.exec(id);
     return match ? parseInt(match[1], 10) : 0;
+}
+
+/**
+ * Anthropic model id shape: `claude-<family>-<major>[-<minor>][-<YYYYMMDD>]`.
+ * The optional trailing 8-digit snapshot date is not part of the version —
+ * `claude-sonnet-4-20250514` is Sonnet 4.0, not 4.20250514 — so the minor
+ * group is capped at two digits to force the date into the snapshot group.
+ */
+const ANTHROPIC_MODEL = /^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?$/;
+
+/** Newest version within each Claude family (opus/sonnet/haiku/fable, and any future one) — one id per family. */
+function anthropicRecommendedIds(models: RecommendCandidate[]): Set<string> {
+    const byFamily = new Map<string, RecommendCandidate[]>();
+    for (const model of models) {
+        const family = anthropicFamily(model.id);
+        if (!family) {
+            continue;
+        }
+        const members = byFamily.get(family) ?? [];
+        members.push(model);
+        byFamily.set(family, members);
+    }
+    const recommended = new Set<string>();
+    for (const members of byFamily.values()) {
+        const newest = members.reduce((best, m) => (anthropicVersion(m.id) > anthropicVersion(best.id) ? m : best));
+        recommended.add(newest.id);
+    }
+    return recommended;
+}
+
+/** `claude-opus-4-8` → "opus"; null for ids that aren't `claude-<family>-<version>`. */
+function anthropicFamily(id: string): string | null {
+    return ANTHROPIC_MODEL.exec(id)?.[1] ?? null;
+}
+
+/** `claude-opus-4-8` → 4.8, `claude-sonnet-5` → 5, `claude-sonnet-4-20250514` → 4 (the trailing date is not a minor). */
+function anthropicVersion(id: string): number {
+    const match = ANTHROPIC_MODEL.exec(id);
+    if (!match) {
+        return 0;
+    }
+    const [, , major, minor] = match;
+    return parseFloat(minor ? `${major}.${minor}` : major);
 }

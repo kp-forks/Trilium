@@ -161,11 +161,12 @@ describe("llm/index provider registry", () => {
     describe("listProviderModels", () => {
         it("lists models for ad-hoc credentials, tagged with the recommended flag", async () => {
             // No saved config needed — the add/edit flow passes raw credentials.
-            // (Provider-specific recommendation rules are covered in model_listing.spec.)
-            const models = await listProviderModels("anthropic", "k");
+            // Uses "google" to exercise the generic non-preview fallback rule;
+            // provider-specific recommendation rules are covered in model_listing.spec.
+            const models = await listProviderModels("google", "k");
             expect(models).toEqual([
-                { id: "anthropic-model", name: "anthropic Model", recommended: true },
-                { id: "anthropic-preview", name: "anthropic Preview", recommended: false }
+                { id: "google-model", name: "google Model", recommended: true },
+                { id: "google-preview", name: "google Preview", recommended: false }
             ]);
         });
 

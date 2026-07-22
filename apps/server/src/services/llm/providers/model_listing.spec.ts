@@ -220,6 +220,25 @@ describe("recommendedModelIds", () => {
         expect(recommendedModelIds([{ id: "llama3.2" }, { id: "qwen2.5" }], "openai").size).toBe(0);
     });
 
+    it("recommends the newest version of each Claude family for Anthropic", () => {
+        const ids = recommendedModelIds([
+            "claude-fable-5",
+            "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-opus-4-20250514",
+            "claude-sonnet-5", "claude-sonnet-4-6", "claude-sonnet-4-20250514",
+            "claude-haiku-4-5-20251001"
+        ].map(id => ({ id })), "anthropic");
+        // One per family, newest each — Fable 5, Opus 4.8, Sonnet 5, Haiku 4.5.
+        expect([...ids].sort()).toEqual([
+            "claude-fable-5", "claude-haiku-4-5-20251001", "claude-opus-4-8", "claude-sonnet-5"
+        ]);
+    });
+
+    it("treats an Anthropic snapshot date as the version, not a minor bump", () => {
+        // sonnet-4-20250514 is 4.0, so sonnet-4-6 (4.6) must outrank it.
+        const ids = recommendedModelIds([{ id: "claude-sonnet-4-20250514" }, { id: "claude-sonnet-4-6" }], "anthropic");
+        expect([...ids]).toEqual(["claude-sonnet-4-6"]);
+    });
+
     it("falls back to non-preview, non-legacy models for other providers", () => {
         const ids = recommendedModelIds([
             { id: "gemini-2.5-flash" },
