@@ -55,7 +55,7 @@ describe("mergeModelLists", () => {
 
 describe("isOpenAiChatModel", () => {
     it("keeps chat model families, including unknown future ones", () => {
-        for (const id of ["gpt-4.1", "gpt-5", "o3", "o4-mini", "chatgpt-4o-latest"]) {
+        for (const id of ["gpt-4.1", "gpt-5", "gpt-5.6-sol", "o3", "o4-mini", "chatgpt-4o-latest"]) {
             expect(isOpenAiChatModel(id), id).toBe(true);
         }
     });
@@ -71,6 +71,11 @@ describe("isOpenAiChatModel", () => {
             "gpt-4o-audio-preview",
             "gpt-4o-transcribe",
             "gpt-image-1",
+            "sora-2",
+            "computer-use-preview",
+            "codex-mini-latest",
+            "gpt-3.5-turbo-instruct",
+            "o3-deep-research",
             "babbage-002",
             "davinci-002",
             "gpt-4o-search-preview"
@@ -81,14 +86,57 @@ describe("isOpenAiChatModel", () => {
 });
 
 describe("isGoogleChatModel", () => {
-    it("keeps Gemini chat models", () => {
-        for (const id of ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-3-pro"]) {
+    it("keeps Gemini chat models, including unknown future ones", () => {
+        for (const id of [
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-3-flash-preview",
+            "gemini-3.1-pro-preview",
+            "gemini-3.5-flash",
+            "gemini-3.6-flash",
+            "gemini-2.0-flash-exp"
+        ]) {
             expect(isGoogleChatModel(id), id).toBe(true);
         }
     });
 
-    it("drops embedding and media-generation models", () => {
-        for (const id of ["text-embedding-004", "gemini-embedding-001", "aqa", "imagen-3.0-generate-002", "veo-2.0-generate-001", "gemini-2.5-flash-preview-tts"]) {
+    it("drops non-Gemini families wholesale", () => {
+        for (const id of [
+            "text-embedding-004",
+            "aqa",
+            "imagen-3.0-generate-002",
+            "veo-3.1-generate-preview",
+            "lyria-3-pro-preview",
+            "gemma-4-26b-a4b-it",
+            "deep-research-preview-04-2026",
+            "antigravity-preview-05-2026",
+            "learnlm-2.0-flash-experimental"
+        ]) {
+            expect(isGoogleChatModel(id), id).toBe(false);
+        }
+    });
+
+    it("drops non-conversational gemini-* variants (media, robotics, computer use)", () => {
+        for (const id of [
+            "gemini-embedding-001",
+            "gemini-2.5-flash-image", // Nano Banana
+            "gemini-3-pro-image", // Nano Banana Pro
+            "gemini-3.1-flash-lite-image", // Nano Banana 2 Lite
+            "gemini-2.5-flash-preview-tts",
+            "gemini-3.1-flash-live-preview",
+            "gemini-2.5-flash-native-audio-preview-12-2025",
+            "gemini-omni-flash",
+            "gemini-robotics-er-1.6-preview",
+            "gemini-2.5-computer-use-preview-10-2025",
+            "gemini-3.1-pro-preview-customtools" // real id — no hyphen in "customtools"
+        ]) {
+            expect(isGoogleChatModel(id), id).toBe(false);
+        }
+    });
+
+    it("drops rolling aliases and pinned revisions that duplicate stable ids", () => {
+        for (const id of ["gemini-flash-latest", "gemini-pro-latest", "gemini-flash-lite-latest", "gemini-2.0-flash-lite-001"]) {
             expect(isGoogleChatModel(id), id).toBe(false);
         }
     });

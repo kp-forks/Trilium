@@ -62,24 +62,36 @@ export function mergeModelLists(curated: ModelInfo[], remote: RemoteModel[]): Mo
 
 /**
  * Model-id families returned by the official OpenAI `/models` endpoint that are
- * not chat models (embeddings, audio, image, moderation, legacy completions).
- * Only applied on the official endpoint — custom base URLs (Ollama, vLLM,
- * LiteLLM, LM Studio) list exactly what the user installed, so nothing is
- * filtered there.
+ * not chat models (embeddings, audio/speech, image, video, moderation,
+ * computer-use, coding agents, legacy completions). Only applied on the
+ * official endpoint — custom base URLs (Ollama, vLLM, LiteLLM, LM Studio) list
+ * exactly what the user installed, so nothing is filtered there.
  */
-const OPENAI_NON_CHAT = /embedding|whisper|tts|dall-e|moderation|realtime|audio|transcribe|image|babbage|davinci|search/i;
+const OPENAI_NON_CHAT = /embedding|whisper|tts|dall-e|moderation|realtime|audio|transcribe|image|sora|computer-use|codex|instruct|deep-research|babbage|davinci|search/i;
 
 export function isOpenAiChatModel(id: string): boolean {
     return !OPENAI_NON_CHAT.test(id);
 }
 
 /**
- * Non-chat Gemini model families. The primary filter is the API's
- * `supportedGenerationMethods` (must include `generateContent`), but a few
- * non-conversational models pass that check too, so they are excluded by id.
+ * Chat-model filter for the Gemini API. The endpoint's `supportedGenerationMethods`
+ * is not enough: image (Nano Banana), robotics, computer-use, and speech models
+ * all advertise `generateContent` too. Filter by id shape instead:
+ *
+ * - Only `gemini-*` ids are chat candidates — this drops the non-Gemini
+ *   families wholesale (`lyria-*` music, `veo-*` video, `imagen-*`, `gemma-*`
+ *   open models, `deep-research-*`, `antigravity-*` agents, embeddings, AQA).
+ * - Within `gemini-*`, drop non-conversational variants by token: image
+ *   generation, speech (tts/live/native-audio), video (omni), robotics,
+ *   computer use, embeddings, and tool-variant builds (custom-tools).
+ * - Drop `-latest` rolling aliases and `-NNN` pinned revisions — both are
+ *   duplicates of a stable id that is also in the list.
  */
-const GOOGLE_NON_CHAT = /embedding|aqa|imagen|veo|tts/i;
+const GOOGLE_NON_CHAT = /image|tts|live|audio|dialog|robotics|computer-use|embedding|omni|custom-?tools/i;
 
 export function isGoogleChatModel(id: string): boolean {
-    return !GOOGLE_NON_CHAT.test(id);
+    return /^gemini-/.test(id)
+        && !GOOGLE_NON_CHAT.test(id)
+        && !/-latest$/.test(id)
+        && !/-\d{3}$/.test(id);
 }
