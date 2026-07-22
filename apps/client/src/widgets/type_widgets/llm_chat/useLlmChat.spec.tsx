@@ -28,9 +28,9 @@ type LlmChatApi = ReturnType<typeof useLlmChat>;
 type LlmChatOptions = Parameters<typeof useLlmChat>[1];
 
 const MODELS = [
-    { id: "sonnet", name: "Sonnet", provider: "claude-agent", isDefault: true, isSubscription: true },
-    { id: "opus", name: "Opus", provider: "anthropic", costMultiplier: 5 },
-    { id: "mini", name: "Mini", provider: "openai" }
+    { id: "sonnet", name: "Sonnet", provider: "claude-agent", providerId: "ca_1", isDefault: true, isSubscription: true },
+    { id: "opus", name: "Opus", provider: "anthropic", providerId: "a_1", costMultiplier: 5 },
+    { id: "mini", name: "Mini", provider: "openai", providerId: "o_1" }
 ];
 
 describe("useLlmChat", () => {
@@ -83,10 +83,11 @@ describe("useLlmChat", () => {
     it("selects the default model with its provider and annotates model costs", async () => {
         await mountChat();
 
-        // The default model's provider is recorded alongside the model, so two
-        // providers exposing the same model ID stay distinguishable.
+        // The default model's provider (type and config id) is recorded alongside
+        // the model, so two providers exposing the same model ID stay distinguishable.
         expect(api().selectedModel).toBe("sonnet");
         expect(api().selectedProvider).toBe("claude-agent");
+        expect(api().selectedProviderId).toBe("ca_1");
         expect(api().hasProvider).toBe(true);
 
         const costById = new Map(api().availableModels.map((m) => [m.id, m.costDescription]));
@@ -108,6 +109,7 @@ describe("useLlmChat", () => {
         const options = streamChatCompletionMock.mock.calls[0][1];
         expect(options.model).toBe("sonnet");
         expect(options.provider).toBe("claude-agent");
+        expect(options.providerId).toBe("ca_1");
     });
 
     it("resolves the provider by model ID for chats saved before selectedProvider existed", async () => {
@@ -127,6 +129,7 @@ describe("useLlmChat", () => {
             await api().handleSubmit(new Event("submit"));
         });
         expect(streamChatCompletionMock.mock.calls[0][1].provider).toBe("anthropic");
+        expect(streamChatCompletionMock.mock.calls[0][1].providerId).toBe("a_1");
     });
 
     it("round-trips the selected provider through getContent", async () => {
@@ -136,12 +139,12 @@ describe("useLlmChat", () => {
         await act(async () => {
             api().loadFromContent({ version: 1, messages: [], selectedModel: "opus" });
         });
-        expect(api().getContent()).toMatchObject({ selectedModel: "opus", selectedProvider: undefined });
+        expect(api().getContent()).toMatchObject({ selectedModel: "opus", selectedProvider: undefined, selectedProviderId: undefined });
 
-        // Re-picking a model records its provider and persists it.
+        // Re-picking a model records its provider (type and config id) and persists both.
         await act(async () => {
-            api().setSelectedModel("mini", "openai");
+            api().setSelectedModel("mini", "openai", "o_1");
         });
-        expect(api().getContent()).toMatchObject({ selectedModel: "mini", selectedProvider: "openai" });
+        expect(api().getContent()).toMatchObject({ selectedModel: "mini", selectedProvider: "openai", selectedProviderId: "o_1" });
     });
 });

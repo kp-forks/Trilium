@@ -1,5 +1,5 @@
 import type { LlmMessage } from "@triliumnext/commons";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createGoogleMock = vi.fn();
 const googleSearchMock = vi.fn(() => ({ kind: "google_search" }));
@@ -167,5 +167,49 @@ describe("GoogleProvider tool handling", () => {
         // Function tools present → agentic loop options set on the thinking path.
         expect(opts.toolChoice).toBe("auto");
         expect(opts.stopWhen).toBeDefined();
+    });
+});
+
+describe("GoogleProvider model listing", () => {
+    const fetchMock = vi.fn();
+
+    beforeEach(() => {
+        fetchMock.mockReset();
+        vi.stubGlobal("fetch", fetchMock);
+    });
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    const okJson = (body: unknown) => ({ ok: true, json: async () => body });
+
+    it("keeps generateContent-capable chat models, stripping the models/ prefix", async () => {
+        fetchMock.mockResolvedValue(okJson({
+            models: [
+                { name: "models/gemini-2.5-flash", displayName: "Gemini 2.5 Flash", inputTokenLimit: 1048576, supportedGenerationMethods: ["generateContent"] },
+                { name: "models/gemini-3-pro", displayName: "Gemini 3 Pro", inputTokenLimit: 2097152, supportedGenerationMethods: ["generateContent"] },
+                { name: "models/text-embedding-004", supportedGenerationMethods: ["embedContent"] },
+                { name: "models/imagen-3.0-generate-002", supportedGenerationMethods: ["generateContent"] }
+            ]
+        }));
+        const provider = new GoogleProvider("g-key");
+
+        const models = await provider.listModels();
+        expect(fetchMock).toHaveBeenCalledWith(
+            "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000",
+            expect.objectContaining({ headers: { "x-goog-api-key": "g-key" } })
+        );
+        expect(models.map((m) => m.id)).toEqual(["gemini-2.5-flash", "gemini-3-pro"]);
+        // Curated entry keeps its metadata; the unknown one takes the API's
+        // display name and token limit.
+        expect(models[0]).toMatchObject({ name: "Gemini 2.5 Flash", isDefault: true });
+        expect(models[1]).toMatchObject({ name: "Gemini 3 Pro", contextWindow: 2097152 });
+    });
+
+    it("falls back to the curated list when the fetch fails", async () => {
+        fetchMock.mockResolvedValue({ ok: false, status: 403 });
+        const provider = new GoogleProvider("g-key");
+        const models = await provider.listModels();
+        expect(models.map((m) => m.id)).toContain("gemini-2.5-pro");
     });
 });

@@ -1,10 +1,13 @@
 import { createGoogleGenerativeAI, type GoogleGenerativeAIProvider } from "@ai-sdk/google";
-import { streamText, stepCountIs, type ToolSet } from "ai";
 import type { LlmMessage } from "@triliumnext/commons";
-
 import { getLog } from "@triliumnext/core";
+import { stepCountIs, streamText, type ToolSet } from "ai";
+
 import type { LlmProviderConfig, StreamResult } from "../types.js";
 import { BaseProvider, buildModelList } from "./base_provider.js";
+import { isGoogleChatModel, type RemoteModel } from "./model_listing.js";
+
+const OFFICIAL_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
 /**
  * Gemini 2.x models (every model we currently expose) cannot combine
@@ -62,7 +65,7 @@ export class GoogleProvider extends BaseProvider {
     private google: GoogleGenerativeAIProvider;
 
     constructor(apiKey: string, baseURL?: string) {
-        super();
+        super(apiKey, baseURL);
         if (!apiKey) {
             throw new Error("API key is required for Google provider");
         }
@@ -71,6 +74,31 @@ export class GoogleProvider extends BaseProvider {
 
     protected createModel(modelId: string) {
         return this.google(modelId);
+    }
+
+    /**
+     * List models from the Gemini API. Only `generateContent`-capable models
+     * are kept (the endpoint also lists embedding/imagen/veo models), and the
+     * `models/` id prefix is stripped to match what `createModel` expects.
+     */
+    protected override async fetchRemoteModels(): Promise<RemoteModel[] | null> {
+        const payload = await this.fetchJson(`${this.baseURL ?? OFFICIAL_BASE_URL}/models?pageSize=1000`, {
+            "x-goog-api-key": this.apiKey
+        });
+        const models = (payload as { models?: unknown }).models;
+        if (!Array.isArray(models)) {
+            throw new Error("Unexpected /models response shape");
+        }
+        return models
+            .filter((m): m is { name: string; displayName?: string; inputTokenLimit?: number; supportedGenerationMethods?: string[] } =>
+                typeof (m as { name?: unknown }).name === "string")
+            .filter(m => m.supportedGenerationMethods?.includes("generateContent"))
+            .map(m => ({
+                id: m.name.replace(/^models\//, ""),
+                name: m.displayName,
+                contextWindow: m.inputTokenLimit
+            }))
+            .filter(m => isGoogleChatModel(m.id));
     }
 
     protected override addWebSearchTool(tools: ToolSet): void {

@@ -3,7 +3,7 @@ import { getLog } from "@triliumnext/core";
 import type { Request, Response } from "express";
 
 import { generateChatTitle } from "../../services/llm/chat_title.js";
-import { getAllModels, getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
+import { getAllModels, getProvider, getProviderByType, hasConfiguredProviders, type LlmProviderConfig } from "../../services/llm/index.js";
 import { streamToChunks } from "../../services/llm/stream.js";
 import { safeExtractMessageAndStackFromError } from "../../services/utils.js";
 
@@ -50,7 +50,12 @@ async function streamChat(req: Request, res: Response) {
             return;
         }
 
-        const provider = getProviderByType(config.provider || "anthropic");
+        // Prefer routing by the provider config id — it disambiguates multiple
+        // configs of the same type (e.g. OpenAI + a self-hosted Ollama). Chats
+        // saved before providerId existed fall back to type-based resolution.
+        const provider = config.providerId
+            ? getProvider(config.providerId)
+            : getProviderByType(config.provider || "anthropic");
 
         // Get pricing and display name for the model
         const modelId = config.model || provider.getAvailableModels().find(m => m.isDefault)?.id;
@@ -112,14 +117,16 @@ async function streamChat(req: Request, res: Response) {
 }
 
 /**
- * Get available models from all configured providers.
+ * Get available models from all configured providers. Providers that support
+ * dynamic listing are queried live (with server-side caching); the rest report
+ * their curated list.
  */
-function getModels(_req: Request, _res: Response) {
+async function getModels(_req: Request, _res: Response) {
     if (!hasConfiguredProviders()) {
         return { models: [] };
     }
 
-    return { models: getAllModels() };
+    return { models: await getAllModels() };
 }
 
 export default {

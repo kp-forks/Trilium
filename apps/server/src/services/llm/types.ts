@@ -40,8 +40,12 @@ export interface ModelInfo {
     name: string;
     /** Provider type that owns this model (e.g., "anthropic", "openai") */
     provider?: string;
-    /** Pricing per million tokens */
-    pricing: ModelPricing;
+    /** ID of the provider configuration this model was listed from */
+    providerId?: string;
+    /** User-given name of the provider configuration (e.g. "My Ollama") */
+    providerName?: string;
+    /** Pricing per million tokens. Absent for dynamically discovered models with unknown pricing. */
+    pricing?: ModelPricing;
     /** Whether this is the default model */
     isDefault?: boolean;
     /** Cost multiplier relative to the cheapest model (1x = cheapest) */
@@ -87,8 +91,23 @@ export interface LlmProvider {
 
     /**
      * Get list of available models for this provider.
+     *
+     * This is the static, curated list — instant and offline-safe. Used for
+     * default-model and display-name lookups, and as the fallback when dynamic
+     * listing is unavailable or fails.
      */
     getAvailableModels(): ModelInfo[];
+
+    /**
+     * Dynamically list the models actually available on the provider's
+     * endpoint, merged with curated metadata (names, pricing, context windows)
+     * where known. Optional — providers with a fixed catalog (agent/subscription
+     * providers) omit it and callers fall back to {@link getAvailableModels}.
+     *
+     * Implementations must degrade gracefully: on fetch failure they return
+     * the curated list rather than throwing.
+     */
+    listModels?(): Promise<ModelInfo[]>;
 
     /**
      * Generate a short title summarizing a message.

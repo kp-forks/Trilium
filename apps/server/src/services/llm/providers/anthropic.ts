@@ -4,6 +4,9 @@ import { type ModelMessage, stepCountIs, streamText, type SystemModelMessage, ty
 
 import type { LlmProviderConfig, StreamResult } from "../types.js";
 import { BaseProvider, buildModelList, buildModelMessage } from "./base_provider.js";
+import type { RemoteModel } from "./model_listing.js";
+
+const OFFICIAL_BASE_URL = "https://api.anthropic.com/v1";
 
 /** Anthropic ephemeral prompt-caching breakpoint. */
 const CACHE_CONTROL = { anthropic: { cacheControl: { type: "ephemeral" as const } } };
@@ -117,7 +120,7 @@ export class AnthropicProvider extends BaseProvider {
     private anthropic: AnthropicSDKProvider;
 
     constructor(apiKey: string, baseURL?: string) {
-        super();
+        super(apiKey, baseURL);
         if (!apiKey) {
             throw new Error("API key is required for Anthropic provider");
         }
@@ -126,6 +129,21 @@ export class AnthropicProvider extends BaseProvider {
 
     protected createModel(modelId: string) {
         return this.anthropic(modelId);
+    }
+
+    /** List models from Anthropic's `/models` endpoint (all are chat models). */
+    protected override async fetchRemoteModels(): Promise<RemoteModel[] | null> {
+        const payload = await this.fetchJson(`${this.baseURL ?? OFFICIAL_BASE_URL}/models?limit=1000`, {
+            "x-api-key": this.apiKey,
+            "anthropic-version": "2023-06-01"
+        });
+        const data = (payload as { data?: unknown }).data;
+        if (!Array.isArray(data)) {
+            throw new Error("Unexpected /models response shape");
+        }
+        return data
+            .filter((m): m is { id: string; display_name?: string } => typeof (m as { id?: unknown }).id === "string")
+            .map(m => ({ id: m.id, name: m.display_name }));
     }
 
     protected override addWebSearchTool(tools: ToolSet): void {

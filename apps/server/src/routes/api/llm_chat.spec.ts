@@ -10,13 +10,14 @@ const state = vi.hoisted(() => ({
     // When true, the fake provider is chunk-native (implements chatChunks) and
     // records the abort signal the route wires to the response lifecycle.
     chunkNative: false,
-    chunkSignal: undefined as AbortSignal | undefined
+    chunkSignal: undefined as AbortSignal | undefined,
+    // Records how streamChat resolved the provider.
+    providerIdRequested: undefined as string | undefined,
+    providerTypeRequested: undefined as string | undefined
 }));
 
-vi.mock("../../services/llm/index.js", () => ({
-    hasConfiguredProviders: () => state.configured,
-    getAllModels: () => state.models,
-    getProviderByType: () => ({
+vi.mock("../../services/llm/index.js", () => {
+    const makeProvider = () => ({
         chat: () => { if (state.chatThrows !== undefined) throw state.chatThrows; return {}; },
         chatChunks: state.chunkNative
             ? async function* (_messages: unknown, _config: unknown, signal?: AbortSignal) {
@@ -26,8 +27,14 @@ vi.mock("../../services/llm/index.js", () => ({
             : undefined,
         getAvailableModels: () => state.availableModels,
         getModelPricing: () => ({ input: 0, output: 0 })
-    })
-}));
+    });
+    return {
+        hasConfiguredProviders: () => state.configured,
+        getAllModels: async () => state.models,
+        getProvider: (id: string) => { state.providerIdRequested = id; return makeProvider(); },
+        getProviderByType: (type: string) => { state.providerTypeRequested = type; return makeProvider(); }
+    };
+});
 
 vi.mock("../../services/llm/stream.js", () => ({
     async *streamToChunks () { for (const c of state.chunks) yield c; }
@@ -74,20 +81,22 @@ describe("LLM chat API", () => {
             availableModels: [{ id: "m1", name: "Model One", isDefault: true }],
             chatThrows: undefined,
             chunkNative: false,
-            chunkSignal: undefined
+            chunkSignal: undefined,
+            providerIdRequested: undefined,
+            providerTypeRequested: undefined
         });
         generateChatTitle.mockClear();
     });
 
     describe("getModels", () => {
-        it("returns no models when no provider is configured", () => {
+        it("returns no models when no provider is configured", async () => {
             state.configured = false;
-            expect(llmChatRoute.getModels({} as Request, {} as Response)).toEqual({ models: [] });
+            await expect(llmChatRoute.getModels({} as Request, {} as Response)).resolves.toEqual({ models: [] });
         });
 
-        it("returns all models when configured", () => {
+        it("returns all models when configured", async () => {
             state.models = [{ id: "m1" }];
-            expect(llmChatRoute.getModels({} as Request, {} as Response)).toEqual({ models: [{ id: "m1" }] });
+            await expect(llmChatRoute.getModels({} as Request, {} as Response)).resolves.toEqual({ models: [{ id: "m1" }] });
         });
     });
 
@@ -107,6 +116,27 @@ describe("LLM chat API", () => {
             await llmChatRoute.streamChat(req({ messages: [{ role: "user", content: "hi" }] }), r.res);
             expect(r.writes.join("")).toContain("No LLM providers configured");
             expect(r.ended).toBe(true);
+        });
+
+        it("routes by providerId when present, falling back to provider type", async () => {
+            state.chunks = [{ type: "done" }];
+            const r1 = fakeRes();
+            await llmChatRoute.streamChat(req({
+                messages: [{ role: "user", content: "hi" }],
+                config: { provider: "openai", providerId: "openai_123" }
+            }), r1.res);
+            expect(state.providerIdRequested).toBe("openai_123");
+            expect(state.providerTypeRequested).toBeUndefined();
+
+            // No providerId (chat saved before it existed) → type-based resolution.
+            state.providerIdRequested = undefined;
+            const r2 = fakeRes();
+            await llmChatRoute.streamChat(req({
+                messages: [{ role: "user", content: "hi" }],
+                config: { provider: "openai" }
+            }), r2.res);
+            expect(state.providerIdRequested).toBeUndefined();
+            expect(state.providerTypeRequested).toBe("openai");
         });
 
         it("emits an SSE error when no model can be resolved", async () => {

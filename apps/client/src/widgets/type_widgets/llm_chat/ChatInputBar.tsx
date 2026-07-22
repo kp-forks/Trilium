@@ -154,9 +154,9 @@ export default function ChatInputBar({
         onExtendedThinkingChange?.();
     };
 
-    const handleModelSelect = (model: string, provider?: string) => {
-        chat.setSelectedModel(model, provider);
-        onModelChange?.(model);
+    const handleModelSelect = (model: ModelOption) => {
+        chat.setSelectedModel(model.id, model.provider, model.providerId);
+        onModelChange?.(model.id);
     };
 
     const handleNoteContextToggle = () => {
@@ -178,14 +178,16 @@ export default function ChatInputBar({
 
     const isNoteContextEnabled = !!chat.contextNoteId && !!activeNoteId;
 
-    // Two providers can expose the same model ID (e.g. an Anthropic API key and
-    // a Claude subscription both offering "claude-sonnet-5"), so identify the
-    // active model by provider too. Mirror the sender's resolution: prefer the
-    // recorded provider, else fall back to the first ID match (pre-existing chats).
-    const effectiveProvider = chat.selectedProvider
-        ?? chat.availableModels.find(m => m.id === chat.selectedModel)?.provider;
-    const isSelectedModel = (m: ModelOption) => m.id === chat.selectedModel && m.provider === effectiveProvider;
-    const currentModel = chat.availableModels.find(isSelectedModel);
+    // Several providers can expose the same model ID (e.g. an Anthropic API key
+    // and a Claude subscription both offering "claude-sonnet-5", or two
+    // OpenAI-compatible endpoints), so identify the active model by its provider
+    // config too. Mirror the sender's resolution: prefer the recorded provider
+    // id/type, else fall back to the first ID match (pre-existing chats).
+    const currentModel = chat.availableModels.find(m =>
+        m.id === chat.selectedModel
+        && (!chat.selectedProvider || m.provider === chat.selectedProvider)
+        && (!chat.selectedProviderId || m.providerId === chat.selectedProviderId));
+    const isSelectedModel = (m: ModelOption) => m === currentModel;
     const currentModels = chat.availableModels.filter(m => !m.isLegacy);
     const currentModelGroups = groupModelsByProvider(currentModels);
     const legacyModels = chat.availableModels.filter(m => m.isLegacy);
@@ -361,8 +363,8 @@ export default function ChatInputBar({
                                 {group.providerName && <FormListHeader text={group.providerName} />}
                                 {group.models.map(model => (
                                     <FormListItem
-                                        key={`${model.provider}:${model.id}`}
-                                        onClick={() => handleModelSelect(model.id, model.provider)}
+                                        key={`${model.providerId ?? model.provider}:${model.id}`}
+                                        onClick={() => handleModelSelect(model)}
                                         checked={isSelectedModel(model)}
                                     >
                                         {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
@@ -383,8 +385,8 @@ export default function ChatInputBar({
                                             {group.providerName && <FormListHeader text={group.providerName} />}
                                             {group.models.map(model => (
                                                 <FormListItem
-                                                    key={`${model.provider}:${model.id}`}
-                                                    onClick={() => handleModelSelect(model.id, model.provider)}
+                                                    key={`${model.providerId ?? model.provider}:${model.id}`}
+                                                    onClick={() => handleModelSelect(model)}
                                                     checked={isSelectedModel(model)}
                                                 >
                                                     {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
@@ -468,30 +470,37 @@ export default function ChatInputBar({
 }
 
 interface ProviderModelGroup {
-    /** Stable key for the group (the provider id). */
+    /** Stable key for the group (the provider config id, falling back to the type). */
     key: string;
-    /** Friendly provider name shown in the group header. */
+    /** Group header: the user-given config name, or the provider type's friendly name. */
     providerName: string;
     models: ModelOption[];
 }
 
 /**
- * Groups models by their owning provider, preserving the order in which each provider first
- * appears. The provider's friendly name (from {@link PROVIDER_TYPES}) heads each group.
+ * Groups models by their owning provider config, preserving the order in which each config
+ * first appears — so two configs of the same type (e.g. OpenAI and a self-hosted Ollama)
+ * get separate groups. The user-given config name heads each group, falling back to the
+ * provider type's friendly name (from {@link PROVIDER_TYPES}) for older servers that don't
+ * report it.
  */
 function groupModelsByProvider(models: ModelOption[]): ProviderModelGroup[] {
     const groups: ProviderModelGroup[] = [];
-    const byProvider = new Map<string | undefined, ProviderModelGroup>();
+    const byProvider = new Map<string, ProviderModelGroup>();
 
     for (const model of models) {
-        let group = byProvider.get(model.provider);
+        const key = model.providerId ?? model.provider ?? "";
+        let group = byProvider.get(key);
         if (!group) {
             group = {
-                key: model.provider ?? "",
-                providerName: PROVIDER_TYPES.find(p => p.id === model.provider)?.name ?? model.provider ?? "",
+                key,
+                providerName: model.providerName
+                    ?? PROVIDER_TYPES.find(p => p.id === model.provider)?.name
+                    ?? model.provider
+                    ?? "",
                 models: []
             };
-            byProvider.set(model.provider, group);
+            byProvider.set(key, group);
             groups.push(group);
         }
         group.models.push(model);

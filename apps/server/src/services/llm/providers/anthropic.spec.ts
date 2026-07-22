@@ -1,5 +1,5 @@
 import type { LlmMessage } from "@triliumnext/commons";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createAnthropicMock = vi.fn();
 const webSearchMock = vi.fn(() => ({ kind: "anthropic_web_search" }));
@@ -286,5 +286,56 @@ describe("AnthropicProvider prompt cache stability", () => {
 
         // ...but never leaks into the cache-controlled system prompt.
         expect(opts.system.content).not.toContain("SCRIPT_BODY");
+    });
+});
+
+describe("AnthropicProvider model listing", () => {
+    const fetchMock = vi.fn();
+
+    beforeEach(() => {
+        fetchMock.mockReset();
+        vi.stubGlobal("fetch", fetchMock);
+    });
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    const okJson = (body: unknown) => ({ ok: true, json: async () => body });
+
+    it("fetches /models with the API key headers and merges display names", async () => {
+        fetchMock.mockResolvedValue(okJson({
+            data: [
+                { id: "claude-sonnet-5", display_name: "Claude Sonnet 5" },
+                { id: "claude-omega-6", display_name: "Claude Omega 6" }
+            ]
+        }));
+        const provider = new AnthropicProvider("sk-ant");
+
+        const models = await provider.listModels();
+        expect(fetchMock).toHaveBeenCalledWith(
+            "https://api.anthropic.com/v1/models?limit=1000",
+            expect.objectContaining({
+                headers: { "x-api-key": "sk-ant", "anthropic-version": "2023-06-01" }
+            })
+        );
+        expect(models.map((m) => m.id)).toEqual(["claude-sonnet-5", "claude-omega-6"]);
+        // Curated entry keeps its metadata; the unknown one uses the API's display name.
+        expect(models[0]).toMatchObject({ isDefault: true, pricing: { input: 3, output: 15 } });
+        expect(models[1]).toMatchObject({ name: "Claude Omega 6" });
+        expect(models[1].pricing).toBeUndefined();
+    });
+
+    it("uses a custom baseURL when configured", async () => {
+        fetchMock.mockResolvedValue(okJson({ data: [{ id: "claude-sonnet-5" }] }));
+        const provider = new AnthropicProvider("sk-ant", "https://proxy.example/v1");
+        await provider.listModels();
+        expect(fetchMock).toHaveBeenCalledWith("https://proxy.example/v1/models?limit=1000", expect.anything());
+    });
+
+    it("falls back to the curated list when the fetch fails", async () => {
+        fetchMock.mockRejectedValue(new Error("offline"));
+        const provider = new AnthropicProvider("sk-ant");
+        const models = await provider.listModels();
+        expect(models.map((m) => m.id)).toContain("claude-opus-4-8");
     });
 });

@@ -103,6 +103,19 @@ describe("llm/index provider registry", () => {
             setProviders([{ id: "x", name: "X", provider: "mystery", apiKey: "k" }]);
             expect(() => getProvider("x")).toThrow(/Unknown LLM provider type: mystery/);
         });
+
+        it("drops cached instances when the llmProviders option changes", () => {
+            setProviders(TWO);
+            const p1 = getProvider("a1");
+            // Same config → still cached.
+            setProviders(TWO);
+            expect(getProvider("a1")).toBe(p1);
+            // Edited config (e.g. new API key) → cache self-invalidates.
+            setProviders([{ ...TWO[0], apiKey: "new-key" }, TWO[1]]);
+            const p2 = getProvider("a1");
+            expect(p2).not.toBe(p1);
+            expect((p2.constructor as any).lastArgs).toEqual(["new-key", "https://proxy"]);
+        });
     });
 
     describe("getConfiguredProviders error handling (via hasConfiguredProviders)", () => {
@@ -137,29 +150,50 @@ describe("llm/index provider registry", () => {
     });
 
     describe("getAllModels", () => {
-        it("aggregates models across provider types, tagged with the provider", () => {
+        it("aggregates models across providers, tagged with type and config id/name", async () => {
             setProviders(TWO);
-            const models = getAllModels();
+            const models = await getAllModels();
             expect(models).toEqual([
-                { id: "anthropic-model", name: "anthropic Model", provider: "anthropic" },
-                { id: "openai-model", name: "openai Model", provider: "openai" }
+                { id: "anthropic-model", name: "anthropic Model", provider: "anthropic", providerId: "a1", providerName: "My Claude" },
+                { id: "openai-model", name: "openai Model", provider: "openai", providerId: "o1", providerName: "My GPT" }
             ]);
         });
 
-        it("includes each provider type only once even with duplicate configs", () => {
+        it("lists every config separately, even two of the same type", async () => {
+            // e.g. a real OpenAI key plus a self-hosted Ollama endpoint.
             setProviders([
-                { id: "a1", name: "A1", provider: "anthropic", apiKey: "k1" },
-                { id: "a2", name: "A2", provider: "anthropic", apiKey: "k2" }
+                { id: "o1", name: "OpenAI", provider: "openai", apiKey: "k1" },
+                { id: "o2", name: "My Ollama", provider: "openai", apiKey: "k2", baseURL: "http://localhost:11434/v1" }
             ]);
-            const models = getAllModels();
-            expect(models).toHaveLength(1);
-            expect(models[0].provider).toBe("anthropic");
+            const models = await getAllModels();
+            expect(models.map(m => [m.providerId, m.providerName])).toEqual([
+                ["o1", "OpenAI"],
+                ["o2", "My Ollama"]
+            ]);
         });
 
-        it("skips and logs a provider whose model lookup throws", () => {
-            setProviders([{ id: "x", name: "X", provider: "mystery", apiKey: "k" }]);
+        it("prefers dynamic listModels() when the provider implements it", async () => {
+            setProviders(TWO);
+            const provider = getProvider("a1") as { listModels?: () => Promise<unknown> };
+            provider.listModels = vi.fn().mockResolvedValue([{ id: "dyn-model", name: "Dynamic Model" }]);
+            const models = await getAllModels();
+            expect(models[0]).toEqual({
+                id: "dyn-model",
+                name: "Dynamic Model",
+                provider: "anthropic",
+                providerId: "a1",
+                providerName: "My Claude"
+            });
+        });
+
+        it("skips and logs a provider whose model lookup throws, keeping the rest", async () => {
+            setProviders([
+                { id: "x", name: "X", provider: "mystery", apiKey: "k" },
+                { id: "o1", name: "My GPT", provider: "openai", apiKey: "k2" }
+            ]);
             // Unknown type → getProvider throws inside getAllModels and is caught.
-            expect(getAllModels()).toEqual([]);
+            const models = await getAllModels();
+            expect(models.map(m => m.providerId)).toEqual(["o1"]);
             expect(errorMock).toHaveBeenCalled();
         });
     });

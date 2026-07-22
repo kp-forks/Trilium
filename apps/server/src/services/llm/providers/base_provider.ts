@@ -4,16 +4,25 @@
  */
 
 import { type LlmMessage, type LlmMessagePart } from "@triliumnext/commons";
+import { getLog } from "@triliumnext/core";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { resolveAttachmentPart } from "./attachment_content.js";
+import { mergeModelLists, type RemoteModel } from "./model_listing.js";
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt as composeSystemPrompt } from "./system_prompt.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
 const TITLE_MAX_TOKENS = 30;
+
+/** How long a successfully fetched dynamic model list is served from cache. */
+const MODEL_LIST_TTL_MS = 60 * 60 * 1000;
+/** After a failed fetch, don't retry for this long — avoids re-stalling the UI on a dead endpoint. */
+const MODEL_LIST_FAILURE_COOLDOWN_MS = 60 * 1000;
+/** Timeout for a single models-endpoint request. */
+const MODEL_LIST_TIMEOUT_MS = 10_000;
 
 /**
  * Calculate effective cost for comparison (weighted average: 1 input + 3 output).
@@ -65,9 +74,15 @@ export function buildModelMessage(m: LlmMessage): ModelMessage {
 }
 
 /**
+ * A curated (hard-coded) model definition. Unlike dynamically discovered
+ * models, curated entries always carry pricing.
+ */
+type CuratedModel = Omit<ModelInfo, "costMultiplier"> & { pricing: ModelPricing };
+
+/**
  * Build the model list with cost multipliers from a base model definition array.
  */
-export function buildModelList(baseModels: Omit<ModelInfo, "costMultiplier">[]): {
+export function buildModelList(baseModels: CuratedModel[]): {
     models: ModelInfo[];
     pricing: Record<string, ModelPricing>;
 } {
@@ -94,8 +109,81 @@ export abstract class BaseProvider implements LlmProvider {
     protected abstract availableModels: ModelInfo[];
     protected abstract modelPricing: Record<string, ModelPricing>;
 
+    protected apiKey: string;
+    /** Custom endpoint override (self-hosted Ollama/vLLM, proxies). Normalized without a trailing slash. */
+    protected baseURL?: string;
+
+    private modelListCache?: { models: ModelInfo[]; fetchedAt: number };
+    private modelListInFlight?: Promise<ModelInfo[]>;
+    private modelListFailedAt?: number;
+
+    constructor(apiKey = "", baseURL?: string) {
+        this.apiKey = apiKey;
+        this.baseURL = baseURL?.replace(/\/+$/, "") || undefined;
+    }
+
     /** Create a language model instance for the given model ID. */
     protected abstract createModel(modelId: string): LanguageModel;
+
+    /**
+     * Fetch the raw model list from the provider's models endpoint. Returns
+     * null when the provider doesn't support dynamic listing. Overridden by
+     * providers that do; errors are handled by {@link listModels}.
+     */
+    protected async fetchRemoteModels(): Promise<RemoteModel[] | null> {
+        return null;
+    }
+
+    /**
+     * GET a JSON document with the standard model-listing timeout. Shared
+     * helper for {@link fetchRemoteModels} implementations.
+     */
+    protected async fetchJson(url: string, headers: Record<string, string>): Promise<unknown> {
+        const response = await fetch(url, { headers, signal: AbortSignal.timeout(MODEL_LIST_TIMEOUT_MS) });
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} from ${url}`);
+        }
+        return await response.json();
+    }
+
+    /**
+     * Dynamic model listing: the live endpoint list merged with curated
+     * metadata, cached for {@link MODEL_LIST_TTL_MS}. Falls back to the curated
+     * list when the provider doesn't support listing or the fetch fails (with a
+     * cooldown so a dead endpoint isn't re-probed on every dropdown open).
+     */
+    async listModels(): Promise<ModelInfo[]> {
+        const now = Date.now();
+        if (this.modelListCache && now - this.modelListCache.fetchedAt < MODEL_LIST_TTL_MS) {
+            return this.modelListCache.models;
+        }
+        if (this.modelListFailedAt && now - this.modelListFailedAt < MODEL_LIST_FAILURE_COOLDOWN_MS) {
+            return this.availableModels;
+        }
+        if (!this.modelListInFlight) {
+            this.modelListInFlight = this.fetchAndMergeModels().finally(() => {
+                this.modelListInFlight = undefined;
+            });
+        }
+        return this.modelListInFlight;
+    }
+
+    private async fetchAndMergeModels(): Promise<ModelInfo[]> {
+        try {
+            const remote = await this.fetchRemoteModels();
+            if (!remote || remote.length === 0) {
+                return this.availableModels;
+            }
+            const merged = mergeModelLists(this.availableModels, remote);
+            this.modelListCache = { models: merged, fetchedAt: Date.now() };
+            this.modelListFailedAt = undefined;
+            return merged;
+        } catch (e) {
+            this.modelListFailedAt = Date.now();
+            getLog().info(`Dynamic model listing failed for provider ${this.name}, falling back to the curated list: ${e}`);
+            return this.availableModels;
+        }
+    }
 
     /**
      * Build the system prompt. Delegates to the shared `system_prompt` module;

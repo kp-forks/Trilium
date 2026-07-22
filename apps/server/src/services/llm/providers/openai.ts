@@ -2,6 +2,9 @@ import { createOpenAI, type OpenAIProvider as OpenAISDKProvider } from "@ai-sdk/
 import type { ToolSet } from "ai";
 
 import { BaseProvider, buildModelList } from "./base_provider.js";
+import { isOpenAiChatModel, type RemoteModel } from "./model_listing.js";
+
+const OFFICIAL_BASE_URL = "https://api.openai.com/v1";
 
 /**
  * Available OpenAI models with pricing (USD per million tokens).
@@ -67,7 +70,7 @@ export class OpenAiProvider extends BaseProvider {
     private openai: OpenAISDKProvider;
 
     constructor(apiKey: string, baseURL?: string) {
-        super();
+        super(apiKey, baseURL);
         if (!apiKey) {
             throw new Error("API key is required for OpenAI provider");
         }
@@ -76,6 +79,26 @@ export class OpenAiProvider extends BaseProvider {
 
     protected createModel(modelId: string) {
         return this.openai(modelId);
+    }
+
+    /**
+     * List models from the OpenAI-compatible `/models` endpoint. On the
+     * official endpoint the list is full of non-chat models (embeddings,
+     * whisper, TTS, ...), which are filtered out; a custom baseURL (Ollama,
+     * vLLM, LM Studio, LiteLLM) lists exactly what the endpoint offers.
+     */
+    protected override async fetchRemoteModels(): Promise<RemoteModel[] | null> {
+        const payload = await this.fetchJson(`${this.baseURL ?? OFFICIAL_BASE_URL}/models`, {
+            Authorization: `Bearer ${this.apiKey}`
+        });
+        const data = (payload as { data?: unknown }).data;
+        if (!Array.isArray(data)) {
+            throw new Error("Unexpected /models response shape");
+        }
+        const models = data
+            .filter((m): m is { id: string } => typeof (m as { id?: unknown }).id === "string")
+            .map(m => ({ id: m.id }));
+        return this.baseURL ? models : models.filter(m => isOpenAiChatModel(m.id));
     }
 
     protected override addWebSearchTool(tools: ToolSet): void {

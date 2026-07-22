@@ -33,11 +33,22 @@ const providerFactories: Record<string, (apiKey: string, baseURL?: string) => Ll
 let cachedProviders: Record<string, LlmProvider> = {};
 
 /**
+ * The raw llmProviders JSON the cache was built from. When the option changes
+ * (provider added/edited/removed in the settings), the cache self-invalidates
+ * so stale instances — and their dynamic model-list caches — are dropped.
+ */
+let cachedProvidersSource: string | null = null;
+
+/**
  * Get configured providers from the options.
  */
 function getConfiguredProviders(): LlmProviderSetup[] {
     try {
         const providersJson = optionService.getOptionOrNull("llmProviders");
+        if (providersJson !== cachedProvidersSource) {
+            cachedProviders = {};
+            cachedProvidersSource = providersJson;
+        }
         if (!providersJson) {
             return [];
         }
@@ -106,32 +117,33 @@ export function hasConfiguredProviders(): boolean {
 }
 
 /**
- * Get all models from all configured providers, tagged with their provider type.
+ * Get all models from every configured provider instance, tagged with the
+ * provider type and the owning config's id/name. Each config is listed
+ * separately (not deduped by type) so e.g. a real OpenAI key and a self-hosted
+ * Ollama endpoint each contribute their own models. Providers that support
+ * dynamic listing are queried live (in parallel); the rest — and any provider
+ * whose lookup fails — contribute their curated list or are skipped.
  */
-export function getAllModels(): ModelInfo[] {
+export async function getAllModels(): Promise<ModelInfo[]> {
     const configs = getConfiguredProviders();
-    const seenProviderTypes = new Set<string>();
-    const allModels: ModelInfo[] = [];
 
-    for (const config of configs) {
-        // Only include models once per provider type (not per config instance)
-        if (seenProviderTypes.has(config.provider)) {
-            continue;
-        }
-        seenProviderTypes.add(config.provider);
-
+    const modelsPerConfig = await Promise.all(configs.map(async config => {
         try {
             const provider = getProvider(config.id);
-            const models = provider.getAvailableModels();
-            for (const model of models) {
-                allModels.push({ ...model, provider: config.provider });
-            }
+            const models = await (provider.listModels?.() ?? provider.getAvailableModels());
+            return models.map(model => ({
+                ...model,
+                provider: config.provider,
+                providerId: config.id,
+                providerName: config.name
+            }));
         } catch (e) {
-            getLog().error(`Failed to get models from provider ${config.provider}: ${e}`);
+            getLog().error(`Failed to get models from provider ${config.provider} (${config.id}): ${e}`);
+            return [];
         }
-    }
+    }));
 
-    return allModels;
+    return modelsPerConfig.flat();
 }
 
 /**
@@ -139,6 +151,7 @@ export function getAllModels(): ModelInfo[] {
  */
 export function clearProviderCache(): void {
     cachedProviders = {};
+    cachedProvidersSource = null;
 }
 
 export type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing } from "./types.js";

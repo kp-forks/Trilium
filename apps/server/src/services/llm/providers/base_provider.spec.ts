@@ -3,7 +3,7 @@ import { encodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import type { LanguageModel } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { LlmProviderConfig, ModelInfo } from "../types.js";
+import type { LlmProviderConfig } from "../types.js";
 
 const { streamTextMock, generateTextMock, noteMetaMock, errorLogMock, beccaStub } = vi.hoisted(() => ({
     streamTextMock: vi.fn((..._args: any[]) => ({}) as any),
@@ -28,7 +28,8 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
     return {
         ...actual,
         becca: { ...actual.becca, ...beccaStub },
-        getLog: () => ({ ...actual.getLog(), error: errorLogMock })
+        // Spreading the real logger loses prototype methods (e.g. info), so stub it too.
+        getLog: () => ({ ...actual.getLog(), error: errorLogMock, info: vi.fn() })
     };
 });
 
@@ -43,8 +44,9 @@ vi.mock("../tools/index.js", () => ({
 }));
 
 import { BaseProvider, buildModelList, buildModelMessage } from "./base_provider.js";
+import type { RemoteModel } from "./model_listing.js";
 
-const TEST_MODELS: Omit<ModelInfo, "costMultiplier">[] = [
+const TEST_MODELS: Parameters<typeof buildModelList>[0] = [
     { id: "cheap", name: "Cheap", pricing: { input: 1, output: 2 } },
     { id: "mid", name: "Mid", pricing: { input: 2, output: 4 }, isDefault: true },
     { id: "spendy", name: "Spendy", pricing: { input: 10, output: 30 } }
@@ -60,10 +62,15 @@ class TestProvider extends BaseProvider {
     protected modelPricing = BUILT_PRICING;
 
     public createdModelIds: string[] = [];
+    public fetchRemoteModelsMock = vi.fn<() => Promise<RemoteModel[] | null>>(async () => null);
 
     protected createModel(modelId: string): LanguageModel {
         this.createdModelIds.push(modelId);
         return { modelId } as unknown as LanguageModel;
+    }
+
+    protected override fetchRemoteModels(): Promise<RemoteModel[] | null> {
+        return this.fetchRemoteModelsMock();
     }
 
     // Expose protected helpers for direct assertions.
@@ -112,6 +119,52 @@ describe("buildModelList", () => {
             mid: { input: 2, output: 4 },
             spendy: { input: 10, output: 30 }
         });
+    });
+});
+
+describe("listModels", () => {
+    it("returns the curated list when the provider has no dynamic listing", async () => {
+        const provider = new TestProvider();
+        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
+    });
+
+    it("merges the remote list with curated metadata and caches the result", async () => {
+        const provider = new TestProvider();
+        provider.fetchRemoteModelsMock.mockResolvedValue([{ id: "mid" }, { id: "brand-new" }]);
+
+        const models = await provider.listModels();
+        expect(models.map((m) => m.id)).toEqual(["mid", "brand-new"]);
+        expect(models[0]).toMatchObject({ name: "Mid", isDefault: true });
+        expect(models[1].pricing).toBeUndefined();
+
+        // Second call is served from the cache — no second fetch.
+        await expect(provider.listModels()).resolves.toBe(models);
+        expect(provider.fetchRemoteModelsMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("deduplicates concurrent calls into a single fetch", async () => {
+        const provider = new TestProvider();
+        provider.fetchRemoteModelsMock.mockResolvedValue([{ id: "mid" }]);
+
+        const [a, b] = await Promise.all([provider.listModels(), provider.listModels()]);
+        expect(a).toBe(b);
+        expect(provider.fetchRemoteModelsMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("falls back to the curated list on fetch failure and cools down before retrying", async () => {
+        const provider = new TestProvider();
+        provider.fetchRemoteModelsMock.mockRejectedValue(new Error("boom"));
+
+        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
+        // Within the failure cooldown the endpoint is not probed again.
+        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
+        expect(provider.fetchRemoteModelsMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("falls back to the curated list when the remote list is empty", async () => {
+        const provider = new TestProvider();
+        provider.fetchRemoteModelsMock.mockResolvedValue([]);
+        await expect(provider.listModels()).resolves.toBe(BUILT_MODELS);
     });
 });
 
