@@ -14,7 +14,7 @@ import CKEditor, { type CKEditorApi } from "../../react/CKEditor.js";
 import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormListHeader, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
-import AddProviderModal, { type LlmProviderConfig, PROVIDER_TYPES } from "../options/llm/AddProviderModal.js";
+import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
 import { insertNewBlock as insertNewBlockCommand, isSelectionInCodeBlock, outdentListItemAtStart } from "./chat_input_editing.js";
 import { editorHtmlToMarkdown } from "./chat_input_markdown.js";
 import { SafeImage } from "./retry_image.js";
@@ -188,9 +188,6 @@ export default function ChatInputBar({
         && (!chat.selectedProvider || m.provider === chat.selectedProvider)
         && (!chat.selectedProviderId || m.providerId === chat.selectedProviderId));
     const isSelectedModel = (m: ModelOption) => m === currentModel;
-    // The dropdown shows exactly the models the user selected per provider (in
-    // provider settings). Legacy demotion happens there now, not here.
-    const currentModelGroups = groupModelsByProvider(chat.availableModels);
     // Gemini 2.x cannot combine googleSearch with function tools in a single
     // request. When note tools are enabled on a Gemini model we silently drop
     // web search server-side; reflect that here by disabling the toggle so the
@@ -357,10 +354,10 @@ export default function ChatInputBar({
                         portalToBody={inSidebar}
                         dropdownOptions={inSidebar ? { popperConfig: { strategy: "fixed" } } : undefined}
                     >
-                        {currentModelGroups.map(group => (
-                            <Fragment key={group.key}>
-                                {group.providerName && <FormListHeader text={group.providerName} />}
-                                {group.models.map(model => (
+                        {chat.modelGroups.map(group => (
+                            <Fragment key={group.id}>
+                                <FormListHeader text={group.name} />
+                                {group.models.length > 0 ? group.models.map(model => (
                                     <FormListItem
                                         key={`${model.providerId ?? model.provider}:${model.id}`}
                                         onClick={() => handleModelSelect(model)}
@@ -368,7 +365,13 @@ export default function ChatInputBar({
                                     >
                                         {model.name}{model.costDescription && <> <small>({model.costDescription})</small></>}
                                     </FormListItem>
-                                ))}
+                                )) : (
+                                    // Provider configured before model selection existed (or with
+                                    // everything deselected): keep the group visible with a hint.
+                                    <FormListItem disabled onClick={() => {}}>
+                                        <small>{t("llm_chat.no_models_selected")}</small>
+                                    </FormListItem>
+                                )}
                             </Fragment>
                         ))}
                         <FormDropdownDivider />
@@ -443,42 +446,3 @@ export default function ChatInputBar({
     );
 }
 
-interface ProviderModelGroup {
-    /** Stable key for the group (the provider config id, falling back to the type). */
-    key: string;
-    /** Group header: the user-given config name, or the provider type's friendly name. */
-    providerName: string;
-    models: ModelOption[];
-}
-
-/**
- * Groups models by their owning provider config, preserving the order in which each config
- * first appears — so two configs of the same type (e.g. OpenAI and a self-hosted Ollama)
- * get separate groups. The user-given config name heads each group, falling back to the
- * provider type's friendly name (from {@link PROVIDER_TYPES}) for older servers that don't
- * report it.
- */
-function groupModelsByProvider(models: ModelOption[]): ProviderModelGroup[] {
-    const groups: ProviderModelGroup[] = [];
-    const byProvider = new Map<string, ProviderModelGroup>();
-
-    for (const model of models) {
-        const key = model.providerId ?? model.provider ?? "";
-        let group = byProvider.get(key);
-        if (!group) {
-            group = {
-                key,
-                providerName: model.providerName
-                    ?? PROVIDER_TYPES.find(p => p.id === model.provider)?.name
-                    ?? model.provider
-                    ?? "",
-                models: []
-            };
-            byProvider.set(key, group);
-            groups.push(group);
-        }
-        group.models.push(model);
-    }
-
-    return groups;
-}

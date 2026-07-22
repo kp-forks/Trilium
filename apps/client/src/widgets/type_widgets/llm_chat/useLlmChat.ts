@@ -78,6 +78,18 @@ export interface ModelOption extends LlmModelInfo {
     costDescription?: string;
 }
 
+/** A configured provider and the models the user selected for it (possibly none). */
+export interface ModelProviderGroup {
+    /** Provider config id — stable group key. */
+    id: string;
+    /** User-given provider name, shown as the group header. */
+    name: string;
+    /** Provider type (e.g. "openai"). */
+    provider: string;
+    /** Selected models for this provider; empty for configs migrated from before selection existed. */
+    models: ModelOption[];
+}
+
 export interface LlmChatOptions {
     /** Default value for enableNoteTools */
     defaultEnableNoteTools?: boolean;
@@ -103,6 +115,8 @@ export interface UseLlmChatReturn {
     /** Images or files the user has attached but not yet sent. */
     pendingAttachments: AttachmentBlock[];
     availableModels: ModelOption[];
+    /** Per-provider groups (including providers with no models selected yet). */
+    modelGroups: ModelProviderGroup[];
     selectedModel: string;
     /** Provider type owning {@link selectedModel}; undefined until a model is picked or in pre-existing chats. */
     selectedProvider: string | undefined;
@@ -193,6 +207,7 @@ export function useLlmChat(
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
     const [pendingAttachments, setPendingAttachments] = useState<AttachmentBlock[]>([]);
     const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
+    const [modelGroups, setModelGroups] = useState<ModelProviderGroup[]>([]);
     const [selectedModel, setSelectedModel] = useState<string>("");
     const [selectedProvider, setSelectedProvider] = useState<string | undefined>(undefined);
     const [selectedProviderId, setSelectedProviderId] = useState<string | undefined>(undefined);
@@ -289,8 +304,9 @@ export function useLlmChat(
     // picked (with full metadata) when the provider was configured; dynamic
     // listing only runs in the provider-settings model picker.
     const refreshModels = useCallback(() => {
-        const { models, hasProvider } = readSelectedModels();
+        const { models, groups, hasProvider } = readSelectedModels();
         setAvailableModels(models);
+        setModelGroups(groups);
         setHasProvider(hasProvider);
         setIsCheckingProvider(false);
         if (!selectedModel) {
@@ -884,6 +900,7 @@ export function useLlmChat(
         pendingCitations,
         pendingAttachments,
         availableModels,
+        modelGroups,
         selectedModel,
         selectedProvider,
         selectedProviderId,
@@ -939,26 +956,30 @@ interface StoredProviderConfig {
 }
 
 /**
- * Flatten the user's selected models across all configured providers, tagging
- * each with its owning config (provider type, id, name) and a cost description.
- * `hasProvider` reflects whether any provider is configured at all, independent
- * of whether it has models selected.
+ * Read the user's selected models per configured provider. Returns:
+ * - `groups`: one entry per configured provider (in config order), each with its
+ *   selected models — the group is kept even when it has none, so a provider
+ *   migrated from before selection existed still shows up with an empty group.
+ * - `models`: the flattened list across all groups (for default selection and
+ *   the active-model lookup).
+ * - `hasProvider`: whether any provider is configured at all.
  */
-function readSelectedModels(): { models: ModelOption[]; hasProvider: boolean } {
+function readSelectedModels(): { models: ModelOption[]; groups: ModelProviderGroup[]; hasProvider: boolean } {
     const configs = (options.getJson("llmProviders") as StoredProviderConfig[] | null) ?? [];
-    const models: ModelOption[] = [];
-    for (const config of configs) {
-        for (const model of config.selectedModels ?? []) {
-            models.push({
-                ...model,
-                provider: config.provider,
-                providerId: config.id,
-                providerName: config.name,
-                costDescription: model.isSubscription
-                    ? t("llm_chat.model_cost_included")
-                    : model.costMultiplier ? `${model.costMultiplier}x` : undefined
-            });
-        }
-    }
-    return { models, hasProvider: configs.length > 0 };
+    const groups: ModelProviderGroup[] = configs.map(config => ({
+        id: config.id,
+        name: config.name,
+        provider: config.provider,
+        models: (config.selectedModels ?? []).map(model => ({
+            ...model,
+            provider: config.provider,
+            providerId: config.id,
+            providerName: config.name,
+            costDescription: model.isSubscription
+                ? t("llm_chat.model_cost_included")
+                : model.costMultiplier ? `${model.costMultiplier}x` : undefined
+        }))
+    }));
+    const models = groups.flatMap(g => g.models);
+    return { models, groups, hasProvider: configs.length > 0 };
 }

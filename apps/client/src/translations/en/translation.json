@@ -2157,6 +2157,7 @@
     "extended_thinking": "Extended thinking",
     "legacy_models": "Legacy models",
     "model_cost_included": "Subscription",
+    "no_models_selected": "No models selected, edit this provider in settings",
     "thinking": "Thinking...",
     "thought_process": "Thought process",
     "tool_calls": "{{count}} tool call(s)",

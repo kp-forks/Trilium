@@ -109,6 +109,24 @@ describe("useLlmChat", () => {
         expect(costById.get("mini")).toBeUndefined(); // baseline cost — no annotation
     });
 
+    it("groups models per provider, keeping a provider with no selected models as an empty group", async () => {
+        // A config migrated from before selection existed: no selectedModels.
+        optionsGetJsonMock.mockReturnValue([
+            { id: "a_1", name: "Anthropic", provider: "anthropic", selectedModels: [{ id: "opus", name: "Opus" }] },
+            { id: "legacy_1", name: "My OpenAI", provider: "openai" }
+        ]);
+        await mountChat();
+
+        expect(api().modelGroups.map(g => [g.id, g.models.length])).toEqual([
+            ["a_1", 1],
+            ["legacy_1", 0] // still present so the dropdown can prompt the user to configure it
+        ]);
+        // A configured-but-empty provider still counts as "has provider".
+        expect(api().hasProvider).toBe(true);
+        // The empty group contributes no selectable models.
+        expect(api().availableModels.map(m => m.id)).toEqual(["opus"]);
+    });
+
     it("sends with the provider recorded at model selection", async () => {
         await mountChat();
         await act(async () => {
