@@ -120,6 +120,18 @@ jobs:
 
       - name: Build mobile APK
         uses: ./.github/actions/build-mobile
+        with:
+          nightly: "true"
+          upload-artifact: "false"
+          keystore-base64: ${{ secrets.NIGHTLY_ANDROID_KEYSTORE_BASE64 }}
+          keystore-password: ${{ secrets.NIGHTLY_ANDROID_KEYSTORE_PASSWORD }}
+          key-alias: ${{ secrets.NIGHTLY_ANDROID_KEY_ALIAS }}
+          key-password: ${{ secrets.NIGHTLY_ANDROID_KEY_PASSWORD }}
+
+      - name: Rename APK
+        run: >-
+          mv apps/mobile/android/app/build/outputs/apk/release/app-release.apk
+          apps/mobile/android/app/build/outputs/apk/release/TriliumNotes-mobile-nightly.apk
 
       - name: Publish release
         uses: softprops/action-gh-release@v3.0.2
@@ -127,7 +139,7 @@ jobs:
           make_latest: false
           prerelease: true
           draft: false
-          files: apps/mobile/android/app/build/outputs/apk/debug/*.apk
+          files: apps/mobile/android/app/build/outputs/apk/release/*.apk
           tag_name: nightly
           name: Mobile Nightly
 
