@@ -12,7 +12,7 @@ import { parse } from "node-html-parser";
 
 import sql from "../../sql.js";
 import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
-import graph, { type OneNotePage, sanitizeGraphUrl } from "./graph.js";
+import graph, { type AccessTokenProvider, type OneNotePage, sanitizeGraphUrl } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
 import { type FailedPageReport, type ImportReportData, renderImportReport } from "./report.js";
@@ -87,7 +87,7 @@ interface FetchedSection {
  * reported over the WebSocket via the "importNotes" TaskContext, so this never throws to the caller:
  * any error is caught and surfaced as a task error toast instead.
  */
-export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false, shrinkImages = false }: { accessToken: string; parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean; shrinkImages?: boolean }): Promise<void> {
+export async function importSelection({ getAccessToken, parentNoteId, sections, taskId, debug = false, shrinkImages = false }: { getAccessToken: AccessTokenProvider; parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean; shrinkImages?: boolean }): Promise<void> {
     const taskContext = TaskContext.getInstance(taskId, "importNotes", { safeImport: true, shrinkImages });
     const startedAtMs = Date.now();
     graph.resetThrottleStats();
@@ -100,7 +100,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
         // any content is fetched — this lets the client show a real progress bar rather than a bare count.
         const sectionPages: { section: OneNoteSectionSelection; pages: OneNotePage[] }[] = [];
         for (const section of sections) {
-            sectionPages.push({ section, pages: await graph.listPages(accessToken, section.id) });
+            sectionPages.push({ section, pages: await graph.listPages(getAccessToken, section.id) });
         }
         taskContext.setTotalCount(sectionPages.reduce((total, entry) => total + entry.pages.length, 0));
 
@@ -110,9 +110,9 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
             const fetchedPages: FetchedPage[] = [];
             for (const page of pages) {
                 try {
-                    const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
+                    const { html: rawHtml, inkml } = await graph.getPageContent(getAccessToken, page.id);
                     const html = converter.convertPageHtml(rawHtml);
-                    const { resources, failedResourceCount } = await downloadPageResources(accessToken, page.title, html);
+                    const { resources, failedResourceCount } = await downloadPageResources(getAccessToken, page.title, html);
                     fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
                     consecutivePageFailures = 0;
                 } catch (e: unknown) {
@@ -388,7 +388,7 @@ function renderInkFigure(note: BNote, svg: string, shrinkImages: boolean): strin
  * downloads each once. Failures are logged and skipped so one missing resource doesn't abort the whole
  * import; the reference is simply left untouched.
  */
-async function downloadPageResources(accessToken: string, pageTitle: string, html: string): Promise<{ resources: DownloadedResource[]; failedResourceCount: number }> {
+async function downloadPageResources(getAccessToken: AccessTokenProvider, pageTitle: string, html: string): Promise<{ resources: DownloadedResource[]; failedResourceCount: number }> {
     const root = parse(html);
 
     const refs = new Map<string, Omit<DownloadedResource, "content">>();
@@ -420,7 +420,7 @@ async function downloadPageResources(accessToken: string, pageTitle: string, htm
     // practice dropped most images and left the note nearly empty. A failed download is skipped.
     const downloaded = await mapWithConcurrency(all, RESOURCE_DOWNLOAD_CONCURRENCY, async (ref) => {
         try {
-            const { content, contentType } = await graph.getResource(accessToken, ref.url);
+            const { content, contentType } = await graph.getResource(getAccessToken, ref.url);
             return { ...ref, mime: ref.mime || contentType, content };
         } catch (e: unknown) {
             getLog().error(`OneNote import: could not download resource ${sanitizeGraphUrl(ref.url)}: ${e instanceof Error ? e.message : e}`);

@@ -88,7 +88,7 @@ describe("importSelection (real DB)", () => {
         graphMock.getPageContent.mockResolvedValue({ html: "<p>hello</p>", inkml: "" });
 
         await cls.init(() => importSelection({
-            accessToken: "token",
+            getAccessToken: () => Promise.resolve("token"),
             parentNoteId: "root",
             sections: [{ id: "sec-1", title: "Section", groupPath: [], notebookId: "nb-1", notebookTitle: "Notebook" }],
             taskId: "task-page-id-label"
@@ -122,7 +122,7 @@ describe("importSelection (real DB)", () => {
         }).note);
 
         await cls.init(() => importSelection({
-            accessToken: "token",
+            getAccessToken: () => Promise.resolve("token"),
             parentNoteId: parent.noteId,
             sections: [{ id: "sec-2", title: "Report Section", groupPath: [], notebookId: "nb-2", notebookTitle: "Report Notebook" }],
             taskId: "task-report"
@@ -160,7 +160,7 @@ describe("importSelection (real DB)", () => {
         }).note);
 
         await cls.init(() => importSelection({
-            accessToken: "token",
+            getAccessToken: () => Promise.resolve("token"),
             parentNoteId: parent.noteId,
             sections: [{ id: "sec-3", title: "Ph Section", groupPath: [], notebookId: "nb-3", notebookTitle: "Ph Notebook" }],
             taskId: "task-placeholder"
@@ -203,7 +203,7 @@ describe("importSelection (real DB)", () => {
         }).note);
 
         await cls.init(() => importSelection({
-            accessToken: "token",
+            getAccessToken: () => Promise.resolve("token"),
             parentNoteId: parent.noteId,
             sections: [{ id: "sec-4", title: "CB Section", groupPath: [], notebookId: "nb-4", notebookTitle: "CB Notebook" }],
             taskId: "task-circuit-breaker"

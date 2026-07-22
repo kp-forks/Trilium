@@ -12,6 +12,14 @@ function graphResponse(status: number, body: string, headers?: Record<string, st
     return new Response(body, { status, headers }) as unknown as Awaited<ReturnType<typeof safeFetch>>;
 }
 
+/** The static token provider used by tests that don't exercise refresh. */
+const token = () => Promise.resolve("token");
+
+/** The Authorization header sent on the mocked safeFetch's `call`-th invocation. */
+function sentAuth(call: number): unknown {
+    return (safeFetchMock.mock.calls[call]?.[1]?.headers as Record<string, string> | undefined)?.Authorization;
+}
+
 describe("backoffDelayMs", () => {
     it("doubles the delay with each attempt", () => {
         expect(backoffDelayMs(0)).toBe(2000);
@@ -71,7 +79,7 @@ describe("throttling retries", () => {
             return calls <= 12 ? graphResponse(429, "") : graphResponse(200, JSON.stringify({ displayName: "Ada" }));
         });
 
-        const promise = getAccount("token");
+        const promise = getAccount(token);
         await vi.runAllTimersAsync();
 
         await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
@@ -83,7 +91,7 @@ describe("throttling retries", () => {
             .mockResolvedValueOnce(graphResponse(429, "", { "Retry-After": "120" }))
             .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
 
-        const promise = getAccount("token");
+        const promise = getAccount(token);
 
         // The plain exponential backoff for a first attempt is 2s; Retry-After must override it,
         // so just before the 120s mark the retry must not have fired yet.
@@ -103,7 +111,7 @@ describe("throttling retries", () => {
             return calls <= 3 ? graphResponse(429, "", { "Retry-After": "30" }) : graphResponse(200, JSON.stringify({ displayName: "Ada" }));
         });
 
-        const promise = getAccount("token");
+        const promise = getAccount(token);
         await vi.runAllTimersAsync();
         await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
 
@@ -115,11 +123,35 @@ describe("throttling retries", () => {
         expect(getThrottleStats()).toEqual({ requestCount: 0, waitMs: 0 });
     });
 
+    it("re-reads the access token before each attempt, so a refresh during the wait is picked up", async () => {
+        // The token provider hands back whatever `current` holds at call time — modelling a refresh
+        // that lands while a throttled request is waiting out its backoff.
+        let current = "old-token";
+        const rotating = () => Promise.resolve(current);
+        safeFetchMock
+            .mockResolvedValueOnce(graphResponse(429, "", { "Retry-After": "30" }))
+            .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
+
+        const promise = getAccount(rotating);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(safeFetchMock).toHaveBeenCalledTimes(1);
+        expect(sentAuth(0)).toBe("Bearer old-token");
+
+        current = "fresh-token";
+        await vi.advanceTimersByTimeAsync(30_000);
+        await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
+
+        // Without re-reading the provider the retry would resend the stale token and 401 forever; the
+        // whole point of the fix is that the second attempt carries the refreshed one.
+        expect(safeFetchMock).toHaveBeenCalledTimes(2);
+        expect(sentAuth(1)).toBe("Bearer fresh-token");
+    });
+
     it("gives up with the throttled response once the wait budget is exhausted", async () => {
         safeFetchMock.mockImplementation(async () =>
             graphResponse(429, JSON.stringify({ error: { code: "20166", message: "Too many requests" } })));
 
-        const promise = getAccount("token").catch((e: unknown) => e);
+        const promise = getAccount(token).catch((e: unknown) => e);
         await vi.runAllTimersAsync();
         const error = await promise;
 
@@ -154,7 +186,7 @@ describe("gateway timeout retries", () => {
             .mockResolvedValueOnce(graphResponse(504, ""))
             .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
 
-        const promise = getAccount("token");
+        const promise = getAccount(token);
         await vi.runAllTimersAsync();
 
         await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
@@ -168,7 +200,7 @@ describe("gateway timeout retries", () => {
             error: { code: "UnknownError", message: "Gateway timeout." }
         })));
 
-        const promise = getPageContent("token", "page-1").catch((e: unknown) => e);
+        const promise = getPageContent(token, "page-1").catch((e: unknown) => e);
         await vi.runAllTimersAsync();
         const error = await promise;
 
@@ -186,7 +218,7 @@ describe("gateway timeout retries", () => {
             .mockResolvedValueOnce(graphResponse(504, ""))
             .mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Ada" })));
 
-        const first = getAccount("token");
+        const first = getAccount(token);
         await vi.runAllTimersAsync();
         await expect(first).resolves.toEqual({ name: "Ada", email: "" });
 
@@ -194,7 +226,7 @@ describe("gateway timeout retries", () => {
         // immediately instead of waiting out a shared gate (no timer advancement beyond a microtask
         // flush).
         safeFetchMock.mockResolvedValueOnce(graphResponse(200, JSON.stringify({ displayName: "Bob" })));
-        const second = getAccount("token");
+        const second = getAccount(token);
         await vi.advanceTimersByTimeAsync(0);
         await expect(second).resolves.toEqual({ name: "Bob", email: "" });
         expect(safeFetchMock).toHaveBeenCalledTimes(3);
@@ -211,7 +243,7 @@ describe("failed Graph requests", () => {
             error: { code: "20102", message: "The specified resource ID does not exist." }
         })));
 
-        await expect(getPageContent("token", "page-1")).rejects.toThrow(
+        await expect(getPageContent(token, "page-1")).rejects.toThrow(
             "Failed to fetch OneNote page content (HTTP 404: 20102: The specified resource ID does not exist.) "
             + "from https://graph.microsoft.com/v1.0/me/onenote/pages/page-1/content?includeInkML=true"
         );
@@ -221,7 +253,7 @@ describe("failed Graph requests", () => {
         safeFetchMock.mockResolvedValue(graphResponse(500, "<html>Internal Server Error</html>"));
 
         const url = "https://graph.microsoft.com/v1.0/me/onenote/resources/res-1/$value";
-        await expect(getResource("token", url)).rejects.toThrow(
+        await expect(getResource(token, url)).rejects.toThrow(
             `Failed to fetch OneNote resource (HTTP 500) from ${url}`
         );
     });
@@ -231,7 +263,7 @@ describe("failed Graph requests", () => {
             error: { code: "AccessDenied", message: "Insufficient privileges." }
         })));
 
-        await expect(getAccount("token")).rejects.toThrow(
+        await expect(getAccount(token)).rejects.toThrow(
             "Microsoft Graph request failed (HTTP 403: AccessDenied: Insufficient privileges.) "
             + "from https://graph.microsoft.com/v1.0/me"
         );
@@ -247,7 +279,7 @@ describe("failed Graph requests", () => {
             })))
             .mockResolvedValueOnce(graphResponse(410, JSON.stringify({ error: { code: "Gone" } })));
 
-        await expect(listPages("token", "sec-1")).rejects.toThrow(
+        await expect(listPages(token, "sec-1")).rejects.toThrow(
             `Microsoft Graph request failed (HTTP 410: Gone) from ${nextLink}`
         );
     });
@@ -260,7 +292,7 @@ describe("failed Graph requests", () => {
         } as unknown as Awaited<ReturnType<typeof safeFetch>>);
 
         const url = "https://graph.microsoft.com/v1.0/me/onenote/resources/res-2/$value";
-        await expect(getResource("token", url)).rejects.toThrow(
+        await expect(getResource(token, url)).rejects.toThrow(
             `Failed to fetch OneNote resource (HTTP 502) from ${url}`
         );
     });

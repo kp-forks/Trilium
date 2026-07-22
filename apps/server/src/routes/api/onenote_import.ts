@@ -24,9 +24,10 @@ import type { Request } from "express";
 
 import { isInternalElectronRequest } from "../../services/electron_request.js";
 import { getDesktopSession, type OneNoteTokenSession, setDesktopSession } from "../../services/import/onenote/desktop_session.js";
-import graph from "../../services/import/onenote/graph.js";
+import graph, { type AccessTokenProvider } from "../../services/import/onenote/graph.js";
 import importer from "../../services/import/onenote/importer.js";
 import { ONENOTE_OAUTH } from "../../services/import/onenote/oauth.js";
+import { createGraphTokenProvider } from "../../services/import/onenote/token_provider.js";
 import oauth from "../../services/oauth/oauth.js";
 
 async function deviceLogin(req: Request): Promise<OneNoteDeviceLogin> {
@@ -71,7 +72,7 @@ async function devicePoll(req: Request): Promise<OneNoteDevicePollResult | [numb
             return { status: "pending" };
         }
 
-        const account = await graph.getAccount(result.tokens.access_token);
+        const account = await graph.getAccount(() => Promise.resolve(result.tokens.access_token));
         req.session.oneNoteImport = {
             accessToken: result.tokens.access_token,
             refreshToken: result.tokens.refresh_token,
@@ -100,16 +101,16 @@ async function disconnect(req: Request) {
 }
 
 async function getNotebooks(req: Request) {
-    const accessToken = await getValidAccessToken(req);
-    if (!accessToken) {
+    const getAccessToken = buildTokenProvider(req);
+    if (!(await isConnected(getAccessToken))) {
         return [401, "Not connected to OneNote."];
     }
-    return { notebooks: await graph.listNotebooks(accessToken) };
+    return { notebooks: await graph.listNotebooks(getAccessToken) };
 }
 
 async function runImport(req: Request) {
-    const accessToken = await getValidAccessToken(req);
-    if (!accessToken) {
+    const getAccessToken = buildTokenProvider(req);
+    if (!(await isConnected(getAccessToken))) {
         return [401, "Not connected to OneNote."];
     }
 
@@ -125,37 +126,35 @@ async function runImport(req: Request) {
     // Fire-and-forget: a large notebook can take far longer than the client's HTTP request timeout, so
     // we return immediately and let the import report progress, completion and any error over the
     // WebSocket (taskType "importNotes"). importSelection catches and reports its own failures, so the
-    // detached promise never rejects.
-    void importer.importSelection({ accessToken, parentNoteId, sections, taskId, debug: !!debug, shrinkImages: !!shrinkImages });
+    // detached promise never rejects. The token provider (not a fixed token) is handed off so the
+    // import keeps refreshing across its whole run, which can outlast a single Graph token.
+    void importer.importSelection({ getAccessToken, parentNoteId, sections, taskId, debug: !!debug, shrinkImages: !!shrinkImages });
     return {};
 }
 
-/** Returns a usable access token, transparently refreshing it when expired, or null if disconnected. */
-async function getValidAccessToken(req: Request): Promise<string | null> {
+/**
+ * Builds the token provider bound to this request's token store (session on web, the process-wide
+ * singleton on desktop). Returns a valid access token per call, refreshing and persisting as expiry
+ * nears; the importer re-reads it before every Graph request so a long import never runs on an expired
+ * token. See {@link createGraphTokenProvider}.
+ */
+function buildTokenProvider(req: Request): AccessTokenProvider {
     const store = tokenStore(req);
-    const session = store.read();
-    if (!session?.accessToken) {
-        return null;
-    }
+    return createGraphTokenProvider({
+        read: () => store.read(),
+        write: (tokens) => store.write(tokens),
+        refresh: (refreshToken) => oauth.refreshAccessToken(ONENOTE_OAUTH, { refreshToken })
+    });
+}
 
-    const stillValid = session.expiresAt && Date.now() < session.expiresAt - 60_000;
-    if (stillValid) {
-        return session.accessToken;
+/** True when the connection can currently produce an access token; false when disconnected/unrefreshable. */
+async function isConnected(getAccessToken: AccessTokenProvider): Promise<boolean> {
+    try {
+        await getAccessToken();
+        return true;
+    } catch {
+        return false;
     }
-
-    if (session.refreshToken) {
-        const tokens = await oauth.refreshAccessToken(ONENOTE_OAUTH, { refreshToken: session.refreshToken });
-        await store.write({
-            accessToken: tokens.access_token,
-            refreshToken: tokens.refresh_token ?? session.refreshToken,
-            expiresAt: Date.now() + tokens.expires_in * 1000
-        });
-        return tokens.access_token;
-    }
-
-    // Expired with no refresh token: force a clean reconnect rather than handing back a stale token
-    // that would fail mid-import with a confusing Graph 401.
-    return null;
 }
 
 interface TokenStore {

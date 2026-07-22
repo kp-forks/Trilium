@@ -13,6 +13,14 @@ import { extractPageId } from "./links.js";
 
 const GRAPH_BASE = "https://graph.microsoft.com/v1.0";
 
+/**
+ * Supplies a currently-valid access token, refreshing it as needed. The importer passes one of these
+ * rather than a fixed string so a long or heavily-throttled import — which outlives a single Graph
+ * token — keeps authenticating instead of 401ing once the token captured up front expires. It is
+ * re-read before every request attempt (see {@link graphFetch}), including after a throttle wait.
+ */
+export type AccessTokenProvider = () => Promise<string>;
+
 // safeFetch's default 5s timeout is too tight for the importer: page content and binary resources can
 // be large and slow. Allow a generous per-request budget instead.
 const GRAPH_TIMEOUT_MS = 60_000;
@@ -64,7 +72,7 @@ let throttleWaitMs = 0;
  * and gives up after {@link MAX_GATEWAY_TIMEOUT_RETRIES} attempts rather than drawing on the
  * hour-long throttle budget.
  */
-async function graphFetch(accessToken: string, url: string): Promise<Response> {
+async function graphFetch(getAccessToken: AccessTokenProvider, url: string): Promise<Response> {
     const giveUpAtMs = Date.now() + MAX_THROTTLE_WAIT_MS;
     let throttleAttempt = 0;
     let gatewayTimeoutRetry = 0;
@@ -74,6 +82,10 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
             await delay(gateWaitMs);
         }
 
+        // Resolved after the gate wait, per attempt: a token captured before an hour of throttling
+        // would already be expired by the time the request finally goes out. The provider hands back
+        // the cached token while it is valid and refreshes only as expiry nears.
+        const accessToken = await getAccessToken();
         const response = await safeFetch(url, {
             headers: { Authorization: `Bearer ${accessToken}` },
             signal: AbortSignal.timeout(GRAPH_TIMEOUT_MS)
@@ -175,8 +187,8 @@ export interface OneNotePage {
     pageId?: string;
 }
 
-export async function getAccount(accessToken: string): Promise<GraphAccount> {
-    const me = await graphGet<{ displayName?: string; mail?: string; userPrincipalName?: string }>(accessToken, "/me");
+export async function getAccount(getAccessToken: AccessTokenProvider): Promise<GraphAccount> {
+    const me = await graphGet<{ displayName?: string; mail?: string; userPrincipalName?: string }>(getAccessToken, "/me");
     return {
         name: me.displayName ?? me.userPrincipalName ?? "Unknown",
         email: me.mail ?? me.userPrincipalName ?? ""
@@ -193,9 +205,9 @@ export async function getAccount(accessToken: string): Promise<GraphAccount> {
  * section groups follow their `sectionGroupsUrl`, and those follow-up requests run in parallel —
  * section groups nest arbitrarily and the notebooks endpoint won't $expand them more than one level.
  */
-export async function listNotebooks(accessToken: string): Promise<OneNoteNotebook[]> {
+export async function listNotebooks(getAccessToken: AccessTokenProvider): Promise<OneNoteNotebook[]> {
     const url = "/me/onenote/notebooks?$select=id,displayName,createdDateTime,lastModifiedDateTime,sectionGroupsUrl&$expand=sections($select=id,displayName,createdDateTime,lastModifiedDateTime),sectionGroups($select=id)&$orderby=displayName";
-    const notebooks = await graphGetAll<RawNotebook>(accessToken, url);
+    const notebooks = await graphGetAll<RawNotebook>(getAccessToken, url);
 
     return Promise.all(
         notebooks.map(async (notebook) => ({
@@ -204,7 +216,7 @@ export async function listNotebooks(accessToken: string): Promise<OneNoteNoteboo
             createdDateTime: notebook.createdDateTime,
             lastModifiedDateTime: notebook.lastModifiedDateTime,
             sections: mapSections(notebook.sections),
-            sectionGroups: notebook.sectionGroups?.length && notebook.sectionGroupsUrl ? await fetchSectionGroups(accessToken, notebook.sectionGroupsUrl) : []
+            sectionGroups: notebook.sectionGroups?.length && notebook.sectionGroupsUrl ? await fetchSectionGroups(getAccessToken, notebook.sectionGroupsUrl) : []
         }))
     );
 }
@@ -214,9 +226,9 @@ export async function listNotebooks(accessToken: string): Promise<OneNoteNoteboo
  * each group carrying its own sections and nested groups. Sibling groups are fetched in parallel, and a
  * further round-trip happens only for groups that actually have nested groups.
  */
-async function fetchSectionGroups(accessToken: string, sectionGroupsUrl: string): Promise<OneNoteSectionGroup[]> {
+async function fetchSectionGroups(getAccessToken: AccessTokenProvider, sectionGroupsUrl: string): Promise<OneNoteSectionGroup[]> {
     const url = appendQuery(sectionGroupsUrl, "$select=id,displayName,createdDateTime,lastModifiedDateTime,sectionGroupsUrl&$expand=sections($select=id,displayName,createdDateTime,lastModifiedDateTime),sectionGroups($select=id)");
-    const groups = await graphGetAll<RawSectionGroup>(accessToken, url);
+    const groups = await graphGetAll<RawSectionGroup>(getAccessToken, url);
 
     return Promise.all(
         groups.map(async (group) => ({
@@ -225,7 +237,7 @@ async function fetchSectionGroups(accessToken: string, sectionGroupsUrl: string)
             createdDateTime: group.createdDateTime,
             lastModifiedDateTime: group.lastModifiedDateTime,
             sections: mapSections(group.sections),
-            sectionGroups: group.sectionGroups?.length && group.sectionGroupsUrl ? await fetchSectionGroups(accessToken, group.sectionGroupsUrl) : []
+            sectionGroups: group.sectionGroups?.length && group.sectionGroupsUrl ? await fetchSectionGroups(getAccessToken, group.sectionGroupsUrl) : []
         }))
     );
 }
@@ -238,11 +250,11 @@ function appendQuery(url: string, query: string): string {
     return url.includes("?") ? `${url}&${query}` : `${url}?${query}`;
 }
 
-export async function listPages(accessToken: string, sectionId: string): Promise<OneNotePage[]> {
+export async function listPages(getAccessToken: AccessTokenProvider, sectionId: string): Promise<OneNotePage[]> {
     // `links` carries the page's own `onenote:` client URL, from which we recover the page-id GUID that
     // cross-page links reference (see links.ts).
     const url = `/me/onenote/sections/${sectionId}/pages?$select=id,title,createdDateTime,lastModifiedDateTime,level,links&$orderby=order&pagelevel=true`;
-    const raw = await graphGetAll<RawPage>(accessToken, url);
+    const raw = await graphGetAll<RawPage>(getAccessToken, url);
     return raw.map((p) => ({
         id: p.id,
         title: p.title || "Untitled",
@@ -262,9 +274,9 @@ export async function listPages(accessToken: string, sectionId: string): Promise
  * `application/inkml+xml` part), which parsePageContent splits apart. Pages without ink may still come
  * back as plain HTML, which the parser handles by returning the whole body as `html`.
  */
-export async function getPageContent(accessToken: string, pageId: string): Promise<{ html: string; inkml: string }> {
+export async function getPageContent(getAccessToken: AccessTokenProvider, pageId: string): Promise<{ html: string; inkml: string }> {
     const url = `${GRAPH_BASE}/me/onenote/pages/${pageId}/content?includeInkML=true`;
-    const response = await graphFetch(accessToken, url);
+    const response = await graphFetch(getAccessToken, url);
     if (!response.ok) {
         throw await graphRequestError("Failed to fetch OneNote page content", url, response);
     }
@@ -307,8 +319,8 @@ export function parsePageContent(raw: string): { html: string; inkml: string } {
  * absolute Graph `…/resources/{id}/$value` link, so it is fetched directly rather than relative to the
  * API base. Returns the raw bytes plus the server-reported content type.
  */
-export async function getResource(accessToken: string, url: string): Promise<{ content: Uint8Array; contentType: string }> {
-    const response = await graphFetch(accessToken, url);
+export async function getResource(getAccessToken: AccessTokenProvider, url: string): Promise<{ content: Uint8Array; contentType: string }> {
+    const response = await graphFetch(getAccessToken, url);
     if (!response.ok) {
         throw await graphRequestError("Failed to fetch OneNote resource", url, response);
     }
@@ -356,9 +368,9 @@ interface RawPage {
     links?: { oneNoteClientUrl?: { href?: string } };
 }
 
-async function graphGet<T>(accessToken: string, path: string): Promise<T> {
+async function graphGet<T>(getAccessToken: AccessTokenProvider, path: string): Promise<T> {
     const url = `${GRAPH_BASE}${path}`;
-    const response = await graphFetch(accessToken, url);
+    const response = await graphFetch(getAccessToken, url);
     if (!response.ok) {
         throw await graphRequestError("Microsoft Graph request failed", url, response);
     }
@@ -366,12 +378,12 @@ async function graphGet<T>(accessToken: string, path: string): Promise<T> {
 }
 
 /** GETs a Graph collection endpoint, following @odata.nextLink pagination. */
-async function graphGetAll<T>(accessToken: string, pathOrUrl: string): Promise<T[]> {
+async function graphGetAll<T>(getAccessToken: AccessTokenProvider, pathOrUrl: string): Promise<T[]> {
     const results: T[] = [];
     let next: string | null = pathOrUrl.startsWith("http") ? pathOrUrl : `${GRAPH_BASE}${pathOrUrl}`;
 
     while (next) {
-        const response: Response = await graphFetch(accessToken, next);
+        const response: Response = await graphFetch(getAccessToken, next);
         if (!response.ok) {
             // `next` rather than `pathOrUrl`: on a paginated collection the failing request may be a
             // follow-up @odata.nextLink, not the original URL.
