@@ -1,4 +1,4 @@
-import { becca, cls } from "@triliumnext/core";
+import { becca, cls, note_service as noteService } from "@triliumnext/core";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import sqlInit from "../../sql_init.js";
@@ -11,7 +11,9 @@ vi.mock("./graph.js", () => ({
         listNotebooks: vi.fn(),
         listPages: vi.fn(),
         getPageContent: vi.fn(),
-        getResource: vi.fn()
+        getResource: vi.fn(),
+        getThrottleStats: vi.fn(() => ({ requestCount: 0, waitMs: 0 })),
+        resetThrottleStats: vi.fn()
     }
 }));
 
@@ -102,5 +104,37 @@ describe("importSelection (real DB)", () => {
         // Container notes (section, notebook) are not OneNote pages and must not carry the label.
         const sectionNote = Object.values(becca.notes).find((note) => note.title === "Section");
         expect(sectionNote?.getOwnedLabelValue("oneNotePageId")).toBeNull();
+    });
+
+    it("writes an import report as the root import note's content", async () => {
+        graphMock.listPages.mockResolvedValue([
+            { id: "1-abc", title: "Report Page One", level: 0 },
+            { id: "1-def", title: "Report Page Two", level: 0 }
+        ]);
+        graphMock.getPageContent.mockResolvedValue({ html: "<p>hello</p>", inkml: "" });
+
+        const parent = cls.init(() => noteService.createNewNote({
+            parentNoteId: "root",
+            title: "report parent",
+            content: "",
+            type: "text",
+            mime: "text/html"
+        }).note);
+
+        await cls.init(() => importSelection({
+            accessToken: "token",
+            parentNoteId: parent.noteId,
+            sections: [{ id: "sec-2", title: "Report Section", groupPath: [], notebookId: "nb-2", notebookTitle: "Report Notebook" }],
+            taskId: "task-report"
+        }));
+
+        const rootImportNote = parent.getChildNotes()[0];
+        const content = rootImportNote?.getContent() as string;
+        expect(content).toContain('<tr><th scope="row">Pages imported successfully</th><td>2/2 (100%)</td></tr>');
+        expect(content).toContain('<tr><th scope="row">Sections imported</th><td>1</td></tr>');
+        // Nothing failed and no optional stats apply (no images, ink, links, or throttling), so the
+        // happy-path report stays a compact summary table without failure sections or extra rows.
+        expect(content).not.toContain("could not be");
+        expect(content).not.toContain("Images");
     });
 });

@@ -15,6 +15,7 @@ import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
 import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
+import { type ImportReportData, renderImportReport } from "./report.js";
 
 interface FetchedPage {
     /**
@@ -37,6 +38,8 @@ interface FetchedPage {
     inkSvg: string | null;
     /** Binary resources (images, file attachments) referenced by the page, downloaded up front. */
     resources: DownloadedResource[];
+    /** How many of the page's resources failed to download (skipped, reported in the import report). */
+    failedResourceCount: number;
     /** OneNote's page creation timestamp (ISO 8601), preserved on the imported note. */
     createdDateTime?: string;
     /** OneNote's last-modified timestamp (ISO 8601), preserved on the imported note. */
@@ -73,6 +76,8 @@ interface FetchedSection {
  */
 export async function importSelection({ accessToken, parentNoteId, sections, taskId, debug = false, shrinkImages = false }: { accessToken: string; parentNoteId: string; sections: OneNoteSectionSelection[]; taskId: string; debug?: boolean; shrinkImages?: boolean }): Promise<void> {
     const taskContext = TaskContext.getInstance(taskId, "importNotes", { safeImport: true, shrinkImages });
+    const startedAtMs = Date.now();
+    graph.resetThrottleStats();
 
     try {
         // Phase 1: pull everything over the network first, so note creation can run in a single
@@ -92,8 +97,8 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
             for (const page of pages) {
                 const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
                 const html = converter.convertPageHtml(rawHtml);
-                const resources = await downloadPageResources(accessToken, page.title, html);
-                fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                const { resources, failedResourceCount } = await downloadPageResources(accessToken, page.title, html);
+                fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
                 taskContext.increaseProgressCount();
             }
             fetched.push({
@@ -110,7 +115,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
         }
 
         // Phase 2: create the note tree.
-        const rootNoteId = sql.transactional(() => createNotes(parentNoteId, fetched, debug, shrinkImages));
+        const rootNoteId = sql.transactional(() => createNotes(parentNoteId, fetched, debug, shrinkImages, startedAtMs));
 
         taskContext.taskSucceeded({ parentNoteId, importedNoteId: rootNoteId });
     } catch (e: unknown) {
@@ -119,7 +124,7 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
     }
 }
 
-function createNotes(parentNoteId: string, sections: FetchedSection[], debug: boolean, shrinkImages: boolean): string {
+function createNotes(parentNoteId: string, sections: FetchedSection[], debug: boolean, shrinkImages: boolean, startedAtMs: number): string {
     const parentNote = becca.getNoteOrThrow(parentNoteId);
     const isProtected = parentNote.isProtected && protectedSession.isProtectedSessionAvailable();
 
@@ -221,8 +226,18 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
 
     // Second pass: now that every page has a note, resolve cross-page `onenote:` links and persist the
     // final content. Done once per page (rather than re-saving for resources, then again for links).
+    let resolvedLinkCount = 0;
+    let unresolvedLinkCount = 0;
     for (const { note, original, content, page } of createdPages) {
-        const finalContent = rewritePageLinks(content, (pageId) => targetByPageId.get(pageId) ?? null);
+        const finalContent = rewritePageLinks(content, (pageId) => {
+            const target = targetByPageId.get(pageId) ?? null;
+            if (target) {
+                resolvedLinkCount++;
+            } else {
+                unresolvedLinkCount++;
+            }
+            return target;
+        });
         if (finalContent !== original) {
             note.setContent(finalContent);
             void noteService.asyncPostProcessContent(note, finalContent);
@@ -233,7 +248,46 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
         applyOriginalDates(note, page.createdDateTime, page.lastModifiedDateTime);
     }
 
+    // Finally, document the import's outcome as the root note's content — the task toast is ephemeral,
+    // and for a multi-hour import the user has likely walked away by the time it finishes.
+    const allPages = createdPages.map(({ note, page }) => ({ note, page }));
+    const throttleStats = graph.getThrottleStats();
+    const reportData: ImportReportData = {
+        importedPageCount: createdPages.length,
+        notebookCount: new Set(sections.map((section) => section.notebookId)).size,
+        sectionCount: sections.length,
+        durationMs: Date.now() - startedAtMs,
+        imageCount: sumResources(allPages, "image", () => 1),
+        imageBytes: sumResources(allPages, "image", (resource) => resource.content.length),
+        attachmentCount: sumResources(allPages, "file", () => 1),
+        attachmentBytes: sumResources(allPages, "file", (resource) => resource.content.length),
+        inkPageCount: allPages.filter(({ page }) => page.inkSvg !== null).length,
+        resolvedLinkCount,
+        unresolvedLinkCount,
+        throttledRequestCount: throttleStats.requestCount,
+        throttleWaitMs: throttleStats.waitMs,
+        // Filled in once fetch failures skip the page instead of aborting the import.
+        failedPages: [],
+        failedResources: allPages
+            .filter(({ page }) => page.failedResourceCount > 0)
+            .map(({ note, page }) => ({ pageTitle: page.title, pageNoteId: note.noteId, failedCount: page.failedResourceCount }))
+    };
+    rootNote.setContent(renderImportReport(reportData));
+
     return rootNote.noteId;
+}
+
+/** Totals `value` over every downloaded page resource of the given kind. */
+function sumResources(pages: { page: FetchedPage }[], kind: DownloadedResource["kind"], value: (resource: DownloadedResource) => number): number {
+    let sum = 0;
+    for (const { page } of pages) {
+        for (const resource of page.resources) {
+            if (resource.kind === kind) {
+                sum += value(resource);
+            }
+        }
+    }
+    return sum;
 }
 
 /**
@@ -293,7 +347,7 @@ function renderInkFigure(note: BNote, svg: string, shrinkImages: boolean): strin
  * downloads each once. Failures are logged and skipped so one missing resource doesn't abort the whole
  * import; the reference is simply left untouched.
  */
-async function downloadPageResources(accessToken: string, pageTitle: string, html: string): Promise<DownloadedResource[]> {
+async function downloadPageResources(accessToken: string, pageTitle: string, html: string): Promise<{ resources: DownloadedResource[]; failedResourceCount: number }> {
     const root = parse(html);
 
     const refs = new Map<string, Omit<DownloadedResource, "content">>();
@@ -312,7 +366,7 @@ async function downloadPageResources(accessToken: string, pageTitle: string, htm
     }
 
     if (refs.size === 0) {
-        return [];
+        return { resources: [], failedResourceCount: 0 };
     }
 
     const all = Array.from(refs.values());
@@ -337,7 +391,7 @@ async function downloadPageResources(accessToken: string, pageTitle: string, htm
     const failed = all.length - resources.length;
     const totalBytes = resources.reduce((sum, resource) => sum + resource.content.length, 0);
     getLog().info(`OneNote import: page '${pageTitle}' downloaded ${resources.length}/${all.length} resource(s) (${Math.round(totalBytes / 1024)} KiB)${failed > 0 ? `; ${failed} failed and were skipped` : ""}`);
-    return resources;
+    return { resources, failedResourceCount: failed };
 }
 
 /**

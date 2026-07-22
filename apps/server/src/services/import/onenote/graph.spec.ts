@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../../safe_fetch.js", () => ({ safeFetch: vi.fn() }));
 
 import { safeFetch } from "../../safe_fetch.js";
-import { backoffDelayMs, extractGraphErrorDetail, getAccount, getPageContent, getResource, listPages, resetThrottleGate, retryAfterMs } from "./graph.js";
+import { backoffDelayMs, extractGraphErrorDetail, getAccount, getPageContent, getResource, getThrottleStats, listPages, resetThrottleGate, resetThrottleStats, retryAfterMs } from "./graph.js";
 
 const safeFetchMock = vi.mocked(safeFetch);
 
@@ -93,6 +93,26 @@ describe("throttling retries", () => {
         await vi.advanceTimersByTimeAsync(1_000);
         await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
         expect(safeFetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("accumulates throttle statistics for the import report", async () => {
+        resetThrottleStats();
+        let calls = 0;
+        safeFetchMock.mockImplementation(async () => {
+            calls++;
+            return calls <= 3 ? graphResponse(429, "", { "Retry-After": "30" }) : graphResponse(200, JSON.stringify({ displayName: "Ada" }));
+        });
+
+        const promise = getAccount("token");
+        await vi.runAllTimersAsync();
+        await expect(promise).resolves.toEqual({ name: "Ada", email: "" });
+
+        // Three throttled responses, each pushing the shared gate 30s past "now" — the accumulated
+        // wait reflects wall-clock time spent throttled (gate extensions), not a per-request sum.
+        expect(getThrottleStats()).toEqual({ requestCount: 3, waitMs: 90_000 });
+
+        resetThrottleStats();
+        expect(getThrottleStats()).toEqual({ requestCount: 0, waitMs: 0 });
     });
 
     it("gives up with the throttled response once the wait budget is exhausted", async () => {

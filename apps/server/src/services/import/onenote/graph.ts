@@ -42,6 +42,13 @@ const MAX_GATEWAY_TIMEOUT_RETRIES = 5;
 // "don't send until" timestamp that ALL requests wait on, so the whole pool backs off together.
 let throttledUntilMs = 0;
 
+// Aggregate throttle statistics for the current import, surfaced in the import report (they answer
+// "why did this take hours?"). `requestCount` counts throttled (429/503) responses; `waitMs`
+// accumulates net extensions of the shared gate — wall-clock time spent waiting out throttles —
+// rather than a per-request sum, since concurrent requests wait on the same gate window.
+let throttledRequestCount = 0;
+let throttleWaitMs = 0;
+
 /**
  * Fetches a Microsoft Graph URL through {@link safeFetch} so the request is hardened against SSRF —
  * pagination (`@odata.nextLink`) and resource URLs come from Graph responses and page HTML, so they
@@ -102,6 +109,8 @@ async function graphFetch(accessToken: string, url: string): Promise<Response> {
 
         // Extend the shared gate (Math.max: simultaneous 429s converge on one window rather than
         // stacking). The wait itself happens at the top of the next iteration, shared across the pool.
+        throttledRequestCount++;
+        throttleWaitMs += Math.max(0, Date.now() + waitMs - Math.max(throttledUntilMs, Date.now()));
         throttledUntilMs = Math.max(throttledUntilMs, Date.now() + waitMs);
         throttleAttempt++;
         getLog().info(`OneNote import: Graph throttled (HTTP ${response.status}) on ${url}; retry ${throttleAttempt} after ${waitMs}ms (${Math.round((giveUpAtMs - Date.now()) / 60_000)}min of wait budget left)`);
@@ -133,6 +142,17 @@ export function retryAfterMs(header: string | null): number | null {
 /** Resets the shared throttle gate; exported for tests only. */
 export function resetThrottleGate(): void {
     throttledUntilMs = 0;
+}
+
+/** Returns the throttle statistics accumulated since the last {@link resetThrottleStats}. */
+export function getThrottleStats(): { requestCount: number; waitMs: number } {
+    return { requestCount: throttledRequestCount, waitMs: throttleWaitMs };
+}
+
+/** Resets the throttle statistics; called at the start of an import so its report covers only itself. */
+export function resetThrottleStats(): void {
+    throttledRequestCount = 0;
+    throttleWaitMs = 0;
 }
 
 function delay(ms: number): Promise<void> {
@@ -399,5 +419,7 @@ export default {
     listNotebooks,
     listPages,
     getPageContent,
-    getResource
+    getResource,
+    getThrottleStats,
+    resetThrottleStats
 };
