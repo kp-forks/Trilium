@@ -379,16 +379,23 @@
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "x3i7MxGccDuM",
+                                            "value": "fiHicjpHjIRJ",
                                             "isInheritable": false,
                                             "position": 20
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "swSFivWk6KkA",
+                                            "value": "x3i7MxGccDuM",
                                             "isInheritable": false,
                                             "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "swSFivWk6KkA",
+                                            "isInheritable": false,
+                                            "position": 40
                                         },
                                         {
                                             "type": "label",
@@ -491,37 +498,58 @@
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "MtPxeAWVAzMg",
+                                            "value": "poXkQfguuA0U",
                                             "isInheritable": false,
                                             "position": 10
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "cbkrhQjrkKrh",
+                                            "value": "pgxEVkzLl1OP",
                                             "isInheritable": false,
                                             "position": 20
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "WOcw2SLH6tbX",
+                                            "value": "nRqcgfTb97uV",
                                             "isInheritable": false,
                                             "position": 30
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "nRqcgfTb97uV",
+                                            "value": "MtPxeAWVAzMg",
                                             "isInheritable": false,
                                             "position": 40
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "Gzjqa934BdH4",
+                                            "value": "GBBMSlVSOIGP",
                                             "isInheritable": false,
                                             "position": 50
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "R9pX4DGra2Vt",
+                                            "isInheritable": false,
+                                            "position": 60
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "cbkrhQjrkKrh",
+                                            "isInheritable": false,
+                                            "position": 70
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "WOcw2SLH6tbX",
+                                            "isInheritable": false,
+                                            "position": 80
                                         },
                                         {
                                             "type": "label",
@@ -1573,30 +1601,37 @@
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "Gzjqa934BdH4",
+                                            "value": "IgkTHSaFfq6A",
                                             "isInheritable": false,
                                             "position": 20
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "4TIF1oA4VQRO",
+                                            "value": "Gzjqa934BdH4",
                                             "isInheritable": false,
                                             "position": 30
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "vcjrb3VVYPZI",
+                                            "value": "4TIF1oA4VQRO",
                                             "isInheritable": false,
                                             "position": 40
                                         },
                                         {
                                             "type": "relation",
                                             "name": "internalLink",
-                                            "value": "ud6MShXL4WpO",
+                                            "value": "vcjrb3VVYPZI",
                                             "isInheritable": false,
                                             "position": 50
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "ud6MShXL4WpO",
+                                            "isInheritable": false,
+                                            "position": 60
                                         },
                                         {
                                             "type": "label",
@@ -1615,7 +1650,46 @@
                                     ],
                                     "format": "markdown",
                                     "dataFileName": "Signing in with OpenID Connect.md",
-                                    "attachments": []
+                                    "attachments": [],
+                                    "dirFileName": "Signing in with OpenID Connect",
+                                    "children": [
+                                        {
+                                            "isClone": false,
+                                            "noteId": "IgkTHSaFfq6A",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "Otzi9La2YAUX",
+                                                "WOcw2SLH6tbX",
+                                                "x1lQNKQBqLcA",
+                                                "IgkTHSaFfq6A"
+                                            ],
+                                            "title": "Setting up with various providers",
+                                            "notePosition": 10,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "x1lQNKQBqLcA",
+                                                    "isInheritable": false,
+                                                    "position": 10
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "setup",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Setting up with various providers.md",
+                                            "attachments": []
+                                        }
+                                    ]
                                 },
                                 {
                                     "isClone": false,
@@ -7393,6 +7467,20 @@
                                                     "value": "bx bx-window-open",
                                                     "isInheritable": false,
                                                     "position": 20
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "HI6GBBIduIgv",
+                                                    "isInheritable": false,
+                                                    "position": 90
+                                                },
+                                                {
+                                                    "type": "relation",
+                                                    "name": "internalLink",
+                                                    "value": "eIg8jdvaoNNd",
+                                                    "isInheritable": false,
+                                                    "position": 100
                                                 }
                                             ],
                                             "format": "markdown",
@@ -11572,6 +11660,20 @@
                                             "position": 20
                                         },
                                         {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "i16PM6A7GXdU",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        },
+                                        {
+                                            "type": "relation",
+                                            "name": "internalLink",
+                                            "value": "CtBQqbwXDx1w",
+                                            "isInheritable": false,
+                                            "position": 40
+                                        },
+                                        {
                                             "type": "label",
                                             "name": "iconClass",
                                             "value": "bx bx-checkbox-checked",
@@ -11584,20 +11686,6 @@
                                             "value": "todo-lists",
                                             "isInheritable": false,
                                             "position": 40
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "i16PM6A7GXdU",
-                                            "isInheritable": false,
-                                            "position": 50
-                                        },
-                                        {
-                                            "type": "relation",
-                                            "name": "internalLink",
-                                            "value": "CtBQqbwXDx1w",
-                                            "isInheritable": false,
-                                            "position": 60
                                         }
                                     ],
                                     "format": "markdown",
@@ -17794,6 +17882,13 @@
                                     "position": 10
                                 },
                                 {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "x1lQNKQBqLcA",
+                                    "isInheritable": false,
+                                    "position": 20
+                                },
+                                {
                                     "type": "label",
                                     "name": "shareAlias",
                                     "value": "configuration",
@@ -21309,23 +21404,37 @@
                                 {
                                     "type": "relation",
                                     "name": "internalLink",
-                                    "value": "4TIF1oA4VQRO",
+                                    "value": "swSFivWk6KkA",
                                     "isInheritable": false,
                                     "position": 30
                                 },
                                 {
                                     "type": "relation",
                                     "name": "internalLink",
-                                    "value": "tAassRL4RSQL",
+                                    "value": "poXkQfguuA0U",
                                     "isInheritable": false,
                                     "position": 40
                                 },
                                 {
                                     "type": "relation",
                                     "name": "internalLink",
-                                    "value": "Gzjqa934BdH4",
+                                    "value": "4TIF1oA4VQRO",
                                     "isInheritable": false,
                                     "position": 50
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "tAassRL4RSQL",
+                                    "isInheritable": false,
+                                    "position": 60
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "Gzjqa934BdH4",
+                                    "isInheritable": false,
+                                    "position": 70
                                 },
                                 {
                                     "type": "label",
