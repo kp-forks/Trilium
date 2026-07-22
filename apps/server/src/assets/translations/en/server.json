@@ -330,6 +330,7 @@
   },
   "onenote_import": {
     "root-title": "OneNote import",
+    "failed-page-placeholder": "This page could not be imported from OneNote. Error: {{error}}",
     "report": {
       "row-pages": "Pages imported successfully",
       "row-notebooks": "Notebooks imported",

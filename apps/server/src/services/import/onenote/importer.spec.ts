@@ -137,4 +137,81 @@ describe("importSelection (real DB)", () => {
         expect(content).not.toContain("could not be");
         expect(content).not.toContain("Images");
     });
+
+    it("imports a placeholder note when a page's content cannot be fetched, keeping the tree intact", async () => {
+        graphMock.listPages.mockResolvedValue([
+            { id: "1-good", title: "Ph Good", level: 0 },
+            { id: "1-bad", title: "Ph Bad", level: 0 },
+            { id: "1-sub", title: "Ph Sub", level: 1 }
+        ]);
+        graphMock.getPageContent.mockImplementation(async (_token, pageId) => {
+            if (pageId === "1-bad") {
+                throw new Error("Failed to fetch OneNote page content (HTTP 504)");
+            }
+            return { html: "<p>ok</p>", inkml: "" };
+        });
+
+        const parent = cls.init(() => noteService.createNewNote({
+            parentNoteId: "root",
+            title: "placeholder parent",
+            content: "",
+            type: "text",
+            mime: "text/html"
+        }).note);
+
+        await cls.init(() => importSelection({
+            accessToken: "token",
+            parentNoteId: parent.noteId,
+            sections: [{ id: "sec-3", title: "Ph Section", groupPath: [], notebookId: "nb-3", notebookTitle: "Ph Notebook" }],
+            taskId: "task-placeholder"
+        }));
+
+        // The failed page becomes a placeholder note: findable by label, explains itself, and keeps
+        // the page id so a later retry pass can re-fetch it.
+        const badNote = Object.values(becca.notes).find((note) => note.title === "Ph Bad");
+        expect(badNote?.hasOwnedLabel("oneNoteImportFailed")).toBe(true);
+        expect(badNote?.getOwnedLabelValue("oneNotePageId")).toBe("1-bad");
+        expect(badNote?.getContent()).toContain("could not be imported");
+        expect(badNote?.getContent()).toContain("HTTP 504");
+
+        // Subpage nesting resolves by index, so the placeholder must hold its parent spot in the tree.
+        const subNote = Object.values(becca.notes).find((note) => note.title === "Ph Sub");
+        expect(subNote?.getParentNotes()[0]?.noteId).toBe(badNote?.noteId);
+
+        // The report counts the loss and links to the placeholder.
+        const content = parent.getChildNotes()[0]?.getContent() as string;
+        expect(content).toContain('<tr><th scope="row">Pages imported successfully</th><td>2/3 (66%)</td></tr>');
+        expect(content).toContain("Pages that could not be imported");
+        expect(content).toContain(`href="#root/${badNote?.noteId}"`);
+    });
+
+    it("aborts the import when too many consecutive pages fail (systemic failure)", async () => {
+        graphMock.listPages.mockResolvedValue(
+            Array.from({ length: 8 }, (_, i) => ({ id: `1-cb${i}`, title: `CB Page ${i}`, level: 0 }))
+        );
+        graphMock.getPageContent.mockClear();
+        graphMock.getPageContent.mockImplementation(async () => {
+            throw new Error("Failed to fetch OneNote page content (HTTP 504)");
+        });
+
+        const parent = cls.init(() => noteService.createNewNote({
+            parentNoteId: "root",
+            title: "circuit breaker parent",
+            content: "",
+            type: "text",
+            mime: "text/html"
+        }).note);
+
+        await cls.init(() => importSelection({
+            accessToken: "token",
+            parentNoteId: parent.noteId,
+            sections: [{ id: "sec-4", title: "CB Section", groupPath: [], notebookId: "nb-4", notebookTitle: "CB Notebook" }],
+            taskId: "task-circuit-breaker"
+        }));
+
+        // Six consecutive failures trip the breaker: the remaining pages are never fetched and the
+        // import aborts without creating any notes (a placeholder-only tree would be worthless).
+        expect(graphMock.getPageContent).toHaveBeenCalledTimes(6);
+        expect(parent.getChildNotes()).toHaveLength(0);
+    });
 });

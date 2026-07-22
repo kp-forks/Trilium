@@ -15,7 +15,7 @@ import converter, { ONENOTE_ATTACHMENT_CLASS } from "./converter.js";
 import graph, { type OneNotePage } from "./graph.js";
 import { inkmlToSvg } from "./inkml.js";
 import { type LinkTarget, rewritePageLinks } from "./links.js";
-import { type ImportReportData, renderImportReport } from "./report.js";
+import { type FailedPageReport, type ImportReportData, renderImportReport } from "./report.js";
 
 interface FetchedPage {
     /**
@@ -44,7 +44,20 @@ interface FetchedPage {
     createdDateTime?: string;
     /** OneNote's last-modified timestamp (ISO 8601), preserved on the imported note. */
     lastModifiedDateTime?: string;
+    /**
+     * Set when the page's content could not be fetched (after retries). The page is imported as a
+     * placeholder note carrying this error instead of aborting the whole import: one poisoned page
+     * must not cost the user hours of already-fetched work.
+     */
+    fetchError?: string;
 }
+
+/**
+ * Aborts the import once this many pages in a row fail to fetch. A streak this long means the
+ * failure is systemic (expired token, service outage) rather than page-specific, and failing fast
+ * beats producing a tree of nothing but placeholders. Mirrors the Obsidian importer's threshold.
+ */
+const MAX_CONSECUTIVE_PAGE_FAILURES = 5;
 
 interface DownloadedResource {
     /** The Graph resource URL as it still appears in the converted HTML; used to match references. */
@@ -92,13 +105,25 @@ export async function importSelection({ accessToken, parentNoteId, sections, tas
         taskContext.setTotalCount(sectionPages.reduce((total, entry) => total + entry.pages.length, 0));
 
         const fetched: FetchedSection[] = [];
+        let consecutivePageFailures = 0;
         for (const { section, pages } of sectionPages) {
             const fetchedPages: FetchedPage[] = [];
             for (const page of pages) {
-                const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
-                const html = converter.convertPageHtml(rawHtml);
-                const { resources, failedResourceCount } = await downloadPageResources(accessToken, page.title, html);
-                fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                try {
+                    const { html: rawHtml, inkml } = await graph.getPageContent(accessToken, page.id);
+                    const html = converter.convertPageHtml(rawHtml);
+                    const { resources, failedResourceCount } = await downloadPageResources(accessToken, page.title, html);
+                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                    consecutivePageFailures = 0;
+                } catch (e: unknown) {
+                    consecutivePageFailures++;
+                    const message = e instanceof Error ? e.message : String(e);
+                    getLog().error(`OneNote import: could not fetch page '${page.title}' (${page.id}); a placeholder note will be imported instead: ${message}`);
+                    if (consecutivePageFailures > MAX_CONSECUTIVE_PAGE_FAILURES) {
+                        throw new Error(`Aborting the OneNote import: ${consecutivePageFailures} pages in a row failed to fetch, which points to a systemic problem rather than individual broken pages. Last error: ${message}`);
+                    }
+                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html: "", rawHtml: "", rawInkml: "", inkSvg: null, resources: [], failedResourceCount: 0, fetchError: message, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                }
                 taskContext.increaseProgressCount();
             }
             fetched.push({
@@ -138,6 +163,7 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
     // page's OneNote page-id GUID to its imported note (and title) — both feed the link-resolution pass.
     const createdPages: { note: BNote; original: string; content: string; page: FetchedPage }[] = [];
     const targetByPageId = new Map<string, LinkTarget>();
+    const failedPages: FailedPageReport[] = [];
 
     // Recreate the OneNote hierarchy as folder notes: a folder per notebook, then a folder per section
     // group on the path down to the section, then the section itself. Folders are keyed by their OneNote
@@ -178,13 +204,27 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
             const { note: pageNote } = noteService.createNewNote({
                 parentNoteId: parentIndex >= 0 ? (pageNoteIds[parentIndex] ?? sectionNote.noteId) : sectionNote.noteId,
                 title: page.title,
-                content: page.html,
+                content: page.fetchError === undefined ? page.html : renderFailedPagePlaceholder(page.fetchError),
                 type: "text",
                 mime: "text/html",
                 isProtected
             });
             pageNoteIds[index] = pageNote.noteId;
             pageNote.addLabel("oneNotePageId", page.id);
+            if (page.pageId) {
+                // Registered for placeholders too, so other pages' links to a failed page resolve to it.
+                targetByPageId.set(page.pageId, { noteId: pageNote.noteId, title: page.title });
+            }
+
+            if (page.fetchError !== undefined) {
+                // A placeholder rather than a gap: it holds the page's spot in the tree (subpages
+                // resolve their parent by index), keeps the OneNote timestamps, and is findable by
+                // label. The dates are applied here because placeholders skip the second pass below.
+                pageNote.addLabel("oneNoteImportFailed");
+                failedPages.push({ title: page.title, sectionTitle: section.title, noteId: pageNote.noteId, error: page.fetchError });
+                applyOriginalDates(pageNote, page.createdDateTime, page.lastModifiedDateTime);
+                continue;
+            }
 
             // Resources and ink both need the page note to exist (attachments hang off it), so build
             // the per-page content now: swap Graph URLs for local attachment references, then append
@@ -199,9 +239,6 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
             }
 
             createdPages.push({ note: pageNote, original: page.html, content, page });
-            if (page.pageId) {
-                targetByPageId.set(page.pageId, { noteId: pageNote.noteId, title: page.title });
-            }
 
             // Debug aid: keep the unmodified Graph HTML (and InkML, when present) alongside the
             // converted note so the two can be compared when diagnosing conversion issues.
@@ -266,8 +303,7 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
         unresolvedLinkCount,
         throttledRequestCount: throttleStats.requestCount,
         throttleWaitMs: throttleStats.waitMs,
-        // Filled in once fetch failures skip the page instead of aborting the import.
-        failedPages: [],
+        failedPages,
         failedResources: allPages
             .filter(({ page }) => page.failedResourceCount > 0)
             .map(({ note, page }) => ({ pageTitle: page.title, pageNoteId: note.noteId, failedCount: page.failedResourceCount }))
@@ -275,6 +311,11 @@ function createNotes(parentNoteId: string, sections: FetchedSection[], debug: bo
     rootNote.setContent(renderImportReport(reportData));
 
     return rootNote.noteId;
+}
+
+/** The body of a placeholder note standing in for a page whose content could not be fetched. */
+function renderFailedPagePlaceholder(error: string): string {
+    return `<p>${t("onenote_import.failed-page-placeholder", { error })}</p>`;
 }
 
 /** Totals `value` over every downloaded page resource of the given kind. */
