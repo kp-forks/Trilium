@@ -133,7 +133,9 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
         onHidden();
     }
 
-    const title = isEdit ? t("llm.edit_provider_title") : t("llm.add_provider_title");
+    const title = isEdit
+        ? t("llm.edit_provider_title", { name: existingProvider?.name ?? providerType?.name ?? selectedProvider })
+        : t("llm.add_provider_title");
     const primaryLabel = step === 1
         ? t("llm.next")
         : isEdit ? t("llm.save") : t("llm.add_provider");

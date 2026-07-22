@@ -3138,7 +3138,7 @@
     "feature_not_enabled": "Enable the LLM experimental feature in Settings → Advanced → Experimental features to use AI integrations.",
     "add_provider": "Add Provider",
     "add_provider_title": "Add AI Provider",
-    "edit_provider_title": "Edit AI Provider",
+    "edit_provider_title": "Edit {{name}}",
     "edit_provider": "Edit",
     "next": "Next",
     "back": "Back",
