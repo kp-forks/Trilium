@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
-import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteContainer, type OneNoteNotebook, orderedChildren } from "../../../services/onenote_import.js";
+import onenoteImport, { buildSectionSelections, type OneNoteAccount, type OneNoteContainer, type OneNoteDeviceLogin, type OneNoteNotebook, orderedChildren } from "../../../services/onenote_import.js";
 import toast from "../../../services/toast.js";
 import { isElectron, randomString } from "../../../services/utils.js";
 import Button from "../../react/Button.js";
@@ -24,6 +24,8 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
     const [debug, setDebug] = useState(false);
     const [compressImages] = useTriliumOptionBool("compressImages");
     const [shrinkImages, setShrinkImages] = useState(compressImages);
+    // Set while a web (device-flow) sign-in is pending; null on desktop, whose sign-in needs no code.
+    const [deviceLogin, setDeviceLogin] = useState<OneNoteDeviceLogin | null>(null);
     const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const stopPolling = useCallback(() => {
@@ -80,30 +82,44 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
                 return;
             }
 
-            const { authUrl } = await onenoteImport.getAuthUrl();
-            window.open(authUrl, "_blank", "noopener,noreferrer");
-
+            // Web uses the device flow: a self-hosted server's domain cannot be registered as an OAuth
+            // redirect URI, so instead of a callback the user enters a short code at Microsoft's
+            // sign-in page while we poll the server until the sign-in completes.
+            const login = await onenoteImport.deviceLogin();
+            setDeviceLogin(login);
             setPhase("connecting");
             stopPolling();
             pollRef.current = setInterval(async () => {
                 try {
-                    const status = await onenoteImport.getStatus();
-                    if (status.connected) {
+                    const result = await onenoteImport.devicePoll();
+                    if (result.status === "connected") {
                         stopPolling();
-                        setAccount(status.account);
+                        setDeviceLogin(null);
+                        setAccount(result.account);
                         await loadNotebooks();
                         setPhase("ready");
+                    } else if (result.status === "failed") {
+                        stopPolling();
+                        setDeviceLogin(null);
+                        toast.showError(result.error);
+                        setPhase("disconnected");
                     }
                 } catch (e) {
                     // A transient poll failure shouldn't surface a toast on every tick; keep polling.
-                    console.error("Failed to poll OneNote status:", e);
+                    console.error("Failed to poll OneNote sign-in:", e);
                 }
-            }, 2000);
+            }, (login.intervalSeconds || 5) * 1000);
         } catch (e) {
             toast.showError(e instanceof Error ? e.message : String(e));
             setPhase("disconnected");
         }
     }, [loadNotebooks, stopPolling]);
+
+    const cancelSignIn = useCallback(() => {
+        stopPolling();
+        setDeviceLogin(null);
+        setPhase("disconnected");
+    }, [stopPolling]);
 
     const disconnect = useCallback(async () => {
         stopPolling();
@@ -179,9 +195,26 @@ function OneNotePanel({ parentNoteId, closeDialog, setFooter }: ImportProviderPa
             <Card heading={t("onenote_import.section_heading")}>
                 <CardSection className="onenote-panel">
                     <p>{t("onenote_import.connect_description")}</p>
-                    {phase === "connecting"
-                        ? <p className="onenote-status"><LoadingSpinner /> {t("onenote_import.connecting")}</p>
-                        : <Button text={t("onenote_import.connect")} kind="primary" icon="bxl-microsoft" onClick={connect} />}
+                    {phase === "connecting" && deviceLogin
+                        ? (
+                            <div className="onenote-device-signin">
+                                <p>{t("onenote_import.device_instructions")}</p>
+                                <div className="onenote-device-code">{deviceLogin.userCode}</div>
+                                <div className="onenote-device-actions">
+                                    <Button
+                                        text={t("onenote_import.device_open_page")}
+                                        kind="primary"
+                                        icon="bx-link-external"
+                                        onClick={() => window.open(deviceLogin.verificationUri, "_blank", "noopener,noreferrer")}
+                                    />
+                                    <Button text={t("onenote_import.device_cancel")} kind="lowProfile" onClick={cancelSignIn} />
+                                </div>
+                                <p className="onenote-status"><LoadingSpinner /> {t("onenote_import.connecting")}</p>
+                            </div>
+                        )
+                        : phase === "connecting"
+                            ? <p className="onenote-status"><LoadingSpinner /> {t("onenote_import.connecting")}</p>
+                            : <Button text={t("onenote_import.connect")} kind="primary" icon="bxl-microsoft" onClick={connect} />}
                 </CardSection>
             </Card>
         );
