@@ -19180,13 +19180,6 @@
                         {
                             "type": "relation",
                             "name": "internalLink",
-                            "value": "6f9hih2hXXZk",
-                            "isInheritable": false,
-                            "position": 10
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
                             "value": "MgibgPcfeuGz",
                             "isInheritable": false,
                             "position": 20
@@ -19323,6 +19316,13 @@
                             "value": "bx bx-bot",
                             "isInheritable": false,
                             "position": 30
+                        },
+                        {
+                            "type": "relation",
+                            "name": "internalLink",
+                            "value": "6f9hih2hXXZk",
+                            "isInheritable": false,
+                            "position": 200
                         }
                     ],
                     "format": "markdown",

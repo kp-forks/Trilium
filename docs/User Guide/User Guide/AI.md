@@ -1,20 +1,4 @@
 # AI
-## History
-
-### Removal in v0.102.0
-
-Starting with version v0.102.0, AI/LLM integration has been removed from the Trilium Notes core.
-
-While a significant amount of effort went into developing this feature, maintaining and supporting it long-term proved to be unsustainable.
-
-When upgrading to v0.102.0, your Chat notes will be preserved, but instead of the dedicated chat window they will be turned to a normal <a class="reference-link" href="Note%20Types/Code.md">Code</a> note, revealing the underlying JSON of the conversation.
-
-### Reintroduction in v0.103.0
-
-Given the recent advancements of the AI scene, we decided to give the LLM integration another try. v0.103.0 introduces a completely new chat system.
-
-One of the key changes that lead to the reimplementation is that now we are using a library ([Vercel AI](https://github.com/vercel/ai)) to manage the inner mechanism and the differences between LLM providers instead of having to implement it on our own.
-
 ## Feature highlights
 
 *   Chat-based interface with live streaming of the messages.
@@ -114,6 +98,12 @@ Unlike the sidebar, the AI will not be aware of the current note it's in.
 ### Templates
 
 Chat notes can be set as <a class="reference-link" href="Advanced%20Usage/Templates.md">Templates</a> to make them easily reusable. The entire conversation history is kept, allowing a basic form of specialization for the LLM with the existing chat acting like a system prompt. 
+
+### Model selection
+
+When a provider is configured in <a class="reference-link" href="Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a>, the next step is to select the models that will be available for the chat.
+
+The models are retrieved dynamically from the provider, only when the model selection list is visible. To alter the list of models, simply press the Edit button in the model selection box.
 
 ## Features
 
@@ -236,3 +226,19 @@ The following are alternatives to Trilium's built-in MCP feature. Since Trilium'
 
 > [!IMPORTANT]
 > These solutions are third-party and thus not endorsed or supported directly by the Trilium Notes team. Please address questions and issues on their corresponding repository instead.
+
+## History
+
+### Removal in v0.102.0
+
+Starting with version v0.102.0, AI/LLM integration has been removed from the Trilium Notes core.
+
+While a significant amount of effort went into developing this feature, maintaining and supporting it long-term proved to be unsustainable.
+
+When upgrading to v0.102.0, your Chat notes will be preserved, but instead of the dedicated chat window they will be turned to a normal <a class="reference-link" href="Note%20Types/Code.md">Code</a> note, revealing the underlying JSON of the conversation.
+
+### Reintroduction in v0.103.0
+
+Given the recent advancements of the AI scene, we decided to give the LLM integration another try. v0.103.0 introduces a completely new chat system.
+
+One of the key changes that lead to the reimplementation is that now we are using a library ([Vercel AI](https://github.com/vercel/ai)) to manage the inner mechanism and the differences between LLM providers instead of having to implement it on our own.
