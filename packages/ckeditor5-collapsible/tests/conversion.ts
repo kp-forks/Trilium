@@ -74,8 +74,9 @@ describe("CollapsibleEditing conversion", () => {
             const root = editor.editing.view.getDomRoot();
             const selector = "details.trilium-collapsible";
             const detailsBefore = root?.querySelector<HTMLDetailsElement>(selector);
-            // Simulate the user opening the block: flip `open` and fire the native
-            // `toggle` the plugin listens for (the arrow's click handler does the same).
+            // Simulate a toggle the plugin didn't originate (the browser expanding a
+            // block to reveal a find-in-page match): flip `open` and fire the native
+            // `toggle` event, which the plugin adopts into the model.
             if (detailsBefore) {
                 detailsBefore.open = true;
                 detailsBefore.dispatchEvent(new Event("toggle"));
