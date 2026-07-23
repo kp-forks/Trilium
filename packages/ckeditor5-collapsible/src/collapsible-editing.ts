@@ -3,7 +3,7 @@ import { formatShortcut, joinShortcut } from "@triliumnext/commons";
 import { ContentHintManager, type HintHandle } from "@triliumnext/ckeditor5-utils";
 import BlockDragHandle from "./block-drag-handle.js";
 import CollapsibleCommand from "./collapsible-command.js";
-import { OPEN_ATTRIBUTE } from "./constants.js";
+import { OPEN_ATTRIBUTE, TRANSIENT_OPEN_ATTRIBUTE } from "./constants.js";
 
 type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 
@@ -111,6 +111,14 @@ export default class CollapsibleEditing extends Plugin {
     private handleHintManager?: ContentHintManager;
     /** Hover-driven handle per rendered drag-handle. Disposed when the handle detaches. */
     private readonly handleHoverHandles = new Map<HTMLElement, HintHandle>();
+    /**
+     * Collapsed <details> currently force-opened to reveal a find-in-note match.
+     * This is transient editing-view state only: it never touches the model, so
+     * it produces no `change:data`, no autosave, and no revision — searching must
+     * not rewrite the open/closed layout the user saved. A block is held here only
+     * while the find highlight sits inside it and is released the moment it leaves.
+     */
+    private readonly findRevealed = new Set<any>();
 
     public init(): void {
         this.editor.commands.add("collapsible", new CollapsibleCommand(this.editor));
@@ -138,6 +146,7 @@ export default class CollapsibleEditing extends Plugin {
         this.registerClickHandler();
         this.registerDomListeners();
         this.registerPostFixers();
+        this.registerFindReveal();
         // Global user preference: skip all content-hint wiring when off. The
         // rest of `init()` (schema, key handlers, drag, post-fixers) stays
         // intact — hints are additive UX, not a load-bearing feature. Missing
@@ -170,6 +179,7 @@ export default class CollapsibleEditing extends Plugin {
         this.handleHoverHandles.clear();
         this.handleHintManager?.destroy();
         this.handleHintManager = undefined;
+        this.findRevealed.clear();
         this.dragHandle?.cancel();
         super.destroy();
     }
@@ -248,7 +258,15 @@ export default class CollapsibleEditing extends Plugin {
                 // itself restores it — a post-render fix-up can't, because the view's
                 // "render" event fires *before* the DOM is reconciled.
                 const attributes: Record<string, string> = { class: "trilium-collapsible" };
-                if (modelElement.getAttribute(OPEN_ATTRIBUTE)) attributes.open = "";
+                if (modelElement.getAttribute(OPEN_ATTRIBUTE)) {
+                    attributes.open = "";
+                } else if (this.findRevealed.has(modelElement)) {
+                    // Force-open for a find match, without a persisted `open`. Tag it
+                    // so this "opened only by search" state is styleable and can be
+                    // stripped again cleanly when the highlight moves on.
+                    attributes.open = "";
+                    attributes[TRANSIENT_OPEN_ATTRIBUTE] = "";
+                }
                 const details = writer.createContainerElement("details", attributes);
                 writer.insert(
                     writer.createPositionAt(details, 0),
@@ -843,7 +861,80 @@ export default class CollapsibleEditing extends Plugin {
         // Adopt a state the model doesn't know about yet. Toggles that originated
         // from the model land here too and are absorbed by setDetailsOpen's guard.
         const detailsModel = this.detailsFromDom(detailsDom);
-        if (detailsModel) this.setDetailsOpen(detailsModel, detailsDom.open);
+        if (!detailsModel) return;
+        // A find-reveal drives this block's `open` transiently in the editing view
+        // only — adopting it into the (persisted) model would let a search rewrite
+        // the saved open/closed layout, so leave the model alone here.
+        if (this.findRevealed.has(detailsModel)) return;
+        this.setDetailsOpen(detailsModel, detailsDom.open);
+    }
+
+    // -----------------------------------------------------------------
+    // Find-in-note reveal (transient, editing-view only)
+    // -----------------------------------------------------------------
+
+    /**
+     * Follow the find-and-replace highlight: when it lands inside a collapsed
+     * block, open that block (and any collapsed ancestors) just enough to show
+     * the match; re-collapse the moment the highlight leaves. Purely editing-view
+     * state — see {@link findRevealed}. No-op when the editor has no find plugin.
+     */
+    private registerFindReveal() {
+        if (!this.editor.plugins.has("FindAndReplaceEditing")) return;
+        const findEditing: any = this.editor.plugins.get("FindAndReplaceEditing");
+        const state = findEditing?.state;
+        if (!state?.on) return;
+        this.listenTo(state, "change:highlightedResult", (_evt: any, _name: any, highlighted: any) => {
+            this.syncFindReveal(highlighted);
+        });
+    }
+
+    /**
+     * Reconcile {@link findRevealed} with the block(s) the current highlight sits
+     * in. Ancestors newly holding the highlight get revealed; blocks that no
+     * longer hold it are re-collapsed. A `null` highlight (search cleared/closed)
+     * collapses everything.
+     */
+    private syncFindReveal(highlighted: any) {
+        const wanted = new Set<any>();
+        for (let node = highlighted?.marker?.getStart?.()?.parent; node; node = node.parent) {
+            // A persisted-open block is already visible — nothing transient to do.
+            if (node.is?.("element", "details") && !this.isDetailsOpen(node)) {
+                wanted.add(node);
+            }
+        }
+
+        for (const details of this.findRevealed) {
+            if (!wanted.has(details)) {
+                this.findRevealed.delete(details);
+                this.applyFindReveal(details, false);
+            }
+        }
+        for (const details of wanted) {
+            if (!this.findRevealed.has(details)) {
+                this.findRevealed.add(details);
+                this.applyFindReveal(details, true);
+            }
+        }
+    }
+
+    /** Add or strip the transient `open` (and its CSS marker) on the editing view. */
+    private applyFindReveal(details: any, reveal: boolean) {
+        const viewElement = this.editor.editing.mapper.toViewElement(details);
+        if (!viewElement) return;
+        this.editor.editing.view.change((writer: any) => {
+            if (reveal) {
+                writer.setAttribute(OPEN_ATTRIBUTE, "", viewElement);
+                writer.setAttribute(TRANSIENT_OPEN_ATTRIBUTE, "", viewElement);
+            } else {
+                // If the user genuinely toggled it open mid-search, leave it open;
+                // only the transient marker is ours to remove.
+                if (!this.isDetailsOpen(details)) {
+                    writer.removeAttribute(OPEN_ATTRIBUTE, viewElement);
+                }
+                writer.removeAttribute(TRANSIENT_OPEN_ATTRIBUTE, viewElement);
+            }
+        });
     }
 
     // -----------------------------------------------------------------
