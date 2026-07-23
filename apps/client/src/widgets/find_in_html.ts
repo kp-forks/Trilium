@@ -85,8 +85,22 @@ export default class FindInHtml {
         if (this.$results?.length) {
             const $current = this.$results.eq(this.currentIndex);
             this.$results.removeClass(FIND_RESULT_SELECTED_CSS_CLASSNAME);
+            // Reveal matches inside collapsed <details>, like native find-in-page.
+            // Must precede scrollIntoView so the target is laid out first.
+            expandAncestorDetails($current[0]);
             $current[0].scrollIntoView({ block: 'center', inline: 'center'});
             $current.addClass(FIND_RESULT_SELECTED_CSS_CLASSNAME);
         }
+    }
+}
+
+/** Open every collapsed `<details>` ancestor of `el` so a match inside it becomes visible. */
+export function expandAncestorDetails(el: HTMLElement) {
+    let details = el.closest("details");
+    while (details) {
+        if (!details.open) {
+            details.open = true;
+        }
+        details = details.parentElement?.closest("details") ?? null;
     }
 }
