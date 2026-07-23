@@ -11,3 +11,12 @@
  * importing `collapsible-editing.ts`, which imports the command back.
  */
 export const OPEN_ATTRIBUTE = "open";
+
+/**
+ * Editing-view-only marker set on a `<details>` that is force-opened purely to
+ * reveal a find-in-note match ("transient open"). It is never downcast to the
+ * data view, so it stays out of the saved HTML — it exists only as a CSS hook to
+ * style a block that search opened versus one the user opened. Removed as soon as
+ * the highlight leaves the block.
+ */
+export const TRANSIENT_OPEN_ATTRIBUTE = "data-tn-collapsible-temporary-open";

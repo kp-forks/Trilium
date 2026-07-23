@@ -12,6 +12,7 @@ import NoteContext, { NoteContextDataMap } from "../../components/note_context";
 import FBlob from "../../entities/fblob";
 import FNote from "../../entities/fnote";
 import attributes from "../../services/attributes";
+import { expandAncestorDetails } from "../../services/collapsible";
 import froca from "../../services/froca";
 import { t } from "../../services/i18n";
 import keyboard_actions from "../../services/keyboard_actions";
@@ -1259,7 +1260,12 @@ export function useImperativeSearchHighlighlighting(highlightedTokens: string[] 
         mark.current.unmark();
         mark.current.markRegExp(highlightRegex, {
             element: "span",
-            className: "ck-find-result"
+            className: "ck-find-result",
+            // Reveal matches that landed inside collapsed <details> blocks — they
+            // are highlighted in the DOM but hidden until the block is expanded.
+            done: () => {
+                el.querySelectorAll<HTMLElement>(".ck-find-result").forEach(expandAncestorDetails);
+            }
         });
     };
 }

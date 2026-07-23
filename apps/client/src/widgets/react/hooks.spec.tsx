@@ -4,7 +4,7 @@ import { useRef } from "preact/hooks";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { type DelayedVisibilityPhase, useDelayedVisibility, useStaticTooltip } from "./hooks";
+import { type DelayedVisibilityPhase, useDelayedVisibility, useImperativeSearchHighlighlighting, useStaticTooltip } from "./hooks";
 
 let currentPhase: DelayedVisibilityPhase | undefined;
 
@@ -124,5 +124,69 @@ describe("useStaticTooltip", () => {
         await act(async () => render(<TooltipHarness generation={2} />, container));
 
         expect(document.querySelector(".tooltip")).toBeNull();
+    });
+});
+
+describe("useImperativeSearchHighlighlighting", () => {
+    let container: HTMLElement;
+    let highlight: ((el: HTMLElement | null | undefined) => void) | undefined;
+
+    function Probe({ tokens }: { tokens: string[] | null | undefined }) {
+        highlight = useImperativeSearchHighlighlighting(tokens);
+        return null;
+    }
+
+    beforeEach(() => {
+        container = document.createElement("div");
+        document.body.appendChild(container);
+    });
+
+    afterEach(() => {
+        render(null, container);
+        container.remove();
+        highlight = undefined;
+    });
+
+    async function mount(tokens: string[] | null | undefined) {
+        await act(async () => render(<Probe tokens={tokens} />, container));
+    }
+
+    function content(html: string): HTMLElement {
+        const el = document.createElement("div");
+        el.innerHTML = html;
+        document.body.appendChild(el);
+        return el;
+    }
+
+    it("highlights matches and opens the collapsed <details> that contains them", async () => {
+        await mount([ "needle" ]);
+        const target = content("<details><summary>t</summary><p>a needle here</p></details>");
+
+        highlight?.(target);
+
+        expect(target.querySelectorAll(".ck-find-result").length).toBeGreaterThan(0);
+        expect(target.querySelector("details")?.open).toBe(true);
+        target.remove();
+    });
+
+    it("leaves a collapsed block closed when it holds no match", async () => {
+        await mount([ "needle" ]);
+        const target = content("<details><summary>t</summary><p>nothing relevant</p></details>");
+
+        highlight?.(target);
+
+        expect(target.querySelector("details")?.open).toBe(false);
+        target.remove();
+    });
+
+    it("does nothing without tokens", async () => {
+        await mount([]);
+        const target = content("<details><summary>t</summary><p>needle</p></details>");
+
+        highlight?.(target);
+
+        expect(target.querySelectorAll(".ck-find-result").length).toBe(0);
+        expect(target.querySelector("details")?.open).toBe(false);
+        target.remove();
     });
 });
