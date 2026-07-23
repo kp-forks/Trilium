@@ -8,6 +8,17 @@ vi.mock("@triliumnext/core", async (importOriginal) => {
     };
 });
 
+const createOpenAiMock = vi.fn();
+
+vi.mock("@ai-sdk/openai", () => ({
+    createOpenAI: (opts: unknown) => {
+        createOpenAiMock(opts);
+        const fn: any = () => ({});
+        fn.chat = vi.fn((modelId: string) => ({ modelId }));
+        return fn;
+    }
+}));
+
 import { OllamaProvider } from "./ollama.js";
 
 /** Minimal /api/tags payload with the fields the provider reads. */
@@ -32,6 +43,7 @@ describe("OllamaProvider", () => {
 
     beforeEach(() => {
         fetchMock.mockReset();
+        createOpenAiMock.mockClear();
         vi.stubGlobal("fetch", fetchMock);
     });
 
@@ -40,101 +52,143 @@ describe("OllamaProvider", () => {
         vi.useRealTimers();
     });
 
-    it("loads models with display names built from size and quantization", async () => {
-        fetchMock.mockResolvedValue(tagsResponse([
-            { name: "llama3.2:latest", parameter_size: "3.2B", quantization_level: "Q4_K_M" },
-            { name: "plain-model" }
-        ]));
+    describe("construction", () => {
+        it("points the OpenAI-compatible client at the instance's /v1 endpoint", () => {
+            new OllamaProvider("", "http://ollama.lan:11434");
+            expect(createOpenAiMock).toHaveBeenCalledWith({ apiKey: "ollama", baseURL: "http://ollama.lan:11434/v1" });
+        });
 
-        const provider = new OllamaProvider();
-        const models = await provider.loadModels();
+        it("defaults to the local instance and strips trailing slashes", () => {
+            new OllamaProvider();
+            expect(createOpenAiMock).toHaveBeenLastCalledWith({ apiKey: "ollama", baseURL: "http://localhost:11434/v1" });
 
-        expect(fetchMock).toHaveBeenCalledWith("http://localhost:11434/api/tags", expect.anything());
-        expect(models.map(m => m.name)).toEqual([
-            "llama3.2:latest (3.2B, Q4_K_M)",
-            "plain-model"
-        ]);
-        // Local models are free and the first one is the default.
-        expect(models[0].isDefault).toBe(true);
-        expect(models[0].pricing).toEqual({ input: 0, output: 0 });
+            new OllamaProvider("", "http://ollama.lan:11434///");
+            expect(createOpenAiMock).toHaveBeenLastCalledWith({ apiKey: "ollama", baseURL: "http://ollama.lan:11434/v1" });
+        });
+
+        it("falls back to the default base URL for invalid or non-http URLs", () => {
+            new OllamaProvider("", "ftp://example.com");
+            expect(createOpenAiMock).toHaveBeenLastCalledWith({ apiKey: "ollama", baseURL: "http://localhost:11434/v1" });
+
+            new OllamaProvider("", "not a url");
+            expect(createOpenAiMock).toHaveBeenLastCalledWith({ apiKey: "ollama", baseURL: "http://localhost:11434/v1" });
+        });
+
+        it("chats through the Chat Completions API, which every Ollama version supports", () => {
+            const provider = new OllamaProvider() as any;
+            expect(provider.createModel("llama3.2")).toEqual({ modelId: "llama3.2" });
+        });
     });
 
-    it("caches the model list within the TTL and refetches after it expires", async () => {
-        vi.useFakeTimers();
-        fetchMock.mockResolvedValue(tagsResponse([{ name: "m1" }]));
+    describe("listModels", () => {
+        it("lists the installed models with names built from size and quantization", async () => {
+            fetchMock.mockResolvedValue(tagsResponse([
+                { name: "llama3.2:latest", parameter_size: "3.2B", quantization_level: "Q4_K_M" },
+                { name: "plain-model" }
+            ]));
 
-        const provider = new OllamaProvider();
-        await provider.loadModels();
-        await provider.loadModels();
-        expect(fetchMock).toHaveBeenCalledTimes(1);
+            const models = await new OllamaProvider().listModels();
 
-        vi.advanceTimersByTime(61_000);
-        await provider.loadModels();
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+            expect(fetchMock).toHaveBeenCalledWith("http://localhost:11434/api/tags", expect.anything());
+            expect(models.map(m => m.name)).toEqual([
+                "llama3.2:latest (3.2B, Q4_K_M)",
+                "plain-model"
+            ]);
+            // Models run on the user's own hardware, so they are free; the first
+            // one stands in as the default since Ollama has no notion of one.
+            expect(models[0].isDefault).toBe(true);
+            expect(models.map(m => m.pricing)).toEqual([{ input: 0, output: 0 }, { input: 0, output: 0 }]);
+        });
+
+        it("caches the model list within the TTL and refetches after it expires", async () => {
+            vi.useFakeTimers();
+            fetchMock.mockResolvedValue(tagsResponse([{ name: "m1" }]));
+
+            const provider = new OllamaProvider();
+            await provider.listModels();
+            await provider.listModels();
+            expect(fetchMock).toHaveBeenCalledTimes(1);
+
+            vi.advanceTimersByTime(61 * 60 * 1000);
+            await provider.listModels();
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        });
+
+        it("does not cache an empty model list, so a first-use setup can recover", async () => {
+            fetchMock.mockResolvedValue(tagsResponse([]));
+            const provider = new OllamaProvider();
+            await expect(provider.listModels()).resolves.toEqual([]);
+
+            // Models get pulled in Ollama, the next call must refetch.
+            fetchMock.mockResolvedValue(tagsResponse([{ name: "fresh" }]));
+            const models = await provider.listModels();
+            expect(models.map(m => m.id)).toEqual(["fresh"]);
+            expect(fetchMock).toHaveBeenCalledTimes(2);
+        });
+
+        it("surfaces an unreachable instance instead of masking it as an empty list", async () => {
+            fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
+            await expect(new OllamaProvider().listModels()).rejects.toThrow(/ECONNREFUSED/);
+        });
+
+        it("rejects a malformed /api/tags response", async () => {
+            fetchMock.mockResolvedValue({ ok: true, json: async () => ({ error: "boom" }) } as Response);
+            await expect(new OllamaProvider().listModels()).rejects.toThrow(/Unexpected \/api\/tags response shape/);
+        });
+
+        it("rejects when the instance responds with an error status", async () => {
+            fetchMock.mockResolvedValue({ ok: false, status: 500 } as Response);
+            await expect(new OllamaProvider().listModels()).rejects.toThrow(/HTTP 500/);
+        });
     });
 
-    it("does not cache an empty model list, so a first-use setup can recover", async () => {
-        fetchMock.mockResolvedValue(tagsResponse([]));
-        const provider = new OllamaProvider();
-        await expect(provider.loadModels()).resolves.toEqual([]);
+    describe("model defaults", () => {
+        it("chats with the first model and writes titles with a small one", async () => {
+            fetchMock.mockResolvedValue(tagsResponse([
+                { name: "big-model", parameter_size: "70B" },
+                { name: "small-model", parameter_size: "3B" }
+            ]));
 
-        // Models get pulled in Ollama, the next call must refetch.
-        fetchMock.mockResolvedValue(tagsResponse([{ name: "fresh" }]));
-        const models = await provider.loadModels();
-        expect(models).toHaveLength(1);
-        expect(fetchMock).toHaveBeenCalledTimes(2);
+            const provider = new OllamaProvider();
+            await provider.listModels();
+            // Both are protected — observable only through the models the base
+            // class picks, so assert through the internal fields.
+            const internals = provider as unknown as { defaultModel: string; titleModel: string };
+            expect(internals.defaultModel).toBe("big-model");
+            expect(internals.titleModel).toBe("small-model");
+        });
+
+        it("falls back to a name-shaped small model, then to the default model", async () => {
+            fetchMock.mockResolvedValue(tagsResponse([
+                { name: "big-model", parameter_size: "70B" },
+                { name: "phi-something" }
+            ]));
+            const byName = new OllamaProvider();
+            await byName.listModels();
+            expect((byName as unknown as { titleModel: string }).titleModel).toBe("phi-something");
+
+            fetchMock.mockResolvedValue(tagsResponse([{ name: "only-big", parameter_size: "70B" }]));
+            const onlyBig = new OllamaProvider();
+            await onlyBig.listModels();
+            expect((onlyBig as unknown as { titleModel: string }).titleModel).toBe("only-big");
+        });
+
+        it("resolves the title model before generating a title", async () => {
+            fetchMock.mockResolvedValue(tagsResponse([{ name: "tiny", parameter_size: "1B" }]));
+            const provider = new OllamaProvider();
+            const generateTitle = vi.spyOn(
+                Object.getPrototypeOf(Object.getPrototypeOf(provider)) as { generateTitle: () => Promise<string> },
+                "generateTitle"
+            ).mockResolvedValue("A title");
+
+            await expect(provider.generateTitle("Hello")).resolves.toBe("A title");
+            expect(fetchMock).toHaveBeenCalledWith("http://localhost:11434/api/tags", expect.anything());
+            expect((provider as unknown as { titleModel: string }).titleModel).toBe("tiny");
+            generateTitle.mockRestore();
+        });
     });
 
-    it("keeps the previous model list when the instance is unreachable", async () => {
-        vi.useFakeTimers();
-        fetchMock.mockResolvedValue(tagsResponse([{ name: "m1" }]));
-        const provider = new OllamaProvider();
-        await provider.loadModels();
-
-        vi.advanceTimersByTime(61_000);
-        fetchMock.mockRejectedValue(new Error("ECONNREFUSED"));
-        const models = await provider.loadModels();
-        expect(models.map(m => m.id)).toEqual(["m1"]);
-    });
-
-    it("returns the current list on a malformed /api/tags response", async () => {
-        fetchMock.mockResolvedValue({ ok: true, json: async () => ({ error: "boom" }) } as Response);
-        const provider = new OllamaProvider();
-        await expect(provider.loadModels()).resolves.toEqual([]);
-    });
-
-    it("returns the current list when the instance responds with an error status", async () => {
-        fetchMock.mockResolvedValue({ ok: false, status: 500 } as Response);
-        const provider = new OllamaProvider();
-        await expect(provider.loadModels()).resolves.toEqual([]);
-    });
-
-    it("falls back to the default base URL for invalid or non-http URLs", async () => {
-        fetchMock.mockResolvedValue(tagsResponse([]));
-
-        await new OllamaProvider("ftp://example.com").loadModels();
-        expect(fetchMock).toHaveBeenLastCalledWith("http://localhost:11434/api/tags", expect.anything());
-
-        await new OllamaProvider("not a url").loadModels();
-        expect(fetchMock).toHaveBeenLastCalledWith("http://localhost:11434/api/tags", expect.anything());
-    });
-
-    it("strips trailing slashes from a valid base URL", async () => {
-        fetchMock.mockResolvedValue(tagsResponse([]));
-        await new OllamaProvider("http://ollama.lan:11434///").loadModels();
-        expect(fetchMock).toHaveBeenLastCalledWith("http://ollama.lan:11434/api/tags", expect.anything());
-    });
-
-    it("prefers a small model for title generation", async () => {
-        fetchMock.mockResolvedValue(tagsResponse([
-            { name: "big-model", parameter_size: "70B" },
-            { name: "small-model", parameter_size: "3B" }
-        ]));
-
-        const provider = new OllamaProvider();
-        await provider.loadModels();
-        // titleModel is protected — observable via generateTitle's model choice,
-        // so assert through the internal field cast instead.
-        expect((provider as unknown as { titleModel: string }).titleModel).toBe("small-model");
+    it("reports every model as free, whatever the price table knows", () => {
+        expect(new OllamaProvider().getModelPricing()).toEqual({ input: 0, output: 0 });
     });
 });

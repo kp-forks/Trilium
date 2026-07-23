@@ -18,6 +18,7 @@ import utils, {
     isLaunchBarConfig,
     isMac,
     isMobileApp,
+    isPreAuthScreen,
     isPWA,
     isUpdateAvailable,
     mapToKeyValueArray,
@@ -910,5 +911,44 @@ describe("openInReusableSplit / openInAppHelpFromUrl", () => {
         };
         await openInAppHelpFromUrl("MyPage");
         expect(setNote).toHaveBeenCalledWith("_help_MyPage", { viewScope: { viewMode: "contextual-help" } });
+    });
+});
+
+describe("isPreAuthScreen", () => {
+    const originalGlob = window.glob;
+
+    afterEach(() => {
+        window.glob = originalGlob;
+    });
+
+    function setGlob(patch: Record<string, unknown>) {
+        // The eager module-load side effects (froca tree load, ws connect, options /
+        // keyboard-actions / fonts fetches) read `glob` directly; we only need the auth flags here.
+        window.glob = { isMainWindow: true, ...patch } as typeof window.glob;
+    }
+
+    it("flags the login screen (loggedIn:false) so eager loads skip their unauthenticated calls", () => {
+        setGlob({ dbInitialized: true, loggedIn: false });
+        expect(isPreAuthScreen()).toBe(true);
+    });
+
+    it("flags the set-password screen (passwordSet:false)", () => {
+        setGlob({ dbInitialized: true, passwordSet: false });
+        expect(isPreAuthScreen()).toBe(true);
+    });
+
+    it("does NOT flag the setup screen — froca/ws already gate on !dbInitialized and the server permits pre-init requests", () => {
+        setGlob({ dbInitialized: false });
+        expect(isPreAuthScreen()).toBe(false);
+    });
+
+    it("does NOT flag the fully authenticated app", () => {
+        setGlob({ dbInitialized: true, loggedIn: true, passwordSet: true });
+        expect(isPreAuthScreen()).toBe(false);
+    });
+
+    it("does NOT flag an unset glob (unit-test / unknown state) — strict === false keeps eager loads working", () => {
+        setGlob({});
+        expect(isPreAuthScreen()).toBe(false);
     });
 });

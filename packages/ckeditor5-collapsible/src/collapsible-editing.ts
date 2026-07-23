@@ -3,6 +3,7 @@ import { formatShortcut, joinShortcut } from "@triliumnext/commons";
 import { ContentHintManager, type HintHandle } from "@triliumnext/ckeditor5-utils";
 import BlockDragHandle from "./block-drag-handle.js";
 import CollapsibleCommand from "./collapsible-command.js";
+import { OPEN_ATTRIBUTE } from "./constants.js";
 
 type TranslateFn = (key: string, params?: Record<string, unknown>) => string;
 
@@ -57,13 +58,18 @@ interface SummaryHintState {
 /**
  * Schema, conversion and key handling for collapsible blocks.
  *
- * Model:        <details><summary>title</summary>…blocks…</details>
- * Data view:    <details class="trilium-collapsible"><summary>…</summary>…</details>
+ * Model:        <details open><summary>title</summary>…blocks…</details>
+ * Data view:    <details class="trilium-collapsible" open><summary>…</summary>…</details>
  * Editing view: same, plus a custom arrow UIElement in the summary for toggling.
- *               The DOM `open` attribute is the source of truth for collapsed state
- *               and is intentionally not persisted in the model — everything loads
- *               collapsed; freshly-inserted blocks (including those re-created by
- *               redo) are opened by the differ-driven listener below.
+ *
+ * The expanded state lives in the model as the {@link OPEN_ATTRIBUTE} attribute and
+ * is therefore persisted into the note's saved HTML: a block the user left open
+ * reopens on the next visit. A **missing** attribute means collapsed, so notes
+ * written before the state was persisted keep loading fully collapsed.
+ *
+ * Toggling is a model change like any other, with one deliberate exception: it runs
+ * in a non-undoable batch (see {@link CollapsibleEditing#setDetailsOpen}), so
+ * Ctrl+Z after reading a note doesn't re-collapse what the reader just expanded.
  */
 export default class CollapsibleEditing extends Plugin {
 
@@ -77,15 +83,7 @@ export default class CollapsibleEditing extends Plugin {
 
     private keydownListeners: Array<{ root: HTMLElement, handler: (e: KeyboardEvent) => void }> = [];
     private toggleListeners: Array<{ root: HTMLElement, handler: (e: Event) => void }> = [];
-    private autoOpenTimer?: ReturnType<typeof setTimeout>;
     private dragHandle!: BlockDragHandle;
-    /**
-     * Pre-move open state for details that are about to be re-inserted via
-     * drag. Consulted by the auto-open differ listener so a collapsed block
-     * stays collapsed after being moved (instead of being unconditionally
-     * opened like a freshly-inserted one).
-     */
-    private readonly preserveOpenOnNextInsert = new Map<any, boolean>();
     /**
      * Shared manager for summary hints (screen-corner popup on each <summary>).
      * Each summary owns ONE handle in {@link summaryHints}; visibility is
@@ -131,11 +129,6 @@ export default class CollapsibleEditing extends Plugin {
             onClick: (model) => {
                 this.editor.model.change(w => w.setSelection(model, "on"));
                 this.editor.editing.view.focus();
-            },
-            beforeMove: (model) => {
-                if (model?.is?.("element", "details")) {
-                    this.preserveOpenOnNextInsert.set(model, this.isDetailsOpen(model));
-                }
             }
         });
         this.registerSchema();
@@ -144,7 +137,6 @@ export default class CollapsibleEditing extends Plugin {
         this.registerKeyHandlers();
         this.registerClickHandler();
         this.registerDomListeners();
-        this.registerAutoOpenNewDetails();
         this.registerPostFixers();
         // Global user preference: skip all content-hint wiring when off. The
         // rest of `init()` (schema, key handlers, drag, post-fixers) stays
@@ -165,10 +157,6 @@ export default class CollapsibleEditing extends Plugin {
             root.removeEventListener("toggle", handler, true);
         }
         this.toggleListeners = [];
-        if (this.autoOpenTimer !== undefined) {
-            clearTimeout(this.autoOpenTimer);
-            this.autoOpenTimer = undefined;
-        }
         for (const state of this.summaryHints.values()) {
             this.detachSummaryHoverListeners(state, state.dom);
             state.handle.dispose();
@@ -183,7 +171,6 @@ export default class CollapsibleEditing extends Plugin {
         this.handleHintManager?.destroy();
         this.handleHintManager = undefined;
         this.dragHandle?.cancel();
-        this.preserveOpenOnNextInsert.clear();
         super.destroy();
     }
 
@@ -193,7 +180,12 @@ export default class CollapsibleEditing extends Plugin {
 
     private registerSchema() {
         const schema = this.editor.model.schema;
-        schema.register("details", { inheritAllFrom: "$container" });
+        schema.register("details", {
+            inheritAllFrom: "$container",
+            // Without this the attribute would be stripped by `insertContent`
+            // (schema-driven filtering) when a collapsible is pasted or inserted.
+            allowAttributes: [OPEN_ATTRIBUTE]
+        });
         schema.register("summary", {
             allowIn: "details",
             allowContentOf: "$block",
@@ -212,7 +204,67 @@ export default class CollapsibleEditing extends Plugin {
         // <details>
         conversion.for("upcast").elementToElement({ view: "details", model: "details" });
         conversion.for("dataDowncast").elementToElement({ model: "details", view: detailsView });
-        conversion.for("editingDowncast").elementToElement({ model: "details", view: detailsView });
+
+        // `open` — the persisted expanded state. Upcast maps the native boolean
+        // attribute (whose value is the empty string) to a model `true`; a missing
+        // attribute yields no model attribute at all, i.e. collapsed.
+        conversion.for("upcast").attributeToAttribute({
+            view: { name: "details", key: OPEN_ATTRIBUTE },
+            model: { key: OPEN_ATTRIBUTE, value: () => true }
+        });
+        // Both downcasts use the same explicit converter rather than the
+        // `attributeToAttribute` helper: the helper derives the view value from the
+        // model value (giving `open="true"`), whereas a native boolean attribute
+        // wants `open=""`. Removal has to clear the view attribute outright.
+        const openDowncast = (dispatcher: any) => {
+            dispatcher.on(`attribute:${OPEN_ATTRIBUTE}:details`, (evt: any, data: any, conversionApi: any) => {
+                if (!conversionApi.consumable.consume(data.item, evt.name)) return;
+                const viewElement = conversionApi.mapper.toViewElement(data.item);
+                if (!viewElement) return;
+                if (data.attributeNewValue) {
+                    conversionApi.writer.setAttribute(OPEN_ATTRIBUTE, "", viewElement);
+                } else {
+                    conversionApi.writer.removeAttribute(OPEN_ATTRIBUTE, viewElement);
+                }
+            });
+        };
+        conversion.for("dataDowncast").add(openDowncast);
+        conversion.for("editingDowncast").add(openDowncast);
+        // The editing view wraps the body blocks in a <div class="trilium-collapsible-content">.
+        // Chromium caps a native mouse drag-selection to a single block whenever the blocks are
+        // direct children of a <details> in a contenteditable (its ::details-content slot acts as
+        // a hard selection boundary — keyboard and programmatic selection cross it fine, only the
+        // drag algorithm doesn't). Giving the body a single wrapping container removes that
+        // boundary. This is editing-only: the data downcast above stays flat
+        // (<details><summary>…</summary><blocks>) so the saved HTML signature is unchanged. The
+        // <summary> stays a direct child of <details> (native collapse hides everything else), so
+        // only the non-summary blocks go into the wrapper.
+        conversion.for("editingDowncast").elementToStructure({
+            model: "details",
+            view: (modelElement: any, { writer }: any) => {
+                // Reconversion (triggered whenever the body blocks change) rebuilds this
+                // <details>, which would otherwise default to closed and collapse a block
+                // the user is editing. Seed `open` from the model here so the renderer
+                // itself restores it — a post-render fix-up can't, because the view's
+                // "render" event fires *before* the DOM is reconciled.
+                const attributes: Record<string, string> = { class: "trilium-collapsible" };
+                if (modelElement.getAttribute(OPEN_ATTRIBUTE)) attributes.open = "";
+                const details = writer.createContainerElement("details", attributes);
+                writer.insert(
+                    writer.createPositionAt(details, 0),
+                    writer.createSlot((node: any) => node.is("element", "summary"))
+                );
+                const content = writer.createContainerElement("div", {
+                    class: "trilium-collapsible-content"
+                });
+                writer.insert(
+                    writer.createPositionAt(content, 0),
+                    writer.createSlot((node: any) => !node.is("element", "summary"))
+                );
+                writer.insert(writer.createPositionAt(details, "end"), content);
+                return details;
+            }
+        });
 
         // <summary>
         conversion.for("upcast").elementToElement({ view: "summary", model: "summary" });
@@ -249,12 +301,7 @@ export default class CollapsibleEditing extends Plugin {
             "aria-label": t("text-editor.collapsible-select-label")
         }, function(this: any, domDocument: any) {
             const span: HTMLElement = this.toDomElement(domDocument);
-            const resolveDetails = () => {
-                const detailsDom = span.closest("details");
-                if (!detailsDom) return null;
-                const view = editor.editing.view.domConverter.mapDomToView(detailsDom);
-                return view ? editor.editing.mapper.toModelElement(view as any) : null;
-            };
+            const resolveDetails = () => plugin.detailsFromDom(span);
             const selectBlock = () => {
                 const model = resolveDetails();
                 if (!model) return;
@@ -299,9 +346,12 @@ export default class CollapsibleEditing extends Plugin {
             "aria-expanded": "false"
         }, function(this: any, domDocument: any) {
             const span: HTMLElement = this.toDomElement(domDocument);
+            // Toggle through the model, never by writing `detailsDom.open`: `open` is
+            // now part of the editing view, so a direct DOM write would desynchronise
+            // the view tree from the DOM and be clobbered by the next render.
             const toggle = () => {
-                const details = span.closest("details");
-                if (details) details.open = !details.open;
+                const model = plugin.detailsFromDom(span);
+                if (model) plugin.toggleDetails(model);
             };
             // mousedown preventDefault keeps the browser from placing a caret
             // inside the non-editable UI element.
@@ -345,16 +395,46 @@ export default class CollapsibleEditing extends Plugin {
         return dom instanceof Element ? (dom as unknown as T) : null;
     }
 
-    /** True if the <details> is currently expanded (or no DOM mapping yet). */
+    /** True if the <details> is currently expanded. A missing attribute means collapsed. */
     private isDetailsOpen(model: any): boolean {
-        const dom = this.getDom<HTMLDetailsElement>(model);
-        return !dom || dom.open;
+        return !!model.getAttribute?.(OPEN_ATTRIBUTE);
     }
 
-    /** Toggle the DOM `open` attribute directly (the source of truth in this plugin). */
+    /**
+     * Write the expanded state to the model, which the downcast reflects to the DOM.
+     *
+     * `enqueueChange`, not `change`: a toggle can originate from a DOM event that
+     * fires while a model change block is still open (the downcast setting `open`
+     * makes the browser emit `toggle`), and `model.change` nested in a block joins
+     * that block's batch — silently making the toggle part of the user's undo step.
+     * `enqueueChange` always creates its own batch, and `isUndoable: false` keeps it
+     * off the undo stack: Ctrl+Z after reading must not re-collapse the block.
+     */
     private setDetailsOpen(model: any, open: boolean) {
-        const dom = this.getDom<HTMLDetailsElement>(model);
-        if (dom) dom.open = open;
+        // Cheap guard against the downcast → DOM `toggle` → write-back loop. The
+        // writer would swallow the no-op anyway, but bailing here also avoids
+        // queueing an empty change block on every render-driven toggle.
+        if (this.isDetailsOpen(model) === open) return;
+        this.editor.model.enqueueChange({ isUndoable: false }, (writer: any) => {
+            if (open) {
+                writer.setAttribute(OPEN_ATTRIBUTE, true, model);
+            } else {
+                writer.removeAttribute(OPEN_ATTRIBUTE, model);
+            }
+        });
+    }
+
+    /** Flip the expanded state of a <details>. */
+    private toggleDetails(model: any) {
+        this.setDetailsOpen(model, !this.isDetailsOpen(model));
+    }
+
+    /** Resolve the <details> model element enclosing a DOM node, if any. */
+    private detailsFromDom(node: Element): any | null {
+        const detailsDom = node.closest("details");
+        if (!detailsDom) return null;
+        const view = this.editor.editing.view.domConverter.mapDomToView(detailsDom);
+        return view ? this.editor.editing.mapper.toModelElement(view as any) : null;
     }
 
     /** Is the caret on the first ("top") or last ("bottom") visual line of `dom`? */
@@ -466,22 +546,13 @@ export default class CollapsibleEditing extends Plugin {
         const details = summary.parent;
         if (!details || !details.is("element", "details")) return;
 
-        // If the title is currently collapsed and we'll need to expand it (middle-
-        // of-title split), do it now — before model.change runs and the hidden-body
-        // post-fixer gets a chance to snap the caret out of the new body paragraph.
-        const willSplit = !selection.isCollapsed
-            ? false  // selection will be deleted first, then the new collapsed position determines branch
-            : !selection.getLastPosition()!.isAtStart && !selection.getLastPosition()!.isAtEnd;
-        if (willSplit && !this.isDetailsOpen(details)) {
-            this.setDetailsOpen(details, true);
-        }
-
         model.change(writer => {
             // Drop any non-collapsed selection so we operate on a single position.
             if (!selection.isCollapsed) {
                 model.deleteContent(selection);
             }
-            const position = selection.getLastPosition()!;
+            const position = selection.getLastPosition();
+            if (!position) return;
 
             if (position.isAtStart) {
                 this.insertParagraphAt(writer, writer.createPositionBefore(details));
@@ -506,11 +577,13 @@ export default class CollapsibleEditing extends Plugin {
                 return;
             }
 
-            // Middle of title: split. If we entered this branch via the selection-
-            // delete path (rather than `willSplit` above), expand now too.
-            if (!this.isDetailsOpen(details)) {
-                this.setDetailsOpen(details, true);
-            }
+            // Middle of title: split, which needs the body visible. Expand inside
+            // this same change block so the hidden-body post-fixer (which runs once
+            // the block completes) sees the block already open and leaves the caret
+            // in the new body paragraph. Using the block's own writer rather than
+            // `setDetailsOpen` is deliberate here: the expansion is part of the
+            // user's edit, so undoing the split should restore the collapsed state.
+            writer.setAttribute(OPEN_ATTRIBUTE, true, details);
             const rightRange = writer.createRange(
                 writer.createPositionAt(summary, position.offset),
                 writer.createPositionAt(summary, "end")
@@ -725,9 +798,7 @@ export default class CollapsibleEditing extends Plugin {
             const summary = selection.getFirstPosition()?.findAncestor("summary");
             const details = summary?.parent;
             if (!details?.is("element", "details")) return;
-            const dom = this.getDom<HTMLDetailsElement>(details);
-            if (!dom) return;
-            dom.open = !dom.open;
+            this.toggleDetails(details);
             event.preventDefault();
             event.stopPropagation();
             return;
@@ -751,8 +822,16 @@ export default class CollapsibleEditing extends Plugin {
         }
     }
 
+    /**
+     * The DOM `toggle` event, which fires both for our own downcast-driven changes
+     * and for toggles the browser performs on its own (Chromium expands a closed
+     * <details> to reveal a find-in-page match).
+     *
+     * Moving the caret out of a body that just collapsed is *not* handled here —
+     * {@link CollapsibleEditing#hiddenBodyPostFixer} reads the same model attribute
+     * and does it for every path that can close a block, including this one.
+     */
     private onDetailsToggle(event: Event) {
-        const editor = this.editor;
         const detailsDom = event.target as HTMLDetailsElement;
         if (detailsDom.tagName?.toLowerCase() !== "details") return;
         if (!detailsDom.classList.contains("trilium-collapsible")) return;
@@ -761,112 +840,10 @@ export default class CollapsibleEditing extends Plugin {
         const arrow = detailsDom.querySelector(":scope > summary > .trilium-collapsible-arrow");
         arrow?.setAttribute("aria-expanded", String(detailsDom.open));
 
-        if (detailsDom.open) return;
-
-        const detailsView = editor.editing.view.domConverter.mapDomToView(detailsDom);
-        const detailsModel = detailsView ? editor.editing.mapper.toModelElement(detailsView as any) : null;
-        if (!detailsModel) return;
-
-        const summary = detailsModel.getChild(0);
-        if (!summary?.is("element", "summary")) return;
-
-        const position = editor.model.document.selection.getFirstPosition();
-        if (!position) return;
-
-        // Already in the toggled block's own summary — caret is still visible.
-        if (position.findAncestor("summary") === summary) return;
-
-        // The caret only needs to move if it's inside the toggled details
-        // (could be many levels deep — e.g. a nested collapsible's body or its
-        // summary; both get hidden when the outer one collapses).
-        let isInside = false;
-        for (let node: any = position.parent; node; node = node.parent) {
-            if (node === detailsModel) { isInside = true; break; }
-        }
-        if (!isInside) return;
-
-        editor.model.change(writer => writer.setSelection(summary, "end"));
-    }
-
-    // -----------------------------------------------------------------
-    // Auto-open freshly-inserted collapsibles
-    // -----------------------------------------------------------------
-
-    /**
-     * The editing downcast emits <details> closed by default so loaded documents
-     * stay collapsed. We do want freshly-inserted collapsibles to open, though —
-     * via the toolbar, via paste, and importantly via *redo* (which re-applies
-     * the insert and would otherwise leave the redone block closed because the
-     * one-shot `setTimeout` from `CollapsibleCommand.execute` has already run).
-     *
-     * Watching the differ for new <details> insertions after the editor is
-     * `ready` covers all three paths uniformly and survives undo/redo.
-     */
-    private registerAutoOpenNewDetails() {
-        const editor = this.editor;
-        let ready = false;
-        // Trilium loads note content via `editor.setData(...)` after the editor
-        // is ready, so the change:data that follows is a wholesale data load —
-        // not user-initiated insertions. Bracket the entire setData call with
-        // `loading=true/false` (highest fires before the data is written,
-        // lowest after everything setData triggered synchronously) so every
-        // change:data that fires inside is covered — not just the first one.
-        // The CKEditor public API doesn't guarantee setData emits exactly one
-        // change:data, so a single-shot flag would leak follow-ups.
-        let loading = false;
-        // Accumulate across `change:data` events: if two events fire in the
-        // same tick (separate model transactions), each restarting the timer
-        // would otherwise drop the previous batch on the floor.
-        const pendingOpen = new Set<any>();
-
-        this.listenTo(editor, "ready", () => { ready = true; });
-        this.listenTo(editor.data, "set", () => { loading = true; }, { priority: "highest" });
-        this.listenTo(editor.data, "set", () => { loading = false; }, { priority: "lowest" });
-
-        this.listenTo(editor.model.document, "change:data", () => {
-            if (loading) return;
-            if (!ready) return;
-            for (const entry of editor.model.document.differ.getChanges()) {
-                if (entry.type !== "insert") continue;
-                // A single insert entry can cover multiple top-level nodes (e.g. a
-                // multi-block paste). Walk via nextSibling up to entry.length so
-                // every inserted <details> gets queued for auto-open, not just the
-                // first one at the entry's position.
-                let node = (entry as any).position?.nodeAfter;
-                for (let i = 0; i < (entry as any).length && node; i++) {
-                    if (node.is?.("element", "details")) pendingOpen.add(node);
-                    node = node.nextSibling;
-                }
-            }
-            if (pendingOpen.size === 0) return;
-
-            // Defer to the next tick so the editing view has rendered the new
-            // DOM elements. Replace any in-flight timer so destroy can cancel.
-            // The accumulated `pendingOpen` survives the restart.
-            if (this.autoOpenTimer !== undefined) clearTimeout(this.autoOpenTimer);
-            this.autoOpenTimer = setTimeout(() => {
-                this.autoOpenTimer = undefined;
-                if ((editor as any).state === "destroyed") {
-                    pendingOpen.clear();
-                    this.preserveOpenOnNextInsert.clear();
-                    return;
-                }
-                for (const node of pendingOpen) {
-                    const dom = this.getDom<HTMLDetailsElement>(node);
-                    if (!dom) continue;
-                    // A move (drag-and-drop) records as remove + insert; restore the
-                    // pre-move open state so a collapsed block stays collapsed.
-                    // Fresh inserts have no entry here and default to open.
-                    if (this.preserveOpenOnNextInsert.has(node)) {
-                        dom.open = this.preserveOpenOnNextInsert.get(node)!;
-                        this.preserveOpenOnNextInsert.delete(node);
-                    } else {
-                        dom.open = true;
-                    }
-                }
-                pendingOpen.clear();
-            }, 0);
-        });
+        // Adopt a state the model doesn't know about yet. Toggles that originated
+        // from the model land here too and are absorbed by setDetailsOpen's guard.
+        const detailsModel = this.detailsFromDom(detailsDom);
+        if (detailsModel) this.setDetailsOpen(detailsModel, detailsDom.open);
     }
 
     // -----------------------------------------------------------------
@@ -1296,8 +1273,7 @@ export default class CollapsibleEditing extends Plugin {
         let outermostClosed: any = null;
         for (let node: any = position.parent; node; node = node.parent) {
             if (!node.is?.("element", "details")) continue;
-            const dom = this.getDom<HTMLDetailsElement>(node);
-            if (dom && !dom.open) outermostClosed = node;
+            if (!this.isDetailsOpen(node)) outermostClosed = node;
         }
         if (!outermostClosed) return false;
 

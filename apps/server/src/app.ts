@@ -18,6 +18,7 @@ import mcpRoutes from "./routes/mcp.js";
 import routes from "./routes/routes.js";
 import config from "./services/config.js";
 import { getLog } from "@triliumnext/core";
+import { desktopNetworkAccessGate } from "./services/desktop_network_gate.js";
 import { createReactiveOidcMiddleware } from "./services/open_id.js";
 import { RESOURCE_DIR } from "./services/resource_dir.js";
 import utils, { getResourceDir, isDev } from "./services/utils.js";
@@ -99,6 +100,12 @@ export default async function buildApp() {
     // MCP is registered before session/auth middleware — it uses its own
     // localhost-only guard and does not require Trilium authentication.
     mcpRoutes.register(app);
+
+    // Desktop only: gate web access (SPA/login, /share, /api, static assets) behind
+    // the network-access opt-in. Mounted after MCP and before the static/app/share
+    // routes so those local integrations stay reachable on loopback while the web app
+    // does not, unless the user enables network access. No-op on the server build.
+    app.use(desktopNetworkAccessGate);
 
     app.use(express.static(path.join(publicDir, "root"), STATIC_OPTIONS));
     app.use(`/manifest.webmanifest`, express.static(path.join(publicAssetsDir, "manifest.webmanifest"), STATIC_OPTIONS));

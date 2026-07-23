@@ -1,21 +1,3 @@
-<h2>History</h2>
-<h3>Removal in v0.102.0</h3>
-<p>Starting with version v0.102.0, AI/LLM integration has been removed from
-  the Trilium Notes core.</p>
-<p>While a significant amount of effort went into developing this feature,
-  maintaining and supporting it long-term proved to be unsustainable.</p>
-<p>When upgrading to v0.102.0, your Chat notes will be preserved, but instead
-  of the dedicated chat window they will be turned to a normal&nbsp;<a class="reference-link"
-  href="#root/_help_6f9hih2hXXZk">Code</a>&nbsp;note, revealing the underlying
-  JSON of the conversation.</p>
-<h3>Reintroduction in v0.103.0</h3>
-<p>Given the recent advancements of the AI scene, we decided to give the
-  LLM integration another try. v0.103.0 introduces a completely new chat
-  system.</p>
-<p>One of the key changes that lead to the reimplementation is that now we
-  are using a library (<a href="https://github.com/vercel/ai">Vercel AI</a>)
-  to manage the inner mechanism and the differences between LLM providers
-  instead of having to implement it on our own.</p>
 <h2>Feature highlights</h2>
 <ul>
   <li>Chat-based interface with live streaming of the messages.</li>
@@ -156,6 +138,15 @@
   make them easily reusable. The entire conversation history is kept, allowing
   a basic form of specialization for the LLM with the existing chat acting
   like a system prompt.&nbsp;</p>
+<h3>Model selection</h3>
+<p>When a provider is configured in&nbsp;<a class="reference-link" href="#root/_help_4TIF1oA4VQRO">Options</a>,
+  the next step is to select the models that will be available for the chat.</p>
+<p>The models are retrieved dynamically from the provider, only when the
+  model selection list is visible. To alter the list of models, simply press
+  the Edit button in the model selection box.</p>
+<p>Pricing information is displayed for known models. The pricing information
+  (price per million tokens) is embedded in the application (using a subset
+  of LiteLLM's data) and is updated with new versions of Trilium.</p>
 <h2>Features</h2>
 <h3>Web search</h3>
 <p>The AI can optionally search the web to find more information about a
@@ -321,3 +312,21 @@ class="admonition note">
       by the Trilium Notes team. Please address questions and issues on their
       corresponding repository instead.</p>
   </aside>
+  <h2>History</h2>
+  <h3>Removal in v0.102.0</h3>
+  <p>Starting with version v0.102.0, AI/LLM integration has been removed from
+    the Trilium Notes core.</p>
+  <p>While a significant amount of effort went into developing this feature,
+    maintaining and supporting it long-term proved to be unsustainable.</p>
+  <p>When upgrading to v0.102.0, your Chat notes will be preserved, but instead
+    of the dedicated chat window they will be turned to a normal&nbsp;<a class="reference-link"
+    href="#root/_help_6f9hih2hXXZk">Code</a>&nbsp;note, revealing the underlying
+    JSON of the conversation.</p>
+  <h3>Reintroduction in v0.103.0</h3>
+  <p>Given the recent advancements of the AI scene, we decided to give the
+    LLM integration another try. v0.103.0 introduces a completely new chat
+    system.</p>
+  <p>One of the key changes that lead to the reimplementation is that now we
+    are using a library (<a href="https://github.com/vercel/ai">Vercel AI</a>)
+    to manage the inner mechanism and the differences between LLM providers
+    instead of having to implement it on our own.</p>

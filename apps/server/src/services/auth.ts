@@ -68,7 +68,23 @@ function checkAuth(req: Request, res: Response, next: NextFunction) {
             next();
             return;
         }
-        res.redirect('login');
+        // SSO is enabled but the OIDC session has lapsed while the Trilium session still
+        // carries loggedIn:true — e.g. express-openid-connect's absolute-duration cap
+        // (default 7d) expired on a still-live, rolling trilium.sid (default 21d). Redirecting
+        // to /login here loops forever: loginPage 302s straight back to "." (the SPA root),
+        // which lands right back in this branch (#10589 follow-up). Treat the session as logged
+        // out and serve the SPA, which renders the login screen from the bootstrap
+        // loggedIn:false payload. The API stays protected separately via checkApiAuth.
+        //
+        // Persist the flip explicitly before handing off: express-session's implicit save
+        // only runs on res.end(), so with an async store the SPA's immediately-following
+        // /bootstrap sub-request could otherwise read the still-loggedIn session and bounce
+        // back through this branch instead of seeing loggedIn:false.
+        req.session.loggedIn = false;
+        req.session.save((err) => {
+            if (err) console.error("Error saving session after OIDC session lapse:", err);
+            next();
+        });
         return;
     } else {
         next();

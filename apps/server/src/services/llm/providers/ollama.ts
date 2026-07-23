@@ -1,24 +1,27 @@
 /**
- * Ollama provider — uses the OpenAI-compatible API that Ollama exposes.
+ * Ollama provider — chats through the OpenAI-compatible API that Ollama exposes
+ * at `/v1`, but lists models through Ollama's own `/api/tags`, which reports the
+ * parameter size and quantization level the OpenAI-compatible `/models`
+ * endpoint omits.
  *
- * Because Ollama runs locally with a dynamic model list, this provider
- * fetches available models from the Ollama instance at runtime instead
- * of using a hardcoded list.
+ * Everything about an Ollama instance is dynamic: the models are whatever the
+ * user has pulled locally, and none of them appear in the committed price table
+ * — they run on the user's own hardware, so they are free.
  */
 
 import { createOpenAI, type OpenAIProvider as OpenAISDKProvider } from "@ai-sdk/openai";
 import { getLog } from "@triliumnext/core";
 
-import { BaseProvider } from "./base_provider.js";
 import type { ModelInfo, ModelPricing } from "../types.js";
+import { BaseProvider, type RemoteModel } from "./base_provider.js";
 
 const DEFAULT_BASE_URL = "http://localhost:11434";
 
-/** How long a fetched model list stays fresh before it is re-fetched. */
-const MODEL_LIST_TTL_MS = 60_000;
-
-/** Ollama models are local and free. */
+/** Ollama models run locally, so they cost nothing to use. */
 const FREE_PRICING: ModelPricing = { input: 0, output: 0 };
+
+/** Below this parameter count (in billions) a model is cheap enough for titles. */
+const TITLE_MODEL_MAX_PARAMS_B = 4;
 
 /**
  * Shape of the Ollama `/api/tags` response.
@@ -42,6 +45,100 @@ interface OllamaTagsResponse {
     }>;
 }
 
+type OllamaTag = OllamaTagsResponse["models"][number];
+
+export class OllamaProvider extends BaseProvider {
+    name = "ollama";
+    // Both are resolved from the live model list — an Ollama instance serves
+    // whatever the user pulled, so there is nothing sensible to hardcode.
+    protected defaultModel = "";
+    protected titleModel = "";
+
+    private openai: OpenAISDKProvider;
+    /** Validated instance URL, without a trailing slash. */
+    private endpoint: string;
+
+    constructor(apiKey = "", baseURL?: string) {
+        super(apiKey, baseURL);
+        this.endpoint = sanitizeBaseUrl(this.baseURL);
+
+        // Ollama exposes an OpenAI-compatible endpoint at /v1
+        this.openai = createOpenAI({
+            apiKey: apiKey || "ollama", // Ollama ignores this but the SDK requires it
+            baseURL: `${this.endpoint}/v1`
+        });
+    }
+
+    protected createModel(modelId: string) {
+        // Use the Chat Completions API explicitly — calling `this.openai(modelId)`
+        // defaults to the OpenAI Responses API, which Ollama only supports
+        // since 0.13.3. Chat Completions works on all Ollama versions.
+        return this.openai.chat(modelId);
+    }
+
+    /**
+     * List the models installed on the instance. Uses Ollama's native
+     * `/api/tags` rather than the OpenAI-compatible `/models`: only the former
+     * carries the parameter size and quantization level shown in the picker and
+     * used to pick a cheap title model.
+     */
+    protected override async fetchRemoteModels(): Promise<RemoteModel[] | null> {
+        const payload = await this.fetchJson(`${this.endpoint}/api/tags`, {});
+        const models = (payload as OllamaTagsResponse).models;
+        if (!Array.isArray(models)) {
+            throw new Error("Unexpected /api/tags response shape");
+        }
+        this.pickModelDefaults(models);
+        return models.map(m => ({ id: m.name, name: formatModelName(m) }));
+    }
+
+    /**
+     * Ollama models never appear in the committed price table (they are local
+     * builds, not a vendor catalog), so tag the merged list as free rather than
+     * leaving the cost unknown in the picker.
+     */
+    override async listModels(): Promise<ModelInfo[]> {
+        const models = await super.listModels();
+        return models.map(model => ({ ...model, pricing: FREE_PRICING }));
+    }
+
+    /** Running a model locally is free, whatever the price table knows. */
+    override getModelPricing(): ModelPricing {
+        return FREE_PRICING;
+    }
+
+    /**
+     * The title model is only known once the instance has been listed, so make
+     * sure that happened before falling through to the base implementation
+     * (which chats with {@link titleModel}). The list is cached by the base
+     * class, so this is a no-op after the first call.
+     */
+    override async generateTitle(firstMessage: string): Promise<string> {
+        if (!this.titleModel) {
+            await this.listModels();
+        }
+        return super.generateTitle(firstMessage);
+    }
+
+    /**
+     * Remember which model to chat with by default and which to write chat
+     * titles with. Ollama has no notion of a default, so the first installed
+     * model wins; titles prefer the smallest model available, since they are a
+     * throwaway one-liner and a 70B model would make opening a chat sluggish.
+     */
+    private pickModelDefaults(models: OllamaTag[]): void {
+        if (models.length === 0) {
+            return;
+        }
+        this.defaultModel = models[0].name;
+        const smallModel = models.find(m => {
+            const size = parseParamSize(m.details?.parameter_size);
+            return size !== undefined && size < TITLE_MODEL_MAX_PARAMS_B;
+        }) ?? models.find(m => /small|mini|tiny|phi|gemma.*2b/i.test(m.name));
+        this.titleModel = smallModel?.name ?? this.defaultModel;
+    }
+}
+
 /**
  * Validate a user-supplied base URL: must parse as an http(s) URL.
  * Falls back to the default local instance URL otherwise.
@@ -55,7 +152,7 @@ function sanitizeBaseUrl(baseUrl: string | undefined): string {
         if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
             throw new Error(`unsupported protocol ${parsed.protocol}`);
         }
-        return baseUrl.replace(/\/+$/, "");
+        return baseUrl;
     } catch (e) {
         getLog().error(`Ollama: invalid base URL "${baseUrl}" (${e}), falling back to ${DEFAULT_BASE_URL}`);
         return DEFAULT_BASE_URL;
@@ -82,7 +179,7 @@ function parseParamSize(paramSize?: string): number | undefined {
  * Build a human-readable display name from Ollama model metadata.
  * Example: "llama3.2:latest" → "llama3.2:latest (3.2B, Q4_K_M)"
  */
-function formatModelName(m: OllamaTagsResponse["models"][number]): string {
+function formatModelName(m: OllamaTag): string {
     const parts: string[] = [];
     if (m.details?.parameter_size) {
         parts.push(m.details.parameter_size);
@@ -94,91 +191,4 @@ function formatModelName(m: OllamaTagsResponse["models"][number]): string {
         return `${m.name} (${parts.join(", ")})`;
     }
     return m.name;
-}
-
-export class OllamaProvider extends BaseProvider {
-    name = "ollama";
-    protected defaultModel = "";
-    protected titleModel = "";
-    protected availableModels: ModelInfo[] = [];
-    protected modelPricing: Record<string, ModelPricing> = {};
-
-    private openai: OpenAISDKProvider;
-    private baseUrl: string;
-    /** Timestamp of the last successful non-empty model fetch (0 = never). */
-    private modelsLoadedAt = 0;
-
-    constructor(baseUrl?: string) {
-        super();
-        this.baseUrl = sanitizeBaseUrl(baseUrl);
-
-        // Ollama exposes an OpenAI-compatible endpoint at /v1
-        this.openai = createOpenAI({
-            apiKey: "ollama", // Ollama ignores this but the SDK requires it
-            baseURL: `${this.baseUrl}/v1`
-        });
-    }
-
-    protected createModel(modelId: string) {
-        // Use the Chat Completions API explicitly — calling `this.openai(modelId)`
-        // defaults to the OpenAI Responses API, which Ollama only supports
-        // since 0.13.3. Chat Completions works on all Ollama versions.
-        return this.openai.chat(modelId);
-    }
-
-    /**
-     * Fetch available models from the Ollama instance. The list is cached for
-     * a short TTL so pulling a new model in Ollama shows up without a server
-     * restart; an empty list is never cached so first-use setups can recover.
-     */
-    async loadModels(): Promise<ModelInfo[]> {
-        if (this.availableModels.length > 0 && Date.now() - this.modelsLoadedAt < MODEL_LIST_TTL_MS) {
-            return this.availableModels;
-        }
-
-        try {
-            const res = await fetch(`${this.baseUrl}/api/tags`, {
-                signal: AbortSignal.timeout(5000)
-            });
-            if (!res.ok) {
-                getLog().error(`Ollama: failed to fetch models (${res.status})`);
-                return this.availableModels;
-            }
-
-            const data = (await res.json()) as OllamaTagsResponse;
-            if (!Array.isArray(data.models)) {
-                getLog().error("Ollama: unexpected /api/tags response shape");
-                return this.availableModels;
-            }
-            this.availableModels = data.models.map((m, i) => ({
-                id: m.name,
-                name: formatModelName(m),
-                pricing: FREE_PRICING,
-                costMultiplier: 0,
-                isDefault: i === 0
-            }));
-
-            this.modelPricing = Object.fromEntries(
-                this.availableModels.map((m) => [m.id, FREE_PRICING])
-            );
-
-            if (this.availableModels.length > 0) {
-                this.defaultModel = this.availableModels[0].id;
-                // Prefer smaller model for titles if available (under 4B params)
-                const smallModel = data.models.find((m) => {
-                    const size = parseParamSize(m.details?.parameter_size);
-                    return size !== undefined && size < 4;
-                }) ?? data.models.find((m) =>
-                    /small|mini|tiny|phi|gemma.*2b/i.test(m.name)
-                );
-                this.titleModel = smallModel?.name || this.defaultModel;
-                this.modelsLoadedAt = Date.now();
-            }
-
-            return this.availableModels;
-        } catch (e) {
-            getLog().error(`Ollama: failed to connect to ${this.baseUrl}: ${e}`);
-            return this.availableModels;
-        }
-    }
 }
