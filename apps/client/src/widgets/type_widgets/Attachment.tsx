@@ -34,6 +34,7 @@ import NoteLink from "../react/NoteLink";
 import { ParentComponent, refToJQuerySelector } from "../react/react_utils";
 import SiblingNavigator from "../react/SiblingNavigator";
 import { TextPreview } from "./File";
+import MediaPreview from "./file/MediaPreview";
 import { TypeWidgetProps } from "./type_widget";
 
 /**
@@ -155,9 +156,13 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     const isFileLike = attachment.role === "file" || attachment.role === "importSource";
     const supportsOcr = attachment.role === "image" || isFileLike;
 
-    // Image attachments opened in full detail get the interactive zoom/pan viewer; everything
-    // else is rendered imperatively via the content renderer.
+    // Opened in full detail, an image gets the interactive zoom/pan viewer and audio/video the full media
+    // player — both mounted here rather than through the content renderer, which has no tab context to hand
+    // them (and it is the tab that lets them navigate between the note's other attachments). Everything else,
+    // in either view, is rendered imperatively via the content renderer.
     const isZoomableImage = !!isFullDetail && attachment.role === "image";
+    const isPlayableMedia = !!isFullDetail && (attachment.mime.startsWith("audio/") || attachment.mime.startsWith("video/"));
+    const rendersItself = isZoomableImage || isPlayableMedia;
     const imageSrc = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}?${attachment.utcDateModified}`;
 
     /** Unmounts whatever the content renderer previously mounted here (a media player), so that replacing
@@ -168,13 +173,10 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     }
 
     function refresh() {
-        if (!isZoomableImage) {
-            // The full-detail view has a pane to itself, so it gets the pdf.js toolbar and the full media
-            // player; a list-view preview stays bare and click-to-play.
-            content_renderer.getRenderedContent(attachment, {
-                pdfToolbar: !!isFullDetail,
-                mediaEnvironment: isFullDetail ? "standalone" : "preview"
-            })
+        if (!rendersItself) {
+            // The full-detail view has a pane to itself, so it gets the pdf.js toolbar; a list-view preview
+            // stays bare.
+            content_renderer.getRenderedContent(attachment, { pdfToolbar: !!isFullDetail })
                 .then(({ $renderedContent }) => {
                     disposeContent();
                     contentWrapper.current?.replaceChildren(...$renderedContent);
@@ -192,7 +194,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     useEffect(() => {
         refresh();
         return disposeContent;
-    }, [ attachment, isZoomableImage ]);
+    }, [ attachment, rendersItself ]);
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         if (loadResults.getAttachmentRows().find(attachment => attachment.attachmentId)) {
             refresh();
@@ -274,6 +276,16 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
                             nextTooltipI18nKey="image_navigation.next"
                             extraPreviousKeys={[ "Backspace" ]}
                             extraNextKeys={[ "Space" ]}
+                        />
+                    </div>
+                ) : isPlayableMedia ? (
+                    <div key="media-player" className="attachment-content-wrapper attachment-media-player">
+                        <MediaPreview
+                            entity={attachment}
+                            environment="standalone"
+                            noteContext={noteContext}
+                            ownerNote={ownerNote}
+                            viewScope={viewScope}
                         />
                     </div>
                 ) : (

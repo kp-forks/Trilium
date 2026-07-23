@@ -9,6 +9,7 @@ const { audioVisualizer } = vi.hoisted(() => ({ audioVisualizer: vi.fn((_props: 
 vi.mock("./audio_waveform", () => ({ loadWaveform: vi.fn(async () => null) }));
 vi.mock("./AudioVisualizer", () => ({ AudioVisualizer: audioVisualizer }));
 
+import type NoteContext from "../../../components/note_context";
 import type FAttachment from "../../../entities/fattachment";
 import type FNote from "../../../entities/fnote";
 import MediaPreview from "./MediaPreview";
@@ -108,6 +109,52 @@ describe("MediaPreview", () => {
     it("hides the folder play mode outside the note detail, where there is no folder to set it on", async () => {
         await act(async () => render(<MediaPreview entity={videoNote} environment="embedded" />, container));
         expect(container.querySelector(".play-mode-dropdown")).toBeNull();
+    });
+
+    describe("attachment siblings", () => {
+        // Audio, video, PDFs and archives all carry the "file" role, so only the mime tells them apart.
+        const attachments = [
+            { attachmentId: "att1", role: "file", title: "Recording", mime: "audio/mpeg" },
+            { attachmentId: "att2", role: "file", title: "Manual", mime: "application/pdf" },
+            { attachmentId: "att3", role: "file", title: "Interview", mime: "audio/ogg" }
+        ];
+        const viewScope = { viewMode: "attachments" as const, attachmentId: "att1" };
+        const ownerNote = { noteId: "own1", attachments, getAttachments: async () => attachments } as unknown as FNote;
+
+        const renderAttachmentPlayer = async (setNote: ReturnType<typeof vi.fn>) => {
+            const noteContext = { noteId: "own1", notePath: "root/own1", viewScope, isActive: () => true, setNote } as unknown as NoteContext;
+            await act(async () => render(
+                <MediaPreview entity={audioAttachment} environment="standalone" noteContext={noteContext} ownerNote={ownerNote} viewScope={viewScope} />,
+                container));
+            // Siblings are loaded asynchronously, so the buttons only appear on the following render.
+            await act(async () => {});
+        };
+
+        it("moves to the owner note's other playable attachments, skipping what it can't play", async () => {
+            const setNote = vi.fn();
+            await renderAttachmentPlayer(setNote);
+
+            const next = container.querySelector(".bx-skip-next");
+            expect(next).not.toBeNull();
+            expect(container.querySelector(".bx-skip-previous")).not.toBeNull();
+
+            await act(async () => (next as HTMLElement).click());
+            // att2 is the PDF sitting between them, and is passed over.
+            expect(setNote).toHaveBeenCalledWith("root/own1", { viewScope: { ...viewScope, attachmentId: "att3" } });
+        });
+
+        it("has nothing to move between when the owner has a single playable attachment", async () => {
+            const setNote = vi.fn();
+            const lonelyOwner = { noteId: "own1", attachments: attachments.slice(0, 2), getAttachments: async () => attachments.slice(0, 2) } as unknown as FNote;
+            const noteContext = { noteId: "own1", notePath: "root/own1", viewScope, isActive: () => true, setNote } as unknown as NoteContext;
+            await act(async () => render(
+                <MediaPreview entity={audioAttachment} environment="standalone" noteContext={noteContext} ownerNote={lonelyOwner} viewScope={viewScope} />,
+                container));
+            await act(async () => {});
+
+            expect(container.querySelector(".bx-skip-next")).toBeNull();
+            expect(container.querySelector(".bx-skip-previous")).toBeNull();
+        });
     });
 
     describe("compact audio chrome", () => {
