@@ -2,7 +2,9 @@ import { getLog, options as optionService } from "@triliumnext/core";
 
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { ClaudeAgentProvider } from "./providers/claude_agent.js";
+import { DeepSeekProvider } from "./providers/deepseek.js";
 import { GoogleProvider } from "./providers/google.js";
+import { LocalProvider } from "./providers/local.js";
 import { OpenAiProvider } from "./providers/openai.js";
 import type { LlmProvider, ModelInfo } from "./types.js";
 
@@ -26,7 +28,7 @@ export interface LlmProviderSetup {
 }
 
 /** Provider type identifiers that can be instantiated, for error messages. */
-const PROVIDER_TYPES = ["anthropic", "openai", "google", "claude-agent"];
+const PROVIDER_TYPES = ["anthropic", "openai", "google", "deepseek", "claude-agent", "ollama", "lmstudio", "openai-compatible"];
 
 /**
  * Instantiate a provider from its type identifier.
@@ -46,10 +48,21 @@ function createProviderInstance(provider: string, apiKey: string, baseURL?: stri
             return new OpenAiProvider(apiKey, baseURL);
         case "google":
             return new GoogleProvider(apiKey, baseURL);
+        // OpenAI-compatible on the wire, but carded separately from the generic
+        // custom endpoint so its models resolve against the committed price table.
+        case "deepseek":
+            return new DeepSeekProvider(apiKey, baseURL);
         // Claude Pro/Max subscription via the Claude Agent SDK — no API key;
         // authentication is handled by Claude Code itself (`claude /login`).
         case "claude-agent":
             return new ClaudeAgentProvider();
+        // Self-hosted endpoints. The three cards differ only in the URL and setup
+        // hint the UI prefills; they all speak the OpenAI-compatible API, with
+        // Ollama and LM Studio additionally offering a richer native listing.
+        case "ollama":
+        case "lmstudio":
+        case "openai-compatible":
+            return new LocalProvider(provider, apiKey, baseURL);
         default:
             throw new Error(`Unknown LLM provider type: ${provider}. Available: ${PROVIDER_TYPES.join(", ")}`);
     }

@@ -47,14 +47,21 @@ function classify(key: string, provider: string | undefined): string | null {
     if (/^gemini-/.test(key)) {
         return "google"; // provider tag is unreliable here; key shape is not
     }
+    if (/^deepseek-/.test(key) && provider === "deepseek") {
+        return "deepseek";
+    }
     return null;
 }
 
 /** LiteLLM stores costs per token; we display per million tokens. */
 const PER_MILLION = 1_000_000;
 
-/** At least this many models per provider, or the upstream file is assumed broken. */
-const SANITY_FLOOR: Record<string, number> = { anthropic: 5, openai: 10, google: 5 };
+/**
+ * At least this many models per provider, or the upstream file is assumed broken.
+ * DeepSeek's floor is low because its catalog genuinely is — a handful of rolling
+ * aliases rather than a wall of dated snapshots.
+ */
+const SANITY_FLOOR: Record<string, number> = { anthropic: 5, openai: 10, google: 5, deepseek: 2 };
 
 interface LiteLlmEntry {
     litellm_provider?: string;

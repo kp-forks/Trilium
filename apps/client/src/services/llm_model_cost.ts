@@ -16,5 +16,10 @@ export function formatModelCost(model: Pick<LlmModelInfo, "isSubscription" | "pr
     if (!model.pricing) {
         return undefined;
     }
+    // Models that run on the user's own hardware (Ollama) are priced at zero —
+    // "Free" reads better there than "$0 / $0 per Mtok".
+    if (model.pricing.input === 0 && model.pricing.output === 0) {
+        return t("llm_chat.free");
+    }
     return t("llm.model_cost_per_mtok", { input: model.pricing.input, output: model.pricing.output });
 }

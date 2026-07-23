@@ -43,6 +43,9 @@ const PROVIDERS = [
     ] },
     { id: "o_1", name: "OpenAI", provider: "openai", selectedModels: [
         { id: "mini", name: "Mini" }
+    ] },
+    { id: "ol_1", name: "My Ollama", provider: "ollama", selectedModels: [
+        { id: "llama3.2", name: "llama3.2 (3.2B)", pricing: { input: 0, output: 0 } }
     ] }
 ];
 
@@ -107,6 +110,7 @@ describe("useLlmChat", () => {
         expect(costById.get("sonnet")).toBe("llm_chat.model_cost_included"); // subscription → "included" label
         expect(costById.get("opus")).toBe("llm.model_cost_per_mtok"); // metered → per-Mtok price label (key echoed by the i18n mock)
         expect(costById.get("mini")).toBeUndefined(); // unknown pricing — no annotation
+        expect(costById.get("llama3.2")).toBe("llm_chat.free"); // locally run (zero-priced) → "free" label
     });
 
     it("groups models per provider, keeping a provider with no selected models as an empty group", async () => {

@@ -19201,27 +19201,6 @@
                         {
                             "type": "relation",
                             "name": "internalLink",
-                            "value": "wy8So3yZZlH9",
-                            "isInheritable": false,
-                            "position": 40
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
-                            "value": "poXkQfguuA0U",
-                            "isInheritable": false,
-                            "position": 50
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
-                            "value": "WOcw2SLH6tbX",
-                            "isInheritable": false,
-                            "position": 60
-                        },
-                        {
-                            "type": "relation",
-                            "name": "internalLink",
                             "value": "4TIF1oA4VQRO",
                             "isInheritable": false,
                             "position": 70
@@ -19323,11 +19302,138 @@
                             "value": "bx bx-bot",
                             "isInheritable": false,
                             "position": 30
+                        },
+                        {
+                            "type": "relation",
+                            "name": "internalLink",
+                            "value": "bkPZAMT7d2sR",
+                            "isInheritable": false,
+                            "position": 200
+                        },
+                        {
+                            "type": "relation",
+                            "name": "internalLink",
+                            "value": "cRRrdZjgyhNc",
+                            "isInheritable": false,
+                            "position": 210
                         }
                     ],
                     "format": "markdown",
                     "dataFileName": "AI.md",
-                    "attachments": []
+                    "attachments": [],
+                    "dirFileName": "AI",
+                    "children": [
+                        {
+                            "isClone": false,
+                            "noteId": "bkPZAMT7d2sR",
+                            "notePath": [
+                                "pOsGYCXsbNQG",
+                                "GBBMSlVSOIGP",
+                                "bkPZAMT7d2sR"
+                            ],
+                            "title": "Providers",
+                            "notePosition": 10,
+                            "prefix": null,
+                            "isExpanded": false,
+                            "type": "text",
+                            "mime": "text/html",
+                            "attributes": [
+                                {
+                                    "type": "label",
+                                    "name": "shareAlias",
+                                    "value": "providers",
+                                    "isInheritable": false,
+                                    "position": 30
+                                },
+                                {
+                                    "type": "label",
+                                    "name": "iconClass",
+                                    "value": "bx bx-cog",
+                                    "isInheritable": false,
+                                    "position": 40
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "wy8So3yZZlH9",
+                                    "isInheritable": false,
+                                    "position": 50
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "poXkQfguuA0U",
+                                    "isInheritable": false,
+                                    "position": 60
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "WOcw2SLH6tbX",
+                                    "isInheritable": false,
+                                    "position": 70
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "4TIF1oA4VQRO",
+                                    "isInheritable": false,
+                                    "position": 80
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "cRRrdZjgyhNc",
+                                    "isInheritable": false,
+                                    "position": 90
+                                }
+                            ],
+                            "format": "markdown",
+                            "dataFileName": "Providers.md",
+                            "attachments": []
+                        },
+                        {
+                            "isClone": false,
+                            "noteId": "cRRrdZjgyhNc",
+                            "notePath": [
+                                "pOsGYCXsbNQG",
+                                "GBBMSlVSOIGP",
+                                "cRRrdZjgyhNc"
+                            ],
+                            "title": "Privacy",
+                            "notePosition": 20,
+                            "prefix": null,
+                            "isExpanded": false,
+                            "type": "text",
+                            "mime": "text/html",
+                            "attributes": [
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "CdNpE2pqjmI6",
+                                    "isInheritable": false,
+                                    "position": 30
+                                },
+                                {
+                                    "type": "relation",
+                                    "name": "internalLink",
+                                    "value": "bwg0e8ewQMak",
+                                    "isInheritable": false,
+                                    "position": 40
+                                },
+                                {
+                                    "type": "label",
+                                    "name": "iconClass",
+                                    "value": "bx bx-lock-alt",
+                                    "isInheritable": false,
+                                    "position": 50
+                                }
+                            ],
+                            "format": "markdown",
+                            "dataFileName": "Privacy.md",
+                            "attachments": []
+                        }
+                    ]
                 },
                 {
                     "isClone": false,
