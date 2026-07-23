@@ -906,8 +906,12 @@ export default class CollapsibleEditing extends Plugin {
 
         for (const details of this.findRevealed) {
             if (!wanted.has(details)) {
-                this.findRevealed.delete(details);
+                // Keep the entry in the set until the reveal is stripped: while it's present,
+                // onDetailsToggle's guard swallows the write-back from the DOM `toggle` that
+                // removing `open` fires (mirrors the reveal path below). setDetailsOpen's own
+                // no-op guard is the backstop where `toggle` fires asynchronously.
                 this.applyFindReveal(details, false);
+                this.findRevealed.delete(details);
             }
         }
         for (const details of wanted) {
