@@ -1,5 +1,5 @@
 import { IndentBlock, Plugin, Table } from "ckeditor5";
-import type { DowncastAttributeEvent, DowncastDispatcher } from "ckeditor5";
+import type { DowncastAttributeEvent, DowncastDispatcher, ModelElement } from "ckeditor5";
 
 /**
  * Lets tables participate in block indentation.
@@ -46,11 +46,9 @@ export default class TableIndent extends Plugin {
  */
 function keepIndentedTableWithinParent(dispatcher: DowncastDispatcher) {
     dispatcher.on<DowncastAttributeEvent>("attribute:blockIndent:table", (evt, data, conversionApi) => {
-        if (!data.item.is("element", "table")) {
-            return;
-        }
-
-        const figure = conversionApi.mapper.toViewElement(data.item);
+        // The event name is scoped to `table`, so `data.item` is always the table element.
+        const figure = conversionApi.mapper.toViewElement(data.item as ModelElement);
+        /* v8 ignore next 3 -- defensive: at low priority the table is already converted, so it always maps to a view element */
         if (!figure) {
             return;
         }
