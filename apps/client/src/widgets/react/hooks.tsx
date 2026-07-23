@@ -783,11 +783,25 @@ export function useNoteBlob(note: FNote | null | undefined, componentId?: string
      * only be set by widgets whose main content display is gated on this blob. (Passed
      * explicitly because NoteContextContext is only provided in dialogs, not the main window.) */
     reportLoadStateTo?: NoteContext | null;
+    /** Whether the consuming widget is currently displayed. When explicitly `false`, load states
+     * are not published — a cached/hidden type widget must not drive the note detail's loading
+     * overlay over the widget the user is actually looking at (#10575). Leave undefined when the
+     * consumer has no cached-hidden state. */
+    isVisible?: boolean;
+    /** Refetch on becoming visible if a content change was skipped while hidden because it came
+     * from this widget's own component (`componentId`). For widgets that display saved content
+     * produced by a sibling under the same parent component (e.g. the read-only text view behind
+     * the editor), own-component changes are somebody else's edits that must eventually show. */
+    refreshOnShow?: boolean;
 }): FBlob | null | undefined {
     const [ blob, setBlob ] = useState<FBlob | null>();
     const requestIdRef = useRef(0);
+    const missedContentChangeRef = useRef(false);
 
     function reportLoadState(state: "loading" | "loaded" | "error") {
+        if (opts?.isVisible === false) {
+            return;
+        }
         opts?.reportLoadStateTo?.setContextData("contentLoad", { state, retry: () => refresh() });
     }
 
@@ -821,8 +835,19 @@ export function useNoteBlob(note: FNote | null | undefined, componentId?: string
 
         if (loadResults.isNoteContentReloaded(note.noteId, componentId)) {
             refresh();
+        } else if (opts?.refreshOnShow && loadResults.isNoteContentReloaded(note.noteId)) {
+            // The change came from our own component, so the refetch was skipped; remember it so
+            // the content is brought up to date when the widget is displayed again.
+            missedContentChangeRef.current = true;
         }
     });
+
+    useEffect(() => {
+        if (opts?.refreshOnShow && opts?.isVisible && missedContentChangeRef.current) {
+            missedContentChangeRef.current = false;
+            refresh();
+        }
+    }, [ opts?.isVisible ]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useDebugValue(note?.noteId);
 
