@@ -7,6 +7,21 @@
         margin-bottom: 0;
     }
 
+    /* The picked provider's logo introducing the connection step, following the
+       setup wizard's illustrations: one large centred mark, muted so it stays
+       decoration rather than competing with the fields below it. */
+    .add-provider-illustration {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+        color: var(--muted-text-color);
+        opacity: 0.6;
+
+        .masked-icon {
+            --masked-icon-size: 80px;
+        }
+    }
+
     /* Where the notes end up — the distinction the groups exist to draw. Sits at
        the top of its group's card, ahead of the providers it qualifies. */
     .add-provider-group-description {

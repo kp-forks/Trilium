@@ -9,6 +9,7 @@ import { t } from "../../../../services/i18n";
 import { Badge } from "../../../react/Badge";
 import { Card, CardSection } from "../../../react/Card";
 import FormTextBox from "../../../react/FormTextBox";
+import MaskedIcon from "../../../react/MaskedIcon";
 import Modal from "../../../react/Modal";
 import SelectableCard, { SelectableCardGrid } from "../../../react/SelectableCard";
 import OptionsRow from "../components/OptionsRow";
@@ -332,36 +333,40 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                     />
                 ))
             ) : step === "connection" ? (
-                // A single unlabelled card of settings rows: the step holds a handful of
-                // fields for one provider — already named in the modal title — so the
-                // hairline between rows is all the structure it needs.
-                <Card>
-                    <CardSection>
-                        {/* Self-hosted providers lead with the endpoint — the port is the
-                            detail that has to be right — and treat the key as optional. */}
-                        {baseUrlMode === "required" && baseUrlField}
-                        {usesApiKey && (
-                            <OptionsRow
-                                name="api-key"
-                                label={t("llm.api_key")}
-                                description={apiKeyMode === "optional" ? t("llm.api_key_optional_description") : undefined}
-                                stacked
-                            >
-                                <FormTextBox
-                                    type="password"
-                                    currentValue={apiKey}
-                                    onChange={setApiKey}
-                                    placeholder={t("llm.api_key_placeholder")}
-                                    autoFocus={baseUrlMode !== "required"}
-                                />
-                            </OptionsRow>
-                        )}
-                        {baseUrlMode === "advanced" && baseUrlField}
-                        {!usesApiKey && baseUrlMode === "none" && (
-                            <p>{t("llm.claude_agent_description")}</p>
-                        )}
-                    </CardSection>
-                </Card>
+                <>
+                    {providerType && <ProviderIllustration providerType={providerType} />}
+
+                    {/* A single unlabelled card of settings rows: the step holds a handful of
+                        fields for one provider — already named in the modal title — so the
+                        hairline between rows is all the structure it needs. */}
+                    <Card>
+                        <CardSection>
+                            {/* Self-hosted providers lead with the endpoint — the port is the
+                                detail that has to be right — and treat the key as optional. */}
+                            {baseUrlMode === "required" && baseUrlField}
+                            {usesApiKey && (
+                                <OptionsRow
+                                    name="api-key"
+                                    label={t("llm.api_key")}
+                                    description={apiKeyMode === "optional" ? t("llm.api_key_optional_description") : undefined}
+                                    stacked
+                                >
+                                    <FormTextBox
+                                        type="password"
+                                        currentValue={apiKey}
+                                        onChange={setApiKey}
+                                        placeholder={t("llm.api_key_placeholder")}
+                                        autoFocus={baseUrlMode !== "required"}
+                                    />
+                                </OptionsRow>
+                            )}
+                            {baseUrlMode === "advanced" && baseUrlField}
+                            {!usesApiKey && baseUrlMode === "none" && (
+                                <p>{t("llm.claude_agent_description")}</p>
+                            )}
+                        </CardSection>
+                    </Card>
+                </>
             ) : (
                 <Card heading={t("llm.select_models")}>
                     <CardSection>
@@ -380,6 +385,21 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
             )}
         </Modal>,
         document.body
+    );
+}
+
+/**
+ * The provider's own mark, above the fields it belongs to. Follows the setup
+ * wizard's illustrations — one large, centred, muted glyph introducing the page —
+ * except that here it is the logo of whatever was picked on the previous step, so
+ * the step opens by confirming *what* is being connected rather than with a bare
+ * text box.
+ */
+function ProviderIllustration({ providerType }: { providerType: ProviderType }) {
+    return (
+        <div className="add-provider-illustration">
+            <MaskedIcon url={providerType.iconUrl} />
+        </div>
     );
 }
 
