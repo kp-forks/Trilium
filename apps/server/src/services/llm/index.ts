@@ -26,15 +26,21 @@ export interface LlmProviderSetup {
     selectedModels?: ModelInfo[];
 }
 
-/** Factory functions for creating provider instances */
-const providerFactories: Record<string, (apiKey: string, baseURL?: string) => LlmProvider> = {
-    anthropic: (apiKey, baseURL) => new AnthropicProvider(apiKey, baseURL),
-    openai: (apiKey, baseURL) => new OpenAiProvider(apiKey, baseURL),
-    google: (apiKey, baseURL) => new GoogleProvider(apiKey, baseURL),
+/**
+ * Factory functions for creating provider instances, keyed by provider type.
+ * A Map (not a plain object) is deliberate: the provider key is user-controlled,
+ * and `map.get(userKey)` can only return a factory we registered — never an
+ * inherited method like `constructor`/`toString`, which a `obj[userKey]()`
+ * lookup would resolve and invoke.
+ */
+const providerFactories = new Map<string, (apiKey: string, baseURL?: string) => LlmProvider>([
+    ["anthropic", (apiKey, baseURL) => new AnthropicProvider(apiKey, baseURL)],
+    ["openai", (apiKey, baseURL) => new OpenAiProvider(apiKey, baseURL)],
+    ["google", (apiKey, baseURL) => new GoogleProvider(apiKey, baseURL)],
     // Claude Pro/Max subscription via the Claude Agent SDK — no API key;
     // authentication is handled by Claude Code itself (`claude /login`).
-    "claude-agent": () => new ClaudeAgentProvider()
-};
+    ["claude-agent", () => new ClaudeAgentProvider()]
+]);
 
 /** Cache of instantiated providers by their config ID */
 let cachedProviders: Record<string, LlmProvider> = {};
@@ -92,9 +98,9 @@ export function getProvider(providerId?: string): LlmProvider {
     }
 
     // Create new provider instance
-    const factory = providerFactories[config.provider];
+    const factory = providerFactories.get(config.provider);
     if (!factory) {
-        throw new Error(`Unknown LLM provider type: ${config.provider}. Available: ${Object.keys(providerFactories).join(", ")}`);
+        throw new Error(`Unknown LLM provider type: ${config.provider}. Available: ${[...providerFactories.keys()].join(", ")}`);
     }
 
     const provider = factory(config.apiKey, config.baseURL);
@@ -133,9 +139,9 @@ export function hasConfiguredProviders(): boolean {
  * dynamic listing.
  */
 export async function listProviderModels(provider: string, apiKey: string, baseURL?: string): Promise<ModelInfo[]> {
-    const factory = providerFactories[provider];
+    const factory = providerFactories.get(provider);
     if (!factory) {
-        throw new Error(`Unknown LLM provider type: ${provider}. Available: ${Object.keys(providerFactories).join(", ")}`);
+        throw new Error(`Unknown LLM provider type: ${provider}. Available: ${[...providerFactories.keys()].join(", ")}`);
     }
     const instance = factory(apiKey, baseURL);
     const models = await (instance.listModels?.() ?? instance.getAvailableModels());

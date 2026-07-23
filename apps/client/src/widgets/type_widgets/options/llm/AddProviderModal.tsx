@@ -139,7 +139,10 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
     const primaryLabel = step === 1
         ? t("llm.next")
         : isEdit ? t("llm.save") : t("llm.add_provider");
-    const primaryDisabled = step === 1 ? !connectionValid : selectedModels.length === 0;
+    // Step 2 never disables Save: an empty selection is valid (hides all of the
+    // provider's models, same as a pre-selection migration), and it avoids a
+    // dead-end when the live model fetch fails.
+    const primaryDisabled = step === 1 && !connectionValid;
 
     return createPortal(
         <Modal
