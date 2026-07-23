@@ -12,6 +12,15 @@ vi.mock("@ai-sdk/openai", () => ({
     }
 }));
 
+const { generateTextMock } = vi.hoisted(() => ({
+    generateTextMock: vi.fn(async () => ({ text: "  A generated title  " }) as any)
+}));
+
+vi.mock("ai", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("ai")>();
+    return { ...actual, generateText: generateTextMock };
+});
+
 import { DeepSeekProvider, deepSeekModelName } from "./deepseek.js";
 
 describe("DeepSeekProvider construction", () => {
@@ -82,6 +91,13 @@ describe("DeepSeekProvider model listing", () => {
         expect(provider.titleModel).toBe("deepseek-v4-flash");
         expect(provider.defaultModel).toBe("deepseek-v4-pro");
         expect(models.find((m: any) => m.isDefault)?.id).toBe("deepseek-v4-pro");
+
+        // Same verdict whichever order the endpoint happens to list them in.
+        fetchMock.mockResolvedValue(okJson({ data: [{ id: "deepseek-v4-flash" }, { id: "deepseek-v4-pro" }] }));
+        const reversed = new DeepSeekProvider("sk-deep") as any;
+        await reversed.listModels();
+        expect(reversed.titleModel).toBe("deepseek-v4-flash");
+        expect(reversed.defaultModel).toBe("deepseek-v4-pro");
     });
 
     it("keeps the alias when a listing never happens, and never titles with an unpriced id", async () => {
@@ -100,6 +116,26 @@ describe("DeepSeekProvider model listing", () => {
         expect(proxied.titleModel).toBe("deepseek-v4-flash");
     });
 
+    it("leaves the fallbacks alone when the endpoint lists nothing", async () => {
+        // An empty catalogue gives nothing to point the defaults at, so the aliases
+        // stand and the base class falls back to the price table's own list.
+        fetchMock.mockResolvedValue(okJson({ data: [] }));
+        const provider = new DeepSeekProvider("sk-deep") as any;
+        await provider.listModels();
+        expect(provider.titleModel).toBe("deepseek-chat");
+        expect(provider.defaultModel).toBe("deepseek-chat");
+    });
+
+    it("falls back to listing order when the table prices none of the models", async () => {
+        // A gateway serving ids the table doesn't know: nothing can be ranked on
+        // cost, so both defaults settle on the first one listed.
+        fetchMock.mockResolvedValue(okJson({ data: [{ id: "house-model" }, { id: "other-model" }] }));
+        const provider = new DeepSeekProvider("sk-deep") as any;
+        await provider.listModels();
+        expect(provider.titleModel).toBe("house-model");
+        expect(provider.defaultModel).toBe("house-model");
+    });
+
     it("honours a base URL override and surfaces listing failures", async () => {
         fetchMock.mockResolvedValue(okJson({ data: [{ id: "deepseek-chat" }] }));
         await new DeepSeekProvider("sk-deep", "https://gateway.example/v1").listModels();
@@ -110,6 +146,48 @@ describe("DeepSeekProvider model listing", () => {
 
         fetchMock.mockResolvedValue(okJson({ data: { unexpected: "shape" } }));
         await expect(new DeepSeekProvider("sk-deep").listModels()).rejects.toThrow(/Unexpected \/models response shape/);
+    });
+});
+
+describe("DeepSeekProvider title generation", () => {
+    const fetchMock = vi.fn();
+    const okJson = (body: unknown) => ({ ok: true, json: async () => body });
+
+    beforeEach(() => {
+        fetchMock.mockReset();
+        chatMock.mockClear();
+        generateTextMock.mockClear();
+        vi.stubGlobal("fetch", fetchMock);
+    });
+
+    it("lists the endpoint first, so the title goes to a model the account has", async () => {
+        fetchMock.mockResolvedValue(okJson({ data: [{ id: "deepseek-v4-pro" }, { id: "deepseek-v4-flash" }] }));
+
+        const title = await new DeepSeekProvider("sk-deep").generateTitle("Explain quantum tunnelling");
+        // Not the `deepseek-chat` alias baked into the class — a v4-era account
+        // doesn't list it, so titling with it would be a request that just fails.
+        expect(chatMock).toHaveBeenCalledWith("deepseek-v4-flash");
+        expect(title).toBe("A generated title");
+    });
+
+    it("doesn't list again once the defaults are resolved", async () => {
+        fetchMock.mockResolvedValue(okJson({ data: [{ id: "deepseek-v4-flash" }] }));
+        const provider = new DeepSeekProvider("sk-deep");
+        await provider.listModels();
+
+        const probes = fetchMock.mock.calls.length;
+        await provider.generateTitle("Explain quantum tunnelling");
+        expect(fetchMock.mock.calls.length).toBe(probes);
+    });
+
+    it("still titles when the endpoint can't be listed", async () => {
+        // Offline, or a listing that errors: the alias is the last resort, and the
+        // user loses nothing.
+        fetchMock.mockRejectedValue(new Error("offline"));
+
+        const title = await new DeepSeekProvider("sk-deep").generateTitle("Explain quantum tunnelling");
+        expect(chatMock).toHaveBeenCalledWith("deepseek-chat");
+        expect(title).toBe("A generated title");
     });
 });
 

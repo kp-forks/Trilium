@@ -40,6 +40,7 @@ function makeProviderMock(tag: string) {
 vi.mock("./providers/anthropic.js", () => ({ AnthropicProvider: makeProviderMock("anthropic") }));
 vi.mock("./providers/openai.js", () => ({ OpenAiProvider: makeProviderMock("openai") }));
 vi.mock("./providers/google.js", () => ({ GoogleProvider: makeProviderMock("google") }));
+vi.mock("./providers/deepseek.js", () => ({ DeepSeekProvider: makeProviderMock("deepseek") }));
 vi.mock("./providers/claude_agent.js", () => ({ ClaudeAgentProvider: makeProviderMock("claude-agent") }));
 vi.mock("./providers/local.js", () => ({ LocalProvider: makeProviderMock("local") }));
 
@@ -93,6 +94,7 @@ describe("llm/index provider registry", () => {
                 { id: "a", name: "A", provider: "anthropic", apiKey: "ka" },
                 { id: "o", name: "O", provider: "openai", apiKey: "ko" },
                 { id: "g", name: "G", provider: "google", apiKey: "kg" },
+                { id: "d", name: "D", provider: "deepseek", apiKey: "kd" },
                 { id: "c", name: "C", provider: "claude-agent", apiKey: "" },
                 { id: "l", name: "L", provider: "ollama", apiKey: "", baseURL: "http://ollama.lan:11434" },
                 { id: "lm", name: "LM", provider: "lmstudio", apiKey: "", baseURL: "http://box:1234/v1" },
@@ -101,6 +103,9 @@ describe("llm/index provider registry", () => {
             expect((getProvider("a").constructor as any).lastArgs).toEqual(["ka", undefined]);
             expect((getProvider("o").constructor as any).lastArgs).toEqual(["ko", undefined]);
             expect((getProvider("g").constructor as any).lastArgs).toEqual(["kg", undefined]);
+            // Its own class rather than the shared self-hosted one, despite speaking
+            // the same protocol — that is what gives its models a price.
+            expect((getProvider("d").constructor as any).lastArgs).toEqual(["kd", undefined]);
             // The subscription provider takes no constructor args — auth is Claude Code's.
             expect((getProvider("c").constructor as any).lastArgs).toEqual([]);
             // The three self-hosted cards share one class, which receives the card

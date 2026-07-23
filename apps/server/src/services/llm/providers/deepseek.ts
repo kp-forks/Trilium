@@ -84,12 +84,21 @@ export class DeepSeekProvider extends BaseProvider {
         const priced = ids.filter(id => prices[id]);
         const ranked = priced.length > 0 ? priced : ids;
         const cost = (id: string) => prices[id]?.output ?? 0;
-        const costs = ranked.map(cost);
-        const cheapest = Math.min(...costs);
-        const dearest = Math.max(...costs);
 
-        this.titleModel = ranked.find(id => cost(id) === cheapest) ?? ids[0];
-        this.defaultModel = ranked.find(id => cost(id) === dearest) ?? ids[0];
+        // Strict comparisons, so a tie leaves the first-listed id in place.
+        let cheapest = ranked[0];
+        let dearest = ranked[0];
+        for (const id of ranked) {
+            if (cost(id) < cost(cheapest)) {
+                cheapest = id;
+            }
+            if (cost(id) > cost(dearest)) {
+                dearest = id;
+            }
+        }
+
+        this.titleModel = cheapest;
+        this.defaultModel = dearest;
         this.defaultsFromListing = true;
     }
 

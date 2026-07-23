@@ -339,9 +339,9 @@ function parseParamSize(paramSize?: string): number | undefined {
     const match = paramSize.match(/^([\d.]+)\s*([BMK])/i);
     if (!match) return undefined;
     const value = parseFloat(match[1]);
+    // The pattern admits no other unit, so K needs no test of its own.
     const unit = match[2].toUpperCase();
     if (unit === "B") return value;
     if (unit === "M") return value / 1000;
-    if (unit === "K") return value / 1_000_000;
-    return undefined;
+    return value / 1_000_000;
 }
