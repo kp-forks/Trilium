@@ -440,6 +440,24 @@ describe("convertPageHtml", () => {
         expect(parse(converter.convertPageHtml(sample)).querySelector("colgroup")).toBeFalsy();
     });
 
+    it("recovers OneNote's over-darkened table cell shading by reflecting its lightness", () => {
+        // OneNote's Graph export returns cell shading as a dark shade of the colour it displays (same
+        // hue and saturation, inverted lightness): a cell shown as #b6d9a1 comes back as #375623.
+        // Reflecting the lightness recovers the light tint (#bddca9, a barely-perceptible delta off).
+        const sample = `<body><div><table><tr><td style="background-color:#375623"><span lang="en-US">A</span></td><td>B</td></tr></table></div></body>`;
+        const out = converter.convertPageHtml(sample);
+
+        expect(out).toContain("background-color:#bddca9");
+        expect(out).not.toContain("#375623");
+    });
+
+    it("leaves an already-light table cell shading untouched", () => {
+        // A light background is plausible shading as-is (and correctly-exported colours arrive light),
+        // so only dark cell backgrounds are reflected.
+        const sample = `<body><div><table><tr><td style="background-color:#b6d9a1">A</td><td>B</td></tr></table></div></body>`;
+        expect(converter.convertPageHtml(sample)).toContain("background-color:#b6d9a1");
+    });
+
     it("converts OneNote to-do tags into a Trilium task list", () => {
         const out = converter.convertPageHtml(TAGS_SAMPLE);
         const root = parse(out);
