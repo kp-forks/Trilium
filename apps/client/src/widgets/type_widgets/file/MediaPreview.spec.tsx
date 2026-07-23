@@ -111,7 +111,7 @@ describe("MediaPreview", () => {
     });
 
     describe("compact audio chrome", () => {
-        /** The compact chrome is worn everywhere but the note detail — an activated preview and an embed alike. */
+        /** The compact chrome is worn everywhere but a standalone player — an activated preview and an embed alike. */
         const renderCompactAudio = async (environment: "preview" | "embedded") => {
             await act(async () => render(<MediaPreview entity={audioNote} environment={environment} />, container));
             if (environment === "preview") {
@@ -142,7 +142,7 @@ describe("MediaPreview", () => {
                 expect.objectContaining({ compact: true }), expect.anything());
         });
 
-        it("leaves the note detail with the full controls and the icon", async () => {
+        it("leaves a standalone player with the full controls and the icon", async () => {
             await act(async () => render(<MediaPreview entity={audioNote} environment="standalone" />, container));
 
             expect(container.querySelector(".media-compact")).toBeNull();
@@ -188,7 +188,7 @@ describe("MediaPreview", () => {
             expect(container.querySelector(".bx-fullscreen")).toBeNull();
         });
 
-        it("leaves the note detail with the full overlay", async () => {
+        it("leaves a standalone player with the full overlay", async () => {
             await act(async () => render(<MediaPreview entity={videoNote} environment="standalone" />, container));
 
             expect(container.querySelector(".media-compact-row")).toBeNull();

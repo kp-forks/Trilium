@@ -327,6 +327,16 @@ describe("getRenderedContent file rendering", () => {
         expect($renderedContent.find(".file-footer").length).toBe(0);
     });
 
+    it("mounts the full media player when the caller gives the media a pane of its own", async () => {
+        const note = buildNote({ title: "A", type: "file" });
+        note.mime = "audio/mpeg";
+        const { $renderedContent } = await getRenderedContent(note, { mediaEnvironment: "standalone" });
+        expect(mediaPreviewComponent).toHaveBeenCalledWith(
+            expect.objectContaining({ entity: note, environment: "standalone" }), expect.anything());
+        // Unlike an embed, the full player leaves Download / Open to the footer below it.
+        expect($renderedContent.find(".file-footer").length).toBe(1);
+    });
+
     it("keeps the footer for a media preview, and for the file types that have no player", async () => {
         const video = buildNote({ title: "V", type: "file" });
         video.mime = "video/mp4";

@@ -169,8 +169,12 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
 
     function refresh() {
         if (!isZoomableImage) {
-            // The full-detail view gets the pdf.js toolbar; list-view previews stay bare.
-            content_renderer.getRenderedContent(attachment, { pdfToolbar: !!isFullDetail })
+            // The full-detail view has a pane to itself, so it gets the pdf.js toolbar and the full media
+            // player; a list-view preview stays bare and click-to-play.
+            content_renderer.getRenderedContent(attachment, {
+                pdfToolbar: !!isFullDetail,
+                mediaEnvironment: isFullDetail ? "standalone" : "preview"
+            })
                 .then(({ $renderedContent }) => {
                     disposeContent();
                     contentWrapper.current?.replaceChildren(...$renderedContent);

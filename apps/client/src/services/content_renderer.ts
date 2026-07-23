@@ -57,11 +57,12 @@ export interface RenderOptions {
     /**
      * How audio/video renders. `preview` (the default) shows a click-to-load placeholder, so that a screen
      * full of media notes doesn't have every one of them streaming from the server at once; `embedded`
-     * mounts the full player straight away. `native` emits a plain `<audio>`/`<video>` element instead of
-     * the player, for the callers that serialize the rendered content into an HTML string or into a separate
-     * document (presentation, printing) — a mounted player would be dead markup there.
+     * mounts the compact player straight away; `standalone` mounts the full one, for a host that gives the
+     * media a pane of its own (the attachment full-detail view). `native` emits a plain `<audio>`/`<video>`
+     * element instead of the player, for the callers that serialize the rendered content into an HTML string
+     * or into a separate document (presentation, printing) — a mounted player would be dead markup there.
      */
-    mediaEnvironment?: "preview" | "embedded" | "native";
+    mediaEnvironment?: MediaEnvironment | "native";
     /**
      * If enabled, PDFs render with the pdf.js toolbar (zoom, page navigation, print, download).
      * Off by default so that lightweight previews (attachment list, tooltips, embeds) stay bare;
@@ -382,7 +383,7 @@ async function renderFile(entity: FNote | FAttachment, type: string, $renderedCo
 /**
  * Mounts the Trilium media player for an audio/video note or attachment. In a `preview` it starts as a
  * placeholder and only loads the media once the user presses play (see {@link MediaPreview}); an `embedded`
- * one loads straight away. Like every other mounted widget here, the embedding caller must tear it down via
+ * or `standalone` one loads straight away. Like every other mounted widget here, the caller must tear it down via
  * {@link disposeInteractiveContent} — otherwise the Preact root leaks and its media keeps playing.
  */
 async function renderMedia(entity: FNote | FAttachment, environment: MediaEnvironment, $content: JQuery<HTMLElement>) {
