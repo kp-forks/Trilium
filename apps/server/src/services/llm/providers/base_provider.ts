@@ -174,6 +174,25 @@ export function mergeModelLists(curated: ModelInfo[], remote: RemoteModel[]): Mo
     return merged;
 }
 
+/**
+ * Normalize a custom endpoint override: strip trailing slashes, and treat an
+ * empty result as "no override".
+ *
+ * Written as an index scan rather than `replace(/\/+$/, "")`: that pattern
+ * backtracks polynomially on a value ending in many slashes, and the base URL
+ * arrives straight from a request body (CodeQL js/polynomial-redos).
+ */
+function normalizeBaseUrl(baseURL: string | undefined): string | undefined {
+    if (!baseURL) {
+        return undefined;
+    }
+    let end = baseURL.length;
+    while (end > 0 && baseURL.charAt(end - 1) === "/") {
+        end--;
+    }
+    return baseURL.slice(0, end) || undefined;
+}
+
 export abstract class BaseProvider implements LlmProvider {
     abstract name: string;
 
@@ -189,7 +208,7 @@ export abstract class BaseProvider implements LlmProvider {
 
     constructor(apiKey = "", baseURL?: string) {
         this.apiKey = apiKey;
-        this.baseURL = baseURL?.replace(/\/+$/, "") || undefined;
+        this.baseURL = normalizeBaseUrl(baseURL);
     }
 
     /** Create a language model instance for the given model ID. */

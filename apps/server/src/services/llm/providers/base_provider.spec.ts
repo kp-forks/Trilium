@@ -104,6 +104,10 @@ class TestProvider extends BaseProvider {
     public callBaseGetProviderPrices() {
         return super.getProviderPrices();
     }
+    /** Expose the normalized endpoint override for assertions. */
+    public get normalizedBaseUrl() {
+        return this.baseURL;
+    }
 }
 
 /** Build a stub attachment with the given content/availability. */
@@ -140,6 +144,27 @@ describe("getAvailableModels / getModelPricing (from the price table)", () => {
         const provider = new TestProvider();
         expect(provider.getModelPricing("spendy")).toEqual({ input: 10, output: 30 });
         expect(provider.getModelPricing("nope")).toBeUndefined();
+    });
+});
+
+describe("base URL normalization", () => {
+    it("strips trailing slashes and treats a blank override as none", () => {
+        expect(new TestProvider("k", "http://localhost:11434/v1").normalizedBaseUrl).toBe("http://localhost:11434/v1");
+        expect(new TestProvider("k", "http://localhost:11434/v1/").normalizedBaseUrl).toBe("http://localhost:11434/v1");
+        expect(new TestProvider("k", "http://localhost:11434/v1///").normalizedBaseUrl).toBe("http://localhost:11434/v1");
+        expect(new TestProvider("k").normalizedBaseUrl).toBeUndefined();
+        expect(new TestProvider("k", "").normalizedBaseUrl).toBeUndefined();
+        expect(new TestProvider("k", "///").normalizedBaseUrl).toBeUndefined();
+    });
+
+    it("trims a pathological run of trailing slashes without backtracking", () => {
+        // The base URL comes straight from a request body, and the previous
+        // `/\/+$/` pattern backtracked polynomially on this input, hanging the
+        // server (CodeQL js/polynomial-redos).
+        const hostile = `http://x${"/".repeat(100_000)}`;
+        const startedAt = Date.now();
+        expect(new TestProvider("k", hostile).normalizedBaseUrl).toBe("http://x");
+        expect(Date.now() - startedAt).toBeLessThan(1000);
     });
 });
 
