@@ -2,6 +2,7 @@
 // uses for highlighting matches, use the same one on CodeMirror
 // for consistency
 import type Mark from "mark.js";
+import { expandAncestorDetails } from "../services/collapsible.js";
 import utils from "../services/utils.js";
 import type FindWidget from "./find.js";
 import type { FindResult } from "./find.js";
@@ -91,16 +92,5 @@ export default class FindInHtml {
             $current[0].scrollIntoView({ block: 'center', inline: 'center'});
             $current.addClass(FIND_RESULT_SELECTED_CSS_CLASSNAME);
         }
-    }
-}
-
-/** Open every collapsed `<details>` ancestor of `el` so a match inside it becomes visible. */
-export function expandAncestorDetails(el: HTMLElement) {
-    let details = el.closest("details");
-    while (details) {
-        if (!details.open) {
-            details.open = true;
-        }
-        details = details.parentElement?.closest("details") ?? null;
     }
 }

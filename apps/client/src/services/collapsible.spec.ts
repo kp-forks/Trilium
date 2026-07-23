@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { expandAncestorDetails } from "./find_in_html.js";
+import { expandAncestorDetails } from "./collapsible.js";
 
 /** Build a DOM tree from an HTML string and return the element matching `selector`. */
 function mount(html: string, selector: string): HTMLElement {
