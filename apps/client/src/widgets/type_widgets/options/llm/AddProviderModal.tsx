@@ -2,7 +2,7 @@ import "./AddProviderModal.css";
 
 import type { LlmModelInfo } from "@triliumnext/commons";
 import { createPortal } from "preact/compat";
-import { useMemo, useRef, useState } from "preact/hooks";
+import { useMemo, useState } from "preact/hooks";
 import { Trans } from "react-i18next";
 
 import { t } from "../../../../services/i18n";
@@ -10,8 +10,8 @@ import { Badge } from "../../../react/Badge";
 import { Card, CardSection } from "../../../react/Card";
 import FormTextBox from "../../../react/FormTextBox";
 import MaskedIcon from "../../../react/MaskedIcon";
-import Modal from "../../../react/Modal";
 import SelectableCard, { SelectableCardGrid } from "../../../react/SelectableCard";
+import WizardModal, { type WizardStep } from "../../../react/WizardModal";
 import OptionsRow from "../components/OptionsRow";
 import anthropicIcon from "./icons/anthropic.svg?url";
 import claudeAgentIcon from "./icons/claude-ai.svg?url";
@@ -155,7 +155,6 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
     const [apiKey, setApiKey] = useState(existingProvider?.apiKey ?? "");
     const [baseUrl, setBaseUrl] = useState(existingProvider?.baseURL ?? prefilledBaseUrl(existingProvider?.provider ?? PROVIDER_TYPES[0].id));
     const [selectedModels, setSelectedModels] = useState<LlmModelInfo[]>(existingProvider?.selectedModels ?? []);
-    const formRef = useRef<HTMLFormElement>(null);
 
     const providerType = useMemo(
         () => PROVIDER_TYPES.find(p => p.id === selectedProvider),
@@ -236,22 +235,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
         onHidden();
     }
 
-    function handleSubmit() {
-        if (step === "provider") {
-            // Enter with nothing picked yet must not silently advance with whichever
-            // provider happens to be first in the list.
-            if (providerChosen) {
-                setStep("connection");
-            }
-            return;
-        }
-        if (step === "connection") {
-            if (connectionValid) {
-                setStep("models");
-            }
-            return;
-        }
-
+    function handleFinish() {
         const saved: LlmProviderConfig = {
             id: existingProvider?.id ?? `${selectedProvider}_${Date.now()}`,
             name: providerType?.name || selectedProvider,
@@ -268,57 +252,20 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
 
     // Past the picker the cards are gone, so the title carries which provider is
     // being set up.
-    const title = isEdit
+    const namedTitle = isEdit
         ? t("llm.edit_provider_title", { name: existingProvider?.name ?? providerType?.name ?? selectedProvider })
-        : step === "provider"
-            ? t("llm.add_provider_title")
-            : t("llm.add_provider_title_named", { name: providerType?.name ?? selectedProvider });
-    const primaryLabel = step === "models"
-        ? (isEdit ? t("llm.save") : t("llm.add_provider"))
-        : t("llm.next");
-    // The models step never disables Save: an empty selection is valid (hides all
-    // of the provider's models, same as a pre-selection migration), and it avoids
-    // a dead-end when the live model fetch fails.
-    const primaryDisabled = step === "connection" && !connectionValid;
-    // Back retraces the steps this modal actually opened with: editing starts at
-    // the connection details (the provider type of a saved config is fixed), so
-    // there is nothing behind it to go back to.
-    const previousStep = step === "models" ? "connection" : step === "connection" ? "provider" : undefined;
-    const canGoBack = previousStep !== undefined && !(previousStep === "provider" && firstStep !== "provider");
+        : t("llm.add_provider_title_named", { name: providerType?.name ?? selectedProvider });
 
-    return createPortal(
-        <Modal
-            show={show}
-            onHidden={handleCancel}
-            onSubmit={handleSubmit}
-            formRef={formRef}
-            title={title}
-            className="add-provider-modal"
-            size="md"
-            maxWidth={600}
-            stackable
-            // The provider list is the tallest step and grows with every provider
-            // added, so scroll the body rather than pushing the footer off-screen.
-            scrollable
-            footer={
-                <>
-                    <button
-                        type="button"
-                        className="btn btn-secondary"
-                        onClick={canGoBack && previousStep ? () => setStep(previousStep) : handleCancel}
-                    >
-                        {canGoBack ? t("llm.back") : t("llm.cancel")}
-                    </button>
-                    {/* Choosing a card advances on its own, so the provider step needs no primary action. */}
-                    {step !== "provider" && (
-                        <button type="submit" className="btn btn-primary" disabled={primaryDisabled}>
-                            {primaryLabel}
-                        </button>
-                    )}
-                </>
-            }
-        >
-            {step === "provider" ? (
+    const steps: WizardStep<ProviderStep>[] = [
+        {
+            id: "provider",
+            title: t("llm.add_provider_title"),
+            // Choosing a card advances on its own, so the step needs no primary action —
+            // but Enter must still not advance with whichever provider happens to be
+            // first in the list, hence the guard.
+            autoAdvance: true,
+            canContinue: providerChosen,
+            content: (
                 // One card per group rather than one "Provider" card holding them all:
                 // the groups are the step's structure, so each gets the heading and the
                 // enclosure, and the choices below it are only the ones it describes.
@@ -332,7 +279,13 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                         onSelect={selectProviderType}
                     />
                 ))
-            ) : step === "connection" ? (
+            )
+        },
+        {
+            id: "connection",
+            title: namedTitle,
+            canContinue: connectionValid,
+            content: (
                 <>
                     {providerType && <ProviderIllustration providerType={providerType} />}
 
@@ -367,7 +320,15 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                         </CardSection>
                     </Card>
                 </>
-            ) : (
+            )
+        },
+        {
+            id: "models",
+            title: namedTitle,
+            // Never blocked: an empty selection is valid (it hides all of the provider's
+            // models, same as a pre-selection migration), and allowing it avoids a
+            // dead-end when the live model fetch fails.
+            content: (
                 <Card heading={t("llm.select_models")}>
                     <CardSection>
                         <ModelSelection
@@ -382,8 +343,27 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                         />
                     </CardSection>
                 </Card>
-            )}
-        </Modal>,
+            )
+        }
+    ];
+
+    return createPortal(
+        <WizardModal
+            show={show}
+            onHidden={handleCancel}
+            steps={steps}
+            step={step}
+            onStepChange={setStep}
+            // Editing starts at the connection details — the provider type of a saved
+            // config is fixed — so the picker behind it is not somewhere Back can go.
+            entryStep={firstStep}
+            finishLabel={isEdit ? t("llm.save") : t("llm.add_provider")}
+            onFinish={handleFinish}
+            className="add-provider-modal"
+            size="md"
+            maxWidth={600}
+            stackable
+        />,
         document.body
     );
 }

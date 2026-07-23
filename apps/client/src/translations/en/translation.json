@@ -2773,6 +2773,11 @@
     "cancel": "Cancel",
     "help_title": "Display more information about this screen"
   },
+  "wizard": {
+    "back": "Back",
+    "next": "Next",
+    "step_progress": "Step {{current}} of {{total}}"
+  },
   "call_to_action": {
     "next_theme_title": "Try the new Trilium theme",
     "next_theme_message": "You are currently using the legacy theme, would you like to try the new theme?",
@@ -3140,8 +3145,6 @@
     "add_provider_title": "Add AI Provider",
     "edit_provider_title": "Edit {{name}}",
     "edit_provider": "Edit",
-    "next": "Next",
-    "back": "Back",
     "save": "Save",
     "select_models": "Select models",
     "models_loading": "Loading models…",
@@ -3191,7 +3194,6 @@
     "troubleshoot_server_running": "Is the server running on the machine you expect?",
     "troubleshoot_port": "Does the port in the URL match the one the server reports?",
     "troubleshoot_remote": "If the server is on another machine, is it configured to accept connections from the network rather than localhost only?",
-    "cancel": "Cancel",
     "mcp_title": "MCP (Model Context Protocol)",
     "mcp_enabled": "MCP server",
     "mcp_enabled_description": "Expose a Model Context Protocol (MCP) endpoint so that AI coding assistants (e.g. Claude Code, GitHub Copilot) can read and modify your notes. The endpoint is only accessible from localhost.",

@@ -1,4 +1,12 @@
 .modal.add-provider-modal {
+    /* Sized against the three steps, which trade off one for one: every pixel of frame
+       is a pixel less scrolling in the provider list (far the tallest — four group
+       cards, seven rows) and a pixel more empty space under the connection step (the
+       shortest — a logo and one or two fields). This sits nearer the tall end because
+       the model list, whose length isn't known until it loads, is the step that most
+       wants the room. */
+    --wizard-body-height: 40rem;
+
     .tn-card {
         margin-bottom: 1rem;
     }
