@@ -25,21 +25,35 @@ export interface LlmProviderSetup {
     selectedModels?: ModelInfo[];
 }
 
+/** Provider type identifiers that can be instantiated, for error messages. */
+const PROVIDER_TYPES = ["anthropic", "openai", "google", "claude-agent"];
+
 /**
- * Factory functions for creating provider instances, keyed by provider type.
- * A Map (not a plain object) is deliberate: the provider key is user-controlled,
- * and `map.get(userKey)` can only return a factory we registered — never an
- * inherited method like `constructor`/`toString`, which a `obj[userKey]()`
- * lookup would resolve and invoke.
+ * Instantiate a provider from its type identifier.
+ *
+ * Deliberately a switch over literal cases rather than a lookup table: the
+ * provider type is user-controlled, and looking a factory up by it — with a
+ * plain object *or* a Map — makes the invoked function a value derived from
+ * untrusted input, which is exactly what CodeQL's
+ * `js/unvalidated-dynamic-method-call` flags. Here every branch calls a
+ * statically known constructor, so no dynamic dispatch is possible at all.
  */
-const providerFactories = new Map<string, (apiKey: string, baseURL?: string) => LlmProvider>([
-    ["anthropic", (apiKey, baseURL) => new AnthropicProvider(apiKey, baseURL)],
-    ["openai", (apiKey, baseURL) => new OpenAiProvider(apiKey, baseURL)],
-    ["google", (apiKey, baseURL) => new GoogleProvider(apiKey, baseURL)],
-    // Claude Pro/Max subscription via the Claude Agent SDK — no API key;
-    // authentication is handled by Claude Code itself (`claude /login`).
-    ["claude-agent", () => new ClaudeAgentProvider()]
-]);
+function createProviderInstance(provider: string, apiKey: string, baseURL?: string): LlmProvider {
+    switch (provider) {
+        case "anthropic":
+            return new AnthropicProvider(apiKey, baseURL);
+        case "openai":
+            return new OpenAiProvider(apiKey, baseURL);
+        case "google":
+            return new GoogleProvider(apiKey, baseURL);
+        // Claude Pro/Max subscription via the Claude Agent SDK — no API key;
+        // authentication is handled by Claude Code itself (`claude /login`).
+        case "claude-agent":
+            return new ClaudeAgentProvider();
+        default:
+            throw new Error(`Unknown LLM provider type: ${provider}. Available: ${PROVIDER_TYPES.join(", ")}`);
+    }
+}
 
 /** Cache of instantiated providers by their config ID */
 let cachedProviders: Record<string, LlmProvider> = {};
@@ -97,12 +111,7 @@ export function getProvider(providerId?: string): LlmProvider {
     }
 
     // Create new provider instance
-    const factory = providerFactories.get(config.provider);
-    if (!factory) {
-        throw new Error(`Unknown LLM provider type: ${config.provider}. Available: ${[...providerFactories.keys()].join(", ")}`);
-    }
-
-    const provider = factory(config.apiKey, config.baseURL);
+    const provider = createProviderInstance(config.provider, config.apiKey, config.baseURL);
     cachedProviders[config.id] = provider;
     return provider;
 }
@@ -138,11 +147,7 @@ export function hasConfiguredProviders(): boolean {
  * dynamic listing.
  */
 export async function listProviderModels(provider: string, apiKey: string, baseURL?: string): Promise<ModelInfo[]> {
-    const factory = providerFactories.get(provider);
-    if (!factory) {
-        throw new Error(`Unknown LLM provider type: ${provider}. Available: ${[...providerFactories.keys()].join(", ")}`);
-    }
-    const instance = factory(apiKey, baseURL);
+    const instance = createProviderInstance(provider, apiKey, baseURL);
     const models = await (instance.listModels?.() ?? instance.getAvailableModels());
     // Tag the default-selected set here so the recommendation rule lives on the
     // server — in the provider that owns its model id shape — rather than in the
