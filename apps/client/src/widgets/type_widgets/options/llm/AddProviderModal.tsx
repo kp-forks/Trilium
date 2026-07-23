@@ -47,8 +47,14 @@ export interface ProviderType {
     prefillBaseUrl?: boolean;
     /** URL of the provider's logo (an imported `*.svg?url`), rendered monochrome via a CSS mask. */
     iconUrl: string;
-    /** Short blurb shown under the provider name on its selectable card. */
-    description: string;
+    /**
+     * Short blurb under the provider name, only where the name doesn't already say
+     * what the card is or what it needs — a prerequisite (Claude Code), or a card
+     * that names no vendor at all (OpenAI-compatible). Every vendor card goes
+     * without: "GPT models via the OpenAI API" under "OpenAI", inside a group
+     * headed "Cloud providers", is a line of height for nothing.
+     */
+    description?: string;
     /** One-line setup reminder shown under the endpoint field (i18n key, rendered via `<Trans>`). */
     setupHintKey?: string;
     /** Marks the provider as beta, shown as a badge next to its name. */
@@ -75,40 +81,48 @@ export interface ProviderType {
 /**
  * List sections, in the order they are shown. Keys are spelled out rather than
  * built from the id so they stay greppable for the translation tooling.
+ *
+ * `columns` is stated per group rather than derived, because the right answer
+ * depends on how many cards the group holds: two columns halve the height of a
+ * group that fills its rows, but leave a lone tile stranded beside empty space in
+ * one that doesn't — conspicuous now that each group has its own card. Adding a
+ * provider means revisiting the number for its group.
  */
 const PROVIDER_GROUPS = [
-    { id: "cloud", headingKey: "llm.provider_group_cloud", descriptionKey: "llm.provider_group_cloud_description" },
-    { id: "subscription", headingKey: "llm.provider_group_subscription", descriptionKey: "llm.provider_group_subscription_description" },
-    { id: "local", headingKey: "llm.provider_group_local", descriptionKey: "llm.provider_group_local_description" },
+    { id: "cloud", columns: 2, headingKey: "llm.provider_group_cloud", descriptionKey: "llm.provider_group_cloud_description" },
+    { id: "subscription", columns: 1, headingKey: "llm.provider_group_subscription", descriptionKey: "llm.provider_group_subscription_description" },
+    { id: "local", columns: 2, headingKey: "llm.provider_group_local", descriptionKey: "llm.provider_group_local_description" },
     // Kept apart from the local runtimes: the same card reaches a hosted
     // OpenAI-compatible service (OpenRouter, Groq, …), so neither "no usage cost"
     // nor "stays on your machine" can be claimed for it.
-    { id: "custom", headingKey: "llm.provider_group_custom", descriptionKey: "llm.provider_group_custom_description" }
+    { id: "custom", columns: 1, headingKey: "llm.provider_group_custom", descriptionKey: "llm.provider_group_custom_description" }
 ] as const;
 
 type ProviderGroupId = (typeof PROVIDER_GROUPS)[number]["id"];
 
 export const PROVIDER_TYPES: ProviderType[] = [
-    { id: "anthropic", name: "Anthropic", group: "cloud", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon, description: t("llm.provider_desc_anthropic") },
-    { id: "openai", name: "OpenAI", group: "cloud", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon, description: t("llm.provider_desc_openai") },
-    { id: "google", name: "Google Gemini", group: "cloud", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon, description: t("llm.provider_desc_google") },
+    { id: "anthropic", name: "Anthropic", group: "cloud", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon },
+    { id: "openai", name: "OpenAI", group: "cloud", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon },
+    { id: "google", name: "Google Gemini", group: "cloud", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon },
     // Reachable through the custom endpoint card too — it speaks the OpenAI API —
     // but carded here so its models resolve against the committed price table,
     // which a nameless endpoint never can.
-    { id: "deepseek", name: "DeepSeek", group: "cloud", defaultBaseUrl: "https://api.deepseek.com/v1", iconUrl: deepseekIcon, description: t("llm.provider_desc_deepseek") },
+    { id: "deepseek", name: "DeepSeek", group: "cloud", defaultBaseUrl: "https://api.deepseek.com/v1", iconUrl: deepseekIcon },
     // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`),
     // and usage is covered by the subscription rather than charged per token.
     { id: "claude-agent", name: "Claude Code", group: "subscription", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, apiKey: "none", baseUrl: "none" },
     // The three self-hosted cards share one server-side provider; they differ only in
     // the endpoint they prefill and the setup hint they show.
+    // No blurbs: the group heading already says local/self-hosted, and how to start
+    // each server belongs on the connection step, where the setup hints live.
     {
         id: "ollama", name: "Ollama", group: "local", defaultBaseUrl: "http://localhost:11434", prefillBaseUrl: true,
-        iconUrl: ollamaIcon, description: t("llm.provider_desc_ollama"),
+        iconUrl: ollamaIcon,
         setupHintKey: "llm.setup_hint_ollama", apiKey: "none", baseUrl: "required"
     },
     {
         id: "lmstudio", name: "LM Studio", group: "local", defaultBaseUrl: "http://localhost:1234/v1", prefillBaseUrl: true,
-        iconUrl: lmStudioIcon, description: t("llm.provider_desc_lmstudio"),
+        iconUrl: lmStudioIcon,
         setupHintKey: "llm.setup_hint_lmstudio", apiKey: "none", baseUrl: "required"
     },
     {
@@ -279,6 +293,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                         key={group.id}
                         heading={t(group.headingKey)}
                         description={t(group.descriptionKey)}
+                        columns={group.columns}
                         providers={PROVIDER_TYPES.filter(p => p.group === group.id)}
                         selectedProvider={providerChosen ? selectedProvider : undefined}
                         onSelect={selectProviderType}
@@ -394,14 +409,16 @@ function ProviderIllustration({ providerType }: { providerType: ProviderType }) 
  * reads as an introduction to the rows it qualifies rather than as a caption
  * floating between two boxes.
  *
- * Laid out one provider per row so each description fits on a single line — the
- * list is the whole step, so it can afford the width, and it stays identical on
- * mobile where a grid would collapse to one column anyway.
+ * Groups that fill their rows are laid out two-up; ones holding a single card
+ * stay full-width, where a half-width tile would sit beside an obvious gap. On
+ * mobile the grid collapses to one column regardless.
  */
-function ProviderGroup({ heading, description, providers, selectedProvider, onSelect }: {
+function ProviderGroup({ heading, description, columns, providers, selectedProvider, onSelect }: {
     heading: string;
     /** Where the user's notes end up with this group — the axis the list is grouped on. */
     description: string;
+    /** Tiles per row, chosen per group — see {@link PROVIDER_GROUPS}. */
+    columns: number;
     providers: ProviderType[];
     /** The chosen provider, or undefined while nothing has been picked yet. */
     selectedProvider: string | undefined;
@@ -411,7 +428,7 @@ function ProviderGroup({ heading, description, providers, selectedProvider, onSe
         <Card heading={heading} className="add-provider-group">
             <CardSection>
                 <p className="add-provider-group-description">{description}</p>
-                <SelectableCardGrid columns={1}>
+                <SelectableCardGrid columns={columns}>
                     {providers.map((provider) => (
                         <SelectableCard
                             key={provider.id}
