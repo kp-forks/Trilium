@@ -49,13 +49,49 @@ describe("inkmlToSvg", () => {
         const svg = inkmlToSvg(dot) ?? "";
         expect(svg).toContain("<circle");
         expect(svg).not.toContain("<path");
+        // The default brush is OneNote's automatic ink, so the dot fills adaptively via the class.
+        expect(svg).toContain(`class="ink-auto"`);
+        expect(svg).toContain("circle.ink-auto{fill:light-dark(#000,#fff)}");
     });
 
-    it("works without namespace prefixes and falls back to a default brush", () => {
+    it("works without namespace prefixes and falls back to a default (automatic) brush", () => {
         const plain = `<ink><trace>0 0, 10 10</trace></ink>`;
         const svg = inkmlToSvg(plain) ?? "";
         expect(svg).toContain("<path");
-        expect(svg).toContain(`stroke="#000000"`);
+        // The default brush is OneNote's automatic ink: rendered theme-adaptively, never hard black.
+        expect(svg).toContain(`class="ink-auto"`);
+        expect(svg).not.toContain(`stroke="#000000"`);
+        expect(svg).toContain("light-dark(#000,#fff)");
+    });
+
+    it("renders OneNote's automatic ink (default black and its white inverse) theme-adaptively", () => {
+        const automatic = `<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML">
+            <inkml:definitions>
+                <inkml:brush xml:id="black"><inkml:brushProperty name="color" value="#000000"/></inkml:brush>
+                <inkml:brush xml:id="white"><inkml:brushProperty name="color" value="#FFFFFF"/></inkml:brush>
+            </inkml:definitions>
+            <inkml:trace brushRef="#black">0 0, 10 10</inkml:trace>
+            <inkml:trace brushRef="#white">20 20, 30 30</inkml:trace>
+        </inkml:ink>`;
+        const svg = inkmlToSvg(automatic) ?? "";
+
+        // Both default black and its dark-mode inverse (white) become the adaptive class, not a color.
+        expect((svg.match(/class="ink-auto"/g) ?? [])).toHaveLength(2);
+        expect(svg).not.toContain(`stroke="#000000"`);
+        expect(svg).not.toContain(`stroke="#FFFFFF"`);
+
+        // The adaptive <style> is emitted once, keyed to the embedding context's color-scheme.
+        expect((svg.match(/<style>/g) ?? [])).toHaveLength(1);
+        expect(svg).toContain("svg{color-scheme:light dark}");
+        expect(svg).toContain("path.ink-auto{stroke:light-dark(#000,#fff)}");
+    });
+
+    it("leaves deliberately-colored ink literal and omits the adaptive style", () => {
+        // #FF0000 is a chosen color — untouched — and with no automatic strokes there's no <style> block.
+        const svg = inkmlToSvg(INKML) ?? "";
+        expect(svg).toContain(`stroke="#FF0000"`);
+        expect(svg).not.toContain("ink-auto");
+        expect(svg).not.toContain("<style>");
     });
 
     it("returns null for empty input or ink with no traces", () => {
