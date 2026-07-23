@@ -62,18 +62,33 @@ export interface ProviderType {
      * an advanced override (vendor APIs), or not applicable. Defaults to `"advanced"`.
      */
     baseUrl?: "required" | "advanced" | "none";
-    /** Which section of the provider list this card belongs to. */
-    group: "cloud" | "local";
+    /**
+     * Which section of the provider list this card belongs to — how it is billed,
+     * mirroring the three the user guide describes: metered API keys, a fixed-fee
+     * subscription reused from elsewhere, and self-hosted.
+     */
+    group: ProviderGroupId;
 }
 
-// The two Claude-powered providers lead the list so they sit together at the top,
-// making the subscription-vs-API-key choice easy to spot.
+/**
+ * List sections, in the order they are shown. Keys are spelled out rather than
+ * built from the id so they stay greppable for the translation tooling.
+ */
+const PROVIDER_GROUPS = [
+    { id: "cloud", headingKey: "llm.provider_group_cloud", descriptionKey: "llm.provider_group_cloud_description" },
+    { id: "subscription", headingKey: "llm.provider_group_subscription", descriptionKey: "llm.provider_group_subscription_description" },
+    { id: "local", headingKey: "llm.provider_group_local", descriptionKey: "llm.provider_group_local_description" }
+] as const;
+
+type ProviderGroupId = (typeof PROVIDER_GROUPS)[number]["id"];
+
 export const PROVIDER_TYPES: ProviderType[] = [
     { id: "anthropic", name: "Anthropic", group: "cloud", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon, description: t("llm.provider_desc_anthropic") },
-    // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`).
-    { id: "claude-agent", name: "Claude Code", group: "cloud", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, apiKey: "none", baseUrl: "none" },
     { id: "openai", name: "OpenAI", group: "cloud", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon, description: t("llm.provider_desc_openai") },
     { id: "google", name: "Google Gemini", group: "cloud", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon, description: t("llm.provider_desc_google") },
+    // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`),
+    // and usage is covered by the subscription rather than charged per token.
+    { id: "claude-agent", name: "Claude Code", group: "subscription", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, apiKey: "none", baseUrl: "none" },
     // The three self-hosted cards share one server-side provider; they differ only in
     // the endpoint they prefill and the setup hint they show.
     {
@@ -286,20 +301,16 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
             {step === "provider" ? (
                 <Card heading={t("llm.provider_type")}>
                     <CardSection>
-                        <ProviderGroup
-                            heading={t("llm.provider_group_cloud")}
-                            description={t("llm.provider_group_cloud_description")}
-                            providers={PROVIDER_TYPES.filter(p => p.group === "cloud")}
-                            selectedProvider={providerChosen ? selectedProvider : undefined}
-                            onSelect={selectProviderType}
-                        />
-                        <ProviderGroup
-                            heading={t("llm.provider_group_local")}
-                            description={t("llm.provider_group_local_description")}
-                            providers={PROVIDER_TYPES.filter(p => p.group === "local")}
-                            selectedProvider={providerChosen ? selectedProvider : undefined}
-                            onSelect={selectProviderType}
-                        />
+                        {PROVIDER_GROUPS.map(group => (
+                            <ProviderGroup
+                                key={group.id}
+                                heading={t(group.headingKey)}
+                                description={t(group.descriptionKey)}
+                                providers={PROVIDER_TYPES.filter(p => p.group === group.id)}
+                                selectedProvider={providerChosen ? selectedProvider : undefined}
+                                onSelect={selectProviderType}
+                            />
+                        ))}
                     </CardSection>
                 </Card>
             ) : step === "connection" ? (

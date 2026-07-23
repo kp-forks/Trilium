@@ -32,12 +32,22 @@ describe("AddProviderModal provider cards", () => {
         }
     });
 
-    it("sorts every card into a list section, with the local one matching the self-hosted set", () => {
-        // The two are independent fields but describe the same thing, so a card
-        // added to one and not the other would land in the wrong section.
-        expect(PROVIDER_TYPES.filter(p => p.group === "local").map(p => p.id)).toEqual(SELF_HOSTED);
+    it("sorts every card into a billing section, with the local one matching the self-hosted set", () => {
+        // Groups follow the user guide's taxonomy: metered API keys, a fixed-fee
+        // subscription reused from elsewhere, and self-hosted. `group` and
+        // `baseUrl` are independent fields describing the same split for the local
+        // set, so a card added to one and not the other would land in the wrong section.
         expect(PROVIDER_TYPES.filter(p => p.group === "cloud").map(p => p.id))
-            .toEqual(["anthropic", "claude-agent", "openai", "google"]);
+            .toEqual(["anthropic", "openai", "google"]);
+        expect(PROVIDER_TYPES.filter(p => p.group === "subscription").map(p => p.id))
+            .toEqual(["claude-agent"]);
+        expect(PROVIDER_TYPES.filter(p => p.group === "local").map(p => p.id)).toEqual(SELF_HOSTED);
+    });
+
+    it("bills every subscription provider through an existing account rather than a key", () => {
+        for (const card of PROVIDER_TYPES.filter(p => p.group === "subscription")) {
+            expect(card.apiKey, `${card.id} should not ask for an API key`).toBe("none");
+        }
     });
 
     it("keeps vendor cards on a required key and an advanced endpoint override", () => {
