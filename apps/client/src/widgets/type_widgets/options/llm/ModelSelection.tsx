@@ -1,6 +1,7 @@
 import "./ModelSelection.css";
 
 import type { LlmModelInfo } from "@triliumnext/commons";
+import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useState } from "preact/hooks";
 
 import { t } from "../../../../services/i18n";
@@ -20,6 +21,12 @@ interface ModelSelectionProps {
      * if nothing is selected yet — seeds a sensible default for a fresh provider.
      */
     autoSelectDefaults?: boolean;
+    /**
+     * Setup guidance shown alongside a listing failure. A failed fetch is the
+     * moment the user needs it, so the provider passes its checklist here rather
+     * than crowding the connection form with instructions nobody reads.
+     */
+    troubleshooting?: ComponentChildren;
 }
 
 /**
@@ -27,7 +34,7 @@ interface ModelSelectionProps {
  * keep. The picked set (with full metadata) is what the chat picker later shows,
  * so no live fetch is needed during normal chatting.
  */
-export default function ModelSelection({ query, selected, onChange, autoSelectDefaults }: ModelSelectionProps) {
+export default function ModelSelection({ query, selected, onChange, autoSelectDefaults, troubleshooting }: ModelSelectionProps) {
     const [models, setModels] = useState<LlmModelInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | undefined>();
@@ -70,10 +77,14 @@ export default function ModelSelection({ query, selected, onChange, autoSelectDe
         return <div className="model-selection-status">{t("llm.models_loading")}</div>;
     }
     if (error) {
-        return <NoItems icon="bx bx-error-circle" text={t("llm.models_load_failed", { error })} />;
+        return (
+            <NoItems icon="bx bx-error-circle" text={t("llm.models_load_failed", { error })}>
+                {troubleshooting}
+            </NoItems>
+        );
     }
     if (models.length === 0) {
-        return <NoItems icon="bx bx-bot" text={t("llm.models_none_available")} />;
+        return <NoItems icon="bx bx-bot" text={t("llm.models_none_available")}>{troubleshooting}</NoItems>;
     }
 
     const allSelected = models.every(isSelected);

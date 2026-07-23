@@ -3,7 +3,7 @@ import { getLog, options as optionService } from "@triliumnext/core";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { ClaudeAgentProvider } from "./providers/claude_agent.js";
 import { GoogleProvider } from "./providers/google.js";
-import { OllamaProvider } from "./providers/ollama.js";
+import { LocalProvider } from "./providers/local.js";
 import { OpenAiProvider } from "./providers/openai.js";
 import type { LlmProvider, ModelInfo } from "./types.js";
 
@@ -27,7 +27,7 @@ export interface LlmProviderSetup {
 }
 
 /** Provider type identifiers that can be instantiated, for error messages. */
-const PROVIDER_TYPES = ["anthropic", "openai", "google", "claude-agent", "ollama"];
+const PROVIDER_TYPES = ["anthropic", "openai", "google", "claude-agent", "ollama", "lmstudio", "openai-compatible"];
 
 /**
  * Instantiate a provider from its type identifier.
@@ -51,9 +51,13 @@ function createProviderInstance(provider: string, apiKey: string, baseURL?: stri
         // authentication is handled by Claude Code itself (`claude /login`).
         case "claude-agent":
             return new ClaudeAgentProvider();
-        // Local models via Ollama's own API — no API key, only the instance URL.
+        // Self-hosted endpoints. The three cards differ only in the URL and setup
+        // hint the UI prefills; they all speak the OpenAI-compatible API, with
+        // Ollama and LM Studio additionally offering a richer native listing.
         case "ollama":
-            return new OllamaProvider(apiKey, baseURL);
+        case "lmstudio":
+        case "openai-compatible":
+            return new LocalProvider(provider, apiKey, baseURL);
         default:
             throw new Error(`Unknown LLM provider type: ${provider}. Available: ${PROVIDER_TYPES.join(", ")}`);
     }

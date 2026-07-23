@@ -130,4 +130,19 @@ describe("ModelSelection", () => {
         const el = await renderSelection({ query: { provider: "openai" }, selected: [], onChange: vi.fn() });
         expect(el.textContent).toContain("llm.models_none_available");
     });
+
+    it("shows the provider's setup guidance when listing fails or comes back empty", async () => {
+        // The failure state is where a self-hosted user needs instructions, so
+        // the caller's checklist rides along with both non-happy paths.
+        const troubleshooting = <span>check the server</span>;
+
+        fetchProviderModelsMock.mockRejectedValue(new Error("ECONNREFUSED"));
+        const failed = await renderSelection({ query: { provider: "ollama" }, selected: [], onChange: vi.fn(), troubleshooting });
+        expect(failed.textContent).toContain("check the server");
+
+        render(null, failed);
+        fetchProviderModelsMock.mockResolvedValue([]);
+        const empty = await renderSelection({ query: { provider: "ollama" }, selected: [], onChange: vi.fn(), troubleshooting });
+        expect(empty.textContent).toContain("check the server");
+    });
 });

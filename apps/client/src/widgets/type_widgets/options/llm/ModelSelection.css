@@ -39,3 +39,16 @@
 .model-selection-cost {
     color: var(--muted-text-color);
 }
+
+/* Setup checklist shown inside the "couldn't list models" placeholder. */
+.model-selection-troubleshooting {
+    margin: 0.75em 0 0;
+    padding-inline-start: 1.2em;
+    text-align: start;
+    font-size: 0.9em;
+    color: var(--muted-text-color);
+
+    & li {
+        margin-bottom: 0.25em;
+    }
+}
