@@ -6,12 +6,12 @@
 import { type LlmMessage, type LlmMessagePart } from "@triliumnext/commons";
 import { type FilePart, generateText, type ImagePart, type LanguageModel, type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type TextPart, type ToolSet } from "ai";
 
+import { resolveAttachmentPart } from "../attachment_content.js";
+import { buildNoteHint } from "../note_hint.js";
+import { buildSystemPrompt as composeSystemPrompt } from "../system_prompt.js";
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
-import { resolveAttachmentPart } from "./attachment_content.js";
 import MODEL_PRICES_JSON from "./model_prices.json" with { type: "json" };
-import { buildNoteHint } from "./note_hint.js";
-import { buildSystemPrompt as composeSystemPrompt } from "./system_prompt.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
 const TITLE_MAX_TOKENS = 30;

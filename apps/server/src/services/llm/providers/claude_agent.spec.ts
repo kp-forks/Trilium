@@ -29,7 +29,7 @@ vi.mock("../../data_dir.js", async () => {
 vi.mock("../../port.js", () => ({ default: 8080 }));
 
 const buildNoteHintMock = vi.hoisted(() => vi.fn((noteId: string): string | null => `NOTE_META(${noteId})`));
-vi.mock("./note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
+vi.mock("../note_hint.js", () => ({ buildNoteHint: buildNoteHintMock }));
 
 // BYO binary resolution shells out to the user's `claude`; stub it so tests
 // don't depend on a real install. Resolves a path by default; can be made to
@@ -40,7 +40,7 @@ vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBin
 // Attachment resolution reads bytes out of Becca, which the core mock above
 // omits — stub it so the multimodal tests drive block construction directly.
 const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
-vi.mock("./attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
+vi.mock("../attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
 
 // The Windows `.cmd` shim delegates to child_process.spawn; the provider never
 // spawns otherwise, so mocking the whole module is safe.
