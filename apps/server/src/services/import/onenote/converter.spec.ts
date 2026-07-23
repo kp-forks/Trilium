@@ -287,6 +287,36 @@ const TABLE_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): a column-resized table. OneNote stamps the resized width as a
+// bare pixel `width` on every cell of the column (150/49/399/136 across the four columns), a form the
+// sanitizer drops — so the widths are lost unless translated to CKEditor's colgroup representation.
+const TABLE_RESIZE_SAMPLE = `<html lang="ro-RO">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:689px">
+            <table style="border:1px solid;border-collapse:collapse">
+                <tr>
+                    <td style="width:150;border:1px solid"><span lang="en-US">Mid</span></td>
+                    <td style="width:49;border:1px solid"><span lang="en-US">SM</span></td>
+                    <td style="width:399;border:1px solid"><span lang="en-US">Large</span></td>
+                    <td style="width:136;border:1px solid"><br /></td>
+                </tr>
+                <tr>
+                    <td style="width:150;border:1px solid"><span lang="en-US">Mid</span></td>
+                    <td style="width:49;border:1px solid"><span lang="en-US">SM</span></td>
+                    <td style="width:399;border:1px solid"><span lang="en-US">Large</span></td>
+                    <td style="width:136;border:1px solid"><br /></td>
+                </tr>
+                <tr>
+                    <td style="width:150;border:1px solid"><br /></td>
+                    <td style="width:49;border:1px solid"><br /></td>
+                    <td style="width:399;border:1px solid"><br /></td>
+                    <td style="width:136;border:1px solid"><br /></td>
+                </tr>
+            </table>
+        </div>
+    </body>
+</html>`;
+
 // Tests assert the end result (the HTML actually stored on the note, i.e. after sanitization).
 describe("convertPageHtml", () => {
     it("strips OneNote's block-level <br> spacing and empty list items, keeping real content", () => {
@@ -370,6 +400,44 @@ describe("convertPageHtml", () => {
 
         expect(out).not.toContain("border:0px");
         expect(out).not.toContain("border-collapse");
+    });
+
+    it("preserves OneNote per-column widths as a CKEditor resized-table colgroup", () => {
+        const out = converter.convertPageHtml(TABLE_RESIZE_SAMPLE);
+        const root = parse(out);
+
+        // The table becomes a full-width table figure, tagged as column-resized, with its rows in a
+        // <tbody> beneath the <colgroup> — CKEditor's resized-table shape.
+        const figure = root.querySelector("figure.table");
+        expect(figure?.getAttribute("style")).toContain("width:100%");
+        expect(figure?.querySelector("table")?.getAttribute("class")).toContain("ck-table-resized");
+        expect(root.querySelector("figure.table table colgroup")).toBeTruthy();
+        expect(root.querySelectorAll("figure.table table tbody tr")).toHaveLength(3);
+
+        // Each column's pixel width (150/49/399/136 of 734) becomes a proportional percentage in the
+        // colgroup, and the set sums to exactly 100 (the rounding remainder settles on the last column).
+        const cols = root.querySelectorAll("colgroup col").map((col) => col.getAttribute("style"));
+        expect(cols).toEqual(["width:20.44%", "width:6.68%", "width:54.36%", "width:18.52%"]);
+
+        // The now-redundant per-cell widths are gone, and the cell content survives.
+        expect(root.querySelectorAll("td").every((td) => !(td.getAttribute("style") ?? "").includes("width"))).toBe(true);
+        expect(out).toContain("Mid");
+        expect(out).toContain("Large");
+    });
+
+    it("leaves a table without a full set of column widths unresized", () => {
+        // Only the first column carries a width — the resize would be ambiguous, so the table is left as-is.
+        const sample = `<body><div><table style="border:1px solid;border-collapse:collapse"><tr><td style="width:220;border:1px solid">A</td><td style="border:1px solid">B</td></tr></table></div></body>`;
+        const root = parse(converter.convertPageHtml(sample));
+
+        expect(root.querySelector("figure.table")).toBeFalsy();
+        expect(root.querySelector("colgroup")).toBeFalsy();
+        expect(root.querySelector("table")?.getAttribute("class") ?? "").not.toContain("ck-table-resized");
+    });
+
+    it("does not resize a table that merges cells (colspan/rowspan)", () => {
+        const sample = `<body><div><table><tr><td colspan="2" style="width:100">A</td></tr><tr><td style="width:50">B</td><td style="width:50">C</td></tr></table></div></body>`;
+        expect(parse(converter.convertPageHtml(sample)).querySelector("colgroup")).toBeFalsy();
     });
 
     it("converts OneNote to-do tags into a Trilium task list", () => {

@@ -117,6 +117,7 @@ export function convertPageHtml(rawHtml: string): string {
     normalizeTableBorders(scope);
     removeEmptyListItems(scope);
     removeBlockLevelBreaks(scope);
+    resizeTables(scope);
 
     return sanitize.sanitizeHtml(scope.innerHTML);
 }
@@ -519,6 +520,90 @@ function normalizeTableBorders(scope: HTMLElement) {
             el.setAttribute("style", serializeStyle(style));
         }
     }
+}
+
+/**
+ * OneNote carries a resized column's width as a bare pixel `width` on every cell of that column
+ * (e.g. `<td style="width:150;…">`), a per-cell form the sanitizer drops — so column widths are lost.
+ * CKEditor instead stores column widths as percentages in a <colgroup> on a `ck-table-resized` table
+ * wrapped in `<figure class="table" style="width:100%;">`. When every column carries an explicit width,
+ * translate OneNote's pixel widths into that representation: emit a <colgroup> of proportional
+ * percentages (summing to 100), strip the now-redundant per-cell widths, tag the table resized and wrap
+ * it in a table figure. Tables that don't width every column, or that merge cells (colspan/rowspan,
+ * which this flat column model can't represent), are left untouched.
+ */
+function resizeTables(scope: HTMLElement) {
+    for (const table of scope.querySelectorAll("table")) {
+        const cellRows = table.querySelectorAll("tr").map((row) => row.querySelectorAll("td, th"));
+        const columnCount = Math.max(0, ...cellRows.map((cells) => cells.length));
+        if (columnCount === 0 || cellRows.some((cells) => cells.some(hasCellSpan))) {
+            continue;
+        }
+
+        // A resized column repeats its width on every cell; take the first one seen per column. Bail
+        // unless every column has one — a partial set can't be faithfully turned into a full colgroup.
+        const widths: number[] = [];
+        for (let column = 0; column < columnCount; column++) {
+            const width = cellRows.map((cells) => columnWidth(cells[column])).find((value) => value !== undefined);
+            if (width === undefined) {
+                break;
+            }
+            widths.push(width);
+        }
+        if (widths.length !== columnCount) {
+            continue;
+        }
+
+        for (const cells of cellRows) {
+            for (const cell of cells) {
+                const style = parseStyle(cell.getAttribute("style") ?? "");
+                if (style.delete("width")) {
+                    if (style.size === 0) {
+                        cell.removeAttribute("style");
+                    } else {
+                        cell.setAttribute("style", serializeStyle(style));
+                    }
+                }
+            }
+        }
+
+        const colgroup = `<colgroup>${columnPercentages(widths).map((percent) => `<col style="width:${percent}%;">`).join("")}</colgroup>`;
+        const existingClass = table.getAttribute("class");
+        table.setAttribute("class", existingClass ? `${existingClass} ck-table-resized` : "ck-table-resized");
+        table.set_content(`${colgroup}<tbody>${table.innerHTML}</tbody>`);
+        table.insertAdjacentHTML("beforebegin", `<figure class="table" style="width:100%;">${table.toString()}</figure>`);
+        table.remove();
+    }
+}
+
+/** Whether a cell spans multiple rows/columns, which the flat column model in resizeTables can't map. */
+function hasCellSpan(cell: HTMLElement): boolean {
+    return cell.getAttribute("colspan") != null || cell.getAttribute("rowspan") != null;
+}
+
+/** A cell's positive pixel `width` (OneNote writes it unit-less, e.g. `width:150`), or undefined. */
+function columnWidth(cell: HTMLElement | undefined): number | undefined {
+    const value = cell && parseStyle(cell.getAttribute("style") ?? "").get("width");
+    const pixels = value ? parseFloat(value) : NaN;
+    return Number.isFinite(pixels) && pixels > 0 ? pixels : undefined;
+}
+
+/**
+ * Turns pixel column widths into percentages of their total, rounded to two decimals. The last column
+ * takes the remainder so the set sums to exactly 100% (matching CKEditor's normalized colgroup) rather
+ * than drifting a hundredth off through independent rounding.
+ */
+function columnPercentages(widths: number[]): number[] {
+    const total = widths.reduce((sum, width) => sum + width, 0);
+    let allocated = 0;
+    return widths.map((width, index) => {
+        if (index === widths.length - 1) {
+            return Math.round((100 - allocated) * 100) / 100;
+        }
+        const percent = Math.round((width / total) * 10000) / 100;
+        allocated += percent;
+        return percent;
+    });
 }
 
 /** Drops list items that hold nothing but whitespace/<br> (OneNote's "exited the list" remnant). */
