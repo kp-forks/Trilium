@@ -48,6 +48,9 @@ import {
     hasConfiguredProviders,
     listProviderModels
 } from "./index.js";
+// Mocked module → this is the makeProviderMock("google") stand-in class, whose
+// prototype we can strip listModels from to exercise the curated-list fallback.
+import { GoogleProvider } from "./providers/google.js";
 
 function setProviders(configs: unknown) {
     getOptionOrNullMock.mockReturnValue(typeof configs === "string" ? configs : JSON.stringify(configs));
@@ -172,6 +175,20 @@ describe("llm/index provider registry", () => {
 
         it("throws for an unknown provider type", async () => {
             await expect(listProviderModels("mystery", "k")).rejects.toThrow(/Unknown LLM provider type: mystery/);
+        });
+
+        it("falls back to getAvailableModels for a provider without dynamic listing", async () => {
+            // Some providers offer no live /models endpoint, so listModels is
+            // absent and the `?.() ?? getAvailableModels()` fallback takes over.
+            const proto = GoogleProvider.prototype as { listModels?: unknown };
+            const original = proto.listModels;
+            delete proto.listModels;
+            try {
+                const models = await listProviderModels("google", "k");
+                expect(models).toEqual([{ id: "google-model", name: "google Model", recommended: true }]);
+            } finally {
+                proto.listModels = original;
+            }
         });
     });
 

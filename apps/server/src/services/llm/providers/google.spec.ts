@@ -211,4 +211,10 @@ describe("GoogleProvider model listing", () => {
         const provider = new GoogleProvider("g-key");
         await expect(provider.listModels()).rejects.toThrow(/Authentication failed/);
     });
+
+    it("rejects a /models payload whose models field is not an array", async () => {
+        fetchMock.mockResolvedValue(okJson({ models: { unexpected: "shape" } }));
+        const provider = new GoogleProvider("g-key");
+        await expect(provider.listModels()).rejects.toThrow(/Unexpected \/models response shape/);
+    });
 });

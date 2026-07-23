@@ -1,5 +1,5 @@
 import type { LlmStreamChunk } from "@triliumnext/commons";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const queryMock = vi.hoisted(() => vi.fn());
 const errorLogMock = vi.hoisted(() => vi.fn());
@@ -41,6 +41,11 @@ vi.mock("./claude_binary.js", () => ({ resolveClaudeBinaryPath: resolveClaudeBin
 // omits — stub it so the multimodal tests drive block construction directly.
 const resolveAttachmentPartMock = vi.hoisted(() => vi.fn());
 vi.mock("./attachment_content.js", () => ({ resolveAttachmentPart: resolveAttachmentPartMock }));
+
+// The Windows `.cmd` shim delegates to child_process.spawn; the provider never
+// spawns otherwise, so mocking the whole module is safe.
+const spawnMock = vi.hoisted(() => vi.fn());
+vi.mock("child_process", () => ({ spawn: spawnMock }));
 
 const { buildSeededPrompt, buildSubscriptionModelList, ClaudeAgentProvider, hashTranscript, resetAgentCwdForTests, resetSubscriptionModelCacheForTests } = await import("./claude_agent.js");
 
@@ -951,6 +956,17 @@ describe("ClaudeAgentProvider.listModels", () => {
         expect(queryMock).toHaveBeenCalledTimes(1);
     });
 
+    it("deduplicates concurrent probes into a single spawn", async () => {
+        scriptSupportedModels([{ value: "claude-sonnet-5", displayName: "Sonnet 5" }]);
+        const provider = new ClaudeAgentProvider();
+        // The second call arrives while the first probe is still in flight and
+        // shares its promise instead of spawning a second CLI subprocess.
+        const [a, b] = await Promise.all([provider.listModels(), provider.listModels()]);
+
+        expect(a).toBe(b);
+        expect(queryMock).toHaveBeenCalledTimes(1);
+    });
+
     it("propagates the probe failure so the modal can surface it (e.g. not authenticated)", async () => {
         scriptSupportedModels(async () => {
             throw new Error("Claude Code is not authenticated");
@@ -959,11 +975,113 @@ describe("ClaudeAgentProvider.listModels", () => {
         await expect(provider.listModels()).rejects.toThrow("not authenticated");
     });
 
+    it("times out when the init handshake never surfaces the catalog", async () => {
+        vi.useFakeTimers();
+        try {
+            // supportedModels() never resolves → the 15s timeout wins the race.
+            scriptSupportedModels(() => new Promise<never>(() => {}));
+            const provider = new ClaudeAgentProvider();
+            const promise = provider.listModels();
+            // Surface the rejection now so it isn't reported as unhandled while
+            // we advance the clock; assert on it after the timer fires.
+            const settled = promise.then(() => "resolved", (e: Error) => e.message);
+            await vi.advanceTimersByTimeAsync(15_000);
+            expect(await settled).toMatch(/Timed out reading the Claude Code model catalog/);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it("propagates when Claude Code isn't installed, without spawning a probe", async () => {
         resolveClaudeBinaryMock.mockRejectedValueOnce(new Error("Claude Code CLI not found"));
         const provider = new ClaudeAgentProvider();
 
         await expect(provider.listModels()).rejects.toThrow("not found");
         expect(queryMock).not.toHaveBeenCalled();
+    });
+
+    it("feeds query() a no-input prompt that stays open until teardown, then finishes once aborted", async () => {
+        // The probe hands query() a prompt whose iterator never yields a user
+        // message — it registers a teardown listener and only resolves `done`
+        // once the probe aborts. Drive that iterator here (the mock never would).
+        let probeIterator: AsyncIterator<unknown> | undefined;
+        let firstPull: Promise<IteratorResult<unknown>> | undefined;
+        queryMock.mockImplementation((opts: { prompt: AsyncIterable<unknown> }) => {
+            probeIterator = opts.prompt[Symbol.asyncIterator]();
+            // Pull once while the probe's controller is still un-aborted: this
+            // runs the iterator body and registers the abort ("finish") listener.
+            firstPull = probeIterator.next();
+            return { supportedModels: async () => [{ value: "claude-sonnet-5", displayName: "Sonnet 5" }] };
+        });
+
+        await new ClaudeAgentProvider().listModels();
+
+        // The probe's teardown aborted the controller, resolving the pending pull.
+        expect(firstPull).toBeDefined();
+        await expect(firstPull).resolves.toEqual({ done: true, value: undefined });
+
+        // A later pull sees the already-aborted signal and finishes immediately.
+        expect(probeIterator).toBeDefined();
+        await expect(probeIterator?.next()).resolves.toEqual({ done: true, value: undefined });
+    });
+});
+
+describe("Windows .cmd spawn shim", () => {
+    const realPlatform = process.platform;
+
+    function setPlatform(value: string) {
+        Object.defineProperty(process, "platform", { value, configurable: true });
+    }
+
+    beforeEach(() => {
+        queryMock.mockReset();
+        spawnMock.mockReset();
+    });
+    afterEach(() => {
+        setPlatform(realPlatform);
+        // Restore the default binary path the other suites depend on.
+        resolveClaudeBinaryMock.mockReset();
+        resolveClaudeBinaryMock.mockImplementation(async () => "/usr/bin/claude");
+    });
+
+    it("wraps the CLI spawn in a shell for a .cmd shim on Windows", async () => {
+        // Node's spawn() can't execute a .cmd batch file (the npm shim) directly,
+        // so the provider installs a spawn override that delegates via a shell.
+        setPlatform("win32");
+        resolveClaudeBinaryMock.mockResolvedValue("C:\\Users\\me\\claude.cmd");
+        scriptAgent([successResult()]);
+        await collect(new ClaudeAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+
+        const spawnClaudeCodeProcess = queryMock.mock.calls[0][0].options.spawnClaudeCodeProcess;
+        expect(spawnClaudeCodeProcess).toBeTypeOf("function");
+
+        const fakeChild = { pid: 123 };
+        spawnMock.mockReturnValue(fakeChild);
+        const child = spawnClaudeCodeProcess({ command: "claude.cmd", args: ["--print"], cwd: "/tmp", env: { A: "1" }, signal: undefined });
+
+        expect(spawnMock).toHaveBeenCalledWith(
+            "claude.cmd",
+            ["--print"],
+            expect.objectContaining({ shell: true, stdio: "pipe", cwd: "/tmp", env: { A: "1" } })
+        );
+        expect(child).toBe(fakeChild);
+    });
+
+    it("installs no spawn override on non-Windows hosts", async () => {
+        setPlatform("linux");
+        resolveClaudeBinaryMock.mockResolvedValue("/usr/bin/claude");
+        scriptAgent([successResult()]);
+        await collect(new ClaudeAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock.mock.calls[0][0].options.spawnClaudeCodeProcess).toBeUndefined();
+    });
+
+    it("installs no spawn override for a non-.cmd binary on Windows", async () => {
+        setPlatform("win32");
+        resolveClaudeBinaryMock.mockResolvedValue("C:\\Users\\me\\claude.exe");
+        scriptAgent([successResult()]);
+        await collect(new ClaudeAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+
+        expect(queryMock.mock.calls[0][0].options.spawnClaudeCodeProcess).toBeUndefined();
     });
 });

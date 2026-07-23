@@ -123,6 +123,12 @@ describe("LLM chat API", () => {
             await llmChatRoute.getProviderModels(req, {} as Response);
             expect(state.providerModelsArgs).toEqual(["claude-agent", "", undefined]);
         });
+
+        it("stringifies a non-Error listing failure into the validation error", async () => {
+            state.providerModelsThrows = "socket hang up";
+            const req = { body: { provider: "openai", apiKey: "k" } } as unknown as Request;
+            await expect(llmChatRoute.getProviderModels(req, {} as Response)).rejects.toThrow("socket hang up");
+        });
     });
 
     describe("streamChat", () => {

@@ -73,6 +73,16 @@ describe("fetchProviderModels", () => {
         server.post = vi.fn(async () => { throw "rejected by browser"; }) as typeof server.post;
         await expect(fetchProviderModels({ provider: "openai" })).rejects.toThrow("rejected by browser");
     });
+
+    it("uses an Error's message when the rejection is an Error object", async () => {
+        server.post = vi.fn(async () => { throw new Error("network down"); }) as typeof server.post;
+        await expect(fetchProviderModels({ provider: "openai" })).rejects.toThrow("network down");
+    });
+
+    it("stringifies a non-string, non-Error rejection", async () => {
+        server.post = vi.fn(async () => { throw { code: 500 }; }) as typeof server.post;
+        await expect(fetchProviderModels({ provider: "openai" })).rejects.toThrow("[object Object]");
+    });
 });
 
 describe("streamChatCompletion", () => {

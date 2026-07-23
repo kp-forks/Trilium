@@ -340,4 +340,10 @@ describe("AnthropicProvider model listing", () => {
         const provider = new AnthropicProvider("sk-ant");
         await expect(provider.listModels()).rejects.toThrow("offline");
     });
+
+    it("rejects a /models payload whose data field is not an array", async () => {
+        fetchMock.mockResolvedValue(okJson({ data: { unexpected: "shape" } }));
+        const provider = new AnthropicProvider("sk-ant");
+        await expect(provider.listModels()).rejects.toThrow(/Unexpected \/models response shape/);
+    });
 });

@@ -273,6 +273,11 @@ export class ClaudeAgentProvider implements LlmProvider {
                 })
             ]);
         } finally {
+            // `timer` is always assigned by the time this runs: the Promise
+            // executor above is invoked synchronously by the constructor, so the
+            // race cannot settle before the assignment. The guard exists only to
+            // narrow the optional type, making its else path unreachable.
+            /* v8 ignore else */
             if (timer) {
                 clearTimeout(timer);
             }

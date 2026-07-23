@@ -1,7 +1,7 @@
 import type { LlmMessage, LlmMessagePart } from "@triliumnext/commons";
 import { encodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import type { LanguageModel } from "ai";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { LlmProviderConfig } from "../types.js";
 
@@ -88,6 +88,16 @@ class TestProvider extends BaseProvider {
     public callBuildMessages(m: LlmMessage[]) {
         return this.buildMessages(m);
     }
+    /** Reach the base implementation past this class's own override. */
+    public callBaseFetchRemoteModels() {
+        return super.fetchRemoteModels();
+    }
+    public callFetchJson(url: string, headers: Record<string, string>) {
+        return this.fetchJson(url, headers);
+    }
+    public callBaseGetProviderPrices() {
+        return super.getProviderPrices();
+    }
 }
 
 /** Build a stub attachment with the given content/availability. */
@@ -168,6 +178,46 @@ describe("listModels", () => {
         const provider = new TestProvider();
         provider.fetchRemoteModelsMock.mockResolvedValue([]);
         expect((await provider.listModels()).map((m) => m.id)).toEqual(["cheap", "mid", "spendy"]);
+    });
+});
+
+describe("fetchRemoteModels / fetchJson (base defaults and errors)", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
+    it("base fetchRemoteModels returns null — providers opt in to dynamic listing", async () => {
+        await expect(new TestProvider().callBaseFetchRemoteModels()).resolves.toBeNull();
+    });
+
+    it("fetchJson raises a plain HTTP error for a non-auth failure", async () => {
+        vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 500 })));
+        await expect(new TestProvider().callFetchJson("https://api.example/models", { "x-key": "v" }))
+            .rejects.toThrow("HTTP 500 from https://api.example/models");
+    });
+
+    it("fetchJson reports an auth failure so the add/edit screen can flag the credential", async () => {
+        vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 401 })));
+        await expect(new TestProvider().callFetchJson("https://api.example/models", { "x-key": "v" }))
+            .rejects.toThrow(/Authentication failed \(HTTP 401\) — check the API key\.$/);
+    });
+
+    it("fetchJson's auth error also blames the base URL when one is configured", async () => {
+        vi.stubGlobal("fetch", vi.fn(async () => ({ ok: false, status: 403 })));
+        await expect(new TestProvider("key", "https://proxy.example").callFetchJson("https://proxy.example/models", {}))
+            .rejects.toThrow(/check the API key and base URL\./);
+    });
+
+    it("fetchJson returns the parsed JSON on success", async () => {
+        vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true, json: async () => ({ data: [1, 2] }) })));
+        await expect(new TestProvider().callFetchJson("https://api.example/models", {}))
+            .resolves.toEqual({ data: [1, 2] });
+    });
+
+    it("getProviderPrices returns an empty table for a provider absent from the price file", () => {
+        // TestProvider.name ("test") has no entry in the committed price table,
+        // so the base lookup falls back to an empty map.
+        expect(new TestProvider().callBaseGetProviderPrices()).toEqual({});
     });
 });
 
