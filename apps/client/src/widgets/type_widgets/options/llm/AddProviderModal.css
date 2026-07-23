@@ -7,12 +7,6 @@
         margin-bottom: 0;
     }
 
-    /* The connection card holds the form fields directly, so drop the FormGroup's
-       trailing margin on the last field to keep the card padding even. */
-    .tn-card-section .form-group:last-child {
-        margin-bottom: 0;
-    }
-
     /* Where the notes end up — the distinction the groups exist to draw. Sits at
        the top of its group's card, ahead of the providers it qualifies. */
     .add-provider-group-description {
