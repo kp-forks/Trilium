@@ -255,4 +255,13 @@ describe("OpenAiProvider recommendedModelIds", () => {
     it("recommends nothing for an OpenAI-compatible endpoint with no gpt/o models", () => {
         expect(recommend(["llama3.2", "qwen2.5"]).size).toBe(0);
     });
+
+    it("recommends unversioned gpt-* models when nothing versioned outranks them", () => {
+        // A self-hosted endpoint serving OpenAI's open-weight models: `gpt-oss-*`
+        // starts with `gpt-` but carries no version, so all of them tie at 0.
+        expect([...recommend(["gpt-oss-120b", "gpt-oss-20b"])].sort())
+            .toEqual(["gpt-oss-120b", "gpt-oss-20b"]);
+        // ...but any real GPT generation outranks them.
+        expect([...recommend(["gpt-oss-120b", "gpt-4.1"])]).toEqual(["gpt-4.1"]);
+    });
 });

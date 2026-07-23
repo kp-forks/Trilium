@@ -169,35 +169,39 @@ const ANTHROPIC_MODEL = /^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?$/;
  * {@link AnthropicProvider} (it runs the Agent SDK, not the AI SDK).
  */
 export function anthropicRecommendedIds(models: ModelInfo[]): Set<string> {
-    const byFamily = new Map<string, ModelInfo[]>();
+    const byFamily = new Map<string, { id: string; version: number }[]>();
     for (const model of models) {
-        const family = anthropicFamily(model.id);
-        if (!family) {
+        const parsed = parseAnthropicModel(model.id);
+        if (!parsed) {
             continue;
         }
-        const members = byFamily.get(family) ?? [];
-        members.push(model);
-        byFamily.set(family, members);
+        const members = byFamily.get(parsed.family) ?? [];
+        members.push({ id: model.id, version: parsed.version });
+        byFamily.set(parsed.family, members);
     }
     const recommended = new Set<string>();
     for (const members of byFamily.values()) {
-        const newest = members.reduce((best, m) => (anthropicVersion(m.id) > anthropicVersion(best.id) ? m : best));
+        // Strict `>` so the earliest listed model wins a version tie.
+        const newest = members.reduce((best, m) => (m.version > best.version ? m : best));
         recommended.add(newest.id);
     }
     return recommended;
 }
 
-/** `claude-opus-4-8` → "opus"; null for ids that aren't `claude-<family>-<version>`. */
-function anthropicFamily(id: string): string | null {
-    return ANTHROPIC_MODEL.exec(id)?.[1] ?? null;
-}
-
-/** `claude-opus-4-8` → 4.8, `claude-sonnet-5` → 5, `claude-sonnet-4-20250514` → 4 (the trailing date is not a minor). */
-function anthropicVersion(id: string): number {
+/**
+ * `claude-opus-4-8` → `{ family: "opus", version: 4.8 }`, `claude-sonnet-5` →
+ * version 5, `claude-sonnet-4-20250514` → version 4 (the trailing date is a
+ * snapshot, not a minor). Null for ids outside the `claude-<family>-<version>`
+ * shape, which the caller skips.
+ *
+ * Family and version are parsed together so the regex runs once per model
+ * rather than again on both sides of every version comparison.
+ */
+function parseAnthropicModel(id: string): { family: string; version: number } | null {
     const match = ANTHROPIC_MODEL.exec(id);
     if (!match) {
-        return 0;
+        return null;
     }
-    const [, , major, minor] = match;
-    return parseFloat(minor ? `${major}.${minor}` : major);
+    const [, family, major, minor] = match;
+    return { family, version: parseFloat(minor ? `${major}.${minor}` : major) };
 }

@@ -132,14 +132,17 @@ function newestOfLine(models: ModelInfo[], line: RegExp, version: (id: string) =
     return family.filter(m => version(m.id) === max).map(m => m.id);
 }
 
-/** `gpt-5.6-sol` → 5.6, `gpt-4.1` → 4.1, `gpt-4o` → 4. */
+/**
+ * `gpt-5.6-sol` → 5.6, `gpt-4.1` → 4.1, `gpt-4o` → 4. Version 0 for a `gpt-`
+ * id carrying no version at all (self-hosted `gpt-oss-120b`), which leaves such
+ * a model recommendable only when nothing versioned outranks it.
+ */
 function gptVersion(id: string): number {
     const match = /^gpt-(\d+(?:\.\d+)?)/.exec(id);
     return match ? parseFloat(match[1]) : 0;
 }
 
-/** `o4-mini` → 4, `o3` → 3. */
+/** `o4-mini` → 4, `o3` → 3. Only reached for `/^o\d/` ids, so the digits are guaranteed. */
 function oSeriesVersion(id: string): number {
-    const match = /^o(\d+)/.exec(id);
-    return match ? parseInt(match[1], 10) : 0;
+    return parseInt(id.slice(1), 10);
 }
