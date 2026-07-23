@@ -15,6 +15,7 @@ import WizardModal, { type WizardStep } from "../../../react/WizardModal";
 import OptionsRow from "../components/OptionsRow";
 import anthropicIcon from "./icons/anthropic.svg?url";
 import claudeAgentIcon from "./icons/claude-ai.svg?url";
+import deepseekIcon from "./icons/deepseek.svg?url";
 import geminiIcon from "./icons/gemini.svg?url";
 import lmStudioIcon from "./icons/lmstudio.svg?url";
 import ollamaIcon from "./icons/ollama.svg?url";
@@ -91,6 +92,10 @@ export const PROVIDER_TYPES: ProviderType[] = [
     { id: "anthropic", name: "Anthropic", group: "cloud", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon, description: t("llm.provider_desc_anthropic") },
     { id: "openai", name: "OpenAI", group: "cloud", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon, description: t("llm.provider_desc_openai") },
     { id: "google", name: "Google Gemini", group: "cloud", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon, description: t("llm.provider_desc_google") },
+    // Reachable through the custom endpoint card too — it speaks the OpenAI API —
+    // but carded here so its models resolve against the committed price table,
+    // which a nameless endpoint never can.
+    { id: "deepseek", name: "DeepSeek", group: "cloud", defaultBaseUrl: "https://api.deepseek.com/v1", iconUrl: deepseekIcon, description: t("llm.provider_desc_deepseek") },
     // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`),
     // and usage is covered by the subscription rather than charged per token.
     { id: "claude-agent", name: "Claude Code", group: "subscription", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, apiKey: "none", baseUrl: "none" },

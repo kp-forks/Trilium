@@ -116,6 +116,28 @@
       "ctx": 1000000
     }
   },
+  "deepseek": {
+    "deepseek-chat": {
+      "input": 0.28,
+      "output": 0.42,
+      "ctx": 131072
+    },
+    "deepseek-reasoner": {
+      "input": 0.28,
+      "output": 0.42,
+      "ctx": 131072
+    },
+    "deepseek-v4-flash": {
+      "input": 0.14,
+      "output": 0.28,
+      "ctx": 1000000
+    },
+    "deepseek-v4-pro": {
+      "input": 0.435,
+      "output": 0.87,
+      "ctx": 1000000
+    }
+  },
   "google": {
     "gemini-2.0-flash": {
       "input": 0.1,

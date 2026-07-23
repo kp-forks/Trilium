@@ -38,7 +38,7 @@ describe("AddProviderModal provider cards", () => {
         // section, which exists because that card also reaches *hosted* services
         // (OpenRouter, Groq) and so can claim neither free use nor locality.
         expect(PROVIDER_TYPES.filter(p => p.group === "cloud").map(p => p.id))
-            .toEqual(["anthropic", "openai", "google"]);
+            .toEqual(["anthropic", "openai", "google", "deepseek"]);
         expect(PROVIDER_TYPES.filter(p => p.group === "subscription").map(p => p.id))
             .toEqual(["claude-agent"]);
         expect(PROVIDER_TYPES.filter(p => p.group === "local").map(p => p.id))
@@ -62,7 +62,7 @@ describe("AddProviderModal provider cards", () => {
     });
 
     it("keeps vendor cards on a required key and an advanced endpoint override", () => {
-        for (const id of ["anthropic", "openai", "google"]) {
+        for (const id of ["anthropic", "openai", "google", "deepseek"]) {
             const card = PROVIDER_TYPES.find(p => p.id === id);
             // Both default, so neither is set explicitly.
             expect(card?.apiKey ?? "required").toBe("required");

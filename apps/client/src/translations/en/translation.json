@@ -3165,6 +3165,7 @@
     "provider_desc_claude_agent": "Requires Claude Code on the machine running Trilium.",
     "provider_desc_openai": "GPT models via the OpenAI API.",
     "provider_desc_google": "Gemini models via the Google API.",
+    "provider_desc_deepseek": "DeepSeek models via the DeepSeek API.",
     "actions": "Actions",
     "delete_provider": "Delete",
     "delete_provider_confirmation": "Are you sure you want to delete the provider \"{{name}}\"?",
