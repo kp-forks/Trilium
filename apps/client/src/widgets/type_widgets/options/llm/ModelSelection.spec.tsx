@@ -81,6 +81,14 @@ describe("ModelSelection", () => {
         expect(onChange).not.toHaveBeenCalled();
     });
 
+    it("leaves an empty selection untouched when auto-select is off", async () => {
+        // A provider deliberately emptied to "hide all" — reopening its editor
+        // must not silently re-populate it (see shouldSeedDefaultModels).
+        const onChange = vi.fn();
+        await renderSelection({ query: { provider: "openai" }, selected: [], onChange, autoSelectDefaults: false });
+        expect(onChange).not.toHaveBeenCalled();
+    });
+
     it("toggling a checkbox adds or removes that model", async () => {
         const onChange = vi.fn();
         await renderSelection({ query: { provider: "openai" }, selected: [MODELS[0]], onChange });

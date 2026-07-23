@@ -98,6 +98,14 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
         [selectedProvider, trimmedApiKey, trimmedBaseUrl]
     );
 
+    // Seed the recommended models only when the provider has no stored selection
+    // yet: a brand-new provider, or a pre-selection config being migrated (where
+    // seeding is the whole point of the "configure models" prompt). An existing
+    // but explicitly emptied selection (`[]`, truthy) is a deliberate "hide all"
+    // and must not be silently re-populated when the editor is reopened — hence
+    // the check against `undefined` rather than edit mode or `length === 0`.
+    const seedDefaultModels = !existingProvider?.selectedModels;
+
     function reset() {
         setStep(initialStep);
         setSelectedProvider(existingProvider?.provider ?? PROVIDER_TYPES[0].id);
@@ -237,7 +245,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                             query={modelQuery}
                             selected={selectedModels}
                             onChange={setSelectedModels}
-                            autoSelectDefaults
+                            autoSelectDefaults={seedDefaultModels}
                         />
                     </CardSection>
                 </Card>
