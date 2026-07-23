@@ -25,12 +25,14 @@ function makeProviderMock(tag: string) {
             return [{ id: `${tag}-model`, name: `${tag} Model` }];
         }
         listModels() {
-            // A current model plus a preview one — the fallback recommendation
-            // rule (non-openai) keeps the former and drops the latter.
             return Promise.resolve([
                 { id: `${tag}-model`, name: `${tag} Model` },
                 { id: `${tag}-preview`, name: `${tag} Preview` }
             ]);
+        }
+        /** Stands in for the provider's own rule — index only forwards to it. */
+        recommendedModelIds(models: { id: string }[]) {
+            return new Set(models.filter(m => !m.id.endsWith("-preview")).map(m => m.id));
         }
     };
 }
@@ -164,8 +166,8 @@ describe("llm/index provider registry", () => {
     describe("listProviderModels", () => {
         it("lists models for ad-hoc credentials, tagged with the recommended flag", async () => {
             // No saved config needed — the add/edit flow passes raw credentials.
-            // Uses "google" to exercise the generic non-preview fallback rule;
-            // provider-specific recommendation rules are covered in model_listing.spec.
+            // Only the delegation is asserted here; each provider's own rule is
+            // covered in its spec (openai/anthropic/google/claude_agent).
             const models = await listProviderModels("google", "k");
             expect(models).toEqual([
                 { id: "google-model", name: "google Model", recommended: true },

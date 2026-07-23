@@ -2,9 +2,8 @@ import { type AnthropicProvider as AnthropicSDKProvider,createAnthropic } from "
 import type { LlmMessage } from "@triliumnext/commons";
 import { type ModelMessage, stepCountIs, streamText, type SystemModelMessage, type ToolSet } from "ai";
 
-import type { LlmProviderConfig, StreamResult } from "../types.js";
-import { BaseProvider, buildModelMessage } from "./base_provider.js";
-import type { RemoteModel } from "./model_listing.js";
+import type { LlmProviderConfig, ModelInfo, StreamResult } from "../types.js";
+import { BaseProvider, buildModelMessage, type RemoteModel } from "./base_provider.js";
 
 const OFFICIAL_BASE_URL = "https://api.anthropic.com/v1";
 
@@ -58,6 +57,10 @@ export class AnthropicProvider extends BaseProvider {
         tools.web_search = this.anthropic.tools.webSearch_20250305({
             maxUses: 5
         });
+    }
+
+    override recommendedModelIds(models: ModelInfo[]): Set<string> {
+        return anthropicRecommendedIds(models);
     }
 
     /**
@@ -145,4 +148,56 @@ export class AnthropicProvider extends BaseProvider {
 
         return streamText(streamOptions);
     }
+}
+
+/**
+ * Anthropic model id shape: `claude-<family>-<major>[-<minor>][-<YYYYMMDD>]`.
+ * The optional trailing 8-digit snapshot date is not part of the version —
+ * `claude-sonnet-4-20250514` is Sonnet 4.0, not 4.20250514 — so the minor
+ * group is capped at two digits to force the date into the snapshot group.
+ */
+const ANTHROPIC_MODEL = /^claude-([a-z]+)-(\d+)(?:-(\d{1,2}))?(?:-\d{8})?$/;
+
+/**
+ * Recommend the newest version within each Claude family (Opus, Sonnet, Haiku,
+ * Fable, and any future one) — one model per family, so today's Opus 4.8,
+ * Sonnet 5, Haiku 4.5 and Fable 5. Older revisions and dated snapshots stay in
+ * the picker, unchecked.
+ *
+ * Exported because the Claude Code subscription provider serves the same
+ * `claude-*` catalog and must apply the same rule, without inheriting from
+ * {@link AnthropicProvider} (it runs the Agent SDK, not the AI SDK).
+ */
+export function anthropicRecommendedIds(models: ModelInfo[]): Set<string> {
+    const byFamily = new Map<string, ModelInfo[]>();
+    for (const model of models) {
+        const family = anthropicFamily(model.id);
+        if (!family) {
+            continue;
+        }
+        const members = byFamily.get(family) ?? [];
+        members.push(model);
+        byFamily.set(family, members);
+    }
+    const recommended = new Set<string>();
+    for (const members of byFamily.values()) {
+        const newest = members.reduce((best, m) => (anthropicVersion(m.id) > anthropicVersion(best.id) ? m : best));
+        recommended.add(newest.id);
+    }
+    return recommended;
+}
+
+/** `claude-opus-4-8` → "opus"; null for ids that aren't `claude-<family>-<version>`. */
+function anthropicFamily(id: string): string | null {
+    return ANTHROPIC_MODEL.exec(id)?.[1] ?? null;
+}
+
+/** `claude-opus-4-8` → 4.8, `claude-sonnet-5` → 5, `claude-sonnet-4-20250514` → 4 (the trailing date is not a minor). */
+function anthropicVersion(id: string): number {
+    const match = ANTHROPIC_MODEL.exec(id);
+    if (!match) {
+        return 0;
+    }
+    const [, , major, minor] = match;
+    return parseFloat(minor ? `${major}.${minor}` : major);
 }

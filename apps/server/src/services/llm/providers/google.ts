@@ -4,8 +4,7 @@ import { getLog } from "@triliumnext/core";
 import { stepCountIs, streamText, type ToolSet } from "ai";
 
 import type { LlmProviderConfig, StreamResult } from "../types.js";
-import { BaseProvider } from "./base_provider.js";
-import { isGoogleChatModel, type RemoteModel } from "./model_listing.js";
+import { BaseProvider, type RemoteModel } from "./base_provider.js";
 
 const OFFICIAL_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 
@@ -123,4 +122,27 @@ export class GoogleProvider extends BaseProvider {
 
         return streamText(streamOptions);
     }
+}
+
+/**
+ * Chat-model filter for the Gemini API. The endpoint's `supportedGenerationMethods`
+ * is not enough: image (Nano Banana), robotics, computer-use, and speech models
+ * all advertise `generateContent` too. Filter by id shape instead:
+ *
+ * - Only `gemini-*` ids are chat candidates — this drops the non-Gemini
+ *   families wholesale (`lyria-*` music, `veo-*` video, `imagen-*`, `gemma-*`
+ *   open models, `deep-research-*`, `antigravity-*` agents, embeddings, AQA).
+ * - Within `gemini-*`, drop non-conversational variants by token: image
+ *   generation, speech (tts/live/native-audio), video (omni), robotics,
+ *   computer use, embeddings, and tool-variant builds (custom-tools).
+ * - Drop `-latest` rolling aliases and `-NNN` pinned revisions — both are
+ *   duplicates of a stable id that is also in the list.
+ */
+const GOOGLE_NON_CHAT = /image|tts|live|audio|dialog|robotics|computer-use|embedding|omni|custom-?tools/i;
+
+export function isGoogleChatModel(id: string): boolean {
+    return /^gemini-/.test(id)
+        && !GOOGLE_NON_CHAT.test(id)
+        && !/-latest$/.test(id)
+        && !/-\d{3}$/.test(id);
 }

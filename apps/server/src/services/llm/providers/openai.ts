@@ -1,8 +1,8 @@
 import { createOpenAI, type OpenAIProvider as OpenAISDKProvider } from "@ai-sdk/openai";
 import type { ToolSet } from "ai";
 
-import { BaseProvider } from "./base_provider.js";
-import { isOpenAiChatModel, openAiModelName, type RemoteModel } from "./model_listing.js";
+import type { ModelInfo } from "../types.js";
+import { BaseProvider, type RemoteModel } from "./base_provider.js";
 
 const OFFICIAL_BASE_URL = "https://api.openai.com/v1";
 
@@ -57,4 +57,89 @@ export class OpenAiProvider extends BaseProvider {
     protected override addWebSearchTool(tools: ToolSet): void {
         tools.web_search = this.openai.tools.webSearch();
     }
+
+    /**
+     * Recommend only the newest generation of each OpenAI line, core tiers only.
+     *
+     * The recency signal is the version number, across two parallel lines (the
+     * GPT line `gpt-<version>` and the reasoning o-series `o<n>`) — so today's
+     * `gpt-5.6-{sol,terra,luna}` and `o4-mini`, not the dozens of older gpt-4
+     * through 5.5 and o1/o3 models (which stay in the picker, unchecked). When
+     * gpt-5.7 / o5 ship they win automatically. A self-hosted endpoint serving
+     * neither line recommends nothing.
+     */
+    override recommendedModelIds(models: ModelInfo[]): Set<string> {
+        // Premium (`-pro`) and rolling-alias (`-chat-latest`) variants are never a
+        // default; drop them before picking the newest generation.
+        const core = models.filter(m => !/-pro$/.test(m.id) && !/-chat-latest$/.test(m.id));
+        return new Set([
+            ...newestOfLine(core, /^gpt-/, gptVersion),
+            ...newestOfLine(core, /^o\d/, oSeriesVersion)
+        ]);
+    }
+}
+
+/**
+ * Model-id families returned by the official OpenAI `/models` endpoint that are
+ * not chat models (embeddings, audio/speech, image, video, moderation,
+ * computer-use, coding agents, legacy completions). Only applied on the
+ * official endpoint — custom base URLs (Ollama, vLLM, LiteLLM, LM Studio) list
+ * exactly what the user installed, so nothing is filtered there.
+ */
+const OPENAI_NON_CHAT = /embedding|whisper|tts|dall-e|moderation|realtime|audio|transcribe|image|sora|computer-use|codex|instruct|deep-research|babbage|davinci|search/i;
+
+/**
+ * Pinned-snapshot suffixes that duplicate a rolling base id — `-2024-05-13`
+ * (dated) and `-0125` / `-1106` (legacy MMDD). Dropped so the list shows
+ * `gpt-4o`, not `gpt-4o` plus five of its dated revisions.
+ */
+const OPENAI_SNAPSHOT = /-\d{4}(-\d{2}-\d{2})?$/;
+
+export function isOpenAiChatModel(id: string): boolean {
+    // `chat-latest` is a bare rolling alias (current ChatGPT Instant model) —
+    // redundant with the versioned `gpt-*-chat-latest` handles and uninformative
+    // on its own, so it's dropped.
+    return id !== "chat-latest" && !OPENAI_NON_CHAT.test(id) && !OPENAI_SNAPSHOT.test(id);
+}
+
+/**
+ * Friendly display name for an OpenAI model id, since the `/models` endpoint
+ * returns none. Only the GPT family is reshaped — `gpt-4.1-mini` →
+ * "GPT-4.1 Mini", `gpt-5.6-sol` → "GPT-5.6 Sol". The o-series keeps OpenAI's
+ * canonical lowercase-hyphenated form (`o4-mini`, `o1-pro`), which is both its
+ * proper style and what keeps it visually distinct from "GPT-4o Mini".
+ * Non-OpenAI ids (self-hosted `llama3.2`) are left untouched.
+ */
+export function openAiModelName(id: string): string {
+    const gptMatch = /^gpt-([^-]+)(?:-(.+))?$/.exec(id);
+    if (!gptMatch) {
+        return id;
+    }
+    const [, version, suffix] = gptMatch;
+    const suffixName = suffix
+        ? ` ${suffix.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")}`
+        : "";
+    return `GPT-${version}${suffixName}`;
+}
+
+/** Ids in `models` matching `line` whose parsed version equals the line's maximum. */
+function newestOfLine(models: ModelInfo[], line: RegExp, version: (id: string) => number): string[] {
+    const family = models.filter(m => line.test(m.id));
+    if (family.length === 0) {
+        return [];
+    }
+    const max = Math.max(...family.map(m => version(m.id)));
+    return family.filter(m => version(m.id) === max).map(m => m.id);
+}
+
+/** `gpt-5.6-sol` → 5.6, `gpt-4.1` → 4.1, `gpt-4o` → 4. */
+function gptVersion(id: string): number {
+    const match = /^gpt-(\d+(?:\.\d+)?)/.exec(id);
+    return match ? parseFloat(match[1]) : 0;
+}
+
+/** `o4-mini` → 4, `o3` → 3. */
+function oSeriesVersion(id: string): number {
+    const match = /^o(\d+)/.exec(id);
+    return match ? parseInt(match[1], 10) : 0;
 }

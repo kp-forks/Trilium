@@ -1085,3 +1085,17 @@ describe("Windows .cmd spawn shim", () => {
         expect(queryMock.mock.calls[0][0].options.spawnClaudeCodeProcess).toBeUndefined();
     });
 });
+
+describe("ClaudeAgentProvider.recommendedModelIds", () => {
+    it("applies Anthropic's per-family newest-version rule, not the generic default", () => {
+        // The subscription catalog shares Anthropic's id shape, so it recommends
+        // one model per family rather than every non-preview, non-legacy model.
+        const ids = new ClaudeAgentProvider().recommendedModelIds(
+            ["claude-fable-5", "claude-opus-4-8", "claude-opus-4-7", "claude-sonnet-5", "claude-haiku-4-5-20251001"]
+                .map(id => ({ id, name: id }))
+        );
+        expect([...ids].sort()).toEqual([
+            "claude-fable-5", "claude-haiku-4-5-20251001", "claude-opus-4-8", "claude-sonnet-5"
+        ]);
+    });
+});

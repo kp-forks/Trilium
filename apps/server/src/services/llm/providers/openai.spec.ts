@@ -22,7 +22,7 @@ vi.mock("ai", async (importOriginal) => {
     return { ...actual, streamText: streamTextMock };
 });
 
-import { OpenAiProvider } from "./openai.js";
+import { isOpenAiChatModel, openAiModelName, OpenAiProvider } from "./openai.js";
 
 describe("OpenAiProvider construction", () => {
     beforeEach(() => {
@@ -146,5 +146,113 @@ describe("OpenAiProvider model listing", () => {
         fetchMock.mockResolvedValue(okJson({ nope: true }));
         const provider = new OpenAiProvider("sk-test");
         await expect(provider.listModels()).rejects.toThrow(/Unexpected .* response shape/);
+    });
+});
+
+describe("isOpenAiChatModel", () => {
+    it("keeps chat model families, including unknown future ones", () => {
+        for (const id of ["gpt-4.1", "gpt-5", "gpt-5.6-sol", "o3", "o4-mini", "chatgpt-4o-latest"]) {
+            expect(isOpenAiChatModel(id), id).toBe(true);
+        }
+    });
+
+    it("drops non-chat families", () => {
+        for (const id of [
+            "text-embedding-3-large",
+            "whisper-1",
+            "tts-1-hd",
+            "dall-e-3",
+            "omni-moderation-latest",
+            "gpt-4o-realtime-preview",
+            "gpt-4o-audio-preview",
+            "gpt-4o-transcribe",
+            "gpt-image-1",
+            "sora-2",
+            "computer-use-preview",
+            "codex-mini-latest",
+            "gpt-3.5-turbo-instruct",
+            "o3-deep-research",
+            "babbage-002",
+            "davinci-002",
+            "gpt-4o-search-preview",
+            "chat-latest" // bare rolling alias, dropped; versioned gpt-*-chat-latest are kept
+        ]) {
+            expect(isOpenAiChatModel(id), id).toBe(false);
+        }
+    });
+
+    it("drops pinned snapshots that duplicate a rolling base id", () => {
+        for (const id of [
+            "gpt-4o-2024-05-13",
+            "gpt-5-2025-08-07",
+            "gpt-4.1-mini-2025-04-14",
+            "gpt-4-turbo-2024-04-09",
+            "o3-2025-04-16",
+            "o4-mini-2025-04-16",
+            "gpt-3.5-turbo-0125",
+            "gpt-3.5-turbo-1106",
+            "gpt-4-0613"
+        ]) {
+            expect(isOpenAiChatModel(id), id).toBe(false);
+        }
+        // ...but the rolling base ids and non-snapshot suffixes survive.
+        for (const id of ["gpt-4o", "gpt-5", "gpt-4.1-mini", "gpt-3.5-turbo-16k", "gpt-5-chat-latest"]) {
+            expect(isOpenAiChatModel(id), id).toBe(true);
+        }
+    });
+});
+
+describe("openAiModelName", () => {
+    it("prettifies gpt-* ids into friendly names", () => {
+        expect(openAiModelName("gpt-4.1")).toBe("GPT-4.1");
+        expect(openAiModelName("gpt-4.1-mini")).toBe("GPT-4.1 Mini");
+        expect(openAiModelName("gpt-4o")).toBe("GPT-4o");
+        expect(openAiModelName("gpt-4o-mini")).toBe("GPT-4o Mini");
+        expect(openAiModelName("gpt-5.6-sol")).toBe("GPT-5.6 Sol");
+        expect(openAiModelName("gpt-3.5-turbo")).toBe("GPT-3.5 Turbo");
+        expect(openAiModelName("gpt-5-chat-latest")).toBe("GPT-5 Chat Latest");
+    });
+
+    it("leaves the o-series in OpenAI's canonical lowercase-hyphenated form", () => {
+        // Kept distinct from "GPT-4o Mini"; only the GPT family is reshaped.
+        expect(openAiModelName("o1")).toBe("o1");
+        expect(openAiModelName("o3")).toBe("o3");
+        expect(openAiModelName("o3-mini")).toBe("o3-mini");
+        expect(openAiModelName("o4-mini")).toBe("o4-mini");
+        expect(openAiModelName("o1-pro")).toBe("o1-pro");
+    });
+
+    it("leaves non-OpenAI ids untouched", () => {
+        expect(openAiModelName("llama3.2")).toBe("llama3.2"); // self-hosted endpoint
+        expect(openAiModelName("chatgpt-4o-latest")).toBe("chatgpt-4o-latest");
+    });
+});
+
+describe("OpenAiProvider recommendedModelIds", () => {
+    const recommend = (ids: string[]) =>
+        new OpenAiProvider("sk-test").recommendedModelIds(ids.map(id => ({ id, name: id })));
+
+    it("recommends only the newest generation of each OpenAI line, core tiers only", () => {
+        // A representative slice of a live OpenAI /models response.
+        const ids = recommend([
+            "gpt-4.1", "gpt-4.1-mini", "gpt-4.1-nano", "gpt-4o", "gpt-4", "gpt-3.5-turbo",
+            "gpt-5", "gpt-5-mini", "gpt-5-chat-latest", "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-pro",
+            "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+            "o1", "o1-pro", "o3", "o3-mini", "o4-mini"
+        ]);
+        // Newest GPT generation (5.6) + newest o-series (o4) — nothing older.
+        expect([...ids].sort()).toEqual(["gpt-5.6-luna", "gpt-5.6-sol", "gpt-5.6-terra", "o4-mini"]);
+    });
+
+    it("excludes -pro and -chat-latest even within the newest generation", () => {
+        expect([...recommend(["gpt-9-sol", "gpt-9-pro", "gpt-9-chat-latest"])]).toEqual(["gpt-9-sol"]);
+    });
+
+    it("degrades to the newest available generation for an older-only endpoint", () => {
+        expect([...recommend(["gpt-4", "gpt-4.1", "gpt-4o"])]).toEqual(["gpt-4.1"]); // 4.1 > 4o (4.0) > 4
+    });
+
+    it("recommends nothing for an OpenAI-compatible endpoint with no gpt/o models", () => {
+        expect(recommend(["llama3.2", "qwen2.5"]).size).toBe(0);
     });
 });

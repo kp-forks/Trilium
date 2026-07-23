@@ -9,13 +9,46 @@ import { type FilePart, generateText, type ImagePart, type LanguageModel, type M
 import { allToolRegistries } from "../tools/index.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
 import { resolveAttachmentPart } from "./attachment_content.js";
-import { mergeModelLists, type ModelPriceTable, type ProviderPrices, type RemoteModel } from "./model_listing.js";
 import MODEL_PRICES_JSON from "./model_prices.json" with { type: "json" };
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt as composeSystemPrompt } from "./system_prompt.js";
 
 const DEFAULT_MAX_TOKENS = 8096;
 const TITLE_MAX_TOKENS = 30;
+
+/**
+ * A model as reported by a provider's models endpoint. Only what the listing
+ * APIs actually return — pricing is never part of it.
+ */
+export interface RemoteModel {
+    id: string;
+    /** Human-readable name, when the API provides one (e.g. Anthropic's `display_name`). */
+    name?: string;
+    /** Context window in tokens, when the API provides one (e.g. Google's `inputTokenLimit`). */
+    contextWindow?: number;
+}
+
+/**
+ * Per-model pricing/metadata, sourced from the committed `model_prices.json`
+ * (pruned from LiteLLM — see `scripts/update-model-prices.ts`). This is the
+ * single source of truth for cost/context data now that the hand-curated
+ * per-provider model arrays are gone; the endpoint (dynamic listing) remains the
+ * source of truth for which models exist and their display names.
+ */
+export interface ModelPrice {
+    /** USD per million input tokens. */
+    input: number;
+    /** USD per million output tokens. */
+    output: number;
+    /** Context window in tokens, when known. */
+    ctx?: number;
+}
+
+/** One provider's pricing, keyed by model id. */
+export type ProviderPrices = Record<string, ModelPrice>;
+
+/** The whole committed price table: provider name → model id → pricing. */
+export type ModelPriceTable = Record<string, ProviderPrices>;
 
 /**
  * The committed pricing/context table — the single source of truth for cost
@@ -87,6 +120,58 @@ export function buildModelList(baseModels: CuratedModel[]): {
 } {
     const pricing = Object.fromEntries(baseModels.map(m => [m.id, m.pricing]));
     return { models: baseModels, pricing };
+}
+
+/**
+ * Merge a live-fetched model list with a base metadata list (the provider's
+ * price-table slice, see {@link BaseProvider.getAvailableModels}).
+ *
+ * The remote list is the source of truth for *availability* and *display name*:
+ * base entries absent from it are dropped, remote models unknown to the base
+ * list are included with whatever metadata the endpoint reported (no pricing).
+ * The base list supplies pricing and context window (and, offline, a fallback
+ * name) for the models it knows; the endpoint's display name always wins when
+ * present.
+ *
+ * Shared by {@link BaseProvider.listModels} and the Claude Agent provider, which
+ * merges the CLI's catalog rather than an HTTP endpoint's but needs the same rules.
+ *
+ * Ordering: base-known models first (in base order), then unknown remote models
+ * alphabetically. An existing default keeps its flag; otherwise the first merged
+ * model becomes the default so callers relying on `find(m => m.isDefault)` keep
+ * working.
+ */
+export function mergeModelLists(curated: ModelInfo[], remote: RemoteModel[]): ModelInfo[] {
+    const remoteById = new Map(remote.map(m => [m.id, m]));
+
+    const known = curated
+        .filter(m => remoteById.has(m.id))
+        .map(m => {
+            const remoteModel = remoteById.get(m.id);
+            return {
+                ...m,
+                // The endpoint is authoritative for display names (e.g. Anthropic's
+                // `display_name`); the base name is only an offline fallback.
+                name: remoteModel?.name ?? m.name,
+                contextWindow: m.contextWindow ?? remoteModel?.contextWindow
+            };
+        });
+
+    const curatedIds = new Set(curated.map(m => m.id));
+    const unknown = remote
+        .filter(m => !curatedIds.has(m.id))
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map<ModelInfo>(m => ({
+            id: m.id,
+            name: m.name ?? m.id,
+            contextWindow: m.contextWindow
+        }));
+
+    const merged = [...known, ...unknown];
+    if (merged.length > 0 && !merged.some(m => m.isDefault)) {
+        merged[0] = { ...merged[0], isDefault: true };
+    }
+    return merged;
 }
 
 export abstract class BaseProvider implements LlmProvider {
@@ -329,6 +414,16 @@ export abstract class BaseProvider implements LlmProvider {
                 ...(id === this.defaultModel ? { isDefault: true } : {})
             }))
             .sort((a, b) => a.id.localeCompare(b.id));
+    }
+
+    /**
+     * The ids pre-selected by default when adding or resetting this provider.
+     * The generic rule — everything that is neither a preview nor a legacy model
+     * — is overridden by providers whose id shape carries a usable recency
+     * signal (see {@link OpenAiProvider} and {@link AnthropicProvider}).
+     */
+    recommendedModelIds(models: ModelInfo[]): Set<string> {
+        return new Set(models.filter(m => !m.isLegacy && !/preview/i.test(m.id)).map(m => m.id));
     }
 
     async generateTitle(firstMessage: string): Promise<string> {

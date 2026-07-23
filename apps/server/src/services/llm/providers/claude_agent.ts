@@ -33,10 +33,10 @@ import path from "path";
 import dataDirs from "../../data_dir.js";
 import { createMcpServer } from "../../mcp/mcp_server.js";
 import type { LlmProvider, LlmProviderConfig, ModelInfo, ModelPricing, StreamResult } from "../types.js";
+import { anthropicRecommendedIds } from "./anthropic.js";
 import { resolveAttachmentPart } from "./attachment_content.js";
-import { buildModelList } from "./base_provider.js";
+import { buildModelList, mergeModelLists, type RemoteModel } from "./base_provider.js";
 import { resolveClaudeBinaryPath } from "./claude_binary.js";
-import { mergeModelLists, type RemoteModel } from "./model_listing.js";
 import { buildNoteHint } from "./note_hint.js";
 import { buildSystemPrompt } from "./system_prompt.js";
 
@@ -187,6 +187,15 @@ export class ClaudeAgentProvider implements LlmProvider {
 
     getAvailableModels(): ModelInfo[] {
         return AVAILABLE_MODELS;
+    }
+
+    /**
+     * The subscription catalog shares Anthropic's `claude-*` id shape, so it
+     * reuses the metered provider's per-family newest-version rule rather than
+     * the generic non-preview/non-legacy default.
+     */
+    recommendedModelIds(models: ModelInfo[]): Set<string> {
+        return anthropicRecommendedIds(models);
     }
 
     /**

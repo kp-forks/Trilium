@@ -3,7 +3,6 @@ import { getLog, options as optionService } from "@triliumnext/core";
 import { AnthropicProvider } from "./providers/anthropic.js";
 import { ClaudeAgentProvider } from "./providers/claude_agent.js";
 import { GoogleProvider } from "./providers/google.js";
-import { recommendedModelIds } from "./providers/model_listing.js";
 import { OpenAiProvider } from "./providers/openai.js";
 import type { LlmProvider, ModelInfo } from "./types.js";
 
@@ -146,8 +145,9 @@ export async function listProviderModels(provider: string, apiKey: string, baseU
     const instance = factory(apiKey, baseURL);
     const models = await (instance.listModels?.() ?? instance.getAvailableModels());
     // Tag the default-selected set here so the recommendation rule lives on the
-    // server (next to the model metadata) rather than in the client picker.
-    const recommended = recommendedModelIds(models, provider);
+    // server — in the provider that owns its model id shape — rather than in the
+    // client picker.
+    const recommended = instance.recommendedModelIds(models);
     return models.map(model => ({ ...model, recommended: recommended.has(model.id) }));
 }
 

@@ -112,6 +112,15 @@ export interface LlmProvider {
     listModels?(): Promise<ModelInfo[]>;
 
     /**
+     * Of a listed model set, the ids pre-selected by default when the provider
+     * is added or its selection reset. Lives on the provider because the rule is
+     * provider-specific (OpenAI and Anthropic read a recency signal out of their
+     * id shapes; everything else falls back to non-preview, non-legacy), and so
+     * the model picker can stay rule-free and just honour the flag.
+     */
+    recommendedModelIds(models: ModelInfo[]): Set<string>;
+
+    /**
      * Generate a short title summarizing a message.
      * Used for auto-renaming chat notes. Should use a fast, cheap model.
      */

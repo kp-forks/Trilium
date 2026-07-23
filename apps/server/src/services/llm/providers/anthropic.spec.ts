@@ -347,3 +347,30 @@ describe("AnthropicProvider model listing", () => {
         await expect(provider.listModels()).rejects.toThrow(/Unexpected \/models response shape/);
     });
 });
+
+describe("AnthropicProvider recommendedModelIds", () => {
+    const recommend = (ids: string[]) =>
+        new AnthropicProvider("sk-ant").recommendedModelIds(ids.map(id => ({ id, name: id })));
+
+    it("recommends the newest version of each Claude family", () => {
+        const ids = recommend([
+            "claude-fable-5",
+            "claude-opus-4-8", "claude-opus-4-7", "claude-opus-4-6", "claude-opus-4-20250514",
+            "claude-sonnet-5", "claude-sonnet-4-6", "claude-sonnet-4-20250514",
+            "claude-haiku-4-5-20251001"
+        ]);
+        // One per family, newest each — Fable 5, Opus 4.8, Sonnet 5, Haiku 4.5.
+        expect([...ids].sort()).toEqual([
+            "claude-fable-5", "claude-haiku-4-5-20251001", "claude-opus-4-8", "claude-sonnet-5"
+        ]);
+    });
+
+    it("treats a snapshot date as the version, not a minor bump", () => {
+        // sonnet-4-20250514 is 4.0, so sonnet-4-6 (4.6) must outrank it.
+        expect([...recommend(["claude-sonnet-4-20250514", "claude-sonnet-4-6"])]).toEqual(["claude-sonnet-4-6"]);
+    });
+
+    it("ignores ids that don't match the claude-<family>-<version> shape", () => {
+        expect(recommend(["some-proxy-model", "claude-instant"]).size).toBe(0);
+    });
+});

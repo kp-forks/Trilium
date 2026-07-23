@@ -18,7 +18,7 @@
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import type { ModelPrice, ModelPriceTable, ProviderPrices } from "../src/services/llm/providers/model_listing.js";
+import type { ModelPrice, ModelPriceTable, ProviderPrices } from "../src/services/llm/providers/base_provider.js";
 
 const SOURCE_URL = "https://raw.githubusercontent.com/BerriAI/litellm/main/model_prices_and_context_window.json";
 

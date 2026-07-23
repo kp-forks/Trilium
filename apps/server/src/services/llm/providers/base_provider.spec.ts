@@ -3,7 +3,7 @@ import { encodeUtf8 } from "@triliumnext/core/src/services/utils/binary.js";
 import type { LanguageModel } from "ai";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { LlmProviderConfig } from "../types.js";
+import type { LlmProviderConfig, ModelInfo } from "../types.js";
 
 const { streamTextMock, generateTextMock, noteMetaMock, errorLogMock, beccaStub } = vi.hoisted(() => ({
     streamTextMock: vi.fn((..._args: any[]) => ({}) as any),
@@ -43,8 +43,14 @@ vi.mock("../tools/index.js", () => ({
     allToolRegistries: [{ toToolSet: () => ({ fake_tool: { description: "x" } }) }]
 }));
 
-import { BaseProvider, buildModelList, buildModelMessage } from "./base_provider.js";
-import type { ProviderPrices, RemoteModel } from "./model_listing.js";
+import {
+    BaseProvider,
+    buildModelList,
+    buildModelMessage,
+    mergeModelLists,
+    type ProviderPrices,
+    type RemoteModel
+} from "./base_provider.js";
 
 const TEST_MODELS: Parameters<typeof buildModelList>[0] = [
     { id: "cheap", name: "Cheap", pricing: { input: 1, output: 2 } },
@@ -134,6 +140,75 @@ describe("getAvailableModels / getModelPricing (from the price table)", () => {
         const provider = new TestProvider();
         expect(provider.getModelPricing("spendy")).toEqual({ input: 10, output: 30 });
         expect(provider.getModelPricing("nope")).toBeUndefined();
+    });
+});
+
+describe("mergeModelLists", () => {
+    const CURATED: ModelInfo[] = [
+        { id: "gpt-4.1", name: "GPT-4.1", pricing: { input: 2, output: 8 }, contextWindow: 1047576, isDefault: true },
+        { id: "gpt-4.1-mini", name: "GPT-4.1 Mini", pricing: { input: 0.4, output: 1.6 }, contextWindow: 1047576 },
+        { id: "gpt-4o", name: "GPT-4o", pricing: { input: 2.5, output: 10 }, contextWindow: 128000, isLegacy: true }
+    ];
+
+    it("keeps base metadata for known models and appends unknown ones alphabetically", () => {
+        const merged = mergeModelLists(CURATED, [
+            { id: "gpt-9" },
+            { id: "gpt-4.1-mini" },
+            { id: "gpt-5" },
+            { id: "gpt-4.1" }
+        ]);
+        expect(merged.map(m => m.id)).toEqual(["gpt-4.1", "gpt-4.1-mini", "gpt-5", "gpt-9"]);
+        // Base entries keep their pricing/default metadata...
+        expect(merged[0]).toMatchObject({ name: "GPT-4.1", pricing: { input: 2, output: 8 }, isDefault: true });
+        // ...unknown ones carry no pricing.
+        expect(merged[2]).toEqual({ id: "gpt-5", name: "gpt-5", contextWindow: undefined });
+    });
+
+    it("prefers the endpoint's display name over the base list's for known models", () => {
+        const merged = mergeModelLists(
+            [{ id: "gpt-4.1", name: "gpt-4.1", pricing: { input: 2, output: 8 } }],
+            [{ id: "gpt-4.1", name: "GPT-4.1 (from endpoint)" }]
+        );
+        expect(merged[0].name).toBe("GPT-4.1 (from endpoint)");
+    });
+
+    it("drops curated models absent from the remote list", () => {
+        expect(mergeModelLists(CURATED, [{ id: "gpt-4.1" }]).map(m => m.id)).toEqual(["gpt-4.1"]);
+    });
+
+    it("uses the remote display name and context window when provided", () => {
+        const merged = mergeModelLists([], [{ id: "llama3.2", name: "Llama 3.2", contextWindow: 131072 }]);
+        expect(merged[0]).toMatchObject({ id: "llama3.2", name: "Llama 3.2", contextWindow: 131072, isDefault: true });
+    });
+
+    it("fills a curated model's missing context window from the remote data", () => {
+        const curated: ModelInfo[] = [{ id: "m", name: "M", pricing: { input: 1, output: 1 } }];
+        expect(mergeModelLists(curated, [{ id: "m", contextWindow: 32000 }])[0].contextWindow).toBe(32000);
+    });
+
+    it("promotes the first model to default when the curated default is unavailable", () => {
+        const merged = mergeModelLists(CURATED, [{ id: "gpt-4o" }, { id: "custom-model" }]);
+        expect(merged.map(m => [m.id, m.isDefault ?? false])).toEqual([
+            ["gpt-4o", true],
+            ["custom-model", false]
+        ]);
+    });
+
+    it("returns an empty list when the remote list shares nothing and is empty", () => {
+        expect(mergeModelLists(CURATED, [])).toEqual([]);
+    });
+});
+
+describe("recommendedModelIds (generic rule)", () => {
+    it("recommends every model that is neither a preview nor legacy", () => {
+        // Providers whose id shape carries no recency signal (e.g. Google) keep
+        // this default; OpenAI/Anthropic override it in their own modules.
+        const ids = new TestProvider().recommendedModelIds([
+            { id: "gemini-2.5-flash", name: "Gemini 2.5 Flash" },
+            { id: "gemini-3-flash-preview", name: "Gemini 3 Flash Preview" },
+            { id: "gemini-2.0-flash", name: "Gemini 2.0 Flash", isLegacy: true }
+        ]);
+        expect([...ids]).toEqual(["gemini-2.5-flash"]);
     });
 });
 
