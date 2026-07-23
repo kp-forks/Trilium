@@ -87,6 +87,17 @@ export default class CollapsibleEditing extends Plugin {
      */
     private readonly preserveOpenOnNextInsert = new Map<any, boolean>();
     /**
+     * Open/collapsed state per <details> model element. The editing view wraps
+     * the body in a content container via `elementToStructure`, which reconverts
+     * the whole <details> whenever its body blocks change — that rebuilds the
+     * <details> DOM element, which defaults to closed and would silently collapse
+     * a block the user has open while they edit its body. The downcast `view()`
+     * reads this back so the rebuilt <details> keeps its `open` attribute. Only
+     * <details> toggled/opened at least once appear here; untouched ones stay
+     * closed (the loaded-document default). Weak so deleted collapsibles drop out.
+     */
+    private readonly detailsOpenState = new WeakMap<any, boolean>();
+    /**
      * Shared manager for summary hints (screen-corner popup on each <summary>).
      * Each summary owns ONE handle in {@link summaryHints}; visibility is
      * driven by the two booleans on {@link SummaryHintState} (hover, caret)
@@ -212,7 +223,41 @@ export default class CollapsibleEditing extends Plugin {
         // <details>
         conversion.for("upcast").elementToElement({ view: "details", model: "details" });
         conversion.for("dataDowncast").elementToElement({ model: "details", view: detailsView });
-        conversion.for("editingDowncast").elementToElement({ model: "details", view: detailsView });
+        // The editing view wraps the body blocks in a <div class="trilium-collapsible-content">.
+        // Chromium caps a native mouse drag-selection to a single block whenever the blocks are
+        // direct children of a <details> in a contenteditable (its ::details-content slot acts as
+        // a hard selection boundary — keyboard and programmatic selection cross it fine, only the
+        // drag algorithm doesn't). Giving the body a single wrapping container removes that
+        // boundary. This is editing-only: the data downcast above stays flat
+        // (<details><summary>…</summary><blocks>) so the saved HTML signature is unchanged. The
+        // <summary> stays a direct child of <details> (native collapse hides everything else), so
+        // only the non-summary blocks go into the wrapper.
+        conversion.for("editingDowncast").elementToStructure({
+            model: "details",
+            view: (modelElement: any, { writer }: any) => {
+                // Reconversion (triggered whenever the body blocks change) rebuilds this
+                // <details>, which would otherwise default to closed and collapse a block
+                // the user is editing. Re-apply the tracked open state as the `open`
+                // attribute so the renderer itself restores it — a post-render fix-up can't,
+                // because the view's "render" event fires *before* the DOM is reconciled.
+                const attributes: Record<string, string> = { class: "trilium-collapsible" };
+                if (this.detailsOpenState.get(modelElement)) attributes.open = "";
+                const details = writer.createContainerElement("details", attributes);
+                writer.insert(
+                    writer.createPositionAt(details, 0),
+                    writer.createSlot((node: any) => node.is("element", "summary"))
+                );
+                const content = writer.createContainerElement("div", {
+                    class: "trilium-collapsible-content"
+                });
+                writer.insert(
+                    writer.createPositionAt(content, 0),
+                    writer.createSlot((node: any) => !node.is("element", "summary"))
+                );
+                writer.insert(writer.createPositionAt(details, "end"), content);
+                return details;
+            }
+        });
 
         // <summary>
         conversion.for("upcast").elementToElement({ view: "summary", model: "summary" });
@@ -347,12 +392,19 @@ export default class CollapsibleEditing extends Plugin {
 
     /** True if the <details> is currently expanded (or no DOM mapping yet). */
     private isDetailsOpen(model: any): boolean {
+        // Prefer the tracked state: mid-reconversion the rebuilt DOM is momentarily
+        // closed even for a block the user has open, and `detailsOpenState` is the
+        // authoritative memory of that (see its declaration). Fall back to the DOM
+        // for <details> that have never been toggled (never entered the map).
+        const tracked = this.detailsOpenState.get(model);
+        if (tracked !== undefined) return tracked;
         const dom = this.getDom<HTMLDetailsElement>(model);
         return !dom || dom.open;
     }
 
-    /** Toggle the DOM `open` attribute directly (the source of truth in this plugin). */
+    /** Remember the open state (so reconversion can restore it) and reflect it to the DOM. */
     private setDetailsOpen(model: any, open: boolean) {
+        this.detailsOpenState.set(model, open);
         const dom = this.getDom<HTMLDetailsElement>(model);
         if (dom) dom.open = open;
     }
@@ -761,10 +813,13 @@ export default class CollapsibleEditing extends Plugin {
         const arrow = detailsDom.querySelector(":scope > summary > .trilium-collapsible-arrow");
         arrow?.setAttribute("aria-expanded", String(detailsDom.open));
 
-        if (detailsDom.open) return;
-
         const detailsView = editor.editing.view.domConverter.mapDomToView(detailsDom);
         const detailsModel = detailsView ? editor.editing.mapper.toModelElement(detailsView as any) : null;
+        // Record the new state so a later reconversion restores it (the arrow's
+        // click handler flips `detailsDom.open` directly, bypassing setDetailsOpen).
+        if (detailsModel) this.detailsOpenState.set(detailsModel, detailsDom.open);
+
+        if (detailsDom.open) return;
         if (!detailsModel) return;
 
         const summary = detailsModel.getChild(0);
@@ -852,16 +907,15 @@ export default class CollapsibleEditing extends Plugin {
                     return;
                 }
                 for (const node of pendingOpen) {
-                    const dom = this.getDom<HTMLDetailsElement>(node);
-                    if (!dom) continue;
+                    if (!this.getDom<HTMLDetailsElement>(node)) continue;
                     // A move (drag-and-drop) records as remove + insert; restore the
                     // pre-move open state so a collapsed block stays collapsed.
                     // Fresh inserts have no entry here and default to open.
                     if (this.preserveOpenOnNextInsert.has(node)) {
-                        dom.open = this.preserveOpenOnNextInsert.get(node)!;
+                        this.setDetailsOpen(node, this.preserveOpenOnNextInsert.get(node) ?? true);
                         this.preserveOpenOnNextInsert.delete(node);
                     } else {
-                        dom.open = true;
+                        this.setDetailsOpen(node, true);
                     }
                 }
                 pendingOpen.clear();
