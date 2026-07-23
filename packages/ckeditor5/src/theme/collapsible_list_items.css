@@ -88,7 +88,8 @@
 
 /* A find match temporarily reveals a collapsed item's children (view-only, the persisted state
  * stays collapsed). Point the arrow the expanded way so the visible nested list isn't contradicted
- * by a "collapsed" arrow. Placed last so it wins over the collapsed rules on equal specificity. */
+ * by a "collapsed" arrow. The extra `.trilium-list-temporarily-expanded` class makes this rule more
+ * specific than the collapsed-arrow rule above, so it wins regardless of source order. */
 .ck-content.ck-editor__editable li[data-trilium-collapsed="true"].trilium-list-temporarily-expanded::before {
     --_arrow-rotation: 90deg;
 }
