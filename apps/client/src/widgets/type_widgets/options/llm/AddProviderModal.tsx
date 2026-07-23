@@ -192,6 +192,21 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
             ? <Trans i18nKey={providerType.setupHintKey} components={{ Code: <code /> }} />
             : t("llm.base_url_description");
 
+    // Rendered in one of two slots: ahead of the key for self-hosted providers
+    // (the endpoint is their primary connection detail) or after it for vendor
+    // ones, where it is only an override — hence the focus following the same rule.
+    const baseUrlField = (
+        <FormGroup name="base-url" label={t("llm.base_url")} description={baseUrlDescription}>
+            <FormTextBox
+                type="text"
+                currentValue={baseUrl}
+                onChange={setBaseUrl}
+                placeholder={providerType?.defaultBaseUrl}
+                autoFocus={baseUrlMode === "required"}
+            />
+        </FormGroup>
+    );
+
     const modelQuery = useMemo(
         () => ({ provider: selectedProvider, apiKey: trimmedApiKey, baseURL: trimmedBaseUrl || undefined }),
         [selectedProvider, trimmedApiKey, trimmedBaseUrl]
@@ -318,58 +333,35 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                     </CardSection>
                 </Card>
             ) : step === "connection" ? (
-                <>
-                    <Card heading={t("llm.connection_details")}>
-                        <CardSection>
-                            {/* Self-hosted providers lead with the endpoint — the port is the
-                                detail that has to be right — and treat the key as optional. */}
-                            {baseUrlMode === "required" && (
-                                <FormGroup name="base-url" label={t("llm.base_url")} description={baseUrlDescription}>
-                                    <FormTextBox
-                                        type="text"
-                                        currentValue={baseUrl}
-                                        onChange={setBaseUrl}
-                                        placeholder={providerType?.defaultBaseUrl}
-                                        autoFocus
-                                    />
-                                </FormGroup>
-                            )}
-                            {usesApiKey && (
-                                <FormGroup
-                                    name="api-key"
-                                    label={t("llm.api_key")}
-                                    description={apiKeyMode === "optional" ? t("llm.api_key_optional_description") : undefined}
-                                >
-                                    <FormTextBox
-                                        type="password"
-                                        currentValue={apiKey}
-                                        onChange={setApiKey}
-                                        placeholder={t("llm.api_key_placeholder")}
-                                        autoFocus={baseUrlMode !== "required"}
-                                    />
-                                </FormGroup>
-                            )}
-                            {!usesApiKey && baseUrlMode === "none" && (
-                                <p>{t("llm.claude_agent_description")}</p>
-                            )}
-                        </CardSection>
-                    </Card>
-
-                    {baseUrlMode === "advanced" && (
-                        <Card heading={t("llm.advanced_options")}>
-                            <CardSection>
-                                <FormGroup name="base-url" label={t("llm.base_url")} description={baseUrlDescription}>
-                                    <FormTextBox
-                                        type="text"
-                                        currentValue={baseUrl}
-                                        onChange={setBaseUrl}
-                                        placeholder={providerType?.defaultBaseUrl}
-                                    />
-                                </FormGroup>
-                            </CardSection>
-                        </Card>
-                    )}
-                </>
+                // A single unlabelled section: the step holds a handful of fields for
+                // one provider — already named in the modal title — so splitting them
+                // across headed cards would announce structure that isn't there.
+                <Card>
+                    <CardSection>
+                        {/* Self-hosted providers lead with the endpoint — the port is the
+                            detail that has to be right — and treat the key as optional. */}
+                        {baseUrlMode === "required" && baseUrlField}
+                        {usesApiKey && (
+                            <FormGroup
+                                name="api-key"
+                                label={t("llm.api_key")}
+                                description={apiKeyMode === "optional" ? t("llm.api_key_optional_description") : undefined}
+                            >
+                                <FormTextBox
+                                    type="password"
+                                    currentValue={apiKey}
+                                    onChange={setApiKey}
+                                    placeholder={t("llm.api_key_placeholder")}
+                                    autoFocus={baseUrlMode !== "required"}
+                                />
+                            </FormGroup>
+                        )}
+                        {baseUrlMode === "advanced" && baseUrlField}
+                        {!usesApiKey && baseUrlMode === "none" && (
+                            <p>{t("llm.claude_agent_description")}</p>
+                        )}
+                    </CardSection>
+                </Card>
             ) : (
                 <Card heading={t("llm.select_models")}>
                     <CardSection>
