@@ -107,6 +107,7 @@ export function convertPageHtml(rawHtml: string): string {
 
     sortPositionedOutlines(scope);
     convertResourceReferences(scope);
+    wrapFloatingImages(scope);
     convertTags(scope);
     convertInlineFormatting(scope);
     normalizeNamedColors(scope);
@@ -174,6 +175,70 @@ function convertResourceReferences(scope: HTMLElement) {
             }
         }
     }
+}
+
+/** Block contexts whose direct <img> children are standalone (block) images, not inline runs. */
+const FLOATING_IMAGE_PARENTS = new Set(["body", "div", "section", "article"]);
+
+/**
+ * OneNote lays a standalone image out as a bare <img> floating in the outline <div>, frequently
+ * trailed — across OneNote's block-level <br> spacing — by a <cite> caption (e.g. a screen clipping's
+ * "Screen clipping taken: …"). Left verbatim the caption renders as loose body text beside the image.
+ *
+ * CKEditor represents a block image as `<figure class="image">`, with any caption as its
+ * `<figcaption>`, so wrap each floating image in a figure, carry its width/height into an
+ * `aspect-ratio` (the form CKEditor stores so the image reserves space and resizes proportionally),
+ * and pull a trailing <cite> in as the caption. Inline images (inside a <p>/<a>/<span>) are left alone.
+ */
+function wrapFloatingImages(scope: HTMLElement) {
+    for (const img of scope.querySelectorAll("img")) {
+        const parent = img.parentNode;
+        if (!(parent instanceof HTMLElement) || !FLOATING_IMAGE_PARENTS.has(parent.tagName?.toLowerCase() ?? "")) {
+            continue;
+        }
+
+        const width = img.getAttribute("width");
+        const height = img.getAttribute("height");
+        const style = parseStyle(img.getAttribute("style") ?? "");
+        if (width && height && !style.has("aspect-ratio") && /^\d+(\.\d+)?$/.test(width) && /^\d+(\.\d+)?$/.test(height)) {
+            style.set("aspect-ratio", `${width}/${height}`);
+            img.setAttribute("style", serializeStyle(style));
+        }
+
+        const caption = takeTrailingCaption(img);
+        const figcaption = caption ? `<figcaption>${caption}</figcaption>` : "";
+        img.insertAdjacentHTML("beforebegin", `<figure class="image">${img.toString()}${figcaption}</figure>`);
+        img.remove();
+    }
+}
+
+/**
+ * Consumes the <cite> caption that trails a floating image (OneNote separates the two with block-level
+ * <br>s), returning the markup for the image's <figcaption> and removing the cite and the intervening
+ * breaks from the document. The caption's text is placed in a fresh <cite>, wrapped in its font-size
+ * class (e.g. text-small) — OneNote's inline caption styling (its grey chrome colour, point size and
+ * zero margins) is dropped so the caption inherits the theme foreground. Returns null when the image
+ * has no trailing cite. Runs before convertInlineFormatting so the fresh cite's content is still
+ * formatted (a caption's own bold/italic runs survive).
+ */
+function takeTrailingCaption(img: HTMLElement): string | null {
+    const breaks: HTMLElement[] = [];
+    let sibling = img.nextElementSibling;
+    while (sibling && sibling.tagName?.toLowerCase() === "br") {
+        breaks.push(sibling);
+        sibling = sibling.nextElementSibling;
+    }
+    if (!sibling || sibling.tagName?.toLowerCase() !== "cite") {
+        return null;
+    }
+
+    const sizeClass = fontSizeClass(parseStyle(sibling.getAttribute("style") ?? "").get("font-size"), sibling);
+    const cite = `<cite>${sibling.innerHTML}</cite>`;
+    const caption = sizeClass ? `<span class="${sizeClass}">${cite}</span>` : cite;
+
+    breaks.forEach((br) => br.remove());
+    sibling.remove();
+    return caption;
 }
 
 /**

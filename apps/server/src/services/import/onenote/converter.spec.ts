@@ -214,6 +214,26 @@ const RESOURCE_SAMPLE = `<html lang="en-US">
     </body>
 </html>`;
 
+// Real OneNote source (debug-captured): a "screen clipping" page — two standalone images, each
+// floating directly in the outline <div> and separated from its <cite> caption by OneNote's <br>
+// spacing. Left verbatim the caption renders as loose body text next to the image.
+const SCREEN_CLIPPING_SAMPLE = `<html lang="ro-RO">
+    <body data-absolute-enabled="true" style="font-family:Calibri;font-size:11pt">
+        <div style="position:absolute;left:48px;top:115px;width:720px">
+            <img width="577.5" height="277.5" src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-aaa!1-BBB!sccc/$value" data-src-type="image/png" data-fullres-src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-aaa!1-BBB!sccc/$value" data-fullres-src-type="image/png" />
+            <br />
+            <cite lang="en-US" style="font-size:9pt;color:#595959;margin-top:0pt;margin-bottom:0pt">Screen clipping taken: 23.07.2026 21:40</cite>
+            <br />
+            <br />
+            <img width="385" height="509" src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-ddd!1-BBB!sccc/$value" data-src-type="image/png" data-fullres-src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-ddd!1-BBB!sccc/$value" data-fullres-src-type="image/png" />
+            <br />
+            <cite lang="en-US" style="font-size:9pt;color:#595959;margin-top:0pt;margin-bottom:0pt">Screen clipping taken: 23.07.2026 21:40</cite>
+            <br />
+            <br />
+        </div>
+    </body>
+</html>`;
+
 // Real OneNote source (debug-captured): OneNote puts the list marker type on each <li> and wraps
 // item text in a margin-0 <p>. The marker type belongs on the <ul>/<ol> (CKEditor's representation),
 // and OneNote's lower-alpha/upper-alpha map to CKEditor's lower-latin/upper-latin.
@@ -435,6 +455,52 @@ describe("convertPageHtml", () => {
         expect(out).not.toContain("data-fullres-src");
         expect(out).not.toContain("data-src-type");
         expect(out).not.toContain("0-eee"); // the full-resolution resource id is gone
+    });
+
+    it("wraps a floating image and its trailing cite caption into a figure with a figcaption", () => {
+        const out = converter.convertPageHtml(SCREEN_CLIPPING_SAMPLE);
+        const root = parse(out);
+
+        // Each standalone image becomes a CKEditor block image (<figure class="image">).
+        const figures = root.querySelectorAll("figure.image");
+        expect(figures).toHaveLength(2);
+
+        const firstImg = figures[0].querySelector("img");
+        // The display dimensions are kept and carried into an aspect-ratio (CKEditor's stored form).
+        expect(firstImg?.getAttribute("width")).toBe("577.5");
+        expect(firstImg?.getAttribute("height")).toBe("277.5");
+        expect(firstImg?.getAttribute("style")).toContain("aspect-ratio:577.5/277.5");
+        // The Graph URL is left intact for the importer to swap for a local attachment reference.
+        expect(firstImg?.getAttribute("src")).toContain("/resources/0-aaa!1-BBB!sccc/$value");
+
+        // The caption is pulled in as the figure's <figcaption>, small and wrapped in a bare <cite>.
+        const figcaption = figures[0].querySelector("figcaption");
+        expect(figcaption?.querySelector("span.text-small cite")?.textContent).toContain("Screen clipping taken: 23.07.2026 21:40");
+        // OneNote's grey caption colour is dropped so the caption inherits the theme foreground.
+        expect(figcaption?.querySelector("cite")?.getAttribute("style") ?? "").not.toContain("color");
+
+        // Both captions are absorbed into a figcaption — none left floating as body text — and the
+        // <br> spacing between image and caption is gone.
+        expect(root.querySelectorAll("cite")).toHaveLength(2);
+        expect(root.querySelectorAll("figcaption cite")).toHaveLength(2);
+        expect(root.querySelectorAll("br")).toHaveLength(0);
+    });
+
+    it("wraps a caption-less floating image in a figure carrying its aspect ratio", () => {
+        const out = converter.convertPageHtml(`<body><div><img width="480" height="441" src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-x!1-y!sz/$value" /><br /></div></body>`);
+        const figure = parse(out).querySelector("figure.image");
+
+        expect(figure).toBeTruthy();
+        expect(figure?.querySelector("figcaption")).toBeFalsy();
+        expect(figure?.querySelector("img")?.getAttribute("style")).toContain("aspect-ratio:480/441");
+    });
+
+    it("leaves an inline image (inside a paragraph) unwrapped", () => {
+        const out = converter.convertPageHtml(`<body><div><p>before <img width="16" height="16" src="https://graph.microsoft.com/v1.0/users('me')/onenote/resources/0-x!1-y!sz/$value" /> after</p></div></body>`);
+        const root = parse(out);
+
+        expect(root.querySelectorAll("figure")).toHaveLength(0);
+        expect(root.querySelector("p img")).toBeTruthy();
     });
 
     it("converts inline-style formatting (bold/italic/underline) to semantic tags", () => {
