@@ -54,6 +54,22 @@ describe("inkmlToSvg", () => {
         expect(svg).toContain("circle.ink-auto{fill:light-dark(#000,#fff)}");
     });
 
+    it("renders a deliberately-colored single-point trace with a literal fill", () => {
+        const dot = `<inkml:ink xmlns:inkml="http://www.w3.org/2003/InkML">
+            <inkml:definitions>
+                <inkml:brush xml:id="br0"><inkml:brushProperty name="color" value="#FF0000"/></inkml:brush>
+            </inkml:definitions>
+            <inkml:trace brushRef="#br0">50 60</inkml:trace>
+        </inkml:ink>`;
+        const svg = inkmlToSvg(dot) ?? "";
+
+        // A chosen color is baked into the dot's fill; no adaptive class or style block is emitted.
+        expect(svg).toContain("<circle");
+        expect(svg).toContain(`fill="#FF0000"`);
+        expect(svg).not.toContain("ink-auto");
+        expect(svg).not.toContain("<style>");
+    });
+
     it("works without namespace prefixes and falls back to a default (automatic) brush", () => {
         const plain = `<ink><trace>0 0, 10 10</trace></ink>`;
         const svg = inkmlToSvg(plain) ?? "";
@@ -92,6 +108,38 @@ describe("inkmlToSvg", () => {
         expect(svg).toContain(`stroke="#FF0000"`);
         expect(svg).not.toContain("ink-auto");
         expect(svg).not.toContain("<style>");
+    });
+
+    it("tolerates malformed brush and trace data, falling back to defaults", () => {
+        // An id-less brush is skipped; a name-less property and non-numeric width/height are ignored
+        // (keeping the defaults); a bare (un-prefixed) brushRef still resolves; a trace with
+        // unparseable coordinates contributes nothing.
+        const messy = `<ink>
+            <definitions>
+                <brush><brushProperty name="color" value="#123456"/></brush>
+                <brush xml:id="b1">
+                    <brushProperty value="orphan"/>
+                    <brushProperty name="width" value="wide"/>
+                    <brushProperty name="height" value="tall"/>
+                    <brushProperty name="color" value="#00AA00"/>
+                </brush>
+            </definitions>
+            <trace brushRef="b1">0 0, 10 10</trace>
+            <trace>squiggle</trace>
+        </ink>`;
+        const svg = inkmlToSvg(messy) ?? "";
+
+        expect((svg.match(/<path/g) ?? [])).toHaveLength(1);
+        expect(svg).toContain(`stroke="#00AA00"`);
+        expect(svg).toContain(`stroke-width="70"`); // default width kept over the unparseable one
+        expect(svg).not.toContain("#123456"); // the id-less brush is never referenced
+    });
+
+    it("scales fractional coordinates and survives a missing closing tag", () => {
+        // Fractional coords are scaled up 10000x for precision; the truncated document (no </ink>)
+        // still parses. 1.5→15000, 3.5→35000: 20000 wide + 2*padding(10).
+        const svg = inkmlToSvg(`<ink><trace>1.5 2.5, 3.5 4.5</trace>`) ?? "";
+        expect(svg).toContain(`viewBox="0 0 20020 20020"`);
     });
 
     it("returns null for empty input or ink with no traces", () => {
