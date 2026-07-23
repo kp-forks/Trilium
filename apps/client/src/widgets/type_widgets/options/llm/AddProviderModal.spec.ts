@@ -32,16 +32,27 @@ describe("AddProviderModal provider cards", () => {
         }
     });
 
-    it("sorts every card into a billing section, with the local one matching the self-hosted set", () => {
-        // Groups follow the user guide's taxonomy: metered API keys, a fixed-fee
-        // subscription reused from elsewhere, and self-hosted. `group` and
-        // `baseUrl` are independent fields describing the same split for the local
-        // set, so a card added to one and not the other would land in the wrong section.
+    it("sorts every card into a section by how it is billed and where it runs", () => {
+        // Groups follow the user guide's taxonomy — metered API keys, a fixed-fee
+        // subscription reused from elsewhere, self-hosted — plus a custom-endpoint
+        // section, which exists because that card also reaches *hosted* services
+        // (OpenRouter, Groq) and so can claim neither free use nor locality.
         expect(PROVIDER_TYPES.filter(p => p.group === "cloud").map(p => p.id))
             .toEqual(["anthropic", "openai", "google"]);
         expect(PROVIDER_TYPES.filter(p => p.group === "subscription").map(p => p.id))
             .toEqual(["claude-agent"]);
-        expect(PROVIDER_TYPES.filter(p => p.group === "local").map(p => p.id)).toEqual(SELF_HOSTED);
+        expect(PROVIDER_TYPES.filter(p => p.group === "local").map(p => p.id))
+            .toEqual(["ollama", "lmstudio"]);
+        expect(PROVIDER_TYPES.filter(p => p.group === "custom").map(p => p.id))
+            .toEqual(["openai-compatible"]);
+        // Every card lands in exactly one section.
+        expect(PROVIDER_TYPES.filter(p => p.group === undefined)).toEqual([]);
+    });
+
+    it("keeps the endpoint-driven cards together regardless of section", () => {
+        // `group` and `baseUrl` are independent fields: splitting the custom
+        // endpoint out of "local" must not stop it asking for a URL.
+        expect(PROVIDER_TYPES.filter(p => p.baseUrl === "required").map(p => p.id)).toEqual(SELF_HOSTED);
     });
 
     it("bills every subscription provider through an existing account rather than a key", () => {

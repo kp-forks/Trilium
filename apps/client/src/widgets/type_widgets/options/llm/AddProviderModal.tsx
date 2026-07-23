@@ -77,7 +77,11 @@ export interface ProviderType {
 const PROVIDER_GROUPS = [
     { id: "cloud", headingKey: "llm.provider_group_cloud", descriptionKey: "llm.provider_group_cloud_description" },
     { id: "subscription", headingKey: "llm.provider_group_subscription", descriptionKey: "llm.provider_group_subscription_description" },
-    { id: "local", headingKey: "llm.provider_group_local", descriptionKey: "llm.provider_group_local_description" }
+    { id: "local", headingKey: "llm.provider_group_local", descriptionKey: "llm.provider_group_local_description" },
+    // Kept apart from the local runtimes: the same card reaches a hosted
+    // OpenAI-compatible service (OpenRouter, Groq, …), so neither "no usage cost"
+    // nor "stays on your machine" can be claimed for it.
+    { id: "custom", headingKey: "llm.provider_group_custom", descriptionKey: "llm.provider_group_custom_description" }
 ] as const;
 
 type ProviderGroupId = (typeof PROVIDER_GROUPS)[number]["id"];
@@ -102,7 +106,7 @@ export const PROVIDER_TYPES: ProviderType[] = [
         setupHintKey: "llm.setup_hint_lmstudio", apiKey: "none", baseUrl: "required"
     },
     {
-        id: "openai-compatible", name: t("llm.provider_openai_compatible"), group: "local", defaultBaseUrl: "http://localhost:8080/v1",
+        id: "openai-compatible", name: t("llm.provider_openai_compatible"), group: "custom", defaultBaseUrl: "http://localhost:8080/v1",
         iconUrl: openAiCompatibleIcon, description: t("llm.provider_desc_openai_compatible"),
         setupHintKey: "llm.setup_hint_openai_compatible", apiKey: "optional", baseUrl: "required"
     }
@@ -374,7 +378,10 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                             selected={selectedModels}
                             onChange={setSelectedModels}
                             autoSelectDefaults={seedDefaultModels}
-                            troubleshooting={providerType?.baseUrl === "required" ? <SelfHostedTroubleshooting /> : undefined}
+                            // Only for the local runtimes: the checklist is about starting a
+                            // server on your own machine, which says nothing useful about a
+                            // hosted endpoint failing to list.
+                            troubleshooting={providerType?.group === "local" ? <SelfHostedTroubleshooting /> : undefined}
                         />
                     </CardSection>
                 </Card>
