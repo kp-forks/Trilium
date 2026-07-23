@@ -14,9 +14,9 @@ import type FAttachment from "../../../entities/fattachment";
 import type FNote from "../../../entities/fnote";
 import MediaPreview from "./MediaPreview";
 
-const videoNote = { noteId: "vid1", title: "Holiday", mime: "video/mp4" } as FNote;
-const audioNote = { noteId: "snd1", title: "Podcast", mime: "audio/mpeg" } as FNote;
-const audioAttachment = { attachmentId: "att1", title: "Recording", mime: "audio/mpeg" } as FAttachment;
+const videoNote = { noteId: "vid1", title: "Holiday", mime: "video/mp4", blobId: "blobV" } as FNote;
+const audioNote = { noteId: "snd1", title: "Podcast", mime: "audio/mpeg", blobId: "blobA" } as FNote;
+const audioAttachment = { attachmentId: "att1", title: "Recording", mime: "audio/mpeg", utcDateModified: "att1mod" } as FAttachment;
 
 describe("MediaPreview", () => {
     let container: HTMLElement;
@@ -56,7 +56,7 @@ describe("MediaPreview", () => {
             expect(container.querySelector(".media-proxy")).toBeNull();
             const media = mediaElement();
             expect(media?.tagName).toBe("VIDEO");
-            expect(media?.getAttribute("src")).toBe("api/notes/vid1/open-partial");
+            expect(media?.getAttribute("src")).toBe("api/notes/vid1/open-partial?v=blobV");
 
             // The media is only just being fetched, so playback waits for it to become playable.
             expect(play).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe("MediaPreview", () => {
 
             const media = mediaElement();
             expect(media?.tagName).toBe("AUDIO");
-            expect(media?.getAttribute("src")).toBe("api/attachments/att1/open-partial");
+            expect(media?.getAttribute("src")).toBe("api/attachments/att1/open-partial?v=att1mod");
         });
     });
 
@@ -82,7 +82,7 @@ describe("MediaPreview", () => {
 
             expect(container.querySelector(".media-proxy")).toBeNull();
             const media = mediaElement();
-            expect(media?.getAttribute("src")).toBe("api/notes/vid1/open-partial");
+            expect(media?.getAttribute("src")).toBe("api/notes/vid1/open-partial?v=blobV");
             // Embedded is "ready to play", not "playing".
             expect(media?.getAttribute("preload")).toBe("metadata");
             expect(play).not.toHaveBeenCalled();

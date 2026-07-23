@@ -151,6 +151,9 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     // in place by froca, so reading it directly during render wouldn't re-render an image attachment
     // (whose title/content don't change when only the erasure schedule does).
     const [ scheduledForErasureSince, setScheduledForErasureSince ] = useState(attachment.utcDateScheduledForErasureSince);
+    // Same reason, for the content itself: replacing an attachment changes neither its id nor its title, so
+    // without this nothing here re-renders and the viewer/player would keep showing what it first loaded.
+    const [ modified, setModified ] = useState(attachment.utcDateModified);
     // "importSource" attachments (e.g. OneNote debug source) behave like ordinary files for
     // preview, OCR and link-copying purposes.
     const isFileLike = attachment.role === "file" || attachment.role === "importSource";
@@ -163,7 +166,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
     const isZoomableImage = !!isFullDetail && attachment.role === "image";
     const isPlayableMedia = !!isFullDetail && (attachment.mime.startsWith("audio/") || attachment.mime.startsWith("video/"));
     const rendersItself = isZoomableImage || isPlayableMedia;
-    const imageSrc = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}?${attachment.utcDateModified}`;
+    const imageSrc = `api/attachments/${attachment.attachmentId}/image/${encodeURIComponent(attachment.title)}?${modified}`;
 
     /** Unmounts whatever the content renderer previously mounted here (a media player), so that replacing
      *  or discarding the content doesn't leak its Preact root — or leave its audio playing. */
@@ -189,6 +192,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
 
         setTitle(attachment.title);
         setScheduledForErasureSince(attachment.utcDateScheduledForErasureSince);
+        setModified(attachment.utcDateModified);
     }
 
     useEffect(() => {
@@ -267,7 +271,7 @@ function AttachmentInfo({ attachment, isFullDetail, ownerNote, noteContext, view
                 {textContent && <TextPreview content={textContent} />}
                 {isZoomableImage ? (
                     <div key="image-viewer" ref={imageViewerWrapper} className="attachment-content-wrapper attachment-image-viewer">
-                        <ImageViewer key={`${attachment.attachmentId}-${attachment.utcDateModified}`} src={imageSrc} alt={attachment.title} />
+                        <ImageViewer key={`${attachment.attachmentId}-${modified}`} src={imageSrc} alt={attachment.title} />
                         <SiblingNavigator
                             note={ownerNote}
                             noteContext={noteContext}
