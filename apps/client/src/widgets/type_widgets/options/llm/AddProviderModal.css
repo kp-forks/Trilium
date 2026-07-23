@@ -22,12 +22,19 @@
     }
 
     .add-provider-group-heading {
-        margin-bottom: 0.5em;
+        margin-bottom: 0.15em;
         color: var(--muted-text-color);
         font-size: 0.85em;
         font-weight: bold;
         text-transform: uppercase;
         letter-spacing: 0.04em;
+    }
+
+    /* Where the notes end up — the distinction the groups exist to draw. */
+    .add-provider-group-description {
+        margin-bottom: 0.6em;
+        color: var(--muted-text-color);
+        font-size: 0.85em;
     }
 
     /* Provider name + its beta badge sitting inline on the card. */

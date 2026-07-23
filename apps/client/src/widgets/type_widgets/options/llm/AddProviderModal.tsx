@@ -288,12 +288,14 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                     <CardSection>
                         <ProviderGroup
                             heading={t("llm.provider_group_cloud")}
+                            description={t("llm.provider_group_cloud_description")}
                             providers={PROVIDER_TYPES.filter(p => p.group === "cloud")}
                             selectedProvider={providerChosen ? selectedProvider : undefined}
                             onSelect={selectProviderType}
                         />
                         <ProviderGroup
                             heading={t("llm.provider_group_local")}
+                            description={t("llm.provider_group_local_description")}
                             providers={PROVIDER_TYPES.filter(p => p.group === "local")}
                             selectedProvider={providerChosen ? selectedProvider : undefined}
                             onSelect={selectProviderType}
@@ -377,8 +379,10 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
  * afford the width, and it stays identical on mobile where a grid would collapse
  * to one column anyway.
  */
-function ProviderGroup({ heading, providers, selectedProvider, onSelect }: {
+function ProviderGroup({ heading, description, providers, selectedProvider, onSelect }: {
     heading: string;
+    /** Where the user's notes end up with this group — the axis the list is grouped on. */
+    description: string;
     providers: ProviderType[];
     /** The chosen provider, or undefined while nothing has been picked yet. */
     selectedProvider: string | undefined;
@@ -387,6 +391,7 @@ function ProviderGroup({ heading, providers, selectedProvider, onSelect }: {
     return (
         <div className="add-provider-group">
             <h5 className="add-provider-group-heading">{heading}</h5>
+            <p className="add-provider-group-description">{description}</p>
             <SelectableCardGrid columns={1}>
                 {providers.map((provider) => (
                     <SelectableCard
