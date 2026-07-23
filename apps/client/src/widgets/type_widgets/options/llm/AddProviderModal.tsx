@@ -8,10 +8,10 @@ import { Trans } from "react-i18next";
 import { t } from "../../../../services/i18n";
 import { Badge } from "../../../react/Badge";
 import { Card, CardSection } from "../../../react/Card";
-import FormGroup from "../../../react/FormGroup";
 import FormTextBox from "../../../react/FormTextBox";
 import Modal from "../../../react/Modal";
 import SelectableCard, { SelectableCardGrid } from "../../../react/SelectableCard";
+import OptionsRow from "../components/OptionsRow";
 import anthropicIcon from "./icons/anthropic.svg?url";
 import claudeAgentIcon from "./icons/claude-ai.svg?url";
 import geminiIcon from "./icons/gemini.svg?url";
@@ -196,7 +196,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
     // (the endpoint is their primary connection detail) or after it for vendor
     // ones, where it is only an override — hence the focus following the same rule.
     const baseUrlField = (
-        <FormGroup name="base-url" label={t("llm.base_url")} description={baseUrlDescription}>
+        <OptionsRow name="base-url" label={t("llm.base_url")} description={baseUrlDescription} stacked>
             <FormTextBox
                 type="text"
                 currentValue={baseUrl}
@@ -204,7 +204,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                 placeholder={providerType?.defaultBaseUrl}
                 autoFocus={baseUrlMode === "required"}
             />
-        </FormGroup>
+        </OptionsRow>
     );
 
     const modelQuery = useMemo(
@@ -318,34 +318,34 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
             }
         >
             {step === "provider" ? (
-                <Card heading={t("llm.provider_type")}>
-                    <CardSection>
-                        {PROVIDER_GROUPS.map(group => (
-                            <ProviderGroup
-                                key={group.id}
-                                heading={t(group.headingKey)}
-                                description={t(group.descriptionKey)}
-                                providers={PROVIDER_TYPES.filter(p => p.group === group.id)}
-                                selectedProvider={providerChosen ? selectedProvider : undefined}
-                                onSelect={selectProviderType}
-                            />
-                        ))}
-                    </CardSection>
-                </Card>
+                // One card per group rather than one "Provider" card holding them all:
+                // the groups are the step's structure, so each gets the heading and the
+                // enclosure, and the choices below it are only the ones it describes.
+                PROVIDER_GROUPS.map(group => (
+                    <ProviderGroup
+                        key={group.id}
+                        heading={t(group.headingKey)}
+                        description={t(group.descriptionKey)}
+                        providers={PROVIDER_TYPES.filter(p => p.group === group.id)}
+                        selectedProvider={providerChosen ? selectedProvider : undefined}
+                        onSelect={selectProviderType}
+                    />
+                ))
             ) : step === "connection" ? (
-                // A single unlabelled section: the step holds a handful of fields for
-                // one provider — already named in the modal title — so splitting them
-                // across headed cards would announce structure that isn't there.
+                // A single unlabelled card of settings rows: the step holds a handful of
+                // fields for one provider — already named in the modal title — so the
+                // hairline between rows is all the structure it needs.
                 <Card>
                     <CardSection>
                         {/* Self-hosted providers lead with the endpoint — the port is the
                             detail that has to be right — and treat the key as optional. */}
                         {baseUrlMode === "required" && baseUrlField}
                         {usesApiKey && (
-                            <FormGroup
+                            <OptionsRow
                                 name="api-key"
                                 label={t("llm.api_key")}
                                 description={apiKeyMode === "optional" ? t("llm.api_key_optional_description") : undefined}
+                                stacked
                             >
                                 <FormTextBox
                                     type="password"
@@ -354,7 +354,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                                     placeholder={t("llm.api_key_placeholder")}
                                     autoFocus={baseUrlMode !== "required"}
                                 />
-                            </FormGroup>
+                            </OptionsRow>
                         )}
                         {baseUrlMode === "advanced" && baseUrlField}
                         {!usesApiKey && baseUrlMode === "none" && (
@@ -384,10 +384,14 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
 }
 
 /**
- * One labelled section of the provider list. Laid out one provider per row so
- * each description fits on a single line — the list is the whole step, so it can
- * afford the width, and it stays identical on mobile where a grid would collapse
- * to one column anyway.
+ * One group of the provider list, as its own card. The blurb sits inside the card
+ * above the choices, the way the settings pages place a section description, so it
+ * reads as an introduction to the rows it qualifies rather than as a caption
+ * floating between two boxes.
+ *
+ * Laid out one provider per row so each description fits on a single line — the
+ * list is the whole step, so it can afford the width, and it stays identical on
+ * mobile where a grid would collapse to one column anyway.
  */
 function ProviderGroup({ heading, description, providers, selectedProvider, onSelect }: {
     heading: string;
@@ -399,24 +403,25 @@ function ProviderGroup({ heading, description, providers, selectedProvider, onSe
     onSelect: (providerId: string) => void;
 }) {
     return (
-        <div className="add-provider-group">
-            <h5 className="add-provider-group-heading">{heading}</h5>
-            <p className="add-provider-group-description">{description}</p>
-            <SelectableCardGrid columns={1}>
-                {providers.map((provider) => (
-                    <SelectableCard
-                        key={provider.id}
-                        iconUrl={provider.iconUrl}
-                        title={provider.beta
-                            ? <span className="add-provider-card-heading">{provider.name}<Badge text={t("llm.beta")} className="add-provider-beta-badge" outline /></span>
-                            : provider.name}
-                        description={provider.description}
-                        selected={selectedProvider === provider.id}
-                        onSelect={() => onSelect(provider.id)}
-                    />
-                ))}
-            </SelectableCardGrid>
-        </div>
+        <Card heading={heading} className="add-provider-group">
+            <CardSection>
+                <p className="add-provider-group-description">{description}</p>
+                <SelectableCardGrid columns={1}>
+                    {providers.map((provider) => (
+                        <SelectableCard
+                            key={provider.id}
+                            iconUrl={provider.iconUrl}
+                            title={provider.beta
+                                ? <span className="add-provider-card-heading">{provider.name}<Badge text={t("llm.beta")} className="add-provider-beta-badge" outline /></span>
+                                : provider.name}
+                            description={provider.description}
+                            selected={selectedProvider === provider.id}
+                            onSelect={() => onSelect(provider.id)}
+                        />
+                    ))}
+                </SelectableCardGrid>
+            </CardSection>
+        </Card>
     );
 }
 

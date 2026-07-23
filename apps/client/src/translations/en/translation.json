@@ -3157,7 +3157,6 @@
     "configured_providers": "Configured Providers",
     "no_providers_configured": "No providers configured yet.",
     "provider_name": "Name",
-    "provider_type": "Provider",
     "beta": "Beta",
     "provider_desc_anthropic": "Claude models via the Anthropic API.",
     "provider_desc_claude_agent": "Requires Claude Code on the machine running Trilium.",

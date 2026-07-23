@@ -13,26 +13,10 @@
         margin-bottom: 0;
     }
 
-    /* Sections of the provider list ("Cloud" / "Local"), separated by a rule so the
-       self-hosted options read as a distinct family rather than more of the same. */
-    .add-provider-group + .add-provider-group {
-        margin-top: 1em;
-        padding-top: 1em;
-        border-top: 1px solid var(--main-border-color);
-    }
-
-    .add-provider-group-heading {
-        margin-bottom: 0.15em;
-        color: var(--muted-text-color);
-        font-size: 0.85em;
-        font-weight: bold;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-    }
-
-    /* Where the notes end up — the distinction the groups exist to draw. */
+    /* Where the notes end up — the distinction the groups exist to draw. Sits at
+       the top of its group's card, ahead of the providers it qualifies. */
     .add-provider-group-description {
-        margin-bottom: 0.6em;
+        margin-bottom: 0.75em;
         color: var(--muted-text-color);
         font-size: 0.85em;
     }
