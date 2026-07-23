@@ -62,30 +62,32 @@ export interface ProviderType {
      * an advanced override (vendor APIs), or not applicable. Defaults to `"advanced"`.
      */
     baseUrl?: "required" | "advanced" | "none";
+    /** Which section of the provider list this card belongs to. */
+    group: "cloud" | "local";
 }
 
-// The two Claude-powered providers lead the list so they sit together on the top row,
-// making the subscription-vs-API-key choice easy to spot; the self-hosted ones close it.
+// The two Claude-powered providers lead the list so they sit together at the top,
+// making the subscription-vs-API-key choice easy to spot.
 export const PROVIDER_TYPES: ProviderType[] = [
-    { id: "anthropic", name: "Anthropic", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon, description: t("llm.provider_desc_anthropic") },
+    { id: "anthropic", name: "Anthropic", group: "cloud", defaultBaseUrl: "https://api.anthropic.com/v1", iconUrl: anthropicIcon, description: t("llm.provider_desc_anthropic") },
     // Uses the Claude Agent SDK on the server; auth belongs to Claude Code (`claude /login`).
-    { id: "claude-agent", name: "Claude Code", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, apiKey: "none", baseUrl: "none" },
-    { id: "openai", name: "OpenAI", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon, description: t("llm.provider_desc_openai") },
-    { id: "google", name: "Google Gemini", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon, description: t("llm.provider_desc_google") },
+    { id: "claude-agent", name: "Claude Code", group: "cloud", defaultBaseUrl: "", iconUrl: claudeAgentIcon, description: t("llm.provider_desc_claude_agent"), beta: true, apiKey: "none", baseUrl: "none" },
+    { id: "openai", name: "OpenAI", group: "cloud", defaultBaseUrl: "https://api.openai.com/v1", iconUrl: openaiIcon, description: t("llm.provider_desc_openai") },
+    { id: "google", name: "Google Gemini", group: "cloud", defaultBaseUrl: "https://generativelanguage.googleapis.com/v1beta", iconUrl: geminiIcon, description: t("llm.provider_desc_google") },
     // The three self-hosted cards share one server-side provider; they differ only in
     // the endpoint they prefill and the setup hint they show.
     {
-        id: "ollama", name: "Ollama", defaultBaseUrl: "http://localhost:11434", prefillBaseUrl: true,
+        id: "ollama", name: "Ollama", group: "local", defaultBaseUrl: "http://localhost:11434", prefillBaseUrl: true,
         iconUrl: ollamaIcon, description: t("llm.provider_desc_ollama"),
         setupHintKey: "llm.setup_hint_ollama", apiKey: "none", baseUrl: "required"
     },
     {
-        id: "lmstudio", name: "LM Studio", defaultBaseUrl: "http://localhost:1234/v1", prefillBaseUrl: true,
+        id: "lmstudio", name: "LM Studio", group: "local", defaultBaseUrl: "http://localhost:1234/v1", prefillBaseUrl: true,
         iconUrl: lmStudioIcon, description: t("llm.provider_desc_lmstudio"),
         setupHintKey: "llm.setup_hint_lmstudio", apiKey: "none", baseUrl: "required"
     },
     {
-        id: "openai-compatible", name: t("llm.provider_openai_compatible"), defaultBaseUrl: "http://localhost:8080/v1",
+        id: "openai-compatible", name: t("llm.provider_openai_compatible"), group: "local", defaultBaseUrl: "http://localhost:8080/v1",
         iconUrl: openAiCompatibleIcon, description: t("llm.provider_desc_openai_compatible"),
         setupHintKey: "llm.setup_hint_openai_compatible", apiKey: "optional", baseUrl: "required"
     }
@@ -103,21 +105,33 @@ function isValidBaseUrl(value: string): boolean {
     }
 }
 
+/**
+ * Pick a provider, enter its credentials, choose its models. Named rather than
+ * numbered because editing skips the first one — the provider type of a saved
+ * config can't change, so its id and name would no longer match.
+ */
+export type ProviderStep = "provider" | "connection" | "models";
+
 interface AddProviderModalProps {
     show: boolean;
     onHidden: () => void;
     onSave: (provider: LlmProviderConfig) => void;
     /** When provided, the modal edits this provider in place instead of adding a new one. */
     existingProvider?: LlmProviderConfig;
-    /** Step to open on. Pass 2 to jump straight to model selection (e.g. editing from the chat picker). */
-    initialStep?: 1 | 2;
+    /** Step to open on. Pass "models" to jump straight to model selection (e.g. editing from the chat picker). */
+    initialStep?: ProviderStep;
 }
 
-export default function AddProviderModal({ show, onHidden, onSave, existingProvider, initialStep = 1 }: AddProviderModalProps) {
+export default function AddProviderModal({ show, onHidden, onSave, existingProvider, initialStep }: AddProviderModalProps) {
     const isEdit = !!existingProvider;
-    // Connection details first, then model selection. Editing keeps the same two steps.
-    const [step, setStep] = useState<1 | 2>(initialStep);
+    const firstStep = initialStep ?? (isEdit ? "connection" : "provider");
+    const [step, setStep] = useState<ProviderStep>(firstStep);
     const [selectedProvider, setSelectedProvider] = useState(existingProvider?.provider ?? PROVIDER_TYPES[0].id);
+    // Whether the user has actually picked a provider. `selectedProvider` always
+    // holds one so the connection step has something to work with, but on a fresh
+    // add nothing should *look* chosen — clicking a card is the choice, and it
+    // moves on immediately, so a pre-highlighted card would be a lie.
+    const [providerChosen, setProviderChosen] = useState(firstStep !== "provider");
     const [apiKey, setApiKey] = useState(existingProvider?.apiKey ?? "");
     const [baseUrl, setBaseUrl] = useState(existingProvider?.baseURL ?? prefilledBaseUrl(existingProvider?.provider ?? PROVIDER_TYPES[0].id));
     const [selectedModels, setSelectedModels] = useState<LlmModelInfo[]>(existingProvider?.selectedModels ?? []);
@@ -138,10 +152,16 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
     const connectionValid = (apiKeyMode !== "required" || !!trimmedApiKey)
         && (baseUrlMode === "none" || (baseUrlIsValid && (baseUrlMode !== "required" || !!trimmedBaseUrl)));
 
-    /** Picking a card swaps in that provider's endpoint, so the right port is filled in by default. */
+    /**
+     * Picking a card swaps in that provider's endpoint — so the right port is
+     * filled in by default — and moves straight on, since the choice *is* the
+     * action on this step (no separate confirmation click).
+     */
     function selectProviderType(providerId: string) {
         setSelectedProvider(providerId);
+        setProviderChosen(true);
         setBaseUrl(prefilledBaseUrl(providerId));
+        setStep("connection");
     }
 
     // Under the endpoint field: the validation error if any, otherwise the
@@ -168,8 +188,9 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
 
     function reset() {
         const initialProvider = existingProvider?.provider ?? PROVIDER_TYPES[0].id;
-        setStep(initialStep);
+        setStep(firstStep);
         setSelectedProvider(initialProvider);
+        setProviderChosen(firstStep !== "provider");
         setApiKey(existingProvider?.apiKey ?? "");
         setBaseUrl(existingProvider?.baseURL ?? prefilledBaseUrl(initialProvider));
         setSelectedModels(existingProvider?.selectedModels ?? []);
@@ -181,9 +202,17 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
     }
 
     function handleSubmit() {
-        if (step === 1) {
+        if (step === "provider") {
+            // Enter with nothing picked yet must not silently advance with whichever
+            // provider happens to be first in the list.
+            if (providerChosen) {
+                setStep("connection");
+            }
+            return;
+        }
+        if (step === "connection") {
             if (connectionValid) {
-                setStep(2);
+                setStep("models");
             }
             return;
         }
@@ -202,16 +231,25 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
         onHidden();
     }
 
+    // Past the picker the cards are gone, so the title carries which provider is
+    // being set up.
     const title = isEdit
         ? t("llm.edit_provider_title", { name: existingProvider?.name ?? providerType?.name ?? selectedProvider })
-        : t("llm.add_provider_title");
-    const primaryLabel = step === 1
-        ? t("llm.next")
-        : isEdit ? t("llm.save") : t("llm.add_provider");
-    // Step 2 never disables Save: an empty selection is valid (hides all of the
-    // provider's models, same as a pre-selection migration), and it avoids a
-    // dead-end when the live model fetch fails.
-    const primaryDisabled = step === 1 && !connectionValid;
+        : step === "provider"
+            ? t("llm.add_provider_title")
+            : t("llm.add_provider_title_named", { name: providerType?.name ?? selectedProvider });
+    const primaryLabel = step === "models"
+        ? (isEdit ? t("llm.save") : t("llm.add_provider"))
+        : t("llm.next");
+    // The models step never disables Save: an empty selection is valid (hides all
+    // of the provider's models, same as a pre-selection migration), and it avoids
+    // a dead-end when the live model fetch fails.
+    const primaryDisabled = step === "connection" && !connectionValid;
+    // Back retraces the steps this modal actually opened with: editing starts at
+    // the connection details (the provider type of a saved config is fixed), so
+    // there is nothing behind it to go back to.
+    const previousStep = step === "models" ? "connection" : step === "connection" ? "provider" : undefined;
+    const canGoBack = previousStep !== undefined && !(previousStep === "provider" && firstStep !== "provider");
 
     return createPortal(
         <Modal
@@ -224,40 +262,46 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
             size="md"
             maxWidth={600}
             stackable
+            // The provider list is the tallest step and grows with every provider
+            // added, so scroll the body rather than pushing the footer off-screen.
+            scrollable
             footer={
                 <>
-                    <button type="button" className="btn btn-secondary" onClick={step === 2 ? () => setStep(1) : handleCancel}>
-                        {step === 2 ? t("llm.back") : t("llm.cancel")}
+                    <button
+                        type="button"
+                        className="btn btn-secondary"
+                        onClick={canGoBack && previousStep ? () => setStep(previousStep) : handleCancel}
+                    >
+                        {canGoBack ? t("llm.back") : t("llm.cancel")}
                     </button>
-                    <button type="submit" className="btn btn-primary" disabled={primaryDisabled}>
-                        {primaryLabel}
-                    </button>
+                    {/* Choosing a card advances on its own, so the provider step needs no primary action. */}
+                    {step !== "provider" && (
+                        <button type="submit" className="btn btn-primary" disabled={primaryDisabled}>
+                            {primaryLabel}
+                        </button>
+                    )}
                 </>
             }
         >
-            {step === 1 ? (
+            {step === "provider" ? (
+                <Card heading={t("llm.provider_type")}>
+                    <CardSection>
+                        <ProviderGroup
+                            heading={t("llm.provider_group_cloud")}
+                            providers={PROVIDER_TYPES.filter(p => p.group === "cloud")}
+                            selectedProvider={providerChosen ? selectedProvider : undefined}
+                            onSelect={selectProviderType}
+                        />
+                        <ProviderGroup
+                            heading={t("llm.provider_group_local")}
+                            providers={PROVIDER_TYPES.filter(p => p.group === "local")}
+                            selectedProvider={providerChosen ? selectedProvider : undefined}
+                            onSelect={selectProviderType}
+                        />
+                    </CardSection>
+                </Card>
+            ) : step === "connection" ? (
                 <>
-                    {!isEdit && (
-                        <Card heading={t("llm.provider_type")}>
-                            <CardSection>
-                                <SelectableCardGrid columns={2}>
-                                    {PROVIDER_TYPES.map((provider) => (
-                                        <SelectableCard
-                                            key={provider.id}
-                                            iconUrl={provider.iconUrl}
-                                            title={provider.beta
-                                                ? <span className="add-provider-card-heading">{provider.name}<Badge text={t("llm.beta")} className="add-provider-beta-badge" outline /></span>
-                                                : provider.name}
-                                            description={provider.description}
-                                            selected={selectedProvider === provider.id}
-                                            onSelect={() => selectProviderType(provider.id)}
-                                        />
-                                    ))}
-                                </SelectableCardGrid>
-                            </CardSection>
-                        </Card>
-                    )}
-
                     <Card heading={t("llm.connection_details")}>
                         <CardSection>
                             {/* Self-hosted providers lead with the endpoint — the port is the
@@ -324,6 +368,40 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
             )}
         </Modal>,
         document.body
+    );
+}
+
+/**
+ * One labelled section of the provider list. Laid out one provider per row so
+ * each description fits on a single line — the list is the whole step, so it can
+ * afford the width, and it stays identical on mobile where a grid would collapse
+ * to one column anyway.
+ */
+function ProviderGroup({ heading, providers, selectedProvider, onSelect }: {
+    heading: string;
+    providers: ProviderType[];
+    /** The chosen provider, or undefined while nothing has been picked yet. */
+    selectedProvider: string | undefined;
+    onSelect: (providerId: string) => void;
+}) {
+    return (
+        <div className="add-provider-group">
+            <h5 className="add-provider-group-heading">{heading}</h5>
+            <SelectableCardGrid columns={1}>
+                {providers.map((provider) => (
+                    <SelectableCard
+                        key={provider.id}
+                        iconUrl={provider.iconUrl}
+                        title={provider.beta
+                            ? <span className="add-provider-card-heading">{provider.name}<Badge text={t("llm.beta")} className="add-provider-beta-badge" outline /></span>
+                            : provider.name}
+                        description={provider.description}
+                        selected={selectedProvider === provider.id}
+                        onSelect={() => onSelect(provider.id)}
+                    />
+                ))}
+            </SelectableCardGrid>
+        </div>
     );
 }
 

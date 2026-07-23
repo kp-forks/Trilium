@@ -13,6 +13,23 @@
         margin-bottom: 0;
     }
 
+    /* Sections of the provider list ("Cloud" / "Local"), separated by a rule so the
+       self-hosted options read as a distinct family rather than more of the same. */
+    .add-provider-group + .add-provider-group {
+        margin-top: 1em;
+        padding-top: 1em;
+        border-top: 1px solid var(--main-border-color);
+    }
+
+    .add-provider-group-heading {
+        margin-bottom: 0.5em;
+        color: var(--muted-text-color);
+        font-size: 0.85em;
+        font-weight: bold;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
     /* Provider name + its beta badge sitting inline on the card. */
     .add-provider-card-heading {
         display: inline-flex;

@@ -14,7 +14,7 @@ import CKEditor, { type CKEditorApi } from "../../react/CKEditor.js";
 import Dropdown from "../../react/Dropdown.js";
 import { FormDropdownDivider, FormListHeader, FormListItem, FormListToggleableItem } from "../../react/FormList.js";
 import { useLegacyImperativeHandlers } from "../../react/hooks.js";
-import AddProviderModal, { type LlmProviderConfig } from "../options/llm/AddProviderModal.js";
+import AddProviderModal, { type LlmProviderConfig, type ProviderStep } from "../options/llm/AddProviderModal.js";
 import { insertNewBlock as insertNewBlockCommand, isSelectionInCodeBlock, outdentListItemAtStart } from "./chat_input_editing.js";
 import { editorHtmlToMarkdown } from "./chat_input_markdown.js";
 import { SafeImage } from "./retry_image.js";
@@ -89,7 +89,7 @@ export default function ChatInputBar({
     // Provider add/edit modal. `modalProvider` undefined = adding; a config = editing.
     // The bumping token re-keys the modal so it re-initializes its wizard on each open.
     const [modalProvider, setModalProvider] = useState<LlmProviderConfig | undefined>();
-    const [modalStep, setModalStep] = useState<1 | 2>(1);
+    const [modalStep, setModalStep] = useState<ProviderStep | undefined>();
     const [modalOpen, setModalOpen] = useState(false);
     const [openToken, setOpenToken] = useState(0);
     const editorApiRef = useRef<CKEditorApi>();
@@ -172,7 +172,7 @@ export default function ChatInputBar({
         }
     };
 
-    const openModal = useCallback((provider?: LlmProviderConfig, step: 1 | 2 = 1) => {
+    const openModal = useCallback((provider?: LlmProviderConfig, step?: ProviderStep) => {
         setModalProvider(provider);
         setModalStep(step);
         setOpenToken(token => token + 1);
@@ -184,7 +184,7 @@ export default function ChatInputBar({
         const configs = (options.getJson("llmProviders") as LlmProviderConfig[] | null) ?? [];
         const config = configs.find(c => c.id === providerId);
         if (config) {
-            openModal(config, 2);
+            openModal(config, "models");
         }
     }, [openModal]);
 

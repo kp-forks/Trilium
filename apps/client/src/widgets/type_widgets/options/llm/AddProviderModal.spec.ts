@@ -32,6 +32,14 @@ describe("AddProviderModal provider cards", () => {
         }
     });
 
+    it("sorts every card into a list section, with the local one matching the self-hosted set", () => {
+        // The two are independent fields but describe the same thing, so a card
+        // added to one and not the other would land in the wrong section.
+        expect(PROVIDER_TYPES.filter(p => p.group === "local").map(p => p.id)).toEqual(SELF_HOSTED);
+        expect(PROVIDER_TYPES.filter(p => p.group === "cloud").map(p => p.id))
+            .toEqual(["anthropic", "claude-agent", "openai", "google"]);
+    });
+
     it("keeps vendor cards on a required key and an advanced endpoint override", () => {
         for (const id of ["anthropic", "openai", "google"]) {
             const card = PROVIDER_TYPES.find(p => p.id === id);
