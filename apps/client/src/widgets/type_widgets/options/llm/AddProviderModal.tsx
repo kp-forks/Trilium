@@ -15,8 +15,10 @@ import SelectableCard, { SelectableCardGrid } from "../../../react/SelectableCar
 import anthropicIcon from "./icons/anthropic.svg?url";
 import claudeAgentIcon from "./icons/claude-ai.svg?url";
 import geminiIcon from "./icons/gemini.svg?url";
+import lmStudioIcon from "./icons/lmstudio.svg?url";
 import ollamaIcon from "./icons/ollama.svg?url";
 import openaiIcon from "./icons/openai.svg?url";
+import openAiCompatibleIcon from "./icons/robot.svg?url";
 import ModelSelection from "./ModelSelection";
 
 export interface LlmProviderConfig {
@@ -42,9 +44,7 @@ export interface ProviderType {
      */
     prefillBaseUrl?: boolean;
     /** URL of the provider's logo (an imported `*.svg?url`), rendered monochrome via a CSS mask. */
-    iconUrl?: string;
-    /** Boxicons class shown when the provider has no logo of its own. */
-    icon?: string;
+    iconUrl: string;
     /** Short blurb shown under the provider name on its selectable card. */
     description: string;
     /** One-line setup reminder shown under the endpoint field (i18n key, rendered via `<Trans>`). */
@@ -81,12 +81,12 @@ export const PROVIDER_TYPES: ProviderType[] = [
     },
     {
         id: "lmstudio", name: "LM Studio", defaultBaseUrl: "http://localhost:1234/v1", prefillBaseUrl: true,
-        icon: "bx bx-desktop", description: t("llm.provider_desc_lmstudio"),
+        iconUrl: lmStudioIcon, description: t("llm.provider_desc_lmstudio"),
         setupHintKey: "llm.setup_hint_lmstudio", apiKey: "none", baseUrl: "required"
     },
     {
         id: "openai-compatible", name: t("llm.provider_openai_compatible"), defaultBaseUrl: "http://localhost:8080/v1",
-        icon: "bx bx-server", description: t("llm.provider_desc_openai_compatible"),
+        iconUrl: openAiCompatibleIcon, description: t("llm.provider_desc_openai_compatible"),
         setupHintKey: "llm.setup_hint_openai_compatible", apiKey: "optional", baseUrl: "required"
     }
 ];

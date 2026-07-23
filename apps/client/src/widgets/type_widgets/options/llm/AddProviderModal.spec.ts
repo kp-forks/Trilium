@@ -52,9 +52,11 @@ describe("AddProviderModal provider cards", () => {
         expect(byId.get("claude-agent")?.baseUrl).toBe("none");
     });
 
-    it("gives every card an icon of some kind", () => {
+    it("gives every card a logo", () => {
+        // SelectableCard is only passed `iconUrl`, so a card without one renders
+        // with an empty icon slot rather than falling back to anything.
         for (const card of PROVIDER_TYPES) {
-            expect(card.iconUrl ?? card.icon, `no icon for ${card.id}`).toBeTruthy();
+            expect(card.iconUrl, `no icon for ${card.id}`).toBeTruthy();
         }
     });
 });
