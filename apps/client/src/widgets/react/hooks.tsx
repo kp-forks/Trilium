@@ -1179,7 +1179,12 @@ export function useContextualShortcutHints(hints: ShortcutHintDefinition | (() =
     hintsRef.current = hints;
 
     useEffect(() => {
-        if (!parentComponent) return;
+        // A standalone Preact root mounted by the content renderer (a media player in a collection tile,
+        // an included note) is hosted by appContext itself. Every chain the dispatcher walks ends there,
+        // so registering would make these hints show up in *every* context — e.g. a played collection
+        // tile adding its Playback section to the image viewer's. Contextual hints need a host that
+        // sits inside the focused chain; the root never does.
+        if (!parentComponent || parentComponent === appContext) return;
 
         const provider: ShortcutHintProvider = (collector) => {
             const current = hintsRef.current;
