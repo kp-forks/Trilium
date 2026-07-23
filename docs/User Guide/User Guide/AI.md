@@ -105,6 +105,8 @@ When a provider is configured in <a class="reference-link" href="Basic%20Concep
 
 The models are retrieved dynamically from the provider, only when the model selection list is visible. To alter the list of models, simply press the Edit button in the model selection box.
 
+Pricing information is displayed for known models. The pricing information (price per million tokens) is embedded in the application (using a subset of LiteLLM's data) and is updated with new versions of Trilium.
+
 ## Features
 
 ### Web search
