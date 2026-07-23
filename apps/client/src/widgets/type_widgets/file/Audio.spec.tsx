@@ -128,6 +128,24 @@ describe("AudioPreview", () => {
             expect(audio.currentTime).toBe(20);
             expect(audio.play).not.toHaveBeenCalled();
         });
+
+        it("stands aside for the application's own chords", async () => {
+            const audio = renderPlayer();
+            setDuration(audio, 100);
+            audio.currentTime = 20;
+
+            await press(" ", { ctrlKey: true });
+            await press("m", { ctrlKey: true });
+            await press("End", { metaKey: true });
+
+            expect(audio.play).not.toHaveBeenCalled();
+            expect(audio.muted).toBe(false);
+            expect(audio.currentTime).toBe(20);
+
+            // Its own Ctrl+Left/Right minute jump still belongs to the player.
+            await press("ArrowRight", { ctrlKey: true });
+            expect(audio.currentTime).toBe(80);
+        });
     });
 
     describe("waveform", () => {

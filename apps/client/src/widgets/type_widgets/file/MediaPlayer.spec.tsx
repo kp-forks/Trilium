@@ -25,7 +25,7 @@ import Component from "../../../components/component";
 import type FNote from "../../../entities/fnote";
 import { collectShortcutHints } from "../../../services/shortcut_hints";
 import { ParentComponent } from "../../react/react_utils";
-import { formatTime, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayerShortcutHints, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { claimsKeystroke, formatTime, PlaybackSpeed, PlayModeButton, PlayPauseButton, SeekBar, SkipButton, useMediaPlayerShortcutHints, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 import type { MediaPlayMode } from "./media_play_mode";
 import type { MediaSource } from "./media_source";
 
@@ -112,6 +112,35 @@ describe("useMediaPlayerShortcutHints", () => {
             "media.hints.jump_end",
             "media.hints.mute"
         ]);
+    });
+});
+
+describe("claimsKeystroke", () => {
+    const keystroke = (key: string, modifiers: Partial<{ ctrlKey: boolean; metaKey: boolean; altKey: boolean; shiftKey: boolean }> = {}) =>
+        ({ key, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, ...modifiers }) as KeyboardEvent;
+
+    it("takes the bare keys the player binds", () => {
+        expect(claimsKeystroke(keystroke(" "))).toBe(true);
+        expect(claimsKeystroke(keystroke("f"))).toBe(true);
+        expect(claimsKeystroke(keystroke("Home"))).toBe(true);
+        // Shift isn't an application modifier, so it doesn't take the key away.
+        expect(claimsKeystroke(keystroke("m", { shiftKey: true }))).toBe(true);
+    });
+
+    it("leaves chords to the application, which owns Ctrl+F and the rest", () => {
+        expect(claimsKeystroke(keystroke("f", { ctrlKey: true }))).toBe(false);
+        expect(claimsKeystroke(keystroke("m", { ctrlKey: true }))).toBe(false);
+        expect(claimsKeystroke(keystroke(" ", { ctrlKey: true }))).toBe(false);
+        expect(claimsKeystroke(keystroke("Home", { metaKey: true }))).toBe(false);
+        expect(claimsKeystroke(keystroke("ArrowUp", { altKey: true }))).toBe(false);
+    });
+
+    it("keeps its own Ctrl+Left/Right minute jump", () => {
+        expect(claimsKeystroke(keystroke("ArrowLeft", { ctrlKey: true }))).toBe(true);
+        expect(claimsKeystroke(keystroke("ArrowRight", { ctrlKey: true }))).toBe(true);
+        // Only with Ctrl alone: Alt+Left is the application's (history back), not a minute jump.
+        expect(claimsKeystroke(keystroke("ArrowLeft", { altKey: true }))).toBe(false);
+        expect(claimsKeystroke(keystroke("ArrowRight", { ctrlKey: true, altKey: true }))).toBe(false);
     });
 });
 

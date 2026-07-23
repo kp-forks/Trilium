@@ -142,6 +142,30 @@ describe("VideoPreview", () => {
             expect(video.currentTime).toBe(20);
             expect(video.play).not.toHaveBeenCalled();
         });
+
+        it("stands aside for the application's own chords", async () => {
+            const video = renderPlayer();
+            setDuration(video, 100);
+            video.currentTime = 20;
+            video.volume = 0.5;
+
+            // Ctrl+F is the app's, not "fullscreen"; likewise Ctrl+Space, Ctrl+M and the rest.
+            await press("f", { ctrlKey: true });
+            expect(wrapper().requestFullscreen).not.toHaveBeenCalled();
+
+            await press(" ", { ctrlKey: true });
+            expect(video.play).not.toHaveBeenCalled();
+
+            await press("m", { ctrlKey: true });
+            expect(video.muted).toBe(false);
+
+            await press("Home", { metaKey: true });
+            await press("End", { altKey: true });
+            expect(video.currentTime).toBe(20);
+
+            await press("ArrowUp", { altKey: true });
+            expect(video.volume).toBeCloseTo(0.5);
+        });
     });
 
     describe("click and tap", () => {

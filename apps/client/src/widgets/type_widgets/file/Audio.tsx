@@ -9,7 +9,7 @@ import { loadWaveform } from "./audio_waveform";
 import { AudioVisualizer } from "./AudioVisualizer";
 import MediaFileActions from "./MediaFileActions";
 import { playerRootClasses, preloadFor, showsFileActions, usesCompactControls } from "./media_environment";
-import { MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayerShortcutHints, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
+import { claimsKeystroke, MediaPlayerProps, MediaSiblingButton, PlaybackSpeed, PlayModeButton, PlayPauseButton, SkipButton, useMediaPlayerShortcutHints, useMediaPlayMode, useMediaSessionController, VolumeControl } from "./MediaPlayer";
 import { WaveformSeekBar } from "./WaveformSeekBar";
 
 export default function AudioPreview({ source, entity, environment, noteContext, ownerNote, viewScope, isVisible = true, autoPlay }: MediaPlayerProps) {
@@ -131,7 +131,7 @@ function useWaveformPeaks(fullUrl: string): number[] | null {
 function useKeyboardShortcuts(audioRef: MutableRef<HTMLAudioElement | null>, togglePlayback: () => void) {
     return useCallback((e: KeyboardEvent) => {
         const audio = audioRef.current;
-        if (!audio) return;
+        if (!audio || !claimsKeystroke(e)) return;
 
         switch (e.key) {
             case " ":

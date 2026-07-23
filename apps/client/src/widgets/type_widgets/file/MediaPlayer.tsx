@@ -11,6 +11,7 @@ import froca from "../../../services/froca";
 import { t } from "../../../services/i18n";
 import type { ViewScope } from "../../../services/link";
 import type { ShortcutHint, ShortcutHintDefinition, ShortcutHintSection } from "../../../services/shortcut_hints";
+import { isAppShortcutChord } from "../../../services/shortcuts";
 import { isMobile } from "../../../services/utils";
 import { logError } from "../../../services/ws";
 import ActionButton from "../../react/ActionButton";
@@ -79,6 +80,18 @@ export function useMediaPlayerShortcutHints({ fullscreen }: { fullscreen: boolea
             MEDIA_NAVIGATION_HINTS
         ];
     });
+}
+
+/**
+ * Whether a keystroke belongs to the player rather than to Trilium's own shortcuts. The players bind bare
+ * keys (Space, arrows, M, F), which as chords are the application's — Ctrl+F is not "fullscreen", and acting
+ * on it would fire alongside whatever the app does with it. The single exception is the player's own
+ * Ctrl+Left/Right minute jump.
+ */
+export function claimsKeystroke(e: KeyboardEvent): boolean {
+    if (!isAppShortcutChord(e)) return true;
+    const isMinuteJump = e.key === "ArrowLeft" || e.key === "ArrowRight";
+    return isMinuteJump && e.ctrlKey && !e.altKey && !e.metaKey;
 }
 
 export function SeekBar({ mediaRef }: { mediaRef: RefObject<HTMLVideoElement | HTMLAudioElement> }) {
