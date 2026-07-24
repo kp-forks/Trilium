@@ -789,6 +789,17 @@ describe("Search", () => {
         expect(result.highlightedContentSnippet).toBe("Summary Title<br><b>Body</b> text here<br>After the block");
     });
 
+    it("surfaces link-preview url/title/description as separate lines in the quick-search snippet", () => {
+        // The url/title/description live in data attributes that striptags would otherwise drop,
+        // leaving a blank snippet even though the note matched on the embedded title.
+        const noteBuilder = note("Link preview note");
+        noteBuilder.note.getContent = () => "<section class=\"link-embed\" data-url=\"https://en.wikipedia.org/wiki/The_Terminator\" data-title=\"The Terminator - Wikipedia\" data-description=\"A 1984 science fiction film.\">&nbsp;</section>";
+        rootNote.child(noteBuilder);
+
+        const snippet = searchService.extractContentSnippet(noteBuilder.note.noteId, [ "terminator" ]);
+        expect(snippet.split("\n")).toEqual([ "https://en.wikipedia.org/wiki/The_Terminator", "The Terminator - Wikipedia", "A 1984 science fiction film." ]);
+    });
+
     // FIXME: test what happens when we order without any filter criteria
 
     // it("comparison between labels", () => {

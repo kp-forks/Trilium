@@ -504,6 +504,14 @@ function extractContentSnippet(noteId: string, searchTokens: string[], maxLength
             content = content
                 .replace(/<\/summary>/gi, "</summary>\n")
                 .replace(/<\/details>/gi, "</details>\n");
+            // Link previews (link-embed / link-mention) keep their url/title/description in data
+            // attributes that striptags would drop; surface them as separate lines instead.
+            content = content.replace(/<(section|span)\b[^>]*\bclass="[^"]*\blink-(?:embed|mention)\b[^"]*"[^>]*>[\s\S]*?<\/\1>/gi, (element) => {
+                const url = element.match(/\bdata-url="([^"]*)"/i)?.[1] ?? "";
+                const title = element.match(/\bdata-title="([^"]*)"/i)?.[1] ?? "";
+                const description = element.match(/\bdata-description="([^"]*)"/i)?.[1] ?? "";
+                return `\n${[url, title, description].filter(Boolean).join("\n")}\n`;
+            });
             content = striptags(content);
         } else if (note.type === "llmChat") {
             // The note stores the whole conversation as a JSON blob; show the readable prose only.
