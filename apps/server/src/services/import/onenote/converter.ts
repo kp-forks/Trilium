@@ -676,6 +676,7 @@ function hslToHex(h: number, s: number, l: number): string {
     if (s === 0) {
         return `#${channel(l).repeat(3)}`;
     }
+    /* v8 ignore next -- only called from correctTableShadingColors with l strictly above 0.5 */
     const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
     const p = 2 * l - q;
     const component = (t: number) => {
