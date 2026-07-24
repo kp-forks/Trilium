@@ -124,6 +124,22 @@ export function convertPageHtml(rawHtml: string): string {
 }
 
 /**
+ * Extracts the page's authored creation timestamp from the Graph page document's
+ * `<meta name="created">` header, or undefined when the meta is absent or unparseable.
+ *
+ * This is the creation date OneNote displays under the page title: it lives in the page *content*
+ * and survives moves, copies and notebook migrations, whereas the page object's `createdDateTime`
+ * metadata is re-stamped by them (a moved page can report an object date years after the authored
+ * one). Graph emits the value without a UTC offset (e.g. "2026-07-23T21:28:00.0000000"), i.e. as
+ * wall-clock time, so `new Date()` parses it as server-local time — exact when the server runs in
+ * the notebook owner's timezone, and still the right day otherwise.
+ */
+export function extractPageCreatedDate(rawHtml: string): string | undefined {
+    const content = parse(rawHtml).querySelector('meta[name="created"]')?.getAttribute("content");
+    return content && !Number.isNaN(Date.parse(content)) ? content : undefined;
+}
+
+/**
  * A OneNote page is a free-form canvas of absolutely-positioned text boxes (the top-level outline
  * <div>s). Their document order need not match their visual order, so reorder them top-to-bottom then
  * left-to-right to linearize the page into a sensible reading order. A no-op for the common
@@ -721,4 +737,4 @@ function removeBlockLevelBreaks(scope: HTMLElement) {
     }
 }
 
-export default { convertPageHtml };
+export default { convertPageHtml, extractPageCreatedDate };

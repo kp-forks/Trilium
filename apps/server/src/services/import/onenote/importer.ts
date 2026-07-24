@@ -40,7 +40,13 @@ interface FetchedPage {
     resources: DownloadedResource[];
     /** How many of the page's resources failed to download (skipped, reported in the import report). */
     failedResourceCount: number;
-    /** OneNote's page creation timestamp (ISO 8601), preserved on the imported note. */
+    /**
+     * OneNote's page creation timestamp (ISO 8601), preserved on the imported note. The authored
+     * date from the page HTML's `<meta name="created">` when available — the date OneNote itself
+     * displays, which survives page moves/copies and notebook migrations — otherwise the Graph
+     * page object's `createdDateTime` (re-stamped by those operations; placeholder pages have no
+     * HTML to read the authored date from).
+     */
     createdDateTime?: string;
     /** OneNote's last-modified timestamp (ISO 8601), preserved on the imported note. */
     lastModifiedDateTime?: string;
@@ -134,7 +140,7 @@ export async function importSelection({ getAccessToken, parentNoteId, sections, 
                 try {
                     const html = converter.convertPageHtml(rawHtml);
                     const { resources, failedResourceCount } = await downloadPageResources(getAccessToken, page.title, html);
-                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
+                    fetchedPages.push({ id: page.id, title: page.title, level: page.level, pageId: page.pageId, html, rawHtml, rawInkml: inkml, inkSvg: inkmlToSvg(inkml), resources, failedResourceCount, createdDateTime: converter.extractPageCreatedDate(rawHtml) ?? page.createdDateTime, lastModifiedDateTime: page.lastModifiedDateTime });
                 } catch (e: unknown) {
                     const message = e instanceof Error ? e.message : String(e);
                     getLog().error(`OneNote import: fetched page '${page.title}' (${page.id}) but could not process its content; a placeholder note will be imported instead: ${message}`);

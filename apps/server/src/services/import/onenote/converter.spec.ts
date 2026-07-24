@@ -791,3 +791,17 @@ describe("convertPageHtml", () => {
         expect(out).toContain("<code>Code</code>");
     });
 });
+
+describe("extractPageCreatedDate", () => {
+    it("returns the authored timestamp from the document's created meta header", () => {
+        expect(converter.extractPageCreatedDate(SAMPLE)).toBe("2020-09-02T09:37:00.0000000");
+    });
+
+    it("returns undefined when the meta is absent, empty or unparseable", () => {
+        // A body-only document (as placeholder-adjacent captures can be) has no head to read.
+        expect(converter.extractPageCreatedDate(FORMATTING_SAMPLE)).toBeUndefined();
+        expect(converter.extractPageCreatedDate(`<html><head><meta name="created" content="" /></head><body></body></html>`)).toBeUndefined();
+        expect(converter.extractPageCreatedDate(`<html><head><meta name="created" content="not a date" /></head><body></body></html>`)).toBeUndefined();
+        expect(converter.extractPageCreatedDate(`<html><head><meta name="created" /></head><body></body></html>`)).toBeUndefined();
+    });
+});
