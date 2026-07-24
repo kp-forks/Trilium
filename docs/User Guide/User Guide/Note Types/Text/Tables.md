@@ -111,7 +111,7 @@ Tables can be set to have invisible borders in order to allow for basic layouts 
 
 ## Table indentation
 
-Since v104.1, tables can be indented as a block (the whole table moves, rather than just the content of a cell).
+Since v0.104.1, tables can be indented as a block (the whole table moves, rather than just the content of a cell).
 
 1.  Click the (**<img class="image_resized" style="aspect-ratio:27/27;width:2.97%;" src="4_Tables_image.png" width="27" height="27">)** button to select the entire table. Otherwise, the indentation applies only to the current cell's content.
 2.  Press <kbd>Tab</kbd> to increase the indent, or <kbd>Shift</kbd>+<kbd>Tab</kbd> to decrease it. Alternatively, use the indentation buttons in the formatting toolbar.
