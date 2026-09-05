@@ -53,7 +53,7 @@ export interface SortableItem {
 /**
  * One way of creating an entry, rendered as a button at the foot of the card.
  *
- * `onCreateItem` decides what the entry is, and may open a dialog or a picker first. Returning
+ * `onCreateItem` decides what the entry is, and can open a dialog or a picker first. Returning
  * nothing creates no entry.
  */
 export interface ItemCreationButton<T extends SortableItem> {
