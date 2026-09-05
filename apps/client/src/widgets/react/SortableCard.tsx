@@ -9,7 +9,7 @@ import {
 
 import { t } from "../../services/i18n";
 import { Card, type CardProps } from "./Card";
-import { createEdgeScroller, type ScrollTarget } from "./edge_scroll";
+import { createEdgeScroller, type Insets, type ScrollTarget } from "./edge_scroll";
 import { useFlip } from "./flip";
 import Icon from "./Icon";
 
@@ -29,12 +29,13 @@ const TOUCH_HOLD_MS = 400;
 const TOUCH_SLACK_PX = 8;
 
 /**
- * How fast a card walks its scroller with the pointer at the very edge, in pixels a second.
+ * How near an edge the pointer comes before the card starts to walk, in pixels.
  *
- * Twice what a board carries a card at: a card is scrolled through in one stretch, where a board is
- * walked along while the reader reads the columns it passes.
+ * Wider under a finger than the 60 a mouse is given: a thumb covers what it is pointing at, and
+ * the strip it has to find is the strip it cannot see.
  */
-const SCROLL_SPEED = 2700;
+const SCROLL_MARGIN = 60;
+const TOUCH_SCROLL_MARGIN = 100;
 
 /** What a press belongs to rather than to the segment holding it. */
 const CONTROLS = "button, a, input, select, textarea, label";
@@ -117,6 +118,8 @@ export function SortableCard<T extends SortableItem>({
     const pointerRef = useRef({ x: 0, y: 0 });
     /** The carry as it now stands, for the scrolling to place the segment again by. */
     const dragToRef = useRef<(clientY: number) => void>(() => {});
+    /** What stands over the edges of the screen while a segment is carried, measured as it starts. */
+    const reachRef = useRef<Insets>({ top: 0, bottom: 0, left: 0, right: 0 });
     /**
      * Walks whatever the card is scrolled inside while a segment is carried to an edge of it.
      *
@@ -125,12 +128,16 @@ export function SortableCard<T extends SortableItem>({
      * the frames it asks for outlive the render that started them.
      */
     const scroller = useMemo(() => createEdgeScroller({
-        speed: SCROLL_SPEED,
+        margin: matchMedia("(pointer: coarse)").matches
+            ? TOUCH_SCROLL_MARGIN
+            : SCROLL_MARGIN,
+        reach: () => reachRef.current,
         // The pointer has not moved, but the card has moved under it.
         onScroll: () => dragToRef.current(pointerRef.current.y)
     }), []);
 
     useEffect(() => () => scroller.stop(), [ scroller ]);
+
     /**
      * The order while a segment is being carried, which the caller is told of once it lands.
      *
@@ -242,6 +249,8 @@ export function SortableCard<T extends SortableItem>({
         if (!segment) {
             return;
         }
+
+        reachRef.current = fixedChrome(segment);
 
         // Refused where the pointer is already gone, a finger lifted during the rest above all.
         // Touch captures to the segment of its own accord, so the carry stands without it.
@@ -545,6 +554,37 @@ export function SortableCard<T extends SortableItem>({
             </div>
         </Card>
     );
+}
+
+/**
+ * How much of each edge of the screen is under something fixed, a toolbar or a bar of tabs.
+ *
+ * A finger cannot be carried under a toolbar, so an edge behind one is an edge the card would
+ * never be walked from. Read from what stands at the middle of each edge, which is where a bar
+ * spanning the screen is found, and measured once per carry: chrome does not come and go during
+ * one.
+ */
+function fixedChrome(carried: HTMLElement): Insets {
+    const insets = { top: 0, bottom: 0, left: 0, right: 0 };
+    const middle = window.innerWidth / 2;
+
+    for (const edge of [ "top", "bottom" ] as const) {
+        const y = edge === "top" ? 1 : window.innerHeight - 1;
+
+        for (const element of document.elementsFromPoint?.(middle, y) ?? []) {
+            // Whatever the segment is drawn inside stands over nothing: it is what is being
+            // carried, and the pointer is on it.
+            if (element.contains(carried) || getComputedStyle(element).position !== "fixed") {
+                continue;
+            }
+
+            const box = element.getBoundingClientRect();
+            const depth = edge === "top" ? box.bottom : window.innerHeight - box.top;
+            insets[edge] = Math.max(insets[edge], Math.min(depth, window.innerHeight / 3));
+        }
+    }
+
+    return insets;
 }
 
 /**
