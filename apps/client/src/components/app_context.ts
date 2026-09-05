@@ -162,7 +162,12 @@ export type CommandMappings = {
     openNewNoteSplit: NoteCommandData;
     openInWindow: NoteCommandData;
     /** Opens a note in the quick-edit popup. A `viewScope` carrying an `attachmentId` opens that attachment instead of the note itself. */
-    openInPopup: CommandData & { noteIdOrPath: string; viewScope?: ViewScope; };
+    openInPopup: CommandData & {
+        noteIdOrPath: string;
+        viewScope?: ViewScope;
+        /** Offers the note type switcher while the note is still blank, as the tab layout does. */
+        showNoteTypeSwitcher?: boolean;
+    };
     /** Dismisses the quick-edit popup, for something within it that has sent the reader elsewhere. Does nothing if it isn't open. */
     closePopupEditor: CommandData;
     openInTreePopup: CommandData & { noteIdOrPath: string; hoistedNoteId: string; };

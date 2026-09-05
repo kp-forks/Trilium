@@ -108,6 +108,9 @@ vi.mock("../FloatingButtonsDefinitions", () => ({
 vi.mock("../PromotedAttributes", () => ({ default: () => null }));
 vi.mock("../ReadOnlyNoteInfoBar", () => ({ default: () => null }));
 vi.mock("../layout/NoteBadges", () => ({ default: () => null }));
+vi.mock("../layout/NoteTypeSwitcher", () => ({
+    default: () => <div className="note-type-switcher-stub" />
+}));
 vi.mock("../ribbon/components/StandaloneRibbonAdapter", () => ({ default: () => null }));
 vi.mock("../ribbon/FormattingToolbar", () => ({ default: () => null, showFormattingToolbar: () => false }));
 vi.mock("../type_widgets/text/mobile_editor_toolbar", () => ({ default: () => <div className="mobile-toolbar-stub" /> }));
@@ -133,7 +136,9 @@ function fakeNote(labels: string[] = [], isOptions = false) {
 let container: HTMLDivElement;
 let parent: Component;
 
-async function openPopup(data: { noteIdOrPath: string, viewScope?: ViewScope }) {
+async function openPopup(
+    data: { noteIdOrPath: string, viewScope?: ViewScope, showNoteTypeSwitcher?: boolean }
+) {
     await act(async () => {
         await parent.handleEvent("openInPopup", data as never);
     });
@@ -415,6 +420,22 @@ describe("PopupEditor", () => {
         expect(document.body.classList.contains("popup-editor-stacked")).toBe(true);
 
         underlying.remove();
+    });
+
+    /**
+     * The switcher offers the note types a note can still become, which only the caller knows is
+     * wanted: a template opened to be written is, an attachment or a note map is not.
+     */
+    it("offers the note type switcher only where the caller asked for it", async () => {
+        await openPopup({ noteIdOrPath: "n1" });
+        expect(container.querySelector(".note-type-switcher-stub")).toBeNull();
+
+        await openPopup({ noteIdOrPath: "n1", showNoteTypeSwitcher: true });
+        expect(container.querySelector(".note-type-switcher-stub")).not.toBeNull();
+
+        // And gone again for the next note opened without it.
+        await openPopup({ noteIdOrPath: "n1" });
+        expect(container.querySelector(".note-type-switcher-stub")).toBeNull();
     });
 
     it("gives mobile its own toolbar and hides the buttons that make no sense in a popup", async () => {

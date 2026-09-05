@@ -13,6 +13,7 @@ import utils from "../../services/utils";
 import NoteList from "../collections/NoteList";
 import FloatingButtons from "../FloatingButtons";
 import { DESKTOP_FLOATING_BUTTONS, POPUP_HIDDEN_FLOATING_BUTTONS } from "../FloatingButtonsDefinitions";
+import NoteTypeSwitcher from "../layout/NoteTypeSwitcher";
 import TitleRow from "../layout/TitleRow";
 import NoteDetail from "../NoteDetail";
 import PromotedAttributes from "../PromotedAttributes";
@@ -35,6 +36,7 @@ const COVERED_LAYER = 1090;
 export default function PopupEditor() {
     const [ shown, setShown ] = useState(false);
     const [ stacked, setStacked ] = useState(false);
+    const [ switchable, setSwitchable ] = useState(false);
     const parentComponent = useContext(ParentComponent);
     const [ noteContext, setNoteContext ] = useState(() => new NoteContext("_popup-editor"));
     const modalRef = useRef<HTMLDivElement>(null);
@@ -44,7 +46,7 @@ export default function PopupEditor() {
         return baseItems.filter(item => !POPUP_HIDDEN_FLOATING_BUTTONS.includes(item));
     }, [ isMobile ]);
 
-    useTriliumEvent("openInPopup", async ({ noteIdOrPath, viewScope }) => {
+    useTriliumEvent("openInPopup", async ({ noteIdOrPath, viewScope, showNoteTypeSwitcher }) => {
         const noteId = tree.getNoteIdAndParentIdFromUrl(noteIdOrPath);
         if (!noteId.noteId) return;
         const note = await froca.getNote(noteId.noteId);
@@ -58,6 +60,7 @@ export default function PopupEditor() {
 
         const noteContext = new NoteContext("_popup-editor");
         setStacked(!!document.querySelector(".modal.show"));
+        setSwitchable(!!showNoteTypeSwitcher);
 
         const hasUserSetNoteReadOnly = note.hasLabel("readOnly");
         await noteContext.setNote(noteIdOrPath, {
@@ -191,6 +194,7 @@ export default function PopupEditor() {
                     <FloatingButtons items={items} />
                     <NoteDetail />
                     <NoteList media="screen" displayOnlyCollections />
+                    {switchable && <NoteTypeSwitcher note={noteContext.note} />}
                 </Modal>
             </DialogWrapper>
         </NoteContextContext.Provider>
