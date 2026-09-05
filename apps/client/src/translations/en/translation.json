@@ -3444,6 +3444,7 @@
     "properties-title": "Board properties",
     "card-templates": "Card templates",
     "card-templates-hint": "Choose what note types and note templates you would like to use when creating new board cards.",
+    "new-template-name": "New card template",
     "more-templates": "More templates…",
     "card-template": "Select a card template",
     "collapse-hint": "Double click to collapse",

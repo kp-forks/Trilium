@@ -21,6 +21,8 @@ export interface TemplateSelectionCardProps {
     instruction: string;
     /** The note the templates belong to, which is what one made here is filed under. */
     note: FNote;
+    /** What a template made here is called, for a caller whose templates are of one kind. */
+    newTemplateName?: string;
     /** What is offered now, as note type ids, in the order they are offered in. */
     templates: string[];
     /** Said with the whole list whenever the reader changes it. */
@@ -38,7 +40,7 @@ export interface TemplateSelectionCardProps {
  * it holds now and where a new one belongs.
  */
 export default function TemplateSelectionCard({
-    heading, instruction, note, templates, onChange
+    heading, instruction, note, newTemplateName, templates, onChange
 }: TemplateSelectionCardProps) {
     /**
      * The list as it stands here, which is what the card is drawn from.
@@ -104,7 +106,7 @@ export default function TemplateSelectionCard({
     /** Makes one and opens it, the reader writing what a note made from it holds. */
     const create = useCallback(async () => {
         const template = await note_create.createTemplateNote(
-            note.noteId, t("template_selection.new-name"));
+            note.noteId, newTemplateName ?? t("template_selection.new-name"));
         if (!template) {
             return undefined;
         }
@@ -119,7 +121,7 @@ export default function TemplateSelectionCard({
 
         setMade((was) => [ ...was, option ]);
         return { key: option.id, caption: option.title, icon: option.icon };
-    }, [ note ]);
+    }, [ newTemplateName, note ]);
 
     return (
         <SortableCard

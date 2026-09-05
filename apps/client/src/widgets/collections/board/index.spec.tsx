@@ -2508,6 +2508,8 @@ describe("Board column rename", () => {
             more.click();
             await flush();
         });
+        // The card reads what a note can be made from as it is drawn, which takes a moment.
+        await act(async () => { await flush(); });
 
         // The last of them: a dialog portalled to the page outlives the board that drew it here.
         const dialog = [ ...document.querySelectorAll<HTMLElement>(".board-properties-dialog") ]
@@ -2515,7 +2517,7 @@ describe("Board column rename", () => {
         expect(dialog).toBeTruthy();
 
         // What the board offers, in the order it stores them, each carried by a grip of its own.
-        const named = [ ...(dialog?.querySelectorAll(".board-template-name") ?? []) ]
+        const named = [ ...(dialog?.querySelectorAll(".template-selection-name") ?? []) ]
             .map(element => element.textContent);
         expect(named).toEqual([ "Text", "Markdown", "Canvas", "Spreadsheet" ]);
         expect(dialog?.querySelectorAll(".tn-sortable-grip").length).toBe(4);

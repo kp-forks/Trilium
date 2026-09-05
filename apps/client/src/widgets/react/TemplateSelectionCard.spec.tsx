@@ -162,6 +162,23 @@ describe("TemplateSelectionCard", () => {
             expect(captions()).toEqual([ "Text", "Markdown", "template_selection.new-name" ]);
         });
 
+        /** A caller whose templates are all of one kind says what one is called. */
+        it("calls a template what the caller calls one", async () => {
+            const made = vi.spyOn(note_create, "createTemplateNote").mockResolvedValue({
+                noteId: "fresh",
+                title: "New card template",
+                type: "text",
+                mime: "text/html",
+                getIcon: () => "bx bx-note"
+            } as unknown as FNote);
+            await draw({ newTemplateName: "New card template" });
+
+            await add("template_selection.create");
+
+            expect(made).toHaveBeenCalledWith("owner1", "New card template");
+            expect(captions().at(-1)).toBe("New card template");
+        });
+
         it("adds nothing where the template could not be made", async () => {
             vi.spyOn(note_create, "createTemplateNote").mockResolvedValue(undefined);
             await draw();
@@ -176,13 +193,14 @@ describe("TemplateSelectionCard", () => {
     // #region The dialog, and what the test does to it
 
     /** Drawn, and given the moment it takes to read what a note can be made from. */
-    async function draw() {
+    async function draw({ newTemplateName }: { newTemplateName?: string } = {}) {
         await act(async () => {
             render(
                 <TemplateSelectionCard
                     heading="What to use"
                     instruction="Pick what a new one is made from."
                     note={OWNER}
+                    newTemplateName={newTemplateName}
                     templates={offered}
                     onChange={(ids) => stored.push(ids)}
                 />,

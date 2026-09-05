@@ -36,6 +36,7 @@ export default function BoardProperties({ api, note, shown, onClose }: {
                 heading={t("board_view.card-templates")}
                 instruction={t("board_view.card-templates-hint")}
                 note={note}
+                newTemplateName={t("board_view.new-template-name")}
                 templates={api.getCardTemplateIds()}
                 onChange={store}
             />

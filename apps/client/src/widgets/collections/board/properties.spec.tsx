@@ -15,15 +15,16 @@ vi.mock("../../../services/i18n", () => ({
 // The card is the app's and is tested where it lives; what the board answers for is the words it is
 // given and where what it holds is written.
 vi.mock("../../react/TemplateSelectionCard", () => ({
-    default: ({ heading, instruction, note, templates, onChange }: {
-        heading: string, instruction: string, note: FNote, templates: string[],
-        onChange: (templates: string[]) => void
+    default: ({ heading, instruction, note, newTemplateName, templates, onChange }: {
+        heading: string, instruction: string, note: FNote, newTemplateName?: string,
+        templates: string[], onChange: (templates: string[]) => void
     }) => (
         <div
             className="templates-stub"
             data-heading={heading}
             data-instruction={instruction}
             data-note={note.noteId}
+            data-new-name={newTemplateName}
             data-templates={templates.join(",")}
             onClick={() => onChange([ "type:canvas:application/json" ])}
         />
@@ -82,6 +83,7 @@ describe("Board properties", () => {
         expect(card?.dataset.instruction).toBe("board_view.card-templates-hint");
         // Filed under the board, and drawn from what the board offers now.
         expect(card?.dataset.note).toBe("board1");
+        expect(card?.dataset.newName).toBe("board_view.new-template-name");
         expect(card?.dataset.templates).toBe("type:text:text/html");
     });
 
