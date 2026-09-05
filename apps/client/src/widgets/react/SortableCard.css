@@ -87,17 +87,52 @@
     }
   }
 
-  .tn-sortable-add {
+  /* The row itself is painted with nothing: the gaps between the buttons are the card's parent
+     showing through, and each button carries what a segment is painted with. */
+  .tn-sortable-adders {
     display: flex;
+    gap: var(--card-section-gap);
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  /* All of one width, however many there are. */
+  .tn-sortable-adder {
+    display: flex;
+    flex: 1 1 0;
+    justify-content: center;
     align-items: center;
     gap: 0.3em;
+    min-width: 0;
+    border: 1px solid var(--card-border-color, var(--main-border-color));
+    padding: var(--card-padding-block) var(--card-padding-inline);
+    background: var(--card-background-color);
     color: var(--muted-text-color);
+    font: inherit;
     cursor: pointer;
 
     &:hover {
       background-color: var(--card-background-hover-color);
       color: var(--main-text-color);
     }
+  }
+
+  /* The card's own corners are the row's to keep, and it is the buttons that are painted. */
+  .tn-sortable-adders:first-of-type .tn-sortable-adder:first-child {
+    border-start-start-radius: var(--card-border-radius);
+  }
+
+  .tn-sortable-adders:first-of-type .tn-sortable-adder:last-child {
+    border-start-end-radius: var(--card-border-radius);
+  }
+
+  .tn-sortable-adders:last-of-type .tn-sortable-adder:first-child {
+    border-end-start-radius: var(--card-border-radius);
+  }
+
+  .tn-sortable-adders:last-of-type .tn-sortable-adder:last-child {
+    border-end-end-radius: var(--card-border-radius);
   }
 
   .tn-sortable-appearing {

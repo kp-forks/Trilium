@@ -402,20 +402,25 @@ export declare const Slider: FunctionComponent<SliderProps>;
  * card draws whatever it is handed back.
  *
  * `items` are named by a `key` that outlives the order they stand in; `renderItem` draws a segment
- * for a card that shows more than a name, and `onAdd` puts a segment at the foot of the card that
- * makes another entry, answering with nothing where the reader backs out.
+ * for a card that shows more than a name, and `itemCreationButtons` puts a row of buttons at the
+ * foot of the card that make another entry, answering with nothing where the reader backs out.
  */
 interface SortableItem {
     key: string;
     caption?: ComponentChildren;
     icon?: string;
 }
+interface ItemCreationButton<T extends SortableItem> {
+    label: string;
+    icon?: string;
+    onCreateItem: () => T | undefined | Promise<T | undefined>;
+}
 interface SortableCardProps<T extends SortableItem> {
     items: T[];
     onChange: (items: T[]) => void;
     renderItem?: (item: T, index: number) => ComponentChildren;
-    onAdd?: () => T | undefined | Promise<T | undefined>;
-    addLabel?: string;
+    /** Up to three, drawn as a row of buttons at the foot of the card. */
+    itemCreationButtons?: ItemCreationButton<T>[];
     selectedKey?: string;
     onSelect?: (key: string) => void;
     heading?: string;

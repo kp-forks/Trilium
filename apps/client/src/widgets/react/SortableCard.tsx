@@ -10,6 +10,9 @@ import { Card, type CardProps } from "./Card";
 import { useFlip } from "./flip";
 import Icon from "./Icon";
 
+/** How many buttons the foot of a card holds before they are too narrow to read. */
+const MAX_CREATION_BUTTONS = 3;
+
 /** One entry of a {@link SortableCard}, named by a key that outlives the order it stands in. */
 export interface SortableItem {
     key: string;
@@ -17,6 +20,19 @@ export interface SortableItem {
     caption?: ComponentChildren;
     /** An icon class, `bx` prefix included, drawn before the caption. */
     icon?: string;
+}
+
+/**
+ * One way of making an entry, drawn as a button at the foot of the card.
+ *
+ * What an entry is is the caller's: the button can ask with a dialog or a picker of its own, and
+ * answering with nothing makes none.
+ */
+export interface ItemCreationButton<T extends SortableItem> {
+    label: string;
+    /** An icon class, `bx` prefix included. */
+    icon?: string;
+    onCreateItem: () => T | undefined | Promise<T | undefined>;
 }
 
 export interface SortableCardProps<T extends SortableItem> extends CardProps {
@@ -30,14 +46,12 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
      */
     renderItem?: (item: T, index: number) => ComponentChildren;
     /**
-     * Makes the entry a segment at the foot of the card adds, which is drawn only when given.
+     * The ways an entry can be made, drawn as a row of buttons at the foot of the card and left out
+     * where there are none. Up to three, past which they are too narrow to read.
      *
-     * The caller decides what a new entry is, so it can ask with a dialog or a picker of its own;
-     * answering with nothing adds none. The entry is appended and opens out where it lands.
+     * The first of them is what Enter beside an entry makes, that being the one a card leads with.
      */
-    onAdd?: () => T | undefined | Promise<T | undefined>;
-    /** What the entry at the foot of the card reads. */
-    addLabel?: string;
+    itemCreationButtons?: ItemCreationButton<T>[];
     /** The entry the reader is on, for a card whose selection the caller keeps. */
     selectedKey?: string;
     onSelect?: (key: string) => void;
@@ -55,8 +69,12 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
  * list of preferences, of columns, or of anything else named by a key.
  */
 export function SortableCard<T extends SortableItem>({
-    items, onChange, renderItem, onAdd, addLabel, selectedKey, onSelect, className, ...card
+    items, onChange, renderItem, itemCreationButtons, selectedKey, onSelect, className, ...card
 }: SortableCardProps<T>) {
+    if ((itemCreationButtons?.length ?? 0) > MAX_CREATION_BUTTONS) {
+        throw new Error("Up to three item creation buttons are supported");
+    }
+
     const listRef = useRef<HTMLDivElement>(null);
     const adderRef = useRef<HTMLElement>(null);
     const dragRef = useRef<Drag<T>>();
@@ -217,14 +235,10 @@ export function SortableCard<T extends SortableItem>({
      * Makes an entry and puts it at `at`, or at the foot of the card where it is given no place.
      *
      * The reader is left standing on an entry made among the others, that being where they asked
-     * for it; one made at the foot leaves them on the segment that adds, so another can follow.
+     * for it; one made at the foot leaves them on the button that made it, so another can follow.
      */
-    const add = useCallback(async (at?: number) => {
-        if (!onAdd) {
-            return;
-        }
-
-        const created = await onAdd();
+    const add = useCallback(async (create: ItemCreationButton<T>["onCreateItem"], at?: number) => {
+        const created = await create();
         if (!created) {
             return;
         }
@@ -238,7 +252,7 @@ export function SortableCard<T extends SortableItem>({
         }
 
         onChange(order);
-    }, [ onAdd, onChange, shown ]);
+    }, [ onChange, shown ]);
 
     const onSegmentKeyDown = useCallback((event: KeyboardEvent, index: number) => {
         if (event.key === "Escape" && dragRef.current) {
@@ -248,11 +262,12 @@ export function SortableCard<T extends SortableItem>({
         }
 
         // An entry is made beside the one the reader is standing on, the way a spreadsheet adds a
-        // row: below it, or above it with Shift. Only where the caller can make one at all.
-
-        if (event.key === "Enter" && onAdd && !event.ctrlKey && !event.metaKey) {
+        // row: below it, or above it with Shift. Made the way the card leads with, there being no
+        // button under the reader's hand to say which of them was meant.
+        const leading = itemCreationButtons?.[0];
+        if (event.key === "Enter" && leading && !event.ctrlKey && !event.metaKey) {
             event.preventDefault();
-            add(event.shiftKey ? index : index + 1);
+            add(leading.onCreateItem, event.shiftKey ? index : index + 1);
             return;
         }
 
@@ -263,9 +278,9 @@ export function SortableCard<T extends SortableItem>({
         if (to === undefined) {
             // Below the last entry stands the segment that adds another, which the reader steps
             // onto rather than past. It holds no entry, so there is nothing to move onto it.
-            if (!control && event.key === "ArrowDown" && index === last && onAdd) {
+            if (!control && event.key === "ArrowDown" && index === last) {
                 event.preventDefault();
-                adderRef.current?.focus();
+                adderRef.current?.querySelector<HTMLElement>(".tn-sortable-adder")?.focus();
             }
 
             return;
@@ -277,15 +292,9 @@ export function SortableCard<T extends SortableItem>({
         } else {
             focusEntry(to);
         }
-    }, [ add, endDrag, focusEntry, moveItem, onAdd, shown ]);
+    }, [ add, endDrag, focusEntry, itemCreationButtons, moveItem, shown ]);
 
     const onAddKeyDown = useCallback((event: KeyboardEvent) => {
-        if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            add();
-            return;
-        }
-
         // Back up into the entries. Home and End name the first and last of them here as they do
         // on an entry itself, this segment being one the reader stands on rather than one of them.
         const control = event.ctrlKey || event.metaKey;
@@ -296,7 +305,7 @@ export function SortableCard<T extends SortableItem>({
 
         event.preventDefault();
         focusEntry(to);
-    }, [ add, focusEntry, shown ]);
+    }, [ focusEntry, shown ]);
 
     return (
         <Card className={clsx("tn-sortable-card", className)} {...card}>
@@ -352,16 +361,26 @@ export function SortableCard<T extends SortableItem>({
                     </section>
                 ))}
 
-                {onAdd && (
+                {/* Painted with nothing of its own: the gaps between the buttons are the card's
+                    parent showing through, and each button carries what a segment is painted
+                    with. */}
+                {!!itemCreationButtons?.length && (
                     <section
                         ref={adderRef}
-                        className="tn-card-section tn-sortable-add"
-                        tabIndex={0}
-                        onClick={() => add()}
+                        className="tn-card-section tn-sortable-adders"
                         onKeyDown={onAddKeyDown}
                     >
-                        <Icon icon="bx bx-plus" />
-                        <span>{addLabel ?? t("sortable_card.add")}</span>
+                        {itemCreationButtons.map((button) => (
+                            <button
+                                key={button.label}
+                                type="button"
+                                className="tn-sortable-adder"
+                                onClick={() => add(button.onCreateItem)}
+                            >
+                                {button.icon && <Icon icon={button.icon} />}
+                                <span>{button.label}</span>
+                            </button>
+                        ))}
                     </section>
                 )}
             </div>

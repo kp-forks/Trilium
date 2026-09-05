@@ -285,18 +285,16 @@ describe("SortableCard", () => {
     describe("adding an entry", () => {
         it("draws no segment for adding unless it is given one", () => {
             draw();
-            expect(container.querySelector(".tn-sortable-add")).toBeNull();
+            expect(container.querySelector(".tn-sortable-adders")).toBeNull();
 
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
-            expect(adder()?.textContent).toContain("sortable_card.add");
+            draw({ itemCreationButtons: [ makes("d", "Delta") ] });
+            expect(adder()?.textContent).toContain("Add");
         });
 
         it("appends what the caller made, and shows it arriving", async () => {
-            const onAdd = vi.fn(() => ({ key: "d", caption: "Delta" }));
-            draw({ onAdd, addLabel: "Add a preference" });
+            draw({ itemCreationButtons: [ makes("d", "Delta", "Add a preference") ] });
 
-            expect(container.querySelector(".tn-sortable-add")?.textContent)
-                .toContain("Add a preference");
+            expect(adder()?.textContent).toContain("Add a preference");
 
             await click(adder());
 
@@ -316,7 +314,7 @@ describe("SortableCard", () => {
 
         it("adds nothing where the caller answers with nothing, a picker being backed out of",
             async () => {
-                draw({ onAdd: () => undefined });
+                draw({ itemCreationButtons: [ { label: "Add", onCreateItem: () => undefined } ] });
 
                 await click(adder());
 
@@ -326,7 +324,8 @@ describe("SortableCard", () => {
 
         it("waits for a caller that asks the reader first", async () => {
             let answer: (item: SortableItem | undefined) => void = () => {};
-            draw({ onAdd: () => new Promise((resolve) => { answer = resolve; }) });
+            draw({ itemCreationButtons: [ { label: "Add", onCreateItem: () => new Promise(
+                (resolve) => { answer = resolve; }) } ] });
 
             await click(adder());
             expect(changed).toEqual([]);
@@ -335,23 +334,42 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "d" ]);
         });
 
-        it("adds from the keyboard as well as from a press", async () => {
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
+        it("offers a button for each way of making one, each the width of the others", async () => {
+            draw({ itemCreationButtons: [
+                makes("d", "Delta", "Add a note"),
+                makes("e", "Epsilon", "Add a link"),
+                makes("f", "Zeta", "Add a folder")
+            ] });
 
-            press(adder(), "Enter");
-            await act(async () => {});
-            expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "d" ]);
+            expect(adders().map((button) => button.textContent))
+                .toEqual([ "Add a note", "Add a link", "Add a folder" ]);
+            // Of one width, however many there are, which the row shares out between them.
+            expect(adders().every((button) => button.style.flex === "")).toBe(true);
 
-            press(adder(), " ");
-            await act(async () => {});
-            expect(changed).toHaveLength(2);
+            await click(adders()[1]);
+            expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "e" ]);
+
+            await click(adders()[2]);
+            expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "e", "f" ]);
+        });
+
+        /** Three is as many as the foot of a card can read; a fourth is the caller's mistake. */
+        it("refuses more than three ways of making an entry", () => {
+            const buttons = [ makes("d", "D"), makes("e", "E"), makes("f", "F"), makes("g", "G") ];
+
+            expect(() => draw({ itemCreationButtons: buttons }))
+                .toThrow("Up to three item creation buttons are supported");
+            expect(() => draw({ itemCreationButtons: buttons.slice(0, 3) })).not.toThrow();
         });
 
         /** Beside the entry the reader stands on, the way a spreadsheet adds a row. */
         it("makes an entry below the focused one for Enter, and above it for Shift and Enter",
             async () => {
                 let made = 0;
-                draw({ onAdd: () => ({ key: `d${++made}`, caption: `Delta ${made}` }) });
+                draw({ itemCreationButtons: [ {
+                    label: "Add",
+                    onCreateItem: () => ({ key: `d${++made}`, caption: `Delta ${made}` })
+                } ] });
 
                 press(segmentOf("a"), "Enter");
                 await act(async () => {});
@@ -365,7 +383,7 @@ describe("SortableCard", () => {
             });
 
         it("leaves the reader standing on what it made, which is shown arriving", async () => {
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
+            draw({ itemCreationButtons: [ makes("d", "Delta") ] });
 
             press(segmentOf("b"), "Enter");
             await act(async () => {});
@@ -385,7 +403,7 @@ describe("SortableCard", () => {
         });
 
         it("makes nothing beside an entry where the caller answers with nothing", async () => {
-            draw({ onAdd: () => undefined });
+            draw({ itemCreationButtons: [ { label: "Add", onCreateItem: () => undefined } ] });
 
             press(segmentOf("a"), "Enter");
             await act(async () => {});
@@ -399,7 +417,7 @@ describe("SortableCard", () => {
          * from the last entry reaches it, and the keys that name an entry lead back into them.
          */
         it("is stepped onto and off again, like the entries above it", () => {
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
+            draw({ itemCreationButtons: [ makes("d", "Delta") ] });
 
             expect(adder()?.tabIndex).toBe(0);
 
@@ -418,14 +436,14 @@ describe("SortableCard", () => {
 
         /** Nothing stands below it, and a card of no entries has nowhere to lead back to. */
         it("goes nowhere from the segment that adds", () => {
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
+            draw({ itemCreationButtons: [ makes("d", "Delta") ] });
 
             focus(adder());
             press(adder(), "ArrowDown");
             expect(document.activeElement).toBe(adder());
 
             items = [];
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
+            draw({ itemCreationButtons: [ makes("d", "Delta") ] });
             focus(adder());
             press(adder(), "ArrowUp");
             expect(document.activeElement).toBe(adder());
@@ -433,7 +451,7 @@ describe("SortableCard", () => {
 
         /** It stands at the foot of the card to be pressed, not to be put in order with the rest. */
         it("leaves the segment for adding where it is", () => {
-            draw({ onAdd: () => ({ key: "d", caption: "Delta" }) });
+            draw({ itemCreationButtons: [ makes("d", "Delta") ] });
             expect(adder()?.querySelector(".tn-sortable-grip")).toBeNull();
             expect(adder()?.getAttribute("role")).not.toBe("listitem");
 
@@ -525,7 +543,7 @@ describe("SortableCard", () => {
             configurable: true
         });
 
-        for (const segment of [ ...segments(), adder() ]) {
+        for (const segment of [ ...segments(), row() ]) {
             if (!segment) {
                 continue;
             }
@@ -547,8 +565,22 @@ describe("SortableCard", () => {
         return container.querySelector<HTMLElement>(".tn-sortable-list");
     }
 
+    function row() {
+        return container.querySelector<HTMLElement>(".tn-sortable-adders");
+    }
+
+    /** The first of the buttons at the foot of the card, there being at least one in these. */
     function adder() {
-        return container.querySelector<HTMLElement>(".tn-sortable-add");
+        return container.querySelector<HTMLElement>(".tn-sortable-adder");
+    }
+
+    function adders() {
+        return [ ...container.querySelectorAll<HTMLElement>(".tn-sortable-adder") ];
+    }
+
+    /** A way of making one entry, named so a test can tell which button made what. */
+    function makes(key: string, caption: string, label = "Add") {
+        return { label, onCreateItem: () => ({ key, caption }) };
     }
 
     function segments() {
