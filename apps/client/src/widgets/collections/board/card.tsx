@@ -91,17 +91,18 @@ function Card({
         // popup already standing is taken as the one to stack on, and closing that leaves neither.
         if (e.detail > 1) return;
 
-        // A link the card draws, such as the target of a relation, names a note of its own. It is
-        // opened in the popup like any other card, and the press is taken here so that neither the
-        // page's own link handler (which would open a tab) nor the card below it acts on it too.
+        // A link to a note, such as a relation's target, opens in the popup. Cancelled here so that
+        // `goToLink` does not open a tab for it as well; a link naming no note is left alone.
         const link = (e.target as HTMLElement | null)?.closest<HTMLAnchorElement>("a[href]");
         if (link) {
             const { notePath } = parseNavigationStateFromUrl(link.getAttribute("href") ?? undefined);
+            if (!notePath) {
+                return;
+            }
+
             e.preventDefault();
             e.stopPropagation();
-            if (notePath) {
-                api.openNote(notePath);
-            }
+            api.openNote(notePath);
             return;
         }
 

@@ -139,27 +139,39 @@ describe("Board card", () => {
         const link = card(first).querySelector<HTMLElement>(".relation-link");
         if (!link) throw new Error("expected the relation link");
 
+        const reachedPage = vi.fn();
+        document.addEventListener("click", reachedPage);
         const press = new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 });
         await act(async () => { link.dispatchEvent(press); });
+        document.removeEventListener("click", reachedPage);
 
         expect(opened).toHaveBeenCalledTimes(1);
         expect(opened).toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "root/targetNote" });
-        // Taken here, so the page's own handler never sees it and no tab is opened.
+        // Taken here, so `goToLink` never sees it and opens no tab for it.
         expect(press.defaultPrevented).toBe(true);
-        expect(press.cancelBubble).toBe(true);
+        expect(reachedPage).not.toHaveBeenCalled();
     });
 
-    /** A link out of Trilium is the browser's to follow, and opens no card over it. */
-    it("leaves a link that names no note alone", async () => {
+    /**
+     * A link naming no note is `goToLink`'s to open, and the card neither opens itself over it nor
+     * takes the press away from the handler that would follow it.
+     */
+    it("leaves a link that names no note to the page's own handler", async () => {
         const { first } = await renderBoard();
         const opened = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined);
         opened.mockClear();
+        const link = card(first).querySelector<HTMLElement>(".outside-link");
+        if (!link) throw new Error("expected the outside link");
 
-        await act(async () => {
-            card(first).querySelector<HTMLElement>(".outside-link")?.click();
-        });
+        const reachedPage = vi.fn();
+        document.addEventListener("click", reachedPage);
+        const press = new MouseEvent("click", { bubbles: true, cancelable: true, detail: 1 });
+        await act(async () => { link.dispatchEvent(press); });
+        document.removeEventListener("click", reachedPage);
 
         expect(opened).not.toHaveBeenCalled();
+        // Reaches `goToLink`, which is what follows an address of its own.
+        expect(reachedPage).toHaveBeenCalled();
     });
 
     /**
