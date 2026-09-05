@@ -68,7 +68,8 @@ export function openTemplateMenu(
 
 /** Opens a template in the popup editor, which leaves whatever asked for it standing. */
 export function quickEdit(noteId: string) {
-    appContext.triggerCommand("openInPopup", { noteIdOrPath: noteId });
+    // A template that has yet to be written can still become a note of another type.
+    appContext.triggerCommand("openInPopup", { noteIdOrPath: noteId, showNoteTypeSwitcher: true });
 }
 
 /**

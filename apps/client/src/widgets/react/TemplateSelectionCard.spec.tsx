@@ -148,7 +148,8 @@ describe("TemplateSelectionCard", () => {
             const quick = items[0];
             if (!quick || !("handler" in quick)) throw new Error("expected a quick edit entry");
             quick.handler?.(quick, {} as never);
-            expect(command).toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "mine" });
+            expect(command)
+                .toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "mine", showNoteTypeSwitcher: true });
         });
 
         it("quick-edits and deletes from the keyboard", async () => {
@@ -157,7 +158,8 @@ describe("TemplateSelectionCard", () => {
             await draw();
 
             press(segments()[1], " ");
-            expect(command).toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "mine" });
+            expect(command)
+                .toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "mine", showNoteTypeSwitcher: true });
 
             press(segments()[1], "Delete");
             await act(async () => { await Promise.resolve(); await Promise.resolve(); });

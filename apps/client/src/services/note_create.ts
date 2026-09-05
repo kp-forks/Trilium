@@ -258,7 +258,11 @@ async function createTemplateNote(parentNoteId: string, title: string) {
         return undefined;
     }
 
-    appContext.triggerCommand("openInPopup", { noteIdOrPath: note.noteId });
+    // Blank when it opens, so the editor offers the note types to make it one of instead.
+    appContext.triggerCommand("openInPopup", {
+        noteIdOrPath: note.noteId,
+        showNoteTypeSwitcher: true
+    });
     return note;
 }
 

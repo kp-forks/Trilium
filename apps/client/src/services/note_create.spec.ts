@@ -294,7 +294,10 @@ describe("createTemplateNote", () => {
             }),
             undefined
         );
-        expect(triggerCommand).toHaveBeenCalledWith("openInPopup", { noteIdOrPath: NOTE_ID });
+        expect(triggerCommand).toHaveBeenCalledWith("openInPopup", {
+            noteIdOrPath: NOTE_ID,
+            showNoteTypeSwitcher: true
+        });
         expect(result).toBe(childNote);
     });
 });
