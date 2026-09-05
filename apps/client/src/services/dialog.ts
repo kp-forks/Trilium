@@ -21,8 +21,8 @@ export async function openDialog($dialog: JQuery<HTMLElement>, closeActDialog = 
 
     saveFocusedElement();
 
-    // Lift this dialog above a stacked quick-edit / tree popup if one is open (see raiseAboveStackedPopup).
-    const bumpedZIndex = raiseAboveStackedPopup($dialog[0], declaredZIndex);
+    // Lift this dialog above whatever is already open, if anything is (see raiseAboveWhatIsOpen).
+    const bumpedZIndex = raiseAboveWhatIsOpen($dialog[0], declaredZIndex);
 
     Modal.getOrCreateInstance($dialog[0], config).show();
 
@@ -149,37 +149,52 @@ export function closeActiveDialog() {
     }
 }
 
+/** The layer a dialog stands on with nothing said about it, which is Bootstrap's own. */
+const STANDARD_MODAL_LAYER = 1055;
+
 /** Self-managing popups (quick-edit, tree popup) set their own z-index via CSS; never lift them. */
 const SELF_MANAGED_POPUP_SELECTOR = ".popup-editor-dialog, .tree-popup-editor-dialog";
 
 /**
- * When a quick-edit / tree popup is stacked on top of another modal it sits at z-index 1100 — above
- * the standard dialog layer (1055). A dialog opened from within it (delete/confirm/prompt/…) would
- * then render *behind* the popup. Detect that case and give the incoming dialog an inline z-index
- * just above the current top-most modal so it clears the popup.
+ * Puts a dialog opened over something else above it.
+ *
+ * Two cases, and one answer for both. A quick-edit / tree popup stacked on another modal sits at
+ * z-index 1100, above the standard dialog layer (1055), so a dialog opened from within it would
+ * render behind the popup. And a dialog opened from another dialog — a picker reached from a
+ * settings dialog, say — declares the same layer as the one it was opened from, which leaves the
+ * two tied: whichever stands later in the page wins, and that is not the one just opened.
+ *
+ * The incoming dialog is given an inline z-index just above the top-most modal, so it clears both.
+ * Its backdrop follows it (see the caller), which is what keeps the dialog underneath from being
+ * pressed while this one is up.
  *
  * The dialog's inline z-index is rewritten from scratch on every open, so a lift never outlives the
- * stacked context that warranted it. `declaredZIndex` is the layer the dialog defines for itself
- * (`Modal`'s `zIndex` prop, e.g. 1100 for the note type chooser or 2000 for confirm/prompt) and is
- * what it falls back to — clearing the property outright would strip that.
+ * context that warranted it. `declaredZIndex` is the layer the dialog defines for itself (`Modal`'s
+ * `zIndex` prop, e.g. 1100 for the note type chooser or 2000 for confirm/prompt) and is what it
+ * falls back to — clearing the property outright would strip that.
  *
  * Returns the assigned z-index (for the caller to match the backdrop), or `null` when no lift was
  * applied.
  */
-function raiseAboveStackedPopup(dialogEl: HTMLElement, declaredZIndex?: number): number | null {
-    const hasStackedPopup = document.body.classList.contains("popup-editor-stacked")
-        || document.body.classList.contains("tree-popup-stacked");
-    if (!hasStackedPopup || dialogEl.matches(SELF_MANAGED_POPUP_SELECTOR)) {
-        dialogEl.style.zIndex = declaredZIndex ? String(declaredZIndex) : "";
-        return null;
-    }
-
+function raiseAboveWhatIsOpen(dialogEl: HTMLElement, declaredZIndex?: number): number | null {
     const others = Array.from(document.querySelectorAll<HTMLElement>(".modal.show"))
         .filter((modal) => modal !== dialogEl);
     const maxZIndex = others.reduce((max, modal) => Math.max(max, parseInt(getComputedStyle(modal).zIndex, 10) || 0), 0);
 
-    // A dialog that already declares a layer above the popup keeps it; lifting only ever raises.
-    const zIndex = Math.max(maxZIndex + 10, declaredZIndex ?? 0);
+    const hasStackedPopup = document.body.classList.contains("popup-editor-stacked")
+        || document.body.classList.contains("tree-popup-stacked");
+    // The layer this dialog would stand on of its own accord, which is what says whether anything
+    // already open would cover it.
+    const own = declaredZIndex ?? STANDARD_MODAL_LAYER;
+    const isCovered = hasStackedPopup || maxZIndex >= own;
+
+    if (!isCovered || dialogEl.matches(SELF_MANAGED_POPUP_SELECTOR)) {
+        dialogEl.style.zIndex = declaredZIndex ? String(declaredZIndex) : "";
+        return null;
+    }
+
+    // A dialog that already declares a layer above everything open keeps it; lifting only raises.
+    const zIndex = Math.max(maxZIndex + 10, own);
     dialogEl.style.zIndex = String(zIndex);
     return zIndex;
 }

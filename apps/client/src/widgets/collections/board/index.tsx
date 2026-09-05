@@ -29,7 +29,6 @@ import {
 } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteAutocomplete from "../../react/NoteAutocomplete";
-import NoteTypeSelectorDialog from "../../react/NoteTypeSelectorDialog";
 import ShortcutHintButton from "../../shortcut_hints/shortcut_hint_button";
 import { onWheelHorizontalScroll } from "../../widget_utils";
 import ActionButton from "../../react/ActionButton";
@@ -45,6 +44,7 @@ import { DEFAULT_COLUMN_ICON, DEFAULT_GROUP_BY, getStatusDefinition, INBOX_COLUM
 import Column from "./column";
 import { currentCardTemplate, DEFAULT_CARD_TEMPLATES } from "./card_templates";
 import ColumnLimitDialog from "./column_limit";
+import BoardProperties from "./properties";
 import { openBoardContextMenu, openCreateColumnMenu } from "./context_menu";
 import { applyCardMove, ColumnMap, getBoardData } from "./data";
 import { useBoardKeyboard } from "./keyboard";
@@ -269,7 +269,7 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
     const [ isCreatingColumn, setIsCreatingColumn ] = useState(false);
     /** Everything a card could be made from, read once: the note types and every template. */
     const [ availableTemplates, setAvailableTemplates ] = useState<NoteTypeOption[]>([]);
-    const [ isPickingTemplates, setIsPickingTemplates ] = useState(false);
+    const [ isEditingProperties, setIsEditingProperties ] = useState(false);
 
     /** How many reads of the templates were asked for, and the newest one answered. */
     const readsAsked = useRef(0);
@@ -390,7 +390,7 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
             onAddColumn: () => setIsCreatingColumn(true),
             onShowInbox: (shown) => api.setInboxEnabled(shown),
             onShowArchived: (shown) => api.setArchivedShown(shown),
-            onCustomizeTemplates: () => setIsPickingTemplates(true),
+            onOpenProperties: () => setIsEditingProperties(true),
             onCollapseAll: () => {
                 // The open column is closed with the rest: it holds the peek that would otherwise
                 // keep it open against what is being written for it.
@@ -419,7 +419,7 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
         offered: offeredTemplates,
         current: currentCardTemplate(offeredTemplates, api.getLastCardTemplateId()),
         onSelect: (template: NoteTypeOption) => api.setLastCardTemplateId(template.id),
-        onMore: () => setIsPickingTemplates(true)
+        onMore: () => setIsEditingProperties(true)
     }), [ api, viewConfig, offeredTemplates ]);
 
     const boardActions = useMemo<BoardActions>(() => ({
@@ -821,14 +821,11 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
                                     column={columnLimitToEdit}
                                     onClose={() => setColumnLimitToEdit(undefined)}
                                 />
-                                <NoteTypeSelectorDialog
+                                <BoardProperties
+                                    api={api}
                                     available={availableTemplates}
-                                    selected={api.getCardTemplateIds()}
-                                    shown={isPickingTemplates}
-                                    title={t("board_view.templates-title")}
-                                    hint={t("board_view.templates-hint")}
-                                    onSave={(ids) => api.setCardTemplateIds(ids)}
-                                    onClose={() => setIsPickingTemplates(false)}
+                                    shown={isEditingProperties}
+                                    onClose={() => setIsEditingProperties(false)}
                                 />
                             </>,
                             document.body

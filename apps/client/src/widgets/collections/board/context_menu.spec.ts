@@ -717,10 +717,10 @@ describe("Board context menu", () => {
 
     /**
      * What the board itself offers, for a press on the ground the columns stand on. The last entry
-     * opens the dialog naming what a card can be made from, which the pill inside the field a card
-     * is named in opens as well.
+     * opens what the board is set up with, which the pill inside the field a card is named in
+     * opens as well.
      */
-    it("offers what the board holds, and a way to what its cards are made from", () => {
+    it("offers what the board holds, and a way to how it is set up", () => {
         const show = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
         const board = {
             inboxShown: true,
@@ -730,7 +730,7 @@ describe("Board context menu", () => {
             onExpandAll: vi.fn(),
             onShowInbox: vi.fn(),
             onShowArchived: vi.fn(),
-            onCustomizeTemplates: vi.fn()
+            onOpenProperties: vi.fn()
         };
 
         openBoardContextMenu({
@@ -741,17 +741,17 @@ describe("Board context menu", () => {
         } as ContextMenuEvent, board);
 
         const items = show.mock.calls.at(-1)?.[0].items ?? [];
-        // A separator stands between what the board shows and what its cards are made from.
+        // A separator stands between what the board shows and how it is set up.
         expect(items.map(item => item && "uiIcon" in item ? item.uiIcon : "---")).toEqual([
             "bx bx-columns", "---",
             "bx bx-collapse-alt", "bx bx-expand-alt", "---",
             INBOX_COLUMN_ICON, "bx bx-archive", "---",
-            "bx bx-list-ul"
+            "bx bx-cog"
         ]);
 
         const entry = items.at(-1);
-        if (!entry || !("handler" in entry)) throw new Error("expected an entry for the templates");
+        if (!entry || !("handler" in entry)) throw new Error("expected an entry for the properties");
         entry.handler?.(entry, {} as never);
-        expect(board.onCustomizeTemplates).toHaveBeenCalled();
+        expect(board.onOpenProperties).toHaveBeenCalled();
     });
 });

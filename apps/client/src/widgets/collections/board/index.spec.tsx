@@ -8,6 +8,8 @@ import { useCallback, useEffect, useState } from "preact/hooks";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { Modal as BootstrapModal } from "bootstrap";
+
 import Component from "../../../components/component";
 import contextMenu from "../../../menus/context_menu";
 import dialog from "../../../services/dialog";
@@ -511,7 +513,7 @@ describe("Collapsed board columns", () => {
                 : []);
         expect(entries.map(entry => entry.icon)).toEqual([
             "bx bx-columns", "bx bx-collapse-alt", "bx bx-expand-alt",
-            INBOX_COLUMN_ICON, "bx bx-archive", "bx bx-list-ul"
+            INBOX_COLUMN_ICON, "bx bx-archive", "bx bx-cog"
         ]);
         const entry = (icon: string) => entries.find(item => item.icon === icon)?.handler;
 
@@ -1753,6 +1755,25 @@ describe("Board column rename", () => {
         return field;
     }
 
+    /**
+     * Takes a dialog down as Bootstrap would.
+     *
+     * Its own teardown waits on a transition that happy-dom never runs, so a dialog left open keeps
+     * the focus trap Bootstrap put on the page: every editor the tests after it open would lose the
+     * focus the moment it was given.
+     */
+    async function dismiss(dialog?: HTMLElement) {
+        await act(async () => {
+            dialog?.dispatchEvent(new Event("hidden.bs.modal", { bubbles: true }));
+            await flush();
+        });
+
+        BootstrapModal.getInstance(dialog as HTMLElement)?.dispose();
+        dialog?.remove();
+        document.querySelector(".modal-backdrop")?.remove();
+        document.body.classList.remove("modal-open");
+    }
+
     /** The element standing for a note, which a move draws afresh. */
     function drawn(container: HTMLElement, noteId: string) {
         const element = [ ...container.querySelectorAll<HTMLElement>(".board-note") ]
@@ -2459,11 +2480,9 @@ describe("Board column rename", () => {
         }
     });
 
-    /** The pill's last entry opens the dialog that decides what the board offers. */
-    it("opens the templates dialog from the pill, and stores what is ticked", async () => {
+    /** The pill's last entry leads where the board's own menu does: how the board is set up. */
+    it("opens the board's properties from the pill, listing what it offers in order", async () => {
         const { container } = await setup();
-        const stored = vi.spyOn(BoardApi.prototype, "setCardTemplateIds")
-            .mockResolvedValue(undefined);
         const slot = container.querySelectorAll<HTMLElement>(".board-column")[1]
             .querySelector<HTMLElement>(".board-new-item");
 
@@ -2490,52 +2509,19 @@ describe("Board column rename", () => {
             await flush();
         });
 
-        // The last of them: a dialog portalled to the page outlives the board that drew it here,
-        // so every board this file has rendered has left one behind.
-        const dialog = [ ...document.querySelectorAll<HTMLElement>(".note-type-selector-dialog") ]
+        // The last of them: a dialog portalled to the page outlives the board that drew it here.
+        const dialog = [ ...document.querySelectorAll<HTMLElement>(".board-properties-dialog") ]
             .at(-1);
         expect(dialog).toBeTruthy();
 
-        const boxes = [ ...(dialog?.querySelectorAll<HTMLInputElement>("input[type=checkbox]") ?? []) ];
-        // The name carries a suffix of its own, which is what ties the box to its label.
-        const named = boxes.map(box => box.getAttribute("name")?.replace(/-[^-]{10}$/, ""));
-        // Everything the app can make is listed, with what the board offers already ticked.
-        expect(named).toEqual([
-            "type:text:text/html",
-            "type:code:text/x-markdown",
-            "type:canvas:application/json",
-            "type:spreadsheet:application/json",
-            "type:mermaid:text/mermaid"
-        ]);
-        expect(boxes.filter(box => box.checked).length).toBe(4);
+        // What the board offers, in the order it stores them, each carried by a grip of its own.
+        const named = [ ...(dialog?.querySelectorAll(".board-template-name") ?? []) ]
+            .map(element => element.textContent);
+        expect(named).toEqual([ "Text", "Markdown", "Canvas", "Spreadsheet" ]);
+        expect(dialog?.querySelectorAll(".tn-sortable-grip").length).toBe(4);
+        expect(dialog?.querySelectorAll(".tn-sortable-adder").length).toBe(2);
 
-        // Nothing ticked is nothing a card could be made from, so it cannot be saved.
-        await act(async () => {
-            for (const box of boxes.filter(box => box.checked)) {
-                box.checked = false;
-                box.dispatchEvent(new Event("change", { bubbles: true }));
-            }
-            await flush();
-        });
-        const save = [ ...(dialog?.querySelectorAll<HTMLButtonElement>("button") ?? []) ]
-            .find(button => button.textContent?.includes("selector-save"));
-        expect(save?.disabled).toBe(true);
-
-        await act(async () => {
-            boxes[4].checked = true;
-            boxes[4].dispatchEvent(new Event("change", { bubbles: true }));
-            await flush();
-        });
-        expect(save?.disabled).toBe(false);
-
-        await act(async () => {
-            dialog?.querySelector("form")?.dispatchEvent(
-                new Event("submit", { bubbles: true, cancelable: true }));
-            await flush();
-        });
-        expect(stored).toHaveBeenCalledWith([ "type:mermaid:text/mermaid" ]);
-
-        stored.mockRestore();
+        await dismiss(dialog);
     });
 
     /**

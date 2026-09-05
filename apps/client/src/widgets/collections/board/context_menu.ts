@@ -180,8 +180,8 @@ interface BoardMenuTarget {
     onExpandAll: () => void;
     onShowInbox: (shown: boolean) => void;
     onShowArchived: (shown: boolean) => void;
-    /** Opens the dialog naming what a new card can be made from. */
-    onCustomizeTemplates: () => void;
+    /** Opens the dialog holding what the board is set up with, its card templates among them. */
+    onOpenProperties: () => void;
 }
 
 /** What the board itself offers, for a press on the ground the columns stand on. */
@@ -224,9 +224,9 @@ export function openBoardContextMenu(event: ContextMenuEvent, board: BoardMenuTa
             },
             { kind: "separator" },
             {
-                title: t("board_view.customize-templates"),
-                uiIcon: "bx bx-list-ul",
-                handler: board.onCustomizeTemplates
+                title: t("board_view.properties"),
+                uiIcon: "bx bx-cog",
+                handler: board.onOpenProperties
             }
         ],
         selectMenuItemHandler() {}
