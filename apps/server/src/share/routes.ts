@@ -436,24 +436,21 @@ function register(router: Router) {
         const searchContext = new SearchContext({ ancestorNoteId });
         const searchResults = searchService.findResultsWithQuery(search, searchContext);
         const authorizedResults = searchResults
-            // Apply the same per-note authorization as the direct content routes:
-            // keep only results the caller may access and that are visible in the tree.
+            // Apply the same per-note authorization as the direct content routes: drop protected
+            // notes (GHSA-xmv9-3v98-7gq8) and keep only results the caller can access that are
+            // visible in the tree.
             .filter((sr) => {
                 const fullNote = shaca.notes[sr.noteId];
 
                 return fullNote
+                    && !fullNote.isProtected
                     && hasCredentialAccess(fullNote, req)
                     && isVisibleInShareTree(ancestorNoteId, sr.notePathArray);
             });
 
-        // Extract content snippets so the share viewer can show what matched. This runs only on
-        // results that passed the authorization filter above, so restricted content is never read.
-        // Snippet extraction reads each note's content and runs token highlighting, so we cap it
-        // to the first SNIPPET_LIMIT results (the share popout only renders 5). Results beyond
-        // the cap are still returned, just without a snippet.
-        // buildSearchResultDetails is the same builder the in-app quick search uses; it sets
-        // contentSnippet / highlightedContentSnippet (HTML-escaped, matched tokens wrapped in
-        // <b>...</b>) on each passed result.
+        // buildSearchResultDetails() reads each note's content to set contentSnippet and
+        // highlightedContentSnippet, so it runs only on authorized results and only on the first
+        // SNIPPET_LIMIT of them (the share popout renders 5); later results carry no snippet.
         const SNIPPET_LIMIT = 20;
         searchService.buildSearchResultDetails(authorizedResults.slice(0, SNIPPET_LIMIT), searchContext);
 

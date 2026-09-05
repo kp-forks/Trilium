@@ -1,4 +1,4 @@
-import { cls, options, task_states } from "@triliumnext/core";
+import { becca, cls, options, password_encryption, protected_session, task_states } from "@triliumnext/core";
 import type { Application, NextFunction,Request, Response } from "express";
 import supertest from "supertest";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -98,6 +98,7 @@ describe("Share API test", () => {
     const SHARE_ROOT_ID = "y0AFOwgOgkWO";
 
     interface ShareSearchResult {
+        id: string;
         title: string;
         snippet?: string;
         highlightedSnippet?: string;
@@ -153,10 +154,10 @@ describe("Share API test", () => {
         expect(cannotSetHeadersCount).toBe(0);
     });
 
-    it("does not build snippets for notes the caller may not see", async () => {
-        // Snippets are extracted only after the authorization filter, so neither the hidden
-        // template's content ("Content Start") nor the credential-protected note may surface
-        // in any field of an anonymous response.
+    it("does not build snippets for notes the caller cannot see", async () => {
+        // Snippets are extracted only after the authorization filter, so an anonymous response
+        // contains neither the hidden template's content ("Content Start") nor the
+        // credential-protected note in any field.
         const hiddenContent = await searchShare("Content Start");
         expect(JSON.stringify(hiddenContent)).not.toContain("Content Start");
 
@@ -165,6 +166,31 @@ describe("Share API test", () => {
 
         const authenticated = await searchShare("Password protected share", "root:password");
         expect(authenticated.map((r) => r.title)).toContain("Password protected share");
+        expect(cannotSetHeadersCount).toBe(0);
+    });
+
+    it("drops protected notes from search results while a protected session is open", async () => {
+        // Protected notes cannot be shared (GHSA-xmv9-3v98-7gq8). With the owner's protected
+        // session open, becca decrypts on read, so the route must drop these notes before
+        // snippet extraction instead of relying on the content being unreadable.
+        const dataKey = await password_encryption.getDataKey("demo1234");
+        if (!(dataKey instanceof Uint8Array)) {
+            throw new Error("Expected a data key from the fixture password.");
+        }
+        protected_session.default.setDataKey(dataKey);
+        try {
+            becca.decryptProtectedNotes();
+            const protectedNote = becca.getNoteOrThrow(PROTECTED_SHARED_NOTE_ID);
+            expect(protectedNote.isDecrypted).toBe(true);
+
+            const results = await searchShare(protectedNote.title);
+            const leaked = results.filter((r) => r.id === PROTECTED_SHARED_NOTE_ID
+                || r.title === "[protected]"
+                || r.title === protectedNote.title);
+            expect(leaked).toEqual([]);
+        } finally {
+            protected_session.resetDataKey();
+        }
         expect(cannotSetHeadersCount).toBe(0);
     });
 

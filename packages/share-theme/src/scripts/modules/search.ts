@@ -20,19 +20,6 @@ interface SearchResult {
     highlightedSnippet?: string;
 }
 
-const HTML_ESCAPE_MAP: Record<string, string> = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    "\"": "&quot;",
-    "'": "&#39;"
-};
-
-/** Escape user-supplied/match text before injecting into innerHTML. */
-export function escapeHtml(s: string): string {
-    return s.replace(/[&<>"']/g, (c) => HTML_ESCAPE_MAP[c]);
-}
-
 function buildResultItem(result: SearchResult) {
     // Prefer the server-rendered highlighted snippet (it only contains <b>/<br> tags that
     // the search service inserts). For static (Fuse) mode we build a plain snippet below
@@ -47,6 +34,58 @@ function buildResultItem(result: SearchResult) {
                 <div class="search-result-note">${escapeHtml(result.path || "Home")}</div>
                 ${snippetBlock}
             </a>`;
+}
+
+export default function setupSearch() {
+    const searchInput: HTMLInputElement | null = document.querySelector(".search-input");
+    if (!searchInput) {
+        return;
+    }
+
+    searchInput.addEventListener("keyup", debounce(async () => {
+        // console.log("CHANGE EVENT");
+        const query = searchInput.value;
+        if (query.length < 3) return;
+        const resp = await fetchResults(query);
+        const results = resp.results.slice(0, 5);
+        const lines = [`<div class="search-results">`];
+        for (const result of results) {
+            lines.push(buildResultItem(result));
+        }
+        lines.push("</div>");
+
+        const container = parseHTML(lines.join("")) as HTMLDivElement;
+        // console.log(container, lines);
+        const rect = searchInput.getBoundingClientRect();
+        container.style.top = `${rect.bottom}px`;
+        container.style.left = `${rect.left}px`;
+        container.style.minWidth = `${rect.width}px`;
+
+        const existing = document.querySelector(".search-results");
+        if (existing) existing.replaceWith(container);
+        else document.body.append(container);
+    }, 500));
+
+    window.addEventListener("click", e => {
+        const existing = document.querySelector(".search-results");
+        if (!existing) return;
+        // If the click was anywhere search components ignore it
+        if (parents(e.target as HTMLElement, ".search-results,.search-item").length) return;
+        if (existing) existing.remove();
+    });
+}
+
+const HTML_ESCAPE_MAP: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;"
+};
+
+/** Escape user-supplied/match text before injecting into innerHTML. */
+export function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => HTML_ESCAPE_MAP[c]);
 }
 
 /**
@@ -104,46 +143,6 @@ export function buildStaticSnippet(
     if (cursor < to) out += escapeHtml(content.slice(cursor, to));
 
     return `${from > 0 ? "…" : ""}${out}${to < content.length ? "…" : ""}`;
-}
-
-
-export default function setupSearch() {
-    const searchInput: HTMLInputElement | null = document.querySelector(".search-input");
-    if (!searchInput) {
-        return;
-    }
-
-    searchInput.addEventListener("keyup", debounce(async () => {
-        // console.log("CHANGE EVENT");
-        const query = searchInput.value;
-        if (query.length < 3) return;
-        const resp = await fetchResults(query);
-        const results = resp.results.slice(0, 5);
-        const lines = [`<div class="search-results">`];
-        for (const result of results) {
-            lines.push(buildResultItem(result));
-        }
-        lines.push("</div>");
-
-        const container = parseHTML(lines.join("")) as HTMLDivElement;
-        // console.log(container, lines);
-        const rect = searchInput.getBoundingClientRect();
-        container.style.top = `${rect.bottom}px`;
-        container.style.left = `${rect.left}px`;
-        container.style.minWidth = `${rect.width}px`;
-
-        const existing = document.querySelector(".search-results");
-        if (existing) existing.replaceWith(container);
-        else document.body.append(container);
-    }, 500));
-
-    window.addEventListener("click", e => {
-        const existing = document.querySelector(".search-results");
-        if (!existing) return;
-        // If the click was anywhere search components ignore it
-        if (parents(e.target as HTMLElement, ".search-results,.search-item").length) return;
-        if (existing) existing.remove();
-    });
 }
 
 async function fetchResults(query: string): Promise<SearchResults> {

@@ -110,11 +110,8 @@ describe("buildStaticSnippet", () => {
         // maxLength=20 so window won't fit the whole match. Match at [0, 30] in a longer string.
         const content = `${"A".repeat(31)} tail tail tail tail tail`;
         const result = buildStaticSnippet(content, [ contentMatch([ 0, 30 ]) ], 20);
-        // The bolded portion is clipped to the window (20 A's), then ellipsis on the right.
-        expect(result).toMatch(/^<b>A+<\/b>…$/);
-        // Should not include all 31 A's — only the windowed slice.
-        const bolded = result!.match(/<b>(A+)<\/b>/)![1];
-        expect(bolded.length).toBeLessThanOrEqual(20);
+        // The bolded run is clipped to the 20-char window and followed by the right-hand ellipsis.
+        expect(result).toBe(`<b>${"A".repeat(20)}</b>…`);
     });
 
     it("ignores content matches with no indices", () => {
