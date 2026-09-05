@@ -421,6 +421,8 @@ interface SortableCardProps<T extends SortableItem> {
     renderItem?: (item: T, index: number) => ComponentChildren;
     /** Up to three, drawn as a row of buttons at the foot of the card. */
     itemCreationButtons?: ItemCreationButton<T>[];
+    /** Which edge of a segment the grip stands on. The trailing one by default. */
+    gripPlacement?: "start" | "end";
     selectedKey?: string;
     onSelect?: (key: string) => void;
     heading?: string;

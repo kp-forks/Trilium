@@ -64,6 +64,12 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
      * The first of them is what Enter beside an entry makes, that being the one a card leads with.
      */
     itemCreationButtons?: ItemCreationButton<T>[];
+    /**
+     * Which edge of a segment the grip stands on. The trailing one by default, where it is out of
+     * the way of what the segment reads; the leading one suits a card whose entries carry controls
+     * of their own on that side.
+     */
+    gripPlacement?: "start" | "end";
     /** The entry the reader is on, for a card whose selection the caller keeps. */
     selectedKey?: string;
     onSelect?: (key: string) => void;
@@ -81,7 +87,8 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
  * list of preferences, of columns, or of anything else named by a key.
  */
 export function SortableCard<T extends SortableItem>({
-    items, onChange, renderItem, itemCreationButtons, selectedKey, onSelect, className, ...card
+    items, onChange, renderItem, itemCreationButtons, gripPlacement = "end", selectedKey, onSelect,
+    className, ...card
 }: SortableCardProps<T>) {
     if ((itemCreationButtons?.length ?? 0) > MAX_CREATION_BUTTONS) {
         throw new Error("Up to three item creation buttons are supported");
@@ -358,6 +365,21 @@ export function SortableCard<T extends SortableItem>({
         focusEntry(to);
     }, [ focusEntry, shown ]);
 
+    /** What a segment is carried by, drawn on whichever edge the caller asked for. */
+    const grip = (key: string) => (
+        <span
+            className="tn-sortable-grip"
+            title={t("sortable_card.reorder")}
+            aria-hidden="true"
+            onPointerDown={(event) => beginDrag(event, key)}
+        >
+            <svg viewBox="0 0 16 16">
+                <line x1="3" y1="6" x2="13" y2="6" />
+                <line x1="3" y1="10" x2="13" y2="10" />
+            </svg>
+        </span>
+    );
+
     return (
         <Card className={clsx("tn-sortable-card", className)} {...card}>
             <div
@@ -415,6 +437,8 @@ export function SortableCard<T extends SortableItem>({
                         onKeyDown={(event) => onSegmentKeyDown(event, index)}
                         onAnimationEnd={() => setAddedKey(undefined)}
                     >
+                        {gripPlacement === "start" && grip(item.key)}
+
                         <span className="tn-sortable-content">
                             {renderItem
                                 ? renderItem(item, index)
@@ -424,17 +448,7 @@ export function SortableCard<T extends SortableItem>({
                                 </>}
                         </span>
 
-                        <span
-                            className="tn-sortable-grip"
-                            title={t("sortable_card.reorder")}
-                            aria-hidden="true"
-                            onPointerDown={(event) => beginDrag(event, item.key)}
-                        >
-                            <svg viewBox="0 0 16 16">
-                                <line x1="3" y1="6" x2="13" y2="6" />
-                                <line x1="3" y1="10" x2="13" y2="10" />
-                            </svg>
-                        </span>
+                        {gripPlacement === "end" && grip(item.key)}
                     </section>
                 ))}
 

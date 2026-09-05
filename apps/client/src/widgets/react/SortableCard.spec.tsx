@@ -553,6 +553,21 @@ describe("SortableCard", () => {
         expect(first.querySelector(".tn-sortable-grip")?.getAttribute("aria-hidden")).toBe("true");
     });
 
+    /** The other edge, for a card whose entries carry something of their own on the trailing one. */
+    it("carries it on the leading edge where the caller asks for it there", () => {
+        draw({ gripPlacement: "start" });
+        const [ first ] = segments();
+
+        expect(first.firstElementChild?.className).toContain("tn-sortable-grip");
+        expect(first.lastElementChild?.className).toContain("tn-sortable-content");
+
+        // And carries a segment from there just the same.
+        grab(first);
+        moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1);
+        drop();
+        expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "b", "a", "c" ]);
+    });
+
     /**
      * The order is the caller's: what it hands back is what the card draws, so a caller that keeps
      * the order elsewhere, or refuses a move, is drawn as it decides rather than as the card left

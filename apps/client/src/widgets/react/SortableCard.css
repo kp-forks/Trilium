@@ -85,6 +85,12 @@
       margin-inline-end: calc(var(--card-padding-inline) / -2);
       padding: 0.7em calc(var(--card-padding-inline) / 2);
     }
+
+    /* Standing first, it reaches for the leading edge instead. */
+    .tn-sortable-grip:first-child {
+      margin-inline-start: calc(var(--card-padding-inline) / -2);
+      margin-inline-end: 0;
+    }
   }
 
   /* Under the pointer rather than in the flow: it follows the finger, and the transition the other
