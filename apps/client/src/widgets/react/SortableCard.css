@@ -31,9 +31,9 @@
   }
 
   /* Painted inside the segment's own box, so a selected segment takes no more room than the rest.
-     Only while the card holds the focus: the selection stands for where the reader is, and they
-     are somewhere else once they have left it. */
-  .tn-sortable-list:focus-within .tn-sortable-selected {
+     Only while the reader is standing among the entries: they are somewhere else once they have
+     left the card, and the segment that adds is a place of its own rather than one of them. */
+  .tn-sortable-list:has(.tn-sortable-segment:focus-within) .tn-sortable-selected {
     box-shadow: inset 0 0 0 1px var(--sortable-selected-color);
   }
 
