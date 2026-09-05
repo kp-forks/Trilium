@@ -1,0 +1,211 @@
+:where(:root) {
+  /* The colour the quick search marks its terms in, which is what a marked term reads as here. */
+  --item-picker-mark-color: var(--quick-search-result-highlight-color);
+  --item-picker-inline-padding: 40px;
+  /* One line of caption in the card's own padding: an exact height, which is what lets an item
+     fold and unfold rather than jumping once a max-height has come down to meet it. */
+  --item-picker-item-height: calc(1.4em + 2 * var(--card-padding-block));
+  --item-picker-fold-duration: 0.15s;
+}
+
+.modal.item-picker-dialog {
+  .modal-body {
+    /* A column, so that what stands where the list was can take the room the list is not using. */
+    display: flex;
+    flex-direction: column;
+    padding-inline: var(--item-picker-inline-padding);
+  }
+
+  /* The room the list stands in, which is also what the placeholder is laid over. */
+  .item-picker-results {
+    position: relative;
+    flex: 1 0 auto;
+  }
+
+  .modal-dialog {
+    /* Half again as wide as a small dialog, which is narrow but not cramped by the padding. */
+    max-width: 405px;
+  }
+
+  .settings-search {
+    margin-bottom: 20px;
+  }
+
+  .item-picker-groups {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* The room between groups is each card's own, so it closes with the card rather than holding a
+     stripe open where one used to stand. */
+  .item-picker-groups > .tn-card {
+    margin-block-end: 1em;
+    transition: margin var(--item-picker-fold-duration) ease;
+  }
+
+  .item-picker-groups > .tn-card:last-child {
+    margin-block-end: 0;
+  }
+
+  /*
+   * A group whose items have all folded goes as well, but by folding: the heading closes over the
+   * same moment the items do.
+   *
+   * The filter's own rule takes an empty group away outright, which would cut the folding short.
+   * Answered in kind, since that rule is `!important` for reasons of its own.
+   */
+  .tn-card.tn-filter-scope:not(:has(.tn-filter-match)) {
+    display: block !important;
+  }
+
+  .tn-card:not(:has(.item-picker-item:not(.item-picker-folded))) {
+    margin-block-end: 0;
+    pointer-events: none;
+
+    & .tn-card-heading {
+      height: 0;
+      margin: 0;
+      opacity: 0;
+      overflow: hidden;
+    }
+  }
+
+  .tn-card-heading {
+    height: 1.4em;
+    transition: height var(--item-picker-fold-duration) ease,
+      margin var(--item-picker-fold-duration) ease,
+      opacity calc(var(--item-picker-fold-duration) * 0.7) ease;
+  }
+
+  .item-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    /* Folding: what the item takes up, and what it is painted with, both go to nothing. Its own
+       height rather than a ceiling to come down from, so the whole of the transition is spent
+       moving: a max-height above the real one is over before it has visibly begun. */
+    height: var(--item-picker-item-height);
+    /* The gap between segments is the item's own, so it folds away with the item. A card's flex
+       gap would hold a stripe open for every item the filter took out. */
+    margin-block-end: var(--card-section-gap);
+    transition: height var(--item-picker-fold-duration) ease,
+      margin var(--item-picker-fold-duration) ease,
+      padding var(--item-picker-fold-duration) ease,
+      border-width var(--item-picker-fold-duration) ease,
+      opacity calc(var(--item-picker-fold-duration) * 0.7) ease;
+    overflow: hidden;
+    cursor: pointer;
+  }
+
+  .item-picker-item:last-of-type {
+    margin-block-end: 0;
+  }
+
+  .item-picker-folded {
+    height: 0;
+    margin-block: 0;
+    padding-block: 0;
+    border-width: 0;
+    opacity: 0;
+  }
+
+  /* Marked by its colour alone, as the quick search marks what it found. */
+  .item-picker-caption {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Bootstrap gives a mark padding of its own, which would part the term from the rest of the
+     caption it stands in the middle of. */
+  .item-picker-caption mark {
+    margin: 0;
+    padding: 0;
+    background: none;
+    color: var(--item-picker-mark-color);
+    font-weight: 600;
+  }
+
+  /*
+   * Laid over the room the list stands in rather than following it, so it holds still while the
+   * list folds away under it. Out of the way of the field above and of what is still standing:
+   * it is faded rather than taken down, and takes no presses meant for either.
+   */
+  .item-picker-empty {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--item-picker-fold-duration) ease,
+      visibility 0s linear var(--item-picker-fold-duration);
+  }
+
+  /* Nothing left standing anywhere, which is the only time there is anything to say. */
+  .item-picker-groups:not(:has(.item-picker-item:not(.item-picker-folded))) + .item-picker-empty {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity var(--item-picker-fold-duration) ease;
+  }
+
+  /* The groups arrive with the dialog rather than into it: one rise as it opens, which is also
+     one animation however many items are being shown. */
+  .item-picker-groups {
+    /* Long enough to be read as its own: the dialog's opening covers the first moments of it. */
+    animation: item-picker-rise 0.4s ease-out;
+  }
+}
+
+.tn-card-body > .item-picker-item {
+  /* The card lays its own segments out with a gap; these carry their own so they can fold. */
+  margin-block-start: 0;
+}
+
+.modal.item-picker-dialog .tn-card-body {
+  gap: 0;
+}
+
+/*
+ * One height whatever it holds, so a list of three opens the same box as a list of a hundred and
+ * the list scrolls inside it.
+ *
+ * The height is the content box's rather than the dialog's: a scrollable modal only caps that box,
+ * which is otherwise sized by what it holds and closes over the list as the filter narrows it. The
+ * dialog is then given the whole screen and centres the box in it, which is how Bootstrap centres
+ * one of its own; a margin of half the room left over would rest on that room being what it looks.
+ */
+body:not(.mobile) .modal.item-picker-dialog {
+  .modal-dialog {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    margin-block: 0;
+  }
+
+  .modal-content {
+    height: 60vh;
+    max-height: 100%;
+  }
+}
+
+/* A phone fills the screen instead, which `isFullPageOnMobile` answers for. */
+body.mobile .modal.item-picker-dialog .modal-content {
+  height: 100%;
+}
+
+@keyframes item-picker-rise {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modal.item-picker-dialog {
+    .item-picker-groups {
+      animation: none;
+    }
+
+    .item-picker-item {
+      transition: none;
+    }
+  }
+}

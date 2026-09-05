@@ -27,6 +27,7 @@ import type { MarkdownImportOpts } from "../widgets/dialogs/markdown_import.jsx"
 import { ChooseNoteTypeCallback } from "../widgets/dialogs/note_type_chooser.jsx";
 import type { PrintPreviewData } from "../widgets/dialogs/print_preview.jsx";
 import type { NotePickerDialogOptions } from "../widgets/dialogs/note_picker.js";
+import type { ItemPickerDialogOptions } from "../widgets/dialogs/item_picker.js";
 import type { PromptDialogOptions } from "../widgets/dialogs/prompt.js";
 import type NoteTreeWidget from "../widgets/note_tree.js";
 import type { RightPaneTabId } from "../widgets/sidebar/RightPaneTabs.jsx";
@@ -151,6 +152,7 @@ export type CommandMappings = {
         isNewNote?: boolean;
     };
     showPromptDialog: PromptDialogOptions;
+    showItemPickerDialog: ItemPickerDialogOptions;
     showNotePickerDialog: NotePickerDialogOptions;
     showInfoDialog: InfoProps;
     showConfirmDialog: ConfirmWithMessageOptions;

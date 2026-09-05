@@ -4,6 +4,7 @@ import { Modal } from "bootstrap";
 import appContext from "../components/app_context.js";
 import type { ConfirmDeleteNoteBoxOptions, ConfirmDialogOptions, ConfirmDialogResult, ConfirmWithMessageOptions, MessageType } from "../widgets/dialogs/confirm.js";
 import { InfoExtraProps } from "../widgets/dialogs/info.jsx";
+import type { ItemPickerDialogOptions, PickerItem } from "../widgets/dialogs/item_picker.js";
 import type { PromptDialogOptions } from "../widgets/dialogs/prompt.js";
 import { focusSavedElement, saveFocusedElement } from "./focus.js";
 import keyboardActionsService from "./keyboard_actions.js";
@@ -229,6 +230,19 @@ export async function chooseNote(props: Omit<NotePickerDialogOptions, "callback"
         appContext.triggerCommand("showNotePickerDialog", { ...props, callback: res }));
 }
 
+/**
+ * Picks one item out of many, grouped and searchable.
+ *
+ * Named for the one thing it does now: picking several at once is the same dialog with a different
+ * answer, and will be a method of its own beside this.
+ *
+ * @returns what was picked, or nothing where the reader backed out.
+ */
+export async function pickSingleItem(props: Omit<ItemPickerDialogOptions, "callback">) {
+    return new Promise<PickerItem | null>((res) =>
+        appContext.triggerCommand("showItemPickerDialog", { ...props, callback: res }));
+}
+
 export async function prompt(props: PromptDialogOptions) {
     return new Promise<string | null>((res) => appContext.triggerCommand("showPromptDialog", { ...props, callback: res }));
 }
@@ -238,5 +252,6 @@ export default {
     chooseNote,
     confirm,
     confirmDeleteNoteBoxWithNote,
+    pickSingleItem,
     prompt
 };

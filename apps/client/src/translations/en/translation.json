@@ -2523,6 +2523,11 @@
     "built-in-templates": "Built-in templates",
     "selector-save": "Save"
   },
+  "item_picker": {
+    "title": "Pick an item",
+    "search": "Search…",
+    "nothing-found": "Nothing matches what you typed."
+  },
   "sortable_card": {
     "reorder": "Drag to reorder"
   },
