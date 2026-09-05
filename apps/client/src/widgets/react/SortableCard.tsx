@@ -25,6 +25,9 @@ const TOUCH_HOLD_MS = 400;
 /** How far it may stray in that time and still be resting rather than scrolling. */
 const TOUCH_SLACK_PX = 8;
 
+/** What a press belongs to rather than to the segment holding it. */
+const CONTROLS = "button, a, input, select, textarea, label";
+
 /** One entry of a {@link SortableCard}, named by a key that outlives the order it stands in. */
 export interface SortableItem {
     key: string;
@@ -210,6 +213,8 @@ export function SortableCard<T extends SortableItem>({
             return;
         }
 
+        listRef.current?.setPointerCapture?.(pointerId);
+
         dragRef.current = {
             key,
             pointerId,
@@ -231,22 +236,33 @@ export function SortableCard<T extends SortableItem>({
     }, []);
 
     const beginDrag = useCallback((event: PointerEvent, key: string) => {
-        const list = listRef.current;
-        if (!list || !segmentOf(key) || (event.pointerType === "mouse" && event.button !== 0)) {
+        if (!listRef.current || !segmentOf(key)) {
             return;
         }
 
-        // The gesture is the grip's alone: it must not also scroll the page under a finger, nor
-        // start a selection under a mouse.
-        event.preventDefault();
-        list.setPointerCapture?.(event.pointerId);
+        const target = event.target as HTMLElement | null;
+        const onGrip = !!target?.closest(".tn-sortable-grip");
 
-        // A mouse on a grip means only one thing, so it is taken up at once. A finger has to rest
-        // first, since it is also how the page is scrolled.
+        // A mouse takes hold of the grip and nothing else: a press anywhere on a segment is for
+        // reading what it says or working a control the caller drew, and a mouse has no trouble
+        // reaching a mark. A finger rests wherever it lands, a thumb across a phone reaching the
+        // near edge of a row far more easily than one particular end of it.
         if (event.pointerType === "mouse") {
+            if (!onGrip || event.button !== 0) {
+                return;
+            }
+
+            // Stops the press from starting a selection instead.
+            event.preventDefault();
             startDrag(key, event.pointerId, event.clientY);
             return;
         }
+
+        // A press that began on a control is the control's, whatever it does with it.
+        if (!onGrip && target?.closest(CONTROLS)) {
+            return;
+        }
+
 
         cancelHold();
         holdRef.current = {
@@ -365,13 +381,17 @@ export function SortableCard<T extends SortableItem>({
         focusEntry(to);
     }, [ focusEntry, shown ]);
 
-    /** What a segment is carried by, drawn on whichever edge the caller asked for. */
-    const grip = (key: string) => (
+    /**
+     * What a segment is carried by, drawn on whichever edge the caller asked for.
+     *
+     * A mark rather than the gesture's own: the segment answers for the press, so a finger takes
+     * hold anywhere on it and only a mouse has to find the grip.
+     */
+    const grip = () => (
         <span
             className="tn-sortable-grip"
             title={t("sortable_card.reorder")}
             aria-hidden="true"
-            onPointerDown={(event) => beginDrag(event, key)}
         >
             <svg viewBox="0 0 16 16">
                 <line x1="3" y1="6" x2="13" y2="6" />
@@ -434,10 +454,11 @@ export function SortableCard<T extends SortableItem>({
                             "tn-sortable-appearing": item.key === addedKey
                         })}
                         onFocus={() => select(item.key)}
+                        onPointerDown={(event) => beginDrag(event, item.key)}
                         onKeyDown={(event) => onSegmentKeyDown(event, index)}
                         onAnimationEnd={() => setAddedKey(undefined)}
                     >
-                        {gripPlacement === "start" && grip(item.key)}
+                        {gripPlacement === "start" && grip()}
 
                         <span className="tn-sortable-content">
                             {renderItem
@@ -448,7 +469,7 @@ export function SortableCard<T extends SortableItem>({
                                 </>}
                         </span>
 
-                        {gripPlacement === "end" && grip(item.key)}
+                        {gripPlacement === "end" && grip()}
                     </section>
                 ))}
 

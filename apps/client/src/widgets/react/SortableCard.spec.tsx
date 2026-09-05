@@ -296,6 +296,49 @@ describe("SortableCard", () => {
             expect(scrolls()).toBe(true);
         });
 
+        /**
+         * A thumb reaching across a phone lands on the near edge of a row far more easily than on
+         * one particular end of it, so the rest is kept wherever the finger fell.
+         */
+        it("is carried by a finger resting anywhere on the segment", () => {
+            draw();
+
+            touch(segmentOf("a"), { onGrip: false });
+            rest();
+            expect(segmentOf("a")?.className).toContain("tn-sortable-dragging");
+
+            moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1, { pointerType: "touch" });
+            drop();
+            expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "b", "a", "c" ]);
+        });
+
+        /** A mouse has no trouble reaching a mark, and a press elsewhere is for reading. */
+        it("is not carried by a mouse pressed anywhere but the grip", () => {
+            draw();
+
+            act(() => {
+                segmentOf("a")?.dispatchEvent(pointerEvent("pointerdown", 0));
+            });
+            moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1);
+
+            expect(segmentOf("a")?.className).not.toContain("tn-sortable-dragging");
+            expect(captions()).toEqual([ "Alpha", "Beta", "Gamma" ]);
+        });
+
+        /** Whatever a control does with a press, carrying the row off is not it. */
+        it("leaves a press that began on a control to the control", () => {
+            draw({ renderItem: (item) => <button type="button">{item.caption}</button> });
+
+            const control = segmentOf("a")?.querySelector("button");
+            act(() => { control?.dispatchEvent(pointerEvent("pointerdown", 0, {
+                pointerType: "touch", button: -1
+            })); });
+            rest();
+
+            expect(segmentOf("a")?.className).not.toContain("tn-sortable-dragging");
+            expect(changed).toEqual([]);
+        });
+
         it("takes nothing up for a finger that strays before it has rested", () => {
             draw();
 
@@ -701,9 +744,9 @@ describe("SortableCard", () => {
         return (segment?.offsetTop ?? 0) + (Number.isNaN(by) ? 0 : by);
     }
 
-    /** A finger going down on a grip, which takes nothing up until it has rested there. */
-    function touch(segment: HTMLElement | null) {
-        grab(segment, 0, { pointerType: "touch", button: -1 });
+    /** A finger going down on a segment, which takes nothing up until it has rested there. */
+    function touch(segment: HTMLElement | null, { onGrip = true } = {}) {
+        grab(segment, 0, { pointerType: "touch", button: -1 }, onGrip);
     }
 
     /** Whether a finger moving now would still scroll the page rather than carry a segment. */
@@ -719,13 +762,13 @@ describe("SortableCard", () => {
         lay();
     }
 
-    function grab(segment: HTMLElement | null, at = 0, options: Record<string, unknown> = {}) {
+    function grab(
+        segment: HTMLElement | null, at = 0, options: Record<string, unknown> = {}, onGrip = true
+    ) {
         grabbedAt = at;
         grabbedFrom = segment?.offsetTop ?? 0;
-        act(() => {
-            segment?.querySelector(".tn-sortable-grip")
-                ?.dispatchEvent(pointerEvent("pointerdown", at, options));
-        });
+        const pressed = onGrip ? segment?.querySelector(".tn-sortable-grip") : segment;
+        act(() => { pressed?.dispatchEvent(pointerEvent("pointerdown", at, options)); });
         lay();
     }
 

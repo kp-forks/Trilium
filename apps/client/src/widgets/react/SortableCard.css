@@ -25,6 +25,16 @@
     transition: transform 200ms ease;
   }
 
+  /* A finger takes hold of a segment by resting anywhere on it, and a rest that long is what
+     raises the callout and the text magnifier on iOS. A mouse is left alone: it carries a segment
+     by the grip, and a caption is still text to read and select. */
+  @media (pointer: coarse) {
+    .tn-sortable-segment {
+      -webkit-touch-callout: none;
+      user-select: none;
+    }
+  }
+
   .tn-sortable-segment:focus-visible {
     outline: 2px solid var(--sortable-selected-color);
     outline-offset: -2px;
