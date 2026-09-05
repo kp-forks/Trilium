@@ -28,14 +28,20 @@ function mockWebsocket() {
         // Do nothing.
     }
 
+    // Awaited by code that reads back what the server has just written. Nothing is written under
+    // test, so there is nothing to wait for.
+    async function waitForMaxKnownEntityChangeId() {}
+
     return {
         default: {
-            subscribeToMessages
+            subscribeToMessages,
+            waitForMaxKnownEntityChangeId
         },
         // consumers also import these as named exports (e.g. useNoteIds); leaving them out makes
         // the subscription effect throw, which silently skips every later effect of the component
         subscribeToMessages,
         unsubscribeToMessage,
+        waitForMaxKnownEntityChangeId,
         // Code that reports a failure this way is usually in a catch block, so an undefined export
         // here throws over the error being handled and loses whatever the component did about it.
         logError(_message: string) {}

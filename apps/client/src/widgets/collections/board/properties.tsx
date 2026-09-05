@@ -28,7 +28,6 @@ export default function BoardProperties({ api, note, shown, onClose }: {
             title={t("board_view.properties-title")}
             size="lg"
             scrollable
-            zIndex={2000}
             show={shown}
             onHidden={onClose}
         >

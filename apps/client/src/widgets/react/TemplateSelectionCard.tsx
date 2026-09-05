@@ -8,12 +8,16 @@ import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import note_create from "../../services/note_create";
 import {
-    getNoteTypeOptions, type NoteTypeOption, noteTypeOptionGroupTitle, resolveNoteTypeOptions
+    type NoteTypeOption, noteTypeOptionGroupTitle, resolveNoteTypeOptions
 } from "../../services/note_types";
 import { type PickerItem, type PickerItemGroup } from "../dialogs/item_picker";
 import ActionButton from "./ActionButton";
+import { useNoteTypeOptions } from "./hooks";
 import Icon from "./Icon";
 import { type SortableItem, SortableCard } from "./SortableCard";
+import {
+    openTemplateMenu, quickEdit, remove, type TemplateCommands, templateNoteId
+} from "./template_commands";
 
 export interface TemplateSelectionCardProps {
     heading: string;
@@ -49,8 +53,8 @@ export default function TemplateSelectionCard({
      * a caller with nothing to re-render for would otherwise leave the list unchanged.
      */
     const [ ids, setIds ] = useState(templates);
-    /** Everything a note can be created from, read once when the card mounts. */
-    const [ available, setAvailable ] = useState<NoteTypeOption[]>([]);
+    /** Everything a note can be created from, kept current as templates are edited. */
+    const available = useNoteTypeOptions();
     /**
      * Templates created here, which the app has yet to report back.
      *
@@ -60,19 +64,6 @@ export default function TemplateSelectionCard({
     const [ made, setMade ] = useState<NoteTypeOption[]>([]);
 
     useEffect(() => setIds(templates), [ templates ]);
-
-    useEffect(() => {
-        let listening = true;
-        getNoteTypeOptions()
-            .then((options) => {
-                if (listening) {
-                    setAvailable(options);
-                }
-            })
-            .catch((e) => console.error("Failed to read what a note can be made from:", e));
-
-        return () => { listening = false; };
-    }, []);
 
     const known = useMemo(
         () => [ ...available, ...made.filter((option) => !available.some((a) => a.id === option.id)) ],
@@ -89,6 +80,36 @@ export default function TemplateSelectionCard({
         setIds(next);
         onChange(next);
     }, [ onChange ]);
+
+    const drop = useCallback((key: string) => {
+        const next = ids.filter((id) => id !== key);
+        setIds(next);
+        onChange(next);
+    }, [ ids, onChange ]);
+
+    /** What the menu on a template does to the list, the rest acting on the note alone. */
+    const commands = useMemo<TemplateCommands>(() => ({
+        onDuplicated: (sourceNoteId, copy) => {
+            const source = offered.find(
+                (option) => option.options.templateNoteId === sourceNoteId);
+            const option: NoteTypeOption = {
+                id: buildTemplateId(copy.noteId),
+                title: copy.title,
+                icon: copy.icon,
+                group: "user",
+                options: { ...source?.options ?? { type: "text" }, templateNoteId: copy.noteId }
+            };
+
+            setMade((was) => [ ...was, option ]);
+            // Beside what it was copied from, which is where a copy is looked for.
+            const at = source ? ids.indexOf(source.id) : -1;
+            const next = [ ...ids ];
+            next.splice(at < 0 ? ids.length : at + 1, 0, option.id);
+            setIds(next);
+            onChange(next);
+        },
+        onDeleted: (noteId) => drop(buildTemplateId(noteId))
+    }), [ drop, ids, offered, onChange ]);
 
     /** Asks which of the templates not already offered to add, and returns it as an entry. */
     const addExisting = useCallback(async () => {
@@ -131,10 +152,40 @@ export default function TemplateSelectionCard({
             onChange={store}
             // The grip leads, so the trailing edge is left to what each entry carries there.
             gripPlacement="start"
+            onItemKeyDown={(item, event) => {
+                const noteId = templateNoteId(item.key);
+                if (!noteId) {
+                    return;
+                }
+
+                if (event.key === " ") {
+                    event.preventDefault();
+                    quickEdit(noteId);
+                } else if (event.key === "Delete") {
+                    event.preventDefault();
+                    remove(noteId, commands);
+                }
+            }}
             renderItem={(item, index) => (
                 <>
                     {item.icon && <Icon icon={item.icon} />}
                     <span className="template-selection-name">{item.caption}</span>
+
+                    {/* Only a template is a note, and only a note has commands of its own. */}
+                    {templateNoteId(item.key) && (
+                        <ActionButton
+                            className="template-selection-menu"
+                            icon="bx bx-dots-vertical-rounded"
+                            text={t("template_selection.menu")}
+                            onClick={(event) => {
+                                event.stopPropagation();
+                                const noteId = templateNoteId(item.key);
+                                if (noteId) {
+                                    openTemplateMenu(event, noteId, commands);
+                                }
+                            }}
+                        />
+                    )}
 
                     {/* The last template is not removable: with none offered, nothing could be
                         created. */}

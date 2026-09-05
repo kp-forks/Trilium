@@ -2527,6 +2527,7 @@
     "add-title": "Add a template",
     "create": "Create a new template",
     "new-name": "New template",
+    "menu": "Template menu",
     "remove": "Remove from the list"
   },
   "item_picker": {

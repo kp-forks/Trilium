@@ -89,6 +89,11 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
      * when the entries carry their own controls on the trailing side.
      */
     gripPlacement?: "start" | "end";
+    /**
+     * Called for a key the card does not answer itself, with the entry that had the focus. For a
+     * caller whose entries have commands of their own.
+     */
+    onItemKeyDown?: (item: T, event: KeyboardEvent) => void;
     /** The selected entry, for a caller that keeps the selection itself. */
     selectedKey?: string;
     onSelect?: (key: string) => void;
@@ -105,8 +110,8 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
  * else identified by a key.
  */
 export function SortableCard<T extends SortableItem>({
-    items, onChange, renderItem, itemCreationButtons, gripPlacement = "end", selectedKey, onSelect,
-    className, ...card
+    items, onChange, renderItem, itemCreationButtons, gripPlacement = "end", onItemKeyDown,
+    selectedKey, onSelect, className, ...card
 }: SortableCardProps<T>) {
     if ((itemCreationButtons?.length ?? 0) > MAX_CREATION_BUTTONS) {
         throw new Error("Up to three item creation buttons are supported");
@@ -454,6 +459,11 @@ export function SortableCard<T extends SortableItem>({
         const to = placeFor(event, index, last);
 
         if (to === undefined) {
+            // Left to the caller, whose entries may answer keys of their own.
+            if (!control) {
+                onItemKeyDown?.(shown[index], event);
+            }
+
             // Below the last entry is the creation row, which Down moves onto. It holds no entry,
             // so Ctrl+Down moves nothing there.
             if (!control && event.key === "ArrowDown" && index === last) {
@@ -470,7 +480,7 @@ export function SortableCard<T extends SortableItem>({
         } else {
             focusEntry(to);
         }
-    }, [ add, endDrag, focusEntry, itemCreationButtons, moveItem, shown ]);
+    }, [ add, endDrag, focusEntry, itemCreationButtons, moveItem, onItemKeyDown, shown ]);
 
     const onAddKeyDown = useCallback((event: KeyboardEvent) => {
         // Moves back into the entries. Home and End address the first and last entry here as they

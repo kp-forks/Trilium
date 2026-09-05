@@ -2,10 +2,18 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import appContext from "../../components/app_context";
+import Component from "../../components/component";
 import type FNote from "../../entities/fnote";
+import contextMenu from "../../menus/context_menu";
+import branches from "../../services/branches";
+import froca from "../../services/froca";
 import dialog from "../../services/dialog";
+import LoadResults from "../../services/load_results";
 import note_create from "../../services/note_create";
 import { getNoteTypeOptions, type NoteTypeOption } from "../../services/note_types";
+import server from "../../services/server";
+import { ParentComponent } from "./react_utils";
 import TemplateSelectionCard from "./TemplateSelectionCard";
 
 // i18next is never initialised under test, so every label would read as undefined.
@@ -28,7 +36,11 @@ const AVAILABLE = [
     [ "template:shipped", "Shipped template", "builtin" ],
     [ "template:mine", "My template", "user" ]
 ].map(([ id, title, group ]) => ({
-    id, title, group, icon: "bx bx-note", options: { type: "text" }
+    id,
+    title,
+    group,
+    icon: "bx bx-note",
+    options: { type: "text", templateNoteId: id.split(":")[1] }
 }) as NoteTypeOption);
 
 /** The note a template made here is filed under. */
@@ -38,9 +50,11 @@ describe("TemplateSelectionCard", () => {
     let container: HTMLElement;
     let stored: string[][];
     let offered: string[];
+    let host: Component;
 
     beforeEach(() => {
         stored = [];
+        host = new Component();
         offered = [ "type:text:text/html", "type:code:text/x-markdown" ];
         container = document.createElement("div");
         document.body.appendChild(container);
@@ -94,6 +108,112 @@ describe("TemplateSelectionCard", () => {
         offered = [ "type:text:text/html" ];
         await draw();
         expect(segments()[0].querySelector(".template-selection-remove")).toBeNull();
+    });
+
+    /**
+     * A template is a note, so it carries the commands a note has. A note type is not, and carries
+     * none.
+     */
+    describe("the commands on a template", () => {
+        beforeEach(() => {
+            offered = [ "type:text:text/html", "template:mine" ];
+            vi.spyOn(froca, "getNote").mockResolvedValue({
+                noteId: "mine",
+                title: "My template",
+                getIcon: () => "bx bx-note",
+                getParentBranches: () => [ { branchId: "b_mine", parentNoteId: "owner1" } ]
+            } as unknown as FNote);
+        });
+
+        it("offers a menu on a template and none on a note type", async () => {
+            await draw();
+
+            expect(segments()[0].querySelector(".template-selection-menu")).toBeNull();
+            expect(segments()[1].querySelector(".template-selection-menu")).not.toBeNull();
+        });
+
+        it("lists what can be done with the note, and quick-edits it", async () => {
+            const shown = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
+            const command = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined);
+            await draw();
+
+            act(() => { segments()[1].querySelector<HTMLElement>(".template-selection-menu")?.click(); });
+
+            const items = shown.mock.calls.at(-1)?.[0].items ?? [];
+            expect(items.map((item) => item && "uiIcon" in item ? item.uiIcon : "---")).toEqual([
+                "bx bx-edit", "bx bx-window-open", "bx bx-outline", "---",
+                "bx bx-trash destructive-action-icon"
+            ]);
+            // The last one deletes the note itself rather than taking it off the list, and says so.
+            expect(items.map((item) => item && "title" in item ? item.title : "---")).toEqual([
+                "tree-context-menu.open-in-popup", "tree-context-menu.open-in-a-new-window",
+                "tree-context-menu.duplicate", "---", "note_actions.delete_note"
+            ]);
+
+            const quick = items[0];
+            if (!quick || !("handler" in quick)) throw new Error("expected a quick edit entry");
+            quick.handler?.(quick, {} as never);
+            expect(command).toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "mine" });
+        });
+
+        it("quick-edits and deletes from the keyboard", async () => {
+            const command = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined);
+            const deleted = vi.spyOn(branches, "deleteNotes").mockResolvedValue(true);
+            await draw();
+
+            press(segments()[1], " ");
+            expect(command).toHaveBeenCalledWith("openInPopup", { noteIdOrPath: "mine" });
+
+            press(segments()[1], "Delete");
+            await act(async () => { await Promise.resolve(); await Promise.resolve(); });
+            expect(deleted).toHaveBeenCalledWith([ "b_mine" ], false, false);
+            // Gone from the list once the note itself is gone.
+            expect(stored.at(-1)).toEqual([ "type:text:text/html" ]);
+        });
+
+        it("puts a duplicate beside the template it was copied from", async () => {
+            offered = [ "type:text:text/html", "template:mine", "type:canvas:application/json" ];
+            vi.spyOn(froca, "getNote").mockImplementation(async (noteId) => ({
+                noteId,
+                title: noteId === "copy1" ? "My template (copy)" : "My template",
+                getIcon: () => "bx bx-note",
+                getParentBranches: () => [ { branchId: `b_${noteId}`, parentNoteId: "owner1" } ]
+            } as unknown as FNote));
+            vi.spyOn(server, "post").mockResolvedValue({ note: { noteId: "copy1" } } as never);
+            const shown = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
+            await draw();
+
+            act(() => {
+                segments()[1].querySelector<HTMLElement>(".template-selection-menu")?.click();
+            });
+            const copy = (shown.mock.calls.at(-1)?.[0].items ?? [])[2];
+            if (!copy || !("handler" in copy)) throw new Error("expected a duplicate entry");
+            await act(async () => {
+                copy.handler?.(copy, {} as never);
+                for (let step = 0; step < 6; step++) {
+                    await Promise.resolve();
+                }
+            });
+
+            expect(stored.at(-1)).toEqual([
+                "type:text:text/html", "template:mine", "template:copy1",
+                "type:canvas:application/json"
+            ]);
+            expect(captions())
+                .toEqual([ "Text", "My template", "My template (copy)", "Canvas" ]);
+        });
+
+        /** A note type answers none of those keys, having no note behind it. */
+        it("leaves the keys alone on a note type", async () => {
+            // Cleared rather than made: a spy already standing comes back with its calls.
+            const command = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined);
+            command.mockClear();
+            await draw();
+
+            press(segments()[0], " ");
+
+            expect(command).not.toHaveBeenCalled();
+        });
     });
 
     describe("adding one", () => {
@@ -190,20 +310,61 @@ describe("TemplateSelectionCard", () => {
         });
     });
 
+    /**
+     * A template is a note, and the popup editor the menu opens writes to it. The entry follows the
+     * note rather than the reading taken when the card was drawn.
+     */
+    describe("a template edited while the card is open", () => {
+        beforeEach(() => { offered = [ "type:text:text/html", "template:mine" ]; });
+
+        it("takes the new title once the note is renamed", async () => {
+            await draw();
+            expect(captions()).toEqual([ "Text", "My template" ]);
+
+            answerWith("template:mine", { title: "Renamed" });
+            await report(noteChanged("mine"));
+
+            expect(captions()).toEqual([ "Text", "Renamed" ]);
+        });
+
+        it("takes the new icon, which is a label rather than part of the note", async () => {
+            await draw();
+
+            answerWith("template:mine", { icon: "bx bx-star" });
+            await report(attributeChanged("iconClass", "mine"));
+
+            expect(icons().at(-1)).toContain("bx-star");
+        });
+
+        it("reads again for a note it offers, and not for any other", async () => {
+            await draw();
+            const reads = () => vi.mocked(getNoteTypeOptions).mock.calls.length;
+            const drawn = reads();
+
+            await report(noteChanged("someOtherNote"));
+            expect(reads()).toBe(drawn);
+
+            await report(noteChanged("mine"));
+            expect(reads()).toBe(drawn + 1);
+        });
+    });
+
     // #region The dialog, and what the test does to it
 
     /** Drawn, and given the moment it takes to read what a note can be made from. */
     async function draw({ newTemplateName }: { newTemplateName?: string } = {}) {
         await act(async () => {
             render(
-                <TemplateSelectionCard
-                    heading="What to use"
-                    instruction="Pick what a new one is made from."
-                    note={OWNER}
-                    newTemplateName={newTemplateName}
-                    templates={offered}
-                    onChange={(ids) => stored.push(ids)}
-                />,
+                <ParentComponent.Provider value={host}>
+                    <TemplateSelectionCard
+                        heading="What to use"
+                        instruction="Pick what a new one is made from."
+                        note={OWNER}
+                        newTemplateName={newTemplateName}
+                        templates={offered}
+                        onChange={(ids) => stored.push(ids)}
+                    />
+                </ParentComponent.Provider>,
                 container);
             await Promise.resolve();
         });
@@ -226,6 +387,43 @@ describe("TemplateSelectionCard", () => {
         const button = adders().find((element) => element.textContent?.trim() === label);
         await act(async () => {
             button?.click();
+            await Promise.resolve();
+            await Promise.resolve();
+        });
+    }
+
+    function icons() {
+        return segments().map((element) => element.querySelector(".bx")?.className);
+    }
+
+    /** Answers the next read with one entry changed, the rest as they were. */
+    function answerWith(id: string, changed: Partial<NoteTypeOption>) {
+        vi.mocked(getNoteTypeOptions).mockResolvedValueOnce(
+            AVAILABLE.map((option) => option.id === id ? { ...option, ...changed } : option));
+    }
+
+    /** A renamed note, as the app reports one. */
+    function noteChanged(noteId: string) {
+        const results = new LoadResults([]);
+        results.addNote(noteId, "other");
+        return results;
+    }
+
+    /** A label written on a note, which is how an icon is changed. */
+    function attributeChanged(name: string, noteId: string) {
+        const results = new LoadResults([ {
+            entityName: "attributes",
+            entityId: "attr1",
+            entity: { attributeId: "attr1", noteId, type: "label", name }
+        } as never ]);
+        results.addAttribute("attr1", "other");
+        return results;
+    }
+
+    /** Hands the card what the app reports, and lets the read it asks for answer. */
+    async function report(loadResults: LoadResults) {
+        await act(async () => {
+            host.handleEvent("entitiesReloaded", { loadResults });
             await Promise.resolve();
             await Promise.resolve();
         });

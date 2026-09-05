@@ -9,3 +9,7 @@
 .template-selection-remove {
   flex-shrink: 0;
 }
+
+.template-selection-menu {
+  flex-shrink: 0;
+}
