@@ -22,10 +22,10 @@ import { useTriliumEvent } from "./hooks";
 import Icon from "./Icon";
 import { type SortableItem, SortableCard } from "./SortableCard";
 
-/** What each kind of definition is called and drawn as, as the editor picks it by. */
+/** Each kind of definition by name, holding the title and icon `AttributeDetail` lists it with. */
 const TYPES = new Map(DEFINITION_TYPES.map((type) => [ type.value, type ]));
 
-/** What a definition naming no kind holds, which is what the editor starts one as. */
+/** The kind a definition naming none is drawn as, which is what a new one is created as. */
 const DEFAULT_TYPE = TYPES.get("text") ?? DEFINITION_TYPES[0];
 
 /** The definition a new attribute starts from, which the reader names in the editor. */
@@ -53,22 +53,22 @@ export interface PromotedAttributesCardProps {
 /**
  * The promoted attributes a collection shows on its items, in the order they are shown.
  *
- * The reader reorders the list, turns an attribute off without deleting it, and edits or creates a
- * definition through the attribute editor. The definitions belong to `note`; the order and what is
- * hidden belong to the caller, which stores whatever `onChange` reports.
+ * Entries are reordered, hidden without being deleted, edited or deleted through the attribute
+ * editor, and created from the button at the foot. `note` carries the definitions; `onChange`
+ * reports the order and what is hidden, which the caller stores.
  */
 export default function PromotedAttributesCard({
     heading, instruction, note, settings, ignored, onChange
 }: PromotedAttributesCardProps) {
     const [ shown, setShown ] = useState(() => resolvePromotedAttributes(note, settings, ignored));
     const [ detail, setDetail ] = useState<AttributeDetailOpts | null>(null);
-    /** What the editor last reported, which is what a save writes. */
+    /** The definition the editor last reported, which `save` writes. */
     const edited = useRef<Attribute>();
-    /** What the editor was handed, against which a renamed definition is recognised. */
+    /** The definition the editor was handed, which `save` compares against to spot a rename. */
     const original = useRef<Attribute>();
 
-    // A definition created, renamed or deleted here arrives as an attribute change like any other,
-    // and the order the reader has put the rest in is kept across it.
+    // A definition created, renamed or deleted here arrives as an attribute change. Resolving
+    // against the current list is what keeps the order of the rest.
     useTriliumEvent("entitiesReloaded", ({ loadResults }) => {
         const affects = loadResults.getAttributeRows()
             .some((attribute) => attributes.isAffecting(attribute, note));
@@ -124,8 +124,8 @@ export default function PromotedAttributesCard({
             y: event?.pageY ?? 150,
             focus: attribute ? undefined : "name",
             hideMultiplicity: true,
-            // Everything arranged here is inheritable and promoted, which is what puts it on the
-            // items: the reader picks what an attribute holds, not how it reaches them.
+            // Every attribute listed here is inheritable and promoted already, so the two toggles
+            // would only offer a way to take it off the list.
             hideInheritance: true
         });
     }, []);
@@ -162,10 +162,8 @@ export default function PromotedAttributesCard({
     }, [ note ]);
 
     /**
-     * Takes the definition away, and with it the values written against it.
-     *
-     * Unlike deleting the definition from the attributes panel, which leaves every item still
-     * carrying its value under a name nothing describes any more.
+     * Deletes the definition and every value written against it. Deleting it from the attributes
+     * panel instead leaves the items carrying values no definition describes.
      */
     const erase = useCallback(async (definitionName: string) => {
         const [ type, name ] = definitionName.split(":", 2) as [ "label" | "relation", string ];
@@ -182,7 +180,7 @@ export default function PromotedAttributesCard({
         }
     }, [ erase ]);
 
-    /** Asks before deleting, since the values on the items go with the definition. */
+    /** Confirms first: the values on the items are deleted with the definition. */
     const confirmErase = useCallback(async (attribute: PromotedAttribute) => {
         const confirmed = await dialog.confirm(
             t("promoted_attributes.delete_confirmation", { name: attribute.title }));
@@ -273,7 +271,7 @@ export default function PromotedAttributesCard({
     );
 }
 
-/** What an attribute holds, as the editor lists the kinds. */
+/** The kind entry for an attribute: its `labelType`, or the relation kind for a relation. */
 function typeOf(attribute: PromotedAttribute) {
     const kind = attribute.type === "relation"
         ? RELATION_DEFINITION_TYPE

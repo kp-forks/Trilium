@@ -121,10 +121,8 @@ export function renameAttributeInSubtree(
 }
 
 /**
- * Deletes an attribute from the collection and everything under it.
- *
- * Quietly: the attribute leaving the list and the items is what reports it, and a toast over a
- * dialog the reader is still working in reads as something else having happened.
+ * Deletes an attribute from the collection and everything under it. Silent: the attribute leaving
+ * the list and the items reports it, and a toast over the dialog reads as something else.
  */
 export function deleteAttributeInSubtree(
     parentNoteId: string, type: "label" | "relation", name: string

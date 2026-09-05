@@ -49,8 +49,8 @@ export interface AttributeDetailOpts {
     parent?: HTMLElement;
     hideMultiplicity?: boolean;
     /**
-     * Leaves out the inheritable and promoted toggles, for a host that decides both itself: a
-     * collection arranging what its items show, where every attribute is inheritable and promoted.
+     * Leaves out the inheritable and promoted toggles. For a host that sets both itself, such as a
+     * collection whose attributes are all inheritable and promoted.
      */
     hideInheritance?: boolean;
     /**
