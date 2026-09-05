@@ -1387,6 +1387,8 @@
     "promoted_attributes": "Promoted Attributes",
     "create_attribute": "Create a new attribute",
     "edit_attribute": "Edit this attribute",
+    "delete_attribute": "Delete this attribute",
+    "delete_confirmation": "Delete <strong>{{name}}</strong> and its values from every note in this collection? This cannot be undone.",
     "shown_on_items": "Shown on the items",
     "hidden_from_items": "Hidden from the items",
     "unset-field-placeholder": "not set",

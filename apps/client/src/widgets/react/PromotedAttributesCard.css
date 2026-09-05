@@ -9,7 +9,8 @@
     white-space: nowrap;
   }
 
-  .promoted-attribute-edit {
+  .promoted-attribute-edit,
+  .promoted-attribute-delete {
     flex-shrink: 0;
   }
 

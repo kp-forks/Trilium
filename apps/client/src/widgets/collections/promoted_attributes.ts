@@ -116,7 +116,12 @@ export function renameAttributeInSubtree(
     return executeBulkActions([ parentNoteId ], [ action ], { includeDescendants: true });
 }
 
-/** Deletes an attribute from the collection and everything under it. */
+/**
+ * Deletes an attribute from the collection and everything under it.
+ *
+ * Quietly: the attribute leaving the list and the items is what reports it, and a toast over a
+ * dialog the reader is still working in reads as something else having happened.
+ */
 export function deleteAttributeInSubtree(
     parentNoteId: string, type: "label" | "relation", name: string
 ) {
@@ -124,5 +129,6 @@ export function deleteAttributeInSubtree(
         ? { name: "deleteLabel", labelName: name }
         : { name: "deleteRelation", relationName: name };
 
-    return executeBulkActions([ parentNoteId ], [ action ], { includeDescendants: true });
+    return executeBulkActions(
+        [ parentNoteId ], [ action ], { includeDescendants: true, silent: true });
 }

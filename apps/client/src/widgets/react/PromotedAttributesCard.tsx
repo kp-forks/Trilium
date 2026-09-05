@@ -6,6 +6,7 @@ import { useCallback, useMemo, useRef, useState } from "preact/hooks";
 import type FNote from "../../entities/fnote";
 import type { Attribute } from "../../services/attribute_parser";
 import attributes, { removeOwnedAttributesByNameOrType } from "../../services/attributes";
+import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import {
     AttributeDetail, type AttributeDetailOpts
@@ -115,7 +116,10 @@ export default function PromotedAttributesCard({
             x: event?.pageX ?? 0,
             y: event?.pageY ?? 150,
             focus: attribute ? undefined : "name",
-            hideMultiplicity: true
+            hideMultiplicity: true,
+            // Everything arranged here is inheritable and promoted, which is what puts it on the
+            // items: the reader picks what an attribute holds, not how it reaches them.
+            hideInheritance: true
         });
     }, []);
 
@@ -150,18 +154,35 @@ export default function PromotedAttributesCard({
             note.noteId, definition.name, definition.value, definition.isInheritable);
     }, [ note ]);
 
-    /** Takes the definition away, and with it the values written against it. */
-    const remove = useCallback(async () => {
+    /**
+     * Takes the definition away, and with it the values written against it.
+     *
+     * Unlike deleting the definition from the attributes panel, which leaves every item still
+     * carrying its value under a name nothing describes any more.
+     */
+    const erase = useCallback(async (definitionName: string) => {
+        const [ type, name ] = definitionName.split(":", 2) as [ "label" | "relation", string ];
+        await deleteAttributeInSubtree(note.noteId, type, name);
+        await removeOwnedAttributesByNameOrType(note, "label", definitionName);
+    }, [ note ]);
+
+    /** Deletes the definition the editor was opened on. */
+    const removeEdited = useCallback(async () => {
         const definition = original.current;
         setDetail(null);
-        if (!definition?.name.includes(":")) {
-            return;
+        if (definition?.name.includes(":")) {
+            await erase(definition.name);
         }
+    }, [ erase ]);
 
-        const [ type, name ] = definition.name.split(":", 2) as [ "label" | "relation", string ];
-        await deleteAttributeInSubtree(note.noteId, type, name);
-        await removeOwnedAttributesByNameOrType(note, "label", definition.name);
-    }, [ note ]);
+    /** Asks before deleting, since the values on the items go with the definition. */
+    const confirmErase = useCallback(async (attribute: PromotedAttribute) => {
+        const confirmed = await dialog.confirm(
+            t("promoted_attributes.delete_confirmation", { name: attribute.title }));
+        if (confirmed) {
+            await erase(attribute.definitionName);
+        }
+    }, [ erase ]);
 
     return (
         <>
@@ -187,6 +208,16 @@ export default function PromotedAttributesCard({
                                 onClick={(event) => {
                                     event.stopPropagation();
                                     openEditor(event, attribute);
+                                }}
+                            />
+
+                            <ActionButton
+                                className="promoted-attribute-delete"
+                                icon="bx bx-trash"
+                                text={t("promoted_attributes.delete_attribute")}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    confirmErase(attribute);
                                 }}
                             />
 
@@ -222,7 +253,7 @@ export default function PromotedAttributesCard({
                     onCancel={() => setDetail(null)}
                     onAttributesChanged={([ definition ]) => { edited.current = definition; }}
                     onSaveAndClose={save}
-                    onDelete={remove}
+                    onDelete={removeEdited}
                 />,
                 document.body)}
         </>

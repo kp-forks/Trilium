@@ -16,6 +16,7 @@ vi.mock("../../services/i18n", () => ({ t: (key: string) => key }));
 const mocks = vi.hoisted(() => ({
     setLabel: vi.fn(),
     removeOwned: vi.fn(async () => {}),
+    confirm: vi.fn(async () => true),
     bulk: vi.fn(async () => {}),
     /** The editor the card opens, which the test drives through the callbacks it was given. */
     detail: { opts: null as AttributeDetailOpts | null, callbacks: {} as Record<string, Function> }
@@ -31,6 +32,8 @@ vi.mock("../../services/attributes", () => ({
 }));
 
 vi.mock("../../services/bulk_action", () => ({ executeBulkActions: mocks.bulk }));
+
+vi.mock("../../services/dialog", () => ({ default: { confirm: mocks.confirm } }));
 
 // The editor is tested where it lives; what the card answers for is what it hands over and what it
 // writes once the editor reports a definition.
@@ -74,6 +77,7 @@ describe("PromotedAttributesCard", () => {
         settings = undefined;
         defined = [ definition("label:dueDate", { alias: "Due" }), definition("label:owner") ];
         mocks.detail.opts = null;
+        mocks.confirm.mockResolvedValue(true);
         host = new Component();
         container = document.body.appendChild(document.createElement("div"));
     });
@@ -133,6 +137,9 @@ describe("PromotedAttributesCard", () => {
                 value: "promoted,single,text",
                 isInheritable: true
             });
+            // Everything arranged here is inheritable and promoted, so neither is asked about.
+            expect(mocks.detail.opts?.hideInheritance).toBe(true);
+            expect(mocks.detail.opts?.hideMultiplicity).toBe(true);
             // Portalled to the page, so it stands over the dialog the card is in.
             expect(document.body.querySelector(".attribute-detail-stub")).toBeTruthy();
         });
@@ -186,7 +193,7 @@ describe("PromotedAttributesCard", () => {
             expect(mocks.bulk).toHaveBeenCalledWith(
                 [ "board1" ],
                 [ { name: "deleteLabel", labelName: "owner" } ],
-                { includeDescendants: true });
+                { includeDescendants: true, silent: true });
             expect(mocks.removeOwned).toHaveBeenCalledWith(NOTE, "label", "label:owner");
         });
 
@@ -229,6 +236,39 @@ describe("PromotedAttributesCard", () => {
         });
     });
 
+    describe("deleting one", () => {
+        /** The values go with the definition, which the attributes panel does not do. */
+        it("asks, then takes the definition and its values away", async () => {
+            draw();
+
+            await act(async () => {
+                segments()[0].querySelector<HTMLElement>(".promoted-attribute-delete")?.click();
+                await flush();
+            });
+
+            expect(mocks.confirm).toHaveBeenCalledWith(
+                expect.stringContaining("promoted_attributes.delete_confirmation"));
+            expect(mocks.bulk).toHaveBeenCalledWith(
+                [ "board1" ],
+                [ { name: "deleteLabel", labelName: "dueDate" } ],
+                { includeDescendants: true, silent: true });
+            expect(mocks.removeOwned).toHaveBeenCalledWith(NOTE, "label", "label:dueDate");
+        });
+
+        it("leaves everything alone where the reader said no", async () => {
+            mocks.confirm.mockResolvedValue(false);
+            draw();
+
+            await act(async () => {
+                segments()[0].querySelector<HTMLElement>(".promoted-attribute-delete")?.click();
+                await flush();
+            });
+
+            expect(mocks.bulk).not.toHaveBeenCalled();
+            expect(mocks.removeOwned).not.toHaveBeenCalled();
+        });
+    });
+
     describe("creating one", () => {
         it("opens the editor on a new definition, named for the reader to change", () => {
             draw();
@@ -238,6 +278,7 @@ describe("PromotedAttributesCard", () => {
             expect(mocks.detail.opts?.attribute)
                 .toEqual({ type: "label", name: "label:myLabel", value: "promoted,single,text", isInheritable: true });
             expect(mocks.detail.opts?.focus).toBe("name");
+            expect(mocks.detail.opts?.hideInheritance).toBe(true);
             // Nothing is listed until the note reports what was made.
             expect(names()).toEqual([ "Due", "owner" ]);
             expect(stored).toEqual([]);
