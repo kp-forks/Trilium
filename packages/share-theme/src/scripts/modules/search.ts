@@ -78,13 +78,25 @@ export function buildStaticSnippet(
 
     // Build the snippet by walking the window and inserting <b>...</b> around any
     // match-range that intersects it. Indices are inclusive on both ends per Fuse.
+    // Ranges are clipped to the window and then merged when they overlap or touch, so that
+    // overlapping matches (common for multi-term queries) never emit a character twice.
+    const ranges = contentMatch.indices
+        .filter(([ s, e ]) => s < to && e >= from)
+        .map(([ s, e ]) => [ Math.max(s, from), Math.min(e + 1, to) ] as [number, number])
+        .sort((a, b) => a[0] - b[0]);
+    const mergedRanges: [number, number][] = [];
+    for (const [ s, e ] of ranges) {
+        const last = mergedRanges[mergedRanges.length - 1];
+        if (last && s <= last[1]) {
+            last[1] = Math.max(last[1], e);
+        } else {
+            mergedRanges.push([ s, e ]);
+        }
+    }
+
     let out = "";
     let cursor = from;
-    const ranges = contentMatch.indices
-        .map(([ s, e ]) => [ Math.max(s, from), Math.min(e + 1, to) ] as [number, number])
-        .filter(([ s, e ]) => e > s)
-        .sort((a, b) => a[0] - b[0]);
-    for (const [ s, e ] of ranges) {
+    for (const [ s, e ] of mergedRanges) {
         if (s > cursor) out += escapeHtml(content.slice(cursor, s));
         out += `<b>${escapeHtml(content.slice(s, e))}</b>`;
         cursor = e;

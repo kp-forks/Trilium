@@ -97,13 +97,23 @@ describe("Share API test", () => {
     // root:password) and "Shared Note Template" (shareHiddenFromTree).
     const SHARE_ROOT_ID = "y0AFOwgOgkWO";
 
-    async function searchTitles(query: string, auth?: string) {
+    interface ShareSearchResult {
+        title: string;
+        snippet?: string;
+        highlightedSnippet?: string;
+    }
+
+    async function searchShare(query: string, auth?: string): Promise<ShareSearchResult[]> {
         let request = supertest(app).get(`/share/api/notes?ancestorNoteId=${SHARE_ROOT_ID}&search=${encodeURIComponent(query)}`);
         if (auth) {
             request = request.set("Authorization", `Basic ${Buffer.from(auth).toString("base64")}`);
         }
         const response = await request.expect(200);
-        return (response.body.results as Array<{ title: string }>).map((r) => r.title);
+        return response.body.results;
+    }
+
+    async function searchTitles(query: string, auth?: string) {
+        return (await searchShare(query, auth)).map((r) => r.title);
     }
 
     it("does not leak shareHiddenFromTree notes via public search", async () => {
@@ -131,6 +141,31 @@ describe("Share API test", () => {
         // result must be treated as not visible.
         const { isVisibleInShareTree } = await import("./routes.js");
         expect(isVisibleInShareTree(SHARE_ROOT_ID, ["root", "someUnsharedNote"])).toBe(false);
+    });
+
+    it("returns plain and highlighted content snippets for authorized search results", async () => {
+        // "Shared that uses template" has the content "<p>Hello world.</p>".
+        const results = await searchShare("world");
+        const match = results.find((r) => r.title === "Shared that uses template");
+
+        expect(match?.snippet).toBe("Hello world.");
+        expect(match?.highlightedSnippet).toBe("Hello <b>world</b>.");
+        expect(cannotSetHeadersCount).toBe(0);
+    });
+
+    it("does not build snippets for notes the caller may not see", async () => {
+        // Snippets are extracted only after the authorization filter, so neither the hidden
+        // template's content ("Content Start") nor the credential-protected note may surface
+        // in any field of an anonymous response.
+        const hiddenContent = await searchShare("Content Start");
+        expect(JSON.stringify(hiddenContent)).not.toContain("Content Start");
+
+        const anonymous = await searchShare("Password protected share");
+        expect(JSON.stringify(anonymous)).not.toContain("Password protected");
+
+        const authenticated = await searchShare("Password protected share", "root:password");
+        expect(authenticated.map((r) => r.title)).toContain("Password protected share");
+        expect(cannotSetHeadersCount).toBe(0);
     });
 
     it("renders custom share template", async () => {

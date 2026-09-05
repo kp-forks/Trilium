@@ -75,6 +75,18 @@ describe("buildStaticSnippet", () => {
         expect(result).toBe("<b>foo</b> bar <b>baz</b>");
     });
 
+    it("merges overlapping/adjacent ranges and skips ranges outside the window", () => {
+        // [0, 5] and [3, 8] overlap and [9, 10] touches the merged run: every character must
+        // be emitted exactly once, inside a single <b>.
+        expect(buildStaticSnippet("abcdefghijk end", [ contentMatch([ 0, 5 ], [ 3, 8 ], [ 9, 10 ]) ]))
+            .toBe("<b>abcdefghijk</b> end");
+
+        // A range that lies entirely past the 40-char window contributes nothing.
+        const content = `FOO ${"y".repeat(200)}BAR`;
+        expect(buildStaticSnippet(content, [ contentMatch([ 0, 2 ], [ 204, 206 ]) ], 40))
+            .toBe(`<b>FOO</b> ${"y".repeat(36)}…`);
+    });
+
     it("prepends an ellipsis when the window is cut from the left of content", () => {
         // 200 chars, match at position 180. With maxLength=40, window anchors to the right.
         const before = "x".repeat(180);
