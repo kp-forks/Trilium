@@ -230,6 +230,27 @@ describe("SortableCard", () => {
             drop();
         });
 
+        /**
+         * A card taller than the screen is scrolled while a segment is carried to an edge of it,
+         * which moves the list out from under a pointer that has not itself moved. The segment
+         * answers to the place in the card the pointer is over, not to the place on screen it was
+         * taken from, or it would be left behind by everything the scrolling brought into view.
+         */
+        it("keeps the segment under the pointer while the card is scrolled", () => {
+            draw();
+            const carried = segmentOf("a");
+
+            grab(carried);
+            moveTo(SEGMENT_HEIGHT / 2);
+            expect(shift(carried)).toBe(SEGMENT_HEIGHT / 2);
+
+            // The card scrolls up by a segment, the pointer staying where it is.
+            standAt(-SEGMENT_HEIGHT);
+            moveTo(SEGMENT_HEIGHT / 2);
+
+            expect(shift(carried)).toBe(SEGMENT_HEIGHT + SEGMENT_HEIGHT / 2);
+        });
+
         it("puts the order back when the carry is abandoned", () => {
             draw();
 
@@ -676,6 +697,7 @@ describe("SortableCard", () => {
         }
 
         element.setPointerCapture = (pointerId: number) => { captured.push(pointerId); };
+        element.getBoundingClientRect ??= () => new DOMRect(0, 0, 300, 0);
         element.releasePointerCapture = () => {};
         Object.defineProperty(element, "clientHeight", {
             get: () => segments().length * (SEGMENT_HEIGHT + SEGMENT_GAP) - SEGMENT_GAP,
@@ -702,6 +724,14 @@ describe("SortableCard", () => {
 
     function list() {
         return container.querySelector<HTMLElement>(".tn-sortable-list");
+    }
+
+    /** Where the list stands on screen, which the scrolling of whatever holds it moves. */
+    function standAt(top: number) {
+        const element = list();
+        if (element) {
+            element.getBoundingClientRect = () => new DOMRect(0, top, 300, listHeight());
+        }
     }
 
     function row() {

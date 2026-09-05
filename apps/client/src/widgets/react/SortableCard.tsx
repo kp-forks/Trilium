@@ -3,10 +3,13 @@ import "./SortableCard.css";
 import clsx from "clsx";
 import { ComponentChildren } from "preact";
 import { flushSync } from "preact/compat";
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import {
+    useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState
+} from "preact/hooks";
 
 import { t } from "../../services/i18n";
 import { Card, type CardProps } from "./Card";
+import { createEdgeScroller, type ScrollTarget } from "./edge_scroll";
 import { useFlip } from "./flip";
 import Icon from "./Icon";
 
@@ -24,6 +27,14 @@ const TOUCH_HOLD_MS = 400;
 
 /** How far it may stray in that time and still be resting rather than scrolling. */
 const TOUCH_SLACK_PX = 8;
+
+/**
+ * How fast a card walks its scroller with the pointer at the very edge, in pixels a second.
+ *
+ * Twice what a board carries a card at: a card is scrolled through in one stretch, where a board is
+ * walked along while the reader reads the columns it passes.
+ */
+const SCROLL_SPEED = 2700;
 
 /** What a press belongs to rather than to the segment holding it. */
 const CONTROLS = "button, a, input, select, textarea, label";
@@ -102,6 +113,24 @@ export function SortableCard<T extends SortableItem>({
     const dragRef = useRef<Drag<T>>();
     /** A finger resting on a grip, which becomes a carry once it has rested long enough. */
     const holdRef = useRef<Hold>();
+    /** Where the pointer was last seen, for a carry the scrolling moves the list under. */
+    const pointerRef = useRef({ x: 0, y: 0 });
+    /** The carry as it now stands, for the scrolling to place the segment again by. */
+    const dragToRef = useRef<(clientY: number) => void>(() => {});
+    /**
+     * Walks whatever the card is scrolled inside while a segment is carried to an edge of it.
+     *
+     * A card taller than the screen, or one hanging off the end of it, has places the pointer
+     * cannot otherwise reach: the first and last segments of it above all. Made once and kept, so
+     * the frames it asks for outlive the render that started them.
+     */
+    const scroller = useMemo(() => createEdgeScroller({
+        speed: SCROLL_SPEED,
+        // The pointer has not moved, but the card has moved under it.
+        onScroll: () => dragToRef.current(pointerRef.current.y)
+    }), []);
+
+    useEffect(() => () => scroller.stop(), [ scroller ]);
     /**
      * The order while a segment is being carried, which the caller is told of once it lands.
      *
@@ -192,6 +221,7 @@ export function SortableCard<T extends SortableItem>({
         }
 
         listRef.current?.releasePointerCapture?.(drag.pointerId);
+        scroller.stop();
         setDraggedKey(undefined);
         pendingFocus.current = drag.key;
 
@@ -204,7 +234,7 @@ export function SortableCard<T extends SortableItem>({
         if (drag.order.some((item, index) => item.key !== drag.was[index].key)) {
             onChange(drag.order);
         }
-    }, [ onChange, segmentOf ]);
+    }, [ onChange, scroller, segmentOf ]);
 
     /** Takes up the segment, which is where the carry begins and where it is drawn as held. */
     const startDrag = useCallback((key: string, pointerId: number, clientY: number) => {
@@ -213,12 +243,19 @@ export function SortableCard<T extends SortableItem>({
             return;
         }
 
-        listRef.current?.setPointerCapture?.(pointerId);
+        // Refused where the pointer is already gone, a finger lifted during the rest above all.
+        // Touch captures to the segment of its own accord, so the carry stands without it.
+        try {
+            listRef.current?.setPointerCapture?.(pointerId);
+        } catch {
+            // Nothing to do: the moves reach the list either way.
+        }
 
         dragRef.current = {
             key,
             pointerId,
             grabbedAt: clientY,
+            at: listRef.current?.getBoundingClientRect().top ?? 0,
             from: segment.offsetTop,
             height: segment.offsetHeight,
             order: shown,
@@ -289,10 +326,14 @@ export function SortableCard<T extends SortableItem>({
             return;
         }
 
+        // Where the pointer has carried it, less however far the list has been scrolled out from
+        // under it: the segment answers to the place in the card the finger is over, not to the
+        // place on screen it was taken from.
+        const carried = clientY - drag.grabbedAt - (list.getBoundingClientRect().top - drag.at);
         // Held inside the card: the segment goes no higher than the first place and no lower than
         // the last, whatever the pointer does past them.
         const room = Math.max(0, list.clientHeight - drag.height);
-        const top = Math.min(Math.max(drag.from + (clientY - drag.grabbedAt), 0), room);
+        const top = Math.min(Math.max(drag.from + carried, 0), room);
 
         const order = orderFor(drag, segment, top, segmentOf);
         if (order) {
@@ -304,6 +345,8 @@ export function SortableCard<T extends SortableItem>({
 
         segment.style.transform = `translateY(${top - segment.offsetTop}px)`;
     }, [ segmentOf ]);
+
+    dragToRef.current = dragTo;
 
     /**
      * Makes an entry and puts it at `at`, or at the foot of the card where it is given no place.
@@ -421,6 +464,8 @@ export function SortableCard<T extends SortableItem>({
 
                     if (dragRef.current?.pointerId === event.pointerId) {
                         event.preventDefault();
+                        pointerRef.current = { x: event.clientX, y: event.clientY };
+                        scroller.update(scrolledBy(listRef.current), event.clientX, event.clientY);
                         dragTo(event.clientY);
                     }
                 }}
@@ -502,6 +547,31 @@ export function SortableCard<T extends SortableItem>({
     );
 }
 
+/**
+ * What the card is scrolled inside, nearest first, which is what a carry to an edge walks along.
+ *
+ * Every scroller above the card counts: one standing in a pane that scrolls, inside a page that
+ * scrolls as well, is reached by walking both.
+ */
+function scrolledBy(list: HTMLElement | null): ScrollTarget[] {
+    const targets: ScrollTarget[] = [];
+
+    for (let element = list?.parentElement; element; element = element.parentElement) {
+        const style = getComputedStyle(element);
+        const scrolls = style.overflowY === "auto" || style.overflowY === "scroll";
+        if (scrolls && element.scrollHeight > element.clientHeight) {
+            targets.push({ element, axis: "y" });
+        }
+    }
+
+    const page = document.scrollingElement;
+    if (page instanceof HTMLElement && page.scrollHeight > page.clientHeight) {
+        targets.push({ element: page, axis: "y" });
+    }
+
+    return targets;
+}
+
 /** A finger resting on a grip, until it has rested long enough to carry the segment. */
 interface Hold {
     pointerId: number;
@@ -518,6 +588,8 @@ interface Drag<T extends SortableItem> {
     pointerId: number;
     /** Where the pointer went down, against which everything after it is measured. */
     grabbedAt: number;
+    /** Where the list stood on screen when it was taken, against which a scroll is measured. */
+    at: number;
     /** Where the segment stood in the list when it was taken. */
     from: number;
     height: number;

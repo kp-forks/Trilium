@@ -1,9 +1,10 @@
 /**
  * Scrolls a container while something is carried near its edge.
  *
- * The board scrolls sideways and a column's cards scroll up and down, so a target names which of the
- * two axes it answers for. Several can be pulled at once: a card carried into the bottom corner of
- * the last column walks the board along and the column down together.
+ * A target names the container and which of the two axes it answers for, and several can be pulled
+ * at once: a board's card carried into the bottom corner of its last column walks the board
+ * sideways and the column down together, and a segment carried past the foot of a card walks
+ * whatever the card is scrolled inside.
  */
 
 /** How near an edge the pointer comes before the container starts to move, in pixels. */
@@ -75,7 +76,11 @@ export function createEdgeScroller({
         let moved = false;
 
         for (const { element, axis } of targets) {
-            const box = element.getBoundingClientRect();
+            // The page's own scroller is the window: its element's box is the whole document,
+            // which starts above the screen as soon as anything has been scrolled.
+            const box = element === document.scrollingElement
+                ? new DOMRect(0, 0, window.innerWidth, window.innerHeight)
+                : element.getBoundingClientRect();
             const pull = axis === "x"
                 ? edgePull(box.left, box.right, point.x, margin)
                 : edgePull(box.top, box.bottom, point.y, margin);
