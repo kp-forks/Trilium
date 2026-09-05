@@ -170,21 +170,21 @@ const LISTED_COLUMNS = 7;
 
 /** What the board is, and what it can be asked to do, for a press on the ground its columns stand on. */
 interface BoardMenuTarget {
-    /** Whether the board keeps an inbox column, which the entry reports and toggles. */
+    /** Whether the board keeps an inbox column. The entry shows it and toggles it. */
     inboxShown: boolean;
-    /** Whether the board draws the notes filed as archived. */
+    /** Whether the board renders notes labelled `archived`. */
     archivedShown: boolean;
-    /** Opens the editor a column is named in, the same one the button at the end opens. */
+    /** Opens the column name editor, the same one the button at the end opens. */
     onAddColumn: () => void;
     onCollapseAll: () => void;
     onExpandAll: () => void;
     onShowInbox: (shown: boolean) => void;
     onShowArchived: (shown: boolean) => void;
-    /** Opens the dialog holding what the board is set up with, its card templates among them. */
+    /** Opens `BoardProperties`, which configures the card templates. */
     onOpenProperties: () => void;
 }
 
-/** What the board itself offers, for a press on the ground the columns stand on. */
+/** The board's own menu, opened by a right click outside any column. */
 export function openBoardContextMenu(event: ContextMenuEvent, board: BoardMenuTarget) {
     event.preventDefault();
     event.stopPropagation();

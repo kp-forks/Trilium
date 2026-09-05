@@ -12,8 +12,8 @@ vi.mock("../../../services/i18n", () => ({
     t: (key: string) => key
 }));
 
-// The card is the app's and is tested where it lives; what the board answers for is the words it is
-// given and where what it holds is written.
+// TemplateSelectionCard is tested in its own spec. What this dialog decides is the labels it
+// passes and where onChange writes.
 vi.mock("../../react/TemplateSelectionCard", () => ({
     default: ({ heading, instruction, note, newTemplateName, templates, onChange }: {
         heading: string, instruction: string, note: FNote, newTemplateName?: string,
@@ -58,8 +58,8 @@ describe("Board properties", () => {
     });
 
     afterEach(() => {
-        // Taken down before Bootstrap is: what is left of a dialog it still believes is shown holds
-        // the focus of everything after it, its teardown waiting on a transition happy-dom never
+        // Unmounted before Bootstrap is disposed: a modal Bootstrap still believes is shown traps
+        // the focus of every later test, and its teardown waits on a transition happy-dom never
         // runs.
         render(null, container);
         container.remove();
@@ -81,7 +81,7 @@ describe("Board properties", () => {
             .toContain("board_view.properties-title");
         expect(card?.dataset.heading).toBe("board_view.card-templates");
         expect(card?.dataset.instruction).toBe("board_view.card-templates-hint");
-        // Filed under the board, and drawn from what the board offers now.
+        // Filed under the board, and read from what the board offers now.
         expect(card?.dataset.note).toBe("board1");
         expect(card?.dataset.newName).toBe("board_view.new-template-name");
         expect(card?.dataset.templates).toBe("type:text:text/html");

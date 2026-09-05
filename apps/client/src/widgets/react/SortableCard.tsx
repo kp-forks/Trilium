@@ -428,6 +428,12 @@ export function SortableCard<T extends SortableItem>({
             return;
         }
 
+        // A key pressed on a control `renderItem` drew belongs to that control: Enter and Space
+        // activate a button, and the card would otherwise act on the entry at the same time.
+        if (event.target !== event.currentTarget) {
+            return;
+        }
+
         // Creates an entry below the focused one, or above it with Shift, the way a spreadsheet
         // adds a row. Uses the first creation button, since no button was pressed.
         const leading = itemCreationButtons?.[0];

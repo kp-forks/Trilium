@@ -28,8 +28,7 @@ function mockWebsocket() {
         // Do nothing.
     }
 
-    // Awaited by code that reads back what the server has just written. Nothing is written under
-    // test, so there is nothing to wait for.
+    // Awaited before reading back what the server wrote. No write happens under test.
     async function waitForMaxKnownEntityChangeId() {}
 
     return {

@@ -115,6 +115,30 @@ describe("SortableCard", () => {
         });
     });
 
+    /**
+     * A key pressed on a control inside a segment belongs to that control: Enter and Space
+     * activate a button, and the entry's own commands must not fire alongside it.
+     */
+    it("leaves the keys of a control inside an entry to that control", async () => {
+        const onItemKeyDown = vi.fn();
+        draw({
+            onItemKeyDown,
+            renderItem: (item) => <button type="button" className="own">{item.caption}</button>,
+            itemCreationButtons: [ makes("d", "Delta") ]
+        });
+
+        const button = segments()[0].querySelector<HTMLElement>(".own");
+        press(button, " ");
+        press(button, "Delete");
+        press(button, "Enter");
+        press(button, "ArrowDown", { ctrlKey: true });
+        await act(async () => {});
+
+        expect(onItemKeyDown).not.toHaveBeenCalled();
+        expect(captions()).toEqual([ "Alpha", "Beta", "Gamma" ]);
+        expect(changed).toEqual([]);
+    });
+
     describe("selection", () => {
         it("selects the entry the reader reaches, and says which it is", () => {
             const onSelect = vi.fn();
