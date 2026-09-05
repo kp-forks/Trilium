@@ -1,0 +1,119 @@
+:where(:root) {
+  --sortable-grip-color: var(--muted-text-color);
+  --sortable-grip-hover-color: var(--main-text-color);
+  --sortable-selected-color: var(--main-text-color);
+  --sortable-dragging-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+  /* Enough to read as held rather than filed, without losing what it says. */
+  --sortable-dragging-opacity: 0.85;
+}
+
+.tn-card.tn-sortable-card {
+  .tn-sortable-list {
+    display: flex;
+    /* The carried segment is placed against this, so it must be what `offsetTop` is read from. */
+    position: relative;
+    flex-direction: column;
+    gap: var(--card-section-gap);
+  }
+
+  .tn-sortable-segment {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    /* What `useFlip` turns into a slide: it puts a segment back where it was for one frame and
+       lets this carry it to where it now stands. 200ms matches FLIP_DURATION_MS. */
+    transition: transform 200ms ease;
+  }
+
+  .tn-sortable-segment:focus-visible {
+    outline: 2px solid var(--sortable-selected-color);
+    outline-offset: -2px;
+  }
+
+  /* Painted inside the segment's own box, so a selected segment takes no more room than the rest. */
+  .tn-sortable-selected {
+    box-shadow: inset 0 0 0 1px var(--sortable-selected-color);
+  }
+
+  .tn-sortable-content {
+    display: flex;
+    flex-grow: 1;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+  }
+
+  .tn-sortable-caption {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tn-sortable-grip {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0.2em 0.1em;
+    color: var(--sortable-grip-color);
+    cursor: grab;
+    /* The gesture is this element's own: without it a finger scrolls the page instead. */
+    touch-action: none;
+
+    & svg {
+      width: 1.1em;
+      height: 1.1em;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+    }
+
+    &:hover {
+      color: var(--sortable-grip-hover-color);
+    }
+  }
+
+  /* Under the pointer rather than in the flow: it follows the finger, and the transition the other
+     segments slide by would drag it a frame behind. */
+  .tn-sortable-dragging {
+    z-index: 1;
+    box-shadow: var(--sortable-dragging-shadow);
+    opacity: var(--sortable-dragging-opacity);
+    transition: none;
+
+    & .tn-sortable-grip {
+      cursor: grabbing;
+    }
+  }
+
+  .tn-sortable-add {
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    color: var(--muted-text-color);
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--card-background-hover-color);
+      color: var(--main-text-color);
+    }
+  }
+
+  .tn-sortable-appearing {
+    animation: tn-sortable-appear 400ms ease-out;
+  }
+}
+
+@keyframes tn-sortable-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tn-card.tn-sortable-card .tn-sortable-segment {
+    transition: none;
+  }
+
+  .tn-card.tn-sortable-card .tn-sortable-appearing {
+    animation: none;
+  }
+}

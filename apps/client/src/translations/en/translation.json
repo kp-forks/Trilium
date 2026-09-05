@@ -2523,6 +2523,10 @@
     "built-in-templates": "Built-in templates",
     "selector-save": "Save"
   },
+  "sortable_card": {
+    "add": "Add item",
+    "reorder": "Drag to reorder"
+  },
   "protect_note": {
     "toggle-on": "Protect the note",
     "toggle-off": "Unprotect the note",
