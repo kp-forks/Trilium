@@ -163,21 +163,28 @@ async function autocompleteSource(term: string, cb: (rows: Suggestion[]) => void
     cb(results);
 }
 
+// `autocomplete("val", ...)` does not dispatch a native "input" event, so each function below
+// fires one to keep consumers bound to it, such as NoteAutocomplete's onTextChange, in sync.
+
 function clearText($el: JQuery<HTMLElement>) {
     searchDelay = 0;
     $el.setSelectedNotePath("");
     $el.autocomplete("val", "").trigger("change");
+    $el.trigger("input");
 }
 
 function setText($el: JQuery<HTMLElement>, text: string) {
     $el.setSelectedNotePath("");
-    $el.autocomplete("val", text.trim()).autocomplete("open");
+    $el.autocomplete("val", text.trim());
+    $el.trigger("input");
+    $el.autocomplete("open");
 }
 
 function showRecentNotes($el: JQuery<HTMLElement>) {
     searchDelay = 0;
     $el.setSelectedNotePath("");
     $el.autocomplete("val", "");
+    $el.trigger("input");
     $el.autocomplete("open");
     $el.trigger("focus");
 }
@@ -185,7 +192,9 @@ function showRecentNotes($el: JQuery<HTMLElement>) {
 function showAllCommands($el: JQuery<HTMLElement>) {
     searchDelay = 0;
     $el.setSelectedNotePath("");
-    $el.autocomplete("val", ">").autocomplete("open");
+    $el.autocomplete("val", ">");
+    $el.trigger("input");
+    $el.autocomplete("open");
 }
 
 function fullTextSearch($el: JQuery<HTMLElement>, options: Options) {
@@ -282,6 +291,18 @@ function initNoteAutocomplete($el: JQuery<HTMLElement>, options?: Options) {
             fullTextSearch($el, options);
         }
     });
+    $el.on("keydown", (event) => {
+        const isPlainEnter = event.key === "Enter"
+            && !event.ctrlKey && !event.shiftKey && !event.altKey && !event.metaKey;
+        // autocomplete.js empties its suggestion list only a tick after closing it, and its
+        // Enter handler selects from the closed-but-not-yet-emptied dropdown — so a fast second
+        // Enter after a selection consumes a stale row (#5669). Enter must never select from a
+        // dropdown the user cannot see; the library keeps aria-expanded in sync with open/close.
+        if (isPlainEnter && $el.attr("aria-expanded") !== "true") {
+            // Stop autocomplete from seeing the keypress, but leave form submission intact.
+            event.stopImmediatePropagation();
+        }
+    });
 
     $el.autocomplete(
         {
@@ -363,8 +384,8 @@ function initNoteAutocomplete($el: JQuery<HTMLElement>, options?: Options) {
         ]
     );
 
-    // TODO: Types fail due to "autocomplete:selected" not being registered in type definitions.
-    ($el as any).on("autocomplete:selected", async (event: Event, suggestion: Suggestion) => {
+    //@ts-expect-error The `autocomplete:selected` handler takes an extra `suggestion` argument that jQuery's `.on()` typings don't model.
+    $el.on("autocomplete:selected", async (event: Event, suggestion: Suggestion) => {
         if (suggestion.action === "command") {
             $el.autocomplete("close");
             $el.trigger("autocomplete:commandselected", [suggestion]);
@@ -385,7 +406,7 @@ function initNoteAutocomplete($el: JQuery<HTMLElement>, options?: Options) {
         }
 
         if (suggestion.action === "create-note") {
-            const { success, noteType, templateNoteId, notePath } = await noteCreateService.chooseNoteType();
+            const { success, noteType, templateNoteId, notePath, cloneToNoteIds } = await noteCreateService.chooseNoteType();
             if (!success) {
                 return;
             }
@@ -393,7 +414,8 @@ function initNoteAutocomplete($el: JQuery<HTMLElement>, options?: Options) {
                 title: suggestion.noteTitle,
                 activate: false,
                 type: noteType,
-                templateNoteId
+                templateNoteId,
+                cloneToNoteIds
             });
 
             const hoistedNoteId = appContext.tabManager.getActiveContext()?.hoistedNoteId;
@@ -452,6 +474,7 @@ function init() {
 
         const chunks = notePath.split("/");
 
+        /* v8 ignore next -- String.split always yields at least one element, so the `: null` branch is unreachable */
         return chunks.length >= 1 ? chunks[chunks.length - 1] : null;
     };
 

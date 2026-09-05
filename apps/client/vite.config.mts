@@ -1,9 +1,11 @@
 /// <reference types='vitest' />
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 import prefresh from '@prefresh/vite';
 import { join } from 'path';
-import webpackStatsPlugin from 'rollup-plugin-webpack-stats';
 import { defineConfig } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy'
+
+import { stripUniverHyphenation } from './vite-plugins.mjs';
 
 const assets = [ "assets", "stylesheets", "fonts", "translations" ];
 
@@ -11,12 +13,16 @@ const isDev = process.env.NODE_ENV === "development";
 let plugins: any = [];
 
 if (isDev) {
-    // Add Prefresh for Preact HMR in development
     plugins = [
-        prefresh()
+        // Prefresh keeps a growing list of vnodes per component type and scans it on every diff, so
+        // a view with thousands of instances of one component slows to a stop. Set TRILIUM_NO_HMR to
+        // work on such a view; components then reload with the page instead of in place.
+        ...(process.env.TRILIUM_NO_HMR ? [] : [ prefresh() ]),
+        stripUniverHyphenation()
     ];
 } else {
     plugins = [
+        stripUniverHyphenation(),
         viteStaticCopy({
             targets: assets.map((asset) => ({
                 src: `src/${asset}/**/*`,
@@ -32,24 +38,36 @@ if (isDev) {
                 }
             ]
         }),
-        webpackStatsPlugin()
+        // Put the Codecov vite plugin after all other plugins
+        codecovVitePlugin({
+            enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+            bundleName: "client",
+            uploadToken: process.env.CODECOV_TOKEN
+        })
     ]
 }
 
 export default defineConfig(() => ({
-    root: __dirname,
+    root: import.meta.dirname,
     cacheDir: '../../.cache/vite',
     base: "",
     plugins,
-    // Use esbuild for JSX transformation (much faster than Babel)
-    esbuild: {
-        jsx: 'automatic',
-        jsxImportSource: 'preact',
-        jsxDev: isDev
+    // Use oxc for JSX transformation (Vite 8+ replaced the deprecated `esbuild` option with `oxc`)
+    oxc: {
+        jsx: {
+            runtime: 'automatic',
+            importSource: 'preact',
+            development: isDev
+        }
     },
     css: {
         transformer: 'lightningcss',
         devSourcemap: isDev
+    },
+    server: {
+        watch: {
+            ignored: ["**/test-output/**"]
+        }
     },
     resolve: {
         alias: [
@@ -72,7 +90,6 @@ export default defineConfig(() => ({
     },
     optimizeDeps: {
         include: [
-            "ckeditor5-premium-features",
             "ckeditor5",
             "mathlive"
         ]
@@ -85,11 +102,9 @@ export default defineConfig(() => ({
         sourcemap: false,
         rollupOptions: {
             input: {
-                index: join(__dirname, "index.html"),
-                login: join(__dirname, "src", "login.ts"),
-                set_password: join(__dirname, "src", "set_password.ts"),
-                runtime: join(__dirname, "src", "runtime.ts"),
-                print: join(__dirname, "src", "print.tsx")
+                index: join(import.meta.dirname, "index.html"),
+                runtime: join(import.meta.dirname, "src", "runtime.ts"),
+                print: join(import.meta.dirname, "src", "print.tsx")
             },
             output: {
                 entryFileNames: (chunk) => {
@@ -114,13 +129,30 @@ export default defineConfig(() => ({
     },
     test: {
         environment: "happy-dom",
+        // Vitest skips CSS processing by default, which would hand `?inline` importers an empty
+        // string. The presentation themes are SCSS compiled through that path, so their specs need
+        // it on to assert against real rules.
+        css: { include: [/\.scss(\?|$)/] },
         setupFiles: [
             "./src/test/setup.ts"
         ],
         reporters: [
             "verbose",
-            ["html", { outputFile: "./test-output/vitest/html/index.html" }]
+            ["html", { outputFile: "./test-output/vitest/html/index.html" }],
+            ["junit", { outputFile: "./test-output/vitest/junit.xml", addFileAttribute: true }]
         ],
+        coverage: {
+            reportsDirectory: "./test-output/vitest/coverage",
+            provider: "v8" as const,
+            // Codecov resolves an lcov `SF:` path by matching it against the repo's file list.
+            // Vitest defaults the lcov reporter's `projectRoot` to the Vite `root`, which would
+            // emit app-relative paths (`src/…`); the shallow ones are ambiguous in this monorepo
+            // and get attributed to whichever project wins the match. Anchor to the repo root so
+            // every path is unambiguous.
+            reporter: ["text", "html", ["lcov", { projectRoot: join(import.meta.dirname, "../..") }]],
+            include: ["src/**/*.{ts,tsx}"],
+            exclude: ["**/*.{test,spec}.{ts,mts,cts,tsx,js,jsx}", "**/*.d.ts"]
+        },
     },
     commonjsOptions: {
         transformMixedEsModules: true,

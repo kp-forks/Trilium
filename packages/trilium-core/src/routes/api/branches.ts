@@ -172,7 +172,8 @@ function setExpandedForSubtree(req: Request<{ branchId: string, expanded: string
     // root is always expanded
     branchIds = branchIds.filter((branchId) => branchId !== "none_root");
 
-    sql.executeMany(/*sql*/`UPDATE branches SET isExpanded = ${expanded} WHERE branchId IN (???)`, branchIds);
+    const expandedValue = expanded ? 1 : 0;
+    sql.executeMany(/*sql*/`UPDATE branches SET isExpanded = ${expandedValue} WHERE branchId IN (???)`, branchIds);
 
     for (const branchId of branchIds) {
         const branch = becca.branches[branchId];
@@ -245,13 +246,14 @@ function deleteBranch(req: Request<{ branchId: string }>) {
     if (eraseNotes) {
         // erase automatically means deleting all clones + note itself
         branch.getNote().deleteNote(deleteId, taskContext);
-        eraseService.eraseNotesWithDeleteId(deleteId);
+        taskContext.scheduleErase(deleteId);
         noteDeleted = true;
     } else {
         noteDeleted = branch.deleteBranch(deleteId, taskContext);
     }
 
     if (last) {
+        eraseService.eraseNotesWithDeleteIds(taskContext.takeScheduledErases());
         taskContext.taskSucceeded(null);
     }
 

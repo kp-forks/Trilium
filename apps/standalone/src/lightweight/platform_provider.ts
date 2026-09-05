@@ -13,6 +13,7 @@ export default class StandalonePlatformProvider implements PlatformProvider {
     readonly isElectron = false;
     readonly isMac = false;
     readonly isWindows = false;
+    readonly isLinux = false;
 
     private envMap: Record<string, string> = {};
 
@@ -23,6 +24,7 @@ export default class StandalonePlatformProvider implements PlatformProvider {
                 this.envMap[envKey] = params.get(queryKey) || "true";
             }
         }
+        /* v8 ignore next 3 -- @preserve: __TRILIUM_INTEGRATION_TEST__ is inlined empty outside integration builds, so this branch is unreachable under the standard (CI) build. */
         if (__TRILIUM_INTEGRATION_TEST__) {
             this.envMap["TRILIUM_INTEGRATION_TEST"] = __TRILIUM_INTEGRATION_TEST__;
         }
@@ -38,5 +40,10 @@ export default class StandalonePlatformProvider implements PlatformProvider {
 
     getEnv(key: string): string | undefined {
         return this.envMap[key];
+    }
+
+    /** The browser owns the storage the database lives in, and gives out no path to it. */
+    getDatabasePath(): null {
+        return null;
     }
 }

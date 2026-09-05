@@ -1,5 +1,7 @@
-import { extractYouTubeVideoId, renderSpreadsheetToHtml, renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons";
-import { icon_packs as iconPackService, sanitize, task_states, utils } from "@triliumnext/core";
+import { extractYouTubeVideoId, isHttpUrl, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
+import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
+import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
+import { type BAttachment, type BBranch, becca, BNote, getLog, icon_packs as iconPackService, options, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
@@ -8,13 +10,8 @@ import { t } from "i18next";
 import { HTMLElement, Options, parse, TextNode } from "node-html-parser";
 import { join } from "path";
 
-import becca from "../becca/becca.js";
-import BAttachment from '../becca/entities/battachment.js';
-import type BBranch from "../becca/entities/bbranch.js";
-import BNote from "../becca/entities/bnote.js";
 import assetPath, { assetUrlFragment } from "../services/asset_path.js";
-import log from "../services/log.js";
-import options from "../services/options.js";
+import { isScriptingEnabled } from "../services/scripting_guard.js";
 import { getResourceDir, isDev } from "../services/utils.js";
 import SAttachment from "./shaca/entities/sattachment.js";
 import SBranch from "./shaca/entities/sbranch.js";
@@ -24,6 +21,29 @@ import shareRoot from "./share_root.js";
 
 const shareAdjustedAssetPath = isDev ? assetPath : `../${assetPath}`;
 const templateCache: Map<string, string> = new Map();
+
+/**
+ * Maximum number of lines a code block may have before server-side syntax highlighting is skipped.
+ * Mirrors the editor's per-block cutoff (HIGHLIGHT_MAX_BLOCK_COUNT in the ckeditor5 syntax
+ * highlighting plugin); beyond it `highlightAuto` is too slow and would block the event loop on
+ * large shared/included code notes (#9717).
+ */
+const HIGHLIGHT_MAX_LINE_COUNT = 500;
+
+/**
+ * Maximum number of characters a code block may have before server-side syntax highlighting is
+ * skipped. The line-count cutoff alone does not protect against a single very long line (e.g.
+ * minified code), so a separate character ceiling guards `highlightAuto`'s size-driven cost.
+ */
+const HIGHLIGHT_MAX_CHAR_COUNT = 50_000;
+
+/**
+ * The base a web view's rooted source is resolved against, to tell a path that stays on this site
+ * from one that only looks rooted at it. `.invalid` is reserved and resolves nowhere, so a source
+ * that reaches this origin can only have done so by staying relative. See {@link isFramableSource}.
+ */
+const SAME_SITE_BASE = "https://web-view.invalid/";
+const SAME_SITE_ORIGIN = new URL(SAME_SITE_BASE).origin;
 
 /**
  * Represents the output of the content renderer.
@@ -105,7 +125,7 @@ export function renderNoteForExport(note: BNote, parentBranch: BBranch, basePath
     });
 }
 
-export function renderNoteContent(note: SNote) {
+export function renderNoteContent(note: SNote, canAccessInclude?: CanAccessInclude) {
     const subRoot = getSharedSubTreeRoot(note);
 
     const ancestors: string[] = [];
@@ -149,6 +169,7 @@ export function renderNoteContent(note: SNote) {
         logoUrl,
         ancestors,
         isStatic: false,
+        canAccessInclude,
         faviconUrl: note.hasRelation("shareFavicon") ? `api/notes/${note.getRelationValue("shareFavicon")}/download` : `../favicon.ico`,
         iconPackCss: [
             ...iconPacks.map(p => iconPackService.generateCss(p, p.builtin
@@ -171,6 +192,7 @@ interface RenderArgs {
     logoUrl: string;
     ancestors: string[];
     isStatic: boolean;
+    canAccessInclude?: CanAccessInclude;
     faviconUrl: string;
     iconPackCss: string;
     iconPackSupportedPrefixes: string[];
@@ -186,8 +208,12 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
         return note.getContent() ?? "";
     }
 
-    const { header, content, isEmpty } = getContent(note);
-    const showLoginInShareTheme = options.getOption("showLoginInShareTheme");
+    // Static export preserves full include-note nesting; the live share view renders only the first level.
+    const { header, content, isEmpty } = getContent(note, {
+        expandNestedIncludes: renderArgs.isStatic,
+        canAccessInclude: renderArgs.canAccessInclude
+    });
+    const showLoginInShareTheme = options.getOptionBool("showLoginInShareTheme");
     const opts = {
         note,
         header,
@@ -199,11 +225,13 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
         t,
         isDev,
         utils,
+        sanitizeUrl: sanitize.sanitizeUrl,
         ...renderArgs,
     };
 
     // Check if the user has their own template.
-    if (note.hasRelation("shareTemplate")) {
+    // Skip user-provided EJS templates when backend scripting is disabled since EJS can execute arbitrary JS.
+    if (note.hasRelation("shareTemplate") && isScriptingEnabled()) {
         // Get the template note and content
         const templateId = note.getRelation("shareTemplate")?.value;
         const templateNote = templateId && shaca.getNote(templateId);
@@ -230,7 +258,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
                 }
             } catch (e: unknown) {
                 const [errMessage, errStack] = utils.safeExtractMessageAndStackFromError(e);
-                log.error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
+                getLog().error(`Rendering user provided share template (${templateId}) threw exception ${errMessage} with stacktrace: ${errStack}`);
             }
         }
     }
@@ -263,7 +291,31 @@ export function readTemplate(path: string) {
     return templateString;
 }
 
-export function getContent(note: SNote | BNote) {
+/**
+ * Decides whether the caller is allowed to read a note that an include pulls in. The share routes
+ * pass their `shareCredentials` check here so that an include cannot hand out a note the same
+ * caller would be refused on a direct request. Omitted by the static export, whose caller is the
+ * already-authenticated instance owner.
+ */
+export type CanAccessInclude = (note: SNote) => boolean;
+
+export interface ShareRenderOptions {
+    /**
+     * Keep expanding include-note sections recursively at every depth. Used for static export, which
+     * preserves full nesting. When false (the default for the on-screen share view), only the first
+     * level of inclusion is rendered and deeper include-note sections are replaced with a reference
+     * link.
+     */
+    expandNestedIncludes?: boolean;
+    /** Internal: render this note's own include-note sections as reference links instead of expanding. */
+    includesAsReferenceLinks?: boolean;
+    /** Internal: note IDs already rendered on the current include path, used as a recursion cycle guard. */
+    seenNoteIds?: Set<string>;
+    /** See {@link CanAccessInclude}. When omitted, every included note is expanded. */
+    canAccessInclude?: CanAccessInclude;
+}
+
+export function getContent(note: SNote | BNote, options: ShareRenderOptions = {}) {
     if (note.isProtected) {
         return {
             header: "",
@@ -279,7 +331,7 @@ export function getContent(note: SNote | BNote) {
     };
 
     if (note.type === "text") {
-        renderText(result, note);
+        renderText(result, note, options);
     } else if (note.type === "code" && note.mime === "text/x-markdown") {
         renderMarkdown(result, note);
     } else if (note.type === "code") {
@@ -311,7 +363,7 @@ function renderIndex(result: Result) {
     for (const childNote of rootNote.getChildNotes()) {
         const isExternalLink = childNote.hasLabel("shareExternalLink");
         const rawHref = childNote.getLabelValue("shareExternalLink") ?? "";
-        const href = isExternalLink ? escapeHtml(sanitize.sanitizeUrl(rawHref)) : `./${childNote.shareId}`;
+        const href = escapeHtml(isExternalLink ? sanitize.sanitizeUrl(rawHref) : `./${childNote.shareId}`);
         const target = isExternalLink ? `target="_blank" rel="noopener noreferrer"` : "";
         result.content += `<li><a class="${childNote.type}" href="${href}" ${target}>${childNote.escapedTitle}</a></li>`;
     }
@@ -319,24 +371,53 @@ function renderIndex(result: Result) {
     result.content += "</ul>";
 }
 
-function renderText(result: Result, note: SNote | BNote) {
+function renderText(result: Result, note: SNote | BNote, options: ShareRenderOptions = {}) {
     if (typeof result.content !== "string") return;
     const parseOpts: Partial<Options> = {
         blockTextElements: {}
     };
     const document = parse(result.content || "", parseOpts);
 
+    // One of a preview's pictures, or what stands in for it. Every picture on a shared page makes
+    // the same decision, so it is made once: safeLinkPreviewImageSrc() keeps the placeholder for
+    // anything but an inline image or an attachment of this instance, because an <img> fires on
+    // load — a remote URL here would have every visitor to the shared page announce itself to a
+    // third party without so much as a click.
+    const renderPicture = (
+        src: string | undefined | null,
+        { className, placeholder, size }: { className: string; placeholder: string; size?: number }
+    ) => {
+        const safeSrc = safeLinkPreviewImageSrc(src);
+
+        if (!safeSrc) {
+            return placeholder;
+        }
+
+        const sizeAttrs = size ? ` width="${size}" height="${size}"` : "";
+
+        return `<img class="${className}" src="${escapeHtml(safeSrc)}" alt="" loading="lazy"${sizeAttrs}>`;
+    };
+
+    // The site's favicon — shown by both the inline mention and the card's URL line, from the one
+    // `data-favicon` the element already carries. A site whose icon could not be had shows nothing
+    // in its place: unlike a card's missing cover there is no hole to fill, and anything stood there
+    // instead was read as a mark of its own rather than as an absent icon.
+    const renderFavicon = (favicon: string | undefined | null) => renderPicture(favicon, {
+        className: "link-embed-mention-favicon",
+        size: 16,
+        placeholder: ""
+    });
+
     // Process link mentions (inline) — metadata is stored in data attributes.
     for (const mentionEl of document.querySelectorAll("span.link-mention")) {
         const url = mentionEl.getAttribute("data-url");
         if (!url) continue;
         const title = mentionEl.getAttribute("data-title") || safeHostnameForShare(url);
-        const favicon = mentionEl.getAttribute("data-favicon");
-        const faviconHtml = favicon
-            ? `<img class="link-embed-mention-favicon" src="${escapeHtml(favicon)}" width="16" height="16">`
-            : `<span class="link-embed-mention-dot"></span>`;
-        mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
-            faviconHtml +
+        // escapeHtml() makes the value safe to *place* in the attribute; it says nothing about the
+        // scheme. `data-*` survives the save-time sanitizer untouched, so a stored
+        // `data-url="javascript:…"` would otherwise become a live link on a public page.
+        mentionEl.innerHTML = `<a class="link-embed-mention" href="${escapeHtml(safeLinkPreviewHref(url))}" target="_blank" rel="noopener noreferrer">` +
+            renderFavicon(mentionEl.getAttribute("data-favicon")) +
             `<span class="link-embed-mention-title">${escapeHtml(title)}</span></a>`;
     }
 
@@ -349,34 +430,76 @@ function renderText(result: Result, note: SNote | BNote) {
         if (embedType === "youtube") {
             const videoId = extractYouTubeVideoId(url);
             if (videoId) {
-                embedEl.innerHTML = `<div class="link-embed-video"><iframe src="https://www.youtube-nocookie.com/embed/${escapeHtml(videoId)}?rel=0" frameborder="0" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;aspect-ratio:16/9;border:none;"></iframe></div>`;
+                // Click-to-play: the shared page shows the thumbnail stored in the note and only
+                // loads YouTube's player once a visitor asks for it, so simply reading the page does
+                // not hand every visitor's IP to Google. The swap is done by the share theme's
+                // video_facade script, which reads data-video-id.
+                // No placeholder: the play button carries the facade on its own.
+                const thumbnailHtml = renderPicture(embedEl.getAttribute("data-image"), {
+                    className: "link-embed-video-thumbnail",
+                    placeholder: ""
+                });
+                embedEl.innerHTML = `<div class="link-embed-video">`
+                    + `<button type="button" class="link-embed-video-facade" data-video-id="${escapeHtml(videoId)}" aria-label="Play video" title="Play video">`
+                    + thumbnailHtml
+                    + `<span class="link-embed-video-play" aria-hidden="true"></span>`
+                    + `</button></div>`;
             }
         } else {
             const title = embedEl.getAttribute("data-title") || safeHostnameForShare(url);
             const description = embedEl.getAttribute("data-description");
-            const image = embedEl.getAttribute("data-image");
             const siteName = embedEl.getAttribute("data-site-name") || safeHostnameForShare(url);
 
-            const imageHtml = image
-                ? `<div class="link-embed-card-image-wrapper"><img class="link-embed-card-image" src="${escapeHtml(image)}" alt="" loading="lazy"></div>`
-                : `<div class="link-embed-card-image-wrapper"><div class="link-embed-card-image-placeholder">&#128279;</div></div>`;
+            // The wrapper is there either way: it is what gives the card's left column its size, so
+            // a card without a picture keeps the same shape as one with it.
+            const imageHtml = `<div class="link-embed-card-image-wrapper">`
+                + renderPicture(embedEl.getAttribute("data-image"), {
+                    className: "link-embed-card-image",
+                    placeholder: `<div class="link-embed-card-image-placeholder">&#128279;</div>`
+                })
+                + `</div>`;
             const descHtml = description ? `<div class="link-embed-card-description">${escapeHtml(description)}</div>` : "";
+            const urlHtml = `<div class="link-embed-card-url">`
+                + renderFavicon(embedEl.getAttribute("data-favicon"))
+                + `<span>${escapeHtml(siteName)}</span></div>`;
 
-            embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">` +
+            embedEl.innerHTML = `<a class="link-embed-card" href="${escapeHtml(safeLinkPreviewHref(url))}" target="_blank" rel="noopener noreferrer">` +
                 imageHtml +
-                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}<div class="link-embed-card-url">${escapeHtml(siteName)}</div></div></a>`;
+                `<div class="link-embed-card-content"><div class="link-embed-card-title">${escapeHtml(title)}</div>${descHtml}${urlHtml}</div></a>`;
         }
     }
 
-    // Process include notes.
+    // Process include notes. The share view renders only the first level of inclusion; static export
+    // (expandNestedIncludes) keeps expanding recursively. seenNoteIds tracks the current ancestor
+    // path (cloned per descent below) so the recursive path can break cycles without treating a note
+    // included in two sibling sub-trees as circular.
+    const seenNoteIds = new Set(options.seenNoteIds);
+    seenNoteIds.add(note.noteId);
     for (const includeNoteEl of document.querySelectorAll("section.include-note")) {
         const noteId = includeNoteEl.getAttribute("data-note-id");
         if (!noteId) continue;
 
-        const note = shaca.getNote(noteId);
-        if (!note) continue;
+        const includedNote = shaca.getNote(noteId);
+        if (!includedNote) continue;
 
-        const includedResult = getContent(note);
+        // An include must not disclose what a direct request for the same note would refuse: a note
+        // carrying `shareCredentials` the caller has not presented becomes a placeholder, and its
+        // title is withheld too, since an included note need not appear in the visible share tree.
+        if (options.canAccessInclude && !options.canAccessInclude(includedNote)) {
+            includeNoteEl.replaceWith(...parse(`<p class="include-note-forbidden">${escapeHtml(t("content_renderer.included-note-requires-credentials"))}</p>`, parseOpts).childNodes);
+            continue;
+        }
+
+        // Deeper-than-first-level includes (and any cycle in the recursive path) degrade to a
+        // reference link that the link-processing passes below resolve to the shared note.
+        if (options.includesAsReferenceLinks || seenNoteIds.has(noteId)) {
+            includeNoteEl.replaceWith(...parse(`<a class="reference-link" href="#root/${escapeHtml(noteId)}">${escapeHtml(includedNote.title)}</a>`, parseOpts).childNodes);
+            continue;
+        }
+
+        const includedResult = getContent(includedNote, options.expandNestedIncludes
+            ? { expandNestedIncludes: true, seenNoteIds: new Set(seenNoteIds), canAccessInclude: options.canAccessInclude }
+            : { includesAsReferenceLinks: true, seenNoteIds: new Set(seenNoteIds), canAccessInclude: options.canAccessInclude });
         if (typeof includedResult.content !== "string") continue;
 
         const includedDocument = parse(includedResult.content, parseOpts).childNodes;
@@ -420,7 +543,13 @@ function renderText(result: Result, note: SNote | BNote) {
                 continue;
             }
 
-            const highlightResult = highlightAuto(codeEl.text);
+            // codeEl.text recursively traverses the node's subtree, so read it once.
+            const codeText = codeEl.text;
+            if (!shouldSyntaxHighlight(codeText)) {
+                continue;
+            }
+
+            const highlightResult = highlightAuto(codeText);
             codeEl.innerHTML = highlightResult.value;
             codeEl.classList.add("hljs");
         }
@@ -448,7 +577,7 @@ function handleAttachmentLink(linkEl: HTMLElement, href: string, getNote: GetNot
             linkEl.appendChild(new TextNode(attachment.title));
         } else {
             linkEl.removeAttribute("href");
-            log.error(`Broken attachment link detected in shared note: unable to find attachment with ID ${attachmentId}`);
+            getLog().error(`Broken attachment link detected in shared note: unable to find attachment with ID ${attachmentId}`);
         }
     } else {
         const [notePath] = href.split("?");
@@ -468,7 +597,7 @@ function handleAttachmentLink(linkEl: HTMLElement, href: string, getNote: GetNot
             }
             linkEl.classList.add(`type-${linkedNote.type}`);
         } else {
-            log.error(`Broken link detected in shared note: unable to find note with ID ${noteId}`);
+            getLog().error(`Broken link detected in shared note: unable to find note with ID ${noteId}`);
             linkEl.removeAttribute("href");
         }
     }
@@ -526,12 +655,39 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
             continue;
         }
 
-        const highlightResult = highlightAuto(codeEl.text);
+        // codeEl.text recursively traverses the node's subtree, so read it once.
+        const codeText = codeEl.text;
+        if (!shouldSyntaxHighlight(codeText)) {
+            continue;
+        }
+
+        const highlightResult = highlightAuto(codeText);
         codeEl.innerHTML = highlightResult.value;
         codeEl.classList.add("hljs");
     }
 
     result.content = document.innerHTML;
+}
+
+/**
+ * Whether a code block is small enough to syntax-highlight server-side. Highlighting (especially
+ * `highlightAuto`, which probes every registered language) scales with content size and would block
+ * the single Node event loop on very large code, so blocks beyond {@link HIGHLIGHT_MAX_LINE_COUNT}
+ * lines or {@link HIGHLIGHT_MAX_CHAR_COUNT} characters are left unhighlighted.
+ */
+export function shouldSyntaxHighlight(code: string) {
+    if (code.length > HIGHLIGHT_MAX_CHAR_COUNT) {
+        return false;
+    }
+
+    let lineCount = 1;
+    let index = -1;
+    while ((index = code.indexOf("\n", index + 1)) !== -1) {
+        if (++lineCount > HIGHLIGHT_MAX_LINE_COUNT) {
+            return false;
+        }
+    }
+    return true;
 }
 
 /**
@@ -541,9 +697,13 @@ export function renderCode(result: Result) {
     if (typeof result.content !== "string" || !result.content?.trim()) {
         result.isEmpty = true;
     } else {
-        const preEl = new HTMLElement("pre", {});
-        preEl.appendChild(new TextNode(result.content));
-        result.content = preEl.outerHTML;
+        // Escape the raw code so that any `<`/`>` it contains are not later re-parsed as HTML.
+        // When such a code note is included into a shared text note, renderText re-parses the
+        // resulting HTML; with unescaped angle brackets (e.g. generics, comparisons, JSX) a large
+        // code note would explode into a pathological node-html-parser tree and hang the event
+        // loop (#9717). The <code> wrapper additionally lets renderText apply syntax highlighting,
+        // bounded by shouldSyntaxHighlight().
+        result.content = `<pre><code>${escapeHtml(result.content)}</code></pre>`;
     }
 }
 
@@ -581,13 +741,61 @@ function renderSpreadsheet(result: Result) {
     }
 }
 
+/**
+ * Renders a web view note as the frame that embeds its source.
+ *
+ * The frame is built as an element rather than assembled as a string: `setAttribute()` escapes the
+ * value it is handed, so the source is placed as a value and can only ever be read back as one.
+ */
 function renderWebView(note: SNote | BNote, result: Result) {
     const url = note.getLabelValue("webViewSrc");
     if (!url) return;
 
-    result.content = `<iframe class="webview" src="${sanitize.sanitizeUrl(url)}" sandbox="allow-same-origin allow-scripts allow-popups"></iframe>`;
+    if (!isFramableSource(url)) {
+        getLog().error(`Web view of shared note '${note.noteId}' not rendered: '${url}' is neither an absolute http(s) URL nor a path on this site.`);
+        return;
+    }
+
+    const frame = new HTMLElement("iframe", { class: "webview" });
+    frame.setAttribute("src", sanitize.sanitizeUrl(url));
+    // The embedded page keeps its own origin, may run scripts and may open windows. Keeping the
+    // origin is what lets the pages a web view is normally pointed at use their cookies and
+    // storage, but it also means a page served from this very origin is not isolated from the page
+    // embedding it; only dropping allow-same-origin would isolate it.
+    frame.setAttribute("sandbox", "allow-same-origin allow-scripts allow-popups");
+    result.content = frame.toString();
 }
 
+/**
+ * True when a web view's source is one the share page may frame: an absolute http(s) URL, or a path
+ * rooted at the site serving the page.
+ *
+ * Those two are what a web view is documented to take — the setup form writes the first, and the
+ * user guide's API reference pages carry the second to reach the Redoc and TypeDoc output the docs
+ * build writes beside them. Any other value reaches the label by another route — a hand-edited
+ * attribute, an import, ETAPI, a sync — and is either not framable at all or leaves the site while
+ * looking rooted at it.
+ *
+ * A rooted path is resolved against a base no source can name, so anything that reaches a different
+ * origin is rejected however it spelled the authority: `sanitizeUrl()` passes `//example.com` and
+ * `/\example.com` through untouched, and the URL parser folds a backslash, and strips a tab, into
+ * the second slash that starts one.
+ */
+function isFramableSource(url: string): boolean {
+    if (isHttpUrl(url)) {
+        return true;
+    }
+
+    if (!url.startsWith("/")) {
+        return false;
+    }
+
+    try {
+        return new URL(url, SAME_SITE_BASE).origin === SAME_SITE_ORIGIN;
+    } catch {
+        return false;
+    }
+}
 
 
 function safeHostnameForShare(url: string): string {

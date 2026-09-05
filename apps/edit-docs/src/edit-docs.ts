@@ -1,16 +1,14 @@
 import debounce from "@triliumnext/client/src/services/debounce.js";
-import type { AdvancedExportOptions, ExportFormat } from "@triliumnext/core";
-import cls from "@triliumnext/server/src/services/cls.js";
-import type NoteMeta from "@triliumnext/server/src/services/meta/note_meta.js";
-import type { NoteMetaFile } from "@triliumnext/server/src/services/meta/note_meta.js";
+import type { AdvancedExportOptions, ExportFormat, NoteMeta, NoteMetaFile } from "@triliumnext/core";
+import { cls } from "@triliumnext/core";
 
-import { parseNoteMetaFile, serverTextNoteHandler, standaloneTextNoteHandler } from "./help_meta_generator.js";
+import { parseNoteMetaFile, serverTextNoteHandler, standaloneTextNoteHandler, stripAppVersion } from "./help_meta_generator.js";
 import fs from "fs/promises";
-import yaml from "js-yaml";
+import { load } from "js-yaml";
 import path from "path";
 
 import packageJson from "../package.json" with { type: "json" };
-import { extractZip, importData, initializeEditDocsCore, startElectron } from "./utils.js";
+import { extractZip, importData, initializeEditDocsCore, rewriteHelpLinks, startElectron } from "./utils.js";
 
 interface NoteMapping {
     rootNoteId: string;
@@ -100,7 +98,7 @@ async function loadConfig() {
     }
 
     const configContent = await fs.readFile(CONFIG_PATH, "utf-8");
-    const config = yaml.load(configContent) as Config;
+    const config = load(configContent) as Config;
 
     BASE_URL = config.baseUrl;
     // Resolve all paths relative to the config file's directory (for flexibility with external configs)
@@ -140,7 +138,7 @@ async function main() {
 }
 
 async function setOptions() {
-    const optionsService = (await import("@triliumnext/server/src/services/options.js")).default;
+    const { options: optionsService } = await import("@triliumnext/core");
     const sql = (await import("@triliumnext/server/src/services/sql.js")).default;
 
     optionsService.setOption("eraseUnusedAttachmentsAfterSeconds", 10);
@@ -185,14 +183,7 @@ async function exportData(noteId: string, format: ExportFormat, outputPath: stri
                         return url ? `href="${url}"` : match;
                     });
 
-                    content = content.replace(/href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)[^"]*"/g, (match, targetNoteId) => {
-                        const components = match.split("/");
-                        components[components.length - 1] = `_help_${components[components.length - 1]}`;
-                        return components.join("/");
-                    });
-
-                    // Remove data-list-item-id created by CKEditor for lists
-                    content = content.replace(/ data-list-item-id="[^"]*"/g, "");
+                    content = rewriteHelpLinks(content);
 
                     return content;
 
@@ -255,7 +246,7 @@ async function cleanUpMeta(outputPath: string, minify: boolean) {
         const standaloneMetaPath = path.resolve(__dirname, "../../standalone/src/assets/help_meta.json");
         await fs.writeFile(standaloneMetaPath, JSON.stringify(standaloneSubtree));
     } else {
-        await fs.writeFile(metaPath, JSON.stringify(meta, null, 4));
+        await fs.writeFile(metaPath, JSON.stringify(stripAppVersion(meta), null, 4));
     }
 
 }

@@ -1,22 +1,28 @@
 import server from "./server.js";
 import appContext from "../components/app_context.js";
+import { formatShortcut, joinShortcut } from "./keyboard_shortcut_display.js";
 import shortcutService, { ShortcutBinding } from "./shortcuts.js";
+import { isPreAuthScreen } from "./utils.js";
 import type Component from "../components/component.js";
 import type { ActionKeyboardShortcut } from "@triliumnext/commons";
 
 const keyboardActionRepo: Record<string, ActionKeyboardShortcut> = {};
 
-const keyboardActionsLoaded = server.get<ActionKeyboardShortcut[]>("keyboard-actions").then((actions) => {
-    actions = actions.filter((a) => !!a.actionName); // filter out separators
+// Skip on the login / set-password pre-auth screens, where an unauthenticated
+// GET /api/keyboard-actions would 401 (#10589); those screens bind no shortcuts.
+const keyboardActionsLoaded: Promise<ActionKeyboardShortcut[]> = isPreAuthScreen()
+    ? Promise.resolve([])
+    : server.get<ActionKeyboardShortcut[]>("keyboard-actions").then((actions) => {
+        actions = actions.filter((a) => !!a.actionName); // filter out separators
 
-    for (const action of actions) {
-        action.effectiveShortcuts = (action.effectiveShortcuts ?? []).filter((shortcut) => !shortcut.startsWith("global:"));
+        for (const action of actions) {
+            action.effectiveShortcuts = (action.effectiveShortcuts ?? []).filter((shortcut) => !shortcut.startsWith("global:"));
 
-        keyboardActionRepo[action.actionName] = action;
-    }
+            keyboardActionRepo[action.actionName] = action;
+        }
 
-    return actions;
-});
+        return actions;
+    });
 
 async function getActions() {
     return await keyboardActionsLoaded;
@@ -48,13 +54,22 @@ async function setupActionsForElement(scope: string, $el: JQuery<HTMLElement>, c
     return bindings;
 }
 
-getActionsForScope("window").then((actions) => {
+/**
+ * Binds every window-scoped action (jump to note, reload, tab switching, …) as a global shortcut
+ * routed through `appContext.triggerCommand`. `AppContext.initComponents()` calls this once
+ * `appContext.tabManager` exists; binding at module load instead left a window during startup in
+ * which a matching keypress (F5 held across a reload, for instance) threw on the missing tab manager.
+ */
+async function setupWindowShortcuts() {
+    const actions = await getActionsForScope("window");
+
     for (const action of actions) {
+        /* v8 ignore next -- effectiveShortcuts is always normalized to an array by the loader (line 13) before this resolves, so the ?? [] fallback is unreachable */
         for (const shortcut of action.effectiveShortcuts ?? []) {
             shortcutService.bindGlobalShortcut(shortcut, () => appContext.triggerCommand(action.actionName, { ntxId: appContext.tabManager.activeNtxId }));
         }
     }
-});
+}
 
 async function getAction(actionName: string, silent = false) {
     await keyboardActionsLoaded;
@@ -88,7 +103,7 @@ function updateDisplayedShortcuts($container: JQuery<HTMLElement>) {
         const action = await getAction(actionName, true);
 
         if (action) {
-            const keyboardActions = (action.effectiveShortcuts ?? []).join(", ");
+            const keyboardActions = formatShortcutList(action.effectiveShortcuts);
 
             if (keyboardActions || $(el).text() !== "not set") {
                 $(el).text(keyboardActions);
@@ -107,7 +122,7 @@ function updateDisplayedShortcuts($container: JQuery<HTMLElement>) {
 
         if (action) {
             const title = $(el).attr("title");
-            const shortcuts = (action.effectiveShortcuts ?? []).join(", ");
+            const shortcuts = formatShortcutList(action.effectiveShortcuts);
 
             if (title?.includes(shortcuts)) {
                 return;
@@ -122,8 +137,14 @@ function updateDisplayedShortcuts($container: JQuery<HTMLElement>) {
 
 export default {
     updateDisplayedShortcuts,
+    setupWindowShortcuts,
     setupActionsForElement,
     getAction,
     getActions,
     getActionsForScope
 };
+
+/** Renders a list of stored shortcuts into a localized, comma-separated display string. */
+function formatShortcutList(shortcuts: string[] | undefined) {
+    return (shortcuts ?? []).map((shortcut) => joinShortcut(formatShortcut(shortcut))).join(", ");
+}

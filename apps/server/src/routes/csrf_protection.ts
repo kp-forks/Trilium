@@ -3,6 +3,8 @@ import type { NextFunction, Request, Response } from "express";
 
 import { isInternalElectronRequest } from "../services/electron_request.js";
 import sessionSecret from "../services/session_secret.js";
+import config from "../services/config.js";
+import sqlInit from "../services/sql_init.js";
 
 export const CSRF_COOKIE_NAME = "trilium-csrf";
 
@@ -10,7 +12,7 @@ const doubleCsrfUtilities = doubleCsrf({
     getSecret: () => sessionSecret,
     cookieOptions: {
         path: "/",
-        secure: false,
+        secure: config.Network.https,
         sameSite: "strict",
         httpOnly: true
     },
@@ -29,6 +31,14 @@ export const { generateCsrfToken } = doubleCsrfUtilities;
 // `services/auth.ts`.
 export function doubleCsrfProtection(req: Request, res: Response, next: NextFunction) {
     if (isInternalElectronRequest(req)) {
+        return next();
+    }
+    // Before the DB is initialized, sessions are never persisted (SQLiteSessionStore
+    // no-ops), so every request carries a fresh session id and the session-bound CSRF
+    // token can never validate — protected endpoints the setup wizard needs (sync/now
+    // for resume/retry of the initial sync) would always 403. CSRF also has nothing to
+    // protect at this stage: there is no authenticated session to ride. See #10548.
+    if (!sqlInit.isDbInitialized()) {
         return next();
     }
     return doubleCsrfUtilities.doubleCsrfProtection(req, res, next);

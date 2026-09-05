@@ -34,7 +34,7 @@ jobs:
           - dockerfile: Dockerfile
     steps:
       - name: Checkout the repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set IMAGE_NAME to lowercase
         run: echo "IMAGE_NAME=${IMAGE_NAME,,}" >> $GITHUB_ENV
@@ -46,7 +46,7 @@ jobs:
 
       - uses: pnpm/action-setup@v6
       - name: Set up node & dependencies
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: "pnpm"
@@ -72,6 +72,7 @@ jobs:
 
       - name: Validate container run output
         run: |
+          cp packages/trilium-core/src/test/fixtures/document.db apps/server/spec/db/document.db
           CONTAINER_ID=$(docker run -d --log-driver=journald --rm --network=host -e TRILIUM_PORT=8082 --volume ./apps/server/spec/db:/home/node/trilium-data --name trilium_local ${{ env.TEST_TAG }})
           echo "Container ID: $CONTAINER_ID"
 
@@ -108,6 +109,9 @@ jobs:
 
   build:
     name: Build Docker images
+    # Only the main repository publishes. merge declares needs: build, so it skips with
+    # this job; test_docker stays unguarded because it uses no secrets.
+    if: ${{ github.repository == vars.REPO_MAIN }}
     strategy:
       fail-fast: false
       matrix:
@@ -143,10 +147,10 @@ jobs:
         run: echo "TEST_TAG=${TEST_TAG,,}" >> $GITHUB_ENV
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - name: Set up node & dependencies
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: 'pnpm'
@@ -231,7 +235,7 @@ jobs:
         run: echo "TEST_TAG=${TEST_TAG,,}" >> $GITHUB_ENV
 
       - name: Set up crane
-        uses: imjasonh/setup-crane@v0.5
+        uses: imjasonh/setup-crane@v0.7
 
       - name: Login to GHCR
         uses: docker/login-action@v4

@@ -13,11 +13,13 @@ import { downloadFileNote, openNoteExternally } from "../../services/open";
 import { createImageSrcUrl, isMobile, openInAppHelpFromUrl } from "../../services/utils";
 import { ViewTypeOptions } from "../collections/interface";
 import { buildSaveSqlToNoteHandler } from "../FloatingButtonsDefinitions";
+import { showImageCompressionDialog } from "../dialogs/image_compression/image_compression_dialog";
 import ActionButton, { ActionButtonProps } from "../react/ActionButton";
 import { ButtonGroup } from "../react/Button";
 import { FormFileUploadActionButton, FormFileUploadFormListItem, FormFileUploadProps } from "../react/FormFileUpload";
 import { FormListItem } from "../react/FormList";
-import { useNoteLabel, useNoteLabelBoolean, useNoteProperty, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
+import { useEffectiveReadOnly, useNoteLabel, useNoteLabelBoolean, useNoteProperty, useTriliumEvent, useTriliumEvents, useTriliumOption } from "../react/hooks";
+import { isSplitEditorForcedReadOnly, resolveDisplayMode } from "../type_widgets/helpers/split_editor_mode";
 import { ParentComponent } from "../react/react_utils";
 import { buildUploadNewFileRevisionListener } from "./FilePropertiesTab";
 import { buildUploadNewImageRevisionListener } from "./ImagePropertiesTab";
@@ -70,7 +72,6 @@ export default function NoteActionsCustom(props: NoteActionsCustomProps) {
             ref={containerRef}
             className="note-actions-custom"
         >
-            <AddChildButton {...innerProps} />
             <RunActiveNoteButton {...innerProps } />
             <SwitchSplitOrientationButton {...innerProps} />
             <DisplayModeSwitcher {...innerProps} />
@@ -112,6 +113,7 @@ function ImageActions(props: NoteActionsCustomInnerProps) {
             <UploadNewRevisionButton {...props} onChange={buildUploadNewImageRevisionListener(props.note)} />
             <OpenExternallyButton {...props} />
             <DownloadFileButton {...props} />
+            <CompressImageButton {...props} />
         </>
     );
 }
@@ -138,6 +140,21 @@ function OpenExternallyButton({ note, noteMime }: NoteActionsCustomInnerProps) {
             text={t("file_properties.open")}
             disabled={note.isProtected}
             onClick={() => openNoteExternally(note.noteId, noteMime)}
+        />
+    );
+}
+
+/**
+ * Shrinks the picture being looked at, and only it — the mime is what tells the dialog it is aimed
+ * at one image rather than at everything a note holds.
+ */
+function CompressImageButton({ note, noteMime }: NoteActionsCustomInnerProps) {
+    return (
+        <NoteAction
+            icon="bx bx-collapse-alt"
+            text={t("compress-image")}
+            disabled={!note.isContentAvailable()}
+            onClick={() => void showImageCompressionDialog({ type: "note", noteId: note.noteId, mime: noteMime })}
         />
     );
 }
@@ -206,12 +223,14 @@ function SwitchSplitOrientationButton({ note, isReadOnly, isDefaultViewMode }: N
     />;
 }
 
-function DisplayModeSwitcher({ note, isDefaultViewMode }: NoteActionsCustomInnerProps) {
+function DisplayModeSwitcher({ note, noteContext, isDefaultViewMode }: NoteActionsCustomInnerProps) {
     const [ displayMode, setDisplayMode ] = useNoteLabel(note, "displayMode");
-    const isEnabled = (note.isMarkdown() || note.type === "mermaid") && note.isContentAvailable() && isDefaultViewMode;
+    const readOnly = useEffectiveReadOnly(note, noteContext);
+    const isEnabled = (note.isMarkdown() || note.type === "mermaid" || note.isIconPack()) && note.isContentAvailable() && isDefaultViewMode;
     if (!isEnabled) return null;
 
-    const mode = displayMode === "source" || displayMode === "preview" ? displayMode : "split";
+    // Mirror SplitEditor's mode resolution so the active button matches the actual pane.
+    const mode = resolveDisplayMode(displayMode, readOnly || isSplitEditorForcedReadOnly(note));
     const buttons: Array<{ value: "source" | "split" | "preview"; icon: string; text: string }> = [
         { value: "source", icon: "bx bx-code", text: t("display_mode.source") },
         { value: "split", icon: "bx bxs-dock-left", text: t("display_mode.split") },
@@ -296,16 +315,6 @@ function InAppHelpButton({ note }: NoteActionsCustomInnerProps) {
     );
 }
 
-function AddChildButton({ parentComponent, noteType, ntxId, isReadOnly }: NoteActionsCustomInnerProps) {
-    if (noteType === "relationMap") {
-        return <NoteAction
-            icon="bx bx-folder-plus"
-            text={t("relation_map_buttons.create_child_note_title")}
-            onClick={() => parentComponent.triggerEvent("relationMapCreateChildNote", { ntxId })}
-            disabled={isReadOnly}
-        />;
-    }
-}
 //#endregion
 
 function NoteAction({ text, active, ...props }: Pick<ActionButtonProps, "text" | "icon" | "disabled" | "triggerCommand" | "active"> & {

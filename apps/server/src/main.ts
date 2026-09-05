@@ -9,8 +9,8 @@ import { t } from "i18next";
 import path from "path";
 
 import ServerBackupService from "./backup_provider.js";
-import ClsHookedExecutionContext from "./cls_provider.js";
-import { getIntegrationTestDbPath, loadCoreSchema } from "./core_assets.js";
+import AsyncLocalStorageExecutionContext from "./cls_provider.js";
+import { loadCoreSchema } from "./core_assets.js";
 import NodejsCryptoProvider from "./crypto_provider.js";
 import NodejsInAppHelpProvider from "./in_app_help_provider.js";
 import ServerLogService from "./log_provider.js";
@@ -19,6 +19,7 @@ import dataDirs from "./services/data_dir.js";
 import port from "./services/port.js";
 import NodeRequestProvider from "./services/request.js";
 import { RESOURCE_DIR } from "./services/resource_dir.js";
+import { consumeSetupMarker, setupPlatform } from "./services/setup_marker.js";
 import WebSocketMessagingProvider from "./services/ws_messaging_provider.js";
 import BetterSqlite3Provider from "./sql_provider.js";
 import NodejsZipProvider from "./zip_provider.js";
@@ -27,14 +28,17 @@ async function startApplication() {
     const config = (await import("./services/config.js")).default;
     const { DOCUMENT_PATH } = (await import("./services/data_dir.js")).default;
 
+    // Before anything opens the database: a restore that was interrupted between moving the old
+    // document aside and opening the new one is undone here, so the instance starts on a database
+    // that is whole rather than on whichever half the interruption left behind.
+    (await import("./services/database_restore.js")).recoverInterruptedRestore();
+
     const dbProvider = new BetterSqlite3Provider();
     if (process.env.TRILIUM_INTEGRATION_TEST === "memory") {
-        // Integration test mode: load the same fixture buffer used by the
-        // unit test setup so e2e tests get a known-good starting state
-        // (schema + demo content + known password) without touching disk.
-        // getIntegrationTestDbPath() handles the bundled-vs-source path
-        // resolution; see core_assets.ts.
-        dbProvider.loadFromBuffer(fs.readFileSync(getIntegrationTestDbPath()));
+        // Load the database file into memory so mutations don't persist to
+        // disk between test runs. The fixture is provided externally (e.g.
+        // copied into the data dir by CI or the Playwright config).
+        dbProvider.loadFromBuffer(fs.readFileSync(DOCUMENT_PATH));
     } else {
         dbProvider.loadFromFile(DOCUMENT_PATH, config.General.readOnly);
     }
@@ -45,32 +49,33 @@ async function startApplication() {
         dbConfig: {
             provider: dbProvider,
             isReadOnly: config.General.readOnly,
-            async onTransactionCommit() {
-                const ws = (await import("./services/ws.js")).default;
-                ws.sendTransactionEntityChangesToAllClients();
+            onTransactionCommit() {
+                // Core types these hooks as synchronous (() => void) and invokes them without
+                // awaiting, so the dynamic import must stay fire-and-forget rather than async.
+                void import("@triliumnext/core").then(({ ws }) => {
+                    ws.sendTransactionEntityChangesToAllClients();
+                });
             },
-            async onTransactionRollback() {
-                const cls = (await import("./services/cls.js")).default;
-                const becca_loader = (await import("@triliumnext/core")).becca_loader;
-                const entity_changes = (await import("./services/entity_changes.js")).default;
+            onTransactionRollback() {
+                void import("@triliumnext/core").then(({ cls, becca_loader, entity_changes }) => {
+                    const entityChangeIds = cls.getAndClearEntityChangeIds();
 
-                const entityChangeIds = cls.getAndClearEntityChangeIds();
+                    if (entityChangeIds.length > 0) {
+                        logService.info("Transaction rollback dirtied the becca, forcing reload.");
 
-                if (entityChangeIds.length > 0) {
-                    logService.info("Transaction rollback dirtied the becca, forcing reload.");
+                        becca_loader.load();
+                    }
 
-                    becca_loader.load();
-                }
-
-                // the maxEntityChangeId has been incremented during failed transaction, need to recalculate
-                entity_changes.recalculateMaxEntityChangeId();
+                    // the maxEntityChangeId has been incremented during failed transaction, need to recalculate
+                    entity_changes.recalculateMaxEntityChangeId();
+                });
             }
         },
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
         zipExportProviderFactory: (await import("./services/export/zip/factory.js")).serverZipExportProviderFactory,
         request: new NodeRequestProvider(),
-        executionContext: new ClsHookedExecutionContext(),
+        executionContext: new AsyncLocalStorageExecutionContext(),
         messaging: new WebSocketMessagingProvider(),
         schema: loadCoreSchema(),
         platform: new ServerPlatformProvider(),
@@ -84,6 +89,9 @@ async function startApplication() {
         backup: new ServerBackupService(options),
         image: (await import("./services/image_provider.js")).serverImageProvider,
         config,
+        // Read before core exists, because what it says is whether to open the database at all.
+        setupMarker: consumeSetupMarker(),
+        setupPlatform,
         extraAppInfo: {
             nodeVersion: process.version,
             dataDirectory: path.resolve(dataDirs.TRILIUM_DATA_DIR)
@@ -97,4 +105,7 @@ async function startApplication() {
     }
 }
 
-startApplication();
+startApplication().catch((err) => {
+    console.error("Fatal error during Trilium server startup:", err);
+    process.exit(1);
+});

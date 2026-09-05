@@ -10,31 +10,46 @@ import { useEffect, useLayoutEffect, useMemo, useRef as usePreactRef } from "pre
 
 import appContext from "../../../components/app_context";
 import FNote from "../../../entities/fnote";
+import { consumeBookmark } from "../../../services/bookmark_jump";
 import { applyInlineMermaid, rewriteMermaidDiagramsInContainer } from "../../../services/content_renderer_text";
-import { getLocaleById } from "../../../services/i18n";
 import { applyLinkEmbeds } from "../../../services/link_embed";
 import { renderMathInElement } from "../../../services/math";
+import { trackPendingRender } from "../../../services/pending_renders";
+import { consumeSearchTerms } from "../../../services/search_jump";
 import { formatCodeBlocks } from "../../../services/syntax_highlight";
-import { useNoteBlob, useNoteLabel, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import { isContentRightToLeft } from "../../../utils/formatters";
+import { useNoteBlob, useNoteLabel, useSearchTermsConsumer, useSyncedRef, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import { TypeWidgetProps } from "../type_widget";
 import { applyReferenceLinks } from "./read_only_helper";
 import { loadIncludedNote, refreshIncludedNote, setupImageOpening } from "./utils";
 
-export default function ReadOnlyText({ note, noteContext, ntxId }: TypeWidgetProps) {
-    const blob = useNoteBlob(note);
+export default function ReadOnlyText({ note, noteContext, ntxId, parentComponent, isVisible }: TypeWidgetProps) {
+    // The componentId matters: the WS echo of a save made by the editable-text editor in the same
+    // split carries the shared parent component's id. Without it, this widget — kept mounted but
+    // hidden while the user temporarily edits an auto-read-only note — would refetch the whole blob
+    // after every save and flash the loading overlay over the editor (#10575). Skipped own-component
+    // changes are caught up on via refreshOnShow when this view is displayed again.
+    const blob = useNoteBlob(note, parentComponent?.componentId, {
+        reportLoadStateTo: noteContext,
+        isVisible,
+        refreshOnShow: true
+    });
     const { isRtl } = useNoteLanguage(note);
     const readOnlyContentRef = usePreactRef<HTMLDivElement>(null);
 
-    // Scroll to bookmark anchor if navigated with ?bookmark=...
+    // Scroll to bookmark anchor if navigated with ?bookmark=... The blob gate skips the mount run,
+    // which fires against an empty container while the content is still loading.
     useEffect(() => {
-        const viewScope = noteContext?.viewScope;
-        if (!viewScope?.bookmark || !readOnlyContentRef.current) return;
-
-        const el = readOnlyContentRef.current.querySelector(`[id="${CSS.escape(viewScope.bookmark)}"]`);
-        el?.scrollIntoView({ behavior: "smooth", block: "center" });
-        viewScope.bookmark = undefined;
+        if (!blob) return;
+        consumeBookmark(readOnlyContentRef.current, noteContext?.viewScope);
     }, [blob]);
+
+    // Jump to the first search match when navigated from search results.
+    useEffect(() => {
+        if (blob) consumeSearchTerms(noteContext, ntxId);
+    }, [blob]);
+    useSearchTermsConsumer(note, noteContext, ntxId);
 
     return (
         <>
@@ -87,13 +102,20 @@ export function ReadOnlyTextContent({ html, ntxId, dir, className, contentRef: e
             appContext.triggerEvent("contentElRefreshed", { ntxId, contentEl: container });
         }
 
-        rewriteMermaidDiagramsInContainer(container);
-        applyInlineMermaid(container);
-        applyIncludedNotes(container);
-        applyLinkEmbeds(container);
+        // The passes that lazily load their library (mermaid, highlight.js) — plus included notes,
+        // which render a whole note of their own — finish after this effect returns. On screen they
+        // simply paint when ready; a caller that snapshots the DOM instead (printing) has to wait for
+        // them, so the work is registered rather than dropped on the floor.
+        trackPendingRender(container, Promise.all([
+            rewriteMermaidDiagramsInContainer(container),
+            applyInlineMermaid(container),
+            applyIncludedNotes(container),
+            applyLinkEmbeds(container),
+            applyReferenceLinks(container),
+            formatCodeBlocks($(container))
+        ]));
+
         applyMath(container);
-        applyReferenceLinks(container);
-        formatCodeBlocks($(container));
         setupImageOpening(container, true);
     }, [ html, ntxId, contentRef ]);
 
@@ -122,25 +144,31 @@ export function ReadOnlyTextContent({ html, ntxId, dir, className, contentRef: e
 
 function useNoteLanguage(note: FNote) {
     const [ language ] = useNoteLabel(note, "language");
-    const isRtl = useMemo(() => {
-        const correspondingLocale = getLocaleById(language);
-        return correspondingLocale?.rtl;
-    }, [ language ]);
+    // Resolved rather than read straight off the label, so a note with no language of its own still
+    // lays out the way the default content language says it should.
+    // The default is subscribed to as well: `isContentRightToLeft` reads the options store directly,
+    // so without it a note carrying no label of its own would keep its old direction until reopened.
+    const [ defaultContentLanguage ] = useTriliumOption("defaultContentLanguage");
+    const isRtl = useMemo(() => isContentRightToLeft(language), [ language, defaultContentLanguage ]);
     return { isRtl };
 }
 
 function applyIncludedNotes(container: HTMLDivElement) {
+    const loaded: Promise<unknown>[] = [];
     const includedNotes = container.querySelectorAll<HTMLElement>("section.include-note");
     for (const includedNote of includedNotes) {
         const noteId = includedNote.dataset.noteId;
         if (!noteId) continue;
-        loadIncludedNote(noteId, $(includedNote));
+        loaded.push(loadIncludedNote(noteId, $(includedNote)));
     }
+    return Promise.all(loaded);
 }
 
 function applyMath(container: HTMLDivElement) {
     const equations = container.querySelectorAll("span.math-tex");
     for (const equation of equations) {
-        renderMathInElement(equation, { trust: true });
+        // throwOnError: false renders invalid formulas as an inline red error (with the
+        // parse message as a tooltip) instead of throwing and logging to the console.
+        renderMathInElement(equation, { trust: true, throwOnError: false });
     }
 }

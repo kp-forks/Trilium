@@ -1,6 +1,7 @@
 import utils from "../services/utils.js";
 import SAttachment from "../share/shaca/entities/sattachment.js";
 import SAttribute from "../share/shaca/entities/sattribute.js";
+import SBranch from "../share/shaca/entities/sbranch.js";
 import SNote from "../share/shaca/entities/snote.js";
 import shaca from "../share/shaca/shaca.js";
 
@@ -17,6 +18,8 @@ interface AttachementDefinition {
 interface NoteDefinition extends AttributeDefinitions, RelationDefinitions {
     id?: string | undefined;
     title?: string;
+    type?: string;
+    mime?: string;
     content?: string | Buffer<ArrayBufferLike>;
     children?: NoteDefinition[];
     attachments?: AttachementDefinition[];
@@ -53,16 +56,17 @@ export function buildShareNote(noteDef: NoteDefinition) {
     const note = new SNote([
         noteDef.id ?? utils.randomString(12),
         noteDef.title ?? "New note",
-        "text",
-        "text/html",
+        noteDef.type ?? "text",
+        noteDef.mime ?? "text/html",
         blobId,
         new Date().toUTCString(),   // utcDateModified
         !!noteDef.isProtected
     ]);
     shaca.notes[note.noteId] = note;
 
-    // Handle content
-    if (noteDef.content) {
+    // Handle content: an explicitly empty content is still a content, as note types that keep
+    // everything in their attributes (web view) have nothing else to return.
+    if (noteDef.content !== undefined) {
         note.getContent = () => {
             if (noteDef.isProtected) return undefined;
             return noteDef.content;
@@ -84,12 +88,20 @@ export function buildShareNote(noteDef: NoteDefinition) {
         }
     }
 
-    // Handle children.
+    // Handle children. The SBranch constructor is what links the two notes, so getChildNotes()
+    // and getVisibleChildNotes() only see a child once its branch exists.
     if (noteDef.children) {
         for (const childDef of noteDef.children) {
             const childNote = buildShareNote(childDef);
 
-            // TODO: Create corresponding SBranch.
+            new SBranch([
+                utils.randomString(12),
+                childNote.noteId,
+                note.noteId,
+                "",     // prefix
+                "",     // isExpanded
+                false   // utcDateModified
+            ]);
         }
     }
 

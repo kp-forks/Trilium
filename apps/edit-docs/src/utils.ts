@@ -1,11 +1,11 @@
 import { BackupService, initializeCore } from "@triliumnext/core";
 import IpcMessagingProvider from "@triliumnext/desktop/src/ipc_messaging_provider.js";
-import { registerTriliumAppScheme } from "@triliumnext/desktop/src/protocol.js";
-import ClsHookedExecutionContext from "@triliumnext/server/src/cls_provider.js";
+import { registerTriliumAppScheme, setupTriliumAppProtocol } from "@triliumnext/desktop/src/protocol.js";
+import AsyncLocalStorageExecutionContext from "@triliumnext/server/src/cls_provider.js";
 import NodejsCryptoProvider from "@triliumnext/server/src/crypto_provider.js";
 import ServerPlatformProvider from "@triliumnext/server/src/platform_provider.js";
 import { serverImageProvider } from "@triliumnext/server/src/services/image_provider.js";
-import windowService from "@triliumnext/server/src/services/window.js";
+import windowService, { setupWindowing } from "@triliumnext/desktop/src/services/window.js";
 import BetterSqlite3Provider from "@triliumnext/server/src/sql_provider.js";
 import NodejsZipProvider from "@triliumnext/server/src/zip_provider.js";
 import { type Archiver, ZipArchive } from "archiver";
@@ -24,7 +24,7 @@ registerTriliumAppScheme();
 // Stub backup service (not used in edit-docs, but required by initializeCore)
 class StubBackupService extends BackupService {
     constructor() {
-        super({ getOption: () => "", getOptionBool: () => false, setOption: () => {} });
+        super({ getOption: () => "", getOptionOrNull: () => null, getOptionBool: () => false, setOption: () => {} });
     }
     scheduleBackups(): void {}
     async backupNow(_name: string): Promise<string> {
@@ -57,7 +57,7 @@ export async function initializeEditDocsCore() {
             provider: dbProvider,
             isReadOnly: false,
             async onTransactionCommit() {
-                const ws = (await import("@triliumnext/server/src/services/ws.js")).default;
+                const { ws } = await import("@triliumnext/core");
                 ws.sendTransactionEntityChangesToAllClients();
             },
             onTransactionRollback: () => {}
@@ -65,7 +65,7 @@ export async function initializeEditDocsCore() {
         crypto: new NodejsCryptoProvider(),
         zip: new NodejsZipProvider(),
         zipExportProviderFactory: serverZipExportProviderFactory,
-        executionContext: new ClsHookedExecutionContext(),
+        executionContext: new AsyncLocalStorageExecutionContext(),
         platform: new ServerPlatformProvider(),
         schema: readFileSync(require.resolve("@triliumnext/core/src/assets/schema.sql"), "utf-8"),
         translations: (await import("@triliumnext/server/src/services/i18n.js")).initializeTranslationsWithParams,
@@ -92,10 +92,27 @@ export function startElectron(callback: () => void): DeferredPromise<void> {
 
         // Start the server.
         const startTriliumServer = (await import("@triliumnext/server/src/www.js")).default;
-        await startTriliumServer();
+        const expressApp = await startTriliumServer();
+
+        // Install the `trilium-app://` request handler that bridges the
+        // renderer's page / asset / API requests into Express. Without this the
+        // main window navigates to `trilium-app://app/` but nothing answers it,
+        // leaving a blank screen with no requests. Desktop does the same in
+        // apps/desktop/src/main.ts.
+        setupTriliumAppProtocol(expressApp);
+
+        // Register the main-process IPC handlers the renderer relies on (window
+        // management, clipboard, and crucially the `navigation-history` channel).
+        // Without this, the renderer's synchronous `navigationCanGoBack/Forward`
+        // IPC calls hit no listener — which storms the TabHistoryNavigationButtons
+        // render loop with tens of thousands of blocking sendSync calls and pegs
+        // the renderer. Desktop registers these in apps/desktop/src/main.ts.
+        // (This also installs the WebContents security policy — webview-attach
+        // vetting, window-open/navigation guards, permission handlers.)
+        setupWindowing();
 
         // Create the main window.
-        await windowService.createMainWindow(electron.app);
+        await windowService.createMainWindow();
 
         callback();
     };
@@ -150,6 +167,36 @@ function waitForEnd(archive: Archiver, stream: WriteStream) {
         archive.on("error", rej);
         archive.finalize().catch(rej);
     });
+}
+
+/**
+ * Rewrites internal `#root/...` note links in exported help HTML so that they resolve
+ * against the help subtree once imported into a production Trilium instance.
+ *
+ * In the edit-docs instance the help notes carry plain, randomly generated IDs, but in
+ * production they live under the `_help` subtree with a `_help_` prefix. This adds that
+ * prefix to the link's target note ID, and reduces the link to that ID alone: the editor
+ * writes a full note path when a link is created, whose intermediate IDs belong to the
+ * docs instance and match nothing in the tree a reader has, leaving the client to fall
+ * back to the note's own path. The importer writes the same single-ID form, so a note
+ * exported straight after an edit now matches one that has been through an import.
+ */
+export function rewriteHelpLinks(content: string): string {
+    return content.replace(/href="([^"]*#root)(?:[a-zA-Z0-9_/]*\/)?([a-zA-Z0-9_]+)([^"]*)"/g,
+        (match, prefix: string, targetNoteId: string, suffix: string) => {
+            if (targetNoteId.startsWith("_help_")) {
+                return `href="${prefix}/${targetNoteId}${suffix}"`;
+            }
+
+            // Canonical hidden-subtree notes (e.g. _options, _optionsTextNotes) keep their IDs in
+            // production, so they already start with an underscore, and their path is a real one.
+            // Only help notes (random alphanumeric IDs) get the `_help_` prefix; prefixing the
+            // others would produce broken `_help__optionsTextNotes`-style links (see issue #9646).
+            if (targetNoteId.startsWith("_")) {
+                return match;
+            }
+            return `href="${prefix}/_help_${targetNoteId}${suffix}"`;
+        });
 }
 
 export async function createZipFromDirectory(dirPath: string, zipPath: string) {

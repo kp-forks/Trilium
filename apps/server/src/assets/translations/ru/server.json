@@ -1,12 +1,6 @@
 {
   "keyboard_actions": {
-    "open-command-palette": "Открыть палитру команд",
     "quick-search": "Активировать панель быстрого поиска",
-    "move-note-up": "Переместить заметку вверх",
-    "move-note-down": "Переместить заметку вниз",
-    "move-note-up-in-hierarchy": "Переместить заметку вверх в иерархии",
-    "move-note-down-in-hierarchy": "Переместить заметку вниз в иерархии",
-    "delete-note": "Удалить заметку",
     "back-in-note-history": "Перейти к предыдущей заметке в истории",
     "forward-in-note-history": "Перейти к следующей заметке в истории",
     "scroll-to-active-note": "Прокрутить дерево заметок до активной заметки",
@@ -25,31 +19,16 @@
     "copy-notes-to-clipboard": "Скопировать выбранные заметки в буфер обмена",
     "paste-notes-from-clipboard": "Вставить заметки из буфера обмена в активную заметку",
     "cut-notes-to-clipboard": "Вырезать выбранные заметки в буфер обмена",
-    "duplicate-subtree": "Дублировать поддерево",
     "tabs-and-windows": "Вкладки и окна",
-    "open-new-tab": "Открыть новую вкладку",
-    "close-active-tab": "Закрыть активную вкладку",
     "reopen-last-tab": "Повторно открыть последнюю закрытую вкладку",
     "open-jump-to-note-dialog": "Открыть диалоговое окно «Перейти к заметке»",
     "create-note-into-inbox": "Создать заметку в папке «Входящие» (если определено) или заметку дня",
     "edit-branch-prefix": "Показать диалоговое окно «Изменить префикс ветки»",
     "select-all-notes-in-parent": "Выбрать все заметки на текущем уровне заметок",
-    "add-note-above-to-the-selection": "Добавить заметку выше к выделению",
-    "add-note-below-to-selection": "Добавить заметку ниже к выделению",
     "activate-next-tab": "Активировать вкладку справа",
     "activate-previous-tab": "Активировать вкладку слева",
     "open-new-window": "Открыть новое пустое окно",
     "toggle-tray": "Показать/скрыть приложение из системного трея",
-    "first-tab": "Активировать первую вкладку в списке",
-    "second-tab": "Активировать вторую вкладку в списке",
-    "third-tab": "Активировать третью вкладку в списке",
-    "fourth-tab": "Активировать четвертую вкладку в списке",
-    "fifth-tab": "Активировать пятую вкладку в списке",
-    "sixth-tab": "Активировать шестую вкладку в списке",
-    "seventh-tab": "Активировать седьмую вкладку в списке",
-    "eight-tab": "Активировать восьмую вкладку в списке",
-    "ninth-tab": "Активировать девятую вкладку в списке",
-    "last-tab": "Активировать последнюю вкладку в списке",
     "dialogs": "Диалоговые окна",
     "show-note-source": "Показать диалоговое окно \"Исходный код заметки\"",
     "show-options": "Открыть страницу «Параметры»",
@@ -66,46 +45,34 @@
     "paste-markdown-into-text": "Вставляет Markdown из буфера обмена в текстовую заметку",
     "cut-into-note": "Вырезает выделенный фрагмент из текущей заметки и создает подзаметку с выбранным текстом",
     "add-include-note-to-text": "Открывает диалоговое окно для добавления заметки",
-    "edit-readonly-note": "Редактировать заметку, доступную только для чтения",
     "attributes-labels-and-relations": "Атрибуты (метки и отношения)",
     "add-new-label": "Создать новую заметку",
     "create-new-relation": "Создать новое отношение",
     "ribbon-tabs": "Вкладки ленты",
-    "toggle-basic-properties": "Перейти к общим параметрам",
-    "toggle-file-properties": "Перейти к свойствам файла",
-    "toggle-image-properties": "Перейти к свойствам изображения",
-    "toggle-owned-attributes": "Перейти к атрибутам",
-    "toggle-inherited-attributes": "Перейти к унаследованным атрибутам",
-    "toggle-promoted-attributes": "Перейти к продвигаемым атрибутам",
     "toggle-link-map": "Перейти к картуессылок",
-    "toggle-note-info": "Перейти к информации о заметке",
-    "toggle-note-paths": "Перейти к путям заметки",
-    "toggle-similar-notes": "Перейти к похожим заметкам",
     "other": "Прочее",
     "toggle-right-pane": "Включить/выключить отображение правой панели, которая включает оглавление и акценты",
-    "print-active-note": "Распечатать активную заметку",
     "open-note-externally": "Открыть заметку как файл с помощью приложения по умолчанию",
     "render-active-note": "Отрендерить (повторно отрендерить) активную заметку",
     "run-active-note": "Запуск JavaScript (фронтенд/бэкенд) из заметки с кодом",
-    "reload-frontend-app": "Перезагрузить фронтенд",
-    "open-dev-tools": "Открыть инструменты разработчика",
     "find-in-text": "Отобразить панель поиска",
     "toggle-left-note-tree-panel": "Отобразить левую панель (дерево)",
-    "toggle-full-screen": "Переключить на полный экран",
-    "zoom-out": "Уменьшить масштаб",
-    "zoom-in": "Увеличить масштаб",
     "note-navigation": "Навигация по заметке",
-    "reset-zoom-level": "Сбросить уровень масштабирования",
     "copy-without-formatting": "Скопировать выделенный текст без форматирования",
     "toggle-book-properties": "Перейти к свойствам коллекции",
     "toggle-classic-editor-toolbar": "Перейти на вкладку «Форматирование» для редактора с фиксированной панелью инструментов",
-    "export-as-pdf": "Экспортировать текущую заметку в формате PDF",
     "toggle-zen-mode": "Включает/отключает режим дзен (минимальный пользовательский интерфейс для фокусирования)",
     "toggle-note-hoisting": "Переключить фокус активной заметки",
     "unhoist": "Убрать фокус с любой заметки",
     "force-save-revision": "Принудительное создать/сохранить снимок версии активной заметки",
     "save-named-revision": "Сохранить именованную ревизию активной заметки",
-    "toggle-archived-notes": "Показать/скрыть архивные заметки в дереве заметок"
+    "toggle-archived-notes": "Показать/скрыть архивные заметки в дереве заметок",
+    "show-deleted-notes": "Показать диалог \"Удалённые заметки\"",
+    "show-space-usage": "Открыть страницу \"Использование места\"",
+    "show-shortcut-hints": "Показать сочетания клавиш для активного виджета",
+    "peek-right-pane": "Показать правую панель в виде временной панели, которая парит над содержимым и закрывается, когда теряет фокус",
+    "create-new-split": "Открыть новое пустое окно справа от активного",
+    "close-active-split": "Закрыть активное окно, оставив открытыми остальные окна вкладки"
   },
   "hidden-subtree": {
     "localization": "Язык и регион",
@@ -118,7 +85,7 @@
     "shortcuts-title": "Сочетания клавиш",
     "images-title": "Медиа",
     "spellcheck-title": "Проверка орфографии",
-    "password-title": "Пароль",
+    "password-title": "Пароль и аутентификация",
     "etapi-title": "ETAPI",
     "multi-factor-authentication-title": "MFA",
     "backup-title": "Резервное копирование",
@@ -167,14 +134,20 @@
     "task-states-title": "Состояния задач",
     "task-state-none": "Нет",
     "task-state-doing": "В работе",
-    "task-state-done": "Выполнено",
+    "task-state-done": "Выполнена",
     "task-state-maybe": "Под вопросом",
-    "task-state-cancelled": "Отменено",
+    "task-state-cancelled": "Отменена",
     "task-state-attr-state-id": "Идентификатор (обязательно)",
     "task-state-attr-markdown-symbol": "Символ Markdown",
-    "task-state-attr-is-completed": "Считать статус выполненным",
+    "task-state-attr-is-completed": "Считать выполненной",
     "task-state-attr-color": "Цвет",
-    "task-state-attr-is-hidden": "Скрыт из спивска"
+    "task-state-attr-is-hidden": "Скрыто из списка",
+    "content-manager-title": "Менеджер контента",
+    "desktop-title": "Настольная версия",
+    "security-title": "Безопасность",
+    "database-title": "База данных",
+    "space-usage-title": "Использование места",
+    "deleted-notes-title": "Удалённые заметки"
   },
   "tray": {
     "bookmarks": "Закладки",
@@ -255,7 +228,7 @@
     "zoom-out": "Уменьшить масштаб",
     "zoom-in": "Увеличить масштаб",
     "open-note-externally": "Открыть заметку вне приложения",
-    "reload-frontend-app": "Перезагрузить приложение",
+    "reload-frontend-app": "Перезагрузить клиент приложения",
     "open-developer-tools": "Открытые инструменты разработчика",
     "find-in-text": "Найти в тексте",
     "toggle-left-pane": "Переключить левую панель",
@@ -283,7 +256,11 @@
     "export-active-note-as-pdf": "Экспортировать активную заметку в формате PDF",
     "toggle-note-hoisting": "Переключить закрепление заметки",
     "save-named-revision": "Сохранить именованную ревизию",
-    "toggle-archived-notes": "Переключить отображение архивных заметок"
+    "toggle-archived-notes": "Переключить отображение архивных заметок",
+    "show-deleted-notes": "Показать удалённые заметки",
+    "show-space-usage": "Показать использование места",
+    "show-shortcut-hints": "Показать подсказки по сочетаниям клавиш",
+    "peek-right-pane": "Посмотреть на правую панель"
   },
   "months": {
     "august": "Август",
@@ -318,7 +295,9 @@
     "remember-me": "Запомнить меня",
     "sign_in_with_sso": "Войти с помощью {{ ssoIssuerName }}",
     "incorrect-totp": "TOTP неверен. Попробуйте ещё раз.",
-    "incorrect-password": "Пароль неверный. Попробуйте ещё раз."
+    "incorrect-password": "Неверный пароль. Попробуйте ещё раз.",
+    "sso-wrong-account": "Эта учётная запись не связана с данным экземпляром Trilium. Войдите в систему с помощью связанной учётной записи.",
+    "sso-not-enrolled": "Единый вход ещё не настроен. Сначала войдите, используя свой пароль, а затем привяжите учётную запись в настройках."
   },
   "set_password": {
     "password": "Пароль",
@@ -366,8 +345,8 @@
     "geo-map": "Карта",
     "start-date": "Дата начала",
     "end-date": "Дата окончания",
-    "start-time": "Дата начала",
-    "end-time": "Дата окончания",
+    "start-time": "Время начала",
+    "end-time": "Время окончания",
     "built-in-templates": "Встроенные шаблоны",
     "board_note_first": "Первая заметка",
     "board_note_second": "Вторая заметка",
@@ -378,7 +357,11 @@
     "presentation_slide_second": "Второй слайд",
     "presentation_slide_first": "Первый слайд",
     "presentation": "Презентация",
-    "presentation_slide": "Слайд презентации"
+    "presentation_slide": "Слайд презентации",
+    "code-snippet": "Фрагмент кода",
+    "markdown-snippet": "Фрагмент Markdown",
+    "ai-quick-action": "Быстрые действия ИИ",
+    "dashboard": "Панель"
   },
   "share_404": {
     "title": "Не найдено",
@@ -418,9 +401,6 @@
     "db_not_initialized_desktop": "База данных не инициализирована, следуйте инструкциям на экране.",
     "db_not_initialized_server": "База данных не инициализирована, пожалуйста, посетите страницу настройки - http://[your-server-host]:{{port}}, чтобы увидеть инструкции по инициализации Trilium."
   },
-  "desktop": {
-    "instance_already_running": "Приложение уже запущено, фокус переключен на него."
-  },
   "password": {
     "incorrect": "Вы ввели неверный пароль."
   },
@@ -436,5 +416,88 @@
       "fulltext-after-expression": "\"{{- token}}\" - неверное выражение. Для поиска текста поместите его перед фильтрами атрибутов (например, \"{{- token}} #метка\" вместо \"#метка {{- token}}\").",
       "unrecognized-expression": "Нераспознанное выражение \"{{- token}}\""
     }
+  },
+  "backup-password-dialog": {
+    "cancel": "Отмена"
+  },
+  "security-dialog": {
+    "cancel": "Отмена",
+    "sql-console": "Консоль SQL",
+    "enable-title": "Включить \"{{settingLabel}}\"",
+    "enable-message": "Вы уверены, что хотите включить \"{{settingLabel}}\"?",
+    "enable-detail": "{{warning}}\n\nВключайте эту функцию только в том случае, если вы действительно собираетесь её использовать. Не включайте ее, если вам предлагает это сделать скрипт или незнакомая заметка.\n\nДля вступления в силу этого изменения требуется перезапуск.",
+    "disable-title": "Отключить \"{{settingLabel}}\"",
+    "disable-message": "Функция \"{{settingLabel}}\" будет отключена.",
+    "disable-detail": "Для вступления в силу этого изменения требуется перезапуск.",
+    "enable": "Включить",
+    "disable": "Отключить",
+    "dont-ask-again": "Не спрашивать снова до перезапуска",
+    "backend-scripting": "Выполнение серверных скриптов",
+    "backend-scripting-warning": "Серверные скрипты имеют полный доступ к серверу, включая файловую систему и сеть.",
+    "sql-console-warning": "Консоль SQL позволяет выполнять произвольные SQL-запросы к базе данных.",
+    "lan-access": "сетевой доступ",
+    "lan-access-warning": "Приложение и ваши общие заметки будут доступны по сети — как из браузера на этом компьютере, так и с других устройств в вашей локальной сети."
+  },
+  "start-over-dialog": {
+    "cancel": "Отмена"
+  },
+  "export": {
+    "zip_filter": "ZIP-архив (*.zip)"
+  },
+  "onenote_import": {
+    "root-title": "Импорт OneNote",
+    "failed-page-placeholder": "Не удалось импортировать эту страницу из OneNote. Ошибка: {{error}}",
+    "report": {
+      "row-pages": "Страницы успешно импортированы",
+      "row-notebooks": "Импортированные записные книжки",
+      "row-sections": "Импортированные разделы",
+      "row-duration": "Общая продолжительность импорта",
+      "row-images": "Изображения",
+      "row-attachments": "Вложения",
+      "row-ink": "Страницы с рукописным текстом или рисунками",
+      "row-links": "Межстраничные ссылки",
+      "skipped-sections-title": "Разделы, которые не удалось импортировать",
+      "skipped-sections-section": "Раздел",
+      "skipped-sections-notebook": "Записная книжка",
+      "skipped-sections-error": "Ошибка",
+      "failed-pages-title": "Страницы, которые не удалось импортировать",
+      "failed-pages-page": "Страница",
+      "failed-pages-section": "Раздел",
+      "failed-pages-error": "Ошибка",
+      "failed-resources-title": "Отсутствующие изображения и вложения",
+      "failed-resources-item_one": "{{- pageLink}}: {{count}} ресурс не удалось загрузить",
+      "failed-resources-item_few": "{{- pageLink}}: {{count}} ресурса не удалось загрузить",
+      "failed-resources-item_many": "{{- pageLink}}: {{count}} ресурсов не удалось загрузить"
+    },
+    "failed-section-placeholder": "Этот раздел не удалось импортировать из OneNote, поэтому он был создан пустым. Ошибка: {{error}}",
+    "protected-section-error": "Этот раздел защищен паролем. Удалите пароль в OneNote, а затем импортируйте его снова.",
+    "protected-section-placeholder": "Этот раздел защищен паролем, поэтому его страницы не удалось импортировать, и он был создан пустым. Для импорта откройте раздел в OneNote, снимите с него пароль (щелкните правой кнопкой мыши по разделу &rarr; Защита паролем &rarr; Удалить пароль ), а затем снова запустите импорт."
+  },
+  "notion_import": {
+    "root-title": "Импорт Notion",
+    "markdown-export-unsupported": "Похоже, это экспорт из Notion в формате \"Markdown & CSV\", который Trilium не может импортировать. Пожалуйста, повторно экспортируйте свою рабочую область Notion, используя экспорта в формате \"HTML\", и импортируйте его.",
+    "subpage-folders-disabled": "Этот экспорт из Notion был создан без параметра \"Создать папки для подстраниц\", поэтому иерархию страниц восстановить невозможно. Пожалуйста, повторно экспортируйте из Notion с включенным параметром \"Создать папки для подстраниц\", и импортируйте его вместо этого."
+  },
+  "keep_import": {
+    "root-title": "Импорт Google Keep"
+  },
+  "anytype_import": {
+    "root-title": "Импорт Anytype",
+    "protobuf-export-unsupported": "Похоже, это экспорт из Anytype в формате \"Protobuf\", который Trilium не может импортировать. Пожалуйста, повторно экспортируйте ваше пространство из Anytype, используя формат \"Any-Block\" с параметром \"JSON\", и импортируйте его вместо этого.",
+    "markdown-export-unsupported": "Похоже, это экспорт из Anytype в формате \"Markdown\", который Trilium не может импортировать. Пожалуйста, повторно экспортируйте ваше пространство из Anytype, используя формат \"Any-Block\" с параметром \"JSON\", и импортируйте его вместо этого."
+  },
+  "obsidian_import": {
+    "root-title": "Импорт Obsidian"
+  },
+  "import": {
+    "invalid_file_grant": "Срок действия выбранного файла истек или он недействителен. Пожалуйста, выберите файл еще раз."
+  },
+  "restore": {
+    "pick_backup_title": "Выберите резервную копию для восстановления",
+    "backup_filter": "Резервная копия Trilium (*.db, *.tnbackup)",
+    "any_file_filter": "Все файлы"
+  },
+  "dialog": {
+    "select_directory": "Выберите папку"
   }
 }

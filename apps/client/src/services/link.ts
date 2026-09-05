@@ -49,6 +49,14 @@ export interface ViewScope {
      * to immediately enter read-only mode.
      */
     isReadOnly?: boolean;
+    /**
+     * If true, a text note is edited with the floating toolbar whatever the user's editor-type
+     * option says — the toolbar following the selection rather than standing in a bar of its own.
+     *
+     * For views too narrow to carry a full toolbar, such as the geo map's marker pane: a classic bar
+     * built for the width of a note either spills out of them or eats the room the note is left.
+     */
+    floatingToolbar?: boolean;
     highlightsListPreviousVisible?: boolean;
     highlightsListTemporarilyHidden?: boolean;
     tocTemporarilyHidden?: boolean;
@@ -62,7 +70,34 @@ export interface ViewScope {
     tocCollapsedHeadings?:  Set<string>;
     /** When set, scrolls to a bookmark anchor within the note after navigation. */
     bookmark?: string;
+    /**
+     * Search terms to highlight and jump to after navigating from search results; consumed once
+     * by the destination type widget (mirrors `bookmark` semantics).
+     */
+    searchTerms?: string[];
 }
+
+/**
+ * The state of a single split pane, as carried by the `splits` hash parameter when a tab is
+ * moved or copied into a window of its own.
+ */
+export interface HashPane {
+    notePath?: string | null;
+    hoistedNoteId?: string | null;
+    viewScope?: ViewScope;
+}
+
+/** A note path as it may appear in a hash: slash-separated note ids. */
+const NOTE_PATH_PATTERN = /^[_a-z0-9]{4,}(\/[_a-z0-9]{4,})*$/i;
+
+/**
+ * How many extra panes a hash is allowed to carry. Well beyond any layout a user would build by
+ * hand, but low enough that a hand-written address can't ask the app to open hundreds of panes.
+ */
+const MAX_SPLIT_PANES_IN_HASH = 8;
+
+/** Hash parameters that belong to a pane's view scope rather than to the window as a whole. */
+const VIEW_SCOPE_PARAMS = ["viewMode", "attachmentId", "bookmark"];
 
 interface CreateLinkOptions {
     title?: string;
@@ -72,6 +107,13 @@ interface CreateLinkOptions {
     referenceLink?: boolean;
     autoConvertToImage?: boolean;
     viewScope?: ViewScope;
+    /**
+     * Inline text appended right after the link title (before the note path, which renders on its
+     * own line). Rendered as a `.note-link-suffix` span so it rides the title's baseline instead of
+     * being pushed into a column by the wider note-path block — e.g. an annotation on why the note
+     * is being shown.
+     */
+    titleSuffix?: string;
 }
 
 async function createLink(notePath: string | undefined, options: CreateLinkOptions = {}) {
@@ -105,6 +147,7 @@ async function createLink(notePath: string | undefined, options: CreateLinkOptio
     let linkTitle = options.title;
 
     if (linkTitle === undefined) {
+        /* v8 ignore start -- the implicit `else` of this chain (noteId falsy) is unreachable: an empty noteId already returned at the guard above */
         if (viewMode === "attachments" && viewScope.attachmentId) {
             const attachment = await froca.getAttachment(viewScope.attachmentId);
 
@@ -112,6 +155,7 @@ async function createLink(notePath: string | undefined, options: CreateLinkOptio
         } else if (noteId) {
             linkTitle = await treeService.getNoteTitle(noteId, parentNoteId);
         }
+        /* v8 ignore stop */
     }
 
     const note = await froca.getNote(noteId);
@@ -154,6 +198,10 @@ async function createLink(notePath: string | undefined, options: CreateLinkOptio
 
     $container.append($noteLink);
 
+    if (options.titleSuffix) {
+        $container.append($("<span>").addClass("note-link-suffix").text(options.titleSuffix));
+    }
+
     if (showNotePath) {
         let pathSegments: string[];
         if (notePath == "root") {
@@ -166,6 +214,7 @@ async function createLink(notePath: string | undefined, options: CreateLinkOptio
             pathSegments = await treeService.getNotePathTitleComponents(resolvedPath);
         }
 
+        /* v8 ignore next 2 -- defensive guards: pathSegments is always a non-empty array (getNotePathTitleComponents never returns empty, and the root case yields ["⌂"]) */
         if (pathSegments) {
             if (pathSegments.length) {
                 $container.append($("<small>").append(treeService.formatNotePath(pathSegments)));
@@ -176,13 +225,20 @@ async function createLink(notePath: string | undefined, options: CreateLinkOptio
     return $container;
 }
 
-export function calculateHash({ notePath, ntxId, hoistedNoteId, viewScope = {} }: NoteCommandData) {
+export function calculateHash(
+    { notePath, ntxId, hoistedNoteId, viewScope = {}, splits, activeSplit }: NoteCommandData
+) {
     notePath = notePath || "";
     const params = [
         ntxId ? { ntxId } : null,
         hoistedNoteId && hoistedNoteId !== "root" ? { hoistedNoteId } : null,
         viewScope.viewMode && viewScope.viewMode !== "default" ? { viewMode: viewScope.viewMode } : null,
-        viewScope.attachmentId ? { attachmentId: viewScope.attachmentId } : null
+        viewScope.attachmentId ? { attachmentId: viewScope.attachmentId } : null,
+        viewScope.searchTerms?.length
+            ? { searchTerms: viewScope.searchTerms.map(encodeURIComponent).join(",") }
+            : null,
+        splits?.length ? { splits: splits.map(encodeSplitPane).join(",") } : null,
+        splits?.length && activeSplit ? { activeSplit: String(activeSplit) } : null
     ].filter((p) => !!p);
 
     const paramStr = params
@@ -190,6 +246,8 @@ export function calculateHash({ notePath, ntxId, hoistedNoteId, viewScope = {} }
             const name = Object.keys(pair)[0];
             const value = (pair as Record<string, string | undefined>)[name];
 
+            /* v8 ignore next -- `value` is never undefined: every retained pair holds a string. It
+               can be empty, but only for a `splits` list whose panes are all empty. */
             return `${encodeURIComponent(name)}=${encodeURIComponent(value || "")}`;
         })
         .join("&");
@@ -207,6 +265,45 @@ export function calculateHash({ notePath, ntxId, hoistedNoteId, viewScope = {} }
     return hash;
 }
 
+/**
+ * Serializes one extra pane into an entry of the `splits` parameter: its own hash body, minus the
+ * leading `#`. Entries are joined with commas, which is unambiguous because neither a note path nor
+ * an encoded parameter value can contain one. A pane holding no note yields an empty entry, so that
+ * the pane count of the original tab survives the trip.
+ */
+function encodeSplitPane(pane: HashPane) {
+    return calculateHash(pane).slice(1);
+}
+
+/** The subset of `window.location` needed to build a URL, which a plain `URL` also satisfies. */
+interface UrlParts {
+    protocol: string;
+    host: string;
+    pathname: string;
+    search: string;
+}
+
+/**
+ * Builds the address of a detached ("extra") window showing the given target.
+ *
+ * The current query string is carried over rather than replaced. On the server it holds nothing of
+ * interest, but in standalone the query *is* the environment (`?safeMode`, `?startNoteId` — see
+ * `QUERY_TO_ENV` in the standalone platform provider), so a window that dropped it would boot with
+ * different settings than the one it was opened from, and would apply those to every other window
+ * should it later inherit the database lock.
+ */
+export function calculateExtraWindowUrl(target: NoteCommandData, location: UrlParts = window.location) {
+    const params = new URLSearchParams(location.search);
+    params.set("extraWindow", "1");
+
+    return `${location.protocol}//${location.host}${location.pathname}?${params}${calculateHash(target)}`;
+}
+
+/** Whether the query string of `url` (everything before `hashIdx`) carries the `extraWindow` marker. */
+function isExtraWindowUrl(url: string, hashIdx: number) {
+    return /[?&]extraWindow(?:[=&]|$)/.test(url.slice(0, hashIdx));
+}
+
 export function parseNavigationStateFromUrl(url: string | undefined) {
     if (!url) {
         return {};
@@ -218,8 +315,10 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
         return {};
     }
 
+    const isExtraWindow = isExtraWindowUrl(url, hashIdx);
+
     // Exclude external links that contain #
-    if (hashIdx !== 0 && !url.includes("/#root") && !url.includes("/#?searchString") && !url.includes("/?extraWindow")) {
+    if (hashIdx !== 0 && !url.includes("/#root") && !url.includes("/#?searchString") && !isExtraWindow) {
         return {};
     }
 
@@ -233,26 +332,44 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
     let hoistedNoteId: string | null = null;
     let searchString: string | null = null;
     let openInPopup = false;
+    let splits: HashPane[] | null = null;
+    let activeSplit = 0;
 
-    if (paramString) {
-        for (const pair of paramString.split("&")) {
-            let [name, value] = pair.split("=");
-            name = decodeURIComponent(name);
-            value = decodeURIComponent(value);
-
-            if (name === "ntxId") {
-                ntxId = value;
-            } else if (name === "hoistedNoteId") {
-                hoistedNoteId = value;
-            } else if (name === "searchString") {
-                searchString = value; // supports triggering search from URL, e.g. #?searchString=blabla
-            } else if (["viewMode", "attachmentId", "bookmark"].includes(name)) {
-                (viewScope as any)[name] = value;
-            } else if (name === "popup") {
-                openInPopup = true;
-            } else {
-                console.warn(`Unrecognized hash parameter '${name}'.`);
-            }
+    for (const [name, value] of parseHashParams(paramString)) {
+        if (name === "ntxId") {
+            ntxId = value;
+        } else if (name === "hoistedNoteId") {
+            hoistedNoteId = value;
+        } else if (name === "searchString") {
+            searchString = value; // supports triggering search from URL, e.g. #?searchString=blabla
+        } else if (name === "searchTerms") {
+            // `value` already went through one decodeURIComponent() in parseHashParams (undoing the
+            // generic pipeline's outer encode); each comma-separated token needs its own inner decode.
+            // A malformed token (corrupted URL, hand-edited link) must not break navigation for
+            // the rest of the link, so drop it rather than letting decodeURIComponent throw.
+            viewScope.searchTerms = value
+                .split(",")
+                .map((token) => {
+                    try {
+                        return decodeURIComponent(token);
+                    } catch {
+                        return null;
+                    }
+                })
+                .filter((token): token is string => token !== null);
+        } else if (VIEW_SCOPE_PARAMS.includes(name)) {
+            (viewScope as any)[name] = value;
+        } else if (name === "popup") {
+            openInPopup = true;
+        } else if (name === "splits") {
+            // Splits lay out the whole window, so they are honoured only while booting a
+            // detached one. A link inside a note reaches this same parser, and no note should
+            // be able to rearrange the panes of the window it is read in.
+            splits = isExtraWindow ? parseSplitPanes(value) : null;
+        } else if (name === "activeSplit") {
+            activeSplit = Number.parseInt(value, 10) || 0;
+        } else {
+            console.warn(`Unrecognized hash parameter '${name}'.`);
         }
     }
 
@@ -260,7 +377,11 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
         return { searchString };
     }
 
-    if (!notePath.match(/^[_a-z0-9]{4,}(\/[_a-z0-9]{4,})*$/i)) {
+    // A hash carrying splits is one we wrote ourselves, so its main pane may hold no note —
+    // that is how a tab whose first pane was empty keeps the rest of its panes.
+    const isEmptyMainPaneWithSplits = !notePath && !!splits?.length;
+
+    if (!isEmptyMainPaneWithSplits && !NOTE_PATH_PATTERN.test(notePath)) {
         return {};
     }
 
@@ -271,12 +392,81 @@ export function parseNavigationStateFromUrl(url: string | undefined) {
         hoistedNoteId,
         viewScope,
         searchString,
-        openInPopup
+        openInPopup,
+        splits,
+        activeSplit
     };
 }
 
+/** Iterates the `name=value` pairs of a hash's parameter string, decoding both sides. */
+function parseHashParams(paramString: string | undefined) {
+    if (!paramString) {
+        return [];
+    }
+
+    return paramString.split("&").map((pair) => {
+        const [name, value] = pair.split("=");
+
+        return [decodeURIComponent(name), decodeURIComponent(value ?? "")] as const;
+    });
+}
+
+/**
+ * Parses the `splits` parameter — the panes that stood beside the main one, in order. Entries that
+ * aren't a well-formed pane are dropped rather than failing the whole hash, so a mangled address
+ * still opens what it can.
+ */
+function parseSplitPanes(value: string): HashPane[] {
+    return value
+        .split(",")
+        .slice(0, MAX_SPLIT_PANES_IN_HASH)
+        .map(parseSplitPane)
+        .filter((pane) => !!pane);
+}
+
+function parseSplitPane(entry: string): HashPane | null {
+    const [notePath, paramString] = entry.split("?");
+
+    // An empty entry is a pane that held no note; anything else has to be a real note path.
+    if (notePath && !NOTE_PATH_PATTERN.test(notePath)) {
+        return null;
+    }
+
+    const pane: HashPane = {
+        notePath: notePath || null,
+        hoistedNoteId: null,
+        viewScope: { viewMode: "default" }
+    };
+
+    for (const [name, paramValue] of parseHashParams(paramString)) {
+        if (name === "hoistedNoteId") {
+            pane.hoistedNoteId = paramValue;
+        } else if (VIEW_SCOPE_PARAMS.includes(name)) {
+            (pane.viewScope as any)[name] = paramValue;
+        }
+        // Everything else — `ntxId`, `searchString`, a nested `splits` — describes a window rather
+        // than a pane, and has no meaning this far down.
+    }
+
+    return pane;
+}
+
+/**
+ * Interactive content that handles its own clicks opts out of link navigation by carrying this class. It is
+ * needed where such content sits inside a link — a media player in a collection card, whose card is itself a
+ * `.block-link` — so that pressing play doesn't also open the note. Marking the content is what lets its
+ * clicks keep bubbling to the document, which the Bootstrap dropdowns inside it rely on; stopping propagation
+ * at the player would kill link navigation and those dropdowns alike.
+ */
+const NO_LINK_NAVIGATION_SELECTOR = ".no-link-navigation";
+
 function goToLink(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDownEvent) {
-    const $link = $(evt.target as any).closest("a,.block-link");
+    const $target = $(evt.target as any);
+    if ($target.closest(NO_LINK_NAVIGATION_SELECTOR).length) {
+        return false;
+    }
+
+    const $link = $target.closest("a,.block-link");
     const hrefLink = $link.attr("href") || $link.attr("data-href");
 
     return goToLinkExt(evt, hrefLink, $link);
@@ -319,13 +509,14 @@ export function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDo
 
     if (notePath) {
         if (isLeftClick && openInPopup) {
-            appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath });
+            appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath, viewScope });
         } else if (openInNewWindow) {
             appContext.triggerCommand("openInWindow", { notePath, viewScope });
         } else if (openInNewTab) {
             appContext.tabManager.openTabWithNoteWithHoisting(notePath, {
                 activate: activate ? true : targetIsBlank,
-                viewScope
+                viewScope,
+                placement: "afterCurrent"
             });
         } else if (isLeftClick) {
             openInCurrentNoteContext(evt, notePath, viewScope);
@@ -347,8 +538,9 @@ export function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDo
                     };
 
                     if (hrefLink.toLowerCase().startsWith("file:")) {
-                        // shell.openExternal mishandles Unicode file:// URLs on Windows;
-                        // convert to a filesystem path and use shell.openPath instead.
+                        // The main process resolves the URL to a path and picks the dispatch
+                        // that works per platform; shell.openExternal alone mishandles Unicode
+                        // file:// URLs on Windows.
                         window.electronApi.shell.openFileUrl(hrefLink).then((err: string) => {
                             if (err) reportLinkError(new Error(err));
                         }).catch(reportLinkError);
@@ -396,7 +588,7 @@ function linkContextMenu(e: PointerEvent) {
     }
 
     if (utils.isCtrlKey(e) && e.button === 2) {
-        appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath });
+        appContext.triggerCommand("openInPopup", { noteIdOrPath: notePath, viewScope });
         e.preventDefault();
         return;
     }
@@ -417,11 +609,16 @@ async function loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string | n
 
     const { noteId, viewScope } = parseNavigationStateFromUrl(href);
     if (!noteId) {
+        // Warned about but not returned on. The editing downcast creates an empty <span> and this
+        // call is the only thing that ever fills it, so bailing here left the widget rendering as
+        // nothing at all while the stored HTML — which resolves its title through
+        // getReferenceLinkTitleSync instead — said "[missing note]". An href that is not a hash
+        // note URL is ordinary enough to reach: an attachment image URL, an external link, or
+        // imported HTML carrying an <a class="reference-link">.
         console.warn("Missing note ID.");
-        return;
     }
 
-    const note = await froca.getNote(noteId, true);
+    const note = noteId ? await froca.getNote(noteId, true) : null;
 
     if (note) {
         $el.addClass(note.getColorClass());
@@ -437,8 +634,8 @@ async function loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string | n
         ));
     }
 
-    if (note) {
-        const icon = await getLinkIcon(noteId, viewScope.viewMode);
+    if (noteId && note) {
+        const icon = await getLinkIcon(noteId, viewScope?.viewMode);
 
         if (icon) {
             $el.prepend($("<span>").addClass(icon));
@@ -494,6 +691,7 @@ function getReferenceLinkTitleSync(href: string) {
     return note.title;
 }
 
+/* v8 ignore next -- the `print` device branch is evaluated once at module load; under test glob.device is undefined, so the false arm cannot be exercised */
 if (glob.device !== "print") {
     // TODO: Check why the event is not supported.
     //@ts-ignore
@@ -528,5 +726,6 @@ export default {
     getReferenceLinkTitle,
     getReferenceLinkTitleSync,
     calculateHash,
+    calculateExtraWindowUrl,
     parseNavigationStateFromUrl
 };

@@ -48,15 +48,17 @@ vi.mock("electron", () => ({
     }
 }));
 
-// `log` reads RESOURCE_DIR / data-dir state at module-load time, which is not
-// available in the test process — stub it out so importing the provider
-// doesn't transitively initialise the server log subsystem.
-vi.mock("@triliumnext/server/src/services/log.js", () => ({
-    default: {
-        info: vi.fn(),
-        error: vi.fn()
-    }
-}));
+// `getLog()` throws when the log service hasn't been initialised via
+// `initializeCore` — and we don't want to spin up core in unit tests just to
+// satisfy a logger. Partial-mock core so `getLog` returns no-op stubs while
+// every other core export keeps its real implementation.
+vi.mock("@triliumnext/core", async (importOriginal) => {
+    const actual = await importOriginal<typeof import("@triliumnext/core")>();
+    return {
+        ...actual,
+        getLog: () => ({ info: vi.fn(), error: vi.fn() })
+    };
+});
 
 const { default: IpcMessagingProvider } = await import("./ipc_messaging_provider.js");
 
@@ -97,6 +99,20 @@ describe("IpcMessagingProvider", () => {
             expect(sends).toEqual([
                 { windowId: a.id, channel: "trilium-ws-message", payload: { type: "ping" } },
                 { windowId: b.id, channel: "trilium-ws-message", payload: { type: "ping" } }
+            ]);
+        });
+
+        it("still delivers noisy log-filtered message types (frontend-update / sync-failed / api-log-messages)", () => {
+            const w = newWindow();
+
+            provider.sendMessageToAllClients({ type: "frontend-update" } as any);
+            provider.sendMessageToAllClients({ type: "sync-failed" } as any);
+            provider.sendMessageToAllClients({ type: "api-log-messages" } as any);
+
+            expect(sends).toEqual([
+                { windowId: w.id, channel: "trilium-ws-message", payload: { type: "frontend-update" } },
+                { windowId: w.id, channel: "trilium-ws-message", payload: { type: "sync-failed" } },
+                { windowId: w.id, channel: "trilium-ws-message", payload: { type: "api-log-messages" } }
             ]);
         });
 
@@ -183,6 +199,19 @@ describe("IpcMessagingProvider", () => {
             // Should not throw.
             deliverFromRenderer(a.webContents.id, { type: "ping" });
             await Promise.resolve();
+        });
+
+        it("swallows handler errors instead of crashing the main process", async () => {
+            const handler = vi.fn().mockRejectedValue(new Error("boom"));
+            provider.setClientMessageHandler(handler);
+
+            const a = newWindow();
+            // Must not reject / throw even though the handler rejects.
+            deliverFromRenderer(a.webContents.id, { type: "ping" });
+            await Promise.resolve();
+            await Promise.resolve();
+
+            expect(handler).toHaveBeenCalled();
         });
     });
 

@@ -1,12 +1,13 @@
 import type { NoteRow, RecentChangeRow } from "@triliumnext/commons";
 import type { Router } from "express";
 
-import becca from "../becca/becca.js";
-import noteService from "../services/notes.js";
-import protectedSessionService from "../services/protected_session.js";
+import { note_service as noteService, protected_session, TaskContext } from "@triliumnext/core";
+
+import { becca } from "@triliumnext/core";
 import sql from "../services/sql.js";
-import TaskContext from "../services/task_context.js";
 import utils from "../services/utils.js";
+
+const protectedSessionService = protected_session.default;
 import eu from "./etapi_utils.js";
 import mappers from "./mappers.js";
 
@@ -134,11 +135,14 @@ function register(router: Router) {
     eu.route<{ noteId: string }>(router, "get", "/etapi/notes/:noteId/revisions", (req, res, next) => {
         const note = eu.getAndCheckNote(req.params.noteId);
 
+        // Protected revisions are left out: GET /etapi/revisions/:revisionId refuses them with
+        // REVISION_IS_PROTECTED, and `description` is stored unencrypted, so listing them here
+        // would publish what the single read withholds.
         const revisions = becca.getRevisionsFromQuery(
             `SELECT revisions.*, LENGTH(blobs.content) AS contentLength
              FROM revisions
              JOIN blobs USING (blobId)
-             WHERE noteId = ?
+             WHERE noteId = ? AND isProtected = 0
              ORDER BY utcDateCreated DESC`,
             [note.noteId]
         );

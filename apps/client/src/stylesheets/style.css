@@ -2,13 +2,13 @@
 
 @font-face {
     font-family: Montserrat;
-    src: url(../fonts/Montserrat-Light.ttf);
+    src: url(../fonts/Montserrat-Light.woff2) format("woff2");
     font-weight: normal;
 }
 
 @font-face {
     font-family: Montserrat;
-    src: url(../fonts/Montserrat-SemiBold.ttf);
+    src: url(../fonts/Montserrat-SemiBold.woff2) format("woff2");
     font-weight: bold;
 }
 
@@ -58,6 +58,9 @@ body#trilium-app.backdrop-effects-disabled *::after {
 
 .table {
     --bs-table-bg: transparent !important;
+    --bs-table-border-color: var(--main-border-color);
+    --bs-table-striped-bg: color-mix(in srgb, var(--main-text-color) 5%, transparent);
+    --bs-table-striped-color: var(--main-text-color);
 }
 
 :root {
@@ -89,6 +92,21 @@ body {
     --launcher-pane-height: 53px;
     --tab-bar-height: 40px;
     --mobile-bottom-offset: env(safe-area-inset-bottom);
+}
+
+/*
+ * Height of the Window Controls Overlay. Chromium centres the caption buttons within it, so this
+ * is the only way to shift them vertically -- there is no x/y equivalent to macOS'
+ * setWindowButtonPosition(). Set it to twice the centre line of the tab bar's own buttons so the
+ * two line up; themes that place those buttons differently (see theme-next) need their own value.
+ *
+ * Scoped to Linux on purpose. Windows also supports the overlay, but leaving the variable unset
+ * there keeps Chromium's system caption height, whose taller hover fills would otherwise spill
+ * past the tab bar. Dropping the scope is fine once the result has actually been looked at on
+ * Windows.
+ */
+body.platform-linux {
+    --native-titlebar-height: 40;
 }
 
 body.ios {
@@ -266,6 +284,20 @@ samp {
     font-family: var(--monospace-font-family) !important;
 }
 
+/*
+ * Programming ligatures: the bundled JetBrains Mono renders `!=` as `≠`, `->` as `→` and so on,
+ * which reads as the characters having been silently replaced (see #2851). The `monospaceLigatures-
+ * Enabled` option gates this; the class is applied by RootContainer.
+ *
+ * Scoped to the monospace surfaces rather than set on `body`: `font-variant-ligatures` is inherited,
+ * so a blanket rule would also disable `fi`/`fl` in prose, which is a typographic regression in note
+ * content and not what anyone is asking for. Inheritance is what makes `.cm-editor` enough to cover
+ * CodeMirror's internals.
+ */
+body.monospace-ligatures-disabled :is(code, kbd, pre, samp, .cm-editor, .ck-mermaid__editing-view) {
+    font-variant-ligatures: none;
+}
+
 .badge {
     --bs-badge-color: var(--muted-text-color);
 
@@ -330,6 +362,11 @@ button.custom-title-bar-button {
 .icon-action:hover:not(.disabled) {
     text-decoration: none;
     border-color: var(--button-border-color);
+}
+
+/* An action that takes something away, marked as such the way destructive menu items are. */
+.icon-action.destructive-action-icon {
+    color: var(--dropdown-item-icon-destructive-color);
 }
 
 .icon-action.disabled {
@@ -419,6 +456,23 @@ button kbd {
     --bs-dropdown-link-active-bg: var(--active-item-background-color) !important;
 }
 
+/* A portaled menu (the Dropdown's `portalToBody`) stacks in the root context, so it has to clear a
+   modal (1055) and a stacked quick-edit popup (1100), and stay under the prompts (2000) it can
+   summon. */
+body > .tn-dropdown-portal > .dropdown-menu {
+    --bs-dropdown-zindex: 1200;
+}
+
+/* Under the menu above, which is what it is drawn for; stated beside it so the two stay in step.
+   Dressed as a dialog's backdrop, a menu that dims the page being the same thing to the reader. */
+body > .tn-dropdown-portal > .tn-dropdown-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1199;
+    background-color: var(--modal-backdrop-color);
+    opacity: var(--bs-backdrop-opacity, 0.5);
+}
+
 body.desktop .dropdown-menu,
 body.desktop .tabulator-popup-container,
 :root .excalidraw .dropdown-menu .dropdown-menu-container,
@@ -466,7 +520,7 @@ body.desktop .tabulator-popup-container,
     opacity: 1;
 }
 
-.dropdown-item:hover:not(.disabled, .dropdown-container-item),
+.dropdown-item:hover:not(.disabled, .active, .dropdown-container-item),
 .tabulator-menu-item:hover,
 :root .excalidraw .context-menu .context-menu-item:hover {
     color: var(--hover-item-text-color) !important;
@@ -504,6 +558,7 @@ body.mobile .dropdown .dropdown-submenu {
 }
 
 .dropdown-item span.keyboard-shortcut,
+.dropdown-item span.menu-trailing-icon,
 .dropdown-item *:not(.keyboard-shortcut) > kbd {
     flex-grow: 1;
     text-align: end;
@@ -547,6 +602,11 @@ body.mobile .dropdown .dropdown-submenu {
 
 .dropdown-item .destructive-action-icon {
     color: var(--dropdown-item-icon-destructive-color);
+}
+
+.dropdown-item .tn-icon.use-note-color {
+    --menu-item-icon-color: var(--custom-color);
+    color: var(--custom-color, inherit);
 }
 
 .dropdown-item > span:not([class]) {
@@ -632,7 +692,7 @@ button.btn-sm {
     color: var(--left-pane-text-color);
 }
 
-.ck.ck-block-toolbar-button {
+.ck.ck-button.ck-block-toolbar-button {
     transform: translateX(7px);
     color: var(--muted-text-color);
     background-color: var(--main-background-color);
@@ -640,6 +700,8 @@ button.btn-sm {
     min-width: 0;
     padding: 0;
     z-index: 1000;
+    translate: -40% 0;
+    padding: 0;
 }
 
 body[dir=rtl] .ck.ck-block-toolbar-button {
@@ -750,10 +812,30 @@ table.promoted-attributes-in-tooltip th {
 
 .tooltip {
     font-size: var(--main-font-size) !important;
-    z-index: calc(var(--ck-z-panel) - 1) !important;
+    /* Above every layer the app opens over the page: a tooltip is appended to `<body>`, so it
+       competes with a dialog in the root stacking context rather than painting inside it, and any
+       lower layer leaves it unreadable behind the very dialog it was asked for. Bootstrap's modal
+       sits at 1055, the dialogs the app lifts itself at up to 3000, the context menu at 2500.
+
+       This layer used to be chained to CKEditor's own — `calc(var(--ck-z-panel) - 1)` — which
+       `ckeditor-theme.css` raised to 10000 for exactly this reason, landing tooltips at 9999.
+       Upstream renamed the variable (`--ck-z-modal` → `--ck-z-panel`) and the override went dead
+       with the old name, dropping tooltips to 999 — under every dialog. Nothing showed it because
+       the math form's rescue rule named a bare `[role="tooltip"]`, lifting every tooltip in the app
+       to 3000; keeping that rule to MathLive's own UI is what finally uncovered it. Stated here in
+       full, and no longer read from a variable another package owns. */
+    z-index: 9999 !important;
 }
 
 .tooltip.tooltip-top {
+    z-index: 32767 !important;
+}
+
+/* Note tooltips are appended to <body> and are frequently triggered from inside a dialog (a link,
+   a deleted-note entry), including the few that lift themselves above the base tooltip layer — the
+   content manager's active-content overlay among them. Held at the same "above everything" layer
+   .tooltip-top names, so they clear those too. */
+.tooltip.note-tooltip {
     z-index: 32767 !important;
 }
 
@@ -887,6 +969,13 @@ table.promoted-attributes-in-tooltip th {
     overflow: hidden;
 }
 
+.note-tooltip-detail {
+    margin-top: -5px;
+    margin-bottom: 5px;
+    color: var(--muted-text-color);
+    font-size: small;
+}
+
 .note-tooltip-content {
     /* height needs to stay small because tooltip has problem when it can't fit to either top or bottom of the cursor */
     max-height: 300px;
@@ -1014,6 +1103,36 @@ table.promoted-attributes-in-tooltip th {
 /* this is because bootstrap (?) sets code color to red for some reason */
 code {
     color: inherit !important;
+}
+
+/*
+ * Inline code — a `code` that is not the body of a code block.
+ *
+ * CKEditor ships its own `.ck-content code` rule with a hardcoded grey, which ignores the theme
+ * entirely. The rule below overrides it (one class more specific) for every surface that renders
+ * note content: the editable and read-only text notes, doc notes and the print sheet.
+ *
+ * The values are theme-tunable; the defaults here are a translucent neutral grey so they hold up
+ * on a light and a dark background alike, which is what the legacy themes fall back to.
+ */
+:where(:root) {
+    --inline-code-background-color: rgba(128, 128, 128, 0.18);
+    --inline-code-border-color: rgba(128, 128, 128, 0.28);
+    --inline-code-hover-background-color: rgba(128, 128, 128, 0.3);
+}
+
+.ck-content code:not(pre code) {
+    padding: 0.1em 0.35em;
+    border-radius: 5px;
+    background-color: var(--inline-code-background-color);
+    /* Monospace runs visually larger than the surrounding prose at the same nominal size. */
+    font-size: 0.8em;
+    /* A long path or identifier must wrap rather than push the paragraph past the note width. */
+    overflow-wrap: break-word;
+
+    &.ck-code_selected {
+        background-color: var(--inline-code-hover-background-color) !important;
+    }
 }
 
 .animated {
@@ -1305,14 +1424,19 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
 
 .include-note {
     margin-bottom: 10px;
-    padding: 10px;
-    border-radius: 10px;
-    background-color: var(--accented-background-color);
+    border-radius: 8px;
+    border: 1px solid var(--card-border-color, var(--main-border-color));
+    background-color: var(--card-background-color, var(--accented-background-color));
     display: flex; /* see https://github.com/zadam/trilium/issues/1590 */
+    transition: background-color 200ms ease-out;
 }
 
-.include-note.ck-placeholder::before {
-    /* remove placeholder in otherwise empty note */
+/* CKEditor counts only non-UIElements as content (see `hasContent` in the
+   engine), so a widget rendered entirely from UIElements — an include note, a
+   Mermaid diagram, etc. — looks "empty" to it. When such a widget is the first
+   block, it can wrongly become the editor's placeholder host, overlaying the
+   placeholder text on top of the widget. Suppress it for any widget. */
+.ck-widget.ck-placeholder::before {
     content: "" !important;
 }
 
@@ -1322,8 +1446,22 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     overflow: auto;
 }
 
-.include-note[data-box-size="small"] .include-note-content.type-pdf {
-    height: 10em; /* PDF is rendered in iframe and must be sized absolutely */
+/* PDFs and web views render in an (absolutely positioned) iframe, so they need an explicit
+   height per box size instead of an intrinsic, content-driven one. */
+.include-note[data-box-size="small"] .include-note-content.type-pdf,
+.include-note[data-box-size="small"] .include-note-content.type-webView {
+    height: 10em;
+}
+
+/* The small box has room for the compact audio player's visualizer band (which carries a floor of its own) or
+   for its controls row and the file footer below it — not for all three. Drop the band, and release the floor
+   so the box shrinks to what is left instead of overflowing onto the Download / Open buttons. */
+.include-note[data-box-size="small"] .include-note-content.type-audio .audio-preview-visualization-wrapper {
+    display: none;
+}
+
+.include-note[data-box-size="small"] .include-note-content.type-audio .rendered-media {
+    min-height: 0;
 }
 
 .include-note[data-box-size="medium"] .include-note-content {
@@ -1331,28 +1469,105 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     overflow: auto;
 }
 
-.include-note[data-box-size="medium"] .include-note-content.type-pdf .rendered-content {
-    height: 20em; /* PDF is rendered in iframe and must be sized absolutely */
+.include-note[data-box-size="medium"] .include-note-content.type-pdf .rendered-content,
+.include-note[data-box-size="medium"] .include-note-content.type-webView .rendered-content {
+    height: 20em;
 }
 
-.include-note[data-box-size="full"] .include-note-content.type-pdf .rendered-content {
-    height: 50em; /* PDF is rendered in iframe and it's not possible to put full height so at least a large height */
+.include-note[data-box-size="full"] .include-note-content.type-pdf .rendered-content,
+.include-note[data-box-size="full"] .include-note-content.type-webView .rendered-content {
+    height: 50em; /* an iframe can't take a percentage full height, so fall back to a large fixed one */
+}
+
+.include-note[data-box-size="expandable"] .include-note-content.type-webView .rendered-content {
+    height: 20em;
+}
+
+/* Full-height collection views (table, board, calendar, geo map, presentation) render their own
+   scroll region with no intrinsic height, so — like PDFs and web views — they need an explicit
+   height per box size. The inner widget fills it via its existing height:100% chain. List/grid
+   collections are content-driven and keep the generic max-height above. */
+.include-note[data-box-size="small"] .include-note-content.type-book:has(.note-list-widget.full-height),
+.include-note[data-box-size="small"] .include-note-content.type-search:has(.note-list-widget.full-height) {
+    height: 10em;
+}
+
+.include-note[data-box-size="medium"] .include-note-content.type-book:has(.note-list-widget.full-height),
+.include-note[data-box-size="medium"] .include-note-content.type-search:has(.note-list-widget.full-height) {
+    height: 20em;
+}
+
+.include-note[data-box-size="full"] .include-note-content.type-book:has(.note-list-widget.full-height),
+.include-note[data-box-size="full"] .include-note-content.type-search:has(.note-list-widget.full-height) {
+    height: 50em; /* a full-height view can't take a percentage full height, so fall back to a large fixed one */
+}
+
+.include-note[data-box-size="expandable"] .include-note-content.type-book:has(.note-list-widget.full-height),
+.include-note[data-box-size="expandable"] .include-note-content.type-search:has(.note-list-widget.full-height) {
+    height: 20em;
 }
 
 .include-note-wrapper {
     width: 100%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+/* Header: the standalone title (non-expandable) and the title row (expandable)
+   both act as the card header, mirroring the grid/list note-book-card header. */
+.include-note-wrapper > .include-note-title,
+.include-note-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: .5rem 1rem;
+    font-size: 1em;
+    font-weight: 500;
+    border-bottom: 1px solid var(--card-border-color, var(--main-border-color));
+}
+
+/* createLink wraps the icon and anchor in a single <span>; lay it out as a flex
+   row so the (larger) note icon lines up vertically with the title text instead
+   of sitting on the text baseline. */
+.include-note-title > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.include-note-title .bx {
+    flex-shrink: 0;
+    font-size: 1.2em;
+    color: var(--note-list-view-icon-color, var(--muted-text-color));
+}
+
+/* Neutralize the default link color and pill hover so the title reads as a
+   plain card header (matching .note-book-title in the grid/list view). */
+.include-note-title a {
+    --link-hover-background: transparent;
+    --link-hover-color: currentColor;
+    color: inherit;
+    font-weight: 500;
+    text-decoration: none;
 }
 
 /* Expandable include note styles */
 .include-note-title-row {
-    display: flex;
-    align-items: center;
-    gap: 5px;
     cursor: pointer;
 }
 
+/* The title inside the expandable row defers its header styling to the row. */
 .include-note-title-row .include-note-title {
     margin: 0;
+    padding: 0;
+    border-bottom: none;
+    font-weight: inherit;
+    font-size: inherit;
+    min-width: 0;
+    flex-grow: 1;
 }
 
 .include-note-toggle {
@@ -1361,11 +1576,12 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     padding: 2px;
     cursor: pointer;
     font-size: 1.2em;
-    color: var(--main-text-color);
+    color: var(--muted-text-color);
     transition: transform 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .include-note-toggle:hover {
@@ -1376,8 +1592,28 @@ body.mobile .modal-content-with-sidebar > .modal-main > .modal-header > .modal-t
     transform: rotate(90deg);
 }
 
+.include-note-content {
+    padding: .75rem 1rem;
+}
+
+.include-note-content > .rendered-content > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Media that renders edge-to-edge (iframes, images, video, full-height collection views) shouldn't
+   be inset. List/grid collections keep their padding (they are content-driven, not full-height). */
+.include-note-content.type-pdf,
+.include-note-content.type-image,
+.include-note-content.type-video,
+.include-note-content.type-canvas,
+.include-note-content.type-webView,
+.include-note-content.type-book:has(.note-list-widget.full-height),
+.include-note-content.type-search:has(.note-list-widget.full-height) {
+    padding: 0;
+}
+
 .include-note[data-box-size="expandable"] .include-note-content {
-    margin-top: 10px;
+    padding-top: 0;
 }
 
 .alert {
@@ -1482,9 +1718,20 @@ body.desktop li.dropdown-submenu:hover > ul.dropdown-menu {
     top: 0;
     inset-inline-start: calc(100% - 2px); /* -2px, otherwise there's a small gap between menu and submenu where the hover can disappear */
     margin-top: -10px;
-    /* to make submenu scrollable https://github.com/zadam/trilium/issues/3136 */
+}
+
+/* to make submenu scrollable https://github.com/zadam/trilium/issues/3136 */
+.dropdown-submenu > .dropdown-menu:not(:has(.dropdown-submenu)) {
     max-height: 600px;
     overflow: auto;
+}
+
+/* Flipped upward (added by ContextMenu.repositionSubmenu) when the submenu would overflow the bottom of the viewport. */
+.dropdown-submenu > .dropdown-menu.submenu-flip-up {
+    top: auto;
+    bottom: 0;
+    margin-top: 0;
+    margin-bottom: -10px;
 }
 
 body.desktop .dropdown-submenu > .dropdown-menu {
@@ -1492,7 +1739,10 @@ body.desktop .dropdown-submenu > .dropdown-menu {
     max-width: 300px;
 }
 
+/* Opened on the other side (`submenu-flip-start` added by ContextMenu.repositionSubmenu) when the
+   submenu would overflow the side it opens on. */
 .dropdown-submenu.dropstart > .dropdown-menu,
+.dropdown-submenu > .dropdown-menu.submenu-flip-start,
 body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     inset-inline-start: auto;
     inset-inline-end: calc(100% - 2px);
@@ -1530,8 +1780,10 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     transform: rotate(-90deg);
 }
 
-::-webkit-scrollbar {
-    width: 12px;
+@supports (-webkit-box-reflect: below) {
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
 }
 
 ::-webkit-scrollbar-thumb {
@@ -1552,6 +1804,28 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
     background-color: var(--selection-background-color);
 }
 
+/*
+ * Fades a scroll container's content out at its edges instead of hard-clipping it, so text
+ * dissolves toward whatever chrome sits past the edge (a section title bar, a composer).
+ * A mask rather than an overlay gradient because the content becomes genuinely transparent:
+ * this holds up when the pane background is a semi-transparent tint over a window material
+ * (Mica/vibrancy), which no painted gradient color could match. Opt in per edge by setting
+ * `--scroll-fade-top` / `--scroll-fade-bottom` on the scroll container (or an ancestor);
+ * each edge defaults to a hard clip. The defaults are `var()` fallbacks rather than custom
+ * property declarations here, so a widget's knobs win regardless of stylesheet bundling
+ * order. The overlay scrollbar fades over the same distance — the cost of masking the
+ * scroll container itself, accepted wherever this is used.
+ */
+.scroll-edge-fade {
+    mask-image: linear-gradient(
+        to bottom,
+        transparent,
+        black var(--scroll-fade-top, 0px),
+        black calc(100% - var(--scroll-fade-bottom, 0px)),
+        transparent
+    );
+}
+
 [data-bs-toggle="tooltip"]:not(.button-widget) span {
     padding-bottom: 0;
     border-bottom: 1px dotted;
@@ -1569,6 +1843,25 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 .ck.ck-mentions > .ck-list__item .ck-button {
     /* wrap text for very long note path title */
     white-space: normal !important;
+}
+
+/*
+ * A note suggestion is an icon beside a note path. Laid out as a row so the two are centred against
+ * each other: left inline, the icon aligns on the text baseline, and `vertical-align: middle` only
+ * gets it as far as the x-height — about a pixel below where the capitals it sits beside read as
+ * centred. The icon carries its own font, so no baseline rule can line the two up in general.
+ */
+.ck.ck-mentions .ck-button.note-mention-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 0.4em;
+    text-align: start;
+}
+
+/* Its own box, so the row centres the glyph itself rather than the line box around it. */
+.ck.ck-mentions .ck-button.note-mention-suggestion > .bx {
+    line-height: 1;
+    flex-shrink: 0;
 }
 
 /* Slash commands */
@@ -1952,7 +2245,6 @@ body:not(.mobile) #launcher-pane.horizontal .dropdown-submenu > .dropdown-menu {
 }
 
 #right-pane .card-body ul {
-    padding-inline-start: 25px;
     margin-bottom: 5px;
 }
 
@@ -2043,16 +2335,33 @@ body.electron.platform-darwin:not(.native-titlebar) .tab-row-container {
 }
 
 #tab-row-left-spacer {
-    width: env(titlebar-area-x);
     -webkit-app-region: drag;
 }
 
-body.electron.platform-darwin:not(.native-titlebar):not(.full-screen) #tab-row-left-spacer {
-    width: 80px;
+/*
+ * Only macOS reserves the traffic lights' room with this spacer; every other platform uses the
+ * container padding below, which handles controls on either side. Keeping the spacer at zero
+ * elsewhere avoids reserving `titlebar-area-x` twice on a Linux desktop with left-hand controls.
+ *
+ * `titlebar-area-x` is where the traffic lights actually end, as the platform measures it, and it
+ * is reported in CSS pixels — so it already accounts both for the width the running macOS gives
+ * the cluster and for the page zoom, which the system-drawn buttons do not follow. A fixed reserve
+ * cannot do either: it shrinks with the page while the buttons stay put, so zooming out slid them
+ * over whatever the tab bar puts first (the pane toggle). It resolves to zero when there are no
+ * controls to clear, i.e. with a native title bar or in full screen.
+ */
+body.electron.platform-darwin #tab-row-left-spacer {
+    width: env(titlebar-area-x);
 }
 
+/*
+ * Keep the tab bar clear of the Window Controls Overlay. On Windows the controls are always on
+ * the right, but on Linux their side follows the desktop's decoration layout (GNOME's
+ * `button-layout`), so reserve space on whichever side(s) Chromium actually took.
+ */
 body.electron:not(.platform-darwin) .tab-row-container {
-    padding-inline-end: calc(100vw - env(titlebar-area-width, 100vw));
+    padding-inline-start: env(titlebar-area-x, 0px);
+    padding-inline-end: calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, 100vw));
 }
 
 .tab-row-container .toggle-button {
@@ -2095,6 +2404,7 @@ body.zen #launcher-container,
 body.zen #launcher-pane,
 body.zen #left-pane,
 body.zen #right-pane,
+body.zen .right-pane-peek-button,
 body.zen #mobile-sidebar-wrapper,
 body.zen .tab-row-container,
 body.zen .tab-row-widget,
@@ -2109,8 +2419,14 @@ body.zen .inline-title,
 body.zen .promoted-attributes-widget,
 body.zen .floating-buttons-children > *:not(.bx-edit-alt),
 body.zen .action-button,
+body.zen .tooltip.content-hint, /* content-area hints (task states, collapsible summaries, drag handles) */
 body.zen .note-split:not(.type-book) .note-list-widget {
     display: none !important;
+}
+
+body.experimental-feature-new-layout.zen #vertical-main-container {
+    /* Remove the placeholder for the right pane peek button */
+    --right-pane-peek-button-gutter: 0;
 }
 
 body.zen .split-note-container-widget > .gutter {
@@ -2549,6 +2865,23 @@ footer.webview-footer button {
     transition: opacity 200ms ease;
 }
 
+/*
+ * Empty to-do item caret fix.
+ *
+ * CKEditor's default to-do list theme spaces the checkbox from the text using a
+ * negative `margin-right: -15px` on the checkbox, which leaves the (still empty)
+ * description as a zero-width inline box. Some engines (notably Electron/Chromium,
+ * see upstream https://github.com/ckeditor/ckeditor5/issues/9141) cannot place the
+ * caret inside such an empty inline box, so it collapses onto the checkbox with
+ * no leading margin. Giving the empty description a real inline-block box lets the
+ * caret land at the normal text offset. The filler <br> is only present while the
+ * item is empty, so this reverts automatically as soon as the user types.
+ */
+.ck-editor__editable.ck-content ul.todo-list li span.todo-list__label__description:has(> br[data-cke-filler="true"]) {
+    display: inline-block;
+    min-width: 1px;
+}
+
 .ck-content ul.todo-list li:has(> span.todo-list__label input[type="checkbox"]:checked) > span.todo-list__label span.todo-list__label__description {
     text-decoration: line-through;
     opacity: 0.6;
@@ -2672,7 +3005,7 @@ iframe.print-iframe {
 
 /* Scrolling container */
 
-.note-split:not(.type-text) > .scrolling-container:has(> :is(.note-detail.full-height, .note-list-widget.full-height)) {
+.note-split:not(.type-text.view-mode-normal) > .scrolling-container:has(> :is(.note-detail.full-height, .note-list-widget.full-height)) {
     display: flex;
     flex-direction: column;
 }
@@ -2683,14 +3016,6 @@ iframe.print-iframe {
     flex-grow: 1;
     width: 100%;
     overflow: hidden;
-}
-
-/* Calendar collection */
-
-.calendar-view a.fc-timegrid-event,
-.calendar-view a.fc-daygrid-event {
-    /* Workaround: set font weight only if the theme-next is not active */
-    font-weight: var(--root-background, 800);
 }
 
 @media (max-width: 991px) {
@@ -2748,6 +3073,17 @@ iframe.print-iframe {
 }
 
 /*
+ * COLLAPSIBLE LIST ITEMS
+ */
+
+:where(:root) {
+    --text-editor-collapsible-list-arrow-color: var(--muted-text-color);
+    /* Neutral by design: a translucent grey reads on both light and dark backgrounds. */
+    --text-editor-collapsible-list-arrow-hover-background: rgba(128, 128, 128, 0.25);
+    --text-editor-collapsible-list-arrow-hover-color: var(--main-text-color);
+}
+
+/*
  * TASK STATES
  */
 
@@ -2768,6 +3104,34 @@ iframe.print-iframe {
     position: relative;
     width: var(--_checkbox-size);
     height: var(--_checkbox-size);
+}
+
+/* Inline-block slot for using .tn-task-checkbox inside flowing text (e.g. the
+   task-state line in the checkbox tooltip). Without a block-formatting
+   ancestor the inner span is inline and its ::before / ::after collapse to
+   zero size, showing only the glyph. */
+.tn-task-checkbox-inline {
+    display: inline-block;
+    margin-inline-start: 8px;
+    vertical-align: middle;
+    line-height: 0;
+}
+
+.tn-task-checkbox-inline > .tn-task-checkbox {
+    /* Scale the checkbox (and, via `calc(var(--_checkbox-size) * ratio)`,
+       its glyph) to the surrounding text size so it fits the tooltip line
+       instead of forcing the default 18px. */
+    --_checkbox-size: 1.1em;
+    display: block;
+    transform: translateY(-0.05em);
+}
+
+/* Status line block above the checkbox tooltip's body. The 8px bottom margin
+   separates it from the "Right click…" hint when the line is present; when
+   the state is an anchor (unchecked/checked) the line is omitted entirely,
+   so no spacing is added. */
+.tn-task-tooltip-state {
+    margin-bottom: 8px;
 }
 
 /* Prevent variables from bleeding into nested items */
@@ -2795,8 +3159,39 @@ iframe.print-iframe {
     --_task-checkbox-background: var(--task-checkbox-done-color);
 }
 
+/* The read-only view renders a real <label>, which Bootstrap's reboot makes
+   inline-block — an empty label (its checkbox is absolutely positioned below)
+   then produces a full-height line of its own, pushing the item text onto the
+   next line. Restore the plain inline display so the empty label collapses. */
+:root .ck-content.ck-content ul.todo-list li .todo-list__label {
+    display: inline;
+}
+
 :root .ck-content.ck-content ul.todo-list li .todo-list__label input[type="checkbox"] {
     --_checkbox-size: var(--ck-content-todo-list-checkmark-size);
+
+    /* Take the checkbox out of the inline flow in every variant and centre it
+       geometrically on the first text line (the li is the positioned ancestor,
+       `li p` has no margin, and CKEditor's own `left/right: -25px` still places
+       it in the gutter). Centering via `vertical-align: middle` depends on font
+       metrics and differs from the absolutely-positioned `_without-description`
+       variant — this makes both variants share one deterministic geometry. */
+    position: absolute;
+    top: calc((1lh - var(--_checkbox-size)) / 2);
+    inset-inline-start: -25px;
+    inset-inline-end: auto;
+    /* `1lh` must resolve against the text's line height, not the UA form-control
+       font, and the UA's 3px checkbox margins would offset the absolute position.
+       (Bootstrap's reboot happens to do both, but don't depend on it.) */
+    margin: 0;
+    font: inherit;
+}
+
+/* CKEditor middle-aligns the inline description span, while a real-<p> description
+   (the `_without-description` variant) sits on the plain baseline — so the text
+   position depended on which variant rendered. Align both on the baseline. */
+:root .ck-content.ck-content ul.todo-list li .todo-list__label .todo-list__label__description {
+    vertical-align: baseline;
 }
 
 /* Checkbox */
@@ -2816,21 +3211,223 @@ iframe.print-iframe {
     /* Checkbox tick */
     &::after {
         all: unset;
-        display: inline-flex;
+        display: flex;
         align-items: center;
         justify-content: center;
         position: absolute;
         inset: 0;
         content: var(--task-state-glyph);
         font-family: var(--task-state-glyph-font-family, inherit);
-        font-size: calc(var(--_checkbox-size) * var(--task-checkbox-glyph-ratio));
+        /* Em box == checkbox box: the flex centering has zero leftover
+           space to round, so nothing can snap asymmetrically. */
+        font-size: var(--_checkbox-size);
+        line-height: 1;
         color: var(--task-checkbox-glyph-color);
-        text-box-trim: trim-both;
+        /* The shrink is geometric, not typographic — scale() doesn't snap
+           to the device-pixel grid, so the glyph stays centred at any zoom. */
+        transform: scale(var(--task-checkbox-glyph-ratio));
     }
 
     &:disabled {
         opacity: 1;
-        cursor: not-allowed;
+    }
+}
+
+/*
+ * Collapsible blocks
+ */
+
+ /*
+ * Shared styles for collapsible blocks (rendered as native HTML <details>/<summary>).
+ * Used in both the editor and the read-only/published view via .ck-content.
+ */
+
+.ck-content details.trilium-collapsible {
+    --collapsible-block-background: var(--card-background-color);
+    --collapsible-block-summary-background: var(--card-background-color);
+    --collapsible-block-summary-delimiter-color: var(--main-background-color);
+
+    --_border-radius: 8px;
+    --_block-padding: .75rem;
+    --_inline-padding: 1rem;
+    --_margin-between-collapsibles: 3px;
+    --_content-indent: 2rem;
+    --_arrow-gap: 2rem;
+
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin: 1em 0;
+    border-radius: var(--_border-radius);
+    background: var(--collapsible-block-background);
+    padding: var(--_block-padding) var(--_inline-padding) var(--_block-padding) var(--_content-indent);
+
+    &:not(& + &):has(+ details.trilium-collapsible) {
+        /* First collapsibile from the series */
+        margin-bottom: var(--_margin-between-collapsibles);
+        border-end-start-radius: 0;
+        border-end-end-radius: 0;
+    }
+
+    & + &:has(+ details.trilium-collapsible) {
+        /* Middle collapsibile blocks from the series */
+        margin-bottom: var(--_margin-between-collapsibles);
+        margin-top: 0;
+        border-radius: 0;
+    }
+
+    & + &:not(:has(+ details.trilium-collapsible)) {
+        /* The last collapsibile from the series */
+        margin-top: 0;
+        border-start-start-radius: 0;
+        border-start-end-radius: 0;
+    }
+
+    > summary {
+        position: relative;
+        left: calc(0px - var(--_content-indent ) / 2);
+        width: calc(100% + var(--_content-indent));
+        padding-left: var(--_arrow-gap);
+        cursor: pointer;
+        font-weight: 500;
+        outline: none;
+        list-style: none; /* native marker replaced by the custom arrow below */
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::after {
+            display: block;
+            content: "";
+            z-index: -1;
+            position: absolute;
+            top: calc(0px - (var(--_block-padding) + 1px));
+            left: calc(0px - var(--_content-indent ) / 2);
+            width: calc(100% + var(--_inline-padding) * 2 + 1px);
+            height: calc(100% + var(--_block-padding) * 2 + 1px);
+            background: var(--collapsible-block-summary-background);
+        }
+
+        &:hover::after {
+            background: var(--card-background-hover-color);
+        }
+    }
+
+    &[open] > summary {
+        margin-bottom: calc(var(--_block-padding) * 2);
+
+        &::after {
+            border-bottom: 2px solid var(--collapsible-block-summary-delimiter-color);
+        }
+    }
+
+    >*:last-child:not(summary) {
+        margin-bottom: 0;
+    }
+}
+
+/*
+ * Custom arrow, shared by every view. In the editor it is a real <span> (inserted by the
+ * editing downcast) because it needs click and keyboard handlers; elsewhere that span
+ * doesn't exist — the arrow is deliberately not part of the saved HTML — so the data view
+ * (read-only text notes, markdown preview) draws it on the summary instead and lets the
+ * native <details> toggle do the work. Both share the geometry and the glyph below.
+ */
+.ck-content details.trilium-collapsible > summary > .trilium-collapsible-arrow,
+.ck-content:not(.ck-editor__editable) details.trilium-collapsible > summary::before {
+    position: absolute;
+    left: 0;
+    top: -0.05em;
+    width: 1lh;
+    height: 1lh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: boxicons;
+    cursor: pointer;
+    user-select: none;
+    /* Scaled rather than sized with font-size, so the box keeps the summary's line metrics
+     * and the arrow stays centred on the first line of the title. */
+    transform: scale(1.3);
+    transition: transform 0.15s ease;
+}
+
+.ck-content details.trilium-collapsible > summary > .trilium-collapsible-arrow::before,
+.ck-content:not(.ck-editor__editable) details.trilium-collapsible > summary::before {
+    content: "\ea50";
+}
+
+.ck-content details.trilium-collapsible[open] > summary > .trilium-collapsible-arrow,
+.ck-content:not(.ck-editor__editable) details.trilium-collapsible[open] > summary::before {
+    transform: scale(1.3) rotate(90deg);
+}
+
+/*
+ * Editor-only tweaks: summary acts like a regular editable text block, and the arrow is the
+ * only collapse affordance (clicking the summary text places a caret instead of toggling).
+ */
+
+.ck-editor__editable details.trilium-collapsible {
+
+    .ck-placeholder::before {
+        opacity: 0.5;
+    }
+
+    /* Body-paragraph placeholder ("Content") is registered on the first body
+     * block. Hide it whenever the body has more than one block — the hint is
+     * only useful when the body is a single empty <p>. The body blocks live in
+     * the editing-only `.trilium-collapsible-content` wrapper, so `:has(> :nth-child(2))`
+     * matches a wrapper with 2+ body children; `:not(:last-child)` would only hide
+     * the placeholder on non-last paragraphs, leaving the last one (e.g. the
+     * original empty body after Enter-in-summary) still visible. */
+    .trilium-collapsible-content:has(> :nth-child(2)) > p.ck-placeholder::before {
+        display: none;
+    }
+
+    /* The shared `> *:last-child:not(summary)` rule now lands on the content
+     * wrapper (which has no margin of its own); zero the wrapper's last body
+     * block instead so the collapsible keeps its tight bottom padding. */
+    .trilium-collapsible-content > *:last-child {
+        margin-bottom: 0;
+    }
+
+    > summary {
+        cursor: text;
+        padding-right: calc(var(--_inline-padding) + 1lh); /* extra space for the handle on the right */
+
+        /* Block selection handle (mirror of the table widget's drag handle).
+         * Click selects the whole <details>; movement uses Alt+↑/↓ from there.
+         * Sits in the details' top-left padding area, visible on hover. */
+        > .trilium-collapsible-handle {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: var(--_inline-padding);
+            z-index: 1000;
+            width: 1lh;
+            height: 1lh;
+            cursor: default;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+
+            &::before {
+                position: absolute;
+                inset: 0;
+                content: "\ec6c";
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-size: 1em;
+                font-family: boxicons;
+                color: var(--muted-text-color, currentColor);
+            }
+        }
+    }
+
+    &:hover > summary > .trilium-collapsible-handle,
+    &:focus-within > summary > .trilium-collapsible-handle {
+        opacity: 1;
     }
 }
 

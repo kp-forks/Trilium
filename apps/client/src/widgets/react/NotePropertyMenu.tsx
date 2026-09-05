@@ -6,6 +6,7 @@ import Component from "../../components/component";
 import FNote from "../../entities/fnote";
 import NoteContextAwareWidget from "../note_context_aware_widget";
 import { FormDropdownDivider, FormDropdownSubmenu, FormListItem, FormListToggleableItem } from "./FormList";
+import HelpTooltipButton from "./HelpTooltipButton";
 import FormTextBox from "./FormTextBox";
 import { useNoteLabel, useNoteLabelBoolean } from "./hooks";
 import { ParentComponent } from "./react_utils";
@@ -15,6 +16,12 @@ export interface ClickContext {
     triggerCommand: NoteContextAwareWidget["triggerCommand"];
 }
 
+/** Available on a property of any kind, for one whose label needs explaining. */
+export interface PropertyHelp {
+    /** What the property does, shown on hover beside its label. */
+    helpTooltip?: string;
+}
+
 export interface CheckBoxProperty {
     type: "checkbox",
     label: string;
@@ -22,6 +29,8 @@ export interface CheckBoxProperty {
     icon?: string;
     /** When true, the checkbox will be checked when the label value is false. Useful when the label represents a "hide" action, without exposing double negatives to the user. */
     reverseValue?: boolean;
+    /** What the setting does, shown on hover beside the label. */
+    helpTooltip?: string;
 }
 
 export interface ButtonProperty {
@@ -77,9 +86,49 @@ export interface ComboBoxProperty {
     dropStart?: boolean;
 }
 
-export type BookProperty = CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty | SplitButtonProperty | Separator;
+export interface SubmenuProperty {
+    type: "submenu";
+    label: string;
+    icon?: string;
+    /** When provided, the submenu is only rendered if this returns true for the current note. */
+    isVisible?: (note: FNote) => boolean;
+    children: BookProperty[];
+}
+
+/** A labelled group of radio-style options rendered inline (e.g. inside a {@link SubmenuProperty}), bound to its own label. */
+export interface OptionGroupProperty {
+    type: "option-group";
+    label: string;
+    bindToLabel: FilterLabelsByType<string>;
+    defaultValue?: string;
+    options: ComboBoxItem[];
+}
+
+export type BookProperty = (
+    CheckBoxProperty | ButtonProperty | NumberProperty | ComboBoxProperty
+    | SplitButtonProperty | SubmenuProperty | OptionGroupProperty | Separator
+) & PropertyHelp;
+
+/** Whether a property should render for the given note, honouring an optional `isVisible` predicate. */
+export function isPropertyVisible(property: BookProperty, note: FNote): boolean {
+    return !("isVisible" in property) || (property.isVisible?.(note) ?? true);
+}
+
+/** A property's label, followed by its explanation when it has one. */
+function PropertyLabel({ property }: { property: BookProperty & { label: string } }) {
+    return (
+        <>
+            {property.label}
+            {property.helpTooltip && <HelpTooltipButton description={property.helpTooltip} />}
+        </>
+    );
+}
 
 export function ViewProperty({ note, property }: { note: FNote, property: BookProperty }) {
+    if (!isPropertyVisible(property, note)) {
+        return null;
+    }
+
     switch (property.type) {
         case "button":
             return <ButtonPropertyView note={note} property={property} />;
@@ -91,9 +140,50 @@ export function ViewProperty({ note, property }: { note: FNote, property: BookPr
             return <NumberPropertyView note={note} property={property} />;
         case "combobox":
             return <ComboBoxPropertyView note={note} property={property} />;
+        case "submenu":
+            return <SubmenuPropertyView note={note} property={property} />;
+        case "option-group":
+            return <OptionGroupPropertyView note={note} property={property} />;
         case "separator":
             return <FormDropdownDivider />;
     }
+}
+
+function SubmenuPropertyView({ note, property }: { note: FNote, property: SubmenuProperty }) {
+    return (
+        <FormDropdownSubmenu
+            title={<PropertyLabel property={property} />}
+            icon={property.icon ?? "bx bx-empty"}
+        >
+            {property.children.map((child, index) => (
+                <ViewProperty key={index} note={note} property={child} />
+            ))}
+        </FormDropdownSubmenu>
+    );
+}
+
+function OptionGroupPropertyView({ note, property }: { note: FNote, property: OptionGroupProperty }) {
+    const [ value, setValue ] = useNoteLabel(note, property.bindToLabel);
+    const valueWithDefault = value ?? property.defaultValue ?? null;
+
+    return (
+        <Fragment>
+            <FormListItem disabled><PropertyLabel property={property} /></FormListItem>
+            {property.options.map((option) => (
+                <FormListItem
+                    key={option.value}
+                    checked={valueWithDefault === option.value}
+                    // Keep the menu open so several grouped settings can be adjusted in one go.
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setValue(option.value);
+                    }}
+                >
+                    {option.label}
+                </FormListItem>
+            ))}
+        </Fragment>
+    );
 }
 
 function ButtonPropertyView({ note, property }: { note: FNote, property: ButtonProperty }) {
@@ -110,7 +200,7 @@ function ButtonPropertyView({ note, property }: { note: FNote, property: ButtonP
                     triggerCommand: parentComponent.triggerCommand.bind(parentComponent)
                 });
             }}
-        >{property.label}</FormListItem>
+        ><PropertyLabel property={property} /></FormListItem>
     );
 }
 
@@ -125,7 +215,7 @@ function SplitButtonPropertyView({ note, property }: { note: FNote, property: Sp
     return (parentComponent &&
         <FormDropdownSubmenu
             icon={property.icon ?? "bx bx-empty"}
-            title={property.label}
+            title={<PropertyLabel property={property} />}
             onDropdownToggleClicked={() => clickContext && property.onClick(clickContext)}
         >
             <ItemsComponent note={note} parentComponent={parentComponent} />
@@ -144,7 +234,7 @@ function NumberPropertyView({ note, property }: { note: FNote, property: NumberP
             disabled={disabled}
             onClick={(e) => e.stopPropagation()}
         >
-            {property.label}
+            <PropertyLabel property={property} />
             <FormTextBox
                 type="number"
                 currentValue={value ?? ""} onChange={setValue}
@@ -174,7 +264,7 @@ function ComboBoxPropertyView({ note, property }: { note: FNote, property: Combo
 
     return (
         <FormDropdownSubmenu
-            title={property.label}
+            title={<PropertyLabel property={property} />}
             icon={property.icon ?? "bx bx-empty"}
             dropStart={property.dropStart}
         >
@@ -205,6 +295,7 @@ function CheckBoxPropertyView({ note, property }: { note: FNote, property: Check
         <FormListToggleableItem
             icon={property.icon}
             title={property.label}
+            helpTooltip={property.helpTooltip}
             currentValue={ property.reverseValue ? !value : value }
             onChange={newValue => setValue(property.reverseValue ? !newValue : newValue)}
         />

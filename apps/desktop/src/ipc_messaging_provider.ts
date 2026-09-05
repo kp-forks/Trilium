@@ -1,6 +1,5 @@
 import type { WebSocketMessage } from "@triliumnext/commons";
-import type { ClientMessageHandler, MessagingProvider } from "@triliumnext/core";
-import log from "@triliumnext/server/src/services/log.js";
+import { getLog, shouldLogMessage, type ClientMessageHandler, type MessagingProvider } from "@triliumnext/core";
 import electron from "electron";
 
 /**
@@ -38,7 +37,7 @@ export default class IpcMessagingProvider implements MessagingProvider {
                 try {
                     await this.clientMessageHandler(String(event.sender.id), parsed);
                 } catch (err) {
-                    log.error(`IPC messaging: handler threw: ${err}`);
+                    getLog().error(`IPC messaging: handler threw: ${err}`);
                 }
             }
         });
@@ -49,10 +48,8 @@ export default class IpcMessagingProvider implements MessagingProvider {
     }
 
     sendMessageToAllClients(message: WebSocketMessage): void {
-        // Match the WS provider's log-filtering so noisy sync-failed /
-        // api-log-messages traffic doesn't flood the log.
-        if (message.type !== "sync-failed" && message.type !== "api-log-messages") {
-            log.info(`Sending message to all windows: ${JSON.stringify(message)}`);
+        if (shouldLogMessage(message)) {
+            getLog().info(`Sending message to all windows: ${JSON.stringify(message)}`);
         }
 
         for (const win of electron.BrowserWindow.getAllWindows()) {
@@ -91,7 +88,7 @@ function safeParse(message: string): unknown {
     try {
         return JSON.parse(message);
     } catch (err) {
-        log.error(`IPC messaging: discarding non-JSON renderer message: ${err}`);
+        getLog().error(`IPC messaging: discarding non-JSON renderer message: ${err}`);
         return undefined;
     }
 }

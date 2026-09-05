@@ -1,15 +1,24 @@
-import { getThemeStyle } from "./services/theme";
+import { createFontStylesheetLink } from "./services/font";
+import {
+    CLIENT_STARTUP_PHASES, hideSplash, initSplashProgress, reportSplashPhase, showSplashError
+} from "./services/splash";
+import { buildThemeStylesheetRefs, createStylesheetLink, getThemeStyle, initThemeChangeNotifier, StylesheetRef } from "./services/theme";
 
 async function bootstrap() {
-    showSplash();
+    // The splash from index.html covers the page until hideSplash(). Standalone reports a longer
+    // sequence of its own before this one, so these phases only take effect on server and desktop.
+    initSplashProgress(CLIENT_STARTUP_PHASES);
+    reportSplashPhase("bootstrap");
     await setupGlob();
     await Promise.all([
         initJQuery(),
         loadBootstrapCss()
     ]);
     loadStylesheets();
+    initThemeChangeNotifier();
     loadIcons();
     setBodyAttributes();
+    reportSplashPhase("application");
     await loadScripts();
     hideSplash();
 }
@@ -79,72 +88,40 @@ async function loadBootstrapCss() {
     }
 }
 
-type StylesheetRef = {
-    href: string;
-    media?: string;
-};
-
-function getConfiguredThemeStylesheets(stylesheetsPath: string, theme: string, customThemeCssUrl?: string) {
-    if (theme === "auto") {
-        return [{ href: `${stylesheetsPath}/theme-dark.css`, media: "(prefers-color-scheme: dark)" }];
-    }
-
-    if (theme === "dark") {
-        return [{ href: `${stylesheetsPath}/theme-dark.css` }];
-    }
-
-    if (theme === "next") {
-        return [
-            { href: `${stylesheetsPath}/theme-next-light.css` },
-            { href: `${stylesheetsPath}/theme-next-dark.css`, media: "(prefers-color-scheme: dark)" }
-        ];
-    }
-
-    if (theme === "next-light") {
-        return [{ href: `${stylesheetsPath}/theme-next-light.css` }];
-    }
-
-    if (theme === "next-dark") {
-        return [{ href: `${stylesheetsPath}/theme-next-dark.css` }];
-    }
-
-    if (theme !== "light" && customThemeCssUrl) {
-        return [{ href: customThemeCssUrl }];
-    }
-
-    return [];
-}
-
 function loadStylesheets() {
     const { device, assetPath, theme, themeBase, customThemeCssUrl } = window.glob;
+    if (device === "print") {
+        return;
+    }
+
     const stylesheetsPath = `${assetPath}/stylesheets`;
-
-    const cssToLoad: StylesheetRef[] = [];
-    if (device !== "print") {
-        cssToLoad.push({ href: `${stylesheetsPath}/ckeditor-theme.css` });
-        cssToLoad.push({ href: `api/fonts` });
-        cssToLoad.push({ href: `${stylesheetsPath}/theme-light.css` });
-        cssToLoad.push(...getConfiguredThemeStylesheets(stylesheetsPath, theme, customThemeCssUrl));
-        if (themeBase) {
-            cssToLoad.push(...getConfiguredThemeStylesheets(stylesheetsPath, themeBase));
-        }
-        cssToLoad.push({ href: `${stylesheetsPath}/style.css` });
+    appendStylesheet({ href: `${stylesheetsPath}/ckeditor-theme.css` });
+    // Marked so it can be swapped when font options change without reloading. Skipped on the
+    // login / set-password pre-auth screens, where the /api/fonts request 401s (and, under nosniff,
+    // surfaces as a MIME-type console error) — those screens use the theme's fonts (#10589). This is
+    // the inline equivalent of utils.isPreAuthScreen(): index.ts runs before setupGlob() populates
+    // window.glob, and utils.ts reads window.glob at module scope, so index.ts must not import utils.
+    if (glob.loggedIn !== false && glob.passwordSet !== false) {
+        document.head.appendChild(createFontStylesheetLink());
     }
-
-    for (const { href, media } of cssToLoad) {
-        const linkEl = document.createElement("link");
-        linkEl.href = href;
-        linkEl.rel = "stylesheet";
-        if (media) {
-            linkEl.media = media;
-        }
-        document.head.appendChild(linkEl);
+    // The light theme is always loaded as the baseline and acts as the anchor for live theme swapping.
+    appendStylesheet({ href: `${stylesheetsPath}/theme-light.css` }, { base: true });
+    for (const ref of buildThemeStylesheetRefs(theme, customThemeCssUrl, themeBase)) {
+        appendStylesheet(ref, { theme: true });
     }
+    appendStylesheet({ href: `${stylesheetsPath}/style.css` });
+}
+
+function appendStylesheet(ref: StylesheetRef, opts?: { base?: boolean; theme?: boolean }) {
+    document.head.appendChild(createStylesheetLink(ref, opts));
 }
 
 function loadIcons() {
     const styleEl = document.createElement("style");
-    styleEl.innerText = window.glob.iconPackCss;
+    // Must be textContent, not innerText: the innerText setter turns every newline into a real
+    // <br> element (one per CSS line, ~20k with several icon packs). iOS WebKit's focused-element
+    // scan walks all of them on every keyboard focus, freezing the app for seconds.
+    styleEl.textContent = window.glob.iconPackCss;
     document.head.appendChild(styleEl);
 }
 
@@ -171,32 +148,42 @@ function setBodyAttributes() {
 }
 
 async function loadScripts() {
+    const entry = await importEntry();
+
+    // Every entry point renders after its module has finished evaluating: the desktop layout, the
+    // note tree and the locale catalogue are all fetched from there. Waiting for the `ready` it
+    // exports keeps the splash up until the screen is actually populated, instead of handing the
+    // user a blank page for the seconds those fetches take on a slow connection.
+    reportSplashPhase("interface");
+    await entry.ready;
+}
+
+function importEntry(): Promise<{ ready?: Promise<unknown> }> {
     if (!glob.dbInitialized) {
-        await import("./setup.js");
-        return;
+        return import("./setup.js");
+    }
+
+    if (glob.passwordSet === false) {
+        return import("./set_password.js");
+    }
+
+    if (glob.loggedIn === false) {
+        return import("./login.js");
     }
 
     switch (glob.device) {
         case "mobile":
-            await import("./mobile.js");
-            break;
+            return import("./mobile.js");
         case "print":
-            await import("./print.js");
-            break;
+            return import("./print.js");
         case "desktop":
         default:
-            await import("./desktop.js");
-            break;
+            return import("./desktop.js");
     }
 }
 
-function showSplash() {
-    // hide body to reduce flickering on the startup. This is done through JS and not CSS to not hide <noscript>
-    document.body.style.display = "none";
-}
-
-function hideSplash() {
-    document.body.style.display = "block";
-}
-
-bootstrap();
+bootstrap().catch((err) => {
+    console.error("Trilium failed to start:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    showSplashError(`Trilium failed to start: ${message} — reload the page to try again.`);
+});

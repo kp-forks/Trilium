@@ -8,6 +8,7 @@ import { type CSSProperties,useEffect, useMemo, useRef, useState } from "preact/
 import { CommandNames } from "../../components/app_context";
 import { handleRightToLeftPlacement, isMobile, openInAppHelpFromUrl } from "../../services/utils";
 import FormToggle from "./FormToggle";
+import HelpTooltipButton from "./HelpTooltipButton";
 import { useStaticTooltip, useSyncedRef } from "./hooks";
 import Icon from "./Icon";
 
@@ -65,12 +66,40 @@ export default function FormList({ children, onSelect, style, fullHeight, wrappe
                     if (value && onSelect) {
                         onSelect(value);
                     }
-                }}>
+                }} onKeyDown={onDropdownMenuKeyDown}>
                     {children}
                 </div>
             </div>
         </div>
     );
+}
+
+/**
+ * Activates the currently focused list item on Enter/Space, so the list is keyboard-operable
+ * and not mouse-only. The focused item is "clicked" to reuse the existing item- and list-level
+ * click handlers (e.g. {@link FormList}'s `onSelect`, toggle items).
+ */
+function onDropdownMenuKeyDown(e: KeyboardEvent) {
+    if (e.key !== "Enter" && e.key !== " ") {
+        return;
+    }
+
+    const target = e.target as HTMLElement;
+
+    const dropdownItem = target.closest(".dropdown-item") as HTMLElement | null;
+    if (!dropdownItem || dropdownItem.classList.contains("disabled")) {
+        return;
+    }
+
+    // Let interactive elements nested inside the item (inputs, buttons, links, anything
+    // focusable) handle their own Enter/Space instead of hijacking it for the parent item.
+    const interactive = target.closest("input, textarea, select, button, a, [tabindex]");
+    if (interactive && interactive !== dropdownItem) {
+        return;
+    }
+
+    e.preventDefault();
+    dropdownItem.click();
 }
 
 export interface FormListBadge {
@@ -81,6 +110,8 @@ export interface FormListBadge {
 export interface FormListItemOpts {
     children: ComponentChildren;
     icon?: string;
+    /** Extra class for the icon itself, e.g. to hang a marker off its corner. */
+    iconClassName?: string;
     value?: string;
     title?: string;
     active?: boolean;
@@ -106,7 +137,7 @@ const TOOLTIP_CONFIG: Partial<Tooltip.Options> = {
     animation: false
 };
 
-export function FormListItem({ className, icon, value, title, active, disabled, checked, container, onClick, selected, rtl, triggerCommand, description, itemRef: externalItemRef, ...contentProps }: FormListItemOpts) {
+export function FormListItem({ className, icon, iconClassName, value, title, active, disabled, checked, container, onClick, selected, rtl, triggerCommand, description, itemRef: externalItemRef, ...contentProps }: FormListItemOpts) {
     const itemRef = useSyncedRef<HTMLLIElement>(externalItemRef, null);
 
     if (checked) {
@@ -125,7 +156,7 @@ export function FormListItem({ className, icon, value, title, active, disabled, 
             data-trigger-command={triggerCommand}
             dir={rtl ? "rtl" : undefined}
         >
-            <Icon icon={icon} />&nbsp;
+            <Icon icon={icon} className={iconClassName} />&nbsp;
             {description ? (
                 <div>
                     <FormListContent description={description} disabled={disabled} {...contentProps} />
@@ -137,10 +168,14 @@ export function FormListItem({ className, icon, value, title, active, disabled, 
     );
 }
 
-export function FormListToggleableItem({ title, currentValue, onChange, disabled, helpPage, ...props }: Omit<FormListItemOpts, "onClick" | "children"> & {
+export function FormListToggleableItem({
+    title, currentValue, onChange, disabled, helpPage, helpTooltip, ...props
+}: Omit<FormListItemOpts, "onClick" | "children"> & {
     title: string;
     currentValue: boolean;
     helpPage?: string;
+    /** What the setting does, shown on hover. Unlike {@link helpPage}, it opens nothing. */
+    helpTooltip?: string;
     onChange(newValue: boolean): void | Promise<void>;
 }) {
     const isWaiting = useRef(false);
@@ -173,6 +208,7 @@ export function FormListToggleableItem({ title, currentValue, onChange, disabled
                             onClick={() => openInAppHelpFromUrl(helpPage)}
                         />
                     )}
+                    {helpTooltip && <HelpTooltipButton description={helpTooltip} />}
                     <span class="switch-spacer" />
                 </>}
             />
@@ -194,13 +230,19 @@ function FormListContent({ children, badges, description, disabled, disabledTool
 }
 
 interface FormListHeaderOpts {
-    text: string;
+    /** Usually a heading, but anything a group can be introduced by: a summary, a row of marks. */
+    text: ComponentChildren;
+    /** Optional element rendered right-aligned in the header (e.g. an edit action). */
+    action?: ComponentChildren;
 }
 
-export function FormListHeader({ text }: FormListHeaderOpts) {
+export function FormListHeader({ text, action }: FormListHeaderOpts) {
     return (
         <li>
-            <h6 className="dropdown-header">{text}</h6>
+            <h6 className={`dropdown-header ${action ? "dropdown-header-with-action" : ""}`}>
+                <span>{text}</span>
+                {action}
+            </h6>
         </li>
     );
 }

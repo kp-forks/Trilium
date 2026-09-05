@@ -388,7 +388,7 @@ class SNote extends AbstractShacaEntity {
     getOwnedAttributeValue(type: string, name: string) {
         const attr = this.getOwnedAttribute(type, name);
 
-        return attr ? (attr.value as string) : null; // FIXME
+        return attr ? attr.value : null;
     }
 
     /**
@@ -404,7 +404,7 @@ class SNote extends AbstractShacaEntity {
      * @returns all note's label values, including inherited ones
      */
     getLabelValues(name: string) {
-        return this.getLabels(name).map((l) => l.value) as string[]; // FIXME
+        return this.getLabels(name).map((l) => l.value);
     }
 
     /**
@@ -540,7 +540,8 @@ class SNote extends AbstractShacaEntity {
             mime: this.mime,
             workspaceIconClass: undefined,
             iconClass: iconClassLabels.length > 0 ? iconClassLabels[0].value : undefined,
-            isFolder: this.isFolder.bind(this)
+            isFolder: this.isFolder.bind(this),
+            getLabelValue: this.getLabelValue.bind(this)
         });
 
         return `tn-icon ${icon}`;

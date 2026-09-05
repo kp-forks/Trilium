@@ -2,28 +2,28 @@ import "./RelationMap.css";
 
 import { CreateChildrenResponse, RelationMapPostResponse } from "@triliumnext/commons";
 import { jsPlumbInstance, OnConnectionBindInfo } from "jsplumb";
-import panzoom, { PanZoomOptions } from "panzoom";
+// The library's own types rather than the hand-written `PanZoom` in types.d.ts, which stops at the
+// handful of calls the map made when it was written and knows nothing of the rest — the ends of the
+// zoom range, or unsubscribing from a report.
+import panzoom, { PanZoom, PanZoomOptions } from "panzoom";
 import { RefObject } from "preact";
 import { HTMLProps } from "preact/compat";
 import { useCallback, useEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import FNote from "../../../entities/fnote";
 import dialog from "../../../services/dialog";
-import { isExperimentalFeatureEnabled } from "../../../services/experimental_features";
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import ActionButton from "../../react/ActionButton";
-import { useEditorSpacedUpdate, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
+import { useEditorSpacedUpdate, useNoteLabelBoolean, useTriliumEvent, useTriliumEvents } from "../../react/hooks";
 import { TypeWidgetProps } from "../type_widget";
 import RelationMapApi, { ClientRelation, MapData, MapDataNoteEntry, RelationType } from "./api";
 import { buildRelationContextMenuHandler } from "./context_menu";
 import { JsPlumb } from "./jsplumb";
+import MapToolbar, { EditToolbar } from "./MapToolbar";
 import { NoteBox } from "./NoteBox";
 import setupOverlays, { uniDirectionalOverlays } from "./overlays";
 import { getMousePosition, getZoom, idToNoteId, noteIdToId, promptForRelationName } from "./utils";
-
-const isNewLayout = isExperimentalFeatureEnabled("new-layout");
 
 interface Clipboard {
     noteId: string;
@@ -49,6 +49,8 @@ declare module "jsplumb" {
 
 export default function RelationMap({ note, noteContext, ntxId, parentComponent }: TypeWidgetProps) {
     const [ data, setData ] = useState<MapData>();
+    // The same read-only the note's own bar of actions read while the + stood there.
+    const [ isReadOnly ] = useNoteLabelBoolean(note, "readOnly");
     const containerRef = useRef<HTMLDivElement>(null);
     const mapApiRef = useRef<RelationMapApi>(null);
     const pbApiRef = useRef<jsPlumbInstance>(null);
@@ -118,7 +120,7 @@ export default function RelationMap({ note, noteContext, ntxId, parentComponent 
 
     const connectionCallback = useRelationCreation({ mapApiRef, jsPlumbApiRef: pbApiRef });
 
-    usePanZoom({
+    const panZoom = usePanZoom({
         ntxId,
         containerRef,
         options: {
@@ -162,37 +164,27 @@ export default function RelationMap({ note, noteContext, ntxId, parentComponent 
                 ))}
             </JsPlumb>
 
-            {isNewLayout && (
-                <div className="btn-group btn-group-sm content-floating-buttons bottom-right">
-                    <ActionButton
-                        icon="bx bx-zoom-in"
-                        text={t("relation_map_buttons.zoom_in_title")}
-                        onClick={() => parentComponent?.triggerEvent("relationMapResetZoomIn", { ntxId })}
-                        className="tn-tool-button"
-                        noIconActionClass
-                    />
+            {/* Both groups stand on the map whatever layout the note is read in: what is done to a
+                canvas belongs on the canvas, and the bar of buttons above the note is not where the
+                reader is looking while dragging one. */}
+            <EditToolbar
+                isReadOnly={isReadOnly}
+                onAddNote={() => parentComponent?.triggerEvent("relationMapCreateChildNote", { ntxId })}
+            />
 
-                    <ActionButton
-                        icon="bx bx-zoom-out"
-                        text={t("relation_map_buttons.zoom_out_title")}
-                        onClick={() => parentComponent?.triggerEvent("relationMapResetZoomOut", { ntxId })}
-                        className="tn-tool-button"
-                        noIconActionClass
-                    />
-
-                    <ActionButton
-                        icon="bx bx-crop"
-                        text={t("relation_map_buttons.reset_pan_zoom_title")}
-                        onClick={() => parentComponent?.triggerEvent("relationMapResetPanZoom", { ntxId })}
-                        className="tn-tool-button"
-                        noIconActionClass
-                    />
-                </div>
-            )}
+            <MapToolbar
+                panZoom={panZoom}
+                onCommand={(command) => parentComponent?.triggerEvent(command, { ntxId })}
+            />
         </div>
     );
 }
 
+/**
+ * Sets the map up to be panned and zoomed, answers the commands that drive it, and hands the
+ * instance back so that the controls over the map can read it — as state rather than as the ref the
+ * commands are answered from, so that they are drawn afresh when the map is rebuilt under a new one.
+ */
 function usePanZoom({ ntxId, containerRef, options, transformData, onTransform }: {
     ntxId: string | null | undefined;
     containerRef: RefObject<HTMLDivElement>;
@@ -201,11 +193,13 @@ function usePanZoom({ ntxId, containerRef, options, transformData, onTransform }
     onTransform: (pzInstance: PanZoom) => void
 }) {
     const apiRef = useRef<PanZoom>(null);
+    const [ panZoom, setPanZoom ] = useState<PanZoom>();
 
     useEffect(() => {
         if (!containerRef.current) return;
         const pzInstance = panzoom(containerRef.current, options);
         apiRef.current = pzInstance;
+        setPanZoom(pzInstance);
 
         if (transformData) {
             pzInstance.zoomTo(0, 0, transformData.scale);
@@ -216,10 +210,13 @@ function usePanZoom({ ntxId, containerRef, options, transformData, onTransform }
         }
 
         if (onTransform) {
-            apiRef.current!.on("transform", () => onTransform(pzInstance));
+            pzInstance.on("transform", () => onTransform(pzInstance));
         }
 
-        return () => pzInstance.dispose();
+        return () => {
+            setPanZoom(undefined);
+            pzInstance.dispose();
+        };
     }, [ containerRef, onTransform ]);
 
     useTriliumEvents([ "relationMapResetPanZoom", "relationMapResetZoomIn", "relationMapResetZoomOut" ], ({ ntxId: eventNtxId }, eventName) => {
@@ -236,6 +233,8 @@ function usePanZoom({ ntxId, containerRef, options, transformData, onTransform }
             pzInstance.zoomTo(0, 0, 0.8);
         }
     });
+
+    return panZoom;
 }
 
 async function useRelationData(noteId: string, mapData: MapData | undefined, mapApiRef: RefObject<RelationMapApi>, jsPlumbRef: RefObject<jsPlumbInstance>) {
@@ -304,8 +303,10 @@ async function useRelationData(noteId: string, mapData: MapData | undefined, map
                 });
                 if (!connection) return;
 
-                // TODO: Does this actually do anything.
-                //@ts-expect-error
+                // Stash the attributeId on the connection so api.ts can map a clicked connection
+                // back to its relation (see the `rel.attributeId === connection.id` lookups there),
+                // and so it can be exposed as data-connection-id below.
+                //@ts-expect-error jsPlumb's Connection type has no writable `id` property.
                 connection.id = relation.attributeId;
 
                 if (relation.type === "inverse") {
@@ -425,7 +426,7 @@ function useRelationCreation({ mapApiRef, jsPlumbApiRef }: { mapApiRef: RefObjec
         const sourceNoteId = idToNoteId(connection.source.id);
         const result = await mapApiRef.current.connect(name, sourceNoteId, targetNoteId);
         if (!result) {
-            await dialog.info(t("relation_map.connection_exists", { name }));
+            toast.showError(t("relation_map.connection_exists", { name }));
             jsPlumbApiRef.current?.deleteConnection(connection);
         }
     }, []);

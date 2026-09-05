@@ -1,14 +1,10 @@
-import type BAttachment from "../becca/entities/battachment.js";
-import type BAttribute from "../becca/entities/battribute.js";
-import type BBranch from "../becca/entities/bbranch.js";
-import type BNote from "../becca/entities/bnote.js";
-import type BRevision from "../becca/entities/brevision.js";
+import type { BAttachment, BAttribute, BBranch, BNote, BRevision } from "@triliumnext/core";
 
 function mapNoteToPojo(note: BNote) {
     return {
         noteId: note.noteId,
         isProtected: note.isProtected,
-        title: note.title,
+        title: note.getTitleOrProtected(),
         type: note.type,
         mime: note.mime,
         blobId: note.blobId,
@@ -55,7 +51,7 @@ function mapAttachmentToPojo(attachment: BAttachment) {
         ownerId: attachment.ownerId,
         role: attachment.role,
         mime: attachment.mime,
-        title: attachment.title,
+        title: attachment.getTitleOrProtected(),
         position: attachment.position,
         blobId: attachment.blobId,
         dateModified: attachment.dateModified,

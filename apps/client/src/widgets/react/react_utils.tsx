@@ -7,6 +7,13 @@ export const ParentComponent = createContext<Component | null>(null);
 export const NoteContextContext = createContext<NoteContext | null>(null);
 
 /**
+ * Whether the container (e.g. a dialog) holding the current note view is actually shown. False inside a dialog
+ * that's hidden but kept mounted in the DOM (e.g. the quick-edit popup with `keepInDom`), so descendants like
+ * media players can stop instead of playing on invisibly. Defaults to true — no enclosing dialog means shown.
+ */
+export const ContainerVisibilityContext = createContext(true);
+
+/**
  * Takes in a React ref and returns a corresponding JQuery selector.
  *
  * @param ref the React ref from which to obtain the jQuery selector.
@@ -40,7 +47,12 @@ export function renderReactWidgetAtElement(parentComponent: Component | null, el
     return $(container) as JQuery<HTMLElement>;
 }
 
-export function disposeReactWidget(container: Element) {
+/**
+ * Unmounts the tree rendered into `container`, running every effect cleanup and releasing the DOM
+ * the vnodes still point at. `container` has to be the element the tree was rendered *into* -- for a
+ * widget built by `renderReactWidget()` that is the fragment, not the `$widget` it returned.
+ */
+export function disposeReactWidget(container: Element | DocumentFragment) {
     render(null, container);
 }
 

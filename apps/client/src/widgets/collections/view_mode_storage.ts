@@ -9,25 +9,66 @@ export type ViewModeStorageType = ViewTypeOptions | "pdfHistory";
 export default class ViewModeStorage<T extends object> {
 
     private note: FNote;
-    private attachmentName: string;
+    readonly attachmentName: string;
+    /** The serialized content last stored or restored, used to tell our own echoes apart from external changes. */
+    private lastKnownContent?: string;
 
     constructor(note: FNote, viewType: ViewModeStorageType) {
         this.note = note;
         this.attachmentName = `${viewType}.json`;
     }
 
+    /**
+     * Writes the config, unless it is already what is stored.
+     *
+     * A view reports its state on changes it makes itself as readily as on the user's — a map, for
+     * one, is told to move to its saved position as it opens, and hears that move back as though it
+     * had been dragged there. Writing anyway is not free and not private: the attachment is saved
+     * with `forceSave`, so identical content still stamps a new date, records an entity change and
+     * announces it to every client, each of which then fetches the attachment back to see what
+     * changed. Nothing did. Opened in a dozen tabs, a view could raise a dozen such writes and a
+     * fetch of each of them per tab, all for a config nobody touched.
+     */
     async store(data: T) {
+        const content = JSON.stringify(data);
+        if (content === this.lastKnownContent) {
+            return;
+        }
+        this.lastKnownContent = content;
         const payload = {
             role: ATTACHMENT_ROLE,
             title: this.attachmentName,
             mime: "application/json",
-            content: JSON.stringify(data),
+            content,
             position: 0
         };
         await server.post(`notes/${this.note.noteId}/attachments?matchBy=title`, payload);
     }
 
     async restore() {
+        const content = await this.fetchContent();
+        if (content === undefined) {
+            return undefined;
+        }
+        this.lastKnownContent = content;
+        return JSON.parse(content) as T;
+    }
+
+    /**
+     * Like {@link restore}, but resolves to `undefined` if the stored content matches what was last
+     * stored or restored, so that callers only react to genuinely external changes (e.g. the same
+     * view opened in another split, or synced from another instance).
+     */
+    async restoreIfChanged() {
+        const content = await this.fetchContent();
+        if (content === undefined || content === this.lastKnownContent) {
+            return undefined;
+        }
+        this.lastKnownContent = content;
+        return JSON.parse(content) as T;
+    }
+
+    private async fetchContent() {
         const existingAttachments = (await this.note.getAttachmentsByRole(ATTACHMENT_ROLE))
             .filter(a => a.title === this.attachmentName);
         if (existingAttachments.length === 0) {
@@ -41,6 +82,6 @@ export default class ViewModeStorage<T extends object> {
 
         const attachment = existingAttachments[0];
         const attachmentData = await server.get<{ content: string } | null>(`attachments/${attachment.attachmentId}/blob`);
-        return JSON.parse(attachmentData?.content ?? "{}") as T;
+        return attachmentData?.content ?? "{}";
     }
 }
