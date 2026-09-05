@@ -3,10 +3,7 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import dialog from "../../../services/dialog";
 import type FNote from "../../../entities/fnote";
-import note_create from "../../../services/note_create";
-import { type NoteTypeOption } from "../../../services/note_types";
 import BoardApi from "./api";
 import BoardProperties from "./properties";
 
@@ -15,30 +12,48 @@ vi.mock("../../../services/i18n", () => ({
     t: (key: string) => key
 }));
 
-/** Everything the app could make, as `getNoteTypeOptions` answers with it. */
-const AVAILABLE = [
-    [ "type:text:text/html", "Text", "type" ],
-    [ "type:code:text/x-markdown", "Markdown", "type" ],
-    [ "type:canvas:application/json", "Canvas", "type" ],
-    [ "template:shipped", "Shipped template", "builtin" ],
-    [ "template:mine", "My template", "user" ]
-].map(([ id, title, group ]) => ({
-    id, title, group, icon: "bx bx-note", options: { type: "text" }
-}) as NoteTypeOption);
-
-/** The board a template made here is filed under. */
-const BOARD = { noteId: "board1" } as FNote;
+// The card is the app's and is tested where it lives; what the board answers for is the words it is
+// given and where what it holds is written.
+vi.mock("../../react/TemplateSelectionCard", () => ({
+    default: ({ heading, instruction, note, templates, onChange }: {
+        heading: string, instruction: string, note: FNote, templates: string[],
+        onChange: (templates: string[]) => void
+    }) => (
+        <div
+            className="templates-stub"
+            data-heading={heading}
+            data-instruction={instruction}
+            data-note={note.noteId}
+            data-templates={templates.join(",")}
+            onClick={() => onChange([ "type:canvas:application/json" ])}
+        />
+    )
+}));
 
 describe("Board properties", () => {
     let container: HTMLElement;
     let stored: string[][];
-    let offered: string[];
 
     beforeEach(() => {
         stored = [];
-        offered = [ "type:text:text/html", "type:code:text/x-markdown" ];
         container = document.createElement("div");
         document.body.appendChild(container);
+
+        const api = {
+            getCardTemplateIds: () => [ "type:text:text/html" ],
+            setCardTemplateIds: async (ids: string[]) => { stored.push(ids); }
+        } as unknown as BoardApi;
+
+        act(() => {
+            render(
+                <BoardProperties
+                    api={api}
+                    note={{ noteId: "board1" } as FNote}
+                    shown
+                    onClose={() => {}}
+                />,
+                container);
+        });
     });
 
     afterEach(() => {
@@ -58,182 +73,25 @@ describe("Board properties", () => {
         document.body.classList.remove("modal-open");
     });
 
-    it("lists what the board offers, in the order it stores them", () => {
-        draw();
+    it("holds the card templates, named and explained in the board's own words", () => {
+        const card = dialog()?.querySelector<HTMLElement>(".templates-stub");
 
-        expect(captions()).toEqual([ "Text", "Markdown" ]);
-        expect(dialog_()?.querySelector(".tn-card-heading")?.textContent)
-            .toContain("board_view.card-templates");
-        expect(dialog_()?.querySelector(".tn-card-description")?.textContent)
-            .toBe("board_view.card-templates-hint");
+        expect(dialog()?.querySelector(".modal-title")?.textContent)
+            .toContain("board_view.properties-title");
+        expect(card?.dataset.heading).toBe("board_view.card-templates");
+        expect(card?.dataset.instruction).toBe("board_view.card-templates-hint");
+        // Filed under the board, and drawn from what the board offers now.
+        expect(card?.dataset.note).toBe("board1");
+        expect(card?.dataset.templates).toBe("type:text:text/html");
     });
 
-    /** The grip leads, so the trailing edge is left to what each entry carries there. */
-    it("carries the grip at the start of an entry and the way to remove it at the end", () => {
-        draw();
-        const [ first ] = segments();
+    it("writes what the card answers with back to the board", () => {
+        act(() => { dialog()?.querySelector<HTMLElement>(".templates-stub")?.click(); });
 
-        expect(first.firstElementChild?.className).toContain("tn-sortable-grip");
-        // Inside what the card draws for an entry, which is the rest of the segment.
-        expect(first.querySelector(".tn-sortable-content")?.lastElementChild?.className)
-            .toContain("board-template-remove");
+        expect(stored).toEqual([ [ "type:canvas:application/json" ] ]);
     });
 
-    it("stores the order the reader puts them in", () => {
-        draw();
-
-        press(segments()[0], "ArrowDown", { ctrlKey: true });
-
-        expect(stored).toEqual([ [ "type:code:text/x-markdown", "type:text:text/html" ] ]);
-    });
-
-    it("takes an entry away, and leaves the last one alone", () => {
-        draw();
-
-        act(() => { segments()[0].querySelector<HTMLElement>(".board-template-remove")?.click(); });
-
-        expect(stored).toEqual([ [ "type:code:text/x-markdown" ] ]);
-        // And gone from the card, which is drawn from the list this dialog holds rather than from
-        // the board it wrote to.
-        expect(captions()).toEqual([ "Markdown" ]);
-
-        // Nothing to make a card from is nothing the board could make one with, so the way to
-        // take the last one away is not offered at all.
-        offered = [ "type:text:text/html" ];
-        draw();
-        expect(segments()[0].querySelector(".board-template-remove")).toBeNull();
-    });
-
-    describe("adding one", () => {
-        it("offers the note types and the reader's own templates, and not the app's", async () => {
-            const picking = vi.spyOn(dialog, "pickSingleItem").mockResolvedValue(null);
-            draw();
-
-            await add("board_view.add-existing-template");
-
-            const groups = picking.mock.calls.at(-1)?.[0].items as {
-                key: string, items: { key: string }[]
-            }[];
-            expect(groups.map((group) => group.key)).toEqual([ "type", "user" ]);
-            // What the board already offers is left out, as is everything the app ships.
-            expect(groups.flatMap((group) => group.items.map((item) => item.key)))
-                .toEqual([ "type:canvas:application/json", "template:mine" ]);
-        });
-
-        it("adds what was picked to the end of the list", async () => {
-            vi.spyOn(dialog, "pickSingleItem")
-                .mockResolvedValue({ key: "template:mine", caption: "My template" });
-            draw();
-
-            await add("board_view.add-existing-template");
-
-            expect(stored.at(-1))
-                .toEqual([ "type:text:text/html", "type:code:text/x-markdown", "template:mine" ]);
-            expect(captions()).toEqual([ "Text", "Markdown", "My template" ]);
-        });
-
-        it("adds nothing where the reader backed out of the picker", async () => {
-            vi.spyOn(dialog, "pickSingleItem").mockResolvedValue(null);
-            draw();
-
-            await add("board_view.add-existing-template");
-
-            expect(stored).toEqual([]);
-            expect(captions()).toEqual([ "Text", "Markdown" ]);
-        });
-
-        /**
-         * The second way in makes a template of its own: a note under the board carrying
-         * `#template`, opened for the reader to write, and offered by the board from then on.
-         */
-        it("makes a template under the board, and offers it from then on", async () => {
-            const made = vi.spyOn(note_create, "createTemplateNote").mockResolvedValue({
-                noteId: "fresh",
-                title: "board_view.new-template-name",
-                type: "text",
-                mime: "text/html",
-                getIcon: () => "bx bx-note"
-            } as unknown as FNote);
-            draw();
-
-            expect(adders().map((button) => button.textContent)).toEqual([
-                "board_view.add-existing-template", "board_view.create-template"
-            ]);
-
-            await add("board_view.create-template");
-
-            expect(made).toHaveBeenCalledWith("board1", "board_view.new-template-name");
-            expect(stored.at(-1)).toEqual([
-                "type:text:text/html", "type:code:text/x-markdown", "template:fresh"
-            ]);
-            // Drawn straight away: the board has yet to hear of the note this was made from.
-            expect(captions()).toEqual([ "Text", "Markdown", "board_view.new-template-name" ]);
-        });
-
-        it("adds nothing where the template could not be made", async () => {
-            vi.spyOn(note_create, "createTemplateNote").mockResolvedValue(undefined);
-            draw();
-
-            await add("board_view.create-template");
-
-            expect(stored).toEqual([]);
-            expect(captions()).toEqual([ "Text", "Markdown" ]);
-        });
-    });
-
-    // #region The dialog, and what the test does to it
-
-    function draw() {
-        const api = {
-            getCardTemplateIds: () => offered,
-            setCardTemplateIds: async (ids: string[]) => { stored.push(ids); }
-        } as unknown as BoardApi;
-
-        act(() => {
-            render(
-                <BoardProperties
-                    api={api}
-                    available={AVAILABLE}
-                    note={BOARD}
-                    shown
-                    onClose={() => {}}
-                />,
-                container);
-        });
-    }
-
-    function dialog_() {
+    function dialog() {
         return document.querySelector<HTMLElement>(".board-properties-dialog");
     }
-
-    function segments() {
-        return [ ...(dialog_()?.querySelectorAll<HTMLElement>(".tn-sortable-segment") ?? []) ];
-    }
-
-    function captions() {
-        return segments().map((element) =>
-            element.querySelector(".board-template-name")?.textContent);
-    }
-
-    function adders() {
-        return [ ...(dialog_()?.querySelectorAll<HTMLElement>(".tn-sortable-adder") ?? []) ];
-    }
-
-    async function add(label: string) {
-        const button = adders().find((element) => element.textContent === label);
-        await act(async () => {
-            button?.click();
-            await Promise.resolve();
-            await Promise.resolve();
-        });
-    }
-
-    function press(target: Element, key: string, options: KeyboardEventInit = {}) {
-        act(() => {
-            target.dispatchEvent(
-                new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...options }));
-        });
-    }
-
-    // #endregion
 });

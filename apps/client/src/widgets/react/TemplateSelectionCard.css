@@ -1,0 +1,11 @@
+/* The name takes what room there is, so the way to remove an entry stands at its trailing edge. */
+.template-selection-name {
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-selection-remove {
+  flex-shrink: 0;
+}

@@ -2522,6 +2522,13 @@
     "note-types": "Note types",
     "built-in-templates": "Built-in templates"
   },
+  "template_selection": {
+    "add-existing": "Add existing template",
+    "add-title": "Add a template",
+    "create": "Create a new template",
+    "new-name": "New template",
+    "remove": "Remove from the list"
+  },
   "item_picker": {
     "title": "Pick an item",
     "search": "Search…",
@@ -3437,11 +3444,6 @@
     "properties-title": "Board properties",
     "card-templates": "Card templates",
     "card-templates-hint": "Choose what note types and note templates you would like to use when creating new board cards.",
-    "add-existing-template": "Add existing template",
-    "add-template-title": "Add a template to the board",
-    "create-template": "Create a new template",
-    "new-template-name": "New card template",
-    "remove-template": "Remove from the board",
     "more-templates": "More templates…",
     "card-template": "Select a card template",
     "collapse-hint": "Double click to collapse",
