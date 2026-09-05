@@ -370,9 +370,11 @@ export function SortableCard<T extends SortableItem>({
                         className="tn-card-section tn-sortable-adders"
                         onKeyDown={onAddKeyDown}
                     >
-                        {itemCreationButtons.map((button) => (
+                        {itemCreationButtons.map((button, index) => (
                             <button
-                                key={button.label}
+                                // The place in the row, which is the only thing that tells two
+                                // buttons apart: a label is the caller's to repeat.
+                                key={index}
                                 type="button"
                                 className="tn-sortable-adder"
                                 onClick={() => add(button.onCreateItem)}

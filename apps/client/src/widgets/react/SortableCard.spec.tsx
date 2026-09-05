@@ -353,6 +353,16 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "e", "f" ]);
         });
 
+        /** A label says what a button does, and two of them can say the same thing. */
+        it("keeps two buttons that read alike apart", async () => {
+            draw({ itemCreationButtons: [ makes("d", "Delta"), makes("e", "Epsilon") ] });
+
+            expect(adders()).toHaveLength(2);
+
+            await click(adders()[1]);
+            expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "e" ]);
+        });
+
         /** Three is as many as the foot of a card can read; a fourth is the caller's mistake. */
         it("refuses more than three ways of making an entry", () => {
             const buttons = [ makes("d", "D"), makes("e", "E"), makes("f", "F"), makes("g", "G") ];
