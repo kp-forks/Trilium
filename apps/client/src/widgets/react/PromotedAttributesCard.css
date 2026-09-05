@@ -1,0 +1,19 @@
+.tn-card.promoted-attributes-card {
+  margin-block-start: 24px;
+
+  /* The name takes the free space, pushing the edit button and the toggle to the trailing edge. */
+  .promoted-attribute-name {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .promoted-attribute-edit {
+    flex-shrink: 0;
+  }
+
+  .switch-widget {
+    flex-shrink: 0;
+  }
+}

@@ -415,7 +415,7 @@ interface ItemCreationButton<T extends SortableItem> {
     icon?: string;
     /** Turns the button off, for a caller that cannot make an entry yet. */
     disabled?: boolean;
-    onCreateItem: () => T | undefined | Promise<T | undefined>;
+    onCreateItem: (event?: MouseEvent) => T | undefined | Promise<T | undefined>;
 }
 interface SortableCardProps<T extends SortableItem> {
     /** See `CardProps`: the words a filter finds the card by, and whether it is filter-only. */

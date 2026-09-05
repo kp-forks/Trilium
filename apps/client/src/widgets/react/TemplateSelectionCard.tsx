@@ -145,6 +145,7 @@ export default function TemplateSelectionCard({
 
     return (
         <SortableCard
+            className="template-selection-card"
             heading={heading}
             description={instruction}
             items={items}

@@ -4,6 +4,7 @@ import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import type FNote from "../../../entities/fnote";
+import type { PromotedAttribute } from "../promoted_attributes";
 import BoardApi from "./api";
 import BoardProperties from "./properties";
 
@@ -31,18 +32,43 @@ vi.mock("../../react/TemplateSelectionCard", () => ({
     )
 }));
 
+// The card is tested in its own spec; what this dialog decides is the words it passes and where
+// onChange writes.
+vi.mock("../../react/PromotedAttributesCard", () => ({
+    default: ({ heading, instruction, note, settings, onChange }: {
+        heading: string, instruction: string, note: FNote,
+        settings: { name: string }[] | undefined,
+        onChange: (attributes: PromotedAttribute[]) => void
+    }) => (
+        <div
+            className="attributes-stub"
+            data-heading={heading}
+            data-instruction={instruction}
+            data-note={note.noteId}
+            data-settings={settings?.map((setting) => setting.name).join(",")}
+            onClick={() => onChange([ { name: "dueDate", hidden: true } as PromotedAttribute ])}
+        />
+    )
+}));
+
 describe("Board properties", () => {
     let container: HTMLElement;
     let stored: string[][];
+    let storedAttributes: PromotedAttribute[][];
 
     beforeEach(() => {
         stored = [];
+        storedAttributes = [];
         container = document.createElement("div");
         document.body.appendChild(container);
 
         const api = {
             getCardTemplateIds: () => [ "type:text:text/html" ],
-            setCardTemplateIds: async (ids: string[]) => { stored.push(ids); }
+            setCardTemplateIds: async (ids: string[]) => { stored.push(ids); },
+            getStoredPromotedAttributes: () => [ { name: "dueDate" }, { name: "owner" } ],
+            setPromotedAttributes: async (attributes: PromotedAttribute[]) => {
+                storedAttributes.push(attributes);
+            }
         } as unknown as BoardApi;
 
         act(() => {
@@ -85,6 +111,21 @@ describe("Board properties", () => {
         expect(card?.dataset.note).toBe("board1");
         expect(card?.dataset.newName).toBe("board_view.new-template-name");
         expect(card?.dataset.templates).toBe("type:text:text/html");
+    });
+
+    it("holds the promoted attributes, in the board's own words and from its own config", () => {
+        const card = dialog()?.querySelector<HTMLElement>(".attributes-stub");
+
+        expect(card?.dataset.heading).toBe("board_view.promoted-attributes");
+        expect(card?.dataset.instruction).toBe("board_view.promoted-attributes-hint");
+        expect(card?.dataset.note).toBe("board1");
+        expect(card?.dataset.settings).toBe("dueDate,owner");
+    });
+
+    it("writes the order and what is hidden back to the board", () => {
+        act(() => { dialog()?.querySelector<HTMLElement>(".attributes-stub")?.click(); });
+
+        expect(storedAttributes).toEqual([ [ { name: "dueDate", hidden: true } ] ]);
     });
 
     it("writes what the card answers with back to the board", () => {

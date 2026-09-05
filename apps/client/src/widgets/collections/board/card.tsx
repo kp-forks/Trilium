@@ -5,7 +5,7 @@ import {
 import FBranch from "../../../entities/fbranch";
 import FNote from "../../../entities/fnote";
 import BoardApi from "./api";
-import { BoardActionsContext, TitleEditor } from ".";
+import { BoardActionsContext, BoardPromotedAttributesContext, TitleEditor } from ".";
 import { ContextMenuEvent } from "../../../menus/context_menu";
 import { openNoteContextMenu } from "./context_menu";
 import { t } from "../../../services/i18n";
@@ -58,6 +58,7 @@ function Card({
     onInsert: (index: number) => void
 }) {
     const { setBranchIdToEdit } = useContext(BoardActionsContext);
+    const shownAttributes = useContext(BoardPromotedAttributesContext);
     // Tracks the `color` label, which the board does not redraw a card for.
     const colorClass = useNoteColorClass(note) || "";
     const editorRef = useRef<HTMLInputElement>(null);
@@ -182,7 +183,11 @@ function Card({
                         title={t("board_view.edit-note-title")}
                         onClick={handleEdit}
                     />
-                    <UserAttributesDisplay note={note} ignoredAttributes={[statusAttribute]} />
+                    <UserAttributesDisplay
+                        note={note}
+                        ignoredAttributes={[statusAttribute]}
+                        shownAttributes={shownAttributes}
+                    />
                 </>
             ) : (
                 <TitleEditor

@@ -2517,11 +2517,15 @@ describe("Board column rename", () => {
         expect(dialog).toBeTruthy();
 
         // What the board offers, in the order it stores them, each carried by a grip of its own.
-        const named = [ ...(dialog?.querySelectorAll(".template-selection-name") ?? []) ]
+        const templates = dialog?.querySelector<HTMLElement>(".template-selection-card");
+        const named = [ ...(templates?.querySelectorAll(".template-selection-name") ?? []) ]
             .map(element => element.textContent);
         expect(named).toEqual([ "Text", "Markdown", "Canvas", "Spreadsheet" ]);
-        expect(dialog?.querySelectorAll(".tn-sortable-grip").length).toBe(4);
-        expect(dialog?.querySelectorAll(".tn-sortable-adder").length).toBe(2);
+        expect(templates?.querySelectorAll(".tn-sortable-grip").length).toBe(4);
+        expect(templates?.querySelectorAll(".tn-sortable-adder").length).toBe(2);
+
+        // And the attributes the cards show, which the same dialog arranges.
+        expect(dialog?.querySelector(".promoted-attributes-card")).toBeTruthy();
 
         await dismiss(dialog);
     });
@@ -3223,5 +3227,71 @@ describe("Board grouped by a relation", () => {
         await act(async () => { await flush(); });
 
         return { board: mountPoint, target };
+    }
+});
+
+describe("the promoted attributes a card shows", () => {
+    let container: HTMLElement;
+    let drawn = 0;
+
+    afterEach(() => {
+        render(null, container);
+        container.remove();
+    });
+
+    it("draws every one of them until the board's config arranges them", async () => {
+        await draw();
+
+        expect(pills()).toEqual([ "Due: 2026-01-01", "owner: Ada" ]);
+    });
+
+    it("draws them in the stored order, and leaves out what is hidden", async () => {
+        await draw([ { name: "owner" }, { name: "dueDate", hidden: true } ]);
+
+        expect(pills()).toEqual([ "owner: Ada" ]);
+    });
+
+    it("draws an attribute the config has never named, after the ones it has", async () => {
+        await draw([ { name: "owner" } ]);
+
+        expect(pills()).toEqual([ "owner: Ada", "Due: 2026-01-01" ]);
+    });
+
+    /** A board defining two promoted labels, one card carrying a value for each. */
+    async function draw(promotedAttributes?: { name: string, hidden?: boolean }[]) {
+        // The cache keeps what a note id was built with, so a card of its own is what keeps this
+        // test's values off the one the test before it drew.
+        const card = `promotedCard${++drawn}`;
+        const note = buildNote({
+            title: "Board",
+            "#collection": "",
+            "#viewType": "board",
+            "#label:dueDate(inheritable)": "promoted,alias=Due,single,text",
+            "#label:owner(inheritable)": "promoted,single,text",
+            children: [
+                { id: card, title: "First", "#status": "To Do", "#dueDate": "2026-01-01",
+                    "#owner": "Ada" }
+            ]
+        });
+
+        container = document.body.appendChild(document.createElement("div"));
+        await act(async () => {
+            render(
+                <ParentComponent.Provider value={new Component()}>
+                    <Harness
+                        note={note}
+                        noteIds={[ ...note.getChildNoteIds() ]}
+                        initialConfig={{ columns: [ { value: "To Do" } ], promotedAttributes }}
+                    />
+                </ParentComponent.Provider>,
+                container
+            );
+        });
+        await act(async () => { await flush(); });
+    }
+
+    function pills() {
+        return [ ...container.querySelectorAll(".board-note .user-attribute") ]
+            .map(element => element.textContent);
     }
 });

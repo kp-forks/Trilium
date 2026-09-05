@@ -62,7 +62,8 @@ export interface ItemCreationButton<T extends SortableItem> {
     icon?: string;
     /** Turns the button off, for a caller that cannot make an entry yet. */
     disabled?: boolean;
-    onCreateItem: () => T | undefined | Promise<T | undefined>;
+    /** Answers with the entry to add, or with nothing where none was made. */
+    onCreateItem: (event?: MouseEvent) => T | undefined | Promise<T | undefined>;
 }
 
 export interface SortableCardProps<T extends SortableItem> extends CardProps {
@@ -387,8 +388,10 @@ export function SortableCard<T extends SortableItem>({
      * Creates an entry at `at`, or appends it when no index is given. An entry created among the
      * others takes the focus; an appended one leaves it on the button, so several can be made.
      */
-    const add = useCallback(async (create: ItemCreationButton<T>["onCreateItem"], at?: number) => {
-        const created = await create();
+    const add = useCallback(async (
+        create: ItemCreationButton<T>["onCreateItem"], at?: number, event?: MouseEvent
+    ) => {
+        const created = await create(event);
         if (!created) {
             return;
         }
@@ -589,7 +592,7 @@ export function SortableCard<T extends SortableItem>({
                                     <span>{button.label}</span>
                                 </>}
                                 disabled={button.disabled}
-                                onClick={() => add(button.onCreateItem)}
+                                onClick={(event) => add(button.onCreateItem, undefined, event)}
                             />
                         ))}
                     </section>

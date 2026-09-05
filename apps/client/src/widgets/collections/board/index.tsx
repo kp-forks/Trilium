@@ -18,6 +18,7 @@ import type { ShortcutHintDefinition } from "../../../services/shortcut_hints";
 import toast from "../../../services/toast";
 import { escapeHtml, isMobile } from "../../../services/utils";
 import { type NoteTypeOption, resolveNoteTypeOptions } from "../../../services/note_types";
+import type { PromotedAttributeSetting } from "../promoted_attributes";
 import CollectionProperties from "../../note_bars/CollectionProperties";
 import FormTextArea from "../../react/FormTextArea";
 import FormTextBox from "../../react/FormTextBox";
@@ -67,6 +68,11 @@ export interface BoardViewData {
     templates?: string[];
     /** The one last used, which the next card is made from. */
     template?: string;
+    /**
+     * Which promoted attributes the cards show, and in what order. An attribute the list does not
+     * name is shown after the ones it does; see {@link resolvePromotedAttributes}.
+     */
+    promotedAttributes?: PromotedAttributeSetting[];
 }
 
 export interface BoardColumnData {
@@ -171,6 +177,14 @@ export const BoardActionsContext = createContext<BoardActions>({
     setDropPosition: () => undefined,
     setDropTarget: () => undefined
 });
+
+/**
+ * Which promoted attributes a card draws, in order.
+ *
+ * A context rather than a prop: a card is memoized, so this is what reaches one when the reader
+ * arranges the attributes and nothing about the card itself has changed.
+ */
+export const BoardPromotedAttributesContext = createContext<string[] | undefined>(undefined);
 
 export const BoardDragStateContext = createContext<BoardDragState>({
     draggedCard: null,
@@ -373,6 +387,14 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
         onSelect: (template: NoteTypeOption) => api.setLastCardTemplateId(template.id),
         onMore: () => setIsEditingProperties(true)
     }), [ api, viewConfig, offeredTemplates ]);
+
+    // Held while the names are the same, since a new array would redraw every card on every render.
+    const shownAttributesRef = useRef<string[]>([]);
+    const resolvedAttributes = api.getVisiblePromotedAttributeNames();
+    if (resolvedAttributes.join(",") !== shownAttributesRef.current.join(",")) {
+        shownAttributesRef.current = resolvedAttributes;
+    }
+    const shownAttributes = shownAttributesRef.current;
 
     const boardActions = useMemo<BoardActions>(() => ({
         setBranchIdToEdit,
@@ -692,6 +714,7 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
         <div className="board-view">
             <CollectionProperties note={parentNote} />
             <BoardActionsContext.Provider value={boardActions}>
+                <BoardPromotedAttributesContext.Provider value={shownAttributes}>
                 <BoardDragStateContext.Provider value={boardDragState}>
                     {byColumn && columns && <div
                         ref={containerRef}
@@ -790,6 +813,7 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
                         )}
                     </div>}
                 </BoardDragStateContext.Provider>
+                </BoardPromotedAttributesContext.Provider>
             </BoardActionsContext.Provider>
         </div>
     );
