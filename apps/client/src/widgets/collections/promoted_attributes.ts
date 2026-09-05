@@ -24,6 +24,8 @@ export interface PromotedAttribute {
     hidden: boolean;
     /** The definition as stored, which the attribute editor is handed to edit. */
     definitionValue: string;
+    /** What the field holds: `text`, `date`, `boolean` and the rest. Absent for a relation. */
+    labelType?: string;
     /** Whether the note that defines it is the collection itself rather than an ancestor. */
     isOwned: boolean;
     /**
@@ -62,11 +64,13 @@ export function resolvePromotedAttributes(
             continue;
         }
 
+        const parsed = definition.getDefinition();
         defined.set(name, {
             name,
             definitionName: definition.name,
             type,
-            title: definition.getDefinition()?.promotedAlias || name,
+            title: parsed?.promotedAlias || name,
+            labelType: parsed?.labelType,
             hidden: false,
             definitionValue: definition.value,
             isOwned: definition.noteId === note?.noteId,

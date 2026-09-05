@@ -37,7 +37,10 @@ vi.mock("../../services/dialog", () => ({ default: { confirm: mocks.confirm } })
 
 // The editor is tested where it lives; what the card answers for is what it hands over and what it
 // writes once the editor reports a definition.
-vi.mock("../attribute_widgets/attribute_detail", () => ({
+vi.mock("../attribute_widgets/attribute_detail", async (importActual) => ({
+    // The kinds a definition can hold are read from the module itself, so the card wears the icons
+    // the editor picks them by.
+    ...(await importActual<typeof import("../attribute_widgets/attribute_detail")>()),
     AttributeDetail: (props: { opts: AttributeDetailOpts | null }) => {
         mocks.detail.opts = props.opts;
         mocks.detail.callbacks = props as unknown as Record<string, Function>;
@@ -46,15 +49,15 @@ vi.mock("../attribute_widgets/attribute_detail", () => ({
 }));
 
 /** A definition as the collection note carries it. */
-function definition(name: string, { alias, value = "promoted,single,text" }: {
-    alias?: string, value?: string
+function definition(name: string, { alias, value = "promoted,single,text", labelType }: {
+    alias?: string, value?: string, labelType?: string
 } = {}) {
     return {
         name,
         value,
         noteId: "board1",
         isInheritable: true,
-        getDefinition: () => ({ isPromoted: true, promotedAlias: alias })
+        getDefinition: () => ({ isPromoted: true, promotedAlias: alias, labelType })
     };
 }
 
@@ -92,6 +95,26 @@ describe("PromotedAttributesCard", () => {
 
         expect(names()).toEqual([ "Due", "owner" ]);
         expect(shown()).toEqual([ true, true ]);
+    });
+
+    /** The same icons the editor picks a kind by, so a row reads as what it holds. */
+    it("wears the icon of what each attribute holds", () => {
+        defined = [
+            definition("label:dueDate", { labelType: "date" }),
+            definition("label:done", { labelType: "boolean" }),
+            definition("label:notes"),
+            definition("relation:owner")
+        ];
+        draw();
+
+        expect(icons()).toEqual([
+            "bx bx-calendar", "bx bx-toggle-left", "bx bx-text", "bx bx-transfer"
+        ]);
+        // And says which kind it is, in the words the editor lists them under.
+        expect(types()).toEqual([
+            "attribute_detail.date", "attribute_detail.boolean", "attribute_detail.text",
+            "attribute_detail.relation_type"
+        ]);
     });
 
     it("follows the order the settings give, and turns off what they hide", () => {
@@ -342,6 +365,16 @@ describe("PromotedAttributesCard", () => {
 
     function segments() {
         return [ ...container.querySelectorAll<HTMLElement>(".tn-sortable-segment") ];
+    }
+
+    function types() {
+        return segments().map((segment) =>
+            segment.querySelector(".promoted-attribute-type .text")?.textContent);
+    }
+
+    function icons() {
+        return segments().map((segment) =>
+            segment.querySelector(".tn-icon")?.className.replace(" tn-icon", ""));
     }
 
     function names() {

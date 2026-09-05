@@ -9,17 +9,24 @@ import attributes, { removeOwnedAttributesByNameOrType } from "../../services/at
 import dialog from "../../services/dialog";
 import { t } from "../../services/i18n";
 import {
-    AttributeDetail, type AttributeDetailOpts
+    AttributeDetail, type AttributeDetailOpts, DEFINITION_TYPES, RELATION_DEFINITION_TYPE
 } from "../attribute_widgets/attribute_detail";
 import {
     deleteAttributeInSubtree, type PromotedAttribute, type PromotedAttributeSetting,
     renameAttributeInSubtree, resolvePromotedAttributes, storedPromotedAttributes
 } from "../collections/promoted_attributes";
 import ActionButton from "./ActionButton";
+import { Badge } from "./Badge";
 import FormToggle from "./FormToggle";
 import { useTriliumEvent } from "./hooks";
 import Icon from "./Icon";
 import { type SortableItem, SortableCard } from "./SortableCard";
+
+/** What each kind of definition is called and drawn as, as the editor picks it by. */
+const TYPES = new Map(DEFINITION_TYPES.map((type) => [ type.value, type ]));
+
+/** What a definition naming no kind holds, which is what the editor starts one as. */
+const DEFAULT_TYPE = TYPES.get("text") ?? DEFINITION_TYPES[0];
 
 /** The definition a new attribute starts from, which the reader names in the editor. */
 const NEW_DEFINITION: Attribute = {
@@ -74,7 +81,7 @@ export default function PromotedAttributesCard({
     const items = useMemo(() => shown.map((attribute) => ({
         key: attribute.name,
         caption: attribute.title,
-        icon: attribute.type === "relation" ? "bx bx-transfer" : "bx bx-tag"
+        icon: typeOf(attribute).icon
     })), [ shown ]);
 
     const store = useCallback((next: PromotedAttribute[]) => {
@@ -201,6 +208,12 @@ export default function PromotedAttributesCard({
                             {item.icon && <Icon icon={item.icon} />}
                             <span className="promoted-attribute-name">{item.caption}</span>
 
+                            <Badge
+                                className="promoted-attribute-type"
+                                text={typeOf(attribute).title}
+                                outline
+                            />
+
                             <ActionButton
                                 className="promoted-attribute-edit"
                                 icon="bx bx-edit"
@@ -258,4 +271,13 @@ export default function PromotedAttributesCard({
                 document.body)}
         </>
     );
+}
+
+/** What an attribute holds, as the editor lists the kinds. */
+function typeOf(attribute: PromotedAttribute) {
+    const kind = attribute.type === "relation"
+        ? RELATION_DEFINITION_TYPE
+        : attribute.labelType ?? "text";
+
+    return TYPES.get(kind) ?? DEFAULT_TYPE;
 }

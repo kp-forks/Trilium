@@ -9,6 +9,13 @@
     white-space: nowrap;
   }
 
+  /* Reads as a note about the row rather than as something to press. */
+  .promoted-attribute-type {
+    flex-shrink: 0;
+    --color: var(--muted-text-color);
+    font-size: 0.8em;
+  }
+
   .promoted-attribute-edit,
   .promoted-attribute-delete {
     flex-shrink: 0;
