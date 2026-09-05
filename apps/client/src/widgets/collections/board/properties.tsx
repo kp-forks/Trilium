@@ -4,12 +4,16 @@ import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 
 import dialog from "../../../services/dialog";
 import { t } from "../../../services/i18n";
+import note_create from "../../../services/note_create";
+import { buildTemplateId } from "@triliumnext/commons";
+
 import { type NoteTypeOption, noteTypeOptionGroupTitle, resolveNoteTypeOptions } from "../../../services/note_types";
 import ActionButton from "../../react/ActionButton";
 import Icon from "../../react/Icon";
 import { type PickerItem, type PickerItemGroup } from "../../dialogs/item_picker";
 import Modal from "../../react/Modal";
 import { type SortableItem, SortableCard } from "../../react/SortableCard";
+import type FNote from "../../../entities/fnote";
 import BoardApi from "./api";
 
 /**
@@ -18,10 +22,12 @@ import BoardApi from "./api";
  * One card for now, the templates a new card is made from; the dialog is the place the rest of the
  * board's own settings will be put as they arrive.
  */
-export default function BoardProperties({ api, available, shown, onClose }: {
+export default function BoardProperties({ api, available, note, shown, onClose }: {
     api: BoardApi,
     /** Everything a card could be made from, as the board read them. */
     available: NoteTypeOption[],
+    /** The board itself, which is what a template made here is filed under. */
+    note: FNote,
     shown: boolean,
     onClose: () => void
 }) {
@@ -35,7 +41,7 @@ export default function BoardProperties({ api, available, shown, onClose }: {
             show={shown}
             onHidden={onClose}
         >
-            <CardTemplates api={api} available={available} shown={shown} />
+            <CardTemplates api={api} available={available} shown={shown} note={note} />
         </Modal>
     );
 }
@@ -46,11 +52,20 @@ export default function BoardProperties({ api, available, shown, onClose }: {
  * The order is the reader's to change, since the first of them is what a card is made from until
  * another is picked, and what the pill in a card's editor leads with.
  */
-function CardTemplates({ api, available, shown }: {
+function CardTemplates({ api, available, note, shown }: {
     api: BoardApi,
     available: NoteTypeOption[],
+    note: FNote,
     shown: boolean
 }) {
+    /**
+     * What was made here, which the board has yet to read back.
+     *
+     * A template is a note, and the board learns of one from the change that files it: until that
+     * arrives there is nothing to draw the entry from, and it would stand in the stored list
+     * without being shown.
+     */
+    const [ made, setMade ] = useState<NoteTypeOption[]>([]);
     /**
      * The list as it stands here, which is what the card is drawn from.
      *
@@ -67,8 +82,11 @@ function CardTemplates({ api, available, shown }: {
         }
     }, [ api, shown ]);
 
+    const known = useMemo(
+        () => [ ...available, ...made.filter((option) => !available.some((a) => a.id === option.id)) ],
+        [ available, made ]);
     const offered = useMemo(
-        () => resolveNoteTypeOptions(ids, available), [ available, ids ]);
+        () => resolveNoteTypeOptions(ids, known), [ known, ids ]);
     const items = useMemo(() => offered.map((option) => ({
         key: option.id,
         caption: option.title,
@@ -93,6 +111,26 @@ function CardTemplates({ api, available, shown }: {
             ? { key: picked.key, caption: picked.caption, icon: picked.icon }
             : undefined;
     }, [ available, offered ]);
+
+    /** Makes one under the board and opens it, the reader writing what a card made from it holds. */
+    const create = useCallback(async () => {
+        const template = await note_create.createTemplateNote(
+            note.noteId, t("board_view.new-template-name"));
+        if (!template) {
+            return undefined;
+        }
+
+        const option: NoteTypeOption = {
+            id: buildTemplateId(template.noteId),
+            title: template.title,
+            icon: template.getIcon(),
+            group: "user",
+            options: { type: template.type, mime: template.mime, templateNoteId: template.noteId }
+        };
+
+        setMade((was) => [ ...was, option ]);
+        return { key: option.id, caption: option.title, icon: option.icon };
+    }, [ note ]);
 
     return (
         <SortableCard
@@ -131,7 +169,7 @@ function CardTemplates({ api, available, shown }: {
                 {
                     label: t("board_view.create-template"),
                     icon: "bx bx-plus",
-                    onCreateItem: () => undefined
+                    onCreateItem: create
                 }
             ]}
         />

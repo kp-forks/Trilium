@@ -824,6 +824,7 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
                                 <BoardProperties
                                     api={api}
                                     available={availableTemplates}
+                                    note={parentNote}
                                     shown={isEditingProperties}
                                     onClose={() => setIsEditingProperties(false)}
                                 />

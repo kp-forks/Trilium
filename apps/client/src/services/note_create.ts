@@ -236,9 +236,41 @@ async function duplicateSubtree(noteId: string, parentNotePath: string) {
     toastService.showMessage(t("note_create.duplicated", { title: origNote?.title }));
 }
 
+/**
+ * Makes a template under the given note and opens it for the reader to write.
+ *
+ * A template is a note carrying `#template`, which is what makes it something other notes can be
+ * made from. Written here rather than in the view that asked for one, since a collection of any
+ * kind may want the same: a board makes the templates its cards are made from, and the next one to
+ * offer templates makes them the same way.
+ *
+ * Opened in a popup rather than in the tab: what asked for it is usually a dialog, which the reader
+ * is still standing in and expects to come back to.
+ *
+ * @returns the note that was made, or nothing where it could not be.
+ */
+async function createTemplateNote(parentNoteId: string, title: string) {
+    const { note } = await createNote(parentNoteId, {
+        activate: false,
+        title,
+        type: "text",
+        attributes: [
+            { type: "label", name: "template", value: "", isInheritable: false }
+        ]
+    });
+
+    if (!note) {
+        return undefined;
+    }
+
+    appContext.triggerCommand("openInPopup", { noteIdOrPath: note.noteId });
+    return note;
+}
+
 export default {
     createNote,
     createNoteWithTypePrompt,
+    createTemplateNote,
     duplicateSubtree,
     chooseNoteType
 };

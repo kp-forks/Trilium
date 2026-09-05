@@ -364,6 +364,36 @@ describe("PopupEditor", () => {
         expect(document.body.classList.contains("popup-editor-open")).toBe(false);
     });
 
+    /**
+     * The popup is held low on purpose, so the editor's panels and the menus its pickers open float
+     * over it. A dialog declaring a layer of its own would cover it, so that dialog gives way for
+     * as long as the popup is up, and is put back exactly as it was found.
+     */
+    it("puts a dialog it stands over underneath it, and back afterwards", async () => {
+        const underlying = document.body.appendChild(document.createElement("div"));
+        underlying.className = "modal show";
+        underlying.style.zIndex = "2000";
+        document.body.appendChild(document.createElement("div")).className = "modal-backdrop";
+
+        await openPopup({ noteIdOrPath: "root/n1" });
+        expect(underlying.style.zIndex).toBe("1090");
+
+        await act(async () => container.querySelector<HTMLElement>(".hidden-stub")?.click());
+        expect(underlying.style.zIndex).toBe("2000");
+    });
+
+    /** One standing below it already is left where it is: nothing about it covers the popup. */
+    it("leaves a dialog below its own layer alone", async () => {
+        const underlying = document.body.appendChild(document.createElement("div"));
+        underlying.className = "modal show";
+        underlying.style.zIndex = "1055";
+        document.body.appendChild(document.createElement("div")).className = "modal-backdrop";
+
+        await openPopup({ noteIdOrPath: "root/n1" });
+
+        expect(underlying.style.zIndex).toBe("1055");
+    });
+
     it("raises its own backdrop when it opens over another dialog", async () => {
         const underlying = document.body.appendChild(document.createElement("div"));
         underlying.className = "modal show";

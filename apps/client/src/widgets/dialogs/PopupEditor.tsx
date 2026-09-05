@@ -26,6 +26,12 @@ import MobileEditorToolbar from "../type_widgets/text/mobile_editor_toolbar";
 
 const isNewLayout = isExperimentalFeatureEnabled("new-layout");
 
+/** The layer the stylesheet gives this popup while it stands over another modal. */
+const STACKED_LAYER = 1100;
+
+/** Where a dialog this popup stands over is held while it is up, which is under its backdrop. */
+const COVERED_LAYER = 1090;
+
 export default function PopupEditor() {
     const [ shown, setShown ] = useState(false);
     const [ stacked, setStacked ] = useState(false);
@@ -113,7 +119,34 @@ export default function PopupEditor() {
         const popupBackdrop = backdrops[backdrops.length - 1] as HTMLElement | undefined;
         if (!popupBackdrop) return;
         popupBackdrop.classList.add("popup-editor-backdrop");
-        return () => popupBackdrop.classList.remove("popup-editor-backdrop");
+
+        /*
+         * The stylesheet's stacked layer clears Bootstrap's own dialogs and no more. A dialog that
+         * declares a layer of its own stands above it — a confirm or a prompt at 2000, or the
+         * properties of a collection that opened this to write a template — and would cover the
+         * popup entirely.
+         *
+         * What gives way is the dialog, not this popup: it is held deliberately low so that the
+         * editor's own panels and the menus its pickers open (portalled to the page at 1200) float
+         * over it, and raising it above a dialog would put every one of those behind it. Each is
+         * put back exactly as it was found, an inline layer of its own included.
+         */
+        const dialog = modalRef.current;
+        const lowered = [ ...document.querySelectorAll<HTMLElement>(".modal.show") ]
+            .filter((modal) => modal !== dialog
+                && (parseInt(getComputedStyle(modal).zIndex, 10) || 0) >= STACKED_LAYER)
+            .map((modal) => {
+                const was = modal.style.zIndex;
+                modal.style.zIndex = String(COVERED_LAYER);
+                return () => { modal.style.zIndex = was; };
+            });
+
+        return () => {
+            popupBackdrop.classList.remove("popup-editor-backdrop");
+            for (const restore of lowered) {
+                restore();
+            }
+        };
     }, [shown, stacked]);
 
     return (

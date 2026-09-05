@@ -4,6 +4,8 @@ import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import dialog from "../../../services/dialog";
+import type FNote from "../../../entities/fnote";
+import note_create from "../../../services/note_create";
 import { type NoteTypeOption } from "../../../services/note_types";
 import BoardApi from "./api";
 import BoardProperties from "./properties";
@@ -23,6 +25,9 @@ const AVAILABLE = [
 ].map(([ id, title, group ]) => ({
     id, title, group, icon: "bx bx-note", options: { type: "text" }
 }) as NoteTypeOption);
+
+/** The board a template made here is filed under. */
+const BOARD = { noteId: "board1" } as FNote;
 
 describe("Board properties", () => {
     let container: HTMLElement;
@@ -137,8 +142,18 @@ describe("Board properties", () => {
             expect(captions()).toEqual([ "Text", "Markdown" ]);
         });
 
-        /** The second way in is drawn, and does nothing yet. */
-        it("offers a way to make one, which makes nothing for now", async () => {
+        /**
+         * The second way in makes a template of its own: a note under the board carrying
+         * `#template`, opened for the reader to write, and offered by the board from then on.
+         */
+        it("makes a template under the board, and offers it from then on", async () => {
+            const made = vi.spyOn(note_create, "createTemplateNote").mockResolvedValue({
+                noteId: "fresh",
+                title: "board_view.new-template-name",
+                type: "text",
+                mime: "text/html",
+                getIcon: () => "bx bx-note"
+            } as unknown as FNote);
             draw();
 
             expect(adders().map((button) => button.textContent)).toEqual([
@@ -146,7 +161,23 @@ describe("Board properties", () => {
             ]);
 
             await add("board_view.create-template");
+
+            expect(made).toHaveBeenCalledWith("board1", "board_view.new-template-name");
+            expect(stored.at(-1)).toEqual([
+                "type:text:text/html", "type:code:text/x-markdown", "template:fresh"
+            ]);
+            // Drawn straight away: the board has yet to hear of the note this was made from.
+            expect(captions()).toEqual([ "Text", "Markdown", "board_view.new-template-name" ]);
+        });
+
+        it("adds nothing where the template could not be made", async () => {
+            vi.spyOn(note_create, "createTemplateNote").mockResolvedValue(undefined);
+            draw();
+
+            await add("board_view.create-template");
+
             expect(stored).toEqual([]);
+            expect(captions()).toEqual([ "Text", "Markdown" ]);
         });
     });
 
@@ -160,7 +191,13 @@ describe("Board properties", () => {
 
         act(() => {
             render(
-                <BoardProperties api={api} available={AVAILABLE} shown onClose={() => {}} />,
+                <BoardProperties
+                    api={api}
+                    available={AVAILABLE}
+                    note={BOARD}
+                    shown
+                    onClose={() => {}}
+                />,
                 container);
         });
     }
