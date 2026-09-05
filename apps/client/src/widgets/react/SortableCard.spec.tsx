@@ -14,12 +14,18 @@ vi.mock("../../services/i18n", () => ({
 const SEGMENT_HEIGHT = 40;
 const SEGMENT_GAP = 4;
 
+/** What the card asks of a finger before it carries a segment: how long, and how still. */
+const TOUCH_HOLD = 400;
+const TOUCH_SLACK = 8;
+
 describe("SortableCard", () => {
     let container: HTMLElement;
     let items: SortableItem[];
     let changed: SortableItem[][];
 
     beforeEach(() => {
+        // The rest a finger keeps is waited out rather than lived through.
+        vi.useFakeTimers();
         items = [
             { key: "a", caption: "Alpha" },
             { key: "b", caption: "Beta" },
@@ -29,6 +35,7 @@ describe("SortableCard", () => {
     });
 
     afterEach(() => {
+        vi.useRealTimers();
         render(null, container);
         container.remove();
     });
@@ -248,16 +255,80 @@ describe("SortableCard", () => {
             expect(changed).toEqual([]);
         });
 
-        /** A finger carries it the same way a mouse does, the grip answering for the gesture. */
-        it("is carried by a finger as well as by a pointer", () => {
+        /**
+         * A finger carries it the same way a mouse does, once it has rested on the grip. The grip
+         * answers for the gesture as soon as it is touched, so a finger that meant to scroll the
+         * page scrolls nothing wherever it lands on one: resting first is what tells them apart.
+         */
+        it("is carried by a finger, once it has rested on the grip", () => {
             draw();
 
-            grab(segmentOf("a"), 0, { pointerType: "touch", button: -1 });
-            moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1, { pointerType: "touch" });
+            touch(segmentOf("a"));
+            // Nothing is taken up by the press itself, however long the finger is there for.
+            expect(segmentOf("a")?.className).not.toContain("tn-sortable-dragging");
 
+            rest();
+            // Held now, which the segment says for itself before it has gone anywhere.
+            expect(segmentOf("a")?.className).toContain("tn-sortable-dragging");
+
+            moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1, { pointerType: "touch" });
             expect(captions()).toEqual([ "Beta", "Alpha", "Gamma" ]);
+
             drop();
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "b", "a", "c" ]);
+        });
+
+        /**
+         * The page is the gesture's until a segment is taken up: a finger that came to scroll
+         * scrolls, wherever on the card it landed. Once one is being carried the move is refused,
+         * which is what holds the page still under it.
+         */
+        it("leaves the page to scroll until a segment is being carried", () => {
+            draw();
+
+            touch(segmentOf("a"));
+            expect(scrolls()).toBe(true);
+
+            rest();
+            expect(scrolls()).toBe(false);
+
+            drop();
+            expect(scrolls()).toBe(true);
+        });
+
+        it("takes nothing up for a finger that strays before it has rested", () => {
+            draw();
+
+            touch(segmentOf("a"));
+            moveTo(SEGMENT_HEIGHT, { pointerType: "touch" });
+            rest();
+
+            expect(segmentOf("a")?.className).not.toContain("tn-sortable-dragging");
+            expect(captions()).toEqual([ "Alpha", "Beta", "Gamma" ]);
+            expect(changed).toEqual([]);
+        });
+
+        /** A finger settling by a pixel or two is still resting, and carries nothing off by it. */
+        it("takes it up for a finger that barely moves, from where the finger now is", () => {
+            draw();
+
+            touch(segmentOf("a"));
+            moveTo(TOUCH_SLACK, { pointerType: "touch" });
+            rest();
+
+            expect(segmentOf("a")?.className).toContain("tn-sortable-dragging");
+            expect(shift(segmentOf("a"))).toBe(0);
+        });
+
+        it("takes nothing up for a finger lifted before it has rested", () => {
+            draw();
+
+            touch(segmentOf("a"));
+            drop();
+            rest();
+
+            expect(segmentOf("a")?.className).not.toContain("tn-sortable-dragging");
+            expect(changed).toEqual([]);
         });
 
         it("carries a card of one entry nowhere, and says nothing about it", () => {
@@ -613,6 +684,24 @@ describe("SortableCard", () => {
     function shift(segment: HTMLElement | null) {
         const by = Number(/translateY\((-?[\d.]+)px\)/.exec(segment?.style.transform ?? "")?.[1]);
         return (segment?.offsetTop ?? 0) + (Number.isNaN(by) ? 0 : by);
+    }
+
+    /** A finger going down on a grip, which takes nothing up until it has rested there. */
+    function touch(segment: HTMLElement | null) {
+        grab(segment, 0, { pointerType: "touch", button: -1 });
+    }
+
+    /** Whether a finger moving now would still scroll the page rather than carry a segment. */
+    function scrolls() {
+        const move = new Event("touchmove", { bubbles: true, cancelable: true });
+        act(() => { list()?.dispatchEvent(move); });
+        return !move.defaultPrevented;
+    }
+
+    /** Waits out the rest a finger has to keep before the segment follows it. */
+    function rest() {
+        act(() => { vi.advanceTimersByTime(TOUCH_HOLD + 10); });
+        lay();
     }
 
     function grab(segment: HTMLElement | null, at = 0, options: Record<string, unknown> = {}) {

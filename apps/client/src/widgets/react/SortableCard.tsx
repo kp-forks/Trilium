@@ -13,6 +13,18 @@ import Icon from "./Icon";
 /** How many buttons the foot of a card holds before they are too narrow to read. */
 const MAX_CREATION_BUTTONS = 3;
 
+/**
+ * How long a finger rests on the grip before the segment follows it.
+ *
+ * A finger on a grip is as likely to be scrolling the page as carrying a segment, and resting is
+ * what tells the two apart: one that moves on scrolls as it would anywhere else, and one that
+ * stays takes the segment up. Matches the board's own cards.
+ */
+const TOUCH_HOLD_MS = 400;
+
+/** How far it may stray in that time and still be resting rather than scrolling. */
+const TOUCH_SLACK_PX = 8;
+
 /** One entry of a {@link SortableCard}, named by a key that outlives the order it stands in. */
 export interface SortableItem {
     key: string;
@@ -78,6 +90,8 @@ export function SortableCard<T extends SortableItem>({
     const listRef = useRef<HTMLDivElement>(null);
     const adderRef = useRef<HTMLElement>(null);
     const dragRef = useRef<Drag<T>>();
+    /** A finger resting on a grip, which becomes a carry once it has rested long enough. */
+    const holdRef = useRef<Hold>();
     /**
      * The order while a segment is being carried, which the caller is told of once it lands.
      *
@@ -112,6 +126,8 @@ export function SortableCard<T extends SortableItem>({
         selector: ".tn-sortable-segment:not(.tn-sortable-dragging)",
         grow: (segment) => segment.dataset.key === addedKey
     });
+
+    useEffect(() => () => window.clearTimeout(holdRef.current?.timer), []);
 
     useLayoutEffect(() => {
         const key = pendingFocus.current;
@@ -180,22 +196,17 @@ export function SortableCard<T extends SortableItem>({
         }
     }, [ onChange, segmentOf ]);
 
-    const beginDrag = useCallback((event: PointerEvent, key: string) => {
-        const list = listRef.current;
+    /** Takes up the segment, which is where the carry begins and where it is drawn as held. */
+    const startDrag = useCallback((key: string, pointerId: number, clientY: number) => {
         const segment = segmentOf(key);
-        if (!list || !segment || (event.pointerType === "mouse" && event.button !== 0)) {
+        if (!segment) {
             return;
         }
 
-        // The gesture is the grip's alone: it must not also scroll the page under a finger, nor
-        // start a selection under a mouse.
-        event.preventDefault();
-        list.setPointerCapture?.(event.pointerId);
-
         dragRef.current = {
             key,
-            pointerId: event.pointerId,
-            grabbedAt: event.clientY,
+            pointerId,
+            grabbedAt: clientY,
             from: segment.offsetTop,
             height: segment.offsetHeight,
             order: shown,
@@ -206,6 +217,46 @@ export function SortableCard<T extends SortableItem>({
         select(key);
         segment.focus();
     }, [ segmentOf, select, shown ]);
+
+    const cancelHold = useCallback(() => {
+        window.clearTimeout(holdRef.current?.timer);
+        holdRef.current = undefined;
+    }, []);
+
+    const beginDrag = useCallback((event: PointerEvent, key: string) => {
+        const list = listRef.current;
+        if (!list || !segmentOf(key) || (event.pointerType === "mouse" && event.button !== 0)) {
+            return;
+        }
+
+        // The gesture is the grip's alone: it must not also scroll the page under a finger, nor
+        // start a selection under a mouse.
+        event.preventDefault();
+        list.setPointerCapture?.(event.pointerId);
+
+        // A mouse on a grip means only one thing, so it is taken up at once. A finger has to rest
+        // first, since it is also how the page is scrolled.
+        if (event.pointerType === "mouse") {
+            startDrag(key, event.pointerId, event.clientY);
+            return;
+        }
+
+        cancelHold();
+        holdRef.current = {
+            pointerId: event.pointerId,
+            from: { x: event.clientX, y: event.clientY },
+            // Where the finger is when the rest is over, so a hand that settles by a pixel or two
+            // does not carry the segment off by as much.
+            at: event.clientY,
+            timer: window.setTimeout(() => {
+                const held = holdRef.current;
+                holdRef.current = undefined;
+                if (held) {
+                    startDrag(key, held.pointerId, held.at);
+                }
+            }, TOUCH_HOLD_MS)
+        };
+    }, [ cancelHold, segmentOf, startDrag ]);
 
     const dragTo = useCallback((clientY: number) => {
         const drag = dragRef.current;
@@ -314,13 +365,39 @@ export function SortableCard<T extends SortableItem>({
                 className="tn-sortable-list"
                 role="list"
                 onPointerMove={(event) => {
+                    const held = holdRef.current;
+                    if (held?.pointerId === event.pointerId) {
+                        // Gone before it settled, which is a finger on its way somewhere else.
+                        held.at = event.clientY;
+                        if (Math.hypot(event.clientX - held.from.x, event.clientY - held.from.y)
+                                > TOUCH_SLACK_PX) {
+                            cancelHold();
+                        }
+
+                        return;
+                    }
+
                     if (dragRef.current?.pointerId === event.pointerId) {
                         event.preventDefault();
                         dragTo(event.clientY);
                     }
                 }}
-                onPointerUp={() => endDrag(true)}
-                onPointerCancel={() => endDrag(false)}
+                // Refused only while a segment is being carried, which is what keeps the page
+                // still under it. Until then the gesture is the page's, so a finger that came to
+                // scroll scrolls, grip or no grip.
+                onTouchMove={(event) => {
+                    if (dragRef.current) {
+                        event.preventDefault();
+                    }
+                }}
+                onPointerUp={() => {
+                    cancelHold();
+                    endDrag(true);
+                }}
+                onPointerCancel={() => {
+                    cancelHold();
+                    endDrag(false);
+                }}
             >
                 {shown.map((item, index) => (
                     <section
@@ -388,6 +465,16 @@ export function SortableCard<T extends SortableItem>({
             </div>
         </Card>
     );
+}
+
+/** A finger resting on a grip, until it has rested long enough to carry the segment. */
+interface Hold {
+    pointerId: number;
+    /** Where it went down, against which a stray is measured. */
+    from: { x: number, y: number };
+    /** Where it is now, which is where the carry begins from. */
+    at: number;
+    timer: number;
 }
 
 /** A segment being carried: where it was taken from, and the order it has reached. */

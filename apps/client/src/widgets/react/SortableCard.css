@@ -58,8 +58,11 @@
     padding: 0.2em 0.1em;
     color: var(--sortable-grip-color);
     cursor: grab;
-    /* The gesture is this element's own: without it a finger scrolls the page instead. */
-    touch-action: none;
+    /* The page scrolls from here as it does anywhere else. What stops it once a segment is being
+       carried is the move being refused, which leaves the gesture with the card. */
+    touch-action: pan-y;
+    -webkit-touch-callout: none;
+    user-select: none;
 
     & svg {
       width: 1.1em;
@@ -71,6 +74,16 @@
 
     &:hover {
       color: var(--sortable-grip-hover-color);
+    }
+  }
+
+  /* A thumb reaches for more than the mark it aims at. What the padding adds here the margin takes
+     back, so the grip is easier to land on without the segments standing any taller. */
+  @media (pointer: coarse) {
+    .tn-sortable-grip {
+      margin-block: -0.5em;
+      margin-inline-end: calc(var(--card-padding-inline) / -2);
+      padding: 0.7em calc(var(--card-padding-inline) / 2);
     }
   }
 
