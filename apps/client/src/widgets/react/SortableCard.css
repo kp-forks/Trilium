@@ -2,9 +2,12 @@
   --sortable-grip-color: var(--muted-text-color);
   --sortable-grip-hover-color: var(--main-text-color);
   --sortable-selected-color: var(--main-text-color);
-  --sortable-dragging-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
+  /* Above and below both, so the segment reads as raised over the ones it is passing rather than
+     as lit from one corner. The lower one is the heavier, as it would be under a light overhead. */
+  --sortable-dragging-shadow: 0 -3px 8px rgba(0, 0, 0, 0.3),
+                              0 5px 8px rgba(0, 0, 0, 0.3);
   /* Enough to read as held rather than filed, without losing what it says. */
-  --sortable-dragging-opacity: 0.85;
+  --sortable-dragging-opacity: 0.90;
 }
 
 .tn-card.tn-sortable-card {
