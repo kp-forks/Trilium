@@ -12,7 +12,7 @@ import { t } from "../../../services/i18n";
 import { escapeHtml } from "../../../services/utils";
 import ColorPicker from "../../react/ColorPicker";
 import Api from "./api";
-import { INBOX_COLUMN, INBOX_COLUMN_ICON } from "./columns";
+import { INBOX_COLUMN } from "./columns";
 
 /** What the column menu is opened for: the column itself, and what it can be asked to do. */
 interface ColumnMenuTarget {
@@ -170,15 +170,12 @@ const LISTED_COLUMNS = 7;
 
 /** What the board is, and what it can be asked to do, for a press on the ground its columns stand on. */
 interface BoardMenuTarget {
-    /** Whether the board keeps an inbox column. The entry shows it and toggles it. */
-    inboxShown: boolean;
     /** Whether the board renders notes labelled `archived`. */
     archivedShown: boolean;
     /** Opens the column name editor, the same one the button at the end opens. */
     onAddColumn: () => void;
     onCollapseAll: () => void;
     onExpandAll: () => void;
-    onShowInbox: (shown: boolean) => void;
     onShowArchived: (shown: boolean) => void;
     /** Opens `BoardProperties`, which configures the card templates. */
     onOpenProperties: () => void;
@@ -210,12 +207,6 @@ export function openBoardContextMenu(event: ContextMenuEvent, board: BoardMenuTa
                 handler: board.onExpandAll
             },
             { kind: "separator" },
-            {
-                title: t("board_view.show-inbox-column"),
-                uiIcon: INBOX_COLUMN_ICON,
-                trailingIcon: board.inboxShown ? "bx bx-check" : undefined,
-                handler: () => board.onShowInbox(!board.inboxShown)
-            },
             {
                 title: t("board_view.show-archived-notes"),
                 uiIcon: "bx bx-archive",

@@ -55,14 +55,29 @@ describe("Board properties", () => {
     let container: HTMLElement;
     let stored: string[][];
     let storedAttributes: PromotedAttribute[][];
+    let toggled: [ string, boolean ][];
+    /** What the board shows, which the General card reads from the note's own labels. */
+    let shownOnBoard: Record<string, boolean>;
 
     beforeEach(() => {
         stored = [];
         storedAttributes = [];
+        toggled = [];
+        shownOnBoard = { enableInboxColumn: false, includeArchived: true };
         container = document.createElement("div");
         document.body.appendChild(container);
 
+        const board = {
+            noteId: "board1",
+            isLabelTruthy: (name: string) => !!shownOnBoard[name],
+            getLabelValue: (name: string) => shownOnBoard[name] ? "true" : "false",
+            getLabel: () => undefined,
+            hasLabel: (name: string) => name in shownOnBoard
+        } as unknown as FNote;
+
         const api = {
+            setInboxEnabled: async (enabled: boolean) => { toggled.push([ "inbox", enabled ]); },
+            setArchivedShown: async (shown: boolean) => { toggled.push([ "archived", shown ]); },
             getCardTemplateIds: () => [ "type:text:text/html" ],
             setCardTemplateIds: async (ids: string[]) => { stored.push(ids); },
             getStoredPromotedAttributes: () => [ { name: "dueDate" }, { name: "owner" } ],
@@ -75,7 +90,7 @@ describe("Board properties", () => {
             render(
                 <BoardProperties
                     api={api}
-                    note={{ noteId: "board1" } as FNote}
+                    note={board}
                     shown
                     onClose={() => {}}
                 />,
@@ -111,6 +126,32 @@ describe("Board properties", () => {
         expect(card?.dataset.note).toBe("board1");
         expect(card?.dataset.newName).toBe("board_view.new-template-name");
         expect(card?.dataset.templates).toBe("type:text:text/html");
+    });
+
+    describe("what the board shows", () => {
+        /** Both were on the board's own menu; the inbox column is now offered only here. */
+        it("draws a segment for each, reading what the board's labels say", () => {
+            const rows = general()?.querySelectorAll(".tn-card-section") ?? [];
+
+            expect(rows.length).toBe(2);
+            expect(toggleAt(0)?.classList.contains("on")).toBe(false);
+            expect(toggleAt(1)?.classList.contains("on")).toBe(true);
+        });
+
+        it("asks the board to show each of them", () => {
+            act(() => { toggleAt(0)?.click(); });
+            act(() => { toggleAt(1)?.click(); });
+
+            expect(toggled).toEqual([ [ "inbox", true ], [ "archived", false ] ]);
+        });
+
+        function general() {
+            return dialog()?.querySelector<HTMLElement>(".board-properties-general");
+        }
+
+        function toggleAt(index: number) {
+            return general()?.querySelectorAll<HTMLElement>(".switch-button")[index];
+        }
     });
 
     it("holds the promoted attributes, in the board's own words and from its own config", () => {

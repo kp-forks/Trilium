@@ -10,8 +10,12 @@ import type { PromotedAttribute, PromotedAttributeSetting } from "../collections
 import PromotedAttributesCard from "./PromotedAttributesCard";
 import { ParentComponent } from "./react_utils";
 
-// i18next is never initialised under test, so every label would read as undefined.
-vi.mock("../../services/i18n", () => ({ t: (key: string) => key }));
+// i18next is never initialised under test, so every label would read as undefined. The command
+// registry, reached through the attribute editor, waits on the translations before it builds.
+vi.mock("../../services/i18n", () => ({
+    t: (key: string) => key,
+    translationsInitializedPromise: Promise.resolve()
+}));
 
 const mocks = vi.hoisted(() => ({
     setLabel: vi.fn(),

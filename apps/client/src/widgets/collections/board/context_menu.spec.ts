@@ -9,7 +9,7 @@ import dialog from "../../../services/dialog";
 import FNote from "../../../entities/fnote";
 import { buildNote } from "../../../test/easy-froca";
 import BoardApi from "./api";
-import { DEFAULT_COLUMN_ICON, INBOX_COLUMN_ICON } from "./columns";
+import { DEFAULT_COLUMN_ICON } from "./columns";
 import { openBoardContextMenu, openColumnContextMenu, openNoteContextMenu } from "./context_menu";
 
 // The card menu opens with the shared link items, which reach for the active note context.
@@ -723,12 +723,10 @@ describe("Board context menu", () => {
     it("offers what the board holds, and a way to how it is set up", () => {
         const show = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
         const board = {
-            inboxShown: true,
             archivedShown: false,
             onAddColumn: vi.fn(),
             onCollapseAll: vi.fn(),
             onExpandAll: vi.fn(),
-            onShowInbox: vi.fn(),
             onShowArchived: vi.fn(),
             onOpenProperties: vi.fn()
         };
@@ -741,11 +739,12 @@ describe("Board context menu", () => {
         } as ContextMenuEvent, board);
 
         const items = show.mock.calls.at(-1)?.[0].items ?? [];
-        // A separator stands between what the board shows and how it is set up.
+        // A separator stands between what the board shows and how it is set up. The inbox column
+        // is turned on in the properties dialog, which the last entry opens.
         expect(items.map(item => item && "uiIcon" in item ? item.uiIcon : "---")).toEqual([
             "bx bx-columns", "---",
             "bx bx-collapse-alt", "bx bx-expand-alt", "---",
-            INBOX_COLUMN_ICON, "bx bx-archive", "---",
+            "bx bx-archive", "---",
             "bx bx-cog"
         ]);
 

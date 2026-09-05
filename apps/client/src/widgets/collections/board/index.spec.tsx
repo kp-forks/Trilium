@@ -26,7 +26,7 @@ import BoardView, { BoardViewData } from ".";
 import { getNoteTypeOptions, type NoteTypeOption } from "../../../services/note_types";
 import { collectShortcutHints } from "../../../services/shortcut_hints";
 import BoardApi, { getPendingWrites } from "./api";
-import { DEFAULT_COLUMN_ICON, INBOX_COLUMN_ICON } from "./columns";
+import { DEFAULT_COLUMN_ICON } from "./columns";
 
 // Stands in for the server: by the time the bulk action resolves, the notes carry the new value,
 // which is what makes the old column empty rather than merely renamed.
@@ -513,7 +513,7 @@ describe("Collapsed board columns", () => {
                 : []);
         expect(entries.map(entry => entry.icon)).toEqual([
             "bx bx-columns", "bx bx-collapse-alt", "bx bx-expand-alt",
-            INBOX_COLUMN_ICON, "bx bx-archive", "bx bx-cog"
+            "bx bx-archive", "bx bx-cog"
         ]);
         const entry = (icon: string) => entries.find(item => item.icon === icon)?.handler;
 
@@ -588,7 +588,6 @@ describe("Collapsed board columns", () => {
     it("opens the column editor and toggles what the board shows, from its menu", async () => {
         const { mountPoint } = await setup();
         const board = mountPoint.querySelector<HTMLElement>(".board-view-container");
-        const inbox = vi.spyOn(BoardApi.prototype, "setInboxEnabled").mockResolvedValue(undefined);
         const archived = vi.spyOn(BoardApi.prototype, "setArchivedShown")
             .mockResolvedValue(undefined);
         const show = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
@@ -601,12 +600,11 @@ describe("Collapsed board columns", () => {
             return found;
         };
 
-        // Neither is on, so neither is ticked, and pressing them asks for them.
-        expect("trailingIcon" in entry(INBOX_COLUMN_ICON) && entry(INBOX_COLUMN_ICON).trailingIcon)
+        // Archived notes are not shown, so the entry is not ticked, and pressing it asks for them.
+        // The inbox column is turned on in the properties dialog rather than here.
+        expect("trailingIcon" in entry("bx bx-archive") && entry("bx bx-archive").trailingIcon)
             .toBeUndefined();
-        entry(INBOX_COLUMN_ICON).handler?.(entry(INBOX_COLUMN_ICON), {} as never);
         entry("bx bx-archive").handler?.(entry("bx bx-archive"), {} as never);
-        expect(inbox).toHaveBeenCalledWith(true);
         expect(archived).toHaveBeenCalledWith(true);
 
         // The same editor the slot at the end of the board opens.
@@ -618,7 +616,6 @@ describe("Collapsed board columns", () => {
         expect(mountPoint.querySelector(".board-add-column input")).toBeTruthy();
 
         show.mockRestore();
-        inbox.mockRestore();
         archived.mockRestore();
     });
 

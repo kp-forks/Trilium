@@ -1,7 +1,4 @@
 .tn-card.promoted-attributes-card {
-  /* Clears the card above it in the dialogs that stack the two. */
-  margin-block-start: 24px;
-
   /* The name takes the free space, pushing the edit button and the toggle to the trailing edge. */
   .promoted-attribute-name {
     flex-grow: 1;

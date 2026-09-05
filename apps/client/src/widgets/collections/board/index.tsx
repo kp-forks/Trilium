@@ -351,10 +351,8 @@ export default function BoardView({ note: parentNote, noteIds, viewConfig, saveC
         }
 
         openBoardContextMenu(event, {
-            inboxShown: inboxEnabled,
             archivedShown: includeArchived,
             onAddColumn: () => setIsCreatingColumn(true),
-            onShowInbox: (shown) => api.setInboxEnabled(shown),
             onShowArchived: (shown) => api.setArchivedShown(shown),
             onOpenProperties: () => setIsEditingProperties(true),
             onCollapseAll: () => {

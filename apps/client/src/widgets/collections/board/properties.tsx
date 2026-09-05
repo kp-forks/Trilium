@@ -1,7 +1,12 @@
+import "./properties.css";
+
 import { useCallback } from "preact/hooks";
 
 import type FNote from "../../../entities/fnote";
 import { t } from "../../../services/i18n";
+import { Card, OptionCardSection } from "../../react/Card";
+import FormToggle from "../../react/FormToggle";
+import { useNoteLabelBoolean } from "../../react/hooks";
 import Modal from "../../react/Modal";
 import PromotedAttributesCard from "../../react/PromotedAttributesCard";
 import TemplateSelectionCard from "../../react/TemplateSelectionCard";
@@ -30,14 +35,7 @@ export default function BoardProperties({ api, note, shown, onClose }: {
             show={shown}
             onHidden={onClose}
         >
-            <TemplateSelectionCard
-                heading={t("board_view.card-templates")}
-                instruction={t("board_view.card-templates-hint")}
-                note={note}
-                newTemplateName={t("board_view.new-template-name")}
-                templates={api.getCardTemplateIds()}
-                onChange={store}
-            />
+            <General api={api} note={note} />
 
             <PromotedAttributesCard
                 heading={t("board_view.promoted-attributes")}
@@ -47,6 +45,46 @@ export default function BoardProperties({ api, note, shown, onClose }: {
                 ignored={[ api.statusAttribute ]}
                 onChange={storeAttributes}
             />
+
+            <TemplateSelectionCard
+                heading={t("board_view.card-templates")}
+                instruction={t("board_view.card-templates-hint")}
+                note={note}
+                newTemplateName={t("board_view.new-template-name")}
+                templates={api.getCardTemplateIds()}
+                onChange={store}
+            />
         </Modal>
+    );
+}
+
+/** What the board draws besides its own cards: the inbox column and what is filed as archived. */
+function General({ api, note }: { api: BoardApi, note: FNote }) {
+    const [ inboxShown ] = useNoteLabelBoolean(note, "enableInboxColumn");
+    const [ archivedShown ] = useNoteLabelBoolean(note, "includeArchived");
+
+    return (
+        <Card className="board-properties-general" heading={t("board_view.general")}>
+            <OptionCardSection
+                name="board-show-inbox"
+                label={t("board_view.show-inbox-column")}
+                description={t("book_properties_config.board-inbox-column-help")}
+            >
+                <FormToggle
+                    currentValue={inboxShown}
+                    onChange={(shown) => api.setInboxEnabled(shown)}
+                />
+            </OptionCardSection>
+
+            <OptionCardSection
+                name="board-show-archived"
+                label={t("board_view.show-archived")}
+            >
+                <FormToggle
+                    currentValue={archivedShown}
+                    onChange={(shown) => api.setArchivedShown(shown)}
+                />
+            </OptionCardSection>
+        </Card>
     );
 }
