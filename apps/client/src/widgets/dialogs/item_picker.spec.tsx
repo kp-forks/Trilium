@@ -6,7 +6,7 @@ import Component from "../../components/component";
 import { ParentComponent } from "../react/react_utils";
 import ItemPickerDialog, { type ItemPickerDialogOptions, type PickerItem } from "./item_picker";
 
-// i18next is never initialised under test, so the stock title and placeholder would be undefined.
+// i18next is never initialised under test, so the built-in title and placeholder are undefined.
 vi.mock("../../services/i18n", () => ({
     t: (key: string) => key
 }));
@@ -63,11 +63,11 @@ describe("ItemPickerDialog", () => {
         expect(headings()).toEqual([ "Fruit", "Tools" ]);
         expect(captions()).toEqual([ "Apple", "Apricot", "Hammer", "Plane" ]);
         expect(dialog()?.querySelector(".modal-title")?.textContent).toContain("Pick one");
-        // The icon an entry carries, for the entries that carry one.
+        // Only some entries carry an icon.
         expect(item("Apple")?.querySelector(".bx-leaf")).not.toBeNull();
     });
 
-    /** A plain list is one group with nothing written above it. */
+    /** A plain list becomes one group with no heading. */
     it("takes a list of items as readily as groups of them", async () => {
         await open({ items: [ { key: "one", caption: "One" }, { key: "two", caption: "Two" } ] });
 
@@ -104,10 +104,7 @@ describe("ItemPickerDialog", () => {
     });
 
     describe("searching", () => {
-        /**
-         * Folded away rather than taken down, so the list closes over what was filtered out. What
-         * is left standing is what a press can still reach.
-         */
+        /** Folded rather than unmounted, so the list collapses over what was filtered out. */
         it("folds away everything that does not match", async () => {
             await open({ items: GROUPS });
 
@@ -115,7 +112,7 @@ describe("ItemPickerDialog", () => {
 
             expect(standing()).toEqual([ "Apple" ]);
             expect(item("Hammer")?.className).toContain("item-picker-folded");
-            // Still drawn, so the folding can be drawn as well.
+            // Still rendered, so the collapse can be animated.
             expect(captions()).toEqual([ "Apple", "Apricot", "Hammer", "Plane" ]);
         });
 
@@ -126,7 +123,7 @@ describe("ItemPickerDialog", () => {
 
             const marked = item("Hammer")?.querySelectorAll("mark");
             expect([ ...marked ?? [] ].map((mark) => mark.textContent)).toEqual([ "mm" ]);
-            // What was not typed is left as it was.
+            // What the query does not match keeps its plain caption.
             expect(item("Hammer")?.textContent).toBe("Hammer");
         });
 
@@ -149,7 +146,7 @@ describe("ItemPickerDialog", () => {
             expect(item("Apple")?.querySelectorAll("mark").length).toBe(0);
         });
 
-        /** The field the settings are looked through, clear button and all. */
+        /** The settings search field, clear button and all. */
         it("is searched through the app's own search field", async () => {
             await open({ items: GROUPS });
 
@@ -168,8 +165,8 @@ describe("ItemPickerDialog", () => {
         });
 
         /**
-         * Nothing left standing is what shows the placeholder, which is laid over the list rather
-         * than following it: whether it is painted is CSS's to say from the same condition.
+         * The empty state is rendered over the list and shown by CSS once every item is folded,
+         * which is the condition asserted here.
          */
         it("leaves nothing standing when nothing matches at all", async () => {
             await open({ items: GROUPS });
@@ -194,7 +191,7 @@ describe("ItemPickerDialog", () => {
         });
     }
 
-    /** Bootstrap tells the dialog it has gone; under test the event is the test's to send. */
+    /** Bootstrap fires this when the dialog closes; the test sends it instead. */
     async function close() {
         await act(async () => {
             dialog()?.dispatchEvent(new Event("hidden.bs.modal", { bubbles: true }));
@@ -212,7 +209,7 @@ describe("ItemPickerDialog", () => {
             await Promise.resolve();
         });
 
-        // The typing settles before the list answers it.
+        // The debounce settles before the list is filtered.
         await act(async () => { vi.advanceTimersByTime(300); await Promise.resolve(); });
     }
 
@@ -228,7 +225,7 @@ describe("ItemPickerDialog", () => {
         return items().map((element) => element.textContent);
     }
 
-    /** What is left standing, which is what the reader can still pick. */
+    /** The items still unfolded, which are the ones that can be picked. */
     function standing() {
         return items()
             .filter((element) => !element.className.includes("item-picker-folded"))

@@ -1,29 +1,28 @@
 :where(:root) {
-  /* The colour the quick search marks its terms in, which is what a marked term reads as here. */
+  /* The colour the quick search marks its terms in. */
   --item-picker-mark-color: var(--quick-search-result-highlight-color);
   --item-picker-inline-padding: 40px;
-  /* One line of caption plus the card's padding: an exact height, which is what lets an item
-     collapse and expand smoothly rather than appearing to jump. */
+  /* One line of caption plus the card's padding. Exact, so the collapse animates. */
   --item-picker-item-height: calc(1.4em + 2 * var(--card-padding-block));
   --item-picker-fold-duration: 0.15s;
 }
 
 .modal.item-picker-dialog {
   .modal-body {
-    /* A column, so the empty state can take the space the list is not using. */
+    /* A column, so the empty state can take the space the list leaves. */
     display: flex;
     flex-direction: column;
     padding-inline: var(--item-picker-inline-padding);
   }
 
-  /* The area holding the list, which the empty state is laid over. */
+  /* Holds the list. The empty state is positioned over it. */
   .item-picker-results {
     position: relative;
     flex: 1 0 auto;
   }
 
   .modal-dialog {
-    /* Half again as wide as a small dialog, which is narrow but not cramped by the padding. */
+    /* Half again as wide as a small dialog, to fit the inline padding. */
     max-width: 405px;
   }
 
@@ -36,8 +35,7 @@
     flex-direction: column;
   }
 
-  /* The space between groups belongs to each card, so it closes with the card rather than leaving
-     a stripe where one was. */
+  /* The gap between groups sits on each card, so it collapses with the card. */
   .item-picker-groups > .tn-card {
     margin-block-end: 1em;
     transition: margin var(--item-picker-fold-duration) ease;
@@ -47,12 +45,8 @@
     margin-block-end: 0;
   }
 
-  /*
-   * A group whose items have all collapsed collapses too, its heading closing on the same beat.
-   *
-   * The filter primitive removes an empty group outright, which would cut the animation short. It
-   * is overridden here in kind, that rule being `!important` for reasons of its own.
-   */
+  /* The filter primitive hides an emptied group outright, which cuts the collapse short.
+     Overridden in kind, its own rule being `!important`. */
   .tn-card.tn-filter-scope:not(:has(.tn-filter-match)) {
     display: block !important;
   }
@@ -80,12 +74,10 @@
     display: flex;
     align-items: center;
     gap: 0.4em;
-    /* Collapsing: the space it takes and what paints it both go to nothing. An exact height rather
-       than a max-height ceiling, which would spend most of the transition above the real height and
-       so appear instant. */
+    /* An exact height, not a max-height ceiling: a ceiling above the real height spends most of
+       the transition invisible. */
     height: var(--item-picker-item-height);
-    /* The gap belongs to the item, so it collapses with it. A flex gap on the card would leave a
-       stripe for every item the filter removed. */
+    /* The gap sits on the item, so it collapses with it. A flex gap would leave a stripe. */
     margin-block-end: var(--card-section-gap);
     transition: height var(--item-picker-fold-duration) ease,
       margin var(--item-picker-fold-duration) ease,
@@ -115,8 +107,7 @@
     white-space: nowrap;
   }
 
-  /* Bootstrap's Reboot gives `mark` padding, which would space a matched term away from the rest
-     of the caption. */
+  /* Bootstrap's Reboot pads `mark`, which would part a matched term from the caption. */
   .item-picker-caption mark {
     margin: 0;
     padding: 0;
@@ -125,10 +116,7 @@
     font-weight: 600;
   }
 
-  /*
-   * Laid over the list rather than following it, so it stays put while the list collapses beneath.
-   * Faded rather than unmounted, and it takes no presses meant for the field or the items.
-   */
+  /* Laid over the list so it holds still while the list collapses. Faded, not unmounted. */
   .item-picker-empty {
     position: absolute;
     inset: 0;
@@ -139,17 +127,16 @@
       visibility 0s linear var(--item-picker-fold-duration);
   }
 
-  /* Shown only when the filter has left nothing. */
+  /* Shown only when the filter leaves nothing. */
   .item-picker-groups:not(:has(.item-picker-item:not(.item-picker-folded))) + .item-picker-empty {
     opacity: 1;
     visibility: visible;
     transition: opacity var(--item-picker-fold-duration) ease;
   }
 
-  /* The groups animate with the dialog rather than into it: one animation however many items are
-     shown. */
+  /* One animation for the whole list, however many items it holds. */
   .item-picker-groups {
-    /* Long enough to read as its own animation, the dialog's opening covering its first moments. */
+    /* Long enough to read as its own animation under the dialog's opening. */
     animation: item-picker-rise 0.4s ease-out;
   }
 }
@@ -163,15 +150,11 @@
   gap: 0;
 }
 
-/*
- * One height whatever it holds, so three items open the same box as a hundred and the list scrolls
- * inside it.
- *
- * The height belongs to `.modal-content` rather than `.modal-dialog`: a scrollable modal only caps
- * the content box, which is otherwise sized by its contents and would shrink as the filter narrows
- * the list. The dialog then fills the viewport and centres the box, which is how Bootstrap centres
- * `.modal-dialog-centered`.
- */
+/* One height whatever it holds, the list scrolling inside it.
+
+   The height goes on `.modal-content`: a scrollable modal only caps that box, which is otherwise
+   sized by its contents and shrinks as the filter narrows the list. `.modal-dialog` then fills the
+   viewport and centres it, as `.modal-dialog-centered` does. */
 body:not(.mobile) .modal.item-picker-dialog {
   .modal-dialog {
     display: flex;
@@ -186,7 +169,7 @@ body:not(.mobile) .modal.item-picker-dialog {
   }
 }
 
-/* A phone fills the screen instead, which `isFullPageOnMobile` answers for. */
+/* A phone fills the screen instead, together with `isFullPageOnMobile`. */
 body.mobile .modal.item-picker-dialog .modal-content {
   height: 100%;
 }

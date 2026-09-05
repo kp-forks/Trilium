@@ -1,4 +1,4 @@
-/* The name takes what room there is, so the way to remove an entry stands at its trailing edge. */
+/* The name takes the free space, pushing the buttons to the trailing edge. */
 .template-selection-name {
   flex-grow: 1;
   overflow: hidden;

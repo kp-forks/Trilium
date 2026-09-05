@@ -14,33 +14,29 @@ import { createEdgeScroller, type Insets, type ScrollTarget } from "./edge_scrol
 import { useFlip } from "./flip";
 import Icon from "./Icon";
 
-/** How many buttons the foot of a card holds before they are too narrow to read. */
+/** How many creation buttons fit at the foot of a card before each is too narrow to read. */
 const MAX_CREATION_BUTTONS = 3;
 
 /**
- * How long a touch must stay still before the drag starts.
- *
- * A touch on a segment can mean a page scroll or a drag. Waiting distinguishes them: a touch that
- * moves first scrolls, one that stays picks the segment up. Matches the board's cards.
+ * How long a touch must stay still before the drag starts. A touch that moves first scrolls the
+ * page instead. Matches the board's cards.
  */
 const TOUCH_HOLD_MS = 400;
 
-/** How far the touch can move in that time and still count as still. */
+/** How far the touch can move within `TOUCH_HOLD_MS` and still count as still. */
 const TOUCH_SLACK_PX = 8;
 
 /**
- * How near an edge the pointer comes before the card starts to walk, in pixels.
- *
- * Wider under a finger than the 60 a mouse is given: a thumb covers what it is pointing at, and
- * the strip it has to find is the strip it cannot see.
+ * How near an edge the pointer must come, in pixels, before the card scrolls. Wider for touch: a
+ * finger covers the strip it has to reach.
  */
 const SCROLL_MARGIN = 60;
 const TOUCH_SCROLL_MARGIN = 100;
 
 /**
- * Elements that answer a press themselves, so a press starting on one is theirs rather than the
- * segment's. `renderItem` draws what it likes, so the roles and `contenteditable` count as well as
- * the native controls.
+ * Elements that handle a press themselves, so a press starting on one never drags the segment.
+ * `renderItem` can draw anything, so ARIA roles and `contenteditable` count as well as the native
+ * controls.
  */
 const CONTROLS = "button, a, input, select, textarea, label, [contenteditable]:not([contenteditable=false]), "
     + "[role=button], [role=link], [role=checkbox], [role=switch], [role=textbox], [role=menuitem]";
@@ -64,6 +60,8 @@ export interface ItemCreationButton<T extends SortableItem> {
     label: string;
     /** An icon class, `bx` prefix included. */
     icon?: string;
+    /** Turns the button off, for a caller that cannot make an entry yet. */
+    disabled?: boolean;
     onCreateItem: () => T | undefined | Promise<T | undefined>;
 }
 
@@ -100,14 +98,11 @@ export interface SortableCardProps<T extends SortableItem> extends CardProps {
 }
 
 /**
- * A card whose segments can be reordered.
+ * A card whose segments can be reordered by dragging the grip or with the keyboard. A drag moves
+ * vertically only and is clamped to the card.
  *
- * Each entry renders as one segment, dragged by its grip or moved with the keyboard, and the other
- * segments slide out of the way. A drag moves vertically only and is clamped to the card.
- *
- * The caller owns the order: `onChange` reports every change, and the card renders whatever it is
- * given back. It does not interpret the entries, so it sorts preferences, columns, or anything
- * else identified by a key.
+ * The caller owns the order: `onChange` reports every change and the card renders what it is given
+ * back. Entries are not interpreted, so anything identified by a key can be sorted.
  */
 export function SortableCard<T extends SortableItem>({
     items, onChange, renderItem, itemCreationButtons, gripPlacement = "end", onItemKeyDown,
@@ -126,63 +121,57 @@ export function SortableCard<T extends SortableItem>({
     const pointerRef = useRef({ x: 0, y: 0 });
     /** The current `dragTo`, so the scroller can reposition the segment without a stale closure. */
     const dragToRef = useRef<(clientY: number) => void>(() => {});
-    /** What stands over the edges of the screen while a segment is carried, measured as it starts. */
+    /** Fixed chrome covering the screen edges, measured when a drag starts. */
     const reachRef = useRef<Insets>({ top: 0, bottom: 0, left: 0, right: 0 });
     /**
-     * Scrolls whatever contains the card while a segment is dragged to its edge.
-     *
-     * A card taller than the viewport, or partly outside it, has positions the pointer cannot
-     * otherwise reach, the first and last segments above all. Created once so its animation frames
-     * outlive the render that started them.
+     * Scrolls the card's containers while a segment is dragged to an edge, so a card taller than
+     * the viewport can be reordered end to end. Created once, so its frames outlive the render.
      */
     const scroller = useMemo(() => createEdgeScroller({
         margin: matchMedia("(pointer: coarse)").matches
             ? TOUCH_SCROLL_MARGIN
             : SCROLL_MARGIN,
         reach: () => reachRef.current,
-        // The pointer has not moved, but the card has.
+        // The pointer has not moved, but the content under it has.
         onScroll: () => dragToRef.current(pointerRef.current.y)
     }), []);
 
     useEffect(() => () => scroller.stop(), [ scroller ]);
 
     /**
-     * The order during a drag, reported to the caller when it ends.
-     *
-     * Kept until the caller renders an order of its own, so the segments do not spring back for the
-     * frames in between.
+     * The order during a drag, reported to the caller when it ends. Kept until the caller renders
+     * its own order, so the segments do not spring back in between.
      */
     const [ draft, setDraft ] = useState<T[] | null>(null);
     const [ draggedKey, setDraggedKey ] = useState<string>();
     const [ ownSelection, setOwnSelection ] = useState<string>();
     /** The entry just added, which grows and fades in. */
     const [ addedKey, setAddedKey ] = useState<string>();
-    /** The segment to focus after the next render, since moving an element drops its focus. */
+    /** The segment to focus after the next render: moving an element drops its focus. */
     const pendingFocus = useRef<string>();
 
     const shown = draft ?? items;
-    /** The list as it now stands, for a callback that answers after an await. */
+    /** The current list, for a callback that resumes after an await. */
     const shownRef = useRef(shown);
     shownRef.current = shown;
     const selected = selectedKey ?? ownSelection;
 
     useEffect(() => {
-        // The caller has rendered its own order, so the draft is no longer needed. Not during a
-        // drag, where the order is still changing.
+        // The caller rendered its own order, so the draft can go. Not during a drag, where the
+        // order is still changing.
         if (!dragRef.current) {
             setDraft(null);
         }
     }, [ items ]);
 
     const segmentOf = useCallback((key: string) => {
-        // Compared rather than put into a selector: a key is the caller's own string, and one
-        // holding a quote or a backslash would throw or match the wrong segment.
+        // Compared instead of interpolated into a selector: a key holding a quote or a backslash
+        // would throw or match the wrong segment.
         const segments = listRef.current?.querySelectorAll<HTMLElement>(".tn-sortable-segment");
         return [ ...segments ?? [] ].find((segment) => segment.dataset.key === key);
     }, []);
 
-    // The dragged segment is excluded: it follows the pointer, and useFlip would slide it back to
-    // the slot the list has opened for it.
+    // The dragged segment is excluded: it follows the pointer, and useFlip would slide it back.
     useFlip(listRef, {
         selector: ".tn-sortable-segment:not(.tn-sortable-dragging)",
         grow: (segment) => segment.dataset.key === addedKey
@@ -266,7 +255,7 @@ export function SortableCard<T extends SortableItem>({
 
         reachRef.current = fixedChrome(segment);
 
-        // Throws when the pointer is no longer active, a touch lifted during the hold above all.
+        // Throws when the pointer is no longer active, usually a touch lifted during the hold.
         // Touch captures to the segment implicitly, so the drag works without this.
         try {
             listRef.current?.setPointerCapture?.(pointerId);
@@ -311,23 +300,21 @@ export function SortableCard<T extends SortableItem>({
         const target = event.target as HTMLElement | null;
         const onGrip = !!target?.closest(".tn-sortable-grip");
 
-        // A mouse takes hold of the grip and nothing else: a press anywhere on a segment is for
-        // reading what it says or working a control the caller drew, and a mouse has no trouble
-        // reaching a mark. A finger rests wherever it lands, a thumb across a phone reaching the
-        // near edge of a row far more easily than one particular end of it.
+        // A mouse drags from the grip only, since it can aim at one. A touch drags from anywhere
+        // on the segment, which a thumb reaches far more easily.
         if (event.pointerType === "mouse") {
             if (!onGrip || event.button !== 0) {
                 return;
             }
 
-            // Stops the press from starting a selection instead.
+            // Stops the press from starting a text selection.
             event.preventDefault();
             startDrag(key, event.pointerId, event.clientY);
             return;
         }
 
-        // A press that began on a control is the control's, whatever it does with it. The segment
-        // itself is not a control, though it handles keys and carries a tabindex.
+        // A press starting on a control belongs to that control. The segment is not one, although
+        // it handles keys and carries a tabindex.
         const control = target?.closest(CONTROLS);
         if (!onGrip && control && control !== segmentOf(key)) {
             return;
@@ -336,9 +323,9 @@ export function SortableCard<T extends SortableItem>({
 
         cancelHold();
 
-        // The list holds the pointer only once the carry begins, so a finger lifted before then,
-        // and outside the list, reports to the page instead. Without this the timer would take up
-        // a segment for a pointer that is no longer down, and nothing would put it back.
+        // The list captures the pointer only once the drag begins, so a finger lifted before that
+        // and outside the list reports to the page. Without this the timer drags a pointer that is
+        // no longer down.
         const dropped = (ended: PointerEvent) => {
             if (ended.pointerId === holdRef.current?.pointerId) {
                 cancelHold();
@@ -351,8 +338,7 @@ export function SortableCard<T extends SortableItem>({
         holdRef.current = {
             pointerId: event.pointerId,
             from: { x: event.clientX, y: event.clientY },
-            // Where the finger is when the rest is over, so a hand that settles by a pixel or two
-            // does not carry the segment off by as much.
+            // Where the finger is once the hold ends, so a small drift does not offset the drag.
             at: event.clientY,
             stopWatching: () => {
                 document.removeEventListener("pointerup", dropped);
@@ -388,8 +374,7 @@ export function SortableCard<T extends SortableItem>({
         const order = orderFor(drag, segment, top, segmentOf);
         if (order) {
             drag.order = order;
-            // Rendered before the segment is positioned, so it is measured against the slot the
-            // list has just opened rather than the one it is leaving.
+            // Rendered before the segment is positioned, so it is measured against its new slot.
             flushSync(() => setDraft(order));
         }
 
@@ -399,10 +384,8 @@ export function SortableCard<T extends SortableItem>({
     dragToRef.current = dragTo;
 
     /**
-     * Creates an entry at `at`, or appends it when no index is given.
-     *
-     * An entry created among the others takes the focus, since that is where it was asked for. An
-     * appended one leaves the focus on the button, so several can be created in a row.
+     * Creates an entry at `at`, or appends it when no index is given. An entry created among the
+     * others takes the focus; an appended one leaves it on the button, so several can be made.
      */
     const add = useCallback(async (create: ItemCreationButton<T>["onCreateItem"], at?: number) => {
         const created = await create();
@@ -410,8 +393,8 @@ export function SortableCard<T extends SortableItem>({
             return;
         }
 
-        // Read again rather than closed over: `create` may open a dialog, and a reorder or another
-        // entry made meanwhile would be undone by an order built from the stale list.
+        // Read again instead of closed over: `create` can open a dialog, and an order built from
+        // the stale list would undo a reorder made meanwhile.
         const order = [ ...shownRef.current ];
         order.splice(at ?? order.length, 0, created);
         setAddedKey(created.key);
@@ -424,8 +407,8 @@ export function SortableCard<T extends SortableItem>({
     }, [ onChange ]);
 
     /**
-     * Ends what the given pointer was doing, and only that: a second finger going down and up
-     * inside the list would otherwise drop or commit the first one's carry.
+     * Ends what `event.pointerId` was doing, and nothing else: a second finger pressed and lifted
+     * in the list would otherwise cancel or commit the first one's drag.
      */
     const finish = useCallback((event: PointerEvent, keep: boolean) => {
         if (holdRef.current?.pointerId === event.pointerId) {
@@ -445,10 +428,11 @@ export function SortableCard<T extends SortableItem>({
             return;
         }
 
-        // Creates an entry beside the focused one, the way a spreadsheet adds a row: below it, or
-        // above it with Shift. Uses the first creation button, since no button was pressed.
+        // Creates an entry below the focused one, or above it with Shift, the way a spreadsheet
+        // adds a row. Uses the first creation button, since no button was pressed.
         const leading = itemCreationButtons?.[0];
-        if (event.key === "Enter" && leading && !event.ctrlKey && !event.metaKey) {
+        if (event.key === "Enter" && leading && !leading.disabled
+                && !event.ctrlKey && !event.metaKey) {
             event.preventDefault();
             add(leading.onCreateItem, event.shiftKey ? index : index + 1);
             return;
@@ -459,13 +443,13 @@ export function SortableCard<T extends SortableItem>({
         const to = placeFor(event, index, last);
 
         if (to === undefined) {
-            // Left to the caller, whose entries may answer keys of their own.
+            // Left to the caller, whose entries can handle keys of their own.
             if (!control) {
                 onItemKeyDown?.(shown[index], event);
             }
 
-            // Below the last entry is the creation row, which Down moves onto. It holds no entry,
-            // so Ctrl+Down moves nothing there.
+            // Down from the last entry moves onto the creation row. It holds no entry, so
+            // Ctrl+Down moves nothing there.
             if (!control && event.key === "ArrowDown" && index === last) {
                 event.preventDefault();
                 adderRef.current?.querySelector<HTMLElement>(".tn-sortable-adder")?.focus();
@@ -483,8 +467,8 @@ export function SortableCard<T extends SortableItem>({
     }, [ add, endDrag, focusEntry, itemCreationButtons, moveItem, onItemKeyDown, shown ]);
 
     const onAddKeyDown = useCallback((event: KeyboardEvent) => {
-        // Moves back into the entries. Home and End address the first and last entry here as they
-        // do on an entry itself: the creation row is a focus stop, not an entry.
+        // Moves back into the entries. Home and End address the first and last entry, as they do
+        // on an entry: the creation row is a focus stop, not an entry.
         const control = event.ctrlKey || event.metaKey;
         const to = control || !shown.length ? undefined : lastPlaceFor(event, shown.length - 1);
         if (to === undefined) {
@@ -496,10 +480,8 @@ export function SortableCard<T extends SortableItem>({
     }, [ focusEntry, shown ]);
 
     /**
-     * The drag handle, drawn on whichever edge `gripPlacement` names.
-     *
-     * An affordance rather than the hit area: the segment handles the press, so a touch may start
-     * anywhere on it and only a mouse has to aim at the grip.
+     * The drag handle, drawn on the edge `gripPlacement` names. An affordance rather than the hit
+     * area: the segment handles the press, so only a mouse has to aim at the grip.
      */
     const grip = () => (
         <span
@@ -540,8 +522,7 @@ export function SortableCard<T extends SortableItem>({
                         dragTo(event.clientY);
                     }
                 }}
-                // Prevented only during a drag, which is what stops the page scrolling under it.
-                // Until then the gesture belongs to the page, so a touch meant to scroll scrolls.
+                // Prevented during a drag only, so a touch meant to scroll still scrolls.
                 onTouchMove={(event) => {
                     if (dragRef.current) {
                         event.preventDefault();
@@ -582,8 +563,7 @@ export function SortableCard<T extends SortableItem>({
                     </section>
                 ))}
 
-                {/* Transparent: the gaps between the buttons show the card's parent through, and
-                    each button paints itself like a segment. */}
+                {/* Transparent: each button paints itself, and the gaps show the card through. */}
                 {!!itemCreationButtons?.length && (
                     <section
                         ref={adderRef}
@@ -592,17 +572,17 @@ export function SortableCard<T extends SortableItem>({
                     >
                         {itemCreationButtons.map((button, index) => (
                             <Button
-                                // The place in the row, which is the only thing that tells two
-                                // buttons apart: a label is the caller's to repeat.
+                                // The position in the row: two buttons can share a label.
                                 key={index}
-                                // Not a command button: the theme paints those with a background,
-                                // a shadow and a minimum width, none of which a segment has.
+                                // Not a command button: the theme gives those a background, a
+                                // shadow and a minimum width, none of which suit a segment.
                                 kind="lowProfile"
                                 className="tn-sortable-adder"
                                 text={<>
                                     {button.icon && <Icon icon={button.icon} />}
                                     <span>{button.label}</span>
                                 </>}
+                                disabled={button.disabled}
                                 onClick={() => add(button.onCreateItem)}
                             />
                         ))}
@@ -614,12 +594,10 @@ export function SortableCard<T extends SortableItem>({
 }
 
 /**
- * How much of the viewport's top and bottom edges is covered by fixed chrome, a toolbar or a tab
- * bar.
+ * How much of the viewport's top and bottom edges fixed chrome covers, a toolbar or a tab bar.
  *
- * A pointer cannot reach under a toolbar, so an edge behind one would never trigger the edge
- * scroll. Measured at the middle of each edge, where a full-width bar is found, and read once per
- * drag, since chrome does not come and go during one.
+ * A pointer cannot reach under a toolbar, so an edge behind one never triggers the edge scroll.
+ * Measured at the middle of each edge and read once per drag.
  */
 function fixedChrome(carried: HTMLElement): Insets {
     const insets = { top: 0, bottom: 0, left: 0, right: 0 };
@@ -644,10 +622,8 @@ function fixedChrome(carried: HTMLElement): Insets {
 }
 
 /**
- * What the card is scrolled inside, nearest first, which is what a carry to an edge walks along.
- *
- * Every scroller above the card counts: a card in a scrolling pane inside a scrolling page needs
- * both.
+ * The scrollable ancestors of the card, nearest first, which the edge scroller walks. A card in a
+ * scrolling pane inside a scrolling page needs both.
  */
 function scrolledBy(list: HTMLElement | null): ScrollTarget[] {
     const targets: ScrollTarget[] = [];
@@ -671,12 +647,12 @@ function scrolledBy(list: HTMLElement | null): ScrollTarget[] {
 /** A touch waiting out `TOUCH_HOLD_MS` before it becomes a drag. */
 interface Hold {
     pointerId: number;
-    /** Where it went down, against which movement is measured. */
+    /** Where the pointer went down, which movement is measured against. */
     from: { x: number, y: number };
-    /** Where it is now, which is where the drag starts from. */
+    /** Where the pointer is now, which the drag starts from. */
     at: number;
     timer: number;
-    /** Drops the page-wide watch for the finger being lifted outside the list. */
+    /** Removes the document listeners watching for a lift outside the list. */
     stopWatching: () => void;
 }
 
@@ -698,15 +674,12 @@ interface Drag<T extends SortableItem> {
 }
 
 /**
- * The index the dragged segment now belongs at.
+ * The index the dragged segment now belongs at. The others are measured at their current
+ * positions, which for one already sliding is the position it slides to.
  *
- * The others are measured where the list has them now: one sliding out of the way already reports
- * the position it is sliding to.
- *
- * A segment gives way once the dragged one's near edge passes its middle, its bottom edge for a
- * segment below and its top edge for one above. Comparing middles instead, the dragged segment
- * would have to reach the middle of the last slot to take it, and the clamp stops it exactly
- * there, so the last position would be unreachable.
+ * A segment gives way once the dragged one's near edge passes its middle: the bottom edge for a
+ * segment below, the top edge for one above. Comparing middles would put the last slot exactly at
+ * the clamp, leaving the last position unreachable.
  */
 function orderFor<T extends SortableItem>(
     drag: Drag<T>, carried: HTMLElement, top: number,
@@ -731,7 +704,7 @@ function orderFor<T extends SortableItem>(
     return from === to ? undefined : moved(drag.order, from, to);
 }
 
-/** The list with one entry moved, or nothing when the move would leave the order unchanged. */
+/** The list with one entry moved, or `undefined` when the order would not change. */
 function moved<T>(items: T[], from: number, to: number) {
     const place = Math.min(Math.max(to, 0), items.length - 1);
     if (from < 0 || from >= items.length || place === from) {
@@ -743,7 +716,7 @@ function moved<T>(items: T[], from: number, to: number) {
     return order;
 }
 
-/** Which entry a key addresses from the creation row below them. */
+/** Which entry a key addresses from the creation row. */
 function lastPlaceFor(event: KeyboardEvent, last: number) {
     switch (event.key) {
         case "ArrowUp":
@@ -757,10 +730,8 @@ function lastPlaceFor(event: KeyboardEvent, last: number) {
 }
 
 /**
- * Which index a key addresses, or nothing for a key the card ignores.
- *
- * The same keys move a segment and step between them, Control telling them apart. The board's cards
- * use the same set.
+ * Which index a key addresses, or `undefined` for a key the card ignores. The same keys move a
+ * segment and step between them, Control telling them apart, as the board's cards do.
  */
 function placeFor(event: KeyboardEvent, index: number, last: number) {
     switch (event.key) {

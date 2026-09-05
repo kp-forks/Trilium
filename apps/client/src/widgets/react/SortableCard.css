@@ -2,18 +2,17 @@
   --sortable-grip-color: var(--muted-text-color);
   --sortable-grip-hover-color: var(--main-text-color);
   --sortable-selected-color: var(--main-text-color);
-  /* Above and below, so a dragged segment reads as raised over the ones it passes. The lower
-     shadow is heavier, as under an overhead light. */
+  /* Above and below, so a dragged segment reads as raised. The lower one is heavier. */
   --sortable-dragging-shadow: 0 -3px 8px rgba(0, 0, 0, 0.3),
                               0 5px 8px rgba(0, 0, 0, 0.3);
-  /* Enough to read as lifted without losing the text. */
+  /* Enough to read as lifted without washing out the text. */
   --sortable-dragging-opacity: 0.90;
 }
 
 .tn-card.tn-sortable-card {
   .tn-sortable-list {
     display: flex;
-    /* The dragged segment is positioned against this, so it must be its offsetParent. */
+    /* Must be the dragged segment's offsetParent: it is positioned against this. */
     position: relative;
     flex-direction: column;
     gap: var(--card-section-gap);
@@ -23,14 +22,13 @@
     display: flex;
     align-items: center;
     gap: 0.5em;
-    /* What useFlip animates: it transforms a segment back to its old position for one frame and
-       lets this transition carry it to the new one. 200ms matches FLIP_DURATION_MS. */
+    /* useFlip transforms a segment back for one frame and lets this transition carry it to its
+       new position. Must match FLIP_DURATION_MS. */
     transition: transform 200ms ease;
   }
 
-  /* A touch drags a segment by resting anywhere on it, and a press that long raises the callout
-     and the text magnifier on iOS. Left alone for a mouse, which drags by the grip and can still
-     select the caption text. */
+  /* A touch drags from anywhere on the segment, and a press that long raises the iOS callout and
+     magnifier. Not applied to a mouse, which drags by the grip and can select the caption. */
   @media (pointer: coarse) {
     .tn-sortable-segment {
       -webkit-touch-callout: none;
@@ -43,8 +41,8 @@
     outline-offset: -2px;
   }
 
-  /* Inset, so a selected segment takes no more room than the rest. Painted only while the focus is
-     on an entry: not when it has left the card, and not on the creation row. */
+  /* Inset, so a selected segment takes no more room than the rest. Painted only while an entry
+     has the focus, not the creation row and not once the focus leaves the card. */
   .tn-sortable-list:has(.tn-sortable-segment:focus-within) .tn-sortable-selected {
     box-shadow: inset 0 0 0 1px var(--sortable-selected-color);
   }
@@ -70,8 +68,7 @@
     padding: 0.2em 0.1em;
     color: var(--sortable-grip-color);
     cursor: grab;
-    /* The page still scrolls from here. What stops it during a drag is preventDefault on
-       touchmove, which hands the gesture to the card. */
+    /* The page still scrolls from here. A drag is what calls preventDefault on touchmove. */
     touch-action: pan-y;
     -webkit-touch-callout: none;
     user-select: none;
@@ -89,8 +86,8 @@
     }
   }
 
-  /* A touch target wider than the mark it aims at. The negative margin takes back what the padding
-     adds, so the segments keep their height. */
+  /* A touch target wider than the icon. The negative margin cancels the padding, so the segment
+     keeps its height. */
   @media (pointer: coarse) {
     .tn-sortable-grip {
       margin-block: -0.5em;
@@ -98,15 +95,14 @@
       padding: 0.7em calc(var(--card-padding-inline) / 2);
     }
 
-    /* Placed first, it extends into the leading padding instead. */
+    /* Placed first, the grip extends into the leading padding instead. */
     .tn-sortable-grip:first-child {
       margin-inline-start: calc(var(--card-padding-inline) / -2);
       margin-inline-end: 0;
     }
   }
 
-  /* Follows the pointer directly: the transition the other segments slide by would leave it a
-     frame behind. */
+  /* Follows the pointer directly: the sliding transition would leave it a frame behind. */
   .tn-sortable-dragging {
     z-index: 1;
     box-shadow: var(--sortable-dragging-shadow);
@@ -118,8 +114,7 @@
     }
   }
 
-  /* Transparent: the gaps between the buttons show the card's parent through, and each button
-     paints itself like a segment. */
+  /* Transparent: each button paints itself, and the gaps show the card through. */
   .tn-sortable-adders {
     display: flex;
     gap: var(--card-section-gap);
@@ -128,8 +123,8 @@
     background: transparent;
   }
 
-  /* Painted as a segment rather than as a button, and all of one width however many there are.
-     What Bootstrap and the theme give a button is undone here. */
+  /* Painted as a segment rather than a button, all of one width, undoing what Bootstrap and the
+     theme give a button. */
   button.tn-sortable-adder.btn {
     display: flex;
     flex: 1 1 0;
@@ -158,7 +153,7 @@
     }
   }
 
-  /* The card's corners belong to the buttons, the row being transparent. */
+  /* The row is transparent, so its buttons carry the card's corners. */
   .tn-sortable-adders:first-of-type button.tn-sortable-adder:first-child {
     border-start-start-radius: var(--card-border-radius);
   }

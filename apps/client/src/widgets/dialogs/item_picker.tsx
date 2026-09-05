@@ -31,10 +31,8 @@ export interface PickerItemGroup {
 export interface ItemPickerDialogOptions {
     title?: string;
     /**
-     * What can be picked: either the items themselves or groups of them, never mixed.
-     *
-     * Used as given, so the caller works them out before opening the dialog rather than making the
-     * user wait for it.
+     * What can be picked: either items or groups of them, never mixed. Used as given, so the
+     * caller assembles them before opening the dialog.
      */
     items: PickerItem[] | PickerItemGroup[];
     /** Placeholder for the search field. */
@@ -49,16 +47,13 @@ const DEBOUNCE_MS = 150;
 /**
  * Picks one item out of many, grouped and searchable, and closes on the pick.
  *
- * The list is narrowed by {@link FilterProvider}, the filter the settings search uses: each item
- * asks whether it matches and is shown or collapsed, so nothing is mounted or unmounted as the
- * query changes and the collapse can be animated.
- *
- * Opened through `dialog.pickSingleItem()`, named for the single pick: picking several at once will
- * be the same dialog with a different result.
+ * {@link FilterProvider} narrows the list, as it does in the settings search. Each item collapses
+ * instead of unmounting, which keeps the change animatable. Opened through
+ * `dialog.pickSingleItem()`.
  */
 export default function ItemPickerDialog() {
     const opts = useRef<ItemPickerDialogOptions>();
-    /** The item picked, reported once the dialog has closed rather than while it is closing. */
+    /** The item picked, reported in `onHidden` rather than while the dialog is closing. */
     const picked = useRef<PickerItem | null>(null);
     const searchRef = useRef<HTMLInputElement>(null);
     const [ shown, setShown ] = useState(false);
@@ -96,8 +91,7 @@ export default function ItemPickerDialog() {
                 opts.current = undefined;
             }}
         >
-            {/* The settings search field, which is also used over the lists of the dialogs the
-                settings open. */}
+            {/* The same search field the settings pages use over their own lists. */}
             <SettingsSearch
                 inputRef={searchRef}
                 query={query}
@@ -106,11 +100,9 @@ export default function ItemPickerDialog() {
             />
 
             <FilterProvider query={settled}>
-                {/* The empty state is laid over this rather than following it, so it stays put
-                    while the list collapses underneath. */}
+                {/* The empty state is laid over this, so it holds still as the list collapses. */}
                 <div className="item-picker-results">
-                    {/* Animated as the dialog opens: the items are its content rather than
-                        something arriving into it. */}
+                    {/* Animated once with the dialog, not per item. */}
                     <div className="item-picker-groups">
                         {groups.map((group) => (
                             <Card key={group.key} heading={group.groupHeader || undefined}>
@@ -132,17 +124,13 @@ export default function ItemPickerDialog() {
     );
 }
 
-/**
- * One item, rendered whether or not it matches: collapsed rather than unmounted, so the list closes
- * over what was filtered out instead of jumping from one set to the next.
- */
+/** One item. Rendered whether or not it matches, collapsing when it does not. */
 function PickerRow({ item, onPick }: { item: PickerItem, onPick: (item: PickerItem) => void }) {
     const matched = useFilterMatch(item.caption);
 
     return (
         <section
-            // Marked as a match for the card, which is what keeps a group rendered while any of its
-            // items is still shown.
+            // Marks the card as matching, which keeps the group rendered while an item shows.
             className={clsx("tn-card-section tn-card-highlight-on-hover item-picker-item",
                 filterRoleClass(matched ? "match" : undefined),
                 { "item-picker-folded": !matched })}
@@ -162,7 +150,7 @@ function PickerRow({ item, onPick }: { item: PickerItem, onPick: (item: PickerIt
     );
 }
 
-/** The caption with the search terms marked wherever they occur. */
+/** The caption with every occurrence of the search terms marked. */
 function Marked({ text }: { text: string }) {
     const filter = useFilterState();
     const parts = useMemo(() => split(text, filter?.tokens), [ text, filter ]);
@@ -181,11 +169,7 @@ function isGroup(entry: PickerItem | PickerItemGroup): entry is PickerItemGroup 
     return "items" in entry;
 }
 
-/**
- * The items as groups, whichever form the caller gave.
- *
- * A plain list becomes one group with no heading, so the dialog renders one shape rather than two.
- */
+/** The items as groups. A plain list becomes one group with no heading, so there is one shape. */
 function asGroups(items: PickerItem[] | PickerItemGroup[]): PickerItemGroup[] {
     const [ first ] = items;
     if (!first) {
@@ -198,17 +182,15 @@ function asGroups(items: PickerItem[] | PickerItemGroup[]): PickerItemGroup[] {
 }
 
 /**
- * The caption split into matched and unmatched parts.
- *
- * Matched against the raw text, so a term that matched only after normalisation, an accent dropped
- * for instance, is left unmarked rather than marked in the wrong place.
+ * The caption split into matched and unmatched parts. Matched against the raw text, so a term that
+ * only matches after normalisation, a dropped accent for instance, stays unmarked.
  */
 function split(text: string, tokens?: string[]) {
     if (!tokens?.length) {
         return [ { text, marked: false } ];
     }
 
-    // A capturing group puts the matches among the parts, at the odd indices.
+    // A capturing group puts the matches at the odd indices of the result.
     const terms = new RegExp(`(${tokens.map(escapeRegExp).join("|")})`, "gi");
     return text.split(terms)
         .map((part, index) => ({ text: part, marked: index % 2 === 1 }))

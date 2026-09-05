@@ -21,14 +21,14 @@ vi.mock("../../services/i18n", () => ({
     t: (key: string) => key
 }));
 
-// The listing is the app's and is tested there; the card is handed a short one of each kind.
+// The listing is tested where it lives; the card is given a short one of each kind.
 vi.mock("../../services/note_types", async () => {
     const actual = await vi.importActual<typeof import("../../services/note_types")>(
         "../../services/note_types");
     return { ...actual, getNoteTypeOptions: vi.fn(async () => AVAILABLE) };
 });
 
-/** Everything the app could make, as `getNoteTypeOptions` answers with it. */
+/** Everything the app can create, as `getNoteTypeOptions` reports it. */
 const AVAILABLE = [
     [ "type:text:text/html", "Text", "type" ],
     [ "type:code:text/x-markdown", "Markdown", "type" ],
@@ -43,7 +43,7 @@ const AVAILABLE = [
     options: { type: "text", templateNoteId: id.split(":")[1] }
 }) as NoteTypeOption);
 
-/** The note a template made here is filed under. */
+/** The parent note a template created here is filed under. */
 const OWNER = { noteId: "owner1" } as FNote;
 
 describe("TemplateSelectionCard", () => {
@@ -74,13 +74,13 @@ describe("TemplateSelectionCard", () => {
             .toBe("Pick what a new one is made from.");
     });
 
-    /** The grip leads, so the trailing edge is left to what each entry carries there. */
+    /** The grip leads, leaving the trailing edge to the entry's own buttons. */
     it("carries the grip at the start of an entry and the way to remove it at the end", async () => {
         await draw();
         const [ first ] = segments();
 
         expect(first.firstElementChild?.className).toContain("tn-sortable-grip");
-        // Inside what the card draws for an entry, which is the rest of the segment.
+        // Inside the segment's content, which is what renderItem draws.
         expect(first.querySelector(".tn-sortable-content")?.lastElementChild?.className)
             .toContain("template-selection-remove");
     });
@@ -99,21 +99,16 @@ describe("TemplateSelectionCard", () => {
         act(() => { segments()[0].querySelector<HTMLElement>(".template-selection-remove")?.click(); });
 
         expect(stored).toEqual([ [ "type:code:text/x-markdown" ] ]);
-        // And gone from the card, which is drawn from the list this dialog holds rather than from
-        // the board it wrote to.
+        // Gone from the card too, which renders from its own state rather than the caller's.
         expect(captions()).toEqual([ "Markdown" ]);
 
-        // Nothing to make a card from is nothing the board could make one with, so the way to
-        // take the last one away is not offered at all.
+        // An empty list creates nothing, so the last entry offers no way to remove it.
         offered = [ "type:text:text/html" ];
         await draw();
         expect(segments()[0].querySelector(".template-selection-remove")).toBeNull();
     });
 
-    /**
-     * A template is a note, so it carries the commands a note has. A note type is not, and carries
-     * none.
-     */
+    /** A template has a note behind it and so carries note commands; a note type does not. */
     describe("the commands on a template", () => {
         beforeEach(() => {
             offered = [ "type:text:text/html", "template:mine" ];
@@ -144,7 +139,7 @@ describe("TemplateSelectionCard", () => {
                 "bx bx-edit", "bx bx-window-open", "bx bx-outline", "---",
                 "bx bx-trash destructive-action-icon"
             ]);
-            // The last one deletes the note itself rather than taking it off the list, and says so.
+            // The last entry deletes the note rather than removing it from the list.
             expect(items.map((item) => item && "title" in item ? item.title : "---")).toEqual([
                 "tree-context-menu.open-in-popup", "tree-context-menu.open-in-a-new-window",
                 "tree-context-menu.duplicate", "---", "note_actions.delete_note"
@@ -167,7 +162,7 @@ describe("TemplateSelectionCard", () => {
             press(segments()[1], "Delete");
             await act(async () => { await Promise.resolve(); await Promise.resolve(); });
             expect(deleted).toHaveBeenCalledWith([ "b_mine" ], false, false);
-            // Gone from the list once the note itself is gone.
+            // Taken off the list once the note is deleted.
             expect(stored.at(-1)).toEqual([ "type:text:text/html" ]);
         });
 
@@ -203,9 +198,9 @@ describe("TemplateSelectionCard", () => {
                 .toEqual([ "Text", "My template", "My template (copy)", "Canvas" ]);
         });
 
-        /** A note type answers none of those keys, having no note behind it. */
+        /** A note type has no note behind it, so it handles none of those keys. */
         it("leaves the keys alone on a note type", async () => {
-            // Cleared rather than made: a spy already standing comes back with its calls.
+            // Cleared rather than created: an existing spy is returned with its calls.
             const command = vi.spyOn(appContext, "triggerCommand").mockReturnValue(undefined);
             command.mockClear();
             await draw();
@@ -227,7 +222,7 @@ describe("TemplateSelectionCard", () => {
                 key: string, items: { key: string }[]
             }[];
             expect(groups.map((group) => group.key)).toEqual([ "type", "user" ]);
-            // What the board already offers is left out, as is everything the app ships.
+            // What the caller already offers is left out, as is everything the app ships.
             expect(groups.flatMap((group) => group.items.map((item) => item.key)))
                 .toEqual([ "type:canvas:application/json", "template:mine" ]);
         });
@@ -255,8 +250,31 @@ describe("TemplateSelectionCard", () => {
         });
 
         /**
-         * The second way in makes a template of its own: a note under the board carrying
-         * `#template`, opened for the reader to write, and offered by the board from then on.
+         * Until the read answers, `templates` cannot be resolved, and a creation would be stored
+         * as the whole list.
+         */
+        it("offers no way to create one until it knows what exists", async () => {
+            let answer: (options: NoteTypeOption[]) => void = () => {};
+            vi.mocked(getNoteTypeOptions)
+                .mockReturnValueOnce(new Promise((resolve) => { answer = resolve; }));
+            await draw();
+
+            expect(adders().map((button) => (button as HTMLButtonElement).disabled))
+                .toEqual([ true, true ]);
+
+            await act(async () => {
+                answer(AVAILABLE);
+                await Promise.resolve();
+            });
+
+            expect(adders().map((button) => (button as HTMLButtonElement).disabled))
+                .toEqual([ false, false ]);
+            expect(stored).toEqual([]);
+        });
+
+        /**
+         * The second button creates a template of its own: a note carrying `#template`, opened for
+         * editing and offered from then on.
          */
         it("makes a template under the board, and offers it from then on", async () => {
             const made = vi.spyOn(note_create, "createTemplateNote").mockResolvedValue({

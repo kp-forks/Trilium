@@ -6,15 +6,10 @@ import Modal from "../../react/Modal";
 import TemplateSelectionCard from "../../react/TemplateSelectionCard";
 import BoardApi from "./api";
 
-/**
- * The board's own settings, apart from its columns and cards.
- *
- * One card for now, the templates a new card is created from; the rest of the board's settings go
- * here as they arrive.
- */
+/** The board's settings, other than its columns and cards. */
 export default function BoardProperties({ api, note, shown, onClose }: {
     api: BoardApi,
-    /** The board itself, and the parent of any template created here. */
+    /** The board note, which is the parent of any template created here. */
     note: FNote,
     shown: boolean,
     onClose: () => void

@@ -413,6 +413,8 @@ interface SortableItem {
 interface ItemCreationButton<T extends SortableItem> {
     label: string;
     icon?: string;
+    /** Turns the button off, for a caller that cannot make an entry yet. */
+    disabled?: boolean;
     onCreateItem: () => T | undefined | Promise<T | undefined>;
 }
 interface SortableCardProps<T extends SortableItem> {
@@ -426,6 +428,8 @@ interface SortableCardProps<T extends SortableItem> {
     itemCreationButtons?: ItemCreationButton<T>[];
     /** Which edge of a segment the grip stands on. The trailing one by default. */
     gripPlacement?: "start" | "end";
+    /** Called with the focused entry for a key the card does not handle itself. */
+    onItemKeyDown?: (item: T, event: KeyboardEvent) => void;
     selectedKey?: string;
     onSelect?: (key: string) => void;
     heading?: string;

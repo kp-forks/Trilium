@@ -237,17 +237,12 @@ async function duplicateSubtree(noteId: string, parentNotePath: string) {
 }
 
 /**
- * Makes a template under the given note and opens it for the reader to write.
+ * Creates a template under `parentNoteId` and opens it in the popup editor.
  *
- * A template is a note carrying `#template`, which is what makes it something other notes can be
- * made from. Written here rather than in the view that asked for one, since a collection of any
- * kind may want the same: a board makes the templates its cards are made from, and the next one to
- * offer templates makes them the same way.
+ * A template is a note carrying `#template`. The popup editor keeps the dialog that asked for the
+ * template open, which a tab switch would not.
  *
- * Opened in a popup rather than in the tab: what asked for it is usually a dialog, which the reader
- * is still standing in and expects to come back to.
- *
- * @returns the note that was made, or nothing where it could not be.
+ * @returns the new note, or `undefined` when it could not be created.
  */
 async function createTemplateNote(parentNoteId: string, title: string) {
     const { note } = await createNote(parentNoteId, {

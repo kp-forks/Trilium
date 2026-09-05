@@ -4,17 +4,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { SortableCard, type SortableItem } from "./SortableCard";
 
-// i18next is never initialised under test, so a stock label would be undefined and the segment it
-// stands in would read nothing at all.
+// i18next is never initialised under test, so every built-in label would read as undefined.
 vi.mock("../../services/i18n", () => ({
     t: (key: string) => key
 }));
 
-/** How tall every segment stands, and the gap between two of them, as the card is laid out. */
+/** The height every segment is given here, and the gap between two of them. */
 const SEGMENT_HEIGHT = 40;
 const SEGMENT_GAP = 4;
 
-/** What the card asks of a finger before it carries a segment: how long, and how still. */
+/** What a touch must do before a drag starts: how long to wait, and how still to stay. */
 const TOUCH_HOLD = 400;
 const TOUCH_SLACK = 8;
 
@@ -24,7 +23,7 @@ describe("SortableCard", () => {
     let changed: SortableItem[][];
 
     beforeEach(() => {
-        // The rest a finger keeps is waited out rather than lived through.
+        // The hold is advanced with fake timers rather than waited out.
         vi.useFakeTimers();
         items = [
             { key: "a", caption: "Alpha" },
@@ -47,11 +46,11 @@ describe("SortableCard", () => {
         expect(container.querySelector(".tn-card-description")?.textContent)
             .toBe("Put them as you like.");
         expect(captions()).toEqual([ "Alpha", "Beta", "Gamma" ]);
-        // Every segment answers for itself, so any of them can be reached and moved by keyboard.
+        // Every segment is focusable, so any of them can be reached and moved by keyboard.
         expect(segments().every((segment) => segment.tabIndex === 0)).toBe(true);
     });
 
-    /** The slot, for a card that shows more of an entry than its name. */
+    /** The render slot, for a card showing more than an entry's name. */
     it("draws each entry with what the caller gives it", () => {
         draw({ renderItem: (item, index) => <b>{`${index}:${item.key}`}</b> });
 
@@ -67,7 +66,7 @@ describe("SortableCard", () => {
 
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "b", "a", "c" ]);
             expect(captions()).toEqual([ "Beta", "Alpha", "Gamma" ]);
-            // The reader is left standing on the entry they moved, not on the place it left.
+            // The focus follows the entry that moved, not the position it left.
             expect(document.activeElement).toBe(segmentOf("a"));
         });
 
@@ -81,7 +80,7 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c" ]);
         });
 
-        /** There is nowhere past the ends, and a key that changes nothing is left to the page. */
+        /** There is nothing past either end, and an unused key is left to the page. */
         it("leaves an entry at the end where it is", () => {
             draw();
             const atTop = segments()[0];
@@ -98,7 +97,7 @@ describe("SortableCard", () => {
         it("steps between entries without Control, moving nothing", () => {
             draw();
 
-            // Nothing stands below the last entry on a card that cannot be added to.
+            // A card with no creation row has nothing below its last entry.
             focus(segments()[2]);
             press(segments()[2], "ArrowDown");
             expect(document.activeElement).toBe(segmentOf("c"));
@@ -134,7 +133,7 @@ describe("SortableCard", () => {
 
             expect(segmentOf("c")?.className).toContain("tn-sortable-selected");
 
-            // What the reader does is reported; what is drawn stays the caller's to decide.
+            // The change is reported, and the caller decides what is drawn.
             focus(segmentOf("a"));
             expect(segmentOf("c")?.className).toContain("tn-sortable-selected");
             expect(segmentOf("a")?.className).not.toContain("tn-sortable-selected");
@@ -158,12 +157,11 @@ describe("SortableCard", () => {
             draw();
 
             grab(segmentOf("a"));
-            // Past the middle of the second segment, which is what it changes places with.
+            // Past the middle of the second segment, which it swaps with.
             moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1);
 
             expect(captions()).toEqual([ "Beta", "Alpha", "Gamma" ]);
-            // Nothing is reported until it lands: a carry across the card is one change, not one
-            // for every segment it passes.
+            // Nothing is reported until the drop: one change per drag, not per segment passed.
             expect(changed).toEqual([]);
 
             drop();
@@ -172,23 +170,21 @@ describe("SortableCard", () => {
         });
 
         /**
-         * A segment gives way as the carried one's foot passes its middle, which is what puts the
-         * last place within reach: the carried segment can be held no lower than that place, so
-         * middle against middle it would have to reach a place it cannot be carried to.
+         * A segment gives way as the dragged one's bottom edge passes its middle, which is what
+         * makes the last position reachable: the clamp stops the drag exactly at that middle.
          */
         it("takes the last place as its foot passes the middle of the last segment", () => {
             draw();
             const last = SEGMENT_HEIGHT * 2 + SEGMENT_GAP * 2;
 
             grab(segmentOf("a"));
-            // Short of the last place by half a segment, and just past the middle of the one
-            // standing in it.
+            // Half a segment short of the last position, just past the middle of the one in it.
             moveTo(last - SEGMENT_HEIGHT / 2 + 1);
 
             expect(captions()).toEqual([ "Beta", "Gamma", "Alpha" ]);
         });
 
-        /** And the other way about: the head passing a middle is what sends a segment above it. */
+        /** The same upwards: the top edge passing a middle moves the segment above it. */
         it("takes the first place as its head passes the middle of the first segment", () => {
             draw();
 
@@ -209,11 +205,11 @@ describe("SortableCard", () => {
             expect(captions()).toEqual([ "Alpha", "Beta", "Gamma" ]);
 
             drop();
-            // Back where it started, so there is nothing to report.
+            // Back at its starting position, so there is nothing to report.
             expect(changed).toEqual([]);
         });
 
-        /** The segment is held inside the card, whatever the pointer does past its ends. */
+        /** The segment is clamped to the card, however far the pointer goes past it. */
         it("carries it no further than the ends of the card", () => {
             draw();
             const carried = segmentOf("c");
@@ -225,16 +221,14 @@ describe("SortableCard", () => {
             const [ first ] = segments();
             grab(first, 0);
             moveTo(500);
-            // The last place a segment can stand in: the room the list has, less its own height.
+            // The last position: the list's height less the segment's own.
             expect(shift(first)).toBe(listHeight() - SEGMENT_HEIGHT);
             drop();
         });
 
         /**
-         * A card taller than the screen is scrolled while a segment is carried to an edge of it,
-         * which moves the list out from under a pointer that has not itself moved. The segment
-         * answers to the place in the card the pointer is over, not to the place on screen it was
-         * taken from, or it would be left behind by everything the scrolling brought into view.
+         * Scrolling moves the list under a pointer that has not moved, so the segment follows the
+         * position in the card rather than the position on screen it started from.
          */
         it("keeps the segment under the pointer while the card is scrolled", () => {
             draw();
@@ -244,7 +238,7 @@ describe("SortableCard", () => {
             moveTo(SEGMENT_HEIGHT / 2);
             expect(shift(carried)).toBe(SEGMENT_HEIGHT / 2);
 
-            // The card scrolls up by a segment, the pointer staying where it is.
+            // The card scrolls up by one segment while the pointer stays put.
             standAt(-SEGMENT_HEIGHT);
             moveTo(SEGMENT_HEIGHT / 2);
 
@@ -276,20 +270,16 @@ describe("SortableCard", () => {
             expect(changed).toEqual([]);
         });
 
-        /**
-         * A finger carries it the same way a mouse does, once it has rested on the grip. The grip
-         * answers for the gesture as soon as it is touched, so a finger that meant to scroll the
-         * page scrolls nothing wherever it lands on one: resting first is what tells them apart.
-         */
+        /** A touch drags as a mouse does, once it has held still for TOUCH_HOLD_MS. */
         it("is carried by a finger, once it has rested on the grip", () => {
             draw();
 
             touch(segmentOf("a"));
-            // Nothing is taken up by the press itself, however long the finger is there for.
+            // The press alone starts no drag, however long the finger stays down.
             expect(segmentOf("a")?.className).not.toContain("tn-sortable-dragging");
 
             rest();
-            // Held now, which the segment says for itself before it has gone anywhere.
+            // Dragging now, which the segment reports before it has moved.
             expect(segmentOf("a")?.className).toContain("tn-sortable-dragging");
 
             moveTo(SEGMENT_HEIGHT + SEGMENT_GAP + 1, { pointerType: "touch" });
@@ -300,9 +290,8 @@ describe("SortableCard", () => {
         });
 
         /**
-         * The page is the gesture's until a segment is taken up: a finger that came to scroll
-         * scrolls, wherever on the card it landed. Once one is being carried the move is refused,
-         * which is what holds the page still under it.
+         * The page scrolls until the drag starts, wherever on the card the touch landed. From
+         * then on touchmove is prevented, which holds the page still.
          */
         it("leaves the page to scroll until a segment is being carried", () => {
             draw();
@@ -318,8 +307,8 @@ describe("SortableCard", () => {
         });
 
         /**
-         * A thumb reaching across a phone lands on the near edge of a row far more easily than on
-         * one particular end of it, so the rest is kept wherever the finger fell.
+         * A touch drags from anywhere on the segment, which a thumb reaches far more easily than
+         * one particular end of it.
          */
         it("is carried by a finger resting anywhere on the segment", () => {
             draw();
@@ -333,7 +322,7 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "b", "a", "c" ]);
         });
 
-        /** A mouse has no trouble reaching a mark, and a press elsewhere is for reading. */
+        /** A mouse can aim at the grip, so a press elsewhere selects text instead. */
         it("is not carried by a mouse pressed anywhere but the grip", () => {
             draw();
 
@@ -346,7 +335,7 @@ describe("SortableCard", () => {
             expect(captions()).toEqual([ "Alpha", "Beta", "Gamma" ]);
         });
 
-        /** Whatever a control does with a press, carrying the row off is not it. */
+        /** A press on a control belongs to that control, and starts no drag. */
         it("leaves a press that began on a control to the control", () => {
             draw({ renderItem: (item) => <button type="button">{item.caption}</button> });
 
@@ -372,7 +361,7 @@ describe("SortableCard", () => {
             expect(changed).toEqual([]);
         });
 
-        /** A finger settling by a pixel or two is still resting, and carries nothing off by it. */
+        /** A drift within TOUCH_SLACK_PX still counts as still, and does not offset the drag. */
         it("takes it up for a finger that barely moves, from where the finger now is", () => {
             draw();
 
@@ -407,7 +396,7 @@ describe("SortableCard", () => {
             expect(changed).toEqual([]);
         });
 
-        /** A press that is not the primary button is somebody else's: a menu, most likely. */
+        /** A press with any other button opens a menu, and starts no drag. */
         it("is not carried by a right click", () => {
             draw();
 
@@ -436,10 +425,10 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "d" ]);
             expect(captions()).toEqual([ "Alpha", "Beta", "Gamma", "Delta" ]);
             expect(segmentOf("d")?.className).toContain("tn-sortable-appearing");
-            // The reader is left on the segment that adds, so another entry can follow.
+            // The focus stays on the creation button, so another entry can follow.
             expect(document.activeElement).not.toBe(segmentOf("d"));
 
-            // Shown once: the entry stays the one just made, and a redraw must not play it again.
+            // Played once: a redraw must not repeat the entry animation.
             act(() => {
                 segmentOf("d")?.dispatchEvent(
                     new AnimationEvent("animationend", { bubbles: true }));
@@ -478,7 +467,7 @@ describe("SortableCard", () => {
 
             expect(adders().map((button) => button.textContent?.trim()))
                 .toEqual([ "Add a note", "Add a link", "Add a folder" ]);
-            // Of one width, however many there are, which the row shares out between them.
+            // All of one width, the row sharing its space between them.
             expect(adders().every((button) => button.style.flex === "")).toBe(true);
 
             await click(adders()[1]);
@@ -488,7 +477,7 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "e", "f" ]);
         });
 
-        /** A label says what a button does, and two of them can say the same thing. */
+        /** Two buttons can carry the same label, so the position tells them apart. */
         it("keeps two buttons that read alike apart", async () => {
             draw({ itemCreationButtons: [ makes("d", "Delta"), makes("e", "Epsilon") ] });
 
@@ -498,7 +487,7 @@ describe("SortableCard", () => {
             expect(changed.at(-1)?.map((item) => item.key)).toEqual([ "a", "b", "c", "e" ]);
         });
 
-        /** Three is as many as the foot of a card can read; a fourth is the caller's mistake. */
+        /** Three is the most the card renders; a fourth is a caller error. */
         it("refuses more than three ways of making an entry", () => {
             const buttons = [ makes("d", "D"), makes("e", "E"), makes("f", "F"), makes("g", "G") ];
 
@@ -507,7 +496,7 @@ describe("SortableCard", () => {
             expect(() => draw({ itemCreationButtons: buttons.slice(0, 3) })).not.toThrow();
         });
 
-        /** Beside the entry the reader stands on, the way a spreadsheet adds a row. */
+        /** Beside the focused entry, the way a spreadsheet adds a row. */
         it("makes an entry below the focused one for Enter, and above it for Shift and Enter",
             async () => {
                 let made = 0;
@@ -558,8 +547,8 @@ describe("SortableCard", () => {
         });
 
         /**
-         * It is one of the places the reader stands, even though it holds no entry: stepping down
-         * from the last entry reaches it, and the keys that name an entry lead back into them.
+         * The creation row is a focus stop although it holds no entry: Down from the last entry
+         * reaches it, and the movement keys lead back into the entries.
          */
         it("is stepped onto and off again, like the entries above it", () => {
             draw({ itemCreationButtons: [ makes("d", "Delta") ] });
@@ -579,7 +568,7 @@ describe("SortableCard", () => {
             expect(document.activeElement).toBe(segmentOf("c"));
         });
 
-        /** Nothing stands below it, and a card of no entries has nowhere to lead back to. */
+        /** Nothing is below it, and an empty card has no entry to lead back to. */
         it("goes nowhere from the segment that adds", () => {
             draw({ itemCreationButtons: [ makes("d", "Delta") ] });
 
@@ -594,7 +583,7 @@ describe("SortableCard", () => {
             expect(document.activeElement).toBe(adder());
         });
 
-        /** It stands at the foot of the card to be pressed, not to be put in order with the rest. */
+        /** The creation row is a focus stop, not an entry, so it cannot be reordered. */
         it("leaves the segment for adding where it is", () => {
             draw({ itemCreationButtons: [ makes("d", "Delta") ] });
             expect(adder()?.querySelector(".tn-sortable-grip")).toBeNull();
@@ -602,7 +591,7 @@ describe("SortableCard", () => {
 
             press(adder(), "ArrowUp", { ctrlKey: true });
             expect(changed).toEqual([]);
-            // Nor does a key meant for the entries carry the reader off it while Control is held.
+            // Control plus a movement key does not move the focus off it either.
             expect(document.activeElement).not.toBe(segmentOf("c"));
         });
     });
@@ -613,11 +602,11 @@ describe("SortableCard", () => {
 
         expect(first.lastElementChild?.className).toContain("tn-sortable-grip");
         expect(first.querySelector(".tn-sortable-grip svg line")).not.toBeNull();
-        // The keyboard answers for what the grip does, so it is not read out a second time.
+        // The keyboard covers what the grip does, so it is hidden from screen readers.
         expect(first.querySelector(".tn-sortable-grip")?.getAttribute("aria-hidden")).toBe("true");
     });
 
-    /** The other edge, for a card whose entries carry something of their own on the trailing one. */
+    /** The leading edge, for a card whose entries carry their own buttons on the trailing one. */
     it("carries it on the leading edge where the caller asks for it there", () => {
         draw({ gripPlacement: "start" });
         const [ first ] = segments();
