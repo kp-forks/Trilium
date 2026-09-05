@@ -17,45 +17,45 @@ import { type SortableItem, SortableCard } from "./SortableCard";
 
 export interface TemplateSelectionCardProps {
     heading: string;
-    /** The sentence saying what the templates are for, shown under the heading. */
+    /** A sentence explaining what the templates are for, shown under the heading. */
     instruction: string;
-    /** The note the templates belong to, which is what one made here is filed under. */
+    /** The note the templates belong to, and the parent of any created here. */
     note: FNote;
-    /** What a template made here is called, for a caller whose templates are of one kind. */
+    /** The title given to a template created here. */
     newTemplateName?: string;
-    /** What is offered now, as note type ids, in the order they are offered in. */
+    /** The templates on offer, as note type ids, in display order. */
     templates: string[];
-    /** Said with the whole list whenever the reader changes it. */
+    /** Called with the whole list after every change. */
     onChange: (templates: string[]) => void;
 }
 
 /**
- * The templates something is made from, in the order they are offered in.
+ * The templates a note can be created from, in the order they are offered.
  *
- * The order is the reader's to change, since the first of them is what is made until another is
- * picked. Entries are added from what the app can already make, or made here and written straight
- * away; the caller keeps the list and decides what it means.
+ * The order is editable, the first template being the default until another is picked. Entries are
+ * added from what the app can already create, or created here; the caller owns the list and decides
+ * what it means.
  *
- * Everything a note can be made from is read by the card itself, so a caller has only to say what
- * it holds now and where a new one belongs.
+ * The card reads everything a note can be created from itself, so a caller only supplies the
+ * current list and where new templates belong.
  */
 export default function TemplateSelectionCard({
     heading, instruction, note, newTemplateName, templates, onChange
 }: TemplateSelectionCardProps) {
     /**
-     * The list as it stands here, which is what the card is drawn from.
+     * The current list, which the card renders from.
      *
-     * Held rather than read from the caller on every draw: a change is written straight through,
-     * and a caller that has nothing to redraw for would otherwise leave the list as it was found.
+     * Held rather than read from the prop on every render: a change is written through at once, and
+     * a caller with nothing to re-render for would otherwise leave the list unchanged.
      */
     const [ ids, setIds ] = useState(templates);
-    /** Everything a note can be made from, read once the card is drawn. */
+    /** Everything a note can be created from, read once when the card mounts. */
     const [ available, setAvailable ] = useState<NoteTypeOption[]>([]);
     /**
-     * What was made here, which the app has yet to read back.
+     * Templates created here, which the app has yet to report back.
      *
-     * A template is a note, and it is known from the change that files it: until that arrives there
-     * is nothing to draw the entry from, and it would stand in the stored list without being shown.
+     * A template is a note, and it becomes known through the entity change that creates it: until
+     * that arrives there is nothing to render the entry from, so it would be stored but not shown.
      */
     const [ made, setMade ] = useState<NoteTypeOption[]>([]);
 
@@ -90,7 +90,7 @@ export default function TemplateSelectionCard({
         onChange(next);
     }, [ onChange ]);
 
-    /** Asks which of the ones not already offered to add, and answers with it as an entry. */
+    /** Asks which of the templates not already offered to add, and returns it as an entry. */
     const addExisting = useCallback(async () => {
         const taken = new Set(offered.map((option) => option.id));
         const picked = await dialog.pickSingleItem({
@@ -103,7 +103,7 @@ export default function TemplateSelectionCard({
             : undefined;
     }, [ available, offered ]);
 
-    /** Makes one and opens it, the reader writing what a note made from it holds. */
+    /** Creates a template and opens it for editing. */
     const create = useCallback(async () => {
         const template = await note_create.createTemplateNote(
             note.noteId, newTemplateName ?? t("template_selection.new-name"));
@@ -136,8 +136,8 @@ export default function TemplateSelectionCard({
                     {item.icon && <Icon icon={item.icon} />}
                     <span className="template-selection-name">{item.caption}</span>
 
-                    {/* The last one left is not removable: nothing offered is nothing that could be
-                        made, so the caller has none to fall back on. */}
+                    {/* The last template is not removable: with none offered, nothing could be
+                        created. */}
                     {items.length > 1 && (
                         <ActionButton
                             className="template-selection-remove"
@@ -170,8 +170,8 @@ export default function TemplateSelectionCard({
 /**
  * What can still be added, as groups for the picker.
  *
- * The templates the app ships are left out: they are a starting point for a note of one's own
- * rather than something to be made from over and over.
+ * The templates the app ships are excluded: they are a starting point for a template of one's own
+ * rather than something to create from repeatedly.
  */
 function pickable(available: NoteTypeOption[], taken: Set<string>): PickerItemGroup[] {
     const groups = new Map<string, PickerItemGroup>();

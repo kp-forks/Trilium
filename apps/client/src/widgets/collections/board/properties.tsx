@@ -7,14 +7,14 @@ import TemplateSelectionCard from "../../react/TemplateSelectionCard";
 import BoardApi from "./api";
 
 /**
- * What the board is set up with, apart from the columns and the cards themselves.
+ * The board's own settings, apart from its columns and cards.
  *
- * One card for now, the templates a new card is made from; the dialog is the place the rest of the
- * board's own settings will be put as they arrive.
+ * One card for now, the templates a new card is created from; the rest of the board's settings go
+ * here as they arrive.
  */
 export default function BoardProperties({ api, note, shown, onClose }: {
     api: BoardApi,
-    /** The board itself, which is what a template made here is filed under. */
+    /** The board itself, and the parent of any template created here. */
     note: FNote,
     shown: boolean,
     onClose: () => void

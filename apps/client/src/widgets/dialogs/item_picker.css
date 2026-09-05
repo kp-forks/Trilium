@@ -2,21 +2,21 @@
   /* The colour the quick search marks its terms in, which is what a marked term reads as here. */
   --item-picker-mark-color: var(--quick-search-result-highlight-color);
   --item-picker-inline-padding: 40px;
-  /* One line of caption in the card's own padding: an exact height, which is what lets an item
-     fold and unfold rather than jumping once a max-height has come down to meet it. */
+  /* One line of caption plus the card's padding: an exact height, which is what lets an item
+     collapse and expand smoothly rather than appearing to jump. */
   --item-picker-item-height: calc(1.4em + 2 * var(--card-padding-block));
   --item-picker-fold-duration: 0.15s;
 }
 
 .modal.item-picker-dialog {
   .modal-body {
-    /* A column, so that what stands where the list was can take the room the list is not using. */
+    /* A column, so the empty state can take the space the list is not using. */
     display: flex;
     flex-direction: column;
     padding-inline: var(--item-picker-inline-padding);
   }
 
-  /* The room the list stands in, which is also what the placeholder is laid over. */
+  /* The area holding the list, which the empty state is laid over. */
   .item-picker-results {
     position: relative;
     flex: 1 0 auto;
@@ -36,8 +36,8 @@
     flex-direction: column;
   }
 
-  /* The room between groups is each card's own, so it closes with the card rather than holding a
-     stripe open where one used to stand. */
+  /* The space between groups belongs to each card, so it closes with the card rather than leaving
+     a stripe where one was. */
   .item-picker-groups > .tn-card {
     margin-block-end: 1em;
     transition: margin var(--item-picker-fold-duration) ease;
@@ -48,11 +48,10 @@
   }
 
   /*
-   * A group whose items have all folded goes as well, but by folding: the heading closes over the
-   * same moment the items do.
+   * A group whose items have all collapsed collapses too, its heading closing on the same beat.
    *
-   * The filter's own rule takes an empty group away outright, which would cut the folding short.
-   * Answered in kind, since that rule is `!important` for reasons of its own.
+   * The filter primitive removes an empty group outright, which would cut the animation short. It
+   * is overridden here in kind, that rule being `!important` for reasons of its own.
    */
   .tn-card.tn-filter-scope:not(:has(.tn-filter-match)) {
     display: block !important;
@@ -81,12 +80,12 @@
     display: flex;
     align-items: center;
     gap: 0.4em;
-    /* Folding: what the item takes up, and what it is painted with, both go to nothing. Its own
-       height rather than a ceiling to come down from, so the whole of the transition is spent
-       moving: a max-height above the real one is over before it has visibly begun. */
+    /* Collapsing: the space it takes and what paints it both go to nothing. An exact height rather
+       than a max-height ceiling, which would spend most of the transition above the real height and
+       so appear instant. */
     height: var(--item-picker-item-height);
-    /* The gap between segments is the item's own, so it folds away with the item. A card's flex
-       gap would hold a stripe open for every item the filter took out. */
+    /* The gap belongs to the item, so it collapses with it. A flex gap on the card would leave a
+       stripe for every item the filter removed. */
     margin-block-end: var(--card-section-gap);
     transition: height var(--item-picker-fold-duration) ease,
       margin var(--item-picker-fold-duration) ease,
@@ -109,15 +108,15 @@
     opacity: 0;
   }
 
-  /* Marked by its colour alone, as the quick search marks what it found. */
+  /* Marked by colour alone, as the quick search marks its results. */
   .item-picker-caption {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
-  /* Bootstrap gives a mark padding of its own, which would part the term from the rest of the
-     caption it stands in the middle of. */
+  /* Bootstrap's Reboot gives `mark` padding, which would space a matched term away from the rest
+     of the caption. */
   .item-picker-caption mark {
     margin: 0;
     padding: 0;
@@ -127,9 +126,8 @@
   }
 
   /*
-   * Laid over the room the list stands in rather than following it, so it holds still while the
-   * list folds away under it. Out of the way of the field above and of what is still standing:
-   * it is faded rather than taken down, and takes no presses meant for either.
+   * Laid over the list rather than following it, so it stays put while the list collapses beneath.
+   * Faded rather than unmounted, and it takes no presses meant for the field or the items.
    */
   .item-picker-empty {
     position: absolute;
@@ -141,17 +139,17 @@
       visibility 0s linear var(--item-picker-fold-duration);
   }
 
-  /* Nothing left standing anywhere, which is the only time there is anything to say. */
+  /* Shown only when the filter has left nothing. */
   .item-picker-groups:not(:has(.item-picker-item:not(.item-picker-folded))) + .item-picker-empty {
     opacity: 1;
     visibility: visible;
     transition: opacity var(--item-picker-fold-duration) ease;
   }
 
-  /* The groups arrive with the dialog rather than into it: one rise as it opens, which is also
-     one animation however many items are being shown. */
+  /* The groups animate with the dialog rather than into it: one animation however many items are
+     shown. */
   .item-picker-groups {
-    /* Long enough to be read as its own: the dialog's opening covers the first moments of it. */
+    /* Long enough to read as its own animation, the dialog's opening covering its first moments. */
     animation: item-picker-rise 0.4s ease-out;
   }
 }
@@ -166,13 +164,13 @@
 }
 
 /*
- * One height whatever it holds, so a list of three opens the same box as a list of a hundred and
- * the list scrolls inside it.
+ * One height whatever it holds, so three items open the same box as a hundred and the list scrolls
+ * inside it.
  *
- * The height is the content box's rather than the dialog's: a scrollable modal only caps that box,
- * which is otherwise sized by what it holds and closes over the list as the filter narrows it. The
- * dialog is then given the whole screen and centres the box in it, which is how Bootstrap centres
- * one of its own; a margin of half the room left over would rest on that room being what it looks.
+ * The height belongs to `.modal-content` rather than `.modal-dialog`: a scrollable modal only caps
+ * the content box, which is otherwise sized by its contents and would shrink as the filter narrows
+ * the list. The dialog then fills the viewport and centres the box, which is how Bootstrap centres
+ * `.modal-dialog-centered`.
  */
 body:not(.mobile) .modal.item-picker-dialog {
   .modal-dialog {

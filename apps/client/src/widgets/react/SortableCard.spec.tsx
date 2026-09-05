@@ -476,7 +476,7 @@ describe("SortableCard", () => {
                 makes("f", "Zeta", "Add a folder")
             ] });
 
-            expect(adders().map((button) => button.textContent))
+            expect(adders().map((button) => button.textContent?.trim()))
                 .toEqual([ "Add a note", "Add a link", "Add a folder" ]);
             // Of one width, however many there are, which the row shares out between them.
             expect(adders().every((button) => button.style.flex === "")).toBe(true);

@@ -416,6 +416,9 @@ interface ItemCreationButton<T extends SortableItem> {
     onCreateItem: () => T | undefined | Promise<T | undefined>;
 }
 interface SortableCardProps<T extends SortableItem> {
+    /** See `CardProps`: the words a filter finds the card by, and whether it is filter-only. */
+    filterExtraKeywords?: string;
+    filterOnly?: boolean;
     items: T[];
     onChange: (items: T[]) => void;
     renderItem?: (item: T, index: number) => ComponentChildren;

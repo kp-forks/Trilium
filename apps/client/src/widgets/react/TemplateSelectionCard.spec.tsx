@@ -148,7 +148,7 @@ describe("TemplateSelectionCard", () => {
             } as unknown as FNote);
             await draw();
 
-            expect(adders().map((button) => button.textContent)).toEqual([
+            expect(adders().map((button) => button.textContent?.trim())).toEqual([
                 "template_selection.add-existing", "template_selection.create"
             ]);
 
@@ -223,7 +223,7 @@ describe("TemplateSelectionCard", () => {
     }
 
     async function add(label: string) {
-        const button = adders().find((element) => element.textContent === label);
+        const button = adders().find((element) => element.textContent?.trim() === label);
         await act(async () => {
             button?.click();
             await Promise.resolve();
