@@ -22,15 +22,6 @@
     height: 100%;
     padding: 0 !important;
 }
-
-.note-detail:not(.full-height) {
-    > .note-detail-code .note-detail-code-editor,
-    > .note-detail-readonly-code .note-detail-readonly-code-content {
-        border-end-start-radius: var(--center-pane-border-radius);
-        border-end-end-radius: var(--center-pane-border-radius);
-        overflow: hidden;
-    }
-}
 /* #endregion */
 
 /* #region Backend log */
@@ -47,4 +38,13 @@
 
 .note-split.type-code .note-list {
     margin-top: 1em;
+}
+
+.note-detail:not(.full-height) {
+    > .note-detail-code .note-detail-code-editor,
+    > .note-detail-readonly-code .note-detail-readonly-code-content {
+        border-end-start-radius: var(--center-pane-border-radius);
+        border-end-end-radius: var(--center-pane-border-radius);
+        overflow: hidden;
+    }
 }
