@@ -55,18 +55,27 @@ function checkForTotpSecret(): boolean {
     return totpEncryptionService.isTotpSecretSet();
 }
 
-/** Returns the time step `submittedPasscode` was generated for, or `null` if it matches none. */
-function findTimeStep(secret: string, submittedPasscode: string): number | null {
+/** Time steps accepted on either side of the current one, so clocks a step apart still agree. */
+const CLOCK_DRIFT_STEPS = 1;
+
+/**
+ * Returns the time step `submittedPasscode` was generated for, or `null` if it matches none of the
+ * steps within `drift` of the current one.
+ */
+function findTimeStep(secret: string, submittedPasscode: string, drift: number): number | null {
     const config = generateConfig();
     const currentStep = Math.floor(Date.now() / 1000 / config.period);
 
     try {
-        const code = { passcode: submittedPasscode, secret: secret.trim(), counter: currentStep };
-        return Hotp.validate(code, config) ? currentStep : null;
+        for (let step = currentStep - drift; step <= currentStep + drift; step++) {
+            const code = { passcode: submittedPasscode, secret: secret.trim(), counter: step };
+            if (Hotp.validate(code, config)) return step;
+        }
     } catch (e) {
         console.error("Failed to validate TOTP:", e);
-        return null;
     }
+
+    return null;
 }
 
 /**
@@ -76,18 +85,18 @@ function findTimeStep(secret: string, submittedPasscode: string): number | null 
 function validateTOTPForSecret(secret: string, submittedPasscode: string): boolean {
     if (!secret) return false;
 
-    return findTimeStep(secret, submittedPasscode) !== null;
+    return findTimeStep(secret, submittedPasscode, CLOCK_DRIFT_STEPS) !== null;
 }
 
 /**
- * Validates a passcode against the persisted secret and records nothing. Used by the setup wizard,
- * which must not write options while becca is unloaded (see `SetupSecondFactor.verify`).
+ * Validates a passcode for the current step only, since it records nothing. Used by the setup
+ * wizard, which must not write options while becca is unloaded (see `SetupSecondFactor.verify`).
  */
 function validateTOTP(submittedPasscode: string): boolean {
     const secret = getTotpSecret();
     if (!secret) return false;
 
-    return validateTOTPForSecret(secret, submittedPasscode);
+    return findTimeStep(secret, submittedPasscode, 0) !== null;
 }
 
 /**
@@ -98,7 +107,7 @@ function verifyTOTP(submittedPasscode: string): boolean {
     const secret = getTotpSecret();
     if (!secret) return false;
 
-    const step = findTimeStep(secret, submittedPasscode);
+    const step = findTimeStep(secret, submittedPasscode, CLOCK_DRIFT_STEPS);
     const lastUsedStep = options.getOptionOrNull("totpLastUsedStep");
     if (step === null || (lastUsedStep && step <= Number(lastUsedStep))) return false;
 

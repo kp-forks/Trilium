@@ -237,9 +237,37 @@ describe("totp", () => {
             vi.setSystemTime(new Date("2026-01-01T00:00:40Z"));
             expect(verify(step + 1)).toBe(true);
 
+            // At step + 2 the window reaches back to step + 1, whose code is already used.
+            vi.setSystemTime(new Date("2026-01-01T00:01:10Z"));
+            expect(verify(step + 1)).toBe(false);
+            // A code from an authenticator one step ahead passes, and after it nothing older does.
+            expect(verify(step + 3)).toBe(true);
+            expect(verify(step + 2)).toBe(false);
+
             // Enrolling a secret clears the recorded step.
             cls.init(() => totp.setSecret(SECRET));
-            expect(verify(step + 1)).toBe(true);
+            expect(verify(step + 2)).toBe(true);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("enrollment accepts a step either side, the wizard only the current one", async () => {
+        const codeFor = await useRealCodes();
+        vi.useFakeTimers({ toFake: [ "Date" ] });
+        try {
+            cls.init(() => totp.setSecret(SECRET));
+            vi.setSystemTime(new Date("2026-01-01T00:00:40Z"));
+            const step = Math.floor(Date.now() / 1000 / 30);
+
+            expect(totp.validateTOTPForSecret(SECRET, codeFor(step - 1))).toBe(true);
+            expect(totp.validateTOTPForSecret(SECRET, codeFor(step + 1))).toBe(true);
+            expect(totp.validateTOTPForSecret(SECRET, codeFor(step - 2))).toBe(false);
+            expect(totp.validateTOTPForSecret(SECRET, codeFor(step + 2))).toBe(false);
+
+            expect(cls.init(() => totp.validateTOTP(codeFor(step)))).toBe(true);
+            expect(cls.init(() => totp.validateTOTP(codeFor(step - 1)))).toBe(false);
+            expect(cls.init(() => totp.validateTOTP(codeFor(step + 1)))).toBe(false);
         } finally {
             vi.useRealTimers();
         }
