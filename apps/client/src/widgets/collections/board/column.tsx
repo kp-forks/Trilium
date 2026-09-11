@@ -598,6 +598,9 @@ export default function Column({
             data-column={column}
             // Read by the drag, which offers neither end of a column that places its own cards.
             data-sorted={isSorted ? "true" : undefined}
+            // Also read by the drag, for placing a card at the column's foot. On the column rather
+            // than on the card area below, which a collapsed column does not draw at all.
+            data-count={noteIds.length}
             className={clsx("board-column", {
                 "drag-over": isDropTarget && (isSorted || draggedCard?.fromColumn !== column),
                 // The class the themes key a hue off, worn here as anywhere else that carries one.
@@ -729,7 +732,6 @@ export default function Column({
                 className={clsx("board-column-content", scrollFade.className)}
                 style={scrollFade.style}
                 onWheel={handleScroll}
-                data-count={noteIds.length}
                 data-window-from={isWindowed ? windowFrom : undefined}
                 data-window-count={isWindowed ? noteIds.length : undefined}
             >

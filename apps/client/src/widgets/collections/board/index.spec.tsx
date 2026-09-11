@@ -4313,6 +4313,20 @@ describe("a column windowed for its size", () => {
     });
 
     /**
+     * The drag places a card at a column's foot by this count. It has to stand on the column
+     * itself: a collapsed column draws no card area to hang it off, and a windowed one draws fewer
+     * cards than it holds.
+     */
+    it("says on each column how many cards it holds, drawn or not", async () => {
+        const board = await renderSized(200, 3);
+        const columns = board.querySelectorAll<HTMLElement>(".board-column");
+
+        expect(columns[0].dataset.count).toBe("200");
+        expect(columns[0].querySelectorAll(".board-note").length).toBeLessThan(200);
+        expect(columns[1].dataset.count).toBe("3");
+    });
+
+    /**
      * The drag and the keyboard both name a card by the place it holds in its column. Counting
      * drawn elements would name a place among whatever is on screen, which moves as it scrolls.
      */
