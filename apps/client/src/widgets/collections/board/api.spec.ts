@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import appContext from "../../../components/app_context";
 import FAttribute from "../../../entities/fattribute";
@@ -2438,5 +2438,66 @@ describe("a selection of cards", () => {
             { type: "label", name: "status", value: "Done", isInheritable: false }, undefined);
         expect(branches.moveBeforeBranch).not.toHaveBeenCalled();
         expect(branches.moveAfterBranch).not.toHaveBeenCalled();
+    });
+});
+
+describe("how wide the board draws its columns", () => {
+    afterEach(() => vi.restoreAllMocks());
+
+    it("reads the label, falling back to the default for a width it does not offer", () => {
+        const width = (label?: string) => createApi(
+            {}, [], buildNote(label ? { title: "Board", "#boardCardWidth": label }
+                : { title: "Board" })).api.columnWidth;
+
+        expect(width()).toBe("narrow");
+        expect(width("medium")).toBe("medium");
+        expect(width("wide")).toBe("wide");
+        expect(width("enormous")).toBe("narrow");
+    });
+
+    it("writes the label for a width other than the default", async () => {
+        const board = buildNote({ title: "Board" });
+        const setLabel = vi.spyOn(attributes, "setLabel").mockResolvedValue(undefined);
+        const { api } = createApi({}, [], board);
+
+        await api.setColumnWidth("wide");
+
+        expect(setLabel).toHaveBeenCalledWith(board.noteId, "boardCardWidth", "wide");
+    });
+
+    /** Kept tidy: a board drawn at the default width carries no label for it at all. */
+    it("takes the label off for the default width", async () => {
+        const board = buildNote({ title: "Board", "#boardCardWidth": "wide" });
+        const setLabel = vi.spyOn(attributes, "setLabel").mockResolvedValue(undefined);
+        const removeLabel = vi.spyOn(attributes, "removeOwnedLabelByName")
+            .mockResolvedValue(true);
+        const { api } = createApi({}, [], board);
+
+        await api.setColumnWidth("narrow");
+
+        expect(removeLabel).toHaveBeenCalledWith(board, "boardCardWidth");
+        expect(setLabel).not.toHaveBeenCalled();
+    });
+
+    /** Dropping its own label there would hand the board the inherited width straight back. */
+    it("writes the default out where the board inherits another width", async () => {
+        const parent = buildNote({
+            title: "Parent",
+            "#boardCardWidth(inheritable)": "wide",
+            children: [ { title: "Board" } ]
+        });
+        const board = froca.getNoteFromCache(parent.getChildNoteIds()[0]);
+        if (!board) throw new Error("expected the board to be in froca");
+        const setLabel = vi.spyOn(attributes, "setLabel").mockResolvedValue(undefined);
+        const removeLabel = vi.spyOn(attributes, "removeOwnedLabelByName")
+            .mockResolvedValue(true);
+        const { api } = createApi({}, [], board);
+
+        expect(api.columnWidth).toBe("wide");
+
+        await api.setColumnWidth("narrow");
+
+        expect(setLabel).toHaveBeenCalledWith(board.noteId, "boardCardWidth", "narrow");
+        expect(removeLabel).not.toHaveBeenCalled();
     });
 });

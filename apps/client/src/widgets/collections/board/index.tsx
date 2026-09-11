@@ -53,7 +53,10 @@ import { forgetWindowHeights } from "./windowing";
 import { BoardDropStateContext, DropStateStore } from "./drop_state";
 import BoardApi from "./api";
 import { adoptLegacyColumns, readColumns } from "./column_storage";
-import { DEFAULT_COLUMN_ICON, DEFAULT_GROUP_BY, getStatusDefinition, INBOX_COLUMN } from "./columns";
+import {
+    COLUMN_WIDTH_LABEL, DEFAULT_COLUMN_ICON, DEFAULT_COLUMN_WIDTH, DEFAULT_GROUP_BY,
+    getStatusDefinition, INBOX_COLUMN, parseColumnWidth
+} from "./columns";
 import Column, { EXPAND_MS, placeCard, settleCards } from "./column";
 import { currentCardTemplate, DEFAULT_CARD_TEMPLATES } from "./card_templates";
 import ColumnLimitDialog from "./column_limit";
@@ -351,6 +354,8 @@ export default function BoardView({
     let viewConfig = adoptedConfig ?? storedConfig;
     const [ includeArchived ] = useNoteLabelBoolean(parentNote, "includeArchived");
     const [ inboxEnabled ] = useNoteLabelBoolean(parentNote, "enableInboxColumn");
+    const [ storedColumnWidth ] =
+        useNoteLabelWithDefault(parentNote, COLUMN_WIDTH_LABEL, DEFAULT_COLUMN_WIDTH);
     /** Every card the board holds, which an active filter narrows before the cards are drawn. */
     const [ allByColumn, setAllByColumn ] = useState<ColumnMap>();
     const [ columns, setColumns ] = useState<string[]>();
@@ -1198,7 +1203,7 @@ export default function BoardView({
         : undefined;
 
     return (
-        <div className={clsx("board-view", {
+        <div className={clsx("board-view", `board-${parseColumnWidth(storedColumnWidth)}-columns`, {
             frozen: isFrozen,
             "editing-open": branchIdToEdit !== undefined || insertingColumns.size > 0
         })}>

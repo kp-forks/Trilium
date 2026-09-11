@@ -4354,3 +4354,64 @@ describe("a column windowed for its size", () => {
         return mountPoint;
     }
 });
+
+describe("how wide the board draws its columns", () => {
+    let container: HTMLElement | undefined;
+
+    afterEach(() => {
+        saved.length = 0;
+        if (container) {
+            render(null, container);
+            container.remove();
+            container = undefined;
+        }
+    });
+
+    /**
+     * The width itself is CSS, which happy-dom does not resolve. What the board answers for is the
+     * class it carries, off which the stylesheet picks one of the three widths.
+     */
+    it("carries the width its label names, and the default where it names none", async () => {
+        expect((await draw(undefined)).className).toContain("board-narrow-columns");
+        expect((await draw("wide")).className).toContain("board-wide-columns");
+        // A width nobody offers is drawn at the default rather than given a class of its own.
+        expect((await draw("enormous")).className).toContain("board-narrow-columns");
+    });
+
+    async function draw(width: string | undefined) {
+        if (container) {
+            render(null, container);
+            container.remove();
+        }
+
+        const note = buildNote({
+            title: "Board",
+            "#collection": "",
+            "#viewType": "board",
+            ...(width ? { "#boardCardWidth": width } : {}),
+            children: [ { title: "First", "#status": "To Do" } ]
+        });
+
+        const mountPoint = document.createElement("div");
+        container = mountPoint;
+        document.body.appendChild(mountPoint);
+
+        await act(async () => {
+            render(
+                <ParentComponent.Provider value={new Component()}>
+                    <Harness
+                        note={note}
+                        noteIds={[ ...note.getChildNoteIds() ]}
+                        initialConfig={{ columns: [ { value: "To Do" } ] }}
+                    />
+                </ParentComponent.Provider>,
+                mountPoint
+            );
+        });
+        await act(async () => { await flush(); });
+
+        const board = mountPoint.querySelector<HTMLElement>(".board-view");
+        if (!board) throw new Error("expected the board to be drawn");
+        return board;
+    }
+});

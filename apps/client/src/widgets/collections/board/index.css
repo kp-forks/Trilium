@@ -16,7 +16,12 @@
   /* Matches the height a normal header takes, so a collapsed column reads as one turned on
      its side. */
   --board-collapsed-column-width: 2.25em;
-  --board-column-width: 275px;
+  /* The three widths the board properties offer, and the one in use. Each is its own variable so
+     a theme can change one width without taking over which of them a board picks. */
+  --board-column-width-narrow: 275px;
+  --board-column-width-medium: 325px;
+  --board-column-width-wide: 400px;
+  --board-column-width: var(--board-column-width-narrow);
   --board-column-border-width: 2px;
   --board-collapse-duration: 1s;
   --board-collapse-duration-quick: 0.3s;
@@ -108,6 +113,20 @@ body.mobile .board-view-container {
 body.mobile .board-view-container.board-dragging {
   scroll-snap-type: none;
   scroll-behavior: auto;
+}
+
+/* Set from `#boardCardWidth`. The columns and everything measured against them read the width off
+   this one variable, so only the board itself names which of the three is in use. */
+.board-view.board-narrow-columns {
+  --board-column-width: var(--board-column-width-narrow);
+}
+
+.board-view.board-medium-columns {
+  --board-column-width: var(--board-column-width-medium);
+}
+
+.board-view.board-wide-columns {
+  --board-column-width: var(--board-column-width-wide);
 }
 
 .board-view-container .board-column {

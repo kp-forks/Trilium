@@ -25,8 +25,9 @@ import {
 import { BoardColumnData, BoardViewData } from ".";
 import { currentCardTemplate, DEFAULT_CARD_TEMPLATES } from "./card_templates";
 import {
-    type BoardStatusDefinition, canStoreColumnsInDefinition, DEFAULT_COLUMN_ICON,
-    DEFAULT_GROUP_BY, INBOX_COLUMN, INBOX_COLUMN_ICON
+    type BoardStatusDefinition, canStoreColumnsInDefinition, COLUMN_WIDTH_LABEL, type ColumnWidth,
+    DEFAULT_COLUMN_ICON, DEFAULT_COLUMN_WIDTH, DEFAULT_GROUP_BY, INBOX_COLUMN, INBOX_COLUMN_ICON,
+    parseColumnWidth
 } from "./columns";
 import { readColumns, writeColumns } from "./column_storage";
 import { ColumnItem, ColumnMap } from "./data";
@@ -655,6 +656,33 @@ export default class BoardApi {
     /** Whether the board draws the notes filed as archived, cards and columns alike. */
     async setArchivedShown(shown: boolean) {
         await attributes.setBooleanWithInheritance(this.parentNote, "includeArchived", shown);
+    }
+
+    /** How wide the board draws its columns, which the board turns into a class of its own. */
+    get columnWidth() {
+        return parseColumnWidth(this.parentNote?.getLabelValue(COLUMN_WIDTH_LABEL));
+    }
+
+    /**
+     * Sets how wide the columns are drawn.
+     *
+     * The default takes the label off the board note, which keeps it tidy. A board that inherits a
+     * width from a template or a parent writes the default out instead: dropping its own label
+     * there would hand the board the inherited width back.
+     */
+    async setColumnWidth(width: ColumnWidth) {
+        const note = this.parentNote;
+        if (!note) return;
+
+        const inherited = note.getAttributes("label", COLUMN_WIDTH_LABEL)
+            .find(attribute => attribute.noteId !== note.noteId);
+        if (width === DEFAULT_COLUMN_WIDTH
+                && parseColumnWidth(inherited?.value) === DEFAULT_COLUMN_WIDTH) {
+            await attributes.removeOwnedLabelByName(note, COLUMN_WIDTH_LABEL);
+            return;
+        }
+
+        await attributes.setLabel(note.noteId, COLUMN_WIDTH_LABEL, width);
     }
 
     /** The note limit set for a column, absent if disabled. */

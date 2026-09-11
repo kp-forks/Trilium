@@ -9,6 +9,7 @@ import {
     BOARD_TEMPLATE_ID,
     canStoreColumnsInDefinition,
     getStatusDefinition,
+    parseColumnWidth,
     resolveBoardColumns
 } from "./columns";
 
@@ -203,5 +204,19 @@ describe("the inbox column", () => {
 
         expect(resolveBoardColumns([ "To Do", "Done" ], [ "", "To Do", "Done" ], [], pending))
             .toEqual([ "", "To Do" ]);
+    });
+});
+
+describe("parseColumnWidth", () => {
+    /** The label is the user's to write by hand, so it can name a width the board does not have. */
+    it("reads the three widths and falls back to the narrow default", () => {
+        expect(parseColumnWidth("narrow")).toBe("narrow");
+        expect(parseColumnWidth("medium")).toBe("medium");
+        expect(parseColumnWidth("wide")).toBe("wide");
+
+        expect(parseColumnWidth("enormous")).toBe("narrow");
+        expect(parseColumnWidth("")).toBe("narrow");
+        expect(parseColumnWidth(null)).toBe("narrow");
+        expect(parseColumnWidth(undefined)).toBe("narrow");
     });
 });
