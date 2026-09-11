@@ -36,15 +36,14 @@ export interface ColumnBox {
      */
     origin: number;
     /**
-     * Where the heading begins and where the button that adds a card ends, down the page. A card
-     * carried past either one is placed at that end of the column. The heading and the button are
-     * left out of both: a card held over one walks the column along instead, which is how a place
-     * in the middle is reached. These hold for the length of a drag for the same reason
-     * {@link top} does.
+     * Where the heading begins and where the button that adds a card ends, down the page. A pointer
+     * past either one places the card at that end of the column. Neither the heading nor the button
+     * counts as past: over them the column auto-scrolls instead, which is how a position in the
+     * middle is reached. These hold for the length of a drag for the same reason {@link top} does.
      */
     headStart: number;
     footEnd: number;
-    /** Whether the column orders its own cards, so nothing can be placed at an end of it. */
+    /** Whether the column sorts its own cards, in which case the drop position is not chosen. */
     sorted: boolean;
     /**
      * The cards as drawn, in order, the dragged one included. Counting it keeps the index in the
@@ -57,27 +56,27 @@ export interface ColumnBox {
 export type ColumnEnd = "first" | "last";
 
 /**
- * How far past the heading or the button the pointer goes before that end is asked for, in pixels.
+ * How far past the heading or the button the pointer must go for that end to count, in pixels.
  *
- * The band between the two is where a card held over the column walks it along, and a pointer that
- * has only just left it is on its way somewhere rather than asking for an end.
+ * Between the two the column auto-scrolls, and a pointer that has only just left that band is
+ * usually crossing it rather than aiming at an end.
  */
 const END_OFFSET = 30;
 
 /**
- * The end of a column a point stands past: above its heading, or below the button that adds a card,
+ * The end of a column a point lies past: above the heading, or below the button that adds a card,
  * by {@link END_OFFSET} in either case.
  *
- * A card placed there goes to that end of the column however far the column is scrolled, which
- * saves dragging it the length of a long one. A column that orders its own cards answers with
- * nothing: it places what it is given, so neither end is the reader's to choose.
+ * A card dropped there goes to that end whatever the column is scrolled to, which saves dragging it
+ * the length of a long column. Returns `undefined` for a sorted column, where the drop position is
+ * not chosen.
  *
- * @param y the pointer, down the page. Unlike a place among the cards, which is read from the
- * carried card's top edge, both ends stand outside the column and only the pointer reaches them.
+ * @param y the pointer, down the page. A position among the cards is read from the carried card's
+ * top edge instead; both ends lie outside the column, which only the pointer reaches.
  */
 export function columnEndAt(column: ColumnBox, y: number): ColumnEnd | undefined {
-    // A column with nothing between its two ends has no middle for a card to be placed in, so
-    // every point would read as one end or the other.
+    // With no space between the two ends there is no middle, and every point would match one of
+    // them.
     if (column.sorted || column.footEnd <= column.headStart) {
         return undefined;
     }

@@ -51,6 +51,18 @@ export function parseColumnWidth(value: string | null | undefined) {
     return COLUMN_WIDTHS.find(width => width === value) ?? DEFAULT_COLUMN_WIDTH;
 }
 
+/**
+ * The class a board wears for the width it names, or nothing where it names none.
+ *
+ * A board that names no width wears no class, so `--board-column-width` keeps whatever value it
+ * inherits: the default in this stylesheet, or a theme's own if one sets it.
+ */
+export function columnWidthClass(value: string | null | undefined) {
+    const width = COLUMN_WIDTHS.find(candidate => candidate === value);
+
+    return width ? `board-${width}-columns` : undefined;
+}
+
 export interface BoardStatusDefinition {
     /** The definition attribute, wherever it is owned. */
     attribute: FAttribute;

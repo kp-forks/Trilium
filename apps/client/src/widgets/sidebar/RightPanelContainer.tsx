@@ -273,7 +273,9 @@ function useItems(rightPaneVisible: boolean, widgetsByParent: WidgetsByParent): 
         },
         {
             el: <BoardColumns />,
-            enabled: (boardColumns?.columns.length ?? 0) > 0,
+            // Gated on being a board rather than on having columns, so that a board with none of
+            // them shows the card's own empty state.
+            enabled: boardColumns !== undefined,
             tab: "outline"
         },
         {

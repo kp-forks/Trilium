@@ -103,7 +103,8 @@ function General({ api, note }: { api: BoardApi, note: FNote }) {
                 />
             </OptionCardSection>
 
-            {/* A phone draws the columns at a width of its own, so there is nothing to pick. */}
+            {/* `body.mobile` in index.css fixes the column width against the viewport, which is
+                what the three widths here would otherwise set. */}
             {!isMobile() && (
                 <OptionCardSection
                     name="board-column-width"

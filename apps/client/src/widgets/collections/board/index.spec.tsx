@@ -4379,11 +4379,14 @@ describe("how wide the board draws its columns", () => {
      * The width itself is CSS, which happy-dom does not resolve. What the board answers for is the
      * class it carries, off which the stylesheet picks one of the three widths.
      */
-    it("carries the width its label names, and the default where it names none", async () => {
-        expect((await draw(undefined)).className).toContain("board-narrow-columns");
+    it("carries the width its label names, and no class where it names none", async () => {
         expect((await draw("wide")).className).toContain("board-wide-columns");
-        // A width nobody offers is drawn at the default rather than given a class of its own.
-        expect((await draw("enormous")).className).toContain("board-narrow-columns");
+        expect((await draw("narrow")).className).toContain("board-narrow-columns");
+
+        // Without a class the width is whatever is inherited, which is the stylesheet's own
+        // default or a theme's if one sets it.
+        expect((await draw(undefined)).className).not.toMatch(/board-\w+-columns/);
+        expect((await draw("enormous")).className).not.toMatch(/board-\w+-columns/);
     });
 
     async function draw(width: string | undefined) {

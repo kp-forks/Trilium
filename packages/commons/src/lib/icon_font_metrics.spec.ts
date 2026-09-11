@@ -17,6 +17,9 @@ describe("measureIconFont", () => {
 
         // Material Design Icons: 512 units to the em, 192 above the baseline.
         expect(measureIconFont(512, pack(192))).toEqual({ ascent: 0.875, descent: 0.125 });
+
+        // A pack of an odd number of glyphs, where the middle one is the median outright.
+        expect(measureIconFont(1024, pack(448, 21))).toEqual({ ascent: 0.9375, descent: 0.0625 });
     });
 
     it("takes the middle of the pack, not the icons drawn off centre on purpose", () => {

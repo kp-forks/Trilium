@@ -240,14 +240,14 @@ export function useBoardDrag(
 
             const column = columnAt(measurement.columns, x);
             const area = column && measurement.areas.get(column.value);
-            // Standing at one end of the column places the card there whatever the column is
-            // scrolled to, which saves carrying it the length of a long one. Read from the pointer
-            // rather than from the card's top edge, as the scrolling is: the ends lie outside the
-            // column, and a card held anywhere but its very top could not reach below the button.
+            // A pointer past either end places the card at that end whatever the column is
+            // scrolled to, which saves dragging it the length of a long column. Read from the
+            // pointer rather than the card's top edge, as auto-scrolling is: both ends lie outside
+            // the column, and a card held below its top edge cannot reach past the button.
             const end = column && area ? columnEndAt(column, held.lastY) : undefined;
             const edges: ScrollTarget[] = [ { element: container, axis: "x" } ];
-            // The column is left where it stands while one of its ends is being asked for: the
-            // place is fixed, and a column walking to its top or bottom under it says otherwise.
+            // No vertical auto-scroll while an end is the target: the index is already decided,
+            // and scrolling would suggest the card is being placed where it passes.
             if (area && !end) {
                 edges.push({ element: area, axis: "y" });
             }
@@ -287,12 +287,12 @@ export function useBoardDrag(
         };
 
         /**
-         * Puts the overlay on the copy being carried, naming the end of the column the card would
-         * go to, and takes it off again for a card placed among the cards.
+         * Shows the overlay on the carried copy, naming the end of the column the card would go to,
+         * and hides it again for a position among the cards.
          *
-         * The label moves towards whatever of the copy the board shows, so a card taller than the
-         * board still shows it. Both the copy and the board were measured when the card was picked
-         * up, so this reads nothing from the page.
+         * Shifts the label towards the part of the copy still inside the board, so that a card
+         * taller than the board keeps it visible. `grab` and `viewport` were both measured when the
+         * card was picked up, so this reads no layout.
          */
         const markEnd = (held: Gesture, end: ColumnEnd | undefined) => {
             const hint = held.hint;

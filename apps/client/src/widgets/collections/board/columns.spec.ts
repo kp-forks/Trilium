@@ -8,6 +8,7 @@ import { buildNote } from "../../../test/easy-froca";
 import {
     BOARD_TEMPLATE_ID,
     canStoreColumnsInDefinition,
+    columnWidthClass,
     getStatusDefinition,
     parseColumnWidth,
     resolveBoardColumns
@@ -218,5 +219,20 @@ describe("parseColumnWidth", () => {
         expect(parseColumnWidth("")).toBe("narrow");
         expect(parseColumnWidth(null)).toBe("narrow");
         expect(parseColumnWidth(undefined)).toBe("narrow");
+    });
+});
+
+describe("columnWidthClass", () => {
+    it("names a class only for a width the board names itself", () => {
+        expect(columnWidthClass("narrow")).toBe("board-narrow-columns");
+        expect(columnWidthClass("medium")).toBe("board-medium-columns");
+        expect(columnWidthClass("wide")).toBe("board-wide-columns");
+
+        // Nothing to wear, so `--board-column-width` keeps the value it inherits. A theme setting
+        // that variable is what this leaves room for.
+        expect(columnWidthClass("enormous")).toBeUndefined();
+        expect(columnWidthClass("")).toBeUndefined();
+        expect(columnWidthClass(null)).toBeUndefined();
+        expect(columnWidthClass(undefined)).toBeUndefined();
     });
 });

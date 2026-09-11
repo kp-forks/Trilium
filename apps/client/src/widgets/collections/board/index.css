@@ -38,7 +38,7 @@
   --board-drag-ring-width: 3px;
   /* The ring a picked-out card carries. */
   --board-selected-ring-color: var(--link-color);
-  /* The overlay a carried card wears while it would go to one end of a column. */
+  /* The overlay on a carried card while it would drop at one end of a column. */
   --board-drop-hint-background: #1f2933;
   --board-drop-hint-color: #ffffff;
   /* Dims the board while a card is being named. Kept light: it draws the eye to the field rather
@@ -127,8 +127,9 @@ body.mobile .board-view-container.board-dragging {
   cursor: grabbing !important;
 }
 
-/* Set from `#boardCardWidth`. The columns and everything measured against them read the width off
-   this one variable, so only the board itself names which of the three is in use. */
+/* Set from `#boardCardWidth`, and only while the board carries it: without one of these classes
+   `--board-column-width` keeps the value it inherits, which a theme can set. The columns and
+   everything measured against them read the width off that one variable. */
 .board-view.board-narrow-columns {
   --board-column-width: var(--board-column-width-narrow);
 }
@@ -596,8 +597,7 @@ body.mobile .board-view-container .board-add-column {
   box-shadow: var(--board-drag-shadow);
 }
 
-/* Covers the card being carried with what dropping it there does, which is why it is opaque: what
-   the card itself says is beside the point while it reads. */
+/* Opaque rather than tinted: while it is up, the message replaces the card's own content. */
 .board-view-container .board-drag-preview .board-drop-hint {
   display: none;
   position: absolute;
