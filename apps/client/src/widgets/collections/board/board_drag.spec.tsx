@@ -817,29 +817,52 @@ describe("useBoardDrag, carrying a card", () => {
          * cut off with it. The board runs 0 to 600 here and the window reaches further, so a label
          * placed against the window would land below what the reader can see.
          */
-        it("keeps the label inside what the board shows of a tall card", () => {
+        it("lets the copy leave the board, but not past a sliver of itself", () => {
             setup(tall);
-            const shift = () => Number(preview()
-                ?.querySelector<HTMLElement>(".board-drop-hint span")
-                ?.style.transform.match(/-?[\d.]+/)?.[0]);
+            const labelEl = () => preview()
+                ?.querySelector<HTMLElement>(".board-drop-hint span") as HTMLElement;
+            const shift = () => Number(labelEl()?.style.transform.match(/-?[\d.]+/)?.[0]);
+            const visible = () =>
+                Number(preview()?.style.getPropertyValue("--board-drag-visible"));
+            /** How far down the page the copy has been moved, off its own transform. */
+            const moved = () =>
+                Number(preview()?.style.transform.match(/translate3d\([^,]+,\s*(-?[\d.]+)px/)?.[1]);
+            const showing = parseFloat(getComputedStyle(card("c3")).fontSize) * 1.5;
 
+            // A card of its own height, carried above the board's head. Above the page here, as
+            // the board's own head is below the window's in the app.
             takeHold();
-            move(50, 440);
+            move(50, -60);
             act(() => { vi.advanceTimersByTime(20); });
-            // Wholly inside the board, so the label stands in the middle of the card.
-            expect(shift()).toBe(0);
+            // Drawn 45 tall about a middle that starts 40 below the page's top, so this is where
+            // its foot stands: a sliver of it inside the board's head at 0.
+            expect(40 + moved() + 50 / 2 + 45 / 2).toBeCloseTo(showing, 5);
+            release(50, -60);
 
-            release(50, 440);
+            // A card taller than the board, carried past the foot but still short of leaving it.
             place(card("c3"), 0, 40, 100, 2000);
-
             press(card("c3"), 50, 65);
             move(50, 440);
             act(() => { vi.advanceTimersByTime(20); });
+            const head = () => 40 + moved() + 2000 / 2 - 1800 / 2;
+            expect(head()).toBeCloseTo(515, 5);
+            expect(visible()).toBeCloseTo(0.034, 3);
 
-            // Where the label lands: the middle of the card, moved by the shift, which the scale
-            // the copy is drawn at takes a tenth off. The card was taken 25 below its own top.
-            const middle = 440 - 25 + 2000 / 2;
-            const label = middle + shift() * 0.9;
+            // Carried on out, it stops with the same sliver against the board's foot.
+            move(50, 1400);
+            act(() => { vi.advanceTimersByTime(20); });
+            const stood = moved();
+            expect(head()).toBeCloseTo(600 - showing, 5);
+            // Against the edge, where the fade has run its course.
+            expect(visible()).toBe(0);
+
+            // And stands still however far past the board the pointer goes.
+            move(50, 1500);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(moved()).toBe(stood);
+
+            // The label keeps to the middle of what the board shows of the copy.
+            const label = 40 + moved() + 2000 / 2 + shift() * 0.9;
             expect(label).toBeGreaterThan(0);
             expect(label).toBeLessThan(600);
         });

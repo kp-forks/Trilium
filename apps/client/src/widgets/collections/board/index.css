@@ -32,14 +32,20 @@
   --board-item-hover-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1);
   /* What a carried card casts, which the stack of a carried selection is drawn behind. */
   --board-drag-shadow: 4px 8px 16px rgba(0, 0, 0, 0.5);
+  /* What a carried copy is drawn at, and what it fades to once it stands against the board's
+     edge with only a sliver of itself in view. */
+  --board-drag-opacity: 0.85;
+  --board-drag-opacity-faded: 0.4;
   /* How far each card of a carried stack stands out from the one in front of it. */
   --board-drag-stack-offset: 4px;
   /* The ring a carried card wears, which the stack behind it starts clear of. */
   --board-drag-ring-width: 3px;
   /* The ring a picked-out card carries. */
   --board-selected-ring-color: var(--link-color);
-  /* The overlay on a carried card while it would drop at one end of a column. */
-  --board-drop-hint-background: #1f2933;
+  /* The overlay on a carried card while it would drop at one end of a column, painted in the hue
+     the card itself is. */
+  --board-drop-hint-background-saturation: 35%;
+  --board-drop-hint-background-lightness: 25%;
   --board-drop-hint-color: #ffffff;
   /* Dims the board while a card is being named. Kept light: it draws the eye to the field rather
      than hiding what is behind it. */
@@ -593,7 +599,7 @@ body.mobile .board-view-container .board-add-column {
   will-change: transform;
   z-index: 1000;
   pointer-events: none;
-  opacity: 0.85;
+  opacity: var(--board-drag-opacity);
   box-shadow: var(--board-drag-shadow);
 }
 
@@ -606,10 +612,38 @@ body.mobile .board-view-container .board-add-column {
   justify-content: center;
   border-radius: inherit;
   padding: var(--card-padding);
-  background-color: var(--board-drop-hint-background);
+  /* Drained of colour until a hue is named, so a card with none of its own held over a plain
+     column reads as grey rather than red. */
+  background-color: hsl(
+    var(--board-drop-hint-hue, 0),
+    0%,
+    var(--board-drop-hint-background-lightness)
+  );
   text-align: center;
   font-weight: 600;
   color: var(--board-drop-hint-color);
+  transition: background-color 250ms ease, color 250ms ease;
+}
+
+/* The card's own hue, or the hue of the column it is held over. */
+.board-view-container .board-drag-preview.hint-tinted .board-drop-hint {
+  background-color: hsl(
+    var(--board-drop-hint-hue),
+    var(--board-drop-hint-background-saturation),
+    var(--board-drop-hint-background-lightness)
+  );
+}
+
+/* The focus ring the copy carries would stand around the overlay, which reads on its own. The copy
+   fades as it leaves the board, `--board-drag-visible` running from one while it is wholly in view
+   to zero once it stands against the edge. */
+.board-view-container .board-drag-preview.showing-drop-hint {
+  outline: none;
+  opacity: calc(
+    var(--board-drag-opacity-faded)
+    + (var(--board-drag-opacity) - var(--board-drag-opacity-faded))
+      * var(--board-drag-visible, 1)
+  );
 }
 
 .board-view-container .board-drag-preview.showing-drop-hint .board-drop-hint {

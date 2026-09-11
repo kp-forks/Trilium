@@ -62,6 +62,9 @@ export function measureBoard(container: HTMLElement, withCards = true): BoardMea
             headStart: heading?.getBoundingClientRect().top ?? rect.top,
             footEnd: adder?.getBoundingClientRect().bottom ?? rect.bottom,
             sorted: element.dataset.sorted === "true",
+            hue: element.classList.contains("with-hue")
+                ? element.style.getPropertyValue("--board-column-custom-hue")
+                : undefined,
             origin: withCards ? contentOrigin(area) : 0,
             cards: withCards ? measureCards(area) : []
         });

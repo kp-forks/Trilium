@@ -25,6 +25,9 @@ const TOUCH_TOLERANCE = 8;
 /** How much a carried card shrinks. Written with the movement, a class could not add to it. */
 const DRAG_SCALE = 0.9;
 
+/** How much of a copy put against the board's edge is left showing, in em of the card. */
+const EDGE_SHOWING = 1.5;
+
 /**
  * How many cards a carried selection is drawn as, however many are on the move: the one holding the
  * count and the two behind it. `index.css` draws the ones behind from `data-layers`.
@@ -203,6 +206,8 @@ export function useBoardDrag(
             held.preview = lifted.preview;
             held.hint = lifted.hint;
             held.grab = lifted.grab;
+            held.ownHue = lifted.ownHue;
+            held.showing = lifted.showing;
             container.classList.add("board-dragging");
             setDragging(true);
 
@@ -253,7 +258,7 @@ export function useBoardDrag(
             }
             scroller.update(edges, held.lastX, held.lastY);
 
-            markEnd(held, end);
+            markEnd(held, end, column);
 
             // A collapsed column draws no card area and holds no cards on screen, so a card carried
             // over it goes to the front of whatever it holds.
@@ -290,11 +295,14 @@ export function useBoardDrag(
          * Shows the overlay on the carried copy, naming the end of the column the card would go to,
          * and hides it again for a position among the cards.
          *
+         * Paints it in the card's own colour, or in the hue of `over` where the card has none.
+         *
          * Shifts the label towards the part of the copy still inside the board, so that a card
-         * taller than the board keeps it visible. `grab` and `viewport` were both measured when the
-         * card was picked up, so this reads no layout.
+         * taller than the board keeps it visible, and fades the copy by how much of it the board
+         * no longer shows. `grab` and `viewport` were both measured when the card was picked up, so
+         * this reads no layout.
          */
-        const markEnd = (held: Gesture, end: ColumnEnd | undefined) => {
+        const markEnd = (held: Gesture, end: ColumnEnd | undefined, over?: ColumnBox) => {
             const hint = held.hint;
             const grab = held.grab;
             const view = held.measurement?.viewport;
@@ -316,10 +324,26 @@ export function useBoardDrag(
 
             if (!end || !(label instanceof HTMLElement)) return;
 
-            const middle = held.lastY - grab.y + grab.height / 2;
+            const hue = held.ownHue || over?.hue;
+            held.preview?.classList.toggle("hint-tinted", !!hue);
+            if (hue) {
+                held.preview?.style.setProperty("--board-drop-hint-hue", hue);
+            }
+
+            const middle = held.lastY - grab.y + grab.height / 2 + holdBack(held);
             const drawn = grab.height * DRAG_SCALE / 2;
             const top = Math.max(middle - drawn, view.top);
             const bottom = Math.min(middle + drawn, view.bottom);
+            // How much of the copy the board still shows, of what it can show at all: it stops
+            // with a sliver of itself in view, so that sliver is where the fade ends rather than
+            // nothing at all. One while the copy is wholly in view, zero once it is against the
+            // edge, whatever the card's height.
+            const height = drawn * 2;
+            const least = height > 0 ? Math.min(1, (held.showing ?? 0) / height) : 1;
+            const shown = height > 0 ? Math.max(0, Math.min(1, (bottom - top) / height)) : 1;
+            const visible = least < 1 ? Math.max(0, (shown - least) / (1 - least)) : 1;
+            held.preview?.style.setProperty("--board-drag-visible", visible.toFixed(3));
+
             // Outside the board altogether: there is no part of the copy to keep the label in.
             const shift = bottom > top ? ((top + bottom) / 2 - middle) / DRAG_SCALE : 0;
             // The label stands on the card, so it goes no further than the card's own edges.
@@ -329,6 +353,30 @@ export function useBoardDrag(
         };
 
         /** Says where the card would land, and whether it has come to rest on that column. */
+        /**
+         * How far the copy stands back from the pointer while an end is being asked for: it follows
+         * the pointer out of the board only until {@link EDGE_SHOWING} of it is left in view, and
+         * goes no further however far past that the pointer goes.
+         *
+         * The far edge is the one left showing: the copy's foot at the board's head, its head at
+         * the board's foot. Nothing to stand back while no end is being asked for, where the copy
+         * follows the pointer wherever it goes.
+         */
+        const holdBack = (held: Gesture) => {
+            const grab = held.grab;
+            const view = held.measurement?.viewport;
+            if (!held.end || !grab || !view) return 0;
+
+            const middle = held.lastY - grab.y + grab.height / 2;
+            const drawn = grab.height * DRAG_SCALE / 2;
+            const inset = held.showing ?? 0;
+            const wanted = held.end === "first"
+                ? Math.max(middle, view.top + inset - drawn)
+                : Math.min(middle, view.bottom - inset + drawn);
+
+            return wanted - middle;
+        };
+
         const report = (held: Gesture, next?: DropPosition | null) => {
             if (held.kind !== "card") return;
 
@@ -412,11 +460,14 @@ export function useBoardDrag(
                     held.frame = undefined;
                     if (!gesture.current || !held.preview) return;
 
+                    // Resolved first: where the copy stands depends on whether an end is being
+                    // asked for, which is what this works out.
+                    resolve(held);
+
                     const dx = held.lastX - held.startX;
-                    const dy = held.lastY - held.startY;
+                    const dy = held.lastY - held.startY + holdBack(held);
                     const scale = held.kind === "card" ? ` scale(${DRAG_SCALE})` : "";
                     held.preview.style.transform = `translate3d(${dx}px, ${dy}px, 0)${scale}`;
-                    resolve(held);
                 });
             }
         };
@@ -779,6 +830,14 @@ function lift(held: Gesture, container: HTMLElement) {
         preview.style.setProperty("--board-column-custom-hue", hue);
     }
 
+    // A colour of the card's own, which the overlay takes before the hue of whatever column it is
+    // held over, and the card's own em. Read here rather than on every move: both take a page read.
+    const style = getComputedStyle(held.element);
+    const ownHue = held.element.classList.contains("with-hue")
+        ? style.getPropertyValue("--custom-color-hue").trim()
+        : undefined;
+    const showing = (parseFloat(style.fontSize) || 0) * EDGE_SHOWING;
+
     for (const [ property, value ] of Object.entries({
         left: `${rect.left}px`,
         top: `${rect.top}px`,
@@ -797,6 +856,8 @@ function lift(held: Gesture, container: HTMLElement) {
     return {
         preview,
         hint,
+        ownHue,
+        showing,
         size: { width: rect.width, height: rect.height },
         // Where inside it the reader took hold, so the middle can be found from the pointer.
         grab: {
@@ -866,8 +927,12 @@ type Gesture = (CardSubject | ColumnSubject) & {
     hint?: HTMLElement;
     /** Which end that is, so the overlay is written only as it changes. */
     end?: ColumnEnd;
+    /** The carried card's own colour as a hue, which the overlay takes before a column's. */
+    ownHue?: string;
     /** What the label inside it measures, read when it is written rather than on every move. */
     labelHeight?: number;
+    /** How much of the copy is left in view once it stands against the board's edge. */
+    showing?: number;
     /** Where the press landed inside it, and how big it is, for finding its middle. */
     grab?: { x: number, y: number, width: number, height: number };
     measurement?: BoardMeasurement;

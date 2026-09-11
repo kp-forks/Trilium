@@ -45,6 +45,8 @@ export interface ColumnBox {
     footEnd: number;
     /** Whether the column sorts its own cards, in which case the drop position is not chosen. */
     sorted: boolean;
+    /** The column's own colour as a hue, or nothing where it has none. */
+    hue?: string;
     /**
      * The cards as drawn, in order, the dragged one included. Counting it keeps the index in the
      * same terms as the list the board holds, which is what a move is expressed in.
