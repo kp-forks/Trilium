@@ -3530,6 +3530,8 @@
     "sort": "Sort",
     "sort-manually": "Manually",
     "default-card-order": "Default card order",
+    "columns-title": "Columns",
+    "columns-empty": "This board has no columns yet.",
     "column-width": "Column width",
     "drop-as-first-item": "Drop as the first item",
     "drop-as-last-item": "Drop as the last item",

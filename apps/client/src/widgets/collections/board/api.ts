@@ -602,13 +602,33 @@ export default class BoardApi {
     }
 
     /**
+     * The columns as something outside the board lists them: what each is called, the icon it
+     * shows and how many cards it holds. The right pane's outline is drawn from this.
+     *
+     * A relation board keys its columns by note id and names them with the note's own title, which
+     * is what its headings show; the id says nothing to a reader on its own.
+     */
+    getColumnOutline(columns: string[]) {
+        return columns.map(column => ({
+            value: column,
+            title: this.isRelationMode && column !== INBOX_COLUMN
+                ? froca.getNoteFromCache(column)?.title ?? column
+                : this.getColumnTitle(column),
+            icon: this.getColumnIcon(column) ?? DEFAULT_COLUMN_ICON,
+            count: this.byColumn?.get(column)?.length ?? 0
+        }));
+    }
+
+    /**
      * The icon a column heading shows, for anything else that stands in for the column.
      *
      * In relation mode the column is a note, so the icon is that note's own — the same one
      * `NoteLink` puts in the heading — and `setColumnIcon` is not offered there.
      */
     getColumnIcon(column: string) {
-        if (this.isRelationMode) {
+        // The inbox stands for the cards carrying no value at all, so there is no note behind it
+        // even on a relation board, where every other column is one.
+        if (this.isRelationMode && column !== INBOX_COLUMN) {
             return froca.getNoteFromCache(column)?.getIcon();
         }
 

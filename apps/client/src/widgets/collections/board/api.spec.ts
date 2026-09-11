@@ -2501,3 +2501,44 @@ describe("how wide the board draws its columns", () => {
         expect(removeLabel).not.toHaveBeenCalled();
     });
 });
+
+describe("the columns as the right pane lists them", () => {
+    it("names each column, gives it its icon and counts the cards it holds", () => {
+        const board = buildNote({ title: "Board" });
+        const cards = new Map([
+            [ "", [ { note: { noteId: "a" } }, { note: { noteId: "b" } } ] ],
+            [ "To Do", [ { note: { noteId: "c" } } ] ]
+        ]) as unknown as ColumnMap;
+        const { api } = createApi(
+            {
+                columns: [
+                    { value: "", displayName: "Unsorted" },
+                    { value: "To Do", icon: "bx bx-star" },
+                    { value: "Done" }
+                ]
+            },
+            [ "", "To Do", "Done" ], board, "status", cards);
+
+        expect(api.getColumnOutline([ "", "To Do", "Done" ])).toEqual([
+            { value: "", title: "Unsorted", icon: "bx bxs-inbox", count: 2 },
+            { value: "To Do", title: "To Do", icon: "bx bx-star", count: 1 },
+            // A column the board draws no cards for still stands, and counts none.
+            { value: "Done", title: "Done", icon: DEFAULT_COLUMN_ICON, count: 0 }
+        ]);
+    });
+
+    /** A relation board keys its columns by note id, which says nothing to a reader on its own. */
+    it("names a relation board's columns by the notes they point at", () => {
+        const target = buildNote({ title: "Alice", "#iconClass": "bx bx-user" });
+        const board = buildNote({ title: "Board" });
+        const { api } = createApi({}, [ "", target.noteId ], board, "~assignee");
+
+        expect(api.getColumnOutline([ "", target.noteId, "missing" ])).toEqual([
+            { value: "", title: "board_view.inbox", icon: "bx bxs-inbox", count: 0 },
+            // The note's own icon, as `FNote` gives it, class and all.
+            { value: target.noteId, title: "Alice", icon: "tn-icon bx bx-user", count: 0 },
+            // A note the cache has not got: the value is all there is to go on.
+            { value: "missing", title: "missing", icon: DEFAULT_COLUMN_ICON, count: 0 }
+        ]);
+    });
+});

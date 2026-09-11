@@ -211,6 +211,14 @@ function columnIcons(container: HTMLElement) {
         .map(el => [ ...el.classList ].filter(name => name.startsWith("bx")).join(" "));
 }
 
+/**
+ * A stand-in note context, with the two calls every mounted board makes of one: it publishes its
+ * columns into the context for the right pane to list, and clears them as it goes.
+ */
+function contextStub(context: object) {
+    return { setContextData: () => {}, clearContextData: () => {}, ...context };
+}
+
 function columnTitles(container: HTMLElement) {
     return [ ...container.querySelectorAll(".board-column h3 .title") ].map(el => el.textContent);
 }
@@ -795,7 +803,7 @@ describe("A board in a tab the reader is not looking at", () => {
         const otherTab = {};
         let shown: object = tab;
         const host = new Component();
-        Object.assign(host, { noteContext: { getMainContext: () => tab } });
+        Object.assign(host, { noteContext: contextStub({ getMainContext: () => tab }) });
         const previousTabManager = appContext.tabManager;
         appContext.tabManager = { getActiveMainContext: () => shown } as never;
 
@@ -862,7 +870,7 @@ describe("A board in a tab the reader is not looking at", () => {
         // One tab, and the board is in a pane of it that does not hold the focus.
         const tab = {};
         const host = new Component();
-        Object.assign(host, { noteContext: { getMainContext: () => tab } });
+        Object.assign(host, { noteContext: contextStub({ getMainContext: () => tab }) });
         const previousTabManager = appContext.tabManager;
         appContext.tabManager = { getActiveMainContext: () => tab } as never;
 
@@ -4234,7 +4242,7 @@ describe("Board properties from the note menu", () => {
         });
 
         const host = new Component();
-        Object.assign(host, { noteContext: { ntxId, isActive: () => true } });
+        Object.assign(host, { noteContext: contextStub({ ntxId, isActive: () => true }) });
 
         const mountPoint = document.createElement("div");
         container = mountPoint;
@@ -4414,4 +4422,90 @@ describe("how wide the board draws its columns", () => {
         if (!board) throw new Error("expected the board to be drawn");
         return board;
     }
+});
+
+describe("what the board hands the right pane", () => {
+    let container: HTMLElement | undefined;
+
+    afterEach(() => {
+        saved.length = 0;
+        if (container) {
+            render(null, container);
+            container.remove();
+            container = undefined;
+        }
+    });
+
+    /**
+     * The pane lists the columns of whichever board is on show, so the board publishes them into
+     * the context it belongs to rather than the pane reading the board's own state.
+     */
+    it("publishes its columns, scrolls to one on request, and takes them back", async () => {
+        const published: { key: string, value: unknown }[] = [];
+        const cleared: string[] = [];
+        const note = buildNote({
+            title: "Board",
+            "#collection": "",
+            "#viewType": "board",
+            children: [
+                { title: "First", "#status": "To Do" },
+                { title: "Second", "#status": "Done" },
+                { title: "Third", "#status": "Done" }
+            ]
+        });
+
+        const host = new Component();
+        Object.assign(host, { noteContext: {
+            setContextData: (key: string, value: unknown) => published.push({ key, value }),
+            clearContextData: (key: string) => cleared.push(key)
+        } });
+
+        const mountPoint = document.createElement("div");
+        container = mountPoint;
+        document.body.appendChild(mountPoint);
+
+        await act(async () => {
+            render(
+                <ParentComponent.Provider value={host}>
+                    <Harness
+                        note={note}
+                        noteIds={[ ...note.getChildNoteIds() ]}
+                        initialConfig={{ columns: [ { value: "To Do" }, { value: "Done" } ] }}
+                    />
+                </ParentComponent.Provider>,
+                mountPoint
+            );
+        });
+        await act(async () => { await flush(); });
+
+        const outline = published.at(-1);
+        expect(outline?.key).toBe("boardColumns");
+        const { columns, scrollToColumn } = outline?.value as {
+            columns: { value: string, title: string, count: number }[],
+            scrollToColumn: (column: string) => void
+        };
+        expect(columns.map(({ title, count }) => `${title}:${count}`))
+            .toEqual([ "To Do:1", "Done:2" ]);
+
+        // What a press on one of the pane's entries does. Both are recorded rather than watched
+        // for: happy-dom scrolls nothing, and a dialog another spec left standing holds the focus.
+        const scrolled: (string | undefined)[] = [];
+        const focused: (string | undefined)[] = [];
+        for (const element of mountPoint.querySelectorAll<HTMLElement>(".board-column")) {
+            element.scrollIntoView = () => scrolled.push(element.dataset.column);
+            const heading = element.querySelector<HTMLElement>("h3");
+            if (heading) {
+                heading.focus = () => focused.push(element.dataset.column);
+            }
+        }
+
+        scrollToColumn("Done");
+        expect(scrolled).toEqual([ "Done" ]);
+        // The heading takes the focus with it, so the board's own keys carry on from there.
+        expect(focused).toEqual([ "Done" ]);
+
+        // A board that is no longer on show leaves nothing behind for the pane to list.
+        act(() => { render(null, mountPoint); });
+        expect(cleared).toContain("boardColumns");
+    });
 });

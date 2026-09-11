@@ -32,7 +32,7 @@ import FormTextArea from "../../react/FormTextArea";
 import FormTextBox from "../../react/FormTextBox";
 import {
     useContextualShortcutHints, useNoteContext, useNoteLabelBoolean, useNoteLabelWithDefault,
-    useNoteTypeOptions, useTrackedElement, useTriliumEvent
+    useNoteTypeOptions, useSetContextData, useTrackedElement, useTriliumEvent
 } from "../../react/hooks";
 import Icon from "../../react/Icon";
 import NoteAutocomplete from "../../react/NoteAutocomplete";
@@ -631,6 +631,24 @@ export default function BoardView({
     /** Until when a column move can still be settling, which is when `useFlip` slides columns. */
     const columnMovedUntil = useRef(0);
 
+    // What the right pane lists the board as, and what a press on one of its entries does.
+    //
+    // Held still between renders: the pane redraws its list whenever this changes identity, and a
+    // board renders on every step of a drag. `storedColumns` is among what it is held against
+    // because the api reads the config in place, so nothing else here changes when it does.
+    const outline = useMemo(() => ({
+        columns: api.getColumnOutline(shownColumns),
+        scrollToColumn: (column: string) => {
+            const element = columnElement(containerRef.current, column);
+            element?.scrollIntoView({ inline: "start", block: "nearest", behavior: "smooth" });
+            // The heading takes the focus, so the board's own keys carry on from the column the
+            // reader picked. Scrolled first, and without moving anything itself: focus landing on
+            // its own would jump the board to the column the scroll is already easing towards.
+            element?.querySelector<HTMLElement>("h3")?.focus({ preventScroll: true });
+        }
+    }), [ api, shownColumns, byColumn, storedColumns, isInRelationMode ]);
+    useSetContextData(noteContext, "boardColumns", outline);
+
     // Neither the creation dates the tie-break needs nor the targets of a sorted relation come
     // with the board. Both are fetched here, and `sortRevision` redraws it once they land.
     useEffect(() => {
@@ -970,13 +988,8 @@ export default function BoardView({
         if (!isMobile()) return;
 
         requestAnimationFrame(() => {
-            const columns = containerRef.current?.querySelectorAll<HTMLElement>(".board-column");
-            for (const element of columns ?? []) {
-                if (element.dataset.column === column) {
-                    element.scrollIntoView({ inline: "center", block: "nearest" });
-                    return;
-                }
-            }
+            columnElement(containerRef.current, column)
+                ?.scrollIntoView({ inline: "center", block: "nearest" });
         });
     }, []);
 
@@ -1412,6 +1425,15 @@ function closeGaps(container: HTMLElement | null) {
 
     for (const room of container.querySelectorAll<HTMLElement>(".board-drop-room")) {
         room.style.height = "0px";
+    }
+}
+
+/** The element a column is drawn in, for the two things that scroll the board to one. */
+function columnElement(container: HTMLElement | null, column: string) {
+    for (const element of container?.querySelectorAll<HTMLElement>(".board-column") ?? []) {
+        if (element.dataset.column === column) {
+            return element;
+        }
     }
 }
 
