@@ -260,9 +260,8 @@ export function useBoardDrag(
 
             markEnd(held, end, column);
 
-            // A collapsed column draws no card area and holds no cards on screen, so a card
-            // carried over it goes to the front of whatever it holds. Either of its ends can still
-            // be asked for, which is what saves opening it to place a card there.
+            // A collapsed column draws no card area, so a card carried over it goes to the front.
+            // Either end can still be asked for, placing a card there without opening the column.
             const position = column
                 ? {
                     column: column.value,
@@ -334,10 +333,8 @@ export function useBoardDrag(
             const drawn = grab.height * DRAG_SCALE / 2;
             const top = Math.max(middle - drawn, view.top);
             const bottom = Math.min(middle + drawn, view.bottom);
-            // How much of the copy the board still shows, of what it can show at all: it stops
-            // with a sliver of itself in view, so that sliver is where the fade ends rather than
-            // nothing at all. One while the copy is wholly in view, zero once it is against the
-            // edge, whatever the card's height.
+            // How much of the copy is in view, measured against the least it can show rather than
+            // against nothing: 1 while wholly in view, 0 once it is against the edge.
             const height = drawn * 2;
             const least = height > 0 ? Math.min(1, (held.showing ?? 0) / height) : 1;
             const shown = height > 0 ? Math.max(0, Math.min(1, (bottom - top) / height)) : 1;
@@ -354,13 +351,9 @@ export function useBoardDrag(
 
         /** Says where the card would land, and whether it has come to rest on that column. */
         /**
-         * How far the copy stands back from the pointer while an end is being asked for: it follows
-         * the pointer out of the board only until {@link EDGE_SHOWING} of it is left in view, and
-         * goes no further however far past that the pointer goes.
-         *
-         * The far edge is the one left showing: the copy's foot at the board's head, its head at
-         * the board's foot. Nothing to stand back while no end is being asked for, where the copy
-         * follows the pointer wherever it goes.
+         * How far back from the pointer the copy is drawn while an end is being asked for, so that
+         * it leaves the board only until {@link EDGE_SHOWING} of it is still in view. Returns 0
+         * while no end is being asked for, where the copy follows the pointer exactly.
          */
         const holdBack = (held: Gesture) => {
             const grab = held.grab;
@@ -460,8 +453,7 @@ export function useBoardDrag(
                     held.frame = undefined;
                     if (!gesture.current || !held.preview) return;
 
-                    // Resolved first: where the copy stands depends on whether an end is being
-                    // asked for, which is what this works out.
+                    // Resolved first: where the copy stands depends on the end being asked for.
                     resolve(held);
 
                     const dx = held.lastX - held.startX;
@@ -830,8 +822,8 @@ function lift(held: Gesture, container: HTMLElement) {
         preview.style.setProperty("--board-column-custom-hue", hue);
     }
 
-    // A colour of the card's own, which the overlay takes before the hue of whatever column it is
-    // held over, and the card's own em. Read here rather than on every move: both take a page read.
+    // The card's own colour and its em, read here rather than on every move: both cost a page
+    // read.
     const style = getComputedStyle(held.element);
     const ownHue = held.element.classList.contains("with-hue")
         ? style.getPropertyValue("--custom-color-hue").trim()

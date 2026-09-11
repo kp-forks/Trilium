@@ -330,9 +330,8 @@ class ContextMenu {
 
         const $link = $("<span>")
             .append($icon)
-            // An element rather than spaces: a row is a flex line, so text between the icon and the
-            // title merges with a plain title but is trimmed before a title boxed by `menuName()`,
-            // leaving the two kinds of row indented differently.
+            // An element, not spaces: in a flex row, text merges with a plain title but is
+            // trimmed before one boxed by `menuName()`, indenting the two kinds of row apart.
             .append($("<span>").addClass("tn-menu-gap"))
             .append(item.title);
 

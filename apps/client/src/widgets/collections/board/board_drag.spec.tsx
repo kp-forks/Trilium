@@ -829,8 +829,8 @@ describe("useBoardDrag, carrying a card", () => {
                 Number(preview()?.style.transform.match(/translate3d\([^,]+,\s*(-?[\d.]+)px/)?.[1]);
             const showing = parseFloat(getComputedStyle(card("c3")).fontSize) * 1.5;
 
-            // A card of its own height, carried above the board's head. Above the page here, as
-            // the board's own head is below the window's in the app.
+            // A card of its own height, carried above the board's head. Negative here: in the app
+            // the board's head sits below the window's.
             takeHold();
             move(50, -60);
             act(() => { vi.advanceTimersByTime(20); });

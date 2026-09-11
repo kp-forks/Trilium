@@ -586,9 +586,8 @@ export default class BoardApi {
     /**
      * Whether a column other than `except` already uses a name.
      *
-     * Checks the columns on the board and the stored ones, so an empty column counts too. Titles
-     * are compared as well as values: the inbox is named by `displayName`, which reads as the same
-     * name to the user.
+     * Compares titles as well as values, since the inbox is named by `displayName`, and covers the
+     * stored columns so that an empty one counts.
      */
     private isColumnNameTaken(name: string, except: string) {
         const values = new Set([ ...this.columns, ...this.storedColumns.map(col => col.value) ]);
@@ -602,11 +601,10 @@ export default class BoardApi {
     }
 
     /**
-     * The columns as something outside the board lists them: what each is called, the icon it
-     * shows and how many cards it holds. The right pane's outline is drawn from this.
+     * What each column is called, the icon it shows and how many cards it holds, which the right
+     * pane's outline is drawn from.
      *
-     * A relation board keys its columns by note id and names them with the note's own title, which
-     * is what its headings show; the id says nothing to a reader on its own.
+     * A relation board keys its columns by note id, so each one is named from the note's title.
      */
     getColumnOutline(columns: string[]) {
         return columns.map(column => ({
@@ -686,9 +684,9 @@ export default class BoardApi {
     /**
      * Sets how wide the columns are drawn.
      *
-     * The default takes the label off the board note, which keeps it tidy. A board that inherits a
-     * width from a template or a parent writes the default out instead: dropping its own label
-     * there would hand the board the inherited width back.
+     * Picking the default removes the label, to keep the note tidy. Where a template or a parent
+     * sets the label, the default is written out instead: `removeOwnedLabelByName` would leave the
+     * inherited value in force.
      */
     async setColumnWidth(width: ColumnWidth) {
         const note = this.parentNote;

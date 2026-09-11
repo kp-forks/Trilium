@@ -612,8 +612,7 @@ body.mobile .board-view-container .board-add-column {
   justify-content: center;
   border-radius: inherit;
   padding: var(--card-padding);
-  /* Drained of colour until a hue is named, so a card with none of its own held over a plain
-     column reads as grey rather than red. */
+  /* No saturation until `hint-tinted` sets it, so an unnamed hue paints grey rather than red. */
   background-color: hsl(
     var(--board-drop-hint-hue, 0),
     0%,
@@ -634,9 +633,8 @@ body.mobile .board-view-container .board-add-column {
   );
 }
 
-/* The focus ring the copy carries would stand around the overlay, which reads on its own. The copy
-   fades as it leaves the board, `--board-drag-visible` running from one while it is wholly in view
-   to zero once it stands against the edge. */
+/* No focus ring while the overlay is up: it would outline the overlay rather than the card. The
+   opacity follows `--board-drag-visible`, 1 while the copy is in view and 0 against the edge. */
 .board-view-container .board-drag-preview.showing-drop-hint {
   outline: none;
   opacity: calc(
