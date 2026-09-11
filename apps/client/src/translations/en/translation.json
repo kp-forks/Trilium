@@ -3494,6 +3494,7 @@
     "change-note-icon": "Change icon",
     "column-menu": "Column menu",
     "column-already-exists": "This column already exists on the board.",
+    "column-name-taken": "The column named “{{- column}}” already exists.",
     "column-definition-save-error": "The columns were saved on the board, but could not be saved to the status attribute.",
     "save-error": "The change could not be saved.",
     "hints": {

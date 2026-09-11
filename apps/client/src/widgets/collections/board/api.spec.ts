@@ -1883,6 +1883,62 @@ describe("renaming a column that names itself", () => {
     });
 });
 
+describe("renaming a column to a name already taken", () => {
+    /**
+     * A column is identified by the name its cards carry, so writing another column's name over it
+     * would merge the two. The rename is refused and reported instead.
+     */
+    it("refuses the rename, says so and leaves both columns alone", async () => {
+        const { api, saved } = createApi(
+            { columns: [ { value: "To Do" }, { value: "Done" } ] }, [ "To Do", "Done" ]);
+        const put = vi.spyOn(server, "put").mockResolvedValue(undefined);
+        const message = vi.spyOn(toast, "showMessage").mockReturnValue(undefined);
+
+        expect(await api.setColumnTitle("To Do", "Done")).toBe(false);
+
+        expect(message).toHaveBeenCalledWith(
+            "board_view.column-name-taken", undefined, "bx bx-duplicate");
+        expect(put).not.toHaveBeenCalled();
+        expect(saved).toEqual([]);
+    });
+
+    /**
+     * The name a column is known by, not only the value its cards carry: the inbox has no value
+     * and is named by `displayName`, so a second column under that name reads as a duplicate.
+     */
+    it("counts a column with no cards yet, and the name the inbox goes by", async () => {
+        const { api, saved } = createApi(
+            {
+                columns: [
+                    { value: "", displayName: "Unsorted" },
+                    { value: "To Do" },
+                    { value: "Done" }
+                ]
+            },
+            // "Done" is stored but holds no cards, so the board does not derive it.
+            [ "", "To Do" ]
+        );
+        vi.spyOn(server, "put").mockResolvedValue(undefined);
+        vi.spyOn(toast, "showMessage").mockReturnValue(undefined);
+
+        expect(await api.setColumnTitle("To Do", "Done")).toBe(false);
+        expect(await api.setColumnTitle("To Do", "Unsorted")).toBe(false);
+        expect(await api.setColumnTitle("", "Done")).toBe(false);
+        expect(saved).toEqual([]);
+    });
+
+    it("takes a free name, and a column keeping the one it has", async () => {
+        const { api } = createApi(
+            { columns: [ { value: "To Do" }, { value: "Done" } ] }, [ "To Do", "Done" ]);
+        const put = vi.spyOn(server, "put").mockResolvedValue(undefined);
+
+        await api.setColumnTitle("To Do", "Doing");
+        await api.setColumnTitle("Done", "Done");
+
+        expect(put).toHaveBeenCalledTimes(2);
+    });
+});
+
 describe("filing a card under the inbox", () => {
     /**
      * Landing in the inbox means carrying no value at all. A relation the card takes from elsewhere

@@ -561,15 +561,43 @@ export default class BoardApi {
      * Most columns are identified by the value their cards carry, so renaming writes that value
      * to every card in the column. The inbox has no value, so it stores a display name instead and
      * its cards are left untouched.
+     *
+     * @returns `false` when nothing was written, which keeps the caller's editor open: the name
+     *          is blank, or another column already uses it and renaming would merge the two.
      */
-    async setColumnTitle(column: string, title: string) {
-        if (!title.trim()) {
-            return;
+    setColumnTitle(column: string, title: string): false | void | Promise<void> {
+        const name = title.trim();
+        if (!name) {
+            return false;
+        }
+
+        if (this.isColumnNameTaken(name, column)) {
+            toast.showMessage(t("board_view.column-name-taken", { column: name }), undefined,
+                "bx bx-duplicate");
+            return false;
         }
 
         return column === INBOX_COLUMN
-            ? this.updateColumn(column, { displayName: title.trim() })
-            : this.renameColumn(column, title);
+            ? this.updateColumn(column, { displayName: name })
+            : this.renameColumn(column, name);
+    }
+
+    /**
+     * Whether a column other than `except` already uses a name.
+     *
+     * Checks the columns on the board and the stored ones, so an empty column counts too. Titles
+     * are compared as well as values: the inbox is named by `displayName`, which reads as the same
+     * name to the user.
+     */
+    private isColumnNameTaken(name: string, except: string) {
+        const values = new Set([ ...this.columns, ...this.storedColumns.map(col => col.value) ]);
+        for (const value of values) {
+            if (value !== except && (value === name || this.getColumnTitle(value) === name)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

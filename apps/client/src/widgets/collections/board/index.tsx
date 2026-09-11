@@ -1536,7 +1536,11 @@ export function TitleEditor({
 }: {
     currentValue?: string;
     placeholder?: string;
-    save: (newValue: string, atStart?: boolean) => void | Promise<void>;
+    /**
+     * Writes what was typed. Returns `false` to refuse it, which keeps the editor open on what it
+     * holds so the reader can correct it.
+     */
+    save: (newValue: string, atStart?: boolean) => false | void | Promise<void>;
     dismiss: () => void;
     isNewItem?: boolean;
     mode?: "normal" | "multiline" | "relation";
@@ -1678,8 +1682,9 @@ export function TitleEditor({
             // editor opened by a press on the thing it edits, rather than from something focused,
             // has nowhere to send it, so Enter says here what that blur would have said.
             const typed = inputRef.current?.value ?? "";
-            if (e.key === "Enter" && typed.trim() && (typed !== currentValue || isNewItem)) {
-                commit(typed);
+            if (e.key === "Enter" && typed.trim() && (typed !== currentValue || isNewItem)
+                    && !commit(typed)) {
+                return;
             }
 
             dismiss();
@@ -1701,7 +1706,10 @@ export function TitleEditor({
                 return;
             }
 
-            commit(value, atStart);
+            if (!commit(value, atStart)) {
+                input?.focus();
+                return;
+            }
 
             if (handsOver) {
                 hasHandedOver.current = true;
@@ -1782,21 +1790,36 @@ export function TitleEditor({
         }
 
         if (!shouldDismiss.current && newValue.trim() && (newValue !== currentValue || isNewItem)) {
-            commit(newValue);
+            if (!commit(newValue)) {
+                // The field stays open, so the focus this blur took off it has to come back.
+                inputRef.current?.focus();
+                return;
+            }
+
             dismissOnNextRefreshRef.current = true;
         } else {
             dismiss();
         }
     };
 
-    // The editor is closing either way, and what a save writes has already been put back by
-    // whatever could not write it; all that is left is to say so rather than to reject unhandled,
-    // which is what a save reaching nobody used to do.
+    /**
+     * Saves what was typed and reports whether `save` accepted it.
+     *
+     * A refusal is reported by `save` itself, which is what knows why it refused. A save that
+     * fails later is reported here instead of rejecting unhandled: the editor has closed by then,
+     * and whatever could not be written has already been put back.
+     */
     function commit(newValue: string, atStart?: boolean) {
-        Promise.resolve(save(newValue, atStart)).catch((e) => {
+        const outcome = save(newValue, atStart);
+        if (outcome === false) {
+            return false;
+        }
+
+        Promise.resolve(outcome).catch((e) => {
             console.error("Failed to save what the board editor was given:", e);
             toast.showError(t("board_view.save-error"));
         });
+        return true;
     }
 
     if (mode !== "relation") {
@@ -1908,7 +1931,10 @@ export function TitleEditor({
             }}
             onBlur={() => dismiss()}
             noteIdChanged={(newValue) => {
-                save(newValue);
+                if (newValue && !commit(newValue)) {
+                    return;
+                }
+
                 dismiss();
             }}
         />

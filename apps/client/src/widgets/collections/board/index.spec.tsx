@@ -1472,6 +1472,28 @@ describe("Board column rename", () => {
     }
 
     /**
+     * Two columns under one name would be merged by the rename, which a reader who has forgotten
+     * the other column does not expect. The name is refused, and the editor stays open on it.
+     */
+    it("refuses a name another column already has and keeps the editor open", async () => {
+        const { container } = await setup();
+        const put = vi.spyOn(server, "put").mockResolvedValue(undefined);
+        const message = vi.spyOn(toast, "showMessage").mockReturnValue(undefined);
+
+        await renameColumnAt(container, 1, "Done");
+
+        expect(message).toHaveBeenCalledWith(
+            "board_view.column-name-taken:{\"column\":\"Done\"}", undefined, "bx bx-duplicate");
+        expect(put).not.toHaveBeenCalled();
+
+        const columns = container.querySelectorAll<HTMLElement>(".board-column");
+        expect(columns).toHaveLength(3);
+        // The column being renamed shows the editor in place of its title.
+        expect(columnTitles(container)).toEqual([ "To Do", "Done" ]);
+        expect(columns[1].querySelector<HTMLInputElement>("h3 input")?.value).toBe("Done");
+    });
+
+    /**
      * The cards, the stored columns and the definition are renamed together by the server, so that
      * no client reads the board while they disagree and writes the old name back. What the board
      * does from here is ask for that, and write none of the three itself.
