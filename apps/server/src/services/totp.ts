@@ -1,5 +1,5 @@
 import { options } from "@triliumnext/core";
-import { Totp } from "time2fa";
+import { generateConfig, Hotp, Totp } from "time2fa";
 
 import recoveryCodesService from "./encryption/recovery_codes.js";
 import totpEncryptionService from "./encryption/totp_encryption.js";
@@ -38,9 +38,13 @@ function generateSecret(accountName = "Trilium"): { success: boolean; message?: 
     }
 }
 
-/** Persists a (previously verified) TOTP secret, making TOTP the active second factor at login. */
+/**
+ * Persists a (previously verified) TOTP secret, making TOTP the active second factor at login, and
+ * clears the time step the previous secret last used (see {@link verifyTOTP}).
+ */
 function setSecret(secret: string): void {
     totpEncryptionService.setTotpSecret(secret);
+    options.setOption("totpLastUsedStep", "");
 }
 
 function getTotpSecret(): string | null {
@@ -51,6 +55,20 @@ function checkForTotpSecret(): boolean {
     return totpEncryptionService.isTotpSecretSet();
 }
 
+/** Returns the time step `submittedPasscode` was generated for, or `null` if it matches none. */
+function findTimeStep(secret: string, submittedPasscode: string): number | null {
+    const config = generateConfig();
+    const currentStep = Math.floor(Date.now() / 1000 / config.period);
+
+    try {
+        const code = { passcode: submittedPasscode, secret: secret.trim(), counter: currentStep };
+        return Hotp.validate(code, config) ? currentStep : null;
+    } catch (e) {
+        console.error("Failed to validate TOTP:", e);
+        return null;
+    }
+}
+
 /**
  * Validates a passcode against an explicitly supplied secret. Used during enrollment to verify the
  * user's authenticator before the secret is persisted (see {@link generateSecret}).
@@ -58,23 +76,34 @@ function checkForTotpSecret(): boolean {
 function validateTOTPForSecret(secret: string, submittedPasscode: string): boolean {
     if (!secret) return false;
 
-    try {
-        return Totp.validate({
-            passcode: submittedPasscode,
-            secret: secret.trim()
-        });
-    } catch (e) {
-        console.error("Failed to validate TOTP:", e);
-        return false;
-    }
+    return findTimeStep(secret, submittedPasscode) !== null;
 }
 
-/** Validates a passcode against the persisted secret. Used at login. */
+/**
+ * Validates a passcode against the persisted secret and records nothing. Used by the setup wizard,
+ * which must not write options while becca is unloaded (see `SetupSecondFactor.verify`).
+ */
 function validateTOTP(submittedPasscode: string): boolean {
     const secret = getTotpSecret();
     if (!secret) return false;
 
     return validateTOTPForSecret(secret, submittedPasscode);
+}
+
+/**
+ * Validates a passcode against the persisted secret and records its time step, so that neither it
+ * nor a code from an earlier step is accepted again (RFC 6238, section 5.2). Used at login.
+ */
+function verifyTOTP(submittedPasscode: string): boolean {
+    const secret = getTotpSecret();
+    if (!secret) return false;
+
+    const step = findTimeStep(secret, submittedPasscode);
+    const lastUsedStep = options.getOptionOrNull("totpLastUsedStep");
+    if (step === null || (lastUsedStep && step <= Number(lastUsedStep))) return false;
+
+    options.setOption("totpLastUsedStep", String(step));
+    return true;
 }
 
 function resetTotp(): void {
@@ -90,5 +119,6 @@ export default {
     checkForTotpSecret,
     validateTOTP,
     validateTOTPForSecret,
+    verifyTOTP,
     resetTotp
 };
