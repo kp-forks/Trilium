@@ -212,7 +212,9 @@ body.mobile .board-view-container .board-add-column {
 .board-view-container .board-column h3 > .column-icon {
   /* Sized down from the note header's button, whose scale suits a toolbar rather than a heading. */
   --note-icon-size: 1.15em;
-  --note-icon-container-padding-size: 0.15em;
+  /* In pixels, as everywhere else the ring is set: it has to be whole for the glyph to sit centred
+     in the disc, and the glyph alone follows the heading's font. */
+  --note-icon-container-padding-size: 4px;
 
   flex-shrink: 0;
   margin-inline-end: 0.4em;
