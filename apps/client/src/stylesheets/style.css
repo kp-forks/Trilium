@@ -1702,6 +1702,12 @@ body.mobile .dropdown-submenu > .dropdown-menu {
     -webkit-user-select: none;
 }
 
+/* What stands between a menu item's icon and its title. */
+.dropdown-item .tn-menu-gap {
+    flex: none;
+    width: 0.5em;
+}
+
 /* A name the user wrote, boxed by `menuName()`: clipped rather than widening the menu. */
 .dropdown-item .tn-menu-name {
     display: block;

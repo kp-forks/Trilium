@@ -558,6 +558,10 @@ importers:
         version: 44.2.0(supports-color@10.2.2)
 
   apps/icon-pack-builder:
+    dependencies:
+      '@triliumnext/commons':
+        specifier: workspace:*
+        version: link:../../packages/commons
     devDependencies:
       '@mdi/font':
         specifier: 7.4.47
@@ -565,6 +569,9 @@ importers:
       '@phosphor-icons/web':
         specifier: 2.1.2
         version: 2.1.2
+      opentype.js:
+        specifier: 2.0.0
+        version: 2.0.0
 
   apps/mobile:
     dependencies:
