@@ -7,6 +7,12 @@ import {
     type BoardDragCallbacks, type DraggedCard, type DropPosition, useBoardDrag
 } from "./board_drag";
 
+// i18next is never initialised under test, so the overlay would be left saying nothing at all.
+vi.mock("../../../services/i18n", () => ({
+    t: (key: string) => key,
+    translationsInitializedPromise: Promise.resolve()
+}));
+
 describe("useBoardDrag, carrying a card", () => {
     let container: HTMLElement | undefined;
     let board: HTMLElement;
@@ -722,10 +728,146 @@ describe("useBoardDrag, carrying a card", () => {
      * Two 100px columns, 200 apart, each card 50 tall. The first holds two cards, the second one.
      * happy-dom lays nothing out, so every box is declared.
      */
-    function setup({ disabled = false, carried }: {
+    describe("carrying a card to one end of a column", () => {
+        /** Ten cards in the first column, scrolled so that neither end of it is on screen. */
+        const tall = {
+            layout: [ Array.from({ length: 10 }, (_, index) => `c${index + 1}`), [ "n3" ] ],
+            scrollTop: 120
+        };
+
+        /** Taken 25 below its own top edge, so the card and the pointer are never in one place. */
+        function takeHold() {
+            press(card("c3"), 50, 65);
+        }
+
+        /**
+         * The column runs on above and below what it shows, so the places the two ends name are
+         * nowhere near the ones the cards on screen give.
+         */
+        it("places the card at the head of the column, and at its foot", () => {
+            setup(tall);
+
+            takeHold();
+            move(50, 225);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(calls.move.at(-1)?.position).toEqual({ column: "To Do", index: 5 });
+
+            // Clear above the heading, which is the head of the column whatever it is scrolled to.
+            move(50, -40);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(calls.move.at(-1)?.position).toEqual({ column: "To Do", index: 0 });
+
+            // Clear below the button that adds a card, which is its foot.
+            move(50, 440);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(calls.move.at(-1)?.position).toEqual({ column: "To Do", index: 10 });
+        });
+
+        /**
+         * Both are where a card is held to walk the column along, which is how a reader reaches a
+         * place in the middle of a long one.
+         */
+        it("leaves the heading and the button that adds a card out of both ends", () => {
+            setup(tall);
+            const showing = () => !!preview()?.classList.contains("showing-drop-hint");
+            const area = board.querySelector<HTMLElement>(".board-column-content");
+
+            takeHold();
+            // On the heading, the card's own top edge standing above the column altogether.
+            move(50, 20);
+            act(() => { vi.advanceTimersByTime(100); });
+            expect(showing()).toBe(false);
+            // What the heading is for while a card is held over it: the column walks up under it,
+            // and the card is placed against the cards that brings into view.
+            expect(area?.scrollTop).toBeLessThan(120);
+
+            // On the button at the foot, and in the band just past it.
+            move(50, 360);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(showing()).toBe(false);
+            expect(calls.move.at(-1)?.position).not.toEqual({ column: "To Do", index: 10 });
+
+            move(50, 425);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(showing()).toBe(false);
+        });
+
+        it("says on the copy being carried what letting go would do", () => {
+            setup(tall);
+            const hint = () => preview()?.querySelector<HTMLElement>(".board-drop-hint");
+
+            takeHold();
+            move(50, -40);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(preview()?.classList.contains("showing-drop-hint")).toBe(true);
+            expect(hint()?.textContent).toBe("board_view.drop-as-first-item");
+
+            move(50, 440);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(hint()?.textContent).toBe("board_view.drop-as-last-item");
+
+            // Back among the cards, where the card is placed against them and says nothing.
+            move(50, 225);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(preview()?.classList.contains("showing-drop-hint")).toBe(false);
+        });
+
+        /**
+         * A card taller than the board is cut off by it, and a label in the middle of the card is
+         * cut off with it. The board runs 0 to 600 here and the window reaches further, so a label
+         * placed against the window would land below what the reader can see.
+         */
+        it("keeps the label inside what the board shows of a tall card", () => {
+            setup(tall);
+            const shift = () => Number(preview()
+                ?.querySelector<HTMLElement>(".board-drop-hint span")
+                ?.style.transform.match(/-?[\d.]+/)?.[0]);
+
+            takeHold();
+            move(50, 440);
+            act(() => { vi.advanceTimersByTime(20); });
+            // Wholly inside the board, so the label stands in the middle of the card.
+            expect(shift()).toBe(0);
+
+            release(50, 440);
+            place(card("c3"), 0, 40, 100, 2000);
+
+            press(card("c3"), 50, 65);
+            move(50, 440);
+            act(() => { vi.advanceTimersByTime(20); });
+
+            // Where the label lands: the middle of the card, moved by the shift, which the scale
+            // the copy is drawn at takes a tenth off. The card was taken 25 below its own top.
+            const middle = 440 - 25 + 2000 / 2;
+            const label = middle + shift() * 0.9;
+            expect(label).toBeGreaterThan(0);
+            expect(label).toBeLessThan(600);
+        });
+
+        /** A sorted column places what it is given, so neither of its ends is on offer. */
+        it("offers no end of a column that orders its own cards", () => {
+            setup(tall);
+            board.querySelectorAll<HTMLElement>(".board-column")[0].dataset.sorted = "true";
+
+            takeHold();
+            move(50, -40);
+            act(() => { vi.advanceTimersByTime(20); });
+
+            expect(preview()?.classList.contains("showing-drop-hint")).toBe(false);
+            expect(calls.move.at(-1)?.position).toEqual({ column: "To Do", index: 0 });
+        });
+    });
+
+    function setup({
+        disabled = false, carried, layout = [ [ "n1", "n2" ], [ "n3" ] ], scrollTop = 0
+    }: {
         disabled?: boolean,
         /** The cards a press answers with, for the tests about carrying a selection. */
-        carried?: string[]
+        carried?: string[],
+        /** What each column holds, for a test that needs more cards than a column can show. */
+        layout?: string[][],
+        /** How far each column is scrolled, its cards standing that much higher on screen. */
+        scrollTop?: number
     } = {}) {
         const mountPoint = document.createElement("div");
         container = mountPoint;
@@ -752,11 +894,11 @@ describe("useBoardDrag, carrying a card", () => {
         board.appendChild(Object.assign(document.createElement("div"), {
             className: "board-drag-layer"
         }));
-        place(board, 0, 0, 500, 400);
+        place(board, 0, 0, 500, 600);
         // Writable: the board walks itself along while something is held at its edge.
         Object.defineProperty(board, "scrollLeft", { value: 0, configurable: true, writable: true });
 
-        for (const [ index, cards ] of [ [ "n1", "n2" ], [ "n3" ] ].entries()) {
+        for (const [ index, cards ] of layout.entries()) {
             const column = document.createElement("div");
             column.className = "board-column";
             column.dataset.column = [ "To Do", "Doing" ][index];
@@ -775,9 +917,9 @@ describe("useBoardDrag, carrying a card", () => {
             const area = document.createElement("div");
             area.className = "board-column-content";
             column.appendChild(area);
-            place(area, index * 200, 40, 100, 360);
+            place(area, index * 200, 40, 100, 300);
             Object.defineProperty(area, "scrollTop", {
-                value: 0, configurable: true, writable: true
+                value: scrollTop, configurable: true, writable: true
             });
 
             for (const [ position, noteId ] of cards.entries()) {
@@ -788,8 +930,14 @@ describe("useBoardDrag, carrying a card", () => {
                     className: "edit-icon"
                 }));
                 area.appendChild(note);
-                place(note, index * 200, 40 + position * 60, 100, 50);
+                place(note, index * 200, 40 + position * 60 - scrollTop, 100, 50);
             }
+
+            // The button that adds a card, which stands at the foot of every open column.
+            const adder = document.createElement("div");
+            adder.className = "board-new-item";
+            column.appendChild(adder);
+            place(adder, index * 200, 340, 100, 60);
         }
 
         // Attached from an effect, which Preact defers past the render.

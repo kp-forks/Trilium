@@ -596,6 +596,8 @@ export default function Column({
     return (
         <div
             data-column={column}
+            // Read by the drag, which offers neither end of a column that places its own cards.
+            data-sorted={isSorted ? "true" : undefined}
             className={clsx("board-column", {
                 "drag-over": isDropTarget && (isSorted || draggedCard?.fromColumn !== column),
                 // The class the themes key a hue off, worn here as anywhere else that carries one.

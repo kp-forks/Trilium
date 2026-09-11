@@ -38,6 +38,9 @@
   --board-drag-ring-width: 3px;
   /* The ring a picked-out card carries. */
   --board-selected-ring-color: var(--link-color);
+  /* The overlay a carried card wears while it would go to one end of a column. */
+  --board-drop-hint-background: #1f2933;
+  --board-drop-hint-color: #ffffff;
   /* Dims the board while a card is being named. Kept light: it draws the eye to the field rather
      than hiding what is behind it. */
   --board-edit-backdrop: rgba(0, 0, 0, 0.15);
@@ -577,6 +580,26 @@ body.mobile .board-view-container .board-add-column {
   cursor: move;
   opacity: 0.85;
   box-shadow: var(--board-drag-shadow);
+}
+
+/* Covers the card being carried with what dropping it there does, which is why it is opaque: what
+   the card itself says is beside the point while it reads. */
+.board-view-container .board-drag-preview .board-drop-hint {
+  display: none;
+  position: absolute;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: inherit;
+  padding: var(--card-padding);
+  background-color: var(--board-drop-hint-background);
+  text-align: center;
+  font-weight: 600;
+  color: var(--board-drop-hint-color);
+}
+
+.board-view-container .board-drag-preview.showing-drop-hint .board-drop-hint {
+  display: flex;
 }
 
 /* What a carried selection is drawn as: one card-shaped block holding how many are on the move. */

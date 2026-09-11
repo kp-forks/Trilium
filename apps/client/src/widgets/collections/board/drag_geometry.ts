@@ -36,10 +36,57 @@ export interface ColumnBox {
      */
     origin: number;
     /**
+     * Where the heading begins and where the button that adds a card ends, down the page. A card
+     * carried past either one is placed at that end of the column. The heading and the button are
+     * left out of both: a card held over one walks the column along instead, which is how a place
+     * in the middle is reached. These hold for the length of a drag for the same reason
+     * {@link top} does.
+     */
+    headStart: number;
+    footEnd: number;
+    /** Whether the column orders its own cards, so nothing can be placed at an end of it. */
+    sorted: boolean;
+    /**
      * The cards as drawn, in order, the dragged one included. Counting it keeps the index in the
      * same terms as the list the board holds, which is what a move is expressed in.
      */
     cards: CardBox[];
+}
+
+/** Which end of a column a card would be placed at. */
+export type ColumnEnd = "first" | "last";
+
+/**
+ * How far past the heading or the button the pointer goes before that end is asked for, in pixels.
+ *
+ * The band between the two is where a card held over the column walks it along, and a pointer that
+ * has only just left it is on its way somewhere rather than asking for an end.
+ */
+const END_OFFSET = 30;
+
+/**
+ * The end of a column a point stands past: above its heading, or below the button that adds a card,
+ * by {@link END_OFFSET} in either case.
+ *
+ * A card placed there goes to that end of the column however far the column is scrolled, which
+ * saves dragging it the length of a long one. A column that orders its own cards answers with
+ * nothing: it places what it is given, so neither end is the reader's to choose.
+ *
+ * @param y the pointer, down the page. Unlike a place among the cards, which is read from the
+ * carried card's top edge, both ends stand outside the column and only the pointer reaches them.
+ */
+export function columnEndAt(column: ColumnBox, y: number): ColumnEnd | undefined {
+    // A column with nothing between its two ends has no middle for a card to be placed in, so
+    // every point would read as one end or the other.
+    if (column.sorted || column.footEnd <= column.headStart) {
+        return undefined;
+    }
+
+    if (y < column.headStart - END_OFFSET) {
+        return "first";
+    }
+
+    return y >= column.footEnd + END_OFFSET ? "last" : undefined;
 }
 
 /**

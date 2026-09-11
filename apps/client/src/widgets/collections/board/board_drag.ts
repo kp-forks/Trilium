@@ -1,9 +1,11 @@
 import { RefObject } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
+import { t } from "../../../services/i18n";
 import { useTrackedElement } from "../../react/hooks";
 import {
-    type CardBox, cardInsertionIndex, columnAt, type ColumnBox, columnCovers, columnInsertionIndex
+    type CardBox, cardInsertionIndex, columnAt, type ColumnBox, columnCovers, type ColumnEnd,
+    columnEndAt, columnInsertionIndex
 } from "./drag_geometry";
 import {
     type BoardMeasurement, measureBoard, placeInModel, toAreaY, toBoardX
@@ -199,6 +201,7 @@ export function useBoardDrag(
                 });
             }
             held.preview = lifted.preview;
+            held.hint = lifted.hint;
             held.grab = lifted.grab;
             container.classList.add("board-dragging");
             setDragging(true);
@@ -237,12 +240,20 @@ export function useBoardDrag(
 
             const column = columnAt(measurement.columns, x);
             const area = column && measurement.areas.get(column.value);
+            // Standing at one end of the column places the card there whatever the column is
+            // scrolled to, which saves carrying it the length of a long one. Read from the pointer
+            // rather than from the card's top edge, as the scrolling is: the ends lie outside the
+            // column, and a card held anywhere but its very top could not reach below the button.
+            const end = column && area ? columnEndAt(column, held.lastY) : undefined;
             const edges: ScrollTarget[] = [ { element: container, axis: "x" } ];
-            if (area) {
+            // The column is left where it stands while one of its ends is being asked for: the
+            // place is fixed, and a column walking to its top or bottom under it says otherwise.
+            if (area && !end) {
                 edges.push({ element: area, axis: "y" });
             }
             scroller.update(edges, held.lastX, held.lastY);
 
+            markEnd(held, end);
 
             // A collapsed column draws no card area and holds no cards on screen, so a card carried
             // over it goes to the front of whatever it holds.
@@ -250,7 +261,8 @@ export function useBoardDrag(
                 ? {
                     column: column.value,
                     index: area
-                        ? placeAt(area, toAreaY(area, topY), held.card, column)
+                        ? endIndex(end, column)
+                            ?? placeAt(area, toAreaY(area, topY), held.card, column)
                         : 0
                 }
                 : null;
@@ -272,6 +284,48 @@ export function useBoardDrag(
             }
 
             report(held, position);
+        };
+
+        /**
+         * Puts the overlay on the copy being carried, naming the end of the column the card would
+         * go to, and takes it off again for a card placed among the cards.
+         *
+         * The label moves towards whatever of the copy the board shows, so a card taller than the
+         * board still shows it. Both the copy and the board were measured when the card was picked
+         * up, so this reads nothing from the page.
+         */
+        const markEnd = (held: Gesture, end: ColumnEnd | undefined) => {
+            const hint = held.hint;
+            const grab = held.grab;
+            const view = held.measurement?.viewport;
+            if (!hint || !grab || !view) return;
+
+            const label = hint.firstElementChild;
+            if (end !== held.end) {
+                held.end = end;
+                held.preview?.classList.toggle("showing-drop-hint", !!end);
+                if (end && label instanceof HTMLElement) {
+                    label.textContent = t(end === "first"
+                        ? "board_view.drop-as-first-item"
+                        : "board_view.drop-as-last-item");
+                    // Read once, as the label is written: every move that follows works from
+                    // this rather than reading the page again.
+                    held.labelHeight = label.offsetHeight;
+                }
+            }
+
+            if (!end || !(label instanceof HTMLElement)) return;
+
+            const middle = held.lastY - grab.y + grab.height / 2;
+            const drawn = grab.height * DRAG_SCALE / 2;
+            const top = Math.max(middle - drawn, view.top);
+            const bottom = Math.min(middle + drawn, view.bottom);
+            // Outside the board altogether: there is no part of the copy to keep the label in.
+            const shift = bottom > top ? ((top + bottom) / 2 - middle) / DRAG_SCALE : 0;
+            // The label stands on the card, so it goes no further than the card's own edges.
+            const room = Math.max(0, (grab.height - (held.labelHeight ?? 0)) / 2);
+            label.style.transform =
+                `translateY(${Math.max(-room, Math.min(room, shift))}px)`;
         };
 
         /** Says where the card would land, and whether it has come to rest on that column. */
@@ -589,6 +643,20 @@ function placeIn(cards: CardBox[], y: number, card: DraggedCard, column: string)
     return index >= card.index ? index + 1 : index;
 }
 
+/**
+ * The place one end of a column names, or nothing where neither end is being asked for.
+ *
+ * The cards were counted with the carried one among them, which is the list a move is expressed
+ * in, so the last place is that count rather than one less.
+ */
+function endIndex(end: ColumnEnd | undefined, column: ColumnBox) {
+    if (!end) {
+        return undefined;
+    }
+
+    return end === "first" ? 0 : column.cards.length;
+}
+
 /** Asks an element for its menu the way a right click does, at the place the tap landed. */
 function askForMenu(element: HTMLElement, clientX: number, clientY: number) {
     element.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, clientX, clientY }));
@@ -691,6 +759,17 @@ function lift(held: Gesture, container: HTMLElement) {
     preview.querySelector(".edit-icon")?.remove();
     preview.querySelector(".board-new-item")?.remove();
 
+    // The overlay saying the card would go to one end of a column, hidden until it would. Built
+    // with the copy so a move only turns it on, and only for a card: a column is not placed this
+    // way.
+    let hint: HTMLElement | undefined;
+    if (held.kind === "card") {
+        hint = document.createElement("div");
+        hint.className = "board-drop-hint";
+        hint.appendChild(document.createElement("span"));
+        preview.appendChild(hint);
+    }
+
     // The copy is carried in the drag layer rather than in the column it came from, where the rule
     // that tints a card no longer reaches it, so the column's hue is put on the copy itself.
     const hue = held.element.closest<HTMLElement>(".board-column.with-hue")
@@ -717,6 +796,7 @@ function lift(held: Gesture, container: HTMLElement) {
     held.element.style.display = "none";
     return {
         preview,
+        hint,
         size: { width: rect.width, height: rect.height },
         // Where inside it the reader took hold, so the middle can be found from the pointer.
         grab: {
@@ -782,6 +862,12 @@ type Gesture = (CardSubject | ColumnSubject) & {
     active: boolean;
     /** The copy that follows the pointer, what it stands for staying where it is. */
     preview?: HTMLElement;
+    /** The overlay on the copy saying the card would go to one end of a column. */
+    hint?: HTMLElement;
+    /** Which end that is, so the overlay is written only as it changes. */
+    end?: ColumnEnd;
+    /** What the label inside it measures, read when it is written rather than on every move. */
+    labelHeight?: number;
     /** Where the press landed inside it, and how big it is, for finding its middle. */
     grab?: { x: number, y: number, width: number, height: number };
     measurement?: BoardMeasurement;

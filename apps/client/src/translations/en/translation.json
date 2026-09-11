@@ -3531,6 +3531,8 @@
     "sort-manually": "Manually",
     "default-card-order": "Default card order",
     "column-width": "Column width",
+    "drop-as-first-item": "Drop as the first item",
+    "drop-as-last-item": "Drop as the last item",
     "column-width-narrow": "Narrow (default)",
     "column-width-medium": "Medium",
     "column-width-wide": "Wide",
