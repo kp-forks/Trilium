@@ -396,8 +396,12 @@ class ContextMenu {
                     return false;
                 }
 
-                // Prevent submenu from failing to expand on mobile
-                if (!("items" in item && item.items)) {
+                // A submenu's parent stays open so that it can still be expanded. One carrying a
+                // command or handler of its own is dismissed like any other item once it has run.
+                const opensSubmenu = "items" in item && !!item.items;
+                const acts = ("handler" in item && !!item.handler)
+                    || ("command" in item && !!item.command);
+                if (!opensSubmenu || acts) {
                     this.hide();
                 }
 
