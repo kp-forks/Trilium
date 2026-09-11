@@ -249,7 +249,7 @@ export function useBoardDrag(
             // scrolled to, which saves dragging it the length of a long column. Read from the
             // pointer rather than the card's top edge, as auto-scrolling is: both ends lie outside
             // the column, and a card held below its top edge cannot reach past the button.
-            const end = column && area ? columnEndAt(column, held.lastY) : undefined;
+            const end = column ? columnEndAt(column, held.lastY) : undefined;
             const edges: ScrollTarget[] = [ { element: container, axis: "x" } ];
             // No vertical auto-scroll while an end is the target: the index is already decided,
             // and scrolling would suggest the card is being placed where it passes.
@@ -260,15 +260,15 @@ export function useBoardDrag(
 
             markEnd(held, end, column);
 
-            // A collapsed column draws no card area and holds no cards on screen, so a card carried
-            // over it goes to the front of whatever it holds.
+            // A collapsed column draws no card area and holds no cards on screen, so a card
+            // carried over it goes to the front of whatever it holds. Either of its ends can still
+            // be asked for, which is what saves opening it to place a card there.
             const position = column
                 ? {
                     column: column.value,
-                    index: area
-                        ? endIndex(end, column)
-                            ?? placeAt(area, toAreaY(area, topY), held.card, column)
-                        : 0
+                    index: endIndex(end, column) ?? (area
+                        ? placeAt(area, toAreaY(area, topY), held.card, column)
+                        : 0)
                 }
                 : null;
             // Standing on the column itself, which for a collapsed one is its heading alone: the
@@ -705,7 +705,7 @@ function endIndex(end: ColumnEnd | undefined, column: ColumnBox) {
         return undefined;
     }
 
-    return end === "first" ? 0 : column.cards.length;
+    return end === "first" ? 0 : column.count;
 }
 
 /** Asks an element for its menu the way a right click does, at the place the tap landed. */

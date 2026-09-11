@@ -52,6 +52,11 @@ export interface ColumnBox {
      * same terms as the list the board holds, which is what a move is expressed in.
      */
     cards: CardBox[];
+    /**
+     * How many cards the column holds, the dragged one included. Read off the column rather than
+     * counted here: a collapsed one draws none of them, and a windowed one only a slice.
+     */
+    count: number;
 }
 
 /** Which end of a column a card would be placed at. */

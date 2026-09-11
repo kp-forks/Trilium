@@ -53,6 +53,9 @@ export function measureBoard(container: HTMLElement, withCards = true): BoardMea
         const heading = element.querySelector<HTMLElement>(":scope > h3");
         const adder = element.querySelector<HTMLElement>(":scope > .board-new-item");
 
+        const cards = withCards ? measureCards(area) : [];
+        const stated = Number(element.dataset.count);
+
         columns.push({
             value,
             left: rect.left - origin,
@@ -66,7 +69,8 @@ export function measureBoard(container: HTMLElement, withCards = true): BoardMea
                 ? element.style.getPropertyValue("--board-column-custom-hue")
                 : undefined,
             origin: withCards ? contentOrigin(area) : 0,
-            cards: withCards ? measureCards(area) : []
+            cards,
+            count: Number.isFinite(stated) ? stated : cards.length
         });
     }
 

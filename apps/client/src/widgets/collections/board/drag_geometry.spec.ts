@@ -20,7 +20,8 @@ function columns(cards: Record<string, CardBox[]> = {}): ColumnBox[] {
         headStart: 0,
         footEnd: 400,
         sorted: false,
-        cards: cards[value] ?? []
+        cards: cards[value] ?? [],
+        count: (cards[value] ?? []).length
     }));
 }
 
@@ -87,7 +88,7 @@ describe("columnCovers", () => {
     it("tells the column from the empty space below a short one", () => {
         const strip: ColumnBox = {
             value: "Parked", left: 0, width: 36, top: 0, height: 90, origin: 0,
-            headStart: 90, footEnd: 90, sorted: false, cards: []
+            headStart: 90, footEnd: 90, sorted: false, cards: [], count: 0
         };
 
         expect(columnCovers(strip, 18, 0)).toBe(true);

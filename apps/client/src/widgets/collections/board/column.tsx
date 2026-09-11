@@ -729,6 +729,7 @@ export default function Column({
                 className={clsx("board-column-content", scrollFade.className)}
                 style={scrollFade.style}
                 onWheel={handleScroll}
+                data-count={noteIds.length}
                 data-window-from={isWindowed ? windowFrom : undefined}
                 data-window-count={isWindowed ? noteIds.length : undefined}
             >

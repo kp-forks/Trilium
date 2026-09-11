@@ -867,6 +867,34 @@ describe("useBoardDrag, carrying a card", () => {
             expect(label).toBeLessThan(600);
         });
 
+        it("offers both ends of a collapsed column, which draws none of its cards", () => {
+            setup();
+            // Collapsed before the board opened, so its cards were never drawn: the strip is its
+            // heading alone, and how many it holds is read off the column itself.
+            const strip = board.querySelectorAll<HTMLElement>(".board-column")[1];
+            strip.classList.add("collapsed");
+            strip.dataset.count = "7";
+            strip.querySelector(".board-column-content")?.remove();
+            strip.querySelector(".board-new-item")?.remove();
+            place(strip, 200, 0, 40, 400);
+            place(strip.querySelector("h3") as HTMLElement, 200, 0, 40, 400);
+
+            press(card("n1"), 10, 10);
+            move(210, 440);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(calls.move.at(-1)?.position).toEqual({ column: "Doing", index: 7 });
+
+            move(210, -40);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(calls.move.at(-1)?.position).toEqual({ column: "Doing", index: 0 });
+
+            // Over the strip itself it goes to the front, as it did before either end was offered.
+            move(210, 200);
+            act(() => { vi.advanceTimersByTime(20); });
+            expect(calls.move.at(-1)?.position).toEqual({ column: "Doing", index: 0 });
+            release(210, 200);
+        });
+
         /** A sorted column places what it is given, so neither of its ends is on offer. */
         it("offers no end of a column that orders its own cards", () => {
             setup(tall);
