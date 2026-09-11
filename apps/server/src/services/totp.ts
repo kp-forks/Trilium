@@ -60,14 +60,20 @@ const CLOCK_DRIFT_STEPS = 1;
 
 /**
  * Returns the time step `submittedPasscode` was generated for, or `null` if it matches none of the
- * steps within `drift` of the current one.
+ * steps within `drift` of the current one. Steps up to `lastUsedStep` are never tried.
  */
-function findTimeStep(secret: string, submittedPasscode: string, drift: number): number | null {
+function findTimeStep(
+    secret: string,
+    submittedPasscode: string,
+    drift: number,
+    lastUsedStep = -Infinity
+): number | null {
     const config = generateConfig();
     const currentStep = Math.floor(Date.now() / 1000 / config.period);
+    const firstStep = Math.max(currentStep - drift, lastUsedStep + 1);
 
     try {
-        for (let step = currentStep - drift; step <= currentStep + drift; step++) {
+        for (let step = firstStep; step <= currentStep + drift; step++) {
             const code = { passcode: submittedPasscode, secret: secret.trim(), counter: step };
             if (Hotp.validate(code, config)) return step;
         }
@@ -107,9 +113,9 @@ function verifyTOTP(submittedPasscode: string): boolean {
     const secret = getTotpSecret();
     if (!secret) return false;
 
-    const step = findTimeStep(secret, submittedPasscode, CLOCK_DRIFT_STEPS);
-    const lastUsedStep = options.getOptionOrNull("totpLastUsedStep");
-    if (step === null || (lastUsedStep && step <= Number(lastUsedStep))) return false;
+    const lastUsedStep = Number(options.getOptionOrNull("totpLastUsedStep")) || -Infinity;
+    const step = findTimeStep(secret, submittedPasscode, CLOCK_DRIFT_STEPS, lastUsedStep);
+    if (step === null) return false;
 
     options.setOption("totpLastUsedStep", String(step));
     return true;

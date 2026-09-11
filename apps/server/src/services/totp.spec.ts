@@ -252,6 +252,26 @@ describe("totp", () => {
         }
     });
 
+    it("verifyTOTP only tries steps after the last used one", () => {
+        // Six-digit codes can repeat between steps; a code that matches every step stands in.
+        mockValidate.mockReturnValue(true);
+        vi.useFakeTimers({ toFake: [ "Date" ] });
+        try {
+            cls.init(() => totp.setSecret(SECRET));
+            vi.setSystemTime(new Date("2026-01-01T00:00:40Z"));
+            const step = Math.floor(Date.now() / 1000 / 30);
+            const verify = () => cls.init(() => totp.verifyTOTP("000000"));
+
+            for (const expected of [ step - 1, step, step + 1 ]) {
+                expect(verify()).toBe(true);
+                expect(options.getOption("totpLastUsedStep")).toBe(String(expected));
+            }
+            expect(verify()).toBe(false);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
     it("enrollment accepts a step either side, the wizard only the current one", async () => {
         const codeFor = await useRealCodes();
         vi.useFakeTimers({ toFake: [ "Date" ] });
