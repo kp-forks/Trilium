@@ -211,10 +211,11 @@ body.mobile .board-view-container .board-add-column {
 
 .board-view-container .board-column h3 > .column-icon {
   /* Sized down from the note header's button, whose scale suits a toolbar rather than a heading. */
-  --note-icon-size: 1.15em;
+  --note-icon-size: 1em;
   /* In pixels, as everywhere else the ring is set: it has to be whole for the glyph to sit centred
-     in the disc, and the glyph alone follows the heading's font. */
-  --note-icon-container-padding-size: 4px;
+     in the disc, and the glyph alone follows the heading's font. The two together give the disc
+     its width. */
+  --note-icon-container-padding-size: 5px;
 
   flex-shrink: 0;
   margin-inline-end: 0.4em;
@@ -448,15 +449,19 @@ body.mobile .board-view-container .board-add-column {
 
 /*
  * The title and the icon before it, which stand where the editor's field and picker do: the icon at
- * `--card-icon-inset` from the card's edge and centred on the first line, the title at
- * `--card-title-inset` with the lines below it kept off the icon, as the field's own padding keeps
- * them.
+ * `--card-icon-inset` from the card's edge, the title at `--card-title-inset` with the lines below
+ * it kept off the icon, as the field's own padding keeps them.
+ *
+ * A hanging indent rather than two boxes beside each other: the icon shares the first line's box,
+ * so it and the title rest on one baseline and rasterise on the same pixel row. Laid out as boxes
+ * of their own they round to the grid apart, which put the icon a pixel off on some cards.
  *
  * The card's padding is already in front of both, so each is drawn back by it.
  */
 .board-view-container .board-note > .title {
-  display: flex;
-  align-items: flex-start;
+  display: block;
+  padding-inline-start: calc(var(--card-title-inset) - var(--card-padding));
+  text-indent: calc(var(--card-icon-inset) - var(--card-title-inset));
 
   /* The spans mark.js wraps a filter's matched tokens in. Matches the search result cards. */
   .ck-find-result {
@@ -473,16 +478,16 @@ body.mobile .board-view-container .board-add-column {
   text-decoration: underline;
 }
 
+/* Inline, so the glyph sits on the title's own baseline. The trailing space assumes the pack draws
+   its icons on a `--card-icon-size` advance, as the layout above already did. */
 .board-view-container .board-note > .title > .icon {
-  flex: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--card-icon-size);
-  height: calc(var(--card-line-height) * 1em);
-  margin-inline-start: calc(var(--card-icon-inset) - var(--card-padding));
+  display: inline;
   margin-inline-end: calc(
     var(--card-title-inset) - var(--card-icon-inset) - var(--card-icon-size));
+  /* A pack centres its ink on the em box, which sits above the middle of the title's capitals. In
+     whole pixels, so the glyph keeps a fixed relation to the row the line is drawn on. */
+  vertical-align: -1px;
+  vertical-align: round(-0.0555em, 1px);
 }
 
 .board-view-container .board-note > .edit-icon {
