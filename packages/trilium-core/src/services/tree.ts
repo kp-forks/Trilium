@@ -130,8 +130,8 @@ function sortNotes(
             return a < b ? -1 : a > b ? 1 : 0;
         }
 
-        // The same rules as a search's orderBy: a child without the label counts as the largest
-        // value, two without it tie, and dates and numbers compare as such rather than as text.
+        // A child without the label counts as the largest value, and two without it tie so the
+        // next level decides.
         function compareLevel(a: BNote, b: BNote, key: string, descending: boolean) {
             const result = compareSortValues(fetchValue(a, key), fetchValue(b, key), compare);
             return descending ? -result : result;

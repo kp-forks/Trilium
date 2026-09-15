@@ -276,7 +276,7 @@ describe("Tree", () => {
         }
     });
 
-    it("compares numbers and dates as such rather than as text", () => {
+    it("compares every level as text, as a single-key #sorted does", () => {
         const note = buildNote({
             children: [
                 {title: "ten", "#priority": "10", "#due": "2026-02-01"},
@@ -289,7 +289,25 @@ describe("Tree", () => {
         getContext().init(() => {
             tree.sortNotesIfNeeded(note.noteId);
         });
+        // Within each due date, "9" sorts after "1" and "2" after "10", descending to nine, one
+        // and two, ten. #sortNatural is what orders a level's numbers by their value.
         const orderedTitles = note.children.map((child) => child.title);
-        expect(orderedTitles).toStrictEqual(["nine", "one", "ten", "two"]);
+        expect(orderedTitles).toStrictEqual(["nine", "one", "two", "ten"]);
+    });
+
+    it("orders the same children the same way whatever order they start in", () => {
+        const titles = Array.from({length: 53}, (_, index) => `Week ${index + 1}`);
+        const orders = [titles, [...titles].reverse()].map((startingOrder) => {
+            const note = buildNote({
+                children: startingOrder.map((title) => ({title})),
+                "#sorted": ""
+            });
+            getContext().init(() => {
+                tree.sortNotesIfNeeded(note.noteId);
+            });
+            return note.children.map((child) => child.title);
+        });
+        expect(orders[0]).toStrictEqual(orders[1]);
+        expect(orders[0].slice(0, 4)).toStrictEqual(["Week 1", "Week 10", "Week 11", "Week 12"]);
     });
 });

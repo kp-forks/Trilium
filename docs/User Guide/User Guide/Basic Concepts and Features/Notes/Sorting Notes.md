@@ -64,4 +64,4 @@ Sorting is done by comparing note properties or specific labels on child notes. 
     *   **Multi-Level Sorting**: Several of the above can be combined, separated by commas; each level is applied only where the previous ones are equal. Every level can carry its own direction as a word after the name, `asc` or `desc`, otherwise it follows `#sortDirection`. For example `#sorted="priority desc, area, dateCreated"` sorts by priority, highest first, then by area, then by creation date.
 4.  **Alphabetical Sorting**: Used as a last resort when other criteria result in equality.
 
-Two values that both read as numbers compare numerically (2 before 10) and two that both read as dates compare chronologically, as in a search's `orderBy`; anything else compares as text.
+All comparisons are made string-wise (e.g., "1" \< "2" or "2020-10-10" < "2021-01-15", but also "2" \> "10").

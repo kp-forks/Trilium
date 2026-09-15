@@ -127,6 +127,5 @@
   <li><strong>Alphabetical Sorting</strong>: Used as a last resort when other
     criteria result in equality.</li>
 </ol>
-<p>Two values that both read as numbers compare numerically (2 before 10)
-  and two that both read as dates compare chronologically, as in a search's <code
-  spellcheck="false">orderBy</code>; anything else compares as text.</p>
+<p>All comparisons are made string-wise (e.g., "1" &lt; "2" or "2020-10-10"
+  &lt; "2021-01-15", but also "2" &gt; "10").</p>
