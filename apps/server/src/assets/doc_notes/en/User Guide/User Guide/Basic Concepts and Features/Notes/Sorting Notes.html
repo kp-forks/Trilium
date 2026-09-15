@@ -36,9 +36,9 @@
             spellcheck="false">desc</code>, as in a search's <code spellcheck="false">orderBy</code>.
             For example <code spellcheck="false">#sorted="priority desc, dueDate"</code> sorts
             by priority, highest first, and notes of equal priority by due date. A
-            child note without a level's label counts as the largest value there: last
-            ascending, first descending. When neither note has the label, the next
-            level decides.</p>
+            child note without a level's label sorts after every child that has it,
+            whichever direction the level runs in. When neither note has the label,
+            the next level decides.</p>
         </td>
       </tr>
       <tr>

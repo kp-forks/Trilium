@@ -255,16 +255,18 @@ describe("Tree", () => {
         expect(orderedTitles).toStrictEqual(["top1", "top2", "b", "a", "bottom2", "bottom1"]);
     });
 
-    it("counts a missing label as the largest value; the next level breaks a double miss", () => {
+    it("sorts a child missing the label last in either direction; the next level breaks a double miss", () => {
         const children: Parameters<typeof buildNote>[0]["children"] = [
             {title: "m", "#order": "z"},
             {title: "unlabelled", "#area": "b"},
             {title: "also", "#area": "a"},
             {title: "a", "#order": "b"}
         ];
+        // Descending reverses the two notes that carry #order, and reverses the #area level that
+        // separates the two that do not, but leaves both of those after the ones that carry it.
         for (const [direction, expected] of [
             ["asc", ["a", "m", "also", "unlabelled"]],
-            ["desc", ["unlabelled", "also", "m", "a"]]
+            ["desc", ["m", "a", "unlabelled", "also"]]
         ] as const) {
             const note = buildNote({
                 children, "#sorted": "order, area", "#sortDirection": direction

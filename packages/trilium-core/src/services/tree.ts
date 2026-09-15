@@ -130,11 +130,19 @@ function sortNotes(
             return a < b ? -1 : a > b ? 1 : 0;
         }
 
-        // A child without the label counts as the largest value, and two without it tie so the
-        // next level decides.
+        function compareReversed(a: string, b: string) {
+            return -compare(a, b);
+        }
+
+        // A child without the label sorts after every child that has it, whichever direction the
+        // level runs in, so only the values both children have follow `descending`. Two children
+        // without it tie, leaving the next level to decide.
         function compareLevel(a: BNote, b: BNote, key: string, descending: boolean) {
-            const result = compareSortValues(fetchValue(a, key), fetchValue(b, key), compare);
-            return descending ? -result : result;
+            return compareSortValues(
+                fetchValue(a, key),
+                fetchValue(b, key),
+                descending ? compareReversed : compare
+            );
         }
 
         notes.sort((a, b) => {
