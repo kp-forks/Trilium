@@ -23,32 +23,32 @@ Child notes can be automatically sorted by attaching specific [labels](../../Adv
     </thead>
     <tbody>
         <tr>
-            <td><code spellcheck="false">#sorted</code></td>
-            <td><p>Keeps child notes sorted by title alphabetically.</p><p>When given a value, it will sort by other criteria instead: a comma-separated list of levels, each <code spellcheck="false">title</code>, <code spellcheck="false">dateCreated</code>, <code spellcheck="false">dateModified</code> or the name of a label on the child notes, optionally followed by <code spellcheck="false">asc</code> or <code spellcheck="false">desc</code>, as in a search's <code spellcheck="false">orderBy</code>. For example <code spellcheck="false">#sorted="priority desc, dueDate"</code> sorts by priority, highest first, and notes of equal priority by due date. A child note without a level's label sorts after every child that has it, whichever direction the level runs in. When neither note has the label, the next level decides.</p></td>
+            <td><code>#sorted</code></td>
+            <td><p>Keeps child notes sorted by title alphabetically.</p><p>When given a value, it will sort by other criteria instead: a comma-separated list of levels, each <code>title</code>, <code>dateCreated</code>, <code>dateModified</code> or the name of a label on the child notes, optionally followed by <code>asc</code> or <code>desc</code>, as in a search's <code>orderBy</code>. For example <code>#sorted="priority desc, dueDate"</code> sorts by priority, highest first, and notes of equal priority by due date. A child note without a level's label sorts after every child that has it, whichever direction the level runs in. When neither note has the label, the next level decides.</p></td>
         </tr>
         <tr>
-            <td><code spellcheck="false">#sortDirection</code></td>
-            <td><p>If <code spellcheck="false">sorted</code> is applied, specifies the direction of the sort:</p><ul><li><code spellcheck="false">ASC</code>, ascending (default)</li><li><code spellcheck="false">DESC</code>, descending</li></ul><p>A level of <code spellcheck="false">sorted</code> followed by its own <code spellcheck="false">asc</code> or <code spellcheck="false">desc</code> keeps that direction regardless.</p></td>
+            <td><code>#sortDirection</code></td>
+            <td><p>If <code>sorted</code> is applied, specifies the direction of the sort:</p><ul><li><code>ASC</code>, ascending (default)</li><li><code>DESC</code>, descending</li></ul><p>A level of <code>sorted</code> followed by its own <code>asc</code> or <code>desc</code> keeps that direction regardless.</p></td>
         </tr>
         <tr>
-            <td><code spellcheck="false">#sortFoldersFirst</code></td>
-            <td>If <code spellcheck="false">sorted</code> is applied, folders (notes with children) will be sorted as a group at the top (at the bottom when <code spellcheck="false">#sortDirection</code> is <code spellcheck="false">desc</code>), and the rest will be sorted.</td>
+            <td><code>#sortFoldersFirst</code></td>
+            <td>If <code>sorted</code> is applied, folders (notes with children) will be sorted as a group at the top (at the bottom when <code>#sortDirection</code> is <code>desc</code>), and the rest will be sorted.</td>
         </tr>
         <tr>
-            <td><code spellcheck="false">#sortNatural</code></td>
+            <td><code>#sortNatural</code></td>
             <td>Sort numbers naturally instead of alphabetically, so 2 comes before 10.</td>
         </tr>
         <tr>
-            <td><code spellcheck="false">#sortLocale</code></td>
-            <td>The language code driving the natural sort (e.g. <code spellcheck="false">zh-CN</code>, <code spellcheck="false">de</code>). Only meaningful together with <code spellcheck="false">#sortNatural</code>.</td>
+            <td><code>#sortLocale</code></td>
+            <td>The language code driving the natural sort (e.g. <code>zh-CN</code>, <code>de</code>). Only meaningful together with <code>#sortNatural</code>.</td>
         </tr>
         <tr>
-            <td><code spellcheck="false">#top</code></td>
-            <td>If <code spellcheck="false">sorted</code> is applied to the parent note, keeps given note on top in its parent.</td>
+            <td><code>#top</code></td>
+            <td>If <code>sorted</code> is applied to the parent note, keeps given note on top in its parent.</td>
         </tr>
         <tr>
-            <td><code spellcheck="false">#bottom</code></td>
-            <td>If <code spellcheck="false">sorted</code> is applied to the parent note, keeps given note on bottom in its parent.</td>
+            <td><code>#bottom</code></td>
+            <td>If <code>sorted</code> is applied to the parent note, keeps given note on bottom in its parent.</td>
         </tr>
     </tbody>
 </table>
