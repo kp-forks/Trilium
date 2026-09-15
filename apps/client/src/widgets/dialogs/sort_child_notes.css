@@ -1,14 +1,7 @@
 .modal.sort-child-notes-dialog {
-    /* The criteria rows set the dialog's width; the prose wraps to it rather than widening it. */
-    :where(body:not(.mobile)) & .modal-dialog {
-        width: fit-content;
-        min-width: 440px;
-        max-width: 680px;
-    }
-
-    .modal-body > :not(.sort-criteria),
-    .sort-levels-description {
-        contain: inline-size;
+    /* Room for a criteria row: the kind select, a label name, the direction and the row buttons. */
+    .modal-dialog {
+        max-width: 600px;
     }
 
     .sort-criteria {
