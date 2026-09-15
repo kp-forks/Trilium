@@ -11,10 +11,10 @@ import { t } from "../../services/i18n";
 import server from "../../services/server";
 import ActionButton from "../react/ActionButton";
 import Button from "../react/Button";
-import FormCheckbox from "../react/FormCheckbox";
-import FormGroup from "../react/FormGroup";
+import { Card, CardSection, OptionCardSection } from "../react/Card";
 import FormSelect from "../react/FormSelect";
 import FormTextBox from "../react/FormTextBox";
+import FormToggle from "../react/FormToggle";
 import { useTriliumEvent } from "../react/hooks";
 import Modal from "../react/Modal";
 import SegmentedChoice, { type SegmentedChoiceOption } from "../react/SegmentedChoice";
@@ -93,90 +93,102 @@ export default function SortChildNotesDialog() {
                 <Button text={t("sort_child_notes.sort")} keyboardShortcut="Enter" />
             </>}
         >
-            <div className="sort-criteria">
-                <h5>{t("sort_child_notes.sorting_criteria")}</h5>
-                <p className="sort-levels-description">
-                    {t("sort_child_notes.sorting_criteria_description")}
-                </p>
-                <div className="sort-levels">
-                    {levels.map((level, index) => (
-                        <div className="sort-level" key={index}>
-                            <FormSelect
-                                className="sort-level-kind"
-                                values={kindOptions}
-                                keyProperty="kind"
-                                titleProperty="title"
-                                currentValue={level.kind}
-                                onChange={(kind) => updateLevel(index, { kind: kind as SortKind })}
+            <Card
+                heading={t("sort_child_notes.sorting_criteria")}
+                description={t("sort_child_notes.sorting_criteria_description")}
+            >
+                {levels.map((level, index) => (
+                    <CardSection className="sort-level" key={index}>
+                        <FormSelect
+                            className="sort-level-kind"
+                            values={kindOptions}
+                            keyProperty="kind"
+                            titleProperty="title"
+                            currentValue={level.kind}
+                            onChange={(kind) => updateLevel(index, { kind: kind as SortKind })}
+                        />
+                        {level.kind === "label" && (
+                            <FormTextBox
+                                className="sort-level-label"
+                                placeholder={t("sort_child_notes.label_name")}
+                                required
+                                pattern={ATTRIBUTE_NAME_PATTERN}
+                                currentValue={level.labelName}
+                                onChange={(labelName) => updateLevel(index, { labelName })}
                             />
-                            {level.kind === "label" && (
-                                <FormTextBox
-                                    className="sort-level-label"
-                                    placeholder={t("sort_child_notes.label_name")}
-                                    required
-                                    pattern={ATTRIBUTE_NAME_PATTERN}
-                                    currentValue={level.labelName}
-                                    onChange={(labelName) => updateLevel(index, { labelName })}
-                                />
-                            )}
-                            <SegmentedChoice
-                                options={directionOptions}
-                                currentValue={level.direction}
-                                onChange={(direction) => updateLevel(index, { direction })}
-                            />
-                            <ActionButton
-                                className="sort-level-up"
-                                icon="bx bx-up-arrow-alt"
-                                text={t("sort_child_notes.move_level_up")}
-                                disabled={index === 0}
-                                onClick={() => moveLevel(index, -1)}
-                            />
-                            <ActionButton
-                                className="sort-level-down"
-                                icon="bx bx-down-arrow-alt"
-                                text={t("sort_child_notes.move_level_down")}
-                                disabled={index === levels.length - 1}
-                                onClick={() => moveLevel(index, 1)}
-                            />
-                            <ActionButton
-                                className="sort-level-remove"
-                                icon="bx bx-x"
-                                text={t("sort_child_notes.remove_level")}
-                                disabled={levels.length === 1}
-                                onClick={() => setLevels(levels.filter((_, i) => i !== index))}
-                            />
-                        </div>
-                    ))}
-                </div>
-                <Button
-                    className="sort-level-add"
-                    icon="bx-plus"
-                    text={t("sort_child_notes.add_level")}
-                    size="small"
-                    onClick={() => setLevels([ ...levels, NEW_LEVEL ])}
-                />
-            </div>
+                        )}
+                        <SegmentedChoice
+                            options={directionOptions}
+                            currentValue={level.direction}
+                            onChange={(direction) => updateLevel(index, { direction })}
+                        />
+                        <ActionButton
+                            className="sort-level-up"
+                            icon="bx bx-up-arrow-alt"
+                            text={t("sort_child_notes.move_level_up")}
+                            disabled={index === 0}
+                            onClick={() => moveLevel(index, -1)}
+                        />
+                        <ActionButton
+                            className="sort-level-down"
+                            icon="bx bx-down-arrow-alt"
+                            text={t("sort_child_notes.move_level_down")}
+                            disabled={index === levels.length - 1}
+                            onClick={() => moveLevel(index, 1)}
+                        />
+                        <ActionButton
+                            className="sort-level-remove"
+                            icon="bx bx-x"
+                            text={t("sort_child_notes.remove_level")}
+                            disabled={levels.length === 1}
+                            onClick={() => setLevels(levels.filter((_, i) => i !== index))}
+                        />
+                    </CardSection>
+                ))}
 
-            <h5>{t("sort_child_notes.folders")}</h5>
-            <FormCheckbox
-                label={t("sort_child_notes.sort_folders_at_top")}
-                hint={t("sort_child_notes.folders_follow_first_level")}
-                name="sort-folders-first"
-                currentValue={foldersFirst} onChange={setFoldersFirst}
-            />
-            <br />
+                <CardSection className="sort-level-add-row">
+                    <Button
+                        className="sort-level-add"
+                        icon="bx-plus"
+                        text={t("sort_child_notes.add_level")}
+                        size="small"
+                        onClick={() => setLevels([ ...levels, NEW_LEVEL ])}
+                    />
+                </CardSection>
+            </Card>
 
-            <h5>{t("sort_child_notes.natural_sort")}</h5>
-            <FormCheckbox
-                name="sort-natural"
-                label={t("sort_child_notes.sort_with_respect_to_different_character_sorting")}
-                currentValue={sortNatural} onChange={setSortNatural}
-            />
-            <FormGroup name="sort-locale" className="form-check" label={t("sort_child_notes.natural_sort_language")} description={t("sort_child_notes.the_language_code_for_natural_sort")}>
-                <FormTextBox currentValue={sortLocale} onChange={setSortLocale} />
-            </FormGroup>
+            <Card>
+                <OptionCardSection
+                    name="sort-folders-first"
+                    label={t("sort_child_notes.sort_folders_at_top")}
+                    description={t("sort_child_notes.folders_follow_first_level")}
+                >
+                    <FormToggle currentValue={foldersFirst} onChange={setFoldersFirst} />
+                </OptionCardSection>
+
+                <OptionCardSection
+                    className="sort-natural"
+                    name="sort-natural"
+                    label={t("sort_child_notes.natural_sort")}
+                    description={t("sort_child_notes.sort_with_respect_to_different_character_sorting")}
+                    subSectionsVisible={sortNatural}
+                    subSections={[
+                        <OptionCardSection
+                            key="locale"
+                            className="sort-locale"
+                            name="sort-locale"
+                            label={t("sort_child_notes.natural_sort_language")}
+                            description={t("sort_child_notes.the_language_code_for_natural_sort")}
+                        >
+                            <FormTextBox currentValue={sortLocale} onChange={setSortLocale} />
+                        </OptionCardSection>
+                    ]}
+                >
+                    <FormToggle currentValue={sortNatural} onChange={setSortNatural} />
+                </OptionCardSection>
+            </Card>
         </Modal>
-    )
+    );
 }
 
 /** Writes the levels in the `#sorted` grammar with their directions, skipping a nameless label. */

@@ -73,6 +73,14 @@ describe("SortChildNotesDialog", () => {
         return scope.querySelector(`button[title="${title}"]`);
     }
 
+    async function flip(scope: Element | null) {
+        const input = scope?.querySelector(".switch-toggle");
+        if (!input) throw new Error("No toggle to flip.");
+        await act(async () => {
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+    }
+
     async function submit() {
         const form = container.querySelector("form");
         if (!form) throw new Error("The dialog has no form.");
@@ -129,6 +137,12 @@ describe("SortChildNotesDialog", () => {
             sortBy: "dateCreated asc, title asc",
             sortDirection: "asc"
         }));
+    });
+
+    it("offers the natural sort language only while natural sort is on", async () => {
+        expect(container.querySelector(".sort-locale")).toBeNull();
+        await flip(container.querySelector(".sort-natural"));
+        expect(container.querySelector(".sort-locale")).not.toBeNull();
     });
 
     it("refuses a label name the attribute rules would not allow", async () => {
