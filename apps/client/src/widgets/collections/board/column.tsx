@@ -517,7 +517,16 @@ export default function Column({
         if (e.key === "F2" && !isCollapsed) {
             setColumnNameToEdit(column);
         }
-    }, [ column, isCollapsed ]);
+
+        // The other half of the toggle: the board's keyboard answers Space on a strip, which also
+        // has to step focus onto the cards the column then draws. Only on the heading itself, the
+        // buttons it carries answering Space for themselves.
+        if (e.key === " " && !isCollapsed && e.target === e.currentTarget) {
+            e.preventDefault();
+            e.stopPropagation();
+            collapse();
+        }
+    }, [ collapse, column, isCollapsed ]);
 
     const overlayHost = useContext(BoardOverlayHostContext);
     /** Whether the heading holds the focus, which on mobile floats the column's rail. */
@@ -685,8 +694,8 @@ export default function Column({
                 ref={headerRef}
                 className={`${isEditing ? "editing" : ""}`}
                 // While collapsed the header is what opens the column, so it says so and answers
-                // for the keys a button answers for. Open, it is a heading again and Space does
-                // nothing, so neither is claimed.
+                // for the keys a button answers for. Open, it is a heading again and claims
+                // neither, `handleTitleKeyDown` taking the Space that collapses it.
                 role={isCollapsed ? "button" : undefined}
                 aria-expanded={isCollapsed ? false : undefined}
                 onContextMenu={openMenu}

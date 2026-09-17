@@ -737,6 +737,25 @@ describe("Collapsed board columns", () => {
      * The menu is opened from the column, so that column is the open one. Storing the flag alone
      * would change nothing on screen and leave the reader with no sign the entry did anything.
      */
+    it("collapses the column when Space is pressed on its heading", async () => {
+        const { mountPoint } = await setup();
+        const header = columnAt(mountPoint, 1).querySelector<HTMLElement>("h3");
+        expect(header).not.toBeNull();
+        header?.focus();
+
+        await act(async () => {
+            header?.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
+            await flush();
+        });
+
+        expect(isCollapsed(mountPoint, 1)).toBe(true);
+        expect(saved.at(-1)?.columns?.[1]).toEqual({ value: "Done", collapsed: true });
+        // The reader is left on the strip's header, which is what opens the column again.
+        const strip = columnAt(mountPoint, 1).querySelector("h3");
+        expect(document.activeElement).toBe(strip);
+        expect(strip?.getAttribute("aria-expanded")).toBe("false");
+    });
+
     it("closes the column as soon as the menu entry collapses it", async () => {
         const { mountPoint } = await setup();
         const column = columnAt(mountPoint, 1);
@@ -1258,6 +1277,7 @@ describe("Board column rename", () => {
                 labelKey: "board_view.hints.insert_column"
             },
             { keys: [ "Space" ], labelKey: "board_view.hints.open_item" },
+            { keys: [ "Space" ], labelKey: "board_view.hints.toggle_column" },
             { keys: [ "F2" ], labelKey: "board_view.hints.rename" },
             { keys: [ "Delete" ], labelKey: "board_view.hints.remove_item" },
             { keys: [ "Shift+Delete" ], labelKey: "board_view.hints.delete_item" },

@@ -3544,6 +3544,7 @@
       "insert_item": "Insert card below / above",
       "insert_column": "Insert column after / before",
       "open_item": "Open card",
+      "toggle_column": "Collapse / expand the column (on a column header)",
       "rename": "Rename card or column",
       "remove_item": "Remove card from the board",
       "delete_item": "Delete the note",

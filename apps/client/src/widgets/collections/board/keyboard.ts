@@ -288,7 +288,8 @@ export function useBoardKeyboard({
             return;
         }
 
-        // Both keys, the collapsed header answering for a button and being announced as one.
+        // Both keys, the collapsed header answering for a button and being announced as one. An
+        // open column is collapsed by the header itself, which draws the collapse it asked for.
         if ((e.key === " " || e.key === "Enter") && spot.kind === "header") {
             const column = columns[spot.column];
             if (!columnsOf(container)[spot.column]?.classList.contains("collapsed")) return;
