@@ -38,6 +38,7 @@ export function useZoomPanPinch({ minScale, maxScale, resetOn, onScaleChange }: 
         ref,
         scale,
         onTransform,
+        wheel: { step: wheelStep(scale) },
         canZoomIn: scale < maxScale * (1 - ZOOM_LIMIT_TOLERANCE),
         canZoomOut: scale > minScale * (1 + ZOOM_LIMIT_TOLERANCE),
         zoomIn: () => ref.current?.zoomIn(zoomStep(currentScale(ref), "in")),
@@ -48,6 +49,13 @@ export function useZoomPanPinch({ minScale, maxScale, resetOn, onScaleChange }: 
 
 /** What one press of a zoom step multiplies the scale by. */
 const ZOOM_STEP = 1.2;
+/**
+ * What one wheel notch multiplies the scale by — gentler than a press, a notch being easy to repeat
+ * and easy to overshoot with.
+ */
+const WHEEL_STEP = 1.1;
+/** The `deltaY` a wheel notch reports where it reports a whole one; a trackpad reports far less. */
+const WHEEL_NOTCH_DELTA = 100;
 /**
  * How near a bound counts as being on it. The zoom animation reaches its target by adding the whole
  * difference back to the scale it started from, which can land a float's width short of the bound.
@@ -65,6 +73,22 @@ const ZOOM_LIMIT_TOLERANCE = 1e-6;
  */
 export function zoomStep(scale: number, direction: "in" | "out") {
     return direction === "in" ? scale * (ZOOM_STEP - 1) : scale * (1 - 1 / ZOOM_STEP);
+}
+
+/**
+ * The `wheel.step` that makes a notch a {@link WHEEL_STEP}, at the scale the content is drawn at.
+ *
+ * react-zoom-pan-pinch adds `step * |deltaY|` to the current scale (see `handleWheelZoom`), so its
+ * own default of 0.015 is a flat +1.5 a notch: from a diagram fitted at 0.5 one notch reaches 2.0,
+ * while at 8 the same notch is barely a twelfth of what is on screen. Scaling the step by the scale
+ * it applies to keeps a notch the same fraction of the view wherever it is taken from.
+ *
+ * The scale is the one last reported through `onTransform`, so a scroll fast enough to outrun a
+ * render takes a notch or two sized for where it just was. The error is a fraction of one notch and
+ * corrects itself on the next.
+ */
+export function wheelStep(scale: number) {
+    return (scale * (WHEEL_STEP - 1)) / WHEEL_NOTCH_DELTA;
 }
 
 /** The scale the instance is at now, read as a button is pressed rather than when it was drawn. */

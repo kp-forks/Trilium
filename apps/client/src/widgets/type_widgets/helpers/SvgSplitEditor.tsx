@@ -151,6 +151,7 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
                         maxScale={MAX_ZOOM}
                         centerOnInit
                         centerZoomedOut
+                        wheel={zoom.wheel}
                         doubleClick={{ mode: "reset" }}
                         onTransform={zoom.onTransform}
                     >

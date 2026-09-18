@@ -143,7 +143,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
                 maxScale={maxScale}
                 centerOnInit
                 centerZoomedOut
-                wheel={{ step: 0.0085 }}
+                wheel={zoom.wheel}
                 autoAlignment={{ disabled: true }}
                 doubleClick={{ mode: "reset" }}
                 onTransform={zoom.onTransform}
