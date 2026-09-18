@@ -177,8 +177,8 @@ body.desktop .note-detail-split .note-detail-code-editor {
     max-width: 100% !important;
 }
 
-/* OverlayControlGroup pins the controls to the corner its `placement` names; the z-index is what
-   keeps them over the error card the preview can be dimmed behind. */
+/* OverlayControlGroup pins the controls by its `placement`. The z-index keeps them above
+   `.note-detail-error-card`, which uses 10 as well. */
 .note-detail-split.svg-editor .svg-preview-controls {
     z-index: 10;
 }

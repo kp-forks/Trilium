@@ -1,8 +1,8 @@
-/* A viewport holding the keys is the pane the reader's input is going to, which is what the active
-   split in a multi-split view already says about itself — the same accent, the same fade (see the
-   `.note-split` rules in theme-next/shell.css). Drawn as an inset outline rather than that border,
-   so it costs the content no room and leaves nothing to suppress the browser's own ring with.
-   The fallback carries the legacy light and dark themes, which define no accent. */
+/* Marks the focused viewport the way `.note-split.active` marks the active split: same accent, same
+   150ms fade (theme-next/shell.css). An inset outline rather than that rule's border — a border on a
+   viewport sized to 100% of its pane costs the content 4px, and declaring an outline here replaces
+   the browser's own focus ring without needing `outline: none`.
+   The fallback covers theme-light.css and theme-dark.css, which define no accent. */
 .tn-zoom-pan-viewport {
     outline: 2px solid transparent;
     outline-offset: -2px;

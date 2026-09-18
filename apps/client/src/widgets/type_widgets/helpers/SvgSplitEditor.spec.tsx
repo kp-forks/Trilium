@@ -7,10 +7,10 @@ import type { SplitEditorProps } from "./SplitEditor";
 import SvgSplitEditor from "./SvgSplitEditor";
 
 // react-zoom-pan-pinch measures its boxes, which happy-dom cannot do. This fake keeps the parts the
-// controls drive: `zoomIn`/`zoomOut` add their step to the current scale and clamp it to the bounds
-// it was given (the library's own arithmetic — see handleCalculateButtonZoom), `resetTransform`
-// returns to the fitted view, and every change is reported through `onTransform`, which is what the
-// readout follows. The props are captured too, so what is handed to the library can be asserted.
+// controls drive: `zoomIn`/`zoomOut` add their step to the current scale and clamp it to the given
+// bounds, copying `handleCalculateButtonZoom`; `resetTransform` returns to the fitted view; and each
+// change calls `onTransform`, which is what updates the readout. It also records the props, so the
+// tests can assert what the component passes to the library.
 const { transformWrapperSpy } = vi.hoisted(() => ({ transformWrapperSpy: vi.fn() }));
 
 vi.mock("react-zoom-pan-pinch", async () => {
@@ -86,8 +86,8 @@ describe("SvgSplitEditor", () => {
             expect.objectContaining({ minScale: 0.5, maxScale: 10 })
         );
 
-        // The keys are the only way a reader with no pointer pans the diagram, so what they are has
-        // to be readable from the preview itself.
+        // Without a pointer the keys are the only way to pan, so the preview shows a hints button
+        // alongside the three zoom steps.
         expect(controls().all.length).toBe(4);
 
         unmount();
@@ -113,8 +113,8 @@ describe("SvgSplitEditor", () => {
     });
 
     it("takes the keys on a press, in a split with the editor as much as on its own", async () => {
-        // Beside the editor is where it matters most: the code pane swallows Tab to indent with, so
-        // a press on the preview is the only way a reader reaches the keys that pan the diagram.
+        // This matters most beside the editor: `smartIndentWithTab` consumes Tab, so a press on the
+        // preview is the only way to reach the keys that pan the diagram.
         const modes: Record<string, string>[] = [ {}, { displayMode: "preview" } ];
         for (const labels of modes) {
             const { container, preview, unmount } = await mount(labels);
@@ -153,9 +153,8 @@ describe("SvgSplitEditor", () => {
 });
 
 /**
- * Mounts `SvgSplitEditor` and waits for the rendered diagram and the controls over it to appear,
- * handing back a reader for the three buttons. They are read afresh on every call, the group being
- * drawn anew whenever the scale changes.
+ * Mounts `SvgSplitEditor` and waits for the rendered diagram and its controls. `controls()` re-reads
+ * the buttons on every call, because the group re-renders whenever the scale changes.
  */
 async function mount(labels: Record<string, string> = {}) {
     const container = document.createElement("div");

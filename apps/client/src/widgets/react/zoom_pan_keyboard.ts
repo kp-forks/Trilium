@@ -11,15 +11,12 @@ export type ZoomPanControl =
     | "zoomIn" | "zoomOut" | "reset"
     | "panUp" | "panDown" | "panLeft" | "panRight";
 
-/**
- * The class a focusable zoom/pan viewport wears, for the focus ring in zoom_pan.css — without one a
- * viewport reached by Tab gives no sign of having been reached.
- */
+/** Draws the focus ring in zoom_pan.css. Put it on whichever element the caller gives `tabIndex`. */
 export const ZOOM_PAN_VIEWPORT_CLASS = "tn-zoom-pan-viewport";
 
 /**
- * What the keys below do, said where the reader can find it. Every viewport this hook is wired to
- * shows the same two sections; a caller with more to say appends its own.
+ * Shortcut hints for the keys {@link codeToControl} maps. A caller with more shortcuts spreads this
+ * and appends its own sections, as `ImageViewer` does for image navigation.
  */
 export const ZOOM_PAN_HINTS: ShortcutHintDefinition = [
     {
@@ -105,11 +102,11 @@ export function getPanDelta(controls: Iterable<ZoomPanControl>, shiftKey: boolea
  * up) onto the focusable `element`, driving the react-zoom-pan-pinch instance in `apiRef`. While
  * keys are held it runs a requestAnimationFrame loop that reuses the library's own
  * `zoomIn`/`zoomOut`/`setTransform`, so the motion is smooth and stays within the library's bounds.
- * Only active while the element is focused, which a press on the viewport is what gives it: an
- * editor beside it takes the focus back on the next press into it, as any other pane would.
+ * Only active while `element` has focus, which a press on it gives; clicking an adjacent editor
+ * takes focus back, as with any other pane.
  *
- * The element is taken rather than a ref to it, so that a viewport mounted later than the hook — a
- * preview pane that a display-mode switch brings in — is wired when it arrives.
+ * Takes the element rather than a ref so the effect re-runs when a viewport mounts after the hook,
+ * as the preview pane does when a display-mode switch adds it.
  */
 export function useZoomPanKeyboard(
     apiRef: { current: ReactZoomPanPinchRef | null },

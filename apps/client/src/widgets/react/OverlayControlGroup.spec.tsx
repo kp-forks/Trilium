@@ -335,7 +335,7 @@ describe("ZoomControls", () => {
         const [ zoomOut, readout, zoomIn ] = container.querySelectorAll("button");
         expect(zoomOut.disabled).toBe(true);
         expect(zoomIn.disabled).toBe(true);
-        // The way back is never refused: a bound is about the steps, not about the fitted view.
+        // A bound disables the steps, not the readout, which always resets to the fitted view.
         expect(readout.disabled).toBe(false);
     });
 

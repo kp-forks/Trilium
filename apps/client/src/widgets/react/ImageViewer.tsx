@@ -27,7 +27,7 @@ const CRISP_NATIVE_SCALE = 4;
 /** Reveal the image even if `decode()` never settles (it can stall for some images, e.g. SVGs). */
 const REVEAL_FALLBACK_MS = 1000;
 
-// The zoom and pan keys are every viewport's; walking the images of a folder is this one's alone.
+// The zoom and pan keys are shared; only this viewer navigates between a folder's images.
 const IMAGE_VIEWER_HINTS: ShortcutHintDefinition = [
     ...ZOOM_PAN_HINTS,
     {

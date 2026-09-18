@@ -177,26 +177,27 @@ export function OverlayFullscreenButton({ isFullscreen, onToggle }: OverlayFulls
 
 interface ZoomControlsProps {
     /**
-     * The scale as a percentage of whatever the content's own hundred is — its native resolution,
-     * its fitted view, its natural size. Left out, the two steps stand alone: a map's zoom level is a
-     * number out of the cartographer's toolbox, not the reader's.
+     * The scale to show between the two steps, as a percentage. What 100% means is the caller's
+     * choice: native resolution in `ImageViewer`, the fitted view in `SvgSplitEditor`, natural size
+     * in the mind map. Omit it to render the two steps with no readout, as the geo map does — a
+     * MapLibre zoom level means nothing as a percentage.
      */
     percent?: number;
-    /** Whether either step has room left; a step that would do nothing is shown disabled. */
+    /** Disables the matching step. Pass `false` once the scale has reached a bound. */
     canZoomIn?: boolean;
     canZoomOut?: boolean;
     onZoomIn: () => void;
     onZoomOut: () => void;
-    /** Only reached through the readout, so only needed where there is a `percent` to show. */
+    /** Runs when the readout is clicked, so it is only needed alongside `percent`. */
     onReset?: () => void;
 }
 
 /**
- * The zoom steps every set of controls over content carries: out, the scale, and in.
+ * Renders the three zoom controls — out, the readout, in — for an {@link OverlayControlGroup} to
+ * hold.
  *
- * Buttons rather than a group of their own, the image viewer and the diagram preview showing nothing
- * else while the maps stand them among a tilt, a recenter and a fullscreen. What a hundred percent
- * means is the content's to say, so the readout is handed a percentage rather than a scale.
+ * Buttons rather than a group of their own, because the geo map and mind map toolbars put them in
+ * one group beside a tilt, a recenter and a fullscreen button.
  */
 export function ZoomControls({ percent, canZoomIn = true, canZoomOut = true, onZoomIn, onZoomOut, onReset }: ZoomControlsProps) {
     return (

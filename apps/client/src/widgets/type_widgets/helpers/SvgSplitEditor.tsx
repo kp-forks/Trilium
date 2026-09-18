@@ -47,8 +47,8 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
     const zoom = useZoomPanPinch({ minScale: MIN_ZOOM, maxScale: MAX_ZOOM, resetOn: note.noteId });
     const [ previewEl, setPreviewEl ] = useState<HTMLDivElement | null>(null);
 
-    // The keys are wired whatever the display mode: a reader with no pointer has no other way to pan
-    // the diagram. Source-only mounts no preview, so it has nothing to say about them either.
+    // Wire the keys in every display mode: without a pointer there is no other way to pan the
+    // diagram. Source-only mounts no preview, so it registers no hints for it.
     const [ displayMode ] = useNoteLabel(note, "displayMode");
     const readOnly = useEffectiveReadOnly(note, props.noteContext);
     const mode = resolveDisplayMode(displayMode, readOnly);
@@ -103,8 +103,8 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
         }).catch(e => console.error("Failed to get attachments for SVGSplitEditor", e));
     }, [ note, svg, attachmentTitle, onSave ]);
 
-    // Import/export. The renderer's `svg` string is exported rather than the on-screen element, so
-    // the export never carries what the preview did to fit the diagram into its pane.
+    // Import/export. Exports the `svg` string from `renderSvg()` rather than the on-screen element,
+    // which CSS has sized to the preview pane.
     useTriliumEvent("exportSvg", ({ ntxId: eventNtxId }) => {
         if (eventNtxId !== ntxId || !svg) return;
 
@@ -183,11 +183,11 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
 }
 
 /**
- * How far in and out the diagram can be taken, as a multiple of the view it opened at.
+ * Zoom bounds, as a multiple of the fitted view.
  *
  * CSS fits the SVG to the preview pane through its `viewBox` and `preserveAspectRatio` (see the SVG
- * section of SplitEditor.css), so a scale of 1 already is that fitted view and these bounds need no
- * measurement of their own.
+ * section of SplitEditor.css), so a scale of 1 is already that fitted view and these bounds need no
+ * measurement.
  */
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 10;

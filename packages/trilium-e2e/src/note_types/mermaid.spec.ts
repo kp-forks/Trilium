@@ -124,7 +124,7 @@ async function testDividerDragSurvival({ page, context, noteTitle }: DividerDrag
     const drawnHeight = () => svgData.evaluate((svg: SVGSVGElement) =>
         svg.getBBox().height * (svg.getScreenCTM()?.d ?? 0));
 
-    // Let the layout settle, mermaid sizing the diagram shortly after it mounts.
+    // Let the layout settle; mermaid sizes the diagram shortly after it mounts.
     await page.waitForTimeout(500);
 
     const beforeHeight = await drawnHeight();

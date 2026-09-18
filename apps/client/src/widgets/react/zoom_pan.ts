@@ -3,22 +3,21 @@ import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 interface ZoomPanPinchOptions {
-    /** The closest in and the furthest out the content can be taken, as the wrapper is given them. */
+    /** Passed through to `TransformWrapper`, and used here for `canZoomIn`/`canZoomOut`. */
     minScale: number;
     maxScale: number;
-    /** Puts the scale back to 1 when this changes, for a wrapper that is remounted under the hook. */
+    /** Resets `scale` to 1 when this value changes, for a wrapper the caller remounts. */
     resetOn?: unknown;
-    /** Called with the scale on every change, for whatever else a caller derives from it. */
+    /** Called with the new scale after every transform, for values the caller derives from it. */
     onScaleChange?: (scale: number) => void;
 }
 
 /**
- * Drives a react-zoom-pan-pinch instance: the ref to hand `TransformWrapper`, the scale it is at,
- * whether either step has room left, and the three things a set of zoom controls does to it.
+ * Drives a react-zoom-pan-pinch instance. Returns the ref for `TransformWrapper`, the current
+ * scale, whether each step has room left, and `zoomIn`/`zoomOut`/`reset`.
  *
- * `onTransform` goes on the wrapper, so the scale here follows every change — a button, the wheel,
- * a pinch, a double click. `wheel` turns the library's own wheel handler off in favour of
- * {@link useZoomPanWheel}.
+ * Pass `onTransform` to the wrapper so `scale` tracks buttons, wheel, pinch and double click alike.
+ * `wheel` disables the library's own wheel handler in favour of {@link useZoomPanWheel}.
  */
 export function useZoomPanPinch({ minScale, maxScale, resetOn, onScaleChange }: ZoomPanPinchOptions) {
     const ref = useRef<ReactZoomPanPinchRef>(null);
@@ -52,15 +51,15 @@ export function useZoomPanPinch({ minScale, maxScale, resetOn, onScaleChange }: 
  * Zooms the content on a wheel notch, anchored on the pointer, in place of the library's own wheel
  * handler.
  *
- * That handler adds `step * |deltaY|` to the current scale (`handleWheelZoom`), and one step cannot
- * be both the `scale * (k - 1)` a notch in needs and the `scale * (1 - 1 / k)` a notch back needs.
- * A notch each way therefore leaves the content at `1 - k²` of where it started, so scrubbing the
- * wheel walks the view steadily smaller. Reading the direction off the event — which the library
- * cannot do before it has picked the step — and asking for a target scale removes that.
+ * That handler adds `step * |deltaY|` to the current scale (`handleWheelZoom`). One step cannot be
+ * both the `scale * (k - 1)` a notch in needs and the `scale * (1 - 1 / k)` a notch back needs, so a
+ * notch each way lands at `1 - k²` of the starting scale and scrubbing shrinks the view. The library
+ * picks its step before it reads the event, so no value of `wheel.step` fixes that; this reads the
+ * direction from `deltaY` and computes a target scale instead.
  *
- * `zoomIn`/`zoomOut` take the increment from the current scale to that target so that the library
- * clamps it to `minScale`/`maxScale` and recomputes its bounds; the transform that follows puts the
- * content back under the pointer, the library having zoomed toward the middle of the view.
+ * `zoomIn`/`zoomOut` take the increment up to that target, so the library still clamps to
+ * `minScale`/`maxScale` and recomputes its bounds. It zooms toward the middle of the view, so the
+ * `setTransform` that follows re-anchors the content under the pointer.
  */
 export function useZoomPanWheel(apiRef: RefObject<ReactZoomPanPinchRef>, element: HTMLElement | null) {
     useEffect(() => {
@@ -68,7 +67,7 @@ export function useZoomPanWheel(apiRef: RefObject<ReactZoomPanPinchRef>, element
 
         const onWheel = (event: WheelEvent) => {
             const api = apiRef.current;
-            // A purely horizontal wheel carries no zoom, and is left to whatever else wants it.
+            // A purely horizontal wheel means no zoom; leave the event for anything else to use.
             if (!api || event.deltaY === 0) return;
             event.preventDefault();
 
@@ -97,16 +96,13 @@ export function useZoomPanWheel(apiRef: RefObject<ReactZoomPanPinchRef>, element
 
 /** What one press of a zoom step multiplies the scale by. */
 const ZOOM_STEP = 1.2;
-/**
- * What one wheel notch multiplies the scale by — gentler than a press, a notch being easy to repeat
- * and easy to overshoot with.
- */
+/** What one wheel notch multiplies the scale by. Below {@link ZOOM_STEP}: notches arrive in bursts. */
 const WHEEL_STEP = 1.1;
-/** The `deltaY` a wheel notch reports where it reports a whole one; a trackpad reports far less. */
+/** The `deltaY` of one mouse-wheel notch. A trackpad reports a fraction of this per event. */
 const WHEEL_NOTCH_DELTA = 100;
 /**
- * How near a bound counts as being on it. The zoom animation reaches its target by adding the whole
- * difference back to the scale it started from, which can land a float's width short of the bound.
+ * How near a bound counts as reaching it. `animate()` computes its last frame as `scale + diff * 1`,
+ * which can land one float's width short of the bound.
  */
 const ZOOM_LIMIT_TOLERANCE = 1e-6;
 
@@ -114,19 +110,19 @@ const ZOOM_LIMIT_TOLERANCE = 1e-6;
  * The increment that takes `scale` one {@link ZOOM_STEP} in the given direction.
  *
  * react-zoom-pan-pinch adds the step to the current scale rather than multiplying by it (see
- * `handleCalculateButtonZoom`), so a fixed step is a leap at the bottom of the range and a crawl at
- * the top: from a fitted view one press of a 0.5 step reaches a `minScale` of 0.5, while 98 more are
- * needed to reach a `maxScale` of 50. Scaling the step by the scale it applies to keeps every press
- * the same proportion of what is on screen.
+ * `handleCalculateButtonZoom`), so a fixed step changes the view far more at a small scale than at a
+ * large one: from a fitted view, one press of a 0.5 step reaches a `minScale` of 0.5, and 98 more
+ * are needed to reach a `maxScale` of 50. Scaling the step by the current scale keeps every press
+ * the same proportion of the view.
  */
 export function zoomStep(scale: number, direction: "in" | "out") {
     return direction === "in" ? scale * (ZOOM_STEP - 1) : scale * (1 - 1 / ZOOM_STEP);
 }
 
 /**
- * The scale a wheel notch takes `scale` to, multiplying or dividing by {@link WHEEL_STEP} so that a
- * notch each way returns to where it started. A trackpad reports a fraction of a notch and moves the
- * scale by that same fraction of the step.
+ * The scale one wheel notch takes `scale` to. Multiplies or divides by {@link WHEEL_STEP}, so a notch
+ * each way returns to the starting scale. A fractional `deltaY` moves the scale by that fraction of
+ * the step, which is how a trackpad reports.
  */
 export function wheelTargetScale(scale: number, deltaY: number) {
     const factor = WHEEL_STEP ** (Math.abs(deltaY) / WHEEL_NOTCH_DELTA);
@@ -154,7 +150,7 @@ export function zoomToPointPosition(scale0: number, posX0: number, posY0: number
     return { x: cursorX - contentX * scale1, y: cursorY - contentY * scale1 };
 }
 
-/** The scale the instance is at now, read as a button is pressed rather than when it was drawn. */
+/** The instance's live scale. Read at click time rather than render time, so the step is current. */
 function currentScale(ref: RefObject<ReactZoomPanPinchRef>) {
     return ref.current?.instance?.state?.scale ?? 1;
 }
