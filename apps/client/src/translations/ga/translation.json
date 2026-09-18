@@ -1006,9 +1006,6 @@
     "button_title": "Easpórtáil léaráid mar SVG"
   },
   "relation_map_buttons": {
-    "reset_pan_zoom_title": "Athshocraigh panáil agus súmáil go dtí na comhordanáidí agus an formhéadú tosaigh",
-    "zoom_in_title": "Zúmáil Isteach",
-    "zoom_out_title": "Zúmáil Amach",
     "create_child_note_title": "Cruthaigh nóta linbh agus cuir leis an léarscáil é",
     "create_child_note_text": "Cuir nóta leis"
   },
@@ -2405,8 +2402,6 @@
     "move-marker-instruction": "Cliceáil ar an léarscáil chun an marcóir a bhogadh go dtí an suíomh sin nó brúigh Escape chun é a dhíbhe.",
     "move-marker-toast-title": "Bog marcóir",
     "webgl-unavailable": "Ní féidir an léarscáil seo a tharraingt mar nach bhfuil WebGL ar fáil. Seiceáil go bhfuil luasghéarú crua-earraí cumasaithe agus go bhfuil do thiománaithe grafaicí cothrom le dáta.",
-    "zoom-in": "Zúmáil isteach",
-    "zoom-out": "Zúmáil amach",
     "enter-3d": "Claon isteach i radharc 3T\nCoinnigh Ctrl agus tarraing chun an léarscáil a chlaonadh go saor",
     "exit-3d": "Leag an léarscáil cothrom arís",
     "close-details": "Dún",
@@ -2516,10 +2511,7 @@
   },
   "svg": {
     "export_to_png": "Níorbh fhéidir an léaráid a easpórtáil go PNG.",
-    "export_to_svg": "Níorbh fhéidir an léaráid a easpórtáil chuig SVG.",
-    "zoom_in": "Zúmáil isteach",
-    "zoom_out": "Zúmáil amach",
-    "reset_zoom": "Athshocraigh súmáil"
+    "export_to_svg": "Níorbh fhéidir an léaráid a easpórtáil chuig SVG."
   },
   "code_theme": {
     "title": "Dealramh",
@@ -3273,9 +3265,6 @@
     "tags-differ": "Níl na clibeanna céanna ag na nóid roghnaithe, mar sin ní féidir iad seo a léamh ach amháin.",
     "add-tag": "Cuir an clib seo leis",
     "remove-tag": "Bain an clib seo",
-    "zoom-in": "Zúmáil isteach",
-    "zoom-out": "Zúmáil amach",
-    "reset-zoom": "Athshocraigh súmáil",
     "center-map": "Lárnaigh an léarscáil",
     "direction-left": "Brainsí ar chlé",
     "direction-right": "Brainsí ar dheis",
@@ -3802,11 +3791,6 @@
       "confirm_sql_console_warning": "Is féidir leis an gconsól SQL do chuid dintiúr sioncronaithe agus an hais pasfhocail a léamh, agus aon nóta a athrú nó a scriosadh."
     }
   },
-  "image_buttons": {
-    "zoom_in": "Zúmáil isteach",
-    "zoom_out": "Zúmáil amach",
-    "reset_zoom": "Athshocraigh an zúmáil"
-  },
   "image_navigation": {
     "previous": "Íomhá roimhe seo: {{- title}}",
     "next": "An chéad íomhá eile: {{- title}}"
@@ -3814,16 +3798,6 @@
   "image_viewer": {
     "loading_error": "Tharla earráid agus an íomhá á luchtú.",
     "hints": {
-      "zoom": "Zúmáil",
-      "zoom_in": "Zúmáil isteach",
-      "zoom_out": "Zúmáil amach",
-      "reset_zoom": "Athshocraigh súmáil",
-      "pan": "Panna",
-      "pan_up": "Suas",
-      "pan_down": "Síos",
-      "pan_left": "Ar chlé",
-      "pan_right": "Ar dheis",
-      "pan_fast": "Panáil níos tapúla",
       "navigation": "Loingseoireacht",
       "next_image": "An chéad íomhá eile",
       "previous_image": "Íomhá roimhe seo",

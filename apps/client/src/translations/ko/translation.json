@@ -1224,15 +1224,7 @@
   },
   "relation_map_buttons": {
     "create_child_note_title": "하위 노트를 만들어 맵에 추가",
-    "reset_pan_zoom_title": "팬과 확대/축소를 초기 좌표와 배율로 재설정",
-    "zoom_in_title": "확대",
-    "zoom_out_title": "축소",
     "create_child_note_text": "노트 추가"
-  },
-  "image_buttons": {
-    "zoom_in": "확대",
-    "zoom_out": "축소",
-    "reset_zoom": "확대/축소 초기화"
   },
   "image_navigation": {
     "previous": "이전 이미지: {{- title}}",
@@ -1241,16 +1233,6 @@
   "image_viewer": {
     "loading_error": "이미지 로딩에 오류가 발생했습니다.",
     "hints": {
-      "zoom": "줌",
-      "zoom_in": "확대",
-      "zoom_out": "축소",
-      "reset_zoom": "확대/축소 초기화",
-      "pan": "팬",
-      "pan_up": "일어",
-      "pan_down": "아래쪽",
-      "pan_left": "왼쪽",
-      "pan_right": "오른쪽",
-      "pan_fast": "더 빠른 팬닝",
       "navigation": "탐색",
       "next_image": "다음 이미지",
       "previous_image": "이전 이미지",
@@ -2860,8 +2842,6 @@
     "move-marker-instruction": "지도를 클릭하여 마커를 해당 위치로 이동하거나 Esc 키를 눌러 취소합니다.",
     "move-marker-toast-title": "마커 이동",
     "webgl-unavailable": "WebGL을 사용할 수 없어 이 지도를 표시할 수 없습니다. 하드웨어 가속이 활성화되어 있고 그래픽 드라이버가 최신 상태인지 확인하세요.",
-    "zoom-in": "확대",
-    "zoom-out": "축소",
     "create-child-note-cancel": "노트 추가 취소",
     "add-marker": "마커 추가",
     "add-marker-cancel": "취소",
@@ -3155,10 +3135,7 @@
   },
   "svg": {
     "export_to_png": "이 다이어그램은 PNG로 내보낼 수 없었습니다.",
-    "export_to_svg": "다이어그램을 SVG로 내보낼 수 없습니다.",
-    "zoom_in": "확대",
-    "zoom_out": "축소",
-    "reset_zoom": "확대/축소 초기화"
+    "export_to_svg": "다이어그램을 SVG로 내보낼 수 없습니다."
   },
   "code_theme": {
     "title": "외형",
@@ -3760,13 +3737,10 @@
     "tags-differ": "선택한 노드의 태그가 서로 다르므로 읽기만 할 수 있습니다.",
     "add-tag": "이 태그 추가",
     "remove-tag": "이 태그 제거",
-    "zoom-in": "확대",
-    "zoom-out": "축소",
     "center-map": "지도를 중앙에 맞추기",
     "direction-left": "왼쪽으로 가지 펼치기",
     "direction-right": "오른쪽으로 가지 펼치기",
     "direction-side": "양쪽으로 가지 펼치기",
-    "reset-zoom": "확대/축소 초기화",
     "direction-down": "아래쪽으로 분기"
   },
   "llm": {
