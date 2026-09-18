@@ -52,6 +52,20 @@ describe("wheelTargetScale", () => {
         expect(scale).toBeCloseTo(1.1);
     });
 
+    it("lands on the fitted view rather than stepping over it", () => {
+        // Scrolling in fast and out slowly sends different totals — Firefox accelerates a fast wheel
+        // — which leaves the ladder off the fitted view, and the factor then keeps it there.
+        expect(wheelTargetScale(1.09, OUT)).toBe(1);
+        expect(wheelTargetScale(0.99, IN)).toBe(1);
+        // From there the ladder is the usual one again.
+        expect(wheelTargetScale(1, IN)).toBeCloseTo(1.1);
+        expect(wheelTargetScale(1, OUT)).toBeCloseTo(1 / 1.1);
+
+        // A notch that stays on one side of the fitted view is left alone, in either direction.
+        expect(wheelTargetScale(1.21, OUT)).toBeCloseTo(1.1);
+        expect(wheelTargetScale(0.826, IN)).toBeCloseTo(0.9086);
+    });
+
     it("reads deltaY in the unit deltaMode names, so a notch is a notch in Firefox too", () => {
         // Firefox reports lines on Windows and Linux, three to a notch; Chromium reports pixels.
         expect(wheelTargetScale(1, -3, WheelEvent.DOM_DELTA_LINE)).toBeCloseTo(wheelTargetScale(1, IN));

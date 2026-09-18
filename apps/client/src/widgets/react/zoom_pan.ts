@@ -107,6 +107,8 @@ const WHEEL_NOTCH_DELTA = 100;
  * this a notch there moves the scale by a thirtieth of a notch's worth.
  */
 const WHEEL_DELTA_MODE_PIXELS = [ 1, WHEEL_NOTCH_DELTA / 3, WHEEL_NOTCH_DELTA * 3 ];
+/** The scale the content is fitted to its pane at, which the readout calls 100%. */
+const FITTED_SCALE = 1;
 /**
  * How near a bound counts as reaching it. `animate()` computes its last frame as `scale + diff * 1`,
  * which can land one float's width short of the bound.
@@ -133,11 +135,21 @@ export function zoomStep(scale: number, direction: "in" | "out") {
  *
  * `deltaMode` is `WheelEvent.deltaMode`, which says what unit `deltaY` is in (see
  * {@link WHEEL_DELTA_MODE_PIXELS}).
+ *
+ * A notch that would step over {@link FITTED_SCALE} lands on it instead. Multiplying by a factor
+ * only reverses exactly when the `deltaY` scrolled each way adds up the same, and it does not:
+ * Firefox accelerates a fast wheel (`mousewheel.acceleration.*`) and a trackpad reports whatever the
+ * finger did. Any mismatch leaves the ladder a percent or two off, and the factor then keeps it
+ * there — 99% and 109% rather than 100% and 110% — so the fitted view needs a detent to stay
+ * reachable. Scrolling away from it is untouched, so the detent never holds the content back.
  */
 export function wheelTargetScale(scale: number, deltaY: number, deltaMode = 0) {
     const pixels = deltaY * (WHEEL_DELTA_MODE_PIXELS[deltaMode] ?? 1);
     const factor = WHEEL_STEP ** (Math.abs(pixels) / WHEEL_NOTCH_DELTA);
-    return pixels < 0 ? scale * factor : scale / factor;
+    const target = pixels < 0 ? scale * factor : scale / factor;
+
+    const stepsOver = Math.sign(scale - FITTED_SCALE) * Math.sign(target - FITTED_SCALE) < 0;
+    return stepsOver ? FITTED_SCALE : target;
 }
 
 interface PanBounds { minPositionX: number; maxPositionX: number; minPositionY: number; maxPositionY: number; }
