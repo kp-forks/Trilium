@@ -72,7 +72,7 @@ export function useZoomPanWheel(apiRef: RefObject<ReactZoomPanPinchRef>, element
             event.preventDefault();
 
             const { scale, positionX, positionY } = api.instance.state;
-            const target = wheelTargetScale(scale, event.deltaY);
+            const target = wheelTargetScale(scale, event.deltaY, event.deltaMode);
             if (target > scale) api.zoomIn(target - scale, 0);
             else api.zoomOut(scale - target, 0);
 
@@ -98,8 +98,15 @@ export function useZoomPanWheel(apiRef: RefObject<ReactZoomPanPinchRef>, element
 const ZOOM_STEP = 1.2;
 /** What one wheel notch multiplies the scale by. Below {@link ZOOM_STEP}: notches arrive in bursts. */
 const WHEEL_STEP = 1.1;
-/** The `deltaY` of one mouse-wheel notch. A trackpad reports a fraction of this per event. */
+/** The pixel `deltaY` of one mouse-wheel notch. A trackpad reports a fraction of this per event. */
 const WHEEL_NOTCH_DELTA = 100;
+/**
+ * The pixels one unit of `deltaY` is worth, indexed by `WheelEvent.deltaMode`: pixels, lines, pages.
+ *
+ * Chromium reports pixels, but Firefox reports lines on Windows and Linux, three to a notch. Without
+ * this a notch there moves the scale by a thirtieth of a notch's worth.
+ */
+const WHEEL_DELTA_MODE_PIXELS = [ 1, WHEEL_NOTCH_DELTA / 3, WHEEL_NOTCH_DELTA * 3 ];
 /**
  * How near a bound counts as reaching it. `animate()` computes its last frame as `scale + diff * 1`,
  * which can land one float's width short of the bound.
@@ -121,12 +128,16 @@ export function zoomStep(scale: number, direction: "in" | "out") {
 
 /**
  * The scale one wheel notch takes `scale` to. Multiplies or divides by {@link WHEEL_STEP}, so a notch
- * each way returns to the starting scale. A fractional `deltaY` moves the scale by that fraction of
- * the step, which is how a trackpad reports.
+ * each way returns to the starting scale. A fractional notch moves the scale by that fraction of the
+ * step, which is how a trackpad reports.
+ *
+ * `deltaMode` is `WheelEvent.deltaMode`, which says what unit `deltaY` is in (see
+ * {@link WHEEL_DELTA_MODE_PIXELS}).
  */
-export function wheelTargetScale(scale: number, deltaY: number) {
-    const factor = WHEEL_STEP ** (Math.abs(deltaY) / WHEEL_NOTCH_DELTA);
-    return deltaY < 0 ? scale * factor : scale / factor;
+export function wheelTargetScale(scale: number, deltaY: number, deltaMode = 0) {
+    const pixels = deltaY * (WHEEL_DELTA_MODE_PIXELS[deltaMode] ?? 1);
+    const factor = WHEEL_STEP ** (Math.abs(pixels) / WHEEL_NOTCH_DELTA);
+    return pixels < 0 ? scale * factor : scale / factor;
 }
 
 interface PanBounds { minPositionX: number; maxPositionX: number; minPositionY: number; maxPositionY: number; }

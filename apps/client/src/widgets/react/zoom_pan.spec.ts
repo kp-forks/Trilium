@@ -51,6 +51,18 @@ describe("wheelTargetScale", () => {
         for (let i = 0; i < 10; i++) scale = wheelTargetScale(scale, IN / 10);
         expect(scale).toBeCloseTo(1.1);
     });
+
+    it("reads deltaY in the unit deltaMode names, so a notch is a notch in Firefox too", () => {
+        // Firefox reports lines on Windows and Linux, three to a notch; Chromium reports pixels.
+        expect(wheelTargetScale(1, -3, WheelEvent.DOM_DELTA_LINE)).toBeCloseTo(wheelTargetScale(1, IN));
+        expect(wheelTargetScale(1, 3, WheelEvent.DOM_DELTA_LINE)).toBeCloseTo(wheelTargetScale(1, OUT));
+        // Taken as pixels, three units would have been a thirtieth of a notch.
+        expect(wheelTargetScale(1, -3)).toBeCloseTo(1.1 ** 0.03);
+
+        // A page is a coarser jump than a notch, and an unknown mode falls back to pixels.
+        expect(wheelTargetScale(1, -1, WheelEvent.DOM_DELTA_PAGE)).toBeCloseTo(1.1 ** 3);
+        expect(wheelTargetScale(1, IN, 99)).toBeCloseTo(1.1);
+    });
 });
 
 describe("clampPan", () => {
