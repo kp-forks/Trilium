@@ -110,7 +110,8 @@ describe("ImageViewer", () => {
         expect(props.doubleClick).toEqual({ mode: "reset" });
         // Numeric envelope is user-tunable — assert sane relationships, not exact values.
         expect(props.maxScale).toBeGreaterThan(props.minScale);
-        expect(props.wheel.step).toBeGreaterThan(0);
+        // The library cannot make a notch each way cancel, so useZoomPanWheel handles the wheel.
+        expect(props.wheel).toEqual({ disabled: true });
     });
 
     it("lets minScale and maxScale be overridden", () => {

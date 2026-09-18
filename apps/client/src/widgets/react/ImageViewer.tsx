@@ -10,7 +10,7 @@ import ShortcutHintButton from "../shortcut_hints/shortcut_hint_button";
 import ContentErrorMessage from "./ContentErrorMessage";
 import { useContextualShortcutHints } from "./hooks";
 import OverlayControlGroup, { ZoomControls } from "./OverlayControlGroup";
-import { useZoomPanPinch } from "./zoom_pan";
+import { useZoomPanPinch, useZoomPanWheel } from "./zoom_pan";
 import { useZoomPanKeyboard, ZOOM_PAN_HINTS, ZOOM_PAN_VIEWPORT_CLASS } from "./zoom_pan_keyboard";
 
 interface ImageViewerProps {
@@ -118,6 +118,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     }, [ src ]);
 
     useZoomPanKeyboard(zoom.ref, rootEl);
+    useZoomPanWheel(zoom.ref, rootEl);
     useContextualShortcutHints(IMAGE_VIEWER_HINTS);
 
     const wrapperClass = [

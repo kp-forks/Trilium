@@ -17,7 +17,8 @@ interface ZoomPanPinchOptions {
  * whether either step has room left, and the three things a set of zoom controls does to it.
  *
  * `onTransform` goes on the wrapper, so the scale here follows every change — a button, the wheel,
- * a pinch, a double click.
+ * a pinch, a double click. `wheel` turns the library's own wheel handler off in favour of
+ * {@link useZoomPanWheel}.
  */
 export function useZoomPanPinch({ minScale, maxScale, resetOn, onScaleChange }: ZoomPanPinchOptions) {
     const ref = useRef<ReactZoomPanPinchRef>(null);
@@ -38,13 +39,60 @@ export function useZoomPanPinch({ minScale, maxScale, resetOn, onScaleChange }: 
         ref,
         scale,
         onTransform,
-        wheel: { step: wheelStep(scale) },
+        wheel: { disabled: true },
         canZoomIn: scale < maxScale * (1 - ZOOM_LIMIT_TOLERANCE),
         canZoomOut: scale > minScale * (1 + ZOOM_LIMIT_TOLERANCE),
         zoomIn: () => ref.current?.zoomIn(zoomStep(currentScale(ref), "in")),
         zoomOut: () => ref.current?.zoomOut(zoomStep(currentScale(ref), "out")),
         reset: () => ref.current?.resetTransform()
     };
+}
+
+/**
+ * Zooms the content on a wheel notch, anchored on the pointer, in place of the library's own wheel
+ * handler.
+ *
+ * That handler adds `step * |deltaY|` to the current scale (`handleWheelZoom`), and one step cannot
+ * be both the `scale * (k - 1)` a notch in needs and the `scale * (1 - 1 / k)` a notch back needs.
+ * A notch each way therefore leaves the content at `1 - k²` of where it started, so scrubbing the
+ * wheel walks the view steadily smaller. Reading the direction off the event — which the library
+ * cannot do before it has picked the step — and asking for a target scale removes that.
+ *
+ * `zoomIn`/`zoomOut` take the increment from the current scale to that target so that the library
+ * clamps it to `minScale`/`maxScale` and recomputes its bounds; the transform that follows puts the
+ * content back under the pointer, the library having zoomed toward the middle of the view.
+ */
+export function useZoomPanWheel(apiRef: RefObject<ReactZoomPanPinchRef>, element: HTMLElement | null) {
+    useEffect(() => {
+        if (!element) return;
+
+        const onWheel = (event: WheelEvent) => {
+            const api = apiRef.current;
+            // A purely horizontal wheel carries no zoom, and is left to whatever else wants it.
+            if (!api || event.deltaY === 0) return;
+            event.preventDefault();
+
+            const { scale, positionX, positionY } = api.instance.state;
+            const target = wheelTargetScale(scale, event.deltaY);
+            if (target > scale) api.zoomIn(target - scale, 0);
+            else api.zoomOut(scale - target, 0);
+
+            const rect = api.instance.wrapperComponent?.getBoundingClientRect();
+            if (!rect) return;
+
+            const zoomed = api.instance.state.scale;
+            const anchored = zoomToPointPosition(
+                scale, positionX, positionY, zoomed,
+                event.clientX - rect.left, event.clientY - rect.top
+            );
+            const bounds = api.instance.bounds;
+            const { x, y } = bounds ? clampPan(anchored.x, anchored.y, bounds) : anchored;
+            api.setTransform(x, y, zoomed, 0);
+        };
+
+        element.addEventListener("wheel", onWheel, { passive: false });
+        return () => element.removeEventListener("wheel", onWheel);
+    }, [ apiRef, element ]);
 }
 
 /** What one press of a zoom step multiplies the scale by. */
@@ -76,19 +124,34 @@ export function zoomStep(scale: number, direction: "in" | "out") {
 }
 
 /**
- * The `wheel.step` that makes a notch a {@link WHEEL_STEP}, at the scale the content is drawn at.
- *
- * react-zoom-pan-pinch adds `step * |deltaY|` to the current scale (see `handleWheelZoom`), so its
- * own default of 0.015 is a flat +1.5 a notch: from a diagram fitted at 0.5 one notch reaches 2.0,
- * while at 8 the same notch is barely a twelfth of what is on screen. Scaling the step by the scale
- * it applies to keeps a notch the same fraction of the view wherever it is taken from.
- *
- * The scale is the one last reported through `onTransform`, so a scroll fast enough to outrun a
- * render takes a notch or two sized for where it just was. The error is a fraction of one notch and
- * corrects itself on the next.
+ * The scale a wheel notch takes `scale` to, multiplying or dividing by {@link WHEEL_STEP} so that a
+ * notch each way returns to where it started. A trackpad reports a fraction of a notch and moves the
+ * scale by that same fraction of the step.
  */
-export function wheelStep(scale: number) {
-    return (scale * (WHEEL_STEP - 1)) / WHEEL_NOTCH_DELTA;
+export function wheelTargetScale(scale: number, deltaY: number) {
+    const factor = WHEEL_STEP ** (Math.abs(deltaY) / WHEEL_NOTCH_DELTA);
+    return deltaY < 0 ? scale * factor : scale / factor;
+}
+
+interface PanBounds { minPositionX: number; maxPositionX: number; minPositionY: number; maxPositionY: number; }
+
+/** Clamps a candidate content position to the library's computed pan bounds. */
+export function clampPan(x: number, y: number, bounds: PanBounds): { x: number; y: number } {
+    return {
+        x: Math.min(Math.max(x, bounds.minPositionX), bounds.maxPositionX),
+        y: Math.min(Math.max(y, bounds.minPositionY), bounds.maxPositionY)
+    };
+}
+
+/**
+ * The content translation that keeps a viewport point fixed across a scale change — i.e. a zoom
+ * anchored on (`cursorX`, `cursorY`) (wrapper-local pixels) rather than the viewport centre.
+ * `scale0`/`posX0`/`posY0` describe the transform before zooming to `scale1`.
+ */
+export function zoomToPointPosition(scale0: number, posX0: number, posY0: number, scale1: number, cursorX: number, cursorY: number): { x: number; y: number } {
+    const contentX = (cursorX - posX0) / scale0;
+    const contentY = (cursorY - posY0) / scale0;
+    return { x: cursorX - contentX * scale1, y: cursorY - contentY * scale1 };
 }
 
 /** The scale the instance is at now, read as a button is pressed rather than when it was drawn. */

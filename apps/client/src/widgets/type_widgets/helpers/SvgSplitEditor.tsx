@@ -8,7 +8,7 @@ import utils, { isMobile } from "../../../services/utils";
 import { useContextualShortcutHints, useEffectiveReadOnly, useNoteLabel, useTriliumEvent } from "../../react/hooks";
 import OverlayControlGroup, { ZoomControls } from "../../react/OverlayControlGroup";
 import { RawHtmlBlock } from "../../react/RawHtml";
-import { useZoomPanPinch } from "../../react/zoom_pan";
+import { useZoomPanPinch, useZoomPanWheel } from "../../react/zoom_pan";
 import { useZoomPanKeyboard, ZOOM_PAN_HINTS, ZOOM_PAN_VIEWPORT_CLASS } from "../../react/zoom_pan_keyboard";
 import { ShortcutHintOverlayButton } from "../../shortcut_hints/shortcut_hint_button";
 import SplitEditor, { SplitEditorProps } from "./SplitEditor";
@@ -53,6 +53,7 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
     const readOnly = useEffectiveReadOnly(note, props.noteContext);
     const mode = resolveDisplayMode(displayMode, readOnly);
     useZoomPanKeyboard(zoom.ref, previewEl);
+    useZoomPanWheel(zoom.ref, previewEl);
     useContextualShortcutHints(mode !== "source" ? ZOOM_PAN_HINTS : []);
 
     // Reset the render state when switching notes so a previous note's render (and the

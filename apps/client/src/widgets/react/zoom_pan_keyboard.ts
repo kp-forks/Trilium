@@ -5,6 +5,7 @@ import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
 import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
 import { isAppShortcutChord } from "../../services/shortcuts";
+import { clampPan, zoomToPointPosition } from "./zoom_pan";
 
 export type ZoomPanControl =
     | "zoomIn" | "zoomOut" | "reset"
@@ -97,27 +98,6 @@ export function getPanDelta(controls: Iterable<ZoomPanControl>, shiftKey: boolea
     if (held.has("panUp")) dy += speed;
     if (held.has("panDown")) dy -= speed;
     return { dx, dy };
-}
-
-interface PanBounds { minPositionX: number; maxPositionX: number; minPositionY: number; maxPositionY: number; }
-
-/** Clamps a candidate content position to the library's computed pan bounds. */
-export function clampPan(x: number, y: number, bounds: PanBounds): { x: number; y: number } {
-    return {
-        x: Math.min(Math.max(x, bounds.minPositionX), bounds.maxPositionX),
-        y: Math.min(Math.max(y, bounds.minPositionY), bounds.maxPositionY)
-    };
-}
-
-/**
- * The content translation that keeps a viewport point fixed across a scale change — i.e. a zoom
- * anchored on (`cursorX`, `cursorY`) (wrapper-local pixels) rather than the viewport centre.
- * `scale0`/`posX0`/`posY0` describe the transform before zooming to `scale1`.
- */
-export function zoomToPointPosition(scale0: number, posX0: number, posY0: number, scale1: number, cursorX: number, cursorY: number): { x: number; y: number } {
-    const contentX = (cursorX - posX0) / scale0;
-    const contentY = (cursorY - posY0) / scale0;
-    return { x: cursorX - contentX * scale1, y: cursorY - contentY * scale1 };
 }
 
 /**

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { wheelStep, zoomStep } from "./zoom_pan";
+import { clampPan, wheelTargetScale, zoomStep, zoomToPointPosition } from "./zoom_pan";
 
 describe("zoomStep", () => {
     it("is the increment react-zoom-pan-pinch needs for a ×1.2 step, at any scale", () => {
@@ -20,20 +20,72 @@ describe("zoomStep", () => {
     });
 });
 
-describe("wheelStep", () => {
+describe("wheelTargetScale", () => {
+    // A wheel reports deltaY down the page for a notch out, and up the page for a notch in.
+    const OUT = 100;
+    const IN = -100;
+
     it("makes a notch the same tenth of the view at any scale", () => {
-        // The library adds `step * |deltaY|` to the scale, so a notch is asserted where it lands.
-        const notch = (scale: number, deltaY = 100) => scale + wheelStep(scale) * deltaY;
+        expect(wheelTargetScale(0.5, IN)).toBeCloseTo(0.55);
+        expect(wheelTargetScale(8, IN)).toBeCloseTo(8.8);
 
-        expect(notch(0.5)).toBeCloseTo(0.55);
-        expect(notch(8)).toBeCloseTo(8.8);
-
-        // The library's own default step would have put that first notch on 2.0 — a diagram fitted
-        // at 50% jumping past 200% on one scroll.
+        // The library's own arithmetic would have put that first notch on 2.0 — a diagram fitted at
+        // 50% jumping past 200% on one scroll.
         expect(0.5 + 0.015 * 100).toBe(2);
-        expect(notch(0.5)).toBeLessThan(0.6);
+    });
 
-        // A trackpad reports a fraction of a notch, and moves the view by that same fraction.
-        expect(notch(1, 10)).toBeCloseTo(1.01);
+    it("returns to where it started when a notch is taken back", () => {
+        // The library cannot do this: it adds or subtracts one step, so a notch each way leaves the
+        // content at 1 - k² of where it was and scrubbing walks the view steadily smaller.
+        expect(wheelTargetScale(wheelTargetScale(1, IN), OUT)).toBeCloseTo(1);
+
+        let scale = 1;
+        for (let i = 0; i < 20; i++) scale = wheelTargetScale(wheelTargetScale(scale, IN), OUT);
+        expect(scale).toBeCloseTo(1);
+    });
+
+    it("moves the scale by the fraction of a notch a trackpad reports", () => {
+        expect(wheelTargetScale(1, IN / 10)).toBeCloseTo(1.1 ** 0.1);
+        // Ten of those fractions make exactly the one notch they are a tenth of.
+        let scale = 1;
+        for (let i = 0; i < 10; i++) scale = wheelTargetScale(scale, IN / 10);
+        expect(scale).toBeCloseTo(1.1);
+    });
+});
+
+describe("clampPan", () => {
+    const bounds = { minPositionX: -100, maxPositionX: 0, minPositionY: -50, maxPositionY: 0 };
+
+    it("leaves an in-bounds position unchanged", () => {
+        expect(clampPan(-40, -20, bounds)).toEqual({ x: -40, y: -20 });
+    });
+
+    it("clamps a position past either edge", () => {
+        expect(clampPan(20, 20, bounds)).toEqual({ x: 0, y: 0 });
+        expect(clampPan(-200, -200, bounds)).toEqual({ x: -100, y: -50 });
+    });
+});
+
+describe("zoomToPointPosition", () => {
+    it("leaves the position unchanged when the cursor sits on the content origin", () => {
+        // Cursor at (posX0, posY0) → content point 0, so scaling moves nothing.
+        expect(zoomToPointPosition(1, 50, 50, 3, 50, 50)).toEqual({ x: 50, y: 50 });
+    });
+
+    it("shifts the position so the cursor's content point stays under the cursor when zooming in", () => {
+        // scale 1→2 at cursor (100,100) over origin: content point 100 must stay put → pos = 100 - 100*2.
+        expect(zoomToPointPosition(1, 0, 0, 2, 100, 100)).toEqual({ x: -100, y: -100 });
+    });
+
+    it("shifts the other way when zooming out, from a non-zero starting transform", () => {
+        // content point = (120-20)/2 = 50; new pos = 120 - 50*1 = 70 (x), (90-(-10))/2=50 → 90-50=40 (y).
+        expect(zoomToPointPosition(2, 20, -10, 1, 120, 90)).toEqual({ x: 70, y: 40 });
+    });
+
+    it("keeps the cursor's content point invariant across the scale change", () => {
+        const [ scale0, posX0, posY0, scale1, cursorX, cursorY ] = [ 1.5, 12, -8, 4.2, 230, 70 ];
+        const { x, y } = zoomToPointPosition(scale0, posX0, posY0, scale1, cursorX, cursorY);
+        expect((cursorX - x) / scale1).toBeCloseTo((cursorX - posX0) / scale0);
+        expect((cursorY - y) / scale1).toBeCloseTo((cursorY - posY0) / scale0);
     });
 });
