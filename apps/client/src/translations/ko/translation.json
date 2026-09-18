@@ -1238,7 +1238,8 @@
       "previous_image": "이전 이미지",
       "first_image": "첫 번째 이미지",
       "last_image": "마지막 이미지"
-    }
+    },
+    "viewport": "이미지 보기"
   },
   "shortcut_hints": {
     "show_button": "단축키 힌트 표시",
@@ -3135,7 +3136,8 @@
   },
   "svg": {
     "export_to_png": "이 다이어그램은 PNG로 내보낼 수 없었습니다.",
-    "export_to_svg": "다이어그램을 SVG로 내보낼 수 없습니다."
+    "export_to_svg": "다이어그램을 SVG로 내보낼 수 없습니다.",
+    "preview": "다이어그램 미리보기"
   },
   "code_theme": {
     "title": "외형",
@@ -4210,5 +4212,22 @@
     "creation-date": "생성 날짜 및 시간",
     "ascending": "오름차순",
     "descending": "내림차순"
+  },
+  "zoom_controls": {
+    "zoom_out": "축소",
+    "reset": "확대/축소 초기화",
+    "zoom_in": "확대",
+    "hints": {
+      "zoom": "확대/축소",
+      "zoom_in": "확대",
+      "zoom_out": "축소",
+      "reset_zoom": "확대/축소 초기화",
+      "pan": "이동",
+      "pan_up": "위로",
+      "pan_down": "아래로",
+      "pan_left": "왼쪽으로",
+      "pan_right": "오른쪽으로",
+      "pan_fast": "빠르게 이동"
+    }
   }
 }
