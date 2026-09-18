@@ -386,11 +386,14 @@ describe("Collapsed board columns", () => {
 
         expect(header()?.getAttribute("role")).toBe("button");
         expect(header()?.getAttribute("aria-expanded")).toBe("false");
+        // The key is announced in both states.
+        expect(header()?.getAttribute("aria-keyshortcuts")).toBe("Space");
 
-        // Open, it is a heading again: Space does nothing there, so no button is promised.
+        // Open, it is a heading again: Space is a board shortcut there, not a button press.
         await select(mountPoint, 0);
         expect(header()?.getAttribute("role")).toBeNull();
         expect(header()?.getAttribute("aria-expanded")).toBeNull();
+        expect(header()?.getAttribute("aria-keyshortcuts")).toBe("Space");
 
         // A column that was never collapsed says nothing either way.
         expect(columnAt(mountPoint, 1).querySelector("h3")?.getAttribute("role")).toBeNull();
@@ -750,7 +753,7 @@ describe("Collapsed board columns", () => {
 
         expect(isCollapsed(mountPoint, 1)).toBe(true);
         expect(saved.at(-1)?.columns?.[1]).toEqual({ value: "Done", collapsed: true });
-        // The reader is left on the strip's header, which is what opens the column again.
+        // The strip's header keeps the focus, so Space opens the column again.
         const strip = columnAt(mountPoint, 1).querySelector("h3");
         expect(document.activeElement).toBe(strip);
         expect(strip?.getAttribute("aria-expanded")).toBe("false");

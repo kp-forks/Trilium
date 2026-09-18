@@ -503,7 +503,7 @@ describe("Board keyboard", () => {
             expect(focusedName(board)).toBe("Third");
         });
 
-        /** Drawn as a strip in `index.spec.tsx`, where the harness reads the write back. */
+        /** This harness never reads the write back, so `index.spec.tsx` covers the strip. */
         it("collapses an open column with Space instead of walking on", async () => {
             const board = await renderBoard();
             focusHeader(board, 1);

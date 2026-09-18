@@ -518,9 +518,8 @@ export default function Column({
             setColumnNameToEdit(column);
         }
 
-        // The other half of the toggle: the board's keyboard answers Space on a strip, which also
-        // has to step focus onto the cards the column then draws. Only on the heading itself, the
-        // buttons it carries answering Space for themselves.
+        // Space collapses the column; `keyboard.ts` handles it on a strip. The target check
+        // excludes the heading's buttons, which activate on Space themselves.
         if (e.key === " " && !isCollapsed && e.target === e.currentTarget) {
             e.preventDefault();
             e.stopPropagation();
@@ -693,11 +692,11 @@ export default function Column({
             <h3
                 ref={headerRef}
                 className={`${isEditing ? "editing" : ""}`}
-                // While collapsed the header is what opens the column, so it says so and answers
-                // for the keys a button answers for. Open, it is a heading again and claims
-                // neither, `handleTitleKeyDown` taking the Space that collapses it.
+                // A collapsed header opens the column, so it is announced as a button. Open, it
+                // is a heading, and Space collapses it as a board shortcut like F2.
                 role={isCollapsed ? "button" : undefined}
                 aria-expanded={isCollapsed ? false : undefined}
+                aria-keyshortcuts="Space"
                 onContextMenu={openMenu}
                 onMouseDown={(e) => {
                     if (e.detail <= 1) {

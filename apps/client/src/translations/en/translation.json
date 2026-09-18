@@ -3520,7 +3520,7 @@
     "new-template-name": "New card template",
     "more-templates": "More templates…",
     "card-template": "Select a card template",
-    "collapse-hint": "Double click to collapse",
+    "collapse-hint": "Double click or press Space to collapse",
     "set-limit": "Set limit...",
     "set-limit-ok": "Set limit",
     "limit-capacity": "Warn for exceeding the column capacity",
