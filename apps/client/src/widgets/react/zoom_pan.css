@@ -1,6 +1,14 @@
-/* A viewport reached by Tab has to show that it was reached; the offset draws the ring inside the
-   pane, which sits flush against the note's own edges with nothing to overflow into. */
-.tn-zoom-pan-viewport:focus-visible {
-    outline: 2px solid var(--input-focus-outline-color);
+/* A viewport holding the keys is the pane the reader's input is going to, which is what the active
+   split in a multi-split view already says about itself — the same accent, the same fade (see the
+   `.note-split` rules in theme-next/shell.css). Drawn as an inset outline rather than that border,
+   so it costs the content no room and leaves nothing to suppress the browser's own ring with.
+   The fallback carries the legacy light and dark themes, which define no accent. */
+.tn-zoom-pan-viewport {
+    outline: 2px solid transparent;
     outline-offset: -2px;
+    transition: outline-color 150ms ease-out;
+}
+
+.tn-zoom-pan-viewport:focus-visible {
+    outline-color: var(--link-selection-outline-color, var(--main-border-color));
 }
