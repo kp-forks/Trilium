@@ -1,15 +1,18 @@
-import { useCallback, useEffect, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
-import utils from "../../../services/utils";
-import { useTriliumEvent } from "../../react/hooks";
+import utils, { isMobile } from "../../../services/utils";
+import { useContextualShortcutHints, useEffectiveReadOnly, useNoteLabel, useTriliumEvent } from "../../react/hooks";
 import OverlayControlGroup, { ZoomControls } from "../../react/OverlayControlGroup";
 import { RawHtmlBlock } from "../../react/RawHtml";
 import { useZoomPanPinch } from "../../react/zoom_pan";
+import { useZoomPanKeyboard, ZOOM_PAN_HINTS, ZOOM_PAN_VIEWPORT_CLASS } from "../../react/zoom_pan_keyboard";
+import { ShortcutHintOverlayButton } from "../../shortcut_hints/shortcut_hint_button";
 import SplitEditor, { SplitEditorProps } from "./SplitEditor";
+import { resolveDisplayMode } from "./split_editor_mode";
 
 interface SvgSplitEditorProps extends Omit<SplitEditorProps, "previewContent"> {
     /**
@@ -42,6 +45,15 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
     const [ svg, setSvg ] = useState<string>();
     const [ error, setError ] = useState<string | null | undefined>();
     const zoom = useZoomPanPinch({ minScale: MIN_ZOOM, maxScale: MAX_ZOOM, resetOn: note.noteId });
+    const [ previewEl, setPreviewEl ] = useState<HTMLDivElement | null>(null);
+
+    // The keys are wired whatever the display mode: a reader with no pointer has no other way to pan
+    // the diagram. Source-only mounts no preview, so it has nothing to say about them either.
+    const [ displayMode ] = useNoteLabel(note, "displayMode");
+    const readOnly = useEffectiveReadOnly(note, props.noteContext);
+    const mode = resolveDisplayMode(displayMode, readOnly);
+    useZoomPanKeyboard(zoom.ref, previewEl);
+    useContextualShortcutHints(mode !== "source" ? ZOOM_PAN_HINTS : []);
 
     // Reset the render state when switching notes so a previous note's render (and the
     // "showing last valid render" badge) can't briefly carry over to a different note.
@@ -123,25 +135,36 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
             dataSaved={onSave}
             placeholder={t("mermaid.placeholder")}
             previewContent={(
-                <TransformWrapper
-                    // The transform sits on an ancestor of the diagram, so it survives a re-render
-                    // of the same note. Keying it on the note drops it when a different one opens.
-                    key={note.noteId}
-                    ref={zoom.ref}
-                    minScale={MIN_ZOOM}
-                    maxScale={MAX_ZOOM}
-                    centerOnInit
-                    centerZoomedOut
-                    doubleClick={{ mode: "reset" }}
-                    onTransform={zoom.onTransform}
+                <div
+                    ref={setPreviewEl}
+                    tabIndex={0}
+                    role="group"
+                    aria-label={t("svg.preview")}
+                    className={`svg-preview-root ${ZOOM_PAN_VIEWPORT_CLASS}`}
                 >
-                    <TransformComponent wrapperClass="svg-preview-viewport" contentClass="svg-preview-content">
-                        <RawHtmlBlock className="render-container" html={svg} />
-                    </TransformComponent>
-                </TransformWrapper>
+                    <TransformWrapper
+                        // The transform sits on an ancestor of the diagram, so it survives a re-render
+                        // of the same note. Keying it on the note drops it when a different one opens.
+                        key={note.noteId}
+                        ref={zoom.ref}
+                        minScale={MIN_ZOOM}
+                        maxScale={MAX_ZOOM}
+                        centerOnInit
+                        centerZoomedOut
+                        doubleClick={{ mode: "reset" }}
+                        onTransform={zoom.onTransform}
+                    >
+                        <TransformComponent wrapperClass="svg-preview-viewport" contentClass="svg-preview-content">
+                            <RawHtmlBlock className="render-container" html={svg} />
+                        </TransformComponent>
+                    </TransformWrapper>
+                </div>
             )}
             previewButtons={!!svg && (
                 <OverlayControlGroup className="svg-preview-controls" placement="bottom-end">
+                    {/* At the leading end of the group rather than in the corner opposite, which the
+                        render-error card spans the full width of. */}
+                    {!isMobile() && <ShortcutHintOverlayButton />}
                     <ZoomControls
                         percent={zoom.scale * 100}
                         canZoomIn={zoom.canZoomIn}

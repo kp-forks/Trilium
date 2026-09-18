@@ -68,17 +68,18 @@ describe("ImageViewer", () => {
 
         const sections = collectShortcutHints(host);
         expect(sections).toHaveLength(3);
+        // The first two sections are ZOOM_PAN_HINTS, shared with every other zoom/pan viewport.
         expect(sections[0].hints.map(h => h.labelKey)).toEqual([
-            "image_viewer.hints.zoom_in",
-            "image_viewer.hints.zoom_out",
-            "image_viewer.hints.reset_zoom"
+            "zoom_controls.hints.zoom_in",
+            "zoom_controls.hints.zoom_out",
+            "zoom_controls.hints.reset_zoom"
         ]);
         expect(sections[1].hints.map(h => h.labelKey)).toEqual([
-            "image_viewer.hints.pan_up",
-            "image_viewer.hints.pan_down",
-            "image_viewer.hints.pan_left",
-            "image_viewer.hints.pan_right",
-            "image_viewer.hints.pan_fast"
+            "zoom_controls.hints.pan_up",
+            "zoom_controls.hints.pan_down",
+            "zoom_controls.hints.pan_left",
+            "zoom_controls.hints.pan_right",
+            "zoom_controls.hints.pan_fast"
         ]);
         expect(sections[2].hints.map(h => h.labelKey)).toEqual([
             "image_viewer.hints.next_image",

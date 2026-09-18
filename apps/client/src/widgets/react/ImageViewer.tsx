@@ -9,9 +9,9 @@ import { isMobile } from "../../services/utils";
 import ShortcutHintButton from "../shortcut_hints/shortcut_hint_button";
 import ContentErrorMessage from "./ContentErrorMessage";
 import { useContextualShortcutHints } from "./hooks";
-import { useImageViewerKeyboard } from "./image_viewer_keyboard";
 import OverlayControlGroup, { ZoomControls } from "./OverlayControlGroup";
 import { useZoomPanPinch } from "./zoom_pan";
+import { useZoomPanKeyboard, ZOOM_PAN_HINTS, ZOOM_PAN_VIEWPORT_CLASS } from "./zoom_pan_keyboard";
 
 interface ImageViewerProps {
     src: string;
@@ -27,25 +27,9 @@ const CRISP_NATIVE_SCALE = 4;
 /** Reveal the image even if `decode()` never settles (it can stall for some images, e.g. SVGs). */
 const REVEAL_FALLBACK_MS = 1000;
 
+// The zoom and pan keys are every viewport's; walking the images of a folder is this one's alone.
 const IMAGE_VIEWER_HINTS: ShortcutHintDefinition = [
-    {
-        titleKey: "image_viewer.hints.zoom",
-        hints: [
-            { keys: ["Ctrl++", "E"], labelKey: "image_viewer.hints.zoom_in" },
-            { keys: ["Ctrl+-", "Q"], labelKey: "image_viewer.hints.zoom_out" },
-            { keys: ["/", "Numpad /"], labelKey: "image_viewer.hints.reset_zoom" }
-        ]
-    },
-    {
-        titleKey: "image_viewer.hints.pan",
-        hints: [
-            { keys: ["Up", "W"], labelKey: "image_viewer.hints.pan_up" },
-            { keys: ["Down", "S"], labelKey: "image_viewer.hints.pan_down" },
-            { keys: ["Left", "A"], labelKey: "image_viewer.hints.pan_left" },
-            { keys: ["Right", "D"], labelKey: "image_viewer.hints.pan_right" },
-            { keys: ["Shift"], labelKey: "image_viewer.hints.pan_fast" }
-        ]
-    },
+    ...ZOOM_PAN_HINTS,
     {
         titleKey: "image_viewer.hints.navigation",
         hints: [
@@ -80,7 +64,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     const [ loaded, setLoaded ] = useState(false);
     const [ loadingError, setLoadingError ] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
-    const rootRef = useRef<HTMLDivElement>(null);
+    const [ rootEl, setRootEl ] = useState<HTMLDivElement | null>(null);
 
     // Recompute the cursor/rendering flags and the displayed (native-relative) zoom percentage.
     // The setters bail out on identical values, so no manual change checks are needed.
@@ -133,7 +117,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         return () => settle(() => {});
     }, [ src ]);
 
-    useImageViewerKeyboard(zoom.ref, rootRef);
+    useZoomPanKeyboard(zoom.ref, rootEl);
     useContextualShortcutHints(IMAGE_VIEWER_HINTS);
 
     const wrapperClass = [
@@ -146,7 +130,13 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     ].filter(Boolean).join(" ");
 
     return (
-        <div ref={rootRef} tabIndex={0} className="image-viewer-root">
+        <div
+            ref={setRootEl}
+            tabIndex={0}
+            role="group"
+            aria-label={t("image_viewer.viewport")}
+            className={`image-viewer-root ${ZOOM_PAN_VIEWPORT_CLASS}`}
+        >
             <TransformWrapper
                 ref={zoom.ref}
                 minScale={minScale}

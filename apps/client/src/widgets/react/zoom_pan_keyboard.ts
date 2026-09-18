@@ -1,11 +1,45 @@
+import "./zoom_pan.css";
+
 import { useEffect } from "preact/hooks";
 import type { ReactZoomPanPinchRef } from "react-zoom-pan-pinch";
 
+import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
 import { isAppShortcutChord } from "../../services/shortcuts";
 
-export type ImageViewerControl =
+export type ZoomPanControl =
     | "zoomIn" | "zoomOut" | "reset"
     | "panUp" | "panDown" | "panLeft" | "panRight";
+
+/**
+ * The class a focusable zoom/pan viewport wears, for the focus ring in zoom_pan.css — without one a
+ * viewport reached by Tab gives no sign of having been reached.
+ */
+export const ZOOM_PAN_VIEWPORT_CLASS = "tn-zoom-pan-viewport";
+
+/**
+ * What the keys below do, said where the reader can find it. Every viewport this hook is wired to
+ * shows the same two sections; a caller with more to say appends its own.
+ */
+export const ZOOM_PAN_HINTS: ShortcutHintDefinition = [
+    {
+        titleKey: "zoom_controls.hints.zoom",
+        hints: [
+            { keys: ["Ctrl++", "E"], labelKey: "zoom_controls.hints.zoom_in" },
+            { keys: ["Ctrl+-", "Q"], labelKey: "zoom_controls.hints.zoom_out" },
+            { keys: ["/", "Numpad /"], labelKey: "zoom_controls.hints.reset_zoom" }
+        ]
+    },
+    {
+        titleKey: "zoom_controls.hints.pan",
+        hints: [
+            { keys: ["Up", "W"], labelKey: "zoom_controls.hints.pan_up" },
+            { keys: ["Down", "S"], labelKey: "zoom_controls.hints.pan_down" },
+            { keys: ["Left", "A"], labelKey: "zoom_controls.hints.pan_left" },
+            { keys: ["Right", "D"], labelKey: "zoom_controls.hints.pan_right" },
+            { keys: ["Shift"], labelKey: "zoom_controls.hints.pan_fast" }
+        ]
+    }
+];
 
 /** Continuous keyboard zoom rate, as a per-second exponent fed to the library's zoomIn/zoomOut. */
 const ZOOM_RATE = 2.5;
@@ -35,7 +69,7 @@ export function claimsKeystroke(e: { code: string; ctrlKey: boolean; metaKey: bo
  * viewer may act on a modified one is {@link claimsKeystroke}'s call. Using `code` keeps it
  * keyboard-layout independent.
  */
-export function codeToControl(code: string): ImageViewerControl | null {
+export function codeToControl(code: string): ZoomPanControl | null {
     switch (code) {
         case "Equal": case "NumpadAdd": case "KeyE": return "zoomIn";
         case "Minus": case "NumpadSubtract": case "KeyQ": return "zoomOut";
@@ -53,7 +87,7 @@ export function codeToControl(code: string): ImageViewerControl | null {
  * moves the *view* that way (Right reveals the right side), so the content translates the opposite
  * way. Scaled by elapsed time, so the speed is frame-rate independent; Shift speeds it up.
  */
-export function getPanDelta(controls: Iterable<ImageViewerControl>, shiftKey: boolean, dtSeconds: number): { dx: number; dy: number } {
+export function getPanDelta(controls: Iterable<ZoomPanControl>, shiftKey: boolean, dtSeconds: number): { dx: number; dy: number } {
     const held = controls instanceof Set ? controls : new Set(controls);
     const speed = PAN_SPEED * (shiftKey ? PAN_FAST_FACTOR : 1) * dtSeconds;
     let dx = 0;
@@ -88,17 +122,20 @@ export function zoomToPointPosition(scale0: number, posX0: number, posY0: number
 
 /**
  * Wires keyboard zoom (`+`/`-`/`/`, with or without Ctrl/Cmd) and pan (arrows / WASD, Shift to speed
- * up) onto the focusable `elementRef`, driving the react-zoom-pan-pinch instance in `apiRef`. While
+ * up) onto the focusable `element`, driving the react-zoom-pan-pinch instance in `apiRef`. While
  * keys are held it runs a requestAnimationFrame loop that reuses the library's own
  * `zoomIn`/`zoomOut`/`setTransform`, so the motion is smooth and stays within the library's bounds.
- * Only active while the element is focused.
+ * Only active while the element is focused, which a press on the viewport is what gives it: an
+ * editor beside it takes the focus back on the next press into it, as any other pane would.
+ *
+ * The element is taken rather than a ref to it, so that a viewport mounted later than the hook — a
+ * preview pane that a display-mode switch brings in — is wired when it arrives.
  */
-export function useImageViewerKeyboard(
+export function useZoomPanKeyboard(
     apiRef: { current: ReactZoomPanPinchRef | null },
-    elementRef: { current: HTMLElement | null }
+    element: HTMLElement | null
 ) {
     useEffect(() => {
-        const element = elementRef.current;
         if (!element) return;
 
         const heldCodes = new Set<string>();
@@ -113,7 +150,7 @@ export function useImageViewerKeyboard(
         };
 
         const activeControls = () => {
-            const controls: ImageViewerControl[] = [];
+            const controls: ZoomPanControl[] = [];
             for (const code of heldCodes) {
                 const control = codeToControl(code);
                 if (control && control !== "reset") controls.push(control);
@@ -200,7 +237,7 @@ export function useImageViewerKeyboard(
             element.removeEventListener("pointerup", onPointerUp, true);
             stop();
         };
-    }, [ apiRef, elementRef ]);
+    }, [ apiRef, element ]);
 }
 
 /**

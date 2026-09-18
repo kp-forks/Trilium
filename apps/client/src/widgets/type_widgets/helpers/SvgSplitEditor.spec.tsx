@@ -74,7 +74,7 @@ describe("SvgSplitEditor", () => {
     beforeEach(() => transformWrapperSpy.mockClear());
 
     it("renders the diagram inside the pan/zoom viewport, with its viewBox untouched", async () => {
-        const { container, unmount } = await mount();
+        const { container, controls, unmount } = await mount();
 
         const svgEl = container.querySelector(".svg-preview-viewport .render-container svg");
         expect(svgEl).not.toBeNull();
@@ -85,6 +85,10 @@ describe("SvgSplitEditor", () => {
         expect(transformWrapperSpy).toHaveBeenCalledWith(
             expect.objectContaining({ minScale: 0.5, maxScale: 10 })
         );
+
+        // The keys are the only way a reader with no pointer pans the diagram, so what they are has
+        // to be readable from the preview itself.
+        expect(controls().all.length).toBe(4);
 
         unmount();
         container.remove();
@@ -106,6 +110,24 @@ describe("SvgSplitEditor", () => {
 
         unmount();
         container.remove();
+    });
+
+    it("takes the keys on a press, in a split with the editor as much as on its own", async () => {
+        // Beside the editor is where it matters most: the code pane swallows Tab to indent with, so
+        // a press on the preview is the only way a reader reaches the keys that pan the diagram.
+        const modes: Record<string, string>[] = [ {}, { displayMode: "preview" } ];
+        for (const labels of modes) {
+            const { container, preview, unmount } = await mount(labels);
+
+            expect(preview().tabIndex).toBe(0);
+            expect(preview().className).toContain("tn-zoom-pan-viewport");
+
+            act(() => { preview().dispatchEvent(new Event("pointerup", { bubbles: true })); });
+            expect(document.activeElement).toBe(preview());
+
+            unmount();
+            container.remove();
+        }
     });
 
     it("leaves a step with no room left to it disabled", async () => {
@@ -135,33 +157,43 @@ describe("SvgSplitEditor", () => {
  * handing back a reader for the three buttons. They are read afresh on every call, the group being
  * drawn anew whenever the scale changes.
  */
-async function mount() {
+async function mount(labels: Record<string, string> = {}) {
     const container = document.createElement("div");
     document.body.appendChild(container);
 
     await act(async () => {
-        render(<SvgSplitEditor {...svgSplitEditorProps(SVG_MARKUP)} />, container);
+        render(<SvgSplitEditor {...svgSplitEditorProps(SVG_MARKUP, labels)} />, container);
     });
 
-    await vi.waitFor(() => expect(container.querySelectorAll(".svg-preview-controls button")).toHaveLength(3));
+    await vi.waitFor(() => expect(container.querySelectorAll(".svg-preview-controls button").length).toBeGreaterThanOrEqual(3));
 
+    // The zoom steps are the last three on the group; the shortcut-hints button leads it.
     const controls = () => {
-        const [ zoomOut, readout, zoomIn ] = container.querySelectorAll<HTMLButtonElement>(".svg-preview-controls button");
-        return { zoomOut, readout, zoomIn };
+        const buttons = [ ...container.querySelectorAll<HTMLButtonElement>(".svg-preview-controls button") ];
+        const [ zoomOut, readout, zoomIn ] = buttons.slice(-3);
+        return { zoomOut, readout, zoomIn, all: buttons };
     };
 
-    return { container, controls, unmount: () => act(() => render(null, container)) };
+    const preview = () => {
+        const el = container.querySelector<HTMLDivElement>(".svg-preview-root");
+        if (!el) throw new Error("Expected the preview viewport to be present.");
+        return el;
+    };
+
+    return { container, controls, preview, unmount: () => act(() => render(null, container)) };
 }
 
 /**
  * Minimal props for `SvgSplitEditor`; SplitEditor is mocked away, so most of `SplitEditorProps`
  * is unused.
  */
-function svgSplitEditorProps(svgMarkup: string) {
+function svgSplitEditorProps(svgMarkup: string, labels: Record<string, string> = {}) {
     const note = {
         noteId: "note1",
         title: "Gantt",
-        getAttachments: async () => []
+        getAttachments: async () => [],
+        getLabelValue: (name: string) => labels[name] ?? null,
+        isLabelTruthy: (name: string) => name in labels && labels[name] !== "false"
     };
 
     return {

@@ -1217,22 +1217,13 @@
   "image_viewer": {
     "loading_error": "There was an error loading the image.",
     "hints": {
-      "zoom": "Zoom",
-      "zoom_in": "Zoom in",
-      "zoom_out": "Zoom out",
-      "reset_zoom": "Reset zoom",
-      "pan": "Pan",
-      "pan_up": "Up",
-      "pan_down": "Down",
-      "pan_left": "Left",
-      "pan_right": "Right",
-      "pan_fast": "Faster panning",
       "navigation": "Navigation",
       "next_image": "Next image",
       "previous_image": "Previous image",
       "first_image": "First image",
       "last_image": "Last image"
-    }
+    },
+    "viewport": "Image view"
   },
   "shortcut_hints": {
     "show_button": "Show shortcut hints",
@@ -3340,7 +3331,8 @@
   },
   "svg": {
     "export_to_png": "The diagram could not be exported to PNG.",
-    "export_to_svg": "The diagram could not be exported to SVG."
+    "export_to_svg": "The diagram could not be exported to SVG.",
+    "preview": "Diagram preview"
   },
   "code_theme": {
     "title": "Appearance",
@@ -4289,6 +4281,18 @@
   "zoom_controls": {
     "zoom_out": "Zoom out",
     "reset": "Reset zoom",
-    "zoom_in": "Zoom in"
+    "zoom_in": "Zoom in",
+    "hints": {
+      "zoom": "Zoom",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "reset_zoom": "Reset zoom",
+      "pan": "Pan",
+      "pan_up": "Up",
+      "pan_down": "Down",
+      "pan_left": "Left",
+      "pan_right": "Right",
+      "pan_fast": "Faster panning"
+    }
   }
 }

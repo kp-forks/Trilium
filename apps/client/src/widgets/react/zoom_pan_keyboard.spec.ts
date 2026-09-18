@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { claimsKeystroke, clampPan, codeToControl, getPanDelta, zoomToPointPosition } from "./image_viewer_keyboard";
+import { claimsKeystroke, clampPan, codeToControl, getPanDelta, zoomToPointPosition } from "./zoom_pan_keyboard";
 
 describe("codeToControl", () => {
     it("maps zoom/reset keys (Equal/Minus/Slash, numpad, Q/E) regardless of modifiers", () => {

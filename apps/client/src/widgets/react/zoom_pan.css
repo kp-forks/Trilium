@@ -1,0 +1,6 @@
+/* A viewport reached by Tab has to show that it was reached; the offset draws the ring inside the
+   pane, which sits flush against the note's own edges with nothing to overflow into. */
+.tn-zoom-pan-viewport:focus-visible {
+    outline: 2px solid var(--input-focus-outline-color);
+    outline-offset: -2px;
+}
