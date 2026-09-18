@@ -1,8 +1,7 @@
 import "./ImageViewer.css";
 
-import { Ref } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 import { t } from "../../services/i18n";
 import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
@@ -11,7 +10,8 @@ import ShortcutHintButton from "../shortcut_hints/shortcut_hint_button";
 import ContentErrorMessage from "./ContentErrorMessage";
 import { useContextualShortcutHints } from "./hooks";
 import { useImageViewerKeyboard } from "./image_viewer_keyboard";
-import OverlayControlGroup, { OverlayControlButton } from "./OverlayControlGroup";
+import OverlayControlGroup, { ZoomControls } from "./OverlayControlGroup";
+import { useZoomPanPinch } from "./zoom_pan";
 
 interface ImageViewerProps {
     src: string;
@@ -20,14 +20,10 @@ interface ImageViewerProps {
     alt?: string;
     minScale?: number;
     maxScale?: number;
-    /** Exposes the zoom/pan instance so the parent can drive zoom in/out/reset. */
-    apiRef?: Ref<ReactZoomPanPinchRef>;
 }
 
 /** Beyond this multiple of the image's native resolution, switch to crisp (non-smoothed) rendering. */
 const CRISP_NATIVE_SCALE = 4;
-/** Scale step applied per zoom-in/out button click (react-zoom-pan-pinch's zoomIn/zoomOut step). */
-const BUTTON_ZOOM_STEP = 0.5;
 /** Reveal the image even if `decode()` never settles (it can stall for some images, e.g. SVGs). */
 const REVEAL_FALLBACK_MS = 1000;
 
@@ -76,7 +72,7 @@ export function evaluateImageZoom(scale: number, img: { naturalWidth: number; cl
  * Interactive image viewer: the image is fit to the viewport on load, then the user can zoom
  * (wheel/pinch/buttons/keyboard) and pan (drag/keyboard). Double-clicking resets to the fitted view.
  */
-export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.5, maxScale = 50, apiRef }: ImageViewerProps) {
+export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.5, maxScale = 50 }: ImageViewerProps) {
     const [ pannable, setPannable ] = useState(false);
     const [ panning, setPanning ] = useState(false);
     const [ largeZoom, setLargeZoom ] = useState(false);
@@ -85,14 +81,6 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     const [ loadingError, setLoadingError ] = useState(false);
     const imgRef = useRef<HTMLImageElement>(null);
     const rootRef = useRef<HTMLDivElement>(null);
-    const zoomRef = useRef<ReactZoomPanPinchRef>(null);
-
-    // Keep our own ref to drive keyboard control, while still forwarding to the caller's apiRef.
-    const setZoomRef = useCallback((instance: ReactZoomPanPinchRef | null) => {
-        zoomRef.current = instance;
-        if (typeof apiRef === "function") apiRef(instance);
-        else if (apiRef) (apiRef as { current: ReactZoomPanPinchRef | null }).current = instance;
-    }, [ apiRef ]);
 
     // Recompute the cursor/rendering flags and the displayed (native-relative) zoom percentage.
     // The setters bail out on identical values, so no manual change checks are needed.
@@ -100,8 +88,10 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         const { pannable: nextPannable, largeZoom: nextLargeZoom, nativeScale } = evaluateImageZoom(scale, imgRef.current);
         setPannable(nextPannable);
         setLargeZoom(nextLargeZoom);
-        setZoomPercent(Math.round(nativeScale * 100));
+        setZoomPercent(nativeScale * 100);
     };
+
+    const zoom = useZoomPanPinch({ minScale, maxScale, onScaleChange: updateZoomState });
 
     // Reveal (or fail) the image, driven by decode() rather than the load event. decode() resolves once
     // the bitmap is ready whether or not we observed `load`, so a fast/cached image that finishes before
@@ -124,7 +114,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         };
         const reveal = () => settle(() => {
             setLoaded(true);
-            updateZoomState(zoomRef.current?.instance?.state?.scale ?? 1);
+            updateZoomState(zoom.ref.current?.instance?.state?.scale ?? 1);
         });
         const timer = setTimeout(reveal, REVEAL_FALLBACK_MS);
         if (typeof img.decode === "function") {
@@ -143,7 +133,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
         return () => settle(() => {});
     }, [ src ]);
 
-    useImageViewerKeyboard(zoomRef, rootRef);
+    useImageViewerKeyboard(zoom.ref, rootRef);
     useContextualShortcutHints(IMAGE_VIEWER_HINTS);
 
     const wrapperClass = [
@@ -158,7 +148,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
     return (
         <div ref={rootRef} tabIndex={0} className="image-viewer-root">
             <TransformWrapper
-                ref={setZoomRef}
+                ref={zoom.ref}
                 minScale={minScale}
                 maxScale={maxScale}
                 centerOnInit
@@ -166,7 +156,7 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
                 wheel={{ step: 0.0085 }}
                 autoAlignment={{ disabled: true }}
                 doubleClick={{ mode: "reset" }}
-                onTransform={(_ref, { scale }) => updateZoomState(scale)}
+                onTransform={zoom.onTransform}
                 onPanningStart={() => setPanning(true)}
                 onPanningStop={() => setPanning(false)}
             >
@@ -190,20 +180,13 @@ export default function ImageViewer({ src, imgClassName, alt = "", minScale = 0.
 
             {!isMobile() && loaded && (
                 <OverlayControlGroup className="image-viewer-controls" placement="bottom-end">
-                    <OverlayControlButton
-                        title={t("image_buttons.zoom_out")}
-                        icon="bx-minus-circle"
-                        onClick={() => zoomRef.current?.zoomOut(BUTTON_ZOOM_STEP)}
-                    />
-                    <OverlayControlButton
-                        title={t("image_buttons.reset_zoom")}
-                        text={`${zoomPercent}%`}
-                        onClick={() => zoomRef.current?.resetTransform()}
-                    />
-                    <OverlayControlButton
-                        title={t("image_buttons.zoom_in")}
-                        icon="bx-plus-circle"
-                        onClick={() => zoomRef.current?.zoomIn(BUTTON_ZOOM_STEP)}
+                    <ZoomControls
+                        percent={zoomPercent}
+                        canZoomIn={zoom.canZoomIn}
+                        canZoomOut={zoom.canZoomOut}
+                        onZoomIn={zoom.zoomIn}
+                        onZoomOut={zoom.zoomOut}
+                        onReset={zoom.reset}
                     />
                 </OverlayControlGroup>
             )}

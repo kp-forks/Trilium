@@ -175,5 +175,54 @@ export function OverlayFullscreenButton({ isFullscreen, onToggle }: OverlayFulls
     );
 }
 
+interface ZoomControlsProps {
+    /**
+     * The scale as a percentage of whatever the content's own hundred is — its native resolution,
+     * its fitted view, its natural size. Left out, the two steps stand alone: a map's zoom level is a
+     * number out of the cartographer's toolbox, not the reader's.
+     */
+    percent?: number;
+    /** Whether either step has room left; a step that would do nothing is shown disabled. */
+    canZoomIn?: boolean;
+    canZoomOut?: boolean;
+    onZoomIn: () => void;
+    onZoomOut: () => void;
+    /** Only reached through the readout, so only needed where there is a `percent` to show. */
+    onReset?: () => void;
+}
+
+/**
+ * The zoom steps every set of controls over content carries: out, the scale, and in.
+ *
+ * Buttons rather than a group of their own, the image viewer and the diagram preview showing nothing
+ * else while the maps stand them among a tilt, a recenter and a fullscreen. What a hundred percent
+ * means is the content's to say, so the readout is handed a percentage rather than a scale.
+ */
+export function ZoomControls({ percent, canZoomIn = true, canZoomOut = true, onZoomIn, onZoomOut, onReset }: ZoomControlsProps) {
+    return (
+        <>
+            <OverlayControlButton
+                title={t("zoom_controls.zoom_out")}
+                icon="bx-minus-circle"
+                disabled={!canZoomOut}
+                onClick={onZoomOut}
+            />
+            {percent !== undefined && (
+                <OverlayControlButton
+                    title={t("zoom_controls.reset")}
+                    text={`${Math.round(percent)}%`}
+                    onClick={onReset}
+                />
+            )}
+            <OverlayControlButton
+                title={t("zoom_controls.zoom_in")}
+                icon="bx-plus-circle"
+                disabled={!canZoomIn}
+                onClick={onZoomIn}
+            />
+        </>
+    );
+}
+
 /** Which way the tooltips on a group open, handed down by the group rather than repeated on each button. */
 const TooltipDirection = createContext<ActionButtonProps["titlePosition"]>("top");

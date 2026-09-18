@@ -1,14 +1,14 @@
-import { RefObject } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
-import { type ReactZoomPanPinchRef, TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
+import { useCallback, useEffect, useState } from "preact/hooks";
+import { TransformComponent, TransformWrapper } from "react-zoom-pan-pinch";
 
 import { t } from "../../../services/i18n";
 import server from "../../../services/server";
 import toast from "../../../services/toast";
 import utils from "../../../services/utils";
 import { useTriliumEvent } from "../../react/hooks";
-import OverlayControlGroup, { OverlayControlButton } from "../../react/OverlayControlGroup";
+import OverlayControlGroup, { ZoomControls } from "../../react/OverlayControlGroup";
 import { RawHtmlBlock } from "../../react/RawHtml";
+import { useZoomPanPinch } from "../../react/zoom_pan";
 import SplitEditor, { SplitEditorProps } from "./SplitEditor";
 
 interface SvgSplitEditorProps extends Omit<SplitEditorProps, "previewContent"> {
@@ -41,15 +41,13 @@ interface SvgSplitEditorProps extends Omit<SplitEditorProps, "previewContent"> {
 export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg, ...props }: SvgSplitEditorProps) {
     const [ svg, setSvg ] = useState<string>();
     const [ error, setError ] = useState<string | null | undefined>();
-    const [ zoom, setZoom ] = useState(1);
-    const zoomRef = useRef<ReactZoomPanPinchRef>(null);
+    const zoom = useZoomPanPinch({ minScale: MIN_ZOOM, maxScale: MAX_ZOOM, resetOn: note.noteId });
 
     // Reset the render state when switching notes so a previous note's render (and the
     // "showing last valid render" badge) can't briefly carry over to a different note.
     useEffect(() => {
         setSvg(undefined);
         setError(undefined);
-        setZoom(1);
     }, [ note.noteId ]);
 
     // Render the SVG.
@@ -129,20 +127,31 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
                     // The transform sits on an ancestor of the diagram, so it survives a re-render
                     // of the same note. Keying it on the note drops it when a different one opens.
                     key={note.noteId}
-                    ref={zoomRef}
+                    ref={zoom.ref}
                     minScale={MIN_ZOOM}
                     maxScale={MAX_ZOOM}
                     centerOnInit
                     centerZoomedOut
                     doubleClick={{ mode: "reset" }}
-                    onTransform={(_ref, { scale }) => setZoom(scale)}
+                    onTransform={zoom.onTransform}
                 >
                     <TransformComponent wrapperClass="svg-preview-viewport" contentClass="svg-preview-content">
                         <RawHtmlBlock className="render-container" html={svg} />
                     </TransformComponent>
                 </TransformWrapper>
             )}
-            previewButtons={!!svg && <PreviewControls zoomRef={zoomRef} zoom={zoom} />}
+            previewButtons={!!svg && (
+                <OverlayControlGroup className="svg-preview-controls" placement="bottom-end">
+                    <ZoomControls
+                        percent={zoom.scale * 100}
+                        canZoomIn={zoom.canZoomIn}
+                        canZoomOut={zoom.canZoomOut}
+                        onZoomIn={zoom.zoomIn}
+                        onZoomOut={zoom.zoomOut}
+                        onReset={zoom.reset}
+                    />
+                </OverlayControlGroup>
+            )}
             {...props}
         />
     );
@@ -157,52 +166,3 @@ export default function SvgSplitEditor({ ntxId, note, attachmentTitle, renderSvg
  */
 const MIN_ZOOM = 0.5;
 const MAX_ZOOM = 10;
-/** What one press of a zoom step multiplies the scale by. */
-const ZOOM_STEP = 1.2;
-/**
- * How near a bound counts as being on it. The zoom animation reaches its target by adding the whole
- * difference back to the scale it started from, which can land a float's width short of the bound.
- */
-const ZOOM_LIMIT_TOLERANCE = 1e-6;
-
-/**
- * The zoom controls in the corner of the rendered diagram: a step in each direction, and between
- * them a readout that fits the diagram back to the pane when pressed.
- *
- * They stand on the {@link OverlayControlGroup} the image viewer's zoom buttons stand on, as the
- * two maps' controls do. The readout is a percentage of the fitted view, so a diagram opens at 100%.
- */
-function PreviewControls({ zoomRef, zoom }: { zoomRef: RefObject<ReactZoomPanPinchRef>; zoom: number }) {
-    return (
-        <OverlayControlGroup className="svg-preview-controls" placement="bottom-end">
-            <OverlayControlButton
-                title={t("svg.zoom_out")}
-                icon="bx-minus-circle"
-                disabled={zoom <= MIN_ZOOM * (1 + ZOOM_LIMIT_TOLERANCE)}
-                onClick={() => zoomRef.current?.zoomOut(zoomStep(zoom, "out"))}
-            />
-            <OverlayControlButton
-                title={t("svg.reset_zoom")}
-                text={`${Math.round(zoom * 100)}%`}
-                onClick={() => zoomRef.current?.resetTransform()}
-            />
-            <OverlayControlButton
-                title={t("svg.zoom_in")}
-                icon="bx-plus-circle"
-                disabled={zoom >= MAX_ZOOM * (1 - ZOOM_LIMIT_TOLERANCE)}
-                onClick={() => zoomRef.current?.zoomIn(zoomStep(zoom, "in"))}
-            />
-        </OverlayControlGroup>
-    );
-}
-
-/**
- * The increment that takes `scale` one {@link ZOOM_STEP} in the given direction.
- *
- * react-zoom-pan-pinch adds the step to the current scale, so a fixed step would be a leap at the
- * bottom of the range and a crawl at the top. Scaling the step by the scale it applies to keeps
- * every press the same proportion of what is on screen.
- */
-function zoomStep(scale: number, direction: "in" | "out") {
-    return direction === "in" ? scale * (ZOOM_STEP - 1) : scale * (1 - 1 / ZOOM_STEP);
-}

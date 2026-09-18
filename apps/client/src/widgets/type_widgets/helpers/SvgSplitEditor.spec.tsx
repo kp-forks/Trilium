@@ -26,15 +26,18 @@ vi.mock("react-zoom-pan-pinch", async () => {
     return {
         TransformWrapper: forwardRef((props: FakeProps, ref) => {
             transformWrapperSpy(props);
-            const scale = useRef(1);
+            // One object, mutated in place: `useZoomPanPinch` reads `instance.state.scale` as a
+            // button is pressed, so a fresh snapshot per render would be one step behind.
+            const state = useRef({ scale: 1 });
             const apply = (target: number) => {
                 const rounded = Number(target.toFixed(3));
-                scale.current = Math.min(props.maxScale, Math.max(props.minScale, rounded));
-                props.onTransform?.(null, { scale: scale.current });
+                state.current.scale = Math.min(props.maxScale, Math.max(props.minScale, rounded));
+                props.onTransform?.(null, { scale: state.current.scale });
             };
             useImperativeHandle(ref, () => ({
-                zoomIn: (step: number) => apply(scale.current + step),
-                zoomOut: (step: number) => apply(scale.current - step),
+                instance: { state: state.current },
+                zoomIn: (step: number) => apply(state.current.scale + step),
+                zoomOut: (step: number) => apply(state.current.scale - step),
                 resetTransform: () => apply(1)
             }));
             return props.children;
