@@ -1485,7 +1485,7 @@ export default function BoardView({
                                         : 0}
                                     cardTemplates={cardTemplates}
                                     nested={storedColumns.get(column)?.nested}
-                                    limit={storedColumns.get(column)?.limit}
+                                    limit={api.getColumnLimit(column)}
                                     columnIndex={index}
                                     columns={shownColumns}
                                     onMoveColumn={handleColumnDrop}
