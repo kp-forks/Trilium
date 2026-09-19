@@ -1906,7 +1906,8 @@
   },
   "svg": {
     "export_to_png": "図をPNG形式でエクスポートできませんでした。",
-    "export_to_svg": "図をSVG形式でエクスポートできませんでした。"
+    "export_to_svg": "図をSVG形式でエクスポートできませんでした。",
+    "preview": "図のプレビュー"
   },
   "code_theme": {
     "title": "外観",
@@ -3653,7 +3654,8 @@
       "previous_image": "前の画像",
       "first_image": "最初の画像",
       "last_image": "最後の画像"
-    }
+    },
+    "viewport": "画像表示"
   },
   "options": {
     "title": "オプション",
@@ -4210,5 +4212,22 @@
   "attribute_menu": {
     "attributes": "属性",
     "not-set": "未設定"
+  },
+  "zoom_controls": {
+    "zoom_out": "ズームアウト",
+    "reset": "ズームをリセット",
+    "zoom_in": "ズームイン",
+    "hints": {
+      "zoom": "ズーム",
+      "zoom_in": "ズームイン",
+      "zoom_out": "ズームアウト",
+      "reset_zoom": "ズームをリセット",
+      "pan": "画面移動",
+      "pan_up": "上",
+      "pan_down": "下",
+      "pan_left": "左",
+      "pan_right": "右",
+      "pan_fast": "高速画面移動"
+    }
   }
 }
