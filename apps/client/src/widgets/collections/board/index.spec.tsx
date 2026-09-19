@@ -2074,6 +2074,44 @@ describe("Board column rename", () => {
     });
 
     /**
+     * A heading holds no card to insert beside, so the ends of the column are what Enter and
+     * Shift+Enter reach there.
+     */
+    it("opens the field at the head of the column for Enter on its heading", async () => {
+        const { container } = await setup();
+        const column = container.querySelectorAll<HTMLElement>(".board-column")[1];
+        const header = column.querySelector<HTMLElement>("h3");
+        const content = column.querySelector<HTMLElement>(".board-column-content");
+        if (!header || !content) throw new Error("expected a column with a heading");
+
+        await act(async () => {
+            header.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+            await flush();
+        });
+
+        const drawn = [ ...content.querySelectorAll(".board-note, .board-new-item") ];
+        expect(drawn[0]?.classList.contains("board-new-item")).toBe(true);
+        expect(drawn[1]?.classList.contains("board-note")).toBe(true);
+    });
+
+    it("opens the field at the foot of the column for Shift+Enter on its heading", async () => {
+        const { container } = await setup();
+        const column = container.querySelectorAll<HTMLElement>(".board-column")[1];
+        const header = column.querySelector<HTMLElement>("h3");
+        if (!header) throw new Error("expected a column with a heading");
+
+        await act(async () => {
+            header.dispatchEvent(new KeyboardEvent(
+                "keydown", { key: "Enter", shiftKey: true, bubbles: true }));
+            await flush();
+        });
+
+        // The footer's own field, which stands outside the cards rather than among them.
+        expect(column.querySelector(".board-column-content .board-new-item")).toBeNull();
+        expect(column.querySelector(".board-new-item.editing")).toBeTruthy();
+    });
+
+    /**
      * The same field wherever it stands, so a card inserted between two others is named, iconed and
      * made from a template the way a card added below the column is.
      */

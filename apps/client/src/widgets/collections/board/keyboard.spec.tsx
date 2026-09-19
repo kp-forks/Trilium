@@ -515,13 +515,16 @@ describe("Board keyboard", () => {
                 .toBe(true);
         });
 
-        it("leaves Enter alone on a column that is not collapsed", async () => {
+        /** The column keeps its cards: only a collapsed heading answers Enter with an expand. */
+        it("makes a card instead of expanding a column that is not collapsed", async () => {
             const board = await renderBoard();
             focusHeader(board, 1);
 
             press(board, "Enter");
+            await act(async () => { await flush(); });
 
-            expect(document.activeElement).toBe(columnAt(board, 1).querySelector("h3"));
+            expect(saved).toHaveLength(0);
+            expect(columnAt(board, 1).querySelector(".board-new-item.inserting")).toBeTruthy();
             expect(columnAt(board, 1).querySelectorAll(".board-note")).toHaveLength(1);
         });
     });

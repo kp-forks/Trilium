@@ -525,7 +525,21 @@ export default function Column({
             e.stopPropagation();
             collapse();
         }
-    }, [ collapse, column, isCollapsed ]);
+
+        // Enter makes a card at the head of the column, Shift+Enter one at its foot. Ctrl+Enter
+        // inserts a column and is left to `keyboard.ts`, which also opens a collapsed column.
+        if (e.key === "Enter" && !e.ctrlKey && !isCollapsed && e.target === e.currentTarget) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            // A sorted column places its own cards, so the field opens at the foot either way.
+            if (e.shiftKey || isSorted) {
+                beginNewItem();
+            } else {
+                beginInsert(0);
+            }
+        }
+    }, [ beginInsert, beginNewItem, collapse, column, isCollapsed, isSorted ]);
 
     const overlayHost = useContext(BoardOverlayHostContext);
     /** Whether the heading holds the focus, which on mobile floats the column's rail. */
