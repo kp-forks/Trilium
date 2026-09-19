@@ -1,9 +1,9 @@
 
 
 import { BlobRow } from "@triliumnext/commons";
-import { binary_utils } from "@triliumnext/core";
+import { decodeUtf8 } from "../../../services/utils/binary.js";
 
-import utils from "../../../services/utils.js";
+import { isStringNote } from "../../../services/utils/index.js";
 import sql from "../../sql.js";
 import AbstractShacaEntity from "./abstract_shaca_entity.js";
 import type { SAttachmentRow } from "./rows.js";
@@ -52,7 +52,7 @@ class SAttachment extends AbstractShacaEntity {
         const content = row.content;
 
         if (this.hasStringContent()) {
-            return content === null ? "" : binary_utils.decodeUtf8(content);
+            return content === null ? "" : decodeUtf8(content);
         }
         return content;
 
@@ -60,7 +60,7 @@ class SAttachment extends AbstractShacaEntity {
 
     /** @returns true if the attachment has string content (not binary) */
     hasStringContent() {
-        return utils.isStringNote(undefined, this.mime);
+        return isStringNote(undefined, this.mime);
     }
 
     getPojo() {

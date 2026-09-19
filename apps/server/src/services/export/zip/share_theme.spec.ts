@@ -19,11 +19,11 @@ const mockAssets = {
 vi.mock("../../../routes/assets", () => mockAssets);
 
 const mockContentRenderer = {
-    getDefaultTemplatePath: vi.fn((name: string) => `/templates/${name}`),
-    readTemplate: vi.fn(() => "TEMPLATE"),
+    readShareTemplate: vi.fn(() => "TEMPLATE"),
     renderNoteForExport: vi.fn(() => "<p>rendered</p>")
 };
-vi.mock("../../../share/content_renderer", () => mockContentRenderer);
+vi.mock("@triliumnext/core/src/share/index.js", () => mockContentRenderer);
+vi.mock("../../../share/share_provider.js", () => ({ registerShareProvider: vi.fn() }));
 
 vi.mock("../../resource_dir", () => ({ RESOURCE_DIR: "/resource" }));
 

@@ -688,9 +688,6 @@ importers:
       '@types/multer':
         specifier: 2.2.0
         version: 2.2.0
-      '@types/safe-compare':
-        specifier: 1.1.2
-        version: 1.1.2
       '@types/serve-favicon':
         specifier: 2.5.7
         version: 2.5.7
@@ -1407,6 +1404,9 @@ importers:
       '@triliumnext/commons':
         specifier: workspace:*
         version: link:../commons
+      '@triliumnext/highlightjs':
+        specifier: workspace:*
+        version: link:../highlightjs
       '@triliumnext/turndown-plugin-gfm':
         specifier: workspace:*
         version: link:../turndown-plugin-gfm
@@ -1422,6 +1422,9 @@ importers:
       color:
         specifier: 5.0.3
         version: 5.0.3
+      ejs:
+        specifier: 6.0.1
+        version: 6.0.1
       escape-html:
         specifier: 1.0.3
         version: 1.0.3
@@ -1468,6 +1471,9 @@ importers:
         specifier: 4.6.5
         version: 4.6.5
     devDependencies:
+      '@types/ejs':
+        specifier: 3.1.5
+        version: 3.1.5
       '@types/escape-html':
         specifier: 1.0.4
         version: 1.0.4
@@ -4758,9 +4764,6 @@ packages:
 
   '@types/reveal.js@5.2.2':
     resolution: {integrity: sha512-U6wdIeFZPR77zjaZCrFNPzKjjfdFr4Dj0WUAZ+UYgXGjwqYCnjpCngeS0hb+28FLL0QzE9jXBikvB7xxAQi5sg==}
-
-  '@types/safe-compare@1.1.2':
-    resolution: {integrity: sha512-kK/IM1+pvwCMom+Kezt/UlP8LMEwm8rP6UgGbRc6zUnhU/csoBQ5rWgmD2CJuHxiMiX+H1VqPGpo0kDluJGXYA==}
 
   '@types/sanitize-html@2.16.1':
     resolution: {integrity: sha512-n9wjs8bCOTyN/ynwD8s/nTcTreIHB1vf31vhLMGqUPNHaweKC4/fAl4Dj+hUlCTKYgm4P3k83fmiFfzkZ6sgMA==}
@@ -15811,8 +15814,6 @@ snapshots:
       '@types/node': 24.13.3
 
   '@types/reveal.js@5.2.2': {}
-
-  '@types/safe-compare@1.1.2': {}
 
   '@types/sanitize-html@2.16.1':
     dependencies:

@@ -1,11 +1,12 @@
 import { trimIndentation } from "@triliumnext/commons";
-import { sanitize, utils } from "@triliumnext/core";
 import ejs from "ejs";
 import { parse } from "node-html-parser";
 import { describe, expect, it, vi } from "vitest";
 
+import * as sanitize from "../services/sanitizer.js";
+import * as utils from "../services/utils/index.js";
 import { buildShareNote, buildShareNotes } from "../test/shaca_mocking.js";
-import { getContent, getDefaultTemplatePath, readTemplate, renderCode, renderNoteContent, type Result, shouldSyntaxHighlight } from "./content_renderer.js";
+import { getContent, readShareTemplate, renderCode, renderNoteContent, type Result, shouldSyntaxHighlight } from "./content_renderer.js";
 import type SNote from "./shaca/entities/snote.js";
 import shaca from "./shaca/shaca.js";
 import shareRoot from "./share_root.js";
@@ -674,7 +675,7 @@ describe("content_renderer", () => {
             const note = buildShareNote(noteDef);
             const subRootNote = buildShareNote({ id: `subRoot-${noteDef.id}` });
 
-            const html = ejs.render(readTemplate(getDefaultTemplatePath("tree_item")), {
+            const html = ejs.render(readShareTemplate("tree_item"), {
                 note,
                 activeNote: subRootNote,
                 subRoot: { note: subRootNote },
@@ -719,7 +720,7 @@ describe("content_renderer", () => {
             const note = shaca.getNote(noteId);
             const { header, content, isEmpty } = getContent(note);
 
-            const html = ejs.render(readTemplate(getDefaultTemplatePath("page")), {
+            const html = ejs.render(readShareTemplate("page"), {
                 note,
                 header,
                 content,
@@ -743,7 +744,7 @@ describe("content_renderer", () => {
                 iconPackSupportedPrefixes: []
             }, {
                 includer: (path: string) => ({
-                    template: readTemplate(getDefaultTemplatePath(path))
+                    template: readShareTemplate(path)
                 })
             });
 

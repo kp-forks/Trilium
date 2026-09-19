@@ -6,11 +6,14 @@ import { t } from "i18next";
 import { join } from "path";
 
 import { becca } from "@triliumnext/core";
+import { readShareTemplate, renderNoteForExport } from "@triliumnext/core/src/share/index.js";
 import { getClientDir, getShareThemeAssetDir } from "../../../routes/assets";
-import { getDefaultTemplatePath, readTemplate, renderNoteForExport } from "../../../share/content_renderer";
+import { registerShareProvider } from "../../../share/share_provider.js";
 import { getLog } from "@triliumnext/core";
 import { RESOURCE_DIR } from "../../resource_dir";
 import { getResourceDir, isDev } from "../../utils";
+
+registerShareProvider();
 
 const shareThemeAssetDir = getShareThemeAssetDir();
 
@@ -181,8 +184,7 @@ export default class ShareThemeExportProvider extends ZipExportProvider {
     }
 
     #save404() {
-        const templatePath = getDefaultTemplatePath("404");
-        const content = ejs.render(readTemplate(templatePath), { t });
+        const content = ejs.render(readShareTemplate("404"), { t });
         this.archive.append(content, { name: "404.html" });
     }
 

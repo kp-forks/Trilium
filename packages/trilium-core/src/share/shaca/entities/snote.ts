@@ -1,8 +1,8 @@
 import { BlobRow, getNoteIcon, NoteType } from "@triliumnext/commons";
-import { binary_utils } from "@triliumnext/core";
+import { decodeUtf8 } from "../../../services/utils/binary.js";
 import escape from "escape-html";
 
-import utils from "../../../services/utils.js";
+import { isStringNote } from "../../../services/utils/index.js";
 import sql from "../../sql.js";
 import AbstractShacaEntity from "./abstract_shaca_entity.js";
 import type { SNoteRow } from "./rows.js";
@@ -107,14 +107,14 @@ class SNote extends AbstractShacaEntity {
         const content = row.content;
 
         if (this.hasStringContent()) {
-            return content === null ? "" : binary_utils.decodeUtf8(content);
+            return content === null ? "" : decodeUtf8(content);
         }
         return content;
     }
 
     /** @returns true if the note has string content (not binary) */
     hasStringContent() {
-        return utils.isStringNote(this.type, this.mime);
+        return isStringNote(this.type, this.mime);
     }
 
     /**
