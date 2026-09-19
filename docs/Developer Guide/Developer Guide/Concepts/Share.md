@@ -12,6 +12,22 @@ The share theme represents the layout, styles and scripts behind the Share notes
 *   In `packages/share-theme`, run `pnpm build` to trigger a build. This will generate `dist` which will then be used by the server.
 *   Alternatively, use `pnpm dev` to watch for changes.
 
+## Where the code lives
+
+The share subsystem is in `packages/trilium-core/src/share`, so that every runtime that carries core can serve it:
+
+*   `shaca` is the read-only cache of the `_share` subtree, loaded from raw rows.
+*   `content_renderer.ts` renders one of its notes into a page.
+*   `handlers.ts` holds the routes as transport-neutral handlers: each takes a `ShareRequest` and returns a `ShareReply` (status, headers, body or redirect), touching no Express type. `route_paths.ts` lists the URL patterns on their own, free of imports, so a router can register them without loading the renderer behind them.
+
+What differs per platform goes through the `ShareProvider` (`share_provider.ts`): where the rows come from, where the EJS templates come from, and whether a note is allowed to supply its own template.
+
+| | Server / desktop | Standalone / mobile |
+| --- | --- | --- |
+| Rows | a second, read-only `better-sqlite3` connection (`apps/server/src/share/sql.ts`) | the one sqlite-wasm connection, shared with every other route |
+| Templates | read from disk | bundled into the build with `?raw` |
+| A note's own EJS template | allowed when backend scripting is enabled | never — this build has no backend scripting |
+
 ## Integration with the server for the share functionality
 
 The server renders the templates using EJS templating from the share theme and hosts the assets.
@@ -21,7 +37,16 @@ The server renders the templates using EJS templating from the share theme and h
     *   Changes to the template will require a restart of the server, since they are cached. Simply press Enter in the console with `pnpm server:start` to quickly trigger a restart.
 *   In production mode, the share theme is automatically built by the server build script and copied to `dist/share-theme`.
 
-The server route handling this functionality is in `src/share/routes.ts`.
+`apps/server/src/share/routes.ts` is the Express adapter over the core handlers, and `apps/server/src/share/share_provider.ts` registers the provider above.
+
+## Integration with the standalone (in-browser) build
+
+`apps/standalone` serves the same pages from the browser. A `/share/` request is claimed by the service worker, forwarded to the tab that owns the database, and answered by the worker's `BrowserRouter` (`apps/standalone/src/lightweight/browser_routes.ts`); `share_provider.ts` beside it supplies the rows and the bundled templates. Nothing outside the browser can reach these pages — there is no server listening — so this is for working on the share feature and for reading published notes locally, not for publishing.
+
+*   The subsystem is loaded by a dynamic `import()` on the first `/share/` request, which keeps EJS, the share theme and the syntax highlighter (~950 KB together) out of the worker's startup bundle. That only holds while nothing in the eager graph imports `share/index.ts`, which is why it is not re-exported from the `@triliumnext/core` barrel.
+*   `ejs` is aliased to its own browser build in `vite.config.mts`: the package's ESM entry imports `node:fs` and `node:path`, which it only needs when no `includer` is passed, and the renderer always passes one.
+*   The share theme's assets are copied into the build at the paths `content_renderer.ts` writes into the page (`share/assets`, `assets/v<version>/images`), in place of the `express.static` routes the server registers.
+*   The pages are rendered by the tab holding the database, so at least one app tab must be open for a `/share/` URL to resolve.
 
 ## Exporting to static HTML files
 
