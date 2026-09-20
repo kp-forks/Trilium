@@ -1,8 +1,9 @@
 import type { Completion, CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
 import { SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 
+import { isBuiltinAttribute } from "../../services/attributes";
 import { t } from "../../services/i18n";
-import server from "../../services/server";
+import { fetchAttributeNames } from "../attribute_widgets/attribute_detail";
 
 /** A branch answers at once, or after the attribute names have been fetched. */
 type CompletionOutcome = CompletionResult | Promise<CompletionResult | null> | null;
@@ -67,23 +68,40 @@ const ORDER_BY_BEFORE = /orderby[^]*/i;
 const ATTRIBUTE_PREFIX = new RegExp(`[#~]!?${SEGMENT}*`);
 
 /**
- * Fetches the label or relation names the database holds, from the endpoint the attribute editor's
- * own autocomplete reads. The whole set is asked for once and narrowed by `validFor` as more of the
- * name is typed, rather than a request per keystroke.
+ * Fetches the label or relation names the database holds, through the same call the sidebar's
+ * attribute picker makes, and marks the built-in ones as that picker does. The whole set is asked
+ * for once and narrowed by `validFor` as more of the name is typed, rather than per keystroke.
  */
 async function attributeCompletions(type: "label" | "relation", from: number): Promise<CompletionResult | null> {
     let names: string[];
     try {
-        names = await server.get<string[]>(`attribute-names/?type=${type}&query=`);
+        names = await fetchAttributeNames(type, "");
     } catch {
         return null;
     }
 
     return {
         from,
-        options: names.map((name) => ({ label: name, type: type === "label" ? "property" : "class" })),
+        options: names.map((name) => ({
+            label: name,
+            type: isBuiltinAttribute(type, name) ? SYSTEM_ATTRIBUTE : type
+        })),
         validFor: SEGMENT_TYPED
     };
+}
+
+/** Stands in for a completion's own type, a name Trilium attaches a meaning to being marked first. */
+const SYSTEM_ATTRIBUTE = "system-attribute";
+
+const COMPLETION_ICONS: Record<string, string> = {
+    [SYSTEM_ATTRIBUTE]: "bx bx-cog",
+    label: "bx bx-hash",
+    relation: "bx bx-transfer"
+};
+
+/** The icon an option is drawn with. Only the attribute names carry one. */
+export function searchCompletionIcon(completion: Completion): string | undefined {
+    return completion.type ? COMPLETION_ICONS[completion.type] : undefined;
 }
 
 /**

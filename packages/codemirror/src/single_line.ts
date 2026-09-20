@@ -1,4 +1,4 @@
-import { autocompletion, type CompletionSource } from "@codemirror/autocomplete";
+import { autocompletion, type Completion, type CompletionSource } from "@codemirror/autocomplete";
 import { history, historyKeymap, standardKeymap } from "@codemirror/commands";
 import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
@@ -18,6 +18,11 @@ export interface SingleLineEditorConfig {
     extensions?: Extension[];
     /** Completions to offer as the value is typed. Without one, the editor has no autocompletion. */
     completionSource?: CompletionSource;
+    /**
+     * The icon classes a completion is drawn with, such as `bx bx-hash`. Completions it answers
+     * nothing for are drawn without one; supplying it at all replaces CodeMirror's own icons.
+     */
+    completionIcon?(completion: Completion): string | undefined;
     /** Runs after every document change, with the whole text. */
     onChange?(value: string): void;
     /** Runs when Enter is pressed; the key never inserts a line break. */
@@ -65,9 +70,16 @@ export function createSingleLineEditor(config: SingleLineEditorConfig): SingleLi
     }
 
     if (config.completionSource) {
+        const icon = config.completionIcon;
+
         // The completion keymap is registered at the highest precedence, so Enter picks the
         // selected option while the popup is open and reaches `onEnter` the rest of the time.
-        extensions.push(autocompletion({ override: [ config.completionSource ], activateOnTyping: true }));
+        extensions.push(autocompletion({
+            override: [ config.completionSource ],
+            activateOnTyping: true,
+            icons: !icon,
+            addToOptions: icon ? [ { position: ICON_POSITION, render: (completion) => renderIcon(icon(completion)) } ] : []
+        }));
     }
 
     return new EditorView({
@@ -75,6 +87,22 @@ export function createSingleLineEditor(config: SingleLineEditorConfig): SingleLi
         doc: config.doc ?? "",
         extensions
     });
+}
+
+/** Where CodeMirror draws its own icons, which {@link SingleLineEditorConfig.completionIcon} takes over. */
+const ICON_POSITION = 20;
+
+function renderIcon(classes: string | undefined) {
+    if (!classes) {
+        return null;
+    }
+
+    const element = document.createElement("span");
+    element.className = `cm-completion-glyph ${classes}`;
+    // The label beside it already says what the icon repeats.
+    element.setAttribute("aria-hidden", "true");
+
+    return element;
 }
 
 /**

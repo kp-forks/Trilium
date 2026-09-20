@@ -42,10 +42,19 @@
             max-height: 18em;
         }
 
+        /* The description carries a full row's width, so it wraps onto its own line while the icon
+           and the label stay centred against each other on the first. */
         & > ul > li {
-            display: block;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
             padding: 0.5em 1em;
             line-height: 1.2;
+        }
+
+        .cm-completion-glyph {
+            margin-inline-end: 0.4em;
+            opacity: 0.7;
         }
 
         .cm-completionLabel {
@@ -55,7 +64,7 @@
         }
 
         .cm-completionDetail {
-            display: block;
+            flex-basis: 100%;
             margin-left: 0;
             font-size: 0.75em;
             font-style: normal;
@@ -70,13 +79,6 @@
             background: var(--active-item-background-color, color-mix(in srgb, var(--main-text-color) 15%, transparent));
             color: var(--active-item-text-color, inherit);
         }
-
-        /* The stock icons are a key for every operator and a square for `note`, which say less
-           than the descriptions beside them. */
-        .cm-completionIcon {
-            display: none;
-        }
-
     }
 
     .cm-placeholder {

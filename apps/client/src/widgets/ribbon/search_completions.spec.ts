@@ -1,15 +1,18 @@
 import type { CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import server from "../../services/server";
-import { searchCompletionSource } from "./search_completions";
+import { fetchAttributeNames } from "../attribute_widgets/attribute_detail";
+import { searchCompletionIcon, searchCompletionSource } from "./search_completions";
 
 // The descriptions are catalogue lookups, which specs don't initialize; the keys identify them.
 vi.mock("../../services/i18n", () => ({ t: (key: string) => key }));
-vi.mock("../../services/server", () => ({ default: { get: vi.fn() } }));
+// Stubbed at the same seam the sidebar's picker fetches through, so the spec needs no server and
+// none of the attribute popup behind it. `isBuiltinAttribute` is left real: what it marks is the
+// point of these tests.
+vi.mock("../attribute_widgets/attribute_detail", () => ({ fetchAttributeNames: vi.fn() }));
 
 beforeEach(() => {
-    vi.mocked(server.get).mockReset().mockResolvedValue([ "book", "publicationYear" ]);
+    vi.mocked(fetchAttributeNames).mockReset().mockResolvedValue([ "book", "archived" ]);
 });
 
 describe("searchCompletionSource", () => {
@@ -82,9 +85,9 @@ describe("searchCompletionSource", () => {
         it("fetches labels for #, anchored past the prefix and past a negation", async () => {
             const result = await complete("towers #bo");
 
-            expect(server.get).toHaveBeenCalledWith("attribute-names/?type=label&query=");
+            expect(fetchAttributeNames).toHaveBeenCalledWith("label", "");
             expect(result?.from).toBe(8);
-            expect(labelsOf(result)).toEqual([ "book", "publicationYear" ]);
+            expect(labelsOf(result)).toEqual([ "book", "archived" ]);
 
             expect((await complete("#!bo"))?.from).toBe(2);
         });
@@ -92,34 +95,65 @@ describe("searchCompletionSource", () => {
         it("fetches relations for ~, and for the segment after note.relations.", async () => {
             await complete("~aut");
 
-            expect(server.get).toHaveBeenCalledWith("attribute-names/?type=relation&query=");
+            expect(fetchAttributeNames).toHaveBeenCalledWith("relation", "");
 
             const inPath = await complete("note.relations.aut");
 
-            expect(server.get).toHaveBeenLastCalledWith("attribute-names/?type=relation&query=");
+            expect(fetchAttributeNames).toHaveBeenLastCalledWith("relation", "");
             expect(inPath?.from).toBe(15);
-            expect(labelsOf(inPath)).toEqual([ "book", "publicationYear" ]);
+            expect(labelsOf(inPath)).toEqual([ "book", "archived" ]);
         });
 
         it("fetches labels for the segment after note.labels.", async () => {
             const result = await complete("note.labels.");
 
-            expect(server.get).toHaveBeenCalledWith("attribute-names/?type=label&query=");
+            expect(fetchAttributeNames).toHaveBeenCalledWith("label", "");
             expect(result?.from).toBe(12);
         });
 
         it("leaves the fuzzy operators to the operator branch", async () => {
             expect(labelsOf(await complete("note.title ~="))).toContain("~=");
-            expect(server.get).not.toHaveBeenCalled();
+            expect(fetchAttributeNames).not.toHaveBeenCalled();
         });
 
         it("offers nothing when the request fails", async () => {
-            vi.mocked(server.get).mockRejectedValue(new Error("offline"));
+            vi.mocked(fetchAttributeNames).mockRejectedValue(new Error("offline"));
 
             expect(await complete("#bo")).toBeNull();
         });
     });
 });
+
+describe("searchCompletionIcon", () => {
+    it("draws attribute names, the system ones with a cog rather than their own kind", async () => {
+        vi.mocked(fetchAttributeNames).mockResolvedValue([ "book", "archived" ]);
+        const labels = await complete("#a");
+
+        expect(iconFor(labels, "book")).toBe("bx bx-hash");
+        expect(iconFor(labels, "archived")).toBe("bx bx-cog");
+
+        vi.mocked(fetchAttributeNames).mockResolvedValue([ "author", "template", "archived" ]);
+        const relations = await complete("~a");
+
+        expect(iconFor(relations, "author")).toBe("bx bx-transfer");
+        expect(iconFor(relations, "template")).toBe("bx bx-cog");
+        // Built-in as a label, an ordinary name as a relation.
+        expect(iconFor(relations, "archived")).toBe("bx bx-transfer");
+    });
+
+    it("leaves everything else undrawn", async () => {
+        expect(iconFor(await complete("no"), "note")).toBeUndefined();
+        expect(iconFor(await complete("or"), "orderBy")).toBeUndefined();
+        expect(iconFor(await complete("note."), "title")).toBeUndefined();
+        expect(iconFor(await complete("#year >"), ">=")).toBeUndefined();
+    });
+});
+
+function iconFor(result: CompletionResult | null, label: string) {
+    const option = optionFor(result, label);
+
+    return option ? searchCompletionIcon(option) : "no such option";
+}
 
 async function complete(text: string, opts?: { explicit?: boolean }) {
     return await searchCompletionSource(contextAt(text, opts));
