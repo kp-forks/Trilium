@@ -94,7 +94,6 @@
     "officeparser": "7.8.0",
     "openid-client": "6.8.8",
     "rand-token": "1.0.1",
-    "safe-compare": "1.1.4",
     "serve-favicon": "2.5.1",
     "supertest": "7.2.2",
     "tesseract.js": "7.0.0",
