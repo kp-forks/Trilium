@@ -42,6 +42,8 @@ import linkEmbedRoute from "./api/link_embed";
 import spreadsheetRoute from "./api/spreadsheet";
 import llmRoute from "./api/llm";
 
+export { type CustomRequestResponse, handleCustomRequest } from "./custom";
+
 // TODO: Deduplicate with routes.ts
 const GET = "get",
     PST = "post",
