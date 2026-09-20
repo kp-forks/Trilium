@@ -92,6 +92,13 @@ describe("searchCompletionSource", () => {
             expect((await complete("#!bo"))?.from).toBe(2);
         });
 
+        it("ranks a built-in below a name of the user's own that matches as well", async () => {
+            const result = await complete("#a");
+
+            expect(optionFor(result, "archived")?.boost).toBe(-99);
+            expect(optionFor(result, "book")?.boost).toBeUndefined();
+        });
+
         it("fetches relations for ~, and for the segment after note.relations.", async () => {
             await complete("~aut");
 

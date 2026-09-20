@@ -82,16 +82,28 @@ async function attributeCompletions(type: "label" | "relation", from: number): P
 
     return {
         from,
-        options: names.map((name) => ({
-            label: name,
-            type: isBuiltinAttribute(type, name) ? SYSTEM_ATTRIBUTE : type
-        })),
+        options: names.map((name) => {
+            const isBuiltin = isBuiltinAttribute(type, name);
+
+            return {
+                label: name,
+                type: isBuiltin ? SYSTEM_ATTRIBUTE : type,
+                boost: isBuiltin ? BUILTIN_BOOST : undefined
+            };
+        }),
         validFor: SEGMENT_TYPED
     };
 }
 
 /** Stands in for a completion's own type, a name Trilium attaches a meaning to being marked first. */
 const SYSTEM_ATTRIBUTE = "system-attribute";
+
+/**
+ * The furthest CodeMirror lets an option be moved down, which it adds to the match score. Penalties
+ * there run to the hundreds, so a built-in sinks below a name of the user's own that matches as
+ * well, while a distinctly better match keeps its place.
+ */
+const BUILTIN_BOOST = -99;
 
 const COMPLETION_ICONS: Record<string, string> = {
     [SYSTEM_ATTRIBUTE]: "bx bx-cog",
