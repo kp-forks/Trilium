@@ -7,14 +7,24 @@ import { searchCompletionSource } from "./search_completions";
 vi.mock("../../services/i18n", () => ({ t: (key: string) => key }));
 
 describe("searchCompletionSource", () => {
-    it("offers the note object while a word is being typed, anchored at its start", () => {
+    it("offers the note object and the keywords while a word is being typed, anchored at its start", () => {
         const result = searchCompletionSource(contextAt("#book AND no"));
 
         expect(result?.from).toBe(10);
-        expect(result?.options.map((option) => option.label)).toEqual([ "note" ]);
-        // A bare `note` is never a complete clause, so the dot comes with it.
-        expect(result?.options[0].apply).toBe("note.");
-        expect(result?.options[0].detail).toBe("search_completion.note");
+        expect(labelsOf(result)).toEqual([ "note", "and", "or", "not", "orderBy", "limit" ]);
+        // Both complete with what has to follow them.
+        expect(optionFor(result, "note")?.apply).toBe("note.");
+        expect(optionFor(result, "not")?.apply).toBe("not(");
+        expect(optionFor(result, "note")?.detail).toBe("search_completion.note");
+    });
+
+    it("offers the sort directions only once an orderBy is open", () => {
+        expect(labelsOf(searchCompletionSource(contextAt("#book de")))).not.toContain("desc");
+
+        const ordering = searchCompletionSource(contextAt("#book orderBy #year de"));
+
+        expect(labelsOf(ordering)).toContain("desc");
+        expect(optionFor(ordering, "asc")?.detail).toBe("order_by.asc");
     });
 
     it("offers every operator once one of their characters is typed", () => {
@@ -62,12 +72,17 @@ describe("searchCompletionSource", () => {
         const explicit = searchCompletionSource(contextAt("#book ", { explicit: true }));
 
         expect(explicit?.from).toBe(6);
-        expect(explicit?.options).toHaveLength(13);
+        // The six words, then every operator.
+        expect(explicit?.options).toHaveLength(18);
     });
 });
 
 function labelsOf(result: CompletionResult | null): string[] {
     return (result?.options ?? []).map((option) => option.label);
+}
+
+function optionFor(result: CompletionResult | null, label: string) {
+    return result?.options.find((option) => option.label === label);
 }
 
 /** Stands in for the editor's context, whose `matchBefore` anchors the pattern at the cursor. */
@@ -78,7 +93,8 @@ function contextAt(text: string, { explicit = false } = {}): CompletionContext {
         pos,
         explicit,
         matchBefore(expr: RegExp) {
-            const match = new RegExp(`(?:${expr.source})$`).exec(text);
+            // Flags carry over, the way CodeMirror's own `ensureAnchor` keeps them.
+            const match = new RegExp(`(?:${expr.source})$`, expr.flags).exec(text);
             return match ? { from: pos - match[0].length, to: pos, text: match[0] } : null;
         }
     } as unknown as CompletionContext;

@@ -22,14 +22,17 @@ export function searchCompletionSource(context: CompletionContext): CompletionRe
         return { from: operator.from, options: operatorOptions(), validFor: OPERATOR_PREFIX };
     }
 
+    // `asc` and `desc` order an `orderBy` key, so they are worth offering only once one is open.
+    const isOrdering = !!context.matchBefore(ORDER_BY_BEFORE);
+
     const word = context.matchBefore(WORD_PREFIX);
     if (word) {
-        return { from: word.from, options: objectOptions(), validFor: WORD_PREFIX };
+        return { from: word.from, options: wordOptions(isOrdering), validFor: WORD_PREFIX };
     }
 
     // Ctrl-Space on empty space asks for everything on offer.
     if (context.explicit) {
-        return { from: context.pos, options: [ ...objectOptions(), ...operatorOptions() ] };
+        return { from: context.pos, options: [ ...wordOptions(isOrdering), ...operatorOptions() ] };
     }
 
     return null;
@@ -43,6 +46,8 @@ const SEGMENT = "[^\\s#~().,=<>*!%+\\-'\"`]";
 /** The `note` object or a relation, followed by the dotted path walked from it. */
 const PROPERTY_PATH = new RegExp(`(?:^|[\\s(])(?:note|~${SEGMENT}+)(?:\\.${SEGMENT}*)+`);
 const SEGMENT_TYPED = new RegExp(`${SEGMENT}*`);
+/** Matches once an `orderBy` has been opened anywhere before the cursor. */
+const ORDER_BY_BEFORE = /orderby[^]*/i;
 
 /**
  * Completes the segment being typed at the end of `path`, where the grammar allows one. Nothing is
@@ -68,12 +73,30 @@ function pathCompletions(path: string, pos: number): CompletionResult | null {
 }
 
 /**
- * The options are built per request rather than once, so they read the catalogue after i18n has
+ * Everything spelled as a word: the `note` object and the keywords that join, order and cut down a
+ * query. Built per request rather than once, so the options read the catalogue after i18n has
  * loaded and follow a language switched while the app is running.
  */
-function objectOptions(): Completion[] {
-    // `note.` completes with the dot, since a bare `note` is never a complete clause.
-    return [ { label: "note", apply: "note.", type: "namespace", detail: t("search_completion.note") } ];
+function wordOptions(isOrdering: boolean): Completion[] {
+    const options: Completion[] = [
+        // Both complete with what has to follow them: a bare `note`, or a `not` without its
+        // parenthesised sub-expression, is never a clause on its own.
+        { label: "note", apply: "note.", type: "namespace", detail: t("search_completion.note") },
+        { label: "and", type: "keyword", detail: t("search_completion.keyword_and") },
+        { label: "or", type: "keyword", detail: t("search_completion.keyword_or") },
+        { label: "not", apply: "not(", type: "keyword", detail: t("search_completion.keyword_not") },
+        { label: "orderBy", type: "keyword", detail: t("search_completion.keyword_order_by") },
+        { label: "limit", type: "keyword", detail: t("search_completion.keyword_limit") }
+    ];
+
+    if (isOrdering) {
+        options.push(
+            { label: "asc", type: "keyword", detail: t("order_by.asc") },
+            { label: "desc", type: "keyword", detail: t("order_by.desc") }
+        );
+    }
+
+    return options;
 }
 
 function segmentOptions(): Completion[] {

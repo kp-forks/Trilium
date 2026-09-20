@@ -4328,6 +4328,11 @@
     "property_relation_count": "Number of relations, including inherited ones",
     "property_relation_count_including_links": "Number of relations, counting the ones made by links",
     "property_owned_relation_count_including_links": "Number of the note's own relations, counting the ones made by links",
-    "property_target_relation_count_including_links": "Number of relations targeting the note, counting the ones made by links"
+    "property_target_relation_count_including_links": "Number of relations targeting the note, counting the ones made by links",
+    "keyword_and": "Both conditions must match",
+    "keyword_or": "Either condition must match",
+    "keyword_not": "Excludes the notes the condition in parentheses matches",
+    "keyword_order_by": "Sorts the results by a property or label",
+    "keyword_limit": "Keeps only the first results"
   }
 }
