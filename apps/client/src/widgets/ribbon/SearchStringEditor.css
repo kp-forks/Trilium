@@ -25,12 +25,9 @@
         white-space: pre-wrap;
     }
 
-    /*
-     * CodeMirror picks between a light and a dark popup from the `EditorView.darkTheme` facet, which
-     * only one of its colour themes sets. The popup follows the app's menu palette instead, which
-     * every Trilium theme defines. The selector has to outweigh `&light .cm-tooltip`, two classes.
-     */
+    /* The selector has to outweigh CodeMirror's `&light .cm-tooltip`, which carries two classes. */
     .cm-editor .cm-tooltip.cm-tooltip-autocomplete {
+        font-size: 0.8125em;
         background: var(--menu-background-color-no-backdrop, var(--main-background-color));
         color: var(--menu-text-color, var(--main-text-color));
         border: 1px solid var(--dropdown-border-color, var(--main-border-color));
@@ -41,28 +38,28 @@
 
         & > ul {
             font-family: inherit;
+            /* Two lines an option, so the stock 10em would show four of them. */
+            max-height: 18em;
         }
 
-        /* Two columns: what is typed on the left, what it matches on the right. The label column
-           is wide enough for the longest option, so the descriptions share a left edge. */
         & > ul > li {
-            display: flex;
-            gap: 0.75em;
-            padding: 0.25em 0.6em;
+            display: block;
+            padding: 0.5em 1em;
+            line-height: 1.2;
         }
 
         .cm-completionLabel {
-            flex: 0 0 3.5em;
-            /* The label is a piece of the query, so it is set like one. */
+            /* Bold like the slash-command palette's, and monospace because it is query syntax. */
             font-family: monospace;
+            font-weight: bold;
         }
 
         .cm-completionDetail {
-            flex: 1 1 auto;
-            min-width: 0;
+            display: block;
             margin-left: 0;
+            font-size: 0.75em;
             font-style: normal;
-            color: var(--muted-text-color);
+            opacity: 0.75;
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -72,12 +69,6 @@
         & > ul > li[aria-selected] {
             background: var(--active-item-background-color, color-mix(in srgb, var(--main-text-color) 15%, transparent));
             color: var(--active-item-text-color, inherit);
-        }
-
-        /* The muted grey has no contrast left against the selected row's background. */
-        & > ul > li[aria-selected] .cm-completionDetail {
-            color: inherit;
-            opacity: 0.8;
         }
 
         /* The stock icons are a key for every operator and a square for `note`, which say less
