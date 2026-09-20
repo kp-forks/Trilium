@@ -350,7 +350,15 @@
     "sort_with_respect_to_different_character_sorting": "根据不同语言或地区的字符排序和排序规则排序。",
     "natural_sort_language": "自然排序语言",
     "the_language_code_for_natural_sort": "自然排序的语言代码，例如中文的 \"zh-CN\"。",
-    "sort": "排序"
+    "sort": "排序",
+    "sorting_criteria_description": "笔记按第一级排序；只有当上一级无法区分时，才由下一级决定先后。",
+    "label": "标签",
+    "label_name": "标签名称",
+    "add_level": "添加层级",
+    "remove_level": "移除层级",
+    "move_level_up": "上移层级",
+    "move_level_down": "下移层级",
+    "folders_follow_first_level": "当第一级为降序时，改为排在底部。"
   },
   "upload_attachments": {
     "upload_attachments_to_note": "上传附件到笔记",
@@ -402,8 +410,8 @@
     "run_on_instance": "定义应在哪个Trilium实例上运行。默认为所有实例。",
     "run_at_hour": "应在几点运行。应与 <code>#run=hourly</code> 一起使用。可多次定义以在一天内多次运行。",
     "disable_inclusion": "含有此标签的脚本不会包含在父脚本执行中。",
-    "sorted": "按标题字母顺序保持子笔记排序。",
-    "sort_direction": "<code>#sorted</code> 的排序方向：<code>desc</code> 为降序，其他值为升序。未设置 <code>#sorted</code> 时忽略。",
+    "sorted": "按标题字母顺序对子笔记进行排序。若填写了值，则改用其他条件排序：以逗号分隔的多级条件，每级为 <code>title</code>、<code>dateCreated</code>、<code>dateModified</code> 或某个标签名，并可分别后接 <code>asc</code> 或 <code>desc</code>，例如 <code>priority desc, dueDate</code>。",
+    "sort_direction": "<code>#sorted</code> 对子笔记排序的方向：<code>desc</code> 为降序，其他任意值均为升序。若某一级条件自带 <code>asc</code> 或 <code>desc</code>，则忽略此项。仅在设置了 <code>#sorted</code> 时生效。",
     "sort_folders_first": "文件夹（含有子笔记的笔记）应排在顶部。",
     "top": "将指定笔记置顶于父级内（仅适用于已排序的父级）。",
     "hide_promoted_attributes": "隐藏此笔记上的升级属性。",
@@ -2422,7 +2430,8 @@
   },
   "svg": {
     "export_to_png": "无法将图表导出为PNG。",
-    "export_to_svg": "此图像无法导出为SVG。"
+    "export_to_svg": "此图像无法导出为SVG。",
+    "preview": "图表预览"
   },
   "code_theme": {
     "title": "外观",
@@ -3616,7 +3625,8 @@
       "previous_image": "上一张图片",
       "first_image": "第一张图片",
       "last_image": "最后一张图片"
-    }
+    },
+    "viewport": "图片视图"
   },
   "security": {
     "backend_scripting_title": "后端脚本",
@@ -4208,5 +4218,22 @@
   "attribute_menu": {
     "attributes": "属性",
     "not-set": "未设置"
+  },
+  "zoom_controls": {
+    "zoom_out": "缩小",
+    "reset": "重置缩放",
+    "zoom_in": "放大",
+    "hints": {
+      "zoom": "缩放",
+      "zoom_in": "放大",
+      "zoom_out": "缩小",
+      "reset_zoom": "重置缩放",
+      "pan": "平移",
+      "pan_up": "上",
+      "pan_down": "下",
+      "pan_left": "左",
+      "pan_right": "右",
+      "pan_fast": "快速平移"
+    }
   }
 }
