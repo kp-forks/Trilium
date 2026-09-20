@@ -32,7 +32,10 @@ export default function SearchStringEditor({ currentValue, placeholder, classNam
         let editor: SingleLineEditor | undefined;
         let cancelled = false;
 
-        void import("@triliumnext/codemirror/src/single_line").then(({ createSingleLineEditor }) => {
+        void Promise.all([
+            import("@triliumnext/codemirror/src/single_line"),
+            import("@triliumnext/codemirror/src/extensions/trilium_search_highlighter")
+        ]).then(([ { createSingleLineEditor }, { triliumSearchHighlighter } ]) => {
             if (cancelled || !parentRef.current) {
                 return;
             }
@@ -41,6 +44,7 @@ export default function SearchStringEditor({ currentValue, placeholder, classNam
                 parent: parentRef.current,
                 doc: propsRef.current.currentValue,
                 placeholder,
+                extensions: [ triliumSearchHighlighter ],
                 onChange: (value) => propsRef.current.onChange(value),
                 onEnter: () => propsRef.current.onEnter()
             });

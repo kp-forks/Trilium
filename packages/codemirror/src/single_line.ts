@@ -7,6 +7,8 @@ export interface SingleLineEditorConfig {
     /** Text the editor starts with. */
     doc?: string;
     placeholder?: string;
+    /** Extra extensions, such as a highlighter for whatever syntax the value holds. */
+    extensions?: Extension[];
     /** Runs after every document change, with the whole text. */
     onChange?(value: string): void;
     /** Runs when Enter is pressed; the key never inserts a line break. */
@@ -44,7 +46,8 @@ export function createSingleLineEditor(config: SingleLineEditorConfig): SingleLi
             if (update.docChanged) {
                 config.onChange?.(update.state.doc.toString());
             }
-        })
+        }),
+        ...(config.extensions ?? [])
     ];
 
     if (config.placeholder) {
