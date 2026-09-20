@@ -1,4 +1,6 @@
 import type { AttributeRow, CreateChildrenResponse, DeleteNotesPreview, MetadataResponse } from "@triliumnext/commons";
+import { t } from "i18next";
+
 import type { Request } from "../../http_interface";
 
 import blobService from "../../services/blob";
@@ -455,41 +457,52 @@ function deleteNotes(req: Request) {
         taskContext.setTotalCount(totalCount);
     }
 
-    for (const branchId of branchIdsToDelete) {
-        const branch = becca.getBranch(branchId);
+    try {
+        for (const branchId of branchIdsToDelete) {
+            const branch = becca.getBranch(branchId);
 
-        if (!branch) {
-            // Either a stale id, or a branch an earlier one of the selection took down with
-            // its subtree.
-            getLog().info(`Branch '${branchId}' was not found, skipping its deletion.`);
-            continue;
+            if (!branch) {
+                // Either a stale id, or a branch an earlier one of the selection took down with
+                // its subtree.
+                getLog().info(`Branch '${branchId}' was not found, skipping its deletion.`);
+                continue;
+            }
+
+            const deleteId = randomString(10);
+
+            // Erasing one branch would leave the note's other clones pointing at erased content, so
+            // eraseNotes deletes the note everywhere it hangs.
+            if (deleteAllClones || eraseNotes) {
+                branch.getNote().deleteNote(deleteId, taskContext);
+            } else {
+                branch.deleteBranch(deleteId, taskContext);
+            }
+
+            if (eraseNotes) {
+                taskContext.scheduleErase(deleteId);
+            }
         }
 
-        const deleteId = randomString(10);
+        const deleteIdsToErase = taskContext.takeScheduledErases();
 
-        // Erasing one branch would leave the note's other clones pointing at erased content, so
-        // eraseNotes deletes the note everywhere it hangs.
-        if (deleteAllClones || eraseNotes) {
-            branch.getNote().deleteNote(deleteId, taskContext);
-        } else {
-            branch.deleteBranch(deleteId, taskContext);
+        if (deleteIdsToErase.length > 0) {
+            // Erasing is bulk SQL over the whole batch with no per-note step to count, so it
+            // reports a phase rather than letting the bar sit at its last value.
+            taskContext.reportPhase("erasing");
+            eraseService.eraseNotesWithDeleteIds(deleteIdsToErase);
         }
 
-        if (eraseNotes) {
-            taskContext.scheduleErase(deleteId);
-        }
+        taskContext.taskSucceeded(null);
+    } catch (e: unknown) {
+        // The progress toast has no close button, so a failure the task system never hears about
+        // leaves it on screen until the page is reloaded. Rethrown rather than answered with a
+        // status, because the surrounding transaction rolls back on the throw — returning here
+        // would commit a half-deleted selection.
+        const message = e instanceof Error ? e.message : String(e);
+        getLog().error(`Deleting notes failed: ${message}`);
+        taskContext.reportError(t("notes.delete-notes-failed", { message }));
+        throw e;
     }
-
-    const deleteIdsToErase = taskContext.takeScheduledErases();
-
-    if (deleteIdsToErase.length > 0) {
-        // Erasing is bulk SQL over the whole batch with no per-note step to count, so it reports a
-        // phase rather than letting the bar sit at its last value.
-        taskContext.reportPhase("erasing");
-        eraseService.eraseNotesWithDeleteIds(deleteIdsToErase);
-    }
-
-    taskContext.taskSucceeded(null);
 }
 
 function forceSaveRevision(req: Request<{ noteId: string }>) {

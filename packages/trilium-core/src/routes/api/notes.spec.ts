@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 import becca from "../../becca/becca";
+import eraseService from "../../services/erase";
 import noteService from "../../services/notes";
 import { getSql } from "../../services/sql/index";
 import ws from "../../services/ws";
@@ -437,6 +438,45 @@ describe("Notes API (core)", () => {
                 expect(counts.at(-1)).toMatchObject({ totalCount: 4, phase: "erasing" });
             } finally {
                 progress.mockRestore();
+            }
+        });
+
+        it("tells the task system when it fails, and keeps the selection", async () => {
+            const { noteId, branchId } = await createTextNote(api, { title: "Delete that fails" });
+            const messages = vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {});
+            const erase = vi.spyOn(eraseService, "eraseNotesWithDeleteIds")
+                .mockImplementation(() => {
+                    throw new Error("erase blew up");
+                });
+
+            try {
+                const res = await api.post("/api/delete-notes", {
+                    body: {
+                        branchIdsToDelete: [ branchId ],
+                        eraseNotes: true,
+                        taskId: "test-batch-failure"
+                    }
+                });
+                expect(res.status).toBe(500);
+
+                const sent = messages.mock.calls.map(([ message ]) => message);
+
+                // Without a terminal message the client's progress toast stays up, and it has no
+                // close button of its own.
+                expect(sent.filter((message) => message.type === "taskError")).toEqual([
+                    expect.objectContaining({
+                        taskId: "test-batch-failure",
+                        taskType: "deleteNotes",
+                        message: expect.stringContaining("erase blew up")
+                    })
+                ]);
+                expect(sent.filter((message) => message.type === "taskSucceeded")).toEqual([]);
+
+                // The throw rolls the transaction back, so nothing of the selection is gone.
+                expect(noteIsDeleted(noteId)).toBe(0);
+            } finally {
+                erase.mockRestore();
+                messages.mockRestore();
             }
         });
 
