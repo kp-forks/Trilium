@@ -1,4 +1,4 @@
-import type { CompletionContext } from "@triliumnext/codemirror/src/single_line";
+import type { CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
 import { describe, expect, it, vi } from "vitest";
 
 import { searchCompletionSource } from "./search_completions";
@@ -27,6 +27,35 @@ describe("searchCompletionSource", () => {
         expect(result?.options.every((option) => option.detail)).toBe(true);
     });
 
+    it("offers path segments after a dot, anchored at the segment being typed", () => {
+        const root = searchCompletionSource(contextAt("note."));
+
+        expect(root?.from).toBe(5);
+        expect(labelsOf(root)).toContain("title");
+        expect(labelsOf(root)).toContain("parents");
+        expect(labelsOf(root)).toContain("content");
+
+        const partial = searchCompletionSource(contextAt("#book AND note.date"));
+
+        expect(partial?.from).toBe(15);
+        expect(labelsOf(partial)).toEqual(labelsOf(root));
+    });
+
+    it("walks a path through a relation and through a traversal", () => {
+        expect(labelsOf(searchCompletionSource(contextAt("~author.")))).toContain("title");
+        expect(labelsOf(searchCompletionSource(contextAt("note.parents.")))).toContain("title");
+        expect(labelsOf(searchCompletionSource(contextAt("~author.relations.son.")))).toContain("title");
+    });
+
+    it("stops where the grammar expects a name or ends the path", () => {
+        // Both take an attribute name, which nothing can enumerate ahead of time.
+        expect(searchCompletionSource(contextAt("note.labels."))).toBeNull();
+        expect(searchCompletionSource(contextAt("note.relations."))).toBeNull();
+        // A terminal property has nothing to walk onto.
+        expect(searchCompletionSource(contextAt("note.title."))).toBeNull();
+        expect(searchCompletionSource(contextAt("note.labels.publicationYear."))).toBeNull();
+    });
+
     it("stays quiet on empty space, and offers everything when asked explicitly", () => {
         expect(searchCompletionSource(contextAt("#book "))).toBeNull();
 
@@ -36,6 +65,10 @@ describe("searchCompletionSource", () => {
         expect(explicit?.options).toHaveLength(13);
     });
 });
+
+function labelsOf(result: CompletionResult | null): string[] {
+    return (result?.options ?? []).map((option) => option.label);
+}
 
 /** Stands in for the editor's context, whose `matchBefore` anchors the pattern at the cursor. */
 function contextAt(text: string, { explicit = false } = {}): CompletionContext {

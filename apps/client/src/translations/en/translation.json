@@ -4314,6 +4314,20 @@
     "operator_less_or_equal": "Less than or equal to",
     "operator_regex": "Matches a regular expression",
     "operator_fuzzy_equal": "Equals, tolerating typos",
-    "operator_fuzzy_contains": "Contains, tolerating typos"
+    "operator_fuzzy_contains": "Contains, tolerating typos",
+    "property_content": "The note's body text",
+    "property_raw_content": "The note's body text, before its formatting is stripped",
+    "property_text": "The title or the body text",
+    "property_parents": "Continues on the note's parents",
+    "property_children": "Continues on the note's children",
+    "property_ancestors": "Continues on the note's ancestors",
+    "property_labels": "Followed by a label name",
+    "property_relations": "Followed by a relation name, then that note's own properties",
+    "property_attribute_count": "Number of labels and relations, including inherited ones",
+    "property_label_count": "Number of labels, including inherited ones",
+    "property_relation_count": "Number of relations, including inherited ones",
+    "property_relation_count_including_links": "Number of relations, counting the ones made by links",
+    "property_owned_relation_count_including_links": "Number of the note's own relations, counting the ones made by links",
+    "property_target_relation_count_including_links": "Number of relations targeting the note, counting the ones made by links"
   }
 }
