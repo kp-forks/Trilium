@@ -25,6 +25,69 @@
         white-space: pre-wrap;
     }
 
+    /*
+     * CodeMirror picks between a light and a dark popup from the `EditorView.darkTheme` facet, which
+     * only one of its colour themes sets. The popup follows the app's menu palette instead, which
+     * every Trilium theme defines. The selector has to outweigh `&light .cm-tooltip`, two classes.
+     */
+    .cm-editor .cm-tooltip.cm-tooltip-autocomplete {
+        background: var(--menu-background-color-no-backdrop, var(--main-background-color));
+        color: var(--menu-text-color, var(--main-text-color));
+        border: 1px solid var(--dropdown-border-color, var(--main-border-color));
+        border-radius: var(--bs-border-radius);
+        box-shadow: 0 5px 10px rgba(0, 0, 0, var(--dropdown-shadow-opacity, 0.2));
+        /* Keeps the list's corners inside the rounded border. */
+        overflow: hidden;
+
+        & > ul {
+            font-family: inherit;
+        }
+
+        /* Two columns: what is typed on the left, what it matches on the right. The label column
+           is wide enough for the longest option, so the descriptions share a left edge. */
+        & > ul > li {
+            display: flex;
+            gap: 0.75em;
+            padding: 0.25em 0.6em;
+        }
+
+        .cm-completionLabel {
+            flex: 0 0 3.5em;
+            /* The label is a piece of the query, so it is set like one. */
+            font-family: monospace;
+        }
+
+        .cm-completionDetail {
+            flex: 1 1 auto;
+            min-width: 0;
+            margin-left: 0;
+            font-style: normal;
+            color: var(--muted-text-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* The selected row matches the tree's, not the menus' — `--hover-item-background-color`
+           is transparent in the legacy themes, which would leave the selection invisible. */
+        & > ul > li[aria-selected] {
+            background: var(--active-item-background-color, color-mix(in srgb, var(--main-text-color) 15%, transparent));
+            color: var(--active-item-text-color, inherit);
+        }
+
+        /* The muted grey has no contrast left against the selected row's background. */
+        & > ul > li[aria-selected] .cm-completionDetail {
+            color: inherit;
+            opacity: 0.8;
+        }
+
+        /* The stock icons are a key for every operator and a square for `note`, which say less
+           than the descriptions beside them. */
+        .cm-completionIcon {
+            display: none;
+        }
+
+    }
+
     .cm-placeholder {
         /* CodeMirror draws the placeholder as an inline-block, which leaves the empty line with no
            text-sized inline box for the caret to take its height from. */
