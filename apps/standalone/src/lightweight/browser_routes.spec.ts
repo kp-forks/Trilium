@@ -308,6 +308,9 @@ return (async () => {
             // A handler that returns without answering. The server leaves such a request hanging
             // until the client gives up; here the worker has to send something.
             createHandler("Silent", "silent", `api.log("thinking about it");`);
+            // Express routes a number or a boolean through res.json(). The User Guide's own
+            // example answers `api.res.send(400)`, so this is the documented shape.
+            createHandler("Primitive", "primitive", `api.res.send(api.req.query.kind === "bool" ? false : 404);`);
 
             const resource = noteService.createNewNote({
                 parentNoteId: "root",
@@ -349,6 +352,26 @@ return (async () => {
         expect(res.status).toBe(200);
         expect(res.headers["Content-Type"]).toContain("application/json");
         expect(parseJson(res.body)).toEqual({ method: "POST", body: { hello: "there" } });
+    });
+
+    // `send()` leaving a number in the body would reach BrowserRouter as something it cannot
+    // encode, and the handler would answer 200 with nothing at all.
+    it("sends a primitive body the way Express does, through json()", async () => {
+        const number = await router.dispatch("GET", "http://localhost/custom/primitive");
+        expect(number.status).toBe(200);
+        expect(text(number.body)).toBe("404");
+        expect(number.headers["Content-Type"]).toContain("application/json");
+
+        const bool = await router.dispatch("GET", "http://localhost/custom/primitive?kind=bool");
+        expect(text(bool.body)).toBe("false");
+    });
+
+    // The server registers its route as an Express `all`, which covers HEAD. A HEAD reaching the
+    // worker with no route to match would answer the router's own 404 instead of the handler.
+    it("answers HEAD from the handler, with the body dropped", async () => {
+        const res = await router.dispatch("HEAD", "http://localhost/custom/greet/world");
+        expect(res.status).toBe(200);
+        expect(res.body).toBeNull();
     });
 
     it("waits for a handler that answers after an await", async () => {

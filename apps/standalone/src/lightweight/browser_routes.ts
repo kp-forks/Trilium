@@ -190,10 +190,10 @@ function createMockResponse() {
         },
         send(body: unknown) {
             res._used = true;
-            // Express serializes an object body as JSON, and a custom request handler written
-            // against it does `api.res.send({...})`. Strings and bytes are left as they are: those
-            // are what the note-content routes send.
-            if (body !== null && typeof body === "object" && !isBinary(body)) {
+            // Express routes an object, a number or a boolean through res.json(), leaving only
+            // strings and bytes to go out as they are. The User Guide's handler example answers
+            // `api.res.send(400)`, which reaches BrowserRouter as an unencodable body otherwise.
+            if (body !== null && isJsonSent(body)) {
                 return res.json(body);
             }
             res._body = body;
@@ -232,9 +232,13 @@ function createMockResponse() {
     return res;
 }
 
-/** Whether a body is already bytes, which {@link BrowserRouter} sends without re-encoding. */
-function isBinary(body: object): boolean {
-    return body instanceof ArrayBuffer || ArrayBuffer.isView(body);
+/** Whether Express would hand this body to `res.json()` rather than write it out as it stands. */
+function isJsonSent(body: unknown): boolean {
+    if (body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
+        return false;
+    }
+
+    return typeof body === "object" || typeof body === "number" || typeof body === "boolean";
 }
 
 /** Header names are case-insensitive, while the record a handler writes them into is not. */
@@ -404,8 +408,12 @@ function bootstrapRoute(req: { query: Record<string, string | undefined> }): Boo
     };
 }
 
-/** Every method a handler script can answer. The server registers its route as an Express `all`. */
-const CUSTOM_HANDLER_METHODS: HttpMethod[] = ["get", "post", "put", "patch", "delete"];
+/**
+ * Every method a handler script can answer. The server registers its route as an Express `all`,
+ * which covers HEAD and OPTIONS too, so both are registered here to match — `BrowserRouter` matches
+ * on the method, and one left out answers the router's own 404 rather than reaching the handler.
+ */
+const CUSTOM_HANDLER_METHODS = ["get", "head", "post", "put", "patch", "delete", "options"];
 
 /**
  * Serves `/custom/`: the notes labelled `#customRequestHandler` and `#customResourceProvider`.
@@ -421,13 +429,12 @@ function registerCustomRoute(router: BrowserRouter) {
                 const path = req.params.path;
                 const res = createMockResponse();
 
-                // Deliberately no transaction: a handler script may await, and one held open
-                // across that would block every other request on the worker's single connection.
-                // The server's route opens none either.
+                // Handler scripts can await, and a transaction held across that wait would block
+                // every other request on the worker's single SQLite connection.
                 //
-                // Awaited because this runtime cannot hold the response open past the handler
-                // returning the way Express does. A script that answers after an `await` returns
-                // its promise, and the body has to be complete before the router sends it.
+                // Awaited because this runtime sends the response as soon as the handler is done,
+                // where Express holds the connection open past it. A script that answers after an
+                // `await` returns its promise, which has to settle before the body goes out.
                 await routes.handleCustomRequest(path, toCoreRequest(req), res, isScriptingEnabled);
 
                 if (!res._used) {
@@ -435,19 +442,21 @@ function registerCustomRoute(router: BrowserRouter) {
                         .send(`Custom handler for '${path}' did not send a response.`);
                 }
 
-                return toRawResponse(res);
+                // A HEAD response carries the status and headers of the GET it stands in for, and
+                // nothing else. Express strips the body itself.
+                return toRawResponse(res, req.method === "HEAD");
             }) as Promise<unknown>
         ));
     }
 }
 
 /** Wraps what a handler wrote to its mock response so {@link BrowserRouter} sends it verbatim. */
-function toRawResponse(res: ReturnType<typeof createMockResponse>) {
+function toRawResponse(res: ReturnType<typeof createMockResponse>, omitBody = false) {
     return {
         [RAW_RESPONSE]: true as const,
         status: res._status,
         headers: res._headers,
-        body: res._body
+        body: omitBody ? null : res._body
     };
 }
 
