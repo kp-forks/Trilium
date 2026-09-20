@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 import becca from "../../becca/becca";
 import noteService from "../../services/notes";
 import { getSql } from "../../services/sql/index";
+import ws from "../../services/ws";
 import { createTextNote } from "../../test/api_fixtures";
 import { CoreApiTester } from "../../test/api_tester";
 
@@ -314,6 +315,146 @@ describe("Notes API (core)", () => {
             // The last request erases everything the group deleted, in one go.
             expect(noteIsDeleted(first.noteId)).toBeNull();
             expect(noteIsDeleted(second.noteId)).toBeNull();
+        });
+    });
+
+    describe("deleting a selection", () => {
+        it("deletes every branch of the selection, and erases them when asked", async () => {
+            const first = await createTextNote(api, { title: "Selection note 1" });
+            const second = await createTextNote(api, { title: "Selection note 2" });
+            const child = await createTextNote(api,
+                { parentNoteId: first.noteId, title: "Selection child" });
+
+            const res = await api.post("/api/delete-notes", {
+                body: {
+                    branchIdsToDelete: [ first.branchId, second.branchId ],
+                    taskId: "test-batch-delete"
+                }
+            });
+
+            expect(res.status).toBe(204);
+            expect(noteIsDeleted(first.noteId)).toBe(1);
+            expect(noteIsDeleted(second.noteId)).toBe(1);
+            // Deleting a note takes its subtree with it, as the per-note route does.
+            expect(noteIsDeleted(child.noteId)).toBe(1);
+
+            const toErase = await createTextNote(api, { title: "Selection to erase" });
+            const eraseRes = await api.post("/api/delete-notes", {
+                body: {
+                    branchIdsToDelete: [ toErase.branchId ],
+                    eraseNotes: true,
+                    taskId: "test-batch-erase"
+                }
+            });
+
+            expect(eraseRes.status).toBe(204);
+            // One request covers the whole selection, so nothing holds the erase back.
+            expect(noteIsDeleted(toErase.noteId)).toBeNull();
+        });
+
+        it("removes only the selected branch of a clone, unless all clones are asked", async () => {
+            const otherParent = await createTextNote(api, { title: "Other clone parent" });
+            const cloned = await createTextNote(api, { title: "Cloned note" });
+
+            const clone = await api.put<{ branchId: string }>(
+                `/api/notes/${cloned.noteId}/clone-to-note/${otherParent.noteId}`,
+                { body: {} }
+            );
+            expect(clone.status).toBe(200);
+
+            const res = await api.post("/api/delete-notes", {
+                body: {
+                    branchIdsToDelete: [ cloned.branchId ],
+                    taskId: "test-batch-clone-delete"
+                }
+            });
+
+            expect(res.status).toBe(204);
+            // The note outlives the branch: it still hangs under the other parent.
+            expect(noteIsDeleted(cloned.noteId)).toBe(0);
+            expect(becca.getNote(cloned.noteId)?.getParentNotes().map((note) => note.noteId))
+                .toEqual([ otherParent.noteId ]);
+
+            const allClones = await createTextNote(api, { title: "Cloned note, all clones" });
+            await api.put(
+                `/api/notes/${allClones.noteId}/clone-to-note/${otherParent.noteId}`, { body: {} });
+
+            const allRes = await api.post("/api/delete-notes", {
+                body: {
+                    branchIdsToDelete: [ allClones.branchId ],
+                    deleteAllClones: true,
+                    taskId: "test-batch-all-clones-delete"
+                }
+            });
+
+            expect(allRes.status).toBe(204);
+            expect(noteIsDeleted(allClones.noteId)).toBe(1);
+        });
+
+        it("skips a branch an earlier one of the selection already took down", async () => {
+            const parent = await createTextNote(api, { title: "Selection ancestor" });
+            const child = await createTextNote(api,
+                { parentNoteId: parent.noteId, title: "Selection descendant" });
+
+            // The tree only ever selects top-most nodes, but other callers (a note title menu,
+            // the table view) can name both.
+            const res = await api.post("/api/delete-notes", {
+                body: {
+                    branchIdsToDelete: [ parent.branchId, child.branchId ],
+                    taskId: "test-batch-nested-delete"
+                }
+            });
+
+            expect(res.status).toBe(204);
+            expect(noteIsDeleted(parent.noteId)).toBe(1);
+            expect(noteIsDeleted(child.noteId)).toBe(1);
+        });
+
+        it("reports the caller's total, and announces the erasing phase", async () => {
+            const progress = vi.spyOn(ws, "sendMessageToAllClients").mockImplementation(() => {});
+
+            try {
+                const { branchId } = await createTextNote(api, { title: "Progress-reported" });
+
+                const res = await api.post("/api/delete-notes", {
+                    body: {
+                        branchIdsToDelete: [ branchId ],
+                        eraseNotes: true,
+                        totalCount: 4,
+                        taskId: "test-batch-progress"
+                    }
+                });
+                expect(res.status).toBe(204);
+
+                const counts = progress.mock.calls
+                    .map(([ message ]) => message)
+                    .filter((message) => message.type === "taskProgressCount");
+
+                // The first message leaves the constructor before the total is known; every later
+                // one carries it, so the client can draw a bar.
+                expect(counts.length).toBeGreaterThan(1);
+                expect(counts[0].totalCount).toBeUndefined();
+                expect(counts.at(-1)).toMatchObject({ totalCount: 4, phase: "erasing" });
+            } finally {
+                progress.mockRestore();
+            }
+        });
+
+        it("400s without a taskId or a branch id array", async () => {
+            const { noteId, branchId } = await createTextNote(api, { title: "Needs a task id" });
+
+            const noTaskId = await api.post("/api/delete-notes", {
+                body: { branchIdsToDelete: [ branchId ] }
+            });
+            expect(noTaskId.status).toBe(400);
+
+            const noBranchIds = await api.post("/api/delete-notes", {
+                body: { taskId: "test-batch-no-branches" }
+            });
+            expect(noBranchIds.status).toBe(400);
+
+            // Neither one deleted anything.
+            expect(noteIsDeleted(noteId)).toBe(0);
         });
     });
 
