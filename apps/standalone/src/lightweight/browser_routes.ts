@@ -4,7 +4,7 @@
  */
 
 import { BootstrapDefinition } from '@triliumnext/commons';
-import { checkIntegrity, consistency_checks, entity_changes, getContext, getPlatform, getSharedBootstrapItems, getSql, type Request, type Response, routes, sql_init } from '@triliumnext/core';
+import { checkIntegrity, consistency_checks, entity_changes, getContext, getPlatform, getSharedBootstrapItems, getSql, isScriptingEnabled, type Request, type Response, routes, sql_init } from '@triliumnext/core';
 import llmRoute from '@triliumnext/core/src/routes/api/llm.js';
 
 import packageJson from '../../package.json' with { type: 'json' };
@@ -108,12 +108,7 @@ function createRoute(router: BrowserRouter) {
                 // If the handler used the mock response (e.g. image routes that call res.send()),
                 // return it as a raw response so BrowserRouter doesn't JSON-serialize it.
                 if (mockRes._used) {
-                    return {
-                        [RAW_RESPONSE]: true as const,
-                        status: mockRes._status,
-                        headers: mockRes._headers,
-                        body: mockRes._body
-                    };
+                    return toRawResponse(mockRes);
                 }
 
                 if (resultHandler) {
@@ -150,12 +145,7 @@ function createAsyncRoute(router: BrowserRouter, { transactional = true } = {}) 
                 // If the handler used the mock response (e.g. image routes that call res.send()),
                 // return it as a raw response so BrowserRouter doesn't JSON-serialize it.
                 if (mockRes._used) {
-                    return {
-                        [RAW_RESPONSE]: true as const,
-                        status: mockRes._status,
-                        headers: mockRes._headers,
-                        body: mockRes._body
-                    };
+                    return toRawResponse(mockRes);
                 }
 
                 if (resultHandler) {
@@ -200,8 +190,29 @@ function createMockResponse() {
         },
         send(body: unknown) {
             res._used = true;
+            // Express serializes an object body as JSON, and a custom request handler written
+            // against it does `api.res.send({...})`. Strings and bytes are left as they are: those
+            // are what the note-content routes send.
+            if (body !== null && typeof body === "object" && !isBinary(body)) {
+                return res.json(body);
+            }
             res._body = body;
             return res;
+        },
+        json(body: unknown) {
+            res._used = true;
+            // Express fills in the type only when the handler has not chosen one, so a handler
+            // answering `application/problem+json` keeps it.
+            if (!hasHeader(res._headers, "Content-Type")) {
+                res._headers["Content-Type"] = "application/json; charset=utf-8";
+            }
+            res._body = JSON.stringify(body);
+            return res;
+        },
+        redirect(url: string) {
+            res._used = true;
+            res._status = 302;
+            res._headers["Location"] = url;
         },
         sendStatus(code: number) {
             res._used = true;
@@ -219,6 +230,16 @@ function createMockResponse() {
         }
     };
     return res;
+}
+
+/** Whether a body is already bytes, which {@link BrowserRouter} sends without re-encoding. */
+function isBinary(body: object): boolean {
+    return body instanceof ArrayBuffer || ArrayBuffer.isView(body);
+}
+
+/** Header names are case-insensitive, while the record a handler writes them into is not. */
+function hasHeader(headers: Record<string, string>, name: string): boolean {
+    return Object.keys(headers).some((key) => key.toLowerCase() === name.toLowerCase());
 }
 
 /**
@@ -332,6 +353,8 @@ export function registerRoutes(router: BrowserRouter): void {
         apiResultHandler
     );
 
+    registerCustomRoute(router);
+
     // Dummy routes for compatibility.
     apiRoute("get", "/api/script/widgets", () => []);
     apiRoute("get", "/api/script/startup", () => []);
@@ -378,6 +401,53 @@ function bootstrapRoute(req: { query: Record<string, string | undefined> }): Boo
         csrfToken: "dummy-csrf-token",
         baseApiUrl: "../api/",
         platform: "web",
+    };
+}
+
+/** Every method a handler script can answer. The server registers its route as an Express `all`. */
+const CUSTOM_HANDLER_METHODS: HttpMethod[] = ["get", "post", "put", "patch", "delete"];
+
+/**
+ * Serves `/custom/`: the notes labelled `#customRequestHandler` and `#customResourceProvider`.
+ *
+ * Registered here rather than in the shared table because the server answers it from a route of its
+ * own, ahead of the API router and without CSRF, and because it takes any method rather than one.
+ */
+function registerCustomRoute(router: BrowserRouter) {
+    for (const method of CUSTOM_HANDLER_METHODS) {
+        router.register(method, "/custom/*path", (req: BrowserRequest) => dbLock.runShared(
+            () => getContext().init(async () => {
+                setContextFromHeaders(req);
+                const path = req.params.path;
+                const res = createMockResponse();
+
+                // Deliberately no transaction: a handler script may await, and one held open
+                // across that would block every other request on the worker's single connection.
+                // The server's route opens none either.
+                //
+                // Awaited because this runtime cannot hold the response open past the handler
+                // returning the way Express does. A script that answers after an `await` returns
+                // its promise, and the body has to be complete before the router sends it.
+                await routes.handleCustomRequest(path, toCoreRequest(req), res, isScriptingEnabled);
+
+                if (!res._used) {
+                    res.setHeader("Content-Type", "text/plain").status(500)
+                        .send(`Custom handler for '${path}' did not send a response.`);
+                }
+
+                return toRawResponse(res);
+            }) as Promise<unknown>
+        ));
+    }
+}
+
+/** Wraps what a handler wrote to its mock response so {@link BrowserRouter} sends it verbatim. */
+function toRawResponse(res: ReturnType<typeof createMockResponse>) {
+    return {
+        [RAW_RESPONSE]: true as const,
+        status: res._status,
+        headers: res._headers,
+        body: res._body
     };
 }
 
