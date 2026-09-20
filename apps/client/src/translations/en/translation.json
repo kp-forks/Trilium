@@ -4300,5 +4300,20 @@
       "pan_right": "Right",
       "pan_fast": "Faster panning"
     }
+  },
+  "search_completion": {
+    "note": "Note title, properties and related notes",
+    "operator_equal": "Equals the whole value",
+    "operator_not_equal": "Does not equal the whole value",
+    "operator_contains": "Contains",
+    "operator_starts_with": "Starts with",
+    "operator_ends_with": "Ends with",
+    "operator_greater_than": "Greater than",
+    "operator_greater_or_equal": "Greater than or equal to",
+    "operator_less_than": "Less than",
+    "operator_less_or_equal": "Less than or equal to",
+    "operator_regex": "Matches a regular expression",
+    "operator_fuzzy_equal": "Equals, tolerating typos",
+    "operator_fuzzy_contains": "Contains, tolerating typos"
   }
 }

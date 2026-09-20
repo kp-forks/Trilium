@@ -4,6 +4,8 @@ import type { SingleLineEditor } from "@triliumnext/codemirror/src/single_line";
 import clsx from "clsx";
 import { useEffect, useRef } from "preact/hooks";
 
+import { searchCompletionSource } from "./search_completions";
+
 interface SearchStringEditorProps {
     currentValue: string;
     placeholder?: string;
@@ -45,6 +47,7 @@ export default function SearchStringEditor({ currentValue, placeholder, classNam
                 doc: propsRef.current.currentValue,
                 placeholder,
                 extensions: [ triliumSearchHighlighter ],
+                completionSource: searchCompletionSource,
                 onChange: (value) => propsRef.current.onChange(value),
                 onEnter: () => propsRef.current.onEnter()
             });
