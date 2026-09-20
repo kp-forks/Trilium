@@ -1,20 +1,35 @@
-import { SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 import type { Completion, CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
+import { SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 
 import { t } from "../../services/i18n";
+import server from "../../services/server";
+
+/** A branch answers at once, or after the attribute names have been fetched. */
+type CompletionOutcome = CompletionResult | Promise<CompletionResult | null> | null;
 
 /**
- * Offers Trilium's search syntax: the `note` object, the property path that hangs off it or off a
- * relation, and the comparison operators, whose spellings (`*=*`, `=*`, `~=`) are the part of the
- * syntax hardest to recall.
+ * Offers Trilium's search syntax: the `note` object, the keywords, the property path that hangs off
+ * `note` or off a relation, the comparison operators — whose spellings (`*=*`, `=*`, `~=`) are the
+ * part of the syntax hardest to recall — and the label and relation names in the database.
  *
- * Attribute names and values are not offered — reading those needs the notes being searched, which
- * a source built from static text cannot see.
+ * Attribute values are not offered yet.
  */
-export function searchCompletionSource(context: CompletionContext): CompletionResult | null {
+export function searchCompletionSource(context: CompletionContext): CompletionOutcome {
     const path = context.matchBefore(PROPERTY_PATH);
     if (path) {
         return pathCompletions(path.text, context.pos);
+    }
+
+    // `~=` and `~*` reach the operators below instead: an attribute name cannot be spelled with
+    // either character, so the pattern finds nothing ending at the cursor.
+    const attribute = context.matchBefore(ATTRIBUTE_PREFIX);
+    if (attribute) {
+        const isNegated = attribute.text[1] === "!";
+
+        return attributeCompletions(
+            attribute.text[0] === "#" ? "label" : "relation",
+            attribute.from + (isNegated ? 2 : 1)
+        );
     }
 
     const operator = context.matchBefore(OPERATOR_PREFIX);
@@ -48,17 +63,44 @@ const PROPERTY_PATH = new RegExp(`(?:^|[\\s(])(?:note|~${SEGMENT}+)(?:\\.${SEGME
 const SEGMENT_TYPED = new RegExp(`${SEGMENT}*`);
 /** Matches once an `orderBy` has been opened anywhere before the cursor. */
 const ORDER_BY_BEFORE = /orderby[^]*/i;
+/** A `#label` or `~relation`, either optionally negated with `!`. */
+const ATTRIBUTE_PREFIX = new RegExp(`[#~]!?${SEGMENT}*`);
 
 /**
- * Completes the segment being typed at the end of `path`, where the grammar allows one. Nothing is
- * offered after `note.labels.`, which expects a label name, or after `note.title.`, which is the
- * end of the path — a terminal property has nothing to walk onto.
+ * Fetches the label or relation names the database holds, from the endpoint the attribute editor's
+ * own autocomplete reads. The whole set is asked for once and narrowed by `validFor` as more of the
+ * name is typed, rather than a request per keystroke.
  */
-function pathCompletions(path: string, pos: number): CompletionResult | null {
+async function attributeCompletions(type: "label" | "relation", from: number): Promise<CompletionResult | null> {
+    let names: string[];
+    try {
+        names = await server.get<string[]>(`attribute-names/?type=${type}&query=`);
+    } catch {
+        return null;
+    }
+
+    return {
+        from,
+        options: names.map((name) => ({ label: name, type: type === "label" ? "property" : "class" })),
+        validFor: SEGMENT_TYPED
+    };
+}
+
+/**
+ * Completes the segment being typed at the end of `path`. After `note.labels.` or
+ * `note.relations.` that is an attribute name; after `note.title.` it is nothing at all, a
+ * terminal property having nothing to walk onto.
+ */
+function pathCompletions(path: string, pos: number): CompletionOutcome {
     const segments = path.split(".");
     const typed = segments[segments.length - 1];
     const previous = segments[segments.length - 2];
     const beforeThat = segments[segments.length - 3];
+    const from = pos - typed.length;
+
+    if (previous === "labels" || previous === "relations") {
+        return attributeCompletions(previous === "labels" ? "label" : "relation", from);
+    }
 
     // A segment follows the root, a traversal, or the relation name reached through `relations`.
     const isAllowed = segments.length === 2
@@ -69,7 +111,7 @@ function pathCompletions(path: string, pos: number): CompletionResult | null {
         return null;
     }
 
-    return { from: pos - typed.length, options: segmentOptions(), validFor: SEGMENT_TYPED };
+    return { from, options: segmentOptions(), validFor: SEGMENT_TYPED };
 }
 
 /**
