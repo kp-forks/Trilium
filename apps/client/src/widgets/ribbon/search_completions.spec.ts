@@ -1,6 +1,7 @@
 import type { CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import server from "../../services/server";
 import { fetchAttributeNames } from "../attribute_widgets/attribute_detail";
 import { searchCompletionIcon, searchCompletionSource } from "./search_completions";
 
@@ -10,9 +11,13 @@ vi.mock("../../services/i18n", () => ({ t: (key: string) => key }));
 // none of the attribute popup behind it. `isBuiltinAttribute` is left real: what it marks is the
 // point of these tests.
 vi.mock("../attribute_widgets/attribute_detail", () => ({ fetchAttributeNames: vi.fn() }));
+// Modules loaded behind `services/attributes` request through this one as they load, so the stub
+// answers from the start rather than from the first `beforeEach`.
+vi.mock("../../services/server", () => ({ default: { get: vi.fn(async () => []) } }));
 
 beforeEach(() => {
     vi.mocked(fetchAttributeNames).mockReset().mockResolvedValue([ "book", "archived" ]);
+    vi.mocked(server.get).mockReset().mockResolvedValue([ "fiction", "science fiction" ]);
 });
 
 describe("searchCompletionSource", () => {
@@ -127,6 +132,53 @@ describe("searchCompletionSource", () => {
             vi.mocked(fetchAttributeNames).mockRejectedValue(new Error("offline"));
 
             expect(await complete("#bo")).toBeNull();
+        });
+    });
+
+    describe("attribute values", () => {
+        it("offers the values a label holds, anchored at the value and quoted where the lexer would split it", async () => {
+            const result = await complete("#genre = fic");
+
+            expect(server.get).toHaveBeenCalledWith("attribute-values/genre");
+            expect(result?.from).toBe(9);
+            expect(labelsOf(result)).toEqual([ "fiction", "science fiction" ]);
+            expect(optionFor(result, "fiction")?.apply).toBeUndefined();
+            expect(optionFor(result, "science fiction")?.apply).toBe("\"science fiction\"");
+        });
+
+        it("closes a quote the user opened rather than adding another", async () => {
+            const result = await complete("#genre = \"science f");
+
+            expect(result?.from).toBe(10);
+            expect(optionFor(result, "science fiction")?.apply).toBe("science fiction\"");
+        });
+
+        it("leaves the operator being typed to the operator branch", async () => {
+            expect(labelsOf(await complete("#genre ="))).toContain("=*");
+            expect(server.get).not.toHaveBeenCalled();
+        });
+
+        it("stops once the value is finished, so the keywords follow it", async () => {
+            expect(labelsOf(await complete("#genre = fiction an"))).toContain("and");
+            expect(labelsOf(await complete("#genre = \"science fiction\" an"))).toContain("and");
+            expect(server.get).not.toHaveBeenCalled();
+        });
+
+        it("follows a value through note.labels., and leaves relations alone", async () => {
+            await complete("note.labels.genre *=* fic");
+
+            expect(server.get).toHaveBeenCalledWith("attribute-values/genre");
+
+            // The endpoint collects label values only; a relation's value is a note ID.
+            await complete("~author = jo");
+
+            expect(server.get).toHaveBeenCalledTimes(1);
+        });
+
+        it("offers nothing when the request fails", async () => {
+            vi.mocked(server.get).mockRejectedValue(new Error("offline"));
+
+            expect(await complete("#genre = fic")).toBeNull();
         });
     });
 });

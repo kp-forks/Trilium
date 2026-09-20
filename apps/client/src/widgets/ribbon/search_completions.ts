@@ -3,17 +3,17 @@ import { SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/common
 
 import { isBuiltinAttribute } from "../../services/attributes";
 import { t } from "../../services/i18n";
+import server from "../../services/server";
 import { fetchAttributeNames } from "../attribute_widgets/attribute_detail";
 
-/** A branch answers at once, or after the attribute names have been fetched. */
+/** A branch answers at once, or after what it offers has been fetched. */
 type CompletionOutcome = CompletionResult | Promise<CompletionResult | null> | null;
 
 /**
  * Offers Trilium's search syntax: the `note` object, the keywords, the property path that hangs off
  * `note` or off a relation, the comparison operators — whose spellings (`*=*`, `=*`, `~=`) are the
- * part of the syntax hardest to recall — and the label and relation names in the database.
- *
- * Attribute values are not offered yet.
+ * part of the syntax hardest to recall — the label and relation names in the database, and the
+ * values a label is compared against.
  */
 export function searchCompletionSource(context: CompletionContext): CompletionOutcome {
     const path = context.matchBefore(PROPERTY_PATH);
@@ -31,6 +31,11 @@ export function searchCompletionSource(context: CompletionContext): CompletionOu
             attribute.text[0] === "#" ? "label" : "relation",
             attribute.from + (isNegated ? 2 : 1)
         );
+    }
+
+    const value = labelValueBeingTyped(context);
+    if (value) {
+        return valueCompletions(value.name, context.pos - value.typed.length, value.quote);
     }
 
     const operator = context.matchBefore(OPERATOR_PREFIX);
@@ -66,6 +71,17 @@ const SEGMENT_TYPED = new RegExp(`${SEGMENT}*`);
 const ORDER_BY_BEFORE = /orderby[^]*/i;
 /** A `#label` or `~relation`, either optionally negated with `!`. */
 const ATTRIBUTE_PREFIX = new RegExp(`[#~]!?${SEGMENT}*`);
+/**
+ * A label compared with an operator, and whatever stands between that operator and the cursor. The
+ * tail stops at the characters that open another clause, so in a query holding several comparisons
+ * the one being typed is the one that matches.
+ */
+const LABEL_COMPARISON = new RegExp(`(?:#|\\.labels\\.)(${SEGMENT}+)\\s*[=!*<>%~]+([^#~()]*)`);
+const QUOTES = [ "\"", "'", "`" ];
+/** A bare value runs until whitespace or a character that would start another clause. */
+const VALUE_TYPED = /[^\s#~()'"`]*/;
+/** What the lexer reads as structure, so a value holding one of these only survives in quotes. */
+const VALUE_NEEDS_QUOTES = /[\s"'`\\#~().=*<>!%+,-]/;
 
 /**
  * Fetches the label or relation names the database holds, through the same call the sidebar's
@@ -114,6 +130,74 @@ const COMPLETION_ICONS: Record<string, string> = {
 /** The icon an option is drawn with. Only the attribute names carry one. */
 export function searchCompletionIcon(completion: Completion): string | undefined {
     return completion.type ? COMPLETION_ICONS[completion.type] : undefined;
+}
+
+/**
+ * Reads the label name and the part of its value typed so far out of the text before the cursor,
+ * and answers nothing where the cursor does not stand in a value.
+ */
+function labelValueBeingTyped(context: CompletionContext) {
+    const comparison = context.matchBefore(LABEL_COMPARISON);
+    const match = comparison && LABEL_COMPARISON.exec(comparison.text);
+    if (!match) {
+        return null;
+    }
+
+    const [ , name, tail ] = match;
+
+    // An operator with nothing after it is still being typed, and the operators are the better offer.
+    if (tail === "") {
+        return null;
+    }
+
+    const rest = tail.trimStart();
+    const quote = QUOTES.includes(rest.charAt(0)) ? rest.charAt(0) : "";
+    const typed = rest.slice(quote.length);
+    // A value ends at its closing quote, or at the whitespace after a bare one; past either the
+    // cursor stands in whatever follows the comparison.
+    const isFinished = quote ? typed.includes(quote) : /\s/.test(typed);
+
+    return isFinished ? null : { name, typed, quote };
+}
+
+/**
+ * Offers the values `name` already holds across the database. Only labels reach here: a relation's
+ * value is a note ID, and the endpoint behind this collects label values alone.
+ */
+async function valueCompletions(name: string, from: number, quote: string): Promise<CompletionResult | null> {
+    let values: string[];
+    try {
+        values = await server.get<string[]>(`attribute-values/${encodeURIComponent(name)}`);
+    } catch {
+        return null;
+    }
+
+    return {
+        from,
+        options: values.map((value) => {
+            const applied = applyValue(value, quote);
+
+            return { label: value, apply: applied === value ? undefined : applied };
+        }),
+        validFor: quote ? new RegExp(`[^${quote}]*`) : VALUE_TYPED
+    };
+}
+
+/**
+ * The text a value is inserted as: closing the quote the user opened, or adding a pair of them
+ * around a value the lexer would otherwise split into several tokens.
+ */
+function applyValue(value: string, quote: string) {
+    if (quote) {
+        return escapeInQuotes(value, quote) + quote;
+    }
+
+    return VALUE_NEEDS_QUOTES.test(value) ? `"${escapeInQuotes(value, "\"")}"` : value;
+}
+
+/** The lexer reads the character after a backslash literally, the quote and the backslash included. */
+function escapeInQuotes(value: string, quote: string) {
+    return value.replace(new RegExp(`[\\\\${quote}]`, "g"), "\\$&");
 }
 
 /**
