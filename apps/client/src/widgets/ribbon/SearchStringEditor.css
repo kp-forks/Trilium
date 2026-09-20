@@ -1,0 +1,34 @@
+/* The wrapper carries the `.form-control` chrome, so the editor inside draws none of its own. */
+.search-string-editor {
+    .cm-editor {
+        background: transparent;
+    }
+
+    .cm-editor.cm-focused {
+        outline: none;
+    }
+
+    .cm-scroller {
+        font-family: inherit;
+        font-size: inherit;
+        line-height: inherit;
+    }
+
+    .cm-content {
+        padding: 0;
+        caret-color: var(--input-text-color);
+    }
+
+    .cm-line {
+        padding: 0;
+        /* `.search-setting-table div` sets nowrap on every descendant, which would stop wrapping. */
+        white-space: pre-wrap;
+    }
+
+    .cm-placeholder {
+        /* CodeMirror draws the placeholder as an inline-block, which leaves the empty line with no
+           text-sized inline box for the caret to take its height from. */
+        display: inline;
+        color: var(--input-placeholder-color, var(--muted-text-color));
+    }
+}

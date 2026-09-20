@@ -1,7 +1,7 @@
 import { AttributeType } from "@triliumnext/commons";
 import clsx from "clsx";
 import { ComponentChildren, VNode } from "preact";
-import { useEffect, useMemo, useRef } from "preact/hooks";
+import { useMemo, useRef } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import FNote from "../../entities/fnote";
@@ -11,12 +11,12 @@ import server from "../../services/server";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import Admonition from "../react/Admonition";
 import FormSelect from "../react/FormSelect";
-import FormTextArea from "../react/FormTextArea";
 import FormTextBox from "../react/FormTextBox";
 import HelpRemoveButtons from "../react/HelpRemoveButtons";
 import { useNoteLabel, useNoteRelation, useSpacedUpdate, useTooltip } from "../react/hooks";
 import Icon from "../react/Icon";
 import NoteAutocomplete from "../react/NoteAutocomplete";
+import SearchStringEditor from "./SearchStringEditor";
 
 export interface SearchOption {
     attributeName: string;
@@ -144,7 +144,6 @@ function SearchOption({ note, className, title, titleIcon, children, help, attri
 
 function SearchStringOption({ note, refreshResults, error, ...restProps }: SearchOptionProps) {
     const [ searchString, setSearchString ] = useNoteLabel(note, "searchString");
-    const inputRef = useRef<HTMLTextAreaElement>(null);
     const currentValue = useRef(searchString ?? "");
     const spacedUpdate = useSpacedUpdate(async () => {
         const searchString = currentValue.current;
@@ -157,9 +156,6 @@ function SearchStringOption({ note, refreshResults, error, ...restProps }: Searc
             });
         }
     }, 1000);
-
-    // Auto-focus.
-    useEffect(() => inputRef.current?.focus(), []);
 
     return <>
         <SearchOption
@@ -182,25 +178,18 @@ function SearchStringOption({ note, refreshResults, error, ...restProps }: Searc
             </>}
             note={note} {...restProps}
         >
-            <FormTextArea
-                inputRef={inputRef}
+            <SearchStringEditor
                 className="search-string"
+                autoFocus
                 placeholder={t("search_string.placeholder")}
                 currentValue={searchString ?? ""}
                 onChange={text => {
                     currentValue.current = text;
                     spacedUpdate.scheduleUpdate();
                 }}
-                onKeyDown={async (e) => {
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-
-                        // this also in effect disallows new lines in query string.
-                        // on one hand, this makes sense since search string is a label
-                        // on the other hand, it could be nice for structuring long search string. It's probably a niche case though.
-                        await spacedUpdate.updateNowIfNecessary();
-                        refreshResults();
-                    }
+                onEnter={async () => {
+                    await spacedUpdate.updateNowIfNecessary();
+                    refreshResults();
                 }}
             />
         </SearchOption>
