@@ -101,6 +101,11 @@
            rather than from the placeholder. The text draws at the line's start either way. */
         position: absolute;
         color: var(--input-placeholder-color, var(--muted-text-color));
+        font-family: var(--main-font-family);
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     /* CodeMirror puts a zero-width spacer before the placeholder widget and aligns it `text-top`,

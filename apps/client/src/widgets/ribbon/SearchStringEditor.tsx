@@ -8,6 +8,8 @@ import { useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../services/i18n";
 import server from "../../services/server";
+import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
+import { useContextualShortcutHints } from "../react/hooks";
 import { searchCompletionIcon, searchCompletionReactivates, searchCompletionSource } from "./search_completions";
 
 interface SearchStringEditorProps {
@@ -21,6 +23,19 @@ interface SearchStringEditorProps {
     /** Runs when Enter is pressed, which the editor treats as "run this search". */
     onEnter(): void;
 }
+
+// The keys the field answers, for the contextual shortcut pane (Alt+F1). CodeMirror binds
+// Ctrl-Space on every platform, so it is a literal key list rather than a rebindable action.
+const SEARCH_STRING_HINTS: ShortcutHintDefinition = [
+    {
+        titleKey: "search_string.hints.title",
+        hints: [
+            { keys: ["Ctrl+Space"], labelKey: "search_string.hints.completions" },
+            { keys: ["Shift+Enter"], labelKey: "search_string.hints.new_line" },
+            { keys: ["Enter"], labelKey: "search_string.hints.run_search" }
+        ]
+    }
+];
 
 /**
  * Edits the `#searchString` of a saved search in a CodeMirror editor. Enter runs the search and
@@ -39,6 +54,8 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
     // Set while the effect below writes `currentValue` into the document, so `onChange` does not
     // report it as an edit the user made.
     const isAdopting = useRef(false);
+
+    useContextualShortcutHints(SEARCH_STRING_HINTS);
 
     useEffect(() => {
         let editor: FieldEditor | undefined;

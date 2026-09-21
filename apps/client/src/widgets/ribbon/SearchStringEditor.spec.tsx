@@ -2,7 +2,10 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { describe, expect, it, vi } from "vitest";
 
+import Component from "../../components/component";
+import { collectShortcutHints } from "../../services/shortcut_hints";
 import { renderInto } from "../../test/render";
+import { ParentComponent } from "../react/react_utils";
 import SearchStringEditor from "./SearchStringEditor";
 
 // The completions fetch attribute names and values through the server; nothing here opens the popup.
@@ -43,6 +46,27 @@ describe("SearchStringEditor", () => {
 
         editor.dispatch({ changes: { from: 11, insert: " = 1954" } });
         expect(onChange).toHaveBeenCalledWith("#book #year = 1954");
+    });
+    it("registers the keys the field answers on the host component", () => {
+        const host = new Component();
+        act(() => {
+            renderInto(
+                <ParentComponent.Provider value={host}>
+                    <SearchStringEditor noteId="search1" currentValue="#book" onChange={() => {}} onEnter={() => {}} />
+                </ParentComponent.Provider>
+            );
+        });
+
+        expect(collectShortcutHints(host)).toEqual([
+            {
+                titleKey: "search_string.hints.title",
+                hints: [
+                    { keys: ["Ctrl+Space"], labelKey: "search_string.hints.completions" },
+                    { keys: ["Shift+Enter"], labelKey: "search_string.hints.new_line" },
+                    { keys: ["Enter"], labelKey: "search_string.hints.run_search" }
+                ]
+            }
+        ]);
     });
 });
 

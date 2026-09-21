@@ -1514,7 +1514,7 @@
   },
   "search_string": {
     "title_column": "Search string:",
-    "placeholder": "fulltext keywords, #tag = value...",
+    "placeholder": "Ctrl+Space for suggestions, Shift+Enter for a new line, Enter to search",
     "search_syntax": "Search syntax",
     "also_see": "also see",
     "complete_help": "complete help on search syntax",
@@ -1526,7 +1526,13 @@
     "label_year_comparison": "numerical comparison (also >, >=, <).",
     "label_date_created": "notes created in the last month",
     "error": "Search error: {{error}}",
-    "search_prefix": "Search:"
+    "search_prefix": "Search:",
+    "hints": {
+      "title": "Search string",
+      "completions": "Show suggestions",
+      "new_line": "New line",
+      "run_search": "Run the search"
+    }
   },
   "attachment_detail": {
     "open_help_page": "Open help page on attachments",
