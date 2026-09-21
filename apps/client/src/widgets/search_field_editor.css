@@ -14,7 +14,8 @@
     }
 
     .cm-scroller {
-        font-family: inherit;
+        /* Outweighs the global `.cm-scroller` rule, which puts code notes in the monospace font. */
+        font-family: var(--main-font-family) !important;
         font-size: inherit;
         line-height: inherit;
         /* The max-height above only scrolls against an overflow here. */
@@ -49,6 +50,7 @@
         overflow: hidden;
         padding: 4px;
 
+        /* CodeMirror sets monospace on the popup; the field itself is in the UI font. */
         & > ul {
             font-family: inherit;
             max-height: 18em;
@@ -68,10 +70,6 @@
         .cm-completion-glyph {
             margin-inline-end: 0.4em;
             opacity: 0.7;
-        }
-
-        .cm-completionLabel {
-            font-family: monospace;
         }
 
         .cm-completionDetail {
@@ -103,7 +101,6 @@
     }
 
     .cm-placeholder {
-        font-family: var(--main-font-family);
         /* The hint names several keys, and the field is one line tall. */
         max-width: 100%;
         white-space: nowrap;
