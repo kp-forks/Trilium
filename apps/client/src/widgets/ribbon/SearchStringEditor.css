@@ -99,9 +99,14 @@
         color: var(--input-placeholder-color, var(--muted-text-color));
     }
 
-    .cm-widgetBuffer {
-        /* Firefox measures the caret against this spacer beside a widget, and the placeholder
-           above is the only widget here. */
-        display: none;
+    /* CodeMirror puts a zero-width spacer before the placeholder widget and aligns it `text-top`,
+       which Firefox draws the caret against, short (https://bugzilla.mozilla.org/show_bug.cgi?id=904846).
+       Baseline alignment restores it. The spacer must keep taking part in layout: CodeMirror
+       measures a position next to a widget from its rect, and a hidden one reads as zeros, which
+       the tooltip plugin treats as off-screen and uses to hide the completion popup. */
+    @supports (-moz-appearance: none) {
+        .cm-widgetBuffer:has(+ .cm-placeholder) {
+            vertical-align: baseline;
+        }
     }
 }
