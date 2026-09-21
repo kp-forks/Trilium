@@ -360,11 +360,11 @@ importers:
         specifier: 1.0.5
         version: 1.0.5
       terra-draw:
-        specifier: 1.33.0
-        version: 1.33.0
+        specifier: 1.34.0
+        version: 1.34.0
       terra-draw-maplibre-gl-adapter:
         specifier: 1.4.1
-        version: 1.4.1(maplibre-gl@6.10.0)(terra-draw@1.33.0)
+        version: 1.4.1(maplibre-gl@6.10.0)(terra-draw@1.34.0)
     devDependencies:
       '@ckeditor/ckeditor5-inspector':
         specifier: 5.0.3
@@ -10766,8 +10766,8 @@ packages:
       maplibre-gl: '>=4'
       terra-draw: ^1.0.0
 
-  terra-draw@1.33.0:
-    resolution: {integrity: sha512-EOJpu0RaKfvFI2Mx48l/OsBpIGdNOpHbvMGzegDQzCepxnxrovxVHFbm85RQljJ6RV3EbLCuvMjZ0HWkJswphA==}
+  terra-draw@1.34.0:
+    resolution: {integrity: sha512-xU2PixFL6SvcyCFvqAoOFj0pB4Az9wSe5SN9fN5e/Xx4FogOhireLPflo2+3Luy5JgJkI6bnxMOGvOjVREZttQ==}
 
   terser@5.51.2:
     resolution: {integrity: sha512-bWnjSNscmuI+GJze6ZupnHP8G/cTcsJF+bXCeQknk2SHQsgbNJnLrqiH9jZ2W4STPVXH2mDKKRX3iwPhc9Cn/Q==}
@@ -23615,12 +23615,12 @@ snapshots:
 
   temporal-utils@1.0.3: {}
 
-  terra-draw-maplibre-gl-adapter@1.4.1(maplibre-gl@6.10.0)(terra-draw@1.33.0):
+  terra-draw-maplibre-gl-adapter@1.4.1(maplibre-gl@6.10.0)(terra-draw@1.34.0):
     dependencies:
       maplibre-gl: 6.10.0
-      terra-draw: 1.33.0
+      terra-draw: 1.34.0
 
-  terra-draw@1.33.0: {}
+  terra-draw@1.34.0: {}
 
   terser@5.51.2:
     dependencies:
