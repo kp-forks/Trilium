@@ -4333,6 +4333,14 @@
     "keyword_or": "Either condition must match",
     "keyword_not": "Excludes the notes the condition in parentheses matches",
     "keyword_order_by": "Sorts the results by a property or label",
-    "keyword_limit": "Keeps only the first results"
+    "keyword_limit": "Keeps only the first results",
+    "date_now": "The current date and time",
+    "date_today": "Today's date",
+    "date_month": "The current month",
+    "date_year": "The current year",
+    "date_now_offset": "Any number of seconds before now",
+    "date_today_offset": "Any number of days before today",
+    "date_month_offset": "Any number of months before this one",
+    "date_year_offset": "Any number of years before this one"
   }
 }

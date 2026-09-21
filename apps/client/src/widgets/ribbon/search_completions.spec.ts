@@ -251,6 +251,24 @@ describe("searchCompletionSource", () => {
                 .toEqual([ "note", "and", "or", "not", "orderBy", "limit" ]);
             expect(labelsOf(await complete("note.labels.type = fic"))).toEqual([ "fiction", "science fiction" ]);
         });
+
+        it("offers the smart dates after a date property, unquoted so the parser resolves them", async () => {
+            const dates = await complete("note.dateCreated >= t");
+
+            expect(labelsOf(dates)).toEqual([
+                "now", "now-60", "today", "today-30", "month", "month-1", "year", "year-1"
+            ]);
+            // Quoting one would make it the text it spells instead of a date.
+            expect(dates?.options.every((option) => option.apply === undefined)).toBe(true);
+            expect(dates?.options.every((option) => option.detail)).toBe(true);
+
+            for (const property of [ "dateModified", "utcDateCreated", "utcDateModified" ]) {
+                expect(labelsOf(await complete(`note.${property} < `))).toContain("today");
+            }
+
+            // A quote the user opened is a date they are spelling out themselves.
+            expect(await complete("note.dateCreated >= \"2")).toBeNull();
+        });
     });
 });
 

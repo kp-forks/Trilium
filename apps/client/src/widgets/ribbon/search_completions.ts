@@ -198,14 +198,17 @@ function propertyValueBeingTyped(context: CompletionContext) {
         return null;
     }
 
-    return {
-        ...value,
-        options: values().map(({ label, detail }) => {
-            const applied = applyValue(label, value.quote);
+    // A quote the user opened is a value they are spelling out, so the ones that mean anything
+    // only bare are dropped. For a date property that leaves nothing to offer.
+    const options = values()
+        .filter(({ verbatim }) => !(verbatim && value.quote))
+        .map(({ label, detail, verbatim }) => {
+            const applied = verbatim ? label : applyValue(label, value.quote);
 
             return { label, detail, apply: applied === label ? undefined : applied };
-        })
-    };
+        });
+
+    return options.length ? { ...value, options } : null;
 }
 
 /**
@@ -233,15 +236,44 @@ function valueBeingTyped(tail: string) {
  * lexer lowercases the query. The lists are the ones the note row and the code-note MIME dropdown
  * already use, so a type or a MIME added there is offered here without further work.
  */
-const PROPERTY_VALUES = new Map<string, () => { label: string, detail?: string }[]>([
+const PROPERTY_VALUES = new Map<string, () => PropertyValue[]>([
     [ "type", () => ALLOWED_NOTE_TYPES.map((noteType) => ({ label: noteType })) ],
     [ "mime", () => MIME_TYPES_DICT.map(({ mime, title }) => ({ label: mime, detail: title })) ],
     [ "isprotected", booleanValues ],
-    [ "isarchived", booleanValues ]
+    [ "isarchived", booleanValues ],
+    [ "datecreated", dateValues ],
+    [ "datemodified", dateValues ],
+    [ "utcdatecreated", dateValues ],
+    [ "utcdatemodified", dateValues ]
 ]);
 
-function booleanValues() {
+interface PropertyValue {
+    label: string;
+    detail?: string;
+    /** Inserted as it stands, the parser reading it as something other than the text it spells. */
+    verbatim?: boolean;
+}
+
+function booleanValues(): PropertyValue[] {
     return [ { label: "true" }, { label: "false" } ];
+}
+
+/**
+ * The dates `resolveConstantOperand` resolves. Nothing else in the app names them, so this is the
+ * only place to find them. Each is offered with an offset as well, counted in the unit that date
+ * steps in, so the form arrives as text to edit rather than as something to read and retype.
+ */
+function dateValues(): PropertyValue[] {
+    return [
+        { label: "now", detail: t("search_completion.date_now"), verbatim: true },
+        { label: "now-60", detail: t("search_completion.date_now_offset"), verbatim: true },
+        { label: "today", detail: t("search_completion.date_today"), verbatim: true },
+        { label: "today-30", detail: t("search_completion.date_today_offset"), verbatim: true },
+        { label: "month", detail: t("search_completion.date_month"), verbatim: true },
+        { label: "month-1", detail: t("search_completion.date_month_offset"), verbatim: true },
+        { label: "year", detail: t("search_completion.date_year"), verbatim: true },
+        { label: "year-1", detail: t("search_completion.date_year_offset"), verbatim: true }
+    ];
 }
 
 /**
