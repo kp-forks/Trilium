@@ -1,19 +1,20 @@
 import { AttributeType } from "@triliumnext/commons";
 import clsx from "clsx";
 import { ComponentChildren, VNode } from "preact";
-import { useMemo, useRef } from "preact/hooks";
+import { useCallback, useEffect, useMemo, useRef } from "preact/hooks";
 
 import appContext from "../../components/app_context";
 import FNote from "../../entities/fnote";
 import { removeOwnedAttributesByNameOrType } from "../../services/attributes";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
+import SpacedUpdate from "../../services/spaced_update";
 import { openInAppHelpFromUrl } from "../../services/utils";
 import Admonition from "../react/Admonition";
 import FormSelect from "../react/FormSelect";
 import FormTextBox from "../react/FormTextBox";
 import HelpRemoveButtons from "../react/HelpRemoveButtons";
-import { useNoteLabel, useNoteRelation, useSpacedUpdate, useTooltip } from "../react/hooks";
+import { useNoteLabel, useNoteRelation, useTooltip } from "../react/hooks";
 import Icon from "../react/Icon";
 import NoteAutocomplete from "../react/NoteAutocomplete";
 import SearchStringEditor from "./SearchStringEditor";
@@ -145,17 +146,38 @@ function SearchOption({ note, className, title, titleIcon, children, help, attri
 function SearchStringOption({ note, refreshResults, error, ...restProps }: SearchOptionProps) {
     const [ searchString, setSearchString ] = useNoteLabel(note, "searchString");
     const currentValue = useRef(searchString ?? "");
-    const spacedUpdate = useSpacedUpdate(async () => {
-        const searchString = currentValue.current;
-        appContext.lastSearchString = searchString;
-        setSearchString(searchString);
+
+    const prepare = useCallback(() => currentValue.current, []);
+    const commit = useCallback(async (text: string) => {
+        appContext.lastSearchString = text;
+        setSearchString(text);
 
         if (note.title.startsWith(t("search_string.search_prefix"))) {
             await server.put(`notes/${note.noteId}/title`, {
-                title: `${t("search_string.search_prefix")} ${searchString.length < 30 ? searchString : `${searchString.substr(0, 30)}…`}`
+                title: `${t("search_string.search_prefix")} ${text.length < 30 ? text : `${text.substr(0, 30)}…`}`
             });
         }
-    }, 1000);
+    }, [ note, setSearchString ]);
+
+    const spacedUpdateRef = useRef<SpacedUpdate<string>>();
+    if (!spacedUpdateRef.current) {
+        spacedUpdateRef.current = new SpacedUpdate<string>({ key: note.noteId, prepare, commit }, 1000);
+    }
+    const spacedUpdate = spacedUpdateRef.current;
+
+    // The ribbon reuses this component across note switches, so rebind on every render: `rebind`
+    // snapshots a still-pending change against the previous note rather than the new one (#9614).
+    useEffect(() => {
+        spacedUpdate.rebind(note.noteId, prepare, commit);
+    });
+
+    // Runs after the rebind above, so the previous note's text has already been snapshotted.
+    useEffect(() => {
+        currentValue.current = searchString ?? "";
+        // A `searchString` that changed on its own is the save echoing back, and must not drop
+        // what is being typed.
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [ note ]);
 
     return <>
         <SearchOption
@@ -182,6 +204,7 @@ function SearchStringOption({ note, refreshResults, error, ...restProps }: Searc
                 className="search-string"
                 autoFocus
                 placeholder={t("search_string.placeholder")}
+                noteId={note.noteId}
                 currentValue={searchString ?? ""}
                 onChange={text => {
                     currentValue.current = text;

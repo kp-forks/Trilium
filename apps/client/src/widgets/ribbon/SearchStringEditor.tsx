@@ -8,6 +8,8 @@ import { searchCompletionIcon, searchCompletionSource } from "./search_completio
 
 interface SearchStringEditorProps {
     currentValue: string;
+    /** The note `currentValue` belongs to. A change to it replaces the document. */
+    noteId: string;
     placeholder?: string;
     className?: string;
     autoFocus?: boolean;
@@ -22,13 +24,16 @@ interface SearchStringEditorProps {
  * CodeMirror loads on demand: `RibbonDefinition` imports the tab holding this component
  * statically, so a static import here would put the editor in the initial bundle.
  */
-export default function SearchStringEditor({ currentValue, placeholder, className, autoFocus, onChange, onEnter }: SearchStringEditorProps) {
+export default function SearchStringEditor({ currentValue, noteId, placeholder, className, autoFocus, onChange, onEnter }: SearchStringEditorProps) {
     const parentRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<SingleLineEditor>();
     // The editor is built once, so it reaches the current props through a ref rather than
     // through the closure of the render that created it.
     const propsRef = useRef({ currentValue, onChange, onEnter });
     propsRef.current = { currentValue, onChange, onEnter };
+    // Set while the effect below writes `currentValue` into the document, so `onChange` does not
+    // report it as an edit the user made.
+    const isAdopting = useRef(false);
 
     useEffect(() => {
         let editor: SingleLineEditor | undefined;
@@ -49,7 +54,11 @@ export default function SearchStringEditor({ currentValue, placeholder, classNam
                 extensions: [ triliumSearchHighlighter ],
                 completionSource: searchCompletionSource,
                 completionIcon: searchCompletionIcon,
-                onChange: (value) => propsRef.current.onChange(value),
+                onChange: (value) => {
+                    if (!isAdopting.current) {
+                        propsRef.current.onChange(value);
+                    }
+                },
                 onEnter: () => propsRef.current.onEnter()
             });
             editorRef.current = editor;
@@ -68,19 +77,28 @@ export default function SearchStringEditor({ currentValue, placeholder, classNam
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // Follows a value that changed outside the editor, such as the ribbon switching to another
-    // search note. A focused editor is left alone: the debounced save echoes the typed text back
-    // as `currentValue`, and replacing the document would drop the caret to the end.
+    // Follows a value that changed outside the editor. Under the same `noteId` a focused editor
+    // keeps its document, since the debounced save echoes the typed text back and replacing the
+    // document would drop the caret to the end.
+    const shownNoteId = useRef(noteId);
     useEffect(() => {
         const editor = editorRef.current;
-        if (!editor || editor.hasFocus || editor.state.doc.toString() === currentValue) {
+        const switchedNote = shownNoteId.current !== noteId;
+        shownNoteId.current = noteId;
+
+        if (!editor || editor.state.doc.toString() === currentValue || (editor.hasFocus && !switchedNote)) {
             return;
         }
 
-        editor.dispatch({
-            changes: { from: 0, to: editor.state.doc.length, insert: currentValue }
-        });
-    }, [ currentValue ]);
+        isAdopting.current = true;
+        try {
+            editor.dispatch({
+                changes: { from: 0, to: editor.state.doc.length, insert: currentValue }
+            });
+        } finally {
+            isAdopting.current = false;
+        }
+    }, [ currentValue, noteId ]);
 
     return <div ref={parentRef} className={clsx("search-string-editor form-control tn-input-field", className)} />;
 }
