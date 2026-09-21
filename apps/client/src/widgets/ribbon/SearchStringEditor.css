@@ -1,8 +1,11 @@
-/* The wrapper carries the `.form-control` chrome, so the editor inside draws none of its own. */
 .search-string-editor {
+    /* The mention autocomplete's colours. The Next theme swaps in the hover pair from
+       `theme-next/ribbon.css`; the legacy themes define those as transparent. */
+    --search-completion-selected-background: var(--active-item-background-color, color-mix(in srgb, var(--main-text-color) 15%, transparent));
+    --search-completion-selected-text: var(--active-item-text-color, inherit);
+
     .cm-editor {
         background: transparent;
-        /* Past this the query scrolls, rather than growing the ribbon without bound. */
         max-height: 12em;
     }
 
@@ -14,7 +17,7 @@
         font-family: inherit;
         font-size: inherit;
         line-height: inherit;
-        /* Pairs with the max-height above, which CodeMirror only scrolls against an overflow here. */
+        /* The max-height above only scrolls against an overflow here. */
         overflow: auto;
     }
 
@@ -25,35 +28,35 @@
 
     .cm-line {
         padding: 0;
-        /* `.search-setting-table div` sets nowrap on every descendant, which would stop wrapping. */
+        /* `.search-setting-table div` sets nowrap on every descendant. */
         white-space: pre-wrap;
     }
 
-    /* The selector has to outweigh CodeMirror's `&light .cm-tooltip`, which carries two classes. */
+    /* Outweighs CodeMirror's `&light .cm-tooltip`, which carries two classes. */
     .cm-editor .cm-tooltip.cm-tooltip-autocomplete {
         font-size: 0.8125em;
         background: var(--menu-background-color-no-backdrop, var(--main-background-color));
         color: var(--menu-text-color, var(--main-text-color));
         border: 1px solid var(--dropdown-border-color, var(--main-border-color));
-        border-radius: var(--bs-border-radius);
+        border-radius: var(--dropdown-border-radius, var(--bs-border-radius));
         box-shadow: 0 5px 10px rgba(0, 0, 0, var(--dropdown-shadow-opacity, 0.2));
-        /* Keeps the list's corners inside the rounded border. */
         overflow: hidden;
+        padding: 4px;
 
         & > ul {
             font-family: inherit;
-            /* Two lines an option, so the stock 10em would show four of them. */
             max-height: 18em;
         }
 
-        /* The description carries a full row's width, so it wraps onto its own line while the icon
-           and the label stay centred against each other on the first. */
+        /* A mention row's metrics: `ul.ck.ck-list button.ck-button` in the Next theme, over the
+           1.84/13px line CKEditor gives `.ck-button__label`. 28px bare, 46px with a description. */
         & > ul > li {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            padding: 0.5em 1em;
-            line-height: 1.2;
+            padding: 2px 16px;
+            border-radius: 6px;
+            line-height: calc(1.84 * 13px);
         }
 
         .cm-completion-glyph {
@@ -62,26 +65,23 @@
         }
 
         .cm-completionLabel {
-            /* Bold like the slash-command palette's, and monospace because it is query syntax. */
             font-family: monospace;
-            font-weight: bold;
         }
 
         .cm-completionDetail {
             flex-basis: 100%;
             margin-left: 0;
             font-size: 0.75em;
+            line-height: 1.84;
             font-style: normal;
             opacity: 0.75;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* The selected row matches the tree's, not the menus' — `--hover-item-background-color`
-           is transparent in the legacy themes, which would leave the selection invisible. */
         & > ul > li[aria-selected] {
-            background: var(--active-item-background-color, color-mix(in srgb, var(--main-text-color) 15%, transparent));
-            color: var(--active-item-text-color, inherit);
+            background: var(--search-completion-selected-background);
+            color: var(--search-completion-selected-text);
         }
     }
 
@@ -97,8 +97,7 @@
     }
 
     .cm-placeholder {
-        /* Out of flow, so the caret on an empty line takes its height from the line's text box
-           rather than from the placeholder. The text draws at the line's start either way. */
+        /* Out of flow, so the caret takes its height from the line rather than from the hint. */
         position: absolute;
         color: var(--input-placeholder-color, var(--muted-text-color));
         font-family: var(--main-font-family);
@@ -108,11 +107,10 @@
         text-overflow: ellipsis;
     }
 
-    /* CodeMirror puts a zero-width spacer before the placeholder widget and aligns it `text-top`,
-       which Firefox draws the caret against, short (https://bugzilla.mozilla.org/show_bug.cgi?id=904846).
-       Baseline alignment restores it. The spacer must keep taking part in layout: CodeMirror
-       measures a position next to a widget from its rect, and a hidden one reads as zeros, which
-       the tooltip plugin treats as off-screen and uses to hide the completion popup. */
+    /* Firefox draws the caret against the spacer CodeMirror puts before the placeholder widget,
+       short (https://bugzilla.mozilla.org/show_bug.cgi?id=904846). The spacer must stay in layout:
+       CodeMirror measures a position next to a widget from its rect, and a hidden one reads as
+       zeros, which hides the completion popup as off-screen. */
     @supports (-moz-appearance: none) {
         .cm-widgetBuffer:has(+ .cm-placeholder) {
             vertical-align: baseline;
