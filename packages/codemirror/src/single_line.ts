@@ -23,6 +23,11 @@ export interface SingleLineEditorConfig {
      * nothing for are drawn without one; supplying it at all replaces CodeMirror's own icons.
      */
     completionIcon?(completion: Completion): string | undefined;
+    /**
+     * Whether picking a completion reopens the popup on what follows it, for one that inserts an
+     * opening rather than a finished value.
+     */
+    activateOnCompletion?(completion: Completion): boolean;
     /** Runs after every document change, with the whole text. */
     onChange?(value: string): void;
     /** Runs when Enter is pressed; the key never inserts a line break. */
@@ -77,6 +82,7 @@ export function createSingleLineEditor(config: SingleLineEditorConfig): SingleLi
         extensions.push(autocompletion({
             override: [ config.completionSource ],
             activateOnTyping: true,
+            activateOnCompletion: config.activateOnCompletion,
             icons: !icon,
             addToOptions: icon ? [ { position: ICON_POSITION, render: (completion) => renderIcon(icon(completion)) } ] : []
         }));

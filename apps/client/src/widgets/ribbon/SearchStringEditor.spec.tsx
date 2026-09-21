@@ -8,7 +8,8 @@ import SearchStringEditor from "./SearchStringEditor";
 // The completions fetch attribute names and values through the server; nothing here opens the popup.
 vi.mock("./search_completions", () => ({
     searchCompletionSource: () => null,
-    searchCompletionIcon: () => undefined
+    searchCompletionIcon: () => undefined,
+    searchCompletionReactivates: () => false
 }));
 
 describe("SearchStringEditor", () => {

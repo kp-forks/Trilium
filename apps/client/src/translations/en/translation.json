@@ -4348,6 +4348,8 @@
     "date_now_offset": "Any number of seconds before now",
     "date_today_offset": "Any number of days before today",
     "date_month_offset": "Any number of months before this one",
-    "date_year_offset": "Any number of years before this one"
+    "date_year_offset": "Any number of years before this one",
+    "label_marker": "Refers to a label. Press Enter to see the list of labels",
+    "relation_marker": "Refers to a relation. Press Enter to see the list of relations"
   }
 }

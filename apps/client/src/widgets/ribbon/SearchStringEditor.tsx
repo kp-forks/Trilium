@@ -6,7 +6,7 @@ import clsx from "clsx";
 import { useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../services/i18n";
-import { searchCompletionIcon, searchCompletionSource } from "./search_completions";
+import { searchCompletionIcon, searchCompletionReactivates, searchCompletionSource } from "./search_completions";
 
 interface SearchStringEditorProps {
     currentValue: string;
@@ -57,6 +57,7 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
                 extensions: [ triliumSearchHighlighter, triliumSearchLinter(searchLintMessages()) ],
                 completionSource: searchCompletionSource,
                 completionIcon: searchCompletionIcon,
+                activateOnCompletion: searchCompletionReactivates,
                 onChange: (value) => {
                     if (!isAdopting.current) {
                         propsRef.current.onChange(value);

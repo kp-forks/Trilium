@@ -153,6 +153,14 @@ const SYSTEM_ATTRIBUTE = "system-attribute";
  */
 const BUILTIN_BOOST = -99;
 
+/**
+ * The furthest an option can be moved up, the other end of {@link BUILTIN_BOOST}. CodeMirror never
+ * reads the order options are offered in — it sorts by match score, and a pattern of a character or
+ * two scores everything alike, leaving the tie to be broken by label. That puts `~` last of all, so
+ * the markers carry the boost instead.
+ */
+const MARKER_BOOST = 99;
+
 const COMPLETION_ICONS: Record<string, string> = {
     [SYSTEM_ATTRIBUTE]: "bx bx-cog",
     label: "bx bx-hash",
@@ -363,9 +371,16 @@ function wordOptions(ordering: OrderingPosition): Completion[] {
     // parenthesised sub-expression, is never a clause on its own.
     const noteObject: Completion = { label: "note", apply: "note.", type: "namespace", detail: t("search_completion.note") };
     const limit: Completion = { label: "limit", type: "keyword", detail: t("search_completion.keyword_limit") };
+    // The characters the whole syntax turns on, and the only part of it a reader cannot arrive at
+    // by typing a word, so they lead. `ValueExtractor` rewrites either into a path, so a sort key
+    // takes them too. Drawn as keywords: the marker is already the icon.
+    const attributeMarkers: Completion[] = [
+        { label: "#", apply: "#", type: "keyword", boost: MARKER_BOOST, detail: t("search_completion.label_marker") },
+        { label: "~", apply: "~", type: "keyword", boost: MARKER_BOOST - 1, detail: t("search_completion.relation_marker") }
+    ];
 
     if (ordering === "key") {
-        return [ noteObject ];
+        return [ ...attributeMarkers, noteObject ];
     }
 
     if (ordering === "sorted") {
@@ -377,6 +392,7 @@ function wordOptions(ordering: OrderingPosition): Completion[] {
     }
 
     return [
+        ...attributeMarkers,
         noteObject,
         { label: "and", type: "keyword", detail: t("search_completion.keyword_and") },
         { label: "or", type: "keyword", detail: t("search_completion.keyword_or") },
@@ -385,6 +401,18 @@ function wordOptions(ordering: OrderingPosition): Completion[] {
         limit
     ];
 }
+
+/**
+ * Whether picking `completion` reopens the popup. Every option that inserts one of these leaves a
+ * clause unfinished: `note.` and `#` are waiting for a name, `not(` for a sub-expression.
+ */
+export function searchCompletionReactivates(completion: Completion): boolean {
+    const applied = completion.apply;
+
+    return typeof applied === "string" && OPENERS.includes(applied.slice(-1));
+}
+
+const OPENERS = [ ".", "(", "#", "~" ];
 
 /**
  * Where the cursor stands in an `orderBy`, which decides what can follow it.
