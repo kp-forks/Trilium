@@ -1,17 +1,35 @@
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+
 import { describe, expect, it } from "vitest";
 
-import { checkPnpm, filterSources } from "./generate-flatpak-sources.mjs";
+import { checkPnpm, filterSources, resolveOutputPath } from "./generate-flatpak-sources.mjs";
 
 describe("checkPnpm", () => {
     it("accepts the pinned pnpm major, with or without a corepack checksum", () => {
-        expect(() => checkPnpm(`{ "packageManager": "pnpm@11.24.0" }`)).not.toThrow();
-        expect(() => checkPnpm(`{ "packageManager": "pnpm@11.24.0+sha512.abc" }`)).not.toThrow();
+        expect(() => checkPnpm(`{ "packageManager": "pnpm@12.4.2" }`)).not.toThrow();
+        expect(() => checkPnpm(`{ "packageManager": "pnpm@12.4.2+sha512.abc" }`)).not.toThrow();
     });
 
     it("rejects another pnpm major, another package manager, and a missing pin", () => {
-        expect(() => checkPnpm(`{ "packageManager": "pnpm@12.0.0" }`)).toThrow(/pnpm 11/);
+        expect(() => checkPnpm(`{ "packageManager": "pnpm@11.22.0" }`)).toThrow(/pnpm 12/);
         expect(() => checkPnpm(`{ "packageManager": "yarn@4.9.1" }`)).toThrow(/yarn@4.9.1/);
         expect(() => checkPnpm(`{}`)).toThrow(/undefined/);
+    });
+});
+
+describe("resolveOutputPath", () => {
+    it("defaults to upload/, appends the filename to a directory, and takes a file path as-is", () => {
+        expect(resolveOutputPath(undefined).endsWith(join("upload", "generated-sources.json"))).toBe(true);
+
+        const dir = mkdtempSync(join(tmpdir(), "flatpak-sources-"));
+        try {
+            expect(resolveOutputPath(dir)).toBe(join(dir, "generated-sources.json"));
+            expect(resolveOutputPath(join(dir, "custom.json"))).toBe(join(dir, "custom.json"));
+        } finally {
+            rmSync(dir, { recursive: true });
+        }
     });
 });
 
