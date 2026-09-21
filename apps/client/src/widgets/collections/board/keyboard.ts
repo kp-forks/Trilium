@@ -340,7 +340,7 @@ export function useBoardKeyboard({
             // on the board offers.
             const neighbour = columns[spot.column + 1] ?? columns[spot.column - 1];
             api.confirmAndRemoveColumn(columns[spot.column]).then((removed) => {
-                if (removed && neighbour) {
+                if (removed && neighbour !== undefined) {
                     pendingFocus.current = { intent: { column: neighbour, part: "header" } };
                 }
             });
@@ -580,8 +580,9 @@ function move(
         const target = toEnd
             ? columns[key === "ArrowRight" ? columns.length - 1 : 0]
             : columns[spot.column + (key === "ArrowRight" ? 1 : -1)];
-        // Only the whole way can ask for the column a card already stands in.
-        if (!target || target === column) return false;
+        // Only the whole way can ask for the column a card already stands in. The inbox column
+        // is the empty string, so a column that is not there is the undefined one.
+        if (target === undefined || target === column) return false;
 
         // A selection standing in several columns is left alone: each card has a neighbour of its
         // own, and sending them all to one column is not what the key means anywhere else.

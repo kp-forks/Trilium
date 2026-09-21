@@ -560,6 +560,20 @@ describe("Board keyboard", () => {
             expect(focusedName(board)).toBe("First");
         });
 
+        /** The inbox is named by the empty string, which is a column like any other to move to. */
+        it("sends a card into the inbox column beside it", async () => {
+            const board = await renderBoard(undefined, undefined, [], true);
+            const strip = vi.spyOn(attributes, "removeOwnedLabelByName").mockReturnValue(true);
+            // The inbox is seeded at the front, so the first card stands in the column after it.
+            focusCard(board, 1, 0);
+
+            press(board, "ArrowLeft", { ctrlKey: true });
+            await settleWrites();
+
+            expect(strip).toHaveBeenCalled();
+            expect(namesIn(board, 0)).toEqual([ "First" ]);
+        });
+
         it("sends every picked-out card to the next column, and leaves them picked out", async () => {
             const board = await renderBoard();
             const write = vi.spyOn(attributes, "setLabel").mockResolvedValue(undefined);
