@@ -1,5 +1,5 @@
 import type { Completion, CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
-import { ALLOWED_NOTE_TYPES, MIME_TYPES_DICT, SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
+import { ALLOWED_NOTE_TYPES, allowedSearchOperators, MIME_TYPES_DICT, SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 
 import { isBuiltinAttribute } from "../../services/attributes";
 import { t } from "../../services/i18n";
@@ -482,32 +482,6 @@ function allowedOperators(context: CompletionContext): ReadonlySet<string> | und
         return undefined;
     }
 
-    const segments = operand.split(".");
-    const property = (segments[segments.length - 1] ?? "").toLowerCase();
-    const previous = (segments[segments.length - 2] ?? "").toLowerCase();
-
-    // The name after `labels.` is the user's own, and says nothing about the comparison.
-    if (previous === "labels") {
-        return undefined;
-    }
-
-    // A relation names a note; only a `.`, walking into a property of that note, continues it.
-    if (previous === "relations" || (operand.startsWith("~") && segments.length === 1)) {
-        return NO_OPERATORS;
-    }
-
-    if (property === "text") {
-        return TEXT_OPERATORS;
-    }
-
-    if (property === "content" || property === "rawcontent") {
-        return CONTENT_OPERATORS;
-    }
-
-    return undefined;
+    return allowedSearchOperators(operand);
 }
 
-const NO_OPERATORS: ReadonlySet<string> = new Set();
-const TEXT_OPERATORS: ReadonlySet<string> = new Set([ "*=*" ]);
-/** Matches `ALLOWED_OPERATORS` in `note_content_fulltext.ts`: content is matched, never ordered. */
-const CONTENT_OPERATORS: ReadonlySet<string> = new Set([ "=", "!=", "*=*", "*=", "=*", "%=", "~=", "~*" ]);

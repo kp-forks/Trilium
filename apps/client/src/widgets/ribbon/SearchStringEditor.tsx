@@ -1,9 +1,11 @@
 import "./SearchStringEditor.css";
 
+import type { SearchLintMessages } from "@triliumnext/codemirror/src/extensions/trilium_search_lint";
 import type { SingleLineEditor } from "@triliumnext/codemirror/src/single_line";
 import clsx from "clsx";
 import { useEffect, useRef } from "preact/hooks";
 
+import { t } from "../../services/i18n";
 import { searchCompletionIcon, searchCompletionSource } from "./search_completions";
 
 interface SearchStringEditorProps {
@@ -41,8 +43,9 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
 
         void Promise.all([
             import("@triliumnext/codemirror/src/single_line"),
-            import("@triliumnext/codemirror/src/extensions/trilium_search_highlighter")
-        ]).then(([ { createSingleLineEditor }, { triliumSearchHighlighter } ]) => {
+            import("@triliumnext/codemirror/src/extensions/trilium_search_highlighter"),
+            import("@triliumnext/codemirror/src/extensions/trilium_search_lint")
+        ]).then(([ { createSingleLineEditor }, { triliumSearchHighlighter }, { triliumSearchLinter } ]) => {
             if (cancelled || !parentRef.current) {
                 return;
             }
@@ -51,7 +54,7 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
                 parent: parentRef.current,
                 doc: propsRef.current.currentValue,
                 placeholder,
-                extensions: [ triliumSearchHighlighter ],
+                extensions: [ triliumSearchHighlighter, triliumSearchLinter(searchLintMessages()) ],
                 completionSource: searchCompletionSource,
                 completionIcon: searchCompletionIcon,
                 onChange: (value) => {
@@ -101,4 +104,15 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
     }, [ currentValue, noteId ]);
 
     return <div ref={parentRef} className={clsx("search-string-editor form-control tn-input-field", className)} />;
+}
+
+/** Read once the editor is built, so the wording follows a language switched while the app runs. */
+function searchLintMessages(): SearchLintMessages {
+    return {
+        relationNeedsProperty: t("search_lint.relation_needs_property"),
+        textNeedsContains: t("search_lint.text_needs_contains"),
+        contentNotOrdered: t("search_lint.content_not_ordered"),
+        compareTheTitle: t("search_lint.compare_the_title"),
+        useOperator: (operator) => t("search_lint.use_operator", { operator })
+    };
 }

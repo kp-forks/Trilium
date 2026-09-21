@@ -4301,6 +4301,13 @@
       "pan_fast": "Faster panning"
     }
   },
+  "search_lint": {
+    "relation_needs_property": "Relations point to a note, so they cannot be checked for equality. Use . instead to access its properties.",
+    "text_needs_contains": "note.text searches the title and content together, so it can only be matched with *=*.",
+    "content_not_ordered": "Note content is text, so it cannot be ordered. Use *=* to match it instead.",
+    "compare_the_title": "Compare the title",
+    "use_operator": "Use {{operator}}"
+  },
   "search_completion": {
     "note": "Note title, properties and related notes",
     "operator_equal": "Equals the whole value",
