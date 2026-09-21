@@ -17,6 +17,7 @@ interface ConfirmDialogProps {
     isConfirmDeleteNoteBox?: boolean;
     deletionTarget?: NoteDeletionTarget;
     mustDeleteNote?: boolean;
+    checkboxLabel?: string;
 }
 
 export default function ConfirmDialog() {
@@ -39,15 +40,8 @@ export default function ConfirmDialog() {
     // what the dialog has to say then.
     const deleteNote = opts?.mustDeleteNote || isDeleteNoteChecked;
 
-    function showDialog(title: string | null, message: MessageType, callback: ConfirmDialogCallback, isConfirmDeleteNoteBox: boolean, deletionTarget?: NoteDeletionTarget, mustDeleteNote?: boolean) {
-        setOpts({
-            title: title ?? undefined,
-            message,
-            callback,
-            isConfirmDeleteNoteBox,
-            deletionTarget,
-            mustDeleteNote
-        });
+    function showDialog(props: ConfirmDialogProps) {
+        setOpts(props);
         // The dialog is mounted once and lives for the session (see LazyDialog), so a box left
         // ticked would still be ticked the next time it is asked about — a destructive default
         // carried over to another note, and to whichever part of the app asks next.
@@ -55,8 +49,17 @@ export default function ConfirmDialog() {
         setShown(true);
     }
 
-    useTriliumEvent("showConfirmDialog", ({ message, callback }) => showDialog(null, message, callback, false));
-    useTriliumEvent("showConfirmDeleteNoteBoxWithNoteDialog", ({ title, message, callback, deletionTarget, mustDeleteNote }) => showDialog(title, message ?? t("confirm.are_you_sure_remove_note", { title: title }), callback, true, deletionTarget, mustDeleteNote));
+    useTriliumEvent("showConfirmDialog", ({ message, callback, checkboxLabel }) =>
+        showDialog({ message, callback, checkboxLabel }));
+    useTriliumEvent("showConfirmDeleteNoteBoxWithNoteDialog", ({ title, message, callback, deletionTarget, mustDeleteNote }) =>
+        showDialog({
+            title,
+            message: message ?? t("confirm.are_you_sure_remove_note", { title: title }),
+            callback,
+            isConfirmDeleteNoteBox: true,
+            deletionTarget,
+            mustDeleteNote
+        }));
 
     return (
         <Modal
@@ -90,6 +93,15 @@ export default function ConfirmDialog() {
             ? opts?.message
             : <RawHtmlBlock html={opts?.message} />
             }
+
+            {/* The caller words the offer itself: what is being removed, and how many notes go
+                with it, is the caller's to describe. */}
+            {opts?.checkboxLabel && (
+                <FormCheckbox
+                    name="confirm-dialog-checkbox"
+                    label={opts.checkboxLabel}
+                    currentValue={isDeleteNoteChecked} onChange={setIsDeleteNoteChecked} />
+            )}
 
             {opts?.isConfirmDeleteNoteBox && (<>
                 {!opts.mustDeleteNote && (
@@ -125,6 +137,11 @@ export interface ConfirmDialogOptions {
 export interface ConfirmWithMessageOptions {
     message: MessageType;
     callback: ConfirmDialogCallback;
+    /**
+     * Wording for a checkbox offering to delete the notes the question is about, left out where
+     * there is nothing to offer. Its state comes back as `isDeleteNoteChecked`.
+     */
+    checkboxLabel?: string;
 }
 
 /**

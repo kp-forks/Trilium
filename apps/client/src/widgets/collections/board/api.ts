@@ -506,12 +506,18 @@ export default class BoardApi {
      * @returns whether the column went, for a caller with something to do afterwards.
      */
     async confirmAndRemoveColumn(column: string) {
-        if (!await dialog.confirm(t("board_view.delete-column-confirmation"))) {
+        // Counted off the map `removeColumn` acts on, so a filter hiding part of the column does
+        // not make the offer read as covering fewer notes than it takes.
+        const cards = (this.allByColumn ?? this.byColumn)?.get(column)?.length ?? 0;
+        const answer = await dialog.confirmWithNoteDeletion(
+            t("board_view.delete-column-confirmation"),
+            cards ? t("board_view.delete-column-notes", { count: cards }) : undefined);
+        if (!answer || !answer.confirmed) {
             return false;
         }
 
         try {
-            await this.removeColumn(column);
+            await this.removeColumn(column, answer.isDeleteNoteChecked);
             return true;
         } catch (e) {
             console.error("Failed to delete the board column:", e);
@@ -520,15 +526,23 @@ export default class BoardApi {
         }
     }
 
-    async removeColumn(column: string) {
-        // Remove the value from the notes. Read off the unfiltered map where there is one, so the
-        // value also comes off the cards an active filter is not showing.
+    /**
+     * Takes a column off the board.
+     *
+     * @param deleteNotes whether its cards are deleted, rather than kept on the board with the
+     *                    grouping value taken off them.
+     */
+    async removeColumn(column: string, deleteNotes = false) {
+        // Read off the unfiltered map where there is one, so the cards an active filter is not
+        // showing are covered too.
         const items = (this.allByColumn ?? this.byColumn)?.get(column);
         const noteIds = items?.map(item => item.note.noteId) || [];
 
-        const action: BulkAction = this.isRelationMode
-            ? { name: "deleteRelation", relationName: this.statusAttribute }
-            : { name: "deleteLabel", labelName: this.statusAttribute };
+        const action: BulkAction = deleteNotes
+            ? { name: "deleteNote" }
+            : this.isRelationMode
+                ? { name: "deleteRelation", relationName: this.statusAttribute }
+                : { name: "deleteLabel", labelName: this.statusAttribute };
         await this.retiredWhile(column, undefined,
             () => executeBulkActions(noteIds, [ action ], { silent: true }));
 

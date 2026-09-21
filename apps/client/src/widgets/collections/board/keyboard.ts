@@ -335,9 +335,9 @@ export function useBoardKeyboard({
         if (e.key === "Delete" && spot.kind === "header" && !e.shiftKey) {
             take(e);
 
-            // Where focus goes once the column is gone, taken up only if it does go. Shift is left
-            // unanswered here: escalating a column would take every note in it, which nothing else
-            // on the board offers.
+            // Where focus goes once the column is gone, taken up only if it does go. Shift is
+            // left unanswered here: the confirmation is where the notes in the column are asked
+            // about, so there is nothing for a modifier to say.
             const neighbour = columns[spot.column + 1] ?? columns[spot.column - 1];
             api.confirmAndRemoveColumn(columns[spot.column]).then((removed) => {
                 if (removed && neighbour !== undefined) {
