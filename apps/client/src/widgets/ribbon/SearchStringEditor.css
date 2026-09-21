@@ -97,7 +97,6 @@
     }
 
     .cm-placeholder {
-        color: var(--input-placeholder-color, var(--muted-text-color));
         font-family: var(--main-font-family);
         /* The hint names several keys, and the field is one line tall. */
         max-width: 100%;
