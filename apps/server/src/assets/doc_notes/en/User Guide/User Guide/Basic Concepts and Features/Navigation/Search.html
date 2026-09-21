@@ -411,9 +411,9 @@ class="table">
   matches a value that is a close whole-word variant of your term. <code>~*</code> (fuzzy-contains)
   matches when your term appears anywhere inside the value, either as a fragment
   or as a near-miss. Both work on note properties such as <code>note.title</code> and <code>note.content</code>,
-  and on labels (<code>#label</code>). Fuzzy operators accept terms of at least
-  3 characters, though how many typos each term tolerates depends on its length
-  — see <em>Fuzzy tolerance</em> below.</p>
+  and on labels (<code>#label</code>). Fuzzy operators accept terms of at
+  least 3 characters, though how many typos each term tolerates depends on
+  its length — see <em>Fuzzy tolerance</em> below.</p>
 <p>The examples assume a note titled <code>Books</code> carrying the label <code>#author=Tolkien</code>,
   and a note whose content is <code>learn programming today</code>.</p>
 <figure
@@ -469,11 +469,10 @@ class="table">
 </figure>
 <h3>Fuzzy tolerance</h3>
 <p><strong>Rule:</strong> how many typos are tolerated depends on the <strong>length</strong> of
-  your search term. Short terms must match exactly, because a single edit is
-  enough to turn one short word into an unrelated one; longer terms tolerate
+  your search term. Short terms must match exactly, because a single edit
+  is enough to turn one short word into an unrelated one; longer terms tolerate
   more.</p>
-<figure
-class="table">
+<figure class="table">
   <table>
     <thead>
       <tr>
@@ -516,8 +515,8 @@ class="table">
         <td><code>a bright red car</code>
         </td>
         <td>No</td>
-        <td>No edits are allowed below 4 characters, so <code>cat</code> does not
-          reach <code>car</code></td>
+        <td>No edits are allowed below 4 characters, so <code>cat</code> does not reach <code>car</code>
+        </td>
       </tr>
       <tr>
         <td><code>carr</code>
@@ -907,5 +906,6 @@ class="table">
     issues</li>
   <li>Notes exceeding this limit will still be included in title and attribute
     searches</li>
-  <li>Terms of 3 characters or fewer are matched exactly; typo tolerance starts at 4 characters</li>
+  <li>Terms of 3 characters or fewer are matched exactly; typo tolerance starts
+    at 4 characters</li>
 </ul>
