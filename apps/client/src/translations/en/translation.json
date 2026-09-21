@@ -4350,6 +4350,8 @@
     "date_month_offset": "Any number of months before this one",
     "date_year_offset": "Any number of years before this one",
     "label_marker": "Refers to a label. Press Enter to see the list of labels",
-    "relation_marker": "Refers to a relation. Press Enter to see the list of relations"
+    "label_marker_negated": "Excludes a label. Press Enter to see the list of labels",
+    "relation_marker": "Refers to a relation. Press Enter to see the list of relations",
+    "relation_marker_negated": "Excludes a relation. Press Enter to see the list of relations"
   }
 }

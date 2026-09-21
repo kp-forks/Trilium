@@ -25,7 +25,7 @@ describe("searchCompletionSource", () => {
         const result = await complete("#book AND no");
 
         expect(result?.from).toBe(10);
-        expect(labelsOf(result)).toEqual([ "#", "~", "note", "and", "or", "not", "orderBy", "limit" ]);
+        expect(labelsOf(result)).toEqual([ "#", "#!", "~", "~!", "note", "and", "or", "not", "orderBy", "limit" ]);
         // Both complete with what has to follow them.
         expect(optionFor(result, "note")?.apply).toBe("note.");
         expect(optionFor(result, "not")?.apply).toBe("not(");
@@ -60,7 +60,7 @@ describe("searchCompletionSource", () => {
 
         // Outside an ordering the keywords are untouched.
         expect(labelsOf(await complete("#book n")))
-            .toEqual([ "#", "~", "note", "and", "or", "not", "orderBy", "limit" ]);
+            .toEqual([ "#", "#!", "~", "~!", "note", "and", "or", "not", "orderBy", "limit" ]);
     });
 
     it("offers every operator once one of their characters is typed", async () => {
@@ -89,7 +89,7 @@ describe("searchCompletionSource", () => {
         expect(await complete("note.relations.author >")).toBeNull();
         // An explicit request past one is left with the keywords alone.
         expect(labelsOf(await complete("~author ", { explicit: true })))
-            .toEqual([ "#", "~", "note", "and", "or", "not", "orderBy", "limit" ]);
+            .toEqual([ "#", "#!", "~", "~!", "note", "and", "or", "not", "orderBy", "limit" ]);
 
         // The last segment decides, and a name the user chose after `labels.` restricts nothing.
         expect(labelsOf(await complete("note.parents.title >"))).toContain(">");
@@ -127,16 +127,19 @@ describe("searchCompletionSource", () => {
         const explicit = await complete("#book ", { explicit: true });
 
         expect(explicit?.from).toBe(6);
-        // The words and the two attribute markers, then every operator.
-        expect(explicit?.options).toHaveLength(20);
+        // The words and the four attribute markers, then every operator.
+        expect(explicit?.options).toHaveLength(22);
         // CodeMirror sorts by score and ignores the order offered, so the markers are boosted
         // to the top rather than merely listed first.
+        // Each negated marker sits directly under the one it negates.
         expect(optionFor(explicit, "#")?.boost).toBe(99);
-        expect(optionFor(explicit, "~")?.boost).toBe(98);
+        expect(optionFor(explicit, "#!")?.boost).toBe(98);
+        expect(optionFor(explicit, "~")?.boost).toBe(97);
+        expect(optionFor(explicit, "~!")?.boost).toBe(96);
 
         // Everything that leaves a clause unfinished reopens the popup on what follows it.
         const reopening = explicit?.options.filter(searchCompletionReactivates).map((o) => o.label);
-        expect(reopening).toEqual([ "#", "~", "note", "not" ]);
+        expect(reopening).toEqual([ "#", "#!", "~", "~!", "note", "not" ]);
     });
 
     describe("attribute names", () => {
@@ -148,6 +151,9 @@ describe("searchCompletionSource", () => {
             expect(labelsOf(result)).toEqual([ "book", "archived" ]);
 
             expect((await complete("#!bo"))?.from).toBe(2);
+            // What the negated marker inserts on its own, which reopens the popup on the name.
+            expect(labelsOf(await complete("#!"))).toEqual([ "book", "archived" ]);
+            expect(labelsOf(await complete("~!"))).toEqual([ "book", "archived" ]);
         });
 
         it("ranks a built-in below a name of the user's own that matches as well", async () => {
@@ -278,7 +284,7 @@ describe("searchCompletionSource", () => {
             // A property whose values nothing can enumerate falls through to the keywords, and a
             // label that happens to share a property's name is still a label.
             expect(labelsOf(await complete("note.title = so")))
-                .toEqual([ "#", "~", "note", "and", "or", "not", "orderBy", "limit" ]);
+                .toEqual([ "#", "#!", "~", "~!", "note", "and", "or", "not", "orderBy", "limit" ]);
             expect(labelsOf(await complete("note.labels.type = fic"))).toEqual([ "fiction", "science fiction" ]);
         });
 

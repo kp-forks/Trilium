@@ -376,11 +376,16 @@ function wordOptions(ordering: OrderingPosition): Completion[] {
     // takes them too. Drawn as keywords: the marker is already the icon.
     const attributeMarkers: Completion[] = [
         { label: "#", apply: "#", type: "keyword", boost: MARKER_BOOST, detail: t("search_completion.label_marker") },
-        { label: "~", apply: "~", type: "keyword", boost: MARKER_BOOST - 1, detail: t("search_completion.relation_marker") }
+        { label: "#!", apply: "#!", type: "keyword", boost: MARKER_BOOST - 1, detail: t("search_completion.label_marker_negated") },
+        { label: "~", apply: "~", type: "keyword", boost: MARKER_BOOST - 2, detail: t("search_completion.relation_marker") },
+        { label: "~!", apply: "~!", type: "keyword", boost: MARKER_BOOST - 3, detail: t("search_completion.relation_marker_negated") }
     ];
+    // A sort key names the value to order by, which a negated marker has none of: `ValueExtractor`
+    // reads `#!foo` as a label named `!foo` and would quietly order by one no note carries.
+    const sortKeyMarkers = attributeMarkers.filter(({ label }) => !label.endsWith("!"));
 
     if (ordering === "key") {
-        return [ ...attributeMarkers, noteObject ];
+        return [ ...sortKeyMarkers, noteObject ];
     }
 
     if (ordering === "sorted") {
@@ -404,7 +409,7 @@ function wordOptions(ordering: OrderingPosition): Completion[] {
 
 /**
  * Whether picking `completion` reopens the popup. Every option that inserts one of these leaves a
- * clause unfinished: `note.` and `#` are waiting for a name, `not(` for a sub-expression.
+ * clause unfinished: `note.`, `#` and `#!` are waiting for a name, `not(` for a sub-expression.
  */
 export function searchCompletionReactivates(completion: Completion): boolean {
     const applied = completion.apply;
@@ -412,7 +417,7 @@ export function searchCompletionReactivates(completion: Completion): boolean {
     return typeof applied === "string" && OPENERS.includes(applied.slice(-1));
 }
 
-const OPENERS = [ ".", "(", "#", "~" ];
+const OPENERS = [ ".", "(", "#", "~", "!" ];
 
 /**
  * Where the cursor stands in an `orderBy`, which decides what can follow it.
