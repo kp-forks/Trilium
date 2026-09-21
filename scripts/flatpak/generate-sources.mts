@@ -9,7 +9,7 @@
  *
  * Usage:
  *
- *   pnpm exec tsx ./scripts/generate-flatpak-sources.mts [output]
+ *   pnpm exec tsx ./scripts/flatpak/generate-sources.mts [output]
  *
  * `output` is the file to write, or a directory to write `generated-sources.json`
  * into — pass the packaging repo checkout to update its tracked copy in place.
@@ -23,7 +23,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 
-const ROOT = join(import.meta.dirname, "..");
+const ROOT = join(import.meta.dirname, "../..");
 const PACKAGE_JSON_PATH = join(ROOT, "package.json");
 const LOCKFILE_PATH = join(ROOT, "pnpm-lock.yaml");
 

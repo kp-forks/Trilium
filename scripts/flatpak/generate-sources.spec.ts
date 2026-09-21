@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { checkPnpm, filterSources, resolveOutputPath } from "./generate-flatpak-sources.mjs";
+import { checkPnpm, filterSources, resolveOutputPath } from "./generate-sources.mjs";
 
 describe("checkPnpm", () => {
     it("accepts the pinned pnpm major, with or without a corepack checksum", () => {
