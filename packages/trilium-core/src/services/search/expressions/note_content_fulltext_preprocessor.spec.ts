@@ -192,3 +192,34 @@ describe("LLM chat preprocessing", () => {
         expect(preprocessContent(chat, type, mime)).toEqual("what is a branch? a parent-child link.");
     });
 });
+
+describe("HTML entity decoding", () => {
+    const type: NoteType = "text";
+    const mime = "text/html";
+
+    it("makes the text the editor displays searchable", () => {
+        // The editor shows "if a < b && b > c, then done" for this body, and extractContentSnippet()
+        // decodes these same entities when it renders the hit — so a query in that shape has to match
+        // the body it was copied from, rather than only the entity spelling stored in the blob.
+        expect(preprocessContent("<p>AT&amp;T reported earnings.</p>", type, mime)).toEqual("at&t reported earnings.");
+        expect(preprocessContent("<p>if a &lt; b &amp;&amp; b &gt; c, then&nbsp;done</p>", type, mime))
+            .toEqual("if a < b && b > c, then done");
+    });
+
+    it("decodes an entity-encoded query separator inside an anchor's href", () => {
+        const html = `<p>see <a href="https://example.com/?a=1&amp;b=2">docs</a></p>`;
+
+        expect(preprocessContent(html, type, mime)).toContain("https://example.com/?a=1&b=2");
+    });
+
+    it("decodes once, so a body showing an entity is still found by what it shows", () => {
+        // "&amp;amp;" displays as "&amp;", and searching for that literal string must hit it — which
+        // it would not if the decode ran twice and left a bare "&".
+        expect(preprocessContent("<p>use &amp;amp; to write one</p>", type, mime)).toContain("use &amp; to write one");
+    });
+
+    it("keeps a raw content search against the stored markup", () => {
+        // note.rawContent is the blob as written, entities and tags included, so it stays encoded.
+        expect(preprocessContent("<p>AT&amp;T</p>", type, mime, true)).toEqual("<p>at&amp;t</p>");
+    });
+});

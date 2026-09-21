@@ -20,6 +20,13 @@ export default function preprocessContent(rawContent: string | Uint8Array, type:
             // Content size already filtered at DB level, safe to process
             content = stripTags(content);
 
+            // What striptags leaves behind is the body as the editor writes it, so entities stand in
+            // for the characters on screen. Decoding them here is what makes a query copied off the
+            // screen match; extractContentSnippet() already decodes the same set to render the hit.
+            // Runs before the injected text is appended, since that one is decoded already and a
+            // second pass would eat an "&amp;lt;" the note means literally.
+            content = unescapeHtml(content);
+
             if (injectedText) {
                 // The body above was normalized, and matchesContent() compares a lowercased query
                 // token against the raw string, so the injected text must be normalized too.

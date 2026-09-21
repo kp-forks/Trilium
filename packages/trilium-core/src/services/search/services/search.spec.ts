@@ -1160,6 +1160,41 @@ describe("Search", () => {
         expect(searchService.extractContentSnippet(noteBuilder.note.noteId, [ "secret" ])).toBe("");
     });
 
+    describe("body text held in HTML entities", () => {
+        function bodyNote(title: string, content: string) {
+            return getContext().init(() => noteService.createNewNote({
+                parentNoteId: "root",
+                title,
+                content,
+                type: "text"
+            }).note);
+        }
+
+        function finds(query: string, noteId: string) {
+            return searchService.findResultsWithQuery(query, new SearchContext()).some((result) => result.noteId === noteId);
+        }
+
+        it("finds a body by the text the editor shows for it", () => {
+            // The editor renders this body as "AT&T reported R&D spend, where a<b held.", and that is
+            // the wording the quick-search snippet prints back. Searching for the words on screen found
+            // nothing, because only &nbsp; was unwrapped while &amp;, &lt; and &gt; stayed encoded.
+            const telco = bodyNote("Telco", "<p>AT&amp;T reported R&amp;D spend, where a&lt;b held.</p>");
+
+            expect(finds("AT&T", telco.noteId)).toBe(true);
+            expect(finds("R&D", telco.noteId)).toBe(true);
+            expect(finds("a<b", telco.noteId)).toBe(true);
+        });
+
+        it("decodes once, so a body showing an entity is found by what it shows", () => {
+            // This body reads "write &amp;t rather than &lt;" on screen. Decoding it a second time
+            // would turn the shown "&lt;" into a bare "<" and let the second query through.
+            const literal = bodyNote("Literal", "<p>write &amp;amp;t rather than &amp;lt;</p>");
+
+            expect(finds("&lt;", literal.noteId)).toBe(true);
+            expect(finds("at<t", literal.noteId)).toBe(false);
+        });
+    });
+
     // FIXME: test what happens when we order without any filter criteria
 
     // it("comparison between labels", () => {
