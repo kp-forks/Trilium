@@ -81,6 +81,17 @@
         }
     }
 
+    .cm-diagnostic {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5em;
+    }
+
+    .cm-diagnosticAction {
+        margin-left: 0;
+    }
+
     .cm-placeholder {
         /* Out of flow, so the caret on an empty line takes its height from the line's text box
            rather than from the placeholder. The text draws at the line's start either way. */
