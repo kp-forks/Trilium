@@ -2,6 +2,7 @@ import type { Completion, CompletionContext, CompletionResult } from "@triliumne
 import { ALLOWED_NOTE_TYPES, allowedSearchOperators, MIME_TYPES_DICT, SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 
 import { isBuiltinAttribute } from "../../services/attributes";
+import type { Suggestion } from "../../services/note_autocomplete";
 import { t } from "../../services/i18n";
 import server from "../../services/server";
 import { fetchAttributeNames } from "../attribute_widgets/attribute_detail";
@@ -16,6 +17,15 @@ type CompletionOutcome = CompletionResult | Promise<CompletionResult | null> | n
  * values a label is compared against.
  */
 export function searchCompletionSource(context: CompletionContext): CompletionOutcome {
+    // Read before the rest: `@` is a name character to the lexer, so the branches below would
+    // answer for one typed inside an attribute name.
+    const mention = context.matchBefore(NOTE_MENTION);
+    if (mention) {
+        const typedAt = mention.text.indexOf("@");
+
+        return noteCompletions(mention.text.slice(typedAt + 1), mention.from + typedAt);
+    }
+
     const path = context.matchBefore(PROPERTY_PATH);
     if (path) {
         return pathCompletions(path.text, context.pos);
@@ -71,6 +81,12 @@ export function searchCompletionSource(context: CompletionContext): CompletionOu
     return null;
 }
 
+/**
+ * A note picked with `@`, which opens only where a value can stand — at the start, or after
+ * whitespace, an opening bracket or an operator. `@` is a name character to the lexer, so one
+ * typed inside an attribute name is left alone.
+ */
+const NOTE_MENTION = /(?:^|[\s(=!*<>%~])@[^\s#~()'"`@]*/;
 /** The characters an operator is spelled with, so typing any of them starts offering them. */
 const OPERATOR_PREFIX = /[=!*<>%~]+/;
 const WORD_PREFIX = /[a-zA-Z]+/;
@@ -114,6 +130,55 @@ const VALUE_NEEDS_QUOTES = /[\s"'`\\#~().=*<>!%+,-]/;
  * query, so the spelling does not matter.
  */
 const RESERVED_VALUES = new Set([ "note", "now", "today", "month", "year" ]);
+
+/** A completion drawn with an icon of its own, which {@link COMPLETION_ICONS} cannot supply. */
+interface NoteCompletion extends Completion {
+    noteIcon?: string;
+}
+
+/**
+ * Offers the notes matching what follows an `@`, through the call the jump-to dialog reads, and
+ * inserts the id of the one picked. The id is what the query keeps, so it goes on matching the
+ * note after a rename; with nothing typed yet the call answers with the recently visited notes.
+ */
+async function noteCompletions(term: string, atPos: number): Promise<CompletionResult | null> {
+    let suggestions: Suggestion[];
+    try {
+        suggestions = await server.get<Suggestion[]>(
+            `autocomplete?query=${encodeURIComponent(term)}&activeNoteId=none&fastSearch=true`
+        );
+    } catch {
+        return null;
+    }
+
+    const options: NoteCompletion[] = [];
+
+    for (const [ index, suggestion ] of suggestions.entries()) {
+        const noteId = suggestion.notePath?.split("/").filter(Boolean).pop();
+        if (!noteId || !suggestion.noteTitle) {
+            continue;
+        }
+
+        options.push({
+            label: suggestion.noteTitle,
+            detail: suggestion.notePathTitle,
+            noteIcon: suggestion.icon,
+            // The call ranks the notes; this keeps that order among the ones matching as well as
+            // each other, while leaving a distinctly better match free to rise past them.
+            boost: -index,
+            // Rewrites the `@` along with what was typed after it. CodeMirror would replace only
+            // what it matched against, which starts past the `@`.
+            apply: (view, _completion, _from, to) => view.dispatch({
+                changes: { from: atPos, to, insert: noteId },
+                selection: { anchor: atPos + noteId.length }
+            })
+        });
+    }
+
+    // Offered from past the `@`, so what was typed is matched against the titles rather than
+    // against a marker no title carries.
+    return options.length ? { from: atPos + 1, options } : null;
+}
 
 /**
  * Fetches the label or relation names the database holds, through the same call the sidebar's
@@ -169,6 +234,10 @@ const COMPLETION_ICONS: Record<string, string> = {
 
 /** The icon an option is drawn with. Only the attribute names carry one. */
 export function searchCompletionIcon(completion: Completion): string | undefined {
+    if ("noteIcon" in completion && typeof completion.noteIcon === "string") {
+        return completion.noteIcon;
+    }
+
     return completion.type ? COMPLETION_ICONS[completion.type] : undefined;
 }
 

@@ -342,6 +342,78 @@ function iconFor(result: CompletionResult | null, label: string) {
     return option ? searchCompletionIcon(option) : "no such option";
 }
 
+describe("note mentions", () => {
+    const NOTES = [
+        { notePath: "root/abc123", noteTitle: "Foo", notePathTitle: "Root / Foo", icon: "bx bx-file" },
+        { notePath: "root/proj/def456", noteTitle: "Foobar", notePathTitle: "Root / Projects / Foobar", icon: "bx bx-note" }
+    ];
+
+    beforeEach(() => vi.mocked(server.get).mockResolvedValue(NOTES));
+
+    it("offers the notes an @ names and inserts the id, taking the marker with it", async () => {
+        const result = await complete("~template.noteId = @Fo");
+
+        expect(server.get).toHaveBeenCalledWith("autocomplete?query=Fo&activeNoteId=none&fastSearch=true");
+        // Offered from past the `@`, so "Fo" is matched against the titles.
+        expect(result?.from).toBe(20);
+        expect(labelsOf(result)).toEqual([ "Foo", "Foobar" ]);
+        expect(optionFor(result, "Foo")?.detail).toBe("Root / Foo");
+        expect(optionFor(result, "Foobar")?.boost).toBeLessThan(optionFor(result, "Foo")?.boost ?? 0);
+
+        // The `@` at 19 is rewritten along with the "Fo" after it.
+        expect(dispatchOf(result, "Foo", 22)).toEqual({
+            changes: { from: 19, to: 22, insert: "abc123" },
+            selection: { anchor: 25 }
+        });
+    });
+
+    it("draws each note with its own icon", async () => {
+        const result = await complete("@Fo");
+
+        expect(result?.from).toBe(1);
+        expect(searchCompletionIcon(optionFor(result, "Foo") ?? { label: "" })).toBe("bx bx-file");
+        expect(searchCompletionIcon(optionFor(result, "Foobar") ?? { label: "" })).toBe("bx bx-note");
+    });
+
+    it("answers with the recently visited notes before anything is typed", async () => {
+        const result = await complete("#book AND @");
+
+        expect(server.get).toHaveBeenCalledWith("autocomplete?query=&activeNoteId=none&fastSearch=true");
+        expect(labelsOf(result)).toEqual([ "Foo", "Foobar" ]);
+    });
+
+    it("opens on a standalone @ but not on one inside an attribute name", async () => {
+        const inName = await complete("#foo@");
+
+        expect(server.get).not.toHaveBeenCalledWith(expect.stringContaining("autocomplete?"));
+        expect(labelsOf(inName)).toEqual([ "book", "archived" ]);
+
+        // The same text with the marker standing on its own does reach the notes.
+        expect(labelsOf(await complete("#foo @"))).toEqual([ "Foo", "Foobar" ]);
+    });
+
+    it("skips a suggestion carrying no note", async () => {
+        vi.mocked(server.get).mockResolvedValue([ { noteTitle: "External", externalLink: "https://example.com" }, ...NOTES ]);
+
+        expect(labelsOf(await complete("@Fo"))).toEqual([ "Foo", "Foobar" ]);
+    });
+});
+
+/** Runs an option's rewrite against a stand-in editor and hands back what it dispatched. */
+function dispatchOf(result: CompletionResult | null, label: string, to: number) {
+    const option = optionFor(result, label);
+    const apply = option?.apply;
+
+    if (typeof apply !== "function" || !option) {
+        throw new Error(`The '${label}' option inserts a fixed string rather than rewriting.`);
+    }
+
+    let dispatched: unknown;
+    apply({ dispatch: (spec: unknown) => { dispatched = spec; } } as never, option, 0, to);
+
+    return dispatched;
+}
+
 async function complete(text: string, opts?: { explicit?: boolean }) {
     return await searchCompletionSource(contextAt(text, opts));
 }
