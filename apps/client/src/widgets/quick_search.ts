@@ -30,10 +30,14 @@ const TPL = /*html*/`
         min-width: 0;
     }
 
-    /* The results list sits right below the field, so extra lines scroll inside it. */
     .quick-search .search-string .cm-editor {
         width: 100%;
-        max-height: 100%;
+    }
+
+    /* Outweighs the pre-wrap the shared stylesheet sets, which would wrap a long query onto a
+       second visual line and grow the field. */
+    .quick-search .search-string .cm-line {
+        white-space: pre;
     }
 
     .quick-search .dropdown-menu {
@@ -236,6 +240,7 @@ export default class QuickSearchWidget extends BasicWidget {
         this.editor = createSearchFieldEditor({
             parent: this.$searchField[0],
             placeholder: t("quick-search.placeholder"),
+            singleLine: true,
             onEnter: () => this.runSearch(),
             onArrowDown: () => this.focusFirstResult(),
             onEscape: () => this.closeDropdown()

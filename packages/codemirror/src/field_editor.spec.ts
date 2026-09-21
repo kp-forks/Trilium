@@ -106,6 +106,22 @@ describe("createFieldEditor", () => {
         expect(onEscape).toHaveBeenCalledOnce();
     });
 
+    it("holds a single-line field to one line, flattening the breaks in what is inserted", () => {
+        const onChange = vi.fn();
+        editor = build({ singleLine: true, onChange });
+
+        editor.dispatch({ changes: { from: 0, insert: "#book\n  #year = 1954" } });
+
+        expect(editor.state.doc.lines).toBe(1);
+        expect(editor.state.doc.toString()).toBe("#book   #year = 1954");
+        expect(onChange).toHaveBeenLastCalledWith("#book   #year = 1954");
+        expect(editor.state.selection.main.head).toBe(editor.state.doc.length);
+
+        // Shift-Enter is swallowed, rather than reaching the field as the flattened indentation.
+        expect(pressKey(editor, "Enter", { shiftKey: true })).toBe(true);
+        expect(editor.state.doc.toString()).toBe("#book   #year = 1954");
+    });
+
     it("keeps the line breaks in inserted text", () => {
         const onChange = vi.fn();
         editor = build({ onChange });

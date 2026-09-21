@@ -1,6 +1,6 @@
 import { autocompletion, type Completion, completionStatus, type CompletionSource } from "@codemirror/autocomplete";
 import { history, historyKeymap, standardKeymap } from "@codemirror/commands";
-import type { Extension } from "@codemirror/state";
+import { ChangeSet, type ChangeSpec, EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
 
 /**
@@ -28,9 +28,15 @@ export interface FieldEditorConfig {
      * opening rather than a finished value.
      */
     activateOnCompletion?(completion: Completion): boolean;
+    /**
+     * Whether the value is confined to one line, the way an input is: Shift-Enter does nothing and
+     * a line break in inserted text becomes a space. Long values scroll sideways instead of
+     * wrapping, since `lineWrapping` would grow the field.
+     */
+    singleLine?: boolean;
     /** Runs after every document change, with the whole text. */
     onChange?(value: string): void;
-    /** Runs when Enter is pressed; Shift-Enter inserts a line break instead. */
+    /** Runs when Enter is pressed; Shift-Enter inserts a line break, unless {@link singleLine}. */
     onEnter?(): void;
     /**
      * Runs when ArrowDown is pressed and no completion is open or pending, for a field whose
@@ -51,7 +57,8 @@ export type FieldEditor = EditorView;
  *
  * Enter runs `onEnter` instead of inserting a line break, so the field answers the key the way an
  * input does. Shift-Enter, which `standardKeymap` binds to `insertNewlineAndIndent`, breaks the
- * line and keeps its indentation, for a value the user lays out over several of them.
+ * line and keeps its indentation, for a value the user lays out over several of them; `singleLine`
+ * holds the value to one line instead.
  *
  * `onArrowDown` and `onEscape` run only while no completion is open or pending, so a key the popup
  * drops does not move focus out of the editor instead. An IME keeps Enter for as long as it is
@@ -62,7 +69,6 @@ export type FieldEditor = EditorView;
  */
 export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
     const extensions: Extension[] = [
-        EditorView.lineWrapping,
         history(),
         keymap.of([
             {
@@ -76,6 +82,9 @@ export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
                     return true;
                 }
             },
+            // Swallowed rather than left to `insertNewlineAndIndent`, whose line break and
+            // indentation `flattenToOneLine` would otherwise turn into stray spaces.
+            ...(config.singleLine ? [ { key: "Shift-Enter", run: () => true } ] : []),
             { key: "ArrowDown", run: (view) => keyBelongsToField(view) && !!config.onArrowDown?.() },
             { key: "Escape", run: (view) => keyBelongsToField(view) && !!config.onEscape?.() },
             ...standardKeymap,
@@ -86,6 +95,7 @@ export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
                 config.onChange?.(update.state.doc.toString());
             }
         }),
+        ...(config.singleLine ? [ flattenToOneLine ] : [ EditorView.lineWrapping ]),
         ...(config.extensions ?? [])
     ];
 
@@ -113,6 +123,30 @@ export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
         extensions
     });
 }
+
+/**
+ * Keeps the document on one line, for a field laid out as an input. A line break in inserted text
+ * becomes a space, so pasting several lines still puts their text in the field.
+ */
+const flattenToOneLine = EditorState.transactionFilter.of((tr) => {
+    if (!tr.docChanged || tr.newDoc.lines === 1) {
+        return tr;
+    }
+
+    const flattened: ChangeSpec[] = [];
+    tr.changes.iterChanges((fromA, toA, _fromB, _toB, inserted) => {
+        flattened.push({ from: fromA, to: toA, insert: inserted.toString().replace(/\r\n?|\n/g, " ") });
+    });
+
+    const changes = ChangeSet.of(flattened, tr.startState.doc.length);
+
+    return {
+        changes,
+        // Mapped with assoc 1, so the caret lands after the inserted text as it otherwise would.
+        selection: tr.startState.selection.map(changes, 1),
+        scrollIntoView: tr.scrollIntoView
+    };
+});
 
 /**
  * Whether a navigation key the completion popup declined belongs to the field. The popup drops
