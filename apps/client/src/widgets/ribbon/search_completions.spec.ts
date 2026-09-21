@@ -215,6 +215,43 @@ describe("searchCompletionSource", () => {
             expect(await complete("#genre = fic")).toBeNull();
         });
     });
+
+    describe("property values", () => {
+        it("offers the values an enumerable property holds, and asks the server for none of them", async () => {
+            const types = await complete("note.type = co");
+
+            expect(types?.from).toBe(12);
+            expect(labelsOf(types)).toContain("code");
+            expect(labelsOf(types)).toContain("contentWidget");
+
+            expect(labelsOf(await complete("note.isProtected = t"))).toEqual([ "true", "false" ]);
+            // A space settles the operator, so the values come without typing one; directly after it
+            // the operator may still be growing into `!=` or `=*`.
+            expect(labelsOf(await complete("note.isProtected = "))).toEqual([ "true", "false" ]);
+            expect(labelsOf(await complete("note.isProtected ="))).toContain("=*");
+            expect(labelsOf(await complete("note.isArchived = t"))).toEqual([ "true", "false" ]);
+
+            const mimes = await complete("note.mime = pyt");
+
+            expect(optionFor(mimes, "text/x-python")?.detail).toBe("Python");
+            // The lexer splits a bare `text/x-python` at the dash, so the value is inserted quoted.
+            expect(optionFor(mimes, "text/x-python")?.apply).toBe("\"text/x-python\"");
+
+            expect(server.get).not.toHaveBeenCalled();
+        });
+
+        it("follows the property through a traversal and a relation, and leaves the rest alone", async () => {
+            expect(labelsOf(await complete("note.parents.type = co"))).toContain("code");
+            expect(labelsOf(await complete("note.type = code and note.mime = pyt"))).toContain("text/x-python");
+            expect(labelsOf(await complete("~author.type = co"))).toContain("code");
+
+            // A property whose values nothing can enumerate falls through to the keywords, and a
+            // label that happens to share a property's name is still a label.
+            expect(labelsOf(await complete("note.title = so")))
+                .toEqual([ "note", "and", "or", "not", "orderBy", "limit" ]);
+            expect(labelsOf(await complete("note.labels.type = fic"))).toEqual([ "fiction", "science fiction" ]);
+        });
+    });
 });
 
 describe("searchCompletionIcon", () => {

@@ -1,5 +1,5 @@
 import type { Completion, CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
-import { SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
+import { ALLOWED_NOTE_TYPES, MIME_TYPES_DICT, SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 
 import { isBuiltinAttribute } from "../../services/attributes";
 import { t } from "../../services/i18n";
@@ -36,6 +36,15 @@ export function searchCompletionSource(context: CompletionContext): CompletionOu
     const value = labelValueBeingTyped(context);
     if (value) {
         return valueCompletions(value.name, context.pos - value.typed.length, value.quote);
+    }
+
+    const property = propertyValueBeingTyped(context);
+    if (property) {
+        return {
+            from: context.pos - property.typed.length,
+            options: property.options,
+            validFor: validForValue(property.quote)
+        };
     }
 
     const operator = context.matchBefore(OPERATOR_PREFIX);
@@ -84,6 +93,15 @@ const COMPARISON_OPERAND = new RegExp(`((?:[#~]!?)?${SEGMENT}+(?:\\.${SEGMENT}+)
  * the one being typed is the one that matches.
  */
 const LABEL_COMPARISON = new RegExp(`(?:#|\\.labels\\.)(${SEGMENT}+)\\s*[=!*<>%~]+([^#~()]*)`);
+/**
+ * The same for a note property, which is the last segment of the path walked to it. Its tail runs
+ * to the whitespace after the value rather than to the next clause: `note.` opens a comparison but
+ * does not close the one before it, so a tail that ran on would let the first comparison in a query
+ * swallow the one being typed. Every property completed below holds values spelled without spaces.
+ */
+const PROPERTY_COMPARISON = new RegExp(
+    `(?:note|~${SEGMENT}+)(?:\\.${SEGMENT}+)*\\.(${SEGMENT}+)\\s*[=!*<>%~]+(\\s*[^\\s#~()]*)`
+);
 const QUOTES = [ "\"", "'", "`" ];
 /** A bare value runs until whitespace or a character that would start another clause. */
 const VALUE_TYPED = /[^\s#~()'"`]*/;
@@ -157,7 +175,44 @@ function labelValueBeingTyped(context: CompletionContext) {
     }
 
     const [ , name, tail ] = match;
+    const value = valueBeingTyped(tail);
 
+    return value ? { name, ...value } : null;
+}
+
+/**
+ * The values a note property is compared against, for the properties holding a closed set of them.
+ * The rest — a title, a date, a count — are the user's to type.
+ */
+function propertyValueBeingTyped(context: CompletionContext) {
+    const comparison = context.matchBefore(PROPERTY_COMPARISON);
+    const match = comparison && PROPERTY_COMPARISON.exec(comparison.text);
+    if (!match) {
+        return null;
+    }
+
+    const [ , property, tail ] = match;
+    const values = PROPERTY_VALUES.get(property.toLowerCase());
+    const value = values && valueBeingTyped(tail);
+    if (!value) {
+        return null;
+    }
+
+    return {
+        ...value,
+        options: values().map(({ label, detail }) => {
+            const applied = applyValue(label, value.quote);
+
+            return { label, detail, apply: applied === label ? undefined : applied };
+        })
+    };
+}
+
+/**
+ * Reads the part of a value typed so far out of what stands between the operator and the cursor,
+ * and answers nothing where the cursor no longer stands in that value.
+ */
+function valueBeingTyped(tail: string) {
     // An operator with nothing after it is still being typed, and the operators are the better offer.
     if (tail === "") {
         return null;
@@ -170,7 +225,23 @@ function labelValueBeingTyped(context: CompletionContext) {
     // cursor stands in whatever follows the comparison.
     const isFinished = quote ? typed.includes(quote) : /\s/.test(typed);
 
-    return isFinished ? null : { name, typed, quote };
+    return isFinished ? null : { typed, quote };
+}
+
+/**
+ * The values each enumerable property holds, keyed lower-case as `PROP_MAPPING` is because the
+ * lexer lowercases the query. The lists are the ones the note row and the code-note MIME dropdown
+ * already use, so a type or a MIME added there is offered here without further work.
+ */
+const PROPERTY_VALUES = new Map<string, () => { label: string, detail?: string }[]>([
+    [ "type", () => ALLOWED_NOTE_TYPES.map((noteType) => ({ label: noteType })) ],
+    [ "mime", () => MIME_TYPES_DICT.map(({ mime, title }) => ({ label: mime, detail: title })) ],
+    [ "isprotected", booleanValues ],
+    [ "isarchived", booleanValues ]
+]);
+
+function booleanValues() {
+    return [ { label: "true" }, { label: "false" } ];
 }
 
 /**
@@ -192,8 +263,13 @@ async function valueCompletions(name: string, from: number, quote: string): Prom
 
             return { label: value, apply: applied === value ? undefined : applied };
         }),
-        validFor: quote ? new RegExp(`[^${quote}]*`) : VALUE_TYPED
+        validFor: validForValue(quote)
     };
+}
+
+/** How far the offered values stay valid as more of the one being typed arrives. */
+function validForValue(quote: string) {
+    return quote ? new RegExp(`[^${quote}]*`) : VALUE_TYPED;
 }
 
 /**
