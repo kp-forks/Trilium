@@ -2,6 +2,8 @@
 .search-string-editor {
     .cm-editor {
         background: transparent;
+        /* Past this the query scrolls, rather than growing the ribbon without bound. */
+        max-height: 12em;
     }
 
     .cm-editor.cm-focused {
@@ -12,6 +14,8 @@
         font-family: inherit;
         font-size: inherit;
         line-height: inherit;
+        /* Pairs with the max-height above, which CodeMirror only scrolls against an overflow here. */
+        overflow: auto;
     }
 
     .cm-content {

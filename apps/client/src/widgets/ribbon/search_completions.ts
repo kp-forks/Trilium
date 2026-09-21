@@ -1,4 +1,4 @@
-import type { Completion, CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
+import type { Completion, CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/field_editor";
 import { ALLOWED_NOTE_TYPES, allowedSearchOperators, MIME_TYPES_DICT, SEARCH_NOTE_PATH, SEARCH_NOTE_PATH_SEGMENTS } from "@triliumnext/commons";
 
 import { isBuiltinAttribute } from "../../services/attributes";

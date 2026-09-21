@@ -1,4 +1,4 @@
-import type { CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/single_line";
+import type { CompletionContext, CompletionResult } from "@triliumnext/codemirror/src/field_editor";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import server from "../../services/server";

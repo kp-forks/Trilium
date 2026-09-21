@@ -1,8 +1,8 @@
 import "./SearchStringEditor.css";
 
 import type { SearchLintMessages } from "@triliumnext/codemirror/src/extensions/trilium_search_lint";
+import type { FieldEditor } from "@triliumnext/codemirror/src/field_editor";
 import type { SearchLintResponse } from "@triliumnext/commons";
-import type { SingleLineEditor } from "@triliumnext/codemirror/src/single_line";
 import clsx from "clsx";
 import { useEffect, useRef } from "preact/hooks";
 
@@ -23,14 +23,15 @@ interface SearchStringEditorProps {
 }
 
 /**
- * Edits the `#searchString` of a saved search in a one-line CodeMirror editor.
+ * Edits the `#searchString` of a saved search in a CodeMirror editor. Enter runs the search and
+ * Shift-Enter starts a new line, so a long query can be laid out over several of them.
  *
  * CodeMirror loads on demand: `RibbonDefinition` imports the tab holding this component
  * statically, so a static import here would put the editor in the initial bundle.
  */
 export default function SearchStringEditor({ currentValue, noteId, placeholder, className, autoFocus, onChange, onEnter }: SearchStringEditorProps) {
     const parentRef = useRef<HTMLDivElement>(null);
-    const editorRef = useRef<SingleLineEditor>();
+    const editorRef = useRef<FieldEditor>();
     // The editor is built once, so it reaches the current props through a ref rather than
     // through the closure of the render that created it.
     const propsRef = useRef({ currentValue, onChange, onEnter });
@@ -40,19 +41,19 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
     const isAdopting = useRef(false);
 
     useEffect(() => {
-        let editor: SingleLineEditor | undefined;
+        let editor: FieldEditor | undefined;
         let cancelled = false;
 
         void Promise.all([
-            import("@triliumnext/codemirror/src/single_line"),
+            import("@triliumnext/codemirror/src/field_editor"),
             import("@triliumnext/codemirror/src/extensions/trilium_search_highlighter"),
             import("@triliumnext/codemirror/src/extensions/trilium_search_lint")
-        ]).then(([ { createSingleLineEditor }, { triliumSearchHighlighter }, { triliumSearchLinter } ]) => {
+        ]).then(([ { createFieldEditor }, { triliumSearchHighlighter }, { triliumSearchLinter } ]) => {
             if (cancelled || !parentRef.current) {
                 return;
             }
 
-            editor = createSingleLineEditor({
+            editor = createFieldEditor({
                 parent: parentRef.current,
                 doc: propsRef.current.currentValue,
                 placeholder,

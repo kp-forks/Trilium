@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createSingleLineEditor } from "../single_line.js";
+import { createFieldEditor } from "../field_editor.js";
 import { tokenizeSearchQuery, triliumSearchHighlighter } from "./trilium_search_highlighter.js";
 
 describe("tokenizeSearchQuery", () => {
@@ -89,7 +89,7 @@ describe("triliumSearchHighlighter", () => {
     it("marks the tokens in the rendered editor", () => {
         const parent = document.createElement("div");
         document.body.appendChild(parent);
-        const editor = createSingleLineEditor({
+        const editor = createFieldEditor({
             parent,
             doc: "#book or ~author.title = 'Tolkien'",
             extensions: [ triliumSearchHighlighter ]
