@@ -32,6 +32,12 @@
         white-space: pre-wrap;
     }
 
+    /* Over Bootstrap dropdowns, which sit at 1000: the quick search hangs its results off this
+       same field, and the popup and its lint tooltips have to cover them. */
+    .cm-editor .cm-tooltip {
+        z-index: 1010;
+    }
+
     /* Outweighs CodeMirror's `&light .cm-tooltip`, which carries two classes. */
     .cm-editor .cm-tooltip.cm-tooltip-autocomplete {
         font-size: 0.8125em;
