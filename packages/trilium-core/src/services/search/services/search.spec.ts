@@ -1171,13 +1171,14 @@ describe("Search", () => {
         }
 
         function finds(query: string, noteId: string) {
-            return searchService.findResultsWithQuery(query, new SearchContext()).some((result) => result.noteId === noteId);
+            const results = searchService.findResultsWithQuery(query, new SearchContext());
+
+            return results.some((result) => result.noteId === noteId);
         }
 
         it("finds a body by the text the editor shows for it", () => {
-            // The editor renders this body as "AT&T reported R&D spend, where a<b held.", and that is
-            // the wording the quick-search snippet prints back. Searching for the words on screen found
-            // nothing, because only &nbsp; was unwrapped while &amp;, &lt; and &gt; stayed encoded.
+            // This body reads "AT&T reported R&D spend, where a<b held." on screen, and that is the
+            // wording the result card prints back, so a query in that shape has to reach the body.
             const telco = bodyNote("Telco", "<p>AT&amp;T reported R&amp;D spend, where a&lt;b held.</p>");
 
             expect(finds("AT&T", telco.noteId)).toBe(true);
@@ -1186,8 +1187,8 @@ describe("Search", () => {
         });
 
         it("decodes once, so a body showing an entity is found by what it shows", () => {
-            // This body reads "write &amp;t rather than &lt;" on screen. Decoding it a second time
-            // would turn the shown "&lt;" into a bare "<" and let the second query through.
+            // The body displays "&amp;" and "&lt;". A second decode would turn the second one into
+            // a bare "<", which is not what the note says.
             const literal = bodyNote("Literal", "<p>write &amp;amp;t rather than &amp;lt;</p>");
 
             expect(finds("&lt;", literal.noteId)).toBe(true);

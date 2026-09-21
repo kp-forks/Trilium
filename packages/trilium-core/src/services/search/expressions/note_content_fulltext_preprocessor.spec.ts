@@ -198,12 +198,13 @@ describe("HTML entity decoding", () => {
     const mime = "text/html";
 
     it("makes the text the editor displays searchable", () => {
-        // The editor shows "if a < b && b > c, then done" for this body, and extractContentSnippet()
-        // decodes these same entities when it renders the hit — so a query in that shape has to match
-        // the body it was copied from, rather than only the entity spelling stored in the blob.
-        expect(preprocessContent("<p>AT&amp;T reported earnings.</p>", type, mime)).toEqual("at&t reported earnings.");
-        expect(preprocessContent("<p>if a &lt; b &amp;&amp; b &gt; c, then&nbsp;done</p>", type, mime))
-            .toEqual("if a < b && b > c, then done");
+        // `extractContentSnippet()` decodes these entities to render a hit, so the same spelling
+        // is what a query has to match.
+        const entities = "<p>if a &lt; b &amp;&amp; b &gt; c, then&nbsp;done</p>";
+
+        expect(preprocessContent("<p>AT&amp;T reported earnings.</p>", type, mime))
+            .toEqual("at&t reported earnings.");
+        expect(preprocessContent(entities, type, mime)).toEqual("if a < b && b > c, then done");
     });
 
     it("decodes an entity-encoded query separator inside an anchor's href", () => {
@@ -213,13 +214,14 @@ describe("HTML entity decoding", () => {
     });
 
     it("decodes once, so a body showing an entity is still found by what it shows", () => {
-        // "&amp;amp;" displays as "&amp;", and searching for that literal string must hit it — which
-        // it would not if the decode ran twice and left a bare "&".
-        expect(preprocessContent("<p>use &amp;amp; to write one</p>", type, mime)).toContain("use &amp; to write one");
+        // This body displays "&amp;"; a second decode would leave a bare "&" and stop matching the
+        // characters the note shows.
+        expect(preprocessContent("<p>use &amp;amp; to write one</p>", type, mime))
+            .toContain("use &amp; to write one");
     });
 
     it("keeps a raw content search against the stored markup", () => {
-        // note.rawContent is the blob as written, entities and tags included, so it stays encoded.
+        // `note.rawContent` is the blob as written, entities and tags included.
         expect(preprocessContent("<p>AT&amp;T</p>", type, mime, true)).toEqual("<p>at&amp;t</p>");
     });
 });
