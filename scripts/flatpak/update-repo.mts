@@ -1,17 +1,17 @@
 /**
- * Writes the Flathub packaging repo's files from their vendored sources in
- * `apps/desktop/flatpak/`: the manifest — with its git source pinned to the
- * requested ref and its pnpm sources tracking that ref's `packageManager` —
- * plus the launch wrapper, desktop file and metainfo.
+ * Writes the Flathub packaging repo's manifest and launch wrapper from their
+ * vendored sources in `apps/desktop/flatpak/`, with the manifest's git source
+ * pinned to the requested ref and its pnpm sources tracking that ref's
+ * `packageManager`. The desktop file and metainfo install from the pinned
+ * checkout itself; `generated-sources.json` is a separate step:
+ * ./scripts/flatpak/generate-sources.mts, run against the same ref's checkout.
  *
  * Usage:
  *
  *   pnpm exec tsx ./scripts/flatpak/update-repo.mts <packaging-repo-dir> [ref]
  *
  * `ref` defaults to HEAD; a tag pins `tag:` and `commit:`, anything else pins
- * the bare commit (the beta case). `generated-sources.json` is a separate
- * step: ./scripts/flatpak/generate-sources.mts, run against the same ref's
- * checkout.
+ * the bare commit (the beta case).
  */
 
 import { execFileSync } from "node:child_process";
@@ -21,11 +21,6 @@ import { join, resolve } from "node:path";
 
 const FLATPAK_DIR = join(import.meta.dirname, "../../apps/desktop/flatpak");
 const MANIFEST_NAME = "org.triliumnotes.Trilium.yml";
-const COPIED_FILES = [
-    "trilium.sh",
-    "org.triliumnotes.Trilium.desktop",
-    "org.triliumnotes.Trilium.metainfo.xml"
-];
 
 export async function main(argv: string[]) {
     const [repoDirArg, ref = "HEAD"] = argv;
@@ -48,11 +43,8 @@ export async function main(argv: string[]) {
     }
 
     writeFileSync(join(repoDir, MANIFEST_NAME), manifest);
-    for (const file of COPIED_FILES) {
-        copyFileSync(join(FLATPAK_DIR, file), join(repoDir, file));
-    }
-    console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}, `
-        + `${COPIED_FILES.length + 1} files.`);
+    copyFileSync(join(FLATPAK_DIR, "trilium.sh"), join(repoDir, "trilium.sh"));
+    console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}.`);
 }
 
 /** Pins the manifest's git source; without a tag, the `tag:` line goes (a beta builds a bare commit). */

@@ -58,6 +58,8 @@ modules:
       - pnpm exec tsx apps/desktop/electron-forge/trim-locales.ts /app/lib/electron/locales
 
       - install -Dm755 trilium.sh /app/bin/trilium
+      - install -Dm644 apps/desktop/flatpak/${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
+      - install -Dm644 apps/desktop/flatpak/${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
       - for s in 128 256 512; do install -Dm644 "apps/desktop/electron-forge/app-icon/png/${s}x${s}.png"
         "/app/share/icons/hicolor/${s}x${s}/apps/${FLATPAK_ID}.png"; done
     sources:
@@ -78,17 +80,6 @@ modules:
         sha256: c3bb8caba00f308733b0876d245e1e1f3ad656e6605f4f85dd861457267ae9f2
         dest: flatpak-node/pnpm
         only-arches: [aarch64]
+      # The launch wrapper stays a repo file, reviewable without opening the checkout.
       - type: file
         path: trilium.sh
-
-  # Separate module so a metadata edit does not invalidate app build.
-  - name: metadata
-    buildsystem: simple
-    build-commands:
-      - install -Dm644 ${FLATPAK_ID}.desktop /app/share/applications/${FLATPAK_ID}.desktop
-      - install -Dm644 ${FLATPAK_ID}.metainfo.xml /app/share/metainfo/${FLATPAK_ID}.metainfo.xml
-    sources:
-      - type: file
-        path: org.triliumnotes.Trilium.desktop
-      - type: file
-        path: org.triliumnotes.Trilium.metainfo.xml
