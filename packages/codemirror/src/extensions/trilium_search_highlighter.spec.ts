@@ -85,6 +85,16 @@ describe("tokenizeSearchQuery", () => {
     });
 });
 
+describe("negation in the token stream", () => {
+    it("keeps a negated attribute one token, which the linter reads as the operand", () => {
+        expect(tokenize("#!fiction ~!author = x")).toEqual([
+            "label:#!fiction",
+            "relation:~!author",
+            "operator:="
+        ]);
+    });
+});
+
 describe("triliumSearchHighlighter", () => {
     it("marks the tokens in the rendered editor", () => {
         const parent = document.createElement("div");
@@ -101,6 +111,24 @@ describe("triliumSearchHighlighter", () => {
             expect(textOf(parent, ".cm-search-relation")).toEqual([ "~author" ]);
             expect(textOf(parent, ".cm-search-property")).toEqual([ ".title" ]);
             expect(textOf(parent, ".cm-search-string")).toEqual([ "'Tolkien'" ]);
+        } finally {
+            editor.destroy();
+        }
+    });
+    it("draws the negation apart from the attribute it negates", () => {
+        const parent = document.createElement("div");
+        document.body.appendChild(parent);
+        const editor = createFieldEditor({
+            parent,
+            doc: "#!fiction ~!author.title = x",
+            extensions: [ triliumSearchHighlighter ]
+        });
+
+        try {
+            // The marker and the name keep the attribute's own colour, split around the `!`.
+            expect(textOf(parent, ".cm-search-negation")).toEqual([ "!", "!" ]);
+            expect(textOf(parent, ".cm-search-label")).toEqual([ "#", "fiction" ]);
+            expect(textOf(parent, ".cm-search-relation")).toEqual([ "~", "author" ]);
         } finally {
             editor.destroy();
         }

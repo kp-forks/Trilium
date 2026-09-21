@@ -291,6 +291,7 @@
     /* Search query syntax (the search string of a saved search) */
     --search-label-color: #1a6fc4;
     --search-relation-color: #7d4bbd;
+    --search-negation-color: #c62828;
     --search-property-color: #0f7b6c;
     --search-keyword-color: #b02a5b;
     --search-operator-color: #596573;

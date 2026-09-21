@@ -160,6 +160,13 @@ const MARKS: Record<SearchTokenKind, Decoration> = {
 };
 
 /**
+ * The `!` of `#!fiction`, drawn apart from the attribute it negates so the one character that
+ * inverts a clause is not read as part of the name. It is a decoration rather than a token of its
+ * own: the linter reads the same stream and takes an attribute to be one token.
+ */
+const NEGATION_MARK = Decoration.mark({ class: "cm-search-negation" });
+
+/**
  * The Next themes own the palette (`--search-*` in theme-next-light.css / theme-next-dark.css).
  * The fallbacks below are what the legacy themes — which don't define those variables — render
  * with, so they are mid-tones that hold up on a light and a dark background alike.
@@ -167,6 +174,7 @@ const MARKS: Record<SearchTokenKind, Decoration> = {
 const searchHighlightTheme = EditorView.baseTheme({
     ".cm-search-label": { color: "var(--search-label-color, #539bf5)" },
     ".cm-search-relation": { color: "var(--search-relation-color, #8957e5)" },
+    ".cm-search-negation": { color: "var(--search-negation-color, #e5534b)" },
     ".cm-search-property": { color: "var(--search-property-color, #268a8a)" },
     ".cm-search-keyword": { color: "var(--search-keyword-color, #bf3989)", fontWeight: "bold" },
     ".cm-search-operator": { color: "var(--search-operator-color, var(--muted-text-color))" },
@@ -192,10 +200,23 @@ export const triliumSearchHighlighter: Extension = [ searchHighlightField, searc
 
 function buildSearchDecorations(state: EditorState): DecorationSet {
     const builder = new RangeSetBuilder<Decoration>();
+    const text = state.doc.toString();
 
-    for (const token of tokenizeSearchQuery(state.doc.toString())) {
+    for (const token of tokenizeSearchQuery(text)) {
+        const negation = token.from + 1;
+
+        if (ATTRIBUTE_KINDS.has(token.kind) && text[negation] === "!") {
+            builder.add(token.from, negation, MARKS[token.kind]);
+            builder.add(negation, negation + 1, NEGATION_MARK);
+            builder.add(negation + 1, token.to, MARKS[token.kind]);
+            continue;
+        }
+
         builder.add(token.from, token.to, MARKS[token.kind]);
     }
 
     return builder.finish();
 }
+
+/** The tokens spelled with a marker, which is the only place a `!` can negate. */
+const ATTRIBUTE_KINDS: ReadonlySet<SearchTokenKind> = new Set([ "label", "relation" ]);

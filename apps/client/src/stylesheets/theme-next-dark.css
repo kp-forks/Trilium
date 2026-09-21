@@ -293,6 +293,7 @@
     /* Search query syntax (the search string of a saved search) */
     --search-label-color: #79b8ff;
     --search-relation-color: #c2a8ff;
+    --search-negation-color: #ff6b6b;
     --search-property-color: #5bc4b1;
     --search-keyword-color: #ff7eb6;
     --search-operator-color: #9aa4b0;
