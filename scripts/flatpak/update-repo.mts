@@ -1,6 +1,6 @@
 /**
- * Writes the Flathub packaging repo's manifest and launch wrapper from their
- * vendored sources in `apps/desktop/flatpak/`, with the manifest's git source
+ * Writes the Flathub packaging repo's manifest, launch wrapper and bot config
+ * from their vendored sources in `apps/desktop/flatpak/`, with the git source
  * pinned to the requested ref and its pnpm sources tracking that ref's
  * `packageManager`. The desktop file and metainfo install from the pinned
  * checkout itself; `generated-sources.json` is a separate step:
@@ -21,6 +21,9 @@ import { join, resolve } from "node:path";
 
 const FLATPAK_DIR = join(import.meta.dirname, "../../apps/desktop/flatpak");
 const MANIFEST_NAME = "org.triliumnotes.Trilium.yml";
+// The wrapper is a manifest source; flathub.json configures Flathub's bots and
+// only takes effect on the packaging repo's default branch.
+const COPIED_FILES = [ "trilium.sh", "flathub.json" ];
 
 export async function main(argv: string[]) {
     const [repoDirArg, ref = "HEAD"] = argv;
@@ -43,7 +46,9 @@ export async function main(argv: string[]) {
     }
 
     writeFileSync(join(repoDir, MANIFEST_NAME), manifest);
-    copyFileSync(join(FLATPAK_DIR, "trilium.sh"), join(repoDir, "trilium.sh"));
+    for (const file of COPIED_FILES) {
+        copyFileSync(join(FLATPAK_DIR, file), join(repoDir, file));
+    }
     console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}.`);
 }
 

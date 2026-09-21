@@ -1,0 +1,55 @@
+name: Release to Flathub
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Tag or ref to package (a tag pins tag + commit, anything else a bare commit)'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  update-flathub-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          # update-repo.mts resolves the ref against the checkout, so tags must be present.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install flatpak-node-generator
+        # Pinned to a master commit: there is no release, and bundled copies (org.flatpak.Builder)
+        # lag behind fixes such as skipping the linux-armv7l binaries Electron 44 dropped.
+        run: pipx install 'git+https://github.com/flatpak/flatpak-builder-tools.git@41c20aa10819cdb2a4f3ca171758a96d1955c018#subdirectory=node'
+
+      - name: Clone the Flathub repo
+        run: git clone --depth=1 https://github.com/flathub/org.triliumnotes.Trilium.git "$RUNNER_TEMP/flathub"
+
+      - name: Update the manifest and packaging files
+        run: node --experimental-strip-types scripts/flatpak/update-repo.mts "$RUNNER_TEMP/flathub" ${INPUT_REF:+"$INPUT_REF"}
+        env:
+          INPUT_REF: ${{ inputs.ref }}
+
+      - name: Generate the offline install sources
+        run: node --experimental-strip-types scripts/flatpak/generate-sources.mts "$RUNNER_TEMP/flathub"
+
+      - name: Validate the metainfo
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes appstream
+          appstreamcli validate --explain "$RUNNER_TEMP/flathub/org.triliumnotes.Trilium.metainfo.xml"
+
+      - name: Show the resulting change
+        run: git -C "$RUNNER_TEMP/flathub" --no-pager diff --stat
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: flathub-repo
+          path: ${{ runner.temp }}/flathub
