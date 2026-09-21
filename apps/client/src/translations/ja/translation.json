@@ -2414,7 +2414,9 @@
     "delete-notes-in-progress": "削除進行中のノート: {{count}}",
     "delete-finished-successfully": "削除が正常に完了しました。",
     "undeleting-notes-in-progress": "削除済みのノートを復元中: {{count}}",
-    "undeleting-notes-finished-successfully": "ノートの復元が正常に完了しました。"
+    "undeleting-notes-finished-successfully": "ノートの復元が正常に完了しました。",
+    "delete-notes-in-progress-with-total": "{{total}} 件中 {{progress}} 件のノートを削除しました",
+    "erasing-notes": "ノートを削除中…"
   },
   "frontend_script_api": {
     "async_warning": "`api.runOnBackend()` に非同期関数を渡していますが、これは意図したとおりに動作しない可能性があります。\\n関数を同期させる(`async` キーワードを削除する)か、`api.runAsyncOnBackendWithManualTransactionHandling()` を使用してください。",
