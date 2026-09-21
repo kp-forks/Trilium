@@ -82,9 +82,15 @@
     }
 
     .cm-placeholder {
-        /* CodeMirror draws the placeholder as an inline-block, which leaves the empty line with no
-           text-sized inline box for the caret to take its height from. */
-        display: inline;
+        /* Out of flow, so the caret on an empty line takes its height from the line's text box
+           rather than from the placeholder. The text draws at the line's start either way. */
+        position: absolute;
         color: var(--input-placeholder-color, var(--muted-text-color));
+    }
+
+    .cm-widgetBuffer {
+        /* Firefox measures the caret against this spacer beside a widget, and the placeholder
+           above is the only widget here. */
+        display: none;
     }
 }
