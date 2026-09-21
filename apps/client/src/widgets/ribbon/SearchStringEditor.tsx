@@ -1,5 +1,6 @@
 import type { FieldEditor } from "@triliumnext/codemirror/src/field_editor";
 import clsx from "clsx";
+import type { MutableRef } from "preact/hooks";
 import { useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../services/i18n";
@@ -12,11 +13,22 @@ interface SearchStringEditorProps {
     /** The note `currentValue` belongs to. A change to it replaces the document. */
     noteId: string;
     placeholder?: string;
+    /** Names the field where the placeholder is a hint rather than a name for it. */
+    ariaLabel?: string;
     className?: string;
     autoFocus?: boolean;
+    /** Whether the query is held to one line, for a field laid out as an input. */
+    singleLine?: boolean;
+    /** Handed the editor once built, for a caller that has to focus or select what it holds. */
+    editorRef?: MutableRef<FieldEditor | undefined>;
     onChange(newValue: string): void;
     /** Runs when Enter is pressed, which the editor treats as "run this search". */
     onEnter(): void;
+    /**
+     * Runs on Escape, once the completion popup has passed the key on. Returns whether the field
+     * took it; `false` leaves it to whatever the field sits in.
+     */
+    onEscape?(): boolean;
 }
 
 // The keys the field answers, for the contextual shortcut pane (Alt+F1). CodeMirror binds
@@ -32,22 +44,36 @@ const SEARCH_STRING_HINTS: ShortcutHintDefinition = [
     }
 ];
 
+/** The same, less the line break a one-line field does not take. */
+const SINGLE_LINE_HINTS: ShortcutHintDefinition = [
+    {
+        titleKey: "search_string.hints.title",
+        hints: [
+            { keys: ["Ctrl+Space"], labelKey: "search_string.hints.completions" },
+            { keys: ["Enter"], labelKey: "search_string.hints.run_search" }
+        ]
+    }
+];
+
 /**
- * Edits the `#searchString` of a saved search in a CodeMirror editor. Enter runs the search and
- * Shift-Enter starts a new line, so a long query can be laid out over several of them.
+ * A search query in a CodeMirror editor, with the highlighting, linting and completions the syntax
+ * carries. Enter runs the search; Shift-Enter starts a new line, so a long query can be laid out
+ * over several of them, unless `singleLine` holds the field to one.
+ *
+ * Written to edit the `#searchString` of a saved search, and used for a collection filter too.
  */
-export default function SearchStringEditor({ currentValue, noteId, placeholder, className, autoFocus, onChange, onEnter }: SearchStringEditorProps) {
+export default function SearchStringEditor({ currentValue, noteId, placeholder, ariaLabel, className, autoFocus, singleLine, editorRef: exposedRef, onChange, onEnter, onEscape }: SearchStringEditorProps) {
     const parentRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<FieldEditor>();
     // The editor is built once, so it reaches the current props through a ref rather than
     // through the closure of the render that created it.
-    const propsRef = useRef({ currentValue, onChange, onEnter });
-    propsRef.current = { currentValue, onChange, onEnter };
+    const propsRef = useRef({ currentValue, onChange, onEnter, onEscape });
+    propsRef.current = { currentValue, onChange, onEnter, onEscape };
     // Set while the effect below writes `currentValue` into the document, so `onChange` does not
     // report it as an edit the user made.
     const isAdopting = useRef(false);
 
-    useContextualShortcutHints(SEARCH_STRING_HINTS);
+    useContextualShortcutHints(singleLine ? SINGLE_LINE_HINTS : SEARCH_STRING_HINTS);
 
     useEffect(() => {
         if (!parentRef.current) {
@@ -58,14 +84,20 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
             parent: parentRef.current,
             doc: propsRef.current.currentValue,
             placeholder,
+            ariaLabel,
+            singleLine,
             onChange: (value) => {
                 if (!isAdopting.current) {
                     propsRef.current.onChange(value);
                 }
             },
-            onEnter: () => propsRef.current.onEnter()
+            onEnter: () => propsRef.current.onEnter(),
+            onEscape: () => propsRef.current.onEscape?.() ?? false
         });
         editorRef.current = editor;
+        if (exposedRef) {
+            exposedRef.current = editor;
+        }
 
         if (autoFocus) {
             editor.focus();
@@ -74,6 +106,9 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
         return () => {
             editor.destroy();
             editorRef.current = undefined;
+            if (exposedRef) {
+                exposedRef.current = undefined;
+            }
         };
         // Builds the editor once; `placeholder` and `autoFocus` are read at that point.
         // eslint-disable-next-line react-hooks/exhaustive-deps

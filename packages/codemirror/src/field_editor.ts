@@ -14,6 +14,8 @@ export interface FieldEditorConfig {
     /** Text the editor starts with. */
     doc?: string;
     placeholder?: string;
+    /** Names the field for assistive technology, where a placeholder is a hint rather than a name. */
+    ariaLabel?: string;
     /** Extra extensions, such as a highlighter for whatever syntax the value holds. */
     extensions?: Extension[];
     /** Completions to offer as the value is typed. Without one, the editor has no autocompletion. */
@@ -101,6 +103,10 @@ export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
 
     if (config.placeholder) {
         extensions.push(placeholder(config.placeholder));
+    }
+
+    if (config.ariaLabel) {
+        extensions.push(EditorView.contentAttributes.of({ "aria-label": config.ariaLabel }));
     }
 
     if (config.completionSource) {
