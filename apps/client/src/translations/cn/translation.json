@@ -2178,7 +2178,9 @@
     "delete-notes-in-progress": "正在删除笔记：{{count}}",
     "delete-finished-successfully": "删除成功完成。",
     "undeleting-notes-in-progress": "正在恢复删除的笔记：{{count}}",
-    "undeleting-notes-finished-successfully": "恢复删除的笔记已成功完成。"
+    "undeleting-notes-finished-successfully": "恢复删除的笔记已成功完成。",
+    "delete-notes-in-progress-with-total": "已删除 {{progress}} 条笔记，共 {{total}} 条",
+    "erasing-notes": "正在清除笔记…"
   },
   "frontend_script_api": {
     "async_warning": "你正在将一个异步函数传递给 `api.runOnBackend()`，这可能无法按预期工作。\\n要么使该函数同步（通过移除 `async` 关键字），要么使用 `api.runAsyncOnBackendWithManualTransactionHandling()`。",
