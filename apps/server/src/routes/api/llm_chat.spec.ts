@@ -168,5 +168,24 @@ describe("streamChat", () => {
                 'data: {"type":"done"}\n\n'
             ]);
         });
+
+        it("stops the heartbeat when the client disconnects while the provider is still waiting", async () => {
+            state.chunks = [{ type: "done" }];
+            state.delaysMs = [SSE_HEARTBEAT_MS * 2];
+            const r = fakeRes({ withFlush: true });
+            const finished = llmChatRoute.streamChat(chatReq(), r.res);
+            await vi.advanceTimersByTimeAsync(0);
+
+            r.listeners.close();
+            expect(state.signal?.aborted).toBe(true);
+
+            await vi.advanceTimersByTimeAsync(SSE_HEARTBEAT_MS);
+            expect(r.writes).toEqual([]);
+
+            await vi.advanceTimersByTimeAsync(SSE_HEARTBEAT_MS);
+            await finished;
+            expect(r.writes).toEqual([]);
+            expect(r.ended).toBe(true);
+        });
     });
 });

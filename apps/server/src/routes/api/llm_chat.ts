@@ -48,10 +48,10 @@ async function streamChat(req: Request, res: Response) {
     // Type assertion for flush method (available when compression is used)
     const flushableRes = res as Response & { flush?: () => void };
 
-    // Stop the turn when the client disconnects mid-stream, so a closed tab
-    // doesn't leave an agent loop running against the provider.
+    // Abort the provider turn when the client disconnects, so a closed tab
+    // does not leave an agent loop running. Aborting `runChat` does not always
+    // settle at once, so the heartbeat stops here rather than in `finally`.
     const abortController = new AbortController();
-    res.on("close", () => abortController.abort());
 
     let stopped = false;
     const writeFrame = (frame: string) => {
@@ -65,6 +65,11 @@ async function streamChat(req: Request, res: Response) {
     };
 
     const heartbeat = startSseHeartbeat(() => writeFrame(SSE_HEARTBEAT_FRAME));
+    res.on("close", () => {
+        stopped = true;
+        heartbeat.stop();
+        abortController.abort();
+    });
 
     try {
         // Imported here rather than at module scope so the chat pipeline and
