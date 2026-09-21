@@ -1514,7 +1514,7 @@
   },
   "search_string": {
     "title_column": "Search string:",
-    "placeholder": "Ctrl+Space for suggestions, Shift+Enter for a new line, Enter to search",
+    "placeholder": "Ctrl+Space for suggestions, @ for a note, Shift+Enter for a new line, Enter to search",
     "search_syntax": "Search syntax",
     "also_see": "also see",
     "complete_help": "complete help on search syntax",
