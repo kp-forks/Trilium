@@ -20,9 +20,8 @@ export default function preprocessContent(rawContent: string | Uint8Array, type:
             // Content size already filtered at DB level, safe to process
             content = stripTags(content);
 
-            // The stored body holds entities where the editor shows characters, so decoding is what
-            // makes the searchable text the displayed one. Injected link text arrives already
-            // decoded, so this runs before it is appended and never twice over the same characters.
+            // The body is decoded so a query can reach the text the editor shows, and before the
+            // injected link text is appended, since that arrives decoded already.
             content = unescapeHtml(content);
 
             if (injectedText) {

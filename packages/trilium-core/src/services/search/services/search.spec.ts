@@ -1177,20 +1177,14 @@ describe("Search", () => {
         }
 
         it("finds a body by the text the editor shows for it", () => {
-            // This body reads "AT&T reported R&D spend, where a<b held." on screen, and that is the
-            // wording the result card prints back, so a query in that shape has to reach the body.
-            const telco = bodyNote("Telco", "<p>AT&amp;T reported R&amp;D spend, where a&lt;b held.</p>");
+            // The first body reads "AT&T and R&D, where a<b." on screen; the second displays
+            // "&amp;" and "&lt;", which a second decode would turn into "&" and "<".
+            const telco = bodyNote("Telco", "<p>AT&amp;T and R&amp;D, where a&lt;b.</p>");
+            const literal = bodyNote("Literal", "<p>write &amp;amp;t rather than &amp;lt;</p>");
 
             expect(finds("AT&T", telco.noteId)).toBe(true);
             expect(finds("R&D", telco.noteId)).toBe(true);
             expect(finds("a<b", telco.noteId)).toBe(true);
-        });
-
-        it("decodes once, so a body showing an entity is found by what it shows", () => {
-            // The body displays "&amp;" and "&lt;". A second decode would turn the second one into
-            // a bare "<", which is not what the note says.
-            const literal = bodyNote("Literal", "<p>write &amp;amp;t rather than &amp;lt;</p>");
-
             expect(finds("&lt;", literal.noteId)).toBe(true);
             expect(finds("at<t", literal.noteId)).toBe(false);
         });

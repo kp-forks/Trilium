@@ -158,9 +158,28 @@ describe("Text (HTML) preprocessing", () => {
         expect(result).toContain("a 1984 science fiction film.");
     });
 
+    it("makes the searchable body the text the editor displays", () => {
+        // `extractContentSnippet()` decodes the same set to render a hit, so the spelling on screen
+        // is what a query has to be able to reach.
+        const ampersand = "<p>AT&amp;T reported earnings.</p>";
+        const entities = "<p>if a &lt; b &amp;&amp; b &gt; c, then&nbsp;done</p>";
+        const href = `<p>see <a href="https://example.com/?a=1&amp;b=2">docs</a></p>`;
+        const shown = "<p>use &amp;amp; to write one</p>";
+
+        expect(preprocessContent(ampersand, type, mime)).toEqual("at&t reported earnings.");
+        expect(preprocessContent(entities, type, mime)).toEqual("if a < b && b > c, then done");
+        expect(preprocessContent(href, type, mime)).toContain("https://example.com/?a=1&b=2");
+        // Decoded once: this body shows "&amp;", where a second pass would leave a bare "&".
+        expect(preprocessContent(shown, type, mime)).toContain("use &amp; to write one");
+    });
+
     it("keeps the markup but still unescapes entities when raw is requested", () => {
-        const result = preprocessContent("<p>Hello&nbsp;world</p>", type, mime, true);
-        expect(result).toEqual("<p>hello world</p>");
+        const spacing = preprocessContent("<p>Hello&nbsp;world</p>", type, mime, true);
+        // `note.rawContent` searches the stored markup, so the basic entities stay encoded there.
+        const markup = preprocessContent("<p>AT&amp;T</p>", type, mime, true);
+
+        expect(spacing).toEqual("<p>hello world</p>");
+        expect(markup).toEqual("<p>at&amp;t</p>");
     });
 });
 
@@ -190,38 +209,5 @@ describe("LLM chat preprocessing", () => {
             ]
         });
         expect(preprocessContent(chat, type, mime)).toEqual("what is a branch? a parent-child link.");
-    });
-});
-
-describe("HTML entity decoding", () => {
-    const type: NoteType = "text";
-    const mime = "text/html";
-
-    it("makes the text the editor displays searchable", () => {
-        // `extractContentSnippet()` decodes these entities to render a hit, so the same spelling
-        // is what a query has to match.
-        const entities = "<p>if a &lt; b &amp;&amp; b &gt; c, then&nbsp;done</p>";
-
-        expect(preprocessContent("<p>AT&amp;T reported earnings.</p>", type, mime))
-            .toEqual("at&t reported earnings.");
-        expect(preprocessContent(entities, type, mime)).toEqual("if a < b && b > c, then done");
-    });
-
-    it("decodes an entity-encoded query separator inside an anchor's href", () => {
-        const html = `<p>see <a href="https://example.com/?a=1&amp;b=2">docs</a></p>`;
-
-        expect(preprocessContent(html, type, mime)).toContain("https://example.com/?a=1&b=2");
-    });
-
-    it("decodes once, so a body showing an entity is still found by what it shows", () => {
-        // This body displays "&amp;"; a second decode would leave a bare "&" and stop matching the
-        // characters the note shows.
-        expect(preprocessContent("<p>use &amp;amp; to write one</p>", type, mime))
-            .toContain("use &amp; to write one");
-    });
-
-    it("keeps a raw content search against the stored markup", () => {
-        // `note.rawContent` is the blob as written, entities and tags included.
-        expect(preprocessContent("<p>AT&amp;T</p>", type, mime, true)).toEqual("<p>at&amp;t</p>");
     });
 });
