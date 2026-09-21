@@ -16,7 +16,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { copyFileSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const FLATPAK_DIR = join(import.meta.dirname, "../../apps/desktop/flatpak");
@@ -24,6 +24,7 @@ const MANIFEST_NAME = "org.triliumnotes.Trilium.yml";
 // The wrapper is a manifest source; flathub.json configures Flathub's bots and
 // only takes effect on the packaging repo's default branch.
 const COPIED_FILES = [ "trilium.sh", "flathub.json" ];
+const MIN_PNPM_MAJOR = 12;
 
 export async function main(argv: string[]) {
     const [repoDirArg, ref = "HEAD"] = argv;
@@ -39,6 +40,7 @@ export async function main(argv: string[]) {
 
     const pnpmVersion = parsePnpmVersion(git("show", `${commit}:package.json`));
     if (getPnpmVersion(manifest) !== pnpmVersion) {
+        checkPnpmSupported(pnpmVersion);
         manifest = updatePnpmPins(manifest, pnpmVersion, {
             x64: await sha256OfUrl(pnpmExeUrl("x64", pnpmVersion)),
             arm64: await sha256OfUrl(pnpmExeUrl("arm64", pnpmVersion))
@@ -49,7 +51,15 @@ export async function main(argv: string[]) {
     for (const file of COPIED_FILES) {
         copyFileSync(join(FLATPAK_DIR, file), join(repoDir, file));
     }
+    if (process.env.GITHUB_OUTPUT) {
+        appendFileSync(process.env.GITHUB_OUTPUT, formatOutputs(commit, tag, pnpmVersion));
+    }
     console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}.`);
+}
+
+/** Step outputs for the workflow that opens the pull request; the tag is empty for a beta. */
+export function formatOutputs(commit: string, tag: string | undefined, pnpmVersion: string): string {
+    return `commit=${commit}\nshort=${commit.slice(0, 8)}\ntag=${tag ?? ""}\npnpm=${pnpmVersion}\n`;
 }
 
 /** Pins the manifest's git source; without a tag, the `tag:` line goes (a beta builds a bare commit). */
@@ -60,6 +70,18 @@ export function updateGitSource(manifest: string, commit: string, tag?: string):
     }
     return manifest.replace(gitSource, (_, urlLine: string, _tagLine: string, indent: string) =>
         `${urlLine}${tag ? `${indent}tag: ${tag}\n` : ""}${indent}commit: ${commit}`);
+}
+
+/**
+ * The manifest pins pnpm per architecture, from the `@pnpm/exe.*` packages pnpm
+ * publishes since 12. Older refs pinned one wrapper tarball, whose URL this
+ * would otherwise build and fetch to a bare 404.
+ */
+export function checkPnpmSupported(version: string) {
+    if (Number(version.split(".")[0]) < MIN_PNPM_MAJOR) {
+        throw new Error(`The ref pins pnpm ${version}; the manifest's per-architecture `
+            + `sources need pnpm ${MIN_PNPM_MAJOR} or newer.`);
+    }
 }
 
 /** The version the manifest's per-arch pnpm sources currently pin. */

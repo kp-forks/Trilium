@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getPnpmVersion, parsePnpmVersion, updateGitSource, updatePnpmPins } from "./update-repo.mjs";
+import { checkPnpmSupported, formatOutputs, getPnpmVersion, parsePnpmVersion, updateGitSource, updatePnpmPins } from "./update-repo.mjs";
 
 const MANIFEST = `\
 modules:
@@ -49,6 +49,15 @@ describe("updateGitSource", () => {
     });
 });
 
+describe("formatOutputs", () => {
+    it("reports the tag for a release and an empty tag for a beta", () => {
+        expect(formatOutputs(NEW_COMMIT, "v0.106.0", "12.4.2")).toBe(
+            `commit=${NEW_COMMIT}\nshort=12345678\ntag=v0.106.0\npnpm=12.4.2\n`);
+        // The workflow drafts the pull request when the tag is empty.
+        expect(formatOutputs(NEW_COMMIT, undefined, "12.4.2")).toContain("tag=\n");
+    });
+});
+
 describe("pnpm pins", () => {
     it("reads the pinned version", () => {
         expect(getPnpmVersion(MANIFEST)).toBe("12.4.2");
@@ -69,6 +78,13 @@ describe("pnpm pins", () => {
         expect(updated).toContain(`exe.linux-x64-12.5.0.tgz\n        sha256: ${"a".repeat(64)}`);
         expect(updated).toContain(`exe.linux-arm64-12.5.0.tgz\n        sha256: ${"b".repeat(64)}`);
         expect(updated).not.toContain("12.4.2");
+    });
+
+    it("rejects a ref older than the per-arch pnpm packages", () => {
+        expect(() => checkPnpmSupported("12.4.2")).not.toThrow();
+        // pnpm 11 shipped one wrapper tarball; @pnpm/exe.* starts at 12, so the
+        // fetch would 404 with nothing explaining why.
+        expect(() => checkPnpmSupported("11.22.0")).toThrow(/pnpm 12 or newer/);
     });
 
     it("rejects a manifest missing a per-arch source", () => {
