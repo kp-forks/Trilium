@@ -40,7 +40,9 @@ export function searchCompletionSource(context: CompletionContext): CompletionOu
 
     const operator = context.matchBefore(OPERATOR_PREFIX);
     if (operator) {
-        return { from: operator.from, options: operatorOptions(), validFor: OPERATOR_PREFIX };
+        const options = operatorOptions(context);
+
+        return options.length ? { from: operator.from, options, validFor: OPERATOR_PREFIX } : null;
     }
 
     // `asc` and `desc` order an `orderBy` key, so they are worth offering only once one is open.
@@ -53,7 +55,7 @@ export function searchCompletionSource(context: CompletionContext): CompletionOu
 
     // Ctrl-Space on empty space asks for everything on offer.
     if (context.explicit) {
-        return { from: context.pos, options: [ ...wordOptions(isOrdering), ...operatorOptions() ] };
+        return { from: context.pos, options: [ ...wordOptions(isOrdering), ...operatorOptions(context) ] };
     }
 
     return null;
@@ -72,6 +74,11 @@ const ORDER_BY_BEFORE = /orderby[^]*/i;
 /** A `#label` or `~relation`, either optionally negated with `!`. */
 const ATTRIBUTE_PREFIX = new RegExp(`[#~]!?${SEGMENT}*`);
 /**
+ * The attribute or property path an operator is being typed against. The operator characters are
+ * matched along with it so the pattern ends at the cursor, and only the operand is captured.
+ */
+const COMPARISON_OPERAND = new RegExp(`((?:[#~]!?)?${SEGMENT}+(?:\\.${SEGMENT}+)*)\\s*[=!*<>%~]*`);
+/**
  * A label compared with an operator, and whatever stands between that operator and the cursor. The
  * tail stops at the characters that open another clause, so in a query holding several comparisons
  * the one being typed is the one that matches.
@@ -82,6 +89,12 @@ const QUOTES = [ "\"", "'", "`" ];
 const VALUE_TYPED = /[^\s#~()'"`]*/;
 /** What the lexer reads as structure, so a value holding one of these only survives in quotes. */
 const VALUE_NEEDS_QUOTES = /[\s"'`\\#~().=*<>!%+,-]/;
+/**
+ * Operands the parser reads as something other than the text they spell: `now`, `today`, `month`
+ * and `year` resolve to a date, and `note` is rejected as a keyword. The lexer lowercases the
+ * query, so the spelling does not matter.
+ */
+const RESERVED_VALUES = new Set([ "note", "now", "today", "month", "year" ]);
 
 /**
  * Fetches the label or relation names the database holds, through the same call the sidebar's
@@ -185,14 +198,17 @@ async function valueCompletions(name: string, from: number, quote: string): Prom
 
 /**
  * The text a value is inserted as: closing the quote the user opened, or adding a pair of them
- * around a value the lexer would otherwise split into several tokens.
+ * around a value the parser would otherwise read as something else — one the lexer splits into
+ * several tokens, or one spelled like a reserved operand.
  */
 function applyValue(value: string, quote: string) {
     if (quote) {
         return escapeInQuotes(value, quote) + quote;
     }
 
-    return VALUE_NEEDS_QUOTES.test(value) ? `"${escapeInQuotes(value, "\"")}"` : value;
+    const needsQuotes = VALUE_NEEDS_QUOTES.test(value) || RESERVED_VALUES.has(value.toLowerCase());
+
+    return needsQuotes ? `"${escapeInQuotes(value, "\"")}"` : value;
 }
 
 /** The lexer reads the character after a backslash literally, the quote and the backslash included. */
@@ -293,7 +309,10 @@ const SEGMENT_DETAILS: Record<string, string> = {
     revisionCount: "order_by.revision_count"
 };
 
-function operatorOptions(): Completion[] {
+/** The operators the operand standing before the cursor can be compared with. */
+function operatorOptions(context: CompletionContext): Completion[] {
+    const allowed = allowedOperators(context);
+
     return [
         { label: "=", detail: t("search_completion.operator_equal") },
         { label: "!=", detail: t("search_completion.operator_not_equal") },
@@ -307,5 +326,48 @@ function operatorOptions(): Completion[] {
         { label: "%=", detail: t("search_completion.operator_regex") },
         { label: "~=", detail: t("search_completion.operator_fuzzy_equal") },
         { label: "~*", detail: t("search_completion.operator_fuzzy_contains") }
-    ].map((option) => ({ ...option, type: "keyword" }));
+    ]
+        .filter(({ label }) => !allowed || allowed.has(label))
+        .map((option) => ({ ...option, type: "keyword" }));
 }
+
+/**
+ * What the operand restricts the comparison to, `undefined` standing for no restriction. Offering
+ * more would build a query the parser rejects.
+ */
+function allowedOperators(context: CompletionContext): ReadonlySet<string> | undefined {
+    const comparison = context.matchBefore(COMPARISON_OPERAND);
+    const operand = comparison && COMPARISON_OPERAND.exec(comparison.text)?.[1];
+    if (!operand) {
+        return undefined;
+    }
+
+    const segments = operand.split(".");
+    const property = (segments[segments.length - 1] ?? "").toLowerCase();
+    const previous = (segments[segments.length - 2] ?? "").toLowerCase();
+
+    // The name after `labels.` is the user's own, and says nothing about the comparison.
+    if (previous === "labels") {
+        return undefined;
+    }
+
+    // A relation names a note; only a `.`, walking into a property of that note, continues it.
+    if (previous === "relations" || (operand.startsWith("~") && segments.length === 1)) {
+        return NO_OPERATORS;
+    }
+
+    if (property === "text") {
+        return TEXT_OPERATORS;
+    }
+
+    if (property === "content" || property === "rawcontent") {
+        return CONTENT_OPERATORS;
+    }
+
+    return undefined;
+}
+
+const NO_OPERATORS: ReadonlySet<string> = new Set();
+const TEXT_OPERATORS: ReadonlySet<string> = new Set([ "*=*" ]);
+/** Matches `ALLOWED_OPERATORS` in `note_content_fulltext.ts`: content is matched, never ordered. */
+const CONTENT_OPERATORS: ReadonlySet<string> = new Set([ "=", "!=", "*=*", "*=", "=*", "%=", "~=", "~*" ]);

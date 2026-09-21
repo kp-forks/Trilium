@@ -51,6 +51,29 @@ describe("searchCompletionSource", () => {
         expect(result?.options.every((option) => option.detail)).toBe(true);
     });
 
+    it("offers only the operators the operand accepts", async () => {
+        // `note.text` is matched, never ordered or compared exactly.
+        expect(labelsOf(await complete("note.text >"))).toEqual([ "*=*" ]);
+        expect(labelsOf(await complete("~author.text ="))).toEqual([ "*=*" ]);
+
+        // Content is matched too, but with every matching operator.
+        const content = labelsOf(await complete("note.content ="));
+        expect(content).toContain("%=");
+        expect(content).not.toContain(">=");
+        expect(labelsOf(await complete("note.rawContent ="))).toEqual(content);
+
+        // A relation is compared only through a property of the note it names.
+        expect(await complete("~author =")).toBeNull();
+        expect(await complete("note.relations.author >")).toBeNull();
+        // An explicit request past one is left with the keywords alone.
+        expect(labelsOf(await complete("~author ", { explicit: true })))
+            .toEqual([ "note", "and", "or", "not", "orderBy", "limit" ]);
+
+        // The last segment decides, and a name the user chose after `labels.` restricts nothing.
+        expect(labelsOf(await complete("note.parents.title >"))).toContain(">");
+        expect(labelsOf(await complete("note.labels.text ="))).toContain("=");
+    });
+
     it("offers path segments after a dot, anchored at the segment being typed", async () => {
         const root = await complete("note.");
 
@@ -144,6 +167,17 @@ describe("searchCompletionSource", () => {
             expect(labelsOf(result)).toEqual([ "fiction", "science fiction" ]);
             expect(optionFor(result, "fiction")?.apply).toBeUndefined();
             expect(optionFor(result, "science fiction")?.apply).toBe("\"science fiction\"");
+        });
+
+        it("quotes a value spelled like a reserved operand, whatever its case", async () => {
+            vi.mocked(server.get).mockResolvedValue([ "note", "Today", "monthly" ]);
+
+            const result = await complete("#genre = t");
+
+            // Bare, `note` is rejected as a keyword and `today` resolves to a date.
+            expect(optionFor(result, "note")?.apply).toBe("\"note\"");
+            expect(optionFor(result, "Today")?.apply).toBe("\"Today\"");
+            expect(optionFor(result, "monthly")?.apply).toBeUndefined();
         });
 
         it("closes a quote the user opened rather than adding another", async () => {
