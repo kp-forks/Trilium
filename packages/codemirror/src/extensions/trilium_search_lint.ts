@@ -22,16 +22,63 @@ export interface SearchLintMessages {
 }
 
 /**
+ * Reads a query by the engine's own rules, without running it. Answers the first fault, or `null`
+ * where the query has none.
+ */
+export type SearchValidator = (query: string) => Promise<string | null>;
+
+/**
  * Marks the comparisons `parse.ts` refuses, which a query reaches only by being rewritten: no token
  * typed after `~author =` makes it valid again, so a completion has nothing to offer there and the
  * mistake would otherwise surface only once the search is run.
  *
- * It reads the same tokens the highlighter colours and holds to what they decide on their own. The
- * parser in `trilium-core` stays the authority on whether a query is valid, and the error it
- * reports is still what the ribbon shows.
+ * The rules below read the same tokens the highlighter colours and hold to what they decide on
+ * their own, which keeps them instant and lets them mark the operator they object to. `validate`
+ * covers the rest of what the engine refuses, at the cost of a round trip and of a message it can
+ * only attach to the whole query, since `SearchContext` records no offsets.
  */
-export function triliumSearchLinter(messages: SearchLintMessages): Extension {
-    return linter((view) => diagnoseSearchQuery(view.state.doc.toString(), messages));
+export function triliumSearchLinter(messages: SearchLintMessages, validate?: SearchValidator): Extension {
+    return linter((view) => searchDiagnostics(
+        view.state.doc.toString(),
+        messages,
+        validate,
+        () => view.state.doc.toString()
+    ));
+}
+
+/**
+ * The lint source, apart from an editor, which is also how the spec drives it. `currentQuery` is
+ * read again once `validate` answers, so a message describing text already typed over is dropped.
+ */
+export async function searchDiagnostics(
+    query: string,
+    messages: SearchLintMessages,
+    validate?: SearchValidator,
+    currentQuery: () => string = () => query
+): Promise<Diagnostic[]> {
+    const local = diagnoseSearchQuery(query, messages);
+
+    // The local rules already name a fault, and the engine would only report the same one again,
+    // less precisely. They also answer for an empty query, which has nothing to say.
+    if (local.length > 0 || !validate || query.trim() === "") {
+        return local;
+    }
+
+    let error: string | null;
+    try {
+        error = await validate(query);
+    } catch {
+        // The editor keeps working without the engine's opinion.
+        return [];
+    }
+
+    // Typing during the round trip has already queued another run, whose answer describes what the
+    // query says now.
+    if (!error || currentQuery() !== query) {
+        return [];
+    }
+
+    return [ { from: 0, to: query.length, severity: "error", message: error } ];
 }
 
 /** Runs the rules over `query`, apart from an editor, which is also how the spec drives them. */

@@ -1,11 +1,13 @@
 import "./SearchStringEditor.css";
 
 import type { SearchLintMessages } from "@triliumnext/codemirror/src/extensions/trilium_search_lint";
+import type { SearchLintResponse } from "@triliumnext/commons";
 import type { SingleLineEditor } from "@triliumnext/codemirror/src/single_line";
 import clsx from "clsx";
 import { useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../services/i18n";
+import server from "../../services/server";
 import { searchCompletionIcon, searchCompletionReactivates, searchCompletionSource } from "./search_completions";
 
 interface SearchStringEditorProps {
@@ -54,7 +56,7 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
                 parent: parentRef.current,
                 doc: propsRef.current.currentValue,
                 placeholder,
-                extensions: [ triliumSearchHighlighter, triliumSearchLinter(searchLintMessages()) ],
+                extensions: [ triliumSearchHighlighter, triliumSearchLinter(searchLintMessages(), validateOnServer) ],
                 completionSource: searchCompletionSource,
                 completionIcon: searchCompletionIcon,
                 activateOnCompletion: searchCompletionReactivates,
@@ -105,6 +107,17 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
     }, [ currentValue, noteId ]);
 
     return <div ref={parentRef} className={clsx("search-string-editor form-control tn-input-field", className)} />;
+}
+
+/**
+ * Asks the engine to read the query without running it, for the faults the rules in the editor do
+ * not cover. Only reached once those rules are satisfied, so a query they already object to costs
+ * no request.
+ */
+async function validateOnServer(searchString: string) {
+    const { error } = await server.post<SearchLintResponse>("search/lint", { searchString });
+
+    return error;
 }
 
 /** Read once the editor is built, so the wording follows a language switched while the app runs. */

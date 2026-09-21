@@ -484,6 +484,30 @@ function parseQueryToExpression(query: string, searchContext: SearchContext) {
     return expression;
 }
 
+/**
+ * Reads `query` the way a search would, and answers the first thing wrong with it, or `null` where
+ * nothing is. Nothing is executed, so this costs a lex and a parse rather than a search.
+ *
+ * Two things the caller has to live with. `SearchContext` keeps only the first error, so a query
+ * holding several faults reports the earliest. And some faults are only found while the search
+ * runs — `note.content >= x` parses and is refused by `NoteContentFulltextExp` — so silence here
+ * is not a promise that the search will succeed.
+ */
+function validateSearchQuery(query: string): string | null {
+    const searchContext = new SearchContext();
+    searchContext.originalQuery = query;
+
+    try {
+        parseQueryToExpression(query || "", searchContext);
+    } catch (e: unknown) {
+        // The parser reads past the end of a query cut short after `note.labels` and the like, so a
+        // validator that let the throw out would fail on the very text it exists to describe.
+        return e instanceof Error ? e.message : String(e);
+    }
+
+    return searchContext.getError();
+}
+
 function searchNotes(query: string, params: SearchParams = {}): BNote[] {
     const searchResults = findResultsWithQuery(query, new SearchContext(params));
 
@@ -897,6 +921,7 @@ export default {
     findResultsWithQuery,
     findFirstNoteWithQuery,
     searchNotes,
+    validateSearchQuery,
     extractContentSnippet,
     extractAttributeSnippet,
     highlightSearchResults

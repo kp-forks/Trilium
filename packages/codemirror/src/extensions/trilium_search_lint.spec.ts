@@ -1,6 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
-import { diagnoseSearchQuery, type SearchLintMessages } from "./trilium_search_lint.js";
+import { diagnoseSearchQuery, type SearchLintMessages, searchDiagnostics, type SearchValidator } from "./trilium_search_lint.js";
 
 // The wording is the consumer's; the keys identify which rule answered.
 const MESSAGES: SearchLintMessages = {
@@ -78,6 +78,52 @@ describe("diagnoseSearchQuery", () => {
         expect(messagesFor("#book = 1 ~author = x note.text = y")).toEqual([ "relation", "text" ]);
     });
 });
+
+describe("searchDiagnostics", () => {
+    it("asks the engine only about a query its own rules accept", async () => {
+        const validate = vi.fn(async () => "Mixed usage of AND/OR");
+
+        // A fault of its own is reported without a round trip, since the engine would name the
+        // same one less precisely.
+        expect(await ranges("~author = tolkien", validate)).toEqual([ { from: 8, to: 9, message: "relation" } ]);
+        expect(validate).not.toHaveBeenCalled();
+
+        expect(await ranges("#a and #b or #c", validate)).toEqual([
+            { from: 0, to: 15, message: "Mixed usage of AND/OR" }
+        ]);
+        expect(validate).toHaveBeenCalledWith("#a and #b or #c");
+
+        // Nothing to say about an empty field, and nothing to ask.
+        validate.mockClear();
+        expect(await ranges("   ", validate)).toEqual([]);
+        expect(validate).not.toHaveBeenCalled();
+    });
+
+    it("keeps the editor working when the engine cannot be reached", async () => {
+        const failing = vi.fn(async () => { throw new Error("offline"); });
+
+        expect(await ranges("#a and #b or #c", failing)).toEqual([]);
+        expect(failing).toHaveBeenCalled();
+    });
+
+    it("drops an answer that describes a query already typed over", async () => {
+        const diagnostics = await searchDiagnostics(
+            "#a and #b or #c",
+            MESSAGES,
+            async () => "Mixed usage of AND/OR",
+            () => "#a and #b"
+        );
+
+        expect(diagnostics).toEqual([]);
+    });
+});
+
+/** Drives the real lint source and keeps only what a squiggle is drawn from. */
+async function ranges(query: string, validate: SearchValidator) {
+    const diagnostics = await searchDiagnostics(query, MESSAGES, validate);
+
+    return diagnostics.map(({ from, to, message }) => ({ from, to, message }));
+}
 
 function messagesFor(query: string) {
     return diagnoseSearchQuery(query, MESSAGES).map((diagnostic) => diagnostic.message);
