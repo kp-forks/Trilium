@@ -97,23 +97,12 @@
     }
 
     .cm-placeholder {
-        /* Out of flow, so the caret takes its height from the line rather than from the hint. */
-        position: absolute;
         color: var(--input-placeholder-color, var(--muted-text-color));
         font-family: var(--main-font-family);
+        /* The hint names several keys, and the field is one line tall. */
         max-width: 100%;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-    }
-
-    /* Firefox draws the caret against the spacer CodeMirror puts before the placeholder widget,
-       short (https://bugzilla.mozilla.org/show_bug.cgi?id=904846). The spacer must stay in layout:
-       CodeMirror measures a position next to a widget from its rect, and a hidden one reads as
-       zeros, which hides the completion popup as off-screen. */
-    @supports (-moz-appearance: none) {
-        .cm-widgetBuffer:has(+ .cm-placeholder) {
-            vertical-align: baseline;
-        }
     }
 }
