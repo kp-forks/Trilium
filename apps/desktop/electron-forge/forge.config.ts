@@ -1,5 +1,6 @@
 import type { ForgeConfig } from "@electron-forge/shared-types";
-import { FuseV1Options, FuseVersion } from "@electron/fuses";
+import { FuseV1Options } from "@electron/fuses";
+import { FUSES } from "./flip-fuses.js";
 import { trimElectronLocales } from "./trim-locales.js";
 import { copyFileSync, existsSync, mkdirSync, readFileSync, renameSync } from "fs";
 import path, { join } from "path";
@@ -189,13 +190,9 @@ const config: ForgeConfig = {
         {
             name: "@electron-forge/plugin-fuses",
             config: {
-                version: FuseVersion.V1,
-                [FuseV1Options.RunAsNode]: false,
-                [FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-                [FuseV1Options.EnableNodeCliInspectArguments]: false,
-                [FuseV1Options.EnableCookieEncryption]: true,
+                ...FUSES,
+                // The forge builds package the app into an asar archive; the Flathub build has none.
                 [FuseV1Options.OnlyLoadAppFromAsar]: true,
-                [FuseV1Options.GrantFileProtocolExtraPrivileges]: false,
                 [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true
             }
         }
