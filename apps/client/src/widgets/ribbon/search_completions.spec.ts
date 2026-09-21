@@ -41,6 +41,28 @@ describe("searchCompletionSource", () => {
         expect(optionFor(ordering, "asc")?.detail).toBe("order_by.asc");
     });
 
+    it("narrows an orderBy to what can follow the key being written", async () => {
+        // A key is a property path or an attribute name, which the branches above answer for.
+        expect(labelsOf(await complete("#book orderBy n"))).toEqual([ "note" ]);
+        expect(labelsOf(await complete("#book orderBy ", { explicit: true }))).toEqual([ "note" ]);
+
+        // Once a key stands there it can be sorted, followed by another, or cut short.
+        expect(labelsOf(await complete("#book orderBy note.title d")))
+            .toEqual([ "asc", "desc", "limit" ]);
+        expect(labelsOf(await complete("#book orderBy note.title desc, note.dateCreated a")))
+            .toEqual([ "asc", "desc", "limit" ]);
+
+        // A comma opens the next key, which has no direction of its own yet.
+        expect(labelsOf(await complete("#book orderBy note.title, n"))).toEqual([ "note" ]);
+
+        // An ordering names a key and sorts on it; nothing in it is compared.
+        expect(await complete("#book orderBy note.title =")).toBeNull();
+
+        // Outside an ordering the keywords are untouched.
+        expect(labelsOf(await complete("#book n")))
+            .toEqual([ "note", "and", "or", "not", "orderBy", "limit" ]);
+    });
+
     it("offers every operator once one of their characters is typed", async () => {
         const result = await complete("#year >");
 

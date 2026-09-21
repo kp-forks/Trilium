@@ -47,24 +47,25 @@ export function searchCompletionSource(context: CompletionContext): CompletionOu
         };
     }
 
+    // An ordering names a key and sorts on it, comparing nothing.
+    const ordering = orderingPosition(context);
+    const operators = () => (ordering === "none" ? operatorOptions(context) : []);
+
     const operator = context.matchBefore(OPERATOR_PREFIX);
     if (operator) {
-        const options = operatorOptions(context);
+        const options = operators();
 
         return options.length ? { from: operator.from, options, validFor: OPERATOR_PREFIX } : null;
     }
 
-    // `asc` and `desc` order an `orderBy` key, so they are worth offering only once one is open.
-    const isOrdering = !!context.matchBefore(ORDER_BY_BEFORE);
-
     const word = context.matchBefore(WORD_PREFIX);
     if (word) {
-        return { from: word.from, options: wordOptions(isOrdering), validFor: WORD_PREFIX };
+        return { from: word.from, options: wordOptions(ordering), validFor: WORD_PREFIX };
     }
 
     // Ctrl-Space on empty space asks for everything on offer.
     if (context.explicit) {
-        return { from: context.pos, options: [ ...wordOptions(isOrdering), ...operatorOptions(context) ] };
+        return { from: context.pos, options: [ ...wordOptions(ordering), ...operators() ] };
     }
 
     return null;
@@ -357,26 +358,57 @@ function pathCompletions(path: string, pos: number): CompletionOutcome {
  * query. Built per request rather than once, so the options read the catalogue after i18n has
  * loaded and follow a language switched while the app is running.
  */
-function wordOptions(isOrdering: boolean): Completion[] {
-    const options: Completion[] = [
-        // Both complete with what has to follow them: a bare `note`, or a `not` without its
-        // parenthesised sub-expression, is never a clause on its own.
-        { label: "note", apply: "note.", type: "namespace", detail: t("search_completion.note") },
+function wordOptions(ordering: OrderingPosition): Completion[] {
+    // Both complete with what has to follow them: a bare `note`, or a `not` without its
+    // parenthesised sub-expression, is never a clause on its own.
+    const noteObject: Completion = { label: "note", apply: "note.", type: "namespace", detail: t("search_completion.note") };
+    const limit: Completion = { label: "limit", type: "keyword", detail: t("search_completion.keyword_limit") };
+
+    if (ordering === "key") {
+        return [ noteObject ];
+    }
+
+    if (ordering === "sorted") {
+        return [
+            { label: "asc", type: "keyword", detail: t("order_by.asc") },
+            { label: "desc", type: "keyword", detail: t("order_by.desc") },
+            limit
+        ];
+    }
+
+    return [
+        noteObject,
         { label: "and", type: "keyword", detail: t("search_completion.keyword_and") },
         { label: "or", type: "keyword", detail: t("search_completion.keyword_or") },
         { label: "not", apply: "not(", type: "keyword", detail: t("search_completion.keyword_not") },
         { label: "orderBy", type: "keyword", detail: t("search_completion.keyword_order_by") },
-        { label: "limit", type: "keyword", detail: t("search_completion.keyword_limit") }
+        limit
     ];
+}
 
-    if (isOrdering) {
-        options.push(
-            { label: "asc", type: "keyword", detail: t("order_by.asc") },
-            { label: "desc", type: "keyword", detail: t("order_by.desc") }
-        );
+/**
+ * Where the cursor stands in an `orderBy`, which decides what can follow it.
+ * `parseOrderByAndLimit()` reads a property path, then an optional `asc` or `desc`, then either a
+ * comma and another key or the `limit` that ends the query.
+ */
+type OrderingPosition = "none" | "key" | "sorted";
+
+function orderingPosition(context: CompletionContext): OrderingPosition {
+    const ordering = context.matchBefore(ORDER_BY_BEFORE);
+    if (!ordering) {
+        return "none";
     }
 
-    return options;
+    // Each key is ordered on its own, so only what follows the last comma counts.
+    const key = ordering.text.slice(ordering.text.lastIndexOf(",") + 1).replace(/^\s*orderby/i, "");
+    // What is being typed is not a key yet, and says nothing about what may follow one.
+    const written = key.replace(new RegExp(`${WORD_PREFIX.source}$`), "").trim();
+
+    if (/(^|\s)limit(\s|$)/i.test(written)) {
+        return "none";
+    }
+
+    return written ? "sorted" : "key";
 }
 
 function segmentOptions(): Completion[] {
