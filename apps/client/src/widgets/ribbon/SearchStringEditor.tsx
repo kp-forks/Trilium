@@ -1,16 +1,11 @@
-import "./SearchStringEditor.css";
-
-import type { SearchLintMessages } from "@triliumnext/codemirror/src/extensions/trilium_search_lint";
 import type { FieldEditor } from "@triliumnext/codemirror/src/field_editor";
-import type { SearchLintResponse } from "@triliumnext/commons";
 import clsx from "clsx";
 import { useEffect, useRef } from "preact/hooks";
 
 import { t } from "../../services/i18n";
-import server from "../../services/server";
 import type { ShortcutHintDefinition } from "../../services/shortcut_hints";
 import { useContextualShortcutHints } from "../react/hooks";
-import { searchCompletionIcon, searchCompletionReactivates, searchCompletionSource } from "./search_completions";
+import { createSearchFieldEditor, SEARCH_FIELD_EDITOR_CLASS } from "../search_field_editor";
 
 interface SearchStringEditorProps {
     currentValue: string;
@@ -40,9 +35,6 @@ const SEARCH_STRING_HINTS: ShortcutHintDefinition = [
 /**
  * Edits the `#searchString` of a saved search in a CodeMirror editor. Enter runs the search and
  * Shift-Enter starts a new line, so a long query can be laid out over several of them.
- *
- * CodeMirror loads on demand: `RibbonDefinition` imports the tab holding this component
- * statically, so a static import here would put the editor in the initial bundle.
  */
 export default function SearchStringEditor({ currentValue, noteId, placeholder, className, autoFocus, onChange, onEnter }: SearchStringEditorProps) {
     const parentRef = useRef<HTMLDivElement>(null);
@@ -58,43 +50,29 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
     useContextualShortcutHints(SEARCH_STRING_HINTS);
 
     useEffect(() => {
-        let editor: FieldEditor | undefined;
-        let cancelled = false;
+        if (!parentRef.current) {
+            return;
+        }
 
-        void Promise.all([
-            import("@triliumnext/codemirror/src/field_editor"),
-            import("@triliumnext/codemirror/src/extensions/trilium_search_highlighter"),
-            import("@triliumnext/codemirror/src/extensions/trilium_search_lint")
-        ]).then(([ { createFieldEditor }, { triliumSearchHighlighter }, { triliumSearchLinter } ]) => {
-            if (cancelled || !parentRef.current) {
-                return;
-            }
-
-            editor = createFieldEditor({
-                parent: parentRef.current,
-                doc: propsRef.current.currentValue,
-                placeholder,
-                extensions: [ triliumSearchHighlighter, triliumSearchLinter(searchLintMessages(), validateOnServer) ],
-                completionSource: searchCompletionSource,
-                completionIcon: searchCompletionIcon,
-                activateOnCompletion: searchCompletionReactivates,
-                onChange: (value) => {
-                    if (!isAdopting.current) {
-                        propsRef.current.onChange(value);
-                    }
-                },
-                onEnter: () => propsRef.current.onEnter()
-            });
-            editorRef.current = editor;
-
-            if (autoFocus) {
-                editor.focus();
-            }
+        const editor = createSearchFieldEditor({
+            parent: parentRef.current,
+            doc: propsRef.current.currentValue,
+            placeholder,
+            onChange: (value) => {
+                if (!isAdopting.current) {
+                    propsRef.current.onChange(value);
+                }
+            },
+            onEnter: () => propsRef.current.onEnter()
         });
+        editorRef.current = editor;
+
+        if (autoFocus) {
+            editor.focus();
+        }
 
         return () => {
-            cancelled = true;
-            editor?.destroy();
+            editor.destroy();
             editorRef.current = undefined;
         };
         // Builds the editor once; `placeholder` and `autoFocus` are read at that point.
@@ -124,27 +102,5 @@ export default function SearchStringEditor({ currentValue, noteId, placeholder, 
         }
     }, [ currentValue, noteId ]);
 
-    return <div ref={parentRef} className={clsx("search-string-editor form-control tn-input-field", className)} />;
-}
-
-/**
- * Asks the engine to read the query without running it, for the faults the rules in the editor do
- * not cover. Only reached once those rules are satisfied, so a query they already object to costs
- * no request.
- */
-async function validateOnServer(searchString: string) {
-    const { error } = await server.post<SearchLintResponse>("search/lint", { searchString });
-
-    return error;
-}
-
-/** Read once the editor is built, so the wording follows a language switched while the app runs. */
-function searchLintMessages(): SearchLintMessages {
-    return {
-        relationNeedsProperty: t("search_lint.relation_needs_property"),
-        textNeedsContains: t("search_lint.text_needs_contains"),
-        contentNotOrdered: t("search_lint.content_not_ordered"),
-        compareTheTitle: t("search_lint.compare_the_title"),
-        useOperator: (operator) => t("search_lint.use_operator", { operator })
-    };
+    return <div ref={parentRef} className={clsx(SEARCH_FIELD_EDITOR_CLASS, "form-control tn-input-field", className)} />;
 }

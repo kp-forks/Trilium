@@ -1,3 +1,4 @@
+import { completionStatus, startCompletion } from "@codemirror/autocomplete";
 import { EditorSelection } from "@codemirror/state";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -32,7 +33,7 @@ describe("createFieldEditor", () => {
         editor = build({ doc: "#book", onEnter });
         editor.dispatch({ selection: EditorSelection.cursor(5) });
 
-        expect(pressEnter(editor)).toBe(true);
+        expect(pressKey(editor, "Enter")).toBe(true);
         expect(onEnter).toHaveBeenCalledOnce();
         expect(editor.state.doc.toString()).toBe("#book");
     });
@@ -43,10 +44,66 @@ describe("createFieldEditor", () => {
         editor = build({ doc: "#book\n    and #author", onEnter, onChange });
         editor.dispatch({ selection: EditorSelection.cursor(editor.state.doc.length) });
 
-        expect(pressEnter(editor, { shiftKey: true })).toBe(true);
+        expect(pressKey(editor, "Enter", { shiftKey: true })).toBe(true);
         expect(onEnter).not.toHaveBeenCalled();
         expect(editor.state.doc.toString()).toBe("#book\n    and #author\n    ");
         expect(onChange).toHaveBeenLastCalledWith("#book\n    and #author\n    ");
+    });
+
+    it("answers ArrowDown and Escape once the completion popup has passed them on", () => {
+        const onArrowDown = vi.fn().mockReturnValue(true);
+        const onEscape = vi.fn().mockReturnValue(true);
+        editor = build({ doc: "#book\n#year", onArrowDown, onEscape });
+        editor.dispatch({ selection: EditorSelection.cursor(0) });
+
+        expect(pressKey(editor, "ArrowDown")).toBe(true);
+        expect(onArrowDown).toHaveBeenCalledOnce();
+        // Claimed by the field, so the caret stayed on the first line.
+        expect(editor.state.selection.main.head).toBe(0);
+
+        expect(pressKey(editor, "Escape")).toBe(true);
+        expect(onEscape).toHaveBeenCalledOnce();
+    });
+
+    it("leaves a declined ArrowDown to the caret", () => {
+        const onArrowDown = vi.fn().mockReturnValue(false);
+        editor = build({ doc: "#book\n#year", onArrowDown });
+        editor.dispatch({ selection: EditorSelection.cursor(0) });
+
+        pressKey(editor, "ArrowDown");
+
+        expect(onArrowDown).toHaveBeenCalledOnce();
+        expect(editor.state.selection.main.head).toBeGreaterThan(0);
+    });
+
+    it("leaves ArrowDown and Escape to the completion popup while it is open", async () => {
+        const onArrowDown = vi.fn().mockReturnValue(true);
+        const onEscape = vi.fn().mockReturnValue(true);
+        const view = build({
+            doc: "#b",
+            completionSource: () => ({ from: 0, options: [ { label: "#book" }, { label: "#borrowed" } ] }),
+            onArrowDown,
+            onEscape
+        });
+        editor = view;
+        view.dispatch({ selection: EditorSelection.cursor(2) });
+
+        // The popup drops both keys for `interactionDelay` after it opens; neither may reach the
+        // field in that window, since the field's own commands move focus out of the editor.
+        await openCompletion(view);
+        pressKey(view, "ArrowDown");
+        expect(onArrowDown).not.toHaveBeenCalled();
+
+        await openCompletion(view);
+        pressKey(view, "Escape");
+        expect(onEscape).not.toHaveBeenCalled();
+
+        // Closed, so the field gets both keys back.
+        expect(completionStatus(view.state)).toBe(null);
+        pressKey(view, "ArrowDown");
+        pressKey(view, "Escape");
+        expect(onArrowDown).toHaveBeenCalledOnce();
+        expect(onEscape).toHaveBeenCalledOnce();
     });
 
     it("keeps the line breaks in inserted text", () => {
@@ -66,10 +123,16 @@ function build(config: Partial<FieldEditorConfig> = {}): FieldEditor {
     return createFieldEditor({ parent, ...config });
 }
 
-/** Presses Enter on the editor and answers whether a binding handled it. */
-function pressEnter(editor: FieldEditor, init: KeyboardEventInit = {}) {
+/** Opens the completion popup and waits until it is showing. */
+async function openCompletion(view: FieldEditor) {
+    startCompletion(view);
+    await vi.waitFor(() => expect(completionStatus(view.state)).toBe("active"));
+}
+
+/** Presses a key on the editor and answers whether a binding handled it. */
+function pressKey(editor: FieldEditor, key: string, init: KeyboardEventInit = {}) {
     return !editor.contentDOM.dispatchEvent(new KeyboardEvent("keydown", {
-        key: "Enter",
+        key,
         bubbles: true,
         cancelable: true,
         ...init

@@ -1,4 +1,4 @@
-import { autocompletion, type Completion, type CompletionSource } from "@codemirror/autocomplete";
+import { autocompletion, type Completion, completionStatus, type CompletionSource } from "@codemirror/autocomplete";
 import { history, historyKeymap, standardKeymap } from "@codemirror/commands";
 import type { Extension } from "@codemirror/state";
 import { EditorView, keymap, placeholder } from "@codemirror/view";
@@ -32,6 +32,13 @@ export interface FieldEditorConfig {
     onChange?(value: string): void;
     /** Runs when Enter is pressed; Shift-Enter inserts a line break instead. */
     onEnter?(): void;
+    /**
+     * Runs when ArrowDown is pressed and no completion is open or pending, for a field whose
+     * results are listed below it. Returns whether the key was taken; `false` moves the caret.
+     */
+    onArrowDown?(): boolean;
+    /** Runs when Escape is pressed and no completion is open or pending. Returns as {@link onArrowDown}. */
+    onEscape?(): boolean;
 }
 
 /** The editor {@link createFieldEditor} returns. */
@@ -46,6 +53,10 @@ export type FieldEditor = EditorView;
  * input does. Shift-Enter, which `standardKeymap` binds to `insertNewlineAndIndent`, breaks the
  * line and keeps its indentation, for a value the user lays out over several of them.
  *
+ * `onArrowDown` and `onEscape` run only while no completion is open or pending, so a key the popup
+ * drops does not move focus out of the editor instead. An IME keeps Enter for as long as it is
+ * composing.
+ *
  * It sits apart from the editor in `index.ts` so a consumer that wants a plain input does not
  * load the language, theme and completion machinery a code note needs.
  */
@@ -56,12 +67,17 @@ export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
         keymap.of([
             {
                 key: "Enter",
-                run: () => {
+                run: (view) => {
+                    if (view.composing) {
+                        return false;
+                    }
+
                     config.onEnter?.();
                     return true;
-                },
-                preventDefault: true
+                }
             },
+            { key: "ArrowDown", run: (view) => keyBelongsToField(view) && !!config.onArrowDown?.() },
+            { key: "Escape", run: (view) => keyBelongsToField(view) && !!config.onEscape?.() },
             ...standardKeymap,
             ...historyKeymap
         ]),
@@ -96,6 +112,15 @@ export function createFieldEditor(config: FieldEditorConfig): FieldEditor {
         doc: config.doc ?? "",
         extensions
     });
+}
+
+/**
+ * Whether a navigation key the completion popup declined belongs to the field. The popup drops
+ * ArrowDown and Escape for `interactionDelay` after it opens, and a key dropped that way must not
+ * reach {@link FieldEditorConfig.onArrowDown}, which moves focus out of the editor entirely.
+ */
+function keyBelongsToField(view: EditorView) {
+    return !view.composing && completionStatus(view.state) === null;
 }
 
 /** Where CodeMirror draws its own icons, which {@link FieldEditorConfig.completionIcon} takes over. */
