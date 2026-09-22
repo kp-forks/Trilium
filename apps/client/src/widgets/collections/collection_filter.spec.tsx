@@ -15,7 +15,11 @@ import {
     type CollectionFilter, CollectionFilterInput, useCollectionFilter
 } from "./collection_filter";
 
-vi.mock("../../services/i18n", () => ({
+// The real module besides `t`, which is left to stand for the text it would return:
+// `command_registry.ts`, reached through `note_autocomplete.ts`, awaits
+// `translationsInitializedPromise`, and a mock without it rejects after the test has passed.
+vi.mock("../../services/i18n", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("../../services/i18n")>()),
     t: (key: string) => key
 }));
 
