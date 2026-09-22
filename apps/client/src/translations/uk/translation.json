@@ -363,10 +363,8 @@
     "title": "заголовок",
     "date_created": "дата створення",
     "date_modified": "дата зміни",
-    "sorting_direction": "Напрямок сортування",
     "ascending": "зростання",
     "descending": "спадний",
-    "folders": "Папки",
     "sort_folders_at_top": "сортувати папки зверху",
     "natural_sort": "Нативне сортування",
     "sort_with_respect_to_different_character_sorting": "сортувати з урахуванням різних правил сортування та порівняння символів у різних мовах або регіонах.",
@@ -787,10 +785,7 @@
     "button_title": "Експорт діаграми у форматі SVG"
   },
   "relation_map_buttons": {
-    "create_child_note_title": "Створити нову дочірню нотатку та додати її до цієї Карти зв'язків",
-    "reset_pan_zoom_title": "Скинути панорамування та масштабування до початкових координат і збільшення",
-    "zoom_in_title": "Збільшити масштаб",
-    "zoom_out_title": "Зменшити масштаб"
+    "create_child_note_title": "Створити нову дочірню нотатку та додати її до цієї Карти зв'язків"
   },
   "zpetne_odkazy": {
     "relation": "зв'язок",

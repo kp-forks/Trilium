@@ -510,16 +510,22 @@
     "title": "タイトル",
     "date_created": "作成日",
     "date_modified": "更新日",
-    "sorting_direction": "並べ替えの方向",
     "ascending": "昇順",
     "descending": "降順",
-    "folders": "フォルダ",
     "sort_folders_at_top": "フォルダーを上にして並べ替える",
-    "natural_sort": "自然順",
+    "natural_sort": "自然順で並べ替え",
     "sort_with_respect_to_different_character_sorting": "言語や地域によって異なる文字の並べ替えや照合順序の規則に従って並べ替える。",
     "sort": "並べ替え",
     "natural_sort_language": "自然順言語",
-    "the_language_code_for_natural_sort": "自然順の言語コード。例えば、中国語の場合は \"zh-CN\"。"
+    "the_language_code_for_natural_sort": "自然順の言語コード。例えば、中国語の場合は \"zh-CN\"。",
+    "sorting_criteria_description": "ノートは第 1レベルの条件で並べ替えられます。同じ値だった場合のみ、次のレベルの条件で順序が決定されます。",
+    "label": "ラベル",
+    "label_name": "ラベル名",
+    "add_level": "レベルを追加",
+    "remove_level": "レベルを削除",
+    "move_level_up": "レベルを上に移動",
+    "move_level_down": "レベルを下に移動",
+    "folders_follow_first_level": "第 1 レベルが降順の場合は最下部に配置されます。"
   },
   "close_pane_button": {
     "close_this_pane": "ペインを閉じる"
@@ -537,10 +543,7 @@
     "show_highlights_list": "ハイライトリストを表示"
   },
   "relation_map_buttons": {
-    "zoom_out_title": "ズームアウト",
-    "zoom_in_title": "ズームイン",
     "create_child_note_title": "子ノートを作成し、マップに追加",
-    "reset_pan_zoom_title": "パンとズームを初期座標と倍率にリセット",
     "create_child_note_text": "ノートを追加"
   },
   "tree-context-menu": {
@@ -665,22 +668,22 @@
     "insert-below": "下に新しく挿入",
     "delete-column": "列を削除...",
     "delete-column-confirmation": "本当にこの列を削除しますか？対応する属性は、この列の下のノートでも削除されます。",
-    "new-item": "新しいアイテム",
+    "new-item": "新しいカード",
     "add-column": "列を追加",
     "remove-from-board": "ボードから削除",
     "archive-note": "アーカイブノート",
     "unarchive-note": "ノートのアーカイブを解除",
-    "new-item-placeholder": "ノートのタイトルを入力...",
+    "new-item-placeholder": "カードのタイトルを入力...",
     "add-column-placeholder": "列名を入力...",
-    "edit-note-title": "クリックしてノートのタイトルを編集",
+    "edit-note-title": "クリックしてカードのタイトルを編集",
     "column-already-exists": "この列は既にボード上に存在します。",
     "column-definition-save-error": "列はボード上に保存されましたが、ステータス属性には保存できませんでした。",
     "status-alias": "ステータス",
     "archive-column": "列をアーカイブ",
     "unarchive-column": "列のアーカイブを解除",
     "archived-badge": "アーカイブ済み",
-    "add-new-item": "新しいノートを追加",
-    "add-existing-item": "既存のノートを追加...",
+    "add-new-item": "新しいカードを追加",
+    "add-existing-item": "既存のノートをカードとして追加...",
     "add-existing-item-title": "既存のノートをボードに追加",
     "add-existing-item-ok": "列に追加",
     "add-new-column": "新しい列を追加",
@@ -699,43 +702,43 @@
     "move-column-after": "{{column}} の後ろに",
     "hints": {
       "navigation": "ナビゲーション",
-      "navigate_items": "アイテム間を移動",
+      "navigate_items": "カード間を移動",
       "navigate_columns": "列間を移動",
-      "first_last_item": "列の先頭 / 最後のアイテム",
+      "first_last_item": "列の最初 / 最後のカード",
       "editing": "編集",
-      "insert_item": "下 / 上 にアイテムを挿入",
+      "insert_item": "下 / 上 にカードを挿入",
       "insert_column": "後ろ / 前 に列を挿入",
-      "open_item": "アイテムを開く",
-      "rename": "アイテムまたは列の名前を変更",
-      "remove_item": "ボードからアイテムを削除",
+      "open_item": "カードを開く",
+      "rename": "カードまたは列の名前を変更",
+      "remove_item": "ボードからカードを削除",
       "delete_item": "ノートを削除",
       "remove_column": "列を削除（選択した列ヘッダーに対して））",
       "moving": "移動",
-      "move_item": "アイテムを上 / 下 に移動",
+      "move_item": "カードを上 / 下 に移動",
       "move_within": "列の 先頭 / 末尾 に移動",
       "move_across": "前 / 次 の列に移動",
       "move_to_end_column": "最初 / 最後 の列に移動",
       "move_column": "列を 左 / 右 に移動",
       "move_column_to_edge": "列を 一番左 / 一番右 に移動",
       "selection": "選択",
-      "select_column": "列内のすべてのアイテムを選択",
+      "select_column": "列のすべてのカードを選択",
       "clear_selection": "選択を解除"
     },
     "inbox": "インボックス",
     "inherited-column": "このカードは、テンプレートまたは親ノートから列情報を取得するため、そこで変更できます。",
     "inbox-nested": "ネストされたノートを含める",
     "inbox-remove": "インボックス列を削除",
-    "card-count_other": "{{count}} 件のアイテム",
-    "card-count-with-archived_other": "{{count}} 件のアクティブなアイテム、{{archived}} 件のアーカイブ済み",
-    "card-count-over-limit": "この列に設定されているノート数の上限を超えています！",
+    "card-count_other": "{{count}} 枚のカード",
+    "card-count-with-archived_other": "{{count}} 枚のアクティブなカード、{{archived}} 枚のアーカイブ済み",
+    "card-count-over-limit": "この列に設定されているカード数の上限を超えています！",
     "set-limit": "上限を設定...",
     "set-limit-ok": "上限を設定",
     "limit-capacity": "列の容量超過時に警告する",
-    "limit-count": "列内の最大ノート数",
+    "limit-count": "列のカードの上限数",
     "collapse-column": "列を折りたたむ",
     "edit-title": "タイトルとアイコンを編集",
     "move-to-top": "一番上へ移動",
-    "create-new-note": "ノートを作成",
+    "create-new-note": "カードを作成",
     "create-new-column": "列を作成",
     "create-hold-hint": "右クリックまたは長押しでその他のオプションを表示。",
     "create-at-top": "一番上に作成",
@@ -778,15 +781,21 @@
     "columns-title": "列",
     "columns-empty": "このボードにはまだ列がありません。",
     "column-width": "列の幅",
-    "drop-as-first-item": "最初のアイテムとしてドロップ",
-    "drop-as-last-item": "最後のアイテムとしてドロップ",
+    "drop-as-first-item": "最初のカードとしてドロップ",
+    "drop-as-last-item": "最後のカードとしてドロップ",
     "column-width-narrow": "狭い（デフォルト）",
     "column-width-medium": "中",
     "column-width-wide": "広い",
     "copy-reference": "参照をコピー",
     "reference-column-missing": "その列は、このボード上にはもうありません。",
-    "reference-archived": "そのアイテムはアーカイブされているため、ボードには表示されていません。",
-    "reference-missing": "そのアイテムは、このボード上にはもうありません。"
+    "reference-archived": "そのカードはアーカイブされているため、ボードには表示されていません。",
+    "reference-missing": "そのカードは、このボード上にはもうありません。",
+    "more-actions": "その他の操作",
+    "selection-mode": "カードを選択",
+    "cards-selected_other": "{{count}} 枚のカードを選択中",
+    "select-column-cards": "列のすべてのカードを選択",
+    "reset-selection": "選択を解除",
+    "expand-column": "列を展開"
   },
   "code_buttons": {
     "execute_button_title": "スクリプトを実行",
@@ -1445,8 +1454,8 @@
     "run_on_instance": "どの Trilium インスタンスでこれを実行するかを定義します。デフォルトはすべてのインスタンスです。",
     "run_at_hour": "何時に実行するかを指定します。 <code>#run=hourly</code> と併用してください。1日に複数回実行したい場合は、複数回定義できます。",
     "disable_inclusion": "このラベルが付いたスクリプトは親スクリプトの実行には含まれません。",
-    "sorted": "子ノートをアルファベット順に並べ替える。",
-    "sort_direction": "<code>#sorted</code> 並び順の方向 : 子ノートを降順で並べ替えます。降順の場合は <code>desc</code>、それ以外の場合は昇順になります。<code>#sorted</code> が設定されていない場合は無視されます。",
+    "sorted": "子ノートをタイトルのアルファベット順に並べ替えます。値を指定すると、別の基準で並べ替えられます: その際、<code>title</code>、<code>dateCreated</code>、<code>dateModified</code>、またはラベル名をカンマで区切って指定し、必要に応じてそれぞれに <code>asc</code>（昇順）または <code>desc</code>（降順）を続けます（例: <code>priority desc, dueDate</code>）。",
+    "sort_direction": "<code>#sorted</code> ディレクティブ(指示)は子ノートの順序を指定します: <code>desc</code> なら降順、それ以外なら昇順となります。レベル(階層)指定の直後に <code>asc</code> や <code>desc</code> を記述しても無視されます。また、<code>#sorted</code> が設定されていない場合も無視されます。",
     "sort_folders_first": "フォルダ（子を持つノート）を上にして並べる。",
     "top": "指定されたノートをその親ノートの一番上に表示します（並べ替えらた親ノートにのみ適用されます）。",
     "hide_promoted_attributes": "このノートのプロモート属性を非表示にする。",
@@ -1904,9 +1913,7 @@
   "svg": {
     "export_to_png": "図をPNG形式でエクスポートできませんでした。",
     "export_to_svg": "図をSVG形式でエクスポートできませんでした。",
-    "zoom_in": "拡大",
-    "zoom_out": "縮小",
-    "reset_zoom": "ズームをリセット"
+    "preview": "図のプレビュー"
   },
   "code_theme": {
     "title": "外観",
@@ -2075,7 +2082,9 @@
     "delete_attribute": "この属性を削除",
     "delete_confirmation": "このコレクション内のすべてのノートから <strong>{{name}}</strong> とその値を削除しますか？この操作は元に戻せません。",
     "label_name": "ラベル: {{name}}",
-    "relation_name": "リレーション: {{name}}"
+    "relation_name": "リレーション: {{name}}",
+    "drawn_by_collection": "この基準でコレクションが並べ替えられているため、各アイテムで重複して表示されません",
+    "display_on_items": "コレクションのアイテムに属性を表示"
   },
   "relation_map": {
     "remove_note": "ノートを削除",
@@ -2405,7 +2414,9 @@
     "delete-notes-in-progress": "削除進行中のノート: {{count}}",
     "delete-finished-successfully": "削除が正常に完了しました。",
     "undeleting-notes-in-progress": "削除済みのノートを復元中: {{count}}",
-    "undeleting-notes-finished-successfully": "ノートの復元が正常に完了しました。"
+    "undeleting-notes-finished-successfully": "ノートの復元が正常に完了しました。",
+    "delete-notes-in-progress-with-total": "{{total}} 件中 {{progress}} 件のノートを削除しました",
+    "erasing-notes": "ノートを削除中…"
   },
   "frontend_script_api": {
     "async_warning": "`api.runOnBackend()` に非同期関数を渡していますが、これは意図したとおりに動作しない可能性があります。\\n関数を同期させる(`async` キーワードを削除する)か、`api.runAsyncOnBackendWithManualTransactionHandling()` を使用してください。",
@@ -2451,8 +2462,6 @@
     "move-marker-instruction": "地図をクリックしてマーカーをその位置に移動するか、Esc キーを押して閉じてください。",
     "move-marker-toast-title": "マーカーを移動",
     "webgl-unavailable": "WebGL が利用できないため、この地図を表示できません。ハードウェアアクセラレーションが有効になっていること、およびグラフィックスドライバーが最新であることを確認してください。",
-    "zoom-in": "拡大",
-    "zoom-out": "縮小",
     "create-child-note-cancel": "ノートの追加をキャンセル",
     "add-marker": "マーカーを追加",
     "add-marker-cancel": "キャンセル",
@@ -3129,13 +3138,10 @@
     "tags-differ": "選択されたノードには共通のタグが含まれていないため、これらは閲覧のみ可能です。",
     "add-tag": "このタグを追加",
     "remove-tag": "このタグを削除",
-    "zoom-in": "拡大",
-    "zoom-out": "縮小",
     "center-map": "マップを中央に配置",
     "direction-left": "左にブランチを配置",
     "direction-right": "右にブランチを配置",
     "direction-side": "両側にブランチを配置",
-    "reset-zoom": "ズームをリセット",
     "direction-down": "下向きに分岐"
   },
   "llm": {
@@ -3644,11 +3650,6 @@
     "type_code": "コード",
     "tooltip": "エディタに挿入するための、繰り返し利用できるテキストまたはコードです（ツールバーのスニペットメニュー、またはスラッシュコマンドから挿入できます）。"
   },
-  "image_buttons": {
-    "zoom_in": "ズームイン",
-    "zoom_out": "ズームアウト",
-    "reset_zoom": "ズームをリセット"
-  },
   "image_navigation": {
     "previous": "前の画像: {{- title}}",
     "next": "次の画像: {{- title}}"
@@ -3656,22 +3657,13 @@
   "image_viewer": {
     "loading_error": "画像の読み込み中にエラーが発生しました。",
     "hints": {
-      "zoom": "ズーム",
-      "zoom_in": "拡大",
-      "zoom_out": "縮小",
-      "reset_zoom": "ズームをリセット",
-      "pan": "パン",
-      "pan_up": "上",
-      "pan_down": "下",
-      "pan_left": "左",
-      "pan_right": "右",
-      "pan_fast": "パン高速化",
       "navigation": "ナビゲーション",
       "next_image": "次の画像",
       "previous_image": "前の画像",
       "first_image": "最初の画像",
       "last_image": "最後の画像"
-    }
+    },
+    "viewport": "画像表示"
   },
   "options": {
     "title": "オプション",
@@ -4228,5 +4220,22 @@
   "attribute_menu": {
     "attributes": "属性",
     "not-set": "未設定"
+  },
+  "zoom_controls": {
+    "zoom_out": "ズームアウト",
+    "reset": "ズームをリセット",
+    "zoom_in": "ズームイン",
+    "hints": {
+      "zoom": "ズーム",
+      "zoom_in": "ズームイン",
+      "zoom_out": "ズームアウト",
+      "reset_zoom": "ズームをリセット",
+      "pan": "画面移動",
+      "pan_up": "上",
+      "pan_down": "下",
+      "pan_left": "左",
+      "pan_right": "右",
+      "pan_fast": "高速画面移動"
+    }
   }
 }

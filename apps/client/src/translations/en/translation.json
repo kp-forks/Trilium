@@ -496,16 +496,22 @@
   "sort_child_notes": {
     "sort_children_by": "Sort children by...",
     "sorting_criteria": "Sorting criteria",
-    "title": "title",
-    "date_created": "date created",
-    "date_modified": "date modified",
-    "sorting_direction": "Sorting direction",
-    "ascending": "ascending",
-    "descending": "descending",
-    "folders": "Folders",
-    "sort_folders_at_top": "sort folders at the top",
-    "natural_sort": "Natural Sort",
-    "sort_with_respect_to_different_character_sorting": "sort with respect to different character sorting and collation rules in different languages or regions.",
+    "sorting_criteria_description": "Notes are sorted by the first level; the next level only decides between notes the previous ones left equal.",
+    "title": "Title",
+    "date_created": "Date created",
+    "date_modified": "Date modified",
+    "label": "Label",
+    "label_name": "Label name",
+    "add_level": "Add level",
+    "remove_level": "Remove level",
+    "move_level_up": "Move level up",
+    "move_level_down": "Move level down",
+    "ascending": "Ascending",
+    "descending": "Descending",
+    "sort_folders_at_top": "Sort folders at the top",
+    "folders_follow_first_level": "At the bottom instead when the first level is descending.",
+    "natural_sort": "Natural sort",
+    "sort_with_respect_to_different_character_sorting": "Sort with respect to different character sorting and collation rules in different languages or regions.",
     "natural_sort_language": "Natural sort language",
     "the_language_code_for_natural_sort": "The language code for natural sort, e.g. \"zh-CN\" for Chinese.",
     "sort": "Sort"
@@ -571,8 +577,8 @@
     "run_on_instance": "Define which trilium instance should run this on. Default to all instances.",
     "run_at_hour": "On which hour should this run. Should be used together with <code>#run=hourly</code>. Can be defined multiple times for more runs during the day.",
     "disable_inclusion": "Scripts with this label won't be included into parent script execution.",
-    "sorted": "Keeps child notes sorted by title alphabetically.",
-    "sort_direction": "Direction <code>#sorted</code> orders the child notes in: <code>desc</code> for descending, anything else for ascending. Ignored unless <code>#sorted</code> is set.",
+    "sorted": "Keeps child notes sorted by title alphabetically. A value sorts by other criteria instead: comma-separated levels of <code>title</code>, <code>dateCreated</code>, <code>dateModified</code> or a label name, each optionally followed by <code>asc</code> or <code>desc</code>, e.g. <code>priority desc, dueDate</code>.",
+    "sort_direction": "Direction <code>#sorted</code> orders the child notes in: <code>desc</code> for descending, anything else for ascending. A level followed by its own <code>asc</code> or <code>desc</code> ignores it. Ignored unless <code>#sorted</code> is set.",
     "sort_folders_first": "Folders (notes with children) should be sorted on top.",
     "top": "Keep given note on top in its parent (applies only on sorted parents).",
     "hide_promoted_attributes": "Hide promoted attributes on this note.",
@@ -1208,15 +1214,7 @@
   },
   "relation_map_buttons": {
     "create_child_note_title": "Create child note and add it to map",
-    "create_child_note_text": "Add note",
-    "reset_pan_zoom_title": "Reset pan & zoom to initial coordinates and magnification",
-    "zoom_in_title": "Zoom In",
-    "zoom_out_title": "Zoom Out"
-  },
-  "image_buttons": {
-    "zoom_in": "Zoom in",
-    "zoom_out": "Zoom out",
-    "reset_zoom": "Reset zoom"
+    "create_child_note_text": "Add note"
   },
   "image_navigation": {
     "previous": "Previous image: {{- title}}",
@@ -1225,22 +1223,13 @@
   "image_viewer": {
     "loading_error": "There was an error loading the image.",
     "hints": {
-      "zoom": "Zoom",
-      "zoom_in": "Zoom in",
-      "zoom_out": "Zoom out",
-      "reset_zoom": "Reset zoom",
-      "pan": "Pan",
-      "pan_up": "Up",
-      "pan_down": "Down",
-      "pan_left": "Left",
-      "pan_right": "Right",
-      "pan_fast": "Faster panning",
       "navigation": "Navigation",
       "next_image": "Next image",
       "previous_image": "Previous image",
       "first_image": "First image",
       "last_image": "Last image"
-    }
+    },
+    "viewport": "Image view"
   },
   "shortcut_hints": {
     "show_button": "Show shortcut hints",
@@ -1525,7 +1514,7 @@
   },
   "search_string": {
     "title_column": "Search string:",
-    "placeholder": "fulltext keywords, #tag = value...",
+    "placeholder": "Ctrl+Space for suggestions, @ for a note, Shift+Enter for a new line, Enter to search",
     "search_syntax": "Search syntax",
     "also_see": "also see",
     "complete_help": "complete help on search syntax",
@@ -1537,7 +1526,13 @@
     "label_year_comparison": "numerical comparison (also >, >=, <).",
     "label_date_created": "notes created in the last month",
     "error": "Search error: {{error}}",
-    "search_prefix": "Search:"
+    "search_prefix": "Search:",
+    "hints": {
+      "title": "Search string",
+      "completions": "Show suggestions",
+      "new_line": "New line",
+      "run_search": "Run the search"
+    }
   },
   "attachment_detail": {
     "open_help_page": "Open help page on attachments",
@@ -2846,7 +2841,9 @@
     "delete-notes-in-progress": "Delete notes in progress: {{count}}",
     "delete-finished-successfully": "Delete finished successfully.",
     "undeleting-notes-in-progress": "Undeleting notes in progress: {{count}}",
-    "undeleting-notes-finished-successfully": "Undeleting notes finished successfully."
+    "undeleting-notes-finished-successfully": "Undeleting notes finished successfully.",
+    "delete-notes-in-progress-with-total": "Deleted {{progress}} notes out of {{total}}",
+    "erasing-notes": "Erasing notes…"
   },
   "frontend_script_api": {
     "async_warning": "You're passing an async function to `api.runOnBackend()` which will likely not work as you intended.\\nEither make the function synchronous (by removing `async` keyword), or use `api.runAsyncOnBackendWithManualTransactionHandling()`.",
@@ -3049,8 +3046,6 @@
     "move-marker-toast-title": "Move marker",
     "unable-to-load-map": "Unable to load map.",
     "webgl-unavailable": "This map can't be drawn because WebGL isn't available. Check that hardware acceleration is enabled and that your graphics drivers are up to date.",
-    "zoom-in": "Zoom in",
-    "zoom-out": "Zoom out",
     "enter-3d": "Tilt into a 3D view\nHold Ctrl and drag to tilt the map freely",
     "exit-3d": "Lay the map flat again",
     "close-details": "Close",
@@ -3351,9 +3346,7 @@
   "svg": {
     "export_to_png": "The diagram could not be exported to PNG.",
     "export_to_svg": "The diagram could not be exported to SVG.",
-    "zoom_in": "Zoom in",
-    "zoom_out": "Zoom out",
-    "reset_zoom": "Reset zoom"
+    "preview": "Diagram preview"
   },
   "code_theme": {
     "title": "Appearance",
@@ -4007,9 +4000,6 @@
     "tags-differ": "The selected nodes don't carry the same tags, so these can only be read.",
     "add-tag": "Add this tag",
     "remove-tag": "Remove this tag",
-    "zoom-in": "Zoom in",
-    "zoom-out": "Zoom out",
-    "reset-zoom": "Reset zoom",
     "center-map": "Center the map",
     "direction-left": "Branches to the left",
     "direction-right": "Branches to the right",
@@ -4304,5 +4294,75 @@
     "creation-date": "Creation date & time",
     "ascending": "Ascending",
     "descending": "Descending"
+  },
+  "zoom_controls": {
+    "zoom_out": "Zoom out",
+    "reset": "Reset zoom",
+    "zoom_in": "Zoom in",
+    "hints": {
+      "zoom": "Zoom",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out",
+      "reset_zoom": "Reset zoom",
+      "pan": "Pan",
+      "pan_up": "Up",
+      "pan_down": "Down",
+      "pan_left": "Left",
+      "pan_right": "Right",
+      "pan_fast": "Faster panning"
+    }
+  },
+  "search_lint": {
+    "relation_needs_property": "Relations point to a note, so they cannot be checked for equality. Use . instead to access its properties.",
+    "text_needs_contains": "note.text searches the title and content together, so it can only be matched with *=*.",
+    "content_not_ordered": "Note content is text, so it cannot be ordered. Use *=* to match it instead.",
+    "compare_the_title": "Compare the title",
+    "use_operator": "Use {{operator}}"
+  },
+  "search_completion": {
+    "note": "Note title, properties and related notes",
+    "operator_equal": "Equals the whole value",
+    "operator_not_equal": "Does not equal the whole value",
+    "operator_contains": "Contains",
+    "operator_starts_with": "Starts with",
+    "operator_ends_with": "Ends with",
+    "operator_greater_than": "Greater than",
+    "operator_greater_or_equal": "Greater than or equal to",
+    "operator_less_than": "Less than",
+    "operator_less_or_equal": "Less than or equal to",
+    "operator_regex": "Matches a regular expression",
+    "operator_fuzzy_equal": "Equals, tolerating typos",
+    "operator_fuzzy_contains": "Contains, tolerating typos",
+    "property_content": "The note's body text",
+    "property_raw_content": "The note's body text, before its formatting is stripped",
+    "property_text": "The title or the body text",
+    "property_parents": "Continues on the note's parents",
+    "property_children": "Continues on the note's children",
+    "property_ancestors": "Continues on the note's ancestors",
+    "property_labels": "Followed by a label name",
+    "property_relations": "Followed by a relation name, then that note's own properties",
+    "property_attribute_count": "Number of labels and relations, including inherited ones",
+    "property_label_count": "Number of labels, including inherited ones",
+    "property_relation_count": "Number of relations, including inherited ones",
+    "property_relation_count_including_links": "Number of relations, counting the ones made by links",
+    "property_owned_relation_count_including_links": "Number of the note's own relations, counting the ones made by links",
+    "property_target_relation_count_including_links": "Number of relations targeting the note, counting the ones made by links",
+    "keyword_and": "Both conditions must match",
+    "keyword_or": "Either condition must match",
+    "keyword_not": "Excludes the notes the condition in parentheses matches",
+    "keyword_order_by": "Sorts the results by a property or label",
+    "keyword_limit": "Keeps only the first results",
+    "date_now": "The current date and time",
+    "date_today": "Today's date",
+    "date_month": "The current month",
+    "date_year": "The current year",
+    "date_now_offset": "Any number of seconds before now",
+    "date_today_offset": "Any number of days before today",
+    "date_month_offset": "Any number of months before this one",
+    "date_year_offset": "Any number of years before this one",
+    "label_marker": "Refers to a label. Press Enter to see the list of labels",
+    "label_marker_negated": "Excludes a label. Press Enter to see the list of labels",
+    "relation_marker": "Refers to a relation. Press Enter to see the list of relations",
+    "relation_marker_negated": "Excludes a relation. Press Enter to see the list of relations"
   }
 }

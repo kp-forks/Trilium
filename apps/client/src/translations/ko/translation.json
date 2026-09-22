@@ -520,16 +520,22 @@
     "title": "제목",
     "date_created": "생성일",
     "date_modified": "수정일",
-    "sorting_direction": "정렬 방향",
     "ascending": "오름차순",
     "descending": "내림차순",
-    "folders": "폴더",
     "sort_folders_at_top": "폴더를 맨 위로 정렬",
     "natural_sort": "자연 정렬",
-    "sort_with_respect_to_different_character_sorting": "서로 다른 언어나 지역에서 서로 다른 문자 정렬 및 정렬 규칙에 따라 정렬합니다.",
+    "sort_with_respect_to_different_character_sorting": "언어나 지역별 문자 정렬 및 비교 규칙을 반영하여 정렬합니다.",
     "natural_sort_language": "자연 정렬 언어",
     "the_language_code_for_natural_sort": "자연 정렬의 언어 코드, 예: 중국어의 \"zh-CN\".",
-    "sort": "정렬"
+    "sort": "정렬",
+    "sorting_criteria_description": "노트는 첫 번째 정렬 단계를 기준으로 정렬되며, 이전 단계에서 값이 같은 경우에만 다음 단계가 적용됩니다.",
+    "label": "라벨",
+    "label_name": "라벨 이름",
+    "add_level": "정렬 단계 추가",
+    "remove_level": "정렬 단계 제거",
+    "move_level_up": "정렬 단계 위로 이동",
+    "move_level_down": "정렬 단계 아래로 이동",
+    "folders_follow_first_level": "첫 번째 정렬 단계가 내림차순이면 폴더는 대신 맨 아래에 정렬됩니다."
   },
   "upload_attachments": {
     "upload_attachments_to_note": "노트에 첨부 파일 업로드",
@@ -592,8 +598,8 @@
     "run_on_instance": "이 항목을 실행할 Trilium 인스턴스를 지정합니다. 기본값은 모든 인스턴스입니다.",
     "run_at_hour": "실행할 시간을 지정합니다. <code>#run=hourly</code> 와 함께 사용해야 합니다. 하루에 여러 번 실행하려면 여러 번 정의할 수 있습니다.",
     "disable_inclusion": "이 라벨이 붙은 스크립트는 상위 스크립트 실행에 포함되지 않습니다.",
-    "sorted": "하위 노트를 제목의 알파벳순으로 유지합니다.",
-    "sort_direction": "<code>#sorted</code> 의 정렬 방향을 지정합니다. 내림차순은 <code>desc</code> 로 지정하고, 그 외의 값은 오름차순으로 정렬합니다. <code>#sorted</code> 가 설정되지 않으면 무시됩니다.",
+    "sorted": "하위 노트를 제목 기준 알파벳순으로 정렬합니다. 값을 지정하면 다른 기준으로 정렬할 수 있습니다. 쉼표로 구분된 여러 단계에 <code>title</code>, <code>dateCreated</code>, <code>dateModified</code> 또는 라벨 이름을 지정하고, 각 항목 뒤에는 <code>asc</code> 또는 <code>desc</code>, 둘 중 하나를 선택적으로 붙일 수 있습니다. 예: <code>priority desc, dueDate</code>.",
+    "sort_direction": "정렬 방향은 <code>#sorted</code> 설정으로 결정됩니다. 내림차순은 <code>desc</code> 값을 사용하고, 그 외의 값은 오름차순입니다. 각 정렬 단계에 <code>asc</code> 또는 <code>desc</code> 값을 직접 지정하면 이 설정을 무시합니다. <code>#sorted</code> 설정이 없으면 적용되지 않습니다.",
     "sort_folders_first": "폴더(하위 노트가 있는 노트)를 맨 위에 정렬합니다.",
     "top": "이 노트를 상위 노트의 맨 위에 유지합니다. 상위 노트가 정렬된 경우에만 적용됩니다.",
     "hide_promoted_attributes": "이 노트에서 표시 속성을 숨깁니다.",
@@ -1224,15 +1230,7 @@
   },
   "relation_map_buttons": {
     "create_child_note_title": "하위 노트를 만들어 맵에 추가",
-    "reset_pan_zoom_title": "팬과 확대/축소를 초기 좌표와 배율로 재설정",
-    "zoom_in_title": "확대",
-    "zoom_out_title": "축소",
     "create_child_note_text": "노트 추가"
-  },
-  "image_buttons": {
-    "zoom_in": "확대",
-    "zoom_out": "축소",
-    "reset_zoom": "확대/축소 초기화"
   },
   "image_navigation": {
     "previous": "이전 이미지: {{- title}}",
@@ -1241,22 +1239,13 @@
   "image_viewer": {
     "loading_error": "이미지 로딩에 오류가 발생했습니다.",
     "hints": {
-      "zoom": "줌",
-      "zoom_in": "확대",
-      "zoom_out": "축소",
-      "reset_zoom": "확대/축소 초기화",
-      "pan": "팬",
-      "pan_up": "일어",
-      "pan_down": "아래쪽",
-      "pan_left": "왼쪽",
-      "pan_right": "오른쪽",
-      "pan_fast": "더 빠른 팬닝",
       "navigation": "탐색",
       "next_image": "다음 이미지",
       "previous_image": "이전 이미지",
       "first_image": "첫 번째 이미지",
       "last_image": "마지막 이미지"
-    }
+    },
+    "viewport": "이미지 보기"
   },
   "shortcut_hints": {
     "show_button": "단축키 힌트 표시",
@@ -2722,7 +2711,9 @@
     "delete-notes-in-progress": "진행 중인 노트 삭제: {{count}}",
     "delete-finished-successfully": "삭제는 성공적으로 완료되었습니다.",
     "undeleting-notes-in-progress": "노트 삭제 취소 중: {{count}}",
-    "undeleting-notes-finished-successfully": "노트 삭제 해제는 성공적으로 완료되었습니다."
+    "undeleting-notes-finished-successfully": "노트 삭제 해제는 성공적으로 완료되었습니다.",
+    "delete-notes-in-progress-with-total": "총 {{total}}개 중 {{progress}}개 노트를 삭제했습니다",
+    "erasing-notes": "노트를 삭제하는 중…"
   },
   "frontend_script_api": {
     "async_warning": "`api.runOnBackend()`에 비동기 함수를 전달하면 의도한 대로 작동하지 않을 수 있습니다.\\n함수에서 `async` 키워드를 제거하여 동기 함수로 만들거나 `api.runAsyncOnBackendWithManualTransactionHandling()`을 사용하세요.",
@@ -2860,8 +2851,6 @@
     "move-marker-instruction": "지도를 클릭하여 마커를 해당 위치로 이동하거나 Esc 키를 눌러 취소합니다.",
     "move-marker-toast-title": "마커 이동",
     "webgl-unavailable": "WebGL을 사용할 수 없어 이 지도를 표시할 수 없습니다. 하드웨어 가속이 활성화되어 있고 그래픽 드라이버가 최신 상태인지 확인하세요.",
-    "zoom-in": "확대",
-    "zoom-out": "축소",
     "create-child-note-cancel": "노트 추가 취소",
     "add-marker": "마커 추가",
     "add-marker-cancel": "취소",
@@ -3156,9 +3145,7 @@
   "svg": {
     "export_to_png": "이 다이어그램은 PNG로 내보낼 수 없었습니다.",
     "export_to_svg": "다이어그램을 SVG로 내보낼 수 없습니다.",
-    "zoom_in": "확대",
-    "zoom_out": "축소",
-    "reset_zoom": "확대/축소 초기화"
+    "preview": "다이어그램 미리보기"
   },
   "code_theme": {
     "title": "외형",
@@ -3760,13 +3747,10 @@
     "tags-differ": "선택한 노드의 태그가 서로 다르므로 읽기만 할 수 있습니다.",
     "add-tag": "이 태그 추가",
     "remove-tag": "이 태그 제거",
-    "zoom-in": "확대",
-    "zoom-out": "축소",
     "center-map": "지도를 중앙에 맞추기",
     "direction-left": "왼쪽으로 가지 펼치기",
     "direction-right": "오른쪽으로 가지 펼치기",
     "direction-side": "양쪽으로 가지 펼치기",
-    "reset-zoom": "확대/축소 초기화",
     "direction-down": "아래쪽으로 분기"
   },
   "llm": {
@@ -4236,5 +4220,22 @@
     "creation-date": "생성 날짜 및 시간",
     "ascending": "오름차순",
     "descending": "내림차순"
+  },
+  "zoom_controls": {
+    "zoom_out": "축소",
+    "reset": "확대/축소 초기화",
+    "zoom_in": "확대",
+    "hints": {
+      "zoom": "확대/축소",
+      "zoom_in": "확대",
+      "zoom_out": "축소",
+      "reset_zoom": "확대/축소 초기화",
+      "pan": "이동",
+      "pan_up": "위로",
+      "pan_down": "아래로",
+      "pan_left": "왼쪽으로",
+      "pan_right": "오른쪽으로",
+      "pan_fast": "빠르게 이동"
+    }
   }
 }

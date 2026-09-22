@@ -306,10 +306,8 @@
     "title": "název",
     "date_created": "datum vytvoření",
     "date_modified": "datum úpravy",
-    "sorting_direction": "Směr řazení",
     "ascending": "vzestupně",
     "descending": "sestupně",
-    "folders": "Složky",
     "sort_folders_at_top": "řadit složky nahoře",
     "natural_sort": "Přirozené řazení",
     "sort_with_respect_to_different_character_sorting": "řadit s ohledem na různá pravidla řazení a kolace v různých jazycích nebo oblastech.",
@@ -742,10 +740,7 @@
     "button_title": "Exportovat diagram jako SVG"
   },
   "relation_map_buttons": {
-    "create_child_note_title": "Vytvořit dceřinou poznámku a přidat ji na mapu",
-    "reset_pan_zoom_title": "Resetovat posun & zoom na počáteční souřadnice a zvětšení",
-    "zoom_in_title": "Přiblížit",
-    "zoom_out_title": "Oddálit"
+    "create_child_note_title": "Vytvořit dceřinou poznámku a přidat ji na mapu"
   },
   "mobile_detail_menu": {
     "insert_child_note": "Vložit dceřinou poznámku",

@@ -343,16 +343,22 @@
     "title": "标题",
     "date_created": "创建日期",
     "date_modified": "修改日期",
-    "sorting_direction": "排序方向",
     "ascending": "升序",
     "descending": "降序",
-    "folders": "文件夹",
     "sort_folders_at_top": "将文件夹置顶排序",
     "natural_sort": "自然排序",
     "sort_with_respect_to_different_character_sorting": "根据不同语言或地区的字符排序和排序规则排序。",
     "natural_sort_language": "自然排序语言",
     "the_language_code_for_natural_sort": "自然排序的语言代码，例如中文的 \"zh-CN\"。",
-    "sort": "排序"
+    "sort": "排序",
+    "sorting_criteria_description": "笔记按第一级排序；只有当上一级无法区分时，才由下一级决定先后。",
+    "label": "标签",
+    "label_name": "标签名称",
+    "add_level": "添加层级",
+    "remove_level": "移除层级",
+    "move_level_up": "上移层级",
+    "move_level_down": "下移层级",
+    "folders_follow_first_level": "当第一级为降序时，改为排在底部。"
   },
   "upload_attachments": {
     "upload_attachments_to_note": "上传附件到笔记",
@@ -404,8 +410,8 @@
     "run_on_instance": "定义应在哪个Trilium实例上运行。默认为所有实例。",
     "run_at_hour": "应在几点运行。应与 <code>#run=hourly</code> 一起使用。可多次定义以在一天内多次运行。",
     "disable_inclusion": "含有此标签的脚本不会包含在父脚本执行中。",
-    "sorted": "按标题字母顺序保持子笔记排序。",
-    "sort_direction": "<code>#sorted</code> 的排序方向：<code>desc</code> 为降序，其他值为升序。未设置 <code>#sorted</code> 时忽略。",
+    "sorted": "按标题字母顺序对子笔记进行排序。若填写了值，则改用其他条件排序：以逗号分隔的多级条件，每级为 <code>title</code>、<code>dateCreated</code>、<code>dateModified</code> 或某个标签名，并可分别后接 <code>asc</code> 或 <code>desc</code>，例如 <code>priority desc, dueDate</code>。",
+    "sort_direction": "<code>#sorted</code> 对子笔记排序的方向：<code>desc</code> 为降序，其他任意值均为升序。若某一级条件自带 <code>asc</code> 或 <code>desc</code>，则忽略此项。仅在设置了 <code>#sorted</code> 时生效。",
     "sort_folders_first": "文件夹（含有子笔记的笔记）应排在顶部。",
     "top": "将指定笔记置顶于父级内（仅适用于已排序的父级）。",
     "hide_promoted_attributes": "隐藏此笔记上的升级属性。",
@@ -995,9 +1001,6 @@
   },
   "relation_map_buttons": {
     "create_child_note_title": "创建子笔记并添加到图",
-    "reset_pan_zoom_title": "重置平移和缩放到初始坐标和放大倍率",
-    "zoom_in_title": "放大",
-    "zoom_out_title": "缩小",
     "create_child_note_text": "添加笔记"
   },
   "zpetne_odkazy": {
@@ -1154,7 +1157,9 @@
     "delete_attribute": "删除此属性",
     "delete_confirmation": "从该集合中的每一张笔记中删除 <strong>{{name}}</strong> 及其值？此操作无法撤销。",
     "label_name": "标签：{{name}}",
-    "relation_name": "关系：{{name}}"
+    "relation_name": "关系：{{name}}",
+    "drawn_by_collection": "集合按此进行排列，因此其条目不会重复显示它",
+    "display_on_items": "在集合条目上显示该属性"
   },
   "script_executor": {
     "query": "查询",
@@ -2173,7 +2178,9 @@
     "delete-notes-in-progress": "正在删除笔记：{{count}}",
     "delete-finished-successfully": "删除成功完成。",
     "undeleting-notes-in-progress": "正在恢复删除的笔记：{{count}}",
-    "undeleting-notes-finished-successfully": "恢复删除的笔记已成功完成。"
+    "undeleting-notes-finished-successfully": "恢复删除的笔记已成功完成。",
+    "delete-notes-in-progress-with-total": "已删除 {{progress}} 条笔记，共 {{total}} 条",
+    "erasing-notes": "正在清除笔记…"
   },
   "frontend_script_api": {
     "async_warning": "你正在将一个异步函数传递给 `api.runOnBackend()`，这可能无法按预期工作。\\n要么使该函数同步（通过移除 `async` 关键字），要么使用 `api.runAsyncOnBackendWithManualTransactionHandling()`。",
@@ -2299,8 +2306,6 @@
     "move-marker-instruction": "点击地图即可将标记移动到该位置，或按 Escape 取消。",
     "move-marker-toast-title": "移动标记",
     "webgl-unavailable": "由于 WebGL 不可用，无法绘制此地图。请检查是否已启用硬件加速，并确保显卡驱动程序为最新版本。",
-    "zoom-in": "放大",
-    "zoom-out": "缩小",
     "create-child-note-cancel": "取消添加笔记",
     "add-marker": "添加标记",
     "add-marker-cancel": "取消",
@@ -2428,9 +2433,7 @@
   "svg": {
     "export_to_png": "无法将图表导出为PNG。",
     "export_to_svg": "此图像无法导出为SVG。",
-    "zoom_in": "放大",
-    "zoom_out": "缩小",
-    "reset_zoom": "重置缩放"
+    "preview": "图表预览"
   },
   "code_theme": {
     "title": "外观",
@@ -2511,13 +2514,13 @@
     "insert-below": "在下方插入新笔记",
     "delete-column": "删除列...",
     "delete-column-confirmation": "确定要删除此列吗？此列下所有笔记中对应的属性也将被删除。",
-    "new-item": "新增项目",
+    "new-item": "新增卡片",
     "add-column": "添加列",
     "archive-note": "存档笔记",
     "unarchive-note": "解压笔记",
-    "new-item-placeholder": "输入笔记标题...",
+    "new-item-placeholder": "输入卡片标题...",
     "add-column-placeholder": "请输入列名...",
-    "edit-note-title": "点击编辑笔记标题",
+    "edit-note-title": "点击编辑卡片标题",
     "remove-from-board": "从看板上移除",
     "column-already-exists": "此列已在看板上。",
     "column-definition-save-error": "列已保存在看板上，但无法保存到状态属性。",
@@ -2525,8 +2528,8 @@
     "archive-column": "归档列",
     "unarchive-column": "取消归档列",
     "archived-badge": "已归档",
-    "add-new-item": "添加新笔记",
-    "add-existing-item": "添加现有笔记...",
+    "add-new-item": "添加新卡片",
+    "add-existing-item": "添加现有笔记作为卡片...",
     "add-existing-item-title": "将现有笔记添加到看板",
     "add-existing-item-ok": "添加到列",
     "add-new-column": "添加新列",
@@ -2545,43 +2548,43 @@
     "move-column-after": "移到「{{column}}」之后",
     "hints": {
       "navigation": "导航",
-      "navigate_items": "在项目之间导航",
+      "navigate_items": "在卡片之间导航",
       "navigate_columns": "在列之间导航",
-      "first_last_item": "列的第一 / 最后一个项目",
+      "first_last_item": "列的第一 / 最后一个卡片",
       "editing": "编辑",
-      "insert_item": "在下方 / 上方插入项目",
+      "insert_item": "在下方 / 上方插入卡片",
       "insert_column": "在之后 / 之前插入列",
-      "open_item": "打开项目",
-      "rename": "重命名项目或列",
-      "remove_item": "从看板移除项目",
+      "open_item": "打开卡片",
+      "rename": "重命名卡片或列",
+      "remove_item": "从看板移除卡片",
       "delete_item": "删除笔记",
       "remove_column": "移除列（在选中的列标题上）",
       "moving": "移动",
-      "move_item": "上 / 下移动项目",
+      "move_item": "上 / 下移动卡片",
       "move_within": "移动到列的顶部 / 底部",
       "move_across": "移动到上一列 / 下一列",
       "move_to_end_column": "移动到第一列 / 最后一列",
       "move_column": "左 / 右移动列",
       "move_column_to_edge": "将列移动到最左 / 最右",
       "selection": "选择",
-      "select_column": "选中该列中的所有项目",
+      "select_column": "选中该列中的所有卡片",
       "clear_selection": "清除所选内容"
     },
     "inbox": "收件箱",
     "inherited-column": "此卡片从模板或父笔记继承其列，可在来源处进行更改。",
     "inbox-nested": "包含嵌套笔记",
     "inbox-remove": "移除收件箱列",
-    "card-count_other": "{{count}} 个项目",
-    "card-count-with-archived_other": "{{count}} 个活动项目，{{archived}} 个已归档",
-    "card-count-over-limit": "超出此列设置的笔记上限！",
+    "card-count_other": "{{count}} 张卡片",
+    "card-count-with-archived_other": "{{count}} 张活动卡片，{{archived}} 张已归档",
+    "card-count-over-limit": "超出此列设置的卡片上限！",
     "set-limit": "设置上限...",
     "set-limit-ok": "设置上限",
     "limit-capacity": "超出列容量时发出警告",
-    "limit-count": "列中笔记的最大数量",
+    "limit-count": "列中卡片的最大数量",
     "collapse-column": "折叠列",
     "edit-title": "编辑标题与图标",
     "move-to-top": "移到顶部",
-    "create-new-note": "新建笔记",
+    "create-new-note": "新建卡片",
     "create-new-column": "新建列",
     "create-hold-hint": "右键单击或长按可查看更多选项。",
     "create-at-top": "在顶部新建",
@@ -2624,15 +2627,21 @@
     "columns-title": "列",
     "columns-empty": "此看板还没有任何列。",
     "column-width": "列宽",
-    "drop-as-first-item": "作为第一项拖放",
-    "drop-as-last-item": "作为最后一项拖放",
+    "drop-as-first-item": "作为第一张卡片拖放",
+    "drop-as-last-item": "作为最后一张卡片拖放",
     "column-width-narrow": "窄（默认）",
     "column-width-medium": "中",
     "column-width-wide": "宽",
     "copy-reference": "复制引用",
     "reference-column-missing": "该列已不在这个看板上。",
-    "reference-archived": "该条目已归档，因此看板不显示它。",
-    "reference-missing": "该条目已不在这个看板上。"
+    "reference-archived": "该卡片已归档，因此看板不显示它。",
+    "reference-missing": "该卡片已不在这个看板上。",
+    "more-actions": "更多操作",
+    "selection-mode": "选择卡片",
+    "cards-selected_other": "已选择 {{count}} 张卡片",
+    "select-column-cards": "选择该列中的每一张卡片",
+    "reset-selection": "重置选择",
+    "expand-column": "展开列"
   },
   "command_palette": {
     "tree-action-name": "树形：{{name}}",
@@ -3146,13 +3155,10 @@
     "tags-differ": "选中的节点标签各不相同，因此这些标签只能查看。",
     "add-tag": "添加此标签",
     "remove-tag": "移除此标签",
-    "zoom-in": "放大",
-    "zoom-out": "缩小",
     "center-map": "将地图居中",
     "direction-left": "分支向左",
     "direction-right": "分支向右",
     "direction-side": "分支向两侧",
-    "reset-zoom": "重置缩放",
     "direction-down": "向下分支"
   },
   "llm": {
@@ -3600,18 +3606,14 @@
       "tokens": "tokens",
       "try-again": "重试",
       "working": "正在处理…",
-      "upload-image": "上传图片"
+      "upload-image": "上传图片",
+      "upload-an-image-from-your-device": "从你的设备上传图片。"
     },
     "toolbar-groups": {
       "text-formatting": "文本格式",
       "insert": "插入",
       "alignment": "对齐"
     }
-  },
-  "image_buttons": {
-    "zoom_in": "放大",
-    "zoom_out": "缩小",
-    "reset_zoom": "重置缩放"
   },
   "image_navigation": {
     "previous": "上一张图片：{{- title}}",
@@ -3620,22 +3622,13 @@
   "image_viewer": {
     "loading_error": "图片加载出错。",
     "hints": {
-      "zoom": "缩放",
-      "zoom_in": "放大",
-      "zoom_out": "缩小",
-      "reset_zoom": "重置缩放",
-      "pan": "平移",
-      "pan_up": "上",
-      "pan_down": "下",
-      "pan_left": "左",
-      "pan_right": "右",
-      "pan_fast": "快速平移",
       "navigation": "导航",
       "next_image": "下一张图片",
       "previous_image": "上一张图片",
       "first_image": "第一张图片",
       "last_image": "最后一张图片"
-    }
+    },
+    "viewport": "图片视图"
   },
   "security": {
     "backend_scripting_title": "后端脚本",
@@ -4227,5 +4220,22 @@
   "attribute_menu": {
     "attributes": "属性",
     "not-set": "未设置"
+  },
+  "zoom_controls": {
+    "zoom_out": "缩小",
+    "reset": "重置缩放",
+    "zoom_in": "放大",
+    "hints": {
+      "zoom": "缩放",
+      "zoom_in": "放大",
+      "zoom_out": "缩小",
+      "reset_zoom": "重置缩放",
+      "pan": "平移",
+      "pan_up": "上",
+      "pan_down": "下",
+      "pan_left": "左",
+      "pan_right": "右",
+      "pan_fast": "快速平移"
+    }
   }
 }

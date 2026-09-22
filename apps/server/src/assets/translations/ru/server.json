@@ -93,10 +93,10 @@
     "password-title": "Пароль и аутентификация",
     "etapi-title": "ETAPI",
     "multi-factor-authentication-title": "MFA",
-    "backup-title": "Резервное копирование",
+    "backup-title": "Резервные копии",
     "sync-title": "Синхронизация",
     "other": "Прочее",
-    "advanced-title": "Расширенные настройки",
+    "advanced-title": "Расширенные",
     "inbox-title": "Входящие",
     "root-title": "Скрытые заметки",
     "search-history-title": "История поиска",
@@ -326,7 +326,8 @@
   "notes": {
     "duplicate-note-suffix": "(дубликат)",
     "new-note": "Новая заметка",
-    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}"
+    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}",
+    "delete-notes-failed": "Не удалось удалить заметки: {{- message}}"
   },
   "modals": {
     "error_title": "Ошибка"
