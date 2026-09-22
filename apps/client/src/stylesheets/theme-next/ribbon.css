@@ -177,8 +177,8 @@ ul.editability-dropdown li.dropdown-item > div {
  * Search string
  */
 
-/* The completion popup's selected row follows the mention autocomplete, which this theme paints
-   with the hover colours rather than the active ones (`:root .ck-mentions` in `notes/text.css`). */
+/* The completion popup's selected row uses the hover colours from
+   `:root .ck-mentions` in `notes/text.css` rather than the active colours. */
 .search-string-editor {
     --search-completion-selected-background: var(--hover-item-background-color);
     --search-completion-selected-text: var(--hover-item-text-color);
