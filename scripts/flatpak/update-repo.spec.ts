@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { checkPlaceholdersFilled, checkPnpmSupported, formatOutputs, parsePnpmVersion, updateGitSource, updatePnpmPins } from "./update-repo.mjs";
+import { checkPlaceholdersFilled, checkPnpmSupported, formatOutputs, parsePnpmVersion, selectStaleFiles, updateGitSource, updatePnpmPins } from "./update-repo.mjs";
 
 const MANIFEST = `\
 modules:
@@ -87,5 +87,29 @@ describe("checkPlaceholdersFilled", () => {
         expect(() => checkPlaceholdersFilled(pinned)).not.toThrow();
         expect(() => checkPlaceholdersFilled(`${pinned}  sha256: __ELECTRON_SHA256__\n`))
             .toThrow(/__ELECTRON_SHA256__/);
+    });
+});
+
+describe("selectStaleFiles", () => {
+    it("keeps what the recipe writes and the repo owns, removes the rest", () => {
+        const tracked = [
+            ".gitignore",
+            "README.md",
+            "flathub.json",
+            "flip-fuses.mts",
+            "generated-sources.json",
+            "org.triliumnotes.Trilium.yml",
+            "stamp-build-info.mts",
+            "trilium.sh",
+            "trim-locales.mts",
+            ""
+        ].join("\n");
+
+        expect(selectStaleFiles(tracked))
+            .toEqual([ "flip-fuses.mts", "stamp-build-info.mts", "trim-locales.mts" ]);
+    });
+
+    it("finds nothing to remove once a repo holds only the recipe", () => {
+        expect(selectStaleFiles("org.triliumnotes.Trilium.yml\ntrilium.sh\n")).toEqual([]);
     });
 });

@@ -30,7 +30,10 @@ the words that go to Flathub reviewers.
   a clone of the real Flathub repo (default branch `master`, Elian has `push`). It holds
   only the manifest, `trilium.sh`, `flathub.json`, `generated-sources.json` and a README.
   **Never hand-edit it** — `update-repo.mts` overwrites everything but the sources file,
-  which `generate-sources.mts` overwrites.
+  which `generate-sources.mts` overwrites, and deletes every *other* tracked file. A file
+  the recipe should keep but not write belongs in `KEPT_FILES`; `master` carried
+  `flip-fuses.mts`, `stamp-build-info.mts` and `trim-locales.mts` long after the manifest
+  moved to running the checkout's own copies, which is what that prune clears.
 
 Local flow, from this repo, in this order:
 

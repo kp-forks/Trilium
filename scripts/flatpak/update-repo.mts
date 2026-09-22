@@ -5,6 +5,8 @@
  * `packageManager`. The desktop file and metainfo install from the pinned
  * checkout itself; `generated-sources.json` is a separate step:
  * ./scripts/flatpak/generate-sources.mts, run against the same ref's checkout.
+ * Whatever else the packaging repo still tracks is removed, so the pull request
+ * carries away an older recipe's leftovers rather than leaving them behind.
  *
  * Usage:
  *
@@ -18,7 +20,7 @@
 
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { appendFileSync, copyFileSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { appendFileSync, copyFileSync, existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 const REPO_ROOT = join(import.meta.dirname, "../..");
@@ -27,6 +29,9 @@ const MANIFEST_NAME = "org.triliumnotes.Trilium.yml";
 // The wrapper is a manifest source; flathub.json configures Flathub's bots and
 // only takes effect on the packaging repo's default branch.
 const COPIED_FILES = [ "trilium.sh", "flathub.json" ];
+// Everything else tracked in the packaging repo is a leftover of an older recipe.
+// generate-sources.mts writes the sources file; the other two are the repo's own.
+const KEPT_FILES = [ MANIFEST_NAME, ...COPIED_FILES, "generated-sources.json", "README.md", ".gitignore" ];
 const MIN_PNPM_MAJOR = 12;
 
 export async function main(argv: string[]) {
@@ -53,10 +58,29 @@ export async function main(argv: string[]) {
     for (const file of COPIED_FILES) {
         copyFileSync(join(FLATPAK_DIR, file), join(repoDir, file));
     }
+    // `git ls-files` keeps listing a deletion that is staged but not committed, so a
+    // re-run against the same checkout finds the file already gone.
+    for (const file of selectStaleFiles(gitIn(repoDir, "ls-files"))) {
+        if (existsSync(join(repoDir, file))) {
+            rmSync(join(repoDir, file));
+            console.log(`Removed ${file}, which the recipe no longer owns.`);
+        }
+    }
     if (process.env.GITHUB_OUTPUT) {
         appendFileSync(process.env.GITHUB_OUTPUT, formatOutputs(commit, tag, pnpmVersion));
     }
     console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}.`);
+}
+
+/**
+ * The tracked files the recipe no longer writes, so a pull request removes them instead
+ * of leaving an older recipe's leftovers behind — `master` still carries the build-time
+ * scripts from before the manifest ran the checkout's own copies.
+ */
+export function selectStaleFiles(trackedFiles: string): string[] {
+    return trackedFiles.split("\n")
+        .map((file) => file.trim())
+        .filter((file) => file && !KEPT_FILES.includes(file));
 }
 
 /** Step outputs for the workflow that opens the pull request; the tag is empty for a beta. */
@@ -137,6 +161,10 @@ async function sha256OfUrl(url: string): Promise<string> {
 
 function git(...args: string[]): string {
     return execFileSync("git", args, { cwd: REPO_ROOT }).toString().trim();
+}
+
+function gitIn(cwd: string, ...args: string[]): string {
+    return execFileSync("git", args, { cwd }).toString().trim();
 }
 
 function isTag(ref: string): boolean {
