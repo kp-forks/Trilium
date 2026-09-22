@@ -1,6 +1,6 @@
 ---
 name: packaging-for-flathub
-description: Use when working on Trilium's Flathub packaging — the from-source flatpak recipe vendored in apps/desktop/flatpak/ (manifest, trilium.sh, flathub.json, .desktop, metainfo), the scripts/flatpak/ generators (update-repo.mts, generate-sources.mts), .github/workflows/release-flathub.yml, or the published packaging repo at ../org.triliumnotes.Trilium. Covers the settled architecture decisions (no electron-forge, no asar, sandboxed data dir, per-arch pnpm sources, build-time scripts shared with the forge build), the offline-build machinery (flatpak-node-generator, requiresBuild:false, the Electron ≥43 unzip, the armv7l crash), the org.flatpak.Builder-only toolchain rule, how Flathub test-builds pull requests (drafts included, one misleading status), and what remains (FLATHUB_PAT, the data migration, EOL-rebase of the old app ID). Do NOT use for the electron-forge .flatpak release asset (see forge.config.ts) or for cutting releases (see cutting-a-release).
+description: Use when working on Trilium's Flathub packaging — the from-source flatpak recipe vendored in apps/desktop/flatpak/ (manifest, trilium.sh, flathub.json, .desktop, metainfo), the scripts/flatpak/ generators (update-repo.mts, generate-sources.mts), .github/workflows/release-flathub.yml, or the published packaging repo at ../org.triliumnotes.Trilium. Covers the settled architecture decisions (no electron-forge, no asar, sandboxed data dir, per-arch pnpm sources, build-time scripts shared with the forge build), the offline-build machinery (flatpak-node-generator, requiresBuild:false, the Electron ≥43 unzip, the armv7l crash), the org.flatpak.Builder-only toolchain rule, how Flathub test-builds pull requests (drafts included, one misleading status), and what remains (the data migration, EOL-rebase of the old app ID). Do NOT use for the electron-forge .flatpak release asset (see forge.config.ts) or for cutting releases (see cutting-a-release).
 ---
 
 # Packaging Trilium for Flathub
@@ -9,6 +9,12 @@ A from-source flatpak of Trilium Desktop, built offline inside the flatpak-build
 sandbox with no Electron Forge involvement. **The app is published**: the submission
 (flathub/flathub#10014) merged and `flathub/org.triliumnotes.Trilium` exists. The recipe
 now lives in this repo and the packaging repo is generated from it.
+
+**The generated recipe builds on Flathub's own infrastructure.** `FLATHUB_PAT` is in
+place and the workflow's first unattended run opened
+[org.triliumnotes.Trilium#1](https://github.com/flathub/org.triliumnotes.Trilium/pull/1):
+`validate-manifest` passed, `build-x86_64` took 8m07s and `build-aarch64` 10m40s, both
+green. That run also carried the first prune, removing the three leftover `.mts` scripts.
 
 **Flathub bans AI-generated submissions** (policy May 2026). Everything addressed to
 Flathub — pull request descriptions, review replies, linter-exception requests — is
@@ -221,13 +227,9 @@ build adjudicates it).
 
 ## What remains
 
-1. **`FLATHUB_PAT` secret** — classic token, scope `public_repo` (the repo is public;
-   `repo` is needlessly broad, `workflow` is not needed). Fine-grained equivalent: owner
-   `flathub`, Contents + Pull requests read/write — but org policy may require approval.
-   Without it the workflow's clone step fails.
-2. **The packaging repo's README**, which still describes staged scripts and the old
+1. **The packaging repo's README**, which still describes staged scripts and the old
    pnpm/ASAR reasoning.
-3. **The data migration for existing users**, which the EOL-rebase does not perform and
+2. **The data migration for existing users**, which the EOL-rebase does not perform and
    which no permission can substitute for (see "Sandboxed data dir"). The old Flathub app,
    the Forge `.flatpak` and every `.deb`/AppImage keep notes at host
    `~/.local/share/trilium-data`; the new app starts on an empty
@@ -236,11 +238,11 @@ build adjudicates it).
    `flatpak override --filesystem=…` in the release notes, or exposing the legacy
    database read-only for a one-time import. Settle it **before** the rebase — after it,
    the old app is gone and the surprise is the user's.
-4. **EOL-rebase the old app**: PR `flathub.json` with
+3. **EOL-rebase the old app**: PR `flathub.json` with
    `end-of-life-rebase: org.triliumnotes.Trilium` to `flathub/com.github.zadam.trilium`
    (needs `end-of-life` too, or the linter errors). Old app ships 0.63.7/2024 on EOL
    23.08 to ~71k installs.
-5. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
+4. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
    + rounded corners), `<branding>` colors (leaf-green `#cfe8c0` light / `#254d18` dark;
    compare peers via `flathub.org/api/v2/appstream/<id>` → `.branding`), metainfo
    description refresh, and the `--no-playwright-browsers` flag worth filing upstream.
