@@ -120,6 +120,53 @@ describe("createFieldEditor", () => {
         // Shift-Enter is swallowed, rather than reaching the field as the flattened indentation.
         expect(pressKey(editor, "Enter", { shiftKey: true })).toBe(true);
         expect(editor.state.doc.toString()).toBe("#book   #year = 1954");
+
+        // A change already on one line is left as it was written, as is one that edits no text.
+        editor.dispatch({ changes: { from: 0, insert: "@" } });
+        editor.dispatch({ selection: EditorSelection.cursor(0) });
+        expect(editor.state.doc.toString()).toBe("@#book   #year = 1954");
+        expect(editor.state.selection.main.head).toBe(0);
+    });
+
+    it("leaves the keys it claims to an IME while it is composing", () => {
+        const onEnter = vi.fn();
+        const onArrowDown = vi.fn().mockReturnValue(true);
+        editor = build({ doc: "#book\n#year", onEnter, onArrowDown });
+        editor.dispatch({ selection: EditorSelection.cursor(0) });
+        Object.defineProperty(editor, "composing", { get: () => true });
+
+        pressKey(editor, "Enter");
+        pressKey(editor, "ArrowDown");
+
+        expect(onEnter).not.toHaveBeenCalled();
+        expect(onArrowDown).not.toHaveBeenCalled();
+    });
+
+    it("draws the placeholder and names the field for assistive technology", () => {
+        editor = build({ placeholder: "Search", ariaLabel: "Search string" });
+
+        expect(editor.dom.querySelector(".cm-placeholder")?.textContent).toBe("Search");
+        expect(editor.contentDOM.getAttribute("aria-label")).toBe("Search string");
+    });
+
+    it("draws a completion with the icon the consumer answers for it", async () => {
+        const view = build({
+            doc: "#b",
+            completionSource: () => ({ from: 0, options: [ { label: "#book" }, { label: "#borrowed" } ] }),
+            completionIcon: (completion) => completion.label === "#book" ? "bx bx-hash" : undefined
+        });
+        editor = view;
+        view.dispatch({ selection: EditorSelection.cursor(2) });
+
+        await openCompletion(view);
+
+        // The option answering nothing is drawn without a glyph, rather than with an empty one.
+        const glyphs = Array.from(document.querySelectorAll(".cm-tooltip-autocomplete li"))
+            .map((option) => option.querySelector(".cm-completion-glyph"));
+        expect(glyphs.map((glyph) => glyph?.className)).toEqual([ "cm-completion-glyph bx bx-hash", undefined ]);
+        expect(glyphs[0]?.getAttribute("aria-hidden")).toBe("true");
+        // Supplying the icons replaces CodeMirror's own.
+        expect(document.querySelector(".cm-completionIcon")).toBe(null);
     });
 
     it("keeps the line breaks in inserted text", () => {

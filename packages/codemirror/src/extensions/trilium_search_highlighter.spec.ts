@@ -1,3 +1,4 @@
+import { EditorSelection } from "@codemirror/state";
 import { describe, expect, it } from "vitest";
 
 import { createFieldEditor } from "../field_editor.js";
@@ -111,6 +112,13 @@ describe("triliumSearchHighlighter", () => {
             expect(textOf(parent, ".cm-search-relation")).toEqual([ "~author" ]);
             expect(textOf(parent, ".cm-search-property")).toEqual([ ".title" ]);
             expect(textOf(parent, ".cm-search-string")).toEqual([ "'Tolkien'" ]);
+
+            // An edit recolours the query, while a transaction that changes no text keeps what is drawn.
+            editor.dispatch({ changes: { from: 0, to: 5, insert: "#novel" } });
+            expect(textOf(parent, ".cm-search-label")).toEqual([ "#novel" ]);
+
+            editor.dispatch({ selection: EditorSelection.cursor(0) });
+            expect(textOf(parent, ".cm-search-label")).toEqual([ "#novel" ]);
         } finally {
             editor.destroy();
         }

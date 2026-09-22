@@ -1,6 +1,8 @@
+import { diagnosticCount, forceLinting } from "@codemirror/lint";
 import { describe, expect, it, vi } from "vitest";
 
-import { diagnoseSearchQuery, type SearchLintMessages, searchDiagnostics, type SearchValidator } from "./trilium_search_lint.js";
+import { createFieldEditor } from "../field_editor.js";
+import { diagnoseSearchQuery, type SearchLintMessages, searchDiagnostics, type SearchValidator, triliumSearchLinter } from "./trilium_search_lint.js";
 
 // The wording is the consumer's; the keys identify which rule answered.
 const MESSAGES: SearchLintMessages = {
@@ -74,6 +76,12 @@ describe("diagnoseSearchQuery", () => {
         expect(messagesFor("~author tolkien = x")).toEqual([]);
     });
 
+    it("leaves an operator alone when nothing it could compare stands in front of it", () => {
+        // Nothing at all before the operator, then a value the rules have no opinion about.
+        expect(messagesFor("= hello")).toEqual([]);
+        expect(messagesFor("#book = 1 = 2")).toEqual([]);
+    });
+
     it("marks each offending comparison in a query that holds several", () => {
         expect(messagesFor("#book = 1 ~author = x note.text = y")).toEqual([ "relation", "text" ]);
     });
@@ -115,6 +123,27 @@ describe("searchDiagnostics", () => {
         );
 
         expect(diagnostics).toEqual([]);
+    });
+});
+
+describe("triliumSearchLinter", () => {
+    it("marks the query in the editor with what the engine refuses", async () => {
+        const parent = document.createElement("div");
+        document.body.appendChild(parent);
+        const view = createFieldEditor({
+            parent,
+            doc: "#a and #b or #c",
+            extensions: [ triliumSearchLinter(MESSAGES, async () => "Mixed usage of AND/OR") ]
+        });
+
+        try {
+            forceLinting(view);
+
+            await vi.waitFor(() => expect(diagnosticCount(view.state)).toBe(1));
+            expect(parent.querySelector(".cm-lintRange-error")?.textContent).toBe("#a and #b or #c");
+        } finally {
+            view.destroy();
+        }
     });
 });
 
