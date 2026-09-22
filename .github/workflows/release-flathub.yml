@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.ref || github.ref }}
+          ref: ${{ inputs.ref || github.ref_name }}
           # update-repo.mts resolves the ref against the checkout, so tags must be present.
           fetch-depth: 0
 
@@ -39,9 +39,9 @@ jobs:
 
       - name: Update the manifest and packaging files
         id: update
-        run: node --experimental-strip-types scripts/flatpak/update-repo.mts flathub ${INPUT_REF:+"$INPUT_REF"}
+        run: node --experimental-strip-types scripts/flatpak/update-repo.mts flathub "$INPUT_REF"
         env:
-          INPUT_REF: ${{ inputs.ref }}
+          INPUT_REF: ${{ inputs.ref || github.ref_name }}
 
       - name: Generate the offline install sources
         run: node --experimental-strip-types scripts/flatpak/generate-sources.mts flathub
