@@ -1514,7 +1514,7 @@
   },
   "search_string": {
     "title_column": "Search string:",
-    "placeholder": "fulltext keywords, #tag = value...",
+    "placeholder": "Ctrl+Space for suggestions, @ for a note, Shift+Enter for a new line, Enter to search",
     "search_syntax": "Search syntax",
     "also_see": "also see",
     "complete_help": "complete help on search syntax",
@@ -1526,7 +1526,13 @@
     "label_year_comparison": "numerical comparison (also >, >=, <).",
     "label_date_created": "notes created in the last month",
     "error": "Search error: {{error}}",
-    "search_prefix": "Search:"
+    "search_prefix": "Search:",
+    "hints": {
+      "title": "Search string",
+      "completions": "Show suggestions",
+      "new_line": "New line",
+      "run_search": "Run the search"
+    }
   },
   "attachment_detail": {
     "open_help_page": "Open help page on attachments",
@@ -4302,5 +4308,58 @@
       "pan_right": "Right",
       "pan_fast": "Faster panning"
     }
+  },
+  "search_lint": {
+    "relation_needs_property": "Relations point to a note, so they cannot be checked for equality. Use . instead to access its properties.",
+    "text_needs_contains": "note.text searches the title and content together, so it can only be matched with *=*.",
+    "content_not_ordered": "Note content is text, so it cannot be ordered. Use *=* to match it instead.",
+    "compare_the_title": "Compare the title",
+    "use_operator": "Use {{operator}}"
+  },
+  "search_completion": {
+    "note": "Note title, properties and related notes",
+    "operator_equal": "Equals the whole value",
+    "operator_not_equal": "Does not equal the whole value",
+    "operator_contains": "Contains",
+    "operator_starts_with": "Starts with",
+    "operator_ends_with": "Ends with",
+    "operator_greater_than": "Greater than",
+    "operator_greater_or_equal": "Greater than or equal to",
+    "operator_less_than": "Less than",
+    "operator_less_or_equal": "Less than or equal to",
+    "operator_regex": "Matches a regular expression",
+    "operator_fuzzy_equal": "Equals, tolerating typos",
+    "operator_fuzzy_contains": "Contains, tolerating typos",
+    "property_content": "The note's body text",
+    "property_raw_content": "The note's body text, before its formatting is stripped",
+    "property_text": "The title or the body text",
+    "property_parents": "Continues on the note's parents",
+    "property_children": "Continues on the note's children",
+    "property_ancestors": "Continues on the note's ancestors",
+    "property_labels": "Followed by a label name",
+    "property_relations": "Followed by a relation name, then that note's own properties",
+    "property_attribute_count": "Number of labels and relations, including inherited ones",
+    "property_label_count": "Number of labels, including inherited ones",
+    "property_relation_count": "Number of relations, including inherited ones",
+    "property_relation_count_including_links": "Number of relations, counting the ones made by links",
+    "property_owned_relation_count_including_links": "Number of the note's own relations, counting the ones made by links",
+    "property_target_relation_count_including_links": "Number of relations targeting the note, counting the ones made by links",
+    "keyword_and": "Both conditions must match",
+    "keyword_or": "Either condition must match",
+    "keyword_not": "Excludes the notes the condition in parentheses matches",
+    "keyword_order_by": "Sorts the results by a property or label",
+    "keyword_limit": "Keeps only the first results",
+    "date_now": "The current date and time",
+    "date_today": "Today's date",
+    "date_month": "The current month",
+    "date_year": "The current year",
+    "date_now_offset": "Any number of seconds before now",
+    "date_today_offset": "Any number of days before today",
+    "date_month_offset": "Any number of months before this one",
+    "date_year_offset": "Any number of years before this one",
+    "label_marker": "Refers to a label. Press Enter to see the list of labels",
+    "label_marker_negated": "Excludes a label. Press Enter to see the list of labels",
+    "relation_marker": "Refers to a relation. Press Enter to see the list of relations",
+    "relation_marker_negated": "Excludes a relation. Press Enter to see the list of relations"
   }
 }

@@ -3696,6 +3696,81 @@
                                             "position": 10,
                                             "dataFileName": "Search_image.png"
                                         }
+                                    ],
+                                    "dirFileName": "Search",
+                                    "children": [
+                                        {
+                                            "isClone": false,
+                                            "noteId": "Oxyb6jOjjVNL",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "gh7bpGYxajRS",
+                                                "wArbEsdSae6g",
+                                                "eIg8jdvaoNNd",
+                                                "Oxyb6jOjjVNL"
+                                            ],
+                                            "title": "Under the hood",
+                                            "notePosition": 10,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bxs-cog",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "under-the-hood",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Under the hood.md",
+                                            "attachments": []
+                                        },
+                                        {
+                                            "isClone": false,
+                                            "noteId": "WbjlujkUhEb5",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "gh7bpGYxajRS",
+                                                "wArbEsdSae6g",
+                                                "eIg8jdvaoNNd",
+                                                "WbjlujkUhEb5"
+                                            ],
+                                            "title": "How search matches your text",
+                                            "notePosition": 20,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "matching",
+                                                    "isInheritable": false,
+                                                    "position": 50
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bx-file-find",
+                                                    "isInheritable": false,
+                                                    "position": 60
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "How search matches your text.md",
+                                            "attachments": []
+                                        }
                                     ]
                                 },
                                 {
