@@ -110,13 +110,14 @@ that SHA.
   `chmod`/symlink step. Refs older than pnpm 12 are rejected by `checkPnpmSupported` —
   pnpm 11 had a single wrapper tarball and the per-arch URL would 404.
 
-  A release run re-pins pnpm from the **packaged ref's** `packageManager`, so the
-  published manifest is never stale no matter what the vendored copy says. Between
-  releases Renovate moves `packageManager` and knows nothing about the manifest, so a
-  spec in `update-repo.spec.ts` fails once the two diverge and
-  `pnpm chore:sync-flatpak-pnpm` rewrites both URLs and both `sha256`s from the working
-  tree. Renovate cannot own this itself: a regex manager moves a version but computes no
-  hash, which would trade a stale pin for a mismatch inside Flathub's builder.
+  **The vendored pins are allowed to trail the repository** — the git ref and the pnpm
+  version both. `update-repo.mts` re-pins pnpm from the **packaged ref's**
+  `packageManager` and fetches the two `sha256`s while it writes the packaging repo, so
+  the published manifest is right whatever the vendored copy says. Renovate moves
+  `packageManager` without touching the manifest; do not add a check that fails on the
+  gap. One was tried and reverted: on a `pull_request` run the comparison sees main's
+  `package.json` against the branch's manifest, so a bump on main reddens every open
+  pull request, none of which can fix it.
 - **`flathub.json`** carries `disable-external-data-checker: true` (the checker probes
   broken URLs *without* `x-checker-data`, so it would poll ~2400 generated npm sources)
   and `automerge-flathubbot-prs: false` — the linter errors on `true`

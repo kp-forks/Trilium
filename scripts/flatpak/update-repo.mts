@@ -9,12 +9,10 @@
  * Usage:
  *
  *   pnpm exec tsx ./scripts/flatpak/update-repo.mts <packaging-repo-dir> [ref]
- *   pnpm exec tsx ./scripts/flatpak/update-repo.mts --sync-pnpm
  *
  * `ref` defaults to HEAD; a tag pins `tag:` and `commit:`, anything else pins
- * the bare commit (the beta case). `--sync-pnpm` rewrites the vendored
- * manifest's own pnpm sources from the working tree's package.json instead,
- * which is what `pnpm chore:sync-flatpak-pnpm` runs.
+ * the bare commit (the beta case). The vendored manifest's own pins are a
+ * starting point this rewrites, so they can trail the repository.
  */
 
 import { execFileSync } from "node:child_process";
@@ -59,28 +57,6 @@ export async function main(argv: string[]) {
         appendFileSync(process.env.GITHUB_OUTPUT, formatOutputs(commit, tag, pnpmVersion));
     }
     console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}.`);
-}
-
-/**
- * Moves the vendored manifest's pnpm sources onto the version the working tree
- * pins. A release run derives them from the packaged ref instead, so between
- * releases this is what keeps the manifest in step with `packageManager`.
- */
-export async function syncPnpmPins() {
-    const manifestPath = join(FLATPAK_DIR, MANIFEST_NAME);
-    const manifest = readFileSync(manifestPath, "utf-8");
-    const pnpmVersion = parsePnpmVersion(readFileSync(join(REPO_ROOT, "package.json"), "utf-8"));
-    if (getPnpmVersion(manifest) === pnpmVersion) {
-        console.log(`${manifestPath} already pins pnpm ${pnpmVersion}.`);
-        return;
-    }
-
-    checkPnpmSupported(pnpmVersion);
-    writeFileSync(manifestPath, updatePnpmPins(manifest, pnpmVersion, {
-        x64: await sha256OfUrl(pnpmExeUrl("x64", pnpmVersion)),
-        arm64: await sha256OfUrl(pnpmExeUrl("arm64", pnpmVersion))
-    }));
-    console.log(`Pinned pnpm ${pnpmVersion} in ${manifestPath}.`);
 }
 
 /** Step outputs for the workflow that opens the pull request; the tag is empty for a beta. */
@@ -172,9 +148,7 @@ function isTag(ref: string): boolean {
 
 // Only when run as a script — the pure helpers above are imported by the spec.
 if (process.argv[1] === import.meta.filename) {
-    const argv = process.argv.slice(2);
-    const run = argv[0] === "--sync-pnpm" ? syncPnpmPins() : main(argv);
-    run.catch((err) => {
+    main(process.argv.slice(2)).catch((err) => {
         console.error(err instanceof Error ? err.message : err);
         process.exit(1);
     });
