@@ -9,9 +9,12 @@
  * Usage:
  *
  *   pnpm exec tsx ./scripts/flatpak/update-repo.mts <packaging-repo-dir> [ref]
+ *   pnpm exec tsx ./scripts/flatpak/update-repo.mts --sync-pnpm
  *
  * `ref` defaults to HEAD; a tag pins `tag:` and `commit:`, anything else pins
- * the bare commit (the beta case).
+ * the bare commit (the beta case). `--sync-pnpm` rewrites the vendored
+ * manifest's own pnpm sources from the working tree's package.json instead,
+ * which is what `pnpm chore:sync-flatpak-pnpm` runs.
  */
 
 import { execFileSync } from "node:child_process";
@@ -19,7 +22,8 @@ import { createHash } from "node:crypto";
 import { appendFileSync, copyFileSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
-const FLATPAK_DIR = join(import.meta.dirname, "../../apps/desktop/flatpak");
+const REPO_ROOT = join(import.meta.dirname, "../..");
+const FLATPAK_DIR = join(REPO_ROOT, "apps/desktop/flatpak");
 const MANIFEST_NAME = "org.triliumnotes.Trilium.yml";
 // The wrapper is a manifest source; flathub.json configures Flathub's bots and
 // only takes effect on the packaging repo's default branch.
@@ -55,6 +59,28 @@ export async function main(argv: string[]) {
         appendFileSync(process.env.GITHUB_OUTPUT, formatOutputs(commit, tag, pnpmVersion));
     }
     console.log(`Updated ${repoDir}: ${tag ?? "beta"} @ ${commit}, pnpm ${pnpmVersion}.`);
+}
+
+/**
+ * Moves the vendored manifest's pnpm sources onto the version the working tree
+ * pins. A release run derives them from the packaged ref instead, so between
+ * releases this is what keeps the manifest in step with `packageManager`.
+ */
+export async function syncPnpmPins() {
+    const manifestPath = join(FLATPAK_DIR, MANIFEST_NAME);
+    const manifest = readFileSync(manifestPath, "utf-8");
+    const pnpmVersion = parsePnpmVersion(readFileSync(join(REPO_ROOT, "package.json"), "utf-8"));
+    if (getPnpmVersion(manifest) === pnpmVersion) {
+        console.log(`${manifestPath} already pins pnpm ${pnpmVersion}.`);
+        return;
+    }
+
+    checkPnpmSupported(pnpmVersion);
+    writeFileSync(manifestPath, updatePnpmPins(manifest, pnpmVersion, {
+        x64: await sha256OfUrl(pnpmExeUrl("x64", pnpmVersion)),
+        arm64: await sha256OfUrl(pnpmExeUrl("arm64", pnpmVersion))
+    }));
+    console.log(`Pinned pnpm ${pnpmVersion} in ${manifestPath}.`);
 }
 
 /** Step outputs for the workflow that opens the pull request; the tag is empty for a beta. */
@@ -132,7 +158,7 @@ async function sha256OfUrl(url: string): Promise<string> {
 }
 
 function git(...args: string[]): string {
-    return execFileSync("git", args, { cwd: join(import.meta.dirname, "../..") }).toString().trim();
+    return execFileSync("git", args, { cwd: REPO_ROOT }).toString().trim();
 }
 
 function isTag(ref: string): boolean {
@@ -146,7 +172,9 @@ function isTag(ref: string): boolean {
 
 // Only when run as a script — the pure helpers above are imported by the spec.
 if (process.argv[1] === import.meta.filename) {
-    main(process.argv.slice(2)).catch((err) => {
+    const argv = process.argv.slice(2);
+    const run = argv[0] === "--sync-pnpm" ? syncPnpmPins() : main(argv);
+    run.catch((err) => {
         console.error(err instanceof Error ? err.message : err);
         process.exit(1);
     });

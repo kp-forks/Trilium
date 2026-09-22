@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { checkPnpmSupported, formatOutputs, getPnpmVersion, parsePnpmVersion, updateGitSource, updatePnpmPins } from "./update-repo.mjs";
@@ -91,5 +93,13 @@ describe("pnpm pins", () => {
         const withoutArm = MANIFEST.replace("exe.linux-arm64", "exe.linux-mips");
         expect(() => updatePnpmPins(withoutArm, "12.5.0", { x64: "a".repeat(64), arm64: "b".repeat(64) }))
             .toThrow(/arm64/);
+    });
+
+    // Renovate moves `packageManager` and knows nothing about the manifest, which no
+    // release run reads back; `pnpm chore:sync-flatpak-pnpm` is what fixes this red.
+    it("keeps the vendored manifest on the pnpm the repository pins", () => {
+        const read = (path: string) => readFileSync(new URL(path, import.meta.url), "utf-8");
+        expect(getPnpmVersion(read("../../apps/desktop/flatpak/org.triliumnotes.Trilium.yml")))
+            .toBe(parsePnpmVersion(read("../../package.json")));
     });
 });
