@@ -1,6 +1,6 @@
 ---
 name: packaging-for-flathub
-description: Use when working on Trilium's Flathub packaging — the from-source flatpak recipe vendored in apps/desktop/flatpak/ (manifest, trilium.sh, flathub.json, .desktop, metainfo), the scripts/flatpak/ generators (update-repo.mts, generate-sources.mts), .github/workflows/release-flathub.yml, or the published packaging repo at ../org.triliumnotes.Trilium. Covers the settled architecture decisions (no electron-forge, no asar, sandboxed data dir, per-arch pnpm sources, build-time scripts shared with the forge build), the offline-build machinery (flatpak-node-generator, requiresBuild:false, the Electron ≥43 unzip, the armv7l crash), the org.flatpak.Builder-only toolchain rule, how Flathub test-builds pull requests (drafts included, one misleading status), and what remains (FLATHUB_PAT, release trigger, EOL-rebase of the old app ID). Do NOT use for the electron-forge .flatpak release asset (see forge.config.ts) or for cutting releases (see cutting-a-release).
+description: Use when working on Trilium's Flathub packaging — the from-source flatpak recipe vendored in apps/desktop/flatpak/ (manifest, trilium.sh, flathub.json, .desktop, metainfo), the scripts/flatpak/ generators (update-repo.mts, generate-sources.mts), .github/workflows/release-flathub.yml, or the published packaging repo at ../org.triliumnotes.Trilium. Covers the settled architecture decisions (no electron-forge, no asar, sandboxed data dir, per-arch pnpm sources, build-time scripts shared with the forge build), the offline-build machinery (flatpak-node-generator, requiresBuild:false, the Electron ≥43 unzip, the armv7l crash), the org.flatpak.Builder-only toolchain rule, how Flathub test-builds pull requests (drafts included, one misleading status), and what remains (FLATHUB_PAT, the data migration, EOL-rebase of the old app ID). Do NOT use for the electron-forge .flatpak release asset (see forge.config.ts) or for cutting releases (see cutting-a-release).
 ---
 
 # Packaging Trilium for Flathub
@@ -22,7 +22,8 @@ the words that go to Flathub reviewers.
   the metainfo. `scripts/flatpak/` holds `update-repo.mts` (writes the manifest with the
   ref and pnpm pins, copies `trilium.sh` + `flathub.json`) and `generate-sources.mts`
   (regenerates `generated-sources.json`). `.github/workflows/release-flathub.yml` runs
-  both against a dispatched ref and opens the pull request. Also here:
+  both and opens the pull request, on every published non-prerelease and on a dispatched
+  ref. Also here:
   `apps/website/public/.well-known/org.flathub.VerifiedApps.txt` (empty, serving 200; the
   dev-portal token fills it — post-publication flow, keep the file forever).
 - **The packaging repo**: `/home/elian/Projects/TriliumNext/org.triliumnotes.Trilium`,
@@ -199,8 +200,10 @@ build adjudicates it).
    `repo` is needlessly broad, `workflow` is not needed). Fine-grained equivalent: owner
    `flathub`, Contents + Pull requests read/write — but org policy may require approval.
    Without it the workflow's clone step fails.
-2. **The `release: published` trigger** on `release-flathub.yml`, which also wants
-   prerelease skipping. Dispatch-only today.
+2. **A `<release>` entry in the metainfo at tag time.** The trigger now opens a packaging
+   PR for every stable release, and the metainfo installs from that tag's checkout — so
+   whatever `<releases>` holds when the tag is cut is what Flathub shows. Latest-only,
+   never backfill.
 3. **The packaging repo's README**, which still describes staged scripts and the old
    pnpm/ASAR reasoning.
 4. **The data migration for existing users**, which the EOL-rebase does not perform and
@@ -219,6 +222,6 @@ build adjudicates it).
 6. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
    + rounded corners), `<branding>` colors (leaf-green `#cfe8c0` light / `#254d18` dark;
    compare peers via `flathub.org/api/v2/appstream/<id>` → `.branding`), metainfo
-   description refresh, per-release `<release>` entries (latest-only, never backfill),
-   and the `--no-playwright-browsers` flag worth filing upstream. License stays
-   `AGPL-3.0-only` until the repo reconciles package.json with the README's v3+ grant.
+   description refresh, and the `--no-playwright-browsers` flag worth filing upstream.
+   License stays `AGPL-3.0-only` until the repo reconciles package.json with the README's
+   v3+ grant.
