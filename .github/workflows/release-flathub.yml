@@ -1,5 +1,7 @@
 name: Release to Flathub
 on:
+  release:
+    types: [ published ]
   workflow_dispatch:
     inputs:
       ref:
@@ -12,11 +14,12 @@ permissions:
 
 jobs:
   update-flathub-repo:
+    if: ${{ !github.event.release.prerelease }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ inputs.ref || github.ref_name }}
+          ref: ${{ inputs.ref || github.event.release.tag_name || github.ref_name }}
           # update-repo.mts resolves the ref against the checkout, so tags must be present.
           fetch-depth: 0
 
@@ -42,7 +45,7 @@ jobs:
         id: update
         run: node --experimental-strip-types scripts/flatpak/update-repo.mts flathub "$INPUT_REF"
         env:
-          INPUT_REF: ${{ inputs.ref || github.ref_name }}
+          INPUT_REF: ${{ inputs.ref || github.event.release.tag_name || github.ref_name }}
 
       - name: Generate the offline install sources
         run: node --experimental-strip-types scripts/flatpak/generate-sources.mts flathub
