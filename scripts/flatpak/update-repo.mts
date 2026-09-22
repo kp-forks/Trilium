@@ -11,8 +11,9 @@
  *   pnpm exec tsx ./scripts/flatpak/update-repo.mts <packaging-repo-dir> [ref]
  *
  * `ref` defaults to HEAD; a tag pins `tag:` and `commit:`, anything else pins
- * the bare commit (the beta case). The vendored manifest's own pins are a
- * starting point this rewrites, so they can trail the repository.
+ * the bare commit (the beta case). The vendored manifest carries a
+ * `__PLACEHOLDER__` for every value this fills in, so it holds no pin of its
+ * own to fall behind the repository.
  */
 
 import { execFileSync } from "node:child_process";
@@ -41,13 +42,12 @@ export async function main(argv: string[]) {
     let manifest = updateGitSource(readFileSync(join(FLATPAK_DIR, MANIFEST_NAME), "utf-8"), commit, tag);
 
     const pnpmVersion = parsePnpmVersion(git("show", `${commit}:package.json`));
-    if (getPnpmVersion(manifest) !== pnpmVersion) {
-        checkPnpmSupported(pnpmVersion);
-        manifest = updatePnpmPins(manifest, pnpmVersion, {
-            x64: await sha256OfUrl(pnpmExeUrl("x64", pnpmVersion)),
-            arm64: await sha256OfUrl(pnpmExeUrl("arm64", pnpmVersion))
-        });
-    }
+    checkPnpmSupported(pnpmVersion);
+    manifest = updatePnpmPins(manifest, pnpmVersion, {
+        x64: await sha256OfUrl(pnpmExeUrl("x64", pnpmVersion)),
+        arm64: await sha256OfUrl(pnpmExeUrl("arm64", pnpmVersion))
+    });
+    checkPlaceholdersFilled(manifest);
 
     writeFileSync(join(repoDir, MANIFEST_NAME), manifest);
     for (const file of COPIED_FILES) {
@@ -66,12 +66,20 @@ export function formatOutputs(commit: string, tag: string | undefined, pnpmVersi
 
 /** Pins the manifest's git source; without a tag, the `tag:` line goes (a beta builds a bare commit). */
 export function updateGitSource(manifest: string, commit: string, tag?: string): string {
-    const gitSource = /(url: https:\/\/github\.com\/TriliumNext\/Trilium\.git\n)(\s*tag: \S+\n)?(\s*)commit: [0-9a-f]{40}/;
-    if (!gitSource.test(manifest)) {
+    const tagLine = /^[ \t]*tag: __TAG__\n/m;
+    if (!tagLine.test(manifest) || !manifest.includes("__COMMIT__")) {
         throw new Error("Found no Trilium git source to pin in the manifest.");
     }
-    return manifest.replace(gitSource, (_, urlLine: string, _tagLine: string, indent: string) =>
-        `${urlLine}${tag ? `${indent}tag: ${tag}\n` : ""}${indent}commit: ${commit}`);
+    const tagged = tag ? manifest.replace("__TAG__", tag) : manifest.replace(tagLine, "");
+    return tagged.replace("__COMMIT__", commit);
+}
+
+/** Catches a placeholder added to the manifest that nothing here fills in. */
+export function checkPlaceholdersFilled(manifest: string) {
+    const left = /__[A-Z0-9_]+__/.exec(manifest);
+    if (left) {
+        throw new Error(`The manifest still holds ${left[0]}, which nothing fills in.`);
+    }
 }
 
 /**
@@ -84,15 +92,6 @@ export function checkPnpmSupported(version: string) {
         throw new Error(`The ref pins pnpm ${version}; the manifest's per-architecture `
             + `sources need pnpm ${MIN_PNPM_MAJOR} or newer.`);
     }
-}
-
-/** The version the manifest's per-arch pnpm sources currently pin. */
-export function getPnpmVersion(manifest: string): string {
-    const url = /exe\.linux-x64-([\d.]+)\.tgz/.exec(manifest);
-    if (!url) {
-        throw new Error("Found no pnpm source in the manifest.");
-    }
-    return url[1];
 }
 
 export function parsePnpmVersion(packageJson: string): string {
@@ -109,14 +108,17 @@ export function updatePnpmPins(
     version: string,
     hashes: { x64: string; arm64: string }
 ): string {
+    const pins = {
+        __PNPM_VERSION__: version,
+        __PNPM_SHA256_X64__: hashes.x64,
+        __PNPM_SHA256_ARM64__: hashes.arm64
+    };
     let updated = manifest;
-    for (const arch of ["x64", "arm64"] as const) {
-        const source = new RegExp(
-            `(exe\\.linux-${arch}/-/exe\\.linux-${arch}-)[\\d.]+(\\.tgz\\n\\s*sha256: )[0-9a-f]{64}`);
-        if (!source.test(updated)) {
-            throw new Error(`Found no pnpm source for ${arch} in the manifest.`);
+    for (const [placeholder, value] of Object.entries(pins)) {
+        if (!updated.includes(placeholder)) {
+            throw new Error(`Found no ${placeholder} to fill in the manifest.`);
         }
-        updated = updated.replace(source, `$1${version}$2${hashes[arch]}`);
+        updated = updated.replaceAll(placeholder, value);
     }
     return updated;
 }

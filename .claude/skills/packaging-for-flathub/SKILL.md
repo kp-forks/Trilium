@@ -110,14 +110,22 @@ that SHA.
   `chmod`/symlink step. Refs older than pnpm 12 are rejected by `checkPnpmSupported` —
   pnpm 11 had a single wrapper tarball and the per-arch URL would 404.
 
-  **The vendored pins are allowed to trail the repository** — the git ref and the pnpm
-  version both. `update-repo.mts` re-pins pnpm from the **packaged ref's**
-  `packageManager` and fetches the two `sha256`s while it writes the packaging repo, so
-  the published manifest is right whatever the vendored copy says. Renovate moves
-  `packageManager` without touching the manifest; do not add a check that fails on the
-  gap. One was tried and reverted: on a `pull_request` run the comparison sees main's
-  `package.json` against the branch's manifest, so a bump on main reddens every open
-  pull request, none of which can fix it.
+  **The vendored manifest holds no pins of its own** — `__TAG__`, `__COMMIT__`,
+  `__PNPM_VERSION__`, `__PNPM_SHA256_X64__` and `__PNPM_SHA256_ARM64__` are placeholders
+  `update-repo.mts` fills in from the packaged ref, fetching the two tarballs for their
+  hashes every run. So there is nothing to keep in step and nothing to gate: a check that
+  compared a vendored pin with `package.json` was tried and reverted, because on a
+  `pull_request` run it sees main's `package.json` against the branch's manifest and one
+  Renovate bump reddens every open pull request, none of which can fix it.
+
+  Consequences: the vendored manifest is a template, not a buildable one (it also
+  references a `generated-sources.json` that lives only in the packaging repo), and
+  `checkPlaceholdersFilled` fails the run when a new `__NAME__` appears that nothing
+  fills — including one written inside a comment. Verify a change to the templating by
+  rendering into an empty directory and diffing against the packaging repo:
+  `node --experimental-strip-types scripts/flatpak/update-repo.mts /tmp/out [ref]`.
+  **Never `cp -r` the packaging repo** to do it — its `.flatpak-builder/` holds a
+  multi-gigabyte build tree.
 - **`flathub.json`** carries `disable-external-data-checker: true` (the checker probes
   broken URLs *without* `x-checker-data`, so it would poll ~2400 generated npm sources)
   and `automerge-flathubbot-prs: false` — the linter errors on `true`
