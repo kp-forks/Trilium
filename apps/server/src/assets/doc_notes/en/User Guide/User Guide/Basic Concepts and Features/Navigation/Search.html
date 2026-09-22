@@ -7,6 +7,56 @@
   You also have the option to save your searches, which will create a special
   search note which is visible on your navigation tree and contains the search
   results as sub-items.</p>
+<h2>Types of search</h2>
+<p>There are multiple types of searches, all using the same search mechanism
+  and query language:</p>
+<ul>
+  <li>
+    <p><a class="reference-link" href="#root/_help_Ms1nauBra7gq">Quick search</a>&nbsp;which
+      can be found in the&nbsp;<a class="reference-link" href="#root/_help_xYmIYSP6wE3F">Launch Bar</a>&nbsp;for
+      small one-off searches.</p>
+    <ul>
+      <li>
+        <p>The results are shown in a popup and it has an infinite scroll.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><em>Full search</em> is the more advanced search mechanism.</p>
+    <ul>
+      <li>
+        <p>The results are displayed in a separate page and it has multiple advanced
+          features (search script, fast search, include archived notes, order by,
+          limit).</p>
+      </li>
+      <li>
+        <p><a class="reference-link" href="#root/_help_ivYnonVFBxbQ">Bulk Actions</a>&nbsp;such
+          as adding a label/relation can be applied to the results.</p>
+      </li>
+      <li>
+        <p>The results are paginated and they can be displayed in any&nbsp;<a class="reference-link"
+          href="#root/_help_GTwFsgaA0lCt">Collections</a>&nbsp;view (e.g. grid, list,
+          calendar, table).</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p>Some&nbsp;<a class="reference-link" href="#root/_help_GTwFsgaA0lCt">Collections</a>&nbsp;such
+      as board view have a dedicated search bar which applies to that collection.</p>
+    <ul>
+      <li>
+        <p>In this case, the results are displayed directly in the collection instead
+          of a popup and they are limited to the collection but the query language
+          remains the same.</p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<aside class="admonition note">
+  <p><a href="#root/_help_F1r9QtzQLZqm">Jump to note</a> is a similar concept
+    but it's mainly used to search for notes by title, not by content. Nevertheless,
+    it also features a way to search in full text if the results are unsatisfactory.</p>
+</aside>
 <h2>Accessing the search</h2>
 <ul>
   <li>From the&nbsp;<a class="reference-link" href="#root/_help_xYmIYSP6wE3F">Launch Bar</a>,
@@ -14,6 +64,8 @@
   <li>To limit the search to a note and its children, select <em>Search from subtree</em> from
     the&nbsp;<a class="reference-link" href="#root/_help_YtSN43OrfzaA">Note tree contextual menu</a>&nbsp;or
     press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>.</li>
+  <li>Go to&nbsp;<a class="reference-link" href="#root/_help_F1r9QtzQLZqm">Jump to &amp; command palette</a>,
+    look for something then press <em>Search in full text</em> (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>).</li>
 </ul>
 <h2>Interaction</h2>
 <p>To search for notes, click on the magnifying glass icon on the toolbar
@@ -45,6 +97,78 @@
   <li>The <em>Save to note</em> will create a new note with the search configuration.
     For more information, see&nbsp;<a class="reference-link" href="#root/_help_m523cpzocqaD">Saved Search</a>.</li>
 </ol>
+<h2>Features</h2>
+<h3>Autocomplete</h3>
+<p>To help with the syntax, Trilium offers an autocomplete functionality
+  which can be triggered by pressing <kbd>Ctrl</kbd>+<kbd>Space</kbd>.</p>
+<p>The autocomplete offers:</p>
+<ul>
+  <li>
+    <p>Basic operators such as <code>*=</code> and keywords (<code>limit</code>, <code>not</code>).</p>
+  </li>
+  <li>
+    <p>Fields for object-like fields such as <code>note</code> or <code>~relation</code>,
+      triggered by typing <code>.</code>.</p>
+  </li>
+  <li>
+    <p>Contextual enumerations such as <code>note.type = "</code> or <code>note.mime = "</code>.</p>
+  </li>
+  <li>
+    <p><a href="#root/_help_HI6GBBIduIgv">Label</a> names by typing <code>#</code>,
+      with user-defined ones shown first.</p>
+    <ul>
+      <li>
+        <p>A gear icon indicates system attributes.</p>
+      </li>
+      <li>
+        <p>After typing the label name, the value is also autocompleted with values
+          that are present in the database.</p>
+      </li>
+    </ul>
+  </li>
+  <li>
+    <p><a href="#root/_help_Cq5X6iKQop6R">Relation</a> names by typing <code>~</code>.</p>
+  </li>
+  <li>
+    <p><a href="#root/_help_m1lbrzyKDaRB">Note ID</a>s can be inserted easily
+      by typing <code>@</code> and looking for a note.</p>
+    <ul>
+      <li>
+        <p>If the note ID is under a valid syntax, it will be shown as a chip of
+          the note instead of the raw ID.</p>
+      </li>
+      <li>
+        <p>This is especially useful for queries that make use of the note ID such
+          as searching by template: <code>~template.noteId = @</code>
+        </p>
+      </li>
+    </ul>
+  </li>
+</ul>
+<h3>Syntax highlighting</h3>
+<p>The search input features syntax highlighting, making recognized fields
+  such as <code>note.</code> and operators like <code>NOT</code> stand out.</p>
+<h3>Error highlighting &amp; linting</h3>
+<p>The search is also checked for errors in two phases, which will be displayed
+  as a red squiggle:</p>
+<ul>
+  <li>
+    <p>Linter errors which identify common error patterns and also provide a
+      way to fix them.</p>
+  </li>
+  <li>
+    <p>Search errors which are checked by the server, without indicating the
+      exact place the error occurred.</p>
+  </li>
+</ul>
+<h3>Multiline</h3>
+<p>Long or complicated searches can be formatted by using newlines, similar
+  to SQL queries. Newlines are treated just like spaces.</p>
+<p>To add a new line, press <kbd>Shift</kbd>+<kbd>Enter</kbd>.</p>
+<aside class="admonition note">
+  <p>Multiline is available only for the full search, other inputs such as
+    the quick search or the collection filter are single line.</p>
+</aside>
 <h2>Search options</h2>
 <p>Click on which search option to apply from the Add search option section.</p>
 <ul>

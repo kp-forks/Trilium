@@ -3,10 +3,30 @@
 
 Note search enables you to find notes by searching for text in the title, content, or [attributes](../../Advanced%20Usage/Attributes.md) of the notes. You also have the option to save your searches, which will create a special search note which is visible on your navigation tree and contains the search results as sub-items.
 
+## Types of search
+
+There are multiple types of searches, all using the same search mechanism and query language:
+
+*   <a class="reference-link" href="Quick%20search.md">Quick search</a> which can be found in the <a class="reference-link" href="../UI%20Elements/Launch%20Bar.md">Launch Bar</a> for small one-off searches.
+    
+    *   The results are shown in a popup and it has an infinite scroll.
+*   _Full search_ is the more advanced search mechanism.
+    
+    *   The results are displayed in a separate page and it has multiple advanced features (search script, fast search, include archived notes, order by, limit).
+    *   <a class="reference-link" href="../../Advanced%20Usage/Bulk%20Actions.md">Bulk Actions</a> such as adding a label/relation can be applied to the results.
+    *   The results are paginated and they can be displayed in any <a class="reference-link" href="../../Collections.md">Collections</a> view (e.g. grid, list, calendar, table).
+*   Some <a class="reference-link" href="../../Collections.md">Collections</a> such as board view have a dedicated search bar which applies to that collection.
+    
+    *   In this case, the results are displayed directly in the collection instead of a popup and they are limited to the collection but the query language remains the same.
+
+> [!NOTE]
+> [Jump to note](Jump%20to%20%26%20command%20palette.md) is a similar concept but it's mainly used to search for notes by title, not by content. Nevertheless, it also features a way to search in full text if the results are unsatisfactory.
+
 ## Accessing the search
 
 *   From the <a class="reference-link" href="../UI%20Elements/Launch%20Bar.md">Launch Bar</a>, look for the dedicated search button.
 *   To limit the search to a note and its children, select _Search from subtree_ from the <a class="reference-link" href="../UI%20Elements/Note%20Tree/Note%20tree%20contextual%20menu.md">Note tree contextual menu</a> or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd>.
+*   Go to <a class="reference-link" href="Jump%20to%20%26%20command%20palette.md">Jump to &amp; command palette</a>, look for something then press _Search in full text_ (or <kbd>Ctrl</kbd>+<kbd>Enter</kbd>).
 
 ## Interaction
 
@@ -23,6 +43,47 @@ To search for notes, click on the magnifying glass icon on the toolbar or press 
 5.  Press _Search_ to trigger the search. The results are displayed below the search configuration pane.
 6.  The _Search & Execute actions_ button is only relevant if at least one action has been added (as described in the section below).
 7.  The _Save to note_ will create a new note with the search configuration. For more information, see <a class="reference-link" href="../../Note%20Types/Saved%20Search.md">Saved Search</a>.
+
+## Features
+
+### Autocomplete
+
+To help with the syntax, Trilium offers an autocomplete functionality which can be triggered by pressing <kbd>Ctrl</kbd>+<kbd>Space</kbd>.
+
+The autocomplete offers:
+
+*   Basic operators such as `*=` and keywords (`limit`, `not`).
+*   Fields for object-like fields such as `note` or `~relation`, triggered by typing `.`.
+*   Contextual enumerations such as `note.type = "` or `note.mime = "`.
+*   [Label](../../Advanced%20Usage/Attributes/Labels.md) names by typing `#`, with user-defined ones shown first.
+    
+    *   A gear icon indicates system attributes.
+    *   After typing the label name, the value is also autocompleted with values that are present in the database.
+*   [Relation](../../Advanced%20Usage/Attributes/Relations.md) names by typing `~`.
+*   [Note ID](../../Advanced%20Usage/Note%20ID.md)s can be inserted easily by typing `@` and looking for a note.
+    
+    *   If the note ID is under a valid syntax, it will be shown as a chip of the note instead of the raw ID.
+    *   This is especially useful for queries that make use of the note ID such as searching by template: `~template.noteId = @`
+
+### Syntax highlighting
+
+The search input features syntax highlighting, making recognized fields such as `note.` and operators like `NOT` stand out.
+
+### Error highlighting & linting
+
+The search is also checked for errors in two phases, which will be displayed as a red squiggle:
+
+*   Linter errors which identify common error patterns and also provide a way to fix them.
+*   Search errors which are checked by the server, without indicating the exact place the error occurred.
+
+### Multiline
+
+Long or complicated searches can be formatted by using newlines, similar to SQL queries. Newlines are treated just like spaces.
+
+To add a new line, press <kbd>Shift</kbd>+<kbd>Enter</kbd>.
+
+> [!NOTE]
+> Multiline is available only for the full search, other inputs such as the quick search or the collection filter are single line.
 
 ## Search options
 
