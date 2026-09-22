@@ -27,6 +27,7 @@ jobs:
           # Under the workspace so the pull request step can reach it.
           path: flathub
           token: ${{ secrets.FLATHUB_PAT }}
+          persist-credentials: false
 
       - uses: actions/setup-node@v7
         with:
