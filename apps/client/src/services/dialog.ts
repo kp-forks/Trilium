@@ -212,7 +212,7 @@ async function confirm(message: MessageType) {
 /**
  * Asks a yes/no question that also offers to delete the notes it is about.
  *
- * The offer is worded by the caller, and left out entirely where `checkboxLabel` is absent.
+ * The caller words the offer. Pass no `checkboxLabel` to ask the question alone.
  *
  * @returns the answer and whether the box was ticked, or `false` where the reader backed out.
  */

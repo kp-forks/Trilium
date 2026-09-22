@@ -526,8 +526,8 @@ export default function Column({
             collapse();
         }
 
-        // Enter makes a card at the head of the column, Shift+Enter one at its foot. Ctrl+Enter
-        // inserts a column and is left to `keyboard.ts`, which also opens a collapsed column.
+        // Enter makes a card at the head of the column, Shift+Enter one at its foot.
+        // `keyboard.ts` takes Ctrl+Enter for a column, and Enter on a strip.
         if (e.key === "Enter" && !e.ctrlKey && !isCollapsed && e.target === e.currentTarget) {
             e.preventDefault();
             e.stopPropagation();

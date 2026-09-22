@@ -336,8 +336,7 @@ export function useBoardKeyboard({
             take(e);
 
             // Where focus goes once the column is gone, taken up only if it does go. Shift is
-            // left unanswered here: the confirmation is where the notes in the column are asked
-            // about, so there is nothing for a modifier to say.
+            // left unanswered here: the confirmation asks about the notes in the column.
             const neighbour = columns[spot.column + 1] ?? columns[spot.column - 1];
             api.confirmAndRemoveColumn(columns[spot.column]).then((removed) => {
                 if (removed && neighbour !== undefined) {
@@ -580,8 +579,7 @@ function move(
         const target = toEnd
             ? columns[key === "ArrowRight" ? columns.length - 1 : 0]
             : columns[spot.column + (key === "ArrowRight" ? 1 : -1)];
-        // Only the whole way can ask for the column a card already stands in. The inbox column
-        // is the empty string, so a column that is not there is the undefined one.
+        // Only the whole way can ask for the column a card already stands in.
         if (target === undefined || target === column) return false;
 
         // A selection standing in several columns is left alone: each card has a neighbour of its

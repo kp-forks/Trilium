@@ -141,9 +141,8 @@ describe("ConfirmDialog", () => {
     });
 
     /**
-     * A caller removing something of its own — a board column, say — offers to delete the notes
-     * that go with it in its own words. The verdict the note box carries is not shown, the notes
-     * being the caller's to count rather than this dialog's to look up.
+     * A caller removing something of its own, a board column say, words the offer itself. It
+     * counts the notes too, so the dialog adds no verdict line of its own.
      */
     it("offers the caller's own box, and answers with what was done to it", async () => {
         const answers: { confirmed: boolean, isDeleteNoteChecked: boolean }[] = [];

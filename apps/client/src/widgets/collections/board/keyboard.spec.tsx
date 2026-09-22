@@ -564,7 +564,7 @@ describe("Board keyboard", () => {
         it("sends a card into the inbox column beside it", async () => {
             const board = await renderBoard(undefined, undefined, [], true);
             const strip = vi.spyOn(attributes, "removeOwnedLabelByName").mockReturnValue(true);
-            // The inbox is seeded at the front, so the first card stands in the column after it.
+            // The inbox is seeded at the front, so the first card is in the column after it.
             focusCard(board, 1, 0);
 
             press(board, "ArrowLeft", { ctrlKey: true });

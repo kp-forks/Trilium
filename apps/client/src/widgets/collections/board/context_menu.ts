@@ -144,8 +144,6 @@ export function openColumnContextMenu(api: Api, event: ContextMenuEvent, column:
                 uiIcon: "bx bx-sort-alt-2",
                 items: buildSortMenuItems<string>(sortMenuOptions(api, column.value))
             },
-            // The inbox is where every card without a grouping value goes, so a limit there is
-            // not enforceable.
             ...(isInbox ? [] : [ {
                 title: t("board_view.set-limit"),
                 uiIcon: "bx bx-tachometer",

@@ -219,8 +219,7 @@ describe("Board column context menu", () => {
         expect(icons).not.toContain("bx bx-archive");
         // The inbox leads the board and cannot be moved off the head of it.
         expect(icons).not.toContain("bx bx-horizontal-left");
-        // The inbox is where every card without a grouping value goes, so a limit there is not
-        // enforceable.
+        // The inbox takes every card without a grouping value, however many that is.
         expect(icons).not.toContain("bx bx-tachometer");
 
         const remove = items.find(item =>

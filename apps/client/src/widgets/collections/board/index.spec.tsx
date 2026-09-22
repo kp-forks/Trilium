@@ -2074,8 +2074,8 @@ describe("Board column rename", () => {
     });
 
     /**
-     * A heading holds no card to insert beside, so the ends of the column are what Enter and
-     * Shift+Enter reach there.
+     * A heading has no card to insert beside, so Enter and Shift+Enter reach the ends of the
+     * column instead.
      */
     it("opens the field at the head of the column for Enter on its heading", async () => {
         const { container } = await setup();
@@ -2106,7 +2106,7 @@ describe("Board column rename", () => {
             await flush();
         });
 
-        // The footer's own field, which stands outside the cards rather than among them.
+        // The footer's own field, drawn outside the cards rather than among them.
         expect(column.querySelector(".board-column-content .board-new-item")).toBeNull();
         expect(column.querySelector(".board-new-item.editing")).toBeTruthy();
     });

@@ -506,8 +506,8 @@ export default class BoardApi {
      * @returns whether the column went, for a caller with something to do afterwards.
      */
     async confirmAndRemoveColumn(column: string) {
-        // Counted off the map `removeColumn` acts on, so a filter hiding part of the column does
-        // not make the offer read as covering fewer notes than it takes.
+        // `removeColumn` acts on this map too, so a filter hiding part of the column cannot make
+        // the offer undercount.
         const cards = (this.allByColumn ?? this.byColumn)?.get(column)?.length ?? 0;
         const answer = await dialog.confirmWithNoteDeletion(
             t("board_view.delete-column-confirmation"),
@@ -533,8 +533,7 @@ export default class BoardApi {
      *                    grouping value taken off them.
      */
     async removeColumn(column: string, deleteNotes = false) {
-        // Read off the unfiltered map where there is one, so the cards an active filter is not
-        // showing are covered too.
+        // `allByColumn` covers the cards an active filter is not showing.
         const items = (this.allByColumn ?? this.byColumn)?.get(column);
         const noteIds = items?.map(item => item.note.noteId) || [];
 

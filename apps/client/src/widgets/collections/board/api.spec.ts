@@ -1540,7 +1540,7 @@ describe("removing a column with the question put first", () => {
         const error = vi.spyOn(toast, "showError").mockReturnValue(undefined);
 
         expect(await api.confirmAndRemoveColumn("Done")).toBe(false);
-        // An empty column has no notes to offer, so the box is left out.
+        // The box is about notes to delete, and an empty column has none.
         expect(confirm).toHaveBeenCalledWith("board_view.delete-column-confirmation", undefined);
         expect(saved).toEqual([]);
 
@@ -1556,8 +1556,8 @@ describe("removing a column with the question put first", () => {
     });
 
     /**
-     * The column's own cards are what the offer covers, so taking it deletes the notes instead of
-     * stripping the grouping value and leaving them on the board.
+     * Taking the offer deletes the column's cards, rather than stripping the grouping value and
+     * leaving them on the board.
      */
     it("deletes the notes in the column when the offer is taken", async () => {
         const { api, saved } = createApi(
@@ -2049,8 +2049,8 @@ describe("filing a card under the inbox", () => {
 
 describe("the limit set on a column", () => {
     /**
-     * The inbox is where every card without a grouping value goes, so a limit there is not
-     * enforceable. One stored by an older board is read as none.
+     * The inbox takes every card without a grouping value, however many that is. A limit stored
+     * for it by an older board is read as none.
      */
     it("reads no limit for the inbox and writes none to it", async () => {
         const { api, saved } = createApi(

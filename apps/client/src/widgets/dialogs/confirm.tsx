@@ -138,8 +138,8 @@ export interface ConfirmWithMessageOptions {
     message: MessageType;
     callback: ConfirmDialogCallback;
     /**
-     * Wording for a checkbox offering to delete the notes the question is about, left out where
-     * there is nothing to offer. Its state comes back as `isDeleteNoteChecked`.
+     * Wording for a checkbox offering to delete the notes the question is about. Omit it to ask
+     * the question alone. The tick comes back as `isDeleteNoteChecked`.
      */
     checkboxLabel?: string;
 }
