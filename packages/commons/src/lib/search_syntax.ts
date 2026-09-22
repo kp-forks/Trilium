@@ -72,7 +72,8 @@ export const CONTENT_SEARCH_OPERATORS: ReadonlySet<string> = new Set([
  */
 export function allowedSearchOperators(operand: string): ReadonlySet<string> | undefined {
     const segments = operand.split(".");
-    const property = (segments[segments.length - 1] ?? "").toLowerCase();
+    // `split` always yields a last segment, where a path of one segment yields no previous one.
+    const property = segments[segments.length - 1].toLowerCase();
     const previous = (segments[segments.length - 2] ?? "").toLowerCase();
 
     // The name after `labels.` is the user's own, and says nothing about the comparison.
