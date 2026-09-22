@@ -7269,7 +7269,7 @@
                             "dataFileName": "Mermaid Diagrams.md",
                             "attachments": [
                                 {
-                                    "attachmentId": "EN4DhmgiSH6t",
+                                    "attachmentId": "6uRyawJoeKCM",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
@@ -7277,20 +7277,12 @@
                                     "dataFileName": "Mermaid Diagrams_image.png"
                                 },
                                 {
-                                    "attachmentId": "if9nzuWHt5KP",
+                                    "attachmentId": "EN4DhmgiSH6t",
                                     "title": "image.png",
                                     "role": "image",
                                     "mime": "image/png",
                                     "position": 10,
                                     "dataFileName": "1_Mermaid Diagrams_image.png"
-                                },
-                                {
-                                    "attachmentId": "TpPwoCFIePXm",
-                                    "title": "image.png",
-                                    "role": "image",
-                                    "mime": "image/png",
-                                    "position": 10,
-                                    "dataFileName": "2_Mermaid Diagrams_image.png"
                                 }
                             ],
                             "dirFileName": "Mermaid Diagrams",
