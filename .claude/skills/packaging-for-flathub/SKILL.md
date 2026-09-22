@@ -48,8 +48,9 @@ that SHA.
   if reviewers ever balk at build cost.
 - **App ID `org.triliumnotes.Trilium`**, CamelCase last element. The old
   `com.github.zadam.trilium` gets an `end-of-life-rebase` to the new ID — still pending,
-  Elian can merge it himself; `<provides>`/`<replaces>` are already in the metainfo. User
-  data survives either way (notes live in `trilium-data`, not `~/.var/app`).
+  Elian can merge it himself; `<provides>`/`<replaces>` are already in the metainfo. The
+  rebase renames `~/.var/app/<id>`, which the old app never used, so it moves no notes —
+  see "What remains" for the migration that does.
 - **No asar, no Forge.** Payload proven byte-identical to the Forge flatpak; the +11 MB
   is compression granularity (ostree per file vs. one asar stream). Tamper-sealing comes
   from content-addressed ostree, so asar integrity fuses buy nothing.
@@ -81,6 +82,21 @@ that SHA.
   back to host `~/.local/share/trilium-data` when that exists; a `flatpak override` wins.
   `--filesystem=home` is **gone** — four read-only XDG dirs cover drag-&-drop import
   (electron#30650), so the linter exception that was pending at submission is moot.
+
+  **Do not grant the legacy path back**, in any form. The reviewer struck
+  `--filesystem=home` ([#10014](https://github.com/flathub/flathub/pull/10014#discussion_r3903751184)),
+  then struck the narrowed `--filesystem=~/.local/share/trilium-data:create` as well
+  ([here](https://github.com/flathub/flathub/pull/10014#discussion_r3904573174)) — "you
+  have your sandboxed folder" — when told it would blank out the old app's users:
+  migration is upstream's job, the permission set is Flathub's. Re-adding either gets the
+  next packaging PR rejected. A review bot that reads `trilium.sh` alone flags this as a
+  data-loss bug (PR #11629); it is a known deferred cost, not a defect.
+
+  `$HOME` inside the sandbox is the real path (`/home/user`) whatever is mounted, so the
+  fallback branch turns purely on what the manifest or an override exposes. Verify with
+  `flatpak run --nofilesystem=home --command=sh <id> -c '…'` against an installed build.
+  Since the guard is `[ ! -d "$XDG_DATA_HOME/trilium-data" ]`, an override added *after*
+  the first launch no longer reaches the legacy notes — the sandbox dir already exists.
 - **pnpm 12 ships as a native binary per platform.** The manifest stages
   `@pnpm/exe.linux-x64` / `-arm64` tarballs with `only-arches`, because the `pnpm`
   wrapper package's `postinstall` (which picks one) cannot run offline. `append-path`
@@ -187,11 +203,20 @@ build adjudicates it).
    prerelease skipping. Dispatch-only today.
 3. **The packaging repo's README**, which still describes staged scripts and the old
    pnpm/ASAR reasoning.
-4. **EOL-rebase the old app**: PR `flathub.json` with
+4. **The data migration for existing users**, which the EOL-rebase does not perform and
+   which no permission can substitute for (see "Sandboxed data dir"). The old Flathub app,
+   the Forge `.flatpak` and every `.deb`/AppImage keep notes at host
+   `~/.local/share/trilium-data`; the new app starts on an empty
+   `$XDG_DATA_HOME/trilium-data` and says nothing about why. Options not yet weighed: a
+   first-run prompt that asks for the directory through the file portal, a documented
+   `flatpak override --filesystem=…` in the release notes, or exposing the legacy
+   database read-only for a one-time import. Settle it **before** the rebase — after it,
+   the old app is gone and the surprise is the user's.
+5. **EOL-rebase the old app**: PR `flathub.json` with
    `end-of-life-rebase: org.triliumnotes.Trilium` to `flathub/com.github.zadam.trilium`
    (needs `end-of-life` too, or the linter errors). Old app ships 0.63.7/2024 on EOL
    23.08 to ~71k installs.
-5. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
+6. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
    + rounded corners), `<branding>` colors (leaf-green `#cfe8c0` light / `#254d18` dark;
    compare peers via `flathub.org/api/v2/appstream/<id>` → `.branding`), metainfo
    description refresh, per-release `<release>` entries (latest-only, never backfill),
