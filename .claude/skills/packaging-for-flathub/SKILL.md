@@ -78,6 +78,11 @@ that SHA.
   nothing is left for it to cache-isolate. `trilium.sh` is the one exception, copied into
   the packaging repo so a reviewer reads the sandbox behavior without opening the
   checkout.
+
+  That is also why the metainfo's `<releases>` — the version Flathub displays — has to be
+  right in the commit that gets tagged. `pnpm chore:update-version` regenerates it from
+  the newest five `vX.Y.Z` tags, so it is never hand-edited and never accumulates drift;
+  the version being prepared is dated today until its own tag supplies the date.
 - **Sandboxed data dir, narrow filesystem access.** `trilium.sh` sets
   `TRILIUM_DATA_DIR` to `$XDG_DATA_HOME/trilium-data` (i.e. inside `~/.var/app`), falling
   back to host `~/.local/share/trilium-data` when that exists; a `flatpak override` wins.
@@ -208,13 +213,9 @@ build adjudicates it).
    `repo` is needlessly broad, `workflow` is not needed). Fine-grained equivalent: owner
    `flathub`, Contents + Pull requests read/write — but org policy may require approval.
    Without it the workflow's clone step fails.
-2. **A `<release>` entry in the metainfo at tag time.** The trigger now opens a packaging
-   PR for every stable release, and the metainfo installs from that tag's checkout — so
-   whatever `<releases>` holds when the tag is cut is what Flathub shows. Latest-only,
-   never backfill.
-3. **The packaging repo's README**, which still describes staged scripts and the old
+2. **The packaging repo's README**, which still describes staged scripts and the old
    pnpm/ASAR reasoning.
-4. **The data migration for existing users**, which the EOL-rebase does not perform and
+3. **The data migration for existing users**, which the EOL-rebase does not perform and
    which no permission can substitute for (see "Sandboxed data dir"). The old Flathub app,
    the Forge `.flatpak` and every `.deb`/AppImage keep notes at host
    `~/.local/share/trilium-data`; the new app starts on an empty
@@ -223,11 +224,11 @@ build adjudicates it).
    `flatpak override --filesystem=…` in the release notes, or exposing the legacy
    database read-only for a one-time import. Settle it **before** the rebase — after it,
    the old app is gone and the surprise is the user's.
-5. **EOL-rebase the old app**: PR `flathub.json` with
+4. **EOL-rebase the old app**: PR `flathub.json` with
    `end-of-life-rebase: org.triliumnotes.Trilium` to `flathub/com.github.zadam.trilium`
    (needs `end-of-life` too, or the linter errors). Old app ships 0.63.7/2024 on EOL
    23.08 to ~71k installs.
-6. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
+5. Parked polish: carousel-spec screenshots (window ≤1000×700 or 2× at ≤2000×1400, shadow
    + rounded corners), `<branding>` colors (leaf-green `#cfe8c0` light / `#254d18` dark;
    compare peers via `flathub.org/api/v2/appstream/<id>` → `.branding`), metainfo
    description refresh, and the `--no-playwright-browsers` flag worth filing upstream.
