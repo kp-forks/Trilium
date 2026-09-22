@@ -499,15 +499,14 @@ export default class BoardApi {
     }
 
     /**
-     * Asks before taking a column off the board, the grouping label going from every card in it.
+     * Asks before taking a column off the board, offering to delete its cards as well.
      * Both the menu and the Delete key come through here, so the question is put once and the same
      * way, and a refusal from the server is reported rather than passing for a deletion.
      *
      * @returns whether the column went, for a caller with something to do afterwards.
      */
     async confirmAndRemoveColumn(column: string) {
-        // `removeColumn` acts on this map too, so a filter hiding part of the column cannot make
-        // the offer undercount.
+        // Count from the unfiltered map, which is the one `removeColumn` deletes from.
         const cards = (this.allByColumn ?? this.byColumn)?.get(column)?.length ?? 0;
         const answer = await dialog.confirmWithNoteDeletion(
             t("board_view.delete-column-confirmation"),
@@ -529,8 +528,8 @@ export default class BoardApi {
     /**
      * Takes a column off the board.
      *
-     * @param deleteNotes whether its cards are deleted, rather than kept on the board with the
-     *                    grouping value taken off them.
+     * @param deleteNotes deletes the column's cards instead of removing the grouping value from
+     *                    them.
      */
     async removeColumn(column: string, deleteNotes = false) {
         // `allByColumn` covers the cards an active filter is not showing.

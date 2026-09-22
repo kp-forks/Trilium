@@ -210,11 +210,10 @@ async function confirm(message: MessageType) {
 }
 
 /**
- * Asks a yes/no question that also offers to delete the notes it is about.
+ * Shows a confirmation with an optional checkbox for deleting the notes it asks about.
  *
- * The caller words the offer. Pass no `checkboxLabel` to ask the question alone.
- *
- * @returns the answer and whether the box was ticked, or `false` where the reader backed out.
+ * @param checkboxLabel labels the checkbox; omit it to show no checkbox.
+ * @returns `confirmed` and `isDeleteNoteChecked`, or `false` when the dialog is dismissed.
  */
 async function confirmWithNoteDeletion(message: MessageType, checkboxLabel?: string) {
     return new Promise<ConfirmDialogResult | undefined>((res) =>

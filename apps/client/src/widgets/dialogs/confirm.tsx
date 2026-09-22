@@ -94,8 +94,6 @@ export default function ConfirmDialog() {
             : <RawHtmlBlock html={opts?.message} />
             }
 
-            {/* The caller words the offer itself: what is being removed, and how many notes go
-                with it, is the caller's to describe. */}
             {opts?.checkboxLabel && (
                 <FormCheckbox
                     name="confirm-dialog-checkbox"
