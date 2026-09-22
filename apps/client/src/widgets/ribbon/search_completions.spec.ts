@@ -262,7 +262,7 @@ describe("searchCompletionSource", () => {
 
             expect(labelsOf(await complete("note.isProtected = t"))).toEqual([ "true", "false" ]);
             // A space settles the operator, so the values come without typing one; directly after it
-            // the operator may still be growing into `!=` or `=*`.
+            // the operator can still be growing into `!=` or `=*`.
             expect(labelsOf(await complete("note.isProtected = "))).toEqual([ "true", "false" ]);
             expect(labelsOf(await complete("note.isProtected ="))).toContain("=*");
             expect(labelsOf(await complete("note.isArchived = t"))).toEqual([ "true", "false" ]);

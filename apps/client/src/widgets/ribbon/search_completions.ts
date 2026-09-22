@@ -503,7 +503,7 @@ function orderingPosition(context: CompletionContext): OrderingPosition {
 
     // Each key is ordered on its own, so only what follows the last comma counts.
     const key = ordering.text.slice(ordering.text.lastIndexOf(",") + 1).replace(/^\s*orderby/i, "");
-    // What is being typed is not a key yet, and says nothing about what may follow one.
+    // What is being typed is not a key yet, and says nothing about what can follow one.
     const written = key.replace(new RegExp(`${WORD_PREFIX.source}$`), "").trim();
 
     if (/(^|\s)limit(\s|$)/i.test(written)) {

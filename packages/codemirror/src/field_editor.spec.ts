@@ -88,7 +88,7 @@ describe("createFieldEditor", () => {
         editor = view;
         view.dispatch({ selection: EditorSelection.cursor(2) });
 
-        // The popup drops both keys for `interactionDelay` after it opens; neither may reach the
+        // The popup drops both keys for `interactionDelay` after it opens; neither reaches the
         // field in that window, since the field's own commands move focus out of the editor.
         await openCompletion(view);
         pressKey(view, "ArrowDown");
