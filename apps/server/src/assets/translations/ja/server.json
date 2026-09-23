@@ -318,7 +318,8 @@
   "notes": {
     "new-note": "新しいノート",
     "duplicate-note-suffix": "(複製)",
-    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}"
+    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}",
+    "delete-notes-failed": "ノートの削除に失敗しました: {{- message}}"
   },
   "backend_log": {
     "log-does-not-exist": "バックエンドのログファイル '{{ fileName }}' は（まだ）存在しません。",

@@ -326,7 +326,8 @@
   "notes": {
     "duplicate-note-suffix": "(дубликат)",
     "new-note": "Новая заметка",
-    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}"
+    "duplicate-note-title": "{{- noteTitle }} {{ duplicateNoteSuffix }}",
+    "delete-notes-failed": "Не удалось удалить заметки: {{- message}}"
   },
   "modals": {
     "error_title": "Ошибка"

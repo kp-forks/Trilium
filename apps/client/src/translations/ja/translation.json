@@ -513,11 +513,19 @@
     "ascending": "昇順",
     "descending": "降順",
     "sort_folders_at_top": "フォルダーを上にして並べ替える",
-    "natural_sort": "自然順",
+    "natural_sort": "自然順で並べ替え",
     "sort_with_respect_to_different_character_sorting": "言語や地域によって異なる文字の並べ替えや照合順序の規則に従って並べ替える。",
     "sort": "並べ替え",
     "natural_sort_language": "自然順言語",
-    "the_language_code_for_natural_sort": "自然順の言語コード。例えば、中国語の場合は \"zh-CN\"。"
+    "the_language_code_for_natural_sort": "自然順の言語コード。例えば、中国語の場合は \"zh-CN\"。",
+    "sorting_criteria_description": "ノートは第 1レベルの条件で並べ替えられます。同じ値だった場合のみ、次のレベルの条件で順序が決定されます。",
+    "label": "ラベル",
+    "label_name": "ラベル名",
+    "add_level": "レベルを追加",
+    "remove_level": "レベルを削除",
+    "move_level_up": "レベルを上に移動",
+    "move_level_down": "レベルを下に移動",
+    "folders_follow_first_level": "第 1 レベルが降順の場合は最下部に配置されます。"
   },
   "close_pane_button": {
     "close_this_pane": "ペインを閉じる"
@@ -1446,8 +1454,8 @@
     "run_on_instance": "どの Trilium インスタンスでこれを実行するかを定義します。デフォルトはすべてのインスタンスです。",
     "run_at_hour": "何時に実行するかを指定します。 <code>#run=hourly</code> と併用してください。1日に複数回実行したい場合は、複数回定義できます。",
     "disable_inclusion": "このラベルが付いたスクリプトは親スクリプトの実行には含まれません。",
-    "sorted": "子ノートをアルファベット順に並べ替える。",
-    "sort_direction": "<code>#sorted</code> 並び順の方向 : 子ノートを降順で並べ替えます。降順の場合は <code>desc</code>、それ以外の場合は昇順になります。<code>#sorted</code> が設定されていない場合は無視されます。",
+    "sorted": "子ノートをタイトルのアルファベット順に並べ替えます。値を指定すると、別の基準で並べ替えられます: その際、<code>title</code>、<code>dateCreated</code>、<code>dateModified</code>、またはラベル名をカンマで区切って指定し、必要に応じてそれぞれに <code>asc</code>（昇順）または <code>desc</code>（降順）を続けます（例: <code>priority desc, dueDate</code>）。",
+    "sort_direction": "<code>#sorted</code> ディレクティブ(指示)は子ノートの順序を指定します: <code>desc</code> なら降順、それ以外なら昇順となります。レベル(階層)指定の直後に <code>asc</code> や <code>desc</code> を記述しても無視されます。また、<code>#sorted</code> が設定されていない場合も無視されます。",
     "sort_folders_first": "フォルダ（子を持つノート）を上にして並べる。",
     "top": "指定されたノートをその親ノートの一番上に表示します（並べ替えらた親ノートにのみ適用されます）。",
     "hide_promoted_attributes": "このノートのプロモート属性を非表示にする。",
@@ -2406,7 +2414,9 @@
     "delete-notes-in-progress": "削除進行中のノート: {{count}}",
     "delete-finished-successfully": "削除が正常に完了しました。",
     "undeleting-notes-in-progress": "削除済みのノートを復元中: {{count}}",
-    "undeleting-notes-finished-successfully": "ノートの復元が正常に完了しました。"
+    "undeleting-notes-finished-successfully": "ノートの復元が正常に完了しました。",
+    "delete-notes-in-progress-with-total": "{{total}} 件中 {{progress}} 件のノートを削除しました",
+    "erasing-notes": "ノートを削除中…"
   },
   "frontend_script_api": {
     "async_warning": "`api.runOnBackend()` に非同期関数を渡していますが、これは意図したとおりに動作しない可能性があります。\\n関数を同期させる(`async` キーワードを削除する)か、`api.runAsyncOnBackendWithManualTransactionHandling()` を使用してください。",

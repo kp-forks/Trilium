@@ -9,24 +9,28 @@
  *
  * Usage:
  *
- *   node --experimental-strip-types ./scripts/generate-flatpak-sources.mts
+ *   pnpm exec tsx ./scripts/flatpak/generate-sources.mts [output]
+ *
+ * `output` is the file to write, or a directory to write `generated-sources.json`
+ * into — pass the packaging repo checkout to update its tracked copy in place.
+ * Defaults to `upload/generated-sources.json`.
  *
  * Requires `flatpak-node-generator` on PATH, from the `node` subdirectory of
  * https://github.com/flatpak/flatpak-builder-tools.
  */
 
 import { execFileSync } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
 
-const ROOT = join(import.meta.dirname, "..");
+const ROOT = join(import.meta.dirname, "../..");
 const PACKAGE_JSON_PATH = join(ROOT, "package.json");
 const LOCKFILE_PATH = join(ROOT, "pnpm-lock.yaml");
-const OUTPUT_PATH = join(ROOT, "upload", "generated-sources.json");
 
-const PNPM_MAJOR = 11;
-// pnpm 11 reads its store from a v11 layout (a SQLite index.db); flatpak-node-generator
-// defaults to v10 (per-package JSON index files), which pnpm 11 would not find.
+const PNPM_MAJOR = 12;
+// pnpm 12 still reads its store from the v11 layout (a SQLite index.db);
+// flatpak-node-generator defaults to v10 (per-package JSON index files),
+// which pnpm would not find.
 const STORE_VERSION = "v11";
 
 interface Source {
@@ -35,15 +39,27 @@ interface Source {
     [key: string]: unknown;
 }
 
-export function main() {
+export function main(argv: string[]) {
+    const outputPath = resolveOutputPath(argv[0]);
     checkPnpm(readFileSync(PACKAGE_JSON_PATH, "utf-8"));
-    generateSources();
+    generateSources(outputPath);
 
-    const sources: Source[] = JSON.parse(readFileSync(OUTPUT_PATH, "utf-8"));
+    const sources: Source[] = JSON.parse(readFileSync(outputPath, "utf-8"));
     const kept = filterSources(sources);
-    writeFileSync(OUTPUT_PATH, `${JSON.stringify(kept, null, 4)}\n`);
-    console.log(`Wrote ${relative(ROOT, OUTPUT_PATH)}: `
+    writeFileSync(outputPath, `${JSON.stringify(kept, null, 4)}\n`);
+    console.log(`Wrote ${relative(process.cwd(), outputPath)}: `
         + `${kept.length} sources, ${sources.length - kept.length} dropped.`);
+}
+
+/** The file to write: the argument, `generated-sources.json` under an argument naming a directory, or the default. */
+export function resolveOutputPath(arg: string | undefined): string {
+    if (!arg) {
+        return join(ROOT, "upload", "generated-sources.json");
+    }
+    const path = resolve(arg);
+    return statSync(path, { throwIfNoEntry: false })?.isDirectory()
+        ? join(path, "generated-sources.json")
+        : path;
 }
 
 export function checkPnpm(packageJson: string) {
@@ -80,13 +96,13 @@ export function filterSources(sources: Source[]): Source[] {
     return kept;
 }
 
-function generateSources() {
-    mkdirSync(dirname(OUTPUT_PATH), { recursive: true });
+function generateSources(outputPath: string) {
+    mkdirSync(dirname(outputPath), { recursive: true });
     try {
         execFileSync("flatpak-node-generator", [
             "pnpm", LOCKFILE_PATH,
             "--pnpm-store-version", STORE_VERSION,
-            "-o", OUTPUT_PATH
+            "-o", outputPath
         ], { stdio: "inherit" });
     } catch (err) {
         if ((err as NodeJS.ErrnoException).code === "ENOENT") {
@@ -103,7 +119,7 @@ function generateSources() {
 // Only when run as a script — the pure helpers above are imported by the spec.
 if (process.argv[1] === import.meta.filename) {
     try {
-        main();
+        main(process.argv.slice(2));
     } catch (err) {
         console.error(err instanceof Error ? err.message : err);
         process.exit(1);

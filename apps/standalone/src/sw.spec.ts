@@ -135,6 +135,12 @@ describe("fetch routing", () => {
         const event = fetchEvent(`${origin}/api/notes`);
         handlers.fetch(event);
         expect(event._response).toBeDefined();
+
+        // `/custom/` carries custom request handlers and resource providers. Left off this list it
+        // would be fetched as a static asset, over a network this build does not have.
+        const custom = fetchEvent(`${origin}/custom/my-handler`);
+        handlers.fetch(custom);
+        expect(custom._response).toBeDefined();
     });
 
     it("routes shared-note pages to the client bridge but serves the share theme's assets statically", async () => {

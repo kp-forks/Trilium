@@ -350,7 +350,15 @@
     "sort_with_respect_to_different_character_sorting": "根据不同语言或地区的字符排序和排序规则排序。",
     "natural_sort_language": "自然排序语言",
     "the_language_code_for_natural_sort": "自然排序的语言代码，例如中文的 \"zh-CN\"。",
-    "sort": "排序"
+    "sort": "排序",
+    "sorting_criteria_description": "笔记按第一级排序；只有当上一级无法区分时，才由下一级决定先后。",
+    "label": "标签",
+    "label_name": "标签名称",
+    "add_level": "添加层级",
+    "remove_level": "移除层级",
+    "move_level_up": "上移层级",
+    "move_level_down": "下移层级",
+    "folders_follow_first_level": "当第一级为降序时，改为排在底部。"
   },
   "upload_attachments": {
     "upload_attachments_to_note": "上传附件到笔记",
@@ -402,8 +410,8 @@
     "run_on_instance": "定义应在哪个Trilium实例上运行。默认为所有实例。",
     "run_at_hour": "应在几点运行。应与 <code>#run=hourly</code> 一起使用。可多次定义以在一天内多次运行。",
     "disable_inclusion": "含有此标签的脚本不会包含在父脚本执行中。",
-    "sorted": "按标题字母顺序保持子笔记排序。",
-    "sort_direction": "<code>#sorted</code> 的排序方向：<code>desc</code> 为降序，其他值为升序。未设置 <code>#sorted</code> 时忽略。",
+    "sorted": "按标题字母顺序对子笔记进行排序。若填写了值，则改用其他条件排序：以逗号分隔的多级条件，每级为 <code>title</code>、<code>dateCreated</code>、<code>dateModified</code> 或某个标签名，并可分别后接 <code>asc</code> 或 <code>desc</code>，例如 <code>priority desc, dueDate</code>。",
+    "sort_direction": "<code>#sorted</code> 对子笔记排序的方向：<code>desc</code> 为降序，其他任意值均为升序。若某一级条件自带 <code>asc</code> 或 <code>desc</code>，则忽略此项。仅在设置了 <code>#sorted</code> 时生效。",
     "sort_folders_first": "文件夹（含有子笔记的笔记）应排在顶部。",
     "top": "将指定笔记置顶于父级内（仅适用于已排序的父级）。",
     "hide_promoted_attributes": "隐藏此笔记上的升级属性。",
@@ -1248,7 +1256,7 @@
   },
   "search_string": {
     "title_column": "搜索字符串:",
-    "placeholder": "全文关键词，#标签 = 值 ...",
+    "placeholder": "按 Ctrl+Space 查看建议，@ 引用笔记，Shift+Enter 换行，Enter 搜索",
     "search_syntax": "搜索语法",
     "also_see": "另见",
     "complete_help": "完整的搜索语法帮助",
@@ -1260,7 +1268,13 @@
     "label_year_comparison": "数字比较（也包括>，>=，<）。",
     "label_date_created": "上个月创建的笔记",
     "error": "搜索错误：{{error}}",
-    "search_prefix": "搜索:"
+    "search_prefix": "搜索:",
+    "hints": {
+      "title": "搜索字符串",
+      "completions": "显示建议",
+      "new_line": "换行",
+      "run_search": "执行搜索"
+    }
   },
   "attachment_detail": {
     "open_help_page": "打开附件帮助页面",
@@ -2170,7 +2184,9 @@
     "delete-notes-in-progress": "正在删除笔记：{{count}}",
     "delete-finished-successfully": "删除成功完成。",
     "undeleting-notes-in-progress": "正在恢复删除的笔记：{{count}}",
-    "undeleting-notes-finished-successfully": "恢复删除的笔记已成功完成。"
+    "undeleting-notes-finished-successfully": "恢复删除的笔记已成功完成。",
+    "delete-notes-in-progress-with-total": "已删除 {{progress}} 条笔记，共 {{total}} 条",
+    "erasing-notes": "正在清除笔记…"
   },
   "frontend_script_api": {
     "async_warning": "你正在将一个异步函数传递给 `api.runOnBackend()`，这可能无法按预期工作。\\n要么使该函数同步（通过移除 `async` 关键字），要么使用 `api.runAsyncOnBackendWithManualTransactionHandling()`。",
@@ -2422,7 +2438,8 @@
   },
   "svg": {
     "export_to_png": "无法将图表导出为PNG。",
-    "export_to_svg": "此图像无法导出为SVG。"
+    "export_to_svg": "此图像无法导出为SVG。",
+    "preview": "图表预览"
   },
   "code_theme": {
     "title": "外观",
@@ -2557,7 +2574,8 @@
       "move_column_to_edge": "将列移动到最左 / 最右",
       "selection": "选择",
       "select_column": "选中该列中的所有卡片",
-      "clear_selection": "清除所选内容"
+      "clear_selection": "清除所选内容",
+      "toggle_column": "折叠 / 展开列（在列标题上）"
     },
     "inbox": "收件箱",
     "inherited-column": "此卡片从模板或父笔记继承其列，可在来源处进行更改。",
@@ -2581,7 +2599,7 @@
     "create-column-at-start": "在开头新建列",
     "create-column-at-end": "在末尾新建列",
     "keep-column-collapsed": "保持列折叠",
-    "collapse-hint": "双击以折叠",
+    "collapse-hint": "双击或按空格键以折叠",
     "more-columns": "更多…",
     "collapse-all-columns": "折叠所有列",
     "expand-all-columns": "展开所有列",
@@ -2630,7 +2648,8 @@
     "cards-selected_other": "已选择 {{count}} 张卡片",
     "select-column-cards": "选择该列中的每一张卡片",
     "reset-selection": "重置选择",
-    "expand-column": "展开列"
+    "expand-column": "展开列",
+    "delete-column-notes_other": "同时删除此列中的{{count}}笔记"
   },
   "command_palette": {
     "tree-action-name": "树形：{{name}}",
@@ -3616,7 +3635,8 @@
       "previous_image": "上一张图片",
       "first_image": "第一张图片",
       "last_image": "最后一张图片"
-    }
+    },
+    "viewport": "图片视图"
   },
   "security": {
     "backend_scripting_title": "后端脚本",
@@ -4208,5 +4228,75 @@
   "attribute_menu": {
     "attributes": "属性",
     "not-set": "未设置"
+  },
+  "zoom_controls": {
+    "zoom_out": "缩小",
+    "reset": "重置缩放",
+    "zoom_in": "放大",
+    "hints": {
+      "zoom": "缩放",
+      "zoom_in": "放大",
+      "zoom_out": "缩小",
+      "reset_zoom": "重置缩放",
+      "pan": "平移",
+      "pan_up": "上",
+      "pan_down": "下",
+      "pan_left": "左",
+      "pan_right": "右",
+      "pan_fast": "快速平移"
+    }
+  },
+  "search_lint": {
+    "relation_needs_property": "关系指向一条笔记，因此无法比较是否相等。请改用 . 访问其属性。",
+    "text_needs_contains": "note.text 会同时搜索标题和内容，因此只能用 *=* 匹配。",
+    "content_not_ordered": "笔记内容为文本，无法排序。请改用 *=* 匹配。",
+    "compare_the_title": "比较标题",
+    "use_operator": "请使用 {{operator}}"
+  },
+  "search_completion": {
+    "note": "笔记标题、属性及相关笔记",
+    "operator_equal": "等于整个值",
+    "operator_not_equal": "不等于整个值",
+    "operator_contains": "包含",
+    "operator_starts_with": "开头是",
+    "operator_ends_with": "结尾是",
+    "operator_greater_than": "大于",
+    "operator_greater_or_equal": "大于或等于",
+    "operator_less_than": "小于",
+    "operator_less_or_equal": "小于或等于",
+    "operator_regex": "匹配正则表达式",
+    "operator_fuzzy_equal": "等于（允许拼写错误）",
+    "operator_fuzzy_contains": "包含（允许拼写错误）",
+    "property_content": "笔记的正文",
+    "property_raw_content": "笔记的正文（去除格式之前）",
+    "property_text": "标题或正文",
+    "property_parents": "继续应用于该笔记的父笔记",
+    "property_children": "继续应用于该笔记的子笔记",
+    "property_ancestors": "继续应用于该笔记的祖先笔记",
+    "property_labels": "后接标签名",
+    "property_relations": "后接关系名，再跟该笔记自身的属性",
+    "property_attribute_count": "标签和关系的数量（含继承的）",
+    "property_label_count": "标签的数量（含继承的）",
+    "property_relation_count": "关系的数量（含继承的）",
+    "property_relation_count_including_links": "关系的数量（含链接生成的关系）",
+    "property_owned_relation_count_including_links": "该笔记自身的关系数量（含链接生成的）",
+    "property_target_relation_count_including_links": "指向该笔记的关系数量（含链接生成的）",
+    "keyword_and": "两个条件都必须匹配",
+    "keyword_or": "任一条件匹配即可",
+    "keyword_not": "排除括号内条件所匹配的笔记",
+    "keyword_order_by": "按属性或标签对结果排序",
+    "keyword_limit": "仅保留前若干条结果",
+    "date_now": "当前日期和时间",
+    "date_today": "今天的日期",
+    "date_month": "当前月份",
+    "date_year": "当前年份",
+    "date_now_offset": "当前时间之前的任意秒数",
+    "date_today_offset": "今天之前的任意天数",
+    "date_month_offset": "本月之前的任意月数",
+    "date_year_offset": "今年之前的任意年数",
+    "label_marker": "引用标签。按 Enter 查看标签列表",
+    "label_marker_negated": "排除标签。按 Enter 查看标签列表",
+    "relation_marker": "引用关系。按 Enter 查看关系列表",
+    "relation_marker_negated": "排除关系。按 Enter 查看关系列表"
   }
 }
