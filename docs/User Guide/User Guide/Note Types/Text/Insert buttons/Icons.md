@@ -9,6 +9,9 @@ Icons just like the [note icons](Icons.md) can be inserted in the content of a n
     *   Font size
 *   Custom <a class="reference-link" href="../../../Basic%20Concepts%20and%20Features/Themes/Icon%20Packs.md">Icon Packs</a> are also supported.
     *   For emojis, prefer the Emoji functionality from <a class="reference-link" href="../Insert%20buttons.md">Insert buttons</a>.
+*   When an icon is clicked a floating toolbar appears with the following functions:
+    *   <span class="tn-icon bx bx-sticker"></span> which changes the icon.
+    *   <span class="tn-icon bx bx-reflect-horizontal"></span> which applies transforms: rotate (90 / 180 / 270) and flip horizontal/vertical. Only one transform can be used per icon.
 
 ## Usage
 
