@@ -56,7 +56,8 @@ describe("Board column context menu", () => {
             onMoveColumn?: (toIndex: number) => void,
             onSetLimit?: () => void,
             onCollapse?: (collapsed: boolean) => void,
-            onKeepCollapsed?: (keepCollapsed: boolean) => void
+            onKeepCollapsed?: (keepCollapsed: boolean) => void,
+            onSelectAll?: () => void
         } = {}
     ) {
         const show = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
@@ -71,6 +72,7 @@ describe("Board column context menu", () => {
         // by; a test answers only where that is what it is about.
         const withDefaults = Object.assign({
             getColumnTitle: (name: string) => name,
+            getColumnNoteIds: () => [ "cardA", "cardB" ],
             getColumnSort: () => ({ orderBy: undefined, isDescending: false }),
             getEffectiveColumnSort: () => ({ orderBy: undefined, isDescending: false }),
             getPromotedAttributes: () => []
@@ -88,7 +90,8 @@ describe("Board column context menu", () => {
             onMoveColumn: callbacks.onMoveColumn ?? (() => {}),
             onSetLimit: callbacks.onSetLimit ?? (() => {}),
             onCollapse: callbacks.onCollapse ?? (() => {}),
-            onKeepCollapsed: callbacks.onKeepCollapsed ?? (() => {})
+            onKeepCollapsed: callbacks.onKeepCollapsed ?? (() => {}),
+            onSelectAll: callbacks.onSelectAll ?? (() => {})
         });
 
         // The spy outlives one call, so it is the menu just opened that is read back.
@@ -125,6 +128,22 @@ describe("Board column context menu", () => {
 
         entry.handler?.(entry, {} as never);
         expect(onEditTitle).toHaveBeenCalled();
+    });
+
+    it("picks out every card the column draws, and offers nothing for an empty one", () => {
+        const onSelectAll = vi.fn();
+        const entry = openMenu({} as BoardApi, {}, { onSelectAll }).find(item =>
+            item && "uiIcon" in item && item.uiIcon === "bx bx-selection");
+        if (!entry || !("handler" in entry)) throw new Error("expected a select-all entry");
+
+        expect(entry.enabled).not.toBe(false);
+        entry.handler?.(entry, {} as never);
+        expect(onSelectAll).toHaveBeenCalled();
+
+        const empty = openMenu({ getColumnNoteIds: () => [] } as unknown as BoardApi).find(item =>
+            item && "uiIcon" in item && item.uiIcon === "bx bx-selection");
+        if (!empty || !("enabled" in empty)) throw new Error("expected a select-all entry");
+        expect(empty.enabled).toBe(false);
     });
 
     it("offers to archive a column, and to bring back one already archived", () => {
@@ -266,7 +285,8 @@ describe("Board column context menu", () => {
                 "bx bx-collapse-horizontal", "bx bx-lock-alt", "bx bx-sort-alt-2",
                 "bx bx-tachometer",
                 "bx bx-horizontal-left",
-                "bx bx-archive", "bx bx-trash"
+                "bx bx-archive", "bx bx-trash",
+                "bx bx-selection"
             ]);
     });
 
