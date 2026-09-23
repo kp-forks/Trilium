@@ -14,7 +14,7 @@ These remain formatted as paragraphs, with the glyph prepended to the text. A pa
 | Critical | `critical` | <span class="tn-icon bx bx-error-circle"></span> | `error-circle` |
 | Question | `question` | <span class="tn-icon bx bx-help-circle"></span> | `help-circle` |
 | Highlight | `highlight` | <span class="tn-icon bx bx-highlight"></span> | `highlight` |
-| Definition | `definition` | <span class="tn-icon bx bx-pin"></span> | `pin` |
+| Definition | `remember-for-later` | <span class="tn-icon bx bx-pin"></span> | `pin` |
 | Remember for later | `remember-for-later` | <span class="tn-icon bx bx-pin"></span> | `pin` |
 | Remember for blog | `remember-for-blog` | <span class="tn-icon bx bx-edit"></span> | `edit` |
 | Idea | `idea` | <span class="tn-icon bx bx-bulb"></span> | `bulb` |
