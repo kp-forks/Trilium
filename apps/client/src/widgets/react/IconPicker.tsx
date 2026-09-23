@@ -22,6 +22,15 @@ import Modal from "./Modal";
 /** The room one icon takes in the grid, which also decides how many fit across a given width. */
 export const ICON_SIZE = isMobile() ? 56 : 48;
 
+/** The same, for the compact picker, where the icons are drawn with far less room around them. */
+const COMPACT_ICON_SIZE = 40;
+
+/**
+ * How many rows of icons the compact picker shows. The quarter row is deliberate: a row cut off at
+ * the bottom edge is what tells the reader there is more to scroll to.
+ */
+const COMPACT_ROWS = 8.25;
+
 // One tooltip on the grid, delegated to the icon tiles. A module constant so the grid re-rendering
 // on every keystroke in the search does not tear the tooltip down and build it again each time.
 const ICON_TOOLTIP_CONFIG: Partial<Tooltip.Options> = {
@@ -43,6 +52,11 @@ interface IconPickerProps {
     resetText?: string;
     /** How many icons stand side by side; the host decides from the room it can give the grid. */
     columnCount: number;
+    /**
+     * Draw the grid smaller, for a host with less room to give than a menu of its own — the text
+     * editor's balloon, which stands over the note being written rather than beside it.
+     */
+    compact?: boolean;
 }
 
 /**
@@ -52,7 +66,8 @@ interface IconPickerProps {
  * It only reports what was picked — what that means is the host's own business, whether it is the
  * icon of a note or of something else entirely.
  */
-export default function IconPicker({ onSelect, onReset, resetText, columnCount }: IconPickerProps) {
+export default function IconPicker({ onSelect, onReset, resetText, columnCount, compact }: IconPickerProps) {
+    const iconSize = compact ? COMPACT_ICON_SIZE : ICON_SIZE;
     const iconListRef = useRef<HTMLDivElement>(null);
     const [ search, setSearch ] = useState<string>();
     const [ filterByPrefix, setFilterByPrefix ] = useState<string | null>(null);
@@ -64,7 +79,7 @@ export default function IconPicker({ onSelect, onReset, resetText, columnCount }
     return (
         // The legacy class is kept alongside the picker's own: the themes dress the icon grid
         // through it, having known the picker only as a part of the note icon widget.
-        <div className="icon-picker note-icon-widget">
+        <div className={clsx("icon-picker", "note-icon-widget", compact && "compact")}>
             <FilterRow
                 filterByPrefix={filterByPrefix}
                 search={search}
@@ -79,7 +94,10 @@ export default function IconPicker({ onSelect, onReset, resetText, columnCount }
                 class="icon-list"
                 ref={iconListRef}
                 style={{
-                    width: (columnCount * ICON_SIZE + 10),
+                    width: (columnCount * iconSize + 10),
+                    // The regular grid is as tall as the screen leaves room for (see the CSS); the
+                    // compact one is cut to a set number of rows.
+                    ...(compact && { height: COMPACT_ROWS * iconSize })
                 }}
                 onClick={(e) => {
                     // Make sure we are not clicking on something else than a button.
@@ -92,9 +110,9 @@ export default function IconPicker({ onSelect, onReset, resetText, columnCount }
                 {filteredIcons.length ? (
                     <Grid
                         columnCount={columnCount}
-                        columnWidth={ICON_SIZE}
+                        columnWidth={iconSize}
                         rowCount={Math.ceil(filteredIcons.length / columnCount)}
-                        rowHeight={ICON_SIZE}
+                        rowHeight={iconSize}
                         cellComponent={IconItemCell}
                         cellProps={{
                             filteredIcons,

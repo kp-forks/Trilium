@@ -506,6 +506,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             {iconPickerRequest && createPortal(
                 <IconPicker
                     columnCount={ICON_PICKER_COLUMNS}
+                    compact
                     onSelect={iconPickerRequest.onSelect}
                 />,
                 iconPickerRequest.container
@@ -515,7 +516,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
 }
 
 /** How wide the picker stands in the editor's balloon, in icons. */
-const ICON_PICKER_COLUMNS = 12;
+const ICON_PICKER_COLUMNS = 9;
 
 /**
  * Inserts an empty paragraph at the very top of the document and places the cursor in it, giving the
