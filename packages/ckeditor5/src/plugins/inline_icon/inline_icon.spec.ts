@@ -2,9 +2,10 @@ import {
     _getModelData as getModelData, _getViewData as getViewData, _setModelData as setModelData,
     type ButtonView, type ClassicEditor, ContextualBalloon, GeneralHtmlSupport, Paragraph
 } from "ckeditor5";
-import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import editorStylesheetUrl from "ckeditor5/ckeditor5.css?url";
+import { beforeAll, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
-import { createTestEditor } from "../../../test/editor-kit.js";
+import { createTestEditor, getEditorElement } from "../../../test/editor-kit.js";
 import { installGlobMock } from "../../../test/globals-test-kit.js";
 import InlineIcon from "./inline_icon.js";
 import InlineIconEditing from "./inline_icon_editing.js";
@@ -106,6 +107,21 @@ describe("the balloon InlineIcon picks in", () => {
         expect(container.classList.contains("ck-reset_all-excluded")).toBe(true);
     });
 
+    it("aims at the caret, read afresh on every placing", () => {
+        const balloon = editor.plugins.get(ContextualBalloon);
+        setModelData(editor.model, "<paragraph>Hello[] there</paragraph>");
+
+        pressInsertIcon(editor);
+
+        const { target } = balloon.getPositionOptions() ?? {};
+        expect(typeof target).toBe("function");
+
+        const caret = typeof target === "function" ? target() : target;
+        expect(caret).toBeInstanceOf(Range);
+        expect((caret as Range).collapsed).toBe(true);
+        expect((caret as Range).startContainer.textContent).toBe("Hello there");
+    });
+
     it("inserts what the host reports, and lets go of the picker", () => {
         pressInsertIcon(editor);
 
@@ -176,6 +192,46 @@ describe("the balloon InlineIcon picks in", () => {
     });
 });
 
+describe("where the balloon holding the picker ends up", () => {
+    // Real geometry needs the editor's own stylesheet, which the specs otherwise do without: it is
+    // what makes the balloon panel an absolutely positioned box the placing can move.
+    beforeAll(() => new Promise<void>((resolve, reject) => {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = editorStylesheetUrl;
+        link.onload = () => resolve();
+        link.onerror = () => reject(new Error("the editor stylesheet did not load"));
+        document.head.appendChild(link);
+    }));
+
+    beforeEach(() => installPaintingHost());
+
+    it("places itself again once the host has painted, so the arrow finds the caret", async () => {
+        const editor = await createTestEditor([ Paragraph, InlineIcon ]);
+        getEditorElement(editor).style.cssText = "width: 300px; margin: 200px 0 0 20px;";
+        setModelData(editor.model, "<paragraph>Hello[] there</paragraph>");
+
+        pressInsertIcon(editor);
+
+        const balloon = editor.plugins.get(ContextualBalloon);
+        const placedWhileEmpty = balloonRect(balloon).left;
+
+        // The observer delivers on a later frame, as it does for a host that paints through its
+        // own renderer rather than synchronously.
+        await new Promise((resolve) => setTimeout(resolve, 100));
+
+        const view = editor.editing.view;
+        const range = view.document.selection.getFirstRange();
+        if (!range) throw new Error("the caret has no range");
+        const caret = view.domConverter.viewRangeToDom(range).getBoundingClientRect();
+        const panel = balloonRect(balloon);
+
+        expect(panel.width).toBeGreaterThan(PAINTED_PICKER_WIDTH);
+        expect(Math.abs(arrowX(balloon.view.position, panel) - caret.x)).toBeLessThan(20);
+        expect(panel.left).not.toBe(placedWhileEmpty);
+    });
+});
+
 describe("InlineIcon under the shipped General HTML Support configuration", () => {
     // `textNoteHtmlSupportEnabled` ships off, which leaves GHS with an empty allow-list: a span
     // carrying nothing but classes is dropped unless a plugin claims it.
@@ -204,4 +260,43 @@ function pressInsertIcon(editor: ClassicEditor) {
 
 function escapeKeyDown() {
     return new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true });
+}
+
+/** How wide the stand-in for the picker is, which the balloon has to be placed around. */
+const PAINTED_PICKER_WIDTH = 260;
+
+/** A host that paints something the picker's size into the element the editor gives it. */
+function installPaintingHost() {
+    installGlobMock({
+        getComponentByEl: () => ({
+            showIconPicker({ container }: { container: HTMLElement }) {
+                const painted = document.createElement("div");
+                painted.style.cssText = `width: ${PAINTED_PICKER_WIDTH}px; height: 400px;`;
+                container.appendChild(painted);
+
+                return () => painted.remove();
+            }
+        })
+    });
+}
+
+function balloonRect(balloon: ContextualBalloon) {
+    const element = balloon.view.element;
+    if (!element) {
+        throw new Error("the balloon has no element");
+    }
+
+    return element.getBoundingClientRect();
+}
+
+/** Where the theme draws the arrow: centred for `arrow_n`/`arrow_s`, else 16px in from an edge. */
+function arrowX(position: string | undefined, panel: DOMRect) {
+    if (position?.endsWith("_nw") || position?.endsWith("_sw")) {
+        return panel.left + 16;
+    }
+    if (position?.endsWith("_ne") || position?.endsWith("_se")) {
+        return panel.right - 16;
+    }
+
+    return panel.left + panel.width / 2;
 }

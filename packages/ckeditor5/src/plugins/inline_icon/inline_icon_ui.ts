@@ -1,6 +1,6 @@
 import {
-    BalloonPanelView, ButtonView, clickOutsideHandler, type Command, ContextualBalloon,
-    type Editor, KeystrokeHandler, type Locale, Plugin, View
+    ButtonView, clickOutsideHandler, type Command, ContextualBalloon, type Editor,
+    KeystrokeHandler, type Locale, Plugin, View, type ViewRange
 } from "ckeditor5";
 
 import insertIconIcon from "../../icons/insert-icon.svg?raw";
@@ -27,6 +27,8 @@ export default class InlineIconUI extends Plugin {
     private _balloon: ContextualBalloon = this.editor.plugins.get(ContextualBalloon);
     private _pickerView: IconPickerView | null = null;
     private _releasePicker: (() => void) | null = null;
+    private _pickerResize: ResizeObserver | null = null;
+    private _replacePicker = 0;
 
     init() {
         const editor = this.editor;
@@ -69,9 +71,9 @@ export default class InlineIconUI extends Plugin {
     private _show() {
         const editor = this.editor;
         const editorEl = editor.editing.view.getDomRoot();
-        const position = getBalloonPosition(editor);
+        const shownAt = editor.editing.view.document.selection.getFirstRange();
 
-        if (this._pickerView || !editorEl || !position) {
+        if (this._pickerView || !editorEl || !shownAt) {
             return;
         }
 
@@ -92,7 +94,7 @@ export default class InlineIconUI extends Plugin {
             callback: () => this._hide()
         });
 
-        this._balloon.add({ view, position });
+        this._balloon.add({ view, position: getBalloonPosition(editor, shownAt) });
         this._pickerView = view;
 
         const container = view.element;
@@ -117,12 +119,32 @@ export default class InlineIconUI extends Plugin {
         }
 
         this._releasePicker = release;
+
+        // The host paints into the container only once the call above has returned, and a balloon
+        // placed while it is still empty puts its arrow half the picker's width away from the
+        // caret. Place it again whenever what it holds changes size, which a narrowed grid needs
+        // as much as the first paint does. The placing waits for the next frame: it can itself
+        // change the width the container is given, and Chrome reports that as an observer loop.
+        this._pickerResize = new ResizeObserver(() => {
+            cancelAnimationFrame(this._replacePicker);
+
+            this._replacePicker = requestAnimationFrame(() => {
+                /* v8 ignore next -- disconnecting takes the pending frames with it */
+                if (this._pickerView) {
+                    this._balloon.updatePosition();
+                }
+            });
+        });
+        this._pickerResize.observe(container);
     }
 
     private _hide() {
         const view = this._pickerView;
 
         this._pickerView = null;
+        this._pickerResize?.disconnect();
+        this._pickerResize = null;
+        cancelAnimationFrame(this._replacePicker);
         this._releasePicker?.();
         this._releasePicker = null;
 
@@ -130,6 +152,7 @@ export default class InlineIconUI extends Plugin {
             return;
         }
 
+        /* v8 ignore next -- a picker this plugin still holds is one the balloon has */
         if (this._balloon.hasView(view)) {
             this._balloon.remove(view);
         }
@@ -178,24 +201,16 @@ class IconPickerView extends View {
 
 }
 
-/** Where the balloon points: the text the caret is in, wherever there is room for it. */
-function getBalloonPosition(editor: Editor) {
+/** Where the balloon points: the caret, read afresh on every placing, as the emoji picker does. */
+function getBalloonPosition(editor: Editor, shownAt: ViewRange) {
     const view = editor.editing.view;
-    const range = view.document.selection.getFirstRange();
-
-    /* v8 ignore next 3 -- a rendered document always holds a range for the caret */
-    if (!range) {
-        return null;
-    }
-
-    const { southArrowNorth, southArrowNorthWest, southArrowNorthEast, northArrowSouth,
-        northArrowSouthWest, northArrowSouthEast } = BalloonPanelView.defaultPositions;
 
     return {
-        target: view.domConverter.viewRangeToDom(range),
-        positions: [
-            southArrowNorth, southArrowNorthWest, southArrowNorthEast,
-            northArrowSouth, northArrowSouthWest, northArrowSouthEast
-        ]
+        target: () => {
+            /* v8 ignore next -- a rendered document always holds a range for the caret */
+            const range = view.document.selection.getFirstRange() ?? shownAt;
+
+            return view.domConverter.viewRangeToDom(range);
+        }
     };
 }
