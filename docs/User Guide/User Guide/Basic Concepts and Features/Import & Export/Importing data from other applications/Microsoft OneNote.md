@@ -29,7 +29,7 @@ The following features are preserved by Trilium during the import process:
 *   Hand-drawing is preserved and displayed as an SVG image inside the note
     *   OneNote's default color (black) is special since it also renders as white for dark themes. Since v0.104.1, this is also supported by using a special SVG tweak which reacts to light/dark themes.
 *   Links between other imported pages are converted to <a class="reference-link" href="../../../Note%20Types/Text/Links/Internal%20(reference)%20links.md">Internal (reference) links</a> if the text of the link matches the name of the page, or plain links otherwise. If the pages are not part of the import, the original `onenote:` link is kept.
-*   Tags (apart from to-do lists) are mildly preserved by converting them to emojis. This loses their searchability. Since Trilium has no concept of inline attributes or badges, this is considered a middle-ground.
+*   Tags (apart from to-do lists) are preserved by converting them to inline icons, which are searchable by the icon's name and can be recoloured like any other icon. The Project A/B and numbered priority tags keep an emoji instead, as the icon pack has no letters or numerals.
 
 Regarding the note structure:
 
