@@ -1,13 +1,14 @@
 import {
     _getModelData as getModelData, _getViewData as getViewData, _setModelData as setModelData,
     type ButtonView, type ClassicEditor, ContextualBalloon, FontBackgroundColor, FontColor,
-    GeneralHtmlSupport, Paragraph
+    GeneralHtmlSupport, Link, Paragraph
 } from "ckeditor5";
 import editorStylesheetUrl from "ckeditor5/ckeditor5.css?url";
 import { beforeAll, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import { createTestEditor, getEditorElement } from "../../../test/editor-kit.js";
 import { installGlobMock } from "../../../test/globals-test-kit.js";
+import ReferenceLink from "../referencelink.js";
 import InlineIcon from "./inline_icon.js";
 import InlineIconEditing from "./inline_icon_editing.js";
 import InlineIconUI from "./inline_icon_ui.js";
@@ -79,6 +80,27 @@ describe("InlineIcon", () => {
         expect(command?.isEnabled).toBe(false);
     });
 
+});
+
+describe("a reference link pasted from a rendered page", () => {
+    // The editing view draws a reference link with an icon inside it, so that is what lands on the
+    // clipboard. The icon is not the link's to carry — a reference holds no children — and it has
+    // to be dropped rather than split out to sit beside the link.
+    it("loses the icon the renderer drew inside it, leaving the link alone", async () => {
+        installGlobMock({
+            getComponentByEl: () => ({ loadReferenceLinkTitle: () => Promise.resolve() }),
+            getReferenceLinkTitleSync: () => "Some note",
+            getReferenceLinkTitle: async () => "Some note"
+        });
+
+        const editor = await createTestEditor([ Paragraph, Link, ReferenceLink, InlineIcon ]);
+
+        editor.setData(`<p>See <a class="reference-link" href="#root/abc">`
+            + `<span><span class="tn-icon bx bx-file"></span>Some note</span></a> for more.</p>`);
+
+        expect(getModelData(editor.model, { withoutSelection: true }))
+            .toBe(`<paragraph>See <reference href="#root/abc"></reference> for more.</paragraph>`);
+    });
 });
 
 describe("an icon's colour", () => {
