@@ -88,7 +88,9 @@ function ShareBadge() {
         <BadgeWithDropdown
             icon={SHARE_BADGES[scope].icon}
             text={t(SHARE_BADGES[scope].text)}
-            tooltip={scope === "preview" ? t("breadcrumb_badges.shared_preview_description") : undefined}
+            tooltip={scope === "preview"
+                ? t("breadcrumb_badges.shared_preview_description", { format: t("export.format_share_name") })
+                : undefined}
             className="share-badge"
         >
             <FormListItem
