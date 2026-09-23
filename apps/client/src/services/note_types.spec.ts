@@ -217,12 +217,9 @@ describe("getBlankNoteTypes (via getNoteTypeItems)", () => {
             const types = cmdItems.map((i: any) => i.type);
             expect(types).toContain("llmChat");
 
-            // llmChat is isBeta only -> exactly one BETA badge (title, no className).
+            // llmChat is neither new nor beta, so it carries no badge.
             const llmChat = cmdItems.find((i: any) => i.type === "llmChat");
-            expect(llmChat.badges).toHaveLength(1);
-            expect(llmChat.badges[0].className).toBeUndefined();
-            expect(typeof llmChat.badges[0].title).toBe("string");
-            expect(llmChat.badges[0].title.length).toBeGreaterThan(0);
+            expect(llmChat.badges).toEqual([]);
         } finally {
             restore();
         }
