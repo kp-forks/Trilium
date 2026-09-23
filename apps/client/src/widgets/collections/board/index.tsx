@@ -341,6 +341,10 @@ const BOARD_HINTS: ShortcutHintDefinition = [
     {
         titleKey: "board_view.hints.selection",
         hints: [
+            {
+                keys: [ "Shift+Down", "Shift+Up" ],
+                labelKey: "board_view.hints.extend_selection"
+            },
             { keys: [ "Ctrl+A" ], labelKey: "board_view.hints.select_column" },
             { keys: [ "Escape" ], labelKey: "board_view.hints.clear_selection" }
         ]

@@ -529,6 +529,48 @@ describe("Board keyboard", () => {
         });
     });
 
+    describe("picking out a range with the arrows", () => {
+        it("grows the range on its way down the column and shrinks it on the way back", async () => {
+            const board = await renderBoard(undefined, undefined, [ "To Do" ]);
+            focusCard(board, 0, 0);
+
+            expect(press(board, "ArrowDown", { shiftKey: true })).toBe("Second");
+            expect(pickedNames(board)).toEqual([ "First", "Second" ]);
+
+            expect(press(board, "ArrowDown", { shiftKey: true })).toBe("Fourth");
+            expect(pickedNames(board)).toEqual([ "First", "Second", "Fourth" ]);
+
+            // The button under the cards holds none, so the press stops on the last of them.
+            expect(press(board, "ArrowDown", { shiftKey: true })).toBe("Fourth");
+            expect(pickedNames(board)).toEqual([ "First", "Second", "Fourth" ]);
+
+            // The anchor stays on the card the range began at, so the way back shrinks that same
+            // range rather than opening a new one downwards.
+            expect(press(board, "ArrowUp", { shiftKey: true })).toBe("Second");
+            expect(pickedNames(board)).toEqual([ "First", "Second" ]);
+
+            expect(press(board, "ArrowUp", { shiftKey: true })).toBe("First");
+            expect(pickedNames(board)).toEqual([ "First" ]);
+
+            // As does the header above them.
+            expect(press(board, "ArrowUp", { shiftKey: true })).toBe("First");
+            expect(pickedNames(board)).toEqual([ "First" ]);
+        });
+
+        /**
+         * A range is measured against one column, so an anchor left in another names no place in
+         * the list the press is counted against.
+         */
+        it("begins a range at the focused card when the one picked out stands elsewhere", async () => {
+            const board = await renderBoard();
+            pick(board, 1, 0);
+            focusCard(board, 0, 0);
+
+            expect(press(board, "ArrowDown", { shiftKey: true })).toBe("Second");
+            expect(pickedNames(board)).toEqual([ "First", "Second" ]);
+        });
+    });
+
     describe("moving what is focused", () => {
         /**
          * A collapsed column draws no cards, so the card carried into it would have nothing to be

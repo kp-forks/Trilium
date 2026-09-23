@@ -21,6 +21,9 @@ const ITEM_MOVE_KEYS = [ "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Hom
 /** With Ctrl and Alt, these carry the column focus is in, from wherever inside it focus sits. */
 const COLUMN_MOVE_KEYS = [ "ArrowLeft", "ArrowRight", "Home", "End" ];
 
+/** With Shift, these take a range of cards along a column. */
+const RANGE_KEYS = [ "ArrowUp", "ArrowDown" ];
+
 /**
  * A place on the board that can hold focus.
  *
@@ -281,6 +284,22 @@ export function useBoardKeyboard({
         // focus: it would otherwise pull it back out of whatever the key opened.
         pendingFocus.current = null;
 
+        // Shift with the arrows takes the selection one card further along the column, or one card
+        // back towards where the range began, and carries focus with it.
+        if (e.shiftKey && RANGE_KEYS.includes(e.key)) {
+            // A header and the button under a column hold no card, so a range starts at neither.
+            // The press is left to the browser there, as it was before the board answered for it.
+            if (spot.kind !== "item") return;
+
+            // Taken whether or not it leads anywhere: a card at the end of its column is no reason
+            // to let the key scroll the board instead.
+            take(e);
+            if (extendSelection(container, spot, e.key, { columns, api, selection })) {
+                lastSpot.current = walk(container, spot, e.key) ?? spot;
+            }
+            return;
+        }
+
         if (NAVIGATION_KEYS.includes(e.key)) {
             // The plain arrows would otherwise scroll the page past the end of a column.
             take(e);
@@ -429,6 +448,11 @@ function shiftIsOurs(e: KeyboardEvent) {
         return true;
     }
 
+    // Shift with the up and down arrows takes a range of cards along a column.
+    if (!e.ctrlKey && !e.altKey && RANGE_KEYS.includes(e.key)) {
+        return true;
+    }
+
     return e.ctrlKey && CARD_END_KEYS.includes(e.key);
 }
 
@@ -454,6 +478,39 @@ function spotOf(container: HTMLElement, element: Element | null): Spot | null {
     if (!card) return null;
 
     return { kind: "item", column, item: indexOfCard(card as HTMLElement, columnElement) };
+}
+
+/**
+ * Takes the selection one card along the column from the card focus is on, answering with whether
+ * it reached one. Focus follows only where it did, so the card at the end of a column keeps it
+ * rather than the press stepping onto the header or the button under the cards.
+ *
+ * The anchor stays where the range began, so a press the other way shrinks the same range rather
+ * than starting a new one. A range that is not already running through this column begins at the
+ * focused card, which the press then takes along with the card it steps onto.
+ */
+function extendSelection(
+    container: HTMLElement,
+    spot: Extract<Spot, { kind: "item" }>,
+    key: string,
+    { columns, api, selection }: Pick<BoardKeyboardOptions, "columns" | "api" | "selection">
+) {
+    const next = destination(container, spot, key);
+    // Up from the first card reaches the header and down from the last the button under them.
+    // Neither holds a card, so there is nothing to extend onto.
+    if (next?.kind !== "item") return false;
+
+    const ordered = api.getColumnNoteIds(columns[spot.column]);
+    const from = ordered[spot.item];
+    const to = ordered[next.item];
+    if (from === undefined || to === undefined) return false;
+
+    if (selection.anchor === null || !ordered.includes(selection.anchor)) {
+        selection.selectOnly(from);
+    }
+
+    selection.selectRange(ordered, to);
+    return true;
 }
 
 /**
