@@ -2,13 +2,13 @@ import {
     Command, type Editor, ModelElement, type ModelWriter, Plugin, toWidget, type ViewElement, Widget
 } from "ckeditor5";
 
-/** The model element an icon is; it draws whatever {@link ICON_CLASS} names. */
+/** The model element for an icon; the glyph comes from {@link ICON_CLASS}. */
 export const ICON = "inlineIcon";
 
 /** The icon pack's own class, such as `bx bx-star`. */
 const ICON_CLASS = "iconClass";
 
-/** The class every icon in the app wears beside its pack's, and the one the upcast matches on. */
+/** The class on every icon in the app, beside the pack's own, and what the upcast matches. */
 const MARKER_CLASS = "tn-icon";
 
 export const INSERT_ICON_COMMAND = "insertIcon";
@@ -16,13 +16,13 @@ export const INSERT_ICON_COMMAND = "insertIcon";
 export const ICON_TRANSFORM_COMMAND = "iconTransform";
 
 /**
- * The classes that turn or mirror a glyph, which the application already writes by hand — the right
- * pane's icon is `bx bx-sidebar bx-flip-horizontal`. Boxicons names them, but the rules are not
- * scoped to a pack, so they apply to any icon.
+ * The classes that rotate or mirror a glyph. The application already writes them by hand — the
+ * right pane's icon is `bx bx-sidebar bx-flip-horizontal` — and the rules in
+ * `boxicons-compat.css` are not scoped to a pack, so they apply to any icon.
  *
- * Each sets `transform`, so two never combine: whichever the stylesheet declares last wins. An icon
- * therefore carries one of these or none, which is why {@link IconTransformCommand} holds a value
- * rather than five independent flags.
+ * Each rule sets `transform` at the same specificity, so two classes never combine: the one
+ * declared last in the stylesheet applies. An icon therefore has one of these or none, which is
+ * why {@link IconTransformCommand} stores a single value rather than five flags.
  */
 export const ICON_TRANSFORMS = [
     "bx-rotate-90",
@@ -35,11 +35,11 @@ export const ICON_TRANSFORMS = [
 export type IconTransform = typeof ICON_TRANSFORMS[number];
 
 /**
- * The icon editing feature: an inline widget that stands for one icon of one installed icon pack,
- * written as `<span class="tn-icon bx bx-star"></span>` — the form icons take everywhere else in
- * the application, so the share theme and the in-app help draw it without knowing about the editor.
+ * The icon editing feature: an inline widget for one icon of an installed icon pack, stored as
+ * `<span class="tn-icon bx bx-star"></span>` — the markup icons use everywhere else in the
+ * application, so the share theme and the in-app help render it with no editor-specific code.
  *
- * Which icon to insert is the {@link InlineIconUI} plugin's business; this one only inserts it.
+ * {@link InlineIconUI} provides the picker; this plugin only performs the insert.
  */
 export default class InlineIconEditing extends Plugin {
 
@@ -59,7 +59,7 @@ export default class InlineIconEditing extends Plugin {
             isInline: true,
             // Self-contained: the caret cannot be put inside it, and it is selected as a unit.
             isObject: true,
-            // Colouring needs no converter of ours; CKEditor's own carry these two.
+            // CKEditor's own converters handle these two, so colouring needs none here.
             allowAttributes: [ ICON_CLASS, "fontColor", "fontBackgroundColor", "fontSize" ]
         });
 
@@ -83,8 +83,8 @@ export default class InlineIconEditing extends Plugin {
         });
 
         editor.conversion.for("editingDowncast").elementToElement({
-            // Naming the attribute is what converts the element again when it changes, which is how
-            // a transform applied through the toolbar reaches the view.
+            // Naming the attribute converts the element again when it changes, which is how a
+            // transform set from the toolbar reaches the view.
             model: { name: ICON, attributes: [ ICON_CLASS ] },
             view: (modelElement, { writer }) => {
                 const widget = toWidget(
@@ -93,8 +93,8 @@ export default class InlineIconEditing extends Plugin {
                     { label: editor.t("Icon") }
                 );
 
-                // What InlineIconToolbar recognizes an icon by, since the widget's own element
-                // carries only the pack's classes.
+                // How InlineIconToolbar identifies an icon: the widget element itself has only
+                // the pack's classes.
                 writer.setCustomProperty(ICON, true, widget);
 
                 return widget;
@@ -108,7 +108,7 @@ export default class InlineIconEditing extends Plugin {
 }
 
 /**
- * Puts one icon where the selection is, replacing an icon that selection is already on. See
+ * Inserts one icon at the selection, replacing an icon that selection is already on. See
  * {@link InlineIconEditing}.
  */
 class InsertIconCommand extends Command {
@@ -149,8 +149,8 @@ class InsertIconCommand extends Command {
 }
 
 /**
- * Turns or mirrors the selected icon by rewriting the transform among its classes, of which
- * {@link ICON_TRANSFORMS} explains there is at most one. `null` takes the icon back to upright.
+ * Rotates or mirrors the selected icon by rewriting the transform among its classes, of which
+ * there is at most one (see {@link ICON_TRANSFORMS}). `null` restores the icon to upright.
  */
 class IconTransformCommand extends Command {
 
@@ -184,14 +184,14 @@ class IconTransformCommand extends Command {
 
 }
 
-/** The pack's classes, which is everything the element wears apart from {@link MARKER_CLASS}. */
+/** The pack's classes: every class on the element apart from {@link MARKER_CLASS}. */
 function readIconClass(viewElement: ViewElement) {
     return Array.from(viewElement.getClassNames())
         .filter((className) => className !== MARKER_CLASS)
         .join(" ");
 }
 
-/** What the element wears in the view: the marker class, then the pack's own. */
+/** The classes the element gets in the view: the marker class, then the pack's own. */
 function viewClasses(modelElement: ModelElement) {
     const iconClass = modelElement.getAttribute(ICON_CLASS);
 
@@ -205,7 +205,7 @@ function selectedIcon(editor: Editor) {
     return selected?.is("element", ICON) ? selected : null;
 }
 
-/** The transform an icon carries, or `null` where it is upright. */
+/** The transform class on an icon, or `null` where it is upright. */
 function readTransform(icon: ModelElement): IconTransform | null {
     return readClasses(icon).find(isTransform) ?? null;
 }

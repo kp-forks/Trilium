@@ -72,12 +72,12 @@ export default class InlineIconToolbar extends Plugin {
 
 }
 
-/** A list item's model, which carries the transform its button stands for. */
+/** A list item's model; `_iconTransform` is the transform its button applies. */
 interface TransformItemModel {
     _iconTransform: IconTransform | null;
 }
 
-/** What the dropdown offers: upright, then each transform {@link ICON_TRANSFORMS} names. */
+/** The dropdown's items: upright, then each transform in {@link ICON_TRANSFORMS}. */
 function transformItems(command: Command, t: LocaleTranslate) {
     const labels: Record<IconTransform, string> = {
         "bx-rotate-90": t("Rotate 90°"),
@@ -100,8 +100,8 @@ function transformItems(command: Command, t: LocaleTranslate) {
 }
 
 /**
- * One choice, marked while the selected icon carries it. They are radio items rather than
- * checkboxes because the transforms exclude one another (see {@link ICON_TRANSFORMS}).
+ * One choice, marked while the selected icon has that transform. They are radio items rather
+ * than checkboxes because the transforms exclude one another (see {@link ICON_TRANSFORMS}).
  */
 function transformItem(
     command: Command,

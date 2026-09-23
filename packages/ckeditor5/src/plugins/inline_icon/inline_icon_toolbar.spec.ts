@@ -9,7 +9,7 @@ import { createTestEditor } from "../../../test/editor-kit.js";
 import InlineIcon from "./inline_icon.js";
 import InlineIconToolbar from "./inline_icon_toolbar.js";
 
-/** The shape of the repository's private register, which is where a definition can be read back. */
+/** The shape of the repository's private register, where a definition can be read back. */
 interface ToolbarDefinitions {
     _toolbarDefinitions: Map<string, {
         itemsConfig: string[];
@@ -24,7 +24,7 @@ describe("InlineIconToolbar", () => {
         editor = await createTestEditor([ Paragraph, InlineIcon ]);
     });
 
-    /** Puts one icon in the text and selects it, which is what the toolbar answers to. */
+    /** Puts one icon in the text and selects it, which is what the toolbar responds to. */
     function selectIcon(iconClass: string) {
         setModelData(
             editor.model,
@@ -32,7 +32,7 @@ describe("InlineIconToolbar", () => {
         );
     }
 
-    /** What the note holds for that icon, which is where a transform ends up. */
+    /** What the note stores for that icon, which is where a transform ends up. */
     function storedIcon(iconClass: string) {
         return `<p>Press&nbsp;<span class="tn-icon ${iconClass}"></span></p>`;
     }
@@ -54,7 +54,7 @@ describe("InlineIconToolbar", () => {
         return dropdown;
     }
 
-    /** The list's buttons, which carry the labels and the mark on the transform in force. */
+    /** The list's buttons, with the labels and the mark on the transform in force. */
     function transformButtons(dropdown: DropdownView) {
         return Array.from(dropdown.listView?.items ?? [])
             .filter((item): item is ListItemView => item instanceof ListItemView)
@@ -105,8 +105,8 @@ describe("InlineIconToolbar", () => {
         editor.execute("iconTransform", { transform: "bx-flip-horizontal" });
         expect(editor.getData()).toBe(storedIcon("bx bx-sidebar bx-flip-horizontal"));
 
-        // One transform replaces another rather than joining it: the two would fight over
-        // `transform` in the stylesheet.
+        // One transform replaces another rather than joining it: both set `transform` in the
+        // stylesheet, so only the rule declared last would apply.
         editor.execute("iconTransform", { transform: "bx-rotate-90" });
         expect(editor.getData()).toBe(storedIcon("bx bx-sidebar bx-rotate-90"));
 

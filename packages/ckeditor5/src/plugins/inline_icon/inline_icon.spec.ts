@@ -97,9 +97,9 @@ describe("InlineIcon", () => {
 });
 
 describe("a reference link pasted from a rendered page", () => {
-    // The editing view draws a reference link with an icon inside it, so that is what lands on the
-    // clipboard. The icon is not the link's to carry — a reference holds no children — and it has
-    // to be dropped rather than split out to sit beside the link.
+    // The editing view renders a reference link with an icon inside it, so that is what lands on
+    // the clipboard. A reference takes no children, so the icon is dropped rather than split out
+    // beside the link.
     it("loses the icon the renderer drew inside it, leaving the link alone", async () => {
         installGlobMock({
             getComponentByEl: () => ({ loadReferenceLinkTitle: () => Promise.resolve() }),
@@ -151,7 +151,7 @@ describe("an icon's colour", () => {
 
         editor.execute("insertIcon", { iconClass: "bx bx-cog" });
 
-        // Inside the colour the text already wears, rather than beside it in a colour of its own.
+        // Inside the colour the text already has, rather than beside it in a colour of its own.
         expect(editor.getData()).toBe(`<p><span style="color:rgb(255,0,0);">red`
             + `<span class="tn-icon bx bx-cog"></span></span></p>`);
     });
@@ -174,8 +174,8 @@ describe("an icon's size", () => {
         expect(editor.getData())
             .toBe(`<p>a<span class="text-big"><span class="tn-icon bx bx-cog"></span></span>b</p>`);
 
-        // A line sized as a whole stays one run. An icon the size cannot be put on splits it in
-        // two and is stranded between the halves at the size it started at.
+        // A line sized as a whole stays one run. An icon that the size cannot apply to splits the
+        // run in two and stays between the halves at its original size.
         editor.setData(`<p>a<span class="tn-icon bx bx-cog"></span>b</p>`);
         editor.model.change((writer) => {
             const root = editor.model.document.getRoot();
@@ -223,7 +223,7 @@ describe("the balloon InlineIcon picks in", () => {
         expect(balloon.visibleView).not.toBeNull();
         expect(balloon.view.element?.contains(container)).toBe(true);
         // Everything a balloon shows sits inside the body collection's `ck-reset_all`, which would
-        // strip the application's own styling off the picker.
+        // strip the application's own styling from the picker.
         expect(container.classList.contains("ck-reset_all-excluded")).toBe(true);
     });
 
@@ -259,7 +259,7 @@ describe("the balloon InlineIcon picks in", () => {
         );
 
         pressChangeIcon(editor);
-        // The picker points at the icon rather than at a caret, since that is what is selected.
+        // The picker points at the icon rather than at a caret, since the icon is what is selected.
         const { target } = editor.plugins.get(ContextualBalloon).getPositionOptions() ?? {};
         const at = typeof target === "function" ? target() : target;
 
@@ -294,8 +294,8 @@ describe("the balloon InlineIcon picks in", () => {
         pressInsertIcon(editor);
         const container = showIconPicker.mock.calls[0][0].container;
 
-        // Esc reaches the editor only while the caret still has focus; once the picker has taken
-        // it, the balloon's own element is where the key lands.
+        // Esc reaches the editor only while the caret has focus; once the picker has taken focus,
+        // the key lands on the balloon's own element.
         container.dispatchEvent(escapeKeyDown());
         expect(release).toHaveBeenCalledOnce();
         expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
@@ -333,8 +333,8 @@ describe("the balloon InlineIcon picks in", () => {
 });
 
 describe("where the balloon holding the picker ends up", () => {
-    // Real geometry needs the editor's own stylesheet, which the specs otherwise do without: it is
-    // what makes the balloon panel an absolutely positioned box the placing can move.
+    // Real geometry needs the editor's own stylesheet, which the specs otherwise do without: it
+    // makes the balloon panel an absolutely positioned box that repositioning can move.
     beforeAll(() => new Promise<void>((resolve, reject) => {
         const link = document.createElement("link");
         link.rel = "stylesheet";
@@ -356,8 +356,8 @@ describe("where the balloon holding the picker ends up", () => {
         const balloon = editor.plugins.get(ContextualBalloon);
         const placedWhileEmpty = balloonRect(balloon).left;
 
-        // The observer delivers on a later frame, as it does for a host that paints through its
-        // own renderer rather than synchronously.
+        // The observer fires on a later frame, as it does for a host that renders through its own
+        // renderer rather than synchronously.
         await new Promise((resolve) => setTimeout(resolve, 100));
 
         const view = editor.editing.view;
@@ -374,7 +374,7 @@ describe("where the balloon holding the picker ends up", () => {
 
 describe("InlineIcon under the shipped General HTML Support configuration", () => {
     // `textNoteHtmlSupportEnabled` ships off, which leaves GHS with an empty allow-list: a span
-    // carrying nothing but classes is dropped unless a plugin claims it.
+    // with nothing but classes is dropped unless a plugin models it.
     it("keeps an icon that the plugin models, and loses one that nothing does", async () => {
         const withPlugin = await createTestEditor([ Paragraph, InlineIcon, GeneralHtmlSupport ], {
             htmlSupport: { allow: [] }
@@ -411,10 +411,10 @@ function escapeKeyDown() {
     return new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true });
 }
 
-/** How wide the stand-in for the picker is, which the balloon has to be placed around. */
+/** How wide the stand-in for the picker is, which the balloon is placed around. */
 const PAINTED_PICKER_WIDTH = 260;
 
-/** A host that paints something the picker's size into the element the editor gives it. */
+/** A host that renders something the picker's size into the element the editor passes it. */
 function installPaintingHost() {
     installGlobMock({
         getComponentByEl: () => ({
@@ -438,7 +438,7 @@ function balloonRect(balloon: ContextualBalloon) {
     return element.getBoundingClientRect();
 }
 
-/** Where the theme draws the arrow: centred for `arrow_n`/`arrow_s`, else 16px in from an edge. */
+/** Where the theme puts the arrow: centred for `arrow_n`/`arrow_s`, else 16px in from an edge. */
 function arrowX(position: string | undefined, panel: DOMRect) {
     if (position?.endsWith("_nw") || position?.endsWith("_sw")) {
         return panel.left + 16;
@@ -450,7 +450,7 @@ function arrowX(position: string | undefined, panel: DOMRect) {
     return panel.left + panel.width / 2;
 }
 
-/** Puts the selection on the icon in the first paragraph, as clicking the widget would. */
+/** Puts the selection on the icon in the first paragraph, as a click on the widget would. */
 function selectTheIcon(editor: ClassicEditor) {
     editor.model.change((writer) => {
         const paragraph = editor.model.document.getRoot()?.getChild(0);

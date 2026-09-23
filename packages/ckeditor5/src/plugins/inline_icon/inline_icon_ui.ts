@@ -13,12 +13,11 @@ import { INSERT_ICON_COMMAND } from "./inline_icon_editing.js";
 export const CHANGE_ICON = "changeIcon";
 
 /**
- * The buttons an icon is inserted or swapped through, and the balloon the picking happens in.
+ * The buttons that insert or replace an icon, and the balloon the picking happens in.
  *
- * The editor owns the balloon — where it points, when it goes away — and the application paints its
- * own picker into it through `showIconPicker`, which is the one place every installed icon pack is
- * searchable. A host with no room for a balloon shows the picker its own way and answers with
- * nothing to take down.
+ * The editor positions the balloon and takes it down; the application renders its own picker into
+ * it through `showIconPicker`, the one place every installed icon pack is searchable. A host with
+ * no room for a balloon shows the picker its own way and returns nothing to release.
  */
 export default class InlineIconUI extends Plugin {
 
@@ -43,8 +42,8 @@ export default class InlineIconUI extends Plugin {
         this.addPickerButton(INSERT_ICON_COMMAND, t("Insert icon"));
         this.addPickerButton(CHANGE_ICON, t("Change icon"));
 
-        // Esc reaches the editor only while the caret still has focus; the picker takes focus with
-        // it, so the view carries a handler of its own (see {@link IconPickerView}).
+        // Esc reaches the editor only while the caret has focus, and the picker takes focus away,
+        // so {@link IconPickerView} registers a handler of its own.
         editor.keystrokes.set("Esc", (_data, cancel) => {
             if (this._pickerView) {
                 this._hide();
@@ -59,7 +58,7 @@ export default class InlineIconUI extends Plugin {
         super.destroy();
     }
 
-    /** Opens the picker, which the `/` palette asks for as well as the toolbar button. */
+    /** Opens the picker; the `/` palette calls this as well as the toolbar buttons. */
     public showPicker() {
         const editor = this.editor;
         const editorEl = editor.editing.view.getDomRoot();
@@ -77,7 +76,7 @@ export default class InlineIconUI extends Plugin {
         });
 
         // Wired per picker rather than once: the handler listens through the view, so destroying
-        // the view on the way out is what stops it listening.
+        // the view on the way out stops it.
         clickOutsideHandler({
             emitter: view,
             activator: () => this._pickerView === view,
@@ -112,16 +111,16 @@ export default class InlineIconUI extends Plugin {
 
         this._releasePicker = release;
 
-        // The host paints into the container only once the call above has returned, and a balloon
-        // placed while it is still empty puts its arrow half the picker's width away from the
-        // caret. Place it again whenever what it holds changes size, which a narrowed grid needs
-        // as much as the first paint does. The placing waits for the next frame: it can itself
-        // change the width the container is given, and Chrome reports that as an observer loop.
+        // The host renders into the container only after the call above returns, and a balloon
+        // placed around an empty container puts its arrow half the picker's width from the caret.
+        // Reposition on every size change, not just the first render. The reposition waits for the
+        // next frame because it can change the container's width, which Chrome reports as an
+        // observer loop.
         this._pickerResize = new ResizeObserver(() => {
             cancelAnimationFrame(this._replacePicker);
 
             this._replacePicker = requestAnimationFrame(() => {
-                /* v8 ignore next -- disconnecting takes the pending frames with it */
+                /* v8 ignore next -- disconnecting the observer cancels the pending frames */
                 if (this._pickerView) {
                     this._balloon.updatePosition();
                 }
@@ -170,7 +169,7 @@ export default class InlineIconUI extends Plugin {
             return;
         }
 
-        /* v8 ignore next -- a picker this plugin still holds is one the balloon has */
+        /* v8 ignore next -- a picker this plugin still references is one the balloon still has */
         if (this._balloon.hasView(view)) {
             this._balloon.remove(view);
         }
@@ -181,10 +180,10 @@ export default class InlineIconUI extends Plugin {
 }
 
 /**
- * What the balloon holds: an element for the host to paint into, and nothing else.
+ * The view inside the balloon: an element for the host to render into, and nothing else.
  *
- * It carries `ck-reset_all-excluded` because everything a balloon shows sits inside the body
- * collection's `ck-reset_all`, which would strip the application's own styling off the picker.
+ * It has `ck-reset_all-excluded` because everything a balloon shows sits inside the body
+ * collection's `ck-reset_all`, which would strip the application's own styling from the picker.
  */
 class IconPickerView extends View {
 
@@ -219,13 +218,13 @@ class IconPickerView extends View {
 
 }
 
-/** Where the balloon points: the caret, read afresh on every placing, as the emoji picker does. */
+/** Where the balloon points: the caret, read again on every placement, as the emoji picker does. */
 function getBalloonPosition(editor: Editor, shownAt: ViewRange) {
     const view = editor.editing.view;
 
     return {
         target: () => {
-            /* v8 ignore next -- a rendered document always holds a range for the caret */
+            /* v8 ignore next -- a rendered document always has a range for the caret */
             const range = view.document.selection.getFirstRange() ?? shownAt;
 
             return view.domConverter.viewRangeToDom(range);
