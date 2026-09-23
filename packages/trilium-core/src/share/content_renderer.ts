@@ -1,26 +1,34 @@
 import { extractYouTubeVideoId, isHttpUrl, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
 import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
-import { type BAttachment, type BBranch, becca, BNote, getLog, icon_packs as iconPackService, options, sanitize, task_states, utils } from "@triliumnext/core";
 import { highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
-import { readFileSync } from "fs";
 import { t } from "i18next";
 import { HTMLElement, Options, parse, TextNode } from "node-html-parser";
-import { join } from "path";
 
-import assetPath, { assetUrlFragment } from "../services/asset_path.js";
-import { isScriptingEnabled } from "../services/scripting_guard.js";
-import { getResourceDir, isDev } from "../services/utils.js";
+import becca from "../becca/becca.js";
+import type BAttachment from "../becca/entities/battachment.js";
+import type BBranch from "../becca/entities/bbranch.js";
+import BNote from "../becca/entities/bnote.js";
+import appInfo from "../services/app_info.js";
+import * as iconPackService from "../services/icon_packs.js";
+import { getLog } from "../services/log.js";
+import options from "../services/options.js";
+import * as sanitize from "../services/sanitizer.js";
+import * as task_states from "../services/task_states.js";
+import * as utils from "../services/utils/index.js";
+import { getShareProvider } from "./share_provider.js";
 import SAttachment from "./shaca/entities/sattachment.js";
 import SBranch from "./shaca/entities/sbranch.js";
 import type SNote from "./shaca/entities/snote.js";
 import shaca from "./shaca/shaca.js";
 import shareRoot from "./share_root.js";
 
-const shareAdjustedAssetPath = isDev ? assetPath : `../${assetPath}`;
-const templateCache: Map<string, string> = new Map();
+/**
+ * The URL prefix the share theme resolves built-in assets against, such as `assets/v1.2.3`.
+ */
+export const assetUrlFragment = `assets/v${appInfo.appVersion}`;
 
 /**
  * Maximum number of lines a code block may have before server-side syntax highlighting is skipped.
@@ -221,11 +229,11 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
         header,
         content,
         isEmpty,
-        assetPath: shareAdjustedAssetPath,
+        assetPath: getShareAssetPath(),
         assetUrlFragment,
         showLoginInShareTheme,
         t,
-        isDev,
+        isDev: utils.isDev(),
         utils,
         sanitizeUrl: sanitize.sanitizeUrl,
         ...renderArgs,
@@ -233,7 +241,7 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
 
     // Check if the user has their own template.
     // Skip user-provided EJS templates when backend scripting is disabled since EJS can execute arbitrary JS.
-    if (note.hasRelation("shareTemplate") && isScriptingEnabled()) {
+    if (note.hasRelation("shareTemplate") && getShareProvider().isScriptingEnabled()) {
         // Get the template note and content
         const templateId = note.getRelation("shareTemplate")?.value;
         const templateNote = templateId && shaca.getNote(templateId);
@@ -266,31 +274,25 @@ function renderNoteContentInternal(note: SNote | BNote, renderArgs: RenderArgs) 
     }
 
     // Render with the default view otherwise.
-    const templatePath = getDefaultTemplatePath("page");
-    return ejs.render(readTemplate(templatePath), opts, {
-        includer: (path) => {
-            // Path is relative to apps/server/dist/assets/views
-            return { template: readTemplate(getDefaultTemplatePath(path)) };
-        }
+    return ejs.render(readShareTemplate("page"), opts, {
+        includer: (path) => ({ template: readShareTemplate(path) })
     });
 }
 
-export function getDefaultTemplatePath(template: string) {
-    // Path is relative to apps/server/dist/assets/views
-    return process.env.NODE_ENV === "development"
-        ? join(__dirname, `../../../../packages/share-theme/src/templates/${template}.ejs`)
-        : join(getResourceDir(), `share-theme/templates/${template}.ejs`);
+/**
+ * Returns the share theme's EJS template of that name, such as `page` or `404`. The platform
+ * decides where it comes from: the server reads it from disk, the browser build from its bundle.
+ */
+export function readShareTemplate(name: string) {
+    return getShareProvider().readTemplate(name);
 }
 
-export function readTemplate(path: string) {
-    const cachedTemplate = templateCache.get(path);
-    if (cachedTemplate) {
-        return cachedTemplate;
-    }
-
-    const templateString = readFileSync(path, "utf-8");
-    templateCache.set(path, templateString);
-    return templateString;
+/**
+ * Returns the prefix the share theme resolves built-in assets against. The share pages live one
+ * path segment deeper than the app, so outside dev the prefix climbs back out of `/share/`.
+ */
+function getShareAssetPath() {
+    return utils.isDev() ? `${assetUrlFragment}/src` : `../${assetUrlFragment}`;
 }
 
 /**

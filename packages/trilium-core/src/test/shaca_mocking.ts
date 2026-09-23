@@ -1,4 +1,4 @@
-import utils from "../services/utils.js";
+import { randomString } from "../services/utils/index.js";
 import SAttachment from "../share/shaca/entities/sattachment.js";
 import SAttribute from "../share/shaca/entities/sattribute.js";
 import SBranch from "../share/shaca/entities/sbranch.js";
@@ -54,7 +54,7 @@ export function buildShareNotes(notes: NoteDefinition[]) {
 export function buildShareNote(noteDef: NoteDefinition) {
     const blobId = "foo";
     const note = new SNote([
-        noteDef.id ?? utils.randomString(12),
+        noteDef.id ?? randomString(12),
         noteDef.title ?? "New note",
         noteDef.type ?? "text",
         noteDef.mime ?? "text/html",
@@ -77,7 +77,7 @@ export function buildShareNote(noteDef: NoteDefinition) {
     if (noteDef.attachments) {
         for (const attachmentDef of noteDef.attachments) {
             new SAttachment([
-                attachmentDef.id ?? utils.randomString(12),
+                attachmentDef.id ?? randomString(12),
                 note.noteId,
                 attachmentDef.role ?? "file",
                 attachmentDef.mime ?? "application/blob",
@@ -95,7 +95,7 @@ export function buildShareNote(noteDef: NoteDefinition) {
             const childNote = buildShareNote(childDef);
 
             new SBranch([
-                utils.randomString(12),
+                randomString(12),
                 childNote.noteId,
                 note.noteId,
                 "",     // prefix
@@ -108,7 +108,7 @@ export function buildShareNote(noteDef: NoteDefinition) {
     // Handle labels & relations
     let position = 0;
     for (const [ key, value ] of Object.entries(noteDef)) {
-        const attributeId = utils.randomString(12);
+        const attributeId = randomString(12);
         const name = key.substring(1);
 
         let attribute: SAttribute | null = null;

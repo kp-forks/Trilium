@@ -11,7 +11,7 @@ import { Badge, BadgeWithDropdown } from "../react/Badge";
 import { FormDropdownDivider, FormListItem } from "../react/FormList";
 import { useGetContextDataFrom, useIsNoteReadOnly, useNoteContext, useNoteLabel, useNoteLabelBoolean, useNoteProperty } from "../react/hooks";
 import { useShareState } from "../ribbon/BasicPropertiesTab";
-import { useShareInfo } from "../shared_info";
+import { type ShareScope, useShareInfo } from "../shared_info";
 import { ActiveContentBadges } from "./ActiveContentBadges";
 import { SnippetBadge } from "./SnippetBadge";
 
@@ -82,12 +82,15 @@ export function OfficePreviewBadge() {
 function ShareBadge() {
     const { note } = useNoteContext();
     const [ , switchShareState ] = useShareState(note);
-    const { isSharedExternally, linkHref } = useShareInfo(note);
+    const { scope, linkHref } = useShareInfo(note);
 
     return (linkHref &&
         <BadgeWithDropdown
-            icon={isSharedExternally ? "bx bx-world" : "bx bx-share-alt"}
-            text={isSharedExternally ? t("breadcrumb_badges.shared_publicly") : t("breadcrumb_badges.shared_locally")}
+            icon={SHARE_BADGES[scope].icon}
+            text={t(SHARE_BADGES[scope].text)}
+            tooltip={scope === "preview"
+                ? t("breadcrumb_badges.shared_preview_description", { format: t("export.format_share_name") })
+                : undefined}
             className="share-badge"
         >
             <FormListItem
@@ -106,6 +109,12 @@ function ShareBadge() {
         </BadgeWithDropdown>
     );
 }
+
+const SHARE_BADGES: Record<ShareScope, { icon: string; text: string }> = {
+    public: { icon: "bx bx-world", text: "breadcrumb_badges.shared_publicly" },
+    local: { icon: "bx bx-share-alt", text: "breadcrumb_badges.shared_locally" },
+    preview: { icon: "bx bx-show", text: "breadcrumb_badges.shared_preview" }
+};
 
 function ClippedNoteBadge() {
     const { note } = useNoteContext();

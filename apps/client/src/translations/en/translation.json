@@ -2513,7 +2513,8 @@
   "shared_info": {
     "shared_publicly": "This note is shared publicly on {{- link}}.",
     "shared_locally": "This note is shared locally on {{- link}}.",
-    "help_link": "For help visit <a href=\"https://triliumnext.github.io/Docs/Wiki/sharing.html\">wiki</a>."
+    "help_link": "For help visit <a href=\"https://triliumnext.github.io/Docs/Wiki/sharing.html\">wiki</a>.",
+    "shared_preview": "This note is shared on {{- link}}, but only this browser can open that page, and only while Trilium is open in it. Publishing it for others needs a Trilium server."
   },
   "read-only-info": {
     "read-only-note": "Currently viewing a read-only note.",
@@ -3767,7 +3768,9 @@
     "save_status_error": "Save failed",
     "save_status_saving_tooltip": "Changes are being saved.",
     "save_status_unsaved_tooltip": "There are unsaved changes. They will be saved automatically in a moment.",
-    "save_status_error_tooltip": "An error occurred while saving the note. If possible, try copying the note content elsewhere and reloading the application."
+    "save_status_error_tooltip": "An error occurred while saving the note. If possible, try copying the note content elsewhere and reloading the application.",
+    "shared_preview": "Share preview",
+    "shared_preview_description": "Only this browser can open the shared page, and only while Trilium is open in it. To publish it, export the subtree as \"{{- format}}\" and host the files on any web server, or use a Trilium server."
   },
   "status_bar": {
     "language_title": "Change content language",

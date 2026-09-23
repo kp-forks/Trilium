@@ -1,6 +1,5 @@
-import { events as eventService } from "@triliumnext/core";
-
-import { getLog } from "@triliumnext/core";
+import eventService from "../../services/events.js";
+import { getLog } from "../../services/log.js";
 import shareRoot from "../share_root.js";
 import sql from "../sql.js";
 import type { SAttachmentRow, SAttributeRow, SBranchRow, SNoteRow } from "./entities/rows.js";
