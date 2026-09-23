@@ -840,7 +840,8 @@
       "move_column_to_edge": "Переместить столбец в начало / конец",
       "selection": "Выбор",
       "select_column": "Выбрать все карточки в столбце",
-      "clear_selection": "Очистить выбор"
+      "clear_selection": "Очистить выбор",
+      "toggle_column": "Свернуть / развернуть столбец (на заголовке столбца)"
     },
     "column-definition-save-error": "Столбцы были сохранены на доске, но их не удалось сохранить в атрибуте статуса.",
     "status-alias": "Статус",
@@ -896,7 +897,7 @@
     "new-template-name": "Новый шаблон карточки",
     "more-templates": "Больше шаблонов…",
     "card-template": "Выбрать шаблон карточки",
-    "collapse-hint": "Дважды щелкните, чтобы свернуть",
+    "collapse-hint": "Дважды щелкните или нажмите Пробел, чтобы свернуть",
     "edit-title": "Изменить название и иконку",
     "insert-new": "Вставить новый",
     "more-columns": "Больше…",
@@ -941,7 +942,10 @@
     "more-actions": "Другие действия",
     "reset-selection": "Сбросить выбор",
     "select-column-cards": "Выбрать все карточки в столбце",
-    "selection-mode": "Выбрать карточки"
+    "selection-mode": "Выбрать карточки",
+    "delete-column-notes_one": "Также удалить {{count}} заметку в этом столбце",
+    "delete-column-notes_few": "Также удалить {{count}} заметки в этом столбце",
+    "delete-column-notes_many": "Также удалить {{count}} заметок в этом столбце"
   },
   "table_context_menu": {
     "delete_row": "Удалить строку"
@@ -1733,7 +1737,13 @@
     "label_year_comparison": "числовое сравнение (также >, >=, <).",
     "label_date_created": "заметки, созданные за последний месяц",
     "error": "Ошибка поиска: {{error}}",
-    "placeholder": "полнотекстовые ключевые слова, #tag = value..."
+    "placeholder": "Ctrl+Space — подсказки, @ — заметки, Shift+Enter — новая строка, Enter — поиск",
+    "hints": {
+      "title": "Строка поиска",
+      "completions": "Показать подсказки",
+      "new_line": "Новая строка",
+      "run_search": "Выполнить поиск"
+    }
   },
   "backend_log": {
     "refresh": "Обновить"
@@ -4367,5 +4377,39 @@
       "pan_right": "Вправо",
       "pan_fast": "Быстрое"
     }
+  },
+  "search_lint": {
+    "relation_needs_property": "Отношения указывают на заметку, поэтому их невозможно проверить на равенство. Используйте . для доступа к её свойствам.",
+    "text_needs_contains": "note.text ищет одновременно заголовок и содержимое, поэтому совпадение возможно только при использовании *=*.",
+    "content_not_ordered": "Содержимое заметки — текст, поэтому его нельзя упорядочить. Вместо этого используйте *=*.",
+    "compare_the_title": "Сравнить заголовок",
+    "use_operator": "Используйте {{operator}}"
+  },
+  "search_completion": {
+    "note": "Название, свойства и отношения заметки",
+    "operator_equal": "Равно целому значению",
+    "operator_not_equal": "Не равно целому значению",
+    "operator_contains": "Содержит",
+    "operator_starts_with": "Начинается с",
+    "operator_ends_with": "Заканчивается на",
+    "operator_greater_than": "Больше чем",
+    "operator_greater_or_equal": "Больше или равно",
+    "operator_less_than": "Меньше чем",
+    "operator_less_or_equal": "Меньше или равно",
+    "operator_regex": "Совпадает с регулярным выражением",
+    "operator_fuzzy_equal": "Равно, допуская опечатки",
+    "operator_fuzzy_contains": "Содержит, допуская опечатки",
+    "property_content": "Основной текст заметки",
+    "property_raw_content": "Основной текст заметки до удаления форматирования",
+    "property_text": "Название или основной текст",
+    "property_parents": "Продолжает на родителях заметки",
+    "property_children": "Продолжает на дочерних заметках",
+    "property_ancestors": "Продолжает на потомках заметки",
+    "property_labels": "Дальше следует название метки",
+    "property_relations": "Дальше следует название отношения и свойства заметки",
+    "property_attribute_count": "Количество меток и отношений, включая унаследованные",
+    "property_label_count": "Количество меток, включая унаследованные",
+    "property_relation_count": "Количество отношений, включая унаследованные",
+    "property_relation_count_including_links": "Количество отношений, включая созданные ссылками"
   }
 }
