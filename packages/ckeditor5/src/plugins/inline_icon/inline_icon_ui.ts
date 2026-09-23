@@ -1,9 +1,9 @@
+import bxSticker from "boxicons/svg/regular/bx-sticker.svg?raw";
 import {
     ButtonView, clickOutsideHandler, type Command, ContextualBalloon, type Editor,
     KeystrokeHandler, type Locale, Plugin, View, type ViewRange
 } from "ckeditor5";
 
-import insertIconIcon from "../../icons/insert-icon.svg?raw";
 import { INSERT_ICON_COMMAND } from "./inline_icon_editing.js";
 
 /**
@@ -41,7 +41,7 @@ export default class InlineIconUI extends Plugin {
 
             view.set({
                 label: t("Insert icon"),
-                icon: insertIconIcon,
+                icon: bxSticker,
                 tooltip: true
             });
 

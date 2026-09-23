@@ -31,11 +31,11 @@ import bxError from "boxicons/svg/regular/bx-error.svg?raw";
 import bxErrorCircle from "boxicons/svg/regular/bx-error-circle.svg?raw";
 import bxInfoCircle from "boxicons/svg/regular/bx-info-circle.svg?raw";
 import bxNetworkChart from "boxicons/svg/regular/bx-network-chart.svg?raw";
+import bxSticker from "boxicons/svg/regular/bx-sticker.svg?raw";
 import { BookmarkUI, type Editor, type MentionFeedObjectItem, Plugin } from "ckeditor5";
 
 import collapsibleIcon from "../../icons/collapsible.svg?raw";
 import dateTimeIcon from "../../icons/date-time.svg?raw";
-import insertIconIcon from "../../icons/insert-icon.svg?raw";
 import insertFootnoteIcon from "../../icons/insert-footnote.svg?raw";
 import importMarkdownIcon from "../../icons/markdown-mark.svg?raw";
 import mathIcon from "../../icons/math.svg?raw";
@@ -401,7 +401,7 @@ export function buildTriliumSlashCommands(editor: Editor): SlashCommandDefinitio
             title: t("Icon"),
             description: t("Insert an icon from an installed icon pack"),
             aliases: [ "symbol", "glyph" ],
-            icon: insertIconIcon,
+            icon: bxSticker,
             commandName: INSERT_ICON_COMMAND,
             // Deferred for the reason the anchor entry below is: the picker opens in a balloon
             // placed at the caret, and the palette has not finished putting the selection back
