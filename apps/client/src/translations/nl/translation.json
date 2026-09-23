@@ -265,6 +265,12 @@
   },
   "import": {
     "importIntoNote": "In notitie importeren",
-    "importIntoNoteNamed": "Importeren naar {{- title}}"
+    "importIntoNoteNamed": "Importeren naar {{- title}}",
+    "import_from": "Importeren vanuit",
+    "cardName": "Bestanden en andere formaten",
+    "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, afbeeldingen en meer",
+    "chooseImportFile": "Kies een importbestand",
+    "importZipRecommendation": "Bij het importeren van een ZIP bestand wordt de hiërarchie van de notities aangepast aan de structuur van de submappen in het archief.",
+    "options": "Opties"
   }
 }
