@@ -78,7 +78,8 @@ export default function ModelSelection({ query, selected, onChange, autoSelectDe
     }
     if (error) {
         return (
-            <NoItems icon="bx bx-error-circle" text={t("llm.models_load_failed", { error })}>
+            // JSX escapes the text itself, so i18next must not escape the message as well.
+            <NoItems icon="bx bx-error-circle" text={t("llm.models_load_failed", { error, interpolation: { escapeValue: false } })}>
                 {troubleshooting}
             </NoItems>
         );
