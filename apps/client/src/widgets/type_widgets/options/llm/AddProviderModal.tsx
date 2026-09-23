@@ -52,7 +52,8 @@ export interface ProviderType {
     /**
      * What the connection step shows when the provider has neither a key nor an
      * endpoint to ask for: the full account-and-prerequisite story, in place of
-     * the fields that would otherwise fill the step.
+     * the fields that would otherwise fill the step. Blank lines separate its
+     * paragraphs, so the translation decides where they fall.
      */
     connectionDescription?: string;
     /** One-line setup reminder shown under the endpoint field (i18n key, rendered via `<Trans>`). */
@@ -376,7 +377,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                             )}
                             {baseUrlMode === "advanced" && baseUrlField}
                             {!usesApiKey && baseUrlMode === "none" && (
-                                <p>{providerType?.connectionDescription}</p>
+                                providerType?.connectionDescription?.split(/\n\s*\n/).map((paragraph) => <p key={paragraph}>{paragraph}</p>)
                             )}
                         </CardSection>
                     </Card>

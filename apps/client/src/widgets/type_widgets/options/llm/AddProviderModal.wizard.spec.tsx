@@ -5,7 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({ onSave: vi.fn(), onHidden: vi.fn() }));
 
-vi.mock("../../../../services/i18n", () => ({ t: (key: string) => key }));
+/** Messages whose text a case depends on; every other key renders as itself. */
+const MESSAGES = vi.hoisted<Record<string, string>>(() => ({
+    "llm.antigravity_agent_description": "Uses your Google account.\n\nDownload the server.\n\nSign in once."
+}));
+
+vi.mock("../../../../services/i18n", () => ({ t: (key: string) => MESSAGES[key] ?? key }));
 
 vi.mock("react-i18next", () => ({ Trans: ({ i18nKey }: { i18nKey: string }) => <>{i18nKey}</> }));
 
@@ -138,6 +143,14 @@ describe("the connection step", () => {
 
         // No key, no endpoint — the step is complete the moment it is reached.
         expect(nextButton()?.disabled).toBe(false);
+    });
+
+    it("shows such a provider's description one paragraph at a time", () => {
+        open();
+        act(() => providerCard("Google Antigravity")?.click());
+
+        const paragraphs = [ ...document.querySelectorAll(".wizard-step p") ].map((p) => p.textContent);
+        expect(paragraphs).toEqual([ "Uses your Google account.", "Download the server.", "Sign in once." ]);
     });
 
     it("opens on the connection step when editing, the provider type being fixed by then", () => {
