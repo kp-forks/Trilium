@@ -1050,6 +1050,8 @@ export type BootstrapDefinition = {
     headingStyle: "plain" | "underline" | "markdown";
     layoutOrientation: "vertical" | "horizontal";
     platform?: "aix" | "android" | "darwin" | "freebsd" | "haiku" | "linux" | "openbsd" | "sunos" | "win32" | "cygwin" | "netbsd" | "web";
+    /** The server's CPU architecture, as Node names it (`x64`, `arm64`, …). Absent in standalone. */
+    arch?: string;
     isElectron: boolean;
     isStandalone: boolean;
     /**

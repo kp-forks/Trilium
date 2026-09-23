@@ -3,7 +3,14 @@ import { render } from "preact";
 import { act } from "preact/test-utils";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({ onSave: vi.fn(), onHidden: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+    onSave: vi.fn(),
+    onHidden: vi.fn(),
+    /** The Antigravity download found for the device running Trilium. */
+    antigravityDownload: {} as { version?: string; url?: string }
+}));
+
+vi.mock("./antigravity_download", () => ({ useAntigravityDownload: () => mocks.antigravityDownload }));
 
 /** Messages whose text a case depends on; every other key renders as itself. */
 const MESSAGES = vi.hoisted<Record<string, string>>(() => ({
@@ -12,7 +19,14 @@ const MESSAGES = vi.hoisted<Record<string, string>>(() => ({
 
 vi.mock("../../../../services/i18n", () => ({ t: (key: string) => MESSAGES[key] ?? key }));
 
-vi.mock("react-i18next", () => ({ Trans: ({ i18nKey }: { i18nKey: string }) => <>{i18nKey}</> }));
+// Renders the key, inside the `Link` component when one is passed, so links can be looked up.
+vi.mock("react-i18next", async () => {
+    const { cloneElement } = await import("preact");
+    return {
+        Trans: ({ i18nKey, components }: { i18nKey: string; components?: { Link?: preact.VNode } }) =>
+            components?.Link ? cloneElement(components.Link, {}, i18nKey) : <>{i18nKey}</>
+    };
+});
 
 /*
  * Stands in for the wizard shell, keeping only what drives it: the step being shown, and the one
@@ -64,6 +78,7 @@ afterEach(() => {
     render(null, host);
     document.body.innerHTML = "";
     vi.clearAllMocks();
+    mocks.antigravityDownload = {};
 });
 
 function open(existingProvider?: LlmProviderConfig) {
@@ -120,6 +135,23 @@ describe("the model step", () => {
 
         expect(modelStepFor("Ollama")?.textContent).toContain("llm.troubleshoot_server_running");
         expect(modelStepFor("Claude Code")?.textContent).toBe("");
+    });
+
+    it("links the exact download for the device running Trilium when one was found", () => {
+        mocks.antigravityDownload = { version: "1.1.1", url: "https://dl.google.com/agy.zip" };
+
+        const step = modelStepFor("Google Antigravity");
+        const link = step?.querySelector<HTMLAnchorElement>("a[href='https://dl.google.com/agy.zip']");
+        expect(link?.textContent).toBe("llm.antigravity_setup_archive");
+        expect(link?.target).toBe("_blank");
+        expect(step?.querySelector("button")).toBeNull();
+        expect(step?.textContent).not.toContain("llm.antigravity_setup_download");
+
+        // Without one, the step links the registry entry instead.
+        mocks.antigravityDownload = {};
+        const fallback = modelStepFor("Google Antigravity");
+        expect(fallback?.querySelector("a[href*='agentclientprotocol/registry']")?.textContent).toBe("llm.antigravity_setup_download");
+        expect(fallback?.querySelector("a[href*='dl.google.com']")).toBeNull();
     });
 });
 

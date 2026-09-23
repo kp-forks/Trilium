@@ -14,6 +14,7 @@ import MaskedIcon from "../../../react/MaskedIcon";
 import SelectableCard, { SelectableCardGrid } from "../../../react/SelectableCard";
 import WizardModal, { type WizardStep } from "../../../react/WizardModal";
 import OptionsRow from "../components/OptionsRow";
+import { useAntigravityDownload } from "./antigravity_download";
 import ModelSelection from "./ModelSelection";
 import { PROVIDER_ICONS } from "./provider_icons.js";
 
@@ -510,7 +511,7 @@ export function prefilledBaseUrl(providerId: string): string {
  * The checklist shown when a provider's models can't be listed, which is when
  * the user needs setup instructions. Only the local runtimes and Google
  * Antigravity have one: a hosted endpoint failing to list says nothing that
- * steps on the user's own machine would fix.
+ * steps on the user's own device would fix.
  */
 function troubleshootingFor(providerType: ProviderType | undefined) {
     if (providerType?.id === "antigravity-agent") {
@@ -519,8 +520,13 @@ function troubleshootingFor(providerType: ProviderType | undefined) {
     return providerType?.group === "local" ? <SelfHostedTroubleshooting /> : undefined;
 }
 
-/** How to install Google's Antigravity ACP server, which Trilium does not bundle. */
+/**
+ * How to install Google's Antigravity ACP server, which Trilium does not bundle.
+ * The first step links the archive for the device running Trilium; without
+ * one, it links the registry entry that lists them all.
+ */
 function AntigravitySetup() {
+    const downloadUrl = useAntigravityDownload().url;
     const components = {
         Code: <code />,
         // The registry entry lists the current archive for each platform.
@@ -528,7 +534,11 @@ function AntigravitySetup() {
     };
     return (
         <ol className="model-selection-troubleshooting">
-            <li><Trans i18nKey="llm.antigravity_setup_download" components={components} /></li>
+            <li>
+                {downloadUrl
+                    ? <Trans i18nKey="llm.antigravity_setup_archive" components={{ Link: <a className="tn-link" href={downloadUrl} target="_blank" rel="noopener noreferrer" /> }} />
+                    : <Trans i18nKey="llm.antigravity_setup_download" components={components} />}
+            </li>
             <li><Trans i18nKey="llm.antigravity_setup_path" components={components} /></li>
             <li><Trans i18nKey="llm.antigravity_setup_sign_in" components={components} /></li>
         </ol>

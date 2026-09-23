@@ -110,7 +110,7 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     /**
      * Open a session, signing in first when the server has no saved sign-in and
      * the user is on the add-provider screen to complete it. The server opens
-     * the Google sign-in page in a browser on the machine running Trilium and
+     * the Google sign-in page in a browser on the device running Trilium and
      * answers `authenticate` once the user has finished there; it keeps the
      * sign-in under `GEMINI_HOME`, so later sessions need none.
      */
@@ -129,10 +129,10 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     protected describeFailure(error: unknown): string {
         const text = describeError(error);
         if (isSignInRequired(error)) {
-            return "Google Antigravity is not signed in. Open this provider in the AI settings and go to the model selection, which opens the Google sign-in page in a browser on the machine running Trilium.";
+            return "Google Antigravity is not signed in. Open this provider in the AI settings and go to the model selection, which opens the Google sign-in page in a browser on the device running Trilium.";
         }
         if (/"authenticate" timed out/.test(text)) {
-            return "The Google sign-in was not completed in time. Try again, and finish signing in in the browser window that opens on the machine running Trilium.";
+            return "The Google sign-in was not completed in time. Try again, and finish signing in in the browser window that opens on the device running Trilium.";
         }
         if (/ENOENT|spawn/i.test(text)) {
             return `Failed to start Google's Antigravity ACP server: ${text}`;
