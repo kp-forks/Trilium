@@ -2,7 +2,7 @@
 OneNote's _Tags_ functionality is imported in Trilium as <a class="reference-link" href="../../../../Note%20Types/Text/Insert%20buttons/Icons.md">Icons</a> using the default icon pack or emojis (if there is no suitable replacement).
 
 > [!IMPORTANT]
-> Custom tags are not supported by the OneNote API and never reach the importer.
+> Custom tags are not supported by OneNote's Graph API so Trilium cannot import them.
 
 ### Decorative tags
 

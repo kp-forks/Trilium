@@ -81,7 +81,7 @@ OneNote supports encryption at section level; when importing a notebook that con
 
 The section itself is kept for reference and all the sections that could not be imported will be shown in the report (the top-level note called _OneNote import_).
 
-To unprotect a section in OneNote Desktop, right click on the protected section → _Password Protect This Section_ and press _Remove Password_ and sync. Then reimport either only the protected sessions or the remove everything and start the import from scratch.
+To unprotect a section in OneNote Desktop, right click on the protected section → _Password Protect This Section_ and press _Remove Password_ and sync. Then re-import either only the protected sections or remove everything and start the import from scratch.
 
 ## Other limitations
 
