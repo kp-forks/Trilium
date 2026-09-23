@@ -53,6 +53,9 @@ The server renders the templates using EJS templating from the share theme and h
 
 ## Exporting to static HTML files
 
-This functionality is also handled by the server, but in `src/services/export/zip/share_theme` instead. It works quite similar to the normal sharing functionality, but it uses `BNote` instead of `SNote` (and so on for other entity types), in order to work regardless of whether a note is shared or not.
+The static export lives in `packages/trilium-core/src/services/export/zip/share_theme.ts`, so both the server and the standalone build offer it. It works quite similar to the normal sharing functionality, but it uses `BNote` instead of `SNote` (and so on for other entity types), in order to work regardless of whether a note is shared or not.
 
-The same templates are used and rendered by the server, except that they are stored in a file instead of served to web clients.
+The same templates are used, except that the rendered pages are stored in the archive instead of served to web clients. The theme's built files and the built-in icon fonts reach the provider through `ShareThemeExportAssets`, which each platform fills in its zip export factory:
+
+*   The server reads them from disk (`apps/server/src/services/export/zip/share_theme.ts`).
+*   The standalone build fetches them from `share/assets`, where it already copies them for the share pages. The file names come from the `virtual:share-theme-assets` module, which `vite.config.mts` generates from `packages/share-theme/dist` for both the page and the worker bundle.

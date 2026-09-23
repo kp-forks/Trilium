@@ -19,6 +19,27 @@ const coreVersion = JSON.parse(
     fs.readFileSync(join(__dirname, "../../packages/trilium-core/package.json"), "utf-8")
 ).version;
 
+// Lists the share theme's built files as `virtual:share-theme-assets`, so the share-theme export
+// can fetch each one from `share/assets`, where the static copy below places them.
+const shareThemeAssetListPlugin = (): Plugin => {
+    const moduleId = "virtual:share-theme-assets";
+    const resolvedId = `\0${moduleId}`;
+
+    return {
+        name: "share-theme-asset-list",
+        resolveId: (id) => (id === moduleId ? resolvedId : undefined),
+        load(id) {
+            if (id !== resolvedId) {
+                return;
+            }
+
+            const distDir = join(__dirname, "../../packages/share-theme/dist");
+            const files = fs.existsSync(distDir) ? fs.readdirSync(distDir) : [];
+            return `export default ${JSON.stringify(files)};`;
+        }
+    };
+};
+
 // Watch client files and trigger reload in development
 const clientWatchPlugin = () => ({
     name: "client-watch",
@@ -123,6 +144,7 @@ let plugins: any = [
     stripUniverHyphenation(),
     sqliteWasmDedupePlugin(),
     sqliteWasmPlugin,
+    shareThemeAssetListPlugin(),
     viteStaticCopy({
         targets: clientAssets.map((asset) => ({
             src: `../../client/src/${asset}/**/*`,
@@ -361,7 +383,8 @@ export default defineConfig(() => ({
         include: ['officeparser']
     },
     worker: {
-        format: "es" as const
+        format: "es" as const,
+        plugins: () => [ shareThemeAssetListPlugin() ]
     },
     commonjsOptions: {
         transformMixedEsModules: true,
