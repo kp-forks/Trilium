@@ -68,9 +68,28 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     protected readonly defaultModelId = DEFAULT_MODEL_ID;
     protected readonly agentDirName = path.join("antigravity-agent", "workspace");
 
-    /** Every model the account is offered: the plan already limits the list, and none costs extra. */
+    /**
+     * The newest version of each family, every effort level included, plus
+     * `default`. Older versions stay in the list, unselected. The family and
+     * version come from the display name (`Gemini 3.8 Flash (High)`), since
+     * the ids are not uniform (`gemini-pro-agent` is Gemini 3.1 Pro (High)). A
+     * model named any other way is selected, so a new naming scheme cannot hide
+     * the whole catalog.
+     */
     recommendedModelIds(models: ModelInfo[]): Set<string> {
-        return new Set(models.map(m => m.id));
+        const parsed = models.map(model => ({ model, name: parseGeminiModelName(model.name) }));
+        const newestByFamily = new Map<string, number[]>();
+        for (const { name } of parsed) {
+            if (name) {
+                const newest = newestByFamily.get(name.family);
+                if (!newest || compareVersions(name.version, newest) > 0) {
+                    newestByFamily.set(name.family, name.version);
+                }
+            }
+        }
+        return new Set(parsed
+            .filter(({ name }) => !name || compareVersions(name.version, newestByFamily.get(name.family) ?? []) === 0)
+            .map(({ model }) => model.id));
     }
 
     protected titleModelId(): string | undefined {
@@ -219,6 +238,22 @@ export function buildAntigravityEnv(
         }
     }
     return result;
+}
+
+/** `Gemini 3.8 Flash (High)` → family `Flash`, version `[3, 8]`; undefined for any other shape. */
+function parseGeminiModelName(name: string): { family: string; version: number[] } | undefined {
+    const match = /^Gemini (\d+(?:\.\d+)*) (.+?) \([^)]+\)$/.exec(name);
+    return match ? { family: match[2], version: match[1].split(".").map(Number) } : undefined;
+}
+
+function compareVersions(a: number[], b: number[]): number {
+    for (let i = 0; i < Math.max(a.length, b.length); i++) {
+        const difference = (a[i] ?? 0) - (b[i] ?? 0);
+        if (difference !== 0) {
+            return difference;
+        }
+    }
+    return 0;
 }
 
 /** The newest low-effort Flash model, which the catalog lists first among its peers. */

@@ -195,7 +195,30 @@ describe("AntigravityAgentProvider", () => {
         await provider.listModels();
         await provider.generateTitle("plan my week");
         expect(FakeAcpClient.current?.requests.find(r => r.method === "session/set_model")?.params).toEqual({ sessionId: "sess-1", modelId: "gemini-3.8-flash-low" });
-        expect(provider.recommendedModelIds(await provider.listModels()).size).toBe(5);
+    });
+
+    it("pre-selects the newest version of each family, every effort level included", () => {
+        // The catalog agy_acp_server 1.1.1 reports on session/new, newest first.
+        const models = buildAntigravityModelList({ availableModels: [
+            ...["3.8", "3.7", "3.6"].flatMap(version => ["High", "Medium", "Low"].map(effort => ({
+                modelId: `gemini-${version}-flash-${effort.toLowerCase()}`,
+                name: `Gemini ${version} Flash (${effort})`
+            }))),
+            { modelId: "gemini-pro-agent", name: "Gemini 3.1 Pro (High)" },
+            { modelId: "gemini-3.1-pro-low", name: "Gemini 3.1 Pro (Low)" },
+            // A model named some other way is kept rather than hidden.
+            { modelId: "gemini-nano-agent", name: "Gemini Nano Agent" }
+        ] });
+
+        expect([...new AntigravityAgentProvider().recommendedModelIds(models)].sort()).toEqual([
+            "default",
+            "gemini-3.1-pro-low",
+            "gemini-3.8-flash-high",
+            "gemini-3.8-flash-low",
+            "gemini-3.8-flash-medium",
+            "gemini-nano-agent",
+            "gemini-pro-agent"
+        ]);
     });
 });
 
