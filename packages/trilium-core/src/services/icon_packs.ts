@@ -166,6 +166,30 @@ export function determineBestFontAttachment(iconPackNote: BNote) {
     return null;
 }
 
+/**
+ * The transforms an icon can carry in a note's content, written by the text editor's icon toolbar
+ * as a class. Boxicons names them, but the rules are not scoped to a pack, so they apply to any
+ * icon — the application's own `bx bx-sidebar bx-flip-horizontal` is one.
+ */
+const ICON_TRANSFORM_RULES: Record<string, string> = {
+    "bx-rotate-90": "rotate(90deg)",
+    "bx-rotate-180": "rotate(180deg)",
+    "bx-rotate-270": "rotate(270deg)",
+    "bx-flip-horizontal": "scaleX(-1)",
+    "bx-flip-vertical": "scaleY(-1)"
+};
+
+/**
+ * Generates the CSS for {@link ICON_TRANSFORM_RULES}. `boxicons-compat.css` carries these rules in
+ * the application, which a shared or exported page does not load: there they come from here, beside
+ * the icon packs' own CSS.
+ */
+export function generateIconTransformCss(): string {
+    return Object.entries(ICON_TRANSFORM_RULES)
+        .map(([ className, transform ]) => `.${className} { transform: ${transform}; }`)
+        .join("\n");
+}
+
 export function generateCss({ manifest, fontMime, builtin, fontAttachmentId, prefix }: ProcessedIconPack, fontUrl: string) {
     try {
         const iconDeclarations: string[] = [];
