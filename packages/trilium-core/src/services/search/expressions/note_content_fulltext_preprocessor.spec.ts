@@ -148,6 +148,17 @@ describe("Inline icon searchability", () => {
         expect(words).toEqual([ "bx-star", "star" ]);
     });
 
+    it("names an icon by its pack's class, not by another class the tag carries", () => {
+        // The editor keeps every class an imported icon wears, so a tag can carry a class from
+        // somewhere else entirely. Only a class whose prefix the tag also wears bare names an icon,
+        // and the snippet builder takes the first of them.
+        const html = `<p><span class="tn-icon text-big bx bx-star"></span></p>`;
+
+        const words = preprocessContent(html, type, mime).split(/\s+/).filter(Boolean);
+
+        expect(words).toEqual([ "bx-star", "star" ]);
+    });
+
     it("names an icon once however often the note carries it", () => {
         const icon = `<span class="tn-icon bx bx-star"></span>`;
         const html = `<p>${icon} one ${icon} two ${icon}</p>`;

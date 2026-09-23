@@ -150,12 +150,20 @@ const ICON_MARKER_CLASS = "tn-icon";
  * The pack classes an icon tag wears — `bx-error-circle` from `tn-icon bx bx-error-circle`.
  *
  * The marker is worn by every icon, and a pack's bare prefix — `bx` — by every icon that pack
- * holds, so neither names one.
+ * holds, so neither names one. A tag can also wear a class from outside any pack, since the editor
+ * keeps what imported markup carried: only a class the tag declares the prefix of draws a glyph,
+ * so only those are read. Markup declaring no prefix falls back to every hyphenated class, which
+ * is all there is left to go on.
  */
 export function readIconClasses(tag: string): string[] {
-    return (extractAttribute(tag, "class") ?? "")
+    const classNames = (extractAttribute(tag, "class") ?? "")
         .split(/\s+/)
-        .filter((className) => className !== ICON_MARKER_CLASS && className.includes("-"));
+        .filter((className) => className && className !== ICON_MARKER_CLASS);
+    const prefixes = new Set(classNames.filter((className) => !className.includes("-")));
+    const packClasses = classNames.filter((className) => className.includes("-"));
+    const named = packClasses.filter((className) => prefixes.has(className.slice(0, className.indexOf("-"))));
+
+    return named.length ? named : packClasses;
 }
 
 /** The name inside a pack class: `error-circle` from `bx-error-circle`. */
