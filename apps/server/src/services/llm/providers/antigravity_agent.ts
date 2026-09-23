@@ -16,7 +16,8 @@
  *     Trilium's note tools.
  */
 
-import type { ModelInfo } from "@triliumnext/core/src/services/llm/types.js";
+import { LLM_REASONING_EFFORTS, type LlmReasoningEffort } from "@triliumnext/commons";
+import type { LlmProviderConfig, ModelInfo } from "@triliumnext/core/src/services/llm/types.js";
 import { existsSync } from "fs";
 import path from "path";
 
@@ -58,8 +59,13 @@ const LINUX_CA_BUNDLES = [
     "/etc/ssl/cert.pem"
 ];
 
-/** The cheap model for the title turn, recorded from the last probe. */
-let titleModel: string | undefined;
+/**
+ * What the last catalog the server reported says about its variants: for each
+ * listed model, the real id of each effort level, and the cheap model for the
+ * title turn. Every `session/new` refreshes it, so a chat turn resolves
+ * against the catalog of the session it runs in.
+ */
+let catalog: { variants: Map<string, Map<LlmReasoningEffort, string>>; titleModel?: string } = { variants: new Map() };
 
 export class AntigravityAgentProvider extends AcpAgentProvider {
     name = "antigravity-agent";
@@ -93,7 +99,11 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     }
 
     protected titleModelId(): string | undefined {
-        return titleModel;
+        return catalog.titleModel;
+    }
+
+    protected sessionModelId(model: string, config: LlmProviderConfig): string {
+        return resolveAntigravityModel(model, config.reasoningEffort, catalog.variants);
     }
 
     protected async launchSpec(): Promise<AcpLaunchSpec> {
@@ -107,9 +117,8 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     }
 
     protected buildModelList(remote: AcpSessionModelState): ModelInfo[] {
-        const models = buildAntigravityModelList(remote);
-        titleModel = pickTitleModel(models);
-        return models;
+        recordCatalog(remote);
+        return buildAntigravityModelList(remote);
     }
 
     protected decidePermission(request: AcpPermissionRequest): AcpPermissionOutcome {
@@ -134,15 +143,20 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
      * sign-in under `GEMINI_HOME`, so later sessions need none.
      */
     protected async createSession(client: AcpClient, params: AcpNewSessionParams, interactive: boolean, timeoutMs: number) {
+        let created: Awaited<ReturnType<AcpAgentProvider["createSession"]>>;
         try {
-            return await super.createSession(client, params, interactive, timeoutMs);
+            created = await super.createSession(client, params, interactive, timeoutMs);
         } catch (err) {
             if (!interactive || !isSignInRequired(err)) {
                 throw err;
             }
+            await client.request("authenticate", { methodId: SIGN_IN_METHOD }, SIGN_IN_TIMEOUT_MS);
+            created = await super.createSession(client, params, interactive, timeoutMs);
         }
-        await client.request("authenticate", { methodId: SIGN_IN_METHOD }, SIGN_IN_TIMEOUT_MS);
-        return await super.createSession(client, params, interactive, timeoutMs);
+        if (created.models) {
+            recordCatalog(created.models);
+        }
+        return created;
     }
 
     protected describeFailure(error: unknown): string {
@@ -182,20 +196,47 @@ export function decideAntigravityPermission(request: AcpPermissionRequest, logLa
 }
 
 /**
- * The server's catalog, led by the entry that defers to its own default. The
- * server's order is kept: it is the picker Antigravity itself shows, newest
- * first.
+ * The server's catalog, led by the entry that defers to its own default, with
+ * each model listed once. The server names an effort level inside the model
+ * (`Gemini 3.8 Flash (High)`, `gemini-3.8-flash-high`), so its variants
+ * become one entry, `gemini-3.8-flash`, that lists the levels as
+ * `reasoningEfforts`; {@link resolveAntigravityModel} picks the variant for a
+ * turn. The server's order is kept: it is the picker Antigravity itself
+ * shows, newest first.
  */
 export function buildAntigravityModelList(remote: AcpSessionModelState): ModelInfo[] {
-    const models = (remote.availableModels ?? [])
-        .filter(m => m.modelId && m.modelId !== DEFAULT_MODEL_ID)
-        .map<ModelInfo>(m => ({
-            id: m.modelId,
-            name: m.name ?? m.modelId,
-            pricing: { input: 0, output: 0 },
-            isSubscription: true
-        }));
-    return [...AVAILABLE_MODELS, ...models];
+    const models = groupAntigravityCatalog(remote).map<ModelInfo>(entry => {
+        const common = { pricing: { input: 0, output: 0 }, isSubscription: true };
+        if (entry.variants.size === 1) {
+            const [ [ , modelId ] ] = entry.variants;
+            return { id: modelId, name: entry.variantNames.get(modelId) ?? modelId, ...common };
+        }
+        const reasoningEfforts = sortEfforts([ ...entry.variants.keys() ]);
+        return { id: entry.id, name: entry.name, ...common, reasoningEfforts, defaultReasoningEffort: defaultEffort(reasoningEfforts) };
+    });
+    return [ ...AVAILABLE_MODELS, ...models ];
+}
+
+/**
+ * The real model id for a listed model at an effort level: the variant for
+ * that level, the nearest one when the model lacks it (the higher on a tie),
+ * or the model's default level without a choice. An id that names no grouped
+ * model, such as a variant saved before grouping, is returned as it is.
+ */
+export function resolveAntigravityModel(model: string, effort: LlmReasoningEffort | undefined, variants: Map<string, Map<LlmReasoningEffort, string>>): string {
+    const byEffort = variants.get(model);
+    if (!byEffort) {
+        return model;
+    }
+    const levels = sortEfforts([ ...byEffort.keys() ]);
+    const wanted = LLM_REASONING_EFFORTS.indexOf(effort ?? defaultEffort(levels));
+    let chosen = levels[0];
+    for (const level of levels) {
+        if (Math.abs(LLM_REASONING_EFFORTS.indexOf(level) - wanted) <= Math.abs(LLM_REASONING_EFFORTS.indexOf(chosen) - wanted)) {
+            chosen = level;
+        }
+    }
+    return byEffort.get(chosen) ?? model;
 }
 
 /**
@@ -240,10 +281,70 @@ export function buildAntigravityEnv(
     return result;
 }
 
-/** `Gemini 3.8 Flash (High)` → family `Flash`, version `[3, 8]`; undefined for any other shape. */
-function parseGeminiModelName(name: string): { family: string; version: number[] } | undefined {
-    const match = /^Gemini (\d+(?:\.\d+)*) (.+?) \([^)]+\)$/.exec(name);
-    return match ? { family: match[2], version: match[1].split(".").map(Number) } : undefined;
+/**
+ * `Gemini 3.8 Flash (High)` → family `Flash`, version `[3, 8]`, model
+ * `Gemini 3.8 Flash`, effort `high`; the effort is absent from a name without
+ * one. Undefined for any other shape, or an effort label that is not a level.
+ */
+function parseGeminiModelName(name: string): { family: string; version: number[]; model: string; effort?: LlmReasoningEffort } | undefined {
+    const match = /^Gemini (\d+(?:\.\d+)*) (.+?)(?: \(([^)]+)\))?$/.exec(name);
+    if (!match) {
+        return undefined;
+    }
+    const effort = match[3] === undefined ? undefined : EFFORT_LABELS[match[3].toLowerCase()];
+    if (match[3] !== undefined && !effort) {
+        return undefined;
+    }
+    return { family: match[2], version: match[1].split(".").map(Number), model: `Gemini ${match[1]} ${match[2]}`, effort };
+}
+
+/** The effort levels Antigravity names in its models, by their label. */
+const EFFORT_LABELS: Record<string, LlmReasoningEffort | undefined> = { low: "low", medium: "medium", high: "high" };
+
+/**
+ * The catalog's models, variants of one model gathered into one entry. A model
+ * whose name carries no level is an entry with a single variant.
+ */
+function groupAntigravityCatalog(remote: AcpSessionModelState) {
+    const entries = new Map<string, { id: string; name: string; variants: Map<LlmReasoningEffort, string>; variantNames: Map<string, string> }>();
+    for (const model of remote.availableModels ?? []) {
+        if (!model.modelId || model.modelId === DEFAULT_MODEL_ID) {
+            continue;
+        }
+        const name = model.name ?? model.modelId;
+        const parsed = parseGeminiModelName(name);
+        const id = parsed?.effort ? parsed.model.toLowerCase().replace(/\s+/g, "-") : model.modelId;
+        let entry = entries.get(id);
+        if (!entry) {
+            entry = { id, name: parsed?.effort ? parsed.model : name, variants: new Map(), variantNames: new Map() };
+            entries.set(id, entry);
+        }
+        // A model without a level still needs a key; "high" is never read back for it.
+        entry.variants.set(parsed?.effort ?? "high", model.modelId);
+        entry.variantNames.set(model.modelId, name);
+    }
+    return [ ...entries.values() ];
+}
+
+/** Remember the variants and the title model of a catalog the server reported. */
+function recordCatalog(remote: AcpSessionModelState) {
+    const variants = new Map<string, Map<LlmReasoningEffort, string>>();
+    for (const entry of groupAntigravityCatalog(remote)) {
+        if (entry.variants.size > 1) {
+            variants.set(entry.id, entry.variants);
+        }
+    }
+    const titleModel = (remote.availableModels ?? []).find(m => /flash-low$/.test(m.modelId))?.modelId;
+    catalog = { variants, titleModel };
+}
+
+function sortEfforts(efforts: LlmReasoningEffort[]): LlmReasoningEffort[] {
+    return [ ...efforts ].sort((a, b) => LLM_REASONING_EFFORTS.indexOf(a) - LLM_REASONING_EFFORTS.indexOf(b));
+}
+
+/** High where the model has it, as the server itself defaults to a High variant; the strongest otherwise. */
+function defaultEffort(sortedEfforts: LlmReasoningEffort[]): LlmReasoningEffort {
+    return sortedEfforts.includes("high") ? "high" : sortedEfforts[sortedEfforts.length - 1];
 }
 
 function compareVersions(a: number[], b: number[]): number {
@@ -254,11 +355,6 @@ function compareVersions(a: number[], b: number[]): number {
         }
     }
     return 0;
-}
-
-/** The newest low-effort Flash model, which the catalog lists first among its peers. */
-function pickTitleModel(models: ModelInfo[]): string | undefined {
-    return models.find(m => /flash-low$/.test(m.id))?.id;
 }
 
 /** The server's home, `GEMINI_HOME`: its sign-in, sessions and tool descriptions. */

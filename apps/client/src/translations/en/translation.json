@@ -2586,6 +2586,16 @@
     "sources": "Sources",
     "sources_summary": "{{count}} sources from {{sites}} sites",
     "extended_thinking": "Extended thinking",
+    "reasoning_effort_title": "Reasoning effort: {{level}}",
+    "reasoning_effort_levels": {
+      "none": "None",
+      "minimal": "Minimal",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "xhigh": "Extra high",
+      "max": "Maximum"
+    },
     "model_cost_included": "Subscription",
     "no_models_selected": "No models selected — click the pencil to choose",
     "no_model_selected": "Select a model",

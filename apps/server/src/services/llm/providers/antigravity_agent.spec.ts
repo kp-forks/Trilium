@@ -91,11 +91,14 @@ async function collect(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStre
     return chunks;
 }
 
+/** The catalog agy_acp_server 1.1.1 reports on session/new, newest first. */
 const REMOTE_MODELS = [
-    { modelId: "gemini-3.8-flash-high", name: "Gemini 3.8 Flash (High)" },
-    { modelId: "gemini-3.8-flash-low", name: "Gemini 3.8 Flash (Low)" },
-    { modelId: "gemini-3.7-flash-low", name: "Gemini 3.7 Flash (Low)" },
-    { modelId: "gemini-pro-agent", name: "Gemini 3.1 Pro (High)" }
+    ...["3.8", "3.7", "3.6"].flatMap(version => ["High", "Medium", "Low"].map(effort => ({
+        modelId: `gemini-${version}-flash-${effort.toLowerCase()}`,
+        name: `Gemini ${version} Flash (${effort})`
+    }))),
+    { modelId: "gemini-pro-agent", name: "Gemini 3.1 Pro (High)" },
+    { modelId: "gemini-3.1-pro-low", name: "Gemini 3.1 Pro (Low)" }
 ];
 
 const PERMISSION_OPTIONS = [
@@ -181,7 +184,7 @@ describe("AntigravityAgentProvider", () => {
         const models = await new AntigravityAgentProvider().listModels();
         expect(FakeAcpClient.current?.methods()).toEqual(["initialize", "session/new", "authenticate", "session/new"]);
         expect(FakeAcpClient.current?.requests[2].params).toEqual({ methodId: "oauth-personal" });
-        expect(models.map(m => m.id)).toEqual(["default", "gemini-3.8-flash-high", "gemini-3.8-flash-low", "gemini-3.7-flash-low", "gemini-pro-agent"]);
+        expect(models.map(m => m.id)).toEqual(["default", "gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.1-pro"]);
     });
 
     it("leaves the default model to the server, selects any other, and titles on the newest Flash Low", async () => {
@@ -197,28 +200,33 @@ describe("AntigravityAgentProvider", () => {
         expect(FakeAcpClient.current?.requests.find(r => r.method === "session/set_model")?.params).toEqual({ sessionId: "sess-1", modelId: "gemini-3.8-flash-low" });
     });
 
-    it("pre-selects the newest version of each family, every effort level included", () => {
-        // The catalog agy_acp_server 1.1.1 reports on session/new, newest first.
+    it("pre-selects the newest version of each family", () => {
         const models = buildAntigravityModelList({ availableModels: [
-            ...["3.8", "3.7", "3.6"].flatMap(version => ["High", "Medium", "Low"].map(effort => ({
-                modelId: `gemini-${version}-flash-${effort.toLowerCase()}`,
-                name: `Gemini ${version} Flash (${effort})`
-            }))),
-            { modelId: "gemini-pro-agent", name: "Gemini 3.1 Pro (High)" },
-            { modelId: "gemini-3.1-pro-low", name: "Gemini 3.1 Pro (Low)" },
+            ...REMOTE_MODELS,
             // A model named some other way is kept rather than hidden.
             { modelId: "gemini-nano-agent", name: "Gemini Nano Agent" }
         ] });
 
-        expect([...new AntigravityAgentProvider().recommendedModelIds(models)].sort()).toEqual([
-            "default",
-            "gemini-3.1-pro-low",
-            "gemini-3.8-flash-high",
-            "gemini-3.8-flash-low",
-            "gemini-3.8-flash-medium",
-            "gemini-nano-agent",
-            "gemini-pro-agent"
-        ]);
+        expect([...new AntigravityAgentProvider().recommendedModelIds(models)].sort())
+            .toEqual([ "default", "gemini-3.1-pro", "gemini-3.8-flash", "gemini-nano-agent" ]);
+    });
+
+    it("runs a model at the effort the chat chose, the model's default otherwise", async () => {
+        const provider = new AntigravityAgentProvider();
+        const modelSetFor = async (config: Record<string, unknown>) => {
+            await collect(provider.chatChunks([{ role: "user", content: "hi" }], config));
+            return (FakeAcpClient.current?.requests.find(r => r.method === "session/set_model")?.params as { modelId?: string } | undefined)?.modelId;
+        };
+
+        expect(await modelSetFor({ model: "gemini-3.8-flash", reasoningEffort: "medium" })).toBe("gemini-3.8-flash-medium");
+        expect(await modelSetFor({ model: "gemini-3.1-pro", reasoningEffort: "low" })).toBe("gemini-3.1-pro-low");
+        // No choice: the model's default, High.
+        expect(await modelSetFor({ model: "gemini-3.1-pro" })).toBe("gemini-pro-agent");
+        // A level the model lacks: the nearest one, the higher on a tie.
+        expect(await modelSetFor({ model: "gemini-3.1-pro", reasoningEffort: "medium" })).toBe("gemini-pro-agent");
+        expect(await modelSetFor({ model: "gemini-3.8-flash", reasoningEffort: "minimal" })).toBe("gemini-3.8-flash-low");
+        // A variant id saved before the variants were grouped still works.
+        expect(await modelSetFor({ model: "gemini-3.7-flash-low", reasoningEffort: "high" })).toBe("gemini-3.7-flash-low");
     });
 });
 
@@ -275,6 +283,17 @@ describe("AntigravityAgentProvider tool calls", () => {
 });
 
 describe("buildAntigravityModelList", () => {
+    it("lists each model once, with the efforts it comes in", () => {
+        const efforts = { pricing: { input: 0, output: 0 }, isSubscription: true, defaultReasoningEffort: "high" };
+        expect(buildAntigravityModelList({ availableModels: REMOTE_MODELS })).toEqual([
+            { id: "default", name: "Default", pricing: { input: 0, output: 0 }, isDefault: true, isSubscription: true },
+            { id: "gemini-3.8-flash", name: "Gemini 3.8 Flash", reasoningEfforts: [ "low", "medium", "high" ], ...efforts },
+            { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash", reasoningEfforts: [ "low", "medium", "high" ], ...efforts },
+            { id: "gemini-3.6-flash", name: "Gemini 3.6 Flash", reasoningEfforts: [ "low", "medium", "high" ], ...efforts },
+            { id: "gemini-3.1-pro", name: "Gemini 3.1 Pro", reasoningEfforts: [ "low", "high" ], ...efforts }
+        ]);
+    });
+
     it("leads with the server's own default and keeps the server's order and names", () => {
         expect(buildAntigravityModelList({ availableModels: [{ modelId: "gemini-x" }, { modelId: "default" }, { modelId: "" }] })).toEqual([
             { id: "default", name: "Default", pricing: { input: 0, output: 0 }, isDefault: true, isSubscription: true },

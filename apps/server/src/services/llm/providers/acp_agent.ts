@@ -168,6 +168,15 @@ export abstract class AcpAgentProvider implements LlmProvider {
 
     abstract recommendedModelIds(models: ModelInfo[]): Set<string>;
 
+    /**
+     * The id to hand `session/set_model` for the chat's model and settings. A
+     * provider whose agent names an effort level inside the model id maps
+     * {@link LlmProviderConfig.reasoningEffort} here.
+     */
+    protected sessionModelId(model: string, _config: LlmProviderConfig): string {
+        return model;
+    }
+
     /** The cheap model for the title turn, if the agent offers one. */
     protected titleModelId(): string | undefined {
         return undefined;
@@ -345,7 +354,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
                 // Model selection is an optional ACP capability — degrade to the
                 // agent's default rather than failing the turn.
                 try {
-                    await client.request("session/set_model", { sessionId, modelId: model }, INIT_TIMEOUT_MS);
+                    await client.request("session/set_model", { sessionId, modelId: this.sessionModelId(model, config) }, INIT_TIMEOUT_MS);
                 } catch (err) {
                     getLog().error(`${this.logLabel}: failed to select model "${model}" (${describeError(err)}); continuing with the agent's default.`);
                 }
