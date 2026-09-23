@@ -530,13 +530,13 @@ function AntigravitySetup() {
     const components = {
         Code: <code />,
         // The registry entry lists the current archive for each platform.
-        Link: <a className="tn-link" href="https://github.com/agentclientprotocol/registry/blob/main/antigravity-acp/agent.json" target="_blank" rel="noopener noreferrer" />
+        Link: <a className="tn-link external" href="https://github.com/agentclientprotocol/registry/blob/main/antigravity-acp/agent.json" target="_blank" rel="noopener noreferrer" />
     };
     return (
         <ol className="model-selection-troubleshooting">
             <li>
                 {downloadUrl
-                    ? <Trans i18nKey="llm.antigravity_setup_archive" components={{ Link: <a className="tn-link" href={downloadUrl} target="_blank" rel="noopener noreferrer" /> }} />
+                    ? <Trans i18nKey="llm.antigravity_setup_archive" components={{ Link: <a className="tn-link external" href={downloadUrl} target="_blank" rel="noopener noreferrer" /> }} />
                     : <Trans i18nKey="llm.antigravity_setup_download" components={components} />}
             </li>
             <li><Trans i18nKey="llm.antigravity_setup_path" components={components} /></li>
