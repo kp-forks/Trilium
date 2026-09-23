@@ -15,7 +15,10 @@ export default function preprocessContent(rawContent: string | Uint8Array, type:
         if (!raw) {
             // Runs before stripTags(), which discards the data-* metadata and anchor text, and
             // against the original markup, because normalize() lowercases the noteIds it needs.
-            const injectedText = extractLinkSearchText(originalContent, resolveNoteTitle);
+            const injectedText = [
+                extractLinkSearchText(originalContent, resolveNoteTitle),
+                extractIconSearchText(originalContent)
+            ].filter(Boolean).join(" ");
 
             // Content size already filtered at DB level, safe to process
             content = stripTags(content);
@@ -137,6 +140,12 @@ const LINK_PREVIEW_TAG_RE = /<(?:section|span)\b[^>]*\bclass=["'][^"']*\blink-(?
 // Mirrors findInternalLinks() in services/notes.ts, inlined to keep that import out of here.
 const INTERNAL_LINK_RE = /href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)\/?"/g;
 
+// Must match what inline_icon_editing.ts writes in its dataDowncast.
+const ICON_TAG_RE = /<span\b[^>]*\bclass=["'][^"']*\btn-icon\b[^"']*["'][^>]*>/gi;
+
+/** The class every icon wears beside its pack's, which says nothing about which icon it is. */
+const ICON_MARKER_CLASS = "tn-icon";
+
 /** Collects extra searchable text from a note's link previews and internal-link targets. */
 function extractLinkSearchText(content: string, resolveNoteTitle?: NoteTitleResolver): string {
     const parts: string[] = [];
@@ -169,6 +178,32 @@ function extractLinkSearchText(content: string, resolveNoteTitle?: NoteTitleReso
     }
 
     return parts.join(" ");
+}
+
+/**
+ * Collects what the icons in a note's content should be findable by.
+ *
+ * An icon is an empty element, so stripping the markup leaves nothing of it behind and a note
+ * marked with one is unfindable. Each icon's pack class and the name inside it are appended as
+ * words instead — `bx bx-error-circle` gives `bx-error-circle error-circle` — so the class serves
+ * a search that knows it and the name serves one that does not.
+ */
+function extractIconSearchText(content: string): string {
+    const parts = new Set<string>();
+
+    for (const tag of content.match(ICON_TAG_RE) ?? []) {
+        for (const className of (extractAttribute(tag, "class") ?? "").split(/\s+/)) {
+            // A pack's bare prefix — `bx` — is worn by every icon it holds, so it names none.
+            if (className === ICON_MARKER_CLASS || !className.includes("-")) {
+                continue;
+            }
+
+            parts.add(className);
+            parts.add(className.slice(className.indexOf("-") + 1));
+        }
+    }
+
+    return [ ...parts ].join(" ");
 }
 
 /** Reads a single/double-quoted HTML attribute value from a tag string, entity-decoded. */
