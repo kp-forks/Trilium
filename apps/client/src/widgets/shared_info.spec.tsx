@@ -14,14 +14,17 @@ describe("buildShareLinkHtml", () => {
 });
 
 describe("getShareScope", () => {
-    it("tells a public share from a local one and from a standalone preview", () => {
+    it("tells a public share from a local one, a standalone preview and one only an export publishes", () => {
         const syncServerHost = "https://sync.example.com";
+        const platform = { isElectron: false, isStandalone: false, isMobileApp: false };
 
-        expect(getShareScope({ isElectron: false, isStandalone: false, syncServerHost: "" })).toBe("public");
-        expect(getShareScope({ isElectron: true, isStandalone: false, syncServerHost: "" })).toBe("local");
-        expect(getShareScope({ isElectron: true, isStandalone: false, syncServerHost })).toBe("public");
-        expect(getShareScope({ isElectron: false, isStandalone: true, syncServerHost: "" })).toBe("preview");
-        expect(getShareScope({ isElectron: false, isStandalone: true, syncServerHost })).toBe("public");
+        expect(getShareScope({ ...platform, syncServerHost: "" })).toBe("public");
+        expect(getShareScope({ ...platform, isElectron: true, syncServerHost: "" })).toBe("local");
+        expect(getShareScope({ ...platform, isElectron: true, syncServerHost })).toBe("public");
+        expect(getShareScope({ ...platform, isStandalone: true, syncServerHost: "" })).toBe("preview");
+        expect(getShareScope({ ...platform, isStandalone: true, syncServerHost })).toBe("public");
+        expect(getShareScope({ ...platform, isStandalone: true, isMobileApp: true, syncServerHost: "" })).toBe("export-only");
+        expect(getShareScope({ ...platform, isStandalone: true, isMobileApp: true, syncServerHost })).toBe("public");
     });
 });
 

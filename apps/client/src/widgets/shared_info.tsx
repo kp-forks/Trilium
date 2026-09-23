@@ -6,7 +6,7 @@ import FNote from "../entities/fnote";
 import attributes from "../services/attributes";
 import { t } from "../services/i18n";
 import { buildShareLink } from "../services/share_link";
-import { escapeHtml, isElectron, isStandalone } from "../services/utils";
+import { escapeHtml, isElectron, isMobileApp, isStandalone } from "../services/utils";
 import HelpButton from "./react/HelpButton";
 import { useNoteContext, useTriliumEvent, useTriliumOption } from "./react/hooks";
 import InfoBar from "./react/InfoBar";
@@ -18,7 +18,7 @@ export default function SharedInfo() {
 
     return (
         <InfoBar className="shared-info-widget" type="subtle" style={{display: (!link) ? "none" : undefined}}>
-            {link && <RawHtml html={t(SCOPE_MESSAGES[scope], { link })} />}
+            {link && <RawHtml html={t(SCOPE_MESSAGES[scope], { link, format: t("export.format_share_name") })} />}
             <HelpButton helpPage="R9pX4DGra2Vt" style={{ width: "24px", height: "24px" }} />
         </InfoBar>
     );
@@ -55,23 +55,35 @@ export function useShareInfo(note: FNote | null | undefined) {
     return {
         link,
         linkHref,
-        scope: getShareScope({ isElectron: isElectron(), isStandalone: !!isStandalone, syncServerHost })
+        scope: getShareScope({
+            isElectron: isElectron(),
+            isStandalone: !!isStandalone,
+            isMobileApp: isMobileApp(),
+            syncServerHost
+        })
     };
 }
 
 /**
  * Where a shared note can be opened from. `local` is the desktop app without a sync server, which
  * serves the page on the loopback address. `preview` is the standalone build without a sync server,
- * which renders the page in its own service worker, so only this browser can open it. A server
- * cannot tell whether it is reachable from outside, so it always reports `public`.
+ * which renders the page in its own service worker, so only this browser can open it. `export-only`
+ * is the mobile app without a sync server: its link opens nowhere, so the static export is the only
+ * way to publish the note. A server cannot tell whether it is reachable from outside, so it always
+ * reports `public`.
  */
-export function getShareScope({ isElectron, isStandalone, syncServerHost }: {
+export function getShareScope({ isElectron, isStandalone, isMobileApp, syncServerHost }: {
     isElectron: boolean;
     isStandalone: boolean;
+    isMobileApp: boolean;
     syncServerHost: string | null | undefined;
 }): ShareScope {
     if (syncServerHost) {
         return "public";
+    }
+
+    if (isMobileApp) {
+        return "export-only";
     }
 
     if (isStandalone) {
@@ -81,12 +93,13 @@ export function getShareScope({ isElectron, isStandalone, syncServerHost }: {
     return isElectron ? "local" : "public";
 }
 
-export type ShareScope = "public" | "local" | "preview";
+export type ShareScope = "public" | "local" | "preview" | "export-only";
 
 const SCOPE_MESSAGES: Record<ShareScope, string> = {
     public: "shared_info.shared_publicly",
     local: "shared_info.shared_locally",
-    preview: "shared_info.shared_preview"
+    preview: "shared_info.shared_preview",
+    "export-only": "shared_info.shared_export_only"
 };
 
 export function buildShareLinkHtml(link: string) {

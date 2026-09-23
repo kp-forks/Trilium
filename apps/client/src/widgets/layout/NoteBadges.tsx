@@ -83,25 +83,26 @@ function ShareBadge() {
     const { note } = useNoteContext();
     const [ , switchShareState ] = useShareState(note);
     const { scope, linkHref } = useShareInfo(note);
+    const badge = SHARE_BADGES[scope];
 
     return (linkHref &&
         <BadgeWithDropdown
-            icon={SHARE_BADGES[scope].icon}
-            text={t(SHARE_BADGES[scope].text)}
-            tooltip={scope === "preview"
-                ? t("breadcrumb_badges.shared_preview_description", { format: t("export.format_share_name") })
-                : undefined}
+            icon={badge.icon}
+            text={t(badge.text)}
+            tooltip={badge.tooltip && t(badge.tooltip, { format: t("export.format_share_name") })}
             className="share-badge"
         >
-            <FormListItem
-                icon="bx bx-copy"
-                onClick={() => copyTextWithToast(linkHref)}
-            >{t("breadcrumb_badges.shared_copy_to_clipboard")}</FormListItem>
-            <FormListItem
-                icon="bx bx-link-external"
-                onClick={(e) => goToLinkExt(e, linkHref)}
-            >{t("breadcrumb_badges.shared_open_in_browser")}</FormListItem>
-            <FormDropdownDivider />
+            {scope !== "export-only" && <>
+                <FormListItem
+                    icon="bx bx-copy"
+                    onClick={() => copyTextWithToast(linkHref)}
+                >{t("breadcrumb_badges.shared_copy_to_clipboard")}</FormListItem>
+                <FormListItem
+                    icon="bx bx-link-external"
+                    onClick={(e) => goToLinkExt(e, linkHref)}
+                >{t("breadcrumb_badges.shared_open_in_browser")}</FormListItem>
+                <FormDropdownDivider />
+            </>}
             <FormListItem
                 icon="bx bx-unlink"
                 onClick={() => switchShareState(false)}
@@ -110,10 +111,19 @@ function ShareBadge() {
     );
 }
 
-const SHARE_BADGES: Record<ShareScope, { icon: string; text: string }> = {
+const SHARE_BADGES: Record<ShareScope, { icon: string; text: string; tooltip?: string }> = {
     public: { icon: "bx bx-world", text: "breadcrumb_badges.shared_publicly" },
     local: { icon: "bx bx-share-alt", text: "breadcrumb_badges.shared_locally" },
-    preview: { icon: "bx bx-show", text: "breadcrumb_badges.shared_preview" }
+    preview: {
+        icon: "bx bx-show",
+        text: "breadcrumb_badges.shared_preview",
+        tooltip: "breadcrumb_badges.shared_preview_description"
+    },
+    "export-only": {
+        icon: "bx bx-export",
+        text: "breadcrumb_badges.shared_export_only",
+        tooltip: "breadcrumb_badges.shared_export_only_description"
+    }
 };
 
 function ClippedNoteBadge() {
