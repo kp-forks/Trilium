@@ -1,5 +1,6 @@
 import { iconFontFaceOverrides, type IconFontMetrics, IconRegistry } from "@triliumnext/commons";
 
+import becca from "../becca/becca";
 import type BAttachment from "../becca/entities/battachment";
 import type BNote from "../becca/entities/bnote";
 import boxiconsManifest from "./icon_pack_boxicons-v2.json" with { type: "json" };
@@ -69,6 +70,11 @@ export function getIconPacks() {
         icon: "bx bx-package",
         builtin: true
     };
+
+    // Custom packs are notes, which a search cannot find before becca is loaded (e.g. during setup).
+    if (!becca.loaded) {
+        return [ defaultIconPack ];
+    }
 
     const usedPrefixes = new Set<string>([defaultIconPack.prefix]);
     const customIconPacks = search.searchNotes("#iconPack")

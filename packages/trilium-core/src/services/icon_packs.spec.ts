@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
+import becca from "../becca/becca";
 import { buildNote } from "../test/becca_easy_mocking";
-import { determineBestFontAttachment, generateCss, generateIconRegistry, generateIconTransformCss, IconPackManifest, processIconPack } from "./icon_packs";
+import { determineBestFontAttachment, generateCss, generateIconRegistry, generateIconTransformCss, getIconPacks, IconPackManifest, processIconPack } from "./icon_packs";
+import search from "./search/services/search";
 
 const manifest: IconPackManifest = {
     icons: {
@@ -341,5 +343,25 @@ describe("Generating CSS for icon transforms", () => {
         expect(css).toContain(".bx-rotate-270 { transform: rotate(270deg); }");
         expect(css).toContain(".bx-flip-horizontal { transform: scaleX(-1); }");
         expect(css).toContain(".bx-flip-vertical { transform: scaleY(-1); }");
+    });
+});
+
+describe("Listing icon packs", () => {
+    afterEach(() => {
+        vi.restoreAllMocks();
+    });
+
+    it("returns only the built-in pack, without searching, while becca is not loaded", () => {
+        const wasLoaded = becca.loaded;
+        const searchNotes = vi.spyOn(search, "searchNotes");
+        becca.loaded = false;
+        try {
+            const iconPacks = getIconPacks();
+            expect(iconPacks.map(p => p.prefix)).toStrictEqual([ "bx" ]);
+            expect(iconPacks[0].builtin).toBe(true);
+            expect(searchNotes).not.toHaveBeenCalled();
+        } finally {
+            becca.loaded = wasLoaded;
+        }
     });
 });
