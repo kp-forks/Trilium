@@ -7,12 +7,13 @@ import {
 import InlineIconEditing, {
     ICON, ICON_TRANSFORM_COMMAND, ICON_TRANSFORMS, type IconTransform
 } from "./inline_icon_editing.js";
+import InlineIconUI, { CHANGE_ICON } from "./inline_icon_ui.js";
 
 /**
- * The balloon shown over a selected icon, and the one control it holds.
+ * The balloon shown over a selected icon, and the controls in it.
  *
- * `WidgetToolbarRepository` owns the balloon — where it points, when it appears and when it goes
- * away — so this plugin only names the items and says which view element they belong to.
+ * `WidgetToolbarRepository` positions the balloon and shows or hides it, so this plugin only lists
+ * the items and identifies the view element they apply to.
  */
 export default class InlineIconToolbar extends Plugin {
 
@@ -21,7 +22,7 @@ export default class InlineIconToolbar extends Plugin {
     }
 
     public static get requires() {
-        return [ WidgetToolbarRepository, InlineIconEditing ] as const;
+        return [ WidgetToolbarRepository, InlineIconEditing, InlineIconUI ] as const;
     }
 
     init() {
@@ -60,7 +61,7 @@ export default class InlineIconToolbar extends Plugin {
     afterInit() {
         this.editor.plugins.get(WidgetToolbarRepository).register(ICON, {
             ariaLabel: this.editor.t("Icon toolbar"),
-            items: [ ICON_TRANSFORM_COMMAND ],
+            items: [ CHANGE_ICON, ICON_TRANSFORM_COMMAND ],
             getRelatedElement: (selection) => {
                 const viewElement = selection.getSelectedElement();
 

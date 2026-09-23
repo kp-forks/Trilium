@@ -107,7 +107,10 @@ export default class InlineIconEditing extends Plugin {
 
 }
 
-/** Puts one icon where the selection is. See {@link InlineIconEditing}. */
+/**
+ * Puts one icon where the selection is, replacing an icon that selection is already on. See
+ * {@link InlineIconEditing}.
+ */
 class InsertIconCommand extends Command {
 
     override refresh() {
@@ -125,10 +128,17 @@ class InsertIconCommand extends Command {
 
         const model = this.editor.model;
 
+        // A replacement copies `fontColor` and the rest from the icon it replaces, because a
+        // selection on an object element has no attributes of its own. An insert copies them from
+        // the caret, so an icon inserted into coloured text is that colour.
+        const replaced = selectedIcon(this.editor);
+        const inherited = replaced
+            ? replaced.getAttributes()
+            : model.document.selection.getAttributes();
+
         model.change((writer: ModelWriter) => {
             const icon = writer.createElement(ICON, {
-                // The caret's own attributes, so an icon put into coloured text is that colour.
-                ...Object.fromEntries(model.document.selection.getAttributes()),
+                ...Object.fromEntries(inherited),
                 [ICON_CLASS]: iconClass
             });
 

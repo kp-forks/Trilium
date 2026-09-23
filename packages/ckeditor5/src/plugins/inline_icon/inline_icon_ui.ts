@@ -7,7 +7,13 @@ import {
 import { INSERT_ICON_COMMAND } from "./inline_icon_editing.js";
 
 /**
- * The button an icon is inserted through, and the balloon the picking happens in.
+ * The button `InlineIconToolbar` puts in the balloon over a selected icon. It opens the same
+ * picker as the insert button, because `INSERT_ICON_COMMAND` replaces a selected icon.
+ */
+export const CHANGE_ICON = "changeIcon";
+
+/**
+ * The buttons an icon is inserted or swapped through, and the balloon the picking happens in.
  *
  * The editor owns the balloon — where it points, when it goes away — and the application paints its
  * own picker into it through `showIconPicker`, which is the one place every installed icon pack is
@@ -34,23 +40,8 @@ export default class InlineIconUI extends Plugin {
         const editor = this.editor;
         const t = editor.t;
 
-        editor.ui.componentFactory.add(INSERT_ICON_COMMAND, (locale) => {
-            // Always registered: InlineIconEditing is loaded beside this plugin.
-            const command = editor.commands.get(INSERT_ICON_COMMAND) as Command;
-            const view = new ButtonView(locale);
-
-            view.set({
-                label: t("Insert icon"),
-                icon: bxSticker,
-                tooltip: true
-            });
-
-            view.bind("isEnabled").to(command, "isEnabled");
-
-            this.listenTo(view, "execute", () => this.showPicker());
-
-            return view;
-        });
+        this.addPickerButton(INSERT_ICON_COMMAND, t("Insert icon"));
+        this.addPickerButton(CHANGE_ICON, t("Change icon"));
 
         // Esc reaches the editor only while the caret still has focus; the picker takes focus with
         // it, so the view carries a handler of its own (see {@link IconPickerView}).
@@ -137,6 +128,32 @@ export default class InlineIconUI extends Plugin {
             });
         });
         this._pickerResize.observe(container);
+    }
+
+    /**
+     * One button that opens the picker. Both buttons execute `INSERT_ICON_COMMAND` and take their
+     * enabled state from it, so both are disabled where an icon cannot be inserted.
+     */
+    private addPickerButton(name: string, label: string) {
+        const editor = this.editor;
+
+        editor.ui.componentFactory.add(name, (locale) => {
+            // Always registered: InlineIconEditing is loaded beside this plugin.
+            const command = editor.commands.get(INSERT_ICON_COMMAND) as Command;
+            const view = new ButtonView(locale);
+
+            view.set({
+                label,
+                icon: bxSticker,
+                tooltip: true
+            });
+
+            view.bind("isEnabled").to(command, "isEnabled");
+
+            this.listenTo(view, "execute", () => this.showPicker());
+
+            return view;
+        });
     }
 
     private _hide() {

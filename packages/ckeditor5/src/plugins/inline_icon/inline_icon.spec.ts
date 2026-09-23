@@ -51,6 +51,20 @@ describe("InlineIcon", () => {
                 ` contenteditable="false"></span></p>`);
     });
 
+    it("replaces a selected icon, keeping its colour", () => {
+        setModelData(editor.model, `<paragraph>Press [<inlineIcon fontColor="rgb(255,0,0)"`
+            + ` iconClass="bx bx-cog bx-rotate-90"></inlineIcon>] now</paragraph>`);
+
+        editor.execute("insertIcon", { iconClass: "bx bx-star" });
+
+        // `fontColor` is copied from the replaced icon; reading it from the caret instead would
+        // leave the replacement uncoloured inside a coloured run. The transform is not copied: it
+        // is part of `iconClass`, which the new icon supplies.
+        expect(getModelData(editor.model, { withoutSelection: true }))
+            .toBe(`<paragraph>Press <inlineIcon fontColor="rgb(255,0,0)" iconClass="bx bx-star">`
+                + `</inlineIcon> now</paragraph>`);
+    });
+
     it("upcasts a stored icon back, keeping the pack's classes and dropping the marker", () => {
         editor.setData(`<p>Press <span class="tn-icon bx bx-cog"></span>.</p>`);
 
@@ -238,6 +252,26 @@ describe("the balloon InlineIcon picks in", () => {
         expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
     });
 
+    it("picks over the selected icon when the change button is the one pressed", () => {
+        setModelData(
+            editor.model,
+            `<paragraph>Press [<inlineIcon iconClass="bx bx-cog"></inlineIcon>]</paragraph>`
+        );
+
+        pressChangeIcon(editor);
+        // The picker points at the icon rather than at a caret, since that is what is selected.
+        const { target } = editor.plugins.get(ContextualBalloon).getPositionOptions() ?? {};
+        const at = typeof target === "function" ? target() : target;
+
+        showIconPicker.mock.calls[0][0].onSelect("bx bx-star");
+
+        expect(editor.getData())
+            .toBe(`<p>Press&nbsp;<span class="tn-icon bx bx-star"></span></p>`);
+        expect(at).toBeInstanceOf(Range);
+        expect((at as Range).collapsed).toBe(false);
+        expect(release).toHaveBeenCalledOnce();
+    });
+
     it("takes the balloon back down for a host that shows the picker its own way", () => {
         showIconPicker.mockReturnValue(null);
 
@@ -360,7 +394,16 @@ describe("InlineIcon under the shipped General HTML Support configuration", () =
 });
 
 function pressInsertIcon(editor: ClassicEditor) {
-    const button = editor.ui.componentFactory.create("insertIcon") as unknown as ButtonView;
+    pressPickerButton(editor, "insertIcon");
+}
+
+/** The button in the balloon over a selected icon, which opens the same picker. */
+function pressChangeIcon(editor: ClassicEditor) {
+    pressPickerButton(editor, "changeIcon");
+}
+
+function pressPickerButton(editor: ClassicEditor, name: string) {
+    const button = editor.ui.componentFactory.create(name) as unknown as ButtonView;
     button.fire("execute");
 }
 

@@ -71,7 +71,7 @@ describe("InlineIconToolbar", () => {
         const definition = toolbarDefinition();
         const selection = editor.editing.view.document.selection;
 
-        expect(definition?.itemsConfig).toEqual([ "iconTransform" ]);
+        expect(definition?.itemsConfig).toEqual([ "changeIcon", "iconTransform" ]);
 
         selectIcon("bx bx-cog");
         expect(definition?.getRelatedElement(selection)?.hasClass("tn-icon")).toBe(true);
