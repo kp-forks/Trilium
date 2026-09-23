@@ -1,13 +1,15 @@
-<p>Every built-in note tag OneNote can apply, and what the importer writes
-  in its place. Trilium draws an icon in the paragraph's own colour and size,
-  so a tag inherits whatever formatting surrounds it, and the icon's name
-  is added to the note's searchable text.</p>
-<p>Custom tags are not supported by the OneNote API and never reach the importer.</p>
+<p>OneNote's <em>Tags</em> functionality is imported in Trilium as&nbsp;<a
+  class="reference-link" href="#root/_help_hD8GawVuazff">Icons</a>&nbsp;using
+  the default icon pack or emojis (if there is no suitable replacement).</p>
+<aside
+class="admonition important">
+  <p>Custom tags are not supported by the OneNote API and never reach the importer.</p>
+</aside>
 <h3>Decorative tags</h3>
-<p>These stay paragraphs, with the glyph written in front of the text. A
-  paragraph can carry several tags at once, in which case their glyphs stack.</p>
-<figure
-class="table">
+<p>These remain formatted as paragraphs, with the glyph prepended to the
+  text. A paragraph can carry several tags at once, in which case their glyphs
+  stack.</p>
+<figure class="table">
   <table>
     <thead>
       <tr>
@@ -199,10 +201,10 @@ class="table">
   </table>
 </figure>
 <h3>Check box tags</h3>
-<p>These become task list items, with the glyph inside the item. A run of
-  consecutive ones becomes a single list, and a tag OneNote marked completed
-  arrives with its box ticked.</p>
-<figure class="table">
+<p>These become&nbsp;<a class="reference-link" href="#root/_help_fASfBrYnquKU">To-do Lists</a>,
+  with the glyph inside the item with the tick state preserved:</p>
+<figure
+class="table">
   <table>
     <thead>
       <tr>
@@ -293,15 +295,3 @@ class="table">
     </tbody>
   </table>
 </figure>
-<h3>Notes</h3>
-<ul>
-  <li><strong>Project A</strong>, <strong>Project B</strong>, <strong>To Do priority 1</strong> and <strong>To Do priority 2</strong> keep
-    an emoji rather than an icon. Their glyph is a letter or a number, and
-    the icon pack has neither, so no icon could tell one from the other. These
-    four are the only tags not findable by name.</li>
-  <li><strong>Definition</strong> is imported as a pin rather than a book: the
-    OneNote API returns both the Definition and the Remember for later tag
-    as <code>remember-for-later</code>, so the two are indistinguishable by
-    the time the page reaches Trilium.</li>
-  <li><strong>To Do</strong> is a plain tick box with no glyph, as it is in OneNote.</li>
-</ul>

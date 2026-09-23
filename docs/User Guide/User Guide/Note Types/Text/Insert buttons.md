@@ -62,4 +62,4 @@ Page breaks are marked in the editor with the words _Page break_, but they will 
 
 ## Icons
 
-See the dedicated <a class="reference-link" href="Icons.md">Icons</a> page.
+Icons just like the ones for the [note icon](../../Basic%20Concepts%20and%20Features/Notes/Note%20Icons%20%26%20Colors.md) can be inserted in text. For more information see <a class="reference-link" href="Insert%20buttons/Icons.md">Icons</a>.

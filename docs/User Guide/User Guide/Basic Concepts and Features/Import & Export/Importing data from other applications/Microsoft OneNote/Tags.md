@@ -1,11 +1,12 @@
-# Note Tags
-Every built-in note tag OneNote can apply, and what the importer writes in its place. Trilium draws an icon in the paragraph's own colour and size, so a tag inherits whatever formatting surrounds it, and the icon's name is added to the note's searchable text.
+# Tags
+OneNote's _Tags_ functionality is imported in Trilium as <a class="reference-link" href="../../../../Note%20Types/Text/Insert%20buttons/Icons.md">Icons</a> using the default icon pack or emojis (if there is no suitable replacement).
 
-Custom tags are not supported by the OneNote API and never reach the importer.
+> [!IMPORTANT]
+> Custom tags are not supported by the OneNote API and never reach the importer.
 
 ### Decorative tags
 
-These stay paragraphs, with the glyph written in front of the text. A paragraph can carry several tags at once, in which case their glyphs stack.
+These remain formatted as paragraphs, with the glyph prepended to the text. A paragraph can carry several tags at once, in which case their glyphs stack.
 
 | OneNote tag | `data-tag` | Imported as | Searchable as |
 | --- | --- | --- | --- |
@@ -32,7 +33,7 @@ These stay paragraphs, with the glyph written in front of the text. A paragraph 
 
 ### Check box tags
 
-These become task list items, with the glyph inside the item. A run of consecutive ones becomes a single list, and a tag OneNote marked completed arrives with its box ticked.
+These become <a class="reference-link" href="../../../../Note%20Types/Text/To-do%20Lists.md">To-do Lists</a>, with the glyph inside the item with the tick state preserved:
 
 | OneNote tag | `data-tag` | Imported as | Searchable as |
 | --- | --- | --- | --- |
@@ -45,9 +46,3 @@ These become task list items, with the glyph inside the item. A run of consecuti
 | Schedule meeting | `schedule-meeting` | <span class="tn-icon bx bx-calendar"></span> | `calendar` |
 | Call back | `call-back` | <span class="tn-icon bx bx-phone-call"></span> | `phone-call` |
 | Client request | `client-request` | <span class="tn-icon bx bx-clipboard"></span> | `clipboard` |
-
-### Notes
-
-*   **Project A**, **Project B**, **To Do priority 1** and **To Do priority 2** keep an emoji rather than an icon. Their glyph is a letter or a number, and the icon pack has neither, so no icon could tell one from the other. These four are the only tags not findable by name.
-*   **Definition** is imported as a pin rather than a book: the OneNote API returns both the Definition and the Remember for later tag as `remember-for-later`, so the two are indistinguishable by the time the page reaches Trilium.
-*   **To Do** is a plain tick box with no glyph, as it is in OneNote.
