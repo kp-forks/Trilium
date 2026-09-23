@@ -39,7 +39,7 @@ export default class InlineIconEditing extends Plugin {
             // Self-contained: the caret cannot be put inside it, and it is selected as a unit.
             isObject: true,
             // Colouring needs no converter of ours; CKEditor's own carry these two.
-            allowAttributes: [ ICON_CLASS, "fontColor", "fontBackgroundColor" ]
+            allowAttributes: [ ICON_CLASS, "fontColor", "fontBackgroundColor", "fontSize" ]
         });
 
         editor.conversion.for("upcast").elementToElement({

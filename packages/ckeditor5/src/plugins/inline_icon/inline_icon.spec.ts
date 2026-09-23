@@ -1,7 +1,7 @@
 import {
     _getModelData as getModelData, _getViewData as getViewData, _setModelData as setModelData,
     type ButtonView, type ClassicEditor, ContextualBalloon, FontBackgroundColor, FontColor,
-    GeneralHtmlSupport, Link, Paragraph
+    FontSize, GeneralHtmlSupport, Link, Paragraph
 } from "ckeditor5";
 import editorStylesheetUrl from "ckeditor5/ckeditor5.css?url";
 import { beforeAll, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
@@ -139,6 +139,49 @@ describe("an icon's colour", () => {
 
         // Inside the colour the text already wears, rather than beside it in a colour of its own.
         expect(editor.getData()).toBe(`<p><span style="color:rgb(255,0,0);">red`
+            + `<span class="tn-icon bx bx-cog"></span></span></p>`);
+    });
+});
+
+describe("an icon's size", () => {
+    let editor: ClassicEditor;
+
+    beforeEach(async () => {
+        editor = await createTestEditor([ Paragraph, InlineIcon, FontSize ]);
+    });
+
+    it("is the toolbar's to set, and leaves the run around it whole", () => {
+        editor.setData(`<p>a<span class="tn-icon bx bx-cog"></span>b</p>`);
+        selectTheIcon(editor);
+
+        expect(editor.commands.get("fontSize")?.isEnabled).toBe(true);
+
+        editor.execute("fontSize", { value: "big" });
+        expect(editor.getData())
+            .toBe(`<p>a<span class="text-big"><span class="tn-icon bx bx-cog"></span></span>b</p>`);
+
+        // A line sized as a whole stays one run. An icon the size cannot be put on splits it in
+        // two and is stranded between the halves at the size it started at.
+        editor.setData(`<p>a<span class="tn-icon bx bx-cog"></span>b</p>`);
+        editor.model.change((writer) => {
+            const root = editor.model.document.getRoot();
+            if (root) {
+                writer.setSelection(writer.createRangeIn(root), "in");
+            }
+        });
+
+        editor.execute("fontSize", { value: "big" });
+        expect(editor.getData())
+            .toBe(`<p><span class="text-big">a<span class="tn-icon bx bx-cog"></span>b</span></p>`);
+    });
+
+    it("is the size of the text it is put into, where that text has one", () => {
+        editor.setData(`<p><span class="text-big">big</span></p>`);
+        putCaretAtTheEnd(editor);
+
+        editor.execute("insertIcon", { iconClass: "bx bx-cog" });
+
+        expect(editor.getData()).toBe(`<p><span class="text-big">big`
             + `<span class="tn-icon bx bx-cog"></span></span></p>`);
     });
 });
