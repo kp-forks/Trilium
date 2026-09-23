@@ -35,6 +35,7 @@ import { BookmarkUI, type Editor, type MentionFeedObjectItem, Plugin } from "cke
 
 import collapsibleIcon from "../../icons/collapsible.svg?raw";
 import dateTimeIcon from "../../icons/date-time.svg?raw";
+import insertIconIcon from "../../icons/insert-icon.svg?raw";
 import insertFootnoteIcon from "../../icons/insert-footnote.svg?raw";
 import importMarkdownIcon from "../../icons/markdown-mark.svg?raw";
 import mathIcon from "../../icons/math.svg?raw";
@@ -44,6 +45,8 @@ import { ADMONITION_TYPE_NAMES, type AdmonitionType } from "../admonition/admoni
 import { getAdmonitionTitle } from "../admonition/admonition_ui.js";
 import aiIcon from "../ai_assistant/theme/icons/ai.svg?raw";
 import { COMMAND_NAME as INCLUDE_NOTE_COMMAND } from "../includenote.js";
+import { INSERT_ICON_COMMAND } from "../inline_icon/inline_icon_editing.js";
+import InlineIconUI from "../inline_icon/inline_icon_ui.js";
 import { COMMAND_NAME as INSERT_DATE_TIME_COMMAND } from "../insert_date_time.js";
 import { COMMAND_NAME as INTERNAL_LINK_COMMAND } from "../internallink.js";
 import { COMMAND_NAME as MARKDOWN_IMPORT_COMMAND } from "../markdownimport.js";
@@ -392,6 +395,20 @@ export function buildTriliumSlashCommands(editor: Editor): SlashCommandDefinitio
             description: t("Import Markdown from the clipboard"),
             icon: importMarkdownIcon,
             commandName: MARKDOWN_IMPORT_COMMAND
+        },
+        {
+            id: "icon",
+            title: t("Icon"),
+            description: t("Insert an icon from an installed icon pack"),
+            aliases: [ "symbol", "glyph" ],
+            icon: insertIconIcon,
+            commandName: INSERT_ICON_COMMAND,
+            // Deferred for the reason the anchor entry below is: the picker opens in a balloon
+            // placed at the caret, and the palette has not finished putting the selection back
+            // where it belongs until the tick is over.
+            execute: (target: Editor) => {
+                setTimeout(() => target.plugins.get(InlineIconUI).showPicker(), 0);
+            }
         },
         {
             id: "anchor",

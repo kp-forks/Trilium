@@ -4262,7 +4262,8 @@
       "warning": "Warning",
       "working": "Working…",
       "insert-icon": "Insert icon",
-      "icon": "Icon"
+      "icon": "Icon",
+      "insert-an-icon-from-an-installed-icon-pack": "Insert an icon from an installed icon pack"
     },
     "task-state-dropped-title": "Invalid task states",
     "task-state-dropped-message_one": "A custom task state definition is invalid and was ignored.",

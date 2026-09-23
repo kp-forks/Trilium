@@ -47,7 +47,7 @@ export default class InlineIconUI extends Plugin {
 
             view.bind("isEnabled").to(command, "isEnabled");
 
-            this.listenTo(view, "execute", () => this._show());
+            this.listenTo(view, "execute", () => this.showPicker());
 
             return view;
         });
@@ -68,7 +68,8 @@ export default class InlineIconUI extends Plugin {
         super.destroy();
     }
 
-    private _show() {
+    /** Opens the picker, which the `/` palette asks for as well as the toolbar button. */
+    public showPicker() {
         const editor = this.editor;
         const editorEl = editor.editing.view.getDomRoot();
         const shownAt = editor.editing.view.document.selection.getFirstRange();
