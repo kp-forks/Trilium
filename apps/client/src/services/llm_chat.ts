@@ -22,11 +22,12 @@ const PROVIDER_MODELS_TIMEOUT_MS = 6 * 60_000;
  * Fetch the live model list for a provider from its credentials. Used by the
  * model-selection screen while adding or editing a provider — the config need
  * not be saved yet. A server-side failure (e.g. a bad API key) rejects with a
- * clean message the screen can display.
+ * clean message the screen can display, and shows no toast.
  */
 export async function fetchProviderModels(query: ProviderModelsQuery): Promise<LlmModelInfo[]> {
     try {
-        const response = await server.postWithTimeout<{ models?: LlmModelInfo[] }>("llm-chat/provider-models", PROVIDER_MODELS_TIMEOUT_MS, query);
+        const response = await server.postWithTimeout<{ models?: LlmModelInfo[] }>(
+            "llm-chat/provider-models", PROVIDER_MODELS_TIMEOUT_MS, query, undefined, { silentBadRequest: true });
         return response.models ?? [];
     } catch (error) {
         throw new Error(serverErrorMessage(error));
