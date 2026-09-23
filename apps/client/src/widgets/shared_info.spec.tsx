@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { buildShareLinkHtml } from "./shared_info";
+import { buildShareLinkHtml, getShareScope } from "./shared_info";
 
 describe("buildShareLinkHtml", () => {
     it("keeps the whole link in the anchor's href and text, whatever characters it carries", () => {
@@ -10,6 +10,18 @@ describe("buildShareLinkHtml", () => {
         expect(anchor.getAttribute("href")).toBe(link);
         expect(anchor.textContent).toBe(link);
         expect(anchor.getAttributeNames().sort()).toEqual([ "class", "href" ]);
+    });
+});
+
+describe("getShareScope", () => {
+    it("tells a public share from a local one and from a standalone preview", () => {
+        const syncServerHost = "https://sync.example.com";
+
+        expect(getShareScope({ isElectron: false, isStandalone: false, syncServerHost: "" })).toBe("public");
+        expect(getShareScope({ isElectron: true, isStandalone: false, syncServerHost: "" })).toBe("local");
+        expect(getShareScope({ isElectron: true, isStandalone: false, syncServerHost })).toBe("public");
+        expect(getShareScope({ isElectron: false, isStandalone: true, syncServerHost: "" })).toBe("preview");
+        expect(getShareScope({ isElectron: false, isStandalone: true, syncServerHost })).toBe("public");
     });
 });
 
