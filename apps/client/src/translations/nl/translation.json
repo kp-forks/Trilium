@@ -161,7 +161,7 @@
     "are_you_sure_remove_note": "Weet u zeker dat u de notitie \"{{title}}\" uit het relatie overzicht wil verwijderen? ",
     "if_you_dont_check": "De notitie zelf blijft behouden; alleen wordt de vermelding ervan hier verwijderd.",
     "also_delete_note": "Verwijder ook de notitie",
-    "delete_note_keeps_note_one": "De notitie heeft {{count}} andere klonen, de notitie zelf blijft dus behouden.",
+    "delete_note_keeps_note_one": "De notitie heeft {{count}} andere klone, de notitie zelf blijft dus behouden.",
     "delete_note_keeps_note_other": "De notitie heeft {{count}} andere klonen, de notitie zelf blijft dus behouden.",
     "delete_note_deletes_note": "Dit is de enige plaats waar de notitie in de boomstructuur voorkomt, de notitie wordt dus verwijderd. Dit kan ongedaan gemaakt worden via de recente wijzigingen.",
     "delete_note_deletes_clones": "De notitie wordt verwijderd uit alle {{places}}-locaties waar deze voorkomt. Dit kan ongedaan worden gemaakt via de recente wijzigingen."
@@ -170,7 +170,7 @@
     "title": "Verwijder notities",
     "close": "Sluiten",
     "clones_label": "Klonen",
-    "delete_clones_description_one": "Verwijder ook {{count}}  kloon. Kan ongedaan gemaakt worden bij recente aanpassingen.",
+    "delete_clones_description_one": "Verwijder ook {{count}} kloon. Kan ongedaan gemaakt worden bij recente aanpassingen.",
     "delete_clones_description_other": "Verwijder ook {{count}} klonen. Kan ongedaan gemaakt worden bij recente aanpassingen.",
     "delete_all_clones_description": "Verwijder ook alle klonen (kan ongedaan gemaakt worden bij recente wijzigingen)",
     "erase_notes_label": "Definitief verwijderen",
@@ -271,6 +271,191 @@
     "cardDescription": "ZIP, ENEX, OPML, Markdown, HTML, afbeeldingen en meer",
     "chooseImportFile": "Kies een importbestand",
     "importZipRecommendation": "Bij het importeren van een ZIP bestand wordt de hiërarchie van de notities aangepast aan de structuur van de submappen in het archief.",
-    "options": "Opties"
+    "options": "Opties",
+    "safeImportTooltip": "Trilium <code>.zip</code> exportbestanden kunnen uitvoerbare scripts bevatten. Bij een veilige import worden deze uitgeschakeld; schakel deze optie alleen uit als het archief bedoeld is om scripts uit te voeren en u de inhoud ervan vertrouwt.",
+    "safeImport": "Veilige import",
+    "explodeArchivesTooltip": "Maakt notities van de bestanden in de <code>.zip</code>, <code>.enex</code> and <code>.opml</code> archieven. Als deze optie is uitgeschakeld, worden de archieven ongewijzigd bijgevoegd.",
+    "explodeArchives": "Lees de inhoud van <code>.zip</code>, <code>.enex</code> and <code>.opml</code> archieven.",
+    "shrinkImagesTooltip": "Vermindert de bestandsgrootte van geïmporteerde afbeeldingen, wat de kwaliteit ervan enigszins kan verminderen. Dit geldt niet voor <code>.zip</code> importbestanden die Trilium metadata bevatten, waarvan wordt aangenomen dat de afbeeldingen daarin al gecomprimeerd zijn.",
+    "shrinkImagesProviderTooltip": "Verkleint de bestandsgrootte van geïmporteerde afbeeldingen, waardoor de kwaliteit ervan enigszins kan afnemen.",
+    "shrinkImages": "Afbeeldingen comprimeren",
+    "textImportedAsText": "Importeer HTML, Markdown en TXT als tekstnotities als dit niet duidelijk blijkt uit de metagegevens",
+    "codeImportedAsCode": "Importeer herkende codebestanden (bijv. <code>.json</code>) als codenotities als dit niet duidelijk blijkt uit de metagegevens",
+    "spreadsheetImportedAsSpreadsheet": "Importeer CSV- en Excel-bestanden als bewerkbare spreadsheets in plaats van als afzonderlijke bestanden",
+    "replaceUnderscoresWithSpaces": "Vervang onderstrepingstekens door spaties in geïmporteerde notitienamen",
+    "import": "Importeren",
+    "failed": "Het importeren is mislukt: {{message}}.",
+    "html_import_tags": {
+      "title": "HTML Import Tags",
+      "description": "Stel in welke HTML-tags behouden moeten blijven bij het importeren van notities. Tags die niet in deze lijst staan, worden tijdens het importeren verwijderd. Sommige tags (zoals ‘script’) worden om veiligheidsredenen altijd verwijderd.",
+      "placeholder": "Voer HTML tags in, één per regel",
+      "reset_button": "Terug naar standaardlijst"
+    },
+    "starting": "Bezig met importeren…",
+    "in-progress": "{{progress}} notities geïmporteerd",
+    "in-progress-with-total": "{{progress}} notities geïmporteerd van {{total}}",
+    "extracting": "{{progress}} items verkregen uit {{total}}",
+    "processing": "{{progress}} notities van de {{total}} zijn verwerkt",
+    "throttled": "De dienst beperkt het aantal verzoeken; de import wacht tot de toegang weer beschikbaar is…",
+    "throttled-with-total": "{{progress}} notities van de {{total}} geïmporteerd — de dienst past een verzoekbeperking toe, wachten tot de toegang weer beschikbaar is…",
+    "successful": "Het importeren is succesvol voltooid."
+  },
+  "file_upload": {
+    "drop_or_browse_single": "Sleep een bestand hierheen, of klik om te bladeren",
+    "drop_or_browse_multiple": "Sleep bestanden hierheen of klik om te bladeren",
+    "browse_single": "Tik om een bestand te kiezen",
+    "browse_multiple": "Tik om bestanden te selecteren",
+    "remove_file": "Bestand verwijderen"
+  },
+  "import_provider": {
+    "choose_provider": "Kies hierboven een dienst om uit te importeren."
+  },
+  "onenote_import": {
+    "name": "Microsoft OneNote",
+    "description": "Maakt verbinding met je account",
+    "connect_description": "Meld je aan met je Microsoft account om je OneNote notitieblokken te importeren.",
+    "connect": "Aanmelden met Microsoft",
+    "checking": "Verbinding maken met OneNote…",
+    "connecting": "Wachten tot het inloggen is voltooid…",
+    "device_instructions": "Open de aanmeldpagina van Microsoft en voer deze code in:",
+    "device_open_page": "Open de inlogpagina",
+    "device_cancel": "Aanmelding annuleren",
+    "connected_as": "Verbonden als {{name}}",
+    "disconnect": "Verbinding verbreken",
+    "refresh": "Vernieuwen",
+    "load_failed": "Je OneNote notitieboeken konden niet worden geladen.",
+    "load_retry": "Probeer het opnieuw",
+    "no_notebooks": "Er zijn geen notitieboeken gevonden in dit account.",
+    "no_notebooks_hint": "Er worden alleen notitieblokken weergegeven die zijn opgeslagen in de eigen OneDrive van dit account. Notitieboeken die met jou zijn gedeeld of die op een SharePoint- of Teams site staan, kunnen niet worden geïmporteerd.",
+    "select_sections": "Selecteer de secties die u wilt importeren",
+    "select_sections_hint": "OneNote neemt de oorspronkelijke volgorde niet mee in de geïmporteerde gegevens, waardoor secties en groepen worden gesorteerd op aanmaakdatum en mogelijk niet overeenkomen met de volgorde waarin ze in OneNote worden weergegeven.",
+    "import_count_one": "{{count}} sectie importeren",
+    "import_count_other": "{{count}} secties importeren",
+    "attach_source": "Voeg de originele HTML toe (debug)",
+    "attach_source_hint": "Slaat de ongewijzigde OneNote HTML van elke pagina op als bijlage bij de geïmporteerde notitie, zodat deze kan worden vergeleken met het geconverteerde resultaat."
+  },
+  "notion_import": {
+    "name": "Notion",
+    "description": "Vanuit een HTML-export",
+    "description_long": "Exporteer in Notion je werkruimte of een pagina als HTML, inclusief de subpagina’s, en selecteer vervolgens hier het resulterende .zip-bestand.",
+    "choose_file": "Notion export (.zip)",
+    "import": "Importeren"
+  },
+  "keep_import": {
+    "name": "Google Keep",
+    "description": "Uit een Takeout export",
+    "description_long": "Exporteer in Google Takeout je Keep gegevens als een .zip-bestand en selecteer vervolgens hier het resulterende bestand.",
+    "import": "Importeren"
+  },
+  "anytype_import": {
+    "name": "Elk type",
+    "description": "Uit een JSON export",
+    "description_long": "Exporteer je space in Anytype door het “Any-Block” formaat te gebruiken met “JSON” geselecteerd, selecteer vervolgens hier het resulterende .zip bestand. Voorlopig worden alleen pagina's en de bijbehorende tekst geïmporteerd.",
+    "import": "Importeren"
+  },
+  "obsidian_import": {
+    "name": "Obsidian",
+    "description": "Uit een kluis",
+    "description_long": "Zet je Obsidian Vault map in een zip-bestand en selecteer hier vervolgens het resulterende .zip bestand.",
+    "import": "Importeren"
+  },
+  "evernote_import": {
+    "name": "Evernote",
+    "description": "Uit .enex bestanden",
+    "description_long": "Exporteer in Evernote een notitieboek (of maximaal 100 notities tegelijk) als een ENEX bestand en selecteer vervolgens hier een of meer .enex bestanden. Elk bestand wordt als een afzonderlijk notitieboek geïmporteerd.",
+    "choose_file": "Evernote export (.enex)",
+    "import": "Importeren"
+  },
+  "include_note": {
+    "placeholder_search": "zoek een notitie op naam",
+    "box_size_small": "kort (~ 10 regels)",
+    "box_size_medium": "gemiddeld (~ 30 regels)",
+    "box_size_full": "volledig (in het vak wordt de volledige tekst weergegeven)",
+    "box_size_expandable": "uitklapbaar (standaard ingeklapt)"
+  },
+  "info": {
+    "modalTitle": "Informatiebericht",
+    "closeButton": "Sluiten",
+    "okButton": "OK",
+    "copy_to_clipboard": "Naar klembord kopiëren"
+  },
+  "jump_to_note": {
+    "search_placeholder": "Zoek een notitie op naam of type > voor opdrachten...",
+    "search_button": "Zoeken in de volledige tekst"
+  },
+  "markdown_editor": {
+    "image_upload_failed": "De afbeelding “{{name}}” kan niet worden geüpload."
+  },
+  "markdown_import": {
+    "dialog_title": "Markdown importeren",
+    "modal_body_text": "Vanwege de sandbox van de browser is het niet mogelijk om vanuit JavaScript rechtstreeks uit het klembord te lezen. Plak de Markdown die je wilt importeren in het tekstveld hieronder en klik op de knop Importeren",
+    "import_button": "Importeren",
+    "import_success": "De Markdown inhoud is in het document geïmporteerd."
+  },
+  "markdown_slash_commands": {
+    "date": "Voeg huidige datum en tijd in",
+    "include": "Voeg een andere notitie toe",
+    "image": "Afbeelding uploaden en invoegen",
+    "link": "Link naar een notitie invoegen",
+    "math": "Wiskundig vergelijkingsblok invoegen",
+    "footnote": "Voetnoot invoegen",
+    "mermaid": "Mermaid diagram invoegen",
+    "mermaid_template": "Een \"{{name}}\" Mermaid diagram invoegen",
+    "collapsible": "Inklapbaar blok invoegen",
+    "page_break": "Een pagina einde invoegen (voor afdrukken)",
+    "table": "Een tabel invoegen",
+    "placeholders": {
+      "math": "vergelijking",
+      "collapsible_summary": "Samenvatting",
+      "collapsible_details": "Details",
+      "table_column": "Kolom {{number}}"
+    }
+  },
+  "move_to": {
+    "dialog_title": "Notities verplaatsen naar ...",
+    "notes_to_move": "Te verplaatsen notities",
+    "search_placeholder": "zoek een notitie op naam",
+    "move_button": "Verplaats naar de geselecteerde notitie",
+    "error_no_path": "Geen pad om naar te verplaatsen.",
+    "move_success_message": "Geselecteerde notities zijn verplaatst naar "
+  },
+  "note_type_chooser": {
+    "change_path_prompt": "Pas aan waar de nieuwe notitie moet worden aangemaakt:",
+    "search_placeholder": "zoek pad op naam (standaard als dit veld leeg is)",
+    "modal_title": "Kies notitietype",
+    "modal_body": "Kies het notitietype / de sjabloon voor de nieuwe notitie:",
+    "builtin_templates": "Ingebouwde sjablonen",
+    "templates": "Sjablonen"
+  },
+  "password_not_set": {
+    "title": "Er is geen wachtwoord ingesteld",
+    "body1": "Beveiligde notities worden versleuteld met een gebruikerswachtwoord, maar er is nog geen wachtwoord ingesteld.",
+    "body2": "Om notities te beveiligen, klik je op de onderstaande knop om het dialoogvenster ‘Opties’ te openen en je wachtwoord in te stellen.",
+    "go_to_password_options": "Ga naar Wachtwoordopties"
+  },
+  "prompt": {
+    "ok": "OK"
+  },
+  "protected_session_password": {
+    "modal_title": "Beveiligde sessie",
+    "help_title": "Hulp bij beveiligde notities",
+    "close_label": "Sluiten",
+    "form_label": "Om door te gaan met de gevraagde actie, moet u een beveiligde sessie starten door uw wachtwoord in te voeren:",
+    "start_button": "Beveiligde sessie starten"
+  },
+  "recent_changes": {
+    "title": "Recente wijzigingen",
+    "deleted_notes_title": "Verwijderde notities",
+    "erase_notes_button": "Wis nu de verwijderde notities",
+    "more_actions": "Meer acties",
+    "deleted_notes_settings": "Instellingen voor verwijderde notities",
+    "deleted_notes_message": "Verwijderde notities zijn gewist.",
+    "no_changes_message": "Nog geen wijzigingen...",
+    "no_deleted_notes_message": "Er zijn geen verwijderde notities om weer te geven.",
+    "no_deleted_notes_erasure_hint": "Verwijderde notities worden {{- duration}} bewaard voordat ze definitief worden gewist.",
+    "undelete_link": "terugzetten",
+    "confirm_undelete": "Wilt u deze notitie en de bijbehorende sub-notities weer terugzetten?",
+    "confirm_undelete_to_default_location": "De bovenliggende notitie van deze notitie bestaat niet meer, dus deze kan niet op de oorspronkelijke locatie worden hersteld. Wil je de notitie in plaats daarvan op de standaardlocatie voor nieuwe notities herstellen?",
+    "undeleted_to_default_location": "De oorspronkelijke locatie bestaat niet meer, dus is de notitie teruggezet naar “{{- title}}”."
   }
 }
