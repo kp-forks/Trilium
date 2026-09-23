@@ -41,7 +41,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
     const contentNoteIdRef = useRef<string>();
     const watchdogRef = useRef<EditorWatchdog>(null);
     const editorApiRef = useRef<CKEditorApi>(null);
-    /** The balloon the editor has opened for the icon picker, while one is open. */
+    /** The open icon picker request and its balloon container, or `null` when none is open. */
     const [ iconPickerRequest, setIconPickerRequest ] = useState<IconPickerOpts & { container: HTMLElement } | null>(null);
     const [ language ] = useNoteLabel(note, "language");
     const [ textNoteEditorType ] = useTriliumOption("textNoteEditorType");
@@ -143,8 +143,8 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                 editorApi: editorApiRef.current,
             });
         },
-        // The editor places the balloon and takes it away; what goes inside it is the picker the
-        // application already has over every installed icon pack.
+        // CKEditor creates and positions the balloon; `IconPicker` renders into its container.
+        // On mobile, `showIconPickerDialog` opens the picker in a modal instead.
         showIconPicker(request: IconPickerOpts & { container: HTMLElement }) {
             if (isMobile()) {
                 parentComponent?.triggerCommand("showIconPickerDialog", { onSelect: request.onSelect });
@@ -515,7 +515,7 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
     );
 }
 
-/** How wide the picker stands in the editor's balloon, in icons. */
+/** The number of icons per row of the picker in the editor's balloon. */
 const ICON_PICKER_COLUMNS = 9;
 
 /**

@@ -22,12 +22,12 @@ import Modal from "./Modal";
 /** The room one icon takes in the grid, which also decides how many fit across a given width. */
 export const ICON_SIZE = isMobile() ? 56 : 48;
 
-/** The same, for the compact picker, where the icons are drawn with far less room around them. */
+/** The size of one icon cell in the compact grid, in pixels. */
 const COMPACT_ICON_SIZE = 40;
 
 /**
- * How many rows of icons the compact picker shows. The quarter row is deliberate: a row cut off at
- * the bottom edge is what tells the reader there is more to scroll to.
+ * The number of icon rows the compact grid shows. The partial last row shows that the grid
+ * scrolls.
  */
 const COMPACT_ROWS = 8.25;
 
@@ -52,10 +52,7 @@ interface IconPickerProps {
     resetText?: string;
     /** How many icons stand side by side; the host decides from the room it can give the grid. */
     columnCount: number;
-    /**
-     * Draw the grid smaller, for a host with less room to give than a menu of its own — the text
-     * editor's balloon, which stands over the note being written rather than beside it.
-     */
+    /** Renders smaller icons and `COMPACT_ROWS` rows, for the text editor's balloon. */
     compact?: boolean;
 }
 
@@ -95,8 +92,8 @@ export default function IconPicker({ onSelect, onReset, resetText, columnCount, 
                 ref={iconListRef}
                 style={{
                     width: (columnCount * iconSize + 10),
-                    // The regular grid is as tall as the screen leaves room for (see the CSS); the
-                    // compact one is cut to a set number of rows.
+                    // The CSS sets the height of the regular grid; the compact grid shows
+                    // `COMPACT_ROWS` rows.
                     ...(compact && { height: COMPACT_ROWS * iconSize })
                 }}
                 onClick={(e) => {
@@ -275,24 +272,22 @@ function IconPickerModalButton({
 }
 
 interface IconPickerModalProps extends Pick<IconPickerProps, "onSelect" | "onReset" | "resetText"> {
-    /** What picking an icon is for, worn as the heading. */
+    /** The modal title. */
     title: string;
     show: boolean;
     onHidden(): void;
 }
 
 /**
- * The picker on a screen of its own, for a host with nowhere to hang a menu: a phone, and anything
- * that asks for an icon without a button of its own to hang one under.
+ * Shows the picker in a modal, for mobile and for callers with no button to open a dropdown from.
  *
- * Closing on a pick is the host's to do, as it is the host that decides whether one pick is the end
- * of it.
+ * Picking an icon does not close the modal; the caller closes it through `show`.
  */
 export function IconPickerModal({ title, show, onHidden, onSelect, onReset, resetText }: IconPickerModalProps) {
     const { windowWidth } = useWindowSize();
 
-    // Out of whatever the host stands in — a panel floating over a note holds its own stacking
-    // context, and the modal belongs to the page rather than to it.
+    // Portal to `document.body` so that a caller inside a stacking context, such as a panel
+    // floating over a note, does not trap the modal.
     return createPortal((
         <Modal
             title={title}

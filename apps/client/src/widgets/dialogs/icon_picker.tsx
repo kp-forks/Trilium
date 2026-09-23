@@ -10,8 +10,8 @@ export interface IconPickerOpts {
 }
 
 /**
- * The icon picker on a screen of its own, for the callers that have no button to hang it under —
- * the text editor's toolbar, whose buttons belong to CKEditor rather than to this application.
+ * Shows `IconPickerModal` on the `showIconPickerDialog` event, for callers with no Preact button
+ * to open a dropdown from, such as the CKEditor toolbar on mobile.
  */
 export default function IconPickerDialog() {
     const onSelectRef = useRef<IconPickerOpts["onSelect"]>(null);
