@@ -125,8 +125,8 @@
     "target_parent_note": "대상 상위 노트",
     "search_for_note_by_its_name": "이름으로 노트 검색하기",
     "no_path_to_clone_to": "복제할 경로가 없습니다.",
-    "note_cloned": "\"{{clonedTitle}}\" 노트를 \"{{targetTitle}}\"에 복제했습니다.",
-    "cloned_note_prefix_title": "복제된 노트는 지정한 접두사와 함께 노트 트리에 표시됩니다.",
+    "note_cloned": "\"{{clonedTitle}}\" 노트를 \"{{targetTitle}}\"에 복제했습니다",
+    "cloned_note_prefix_title": "복제된 노트는 지정한 접두사와 함께 노트 트리에 표시됩니다",
     "prefix_optional": "접두사 (선택 사항)",
     "clone_to_selected_note": "선택한 노트로 복제"
   },
@@ -165,7 +165,7 @@
     "export": "내보내기",
     "choose_export_type": "먼저 내보내기 유형을 선택해 주세요",
     "export_finished_successfully": "내보내기를 성공적으로 완료했습니다.",
-    "format_pdf": "PDF - 인쇄 또는 공유용",
+    "format_pdf": "PDF - 인쇄 또는 공유용.",
     "close": "닫기",
     "export_type_subtree": "이 노트 및 모든 하위 노트",
     "what_to_export": "내보낼 항목",
@@ -1504,7 +1504,7 @@
   },
   "search_string": {
     "title_column": "검색 문자열:",
-    "placeholder": "전체 텍스트 키워드, #tag = 값...",
+    "placeholder": "Ctrl+Space로 제안 보기, @로 노트 지정, Shift+Enter로 새 줄 입력, Enter로 검색",
     "search_syntax": "검색 문법",
     "also_see": "참고",
     "complete_help": "검색 문법에 대한 완전한 도움말",
@@ -1516,7 +1516,13 @@
     "label_year_comparison": "숫자 비교입니다(>, >=, <도 사용 가능).",
     "label_date_created": "지난 한 달 동안 작성한 노트",
     "error": "검색 오류: {{error}}",
-    "search_prefix": "검색:"
+    "search_prefix": "검색:",
+    "hints": {
+      "title": "검색 문자열",
+      "completions": "제안 표시",
+      "new_line": "새 줄",
+      "run_search": "검색 실행"
+    }
   },
   "attachment_detail": {
     "open_help_page": "첨부 파일 도움말 페이지 열기",
@@ -3280,7 +3286,8 @@
       "move_column_to_edge": "열을 맨 왼쪽 / 맨 오른쪽으로 이동",
       "selection": "선택",
       "select_column": "열의 모든 카드 선택",
-      "clear_selection": "선택 해제"
+      "clear_selection": "선택 해제",
+      "toggle_column": "열 접기/펼치기(열 머리글에서)"
     },
     "inbox": "받은 편지함",
     "inherited-column": "이 카드는 템플릿 또는 상위 노트에서 열을 상속받으며, 해당 위치에서 변경할 수 있습니다.",
@@ -3304,7 +3311,7 @@
     "create-column-at-start": "맨 앞에 열 생성",
     "create-column-at-end": "맨 끝에 열 생성",
     "keep-column-collapsed": "열을 접은 상태로 유지",
-    "collapse-hint": "두 번 클릭하여 접기",
+    "collapse-hint": "두 번 클릭하거나 Space 키를 눌러 접기",
     "more-columns": "더 보기…",
     "collapse-all-columns": "모든 열 접기",
     "expand-all-columns": "모든 열 펼치기",
@@ -3353,7 +3360,8 @@
     "select-column-cards": "열의 모든 카드 선택",
     "reset-selection": "선택 초기화",
     "expand-column": "열 펼치기",
-    "cards-selected_other": "{{count}}개 카드 선택됨"
+    "cards-selected_other": "{{count}}개 카드 선택됨",
+    "delete-column-notes_other": "이 열의 노트 {{count}}개도 함께 삭제"
   },
   "dashboard_view": {
     "refresh-widget": "새로 고침",
@@ -4237,5 +4245,58 @@
       "pan_right": "오른쪽으로",
       "pan_fast": "빠르게 이동"
     }
+  },
+  "search_lint": {
+    "relation_needs_property": "관계는 노트를 가리키므로 동일 여부를 확인할 수 없습니다. 대신 .을 사용하여 해당 노트의 속성에 접근하세요.",
+    "text_needs_contains": "note.text는 제목과 내용을 함께 검색하므로 *=* 연산자로만 일치 여부를 확인할 수 있습니다.",
+    "content_not_ordered": "노트 내용은 텍스트이므로 순서를 비교할 수 없습니다. 대신 *=* 연산자를 사용하여 일치 여부를 확인하세요.",
+    "compare_the_title": "제목 비교",
+    "use_operator": "{{operator}} 사용"
+  },
+  "search_completion": {
+    "note": "노트 제목, 속성 및 관련 노트",
+    "operator_equal": "전체 값과 같음",
+    "operator_not_equal": "전체 값과 같지 않음",
+    "operator_contains": "포함",
+    "operator_starts_with": "다음으로 시작",
+    "operator_ends_with": "다음으로 끝남",
+    "operator_greater_than": "보다 큼",
+    "operator_greater_or_equal": "보다 크거나 같음",
+    "operator_less_than": "보다 작음",
+    "operator_less_or_equal": "보다 작거나 같음",
+    "operator_regex": "정규 표현식과 일치",
+    "operator_fuzzy_equal": "오타를 허용하여 같음",
+    "operator_fuzzy_contains": "오타를 허용하여 포함",
+    "property_content": "노트의 본문 텍스트",
+    "property_raw_content": "서식을 제거하기 전 노트의 본문 텍스트",
+    "property_text": "제목 또는 본문 텍스트",
+    "property_parents": "노트의 상위 노트에서 계속 검색",
+    "property_children": "노트의 하위 노트에서 계속 검색",
+    "property_ancestors": "노트의 조상 노트에서 계속 검색",
+    "property_labels": "뒤에 라벨 이름을 지정",
+    "property_relations": "뒤에 관계 이름을 지정한 다음 해당 노트의 속성을 지정",
+    "property_attribute_count": "상속된 항목을 포함한 라벨 및 관계 수",
+    "property_label_count": "상속된 항목을 포함한 라벨 수",
+    "property_relation_count": "상속된 항목을 포함한 관계 수",
+    "property_relation_count_including_links": "링크로 생성된 관계를 포함한 관계 수",
+    "property_owned_relation_count_including_links": "링크로 생성된 관계를 포함한 노트 자체의 관계 수",
+    "property_target_relation_count_including_links": "링크로 생성된 관계를 포함하여 이 노트를 대상으로 하는 관계 수",
+    "keyword_and": "두 조건이 모두 일치해야 함",
+    "keyword_or": "두 조건 중 하나가 일치해야 함",
+    "keyword_not": "괄호 안의 조건과 일치하는 노트를 제외",
+    "keyword_order_by": "속성 또는 라벨을 기준으로 결과 정렬",
+    "keyword_limit": "앞쪽 결과만 유지",
+    "date_now": "현재 날짜 및 시간",
+    "date_today": "오늘 날짜",
+    "date_month": "현재 월",
+    "date_year": "현재 연도",
+    "date_now_offset": "현재 시각에서 지정한 초만큼 이전",
+    "date_today_offset": "오늘에서 지정한 일수만큼 이전",
+    "date_month_offset": "이번 달에서 지정한 개월 수만큼 이전",
+    "date_year_offset": "올해에서 지정한 연수만큼 이전",
+    "label_marker": "라벨을 참조합니다. Enter 키를 눌러 라벨 목록 보기",
+    "label_marker_negated": "라벨을 제외합니다. Enter 키를 눌러 라벨 목록 보기",
+    "relation_marker": "관계를 참조합니다. Enter 키를 눌러 관계 목록 보기",
+    "relation_marker_negated": "관계를 제외합니다. Enter 키를 눌러 관계 목록 보기"
   }
 }
