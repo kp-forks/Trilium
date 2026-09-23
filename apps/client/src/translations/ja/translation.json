@@ -722,7 +722,8 @@
       "move_column_to_edge": "列を 一番左 / 一番右 に移動",
       "selection": "選択",
       "select_column": "列のすべてのカードを選択",
-      "clear_selection": "選択を解除"
+      "clear_selection": "選択を解除",
+      "toggle_column": "列を折りたたむ／展開する（列ヘッダー上で）"
     },
     "inbox": "インボックス",
     "inherited-column": "このカードは、テンプレートまたは親ノートから列情報を取得するため、そこで変更できます。",
@@ -746,7 +747,7 @@
     "create-column-at-start": "先頭に列を作成",
     "create-column-at-end": "末尾に列を作成",
     "keep-column-collapsed": "列を折りたたんだままにする",
-    "collapse-hint": "ダブルクリックで折りたたむ",
+    "collapse-hint": "ダブルクリックまたは Space キーで折りたたむ",
     "more-columns": "その他…",
     "collapse-all-columns": "すべての列を折りたたむ",
     "expand-all-columns": "すべての列を展開",
@@ -795,7 +796,8 @@
     "cards-selected_other": "{{count}} 枚のカードを選択中",
     "select-column-cards": "列のすべてのカードを選択",
     "reset-selection": "選択を解除",
-    "expand-column": "列を展開"
+    "expand-column": "列を展開",
+    "delete-column-notes_other": "この列にある {{count}} 件のノートも削除"
   },
   "code_buttons": {
     "execute_button_title": "スクリプトを実行",
@@ -2153,7 +2155,13 @@
     "label_date_created": "過去1ヶ月以内に作成されたノート",
     "error": "検索エラー: {{error}}",
     "search_prefix": "検索:",
-    "placeholder": "全文 キーワード、#tag = value..."
+    "placeholder": "Ctrl + Space で候補を表示、@ でノートを追加、Shift + Enter で改行、Enter で検索",
+    "hints": {
+      "title": "検索文字列",
+      "completions": "候補を表示",
+      "new_line": "改行",
+      "run_search": "検索を実行"
+    }
   },
   "delete_revisions": {
     "delete_note_revisions": "ノートの変更履歴を削除",
@@ -4237,5 +4245,58 @@
       "pan_right": "右",
       "pan_fast": "高速画面移動"
     }
+  },
+  "search_lint": {
+    "relation_needs_property": "リレーションはノートを指すため、等価性のチェック(直接比較)はできません。代わりに「 . 」を使用してプロパティにアクセスしてください。",
+    "text_needs_contains": "note.text はタイトルと本文を合わせて検索するため、*=（部分一致）でのみマッチング可能です。",
+    "content_not_ordered": "ノートの内容はテキストであるため、順序（大小）による比較はできません。代わりに *=* を使用して一致させてください。",
+    "compare_the_title": "タイトルを比較",
+    "use_operator": "{{operator}} を使用"
+  },
+  "search_completion": {
+    "note": "ノートのタイトル、プロパティ、およびリレーション先のノート",
+    "operator_equal": "値が一致",
+    "operator_not_equal": "値が不一致",
+    "operator_contains": "含む",
+    "operator_starts_with": "で始まる",
+    "operator_ends_with": "で終わる",
+    "operator_greater_than": "より大きい",
+    "operator_greater_or_equal": "以上",
+    "operator_less_than": "より小さい",
+    "operator_less_or_equal": "以下",
+    "operator_regex": "正規表現に一致",
+    "operator_fuzzy_equal": "あいまい一致で等しい",
+    "operator_fuzzy_contains": "あいまい一致で含む",
+    "property_content": "ノートの本文",
+    "property_raw_content": "書式設定が削除される前のノートの本文",
+    "property_text": "タイトルまたは本文",
+    "property_parents": "親ノートにも適用",
+    "property_children": "子ノートにも適用",
+    "property_ancestors": "すべての上位ノートにも適用",
+    "property_labels": "ラベル名を続けて指定",
+    "property_relations": "続けてリレーション名を指定し、続けてそのノート自体のプロパティを指定",
+    "property_attribute_count": "ラベルとリレーションの数（継承されたものを含む）",
+    "property_label_count": "ラベルの数（継承されたものを含む）",
+    "property_relation_count": "リレーションの数（継承されたものを含む）",
+    "property_relation_count_including_links": "リレーションの数（リンクによって作成されたものを含む）",
+    "property_owned_relation_count_including_links": "そのノート自身のリレーションの数（リンクによって作成されたものを含む）",
+    "property_target_relation_count_including_links": "そのノートをターゲットとするリレーションの数（リンクによって作成されたものを含む）",
+    "keyword_and": "両方の条件に一致",
+    "keyword_or": "いずれかの条件に一致",
+    "keyword_not": "括弧内の条件に一致するノートを除外",
+    "keyword_order_by": "プロパティまたはラベルで結果を並べ替える",
+    "keyword_limit": "先頭の結果だけを残す",
+    "date_now": "現在の日時",
+    "date_today": "今日の日付",
+    "date_month": "今月",
+    "date_year": "今年",
+    "date_now_offset": "現在から任意の秒数前",
+    "date_today_offset": "今日から任意の日数前",
+    "date_month_offset": "今月から任意の月数前",
+    "date_year_offset": "今年から任意の年数前",
+    "label_marker": "ラベルを指定。Enter キーを押すと一覧を表示",
+    "label_marker_negated": "ラベルを除外。Enter キーを押すと一覧を表示",
+    "relation_marker": "リレーションを指定。Enter キーを押すと一覧を表示",
+    "relation_marker_negated": "リレーションを除外。Enter キーを押すと一覧を表示"
   }
 }
