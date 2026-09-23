@@ -9,8 +9,6 @@ There are three matching modes:
 | **Exact full-text** | a leading `=` (e.g. `=sync`) | the exact whole word or phrase, ignoring surrounding punctuation | No | No |
 | **Attribute / property equality** | `=` inside a `#label=value` or `note.property=value` clause | the _entire_ attribute or property value, exactly | No | No |
 
-Every example below is backed 1:1 by an automated test, so the documentation cannot drift from the engine.
-
 ### Default matching (no prefix)
 
 **Rule:** typing words with no prefix finds notes that contain those words anywhere in the title, content or attributes, as whole words or as substrings. The closest matches are ranked first.
@@ -72,7 +70,7 @@ The examples assume a note titled `Books` carrying the label `#author=Tolkien`, 
 
 ### Fuzzy tolerance
 
-**Rule:** how many typos are tolerated depends on the **length** of your search term. Short terms must match exactly, because a single edit is enough to turn one short word into an unrelated one; longer terms tolerate more.
+**Rule:** how many typos are tolerated depends on the **length** of your search term. Short terms must match exactly, because a single edit is enough to turn one short word into an unrelated one; longer terms have greater tolerance.
 
 | Term length | Edits allowed |
 | --- | --- |

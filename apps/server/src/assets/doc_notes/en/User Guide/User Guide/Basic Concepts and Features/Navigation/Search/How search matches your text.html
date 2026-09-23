@@ -42,8 +42,6 @@
     </tbody>
   </table>
 </figure>
-<p>Every example below is backed 1:1 by an automated test, so the documentation
-  cannot drift from the engine.</p>
 <h3>Default matching (no prefix)</h3>
 <p><strong>Rule:</strong> typing words with no prefix finds notes that contain
   those words anywhere in the title, content or attributes, as whole words
@@ -326,8 +324,8 @@ class="table">
 <h3>Fuzzy tolerance</h3>
 <p><strong>Rule:</strong> how many typos are tolerated depends on the <strong>length</strong> of
   your search term. Short terms must match exactly, because a single edit
-  is enough to turn one short word into an unrelated one; longer terms tolerate
-  more.</p>
+  is enough to turn one short word into an unrelated one; longer terms have
+  greater tolerance.</p>
 <figure class="table">
   <table>
     <thead>
@@ -556,4 +554,3 @@ class="table">
     </tbody>
   </table>
 </figure>
-<p>&nbsp;</p>

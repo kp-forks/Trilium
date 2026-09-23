@@ -4467,7 +4467,47 @@
                                             ],
                                             "format": "markdown",
                                             "dataFileName": "Microsoft OneNote.md",
-                                            "attachments": []
+                                            "attachments": [],
+                                            "dirFileName": "Microsoft OneNote",
+                                            "children": [
+                                                {
+                                                    "isClone": false,
+                                                    "noteId": "LpvyEIBIAAj7",
+                                                    "notePath": [
+                                                        "pOsGYCXsbNQG",
+                                                        "gh7bpGYxajRS",
+                                                        "mHbBMPDPkVV5",
+                                                        "ckZ2uNWQmVeX",
+                                                        "GnhlmrATVqcH",
+                                                        "LpvyEIBIAAj7"
+                                                    ],
+                                                    "title": "Tags",
+                                                    "notePosition": 10,
+                                                    "prefix": null,
+                                                    "isExpanded": false,
+                                                    "type": "text",
+                                                    "mime": "text/html",
+                                                    "attributes": [
+                                                        {
+                                                            "type": "label",
+                                                            "name": "shareAlias",
+                                                            "value": "tags",
+                                                            "isInheritable": false,
+                                                            "position": 30
+                                                        },
+                                                        {
+                                                            "type": "label",
+                                                            "name": "iconClass",
+                                                            "value": "bx bx-star",
+                                                            "isInheritable": false,
+                                                            "position": 40
+                                                        }
+                                                    ],
+                                                    "format": "markdown",
+                                                    "dataFileName": "Tags.md",
+                                                    "attachments": []
+                                                }
+                                            ]
                                         },
                                         {
                                             "isClone": false,
@@ -6086,6 +6126,45 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "1_Insert buttons_plus.png"
+                                        }
+                                    ],
+                                    "dirFileName": "Insert buttons",
+                                    "children": [
+                                        {
+                                            "isClone": false,
+                                            "noteId": "hD8GawVuazff",
+                                            "notePath": [
+                                                "pOsGYCXsbNQG",
+                                                "KSZ04uQ2D1St",
+                                                "iPIMuisry3hd",
+                                                "CohkqWQC1iBv",
+                                                "hD8GawVuazff"
+                                            ],
+                                            "title": "Icons",
+                                            "notePosition": 10,
+                                            "prefix": null,
+                                            "isExpanded": false,
+                                            "type": "text",
+                                            "mime": "text/html",
+                                            "attributes": [
+                                                {
+                                                    "type": "label",
+                                                    "name": "iconClass",
+                                                    "value": "bx bx-sticker",
+                                                    "isInheritable": false,
+                                                    "position": 30
+                                                },
+                                                {
+                                                    "type": "label",
+                                                    "name": "shareAlias",
+                                                    "value": "icons",
+                                                    "isInheritable": false,
+                                                    "position": 40
+                                                }
+                                            ],
+                                            "format": "markdown",
+                                            "dataFileName": "Icons.md",
+                                            "attachments": []
                                         }
                                     ]
                                 },

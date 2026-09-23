@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { buildNote } from "../test/becca_easy_mocking";
-import { determineBestFontAttachment, generateCss, generateIconRegistry, IconPackManifest, processIconPack } from "./icon_packs";
+import { determineBestFontAttachment, generateCss, generateIconRegistry, generateIconTransformCss, IconPackManifest, processIconPack } from "./icon_packs";
 
 const manifest: IconPackManifest = {
     icons: {
@@ -329,5 +329,17 @@ describe("Icon registry", () => {
             "#iconPack": "bx"
         }));
         expect(iconPack).toBeFalsy();
+    });
+});
+
+describe("Generating CSS for icon transforms", () => {
+    it("carries every transform the text editor can write, unscoped to a pack", () => {
+        const css = generateIconTransformCss();
+
+        expect(css).toContain(".bx-rotate-90 { transform: rotate(90deg); }");
+        expect(css).toContain(".bx-rotate-180 { transform: rotate(180deg); }");
+        expect(css).toContain(".bx-rotate-270 { transform: rotate(270deg); }");
+        expect(css).toContain(".bx-flip-horizontal { transform: scaleX(-1); }");
+        expect(css).toContain(".bx-flip-vertical { transform: scaleY(-1); }");
     });
 });

@@ -125,6 +125,7 @@ export function renderNoteForExport(note: BNote, parentBranch: BBranch, basePath
         isStatic: true,
         iconPackCss: [
             ...iconPacks.map(p => iconPackService.generateCss(p, `${basePath}assets/icon-pack-${p.prefix.toLowerCase()}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`)),
+            iconPackService.generateIconTransformCss(),
             task_states.generateTaskStateCss()
         ]
             .filter(Boolean)
@@ -184,6 +185,7 @@ export function renderNoteContent(note: SNote, canAccessInclude?: CanAccessInclu
                 ? `assets/fonts/${p.fontAttachmentId}.${iconPackService.MIME_TO_EXTENSION_MAPPINGS[p.fontMime]}`
                 : `api/attachments/${p.fontAttachmentId}/download`
             )),
+            iconPackService.generateIconTransformCss(),
             task_states.generateTaskStateCss()
         ]
             .filter(Boolean)
