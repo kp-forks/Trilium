@@ -47,7 +47,10 @@ vi.mock("../../../react/WizardModal", () => ({
 }));
 
 // Listing a provider's models is a request of its own, and none of these cases are about it.
-vi.mock("./ModelSelection", () => ({ default: () => <div className="model-selection-stub" /> }));
+// The stub renders the checklist it is handed, which the screen shows when listing fails.
+vi.mock("./ModelSelection", () => ({
+    default: ({ troubleshooting }: { troubleshooting?: preact.ComponentChildren }) => <div className="model-selection-stub">{troubleshooting}</div>
+}));
 
 import AddProviderModal, { type LlmProviderConfig } from "./AddProviderModal";
 
@@ -98,6 +101,27 @@ function finish() {
     act(() => void nextButton()?.click());
     act(() => void nextButton()?.click());
 }
+
+describe("the model step", () => {
+    /** Picks a provider and moves on to the model step. */
+    function modelStepFor(name: string) {
+        open();
+        act(() => providerCard(name)?.click());
+        act(() => void nextButton()?.click());
+        return document.querySelector(".model-selection-stub");
+    }
+
+    it("offers the setup steps that fit the provider when its models cannot be listed", () => {
+        const antigravity = modelStepFor("Google Antigravity");
+        expect(antigravity?.textContent).toContain("llm.antigravity_setup_download");
+        expect(antigravity?.textContent).toContain("llm.antigravity_setup_path");
+        expect(antigravity?.textContent).toContain("llm.antigravity_setup_sign_in");
+        expect(antigravity?.textContent).not.toContain("llm.troubleshoot_server_running");
+
+        expect(modelStepFor("Ollama")?.textContent).toContain("llm.troubleshoot_server_running");
+        expect(modelStepFor("Claude Code")?.textContent).toBe("");
+    });
+});
 
 describe("picking a provider", () => {
     it("holds the step until one has been chosen, rather than taking whichever is first", () => {

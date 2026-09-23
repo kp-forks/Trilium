@@ -398,10 +398,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                             selected={selectedModels}
                             onChange={setSelectedModels}
                             autoSelectDefaults={seedDefaultModels}
-                            // Only for the local runtimes: the checklist is about starting a
-                            // server on your own machine, which says nothing useful about a
-                            // hosted endpoint failing to list.
-                            troubleshooting={providerType?.group === "local" ? <SelfHostedTroubleshooting /> : undefined}
+                            troubleshooting={troubleshootingFor(providerType)}
                         />
                     </CardSection>
                 </Card>
@@ -510,9 +507,34 @@ export function prefilledBaseUrl(providerId: string): string {
 }
 
 /**
- * Shown when a self-hosted endpoint can't be listed — the point at which the
- * user needs setup instructions, rather than on the way in.
+ * The checklist shown when a provider's models can't be listed, which is when
+ * the user needs setup instructions. Only the local runtimes and Google
+ * Antigravity have one: a hosted endpoint failing to list says nothing that
+ * steps on the user's own machine would fix.
  */
+function troubleshootingFor(providerType: ProviderType | undefined) {
+    if (providerType?.id === "antigravity-agent") {
+        return <AntigravitySetup />;
+    }
+    return providerType?.group === "local" ? <SelfHostedTroubleshooting /> : undefined;
+}
+
+/** How to install Google's Antigravity ACP server, which Trilium does not bundle. */
+function AntigravitySetup() {
+    const components = {
+        Code: <code />,
+        // The registry entry lists the current archive for each platform.
+        Link: <a className="tn-link" href="https://github.com/agentclientprotocol/registry/blob/main/antigravity-acp/agent.json" target="_blank" rel="noopener noreferrer" />
+    };
+    return (
+        <ol className="model-selection-troubleshooting">
+            <li><Trans i18nKey="llm.antigravity_setup_download" components={components} /></li>
+            <li><Trans i18nKey="llm.antigravity_setup_path" components={components} /></li>
+            <li><Trans i18nKey="llm.antigravity_setup_sign_in" components={components} /></li>
+        </ol>
+    );
+}
+
 function SelfHostedTroubleshooting() {
     return (
         <ul className="model-selection-troubleshooting">
