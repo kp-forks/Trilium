@@ -1,6 +1,7 @@
 import {
     _getModelData as getModelData, _getViewData as getViewData, _setModelData as setModelData,
-    type ButtonView, type ClassicEditor, ContextualBalloon, GeneralHtmlSupport, Paragraph
+    type ButtonView, type ClassicEditor, ContextualBalloon, FontBackgroundColor, FontColor,
+    GeneralHtmlSupport, Paragraph
 } from "ckeditor5";
 import editorStylesheetUrl from "ckeditor5/ckeditor5.css?url";
 import { beforeAll, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
@@ -78,6 +79,46 @@ describe("InlineIcon", () => {
         expect(command?.isEnabled).toBe(false);
     });
 
+});
+
+describe("an icon's colour", () => {
+    let editor: ClassicEditor;
+
+    beforeEach(async () => {
+        editor = await createTestEditor([ Paragraph, InlineIcon, FontColor, FontBackgroundColor ]);
+    });
+
+    it("is the toolbar's to set, and survives the round trip through the note", () => {
+        setModelData(editor.model, "<paragraph>a[]b</paragraph>");
+        editor.execute("insertIcon", { iconClass: "bx bx-cog" });
+        selectTheIcon(editor);
+
+        expect(editor.commands.get("fontColor")?.isEnabled).toBe(true);
+        expect(editor.commands.get("fontBackgroundColor")?.isEnabled).toBe(true);
+
+        editor.execute("fontColor", { value: "rgb(255,0,0)" });
+        editor.execute("fontBackgroundColor", { value: "rgb(0,255,0)" });
+
+        const stored = `<p>a<span style="background-color:rgb(0,255,0);color:rgb(255,0,0);">`
+            + `<span class="tn-icon bx bx-cog"></span></span>b</p>`;
+        expect(editor.getData()).toBe(stored);
+
+        editor.setData(stored);
+        expect(getModelData(editor.model, { withoutSelection: true }))
+            .toBe(`<paragraph>a<inlineIcon fontBackgroundColor="rgb(0,255,0)"`
+                + ` fontColor="rgb(255,0,0)" iconClass="bx bx-cog"></inlineIcon>b</paragraph>`);
+    });
+
+    it("is the colour of the text it is put into, where that text has one", () => {
+        editor.setData(`<p><span style="color:rgb(255,0,0);">red</span></p>`);
+        putCaretAtTheEnd(editor);
+
+        editor.execute("insertIcon", { iconClass: "bx bx-cog" });
+
+        // Inside the colour the text already wears, rather than beside it in a colour of its own.
+        expect(editor.getData()).toBe(`<p><span style="color:rgb(255,0,0);">red`
+            + `<span class="tn-icon bx bx-cog"></span></span></p>`);
+    });
 });
 
 describe("the balloon InlineIcon picks in", () => {
@@ -299,4 +340,32 @@ function arrowX(position: string | undefined, panel: DOMRect) {
     }
 
     return panel.left + panel.width / 2;
+}
+
+/** Puts the selection on the icon in the first paragraph, as clicking the widget would. */
+function selectTheIcon(editor: ClassicEditor) {
+    editor.model.change((writer) => {
+        const paragraph = editor.model.document.getRoot()?.getChild(0);
+        if (!paragraph?.is("element")) {
+            throw new Error("the document holds no paragraph");
+        }
+
+        const icon = paragraph.getChild(1);
+        if (!icon) {
+            throw new Error("the paragraph holds no icon");
+        }
+
+        writer.setSelection(writer.createRangeOn(icon));
+    });
+}
+
+function putCaretAtTheEnd(editor: ClassicEditor) {
+    editor.model.change((writer) => {
+        const paragraph = editor.model.document.getRoot()?.getChild(0);
+        if (!paragraph?.is("element")) {
+            throw new Error("the document holds no paragraph");
+        }
+
+        writer.setSelection(writer.createPositionAt(paragraph, "end"));
+    });
 }

@@ -38,7 +38,8 @@ export default class InlineIconEditing extends Plugin {
             isInline: true,
             // Self-contained: the caret cannot be put inside it, and it is selected as a unit.
             isObject: true,
-            allowAttributes: [ ICON_CLASS ]
+            // Colouring needs no converter of ours; CKEditor's own carry these two.
+            allowAttributes: [ ICON_CLASS, "fontColor", "fontBackgroundColor" ]
         });
 
         editor.conversion.for("upcast").elementToElement({
@@ -93,7 +94,11 @@ class InsertIconCommand extends Command {
         const model = this.editor.model;
 
         model.change((writer: ModelWriter) => {
-            const icon = writer.createElement(ICON, { [ICON_CLASS]: iconClass });
+            const icon = writer.createElement(ICON, {
+                // The caret's own attributes, so an icon put into coloured text is that colour.
+                ...Object.fromEntries(model.document.selection.getAttributes()),
+                [ICON_CLASS]: iconClass
+            });
 
             model.insertObject(icon, null, null, { setSelection: "after" });
         });
