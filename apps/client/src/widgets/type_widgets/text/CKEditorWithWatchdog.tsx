@@ -21,8 +21,6 @@ export interface CKEditorApi {
     addHtmlToEditor(html: string): void;
     addIncludeNote(noteId: string, boxSize?: BoxSize): void;
     addImage(noteId: string): Promise<void>;
-    /** Inserts an icon of an installed icon pack, named by its class, e.g. `bx bx-star`. */
-    insertIcon(iconClass: string): void;
 }
 
 /**
@@ -218,13 +216,6 @@ export default function CKEditorWithWatchdog({ containerRef: externalContainerRe
 
                 editor?.execute("insertImage", { source: src });
             });
-        },
-        insertIcon(iconClass) {
-            const editor = watchdogRef.current?.editor;
-            if (!editor) return;
-
-            editor.execute("insertIcon", { iconClass });
-            editor.editing.view.focus();
         },
     }));
 

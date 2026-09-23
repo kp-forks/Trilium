@@ -1,8 +1,8 @@
 import {
     _getModelData as getModelData, _getViewData as getViewData, _setModelData as setModelData,
-    type ButtonView, type ClassicEditor, GeneralHtmlSupport, Paragraph
+    type ButtonView, type ClassicEditor, ContextualBalloon, GeneralHtmlSupport, Paragraph
 } from "ckeditor5";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 
 import { createTestEditor } from "../../../test/editor-kit.js";
 import { installGlobMock } from "../../../test/globals-test-kit.js";
@@ -55,6 +55,12 @@ describe("InlineIcon", () => {
             .toBe(`<paragraph>Press <inlineIcon iconClass="bx bx-cog"></inlineIcon>.</paragraph>`);
     });
 
+    it("keeps a marked span that names no pack as it found it", () => {
+        editor.setData(`<p><span class="tn-icon"></span></p>`);
+
+        expect(editor.getData()).toBe(`<p><span class="tn-icon"></span></p>`);
+    });
+
     it("ignores an insert that names no icon", () => {
         setModelData(editor.model, "<paragraph>[]</paragraph>");
 
@@ -71,14 +77,102 @@ describe("InlineIcon", () => {
         expect(command?.isEnabled).toBe(false);
     });
 
-    it("asks the host to open its icon picker, rather than picking itself", () => {
-        const triggerCommand = vi.fn();
-        installGlobMock({ getComponentByEl: () => ({ triggerCommand }) });
+});
 
-        const button = editor.ui.componentFactory.create("insertIcon") as unknown as ButtonView;
-        button.fire("execute");
+describe("the balloon InlineIcon picks in", () => {
+    let editor: ClassicEditor;
+    let showIconPicker: Mock<(request: IconPickerRequest) => (() => void) | null>;
+    let release: Mock<() => void>;
 
-        expect(triggerCommand).toHaveBeenCalledWith("insertIconToText");
+    beforeEach(async () => {
+        release = vi.fn();
+        showIconPicker = vi.fn(() => release);
+        installGlobMock({ getComponentByEl: () => ({ showIconPicker }) });
+
+        editor = await createTestEditor([ Paragraph, InlineIcon ]);
+        setModelData(editor.model, "<paragraph>[]</paragraph>");
+    });
+
+    it("hands the host the balloon's own element to paint into", () => {
+        pressInsertIcon(editor);
+
+        const balloon = editor.plugins.get(ContextualBalloon);
+        const { container } = showIconPicker.mock.calls[0][0];
+
+        expect(balloon.visibleView).not.toBeNull();
+        expect(balloon.view.element?.contains(container)).toBe(true);
+        // Everything a balloon shows sits inside the body collection's `ck-reset_all`, which would
+        // strip the application's own styling off the picker.
+        expect(container.classList.contains("ck-reset_all-excluded")).toBe(true);
+    });
+
+    it("inserts what the host reports, and lets go of the picker", () => {
+        pressInsertIcon(editor);
+
+        showIconPicker.mock.calls[0][0].onSelect("bx bx-cog");
+
+        expect(editor.getData()).toBe(`<p><span class="tn-icon bx bx-cog"></span></p>`);
+        expect(release).toHaveBeenCalledOnce();
+        expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
+    });
+
+    it("takes the balloon back down for a host that shows the picker its own way", () => {
+        showIconPicker.mockReturnValue(null);
+
+        pressInsertIcon(editor);
+
+        expect(showIconPicker).toHaveBeenCalledOnce();
+        expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
+    });
+
+    it("lets go of the picker when a click lands outside the balloon", () => {
+        pressInsertIcon(editor);
+
+        document.body.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
+
+        expect(release).toHaveBeenCalledOnce();
+        expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
+    });
+
+    it("lets go of the picker on Esc, from the text and from the picker alike", () => {
+        pressInsertIcon(editor);
+        const container = showIconPicker.mock.calls[0][0].container;
+
+        // Esc reaches the editor only while the caret still has focus; once the picker has taken
+        // it, the balloon's own element is where the key lands.
+        container.dispatchEvent(escapeKeyDown());
+        expect(release).toHaveBeenCalledOnce();
+        expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
+
+        pressInsertIcon(editor);
+        editor.editing.view.getDomRoot()?.dispatchEvent(escapeKeyDown());
+
+        expect(release).toHaveBeenCalledTimes(2);
+        expect(editor.plugins.get(ContextualBalloon).visibleView).toBeNull();
+    });
+
+    it("leaves the one balloon it has open alone when the button is pressed again", () => {
+        pressInsertIcon(editor);
+        pressInsertIcon(editor);
+
+        expect(showIconPicker).toHaveBeenCalledOnce();
+        expect(release).not.toHaveBeenCalled();
+    });
+
+    it("leaves Esc to the rest of the editor while no picker is open", () => {
+        const escape = escapeKeyDown();
+        editor.editing.view.getDomRoot()?.dispatchEvent(escape);
+
+        expect(escape.defaultPrevented).toBe(false);
+        expect(release).not.toHaveBeenCalled();
+    });
+
+    it("lets go of the picker when the editor is torn down under it", async () => {
+        pressInsertIcon(editor);
+
+        await editor.destroy();
+
+        expect(release).toHaveBeenCalledOnce();
     });
 });
 
@@ -102,3 +196,12 @@ describe("InlineIcon under the shipped General HTML Support configuration", () =
         expect(withoutPlugin.getData()).toBe("<p>Press .</p>");
     });
 });
+
+function pressInsertIcon(editor: ClassicEditor) {
+    const button = editor.ui.componentFactory.create("insertIcon") as unknown as ButtonView;
+    button.fire("execute");
+}
+
+function escapeKeyDown() {
+    return new KeyboardEvent("keydown", { key: "Escape", keyCode: 27, bubbles: true });
+}

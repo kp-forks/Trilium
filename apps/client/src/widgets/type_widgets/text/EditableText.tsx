@@ -3,6 +3,7 @@ import "./LinkEmbed.css";
 
 import { CKTextEditor, EditorWatchdog, SnippetDefinition } from "@triliumnext/ckeditor5";
 import { deferred } from "@triliumnext/commons";
+import { createPortal } from "preact/compat";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 
 import appContext from "../../../components/app_context";
@@ -16,7 +17,9 @@ import options from "../../../services/options";
 import { consumeSearchTerms } from "../../../services/search_jump";
 import toast from "../../../services/toast";
 import utils, { isMobile } from "../../../services/utils";
+import type { IconPickerOpts } from "../../dialogs/icon_picker";
 import { useEditorSpacedUpdate, useLegacyImperativeHandlers, useNoteLabel, useSearchTermsConsumer, useTriliumEvent, useTriliumOption, useTriliumOptionBool } from "../../react/hooks";
+import IconPicker from "../../react/IconPicker";
 import { setEditorNoteId } from "../../react/NoteStore";
 import { TypeWidgetProps } from "../type_widget";
 import CKEditorWithWatchdog, { CKEditorApi, NotificationEventData, NotificationEventInfo } from "./CKEditorWithWatchdog";
@@ -38,6 +41,8 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
     const contentNoteIdRef = useRef<string>();
     const watchdogRef = useRef<EditorWatchdog>(null);
     const editorApiRef = useRef<CKEditorApi>(null);
+    /** The balloon the editor has opened for the icon picker, while one is open. */
+    const [ iconPickerRequest, setIconPickerRequest ] = useState<IconPickerOpts & { container: HTMLElement } | null>(null);
     const [ language ] = useNoteLabel(note, "language");
     const [ textNoteEditorType ] = useTriliumOption("textNoteEditorType");
     const [ codeBlockWordWrap ] = useTriliumOptionBool("codeBlockWordWrap");
@@ -138,13 +143,16 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                 editorApi: editorApiRef.current,
             });
         },
-        insertIconToTextCommand() {
-            if (!editorApiRef.current) return;
-            parentComponent?.triggerCommand("showIconPickerDialog", {
-                onSelect(iconClass) {
-                    editorApiRef.current?.insertIcon(iconClass);
-                }
-            });
+        // The editor places the balloon and takes it away; what goes inside it is the picker the
+        // application already has over every installed icon pack.
+        showIconPicker(request: IconPickerOpts & { container: HTMLElement }) {
+            if (isMobile()) {
+                parentComponent?.triggerCommand("showIconPickerDialog", { onSelect: request.onSelect });
+                return null;
+            }
+
+            setIconPickerRequest(request);
+            return () => setIconPickerRequest(null);
         },
         insertDateTimeToTextCommand() {
             if (!editorApiRef.current) return;
@@ -494,9 +502,20 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
 
                 }}
             />}
+
+            {iconPickerRequest && createPortal(
+                <IconPicker
+                    columnCount={ICON_PICKER_COLUMNS}
+                    onSelect={iconPickerRequest.onSelect}
+                />,
+                iconPickerRequest.container
+            )}
         </>
     );
 }
+
+/** How wide the picker stands in the editor's balloon, in icons. */
+const ICON_PICKER_COLUMNS = 12;
 
 /**
  * Inserts an empty paragraph at the very top of the document and places the cursor in it, giving the

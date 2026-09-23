@@ -1,11 +1,18 @@
-import { ButtonView, Plugin } from "ckeditor5";
+import {
+    BalloonPanelView, ButtonView, clickOutsideHandler, type Command, ContextualBalloon,
+    type Editor, KeystrokeHandler, type Locale, Plugin, View
+} from "ckeditor5";
 
 import insertIconIcon from "../../icons/insert-icon.svg?raw";
 import { INSERT_ICON_COMMAND } from "./inline_icon_editing.js";
 
 /**
- * The button an icon is inserted through. Picking the icon is left to the host, which already has
- * a picker over every installed icon pack; it answers by running {@link INSERT_ICON_COMMAND}.
+ * The button an icon is inserted through, and the balloon the picking happens in.
+ *
+ * The editor owns the balloon — where it points, when it goes away — and the application paints its
+ * own picker into it through `showIconPicker`, which is the one place every installed icon pack is
+ * searchable. A host with no room for a balloon shows the picker its own way and answers with
+ * nothing to take down.
  */
 export default class InlineIconUI extends Plugin {
 
@@ -13,12 +20,21 @@ export default class InlineIconUI extends Plugin {
         return "InlineIconUI" as const;
     }
 
+    public static get requires() {
+        return [ ContextualBalloon ] as const;
+    }
+
+    private _balloon: ContextualBalloon = this.editor.plugins.get(ContextualBalloon);
+    private _pickerView: IconPickerView | null = null;
+    private _releasePicker: (() => void) | null = null;
+
     init() {
         const editor = this.editor;
         const t = editor.t;
 
         editor.ui.componentFactory.add(INSERT_ICON_COMMAND, (locale) => {
-            const command = editor.commands.get(INSERT_ICON_COMMAND);
+            // Always registered: InlineIconEditing is loaded beside this plugin.
+            const command = editor.commands.get(INSERT_ICON_COMMAND) as Command;
             const view = new ButtonView(locale);
 
             view.set({
@@ -27,21 +43,159 @@ export default class InlineIconUI extends Plugin {
                 tooltip: true
             });
 
-            if (command) {
-                view.bind("isEnabled").to(command, "isEnabled");
-            }
+            view.bind("isEnabled").to(command, "isEnabled");
 
-            this.listenTo(view, "execute", () => {
-                const editorEl = editor.editing.view.getDomRoot();
-                if (!editorEl) {
-                    return;
-                }
-
-                glob.getComponentByEl(editorEl).triggerCommand("insertIconToText");
-            });
+            this.listenTo(view, "execute", () => this._show());
 
             return view;
         });
+
+        // Esc reaches the editor only while the caret still has focus; the picker takes focus with
+        // it, so the view carries a handler of its own (see {@link IconPickerView}).
+        editor.keystrokes.set("Esc", (_data, cancel) => {
+            if (this._pickerView) {
+                this._hide();
+                cancel();
+            }
+        });
     }
 
+    public override destroy() {
+        // Before the base class stops the listeners the balloon is taken down through.
+        this._hide();
+        super.destroy();
+    }
+
+    private _show() {
+        const editor = this.editor;
+        const editorEl = editor.editing.view.getDomRoot();
+        const position = getBalloonPosition(editor);
+
+        if (this._pickerView || !editorEl || !position) {
+            return;
+        }
+
+        const view = new IconPickerView(editor.locale);
+        view.keystrokes.set("Esc", (_data, cancel) => {
+            this._hide();
+            editor.editing.view.focus();
+            cancel();
+        });
+
+        // Wired per picker rather than once: the handler listens through the view, so destroying
+        // the view on the way out is what stops it listening.
+        clickOutsideHandler({
+            emitter: view,
+            activator: () => this._pickerView === view,
+            /* v8 ignore next -- the balloon renders its panel as the editor starts up */
+            contextElements: this._balloon.view.element ? [ this._balloon.view.element ] : [],
+            callback: () => this._hide()
+        });
+
+        this._balloon.add({ view, position });
+        this._pickerView = view;
+
+        const container = view.element;
+        /* v8 ignore next 4 -- the balloon renders the view as it adds it, so it has an element */
+        if (!container) {
+            this._hide();
+            return;
+        }
+
+        const release = glob.getComponentByEl<EditorComponent>(editorEl).showIconPicker({
+            container,
+            onSelect: (iconClass) => {
+                this._hide();
+                editor.execute(INSERT_ICON_COMMAND, { iconClass });
+                editor.editing.view.focus();
+            }
+        });
+
+        if (!release) {
+            this._hide();
+            return;
+        }
+
+        this._releasePicker = release;
+    }
+
+    private _hide() {
+        const view = this._pickerView;
+
+        this._pickerView = null;
+        this._releasePicker?.();
+        this._releasePicker = null;
+
+        if (!view) {
+            return;
+        }
+
+        if (this._balloon.hasView(view)) {
+            this._balloon.remove(view);
+        }
+
+        view.destroy();
+    }
+
+}
+
+/**
+ * What the balloon holds: an element for the host to paint into, and nothing else.
+ *
+ * It carries `ck-reset_all-excluded` because everything a balloon shows sits inside the body
+ * collection's `ck-reset_all`, which would strip the application's own styling off the picker.
+ */
+class IconPickerView extends View {
+
+    public readonly keystrokes = new KeystrokeHandler();
+
+    constructor(locale: Locale) {
+        super(locale);
+
+        this.setTemplate({
+            tag: "div",
+            attributes: {
+                class: [ "ck-reset_all-excluded", "icon-picker-balloon" ]
+            }
+        });
+    }
+
+    public override render() {
+        super.render();
+
+        /* v8 ignore next 3 -- `render()` is what builds the element, so it is never absent here */
+        if (!this.element) {
+            return;
+        }
+
+        this.keystrokes.listenTo(this.element);
+    }
+
+    public override destroy() {
+        super.destroy();
+        this.keystrokes.destroy();
+    }
+
+}
+
+/** Where the balloon points: the text the caret is in, wherever there is room for it. */
+function getBalloonPosition(editor: Editor) {
+    const view = editor.editing.view;
+    const range = view.document.selection.getFirstRange();
+
+    /* v8 ignore next 3 -- a rendered document always holds a range for the caret */
+    if (!range) {
+        return null;
+    }
+
+    const { southArrowNorth, southArrowNorthWest, southArrowNorthEast, northArrowSouth,
+        northArrowSouthWest, northArrowSouthEast } = BalloonPanelView.defaultPositions;
+
+    return {
+        target: view.domConverter.viewRangeToDom(range),
+        positions: [
+            southArrowNorth, southArrowNorthWest, southArrowNorthEast,
+            northArrowSouth, northArrowSouthWest, northArrowSouthEast
+        ]
+    };
 }
