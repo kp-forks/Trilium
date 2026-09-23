@@ -217,7 +217,6 @@ function IconPickerModalButton({
     icon, title, className, disabled, onSelect, onReset, resetText, onOpened, onClosed
 }: IconPickerButtonProps) {
     const [ modalShown, setModalShown ] = useState(false);
-    const { windowWidth } = useWindowSize();
 
     return (
         <div className={clsx("note-icon-widget", className)}>
@@ -236,39 +235,66 @@ function IconPickerModalButton({
                 disabled={disabled}
             />
 
-            {/* Out of whatever the button stands in — a panel floating over a note holds its own
-                stacking context, and the modal belongs to the page rather than to it. */}
-            {createPortal((
-                <Modal
-                    title={title}
-                    size="xl"
-                    show={modalShown}
-                    onHidden={() => {
-                        setModalShown(false);
-                        onClosed?.();
-                    }}
-                    className="icon-switcher note-icon-widget"
-                    scrollable
-                    stackable
-                >
-                    {/* As many icons as the screen has room for, rather than the twelve a menu is
-                        built for (see the CSS, which gives the grid the rest of the screen). */}
-                    <IconPicker
-                        columnCount={Math.max(1, Math.floor(windowWidth / ICON_SIZE))}
-                        resetText={resetText}
-                        onSelect={(iconClass) => {
-                            onSelect(iconClass);
-                            setModalShown(false);
-                        }}
-                        onReset={onReset && (() => {
-                            onReset();
-                            setModalShown(false);
-                        })}
-                    />
-                </Modal>
-            ), document.body)}
+            <IconPickerModal
+                title={title}
+                show={modalShown}
+                resetText={resetText}
+                onHidden={() => {
+                    setModalShown(false);
+                    onClosed?.();
+                }}
+                onSelect={(iconClass) => {
+                    onSelect(iconClass);
+                    setModalShown(false);
+                }}
+                onReset={onReset && (() => {
+                    onReset();
+                    setModalShown(false);
+                })}
+            />
         </div>
     );
+}
+
+interface IconPickerModalProps extends Pick<IconPickerProps, "onSelect" | "onReset" | "resetText"> {
+    /** What picking an icon is for, worn as the heading. */
+    title: string;
+    show: boolean;
+    onHidden(): void;
+}
+
+/**
+ * The picker on a screen of its own, for a host with nowhere to hang a menu: a phone, and anything
+ * that asks for an icon without a button of its own to hang one under.
+ *
+ * Closing on a pick is the host's to do, as it is the host that decides whether one pick is the end
+ * of it.
+ */
+export function IconPickerModal({ title, show, onHidden, onSelect, onReset, resetText }: IconPickerModalProps) {
+    const { windowWidth } = useWindowSize();
+
+    // Out of whatever the host stands in — a panel floating over a note holds its own stacking
+    // context, and the modal belongs to the page rather than to it.
+    return createPortal((
+        <Modal
+            title={title}
+            size="xl"
+            show={show}
+            onHidden={onHidden}
+            className="icon-switcher note-icon-widget"
+            scrollable
+            stackable
+        >
+            {/* As many icons as the screen has room for, rather than the twelve a menu is built
+                for (see the CSS, which gives the grid the rest of the screen). */}
+            <IconPicker
+                columnCount={Math.max(1, Math.floor(windowWidth / ICON_SIZE))}
+                resetText={resetText}
+                onSelect={onSelect}
+                onReset={onReset}
+            />
+        </Modal>
+    ), document.body);
 }
 
 type IconWithName = (IconRegistry["sources"][number]["icons"][number] & { iconPack: string });

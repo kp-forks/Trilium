@@ -138,6 +138,14 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
                 editorApi: editorApiRef.current,
             });
         },
+        insertIconToTextCommand() {
+            if (!editorApiRef.current) return;
+            parentComponent?.triggerCommand("showIconPickerDialog", {
+                onSelect(iconClass) {
+                    editorApiRef.current?.insertIcon(iconClass);
+                }
+            });
+        },
         insertDateTimeToTextCommand() {
             if (!editorApiRef.current) return;
             const date = new Date();
