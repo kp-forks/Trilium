@@ -190,7 +190,7 @@ Use `note.getOwnedAttribute()` for direct, `note.getAttribute()` for inherited.
 
 ## Code Style
 
-- 4-space indent, semicolons, double quotes, max line 100, Unix line endings (the format config enforces these). Imports sorted per `eslint-plugin-simple-import-sort` (packages before relative, alphabetical within a group) — only ESLint checks that and it isn't run locally, so sort by hand.
+- 4-space indent, semicolons, double quotes, max line 100 (the format config enforces these). Unix line endings come from Git — `.gitattributes` plus `core.autocrlf` normalize to LF on commit, so the format config does not check them. Imports sorted per `eslint-plugin-simple-import-sort` (packages before relative, alphabetical within a group) — only ESLint checks that and it isn't run locally, so sort by hand.
 - **Never use the non-null assertion `!`**, tests included. Narrow instead: `?.`, `?? fallback`, an explicit check, or an `*OrThrow` accessor (`becca.getNoteOrThrow(id)`).
 - **Never use `Array.prototype.forEach`** — write a `for...of` loop instead, and iterate `array.entries()` when the index is needed (`for (const [index, item] of arr.entries())`). It reads better and allows `break`/`continue`/`await`.
 - **Helpers go below the primary export** they support (or in another module), never between the imports and the main definition — the entry point reads first.
