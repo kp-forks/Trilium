@@ -141,10 +141,27 @@ const LINK_PREVIEW_TAG_RE = /<(?:section|span)\b[^>]*\bclass=["'][^"']*\blink-(?
 const INTERNAL_LINK_RE = /href="[^"]*#root[a-zA-Z0-9_\/]*\/([a-zA-Z0-9_]+)\/?"/g;
 
 // Must match what inline_icon_editing.ts writes in its dataDowncast.
-const ICON_TAG_RE = /<span\b[^>]*\bclass=["'][^"']*\btn-icon\b[^"']*["'][^>]*>/gi;
+export const ICON_TAG_RE = /<span\b[^>]*\bclass=["'][^"']*\btn-icon\b[^"']*["'][^>]*>/gi;
 
 /** The class every icon wears beside its pack's, which says nothing about which icon it is. */
 const ICON_MARKER_CLASS = "tn-icon";
+
+/**
+ * The pack classes an icon tag wears — `bx-error-circle` from `tn-icon bx bx-error-circle`.
+ *
+ * The marker is worn by every icon, and a pack's bare prefix — `bx` — by every icon that pack
+ * holds, so neither names one.
+ */
+export function readIconClasses(tag: string): string[] {
+    return (extractAttribute(tag, "class") ?? "")
+        .split(/\s+/)
+        .filter((className) => className !== ICON_MARKER_CLASS && className.includes("-"));
+}
+
+/** The name inside a pack class: `error-circle` from `bx-error-circle`. */
+export function readIconName(className: string): string {
+    return className.slice(className.indexOf("-") + 1);
+}
 
 /** Collects extra searchable text from a note's link previews and internal-link targets. */
 function extractLinkSearchText(content: string, resolveNoteTitle?: NoteTitleResolver): string {
@@ -192,14 +209,9 @@ function extractIconSearchText(content: string): string {
     const parts = new Set<string>();
 
     for (const tag of content.match(ICON_TAG_RE) ?? []) {
-        for (const className of (extractAttribute(tag, "class") ?? "").split(/\s+/)) {
-            // A pack's bare prefix — `bx` — is worn by every icon it holds, so it names none.
-            if (className === ICON_MARKER_CLASS || !className.includes("-")) {
-                continue;
-            }
-
+        for (const className of readIconClasses(tag)) {
             parts.add(className);
-            parts.add(className.slice(className.indexOf("-") + 1));
+            parts.add(readIconName(className));
         }
     }
 

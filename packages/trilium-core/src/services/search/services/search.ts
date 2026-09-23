@@ -13,6 +13,9 @@ import scriptService from "../../script.js";
 import { isScriptingEnabled } from "../../scripting_guard.js";
 import { escapeHtml, escapeRegExp, normalizePreservingLength, unescapeHtml } from "../../utils/index.js";
 import type Expression from "../expressions/expression.js";
+import {
+    ICON_TAG_RE, readIconClasses, readIconName
+} from "../expressions/note_content_fulltext_preprocessor.js";
 import SearchContext from "../search_context.js";
 import SearchResult, { precomputeScoringTerms } from "../search_result.js";
 import handleParens from "./handle_parens.js";
@@ -606,6 +609,14 @@ function extractContentSnippet(noteId: string, searchTokens: HighlightedTokenInf
                 const title = element.match(/\bdata-title="([^"]*)"/i)?.[1] ?? "";
                 const description = element.match(/\bdata-description="([^"]*)"/i)?.[1] ?? "";
                 return `\n${[url, title, description].filter(Boolean).join("\n")}\n`;
+            });
+            // An icon is an empty element, so striptags leaves no trace of it and a note found by
+            // the icon's name had nothing in its snippet to centre on or to mark. Name it instead;
+            // the snippet is escaped before it is shown, so the icon itself cannot be drawn there.
+            content = content.replace(ICON_TAG_RE, (tag) => {
+                const [ className ] = readIconClasses(tag);
+
+                return className ? ` [${readIconName(className)}] ` : "";
             });
             content = striptags(content);
             // Decode HTML entities so the snippet shows real characters instead of escape codes
