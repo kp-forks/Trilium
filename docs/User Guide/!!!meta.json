@@ -34,6 +34,13 @@
                     "value": "bx bx-help-circle",
                     "isInheritable": false,
                     "position": 30
+                },
+                {
+                    "type": "label",
+                    "name": "readOnly",
+                    "value": "",
+                    "isInheritable": false,
+                    "position": 100
                 }
             ],
             "format": "markdown",
@@ -6498,14 +6505,6 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "3_Tables_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "VerzwlO9y6Na",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "4_Tables_image.png"
                                         }
                                     ]
                                 },
@@ -12296,90 +12295,6 @@
                             "format": "markdown",
                             "dataFileName": "License.md",
                             "attachments": []
-                        }
-                    ]
-                },
-                {
-                    "isClone": false,
-                    "noteId": "B22oYYe2jTIE",
-                    "notePath": [
-                        "pOsGYCXsbNQG",
-                        "B22oYYe2jTIE"
-                    ],
-                    "title": "Internal",
-                    "notePosition": 380,
-                    "prefix": null,
-                    "isExpanded": false,
-                    "type": "text",
-                    "mime": "text/html",
-                    "attributes": [
-                        {
-                            "type": "label",
-                            "name": "shareHiddenFromTree",
-                            "value": "",
-                            "isInheritable": false,
-                            "position": 10
-                        },
-                        {
-                            "type": "label",
-                            "name": "shareAlias",
-                            "value": "internal",
-                            "isInheritable": false,
-                            "position": 30
-                        }
-                    ],
-                    "format": "markdown",
-                    "attachments": [],
-                    "dirFileName": "Internal",
-                    "children": [
-                        {
-                            "isClone": false,
-                            "noteId": "RthSlyQIB6Lm",
-                            "notePath": [
-                                "pOsGYCXsbNQG",
-                                "B22oYYe2jTIE",
-                                "RthSlyQIB6Lm"
-                            ],
-                            "title": "Text Editor Icons",
-                            "notePosition": 10,
-                            "prefix": null,
-                            "isExpanded": false,
-                            "type": "file",
-                            "mime": "application/json",
-                            "attributes": [
-                                {
-                                    "type": "label",
-                                    "name": "iconClass",
-                                    "value": "cke cke-pilcrow",
-                                    "isInheritable": false,
-                                    "position": 20
-                                },
-                                {
-                                    "type": "label",
-                                    "name": "iconPack",
-                                    "value": "cke",
-                                    "isInheritable": false,
-                                    "position": 30
-                                },
-                                {
-                                    "type": "label",
-                                    "name": "shareAlias",
-                                    "value": "text-editor-icons",
-                                    "isInheritable": false,
-                                    "position": 40
-                                }
-                            ],
-                            "dataFileName": "Text Editor Icons.json",
-                            "attachments": [
-                                {
-                                    "attachmentId": "0s6ZLgjsfo4s",
-                                    "title": "text-editor-icons.woff2",
-                                    "role": "file",
-                                    "mime": "font/woff2",
-                                    "position": 10,
-                                    "dataFileName": "Text Editor Icons_text-editor-icons.woff2"
-                                }
-                            ]
                         }
                     ]
                 }

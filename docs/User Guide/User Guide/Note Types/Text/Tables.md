@@ -15,8 +15,8 @@ When a table is selected, a special formatting toolbar will appear:
 
 *   Using the mouse:
     *   Click on a cell to focus it.
-    *   Click the <img src="4_Tables_image.png" width="28" height="27"> button at the top or the bottom of a table to insert an empty paragraph near it.
-    *   Click the <span style="color:hsl(0, 0%, 60%);"><span class="tn-icon cke cke-drag-handle"></span></span> button at the top-left of the table to select it entirely (for easy copy-pasting or cutting) or drag and drop it to relocate the table.
+    *   Click the <span class="tn-icon cke cke-return-arrow"></span> button at the top or the bottom of a table to insert an empty paragraph near it.
+    *   Click the <span style="color:hsl(0,0%,60%);"><span class="tn-icon cke cke-drag-handle"></span></span> button at the top-left of the table to select it entirely (for easy copy-pasting or cutting) or drag and drop it to relocate the table.
 *   Using the keyboard:
     *   Use the arrow keys on the keyboard to easily navigate between cells.
     *   It's also possible to use <kbd>Tab</kbd> to go to the next cell and Shift+Tab to go to the previous cell.
@@ -113,7 +113,7 @@ Tables can be set to have invisible borders in order to allow for basic layouts 
 
 Since v0.104.1, tables can be indented as a block (the whole table moves, rather than just the content of a cell).
 
-1.  Click the <span style="color:hsl(0, 0%, 60%);"><span class="tn-icon cke cke-drag-handle"></span></span> button to select the entire table. Otherwise, the indentation applies only to the current cell's content.
+1.  Click the <span style="color:hsl(0,0%,60%);"><span class="tn-icon cke cke-drag-handle"></span></span> button to select the entire table. Otherwise, the indentation applies only to the current cell's content.
 2.  Press <kbd>Tab</kbd> to increase the indent, or <kbd>Shift</kbd>+<kbd>Tab</kbd> to decrease it. Alternatively, use the indentation buttons in the formatting toolbar.
 
 Markdown does not support indented tables, so the indentation is lost when converting to Markdown.
