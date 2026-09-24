@@ -164,6 +164,26 @@ describe("decideAntigravityPermission", () => {
             options: [PERMISSION_OPTIONS[0], PERMISSION_OPTIONS[2]]
         }, "test")).toEqual(denied);
     });
+
+    // Shape captured from agy_acp_server 1.2.1.
+    const SEARCH_WEB = { toolCallId: "7bba", kind: "search", status: "pending", title: "Run search_web?", rawInput: { query: "weather Sibiu today" } };
+
+    it("approves a web search once only in a chat with web search on", () => {
+        const allowed = { outcome: { outcome: "selected", optionId: "allow" } };
+        const denied = { outcome: { outcome: "selected", optionId: "deny" } };
+        expect(decideAntigravityPermission({ toolCall: SEARCH_WEB, options: PERMISSION_OPTIONS }, "test", { webSearch: true })).toEqual(allowed);
+        expect(decideAntigravityPermission({ toolCall: SEARCH_WEB, options: PERMISSION_OPTIONS }, "test", { webSearch: false })).toEqual(denied);
+        expect(decideAntigravityPermission({ toolCall: SEARCH_WEB, options: PERMISSION_OPTIONS }, "test")).toEqual(denied);
+        // A shell command the model titled like a search, and another search-kind tool.
+        expect(decideAntigravityPermission({
+            toolCall: { kind: "execute", title: "Run search_web?", rawInput: { CommandLine: "Run search_web?" } },
+            options: PERMISSION_OPTIONS
+        }, "test", { webSearch: true })).toEqual(denied);
+        expect(decideAntigravityPermission({
+            toolCall: { ...SEARCH_WEB, title: "Run read_url_content?" },
+            options: PERMISSION_OPTIONS
+        }, "test", { webSearch: true })).toEqual(denied);
+    });
 });
 
 describe("AntigravityAgentProvider", () => {
@@ -202,6 +222,18 @@ describe("AntigravityAgentProvider", () => {
         expect(infoLogMock).toHaveBeenCalledWith(expect.stringContaining(`kept view_file out of the server's private folder`));
         expect(decide({ toolCall: { name: "view_file", args: { AbsolutePath: path.join(DATA_DIR, "antigravity-agent", "workspace", "a.md") } } }))
             .toEqual({ decision: "allow" });
+    });
+
+    it("lets the agent search the web only when the chat allows it", async () => {
+        const request = { toolCall: { kind: "search", title: "Run search_web?", rawInput: { query: "x" } }, options: PERMISSION_OPTIONS };
+
+        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
+        expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", request))
+            .toEqual({ outcome: { outcome: "selected", optionId: "allow" } });
+
+        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", request))
+            .toEqual({ outcome: { outcome: "selected", optionId: "deny" } });
     });
 
     it("signs in during the model probe, but reports a missing sign-in in the chat instead", async () => {

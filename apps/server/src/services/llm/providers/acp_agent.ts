@@ -185,8 +185,10 @@ export abstract class AcpAgentProvider implements LlmProvider {
     /**
      * Permission policy. The default denies every request; a subclass whose
      * agent asks before running Trilium's own note tools approves those.
+     * `config` is the chat turn's configuration, and absent outside a chat
+     * turn (the model probe, the title).
      */
-    protected decidePermission(request: AcpPermissionRequest): AcpPermissionOutcome {
+    protected decidePermission(request: AcpPermissionRequest, _config?: LlmProviderConfig): AcpPermissionOutcome {
         return denyPermission(request, this.logLabel);
     }
 
@@ -338,7 +340,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
         let assistantText = "";
 
         try {
-            client = await this.startClient(collector.onNotification);
+            client = await this.startClient(collector.onNotification, config);
 
             const mcpServers = noteToolsEnabled ? await buildMcpServersConfig() : [];
 
@@ -520,8 +522,11 @@ export abstract class AcpAgentProvider implements LlmProvider {
         }
     }
 
-    /** Spawn the agent and run the ACP initialize handshake. */
-    protected async startClient(onNotification: (method: string, params: unknown) => void): Promise<AcpClient> {
+    /**
+     * Spawn the agent and run the ACP initialize handshake. `config` is the chat
+     * turn's configuration, which the permission policy reads.
+     */
+    protected async startClient(onNotification: (method: string, params: unknown) => void, config?: LlmProviderConfig): Promise<AcpClient> {
         const launch = await this.launchSpec();
         const client = AcpClient.start(launch.binary, {
             cwd: this.agentCwd(),
@@ -529,7 +534,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
             args: launch.args,
             env: launch.env,
             onNotification,
-            onAgentRequest: (method, params) => this.handleAgentRequest(method, params)
+            onAgentRequest: (method, params) => this.handleAgentRequest(method, params, config)
         });
         try {
             await client.request(
@@ -554,9 +559,9 @@ export abstract class AcpAgentProvider implements LlmProvider {
      * Handle agent→client requests. Only the permission callback is supported;
      * everything else (fs, terminal) was never advertised and is refused.
      */
-    private handleAgentRequest(method: string, params: unknown): unknown {
+    private handleAgentRequest(method: string, params: unknown, config: LlmProviderConfig | undefined): unknown {
         if (method === "session/request_permission") {
-            return this.decidePermission(params as AcpPermissionRequest);
+            return this.decidePermission(params as AcpPermissionRequest, config);
         }
         throw new Error(`Trilium does not support "${method}".`);
     }

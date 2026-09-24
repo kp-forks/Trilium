@@ -133,8 +133,8 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
         return buildAntigravityModelList(remote);
     }
 
-    protected decidePermission(request: AcpPermissionRequest): AcpPermissionOutcome {
-        return decideAntigravityPermission(request, this.logLabel);
+    protected decidePermission(request: AcpPermissionRequest, config?: LlmProviderConfig): AcpPermissionOutcome {
+        return decideAntigravityPermission(request, this.logLabel, { webSearch: config?.enableWebSearch === true });
     }
 
     /** Answer the file-access hook for one tool call, logging each denial. */
@@ -197,21 +197,32 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
 }
 
 /**
- * Approve Trilium's own note tools and deny everything else.
+ * Approve Trilium's own note tools, and the web search in a chat that allows
+ * it; deny everything else.
  *
  * The server asks before every MCP tool call, including those of the note-tools
  * server Trilium hands it. It marks those requests in `toolCall._meta` — the
  * MCP server's name and `is_mcp_tool_call` — which the server sets itself, so
  * the model cannot forge them the way it controls a tool call's title and
- * arguments. Built-in tools (shell, file edits, URL fetch, web search) carry no
- * such marker and are denied.
+ * arguments. Other built-in tools (shell, file edits, URL fetch) carry no such
+ * marker and are denied.
+ *
+ * The web search is recognized by its kind and title together. The server
+ * titles it from a template, and the one tool whose title the model writes, the
+ * shell, has the kind `execute`.
  */
-export function decideAntigravityPermission(request: AcpPermissionRequest, logLabel: string): AcpPermissionOutcome {
-    const meta = request.toolCall?._meta;
+export function decideAntigravityPermission(
+    request: AcpPermissionRequest,
+    logLabel: string,
+    { webSearch = false }: { webSearch?: boolean } = {}
+): AcpPermissionOutcome {
+    const toolCall = request.toolCall;
+    const meta = toolCall?._meta;
     const mcp = meta?.mcp as { server?: unknown } | undefined;
     const isNoteTool = meta?.is_mcp_tool_call === true && mcp?.server === NOTE_TOOLS_MCP_SERVER_NAME;
+    const isWebSearch = toolCall?.kind === "search" && toolCall.title === "Run search_web?";
     const allowOnce = request.options?.find(o => o.kind === "allow_once");
-    if (isNoteTool && allowOnce) {
+    if ((isNoteTool || (webSearch && isWebSearch)) && allowOnce) {
         return { outcome: { outcome: "selected", optionId: allowOnce.optionId } };
     }
     return denyPermission(request, logLabel);
