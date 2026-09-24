@@ -5,8 +5,10 @@
  * account's authentication, runs its own agentic loop and keeps conversation
  * history in host-side sessions. So every ACP provider:
  *   - implements `chatChunks()` (chunk-native streaming) instead of `chat()`,
+ *   - keeps its agent process running between turns (see acp_client_pool.ts),
  *   - maps chat notes to ACP sessions and sends only the newest user message
- *     when the transcript still matches (`session/load`), falling back to
+ *     when the transcript still matches, prompting the session directly while
+ *     its process runs and through `session/load` after that, and falls back to
  *     seeding a fresh session from the transcript when it diverged or was lost,
  *   - exposes note tools by pointing the agent at a private loopback MCP
  *     endpoint (see acp_mcp_endpoint.ts), and answers the ACP permission
@@ -28,6 +30,7 @@ import path from "path";
 
 import dataDirs from "../../data_dir.js";
 import { AcpClient } from "./acp_client.js";
+import { AcpClientPool, type AcpLease, type AcpPoolConnection } from "./acp_client_pool.js";
 import { getAcpMcpEndpointUrl } from "./acp_mcp_endpoint.js";
 import { attachmentPlaceholder, buildHistoryReplay, hashTranscript } from "./transcript.js";
 
@@ -114,6 +117,15 @@ interface SessionEntry {
     sessionId: string;
     /** Hash of the transcript as it stood when the session last responded. */
     transcriptHash: string;
+    /** The {@link AcpLease.generation} of the process that holds the session. */
+    generation: number;
+    /**
+     * Whether the session has the note-tools MCP server. MCP servers are fixed
+     * at `session/new`, so a chat whose note access changed needs a new session.
+     */
+    noteToolsEnabled: boolean;
+    /** The model state `session/new` or `session/load` reported, for the chat footer. */
+    models?: AcpSessionModelState;
 }
 
 /**
@@ -133,12 +145,17 @@ interface ProviderState {
     modelCatalogCache?: { models: ModelInfo[]; fetchedAt: number };
     modelCatalogInFlight?: Promise<ModelInfo[]>;
     agentCwd?: string;
+    /** The agent process shared by chat turns and titles. */
+    pool: AcpClientPool;
 }
 
 const stateByProvider = new Map<string, ProviderState>();
 
-/** For tests: forget every provider's sessions, catalog and agent cwd. */
+/** For tests: stop every pooled agent and forget every provider's sessions, catalog and agent cwd. */
 export function resetAcpAgentStateForTests(): void {
+    for (const state of stateByProvider.values()) {
+        state.pool.dispose();
+    }
     stateByProvider.clear();
 }
 
@@ -345,40 +362,53 @@ export abstract class AcpAgentProvider implements LlmProvider {
         };
 
         const collector = createUpdateCollector(emit, update => this.isInternalToolCall(update), update => this.describeBuiltInTool(update));
-        let client: AcpClient | undefined;
-        let sessionId: string | undefined;
-        let sessionModels: AcpSessionModelState | undefined;
+        const pool = this.state().pool;
+        let lease: AcpLease | undefined;
+        let attachedSession: string | undefined;
         let assistantText = "";
 
         try {
-            client = await this.startClient(collector.onNotification, config);
+            const acquired = await pool.acquire(connection => this.connect(connection));
+            lease = acquired;
+            const client = acquired.client;
 
-            const mcpServers = noteToolsEnabled ? await buildMcpServersConfig() : [];
-
-            // Resume the existing session only when the transcript still
-            // matches what it last saw; any divergence (edited history, lost
-            // mapping, server restart) reseeds a fresh session. session/load
-            // replays the session's history as notifications — the collector
-            // suppresses everything until the load completes.
-            if (resume) {
-                collector.muted = true;
+            // Resume the mapped session only when the transcript still matches
+            // what it last saw and it has the note access this turn asks for;
+            // anything else (edited history, lost mapping, toggled note access)
+            // reseeds a fresh session.
+            const resumable = stored?.noteToolsEnabled === noteToolsEnabled ? resume : undefined;
+            let sessionId: string | undefined;
+            let sessionModels: AcpSessionModelState | undefined;
+            if (resumable && stored?.generation === acquired.generation) {
+                // The session is still loaded in this process, so the turn
+                // prompts it directly. The CLIs reject `session/load` for it.
+                sessionId = resumable;
+                sessionModels = stored.models;
+            } else if (resumable) {
+                // The process that held the session ended. `session/load`
+                // replays its history as notifications, which the pool drops
+                // because no turn is attached to the session yet.
                 try {
-                    const loaded = await client.request<{ models?: AcpSessionModelState } | null>("session/load", { sessionId: resume, cwd: this.agentCwd(), mcpServers }, SESSION_TIMEOUT_MS);
-                    sessionId = resume;
+                    const loaded = await client.request<{ models?: AcpSessionModelState } | null>(
+                        "session/load",
+                        { sessionId: resumable, cwd: this.agentCwd(), mcpServers: await buildMcpServersConfig(noteToolsEnabled) },
+                        SESSION_TIMEOUT_MS
+                    );
+                    sessionId = resumable;
                     sessionModels = loaded?.models;
                 } catch (err) {
                     getLog().info(`${this.logLabel}: session/load failed (${describeError(err)}); reseeding a fresh session.`);
-                } finally {
-                    collector.muted = false;
                 }
             }
 
             if (!sessionId) {
-                const created = await this.createSession(client, { cwd: this.agentCwd(), mcpServers }, false, SESSION_TIMEOUT_MS);
+                const created = await this.createSession(client, { cwd: this.agentCwd(), mcpServers: await buildMcpServersConfig(noteToolsEnabled) }, false, SESSION_TIMEOUT_MS);
                 sessionId = created.sessionId;
                 sessionModels = created.models;
             }
             collector.sessionId = sessionId;
+            attachedSession = sessionId;
+            pool.attach(sessionId, { onUpdate: params => collector.onNotification("session/update", params), config });
 
             // The catalog id the turn runs on, and the agent's own id for it when known.
             let runningModel = this.defaultModelId;
@@ -400,7 +430,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
             // instructions and replayed transcript when the session is fresh,
             // then the volatile current-note metadata hint (kept out of the
             // transcript hash so a later turn can still resume).
-            const isFreshSession = sessionId !== resume;
+            const isFreshSession = sessionId !== resumable;
             const hasAttachments = Array.isArray(lastMessage.content) && lastMessage.content.some(p => p.type !== "text");
             const noteHint = config.contextNoteId ? buildNoteHint(config.contextNoteId, hasAttachments) : null;
             const prefix = [
@@ -411,10 +441,12 @@ export abstract class AcpAgentProvider implements LlmProvider {
 
             const promptSessionId = sessionId;
             const onAbort = () => {
-                client?.notify("session/cancel", { sessionId: promptSessionId });
+                // Cancel in-band: other chats share the process, so the turn
+                // cannot end it.
+                client.notify("session/cancel", { sessionId: promptSessionId });
                 // Wake the drain loop below: an agent slow to honour the cancel
-                // (or ignoring it) would otherwise keep this generator — and its
-                // subprocess — suspended until PROMPT_TIMEOUT_MS elapses.
+                // (or ignoring it) would otherwise keep this generator suspended
+                // until PROMPT_TIMEOUT_MS elapses.
                 wakeup?.();
             };
             signal?.addEventListener("abort", onAbort, { once: true });
@@ -438,7 +470,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
                 let finished = false;
                 void done.then(() => { finished = true; wakeup?.(); });
                 // On abort, drain what already arrived and stop — nobody is
-                // reading past this point, and `finally` disposes the client.
+                // reading past this point.
                 while ((!finished && !signal?.aborted) || chunkQueue.length > 0) {
                     if (chunkQueue.length === 0) {
                         await new Promise<void>(resolve => { wakeup = resolve; });
@@ -470,13 +502,16 @@ export abstract class AcpAgentProvider implements LlmProvider {
             // session's real history is unknown — recording a hash here would
             // let a later turn resume a session that diverged from the
             // transcript. Forgetting it just reseeds a fresh one.
-            if (config.chatNoteId && sessionId && !signal?.aborted) {
+            if (config.chatNoteId && !signal?.aborted) {
                 rememberSession(sessionsByChatNote, config.chatNoteId, {
                     sessionId,
                     transcriptHash: hashTranscript([
                         ...conversation,
                         { role: "assistant", content: assistantText }
-                    ])
+                    ]),
+                    generation: acquired.generation,
+                    noteToolsEnabled,
+                    models: sessionModels
                 });
             }
 
@@ -484,25 +519,34 @@ export abstract class AcpAgentProvider implements LlmProvider {
         } catch (error) {
             yield { type: "error", error: this.describeFailure(error) };
         } finally {
-            client?.dispose();
+            if (attachedSession) {
+                pool.detach(attachedSession);
+            }
+            if (lease) {
+                pool.release();
+            }
         }
     }
 
     async generateTitle(firstMessage: string): Promise<string> {
-        let client: AcpClient | undefined;
+        const pool = this.state().pool;
+        let lease: AcpLease | undefined;
+        let attachedSession: string | undefined;
         try {
             let title = "";
-            client = await this.startClient((method, params) => {
-                if (method !== "session/update") {
-                    return;
-                }
-                const update = (params as AcpSessionUpdate).update;
-                if (update?.sessionUpdate === "agent_message_chunk" && update.content && "text" in update.content && update.content.type === "text") {
-                    title += update.content.text;
-                }
-            });
+            lease = await pool.acquire(connection => this.connect(connection));
+            const client = lease.client;
 
             const { sessionId } = await this.createSession(client, { cwd: this.agentCwd(), mcpServers: [] }, false, SESSION_TIMEOUT_MS);
+            attachedSession = sessionId;
+            pool.attach(sessionId, {
+                onUpdate: params => {
+                    const update = (params as AcpSessionUpdate).update;
+                    if (update?.sessionUpdate === "agent_message_chunk" && update.content && "text" in update.content && update.content.type === "text") {
+                        title += update.content.text;
+                    }
+                }
+            });
             const titleModel = this.titleModelId();
             if (titleModel) {
                 try {
@@ -527,15 +571,35 @@ export abstract class AcpAgentProvider implements LlmProvider {
             getLog().error(`${this.logLabel} title generation failed: ${this.describeFailure(error)}`);
             return "";
         } finally {
-            client?.dispose();
+            if (attachedSession) {
+                pool.detach(attachedSession);
+            }
+            if (lease) {
+                pool.release();
+            }
         }
     }
 
+    /** Start the pooled agent, answering each permission request with its turn's configuration. */
+    private connect(connection: AcpPoolConnection): Promise<AcpClient> {
+        return this.startClient(connection.onNotification, {
+            turnConfig: connection.turnConfig,
+            onExit: connection.onExit
+        });
+    }
+
     /**
-     * Spawn the agent and run the ACP initialize handshake. `config` is the chat
-     * turn's configuration, which the permission policy reads.
+     * Spawn the agent and run the ACP initialize handshake. `turnConfig` gives
+     * the configuration of the chat turn a permission request belongs to, which
+     * the permission policy reads.
      */
-    protected async startClient(onNotification: (method: string, params: unknown) => void, config?: LlmProviderConfig): Promise<AcpClient> {
+    protected async startClient(
+        onNotification: (method: string, params: unknown) => void,
+        options: {
+            turnConfig?: (sessionId: string | undefined) => LlmProviderConfig | undefined;
+            onExit?: (error: Error) => void;
+        } = {}
+    ): Promise<AcpClient> {
         const launch = await this.launchSpec();
         const client = AcpClient.start(launch.binary, {
             cwd: this.agentCwd(),
@@ -543,7 +607,12 @@ export abstract class AcpAgentProvider implements LlmProvider {
             args: launch.args,
             env: launch.env,
             onNotification,
-            onAgentRequest: (method, params) => this.handleAgentRequest(method, params, config)
+            onAgentRequest: (method, params) => this.handleAgentRequest(
+                method,
+                params,
+                options.turnConfig?.((params as { sessionId?: string } | undefined)?.sessionId)
+            ),
+            onExit: options.onExit
         });
         try {
             await client.request(
@@ -607,7 +676,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
     private state(): ProviderState {
         let state = stateByProvider.get(this.name);
         if (!state) {
-            state = { sessionsByChatNote: new Map() };
+            state = { sessionsByChatNote: new Map(), pool: new AcpClientPool(this.logLabel) };
             stateByProvider.set(this.name, state);
         }
         return state;
@@ -632,8 +701,8 @@ export function denyPermission(request: AcpPermissionRequest, logLabel: string):
 
 /**
  * Create the session/update collector: maps ACP updates to LlmStreamChunks and
- * pushes them through `emit`. `muted` suppresses the replay flood during
- * session/load; `sessionId` filters stray updates from other sessions.
+ * pushes them through `emit`. `sessionId` filters stray updates from other
+ * sessions.
  * `isHidden` keeps a tool call, and with it every update for that call, out
  * of the chat. `describeBuiltIn` names a built-in tool call the chat has a
  * label for; a call it leaves undescribed shows its title.
@@ -648,10 +717,9 @@ export function createUpdateCollector(
     const toolNamesById = new Map<string, string>();
 
     const collector = {
-        muted: false,
         sessionId: undefined as string | undefined,
         onNotification(method: string, params: unknown): void {
-            if (method !== "session/update" || collector.muted) {
+            if (method !== "session/update") {
                 return;
             }
             const { sessionId, update } = params as AcpSessionUpdate;
@@ -793,8 +861,11 @@ function rememberSession(sessionsByChatNote: Map<string, SessionEntry>, chatNote
     }
 }
 
-/** The MCP server list for `session/new`/`session/load`, pointing at the private loopback endpoint. */
-async function buildMcpServersConfig(): Promise<AcpMcpServer[]> {
+/** The MCP server list for `session/new`/`session/load`: the private loopback endpoint, or none. */
+async function buildMcpServersConfig(noteToolsEnabled: boolean): Promise<AcpMcpServer[]> {
+    if (!noteToolsEnabled) {
+        return [];
+    }
     const url = await getAcpMcpEndpointUrl();
     return [{ name: NOTE_TOOLS_MCP_SERVER_NAME, type: "http", url, headers: [] }];
 }
