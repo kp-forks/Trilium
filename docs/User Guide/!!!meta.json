@@ -3139,20 +3139,12 @@
                                     "dataFileName": "Printing & Exporting as PDF.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "Om2EmdZr54vy",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "Printing & Exporting as PDF_image.png"
-                                        },
-                                        {
                                             "attachmentId": "V7LPRqK96Vjy",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "1_Printing & Exporting as PDF_image.png"
+                                            "dataFileName": "Printing & Exporting as PDF_image.png"
                                         }
                                     ]
                                 },
@@ -4970,7 +4962,7 @@
                                     "dataFileName": "Block quotes & admonitions.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "Cls5AZAbPsIO",
+                                            "attachmentId": "do36b54XpmIC",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
@@ -4978,20 +4970,12 @@
                                             "dataFileName": "Block quotes & admonitions_image.png"
                                         },
                                         {
-                                            "attachmentId": "do36b54XpmIC",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "1_Block quotes & admonitions_image.png"
-                                        },
-                                        {
                                             "attachmentId": "hUwfwkRSDeLJ",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "2_Block quotes & admonitions_image.png"
+                                            "dataFileName": "1_Block quotes & admonitions_image.png"
                                         }
                                     ]
                                 },
@@ -5319,14 +5303,6 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "Format Painter_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "vZqf8QJ80XRF",
-                                            "title": "746436a2e1.svg",
-                                            "role": "image",
-                                            "mime": "image/svg+xml",
-                                            "position": 10,
-                                            "dataFileName": "Format Painter_746436a2e1.svg"
                                         }
                                     ]
                                 },
@@ -5659,14 +5635,6 @@
                                     "format": "markdown",
                                     "dataFileName": "In-editor AI assistant.md",
                                     "attachments": [
-                                        {
-                                            "attachmentId": "WRq3lIRtCSkZ",
-                                            "title": "ai.svg",
-                                            "role": "image",
-                                            "mime": "image/svg+xml",
-                                            "position": 10,
-                                            "dataFileName": "In-editor AI assistant_ai.svg"
-                                        },
                                         {
                                             "attachmentId": "YfZ11mxT5luZ",
                                             "title": "image.png",
