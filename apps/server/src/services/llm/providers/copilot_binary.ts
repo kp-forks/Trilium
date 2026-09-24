@@ -11,16 +11,29 @@
  * (see `findOnPath`, which also asks the login shell). The resolved binary is
  * probed with `--version` once so a broken/absent install surfaces as a clear,
  * actionable error instead of an opaque spawn failure mid-chat.
+ *
+ * The probe must cope with a wrapper standing in for the CLI: VS Code's
+ * Copilot Chat extension puts a `copilot` bootstrapper on the PATH of its
+ * terminals that, when the real CLI is not installed, prints why and asks on
+ * stdin whether to install it. The probe closes stdin so the question reads
+ * end-of-file instead of waiting out the timeout, and requires a version
+ * number in the output, because the wrapper then exits 0 without one.
  */
 
 import { getLog } from "@triliumnext/core";
 import { execFile } from "child_process";
 import { existsSync } from "fs";
-import { promisify } from "util";
 
 import { findOnPath } from "./binary_lookup.js";
 
-const execFileAsync = promisify(execFile);
+const PROBE_TIMEOUT_MS = 15000;
+
+/** What `--version` printed before the probe failed. */
+class ProbeError extends Error {
+    constructor(message: string, readonly output: string) {
+        super(message);
+    }
+}
 
 /**
  * The in-flight/successful resolution. Caching the promise lets concurrent
@@ -50,21 +63,62 @@ async function probeBinary(): Promise<string> {
     // Probe once: confirms the binary actually runs on this host (catches a
     // wrong-arch/broken install) and records the version for diagnostics.
     // Async on purpose — this runs on the first chat request, and a sync probe
-    // would freeze the whole server for up to the 15 s timeout.
+    // would freeze the whole server for up to the timeout.
     let version: string;
     try {
-        // `shell` is required for the .cmd/.bat shims npm creates on Windows —
-        // Node refuses to spawn those directly (CVE-2024-27980). With a shell
-        // the command line is not auto-quoted, so quote the path ourselves.
-        const shell = needsShell(binary);
-        version = (await execFileAsync(shell ? `"${binary}"` : binary, ["--version"], { timeout: 15000, encoding: "utf8", shell })).stdout.trim();
+        const output = await runVersionProbe(binary);
+        const versionLine = output.split("\n").find((line) => /\d+\.\d+\.\d+/.test(line));
+        if (!versionLine) {
+            throw new ProbeError("did not report a version", output);
+        }
+        version = versionLine.trim();
     } catch (err) {
-        const detail = err instanceof Error ? err.message : String(err);
-        throw new Error(`Found GitHub Copilot CLI at "${binary}" but it failed to run (${detail}). Ensure it is installed correctly and that you've run \`copilot login\` on the machine running the Trilium server.`);
+        throw new Error([
+            "Found GitHub Copilot CLI at:",
+            binary,
+            `but it failed to run: ${describeProbeFailure(err)}`,
+            "",
+            "Ensure it is installed correctly and that you've run `copilot login` on the machine running the Trilium server."
+        ].join("\n"));
     }
 
     getLog().info(`Copilot Agent provider: using GitHub Copilot CLI at ${binary} (${version})`);
     return binary;
+}
+
+/**
+ * Runs `binary --version` with stdin closed and resolves with everything it
+ * printed, stdout before stderr. Rejects with a `ProbeError` that names the
+ * timeout, or carries execFile's own message for a spawn or exit failure.
+ */
+function runVersionProbe(binary: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        // `shell` is required for the .cmd/.bat shims npm creates on Windows —
+        // Node refuses to spawn those directly (CVE-2024-27980). With a shell
+        // the command line is not auto-quoted, so quote the path ourselves.
+        const shell = needsShell(binary);
+        const options = { timeout: PROBE_TIMEOUT_MS, encoding: "utf8" as const, shell };
+        const child = execFile(shell ? `"${binary}"` : binary, ["--version"], options, (err, stdout, stderr) => {
+            const output = [stdout, stderr].map((text) => text.trim()).filter(Boolean).join("\n");
+            if (!err) {
+                resolve(output);
+            } else if (err.killed) {
+                reject(new ProbeError(`did not exit within ${PROBE_TIMEOUT_MS / 1000} seconds`, output));
+            } else {
+                // execFile's message already quotes stderr after the command.
+                reject(new ProbeError(err instanceof Error ? err.message : String(err), stdout.trim()));
+            }
+        });
+        child.stdin?.end();
+    });
+}
+
+/** The reason in the "failed to run" error, followed by the output on lines of its own when there is any. */
+function describeProbeFailure(err: unknown): string {
+    if (err instanceof ProbeError && err.output) {
+        return `${err.message}.\n\nIt printed:\n${err.output}`;
+    }
+    return err instanceof Error ? err.message.trim() : String(err);
 }
 
 async function locateBinary(): Promise<string> {
