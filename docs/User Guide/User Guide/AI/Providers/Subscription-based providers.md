@@ -77,5 +77,5 @@ trilium
 
 *   The agent can only work with your notes through Trilium's note tools; its own file and shell tools are blocked for security reasons.
 *   The Antigravity ACP server requires authentication via a login link. The login link needs to be run on the same device, so it might not be possible to set up the provider while using the web version of a Docker installation. <a class="reference-link" href="../../Installation%20%26%20Setup/Desktop%20Installation.md">Desktop Installation</a> should work fine.
-*   Web tools are not supported.
 *   Images can be attached to the conversation, PDFs cannot. The LLM should still be able to read PDF notes and attachments via <a class="reference-link" href="../../Advanced%20Usage/Text%20Extraction%20(OCR).md">Text Extraction (OCR)</a> when the note tools are enabled.
+*   The results of tool calls (e.g. reading a note, writing attributes) are not properly displayed because they are not exposed by the ACP server.
