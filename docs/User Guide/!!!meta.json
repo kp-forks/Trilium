@@ -2106,20 +2106,12 @@
                                     "dataFileName": "Right Sidebar.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "p28l1FIp7xAJ",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "Right Sidebar_image.png"
-                                        },
-                                        {
                                             "attachmentId": "pPdbyXqyGJ21",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "1_Right Sidebar_image.png"
+                                            "dataFileName": "Right Sidebar_image.png"
                                         }
                                     ],
                                     "dirFileName": "Right Sidebar",
@@ -2333,20 +2325,12 @@
                                     "dataFileName": "Recent Changes.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "3HsqEVy53S2H",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "Recent Changes_image.png"
-                                        },
-                                        {
                                             "attachmentId": "dxoiP89lrRn6",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "1_Recent Changes_image.png"
+                                            "dataFileName": "Recent Changes_image.png"
                                         }
                                     ]
                                 },
@@ -3076,28 +3060,12 @@
                                     "dataFileName": "Note Revisions.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "BHquVQR30ess",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "Note Revisions_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "eoYsKZfMMvlg",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "1_Note Revisions_image.png"
-                                        },
-                                        {
                                             "attachmentId": "w1kmtyCISdjQ",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "2_Note Revisions_image.png"
+                                            "dataFileName": "Note Revisions_image.png"
                                         }
                                     ]
                                 },
