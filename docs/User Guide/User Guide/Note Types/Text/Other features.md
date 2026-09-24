@@ -3,12 +3,12 @@
 
 <figure class="image image-style-align-right"><img style="aspect-ratio:201/124;" src="1_Other features_image.png" width="201" height="124"></figure>
 
-Paragraphs can be indented to the right using the  button from the <a class="reference-link" href="Formatting%20toolbar.md">Formatting toolbar</a>.
+Paragraphs can be indented using the following buttons from the <a class="reference-link" href="Formatting%20toolbar.md">Formatting toolbar</a>:
 
 *   Press <span class="tn-icon cke cke-indent"></span> to increase the indentation of the current paragraph by one. Can be pressed multiple times if needed.
 *   Press <span class="tn-icon cke cke-outdent"></span> to decrease the indentation of a current paragraph. The button will be disabled if it is already at the minimum indentation level.
 *   For convenience, keyboard shortcuts are also available. Press <kbd>Tab</kbd> to indent or <kbd>Shift</kbd>+<kbd>Tab</kbd> to decrease the indentation. These shortcuts work even if the cursor is not at the beginning of a paragraph or a list.
-*   Apart from paragraphs, the indent button is also enabled in <a class="reference-link" href="Lists.md">Lists</a>, where it can be used to create nested lists.
+*   Apart from paragraphs, the indent button is also enabled in <a class="reference-link" href="Lists.md">Lists</a> (for nesting) and <a class="reference-link" href="Tables.md">Tables</a>.
 
 ## Markdown import
 

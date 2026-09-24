@@ -5441,7 +5441,7 @@
                                             "dataFileName": "General formatting_image.png"
                                         },
                                         {
-                                            "attachmentId": "OkGcMBKy5b38",
+                                            "attachmentId": "QlP03tA4G97k",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
@@ -5449,7 +5449,7 @@
                                             "dataFileName": "1_General formatting_image.png"
                                         },
                                         {
-                                            "attachmentId": "QlP03tA4G97k",
+                                            "attachmentId": "SwE8rNYiMEBb",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
@@ -5457,20 +5457,12 @@
                                             "dataFileName": "2_General formatting_image.png"
                                         },
                                         {
-                                            "attachmentId": "SwE8rNYiMEBb",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "3_General formatting_image.png"
-                                        },
-                                        {
                                             "attachmentId": "VRNPOor1LpMY",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "4_General formatting_image.png"
+                                            "dataFileName": "3_General formatting_image.png"
                                         }
                                     ]
                                 },
@@ -5780,28 +5772,12 @@
                                     "dataFileName": "Insert buttons.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "1yYoQCxcL89p",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "Insert buttons_image.png"
-                                        },
-                                        {
                                             "attachmentId": "75Y6A4kigDhM",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "1_Insert buttons_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "dZrJ32Cz13fg",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "2_Insert buttons_image.png"
+                                            "dataFileName": "Insert buttons_image.png"
                                         },
                                         {
                                             "attachmentId": "Mj8uDOt36GM8",
@@ -5817,23 +5793,7 @@
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "3_Insert buttons_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "Oh4esHvmpwwS",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "4_Insert buttons_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "Pbux81ahBpld",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "5_Insert buttons_image.png"
+                                            "dataFileName": "1_Insert buttons_image.png"
                                         },
                                         {
                                             "attachmentId": "r3blICK1PaXy",
@@ -5841,15 +5801,7 @@
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "6_Insert buttons_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "rpuASdGA28bV",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "7_Insert buttons_image.png"
+                                            "dataFileName": "2_Insert buttons_image.png"
                                         },
                                         {
                                             "attachmentId": "sNeqHszPiist",
@@ -5857,7 +5809,7 @@
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "8_Insert buttons_image.png"
+                                            "dataFileName": "3_Insert buttons_image.png"
                                         },
                                         {
                                             "attachmentId": "wTs0nELuclAk",
@@ -6073,32 +6025,7 @@
                                             ],
                                             "format": "markdown",
                                             "dataFileName": "External links.md",
-                                            "attachments": [
-                                                {
-                                                    "attachmentId": "4iWGIpzSV6MV",
-                                                    "title": "image.png",
-                                                    "role": "image",
-                                                    "mime": "image/png",
-                                                    "position": 10,
-                                                    "dataFileName": "External links_image.png"
-                                                },
-                                                {
-                                                    "attachmentId": "7VIWlzGk8mAN",
-                                                    "title": "image.png",
-                                                    "role": "image",
-                                                    "mime": "image/png",
-                                                    "position": 10,
-                                                    "dataFileName": "1_External links_image.png"
-                                                },
-                                                {
-                                                    "attachmentId": "ScPPPlw9Ab9Y",
-                                                    "title": "image.png",
-                                                    "role": "image",
-                                                    "mime": "image/png",
-                                                    "position": 10,
-                                                    "dataFileName": "2_External links_image.png"
-                                                }
-                                            ]
+                                            "attachments": []
                                         },
                                         {
                                             "isClone": false,
@@ -6134,24 +6061,7 @@
                                             ],
                                             "format": "markdown",
                                             "dataFileName": "Internal (reference) links.md",
-                                            "attachments": [
-                                                {
-                                                    "attachmentId": "ausNE2PtmeVB",
-                                                    "title": "image.png",
-                                                    "role": "image",
-                                                    "mime": "image/png",
-                                                    "position": 10,
-                                                    "dataFileName": "Internal (reference) links_image.png"
-                                                },
-                                                {
-                                                    "attachmentId": "VWmqBZtLxTJH",
-                                                    "title": "image.png",
-                                                    "role": "image",
-                                                    "mime": "image/png",
-                                                    "position": 10,
-                                                    "dataFileName": "1_Internal (reference) links_image.png"
-                                                }
-                                            ]
+                                            "attachments": []
                                         },
                                         {
                                             "isClone": false,
@@ -6351,14 +6261,6 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "Math Equations_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "B7EEd3MJTg7C",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "1_Math Equations_image.png"
                                         }
                                     ]
                                 },
@@ -6397,7 +6299,7 @@
                                     "dataFileName": "Other features.md",
                                     "attachments": [
                                         {
-                                            "attachmentId": "4ik2A185UZ8W",
+                                            "attachmentId": "QTaczw8qoYL2",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
@@ -6405,52 +6307,12 @@
                                             "dataFileName": "Other features_image.png"
                                         },
                                         {
-                                            "attachmentId": "o7PD1tyys94h",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "1_Other features_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "po6eICABPAsk",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "2_Other features_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "qCefsqgbbdjp",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "3_Other features_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "QTaczw8qoYL2",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "4_Other features_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "Roz4NVWVufdl",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "5_Other features_image.png"
-                                        },
-                                        {
                                             "attachmentId": "x3lcgBCJOVzB",
                                             "title": "image.png",
                                             "role": "image",
                                             "mime": "image/png",
                                             "position": 10,
-                                            "dataFileName": "6_Other features_image.png"
+                                            "dataFileName": "1_Other features_image.png"
                                         }
                                     ]
                                 },
@@ -6705,14 +6567,6 @@
                                             "mime": "image/png",
                                             "position": 10,
                                             "dataFileName": "Text Snippets_image.png"
-                                        },
-                                        {
-                                            "attachmentId": "DlisV0iJLVec",
-                                            "title": "image.png",
-                                            "role": "image",
-                                            "mime": "image/png",
-                                            "position": 10,
-                                            "dataFileName": "1_Text Snippets_image.png"
                                         }
                                     ]
                                 },
