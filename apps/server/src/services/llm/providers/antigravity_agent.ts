@@ -25,11 +25,12 @@ import { existsSync } from "fs";
 import path from "path";
 
 import dataDirs from "../../data_dir.js";
-import { AcpAgentProvider, type AcpLaunchSpec, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
+import { AcpAgentProvider, type AcpLaunchSpec, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, type BuiltInToolDisplay, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
 import { type AcpClient, AcpError } from "./acp_client.js";
 import { getAcpHookEndpointUrl } from "./acp_mcp_endpoint.js";
 import { resolveAntigravityBinaryPath } from "./antigravity_binary.js";
 import { type AntigravityDirs, type AntigravityHookDecision, buildHookCommand, decideAntigravityToolCall, resolveCurlPath, writeAntigravityHooks } from "./antigravity_hook.js";
+import { isPublicHttpUrl } from "./public_url.js";
 
 /** The model id that leaves the session on the model the server picks. */
 const DEFAULT_MODEL_ID = "default";
@@ -133,8 +134,12 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
         return buildAntigravityModelList(remote);
     }
 
-    protected decidePermission(request: AcpPermissionRequest, config?: LlmProviderConfig): AcpPermissionOutcome {
-        return decideAntigravityPermission(request, this.logLabel, { webSearch: config?.enableWebSearch === true });
+    protected decidePermission(request: AcpPermissionRequest, config?: LlmProviderConfig): AcpPermissionOutcome | Promise<AcpPermissionOutcome> {
+        const webSearch = config?.enableWebSearch === true;
+        if (webSearch && isUrlRead(request.toolCall)) {
+            return decideAntigravityUrlRead(request, this.logLabel);
+        }
+        return decideAntigravityPermission(request, this.logLabel, { webSearch });
     }
 
     /** Answer the file-access hook for one tool call, logging each denial. */
@@ -157,9 +162,18 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
         return isToolDescriptionAccess(update, agentHome());
     }
 
-    /** The web search, under the name the other providers' searches carry. */
-    protected builtInToolName(update: AcpToolCallUpdate): string | undefined {
-        return isWebSearch(update) ? "web_search" : undefined;
+    /**
+     * The web search, under the name the other providers' searches carry, and
+     * the page read, with the URL where the chat looks for a detail.
+     */
+    protected describeBuiltInTool(update: AcpToolCallUpdate): BuiltInToolDisplay | undefined {
+        if (isWebSearch(update)) {
+            return { toolName: "web_search" };
+        }
+        if (isUrlRead(update)) {
+            return { toolName: "read_web_page", toolInput: { url: requestedUrl(update.rawInput) } };
+        }
+        return undefined;
     }
 
     /**
@@ -397,6 +411,35 @@ function compareVersions(a: number[], b: number[]): number {
 /** The server's home, `GEMINI_HOME`: its sign-in, sessions and tool descriptions. */
 function agentHome(): string {
     return path.resolve(dataDirs.TRILIUM_DATA_DIR, "antigravity-agent", "home");
+}
+
+/**
+ * Approve reading a web page once when its URL leads to the public internet
+ * (see {@link isPublicHttpUrl}), and deny it otherwise. The caller has checked
+ * that the chat allows web access and that the request is the page read.
+ */
+export async function decideAntigravityUrlRead(request: AcpPermissionRequest, logLabel: string): Promise<AcpPermissionOutcome> {
+    const url = requestedUrl(request.toolCall?.rawInput);
+    const allowOnce = request.options?.find(o => o.kind === "allow_once");
+    if (url && allowOnce && await isPublicHttpUrl(url)) {
+        return { outcome: { outcome: "selected", optionId: allowOnce.optionId } };
+    }
+    return denyPermission(request, logLabel);
+}
+
+/**
+ * Whether a tool call or permission request is the server's page read: the
+ * kind `fetch` with the title the server gives it. The model writes only the
+ * URL, which travels in the input.
+ */
+function isUrlRead(toolCall: { kind?: string; title?: string } | undefined): boolean {
+    return toolCall?.kind === "fetch" && /^Run(?:ning)? read_url_content\??$/.test(toolCall.title ?? "");
+}
+
+/** The URL a page read names, in its `Url` argument. */
+function requestedUrl(rawInput: unknown): string | undefined {
+    const url = (rawInput as { Url?: unknown } | null | undefined)?.Url;
+    return typeof url === "string" ? url : undefined;
 }
 
 /**

@@ -44,6 +44,12 @@ export interface AcpLaunchSpec {
 /** The ACP permission callback's answer. */
 export type AcpPermissionOutcome = { outcome: { outcome: "selected"; optionId: string } | { outcome: "cancelled" } };
 
+/** How the chat shows a built-in tool call: a name it has a label for, and the input it reads. */
+export interface BuiltInToolDisplay {
+    toolName: string;
+    toolInput?: Record<string, unknown>;
+}
+
 export interface AcpPermissionRequest {
     sessionId?: string;
     toolCall?: {
@@ -188,7 +194,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
      * `config` is the chat turn's configuration, and absent outside a chat
      * turn (the model probe, the title).
      */
-    protected decidePermission(request: AcpPermissionRequest, _config?: LlmProviderConfig): AcpPermissionOutcome {
+    protected decidePermission(request: AcpPermissionRequest, _config?: LlmProviderConfig): AcpPermissionOutcome | Promise<AcpPermissionOutcome> {
         return denyPermission(request, this.logLabel);
     }
 
@@ -203,9 +209,10 @@ export abstract class AcpAgentProvider implements LlmProvider {
 
     /**
      * The chat's name for a built-in tool call it has a label for, such as
-     * `web_search`; undefined shows the call's title. Display only.
+     * `web_search`, and optionally its input in the shape the chat reads;
+     * undefined shows the call's title. Display only.
      */
-    protected builtInToolName(_update: AcpToolCallUpdate): string | undefined {
+    protected describeBuiltInTool(_update: AcpToolCallUpdate): BuiltInToolDisplay | undefined {
         return undefined;
     }
 
@@ -341,7 +348,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
             wakeup?.();
         };
 
-        const collector = createUpdateCollector(emit, update => this.isInternalToolCall(update), update => this.builtInToolName(update));
+        const collector = createUpdateCollector(emit, update => this.isInternalToolCall(update), update => this.describeBuiltInTool(update));
         let client: AcpClient | undefined;
         let sessionId: string | undefined;
         let sessionModels: AcpSessionModelState | undefined;
@@ -634,13 +641,13 @@ export function denyPermission(request: AcpPermissionRequest, logLabel: string):
  * pushes them through `emit`. `muted` suppresses the replay flood during
  * session/load; `sessionId` filters stray updates from other sessions.
  * `isHidden` keeps a tool call, and with it every update for that call, out
- * of the chat. `nameTool` names a built-in tool call the chat has a label for;
- * a call it leaves unnamed shows its title.
+ * of the chat. `describeBuiltIn` names a built-in tool call the chat has a
+ * label for; a call it leaves undescribed shows its title.
  */
 export function createUpdateCollector(
     emit: (chunk: LlmStreamChunk) => void,
     isHidden?: (update: AcpToolCallUpdate) => boolean,
-    nameTool?: (update: AcpToolCallUpdate) => string | undefined
+    describeBuiltIn?: (update: AcpToolCallUpdate) => BuiltInToolDisplay | undefined
 ) {
     // toolCallId → display name, for labelling results; also the guard that
     // only this turn's tool calls produce result chunks.
@@ -678,13 +685,14 @@ export function createUpdateCollector(
                         break; // malformed, a re-announcement of a known call, or hidden
                     }
                     const mcpTool = mcpToolName(update._meta);
-                    const toolName = mcpTool ?? nameTool?.(update) ?? (update.title || "tool");
+                    const builtIn = mcpTool ? undefined : describeBuiltIn?.(update);
+                    const toolName = mcpTool ?? builtIn?.toolName ?? (update.title || "tool");
                     toolNamesById.set(update.toolCallId, toolName);
                     emit({
                         type: "tool_use",
                         toolCallId: update.toolCallId,
                         toolName,
-                        toolInput: (mcpTool ? unwrapMcpArguments(update.rawInput) : update.rawInput ?? {}) as Record<string, unknown>
+                        toolInput: (mcpTool ? unwrapMcpArguments(update.rawInput) : builtIn?.toolInput ?? update.rawInput ?? {}) as Record<string, unknown>
                     });
                     break;
                 }

@@ -4121,7 +4121,8 @@
       "clone_note": "Clone note",
       "search_icons": "Search icons",
       "search_help": "Search User Guide",
-      "get_help_toc": "Get User Guide contents"
+      "get_help_toc": "Get User Guide contents",
+      "read_web_page": "Read web page"
     }
   },
   "common": {

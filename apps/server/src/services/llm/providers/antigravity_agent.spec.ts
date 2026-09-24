@@ -236,6 +236,28 @@ describe("AntigravityAgentProvider", () => {
             .toEqual({ outcome: { outcome: "selected", optionId: "deny" } });
     });
 
+    it("lets the agent read a public web page only when the chat allows web access", async () => {
+        // Shape captured from agy_acp_server 1.2.1. IP literals need no DNS.
+        const readUrl = (url: string) => ({
+            toolCall: { kind: "fetch", status: "pending", title: "Run read_url_content?", rawInput: { Url: url } },
+            options: PERMISSION_OPTIONS
+        });
+        const allowed = { outcome: { outcome: "selected", optionId: "allow" } };
+        const denied = { outcome: { outcome: "selected", optionId: "deny" } };
+
+        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
+        const decide = (request: unknown) => FakeAcpClient.current?.onAgentRequest?.("session/request_permission", request);
+        expect(await decide(readUrl("https://93.184.215.14/"))).toEqual(allowed);
+        expect(await decide(readUrl("http://127.0.0.1:8080/"))).toEqual(denied);
+        expect(await decide(readUrl("file:///C:/antigravity-acp/acp_token.json"))).toEqual(denied);
+        // A shell command the model titled like a page read.
+        expect(await decide({ ...readUrl("https://93.184.215.14/"), toolCall: { kind: "execute", title: "Run read_url_content?", rawInput: { Url: "https://93.184.215.14/" } } }))
+            .toEqual(denied);
+
+        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(await FakeAcpClient.current?.onAgentRequest?.("session/request_permission", readUrl("https://93.184.215.14/"))).toEqual(denied);
+    });
+
     it("signs in during the model probe, but reports a missing sign-in in the chat instead", async () => {
         FakeAcpClient.signedIn = false;
         const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
@@ -360,14 +382,16 @@ describe("AntigravityAgentProvider tool calls", () => {
         FakeAcpClient.promptUpdates = [
             { sessionUpdate: "tool_call", toolCallId: "7bba", title: "Run search_web?", kind: "search", status: "pending", rawInput: { query: "weather Sibiu today" } },
             { sessionUpdate: "tool_call_update", toolCallId: "7bba", status: "completed", rawOutput: "Sunny" },
-            { sessionUpdate: "tool_call", toolCallId: "sh1", title: "Run search_web?", kind: "execute", status: "pending", rawInput: { CommandLine: "Run search_web?" } }
+            { sessionUpdate: "tool_call", toolCallId: "sh1", title: "Run search_web?", kind: "execute", status: "pending", rawInput: { CommandLine: "Run search_web?" } },
+            { sessionUpdate: "tool_call", toolCallId: "0601", title: "Run read_url_content?", kind: "fetch", status: "pending", rawInput: { Url: "https://en.wikipedia.org/wiki/Quantum_computing" } }
         ];
 
         const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
         expect(chunks.filter(c => c.type === "tool_use" || c.type === "tool_result")).toEqual([
             { type: "tool_use", toolCallId: "7bba", toolName: "web_search", toolInput: { query: "weather Sibiu today" } },
             { type: "tool_result", toolCallId: "7bba", toolName: "web_search", result: "Sunny", isError: false },
-            { type: "tool_use", toolCallId: "sh1", toolName: "Run search_web?", toolInput: { CommandLine: "Run search_web?" } }
+            { type: "tool_use", toolCallId: "sh1", toolName: "Run search_web?", toolInput: { CommandLine: "Run search_web?" } },
+            { type: "tool_use", toolCallId: "0601", toolName: "read_web_page", toolInput: { url: "https://en.wikipedia.org/wiki/Quantum_computing" } }
         ]);
     });
 });
