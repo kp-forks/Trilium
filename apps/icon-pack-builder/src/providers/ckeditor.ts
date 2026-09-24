@@ -23,6 +23,16 @@ const TRILIUM_ICON_DIRS = [
     "src/plugins/snippets/theme/icons"
 ];
 
+/**
+ * Presentation attributes for the icons that CKEditor styles from its stylesheet instead of from
+ * the SVG. Each value matches the rule the editor applies to that icon.
+ */
+const STYLESHEET_PRESENTATION: Record<string, string> = {
+    // `.ck-widget__type-around__button svg *`
+    IconReturnArrow: `fill="none" stroke="currentColor" stroke-width="1.5" `
+        + `stroke-linecap="round" stroke-linejoin="round"`
+};
+
 interface IconSource {
     id: string;
     svg: string;
@@ -110,7 +120,11 @@ function collectSources(): IconSource[] {
 
     for (const [ exportName, svg ] of Object.entries(ckeditorIcons)) {
         if (!exportName.startsWith("Icon") || typeof svg !== "string") continue;
-        sources.push({ id: `${PREFIX}-${toKebabCase(exportName.slice("Icon".length))}`, svg });
+        const presentation = STYLESHEET_PRESENTATION[exportName];
+        sources.push({
+            id: `${PREFIX}-${toKebabCase(exportName.slice("Icon".length))}`,
+            svg: presentation ? svg.replace(/^<svg\b/, `<svg ${presentation}`) : svg
+        });
     }
 
     const ckeditorPackageDir = join(__dirname, "../../../../packages/ckeditor5");
