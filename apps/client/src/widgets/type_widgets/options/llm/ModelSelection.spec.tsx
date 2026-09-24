@@ -73,9 +73,15 @@ describe("ModelSelection", () => {
         const query = { provider: "openai", apiKey: "sk-test", baseURL: "http://x/v1" };
         const el = await renderSelection({ query, selected: MODELS, onChange: vi.fn() });
 
-        expect(fetchProviderModelsMock).toHaveBeenCalledWith(query);
+        expect(fetchProviderModelsMock).toHaveBeenCalledWith(query, undefined);
         const names = [...el.querySelectorAll(".checkbox-stub")].map(node => node.getAttribute("data-name"));
         expect(names).toEqual(["model-gpt-4.1", "model-gpt-4o", "model-custom"]);
+    });
+
+    it("passes the provider's own timeout to the fetch", async () => {
+        const query = { provider: "antigravity-agent" };
+        await renderSelection({ query, timeoutMs: 6 * 60_000, selected: [], onChange: vi.fn() });
+        expect(fetchProviderModelsMock).toHaveBeenCalledWith(query, 6 * 60_000);
     });
 
     it("auto-selects the server-recommended models when nothing is selected yet", async () => {

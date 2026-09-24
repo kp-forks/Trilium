@@ -54,9 +54,15 @@ describe("fetchProviderModels", () => {
         server.postWithTimeout = vi.fn(async () => ({ models })) as typeof server.postWithTimeout;
         const query = { provider: "openai", apiKey: "sk-test", baseURL: "http://localhost:11434/v1" };
         await expect(fetchProviderModels(query)).resolves.toBe(models);
-        // Long enough for a first Google Antigravity sign-in, which runs inside this request. The
-        // model-selection screen shows a failure inline, so no toast repeats it.
-        expect(server.postWithTimeout).toHaveBeenCalledWith("llm-chat/provider-models", 6 * 60_000, query, undefined, { silentBadRequest: true });
+        // The model-selection screen shows a failure inline, so no toast repeats it.
+        expect(server.postWithTimeout).toHaveBeenCalledWith("llm-chat/provider-models", 60_000, query, undefined, { silentBadRequest: true });
+    });
+
+    it("waits as long as the provider asks for", async () => {
+        server.postWithTimeout = vi.fn(async () => ({ models: [] })) as typeof server.postWithTimeout;
+        const query = { provider: "openai" };
+        await fetchProviderModels(query, 90_000);
+        expect(server.postWithTimeout).toHaveBeenCalledWith("llm-chat/provider-models", 90_000, query, undefined, { silentBadRequest: true });
     });
 
     it("defaults to an empty array when models is absent", async () => {

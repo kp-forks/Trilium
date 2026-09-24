@@ -228,7 +228,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
     }
 
     /**
-     * The models this account may use, as the installed CLI reports them.
+     * The models this account can use, as the installed CLI reports them.
      *
      * There is no `/models` endpoint to call: the catalog arrives on the
      * `session/new` response, which reflects the CLI's version and the plan the
@@ -548,7 +548,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
     protected agentCwd(): string {
         const state = this.state();
         if (!state.agentCwd) {
-            // Resolve to an absolute path — TRILIUM_DATA_DIR may be relative (dev
+            // Resolve to an absolute path — TRILIUM_DATA_DIR can be relative (dev
             // runs use TRILIUM_DATA_DIR=data) and a relative spawn cwd would move
             // with the server process's own cwd.
             const cwd = path.resolve(dataDirs.TRILIUM_DATA_DIR, this.agentDirName);

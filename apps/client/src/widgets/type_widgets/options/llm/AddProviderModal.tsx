@@ -81,6 +81,8 @@ export interface ProviderType {
      * an advanced override (vendor APIs), or not applicable. Defaults to `"advanced"`.
      */
     baseUrl?: "required" | "advanced" | "none";
+    /** How long listing the provider's models can take, when it needs longer than the default minute. */
+    modelListTimeoutMs?: number;
     /**
      * Which section of the provider list this card belongs to — how it is billed,
      * mirroring the three the user guide describes: metered API keys, a fixed-fee
@@ -127,7 +129,9 @@ export const PROVIDER_TYPES: ProviderType[] = [
     { id: "copilot-agent", name: "GitHub Copilot", group: "subscription", defaultBaseUrl: "", iconUrl: PROVIDER_ICONS["copilot-agent"], connectionDescription: t("llm.copilot_agent_description"), beta: true, apiKey: "none", baseUrl: "none", needsHostProcess: true },
     // Gemini on a Google account through Google's Antigravity ACP server; the server
     // signs in itself, opening the Google sign-in page the first time models are listed.
-    { id: "antigravity-agent", name: "Google Antigravity", group: "subscription", defaultBaseUrl: "", iconUrl: PROVIDER_ICONS["antigravity-agent"], connectionDescription: t("llm.antigravity_agent_description"), beta: true, apiKey: "none", baseUrl: "none", needsHostProcess: true },
+    // That sign-in runs inside the model-list request, so the request outlasts the
+    // server's own 5-minute wait for it (`SIGN_IN_TIMEOUT_MS`).
+    { id: "antigravity-agent", name: "Google Antigravity", group: "subscription", defaultBaseUrl: "", iconUrl: PROVIDER_ICONS["antigravity-agent"], connectionDescription: t("llm.antigravity_agent_description"), beta: true, apiKey: "none", baseUrl: "none", needsHostProcess: true, modelListTimeoutMs: 6 * 60_000 },
     // The three self-hosted cards share one server-side provider; they differ only in
     // the endpoint they prefill and the setup hint they show.
     // No blurbs: the group heading already says local/self-hosted, and how to start
@@ -396,6 +400,7 @@ export default function AddProviderModal({ show, onHidden, onSave, existingProvi
                     <CardSection>
                         <ModelSelection
                             query={modelQuery}
+                            timeoutMs={providerType?.modelListTimeoutMs}
                             selected={selectedModels}
                             onChange={setSelectedModels}
                             autoSelectDefaults={seedDefaultModels}
