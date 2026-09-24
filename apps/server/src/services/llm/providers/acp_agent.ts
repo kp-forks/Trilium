@@ -201,6 +201,14 @@ export abstract class AcpAgentProvider implements LlmProvider {
         return false;
     }
 
+    /**
+     * The chat's name for a built-in tool call it has a label for, such as
+     * `web_search`; undefined shows the call's title. Display only.
+     */
+    protected builtInToolName(_update: AcpToolCallUpdate): string | undefined {
+        return undefined;
+    }
+
     /** Map a failure to an actionable message. */
     protected describeFailure(error: unknown): string {
         return describeError(error);
@@ -333,7 +341,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
             wakeup?.();
         };
 
-        const collector = createUpdateCollector(emit, update => this.isInternalToolCall(update));
+        const collector = createUpdateCollector(emit, update => this.isInternalToolCall(update), update => this.builtInToolName(update));
         let client: AcpClient | undefined;
         let sessionId: string | undefined;
         let sessionModels: AcpSessionModelState | undefined;
@@ -626,9 +634,14 @@ export function denyPermission(request: AcpPermissionRequest, logLabel: string):
  * pushes them through `emit`. `muted` suppresses the replay flood during
  * session/load; `sessionId` filters stray updates from other sessions.
  * `isHidden` keeps a tool call, and with it every update for that call, out
- * of the chat.
+ * of the chat. `nameTool` names a built-in tool call the chat has a label for;
+ * a call it leaves unnamed shows its title.
  */
-export function createUpdateCollector(emit: (chunk: LlmStreamChunk) => void, isHidden?: (update: AcpToolCallUpdate) => boolean) {
+export function createUpdateCollector(
+    emit: (chunk: LlmStreamChunk) => void,
+    isHidden?: (update: AcpToolCallUpdate) => boolean,
+    nameTool?: (update: AcpToolCallUpdate) => string | undefined
+) {
     // toolCallId → display name, for labelling results; also the guard that
     // only this turn's tool calls produce result chunks.
     const toolNamesById = new Map<string, string>();
@@ -665,7 +678,7 @@ export function createUpdateCollector(emit: (chunk: LlmStreamChunk) => void, isH
                         break; // malformed, a re-announcement of a known call, or hidden
                     }
                     const mcpTool = mcpToolName(update._meta);
-                    const toolName = mcpTool ?? (update.title || "tool");
+                    const toolName = mcpTool ?? nameTool?.(update) ?? (update.title || "tool");
                     toolNamesById.set(update.toolCallId, toolName);
                     emit({
                         type: "tool_use",

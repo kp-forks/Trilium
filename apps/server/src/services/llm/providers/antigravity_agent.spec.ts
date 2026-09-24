@@ -355,6 +355,21 @@ describe("AntigravityAgentProvider tool calls", () => {
         const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableNoteTools: true }));
         expect(chunks.filter(c => c.type === "tool_use" || c.type === "tool_result").map(c => c.toolCallId)).toEqual(["call_token", "call_token", "cf21", "cf21"]);
     });
+
+    it("names the web search like the other providers do, and nothing the model titled after it", async () => {
+        FakeAcpClient.promptUpdates = [
+            { sessionUpdate: "tool_call", toolCallId: "7bba", title: "Run search_web?", kind: "search", status: "pending", rawInput: { query: "weather Sibiu today" } },
+            { sessionUpdate: "tool_call_update", toolCallId: "7bba", status: "completed", rawOutput: "Sunny" },
+            { sessionUpdate: "tool_call", toolCallId: "sh1", title: "Run search_web?", kind: "execute", status: "pending", rawInput: { CommandLine: "Run search_web?" } }
+        ];
+
+        const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
+        expect(chunks.filter(c => c.type === "tool_use" || c.type === "tool_result")).toEqual([
+            { type: "tool_use", toolCallId: "7bba", toolName: "web_search", toolInput: { query: "weather Sibiu today" } },
+            { type: "tool_result", toolCallId: "7bba", toolName: "web_search", result: "Sunny", isError: false },
+            { type: "tool_use", toolCallId: "sh1", toolName: "Run search_web?", toolInput: { CommandLine: "Run search_web?" } }
+        ]);
+    });
 });
 
 describe("buildAntigravityModelList", () => {

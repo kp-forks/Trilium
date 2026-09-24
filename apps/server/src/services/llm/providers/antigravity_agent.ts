@@ -157,6 +157,11 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
         return isToolDescriptionAccess(update, agentHome());
     }
 
+    /** The web search, under the name the other providers' searches carry. */
+    protected builtInToolName(update: AcpToolCallUpdate): string | undefined {
+        return isWebSearch(update) ? "web_search" : undefined;
+    }
+
     /**
      * Open a session, signing in first when the server has no saved sign-in and
      * the user is on the add-provider screen to complete it. The server opens
@@ -220,9 +225,8 @@ export function decideAntigravityPermission(
     const meta = toolCall?._meta;
     const mcp = meta?.mcp as { server?: unknown } | undefined;
     const isNoteTool = meta?.is_mcp_tool_call === true && mcp?.server === NOTE_TOOLS_MCP_SERVER_NAME;
-    const isWebSearch = toolCall?.kind === "search" && toolCall.title === "Run search_web?";
     const allowOnce = request.options?.find(o => o.kind === "allow_once");
-    if ((isNoteTool || (webSearch && isWebSearch)) && allowOnce) {
+    if ((isNoteTool || (webSearch && isWebSearch(toolCall))) && allowOnce) {
         return { outcome: { outcome: "selected", optionId: allowOnce.optionId } };
     }
     return denyPermission(request, logLabel);
@@ -393,6 +397,15 @@ function compareVersions(a: number[], b: number[]): number {
 /** The server's home, `GEMINI_HOME`: its sign-in, sessions and tool descriptions. */
 function agentHome(): string {
     return path.resolve(dataDirs.TRILIUM_DATA_DIR, "antigravity-agent", "home");
+}
+
+/**
+ * Whether a tool call or permission request is the server's web search: the
+ * kind `search` with the title the server gives it, `Run search_web?` while it
+ * waits for permission and `Running search_web` once it runs.
+ */
+function isWebSearch(toolCall: { kind?: string; title?: string } | undefined): boolean {
+    return toolCall?.kind === "search" && /^Run(?:ning)? search_web\??$/.test(toolCall.title ?? "");
 }
 
 function isSignInRequired(error: unknown): boolean {
