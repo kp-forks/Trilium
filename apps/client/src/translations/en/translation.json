@@ -2586,6 +2586,16 @@
     "sources": "Sources",
     "sources_summary": "{{count}} sources from {{sites}} sites",
     "extended_thinking": "Extended thinking",
+    "reasoning_effort_title": "Reasoning effort: {{level}}",
+    "reasoning_effort_levels": {
+      "none": "None",
+      "minimal": "Minimal",
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "xhigh": "Extra high",
+      "max": "Maximum"
+    },
     "model_cost_included": "Subscription",
     "no_models_selected": "No models selected — click the pencil to choose",
     "no_model_selected": "Select a model",
@@ -4037,8 +4047,6 @@
     "no_providers_configured": "No providers configured yet.",
     "provider_name": "Name",
     "beta": "Beta",
-    "provider_desc_claude_agent": "Requires Claude Code on the machine running Trilium.",
-    "provider_desc_copilot_agent": "Requires the GitHub Copilot CLI on the machine running Trilium.",
     "provider_unavailable_standalone": "Unavailable in the browser version: this provider works by running a separate program on the machine, and there is no machine here to run it on.",
     "actions": "Actions",
     "delete_provider": "Delete",
@@ -4050,11 +4058,16 @@
     "base_url_invalid": "Base URL must be a valid http:// or https:// URL",
     "claude_agent_description": "Uses your Claude Pro/Max subscription through Claude Code, so no API key is needed. Claude Code must be installed on the machine running Trilium (the server when self-hosting, or this computer on desktop); sign in once by running \"claude /login\" there.",
     "copilot_agent_description": "Uses your GitHub Copilot subscription through the GitHub Copilot CLI, so no API key is needed. The Copilot CLI must be installed on the machine running Trilium (the server when self-hosting, or this computer on desktop); sign in once by running \"copilot login\" there — an existing Copilot login from another editor is reused automatically.",
+    "antigravity_agent_description": "Uses the Gemini quota of your Google account (free, Google AI Pro or Ultra) through Google Antigravity, so no API key is needed.\n\nGoogle's Antigravity ACP server must be downloaded to the device running Trilium: the server when self-hosting, or this computer on desktop. If it isn't installed yet, the next step shows how to install it.\n\nThe first time the models are listed, the Google sign-in page opens in a browser on that device.",
+    "antigravity_setup_download": "On the device running Trilium, download the archive for your platform from Google's <Link>ACP registry entry</Link> and unzip it into a folder it can stay in.",
+    "antigravity_setup_archive": "Download <Link>the archive for the device running Trilium</Link> and unzip it there, into a folder it can stay in.",
+    "antigravity_setup_path": "Add that folder to <Code>PATH</Code>, or set the <Code>TRILIUM_ANTIGRAVITY_ACP_PATH</Code> environment variable to <Code>agy_acp_server.par</Code> in it (<Code>agy_acp_server.exe</Code> on Windows), then restart Trilium.",
+    "antigravity_setup_sign_in": "Come back to this step. The first time, the Google sign-in page opens in a browser on that device.",
     "add_provider_title_named": "Add {{- name}}",
     "provider_group_cloud": "Cloud providers",
     "provider_group_cloud_description": "Pay per use with an API key, billed separately from any subscription you already have. Your notes are sent to the provider's servers.",
     "provider_group_subscription": "Subscription",
-    "provider_group_subscription_description": "Reuses a subscription you already pay for, at no extra cost. Your notes are sent to the provider's servers.",
+    "provider_group_subscription_description": "Uses an account you already have instead of an API key, at no extra cost: Claude Pro/Max, GitHub Copilot or a Google account. The provider's program must be installed on the device running Trilium, and your notes are sent to the provider's servers.",
     "provider_group_local": "Local / self-hosted",
     "provider_group_local_description": "No API key, no usage cost. Your notes only reach the machine running the model.",
     "provider_group_custom": "Custom endpoint",
@@ -4108,7 +4121,8 @@
       "clone_note": "Clone note",
       "search_icons": "Search icons",
       "search_help": "Search User Guide",
-      "get_help_toc": "Get User Guide contents"
+      "get_help_toc": "Get User Guide contents",
+      "read_web_page": "Read web page"
     }
   },
   "common": {

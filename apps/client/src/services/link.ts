@@ -552,7 +552,7 @@ export function goToLinkExt(evt: MouseEvent | JQuery.ClickEvent | JQuery.MouseDo
     const isMiddleClick = evt && "which" in evt && evt.which === 2;
     const targetIsBlank = ($link?.attr("target") === "_blank");
     const isDoubleClick = isLeftClick && evt?.type === "dblclick";
-    const openInNewTab = (isLeftClick && ctrlKey) || isDoubleClick || isMiddleClick || targetIsBlank;
+    const openInNewTab = (isLeftClick && (ctrlKey || targetIsBlank)) || isDoubleClick || isMiddleClick;
     const activate = (isLeftClick && ctrlKey && shiftKey) || (isMiddleClick && shiftKey);
     const openInNewWindow = isLeftClick && evt?.shiftKey && !ctrlKey;
 
