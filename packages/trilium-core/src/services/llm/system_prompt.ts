@@ -104,6 +104,7 @@ export function buildSystemPrompt(messages: LlmMessage[], config: LlmProviderCon
             + `<details><summary>Option A</summary>\nDetails about the first option.\n</details>\n<details><summary>Option B</summary>\nDetails about the second option.\n</details>\n\n`
             + `**Footnotes** — use \`[^1]\` in text and \`[^1]: explanation\` at the bottom.\n\n`
             + `**Keyboard keys** — wrap each key in a \`<kbd>\` tag when documenting shortcuts, e.g. \`<kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>Del</kbd>\`.\n\n`
+            + buildIconHint(config.enableNoteTools === true)
             + buildTaskListHint()
     );
 
@@ -111,6 +112,15 @@ export function buildSystemPrompt(messages: LlmMessage[], config: LlmProviderCon
     // `parts` is never empty — the `: undefined` arm is unreachable defence.
     /* v8 ignore next */
     return parts.length > 0 ? parts.join("\n\n") : undefined;
+}
+
+/**
+ * The inline-icon hint: the `tn-icon` span Trilium's text notes store and the chat renders. The
+ * icon search tool is named only when note tools are on, since it is one of them.
+ */
+function buildIconHint(canSearchIcons: boolean): string {
+    const find = canSearchIcons ? ", find one with search_icons" : "";
+    return `**Icons** — insert an inline icon as \`<span class="tn-icon bx bx-cog"></span>\`, with the icon's classes in place of \`bx bx-cog\` (Boxicons such as \`bx bx-star\`, or an installed icon pack's${find}). Use one to show a button or other UI element the user should look for, e.g. "click <span class="tn-icon bx bx-cog"></span> to open the settings"; not as decoration, and not in note titles.\n\n`;
 }
 
 /**
@@ -130,7 +140,11 @@ function buildTaskListHint(): string {
 
 /**
  * Where the user turns a capability on: the icon toggles beside the model
- * selector in `ChatInputBar`, each labeled in its tooltip.
+ * selector in `ChatInputBar`. The icon classes must match the toggles' own.
  */
-const NOTE_ACCESS_TOGGLE = `the note icon ("Note access") next to the model selector, below the message box`;
-const WEB_SEARCH_TOGGLE = `the globe icon ("Web search") next to the model selector, below the message box`;
+const NOTE_ACCESS_TOGGLE = describeToggle("bx bx-note", "Note access");
+const WEB_SEARCH_TOGGLE = describeToggle("bx bx-globe", "Web search");
+
+function describeToggle(iconClass: string, label: string): string {
+    return `the <span class="tn-icon ${iconClass}"></span> "${label}" toggle next to the model selector, below the message box (include the icon exactly as written, so the user sees the same icon)`;
+}
