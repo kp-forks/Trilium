@@ -10,7 +10,7 @@
  *
  * Resolution order: the TRILIUM_ANTIGRAVITY_ACP_PATH override, then the
  * executable on PATH (see `findOnPath`, which also asks the login shell). The
- * resolved binary is probed with `--version` once so a broken or wrong-arch
+ * resolved binary is probed once (see {@link PROBE_ARGS}) so a broken or wrong-arch
  * download surfaces as a clear error instead of an opaque spawn failure
  * mid-chat.
  */
@@ -23,6 +23,17 @@ import { promisify } from "util";
 import { findOnPath } from "./binary_lookup.js";
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Prints the build label and exits without starting the server. The Linux and
+ * macOS `.par` builds print it for `--version`; the Windows build defines no
+ * such flag, so `--undefok` lets it through and `--only_check_args` makes it
+ * exit once the flags parse.
+ */
+const PROBE_ARGS = [ "--undefok=version", "--version", "--only_check_args" ];
+
+/** The Windows build unpacks its bundled Python on every start, which takes about 15 seconds. */
+const PROBE_TIMEOUT_MS = 60_000;
 
 /** Where the setup steps live; the error messages point there. */
 const SETUP_HINT = "See \"Google Antigravity\" in the AI section of the User Guide for how to download it.";
@@ -65,8 +76,8 @@ async function probeBinary(): Promise<string> {
     // would freeze the whole server for up to the timeout.
     let version: string;
     try {
-        const { stdout } = await execFileAsync(binary, ["--version"], { timeout: 30000, encoding: "utf8" });
-        version = parseBuildLabel(stdout);
+        const { stdout } = await execFileAsync(binary, PROBE_ARGS, { timeout: PROBE_TIMEOUT_MS, encoding: "utf8" });
+        version = parseBuildLabel(stdout) || "version not reported";
     } catch (err) {
         const detail = err instanceof Error ? err.message : String(err);
         throw new Error(`Found Google's Antigravity ACP server at "${binary}" but it failed to run (${detail}). ${SETUP_HINT}`);
