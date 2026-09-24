@@ -3557,7 +3557,8 @@
       "selection": "Selection",
       "select_column": "Select every card of the column",
       "clear_selection": "Clear the selection",
-      "extend_selection": "Extend the selection down / up"
+      "extend_selection": "Extend the selection down / up",
+      "toggle_selection": "Pick the card out or put it back"
     },
     "status-alias": "Status",
     "filter-placeholder": "Filter board...",

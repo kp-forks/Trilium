@@ -341,6 +341,7 @@ const BOARD_HINTS: ShortcutHintDefinition = [
     {
         titleKey: "board_view.hints.selection",
         hints: [
+            { keys: [ "Ctrl+Space" ], labelKey: "board_view.hints.toggle_selection" },
             {
                 keys: [ "Shift+Down", "Shift+Up" ],
                 labelKey: "board_view.hints.extend_selection"

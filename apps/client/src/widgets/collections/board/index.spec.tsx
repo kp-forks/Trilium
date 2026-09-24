@@ -1300,6 +1300,7 @@ describe("Board column rename", () => {
                 keys: [ "Ctrl+Alt+Home", "Ctrl+Alt+End" ],
                 labelKey: "board_view.hints.move_column_to_edge"
             },
+            { keys: [ "Ctrl+Space" ], labelKey: "board_view.hints.toggle_selection" },
             {
                 keys: [ "Shift+Down", "Shift+Up" ],
                 labelKey: "board_view.hints.extend_selection"
