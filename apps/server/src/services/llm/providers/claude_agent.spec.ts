@@ -110,7 +110,12 @@ function makeQuery(messages: unknown[]) {
     return Object.assign(generator, { setModel: setModelMock, close: closeMock });
 }
 
+/** The reply chunks of a turn, without the status that precedes a cold start (see {@link collectAll}). */
 async function collect(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
+    return (await collectAll(iterable)).filter(chunk => chunk.type !== "status");
+}
+
+async function collectAll(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
     const chunks: LlmStreamChunk[] = [];
     for await (const chunk of iterable) {
         chunks.push(chunk);
@@ -259,8 +264,10 @@ describe("ClaudeAgentProvider.chatChunks", () => {
             [textDelta("second reply"), successResult("sess-A")]
         ]);
 
-        // Turn 1 — no history, no mapping: plain prompt, no resume.
-        await collect(provider.chatChunks([{ role: "user", content: "first question" }], config));
+        // Turn 1 — no history, no mapping: plain prompt, no resume. Starting the
+        // subprocess is announced before anything else.
+        const first = await collectAll(provider.chatChunks([{ role: "user", content: "first question" }], config));
+        expect(first[0]).toEqual({ type: "status", status: "starting_agent" });
 
         expect(queryMock).toHaveBeenCalledTimes(1);
         const call = queryMock.mock.calls[0][0];
@@ -268,7 +275,7 @@ describe("ClaudeAgentProvider.chatChunks", () => {
 
         // Turn 2 — the transcript still matches, so the live subprocess is
         // reused: no second query(), just another message on the same input.
-        const second = await collect(provider.chatChunks([
+        const second = await collectAll(provider.chatChunks([
             { role: "user", content: "first question" },
             { role: "assistant", content: "first reply" },
             { role: "user", content: "second question" }
@@ -276,6 +283,7 @@ describe("ClaudeAgentProvider.chatChunks", () => {
 
         expect(queryMock).toHaveBeenCalledTimes(1);
         expect(second).toContainEqual({ type: "text", content: "second reply" });
+        expect(second.some(chunk => chunk.type === "status")).toBe(false);
         const pushed = pushedMessages(call.prompt).map(m => (m.message.content[0] as { text: string }).text);
         expect(pushed).toEqual(["first question", "second question"]);
     });

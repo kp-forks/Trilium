@@ -87,6 +87,11 @@ export class AcpClientPool {
         }
     }
 
+    /** Whether a live process is ready, so {@link acquire} hands it out without starting one. */
+    get warm(): boolean {
+        return this.pooled?.client.alive === true;
+    }
+
     /** Return a lease. The client is reaped once no turn has used it for {@link IDLE_TIMEOUT_MS}. */
     release(): void {
         this.activeTurns = Math.max(0, this.activeTurns - 1);

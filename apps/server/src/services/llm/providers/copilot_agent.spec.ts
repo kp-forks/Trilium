@@ -147,7 +147,12 @@ const { buildCopilotModelList, CopilotAgentProvider, resetModelCatalogCacheForTe
 
 const decidePermission = (request: Parameters<typeof denyPermission>[0]) => denyPermission(request, "Copilot Agent provider");
 
+/** The reply chunks of a turn, without the status that precedes a cold start (see {@link collectAll}). */
 async function collect(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
+    return (await collectAll(iterable)).filter(chunk => chunk.type !== "status");
+}
+
+async function collectAll(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
     const chunks: LlmStreamChunk[] = [];
     for await (const chunk of iterable) {
         chunks.push(chunk);
@@ -731,6 +736,17 @@ describe("CopilotAgentProvider.chatChunks", () => {
 
 describe("CopilotAgentProvider keep-alive", () => {
     beforeEach(resetFakes);
+
+    it("says the agent is starting before a turn that has to start it, and only then", async () => {
+        const provider = new CopilotAgentProvider();
+        const starting = { type: "status", status: "starting_agent" };
+
+        expect((await collectAll(provider.chatChunks([userMessage("hi")], {})))[0]).toEqual(starting);
+        expect(await collectAll(provider.chatChunks([userMessage("hi")], {}))).not.toContainEqual(starting);
+
+        FakeAcpClient.current?.die();
+        expect((await collectAll(provider.chatChunks([userMessage("hi")], {})))[0]).toEqual(starting);
+    });
 
     it("reuses one agent process across turns, chats and titles, starting it once", async () => {
         const startSpy = vi.spyOn(FakeAcpClient, "start").mockClear();

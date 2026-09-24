@@ -376,6 +376,9 @@ export abstract class AcpAgentProvider implements LlmProvider {
         let assistantText = "";
 
         try {
+            if (!pool.warm) {
+                yield { type: "status", status: "starting_agent" };
+            }
             const acquired = await pool.acquire(connection => this.connect(connection));
             lease = acquired;
             const client = acquired.client;

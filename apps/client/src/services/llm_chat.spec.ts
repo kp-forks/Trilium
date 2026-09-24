@@ -40,6 +40,7 @@ function makeCallbacks(): Record<keyof StreamCallbacks, ReturnType<typeof vi.fn>
         onToolResult: vi.fn(),
         onCitation: vi.fn(),
         onUsage: vi.fn(),
+        onStatus: vi.fn(),
         onError: vi.fn(),
         onDone: vi.fn()
     } as Record<keyof StreamCallbacks, ReturnType<typeof vi.fn>> & StreamCallbacks;
@@ -162,6 +163,7 @@ describe("streamChatCompletion", () => {
 
     it("dispatches every SSE event type to the matching callback", async () => {
         const events = [
+            { type: "status", status: "starting_agent" },
             { type: "text", content: "T" },
             { type: "thinking", content: "TH" },
             { type: "tool_input_start", toolCallId: "c1", toolName: "search" },
@@ -186,6 +188,7 @@ describe("streamChatCompletion", () => {
         const cb = makeCallbacks();
         await streamChatCompletion(messages, config, cb);
 
+        expect(cb.onStatus).toHaveBeenCalledWith("starting_agent");
         expect(cb.onChunk).toHaveBeenCalledWith("T");
         expect(cb.onThinking).toHaveBeenCalledWith("TH");
         expect(cb.onToolInputStart).toHaveBeenCalledWith("c1", "search");

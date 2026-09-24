@@ -103,7 +103,12 @@ const { createUpdateCollector, resetAcpAgentStateForTests } = await import("./ac
 const { AntigravityAgentProvider, buildAntigravityEnv, buildAntigravityModelList, decideAntigravityPermission } = await import("./antigravity_agent.js");
 const { parseBuildLabel } = await vi.importActual<typeof import("./antigravity_binary.js")>("./antigravity_binary.js");
 
+/** The reply chunks of a turn, without the status that precedes a cold start (see {@link collectAll}). */
 async function collect(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
+    return (await collectAll(iterable)).filter(chunk => chunk.type !== "status");
+}
+
+async function collectAll(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
     const chunks: LlmStreamChunk[] = [];
     for await (const chunk of iterable) {
         chunks.push(chunk);

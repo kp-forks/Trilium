@@ -421,6 +421,7 @@ export class ClaudeAgentProvider implements LlmProvider {
                     session.model = model;
                 }
             } else {
+                yield { type: "status", status: "starting_agent" };
                 const input = new Pushable<SDKUserMessage>();
                 session = {
                     query: query({

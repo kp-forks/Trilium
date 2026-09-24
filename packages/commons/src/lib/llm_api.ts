@@ -201,10 +201,18 @@ export interface LlmErrorDetails {
 }
 
 /**
+ * What a turn is waiting on before its reply starts. The client names it in
+ * the chat until the first content of the reply arrives.
+ *   - `starting_agent`: a subscription agent's CLI is being started.
+ */
+export type LlmStreamStatus = "starting_agent";
+
+/**
  * Stream chunk types for real-time SSE updates.
  * Defines the protocol between server and client.
  */
 export type LlmStreamChunk =
+    | { type: "status"; status: LlmStreamStatus }
     | { type: "text"; content: string }
     | { type: "thinking"; content: string }
     | { type: "tool_input_start"; toolCallId: string; toolName: string }
