@@ -225,6 +225,25 @@ describe("AcpClient", () => {
         await expect(promise).rejects.toThrow(/exited unexpectedly/);
     });
 
+    it("reports its own death to onExit once, but not a dispose", () => {
+        const onExit = vi.fn();
+        const client = AcpClient.start("/bin/copilot", { cwd: "/tmp", onExit });
+        expect(client.alive).toBe(true);
+
+        proc.emit("error", new Error("spawn ENOENT"));
+        proc.emit("exit", 1, null);
+        expect(client.alive).toBe(false);
+        expect(onExit).toHaveBeenCalledTimes(1);
+        expect(onExit).toHaveBeenCalledWith(new Error("Failed to start the ACP agent: spawn ENOENT"));
+
+        const disposedExit = vi.fn();
+        const disposed = AcpClient.start("/bin/copilot", { cwd: "/tmp", onExit: disposedExit });
+        disposed.dispose();
+        proc.emit("exit", 0, null);
+        expect(disposed.alive).toBe(false);
+        expect(disposedExit).not.toHaveBeenCalled();
+    });
+
     it("fails in-flight requests when the subprocess cannot be started", async () => {
         const client = AcpClient.start("/bin/copilot", { cwd: "/tmp" });
         const promise = client.request("initialize", {});

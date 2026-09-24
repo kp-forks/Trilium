@@ -301,4 +301,32 @@ describe("useLlmChat", () => {
         });
         expect(api().getContent()).toMatchObject({ selectedModel: "mini", selectedProvider: "openai", selectedProviderId: "o_1" });
     });
+
+    it("keeps what a turn waits on until the turn ends", async () => {
+        let callbacks: { onStatus: (status: string) => void } | undefined;
+        let finish: () => void = () => undefined;
+        streamChatCompletionMock.mockImplementation(async (_messages, _options, cb) => {
+            callbacks = cb;
+            await new Promise<void>(resolve => { finish = resolve; });
+            cb.onDone();
+        });
+        await mountChat();
+
+        await act(async () => {
+            api().setInput("hi");
+        });
+        await act(async () => {
+            void api().handleSubmit(new Event("submit"));
+        });
+        await act(async () => {
+            callbacks?.onStatus("starting_agent");
+        });
+        expect(api().streamingStatus).toBe("starting_agent");
+
+        await act(async () => {
+            finish();
+        });
+        expect(api().isStreaming).toBe(false);
+        expect(api().streamingStatus).toBeNull();
+    });
 });

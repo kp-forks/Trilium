@@ -1,4 +1,4 @@
-import { LLM_REASONING_EFFORTS, type LlmCitation, type LlmMessage, type LlmMessagePart, type LlmModelInfo, type LlmReasoningEffort, type LlmUsage } from "@triliumnext/commons";
+import { LLM_REASONING_EFFORTS, type LlmCitation, type LlmMessage, type LlmMessagePart, type LlmModelInfo, type LlmReasoningEffort, type LlmStreamStatus, type LlmUsage } from "@triliumnext/commons";
 import { RefObject } from "preact";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
@@ -95,6 +95,8 @@ export interface UseLlmChatReturn {
     isStreaming: boolean;
     streamingBlocks: ContentBlock[];
     streamingThinking: string;
+    /** What the streaming turn waits on before its reply starts, if the server said. */
+    streamingStatus: LlmStreamStatus | null;
     pendingCitations: LlmCitation[];
     /** Images or files the user has attached but not yet sent. */
     pendingAttachments: AttachmentBlock[];
@@ -200,6 +202,7 @@ export function useLlmChat(
     // block smoothed via useSmoothStreaming for a steady reveal cadence.
     const [targetBlocks, setTargetBlocks] = useState<ContentBlock[]>([]);
     const [streamingThinking, setStreamingThinking] = useState("");
+    const [streamingStatus, setStreamingStatus] = useState<LlmStreamStatus | null>(null);
     const { displayedText: smoothedTailText, append: smoothAppend, drain: smoothDrain, reset: smoothReset } = useSmoothStreaming();
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
     const [pendingAttachments, setPendingAttachments] = useState<AttachmentBlock[]>([]);
@@ -555,6 +558,7 @@ export function useLlmChat(
         setIsStreaming(true);
         setTargetBlocks([]);
         setStreamingThinking("");
+        setStreamingStatus(null);
         smoothReset();
 
         let thinkingContent = "";
@@ -660,6 +664,7 @@ export function useLlmChat(
             setTargetBlocks([]);
             setStreamingThinking("");
             setPendingCitations([]);
+            setStreamingStatus(null);
             setIsStreaming(false);
             abortControllerRef.current = null;
         }
@@ -668,6 +673,7 @@ export function useLlmChat(
             apiMessages,
             streamOptions,
             {
+                onStatus: setStreamingStatus,
                 onChunk: (text) => {
                     // A new text block begins whenever the previous tail is
                     // anything other than text (or there's nothing yet). In
@@ -788,6 +794,7 @@ export function useLlmChat(
                     smoothReset();
                     setTargetBlocks([]);
                     setStreamingThinking("");
+                    setStreamingStatus(null);
                     setIsStreaming(false);
                 },
                 onDone: () => {
@@ -816,6 +823,7 @@ export function useLlmChat(
             smoothReset();
             setTargetBlocks([]);
             setStreamingThinking("");
+            setStreamingStatus(null);
             setIsStreaming(false);
             abortControllerRef.current = null;
         });
@@ -921,6 +929,7 @@ export function useLlmChat(
         isStreaming,
         streamingBlocks,
         streamingThinking,
+        streamingStatus,
         pendingCitations,
         pendingAttachments,
         availableModels,

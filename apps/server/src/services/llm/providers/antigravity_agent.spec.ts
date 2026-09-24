@@ -50,6 +50,8 @@ class FakeAcpClient {
     static sessionFailure: Error | undefined;
     /** The session/update payloads the agent streams while answering session/prompt. */
     static promptUpdates: Record<string, unknown>[] = [];
+    /** Runs while session/prompt is answered, as the agent's own requests do. */
+    static onPrompt: ((client: FakeAcpClient) => Promise<void>) | undefined;
 
     requests: { method: string; params: unknown }[] = [];
     onAgentRequest?: (method: string, params: unknown) => unknown;
@@ -78,6 +80,7 @@ class FakeAcpClient {
             for (const update of FakeAcpClient.promptUpdates) {
                 this.onNotification?.("session/update", { sessionId: "sess-1", update });
             }
+            await FakeAcpClient.onPrompt?.(this);
             return { stopReason: "end_turn" } as T;
         }
         return {} as T;
@@ -85,6 +88,9 @@ class FakeAcpClient {
 
     notify(): void {}
     dispose(): void {}
+    get alive(): boolean {
+        return true;
+    }
 
     methods(): string[] {
         return this.requests.map(r => r.method);
@@ -97,7 +103,12 @@ const { createUpdateCollector, resetAcpAgentStateForTests } = await import("./ac
 const { AntigravityAgentProvider, buildAntigravityEnv, buildAntigravityModelList, decideAntigravityPermission } = await import("./antigravity_agent.js");
 const { parseBuildLabel } = await vi.importActual<typeof import("./antigravity_binary.js")>("./antigravity_binary.js");
 
+/** The reply chunks of a turn, without the status that precedes a cold start (see {@link collectAll}). */
 async function collect(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
+    return (await collectAll(iterable)).filter(chunk => chunk.type !== "status");
+}
+
+async function collectAll(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStreamChunk[]> {
     const chunks: LlmStreamChunk[] = [];
     for await (const chunk of iterable) {
         chunks.push(chunk);
@@ -130,7 +141,21 @@ beforeEach(() => {
     FakeAcpClient.availableModels = REMOTE_MODELS;
     FakeAcpClient.sessionFailure = undefined;
     FakeAcpClient.promptUpdates = [];
+    FakeAcpClient.onPrompt = undefined;
 });
+
+/** Answer permission requests the way the agent asks them: during a chat turn, on its session. */
+async function decideDuringTurn(config: Record<string, unknown>, requests: Record<string, unknown>[]): Promise<unknown[]> {
+    const answers: unknown[] = [];
+    FakeAcpClient.onPrompt = async client => {
+        for (const request of requests) {
+            answers.push(await client.onAgentRequest?.("session/request_permission", { sessionId: "sess-1", ...request }));
+        }
+    };
+    await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], config));
+    FakeAcpClient.onPrompt = undefined;
+    return answers;
+}
 
 describe("decideAntigravityPermission", () => {
     // Shapes captured from agy_acp_server 1.1.1.
@@ -233,12 +258,13 @@ describe("AntigravityAgentProvider", () => {
     it("lets the agent search the web only when the chat allows it", async () => {
         const request = { toolCall: { kind: "search", title: "Run search_web?", rawInput: { query: "x" } }, options: PERMISSION_OPTIONS };
 
-        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
-        expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", request))
-            .toEqual({ outcome: { outcome: "selected", optionId: "allow" } });
-
-        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
-        expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", request))
+        expect(await decideDuringTurn({ enableWebSearch: true }, [request]))
+            .toEqual([{ outcome: { outcome: "selected", optionId: "allow" } }]);
+        expect(await decideDuringTurn({}, [request]))
+            .toEqual([{ outcome: { outcome: "selected", optionId: "deny" } }]);
+        // The chats share one agent process, so a request from a session no
+        // turn owns gets no chat's settings.
+        expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", { sessionId: "sess-1", ...request }))
             .toEqual({ outcome: { outcome: "selected", optionId: "deny" } });
     });
 
@@ -251,20 +277,17 @@ describe("AntigravityAgentProvider", () => {
         const allowed = { outcome: { outcome: "selected", optionId: "allow" } };
         const denied = { outcome: { outcome: "selected", optionId: "deny" } };
 
-        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
-        const decide = (request: unknown) => FakeAcpClient.current?.onAgentRequest?.("session/request_permission", request);
-        expect(await decide(readUrl("https://93.184.215.14/"))).toEqual(allowed);
-        expect(await decide(readUrl("http://127.0.0.1:8080/"))).toEqual(denied);
-        expect(await decide(readUrl("file:///C:/antigravity-acp/acp_token.json"))).toEqual(denied);
-        // A shell command the model titled like a page read.
-        expect(await decide({ ...readUrl("https://93.184.215.14/"), toolCall: { kind: "execute", title: "Run read_url_content?", rawInput: { Url: "https://93.184.215.14/" } } }))
-            .toEqual(denied);
+        expect(await decideDuringTurn({ enableWebSearch: true }, [
+            readUrl("https://93.184.215.14/"),
+            readUrl("http://127.0.0.1:8080/"),
+            readUrl("file:///C:/antigravity-acp/acp_token.json"),
+            // A shell command the model titled like a page read.
+            { ...readUrl("https://93.184.215.14/"), toolCall: { kind: "execute", title: "Run read_url_content?", rawInput: { Url: "https://93.184.215.14/" } } },
+            // A page read that names no URL.
+            { ...readUrl(""), toolCall: { kind: "fetch", title: "Run read_url_content?", rawInput: {} } }
+        ])).toEqual([allowed, denied, denied, denied, denied]);
 
-        // A page read that names no URL.
-        expect(await decide({ ...readUrl(""), toolCall: { kind: "fetch", title: "Run read_url_content?", rawInput: {} } })).toEqual(denied);
-
-        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
-        expect(await FakeAcpClient.current?.onAgentRequest?.("session/request_permission", readUrl("https://93.184.215.14/"))).toEqual(denied);
+        expect(await decideDuringTurn({}, [readUrl("https://93.184.215.14/")])).toEqual([denied]);
     });
 
     it("explains a failure to start, sign in or answer in words the user can act on", async () => {
@@ -282,6 +305,8 @@ describe("AntigravityAgentProvider", () => {
         const originalPlatform = Object.getOwnPropertyDescriptor(process, "platform");
         const argsOn = async (platform: NodeJS.Platform) => {
             Object.defineProperty(process, "platform", { ...originalPlatform, value: platform });
+            // Each platform launches its own process.
+            resetAcpAgentStateForTests();
             await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
             return FakeAcpClient.lastStart?.opts.args;
         };
@@ -330,11 +355,13 @@ describe("AntigravityAgentProvider", () => {
         expect(FakeAcpClient.current?.methods()).not.toContain("session/set_model");
 
         await collect(provider.chatChunks([{ role: "user", content: "hi" }], { model: "gemini-pro-agent" }));
-        expect(FakeAcpClient.current?.requests.find(r => r.method === "session/set_model")?.params).toEqual({ sessionId: "sess-1", modelId: "gemini-pro-agent" });
+        expect(FakeAcpClient.current?.requests.filter(r => r.method === "session/set_model").at(-1)?.params).toEqual({ sessionId: "sess-1", modelId: "gemini-pro-agent" });
 
+        // The probe runs on a client of its own; the title runs on the chats' process.
+        const pooled = FakeAcpClient.current;
         await provider.listModels();
         await provider.generateTitle("plan my week");
-        expect(FakeAcpClient.current?.requests.find(r => r.method === "session/set_model")?.params).toEqual({ sessionId: "sess-1", modelId: "gemini-3.8-flash-low" });
+        expect(pooled?.requests.filter(r => r.method === "session/set_model").at(-1)?.params).toEqual({ sessionId: "sess-1", modelId: "gemini-3.8-flash-low" });
     });
 
     it("pre-selects the newest version of each family", () => {
@@ -352,7 +379,7 @@ describe("AntigravityAgentProvider", () => {
         const provider = new AntigravityAgentProvider();
         const modelSetFor = async (config: Record<string, unknown>) => {
             await collect(provider.chatChunks([{ role: "user", content: "hi" }], config));
-            return (FakeAcpClient.current?.requests.find(r => r.method === "session/set_model")?.params as { modelId?: string } | undefined)?.modelId;
+            return (FakeAcpClient.current?.requests.filter(r => r.method === "session/set_model").at(-1)?.params as { modelId?: string } | undefined)?.modelId;
         };
 
         expect(await modelSetFor({ model: "gemini-3.8-flash", reasoningEffort: "medium" })).toBe("gemini-3.8-flash-medium");

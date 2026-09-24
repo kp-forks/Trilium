@@ -1,4 +1,4 @@
-import type { LlmChatConfig, LlmCitation, LlmErrorDetails, LlmMessage, LlmModelInfo, LlmStreamChunk, LlmUsage, WebSocketMessage } from "@triliumnext/commons";
+import type { LlmChatConfig, LlmCitation, LlmErrorDetails, LlmMessage, LlmModelInfo, LlmStreamChunk, LlmStreamStatus, LlmUsage, WebSocketMessage } from "@triliumnext/commons";
 
 import server from "./server.js";
 import { isStandalone, randomString } from "./utils.js";
@@ -58,6 +58,8 @@ export interface StreamCallbacks {
     onToolResult?: (toolCallId: string, toolName: string, result: string, isError?: boolean) => void;
     onCitation?: (citation: LlmCitation) => void;
     onUsage?: (usage: LlmUsage) => void;
+    /** What the turn waits on before its reply starts. */
+    onStatus?: (status: LlmStreamStatus) => void;
     /**
      * @param error human-readable message.
      * @param details provider-call context (status, URL, response body), present only
@@ -250,6 +252,9 @@ function rejectWhenAborted(signal?: AbortSignal): Promise<never> {
  */
 async function handleChunk(chunk: LlmStreamChunk, callbacks: StreamCallbacks): Promise<void> {
     switch (chunk.type) {
+        case "status":
+            callbacks.onStatus?.(chunk.status);
+            break;
         case "text":
             callbacks.onChunk(chunk.content);
             break;
