@@ -158,6 +158,7 @@ function canonicalPath(candidate: string): string {
     let existing = candidate;
     while (!existsSync(existing)) {
         const parent = path.dirname(existing);
+        /* v8 ignore next 3 -- only a root that does not exist, such as a missing Windows drive, ends here. */
         if (parent === existing) {
             return candidate;
         }
@@ -167,6 +168,7 @@ function canonicalPath(candidate: string): string {
     try {
         return path.join(realpathSync.native(existing), ...rest);
     } catch {
+        /* v8 ignore next -- the path existed a moment ago; it can only be removed or locked in between. */
         return candidate;
     }
 }

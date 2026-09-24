@@ -7,10 +7,14 @@ vi.mock("../../../services/i18n.js", () => ({
     t: (key: string, options?: { level?: string }) => (options?.level ? `${key}(${options.level})` : key)
 }));
 
-// Renders the toggle's face, its tooltip and class, and the menu, without Bootstrap.
+// Renders the toggle's face, its tooltip and class, and the menu, without Bootstrap;
+// the placement options go on data attributes.
 vi.mock("../../react/Dropdown.js", () => ({
-    default: ({ text, title, buttonClassName, children }: { text: ComponentChildren; title?: string; buttonClassName?: string; children: ComponentChildren }) => (
-        <div className="dropdown-stub">
+    default: ({ text, title, buttonClassName, children, portalToBody, dropdownOptions }: {
+        text: ComponentChildren; title?: string; buttonClassName?: string; children: ComponentChildren;
+        portalToBody?: boolean; dropdownOptions?: { popperConfig?: { strategy?: string } };
+    }) => (
+        <div className="dropdown-stub" data-portal={String(!!portalToBody)} data-strategy={dropdownOptions?.popperConfig?.strategy ?? "none"}>
             <button className={buttonClassName} title={title}>{text}</button>
             <div className="menu">{children}</div>
         </div>
@@ -32,10 +36,10 @@ afterEach(() => {
     }
 });
 
-function renderDropdown(model: LlmModelInfo, value: Parameters<typeof ReasoningEffortDropdown>[0]["value"], onChange = vi.fn()) {
+function renderDropdown(model: LlmModelInfo, value: Parameters<typeof ReasoningEffortDropdown>[0]["value"], onChange = vi.fn(), inSidebar = false) {
     host = document.body.appendChild(document.createElement("div"));
     const target = host;
-    act(() => render(<ReasoningEffortDropdown model={model} value={value} onChange={onChange} />, target));
+    act(() => render(<ReasoningEffortDropdown model={model} value={value} onChange={onChange} inSidebar={inSidebar} />, target));
     return { host: target, onChange };
 }
 
@@ -45,6 +49,23 @@ describe("effectiveReasoningEffort", () => {
         expect(effectiveReasoningEffort(PRO, "medium")).toBe("high");
         expect(effectiveReasoningEffort(PRO, undefined)).toBe("high");
         expect(effectiveReasoningEffort({ ...PRO, defaultReasoningEffort: undefined }, undefined)).toBe("high");
+        expect(effectiveReasoningEffort({ ...FLASH, reasoningEfforts: [ "low", "medium" ], defaultReasoningEffort: undefined }, undefined)).toBe("medium");
+        // A model that names no levels at all.
+        expect(effectiveReasoningEffort({ id: "m", name: "M" }, "low")).toBe("high");
+    });
+});
+
+describe("ReasoningEffortDropdown placement", () => {
+    it("portals the menu with a fixed position in the sidebar", () => {
+        const stub = renderDropdown(FLASH, undefined, vi.fn(), true).host.querySelector(".dropdown-stub");
+        expect([ stub?.getAttribute("data-portal"), stub?.getAttribute("data-strategy") ]).toEqual([ "true", "fixed" ]);
+    });
+
+    it("keeps the menu in place elsewhere, and lists nothing for a model without levels", () => {
+        const { host: plain } = renderDropdown({ id: "m", name: "M" }, undefined);
+        const stub = plain.querySelector(".dropdown-stub");
+        expect([ stub?.getAttribute("data-portal"), stub?.getAttribute("data-strategy") ]).toEqual([ "false", "none" ]);
+        expect(plain.querySelectorAll(".menu .dropdown-item")).toHaveLength(0);
     });
 });
 

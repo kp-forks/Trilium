@@ -9,6 +9,9 @@ vi.mock("child_process", () => ({ execFile: execFileMock }));
 const existsSyncMock = vi.hoisted(() => vi.fn((_path: string) => true));
 vi.mock("fs", () => ({ existsSync: existsSyncMock }));
 
+const findOnPathMock = vi.hoisted(() => vi.fn<(binary: string) => Promise<string | undefined>>());
+vi.mock("./binary_lookup.js", () => ({ findOnPath: findOnPathMock }));
+
 const logInfoMock = vi.hoisted(() => vi.fn());
 vi.mock("@triliumnext/core", () => ({ getLog: () => ({ info: logInfoMock, error: vi.fn() }) }));
 
@@ -67,6 +70,45 @@ describe("resolveAntigravityBinaryPath", () => {
         probeReturns("");
         await expect(resolveAntigravityBinaryPath()).resolves.toBe(BINARY);
         expect(execFileMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("probes once for concurrent callers, and reports a failure that is no Error", async () => {
+        probeReturns("");
+        const [ first, second ] = await Promise.all([ resolveAntigravityBinaryPath(), resolveAntigravityBinaryPath() ]);
+        expect([ first, second ]).toEqual([ BINARY, BINARY ]);
+        expect(execFileMock).toHaveBeenCalledTimes(1);
+
+        resetAntigravityBinaryCache();
+        execFileMock.mockImplementationOnce((_binary, _args, _options, cb) => cb("killed by signal" as unknown as Error));
+        await expect(resolveAntigravityBinaryPath()).rejects.toThrow(/failed to run \(killed by signal\)/);
+    });
+
+    it("refuses an override that names no file", async () => {
+        existsSyncMock.mockReturnValueOnce(false);
+        await expect(resolveAntigravityBinaryPath()).rejects.toThrow(`TRILIUM_ANTIGRAVITY_ACP_PATH is set to "${BINARY}", but no file exists there.`);
+        expect(execFileMock).not.toHaveBeenCalled();
+    });
+
+    it("looks for the platform's executable on PATH without an override", async () => {
+        const originalPlatform = Object.getOwnPropertyDescriptor(process, "platform");
+        delete process.env.TRILIUM_ANTIGRAVITY_ACP_PATH;
+        probeReturns("");
+        try {
+            Object.defineProperty(process, "platform", { ...originalPlatform, value: "linux" });
+            findOnPathMock.mockResolvedValueOnce("/opt/agy/agy_acp_server.par");
+            await expect(resolveAntigravityBinaryPath()).resolves.toBe("/opt/agy/agy_acp_server.par");
+            expect(findOnPathMock).toHaveBeenLastCalledWith("agy_acp_server.par");
+
+            resetAntigravityBinaryCache();
+            Object.defineProperty(process, "platform", { ...originalPlatform, value: "win32" });
+            findOnPathMock.mockResolvedValueOnce(undefined);
+            await expect(resolveAntigravityBinaryPath()).rejects.toThrow(/was not found\. Put the folder.*Google Antigravity/s);
+            expect(findOnPathMock).toHaveBeenLastCalledWith("agy_acp_server");
+        } finally {
+            if (originalPlatform) {
+                Object.defineProperty(process, "platform", originalPlatform);
+            }
+        }
     });
 });
 

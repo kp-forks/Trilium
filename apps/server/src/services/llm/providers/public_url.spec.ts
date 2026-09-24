@@ -61,4 +61,8 @@ describe("isPublicHttpUrl", () => {
         expect(await isPublicHttpUrl("https://rebind.example/", lookup)).toBe(false);
         expect(await isPublicHttpUrl("https://unknown.example/", lookup)).toBe(false);
     });
+
+    it("resolves names with the system resolver by default", async () => {
+        expect(await isPublicHttpUrl("http://localhost:8080/")).toBe(false);
+    });
 });

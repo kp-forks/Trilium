@@ -100,7 +100,14 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
             }
         }
         return new Set(parsed
-            .filter(({ name }) => !name || compareVersions(name.version, newestByFamily.get(name.family) ?? []) === 0)
+            .filter(({ name }) => {
+                if (!name) {
+                    return true;
+                }
+                /* v8 ignore next -- the loop above records a newest version for every family it parsed. */
+                const newest = newestByFamily.get(name.family) ?? [];
+                return compareVersions(name.version, newest) === 0;
+            })
             .map(({ model }) => model.id));
     }
 
@@ -260,6 +267,7 @@ export function buildAntigravityModelList(remote: AcpSessionModelState): ModelIn
         const common = { pricing: { input: 0, output: 0 }, isSubscription: true };
         if (entry.variants.size === 1) {
             const [ [ , modelId ] ] = entry.variants;
+            /* v8 ignore next -- groupAntigravityCatalog names every variant it records. */
             return { id: modelId, name: entry.variantNames.get(modelId) ?? modelId, ...common };
         }
         const reasoningEfforts = sortEfforts([ ...entry.variants.keys() ]);
@@ -287,6 +295,7 @@ export function resolveAntigravityModel(model: string, effort: LlmReasoningEffor
             chosen = level;
         }
     }
+    /* v8 ignore next -- `chosen` is one of `byEffort`'s own keys. */
     return byEffort.get(chosen) ?? model;
 }
 

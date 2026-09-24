@@ -3,7 +3,11 @@ import { act } from "preact/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../../../services/i18n.js", () => ({
-    t: (key: string, options?: { total?: string }) => (options?.total ? `${key}(${options.total})` : key)
+    t: (key: string, options?: { total?: string; prompt?: string; completion?: string }) => {
+        if (options?.total) return `${key}(${options.total})`;
+        if (options?.completion) return `${key}(${options.prompt}/${options.completion})`;
+        return key;
+    }
 }));
 vi.mock("../text/ReadOnlyText.js", () => ({
     ReadOnlyTextContent: ({ html }: { html: string }) => <div className="markdown-stub">{html}</div>
@@ -44,5 +48,13 @@ describe("ChatMessage footer", () => {
         const footer = renderFooter({ model: "Gemini 3.8 Flash (Medium)", provider: "antigravity-agent" });
         expect(footer?.querySelector(".llm-chat-usage-model")?.textContent).toBe("Gemini 3.8 Flash (Medium)");
         expect(footer?.querySelector(".llm-chat-usage-tokens")).toBeNull();
+    });
+
+    it("counts the prompt as the total when a provider reports only that, and names no model it did not report", () => {
+        const footer = renderFooter({ promptTokens: 800 });
+        expect(footer?.querySelector(".llm-chat-usage-model")).toBeNull();
+        const tokens = footer?.querySelector(".llm-chat-usage-tokens");
+        expect(tokens?.textContent).toBe("llm_chat.total_tokens(800)");
+        expect(tokens?.getAttribute("title")).toBe("llm_chat.tokens_detail(800/0)");
     });
 });

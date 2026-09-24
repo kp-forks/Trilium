@@ -1,6 +1,8 @@
-import { describe, expect, it, vi } from "vitest";
+import { h, render } from "preact";
+import { act } from "preact/test-utils";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { findAntigravityDownload, registryPlatformKey } from "./antigravity_download";
+import { type AntigravityDownload, findAntigravityDownload, registryPlatformKey, useAntigravityDownload } from "./antigravity_download";
 
 /** The registry's agent.json for antigravity-acp 1.1.1, trimmed to two platforms. */
 const ENTRY = {
@@ -64,5 +66,61 @@ describe("findAntigravityDownload", () => {
         await expect(findAntigravityDownload("linux", "x64", respondWith(ENTRY, false))).resolves.toEqual({});
         // The entry changed shape.
         await expect(findAntigravityDownload("linux", "x64", respondWith({ version: "2.0.0" }))).resolves.toEqual({});
+        // The archive is not a URL at all.
+        const broken = { ...ENTRY, distribution: { binary: { "linux-x86_64": { archive: "not a url" } } } };
+        await expect(findAntigravityDownload("linux", "x64", respondWith(broken))).resolves.toEqual({});
+    });
+
+    it("leaves out a version that is not a string", async () => {
+        await expect(findAntigravityDownload("linux", "x64", respondWith({ ...ENTRY, version: 2 })))
+            .resolves.toEqual({ version: undefined, url: ENTRY.distribution.binary["linux-x86_64"].archive });
+    });
+});
+
+describe("useAntigravityDownload", () => {
+    const originalGlob = window.glob;
+    let host: HTMLElement | undefined;
+
+    afterEach(() => {
+        window.glob = originalGlob;
+        vi.unstubAllGlobals();
+        if (host) {
+            render(null, host);
+            host.remove();
+            host = undefined;
+        }
+    });
+
+    /** Mounts the hook for the server's platform and returns what it held after each render. */
+    function mountHook() {
+        window.glob = { ...originalGlob, platform: "linux", arch: "x64" } as typeof window.glob;
+        const seen: AntigravityDownload[] = [];
+        function Probe() {
+            seen.push(useAntigravityDownload());
+            return null;
+        }
+        host = document.body.appendChild(document.createElement("div"));
+        const target = host;
+        act(() => render(h(Probe, null), target));
+        return seen;
+    }
+
+    it("starts empty and then holds the download for the server's platform", async () => {
+        vi.stubGlobal("fetch", respondWith(ENTRY));
+        const seen = mountHook();
+        expect(seen[0]).toEqual({});
+        await vi.waitFor(() => expect(seen.at(-1)?.url).toBe(ENTRY.distribution.binary["linux-x86_64"].archive));
+    });
+
+    it("drops a lookup that finishes after the checklist is gone", async () => {
+        let answer: (value: Response) => void = () => {};
+        vi.stubGlobal("fetch", vi.fn(() => new Promise<Response>(resolve => { answer = resolve; })));
+        const seen = mountHook();
+        const target = host;
+        if (target) {
+            act(() => render(null, target));
+        }
+        await act(async () => answer({ ok: true, status: 200, json: async () => ENTRY } as Response));
+        expect(seen).toEqual([ {} ]);
     });
 });

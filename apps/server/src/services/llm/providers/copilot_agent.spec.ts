@@ -219,6 +219,15 @@ describe("CopilotAgentProvider.listModels", () => {
             .toEqual(["auto", "claude-haiku-4.5", "claude-sonnet-5", "gpt-5-mini"]);
     });
 
+    it("treats a premium rate it cannot read like no rate at all", async () => {
+        FakeAcpClient.sessionModels = { availableModels: [
+            { modelId: "mystery", name: "Mystery", _meta: { copilotUsage: "varies", copilotEnablement: "enabled" } }
+        ] };
+
+        const provider = new CopilotAgentProvider();
+        expect([...provider.recommendedModelIds(await provider.listModels())]).toContain("mystery");
+    });
+
     it("probes once, then serves the cached catalog without respawning the CLI", async () => {
         FakeAcpClient.sessionModels = { availableModels: CLI_MODELS };
         const provider = new CopilotAgentProvider();

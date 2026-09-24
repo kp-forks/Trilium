@@ -184,9 +184,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
     }
 
     /** The cheap model for the title turn, if the agent offers one. */
-    protected titleModelId(): string | undefined {
-        return undefined;
-    }
+    protected abstract titleModelId(): string | undefined;
 
     /**
      * Permission policy. The default denies every request; a subclass whose
@@ -216,10 +214,8 @@ export abstract class AcpAgentProvider implements LlmProvider {
         return undefined;
     }
 
-    /** Map a failure to an actionable message. */
-    protected describeFailure(error: unknown): string {
-        return describeError(error);
-    }
+    /** Map a failure to an actionable message; {@link describeError} gives the generic one. */
+    protected abstract describeFailure(error: unknown): string;
 
     /**
      * The name of the model a turn ran on, for the chat footer: the session's
@@ -413,10 +409,9 @@ export abstract class AcpAgentProvider implements LlmProvider {
                 noteHint
             ].filter((s): s is string => Boolean(s)).join("\n\n");
 
+            const promptSessionId = sessionId;
             const onAbort = () => {
-                if (sessionId) {
-                    client?.notify("session/cancel", { sessionId });
-                }
+                client?.notify("session/cancel", { sessionId: promptSessionId });
                 // Wake the drain loop below: an agent slow to honour the cancel
                 // (or ignoring it) would otherwise keep this generator — and its
                 // subprocess — suspended until PROMPT_TIMEOUT_MS elapses.
@@ -450,8 +445,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
                         wakeup = undefined;
                         continue;
                     }
-                    const chunk = chunkQueue.shift();
-                    if (chunk) {
+                    for (const chunk of chunkQueue.splice(0)) {
                         if (chunk.type === "text") {
                             assistantText += chunk.content;
                         }

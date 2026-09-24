@@ -44,7 +44,10 @@ class FakeAcpClient {
     static current: FakeAcpClient | undefined;
     static lastStart: { binary: string; opts: { args?: string[]; env?: Record<string, string>; cwd: string } } | undefined;
     static signedIn = true;
-    static availableModels: unknown[] = [];
+    /** The catalog `session/new` reports; undefined leaves `models` out of the response. */
+    static availableModels: unknown[] | undefined = [];
+    /** An error `session/new` fails with, when set. */
+    static sessionFailure: Error | undefined;
     /** The session/update payloads the agent streams while answering session/prompt. */
     static promptUpdates: Record<string, unknown>[] = [];
 
@@ -66,8 +69,10 @@ class FakeAcpClient {
             FakeAcpClient.signedIn = true;
         }
         if (method === "session/new") {
+            if (FakeAcpClient.sessionFailure) throw FakeAcpClient.sessionFailure;
             if (!FakeAcpClient.signedIn) throw SIGN_IN_REQUIRED;
-            return { sessionId: "sess-1", models: { currentModelId: "gemini-3.7-flash-high", availableModels: FakeAcpClient.availableModels } } as T;
+            const models = FakeAcpClient.availableModels && { currentModelId: "gemini-3.7-flash-high", availableModels: FakeAcpClient.availableModels };
+            return { sessionId: "sess-1", models } as T;
         }
         if (method === "session/prompt") {
             for (const update of FakeAcpClient.promptUpdates) {
@@ -123,6 +128,7 @@ beforeEach(() => {
     FakeAcpClient.lastStart = undefined;
     FakeAcpClient.signedIn = true;
     FakeAcpClient.availableModels = REMOTE_MODELS;
+    FakeAcpClient.sessionFailure = undefined;
     FakeAcpClient.promptUpdates = [];
 });
 
@@ -254,8 +260,56 @@ describe("AntigravityAgentProvider", () => {
         expect(await decide({ ...readUrl("https://93.184.215.14/"), toolCall: { kind: "execute", title: "Run read_url_content?", rawInput: { Url: "https://93.184.215.14/" } } }))
             .toEqual(denied);
 
+        // A page read that names no URL.
+        expect(await decide({ ...readUrl(""), toolCall: { kind: "fetch", title: "Run read_url_content?", rawInput: {} } })).toEqual(denied);
+
         await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
         expect(await FakeAcpClient.current?.onAgentRequest?.("session/request_permission", readUrl("https://93.184.215.14/"))).toEqual(denied);
+    });
+
+    it("explains a failure to start, sign in or answer in words the user can act on", async () => {
+        const failureOf = async (error: Error) => {
+            FakeAcpClient.sessionFailure = error;
+            resetAcpAgentStateForTests();
+            return new AntigravityAgentProvider().listModels().then(() => "resolved", (err: Error) => err.message);
+        };
+        expect(await failureOf(new Error("ACP request \"authenticate\" timed out after 300000ms"))).toMatch(/sign-in was not completed in time/);
+        expect(await failureOf(new Error("spawn C:\\agy\\agy_acp_server.exe ENOENT"))).toBe("Failed to start Google's Antigravity ACP server: spawn C:\\agy\\agy_acp_server.exe ENOENT");
+        expect(await failureOf(new Error("Something else"))).toBe("Something else");
+    });
+
+    it("passes the Linux build the empty --uid= the ACP registry launches it with, and no other build", async () => {
+        const originalPlatform = Object.getOwnPropertyDescriptor(process, "platform");
+        const argsOn = async (platform: NodeJS.Platform) => {
+            Object.defineProperty(process, "platform", { ...originalPlatform, value: platform });
+            await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+            return FakeAcpClient.lastStart?.opts.args;
+        };
+        try {
+            expect(await argsOn("linux")).toEqual([ "--uid=" ]);
+            expect(await argsOn("win32")).toEqual([]);
+        } finally {
+            if (originalPlatform) {
+                Object.defineProperty(process, "platform", originalPlatform);
+            }
+        }
+    });
+
+    it("works with a server that reports no catalog, or one without a Flash Low to title on", async () => {
+        FakeAcpClient.availableModels = undefined;
+        expect((await new AntigravityAgentProvider().listModels()).map(m => m.id)).toEqual([ "default" ]);
+        const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+        expect(chunks.at(-1)).toEqual({ type: "done" });
+
+        resetAcpAgentStateForTests();
+        FakeAcpClient.availableModels = [ { modelId: "gemini-4-ultra-high", name: "Gemini 4 Ultra (High)" } ];
+        const provider = new AntigravityAgentProvider();
+        expect((await provider.listModels()).map(m => [ m.id, m.name, m.reasoningEfforts ])).toEqual([
+            [ "default", "Default", undefined ],
+            [ "gemini-4-ultra-high", "Gemini 4 Ultra (High)", undefined ]
+        ]);
+        await provider.generateTitle("plan my week");
+        expect(FakeAcpClient.current?.methods()).not.toContain("session/set_model");
     });
 
     it("signs in during the model probe, but reports a missing sign-in in the chat instead", async () => {
@@ -352,6 +406,19 @@ describe("tool call updates from agy_acp_server", () => {
             { type: "tool_result", toolCallId: "f6b5", toolName: "search_icons", result: "Search for icons", isError: false }
         ]);
     });
+
+    it("passes an MCP call's input through when it is not wrapped in an arguments object", () => {
+        const chunks: LlmStreamChunk[] = [];
+        const collector = createUpdateCollector(chunk => chunks.push(chunk));
+        const meta = { mcp: { tool: "search_icons", server: "trilium" }, is_mcp_tool_call: true };
+        for (const [ toolCallId, rawInput ] of [ [ "a", { arguments: "font" } ], [ "b", undefined ] ] as const) {
+            collector.onNotification("session/update", {
+                sessionId: "sess-1",
+                update: { sessionUpdate: "tool_call", toolCallId, title: "trilium_search_icons", kind: "other", status: "pending", rawInput, _meta: meta }
+            });
+        }
+        expect(chunks.map(c => c.type === "tool_use" && c.toolInput)).toEqual([ { arguments: "font" }, {} ]);
+    });
 });
 
 describe("AntigravityAgentProvider tool calls", () => {
@@ -397,6 +464,18 @@ describe("AntigravityAgentProvider tool calls", () => {
             { type: "tool_use", toolCallId: "0601", toolName: "read_web_page", toolInput: { url: "https://en.wikipedia.org/wiki/Quantum_computing" } }
         ]);
     });
+
+    it("shows an untitled call as a plain tool, and hides a working-file read whatever its input", async () => {
+        const brain = path.join(DATA_DIR, "antigravity-agent", "home", "antigravity-acp", "brain", "06ad", "notes.md");
+        FakeAcpClient.promptUpdates = [
+            { sessionUpdate: "tool_call", toolCallId: "s1", kind: "search", status: "pending", rawInput: { query: "q" } },
+            { sessionUpdate: "tool_call", toolCallId: "f1", kind: "fetch", status: "pending", rawInput: { Url: "https://example.com/" } },
+            { sessionUpdate: "tool_call", toolCallId: "b1", title: "Running view_file", kind: "read", status: "in_progress", locations: [{ path: brain }], rawInput: "notes" }
+        ];
+
+        const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableWebSearch: true }));
+        expect(chunks.filter(c => c.type === "tool_use").map(c => [ c.toolCallId, c.toolName ])).toEqual([ [ "s1", "tool" ], [ "f1", "tool" ] ]);
+    });
 });
 
 describe("buildAntigravityModelList", () => {
@@ -416,6 +495,29 @@ describe("buildAntigravityModelList", () => {
             { id: "default", name: "Default", pricing: { input: 0, output: 0 }, isDefault: true, isSubscription: true },
             { id: "gemini-x", name: "gemini-x", pricing: { input: 0, output: 0 }, isSubscription: true }
         ]);
+    });
+
+    it("keeps a label that is no effort level in the name, and defaults to the strongest level without High", () => {
+        const models = buildAntigravityModelList({ availableModels: [
+            { modelId: "gemini-3-pro-ultra", name: "Gemini 3 Pro (Ultra)" },
+            { modelId: "gemini-3.9-flash-low", name: "Gemini 3.9 Flash (Low)" },
+            { modelId: "gemini-3.9-flash-medium", name: "Gemini 3.9 Flash (Medium)" }
+        ] });
+        expect(models.slice(1).map(m => [ m.id, m.name, m.reasoningEfforts, m.defaultReasoningEffort ])).toEqual([
+            [ "gemini-3-pro-ultra", "Gemini 3 Pro (Ultra)", undefined, undefined ],
+            [ "gemini-3.9-flash", "Gemini 3.9 Flash", [ "low", "medium" ], "medium" ]
+        ]);
+    });
+
+    it("compares versions of different lengths as if padded with zeros", () => {
+        const models = buildAntigravityModelList({ availableModels: [
+            { modelId: "gemini-3-flash", name: "Gemini 3 Flash" },
+            { modelId: "gemini-3.1-flash", name: "Gemini 3.1 Flash" },
+            { modelId: "gemini-3.0-pro", name: "Gemini 3.0 Pro" },
+            { modelId: "gemini-3-pro", name: "Gemini 3 Pro" }
+        ] });
+        expect([ ...new AntigravityAgentProvider().recommendedModelIds(models) ].sort())
+            .toEqual([ "default", "gemini-3-pro", "gemini-3.0-pro", "gemini-3.1-flash" ]);
     });
 });
 

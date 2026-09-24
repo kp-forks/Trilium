@@ -48,6 +48,8 @@ describe("decideAntigravityToolCall", () => {
         const shouted = path.join(HOME, "ANTIGRAVITY-ACP", "acp_token.json");
         expect(decide("view_file", { AbsolutePath: shouted }, undefined, "win32")).toBe("deny");
         expect(decide("view_file", { AbsolutePath: shouted }, undefined, "darwin")).toBe("deny");
+        // Case-sensitive file systems: the exact spelling is still refused.
+        expect(decide("view_file", { AbsolutePath: path.join(PRIVATE, "acp_token.json") }, undefined, "linux")).toBe("deny");
     });
 
     it("allows the read tools elsewhere and leaves every other tool to the permission flow", () => {
