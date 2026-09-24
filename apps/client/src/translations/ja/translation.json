@@ -236,7 +236,8 @@
     "filter-none": "すべてのアイコン",
     "filter-default": "デフォルトアイコン",
     "icon_tooltip": "{{name}}\nアイコンパック: {{iconPack}}",
-    "no_results": "アイコンが見つかりません。"
+    "no_results": "アイコンが見つかりません。",
+    "insert_icon": "アイコンを挿入"
   },
   "basic_properties": {
     "note_type": "ノートタイプ",
@@ -1723,7 +1724,9 @@
   "shared_info": {
     "help_link": "ヘルプについては、 <a href=\"https://triliumnext.github.io/Docs/Wiki/sharing.html\">wiki</a> をご覧ください。",
     "shared_locally": "このノートは {{- link}} でローカルに共有されています。",
-    "shared_publicly": "このノートは {{- link}} で一般公開されています。"
+    "shared_publicly": "このノートは {{- link}} で一般公開されています。",
+    "shared_preview": "このノートは {{- link}} で共有されていますが、そのページを開けるのはこのブラウザのみであり、かつ Trilium がそのブラウザで開かれている間だけです。他の人に公開するには、Trilium サーバーが必要です。",
+    "shared_export_only": "このノートは共有されていますが、モバイルアプリでは共有ページを開くことができません。公開するには、サブツリーを \"{{format}}\" としてエクスポートし、任意の Web サーバーでファイルをホストするか、Trilium サーバーを使用してください。"
   },
   "highlights_list_2": {
     "title": "ハイライトリスト",
@@ -2809,7 +2812,11 @@
     "doc_url": "オンラインドキュメント",
     "doc_url_description": "クリックすると、オンラインドキュメントサイトでこのページが表示されます。",
     "office_preview": "プレビュー",
-    "office_preview_description": "このドキュメントは読み取り専用のプレビューとして表示されているため、ここでは編集できません。\n\n編集を行うには、ファイルをダウンロードし、外部アプリケーションで編集してから、新しいリビジョン(更新版)としてアップロードしてください。"
+    "office_preview_description": "このドキュメントは読み取り専用のプレビューとして表示されているため、ここでは編集できません。\n\n編集を行うには、ファイルをダウンロードし、外部アプリケーションで編集してから、新しいリビジョン(更新版)としてアップロードしてください。",
+    "shared_preview": "共有プレビュー",
+    "shared_preview_description": "共有ページを開けるのはこのブラウザのみであり、かつ Trilium がそのブラウザで開かれている間だけです。公開するには、サブツリーを \"{{- format}}\" としてエクスポートし、任意の Web サーバーでファイルをホストするか、Trilium サーバーを使用してください。",
+    "shared_export_only": "未公開",
+    "shared_export_only_description": "モバイルアプリでは共有ページを開くことができません。このノートを公開するには、サブツリーを \"{{- format}}\" としてエクスポートし、任意の Web サーバーでファイルをホストするか、Trilium サーバーを使用してください。"
   },
   "status_bar": {
     "language_title": "コンテンツの言語を変更",
@@ -3247,7 +3254,9 @@
     "enabled": "AI 機能",
     "enabled_description": "以下で設定されたプロバイダーを使用し、AI チャットサイドバーと LLM チャットノートを追加します。",
     "provider_desc_copilot_agent": "Trilium を実行しているマシンに GitHub Copilot CLI がインストールされている必要があります。",
-    "copilot_agent_description": "GitHub Copilot CLI 経由で GitHub Copilot のサブスクリプションを使用するため、API キーは不要です。Copilot CLI は、Trilium を実行しているマシン（セルフホストの場合はサーバー、デスクトップ版の場合はこのコンピューター）にインストールされている必要があります。そのマシン上で一度 \"copilot login\" を実行してサインインしてください — 別のエディタでの既存の Copilot ログイン情報が自動的に再利用されます。"
+    "copilot_agent_description": "GitHub Copilot CLI 経由で GitHub Copilot のサブスクリプションを使用するため、API キーは不要です。Copilot CLI は、Trilium を実行しているマシン（セルフホストの場合はサーバー、デスクトップ版の場合はこのコンピューター）にインストールされている必要があります。そのマシン上で一度 \"copilot login\" を実行してサインインしてください — 別のエディタでの既存の Copilot ログイン情報が自動的に再利用されます。",
+    "provider_desc_antigravity_agent": "Trilium を実行しているマシン上で、Google の Antigravity ACP サーバーを稼働させる必要があります。",
+    "antigravity_agent_description": "Google Antigravity を介して Google アカウント（無料版、Google AI Pro、または Ultra）の Gemini 利用枠を使用するため、API キーは不要です。Google の Antigravity ACP サーバーは、Trilium を実行しているマシン（セルフホストの場合はサーバー、デスクトップ版の場合はそのコンピュータ）にダウンロードしておく必要があります。モデルの一覧を最初に表示する際、そのマシンのブラウザで Google のサインインページが開きます。"
   },
   "ocr": {
     "extracted_text": "抽出されたテキスト（OCR）",
@@ -3615,7 +3624,19 @@
       "try-again": "再試行",
       "working": "処理中…",
       "upload-an-image-from-your-device": "デバイスから画像をアップロードしてください。",
-      "upload-image": "画像をアップロード"
+      "upload-image": "画像をアップロード",
+      "insert-icon": "アイコンを挿入",
+      "icon": "アイコン",
+      "insert-an-icon-from-an-installed-icon-pack": "インストール済みのアイコンパックからアイコンを挿入",
+      "transform-icon": "アイコンを変形",
+      "icon-toolbar": "アイコンツールバー",
+      "no-transform": "変形なし",
+      "rotate-90": "90° 回転",
+      "rotate-180": "180° 回転",
+      "rotate-270": "270° 回転",
+      "flip-horizontally": "左右反転",
+      "flip-vertically": "上下反転",
+      "change-icon": "アイコンを変更"
     },
     "toolbar-groups": {
       "text-formatting": "テキストの書式設定",
