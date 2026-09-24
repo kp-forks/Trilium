@@ -1,3 +1,5 @@
+import "./ReasoningEffortDropdown.css";
+
 import type { LlmModelInfo, LlmReasoningEffort } from "@triliumnext/commons";
 
 import { t } from "../../../services/i18n.js";

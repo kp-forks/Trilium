@@ -242,10 +242,6 @@
     min-width: 0;
 }
 
-.llm-chat-reasoning-effort-icon {
-    margin-inline-end: 0.35em;
-}
-
 .llm-chat-model-select-name {
     overflow: hidden;
     text-overflow: ellipsis;
