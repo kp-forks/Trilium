@@ -240,8 +240,7 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         // through to the raw `claude-opus-4-8[1m]`.
         expect(await usageModel({ model: "claude-opus-4-8[1m]" })).toBe("Claude Opus 4.8 (1M)");
         // An unrecognized ID passes through unchanged rather than becoming undefined.
-        expect(await usageModel({ model: "some-unknown-model" })).toBe("some-unknown-model");
-    });
+        expect(await usageModel({ model: "some-unknown-model" })).toBe("some-unknown-model");    });
 
     it("ignores subagent traffic (non-null parent_tool_use_id)", async () => {
         scriptAgent([
@@ -996,6 +995,18 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         const retried = await collect(provider.chatChunks(followUp, config));
         expect(queryMock).toHaveBeenCalledTimes(2);
         expect(retried).toContainEqual({ type: "text", content: "b" });
+    });
+
+    it("starts a new session after the agent's stream ended mid-turn", async () => {
+        const provider = new ClaudeAgentProvider();
+        const config = { chatNoteId: "note-ended" };
+        scriptAgent([textDelta("cut off")]);
+        const chunks = await collect(provider.chatChunks([{ role: "user", content: "q" }], config));
+        expect(chunks).toContainEqual({ type: "text", content: "cut off" });
+
+        scriptAgent([textDelta("fresh"), successResult()]);
+        await collect(provider.chatChunks([{ role: "user", content: "q" }], config));
+        expect(queryMock).toHaveBeenCalledTimes(2);
     });
 
     it("keeps to the warm-session cap by closing idle sessions behind a busy oldest one", () => {
