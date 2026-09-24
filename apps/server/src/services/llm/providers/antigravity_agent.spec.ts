@@ -1,4 +1,5 @@
 import type { LlmStreamChunk } from "@triliumnext/commons";
+import fs from "fs";
 import os from "os";
 import path from "path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -18,7 +19,15 @@ vi.mock("../../data_dir.js", async () => {
 });
 
 vi.mock("./antigravity_binary.js", () => ({ resolveAntigravityBinaryPath: async () => "/opt/agy/agy_acp_server.par" }));
-vi.mock("./acp_mcp_endpoint.js", () => ({ getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret" }));
+const getAcpHookEndpointUrlMock = vi.hoisted(() => vi.fn(async (_handler: (payload: unknown) => unknown) => "http://127.0.0.1:12345/hook-secret"));
+vi.mock("./acp_mcp_endpoint.js", () => ({
+    getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret",
+    getAcpHookEndpointUrl: getAcpHookEndpointUrlMock
+}));
+vi.mock("./antigravity_hook.js", async (importOriginal) => ({
+    ...await importOriginal<typeof import("./antigravity_hook.js")>(),
+    resolveCurlPath: async () => "/usr/bin/curl"
+}));
 vi.mock("@triliumnext/core/src/services/llm/note_hint.js", () => ({ buildNoteHint: () => null }));
 vi.mock("@triliumnext/core/src/services/llm/attachment_content.js", () => ({ resolveAttachmentPart: vi.fn() }));
 
@@ -173,6 +182,26 @@ describe("AntigravityAgentProvider", () => {
             toolCall: { kind: "execute", title: "rm -rf /" },
             options: PERMISSION_OPTIONS
         })).toEqual({ outcome: { outcome: "selected", optionId: "deny" } });
+    });
+
+    it("keeps the agent away from its sign-in with a hook that asks Trilium about every tool call", async () => {
+        const home = path.join(DATA_DIR, "antigravity-agent", "home");
+        fs.rmSync(path.join(home, "config"), { recursive: true, force: true });
+        getAcpHookEndpointUrlMock.mockClear();
+        await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
+
+        const hooks = JSON.parse(fs.readFileSync(path.join(home, "config", "hooks.json"), "utf8"));
+        expect(hooks["trilium-file-access"].PreToolUse[0]).toMatchObject({
+            matcher: ".*",
+            hooks: [ { command: "\"/usr/bin/curl\" --silent --show-error --fail --max-time 8 --data-binary @- http://127.0.0.1:12345/hook-secret" } ]
+        });
+
+        const decide = getAcpHookEndpointUrlMock.mock.calls[0][0];
+        const tokenRead = { toolCall: { name: "view_file", args: { AbsolutePath: path.join(home, "antigravity-acp", "acp_token.json") } } };
+        expect(decide(tokenRead)).toMatchObject({ decision: "deny" });
+        expect(infoLogMock).toHaveBeenCalledWith(expect.stringContaining(`kept view_file out of the server's private folder`));
+        expect(decide({ toolCall: { name: "view_file", args: { AbsolutePath: path.join(DATA_DIR, "antigravity-agent", "workspace", "a.md") } } }))
+            .toEqual({ decision: "allow" });
     });
 
     it("signs in during the model probe, but reports a missing sign-in in the chat instead", async () => {

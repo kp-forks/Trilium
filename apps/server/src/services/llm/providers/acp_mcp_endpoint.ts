@@ -15,6 +15,10 @@
  * Access control: the listener binds to 127.0.0.1 on a random port, and the
  * endpoint lives under an unguessable 128-bit secret path known only to the
  * agent subprocess we spawn.
+ *
+ * The same listener answers the Antigravity file-access hook under a second
+ * secret path (see `antigravity_hook.ts`): the hook's `curl` posts each tool
+ * call there and prints the decision it gets back.
  */
 
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
@@ -24,29 +28,37 @@ import http from "http";
 
 import { createMcpServer } from "../../mcp/mcp_server.js";
 
-let endpointUrl: Promise<string> | undefined;
+/** Decides one hook request from its JSON body; the result is sent back as JSON. */
+export type AcpHookHandler = (payload: unknown) => unknown;
+
+let endpoint: Promise<{ mcpUrl: string; hookUrl: string }> | undefined;
+let hookHandler: AcpHookHandler | undefined;
 
 /**
  * Start (once) and return the endpoint URL to hand to the agent's
  * `session/new` MCP config. A failed start is not cached so a later chat
  * turn retries.
  */
-export function getAcpMcpEndpointUrl(): Promise<string> {
-    if (!endpointUrl) {
-        endpointUrl = startEndpoint().catch((err: unknown) => {
-            endpointUrl = undefined;
-            throw err;
-        });
-    }
-    return endpointUrl;
+export async function getAcpMcpEndpointUrl(): Promise<string> {
+    return (await startOnce()).mcpUrl;
+}
+
+/**
+ * Start (once) and return the URL the hook posts tool calls to, which
+ * `handler` answers from then on.
+ */
+export async function getAcpHookEndpointUrl(handler: AcpHookHandler): Promise<string> {
+    hookHandler = handler;
+    return (await startOnce()).hookUrl;
 }
 
 /** For tests: close the listener and forget it so the next call starts fresh. */
 export async function resetAcpMcpEndpointForTests(): Promise<void> {
-    if (endpointUrl) {
-        const url = await endpointUrl.catch(() => undefined);
-        endpointUrl = undefined;
-        if (url) {
+    hookHandler = undefined;
+    if (endpoint) {
+        const started = await endpoint.catch(() => undefined);
+        endpoint = undefined;
+        if (started) {
             await new Promise<void>(resolve => {
                 listener?.close(() => resolve());
                 listener = undefined;
@@ -57,14 +69,29 @@ export async function resetAcpMcpEndpointForTests(): Promise<void> {
 
 let listener: http.Server | undefined;
 
-async function startEndpoint(): Promise<string> {
-    const secretPath = `/mcp-${randomBytes(16).toString("hex")}`;
+function startOnce() {
+    if (!endpoint) {
+        endpoint = startEndpoint().catch((err: unknown) => {
+            endpoint = undefined;
+            throw err;
+        });
+    }
+    return endpoint;
+}
+
+async function startEndpoint(): Promise<{ mcpUrl: string; hookUrl: string }> {
+    const mcpPath = `/mcp-${randomBytes(16).toString("hex")}`;
+    const hookPath = `/hook-${randomBytes(16).toString("hex")}`;
     // Filled in once the listener is bound. A request can only arrive after
-    // that, so handleRequest always observes the real address.
+    // that, so the handlers always observe the real address.
     let boundHost = "";
 
     const server = http.createServer((req, res) => {
-        void handleRequest(req, res, secretPath, boundHost);
+        if (req.url === hookPath && hookHandler) {
+            void handleHookRequest(req, res, hookHandler, boundHost);
+        } else {
+            void handleRequest(req, res, mcpPath, boundHost);
+        }
     });
     listener = server;
 
@@ -88,9 +115,35 @@ async function startEndpoint(): Promise<string> {
     }
 
     boundHost = `127.0.0.1:${address.port}`;
-    const url = `http://${boundHost}${secretPath}`;
-    getLog().info(`ACP agent providers: note-tools MCP endpoint listening on ${boundHost} (loopback only)`);
-    return url;
+    getLog().info(`ACP agent providers: loopback endpoint for note tools and hooks listening on ${boundHost}`);
+    return { mcpUrl: `http://${boundHost}${mcpPath}`, hookUrl: `http://${boundHost}${hookPath}` };
+}
+
+/**
+ * Answer a hook request with the handler's decision. Any other response makes
+ * the hook's `curl --fail` exit non-zero, which the agent treats as a denial.
+ */
+async function handleHookRequest(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    handler: AcpHookHandler,
+    boundHost: string
+): Promise<void> {
+    try {
+        if (req.method !== "POST") {
+            res.writeHead(405).end();
+            return;
+        }
+        if (req.headers.host !== boundHost) {
+            res.writeHead(403).end();
+            return;
+        }
+        const decision = handler(await readJsonBody(req));
+        res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(decision));
+    } catch (err) {
+        getLog().error(`ACP hook endpoint error: ${err}`);
+        res.writeHead(500).end();
+    }
 }
 
 async function handleRequest(
@@ -147,7 +200,7 @@ async function readJsonBody(req: http.IncomingMessage): Promise<unknown> {
     for await (const chunk of req) {
         totalBytes += (chunk as Buffer).length;
         if (totalBytes > MAX_BODY_BYTES) {
-            throw new Error(`The MCP request body exceeds the ${MAX_BODY_BYTES}-byte limit.`);
+            throw new Error(`The request body exceeds the ${MAX_BODY_BYTES}-byte limit.`);
         }
         chunks.push(chunk as Buffer);
     }

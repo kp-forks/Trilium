@@ -10,13 +10,16 @@
  *   - `GEMINI_HOME` points it at a directory of Trilium's own, so its sign-in,
  *     sessions, MCP servers and skills are Trilium's rather than those of the
  *     user's own Antigravity setup;
- *   - its file tools are confined to the (empty) agent cwd and its own home;
+ *   - its read tools are confined to the (empty) agent cwd and
+ *     `<home>/antigravity-acp`, which also holds the sign-in, so a hook keeps
+ *     them out of that folder (see `antigravity_hook.ts`);
  *   - every tool that writes, runs a command or reaches the network asks
  *     permission first, and {@link decideAntigravityPermission} approves only
  *     Trilium's note tools.
  */
 
 import { LLM_REASONING_EFFORTS, type LlmReasoningEffort } from "@triliumnext/commons";
+import { getLog } from "@triliumnext/core";
 import type { LlmProviderConfig, ModelInfo } from "@triliumnext/core/src/services/llm/types.js";
 import { existsSync } from "fs";
 import path from "path";
@@ -24,7 +27,9 @@ import path from "path";
 import dataDirs from "../../data_dir.js";
 import { AcpAgentProvider, type AcpLaunchSpec, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
 import { type AcpClient, AcpError } from "./acp_client.js";
+import { getAcpHookEndpointUrl } from "./acp_mcp_endpoint.js";
 import { resolveAntigravityBinaryPath } from "./antigravity_binary.js";
+import { type AntigravityDirs, type AntigravityHookDecision, buildHookCommand, decideAntigravityToolCall, resolveCurlPath, writeAntigravityHooks } from "./antigravity_hook.js";
 
 /** The model id that leaves the session on the model the server picks. */
 const DEFAULT_MODEL_ID = "default";
@@ -107,7 +112,14 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     }
 
     protected async launchSpec(): Promise<AcpLaunchSpec> {
-        const binary = await resolveAntigravityBinaryPath();
+        const home = agentHome();
+        const dirs = { home, workspace: this.agentCwd() };
+        const [ binary, curl, hookUrl ] = await Promise.all([
+            resolveAntigravityBinaryPath(),
+            resolveCurlPath(),
+            getAcpHookEndpointUrl(payload => this.decideToolCall(payload, dirs))
+        ]);
+        writeAntigravityHooks(home, buildHookCommand(curl, hookUrl));
         return {
             binary,
             // The ACP registry launches the Linux build with an empty `--uid=`.
@@ -123,6 +135,16 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
 
     protected decidePermission(request: AcpPermissionRequest): AcpPermissionOutcome {
         return decideAntigravityPermission(request, this.logLabel);
+    }
+
+    /** Answer the file-access hook for one tool call, logging each denial. */
+    private decideToolCall(payload: unknown, dirs: AntigravityDirs): AntigravityHookDecision {
+        const answer = decideAntigravityToolCall(payload, dirs);
+        if (answer.decision === "deny") {
+            const tool = (payload as { toolCall?: { name?: unknown } }).toolCall?.name;
+            getLog().info(`${this.logLabel}: kept ${String(tool)} out of the server's private folder.`);
+        }
+        return answer;
     }
 
     /**

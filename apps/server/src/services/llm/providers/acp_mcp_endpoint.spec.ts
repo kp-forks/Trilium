@@ -16,7 +16,7 @@ vi.mock("@triliumnext/core", () => ({
 const createMcpServerMock = vi.hoisted(() => vi.fn());
 vi.mock("../../mcp/mcp_server.js", () => ({ createMcpServer: createMcpServerMock }));
 
-const { getAcpMcpEndpointUrl, resetAcpMcpEndpointForTests } =
+const { getAcpHookEndpointUrl, getAcpMcpEndpointUrl, resetAcpMcpEndpointForTests } =
     await import("./acp_mcp_endpoint.js");
 
 /** Loopback address, ephemeral port, 128-bit secret path. */
@@ -256,5 +256,41 @@ describe("ACP MCP endpoint", () => {
             .catch(() => undefined);
         const overLimit = expect.stringContaining("4194304-byte limit");
         await vi.waitFor(() => expect(errorLogMock).toHaveBeenCalledWith(overLimit));
+    });
+});
+
+describe("ACP hook endpoint", () => {
+    afterEach(async () => {
+        await resetAcpMcpEndpointForTests();
+        vi.restoreAllMocks();
+    });
+
+    it("shares the MCP listener under a secret path of its own and answers with the handler's decision", async () => {
+        const createServerSpy = vi.spyOn(http, "createServer");
+        const handler = vi.fn((_payload: unknown) => ({ decision: "deny", reason: "no" }));
+
+        const hookUrl = await getAcpHookEndpointUrl(handler);
+        const mcpUrl = await getAcpMcpEndpointUrl();
+        expect(hookUrl).toMatch(/^http:\/\/127\.0\.0\.1:\d+\/hook-[0-9a-f]{32}$/);
+        expect(new URL(hookUrl).port).toBe(new URL(mcpUrl).port);
+        expect(createServerSpy).toHaveBeenCalledTimes(1);
+
+        const payload = { toolCall: { name: "view_file", args: { AbsolutePath: "/x" } } };
+        const answer = await request(hookUrl, { method: "POST", body: JSON.stringify(payload) });
+        expect(answer).toEqual({ status: 200, body: JSON.stringify({ decision: "deny", reason: "no" }) });
+        expect(handler).toHaveBeenCalledWith(payload);
+    });
+
+    it("refuses anything but a POST from the bound host, so a failing hook denies the call", async () => {
+        const handler = vi.fn(() => ({ decision: "allow" }));
+        const hookUrl = await getAcpHookEndpointUrl(handler);
+        const { port } = new URL(hookUrl);
+
+        await expect(request(hookUrl)).resolves.toMatchObject({ status: 405 });
+        await expect(request(hookUrl, { method: "POST", headers: { host: `localhost:${port}` }, body: "{}" }))
+            .resolves.toMatchObject({ status: 403 });
+        await expect(request(hookUrl, { method: "POST", body: "not json" })).resolves.toMatchObject({ status: 500 });
+        expect(errorLogMock).toHaveBeenCalledWith(expect.stringContaining("hook"));
+        expect(handler).not.toHaveBeenCalled();
     });
 });
