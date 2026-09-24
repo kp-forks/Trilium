@@ -359,8 +359,11 @@ describe("AntigravityAgentProvider tool calls", () => {
     const MCP_DIR = path.join(DATA_DIR, "antigravity-agent", "home", "antigravity-acp", "brain", "06ada25b", "mcp", "trilium");
     const TOKEN_FILE = path.join(DATA_DIR, "antigravity-agent", "home", "antigravity-acp", "acp_token.json");
 
-    it("hides the agent's reads of its own tool descriptions, and nothing else", async () => {
+    it("hides the agent's reads of its own working files, and nothing else", async () => {
+        const savedPage = path.join(DATA_DIR, "antigravity-agent", "home", "antigravity-acp", "brain", "f0c024c5", ".system_generated", "steps", "10", "content.md");
         FakeAcpClient.promptUpdates = [
+            // Reading a fetched page the server saved, which the agent never completes: hidden, so it cannot end up "stopped".
+            { sessionUpdate: "tool_call", toolCallId: "call_228152", title: "Running view_file", kind: "read", status: "in_progress", rawInput: { AbsolutePath: savedPage, StartLine: 1, EndLine: 60 } },
             // Listing the tool descriptions: hidden, and so is its completion.
             { sessionUpdate: "tool_call", toolCallId: "06ada25b:2", title: "Running list_directory", kind: "search", status: "in_progress", locations: [{ path: MCP_DIR }], rawInput: { directory_path: MCP_DIR } },
             { sessionUpdate: "tool_call_update", toolCallId: "06ada25b:2", status: "completed", rawOutput: "List trilium MCP tools" },

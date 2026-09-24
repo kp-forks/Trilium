@@ -153,13 +153,13 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
     }
 
     /**
-     * The agent writes a description of every MCP tool to
-     * `<home>/antigravity-acp/brain/<session>/mcp/<server>/<tool>.json` and reads
-     * them with its own file tools before calling one. Those reads are how it
-     * looks a tool up, not work on the user's behalf.
+     * The agent reads its own working files with its file tools: the
+     * description of an MCP tool before calling it, and the saved output of a
+     * long tool result such as a fetched page. Those reads are how it follows
+     * its own tools, not work on the user's behalf.
      */
     protected isInternalToolCall(update: AcpToolCallUpdate): boolean {
-        return isToolDescriptionAccess(update, agentHome());
+        return isWorkingFileAccess(update, agentHome());
     }
 
     /**
@@ -291,11 +291,13 @@ export function resolveAntigravityModel(model: string, effort: LlmReasoningEffor
 }
 
 /**
- * Whether a built-in tool call only touches the agent's tool descriptions:
- * every path it names lies under `<home>/antigravity-acp/brain/<session>/mcp/`.
- * Anything else in the home, such as the sign-in token, does not qualify.
+ * Whether a built-in tool call only touches the agent's working files: every
+ * path it names lies under `<home>/antigravity-acp/brain/<session>/`, where the
+ * server keeps the tool descriptions (`mcp/`) and the output of long tool
+ * results, such as a fetched page (`.system_generated/`). Anything else in the
+ * home, such as the sign-in token, does not qualify.
  */
-export function isToolDescriptionAccess(update: AcpToolCallUpdate, home: string): boolean {
+export function isWorkingFileAccess(update: AcpToolCallUpdate, home: string): boolean {
     if (update._meta && (update._meta as { is_mcp_tool_call?: unknown }).is_mcp_tool_call === true) {
         return false;
     }
@@ -305,7 +307,7 @@ export function isToolDescriptionAccess(update: AcpToolCallUpdate, home: string)
     ].filter((value): value is string => typeof value === "string" && path.isAbsolute(value));
     return paths.length > 0 && paths.every(candidate => {
         const segments = path.relative(home, path.resolve(candidate)).split(path.sep);
-        return segments[0] === "antigravity-acp" && segments[1] === "brain" && segments[3] === "mcp";
+        return segments[0] === "antigravity-acp" && segments[1] === "brain" && segments.length > 3;
     });
 }
 
