@@ -53,7 +53,8 @@ describe('OfficeProcessor', () => {
 
     it('extracts text and reports high confidence when text is present', async () => {
         const processor = new OfficeProcessor();
-        mockParseOffice.mockResolvedValue({ to: async () => ({ value: '  document body  ' }) });
+        const to = vi.fn().mockResolvedValue({ value: '  document body  ' });
+        mockParseOffice.mockResolvedValue({ to });
 
         const result = await processor.extractText(buffer, { mimeType: DOCX, language: 'deu' });
 
@@ -64,6 +65,10 @@ describe('OfficeProcessor', () => {
         expect(mockParseOffice).toHaveBeenCalledWith(buffer, {
             newlineDelimiter: '\n',
             ignoreNotes: false
+        });
+        expect(to).toHaveBeenCalledWith('text', {
+            includeImages: 'none',
+            textConfig: { preserveLayout: false }
         });
     });
 
