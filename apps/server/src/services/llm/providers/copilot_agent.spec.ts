@@ -52,6 +52,9 @@ class FakeAcpClient {
     static current: FakeAcpClient | undefined;
     static promptScript: (client: FakeAcpClient) => Promise<{ stopReason?: string }> = async () => ({ stopReason: "end_turn" });
     static initializeError: Error | undefined;
+    /** What `initialize` answers with. */
+    static initializeResult: unknown = {};
+    static sessionCloseError: Error | undefined;
     static sessionNewError: Error | undefined;
     static sessionLoadError: Error | undefined;
     static setModelError: Error | undefined;
@@ -79,7 +82,7 @@ class FakeAcpClient {
         this.requests.push({ method, params });
         if (method === "initialize") {
             if (FakeAcpClient.initializeError) throw FakeAcpClient.initializeError;
-            return {} as T;
+            return FakeAcpClient.initializeResult as T;
         }
         if (method === "session/new") {
             if (FakeAcpClient.sessionNewError) throw FakeAcpClient.sessionNewError;
@@ -96,6 +99,7 @@ class FakeAcpClient {
             return {} as T;
         }
         if (method === "session/prompt") return (await FakeAcpClient.promptScript(this)) as T;
+        if (method === "session/close" && FakeAcpClient.sessionCloseError) throw FakeAcpClient.sessionCloseError;
         return {} as T;
     }
 
@@ -166,6 +170,8 @@ function resetFakes() {
     FakeAcpClient.sessionModels = undefined;
     FakeAcpClient.current = undefined;
     FakeAcpClient.initializeError = undefined;
+    FakeAcpClient.initializeResult = {};
+    FakeAcpClient.sessionCloseError = undefined;
     FakeAcpClient.sessionNewError = undefined;
     FakeAcpClient.sessionLoadError = undefined;
     FakeAcpClient.setModelError = undefined;
@@ -601,15 +607,18 @@ describe("CopilotAgentProvider.chatChunks", () => {
 
     it("reseeds a fresh session when session/load fails", async () => {
         const provider = new CopilotAgentProvider();
-        await collect(provider.chatChunks([userMessage("hi")], { chatNoteId: "chat-load-fail" }));
+        await collect(provider.chatChunks([userMessage("hi")], { chatNoteId: "chat-load-fail", enableNoteTools: true }));
 
         FakeAcpClient.current?.die();
         FakeAcpClient.sessionLoadError = new Error("unknown session");
         FakeAcpClient.newSessionId = "sess-2";
+        mcpEndpointMock.mockClear();
         const chunks = await collect(provider.chatChunks(
             [userMessage("hi"), assistantMessage(""), userMessage("more")],
-            { chatNoteId: "chat-load-fail" }
+            { chatNoteId: "chat-load-fail", enableNoteTools: true }
         ));
+        // The failed load and the new session share one MCP server list.
+        expect(mcpEndpointMock).toHaveBeenCalledTimes(1);
 
         expect(FakeAcpClient.current?.requests.map(r => r.method))
             .toEqual(["initialize", "session/load", "session/new", "session/prompt"]);
@@ -844,6 +853,27 @@ describe("CopilotAgentProvider.generateTitle", () => {
         expect(FakeAcpClient.current?.requests.find(r => r.method === "session/new")?.params)
             .toMatchObject({ mcpServers: [] });
         expect(FakeAcpClient.current?.disposed).toBe(false);
+    });
+
+    it("closes the title session when the agent supports session/close", async () => {
+        const provider = new CopilotAgentProvider();
+        await provider.generateTitle("hi");
+        expect(FakeAcpClient.current?.requests.some(r => r.method === "session/close")).toBe(false);
+
+        resetModelCatalogCacheForTests();
+        FakeAcpClient.initializeResult = { agentCapabilities: { sessionCapabilities: { close: {} } } };
+        FakeAcpClient.newSessionId = "sess-title";
+        await provider.generateTitle("hi");
+        expect(FakeAcpClient.current?.requests.at(-1)).toEqual({ method: "session/close", params: { sessionId: "sess-title" } });
+
+        // A refused close leaves the title intact.
+        FakeAcpClient.sessionCloseError = new Error("unknown session");
+        FakeAcpClient.promptScript = async client => {
+            client.update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text: "Kept" } }, "sess-title");
+            return { stopReason: "end_turn" };
+        };
+        expect(await provider.generateTitle("hi")).toBe("Kept");
+        expect(infoLogMock).toHaveBeenCalledWith(expect.stringContaining("session/close failed (unknown session)"));
     });
 
     it("still produces a title when the cheap model cannot be selected", async () => {

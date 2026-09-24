@@ -177,16 +177,16 @@ export function closeSession(chatNoteId: string, session: ClaudeSession): void {
     }
 }
 
+/** Close the least recently used idle sessions until the pool is within {@link MAX_WARM_SESSIONS}. */
 function evictOldest(): void {
-    while (sessionsByChatNote.size > MAX_WARM_SESSIONS) {
-        const [oldestId, oldest] = [...sessionsByChatNote.entries()][0];
-        // Never evict a session mid-turn; stop at the first busy one so a
-        // pathological all-busy map degrades to "no eviction" instead of
-        // killing a live reply.
-        if (oldest.busy) {
+    for (const [chatNoteId, session] of [...sessionsByChatNote.entries()]) {
+        if (sessionsByChatNote.size <= MAX_WARM_SESSIONS) {
             break;
         }
-        closeSession(oldestId, oldest);
+        // A busy session is streaming a reply, so it is skipped rather than closed.
+        if (!session.busy) {
+            closeSession(chatNoteId, session);
+        }
     }
 }
 

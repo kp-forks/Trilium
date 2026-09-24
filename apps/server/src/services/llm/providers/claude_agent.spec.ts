@@ -1,6 +1,8 @@
 import type { LlmStreamChunk } from "@triliumnext/commons";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { ClaudeSession } from "./claude_session_pool.js";
+
 const queryMock = vi.hoisted(() => vi.fn());
 const errorLogMock = vi.hoisted(() => vi.fn());
 /** Streaming-input-only Query controls the session pool drives. */
@@ -52,7 +54,7 @@ const spawnMock = vi.hoisted(() => vi.fn());
 vi.mock("child_process", () => ({ spawn: spawnMock }));
 
 const { buildSeededPrompt, buildSubscriptionModelList, ClaudeAgentProvider, hashTranscript, resetAgentCwdForTests, resetSubscriptionModelCacheForTests } = await import("./claude_agent.js");
-const { resetClaudeSessionPoolForTests } = await import("./claude_session_pool.js");
+const { MAX_WARM_SESSIONS, Pushable, releaseSession, rememberSession: rememberWarmSession, resetClaudeSessionPoolForTests } = await import("./claude_session_pool.js");
 type PushablePrompt = { pending: readonly { message: { role: string; content: unknown[] } }[] };
 
 /**
@@ -958,6 +960,56 @@ describe("ClaudeAgentProvider.chatChunks", () => {
         ], { chatNoteId: "filler-199" }));
         const fillerCall = queryMock.mock.calls[queryMock.mock.calls.length - 1][0];
         expect(fillerCall.options.resume).toBe("sess-199");
+    });
+
+    it("closes a session whose stream failed mid-turn instead of handing it to the next turn", async () => {
+        const provider = new ClaudeAgentProvider();
+        const config = { chatNoteId: "note-broken" };
+        const followUp = [
+            { role: "user" as const, content: "q1" },
+            { role: "assistant" as const, content: "a" },
+            { role: "user" as const, content: "q2" }
+        ];
+        // One stream: the first turn completes, the second fails partway.
+        queryMock.mockImplementation(() => Object.assign((async function* () {
+            yield textDelta("a");
+            yield successResult("sess-B");
+            yield textDelta("partial");
+            throw new Error("stream broke");
+        })(), { setModel: setModelMock, close: closeMock }));
+        await collect(provider.chatChunks([{ role: "user", content: "q1" }], config));
+
+        const failed = await collect(provider.chatChunks(followUp, config));
+        expect(failed.some(c => c.type === "error")).toBe(true);
+        expect(closeMock).toHaveBeenCalledTimes(1);
+
+        // A retry on the same history starts a new query.
+        scriptAgent([textDelta("b"), successResult("sess-B")]);
+        const retried = await collect(provider.chatChunks(followUp, config));
+        expect(queryMock).toHaveBeenCalledTimes(2);
+        expect(retried).toContainEqual({ type: "text", content: "b" });
+    });
+
+    it("keeps to the warm-session cap by closing idle sessions behind a busy oldest one", () => {
+        const fakeSession = (): ClaudeSession => ({
+            query: { close: vi.fn() } as unknown as ClaudeSession["query"],
+            input: new Pushable(),
+            fingerprint: "",
+            closed: false,
+            busy: false
+        });
+        const busy = fakeSession();
+        rememberWarmSession("busy", busy);
+        const idle: ClaudeSession[] = [];
+        for (let i = 0; i < MAX_WARM_SESSIONS; i++) {
+            const session = fakeSession();
+            rememberWarmSession(`idle-${i}`, session);
+            releaseSession(`idle-${i}`, session);
+            idle.push(session);
+        }
+
+        expect(busy.closed).toBe(false);
+        expect(idle.map(s => s.closed)).toEqual([true, ...Array(MAX_WARM_SESSIONS - 1).fill(false)]);
     });
 });
 

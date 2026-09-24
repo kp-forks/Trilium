@@ -151,6 +151,14 @@ interface ProviderState {
 
 const stateByProvider = new Map<string, ProviderState>();
 
+/** Clients whose agent advertised `session/close` in its `initialize` response. */
+const sessionClosers = new WeakSet<AcpClient>();
+
+/** The part of the `initialize` response Trilium reads. */
+interface AcpInitializeResult {
+    agentCapabilities?: { sessionCapabilities?: { close?: unknown } };
+}
+
 /** For tests: stop every pooled agent and forget every provider's sessions, catalog and agent cwd. */
 export function resetAcpAgentStateForTests(): void {
     for (const state of stateByProvider.values()) {
@@ -379,11 +387,14 @@ export abstract class AcpAgentProvider implements LlmProvider {
             const resumable = stored?.noteToolsEnabled === noteToolsEnabled ? resume : undefined;
             let sessionId: string | undefined;
             let sessionModels: AcpSessionModelState | undefined;
-            if (resumable && stored?.generation === acquired.generation) {
+            const isLive = resumable !== undefined && stored?.generation === acquired.generation;
+            // Only opening or loading a session names its MCP servers.
+            const mcpServers = isLive ? [] : await buildMcpServersConfig(noteToolsEnabled);
+            if (isLive) {
                 // The session is still loaded in this process, so the turn
                 // prompts it directly. The CLIs reject `session/load` for it.
                 sessionId = resumable;
-                sessionModels = stored.models;
+                sessionModels = stored?.models;
             } else if (resumable) {
                 // The process that held the session ended. `session/load`
                 // replays its history as notifications, which the pool drops
@@ -391,7 +402,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
                 try {
                     const loaded = await client.request<{ models?: AcpSessionModelState } | null>(
                         "session/load",
-                        { sessionId: resumable, cwd: this.agentCwd(), mcpServers: await buildMcpServersConfig(noteToolsEnabled) },
+                        { sessionId: resumable, cwd: this.agentCwd(), mcpServers },
                         SESSION_TIMEOUT_MS
                     );
                     sessionId = resumable;
@@ -402,7 +413,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
             }
 
             if (!sessionId) {
-                const created = await this.createSession(client, { cwd: this.agentCwd(), mcpServers: await buildMcpServersConfig(noteToolsEnabled) }, false, SESSION_TIMEOUT_MS);
+                const created = await this.createSession(client, { cwd: this.agentCwd(), mcpServers }, false, SESSION_TIMEOUT_MS);
                 sessionId = created.sessionId;
                 sessionModels = created.models;
             }
@@ -573,10 +584,23 @@ export abstract class AcpAgentProvider implements LlmProvider {
         } finally {
             if (attachedSession) {
                 pool.detach(attachedSession);
+                // The title session is used once, and the process outlives it.
+                if (lease && sessionClosers.has(lease.client)) {
+                    await this.closeAgentSession(lease.client, attachedSession);
+                }
             }
             if (lease) {
                 pool.release();
             }
+        }
+    }
+
+    /** Ask the agent to drop a session it no longer needs, logging a refusal. */
+    private async closeAgentSession(client: AcpClient, sessionId: string): Promise<void> {
+        try {
+            await client.request("session/close", { sessionId }, INIT_TIMEOUT_MS);
+        } catch (err) {
+            getLog().info(`${this.logLabel}: session/close failed (${describeError(err)}).`);
         }
     }
 
@@ -615,7 +639,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
             onExit: options.onExit
         });
         try {
-            await client.request(
+            const initialized = await client.request<AcpInitializeResult | null>(
                 "initialize",
                 {
                     protocolVersion: 1,
@@ -626,6 +650,9 @@ export abstract class AcpAgentProvider implements LlmProvider {
                 },
                 INIT_TIMEOUT_MS
             );
+            if (initialized?.agentCapabilities?.sessionCapabilities?.close) {
+                sessionClosers.add(client);
+            }
         } catch (err) {
             client.dispose();
             throw err;

@@ -381,6 +381,8 @@ export class ClaudeAgentProvider implements LlmProvider {
         let assistantText = "";
         /** The session this turn is driving, released (not closed) at the end. */
         let held: ClaudeSession | undefined;
+        /** Set once the turn reaches its `result`; only then is the session in a known state. */
+        let turnComplete = false;
         // tool_use id → name, for labelling results; also serves as the guard
         // that only results belonging to *this* turn's tool calls are emitted.
         const toolNamesById = new Map<string, string>();
@@ -450,7 +452,6 @@ export class ClaudeAgentProvider implements LlmProvider {
             // Manual iteration on purpose: `for await (…) { break }` calls
             // iterator.return(), which closes the query and kills the process
             // this whole pool exists to keep warm.
-            let turnComplete = false;
             for (;;) {
                 const next = await active.query.next();
                 if (next.done) {
@@ -610,13 +611,13 @@ export class ClaudeAgentProvider implements LlmProvider {
             yield { type: "error", error: describeAgentError(error) };
         } finally {
             signal?.removeEventListener("abort", onAbort);
-            const reusable = held && config.chatNoteId && !held.closed && !signal?.aborted;
+            const reusable = held && config.chatNoteId && turnComplete && !held.closed && !signal?.aborted;
             if (reusable && held && config.chatNoteId) {
                 // Keep the subprocess warm; the pool reaps it when idle.
                 releaseSession(config.chatNoteId, held);
             } else {
-                // A cancelled turn stops mid-stream, so the session's real
-                // state is unknown and the SDK may be wedged mid-`next()`
+                // A cancelled or failed turn stops mid-stream, so the session's
+                // real state is unknown and the SDK may be wedged mid-`next()`
                 // (interrupt() is not guaranteed to make it yield). Killing the
                 // process is the one reliable way out: the next turn simply
                 // pays a cold start rather than inheriting a broken session.
