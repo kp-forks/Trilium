@@ -11,8 +11,7 @@
  * every tool call, and a hook's `deny` stops the call. A hook that fails also
  * stops it. Trilium writes a hook there that posts each call to its own
  * loopback listener (`getAcpHookEndpointUrl`) with `curl`, and
- * {@link decideAntigravityToolCall} answers. A workspace's `.agents/hooks.json`
- * would not do: the server asks the user to trust the workspace first.
+ * {@link decideAntigravityToolCall} answers.
  */
 
 import { existsSync, mkdirSync, realpathSync, writeFileSync } from "fs";

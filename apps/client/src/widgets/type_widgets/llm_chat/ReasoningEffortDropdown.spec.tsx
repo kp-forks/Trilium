@@ -59,7 +59,7 @@ describe("ReasoningEffortDropdown", () => {
             "llm_chat.reasoning_effort_levels.low",
             "llm_chat.reasoning_effort_levels.high"
         ]);
-        // Pro has no Medium, so High is in effect and ticked.
+        // Medium on Pro runs at the nearest level it offers, High, which is ticked.
         expect(items.map(item => item.classList.contains("checked") || !!item.querySelector(".bx-check"))).toEqual([ false, true ]);
         expect(host.querySelector("button")?.title).toBe("llm_chat.reasoning_effort_title(llm_chat.reasoning_effort_levels.high)");
 
