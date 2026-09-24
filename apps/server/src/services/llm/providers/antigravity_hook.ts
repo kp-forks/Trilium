@@ -86,14 +86,16 @@ export function writeAntigravityHooks(home: string, command: string): void {
 /**
  * The hook command: `curl` posts the call (the hook's stdin) to Trilium and
  * prints the decision. `--fail` turns an error response into a failed hook,
- * which the server treats as a denial. The server runs it with `sh -c`, or
- * `cmd /c` on Windows; the URL holds no character either shell reads.
+ * which the server treats as a denial. `--noproxy` keeps an `HTTP_PROXY`
+ * from routing the loopback request away from Trilium. The server runs it
+ * with `sh -c`, or `cmd /c` on Windows; the URL holds no character either
+ * shell reads.
  */
 export function buildHookCommand(curl: string, hookUrl: string): string {
     if (curl.includes("\"")) {
         throw new Error(`Cannot quote the path of curl for the Antigravity hook: ${curl}`);
     }
-    return `"${curl}" --silent --show-error --fail --max-time ${CURL_MAX_TIME_S} --data-binary @- ${hookUrl}`;
+    return `"${curl}" --silent --show-error --fail --noproxy 127.0.0.1 --max-time ${CURL_MAX_TIME_S} --data-binary @- ${hookUrl}`;
 }
 
 /** The in-flight or successful lookup; a failed one is forgotten so a later install is found. */

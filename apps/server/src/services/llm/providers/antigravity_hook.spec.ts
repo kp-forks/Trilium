@@ -85,7 +85,7 @@ describe("writeAntigravityHooks", () => {
 describe("buildHookCommand", () => {
     it("posts the tool call to Trilium and fails on anything but a decision", () => {
         expect(buildHookCommand("C:\\Windows\\System32\\curl.exe", "http://127.0.0.1:5000/hook-abc"))
-            .toBe("\"C:\\Windows\\System32\\curl.exe\" --silent --show-error --fail --max-time 8 --data-binary @- http://127.0.0.1:5000/hook-abc");
+            .toBe("\"C:\\Windows\\System32\\curl.exe\" --silent --show-error --fail --noproxy 127.0.0.1 --max-time 8 --data-binary @- http://127.0.0.1:5000/hook-abc");
         expect(() => buildHookCommand("/opt/\"odd\"/curl", "http://127.0.0.1:5000/hook-abc")).toThrow(/quote/);
     });
 });

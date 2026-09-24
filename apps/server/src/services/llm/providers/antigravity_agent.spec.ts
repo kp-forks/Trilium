@@ -193,7 +193,7 @@ describe("AntigravityAgentProvider", () => {
         const hooks = JSON.parse(fs.readFileSync(path.join(home, "config", "hooks.json"), "utf8"));
         expect(hooks["trilium-file-access"].PreToolUse[0]).toMatchObject({
             matcher: ".*",
-            hooks: [ { command: "\"/usr/bin/curl\" --silent --show-error --fail --max-time 8 --data-binary @- http://127.0.0.1:12345/hook-secret" } ]
+            hooks: [ { command: "\"/usr/bin/curl\" --silent --show-error --fail --noproxy 127.0.0.1 --max-time 8 --data-binary @- http://127.0.0.1:12345/hook-secret" } ]
         });
 
         const decide = getAcpHookEndpointUrlMock.mock.calls[0][0];
