@@ -110,6 +110,13 @@ const PROMPT_TIMEOUT_MS = 15 * 60_000;
 /** Session mappings kept per chat note; bounded to avoid unbounded growth. */
 const MAX_TRACKED_SESSIONS = 200;
 
+/**
+ * Titles one session answers before it is replaced. Titles share a session to
+ * skip `session/new` (~2.5 s on Antigravity, which also keeps every session on
+ * disk); the cap bounds the history each title prompt carries.
+ */
+export const MAX_TITLES_PER_SESSION = 20;
+
 /** The name the loopback MCP server is registered under in `session/new`. */
 export const NOTE_TOOLS_MCP_SERVER_NAME = "trilium";
 
@@ -147,6 +154,18 @@ interface ProviderState {
     agentCwd?: string;
     /** The agent process shared by chat turns and titles. */
     pool: AcpClientPool;
+    /** The session titles are generated in. */
+    titleSession?: TitleSession;
+    /** Settles when the title in progress does; a session answers one prompt at a time. */
+    titleQueue: Promise<unknown>;
+}
+
+interface TitleSession {
+    sessionId: string;
+    /** The {@link AcpLease.generation} of the process that holds the session. */
+    generation: number;
+    /** Titles the session has been asked for. */
+    titles: number;
 }
 
 const stateByProvider = new Map<string, ProviderState>();
@@ -542,17 +561,26 @@ export abstract class AcpAgentProvider implements LlmProvider {
         }
     }
 
+    /**
+     * Name a chat after its first message, in the session titles share. Titles
+     * take turns, because a session answers one prompt at a time.
+     */
     async generateTitle(firstMessage: string): Promise<string> {
+        const state = this.state();
+        const title = state.titleQueue.then(() => this.requestTitle(firstMessage));
+        state.titleQueue = title;
+        return title;
+    }
+
+    private async requestTitle(firstMessage: string): Promise<string> {
         const pool = this.state().pool;
         let lease: AcpLease | undefined;
-        let attachedSession: string | undefined;
+        let sessionId: string | undefined;
+        let answered = false;
         try {
             let title = "";
             lease = await pool.acquire(connection => this.connect(connection));
-            const client = lease.client;
-
-            const { sessionId } = await this.createSession(client, { cwd: this.agentCwd(), mcpServers: [] }, false, SESSION_TIMEOUT_MS);
-            attachedSession = sessionId;
+            sessionId = await this.titleSessionFor(lease);
             pool.attach(sessionId, {
                 onUpdate: params => {
                     const update = (params as AcpSessionUpdate).update;
@@ -561,40 +589,72 @@ export abstract class AcpAgentProvider implements LlmProvider {
                     }
                 }
             });
-            const titleModel = this.titleModelId();
-            if (titleModel) {
-                try {
-                    await client.request("session/set_model", { sessionId, modelId: titleModel }, INIT_TIMEOUT_MS);
-                } catch {
-                    // Title generation works on any model; ignore selection failures.
-                }
-            }
-            await client.request(
+            await lease.client.request(
                 "session/prompt",
                 {
                     sessionId,
                     prompt: [{
                         type: "text",
-                        text: `Generate a short title (at most 5 words) summarizing this chat message. Reply with only the title, no quotes or punctuation around it:\n\n${firstMessage.substring(0, 500)}`
+                        text: `Generate a short title (at most 5 words) summarizing the chat message below. It is a new request: earlier messages in this conversation do not apply. Reply with only the title, no quotes or punctuation around it:
+
+${firstMessage.substring(0, 500)}`
                     }]
                 },
                 SESSION_TIMEOUT_MS
             );
+            answered = true;
             return title.trim().replace(/^["']|["']$/g, "").substring(0, 100);
         } catch (error) {
             getLog().error(`${this.logLabel} title generation failed: ${this.describeFailure(error)}`);
             return "";
         } finally {
-            if (attachedSession) {
-                pool.detach(attachedSession);
-                // The title session is used once, and the process outlives it.
-                if (lease && sessionClosers.has(lease.client)) {
-                    await this.closeAgentSession(lease.client, attachedSession);
-                }
+            if (sessionId) {
+                pool.detach(sessionId);
+            }
+            // A failed prompt leaves the session in an unknown state.
+            if (lease && sessionId && !answered) {
+                await this.retireTitleSession(lease);
             }
             if (lease) {
                 pool.release();
             }
+        }
+    }
+
+    /**
+     * The title session on the lease's process, opening one on the title model
+     * when the process has none or the current one reached
+     * {@link MAX_TITLES_PER_SESSION}.
+     */
+    private async titleSessionFor(lease: AcpLease): Promise<string> {
+        const state = this.state();
+        const current = state.titleSession;
+        if (current?.generation === lease.generation && current.titles < MAX_TITLES_PER_SESSION) {
+            current.titles++;
+            return current.sessionId;
+        }
+        await this.retireTitleSession(lease);
+
+        const { sessionId } = await this.createSession(lease.client, { cwd: this.agentCwd(), mcpServers: [] }, false, SESSION_TIMEOUT_MS);
+        const titleModel = this.titleModelId();
+        if (titleModel) {
+            try {
+                await lease.client.request("session/set_model", { sessionId, modelId: titleModel }, INIT_TIMEOUT_MS);
+            } catch {
+                // Title generation works on any model; ignore selection failures.
+            }
+        }
+        state.titleSession = { sessionId, generation: lease.generation, titles: 1 };
+        return sessionId;
+    }
+
+    /** Stop using the title session, closing it when its process is the lease's and the agent supports that. */
+    private async retireTitleSession(lease: AcpLease): Promise<void> {
+        const state = this.state();
+        const retired = state.titleSession;
+        state.titleSession = undefined;
+        if (retired?.generation === lease.generation && sessionClosers.has(lease.client)) {
+            await this.closeAgentSession(lease.client, retired.sessionId);
         }
     }
 
@@ -706,7 +766,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
     private state(): ProviderState {
         let state = stateByProvider.get(this.name);
         if (!state) {
-            state = { sessionsByChatNote: new Map(), pool: new AcpClientPool(this.logLabel) };
+            state = { sessionsByChatNote: new Map(), pool: new AcpClientPool(this.logLabel), titleQueue: Promise.resolve() };
             stateByProvider.set(this.name, state);
         }
         return state;

@@ -141,7 +141,7 @@ class FakeAcpError extends Error {
 
 vi.mock("./acp_client.js", () => ({ AcpClient: FakeAcpClient, AcpError: FakeAcpError }));
 
-const { buildPromptBlocks, createUpdateCollector, denyPermission } = await import("./acp_agent.js");
+const { buildPromptBlocks, createUpdateCollector, denyPermission, MAX_TITLES_PER_SESSION } = await import("./acp_agent.js");
 const { IDLE_TIMEOUT_MS } = await import("./acp_client_pool.js");
 const { buildCopilotModelList, CopilotAgentProvider, resetModelCatalogCacheForTests } = await import("./copilot_agent.js");
 
@@ -871,25 +871,78 @@ describe("CopilotAgentProvider.generateTitle", () => {
         expect(FakeAcpClient.current?.disposed).toBe(false);
     });
 
-    it("closes the title session when the agent supports session/close", async () => {
+    it("names chats in one shared session on the process, one title at a time", async () => {
         const provider = new CopilotAgentProvider();
-        await provider.generateTitle("hi");
-        expect(FakeAcpClient.current?.requests.some(r => r.method === "session/close")).toBe(false);
-
-        resetModelCatalogCacheForTests();
-        FakeAcpClient.initializeResult = { agentCapabilities: { sessionCapabilities: { close: {} } } };
-        FakeAcpClient.newSessionId = "sess-title";
-        await provider.generateTitle("hi");
-        expect(FakeAcpClient.current?.requests.at(-1)).toEqual({ method: "session/close", params: { sessionId: "sess-title" } });
-
-        // A refused close leaves the title intact.
-        FakeAcpClient.sessionCloseError = new Error("unknown session");
+        let prompts = 0;
+        let concurrent = 0;
+        let maxConcurrent = 0;
         FakeAcpClient.promptScript = async client => {
-            client.update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text: "Kept" } }, "sess-title");
+            concurrent++;
+            maxConcurrent = Math.max(maxConcurrent, concurrent);
+            prompts++;
+            const title = `Title ${prompts}`;
+            await new Promise(resolve => setTimeout(resolve, 5));
+            client.update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text: title } });
+            concurrent--;
             return { stopReason: "end_turn" };
         };
-        expect(await provider.generateTitle("hi")).toBe("Kept");
+
+        expect(await Promise.all([provider.generateTitle("a"), provider.generateTitle("b"), provider.generateTitle("c")]))
+            .toEqual(["Title 1", "Title 2", "Title 3"]);
+        expect(maxConcurrent).toBe(1);
+        const methods = FakeAcpClient.current?.requests.map(r => r.method);
+        expect(methods).toEqual(["initialize", "session/new", "session/set_model", "session/prompt", "session/prompt", "session/prompt"]);
+        const prompt = FakeAcpClient.current?.requests.find(r => r.method === "session/prompt")?.params as { prompt: { text: string }[] };
+        expect(prompt.prompt[0].text).toContain("earlier messages in this conversation do not apply");
+    });
+
+    it("replaces the title session when it is full, failed, or its process ended, closing it where the agent can", async () => {
+        const provider = new CopilotAgentProvider();
+        FakeAcpClient.initializeResult = { agentCapabilities: { sessionCapabilities: { close: {} } } };
+        const newSessions = () => FakeAcpClient.current?.requests.filter(r => r.method === "session/new").length ?? 0;
+        const closed = () => FakeAcpClient.current?.requests.filter(r => r.method === "session/close").map(r => r.params);
+
+        // Full: the next title opens a new session and closes the old one.
+        for (let i = 0; i <= MAX_TITLES_PER_SESSION; i++) {
+            FakeAcpClient.newSessionId = `sess-title-${newSessions()}`;
+            await provider.generateTitle("hi");
+        }
+        expect(newSessions()).toBe(2);
+        expect(closed()).toEqual([{ sessionId: "sess-title-0" }]);
+
+        // Failed: the session is closed, and the next title opens another.
+        FakeAcpClient.promptScript = async () => { throw new Error("prompt failed"); };
+        expect(await provider.generateTitle("hi")).toBe("");
+        expect(closed()).toEqual([{ sessionId: "sess-title-0" }, { sessionId: "sess-title-1" }]);
+        FakeAcpClient.promptScript = async () => ({ stopReason: "end_turn" });
+        FakeAcpClient.newSessionId = "sess-title-2";
+        await provider.generateTitle("hi");
+        expect(newSessions()).toBe(3);
+
+        // A refused close is logged and changes nothing else.
+        FakeAcpClient.sessionCloseError = new Error("unknown session");
+        FakeAcpClient.promptScript = async () => { throw new Error("prompt failed"); };
+        await provider.generateTitle("hi");
         expect(infoLogMock).toHaveBeenCalledWith(expect.stringContaining("session/close failed (unknown session)"));
+
+        // Ended: the new process gets a session of its own, with no close sent to the old one.
+        FakeAcpClient.sessionCloseError = undefined;
+        FakeAcpClient.promptScript = async () => ({ stopReason: "end_turn" });
+        await provider.generateTitle("hi");
+        FakeAcpClient.current?.die();
+        await provider.generateTitle("hi");
+        expect(FakeAcpClient.current?.requests.map(r => r.method)).toEqual(["initialize", "session/new", "session/set_model", "session/prompt"]);
+    });
+
+    it("keeps using a session on an agent that cannot close one", async () => {
+        const provider = new CopilotAgentProvider();
+        FakeAcpClient.promptScript = async () => { throw new Error("prompt failed"); };
+        await provider.generateTitle("hi");
+        FakeAcpClient.promptScript = async () => ({ stopReason: "end_turn" });
+        for (let i = 0; i <= MAX_TITLES_PER_SESSION; i++) {
+            await provider.generateTitle("hi");
+        }
+        expect(FakeAcpClient.current?.requests.some(r => r.method === "session/close")).toBe(false);
     });
 
     it("still produces a title when the cheap model cannot be selected", async () => {
