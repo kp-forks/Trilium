@@ -1027,7 +1027,8 @@
     "filter-none": "所有图标",
     "filter-default": "默认图标",
     "icon_tooltip": "{{name}}\n图标包：{{iconPack}}",
-    "no_results": "没有找到图标。"
+    "no_results": "没有找到图标。",
+    "insert_icon": "插入图标"
   },
   "basic_properties": {
     "note_type": "笔记类型",
@@ -1981,7 +1982,9 @@
   "shared_info": {
     "help_link": "访问 <a href=\"https://triliumnext.github.io/Docs/Wiki/sharing.html\">wiki</a> 获取帮助。",
     "shared_publicly": "该笔记已在 {{- link}} 上公开分享。",
-    "shared_locally": "此笔记在本地通过 {{- link}} 进行共享。"
+    "shared_locally": "此笔记在本地通过 {{- link}} 进行共享。",
+    "shared_preview": "此笔记分享在 {{- link}}，但只有此浏览器能打开该页面，且仅在 Trilium 处于打开状态时可访问。如需将其发布给他人，需要 Trilium 服务器。",
+    "shared_export_only": "此笔记已分享，但移动端应用无法打开分享页面。如需发布，请将子树导出为「{{format}}」并将文件托管在任意 Web 服务器上，或使用 Trilium 服务器。"
   },
   "note_types": {
     "text": "文本",
@@ -2809,7 +2812,11 @@
     "doc_url": "在线文档",
     "doc_url_description": "点击即可在在线文档网站上查看本页。",
     "office_preview": "预览",
-    "office_preview_description": "此文档以只读预览形式显示，因此无法在此编辑。\n\n如需修改，请下载文件，在外部应用中编辑后，再作为新修订版本上传。"
+    "office_preview_description": "此文档以只读预览形式显示，因此无法在此编辑。\n\n如需修改，请下载文件，在外部应用中编辑后，再作为新修订版本上传。",
+    "shared_preview": "分享预览",
+    "shared_preview_description": "只有此浏览器能打开分享页面，且仅在 Trilium 处于打开状态时可访问。如需发布，请将子树导出为「{{- format}}」并将文件托管在任意 Web 服务器上，或使用 Trilium 服务器。",
+    "shared_export_only": "未发布",
+    "shared_export_only_description": "移动端应用无法打开分享页面。如需发布此笔记，请将子树导出为「{{- format}}」并将文件托管在任意 Web 服务器上，或使用 Trilium 服务器。"
   },
   "status_bar": {
     "language_title": "更改内容语言",
@@ -3231,7 +3238,6 @@
     "models_reset_defaults": "重置为默认值",
     "provider_model_count_other": "{{count}} 个模型",
     "beta": "Beta",
-    "provider_desc_claude_agent": "需要在运行 Trilium 的机器上安装 Claude Code。",
     "claude_agent_description": "通过 Claude Code 使用你的 Claude Pro/Max 订阅，因此无需 API 密钥。Claude Code 必须安装在运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）；在该机器上运行「claude /login」登录一次即可。",
     "add_provider_title_named": "添加 {{- name}}",
     "provider_group_cloud": "云提供商",
@@ -3263,8 +3269,8 @@
     "mcp_unavailable_standalone": "浏览器版不可用：助手需通过网络连接 Trilium，但此版本没有可提供给它们的地址，因为它完全在页面内运行。",
     "enabled": "AI 功能",
     "enabled_description": "添加 AI 聊天侧边栏和 LLM 聊天笔记，使用下方配置的提供商。",
-    "provider_desc_copilot_agent": "需要在运行 Trilium 的机器上安装 GitHub Copilot CLI。",
-    "copilot_agent_description": "通过 GitHub Copilot CLI 使用你的 GitHub Copilot 订阅，因此无需 API 密钥。Copilot CLI 必须安装在运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）；在该机器上运行「copilot login」登录一次即可——来自其他编辑器的现有 Copilot 登录会被自动复用。"
+    "copilot_agent_description": "通过 GitHub Copilot CLI 使用你的 GitHub Copilot 订阅，因此无需 API 密钥。Copilot CLI 必须安装在运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）；在该机器上运行「copilot login」登录一次即可——来自其他编辑器的现有 Copilot 登录会被自动复用。",
+    "antigravity_agent_description": "通过 Google Antigravity 使用你 Google 账户的 Gemini 额度（免费版、Google AI Pro 或 Ultra），因此无需 API 密钥。Google Antigravity ACP 服务器必须下载到运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）。首次列出模型时，该机器的浏览器会打开 Google 登录页面。"
   },
   "revisions": {
     "note_revisions": "笔记修订",
@@ -3615,7 +3621,19 @@
       "try-again": "重试",
       "working": "正在处理…",
       "upload-image": "上传图片",
-      "upload-an-image-from-your-device": "从你的设备上传图片。"
+      "upload-an-image-from-your-device": "从你的设备上传图片。",
+      "insert-icon": "插入图标",
+      "icon": "图标",
+      "insert-an-icon-from-an-installed-icon-pack": "从已安装的图标包中插入图标",
+      "transform-icon": "变换图标",
+      "icon-toolbar": "图标工具栏",
+      "no-transform": "无变换",
+      "rotate-90": "旋转 90°",
+      "rotate-180": "旋转 180°",
+      "rotate-270": "旋转 270°",
+      "flip-horizontally": "水平翻转",
+      "flip-vertically": "垂直翻转",
+      "change-icon": "更改图标"
     },
     "toolbar-groups": {
       "text-formatting": "文本格式",

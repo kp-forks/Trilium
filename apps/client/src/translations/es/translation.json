@@ -3190,7 +3190,6 @@
     "provider_model_count_many": "{{count}} modelos",
     "provider_model_count_other": "{{count}} modelos",
     "beta": "Beta",
-    "provider_desc_claude_agent": "Requiere Claude Code en la máquina que ejecuta Trilium.",
     "base_url": "URL base",
     "base_url_description": "Opcional. Accede a la misma API a través de un proxy o puerta de enlace. Para ejecutar un modelo usted mismo, añada en su lugar un proveedor Ollama o LM Studio.",
     "base_url_invalid": "La URL base debe ser una URL http:// o https:// válida",
@@ -3223,7 +3222,6 @@
     "mcp_config_warning": "Un token otorga acceso completo de lectura y escritura a todas sus notas, así que considérelo como una contraseña. Si se conecta desde otro dispositivo, prefiera HTTPS: un token enviado por HTTP sin cifrar puede interceptarse.",
     "enabled": "Funciones de IA",
     "enabled_description": "Añade la barra lateral de chat de IA y las notas de chat LLM, usando los proveedores configurados a continuación.",
-    "provider_desc_copilot_agent": "Requiere la CLI de GitHub Copilot en la máquina que ejecuta Trilium.",
     "provider_unavailable_standalone": "No disponible en la versión de navegador: este proveedor funciona ejecutando un programa aparte en la máquina, y aquí no hay máquina en la que ejecutarlo.",
     "copilot_agent_description": "Usa su suscripción de GitHub Copilot a través de la CLI de GitHub Copilot, por lo que no se necesita clave de API. La CLI de Copilot debe estar instalada en la máquina que ejecuta Trilium (el servidor si es autoalojado, o este equipo en escritorio); inicie sesión una vez ejecutando «copilot login» allí: un inicio de sesión de Copilot existente desde otro editor se reutiliza automáticamente.",
     "mcp_unavailable_standalone": "No disponible en la versión de navegador: los asistentes se conectarían a Trilium por la red, pero esta compilación no tiene una dirección que darles, ya que se ejecuta por completo dentro de esta página."

@@ -430,7 +430,6 @@
     "no_providers_configured": "Henüz yapılandırılmış sağlayıcı yok.",
     "provider_name": "Ad",
     "beta": "Beta",
-    "provider_desc_claude_agent": "Trilium'u çalıştıran makinede Claude Code gerektirir.",
     "actions": "Eylemler",
     "delete_provider": "Sil",
     "delete_provider_confirmation": "\"{{name}}\" sağlayıcısını silmek istediğinizden emin misiniz?",

@@ -3191,7 +3191,6 @@
     "provider_model_count_many": "{{count}} modelli",
     "provider_model_count_other": "{{count}} modelli",
     "beta": "Beta",
-    "provider_desc_claude_agent": "Richiede Claude Code sul computer su cui è in esecuzione Trilium.",
     "provider_unavailable_standalone": "Non disponibile nella versione browser: questo provider funziona eseguendo un programma separato sulla macchina, e qui non è presente una macchina su cui eseguirlo.",
     "claude_agent_description": "Utilizza il tuo abbonamento Claude Pro/Max tramite Claude Code, quindi non è necessaria alcuna chiave API. Claude Code deve essere installato sulla macchina su cui è in esecuzione Trilium (il server in caso di hosting autonomo, oppure questo computer se si utilizza un computer fisso); accedi una sola volta eseguendo il comando \"claude /login\" su tale computer.",
     "add_provider_title_named": "Aggiungi {{- name}}",
@@ -3223,7 +3222,6 @@
     "mcp_config_warning": "Un token garantisce l'accesso completo in lettura e scrittura a tutte le tue note, quindi trattalo come una password. Se ti connetti da un altro dispositivo, è preferibile utilizzare HTTPS: un token inviato tramite HTTP non crittografato può essere intercettato.",
     "enabled": "Funzionalità di intelligenza artificiale",
     "enabled_description": "Aggiunge la barra laterale della chat con IA e le note della chat LLM, utilizzando i provider configurati di seguito.",
-    "provider_desc_copilot_agent": "È necessaria la CLI di GitHub Copilot sul computer su cui è in esecuzione Trilium.",
     "copilot_agent_description": "Utilizza l'abbonamento a GitHub Copilot tramite la CLI di GitHub Copilot, quindi non è necessaria alcuna chiave API. La CLI di Copilot deve essere installata sul computer su cui è in esecuzione Trilium (il server in caso di self-hosting, oppure questo computer in ambiente desktop); effettuare l'accesso una sola volta eseguendo il comando \"copilot login\" su quel computer: l'accesso a Copilot già esistente da un altro editor verrà riutilizzato automaticamente."
   },
   "ocr": {
