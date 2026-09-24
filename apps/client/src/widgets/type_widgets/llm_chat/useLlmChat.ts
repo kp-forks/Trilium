@@ -770,8 +770,8 @@ export function useLlmChat(
                 },
                 onUsage: (u) => {
                     usage = u;
-                    setLastPromptTokens(u.promptTokens);
-                    setLastCompletionTokens(u.completionTokens);
+                    setLastPromptTokens(u.promptTokens ?? 0);
+                    setLastCompletionTokens(u.completionTokens ?? 0);
                 },
                 onError: (errorMsg, errorDetails) => {
                     console.error("Chat error:", errorMsg, errorDetails);

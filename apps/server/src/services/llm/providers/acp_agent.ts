@@ -205,6 +205,20 @@ export abstract class AcpAgentProvider implements LlmProvider {
     }
 
     /**
+     * The name of the model a turn ran on, for the chat footer: the session's
+     * own name for `runningModelId`, then the catalog's name for `runningModel`,
+     * then `runningModel` itself.
+     */
+    private describeRunningModel(runningModel: string, runningModelId: string | undefined, sessionModels: AcpSessionModelState | undefined): string {
+        const running = runningModelId ? sessionModels?.availableModels?.find(m => m.modelId === runningModelId) : undefined;
+        if (running?.name) {
+            return running.name;
+        }
+        const known = this.state().modelCatalogCache?.models ?? this.fallbackModels;
+        return known.find(m => m.id === runningModel)?.name ?? runningModel;
+    }
+
+    /**
      * Open a session. `interactive` is true only on the add-provider screen,
      * where a subclass can run a sign-in the user is there to complete.
      */
@@ -320,6 +334,7 @@ export abstract class AcpAgentProvider implements LlmProvider {
         const collector = createUpdateCollector(emit, update => this.isInternalToolCall(update));
         let client: AcpClient | undefined;
         let sessionId: string | undefined;
+        let sessionModels: AcpSessionModelState | undefined;
         let assistantText = "";
 
         try {
@@ -335,8 +350,9 @@ export abstract class AcpAgentProvider implements LlmProvider {
             if (resume) {
                 collector.muted = true;
                 try {
-                    await client.request("session/load", { sessionId: resume, cwd: this.agentCwd(), mcpServers }, SESSION_TIMEOUT_MS);
+                    const loaded = await client.request<{ models?: AcpSessionModelState } | null>("session/load", { sessionId: resume, cwd: this.agentCwd(), mcpServers }, SESSION_TIMEOUT_MS);
                     sessionId = resume;
+                    sessionModels = loaded?.models;
                 } catch (err) {
                     getLog().info(`${this.logLabel}: session/load failed (${describeError(err)}); reseeding a fresh session.`);
                 } finally {
@@ -347,14 +363,21 @@ export abstract class AcpAgentProvider implements LlmProvider {
             if (!sessionId) {
                 const created = await this.createSession(client, { cwd: this.agentCwd(), mcpServers }, false, SESSION_TIMEOUT_MS);
                 sessionId = created.sessionId;
+                sessionModels = created.models;
             }
             collector.sessionId = sessionId;
 
+            // The catalog id the turn runs on, and the agent's own id for it when known.
+            let runningModel = this.defaultModelId;
+            let runningModelId = sessionModels?.currentModelId;
             if (model !== this.defaultModelId) {
                 // Model selection is an optional ACP capability — degrade to the
                 // agent's default rather than failing the turn.
                 try {
-                    await client.request("session/set_model", { sessionId, modelId: this.sessionModelId(model, config) }, INIT_TIMEOUT_MS);
+                    const modelId = this.sessionModelId(model, config);
+                    await client.request("session/set_model", { sessionId, modelId }, INIT_TIMEOUT_MS);
+                    runningModel = model;
+                    runningModelId = modelId;
                 } catch (err) {
                     getLog().error(`${this.logLabel}: failed to select model "${model}" (${describeError(err)}); continuing with the agent's default.`);
                 }
@@ -426,6 +449,8 @@ export abstract class AcpAgentProvider implements LlmProvider {
                 if (stopReason !== "end_turn" && stopReason !== "cancelled") {
                     yield { type: "error", error: describeStopReason(stopReason) };
                 }
+                // ACP reports no token counts, so the usage carries only the model.
+                yield { type: "usage", usage: { model: this.describeRunningModel(runningModel, runningModelId, sessionModels), provider: this.name } };
             } finally {
                 signal?.removeEventListener("abort", onAbort);
             }

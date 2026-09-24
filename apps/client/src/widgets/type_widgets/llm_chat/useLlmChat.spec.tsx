@@ -218,6 +218,30 @@ describe("useLlmChat", () => {
         expect(api().lastCompletionTokens).toBe(0);
     });
 
+    it("counts no tokens for a turn whose provider reports only the model", async () => {
+        const reports = [
+            { promptTokens: 1200, completionTokens: 300, totalTokens: 1500 },
+            { model: "GPT-5 mini", provider: "copilot-agent" }
+        ];
+        streamChatCompletionMock.mockImplementation(async (_messages, _options, callbacks) => {
+            callbacks.onUsage(reports.shift());
+            callbacks.onDone();
+        });
+        await mountChat();
+
+        for (const text of ["first", "second"]) {
+            await act(async () => {
+                api().setInput(text);
+            });
+            await act(async () => {
+                await api().handleSubmit(new Event("submit"));
+            });
+        }
+        // The first turn's counts would otherwise stand in for a request they never described.
+        expect(api().lastPromptTokens).toBe(0);
+        expect(api().lastCompletionTokens).toBe(0);
+    });
+
     it("keeps, saves and sends the reasoning effort, only for a model that has levels", async () => {
         optionsGetJsonMock.mockReturnValue([
             ...PROVIDERS,

@@ -133,6 +133,8 @@ async function collect(iterable: AsyncIterable<LlmStreamChunk>): Promise<LlmStre
 }
 
 const userMessage = (text: string) => ({ role: "user" as const, content: text });
+/** What a turn on the default model reports when the CLI names no model of its own. */
+const AUTO_USAGE = { type: "usage", usage: { model: "Auto", provider: "copilot-agent" } };
 const assistantMessage = (text: string) => ({ role: "assistant" as const, content: text });
 
 function resetFakes() {
@@ -295,6 +297,7 @@ describe("CopilotAgentProvider.chatChunks", () => {
             { type: "text", content: "world" },
             { type: "tool_use", toolCallId: "t1", toolName: "search_notes", toolInput: { query: "x" } },
             { type: "tool_result", toolCallId: "t1", toolName: "search_notes", result: "3 results", isError: false },
+            AUTO_USAGE,
             { type: "done" }
         ]);
         expect(FakeAcpClient.current?.disposed).toBe(true);
@@ -349,6 +352,25 @@ describe("CopilotAgentProvider.chatChunks", () => {
 
         const setModel = FakeAcpClient.current?.requests.find(r => r.method === "session/set_model");
         expect(setModel?.params).toMatchObject({ sessionId: "sess-1", modelId: "gpt-5.4" });
+    });
+
+    it("reports the model the turn ran on, by the CLI's name for it", async () => {
+        FakeAcpClient.sessionModels = { availableModels: CLI_MODELS, currentModelId: "claude-sonnet-5" };
+        const provider = new CopilotAgentProvider();
+        const usageFor = async (config: Record<string, unknown>) => {
+            const chunks = await collect(provider.chatChunks([userMessage("hi")], config));
+            return chunks.find(c => c.type === "usage");
+        };
+
+        expect(await usageFor({ model: "gpt-5-mini" }))
+            .toEqual({ type: "usage", usage: { model: "GPT-5 mini", provider: "copilot-agent" } });
+        // "auto" runs on whatever the session starts on.
+        expect(await usageFor({}))
+            .toEqual({ type: "usage", usage: { model: "Claude Sonnet 5", provider: "copilot-agent" } });
+        // A model the CLI refuses leaves the session on its own.
+        FakeAcpClient.setModelError = new Error("unknown model");
+        expect(await usageFor({ model: "gpt-5-mini" }))
+            .toEqual({ type: "usage", usage: { model: "Claude Sonnet 5", provider: "copilot-agent" } });
     });
 
     it("does not call session/set_model for the default 'auto' model", async () => {
@@ -422,7 +444,7 @@ describe("CopilotAgentProvider.chatChunks", () => {
         const provider = new CopilotAgentProvider();
         const chunks = await collect(provider.chatChunks([userMessage("hi")], { chatNoteId: "chat-abort" }, controller.signal));
 
-        expect(chunks).toEqual([{ type: "text", content: "partial" }, { type: "done" }]);
+        expect(chunks).toEqual([{ type: "text", content: "partial" }, AUTO_USAGE, { type: "done" }]);
         expect(FakeAcpClient.current?.notifications).toContainEqual({ method: "session/cancel", params: { sessionId: "sess-1" } });
         expect(FakeAcpClient.current?.disposed).toBe(true);
 
@@ -504,7 +526,7 @@ describe("CopilotAgentProvider.chatChunks", () => {
         const load = FakeAcpClient.current?.requests.find(r => r.method === "session/load");
         expect(load?.params).toMatchObject({ sessionId: "sess-1", cwd: AGENT_CWD });
         expect(FakeAcpClient.current?.requests.some(r => r.method === "session/new")).toBe(false);
-        expect(resumed).toEqual([{ type: "done" }]);
+        expect(resumed).toEqual([AUTO_USAGE, { type: "done" }]);
         const prompt = FakeAcpClient.current?.requests.find(r => r.method === "session/prompt");
         const blocks = (prompt?.params as { prompt: { type: string; text: string }[] }).prompt;
         expect(blocks[0].text).toBe("more");
@@ -533,7 +555,7 @@ describe("CopilotAgentProvider.chatChunks", () => {
         expect(FakeAcpClient.current?.requests.map(r => r.method))
             .toEqual(["initialize", "session/load", "session/new", "session/prompt"]);
         expect(infoLogMock).toHaveBeenCalledWith(expect.stringContaining("session/load failed (unknown session)"));
-        expect(chunks).toEqual([{ type: "done" }]);
+        expect(chunks).toEqual([AUTO_USAGE, { type: "done" }]);
         // A reseeded session is told everything again: instructions + replay.
         const prompt = FakeAcpClient.current?.requests.find(r => r.method === "session/prompt");
         const blocks = (prompt?.params as { prompt: { type: string; text: string }[] }).prompt;
@@ -548,7 +570,7 @@ describe("CopilotAgentProvider.chatChunks", () => {
         const chunks = await collect(provider.chatChunks([userMessage("hi")], { model: "gpt-5.4" }));
 
         expect(errorLogMock).toHaveBeenCalledWith(expect.stringContaining(`failed to select model "gpt-5.4"`));
-        expect(chunks).toEqual([{ type: "done" }]);
+        expect(chunks).toEqual([AUTO_USAGE, { type: "done" }]);
     });
 
     it("disposes the client and reports the failure when the initialize handshake fails", async () => {

@@ -257,6 +257,20 @@ describe("AntigravityAgentProvider", () => {
         // A variant id saved before the variants were grouped still works.
         expect(await modelSetFor({ model: "gemini-3.7-flash-low", reasoningEffort: "high" })).toBe("gemini-3.7-flash-low");
     });
+
+    it("reports the variant the turn ran on, by the server's name for it", async () => {
+        const provider = new AntigravityAgentProvider();
+        const usageFor = async (config: Record<string, unknown>) => {
+            const chunks = await collect(provider.chatChunks([{ role: "user", content: "hi" }], config));
+            return chunks.find(c => c.type === "usage");
+        };
+
+        expect(await usageFor({ model: "gemini-3.8-flash", reasoningEffort: "medium" }))
+            .toEqual({ type: "usage", usage: { model: "Gemini 3.8 Flash (Medium)", provider: "antigravity-agent" } });
+        // The default leaves the pick to the server, which names it in session/new.
+        expect(await usageFor({}))
+            .toEqual({ type: "usage", usage: { model: "Gemini 3.7 Flash (High)", provider: "antigravity-agent" } });
+    });
 });
 
 describe("tool call updates from agy_acp_server", () => {

@@ -164,9 +164,10 @@ export interface LlmModelInfo {
  * Token usage information from the LLM response.
  */
 export interface LlmUsage {
-    promptTokens: number;
-    completionTokens: number;
-    totalTokens: number;
+    /** The token counts are absent when the provider reports none, as the ACP agents (Copilot, Antigravity) do. */
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
     /** Estimated cost in USD (if available) */
     cost?: number;
     /** Model identifier used for this response */
