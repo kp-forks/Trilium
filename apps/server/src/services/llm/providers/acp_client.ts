@@ -171,10 +171,25 @@ export class AcpClient {
         this.proc.stdin.end();
         const killTimer = setTimeout(() => {
             if (!this.exited) {
-                this.proc.kill();
+                this.kill();
             }
         }, DISPOSE_GRACE_MS);
         killTimer.unref();
+    }
+
+    /**
+     * End the agent and every process it started. On Windows `proc.kill()`
+     * ends only the spawned process, while the agent can run in a child of it:
+     * the PyInstaller build of `agy_acp_server` starts its server that way, and
+     * a `.cmd` shim runs the CLI under `cmd.exe`. `taskkill /T` ends the tree.
+     */
+    private kill(): void {
+        if (process.platform === "win32" && this.proc.pid !== undefined) {
+            const taskkill = spawn("taskkill", [ "/pid", String(this.proc.pid), "/T", "/F" ], { stdio: "ignore", windowsHide: true });
+            taskkill.on("error", err => getLog().error(`Failed to end the ACP agent's process tree: ${err.message}`));
+            return;
+        }
+        this.proc.kill();
     }
 
     private send(message: JsonRpcMessage): void {

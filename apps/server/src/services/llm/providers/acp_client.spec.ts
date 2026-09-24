@@ -12,6 +12,7 @@ class FakeProc extends EventEmitter {
     stdout = new PassThrough();
     stderr = new PassThrough();
     killed = false;
+    pid = 4242;
     written: string[] = [];
 
     constructor() {
@@ -39,6 +40,12 @@ function lastWritten(proc: FakeProc): Record<string, unknown> {
     return JSON.parse(proc.written[proc.written.length - 1]);
 }
 
+const originalPlatform = Object.getOwnPropertyDescriptor(process, "platform");
+
+function stubPlatform(platform: NodeJS.Platform) {
+    Object.defineProperty(process, "platform", { ...originalPlatform, value: platform });
+}
+
 describe("AcpClient", () => {
     let proc: FakeProc;
 
@@ -51,6 +58,9 @@ describe("AcpClient", () => {
 
     afterEach(() => {
         vi.useRealTimers();
+        if (originalPlatform) {
+            Object.defineProperty(process, "platform", originalPlatform);
+        }
     });
 
     it("spawns with exactly the given args and the process environment", () => {
@@ -242,6 +252,7 @@ describe("AcpClient", () => {
     });
 
     it("kills an agent that is still running after the grace period", () => {
+        stubPlatform("linux");
         vi.useFakeTimers();
         const client = AcpClient.start("/bin/copilot", { cwd: "/tmp" });
         client.dispose();
@@ -249,6 +260,16 @@ describe("AcpClient", () => {
         expect(proc.killed).toBe(false);
         vi.advanceTimersByTime(1);
         expect(proc.killed).toBe(true);
+    });
+
+    it("kills the agent's whole process tree on Windows, where it runs in a child of the spawned process", () => {
+        stubPlatform("win32");
+        vi.useFakeTimers();
+        const client = AcpClient.start("C:\\agy\\agy_acp_server.exe", { cwd: "C:\\tmp" });
+        client.dispose();
+        vi.advanceTimersByTime(5_000);
+        expect(spawnMock).toHaveBeenLastCalledWith("taskkill", [ "/pid", "4242", "/T", "/F" ], expect.objectContaining({ windowsHide: true }));
+        expect(proc.killed).toBe(false);
     });
 
     it("rejects in-flight requests on dispose and ignores a second dispose", async () => {
