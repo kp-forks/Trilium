@@ -71,16 +71,40 @@ async function main() {
         boxicons3("brands"),
         mdi(),
         phosphor("regular"),
-        phosphor("fill"),
-        ckeditor()
+        phosphor("fill")
     ];
+    const builtinIconPacks = [
+        { iconPack: ckeditor(), manifestFileName: "icon_pack_text_editor.json" }
+    ];
+
     // Prefixes given on the command line (`pnpm start cke`) build only those packs.
     const requested = process.argv.slice(2);
-    await Promise.all(builtIconPacks
-        .filter((iconPack) => !requested.length || requested.includes(iconPack.prefix))
-        .map(buildIconPack));
+    const isRequested = (iconPack: IconPackData) => (
+        !requested.length || requested.includes(iconPack.prefix)
+    );
+    await Promise.all(builtIconPacks.filter(isRequested).map(buildIconPack));
+    for (const { iconPack, manifestFileName } of builtinIconPacks) {
+        if (isRequested(iconPack)) {
+            writeBuiltinIconPack(iconPack, manifestFileName);
+        }
+    }
 
     console.log(`\n✅ Built icon packs are available at ${resolve(outputDir)}.`);
+}
+
+/**
+ * Writes a pack that Trilium ships itself: the font beside `boxicons.woff2` in the client, where
+ * every app serves its built-in fonts from, and the manifest beside the Boxicons one in core, which
+ * `getIconPacks()` imports.
+ */
+function writeBuiltinIconPack(iconPack: IconPackData, manifestFileName: string) {
+    const fontPath = join(__dirname, "../../client/src/fonts", iconPack.fontFile.name);
+    const coreServicesDir = join(__dirname, "../../../packages/trilium-core/src/services");
+    const manifestPath = join(coreServicesDir, manifestFileName);
+    writeFileSync(fontPath, iconPack.fontFile.content);
+    writeFileSync(manifestPath, `${JSON.stringify(iconPack.manifest, null, 2)}\n`);
+
+    console.log(`Built icon pack ${iconPack.name} into ${fontPath} and ${manifestPath}.`);
 }
 
 /**
