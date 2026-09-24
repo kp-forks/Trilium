@@ -61,18 +61,18 @@ export function buildSystemPrompt(messages: LlmMessage[], config: LlmProviderCon
         );
     } else if (config.contextNoteId) {
         parts.push(
-            `You can see the current note's metadata above, but you cannot search or access other notes. If the user asks about other notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`
+            `You can see the current note's metadata above, but you cannot search or access other notes. If the user asks about other notes, inform them that "Note access" is disabled and they can turn it on with ${NOTE_ACCESS_TOGGLE}.`
         );
     } else {
         parts.push(
-            `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Note access").`
+            `You do not have access to the user's notes. If the user asks about their notes, inform them that "Note access" is disabled and they can turn it on with ${NOTE_ACCESS_TOGGLE}.`
         );
     }
 
     // Web search hint
     if (!config.enableWebSearch) {
         parts.push(
-            `You do not have access to web search. If the user asks for current/real-time information, news, or anything that requires searching the web, inform them that "Web search" is disabled and they need to enable it in the chat settings (click on the model name dropdown and toggle "Web search").`
+            `You do not have access to web search. If the user asks for current/real-time information, news, or anything that requires searching the web, inform them that "Web search" is disabled and they can turn it on with ${WEB_SEARCH_TOGGLE}.`
         );
     }
 
@@ -127,3 +127,10 @@ function buildTaskListHint(): string {
     const lines = custom.map(s => `- \`- [${s.markdownSymbol}]\` — ${s.title}${s.isCompleted ? " (completed)" : ""}`);
     return `${base} This workspace also defines extra task states — recognize these markers in the user's notes, and use them when a task fits:\n${lines.join("\n")}`;
 }
+
+/**
+ * Where the user turns a capability on: the icon toggles beside the model
+ * selector in `ChatInputBar`, each labeled in its tooltip.
+ */
+const NOTE_ACCESS_TOGGLE = `the note icon ("Note access") next to the model selector, below the message box`;
+const WEB_SEARCH_TOGGLE = `the globe icon ("Web search") next to the model selector, below the message box`;

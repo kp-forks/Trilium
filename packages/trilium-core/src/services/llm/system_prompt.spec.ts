@@ -44,6 +44,13 @@ describe("buildSystemPrompt", () => {
         expect(prompt).toContain("do not have access to web search");
     });
 
+    it("points the user at the toggle that turns a missing capability on", () => {
+        const prompt = buildSystemPrompt([], {}) ?? "";
+        expect(prompt).toContain("globe icon");
+        expect(prompt).toContain("note icon");
+        expect(prompt).not.toContain("model name dropdown");
+    });
+
     it("always appends the markdown formatting hints", () => {
         const prompt = buildSystemPrompt([], {}) ?? "";
         expect(prompt).toContain("Admonitions");
