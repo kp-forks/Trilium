@@ -28,13 +28,6 @@ import { findOnPath } from "./binary_lookup.js";
 
 const PROBE_TIMEOUT_MS = 15000;
 
-/** What `--version` printed before the probe failed. */
-class ProbeError extends Error {
-    constructor(message: string, readonly output: string) {
-        super(message);
-    }
-}
-
 /**
  * The in-flight/successful resolution. Caching the promise lets concurrent
  * first calls share one probe; a failed probe clears it so a later install is
@@ -64,19 +57,14 @@ async function probeBinary(): Promise<string> {
     // wrong-arch/broken install) and records the version for diagnostics.
     // Async on purpose — this runs on the first chat request, and a sync probe
     // would freeze the whole server for up to the timeout.
-    let version: string;
-    try {
-        const output = await runVersionProbe(binary);
-        const versionLine = output.split("\n").find((line) => /\d+\.\d+\.\d+/.test(line));
-        if (!versionLine) {
-            throw new ProbeError("did not report a version", output);
-        }
-        version = versionLine.trim();
-    } catch (err) {
+    const { output, failure } = await runVersionProbe(binary);
+    const version = failure ? undefined : output.split("\n").find((line) => /\d+\.\d+\.\d+/.test(line))?.trim();
+    if (!version) {
+        const reason = failure ?? "did not report a version";
         throw new Error([
             "Found GitHub Copilot CLI at:",
             binary,
-            `but it failed to run: ${describeProbeFailure(err)}`,
+            `but it failed to run: ${output ? `${reason}.\n\nIt printed:\n${output}` : reason}`,
             "",
             "Ensure it is installed correctly and that you've run `copilot login` on the machine running the Trilium server."
         ].join("\n"));
@@ -88,11 +76,11 @@ async function probeBinary(): Promise<string> {
 
 /**
  * Runs `binary --version` with stdin closed and resolves with everything it
- * printed, stdout before stderr. Rejects with a `ProbeError` that names the
- * timeout, or carries execFile's own message for a spawn or exit failure.
+ * printed, stdout before stderr. On failure, `failure` names the timeout or
+ * carries execFile's own message for a spawn or exit failure.
  */
-function runVersionProbe(binary: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+function runVersionProbe(binary: string): Promise<{ output: string; failure?: string }> {
+    return new Promise((resolve) => {
         // `shell` is required for the .cmd/.bat shims npm creates on Windows —
         // Node refuses to spawn those directly (CVE-2024-27980). With a shell
         // the command line is not auto-quoted, so quote the path ourselves.
@@ -101,24 +89,17 @@ function runVersionProbe(binary: string): Promise<string> {
         const child = execFile(shell ? `"${binary}"` : binary, ["--version"], options, (err, stdout, stderr) => {
             const output = [stdout, stderr].map((text) => text.trim()).filter(Boolean).join("\n");
             if (!err) {
-                resolve(output);
+                resolve({ output });
             } else if (err.killed) {
-                reject(new ProbeError(`did not exit within ${PROBE_TIMEOUT_MS / 1000} seconds`, output));
+                resolve({ output, failure: `did not exit within ${PROBE_TIMEOUT_MS / 1000} seconds` });
             } else {
                 // execFile's message already quotes stderr after the command.
-                reject(new ProbeError(err instanceof Error ? err.message : String(err), stdout.trim()));
+                const failure = (err instanceof Error ? err.message : String(err)).trim();
+                resolve({ output: stdout.trim(), failure });
             }
         });
         child.stdin?.end();
     });
-}
-
-/** The reason in the "failed to run" error, followed by the output on lines of its own when there is any. */
-function describeProbeFailure(err: unknown): string {
-    if (err instanceof ProbeError && err.output) {
-        return `${err.message}.\n\nIt printed:\n${err.output}`;
-    }
-    return err instanceof Error ? err.message.trim() : String(err);
 }
 
 async function locateBinary(): Promise<string> {
