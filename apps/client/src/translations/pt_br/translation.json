@@ -2906,7 +2906,6 @@
     "configured_providers": "Provedores configurados",
     "no_providers_configured": "Nenhum provedor configurado ainda.",
     "beta": "Beta",
-    "provider_desc_claude_agent": "Requer o Claude Code na máquina que executa o Trilium.",
     "provider_unavailable_standalone": "Indisponível na versão de navegador: este provedor funciona executando o Claude Code como um programa separado, e não há máquina aqui para executá-lo.",
     "base_url": "URL base",
     "base_url_description": "Opcional. Alcança a mesma API por meio de um proxy ou gateway. Para executar um modelo você mesmo, adicione um provedor Ollama ou LM Studio em vez disso.",

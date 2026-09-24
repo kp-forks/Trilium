@@ -3304,8 +3304,6 @@
     "models_select_all": "Выбрать все",
     "models_selected_count": "Выбрано {{count}} из {{total}}",
     "models_select_none": "Очистить выбор",
-    "provider_desc_claude_agent": "Требуется Claude Code на компьютере, на котором запущен Trilium.",
-    "provider_desc_copilot_agent": "Требуется GitHub Copilot CLI на компьютере, на котором запущен Trilium.",
     "provider_desc_openai_compatible": "Направьте Trilium на любую конечную точку, поддерживающую API OpenAI.",
     "provider_group_cloud": "Облачные поставщики",
     "provider_group_cloud_description": "Оплата по факту использования ключа API, отдельно от любой уже имеющейся у вас подписки. Ваши заметки отправляются на серверы поставщика.",
@@ -3327,7 +3325,6 @@
     "troubleshoot_port": "Совпадает ли порт в URL-адресе с указанным сервером?",
     "troubleshoot_remote": "Если сервер находится на другом компьютере, настроен ли он на прием подключений из сети, а не только с локальных?",
     "troubleshoot_server_running": "Запущен ли сервер на том компьютере, который вы ожидаете?",
-    "provider_desc_antigravity_agent": "Требуется сервер Antigravity ACP от Google на компьютере, на котором запущен Trilium.",
     "antigravity_agent_description": "Использует квоту Gemini вашей учётной записи Google (бесплатной, Google AI Pro или Ultra) через Google Antigravity, поэтому ключ API не требуется. Сервер Antigravity ACP должен быть скачан на компьютер, на котором запущен Trilium (на сервер при самостоятельном хостинге или на этот компьютер в случае настольной версии). При первом отображении списка моделей в браузере на этом компьютере откроется страница входа в Google."
   },
   "database": {

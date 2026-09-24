@@ -3251,8 +3251,6 @@
     "provider_model_count_few": "{{count}} modele",
     "provider_model_count_other": "{{count}} de modele",
     "beta": "Beta",
-    "provider_desc_claude_agent": "Necesită Claude Code pe calculatorul pe care rulează Trilium.",
-    "provider_desc_copilot_agent": "Necesită GitHub Copilot CLI pe calculatorul pe care rulează Trilium.",
     "provider_unavailable_standalone": "Indisponibil în versiunea din browser: acest furnizor funcționează rulând un program separat pe calculator, iar aici nu există un calculator pe care să îl ruleze.",
     "claude_agent_description": "Folosește abonamentul dumneavoastră Claude Pro/Max prin Claude Code, așa că nu este nevoie de o cheie API. Claude Code trebuie instalat pe calculatorul pe care rulează Trilium (serverul, în cazul găzduirii proprii, sau acest calculator, în varianta desktop); autentificați-vă o singură dată rulând acolo „claude /login”.",
     "copilot_agent_description": "Folosește abonamentul dumneavoastră GitHub Copilot prin GitHub Copilot CLI, așa că nu este nevoie de o cheie API. Copilot CLI trebuie instalat pe calculatorul pe care rulează Trilium (serverul, în cazul găzduirii proprii, sau acest calculator, în varianta desktop); autentificați-vă o singură dată rulând acolo „copilot login” — o autentificare Copilot existentă din alt editor este refolosită automat.",

@@ -3238,7 +3238,6 @@
     "models_reset_defaults": "重置为默认值",
     "provider_model_count_other": "{{count}} 个模型",
     "beta": "Beta",
-    "provider_desc_claude_agent": "需要在运行 Trilium 的机器上安装 Claude Code。",
     "claude_agent_description": "通过 Claude Code 使用你的 Claude Pro/Max 订阅，因此无需 API 密钥。Claude Code 必须安装在运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）；在该机器上运行「claude /login」登录一次即可。",
     "add_provider_title_named": "添加 {{- name}}",
     "provider_group_cloud": "云提供商",
@@ -3270,9 +3269,7 @@
     "mcp_unavailable_standalone": "浏览器版不可用：助手需通过网络连接 Trilium，但此版本没有可提供给它们的地址，因为它完全在页面内运行。",
     "enabled": "AI 功能",
     "enabled_description": "添加 AI 聊天侧边栏和 LLM 聊天笔记，使用下方配置的提供商。",
-    "provider_desc_copilot_agent": "需要在运行 Trilium 的机器上安装 GitHub Copilot CLI。",
     "copilot_agent_description": "通过 GitHub Copilot CLI 使用你的 GitHub Copilot 订阅，因此无需 API 密钥。Copilot CLI 必须安装在运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）；在该机器上运行「copilot login」登录一次即可——来自其他编辑器的现有 Copilot 登录会被自动复用。",
-    "provider_desc_antigravity_agent": "需要在运行 Trilium 的机器上安装 Google Antigravity ACP 服务器。",
     "antigravity_agent_description": "通过 Google Antigravity 使用你 Google 账户的 Gemini 额度（免费版、Google AI Pro 或 Ultra），因此无需 API 密钥。Google Antigravity ACP 服务器必须下载到运行 Trilium 的机器上（自托管时为服务器，桌面版为本机）。首次列出模型时，该机器的浏览器会打开 Google 登录页面。"
   },
   "revisions": {
