@@ -11170,7 +11170,38 @@
                             ],
                             "format": "markdown",
                             "dataFileName": "Providers.md",
-                            "attachments": []
+                            "attachments": [],
+                            "dirFileName": "Providers",
+                            "children": [
+                                {
+                                    "isClone": false,
+                                    "noteId": "eFhxp9laTW1S",
+                                    "notePath": [
+                                        "pOsGYCXsbNQG",
+                                        "GBBMSlVSOIGP",
+                                        "bkPZAMT7d2sR",
+                                        "eFhxp9laTW1S"
+                                    ],
+                                    "title": "Subscription-based providers",
+                                    "notePosition": 10,
+                                    "prefix": null,
+                                    "isExpanded": false,
+                                    "type": "text",
+                                    "mime": "text/html",
+                                    "attributes": [
+                                        {
+                                            "type": "label",
+                                            "name": "shareAlias",
+                                            "value": "subscription-based",
+                                            "isInheritable": false,
+                                            "position": 30
+                                        }
+                                    ],
+                                    "format": "markdown",
+                                    "dataFileName": "Subscription-based providers.md",
+                                    "attachments": []
+                                }
+                            ]
                         },
                         {
                             "isClone": false,
