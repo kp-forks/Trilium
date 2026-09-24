@@ -72,7 +72,7 @@
     "edit_branch_prefix": "Редактировать префикс ветки",
     "prefix": "Префикс",
     "branch_prefix_saved": "Префикс ветки сохранен.",
-    "help_on_tree_prefix": "Помощь по префиксу дерева",
+    "help_on_tree_prefix": "Помощь по префиксам дерева",
     "affected_branches": "Затронутые ветки ({{count}}):",
     "branch_prefix_saved_multiple": "Префикс сохранен для {{count}} ветвей.",
     "edit_branch_prefix_multiple": "Изменить префикс для {{count}} ветвей",
