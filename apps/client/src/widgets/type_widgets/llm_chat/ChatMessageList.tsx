@@ -67,10 +67,12 @@ export default function ChatMessageList({ chat, emptyStateText, className }: Cha
                     <NoItems icon="bx bx-conversation" text={emptyStateText} />
                 )}
                 {storedMessages}
-                {isStreaming && chat.streamingStatus && !thinkingMessage && !streamingMessage && (
-                    <div className="chat-stream-status" role="status">
+                {isStreaming && !thinkingMessage && !streamingMessage && (
+                    <div className={`chat-stream-status ${chat.streamingStatus ? "" : "chat-stream-status-waiting"}`} role="status">
                         <LoadingSpinner />
-                        {t(`llm_chat.stream_status.${chat.streamingStatus}`)}
+                        {chat.streamingStatus
+                            ? t(`llm_chat.stream_status.${chat.streamingStatus}`)
+                            : t("llm_chat.stream_status.waiting_for_reply")}
                     </div>
                 )}
                 {isStreaming && thinkingMessage && (

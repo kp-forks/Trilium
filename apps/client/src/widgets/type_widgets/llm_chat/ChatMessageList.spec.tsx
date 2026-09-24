@@ -24,13 +24,13 @@ afterEach(() => {
 });
 
 /** Render the list for a streaming turn with nothing stored yet. */
-function renderStreamingTurn(streamingBlocks: ContentBlock[]) {
+function renderStreamingTurn(streamingBlocks: ContentBlock[], streamingStatus: string | null = "starting_agent") {
     host = document.body.appendChild(document.createElement("div"));
     const target = host;
     const chat = {
         messages: [],
         isStreaming: true,
-        streamingStatus: "starting_agent",
+        streamingStatus,
         streamingThinking: "",
         streamingBlocks,
         pendingCitations: [],
@@ -55,5 +55,12 @@ describe("ChatMessageList stream status", () => {
         const replying = renderStreamingTurn([ { type: "text", content: "Hello" } ]);
         expect(replying.querySelector(".markdown-stub")?.textContent).toContain("Hello");
         expect(replying.querySelector(".chat-stream-status")).toBeNull();
+    });
+
+    it("says it waits for the reply when the server names nothing slower", () => {
+        const row = renderStreamingTurn([], null).querySelector(".chat-stream-status");
+        expect(row?.textContent).toBe("llm_chat.stream_status.waiting_for_reply");
+        // The delayed fade-in keeps a quick reply from flashing the row.
+        expect(row?.classList.contains("chat-stream-status-waiting")).toBe(true);
     });
 });
