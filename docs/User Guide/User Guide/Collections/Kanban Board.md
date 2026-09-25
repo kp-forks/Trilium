@@ -1,5 +1,5 @@
 # Kanban Board
-The Board view lets you arrange subnotes as cards on a Kanban board.
+The Board view lets you arrange subnotes as cards on a [Kanban board](https://en.wikipedia.org/wiki/Kanban_board).
 
 ## Creating a Kanban board
 
@@ -103,7 +103,7 @@ When cards are sorted by an attribute, they are ordered according to the followi
 | Date, Date & time | oldest → newest |
 | Time | earliest hour (closest to 0) → latest hour (closest to 24) |
 | Boolean | unchecked → checked |
-| Select | The order in which the options are declared.    <br>For example, a select attribute declared with “Low”, “Medium”, and “High” options will be sorted as follows: Low → Medium → High. |
+| Select | The order in which the options are declared.     <br>For example, a select attribute declared with “Low”, “Medium”, and “High” options will be sorted as follows: Low → Medium → High. |
 | Color | Grays → colors. Colors are ordered by their color-wheel [hue](https://en.wikipedia.org/wiki/Hue) angle (from 0° to 360°). |
 
 Relation attributes are ordered according to the title of the target note.
