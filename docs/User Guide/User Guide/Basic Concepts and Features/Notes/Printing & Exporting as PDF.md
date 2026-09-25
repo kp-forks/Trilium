@@ -24,7 +24,7 @@ This will trigger the print preview screen next.
 The print preview dialog allows the following printing options to be adjusted:
 
 *   The printer to use
-    *   _Save as PDF_ generates a P\\DF that is structured (maintains a table of contents, keeps the text selectable). Prefer this over other virtual PDF printers that ship with the operating system.
+    *   _Save as PDF_ generates a PDF that is structured (maintains a table of contents, keeps the text selectable). Prefer this over other virtual PDF printers that ship with the operating system.
 *   Page orientation: _Portrait_ (default) or _Landscape_.
 *   Page size
 *   Scale the entire content from 10% to 200% to improve the fit within the page.
@@ -44,7 +44,7 @@ Additional interaction:
 
 This feature allows printing of notes. It works on both the desktop client, but also on the web.
 
-To print a note, select the <span class="tn-icon cke cke-three-vertical-dots"></span> button to the right of the note and select _Print note_. Depending on the size and type of the note, this can take up to a few seconds. Afterwards you will be redirected to the system/browser printing dialog.
+To print a note, select the <span class="tn-icon bx bx-dots-horizontal-rounded"></span> ([New layout](../UI%20Elements/New%20Layout.md), or <span class="tn-icon bx bx-dots-vertical-rounded"></span> for the old layout) button to the right of the note and select _Print note_. Depending on the size and type of the note, this can take up to a few seconds. Afterwards you will be redirected to the system/browser printing dialog.
 
 On the server or PWA (mobile), the option is not available due to technical constraints and it will be hidden.
 
