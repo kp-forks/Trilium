@@ -331,7 +331,7 @@ function Card({
                     {/* On mobile the rail offers the rename, and a hover-revealed icon has no
                         hover to be revealed by. */}
                     {!isMobile() && <span
-                        className="edit-icon icon bx bx-edit"
+                        className="edit-icon icon bx bx-rename"
                         title={t("board_view.edit-note-title")}
                         onClick={handleEdit}
                     />}
