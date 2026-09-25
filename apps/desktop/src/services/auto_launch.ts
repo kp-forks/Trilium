@@ -83,17 +83,10 @@ function getLinuxAutostartDir() {
 }
 
 function buildLinuxDesktopEntry(hidden: boolean) {
-    // When packaged as an AppImage, APPIMAGE points at the bundle to relaunch.
-    // TRILIUM_LAUNCH_EXEC allows unbundled-Electron packagers (e.g. system-Electron
-    // distributions on Arch) to specify the exact Exec line (packager handles quoting).
-    // Otherwise fall back to the running executable, quoted for paths with spaces.
-    let execLine: string;
-    if (process.env.TRILIUM_LAUNCH_EXEC) {
-        execLine = hidden ? `Exec=${process.env.TRILIUM_LAUNCH_EXEC} ${START_HIDDEN_FLAG}` : `Exec=${process.env.TRILIUM_LAUNCH_EXEC}`;
-    } else {
-        const exec = process.env.APPIMAGE ?? process.execPath;
-        execLine = hidden ? `Exec="${exec}" ${START_HIDDEN_FLAG}` : `Exec="${exec}"`;
-    }
+    // TRILIUM_LAUNCH_EXEC is a pre-quoted command set by packages that run on a system Electron;
+    // otherwise relaunch the AppImage bundle or the running executable.
+    const exec = process.env.TRILIUM_LAUNCH_EXEC || `"${process.env.APPIMAGE ?? process.execPath}"`;
+    const execLine = hidden ? `Exec=${exec} ${START_HIDDEN_FLAG}` : `Exec=${exec}`;
     return [
         "[Desktop Entry]",
         "Type=Application",
