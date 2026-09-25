@@ -5501,6 +5501,24 @@ describe("Column toolbar on mobile", () => {
         expect(buttons()).toEqual([ "bx-edit-alt", "bx-collapse-horizontal", "bx-sort-alt-2" ]);
     });
 
+    /**
+     * A tap lands on a strip on the way to the rail standing over it, so it brings the rail up and
+     * leaves the column as it is. Only the rail's own button opens it.
+     */
+    it("leaves a strip collapsed when it is tapped, and opens it from the rail", async () => {
+        await setup();
+        await act(async () => { heading(0).focus(); });
+        await act(async () => { button("bx-collapse-horizontal").click(); });
+        expect(column(0).classList.contains("collapsed")).toBe(true);
+
+        await act(async () => { column(0).dispatchEvent(new Event("click", { bubbles: true })); });
+        expect(column(0).classList.contains("collapsed")).toBe(true);
+        expect(buttons()).toEqual([ "bx-expand-horizontal" ]);
+
+        await act(async () => { button("bx-expand-horizontal").click(); });
+        expect(column(0).classList.contains("collapsed")).toBe(false);
+    });
+
     it("opens the sort menu and the title editor", async () => {
         await setup();
         const show = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});

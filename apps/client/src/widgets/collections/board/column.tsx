@@ -403,7 +403,7 @@ export default function Column({
     // Reported on the way in only. A column opened by being selected closes when another one is
     // selected, so nothing here watches for focus leaving: the menu, the icon picker and the limit
     // dialog all render outside the column, and each would otherwise close it as it opened.
-    const select = useCallback(() => {
+    const expand = useCallback(() => {
         setActiveColumn(column);
 
         // Opening the strip by hand opens the column for good, unless `keepCollapsed` says it
@@ -413,6 +413,20 @@ export default function Column({
             api.setColumnCollapsed(column, false);
         }
     }, [ api, column, isCollapsed, keepCollapsed, setActiveColumn ]);
+
+    /**
+     * What a press on the column does. On a touch screen a collapsed strip only takes the focus,
+     * which brings its rail up: the rail carries the button that opens it, so a tap aimed at the
+     * rail cannot open the column on the way.
+     */
+    const select = useCallback(() => {
+        if (isMobile() && isCollapsed) {
+            headerRef.current?.focus();
+            return;
+        }
+
+        expand();
+    }, [ expand, isCollapsed ]);
 
     /**
      * Whether the collapse now being drawn is one the reader asked for, which runs faster than a
@@ -858,7 +872,7 @@ export default function Column({
                     isLeaving={!isRailShown}
                     isCollapsed={isCollapsed}
                     onRename={() => setColumnNameToEdit(column)}
-                    onToggleCollapse={isCollapsed ? select : collapse}
+                    onToggleCollapse={isCollapsed ? expand : collapse}
                     onSort={(e) => openColumnSortMenu(api, e.pageX, e.pageY, column)}
                     onFocusOut={handleHeaderFocusOut}
                 />
