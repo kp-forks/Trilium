@@ -3462,7 +3462,7 @@
   },
   "board_view": {
     "delete-note": "Delete note...",
-    "remove-from-board": "Remove from board",
+    "remove-from-board": "Remove from column",
     "archive-note": "Archive note",
     "unarchive-note": "Unarchive note",
     "status-header": "Status",

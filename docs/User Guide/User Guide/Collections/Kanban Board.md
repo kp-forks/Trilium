@@ -290,7 +290,7 @@ You can remove one or more cards from the board and delete their associated note
 
 #### Removing a card from the board without deleting the note
 
-To remove a card from the board's columns while keeping its note, open the card's context menu and select <span class="tn-icon bx bx-task-x"></span> **Remove from board**, or press <kbd>Delete</kbd>. On mobile, hold the card until the side toolbar appears, and then tap the <span class="tn-icon bx bx-task-x"></span> button.
+To remove a card from the board's columns while keeping its note, open the card's context menu and select <span class="tn-icon bx bx-task-x"></span> **Remove from column**, or press <kbd>Delete</kbd>. On mobile, hold the card until the side toolbar appears, and then tap the <span class="tn-icon bx bx-task-x"></span> button.
 
 This command is not available when the inbox column is enabled. Instead, drag the card to the inbox column to achieve the same result.
 
