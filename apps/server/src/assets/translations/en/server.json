@@ -342,7 +342,8 @@
   },
   "backend_log": {
     "log-does-not-exist": "The backend log file '{{ fileName }}' does not exist (yet).",
-    "reading-log-failed": "Reading the backend log file '{{ fileName }}' failed."
+    "reading-log-failed": "Reading the backend log file '{{ fileName }}' failed.",
+    "log-file-unavailable": "The log file could not be opened, so only the most recent entries kept in memory are shown. Trilium keeps trying to open it and writes these entries to it once it can."
   },
   "content_renderer": {
     "note-cannot-be-displayed": "This note type cannot be displayed.",
