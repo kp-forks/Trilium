@@ -154,8 +154,8 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             setIconPickerRequest(request);
             return () => setIconPickerRequest(null);
         },
-        formatDateTime(date: Date) {
-            return utils.formatDateTime(date, options.get("customDateTimeFormat"));
+        formatDateTime(date: Date, format?: string) {
+            return utils.formatDateTime(date, format ?? options.get("customDateTimeFormat"));
         },
         // Keyboard shortcut
         async insertDateTimeToTextCommand() {
