@@ -5290,6 +5290,28 @@ describe("Selection mode on mobile", () => {
         await setup();
 
         expect(container.querySelector(".board-selection-toggle")).toBeNull();
+        // The board offers these over its bottom corner instead, outside the header.
+        expect(container.querySelector(".board-header-tools button.bx-collapse-alt")).toBeNull();
+        expect(container.querySelector(".board-header-tools button.bx-expand-alt")).toBeNull();
+    });
+
+    /** What the desktop offers over the board's bottom corner, which a phone has no room for. */
+    it("closes and opens every column from the header", async () => {
+        await setup();
+        const columns = () => [ ...container.querySelectorAll(".board-column") ];
+        expect(columns().some(column => column.classList.contains("collapsed"))).toBe(false);
+
+        await act(async () => {
+            headerButton("bx-collapse-alt").click();
+            await flush();
+        });
+        expect(columns().every(column => column.classList.contains("collapsed"))).toBe(true);
+
+        await act(async () => {
+            headerButton("bx-expand-alt").click();
+            await flush();
+        });
+        expect(columns().some(column => column.classList.contains("collapsed"))).toBe(false);
     });
 
     /**

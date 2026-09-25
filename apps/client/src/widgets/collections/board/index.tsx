@@ -1405,6 +1405,8 @@ export default function BoardView({
                             }
                         }}
                         onReset={stopSelecting}
+                        onCollapseAll={collapseAllColumns}
+                        onExpandAll={expandAllColumns}
                     >
                         <BoardGroupBy
                             note={parentNote}
