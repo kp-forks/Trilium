@@ -3335,7 +3335,6 @@
     "provider_model_count_many": "{{count}} samhlacha",
     "provider_model_count_other": "{{count}} samhlacha",
     "beta": "Béite",
-    "provider_desc_claude_agent": "Éilíonn Claude Code ar an meaisín a bhfuil Trilium ag rith air.",
     "claude_agent_description": "Úsáideann sé do shíntiús Claude Pro/Max trí Claude Code, mar sin níl aon eochair API ag teastáil. Ní mór Claude Code a shuiteáil ar an meaisín ina bhfuil Trilium ag rith (an freastalaí nuair a dhéantar féinóstáil, nó an ríomhaire seo ar dheasc); sínigh isteach uair amháin trí \"claude /login\" a rith ansin.",
     "add_provider_title_named": "Cuir {{- name}} leis",
     "provider_group_cloud": "Soláthraithe scamall",
@@ -3367,7 +3366,6 @@
     "mcp_unavailable_standalone": "Gan a bheith ar fáil sa leagan brabhsálaí: cheanglódh cúntóirí le Trilium thar an líonra, ach níl aon seoladh ag an tógáil seo le tabhairt dóibh, ós rud é go ritheann sé go hiomlán laistigh den leathanach seo.",
     "enabled": "Gnéithe AI",
     "enabled_description": "Cuireann sé an taobhbharra comhrá AI agus nótaí comhrá LLM leis, ag baint úsáide as na soláthraithe atá cumraithe thíos.",
-    "provider_desc_copilot_agent": "Éilíonn sé GitHub Copilot CLI ar an meaisín a bhfuil Trilium ag rith air.",
     "copilot_agent_description": "Úsáideann sé do shíntiús GitHub Copilot tríd an GitHub Copilot CLI, mar sin níl aon eochair API ag teastáil. Ní mór an Copilot CLI a shuiteáil ar an meaisín ina bhfuil Trilium ag rith (an freastalaí nuair a dhéantar féinóstáil, nó an ríomhaire seo ar dheasc); sínigh isteach uair amháin trí \"login copilot\" a rith ansin — athúsáidtear logáil isteach Copilot atá ann cheana féin ó eagarthóir eile go huathoibríoch."
   },
   "ocr": {

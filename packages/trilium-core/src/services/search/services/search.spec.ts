@@ -1172,6 +1172,36 @@ describe("Search", () => {
         expect(searchService.extractContentSnippet(noteBuilder.note.noteId, [ "secret" ])).toBe("");
     });
 
+    describe("body text held in HTML entities", () => {
+        function bodyNote(title: string, content: string) {
+            return getContext().init(() => noteService.createNewNote({
+                parentNoteId: "root",
+                title,
+                content,
+                type: "text"
+            }).note);
+        }
+
+        function finds(query: string, noteId: string) {
+            const results = searchService.findResultsWithQuery(query, new SearchContext());
+
+            return results.some((result) => result.noteId === noteId);
+        }
+
+        it("finds a body by the text the editor shows for it", () => {
+            // The first body reads "AT&T and R&D, where a<b." on screen; the second displays
+            // "&amp;" and "&lt;", which a second decode would turn into "&" and "<".
+            const telco = bodyNote("Telco", "<p>AT&amp;T and R&amp;D, where a&lt;b.</p>");
+            const literal = bodyNote("Literal", "<p>write &amp;amp;t rather than &amp;lt;</p>");
+
+            expect(finds("AT&T", telco.noteId)).toBe(true);
+            expect(finds("R&D", telco.noteId)).toBe(true);
+            expect(finds("a<b", telco.noteId)).toBe(true);
+            expect(finds("&lt;", literal.noteId)).toBe(true);
+            expect(finds("at<t", literal.noteId)).toBe(false);
+        });
+    });
+
     // FIXME: test what happens when we order without any filter criteria
 
     // it("comparison between labels", () => {

@@ -25,6 +25,7 @@
     "mobile:sync": "pnpm run --filter mobile sync",
     "desktop:start-prod-no-dir": "pnpm run --filter desktop start-prod-no-dir",
     "edit-docs:edit-docs": "pnpm run --filter edit-docs edit-docs",
+    "edit-docs:sync-docs": "pnpm run --filter edit-docs sync-docs",
     "edit-docs:build": "pnpm run --filter edit-docs build",
     "website:start": "pnpm run --filter website dev",
     "website:build": "pnpm run --filter website build",
