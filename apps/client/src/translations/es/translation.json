@@ -642,11 +642,7 @@
     "ai_quick_action": "Ofrece esta nota como una instrucción en el menú del asistente de IA del editor de texto. El título nombra la acción, el contenido es el mensaje.",
     "custom_font": "Marca archivos de fuente que se ofrecen en el selector de fuentes de las opciones de Trilium, bajo el título de la propia nota.",
     "template_new_note_default_parent": "Se define en una nota plantilla: las notas creadas a partir de la plantilla (p. ej. mediante la finalización con @) se colocan bajo la nota destino, salvo que se elija explícitamente otra ubicación.",
-    "board_card_width": "En colecciones de tablero, define el ancho de las columnas: <code>narrow</code>, <code>medium</code> o <code>wide</code>. Se ignora en dispositivos móviles, que las dibujan con un ancho propio.",
-    "enable_inbox_column": "En colecciones de tablero, muestra la columna de bandeja de entrada, que enumera todas las notas hijas no asignadas a una columna del tablero.",
     "board_card_redirect_to": "En una tarjeta del tablero, al abrirla se salta a la nota a la que apunta en lugar de abrir la propia tarjeta.",
-    "sort_columns": "En colecciones de tablero, el orden en que las columnas ordenan sus tarjetas, que una columna sigue salvo que tenga un orden propio. Contiene <code>title</code>, <code>creationDate</code> o <code>attr:</code> seguido del nombre de un atributo promovido.",
-    "sort_columns_descending": "En colecciones de tablero, invierte el orden definido en <code>#sortColumns</code>.",
     "geo_shape": "Forma con la que se dibuja la nota en un mapa geográfico: el tipo de forma y la latitud y longitud de cada punto, p. ej. <code>line:48.85,2.29 48.86,2.35</code>, o un círculo con su centro y alcance en metros, <code>circle:48.85,2.29 500</code>."
   },
   "attribute_editor": {
