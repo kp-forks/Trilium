@@ -40,7 +40,10 @@ import { SORT_DESCENDING_LABEL, SORT_LABEL } from "./sort";
 export type CardPlacement = "top" | "bottom";
 
 /** The relation a card carries to stand in for another note rather than open an editor of its own. */
-export const CARD_REDIRECT_RELATION = "boardCardRedirectTo";
+export const CARD_REDIRECT_RELATION = "board:cardRedirectTo";
+
+/** The previous name of the relation above. `openCard` falls back to it. */
+export const CARD_REDIRECT_RELATION_LEGACY = "boardCardRedirectTo";
 
 /** One write's claim on a column, held until that write lands or is taken back. */
 interface ColumnClaim {
@@ -711,7 +714,7 @@ export default class BoardApi {
      */
     async setInboxEnabled(enabled: boolean) {
         await attributes.setBooleanWithInheritance(
-            this.parentNote, "enableInboxColumn", enabled);
+            this.parentNote, "board:showInbox", enabled);
     }
 
     /** Hides the inbox column, which is what its own menu offers. */
@@ -813,7 +816,7 @@ export default class BoardApi {
     }
 
     /**
-     * Reads `#sortColumns` and `#sortColumnsDescending` off the board note, which is where the
+     * Reads `#board:sortColumns` and `#board:sortColumnsDescending` off the board note, which is where the
      * order the columns default to is stored rather than in `board.json`.
      */
     getDefaultSort() {
@@ -1450,12 +1453,13 @@ export default class BoardApi {
     /**
      * Answers the card's own open gesture, a click or Space.
      *
-     * A card carrying `boardCardRedirectTo` stands in for the note that relation points at, so it
+     * A card carrying `board:cardRedirectTo` stands in for the note that relation points at, so it
      * navigates there instead of opening an editor of its own. Quick edit calls `openNote` and
      * still opens the card's own editor.
      */
     openCard(note: FNote) {
-        const target = note.getRelationValue(CARD_REDIRECT_RELATION);
+        const target = note.getRelationValue(CARD_REDIRECT_RELATION)
+            ?? note.getRelationValue(CARD_REDIRECT_RELATION_LEGACY);
         if (target) {
             const context = this.noteContext ?? appContext.tabManager?.getActiveContext();
             void context?.setNote(target);
@@ -1508,7 +1512,7 @@ export default class BoardApi {
      * the board, and one already there does not move at all.
      */
     get isInboxEnabled() {
-        return !!this.parentNote?.isLabelTruthy("enableInboxColumn");
+        return !!this.parentNote?.isLabelTruthy("board:showInbox");
     }
 
     /**

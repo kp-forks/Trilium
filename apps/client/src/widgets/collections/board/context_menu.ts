@@ -53,6 +53,8 @@ interface ColumnMenuTarget {
     onCollapse: (collapsed: boolean) => void;
     /** Sets whether the column collapses again once it has been opened. */
     onKeepCollapsed: (keepCollapsed: boolean) => void;
+    /** Picks out every card the column draws, as Ctrl+A does. */
+    onSelectAll: () => void;
 }
 
 export function openColumnContextMenu(api: Api, event: ContextMenuEvent, column: ColumnMenuTarget) {
@@ -181,6 +183,14 @@ export function openColumnContextMenu(api: Api, event: ContextMenuEvent, column:
                     shortcut: "Delete",
                     handler: () => api.confirmAndRemoveColumn(column.value)
                 },
+            { kind: "separator" },
+            {
+                title: t("board_view.select-all-cards"),
+                uiIcon: "bx bx-selection",
+                shortcut: "Ctrl+A",
+                enabled: api.getColumnNoteIds(column.value).length > 0,
+                handler: column.onSelectAll
+            },
             { kind: "separator" },
             {
                 kind: "custom",
