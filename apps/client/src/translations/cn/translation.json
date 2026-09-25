@@ -636,11 +636,7 @@
     "ai_quick_action": "将这篇笔记作为指令提供给文本编辑器的 AI 助手菜单。标题为操作命名，内容为提示词。",
     "template_new_note_default_parent": "设置在模板笔记上：从该模板创建的笔记（如通过 @ 补全）会放置在目标笔记下，除非显式选择了其他位置。",
     "custom_font": "标记在 Trilium 选项的字体选择器中提供的字体文件，置于笔记自身标题之下。",
-    "enable_inbox_column": "对于看板集合，显示收件箱列，其中列出所有未被分配到看板列的子笔记。",
-    "sort_columns": "对于看板集合，指各列对其卡片进行排序的顺序；除非某列被赋予了自己的排序顺序，否则它遵循此顺序。值可为 <code>title</code>, <code>creationDate</code> 或 <code>attr:</code> 后跟提升属性的名称。",
-    "sort_columns_descending": "对于看板集合，按 <code>#sortColumns</code> 的顺序反向运行。",
     "board_card_redirect_to": "在看板卡片上，打开卡片会跳转到它所指向的笔记，而不是打开卡片本身。",
-    "board_card_width": "对于看板集合，指各列的绘制宽度： <code>narrow</code>（窄）、<code>medium</code>（中）或 <code>wide</code>（宽）。在移动端会被忽略，移动端会按其自身宽度绘制。",
     "geo_shape": "笔记在地图上绘制的形状：先写形状种类，再依次写每个点的纬度和经度，例如. <code>line:48.85,2.29 48.86,2.35</code> — 或写圆形，值为圆心和半径（米），例如 <code>circle:48.85,2.29 500</code>."
   },
   "attribute_editor": {

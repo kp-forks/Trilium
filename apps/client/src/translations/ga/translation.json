@@ -681,11 +681,7 @@
     "ai_quick_action": "Cuireann sé an nóta seo ar fáil mar threoir i roghchlár cúntóra AI an eagarthóra téacs. Ainmníonn an teideal an gníomh, is é an t-ábhar an leid.",
     "template_new_note_default_parent": "Socraithe ar nóta teimpléid: cuirtear nótaí a cruthaíodh ón teimpléad (e.g. trí @-completion) faoin nóta sprice, mura roghnaítear suíomh eile go sainráite.",
     "custom_font": "Marcáileann sé comhaid clónna atá ar fáil sa roghnóir clónna i roghanna Trilium, faoi theideal an nóta féin.",
-    "enable_inbox_column": "I gcás bailiúcháin boird, taispeántar an colún bosca isteach, ina liostaítear na nótaí linbh go léir nach bhfuil sannta do cholún boird.",
-    "board_card_width": "Maidir le bailiúcháin boird, an leithead a úsáidtear do na colúin: <code>narrow</code> (caol), <code>medium</code> (meánach) nó <code>wide</code> (leathan). Déantar neamhaird de seo ar ghléasanna móibíleacha, áit a socraítear a leithead féin dóibh.",
     "board_card_redirect_to": "Ar chárta boird, má osclaítear an cárta, léimtear chuig an nóta a bhfuil an cárta ag tagairt dó, seachas an cárta féin a oscailt.",
-    "sort_columns": "I gcás bailiúcháin boird, is é seo an t-ord a úsáideann na colúin chun a gcuid cártaí a shórtáil — ord a leanann colún mura bhfuil ord dá chuid féin socraithe dó. Glacann sé le <code>title</code>, <code>creationDate</code> nó <code>attr:</code> agus ainm tréithe curtha chun cinn ina dhiaidh sin.",
-    "sort_columns_descending": "I gcás bailiúcháin boird, ritheann sé an t-ordú i <code>#sortColumns</code> droim ar ais.",
     "geo_shape": "Cruth a úsáidtear chun an nóta a tharraingt ar léarscáil gheografach: an cineál crutha, agus ansin domhanleithead agus domhanfhad gach pointe, m.sh. <code>line:48.85,2.29 48.86,2.35</code> — nó ciorcal, bunaithe ar a lárphointe agus a raon i méadair, <code>circle:48.85,2.29 500</code>."
   },
   "attribute_editor": {
