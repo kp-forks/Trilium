@@ -2470,7 +2470,7 @@ body.zen .note-split:not(.type-book) .note-list-widget {
 
 body.experimental-feature-new-layout.zen #vertical-main-container {
     /* Remove the placeholder for the right pane peek button */
-    --right-pane-peek-button-gutter: 0;
+    --right-pane-peek-button-gutter: 0 !important;
 }
 
 body.zen .split-note-container-widget > .gutter {

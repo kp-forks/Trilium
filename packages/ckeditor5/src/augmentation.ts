@@ -36,6 +36,11 @@ declare global {
          * a balloon — leaves `container` alone and answers `null`.
          */
         showIconPicker(request: IconPickerRequest): (() => void) | null;
+        /**
+         * Formats `date` for insertion in the Day.js `format`, or in the user's
+         * `customDateTimeFormat` when none is given.
+         */
+        formatDateTime(date: Date, format?: string): string;
         loadReferenceLinkTitle($el: JQuery<HTMLElement>, href: string): Promise<void>;
         createNoteForReferenceLink(title: string, intoInbox: boolean): Promise<string | undefined>;
         loadIncludedNote(noteId: string, $el: JQuery<HTMLElement>, boxSize?: string): void;
