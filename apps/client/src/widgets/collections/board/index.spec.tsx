@@ -1722,7 +1722,7 @@ describe("Board column rename", () => {
         show.mockRestore();
     });
 
-    /** `Ctrl+A` reaches the same cards through `keyboard.ts`; this is the menu's own route to them. */
+    /** The column menu's `onSelectAll` calls `selection.selectAll` for the same cards as Ctrl+A. */
     it("picks out every card in the column from the menu", async () => {
         const { container } = await setup();
         const column = container.querySelectorAll<HTMLElement>(".board-column")[1];
