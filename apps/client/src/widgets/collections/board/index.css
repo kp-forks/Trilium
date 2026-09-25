@@ -272,7 +272,6 @@ body.mobile .board-view-container .board-add-column {
      the badge and that button are not drawn, and the heading would otherwise close up around the
      field by the difference between them. */
   min-height: calc(var(--icon-button-size, 32px) + 1em + 1px);
-  border-bottom: 1px solid var(--main-border-color);
   cursor: grab;
   position: relative;
   transition: background-color 0.2s ease, border-radius 0.2s ease;
