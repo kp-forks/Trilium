@@ -7,7 +7,7 @@ The _Jump to Note_ function allows easy navigation between notes by searching fo
 
 To enter the “Jump to” dialog:
 
-*   In the <a class="reference-link" href="../UI%20Elements/Launch%20Bar.md">Launch Bar</a>, press ![](2_Jump%20to%20&%20command%20palette_image.png) button.
+*   In the <a class="reference-link" href="../UI%20Elements/Launch%20Bar.md">Launch Bar</a>, press <span class="tn-icon bx bx-send"></span> button.
 *   Using the keyboard, press <kbd>Ctrl</kbd> + <kbd>J</kbd>.
 
 In addition to searching for notes, it is also possible to search for commands. See the dedicated section below for more information.

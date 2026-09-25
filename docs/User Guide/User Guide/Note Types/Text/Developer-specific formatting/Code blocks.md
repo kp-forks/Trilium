@@ -1,5 +1,5 @@
 # Code blocks
-![](1_Code%20blocks_image.png)
+![](Code%20blocks_image.png)
 
 The code blocks feature allows entering pieces of code in text notes.
 
@@ -7,7 +7,7 @@ Note that this feature is meant for generally small snippets of code. For larger
 
 ## Inserting a code block
 
-*   Via the <a class="reference-link" href="../Formatting%20toolbar.md">Formatting toolbar</a>, look for the ![](Code%20blocks_image.png) button.
+*   Via the <a class="reference-link" href="../Formatting%20toolbar.md">Formatting toolbar</a>, look for the <span class="tn-icon cke cke-code-block"></span> button.
     *   Pressing directly on the icon will insert a code block with the language that was selected most recently. If this is the first time a code block is inserted, the language will be “Auto-detected” by default.
     *   Pressing the arrow next to the icon, which will show a popup with the available languages.
 *   Type ` ``` ` (as in Markdown).
@@ -54,7 +54,7 @@ Should you encounter any issues after the migration, try running Trilium in safe
 ## Changing the language of a code block
 
 Simply click anywhere inside the code block and press again the code block button in the <a class="reference-link" href="../Formatting%20toolbar.md">Formatting toolbar</a>:  
-![](2_Code%20blocks_image.png)
+![](1_Code%20blocks_image.png)
 
 ## Adjusting the list of languages
 

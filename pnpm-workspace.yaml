@@ -141,3 +141,4 @@ allowBuilds:
   spawn-sync: true
   sqlite3: false
   tesseract.js: true
+  ttf2woff2: false
