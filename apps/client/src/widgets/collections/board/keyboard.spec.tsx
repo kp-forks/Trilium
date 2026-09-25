@@ -576,6 +576,16 @@ describe("Board keyboard", () => {
             expect(pickedNames(board)).toEqual([ "First", "Second" ]);
         });
 
+        /** A range runs through cards, so a header is not a place one can start from. */
+        it("leaves Shift and an arrow on a header unanswered", async () => {
+            const board = await renderBoard(undefined, undefined, [ "To Do" ]);
+            focusHeader(board, 0);
+
+            press(board, "ArrowDown", { shiftKey: true });
+
+            expect(pickedNames(board)).toEqual([]);
+        });
+
         /**
          * A range is measured against one column, so an anchor left in another names no place in
          * the list the press is counted against.

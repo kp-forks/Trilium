@@ -1722,6 +1722,31 @@ describe("Board column rename", () => {
         show.mockRestore();
     });
 
+    /** `Ctrl+A` reaches the same cards through `keyboard.ts`; this is the menu's own route to them. */
+    it("picks out every card in the column from the menu", async () => {
+        const { container } = await setup();
+        const column = container.querySelectorAll<HTMLElement>(".board-column")[1];
+        const picked = () => [ ...container.querySelectorAll(".board-note.selected") ]
+            .map(element => element.getAttribute("data-note-id"));
+        expect(picked()).toEqual([]);
+
+        const show = vi.spyOn(contextMenu, "show").mockImplementation(async () => {});
+        column.querySelector("h3")?.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true }));
+
+        const entry = (show.mock.calls.at(-1)?.[0].items ?? [])
+            .find(item => item && "uiIcon" in item && item.uiIcon === "bx bx-selection");
+        if (!entry || !("handler" in entry)) throw new Error("expected a select-all entry");
+
+        await act(async () => {
+            entry.handler?.(entry, {} as never);
+            await flush();
+        });
+        expect(picked()).toEqual(
+            [ ...column.querySelectorAll(".board-note") ].map(e => e.getAttribute("data-note-id")));
+
+        show.mockRestore();
+    });
+
     it("keeps the new-item slot out of the column's scrolling body", async () => {
         const { container } = await setup();
         const column = container.querySelectorAll<HTMLElement>(".board-column")[1];
