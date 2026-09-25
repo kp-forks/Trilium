@@ -10,6 +10,10 @@
   --board-item-hover-background-saturation: 100%;
   --board-item-hover-background-lightness: 98.5%;
 
+  /* What a card stands on while its title is being typed. The pointer leaves the card as the
+     reader moves to the field, so this is the hover lightness and the colour does not change. */
+  --board-item-editing-background-lightness: var(--board-item-hover-background-lightness);
+
   /* The inbox's own surfaces. It holds what has not been sorted yet, so it stands on the board
      itself rather than in a column of its own, and its cards take the surface the app's cards
      stand on. The theme's name first, then the one every theme has. */
@@ -19,6 +23,7 @@
   --board-inbox-item-background: var(--card-background-color, var(--accented-background-color));
   --board-inbox-item-hover-background:
     var(--card-background-hover-color, var(--more-accented-background-color));
+  --board-inbox-item-editing-background: var(--board-inbox-item-hover-background);
 
   --board-limit-exceeded-background: #c62828;
   /* Half opacity: the badge is the main warning, the outline supports it. */
@@ -236,6 +241,10 @@ body.mobile .board-view-container .board-add-column {
 
 .board-view-container .board-column-inbox:not(.with-hue) .board-note:not(.with-hue):hover {
   background-color: var(--board-inbox-item-hover-background);
+}
+
+.board-view-container .board-column-inbox:not(.with-hue) .board-note:not(.with-hue).editing {
+  background-color: var(--board-inbox-item-editing-background);
 }
 
 /* The rename button masks the title it sits over, so it has to be opaque. The theme's card colour
@@ -475,6 +484,16 @@ body.mobile .board-view-container .board-add-column {
     var(--board-item-hue),
     var(--board-item-hover-saturation),
     var(--board-item-hover-background-lightness)
+  );
+}
+
+/* Stated after the rule above, which it shares a specificity with, so a card being edited keeps
+   this background whether or not the pointer is on it. */
+.board-view-container .board-note.editing {
+  background-color: hsl(
+    var(--board-item-hue),
+    var(--board-item-hover-saturation),
+    var(--board-item-editing-background-lightness)
   );
 }
 
