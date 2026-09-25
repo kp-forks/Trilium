@@ -5290,12 +5290,12 @@ describe("Selection mode on mobile", () => {
         await setup();
 
         expect(container.querySelector(".board-selection-toggle")).toBeNull();
-        // The board offers these over its bottom corner instead, outside the header.
+        // Off mobile they are drawn in `OverlayControlGroup`, outside `.board-header-tools`.
         expect(container.querySelector(".board-header-tools button.bx-collapse-alt")).toBeNull();
         expect(container.querySelector(".board-header-tools button.bx-expand-alt")).toBeNull();
     });
 
-    /** What the desktop offers over the board's bottom corner, which a phone has no room for. */
+    /** `onCollapseAll` and `onExpandAll`, which only the header carries on mobile. */
     it("closes and opens every column from the header", async () => {
         await setup();
         const columns = () => [ ...container.querySelectorAll(".board-column") ];

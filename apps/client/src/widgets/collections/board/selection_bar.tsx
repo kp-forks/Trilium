@@ -18,7 +18,7 @@ interface BoardHeaderToolsProps {
     onSelectColumn: () => void;
     /** Drops the selection and ends selection mode, the bar covering the button that started it. */
     onReset: () => void;
-    /** Closes every column at once. On the desktop the board offers this over its bottom corner. */
+    /** Collapses every column. Off mobile `index.tsx` draws the same pair in `OverlayControlGroup`. */
     onCollapseAll: () => void;
     onExpandAll: () => void;
 }
