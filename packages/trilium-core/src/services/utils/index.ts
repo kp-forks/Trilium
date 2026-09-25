@@ -11,6 +11,7 @@ import { NoteMeta } from "../../meta";
 
 export function isDev() { return getPlatform().getEnv("TRILIUM_ENV") === "dev"; }
 export function isElectron() { return getPlatform().isElectron; }
+export function isStandalone() { return getPlatform().isStandalone; }
 export function isMac() { return getPlatform().isMac; }
 export function isWindows() { return getPlatform().isWindows; }
 export function isLinux() { return getPlatform().isLinux; }
