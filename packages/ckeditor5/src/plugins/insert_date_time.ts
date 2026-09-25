@@ -6,14 +6,17 @@ import dateTimeIcon from '../icons/date-time.svg?raw';
 
 export const COMMAND_NAME = 'insertDateTimeToText';
 
-/** The Day.js formats the split button offers besides the user's own `customDateTimeFormat`. */
-export const DATE_TIME_PRESETS = [
-    'YYYY-MM-DD',
-    'HH:mm',
-    'D MMMM YYYY',
-    'dddd, D MMMM YYYY',
-    'YYYY-MM-DDTHH:mm:ssZ'
-] as const;
+/**
+ * The Day.js formats offered besides the user's own `customDateTimeFormat`. `kind` is `time` for a
+ * format that shows only the time, so the `/` palette can title it "Insert time".
+ */
+export const DATE_TIME_PRESETS: readonly DateTimePreset[] = [
+    { format: 'YYYY-MM-DD', kind: 'dateTime' },
+    { format: 'HH:mm', kind: 'time' },
+    { format: 'D MMMM YYYY', kind: 'dateTime' },
+    { format: 'dddd, D MMMM YYYY', kind: 'dateTime' },
+    { format: 'YYYY-MM-DDTHH:mm:ssZ', kind: 'dateTime' }
+];
 
 /**
  * Introduces the `dateTime` split button: the button inserts the current date and time in the
@@ -86,29 +89,45 @@ class InsertDateTimeCommand extends Command {
 
 }
 
+export interface DateTimePreset {
+    format: string;
+    kind: 'dateTime' | 'time';
+}
+
+/** A format the user can insert the date in, with the current date and time rendered in it. */
+export interface DateTimeFormatOption {
+    /** A Day.js format string, or `undefined` for the user's `customDateTimeFormat`. */
+    format?: string;
+    kind: DateTimePreset['kind'];
+    preview: string;
+}
+
 /**
- * One list item per format, labeled with the current date in it. A preset that renders the same
- * as the user's default is left out.
+ * The user's default format followed by each of `DATE_TIME_PRESETS`, as the split button and the
+ * `/` palette offer them. A preset whose preview matches an earlier one is left out.
  */
-function createFormatItems(editor: Editor) {
-    const formats = [ undefined, ...DATE_TIME_PRESETS ];
-    const seenLabels = new Set<string>();
-    const definitions: ListDropdownItemDefinition[] = [];
+export function getDateTimeFormatOptions(editor: Editor): DateTimeFormatOption[] {
+    const seenPreviews = new Set<string>();
+    const options: DateTimeFormatOption[] = [];
 
-    for (const format of formats) {
-        const label = formatNow(editor, format);
-        if (seenLabels.has(label)) {
-            continue;
+    const formats: Omit<DateTimeFormatOption, 'preview'>[] = [ { kind: 'dateTime' }, ...DATE_TIME_PRESETS ];
+
+    for (const { format, kind } of formats) {
+        const preview = formatNow(editor, format);
+        if (!seenPreviews.has(preview)) {
+            seenPreviews.add(preview);
+            options.push({ format, kind, preview });
         }
-
-        seenLabels.add(label);
-        definitions.push({
-            type: 'button',
-            model: new ViewModel({ format, label, withText: true })
-        });
     }
 
-    return definitions;
+    return options;
+}
+
+function createFormatItems(editor: Editor): ListDropdownItemDefinition[] {
+    return getDateTimeFormatOptions(editor).map(({ format, preview }) => ({
+        type: 'button',
+        model: new ViewModel({ format, label: preview, withText: true })
+    }));
 }
 
 function formatNow(editor: Editor, format?: string) {

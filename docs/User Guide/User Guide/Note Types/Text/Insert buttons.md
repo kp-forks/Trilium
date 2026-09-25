@@ -64,8 +64,9 @@ Page breaks are marked in the editor with the words _Page break_, but they will 
 
 The <span class="tn-icon cke cke-trilium-date-time"></span> button inserts the current date and time at the cursor, replacing the selected text if there is any. The inserted text takes the formatting of the text around it, so a date inserted inside bold text is bold too.
 
-*   To insert the date in the default format, press the button itself, press <kbd>Alt</kbd>+<kbd>T</kbd>, or use the _Insert date/time_ entry of the <a class="reference-link" href="Slash%20Commands.md">Slash Commands</a>.
+*   To insert the date in the default format, press the button itself or press <kbd>Alt</kbd>+<kbd>T</kbd>.
 *   To insert it in another format, press the arrow next to the button and pick a format from the list. Each entry shows the current date and time in that format: the default one, the date or the time alone, the date written out, and ISO 8601.
+*   The same formats are offered by the <a class="reference-link" href="Slash%20Commands.md">Slash Commands</a>: type `/date`, `/time`, `/now` or `/today`. The _Insert date/time_ entry uses the default format, and shows what it inserts underneath; the other entries show their output in the title.
 
 The default format can be changed in <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a> → _Text Notes_ → _Editor_ → _Date/time format_, using [Day.js format tokens](https://day.js.org/docs/en/display/format) (for example `DD.MM.YYYY HH:mm`).
 

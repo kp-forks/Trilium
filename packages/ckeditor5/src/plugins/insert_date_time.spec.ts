@@ -97,7 +97,7 @@ describe("InsertDateTimePlugin", () => {
         it("lists the default format and every preset, labeled with the current date in it", () => {
             const labels = openList().map((button) => button.label);
 
-            expect(labels).toEqual([ "2026-09-25 10:30", ...DATE_TIME_PRESETS.map((format) => `<${format}>`) ]);
+            expect(labels).toEqual([ "2026-09-25 10:30", ...DATE_TIME_PRESETS.map(({ format }) => `<${format}>`) ]);
         });
 
         it("leaves out a preset that renders the same as the default format", () => {
@@ -121,7 +121,7 @@ describe("InsertDateTimePlugin", () => {
             const spy = vi.spyOn(editor, "execute");
 
             firstPreset.fire("execute");
-            expect(spy).toHaveBeenLastCalledWith(COMMAND_NAME, { format: DATE_TIME_PRESETS[0] });
+            expect(spy).toHaveBeenLastCalledWith(COMMAND_NAME, { format: DATE_TIME_PRESETS[0].format });
 
             defaultItem.fire("execute");
             expect(spy).toHaveBeenLastCalledWith(COMMAND_NAME, { format: undefined });
