@@ -380,7 +380,7 @@ export default function BoardView({
         () => adoptLegacyColumns(storedConfig, openedOnGroupBy), [ storedConfig, openedOnGroupBy ]);
     let viewConfig = adoptedConfig ?? storedConfig;
     const [ includeArchived ] = useNoteLabelBoolean(parentNote, "includeArchived");
-    const [ inboxEnabled ] = useNoteLabelBoolean(parentNote, "enableInboxColumn");
+    const [ inboxEnabled ] = useNoteLabelBoolean(parentNote, "board:showInbox");
     // Read undefaulted: a board naming no width wears no class, so `--board-column-width` keeps
     // whatever it inherits.
     const [ storedColumnWidth ] = useNoteLabel(parentNote, COLUMN_WIDTH_LABEL);

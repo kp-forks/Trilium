@@ -1312,7 +1312,7 @@ describe("Board keyboard", () => {
             title: "Board",
             "#collection": "",
             "#viewType": "board",
-            ...(inbox ? { "#enableInboxColumn": "true" } : {}),
+            ...(inbox ? { "#board:showInbox": "true" } : {}),
             children: [
                 {
                     title: "First",

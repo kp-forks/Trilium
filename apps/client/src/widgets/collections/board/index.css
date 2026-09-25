@@ -171,7 +171,7 @@ body.mobile .board-view-container.board-dragging {
   cursor: grabbing !important;
 }
 
-/* Set from `#boardCardWidth`, and only while the board carries it: without one of these classes
+/* Set from `#board:columnWidth`, and only while the board carries it: without one of these classes
    `--board-column-width` keeps the value it inherits, which a theme can set. The columns and
    everything measured against them read the width off that one variable. */
 .board-view.board-narrow-columns {

@@ -195,11 +195,11 @@
 <aside class="admonition warning">
   <p>Using the <code>#sorted</code> attribute on Kanban boards <strong>is no longer recommended</strong>,
     because it applies to every column and prevents manual sorting. Instead,
-    use <code>#sortColumns</code>, which is designed exclusively for board collections
-    and can take one of the following values: <code>title</code>, <code>creationDate</code>,
-    or <code>attr:_&lt;attribute name&gt;_</code>, for example, <code>#sortColumns=attr:dueDate</code>.
-    Using the <code>#sortColumnsDescending</code> label will switch to descending
-    order.</p>
+    use <code>#board:sortColumns</code>, which is designed exclusively for board
+    collections and can take one of the following values: <code>title</code>, <code>creationDate</code>,
+    or <code>attr:_&lt;attribute name&gt;_</code>, for example, <code>#board:sortColumns=attr:dueDate</code>.
+    Using the <code>#board:sortColumnsDescending</code> label will switch to
+    descending order.</p>
 </aside>
 <h3>Setting a limit</h3>
 <p>For each column, you can limit the number of cards it contains (also known
@@ -253,7 +253,7 @@
   be moved. It does not support a card limit. Otherwise, it operates like
   a regular column: its title, icon, and color can be changed; it can be
   sorted manually or automatically; and it can be collapsed.</p>
-<p>You can also show the inbox column by applying the <code>#enableInboxColumn</code> label
+<p>You can also show the inbox column by applying the <code>#board:showInbox</code> label
   (read more about&nbsp;<a class="reference-link" href="#root/_help_zEY4DaJG4YT5">Attributes</a>)
   to the board note.</p>
 <p>Optionally, the inbox column can also list nested notes from the board
@@ -264,7 +264,7 @@
   medium, and wide. To change the width, open the <strong>Note menu</strong> → <strong>Board properties</strong> → <strong>Column width</strong> (under
   the <strong>General</strong> section). This option applies to every column
   on the board, except in the mobile version.</p>
-<p>The same option is also available through the <code>#boardCardWidth</code> label
+<p>The same option is also available through the <code>#board:columnWidth</code> label
   (read more about&nbsp;<a class="reference-link" href="#root/_help_zEY4DaJG4YT5">Attributes</a>)
   on the board note, which accepts “<code>narrow</code>”, “<code>medium</code>”,
   or “<code>wide</code>” as its value.</p>

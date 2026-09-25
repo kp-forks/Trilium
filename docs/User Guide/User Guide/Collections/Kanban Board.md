@@ -119,7 +119,7 @@ Once the default is changed, all columns set to the **Board's default** sorting 
 Columns using a sorting option other than **Board's default** will not be affected by the new default. To override all columns so that they use the default sorting options, use the **Reset sorting options to default for all columns** command in Board properties.
 
 > [!WARNING]
-> Using the `#sorted` attribute on Kanban boards **is no longer recommended**, because it applies to every column and prevents manual sorting. Instead, use `#sortColumns`, which is designed exclusively for board collections and can take one of the following values: `title`, `creationDate`, or `attr:_<attribute name>_`, for example, `#sortColumns=attr:dueDate`. Using the `#sortColumnsDescending` label will switch to descending order.
+> Using the `#sorted` attribute on Kanban boards **is no longer recommended**, because it applies to every column and prevents manual sorting. Instead, use `#board:sortColumns`, which is designed exclusively for board collections and can take one of the following values: `title`, `creationDate`, or `attr:_<attribute name>_`, for example, `#board:sortColumns=attr:dueDate`. Using the `#board:sortColumnsDescending` label will switch to descending order.
 
 ### Setting a limit
 
@@ -151,7 +151,7 @@ The inbox column is a special column containing cards that are not assigned to a
 
 The inbox column is hidden by default. To show it, go to <span class="tn-icon bx bx-cog"></span> **Collection options** and toggle **Show inbox column**. The inbox column is distinguishable by its transparent background. It is always the first column and cannot be moved. It does not support a card limit. Otherwise, it operates like a regular column: its title, icon, and color can be changed; it can be sorted manually or automatically; and it can be collapsed.
 
-You can also show the inbox column by applying the `#enableInboxColumn` label (read more about <a class="reference-link" href="../Advanced%20Usage/Attributes.md">Attributes</a>) to the board note.
+You can also show the inbox column by applying the `#board:showInbox` label (read more about <a class="reference-link" href="../Advanced%20Usage/Attributes.md">Attributes</a>) to the board note.
 
 Optionally, the inbox column can also list nested notes from the board collection's subtree. To enable this, open the **column menu** and check <span class="tn-icon bx bx-subdirectory-right"></span> **Include nested notes**.
 
@@ -159,7 +159,7 @@ Optionally, the inbox column can also list nested notes from the board collectio
 
 There are three predefined widths for board columns: narrow (default), medium, and wide. To change the width, open the **Note menu** → **Board properties** → **Column width** (under the **General** section). This option applies to every column on the board, except in the mobile version.
 
-The same option is also available through the `#boardCardWidth` label (read more about <a class="reference-link" href="../Advanced%20Usage/Attributes.md">Attributes</a>) on the board note, which accepts “`narrow`”, “`medium`”, or “`wide`” as its value.
+The same option is also available through the `#board:columnWidth` label (read more about <a class="reference-link" href="../Advanced%20Usage/Attributes.md">Attributes</a>) on the board note, which accepts “`narrow`”, “`medium`”, or “`wide`” as its value.
 
 You can also redefine these three widths by using custom app CSS (read more about <a class="reference-link" href="../Theme%20development/Custom%20app-wide%20CSS.md">Custom app-wide CSS</a>) and assigning the desired pixel values as follows:
 

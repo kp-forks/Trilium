@@ -4211,8 +4211,8 @@ describe("a column that sorts its cards", () => {
             "#viewType": "board",
             ...(boardSort
                 ? {
-                    "#sortColumns": boardSort.orderBy,
-                    ...(boardSort.isDescending ? { "#sortColumnsDescending": "" } : {})
+                    "#board:sortColumns": boardSort.orderBy,
+                    ...(boardSort.isDescending ? { "#board:sortColumnsDescending": "" } : {})
                 }
                 : {}),
             ...(promoted
@@ -4706,7 +4706,7 @@ describe("how wide the board draws its columns", () => {
             title: "Board",
             "#collection": "",
             "#viewType": "board",
-            ...(width ? { "#boardCardWidth": width } : {}),
+            ...(width ? { "#board:columnWidth": width } : {}),
             children: [ { title: "First", "#status": "To Do" } ]
         });
 
@@ -4900,7 +4900,7 @@ describe("Card toolbar on mobile", () => {
             title: "Board",
             "#collection": "",
             "#viewType": "board",
-            ...(withInbox ? { "#enableInboxColumn": "true" } : {}),
+            ...(withInbox ? { "#board:showInbox": "true" } : {}),
             children: [
                 { id: "tool1", title: "First", "#status": "To Do" },
                 { id: "tool2", title: "Second", "#status": "To Do" },
