@@ -199,8 +199,9 @@ export function useBoardKeyboard({
         // direction, the harder form, or the further reach of something the board already does.
         if (e.shiftKey && !shiftIsOurs(e)) return;
 
-        // An editor is open on the thing that is focused, and every key belongs to it.
-        if (target?.closest("input, textarea")) return;
+        // An editor is open on the thing that is focused, and every key belongs to it — the icon
+        // picker and the buttons beside the field included, which Shift+Tab reaches.
+        if (target?.closest("input, textarea, .title-editor-field")) return;
 
         // Alt on its own is how a reader goes back and forward through notes, which is expected to
         // work over a board as over anything else.

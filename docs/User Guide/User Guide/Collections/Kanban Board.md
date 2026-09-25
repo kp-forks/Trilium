@@ -268,7 +268,7 @@ To change the title or icon of a card, use one of the following methods:
 *   **Using the keyboard:** Select a card, and then press <kbd>F2</kbd>.
 *   **Using the context menu:** Open the card's context menu and select <span class="tn-icon bx bx-rename"></span> **Edit title & icon**.
 
-You can then enter a new name and select another icon. Click or tap anywhere outside the card, or press <kbd>Enter</kbd>, to apply the change. Press <kbd>Esc</kbd> to discard the changes.
+You can then enter a new name and select another icon. To move the keyboard focus from the title field to the icon selector, press <kbd>Shift</kbd> + <kbd>Tab</kbd>. Click or tap anywhere outside the card, or press <kbd>Enter</kbd>, to apply the change. Press <kbd>Esc</kbd> to discard the changes.
 
 Each card can be tinted with a different color. Open the card's context menu and select the desired color. If no color is assigned, the card inherits the column color.
 

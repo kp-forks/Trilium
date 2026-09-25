@@ -1875,6 +1875,16 @@ export function TitleEditor({
      * that would have ended the edit being spent.
      */
     const isHoldingOpen = useRef(false);
+    /** The box holding the field and the picker, against which focus is told inside from outside. */
+    const fieldRef = useRef<HTMLDivElement>(null);
+    const iconRef = useRef<HTMLSpanElement>(null);
+    /**
+     * Whether the icon picker holds focus, which Shift+Tab hands to it.
+     *
+     * Set before focus moves rather than when the picker receives it: the field blurs first, and
+     * that blur is what would close the editor.
+     */
+    const isIconFocused = useRef(false);
     const holdOpen = useMemo<HoldOpen>(() => ({
         onOpened: () => { isHoldingOpen.current = true; },
         onClosed: () => {
@@ -1918,6 +1928,17 @@ export function TitleEditor({
         // CJK conversion does not also save the title with unconfirmed text.
         if (isIMEComposing(e)) {
             return;
+        }
+
+        if (e.key === "Tab" && e.shiftKey && icon) {
+            const button = iconRef.current?.querySelector("button");
+            if (button) {
+                e.preventDefault();
+                e.stopPropagation();
+                isIconFocused.current = true;
+                button.focus();
+                return;
+            }
         }
 
         if (e.key === "Enter" && saveAndContinue) {
@@ -2038,7 +2059,7 @@ export function TitleEditor({
     }
 
     const onBlur = (newValue: string) => {
-        if (isHoldingOpen.current) {
+        if (isHoldingOpen.current || isIconFocused.current) {
             return;
         }
 
@@ -2060,6 +2081,41 @@ export function TitleEditor({
             dismiss();
         }
     };
+
+    /**
+     * Ends the edit once the picker hands focus on to something outside the field's own box.
+     * Focus going back to the field, or into the picker's menu, leaves the editor where it is.
+     */
+    function iconFocusOut(e: JSX.TargetedFocusEvent<HTMLSpanElement>) {
+        isIconFocused.current = false;
+
+        const next = e.relatedTarget;
+        if (isHoldingOpen.current || (next instanceof Node && fieldRef.current?.contains(next))) {
+            return;
+        }
+
+        onBlur(inputRef.current?.value ?? "");
+    }
+
+    /** Leaves the editor from the picker, which Escape does from the field itself. */
+    function iconKeyDown(e: JSX.TargetedKeyboardEvent<HTMLSpanElement>) {
+        if (e.key !== "Escape" || isHoldingOpen.current) {
+            return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+        shouldDismiss.current = true;
+
+        const target = returnFocusTo?.current ?? focusElRef.current;
+        if (target instanceof HTMLElement) {
+            target.focus();
+            return;
+        }
+
+        isIconFocused.current = false;
+        dismiss();
+    }
 
     /**
      * Saves what was typed and reports whether `save` accepted it.
@@ -2119,7 +2175,7 @@ export function TitleEditor({
             };
 
         return (
-            <div className={clsx("title-editor-field", {
+            <div ref={fieldRef} className={clsx("title-editor-field", {
                 "with-submit": saveAndContinue,
                 "with-footer": !!footer
             })}>
@@ -2127,7 +2183,12 @@ export function TitleEditor({
                     blur arrives before the picker reports itself open, and losing focus is what
                     closes the editor. */}
                 {icon && (
-                    <span onMouseDown={(e) => e.preventDefault()}>
+                    <span
+                        ref={iconRef}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onFocusOut={iconFocusOut}
+                        onKeyDown={iconKeyDown}
+                    >
                         <IconPickerButton
                             className="title-editor-icon"
                             icon={icon.current}
