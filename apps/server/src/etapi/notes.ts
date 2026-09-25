@@ -1,5 +1,5 @@
 import { type ExportFormat, note_service as noteService, NoteParams, search as searchService, SearchContext, SearchParams, TaskContext, zipExportService, zipImportService } from "@triliumnext/core";
-import { type BNote, becca } from "@triliumnext/core";
+import { becca } from "@triliumnext/core";
 import type { Request, Router } from "express";
 import type { ParsedQs } from "qs";
 
@@ -67,7 +67,10 @@ function register(router: Router) {
 
         try {
             const resp = noteService.createNewNote(params);
-            restoreDateModified(resp.note, req.body.utcDateModified);
+            // `save()` stamps the current time, so the requested date is applied afterwards.
+            if (req.body.utcDateModified) {
+                resp.note.setDateCreatedAndModified(undefined, req.body.utcDateModified);
+            }
 
             res.status(201).json({
                 note: mappers.mapNoteToPojo(resp.note),
@@ -105,7 +108,9 @@ function register(router: Router) {
         noteService.saveRevisionIfNeeded(note);
         eu.validateAndPatch(note, req.body, ALLOWED_PROPERTIES_FOR_PATCH);
         note.save();
-        restoreDateModified(note, req.body.utcDateModified);
+        if (req.body.utcDateModified) {
+            note.setDateCreatedAndModified(undefined, req.body.utcDateModified);
+        }
 
         res.json(mappers.mapNoteToPojo(note));
     });
@@ -193,16 +198,6 @@ function register(router: Router) {
 
         return res.sendStatus(204);
     });
-}
-
-/**
- * Applies a caller-supplied modification date. `save()` stamps the current time, so this runs after
- * it, the same way the importers keep a source note's dates.
- */
-function restoreDateModified(note: BNote, utcDateModified: string | undefined) {
-    if (utcDateModified) {
-        note.setDateCreatedAndModified(undefined, utcDateModified);
-    }
 }
 
 function parseSearchParams(req: Request) {
