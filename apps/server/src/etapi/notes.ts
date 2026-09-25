@@ -67,7 +67,8 @@ function register(router: Router) {
 
         try {
             const resp = noteService.createNewNote(params);
-            // `save()` stamps the current time, so the requested date is applied afterwards.
+            // `save()` stamps the current time, so `setDateCreatedAndModified()` applies the
+            // requested date afterwards.
             if (req.body.utcDateModified) {
                 resp.note.setDateCreatedAndModified(undefined, req.body.utcDateModified);
             }
