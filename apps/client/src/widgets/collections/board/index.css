@@ -563,16 +563,15 @@ body.mobile .board-view-container .board-add-column {
  * `--card-icon-inset` from the card's edge, the title at `--card-title-inset` with the lines below
  * it kept off the icon, as the field's own padding keeps them.
  *
- * A hanging indent rather than two boxes beside each other: the icon shares the first line's box,
- * so it and the title rest on one baseline and rasterise on the same pixel row. Laid out as boxes
- * of their own they round to the grid apart, which put the icon a pixel off on some cards.
+ * The icon is positioned in a box of its own instead of sitting in the first line, using the same
+ * values and the same whole-pixel size as `.title-editor-icon`. Both have to round to the same
+ * pixel row, or the icon moves when the editor opens.
  *
- * The card's padding is already in front of both, so each is drawn back by it.
+ * The card's padding is already in front of the title, so it is drawn back by it.
  */
 .board-view-container .board-note > .title {
   display: block;
   padding-inline-start: calc(var(--card-title-inset) - var(--card-padding));
-  text-indent: calc(var(--card-icon-inset) - var(--card-title-inset));
 
   /* The spans mark.js wraps a filter's matched tokens in. Matches the search result cards. */
   .ck-find-result {
@@ -589,16 +588,23 @@ body.mobile .board-view-container .board-add-column {
   text-decoration: underline;
 }
 
-/* Inline, so the glyph sits on the title's own baseline. The trailing space assumes the pack draws
-   its icons on a `--card-icon-size` advance, as the layout above already did. */
+/* Centred on the first line, in a box the size of the glyph. The size is rounded to whole pixels,
+   as `note_icon.css` rounds the picker's glyph. */
 .board-view-container .board-note > .title > .icon {
-  display: inline;
-  margin-inline-end: calc(
-    var(--card-title-inset) - var(--card-icon-inset) - var(--card-icon-size));
-  /* A pack centres its ink on the em box, which sits above the middle of the title's capitals. In
-     whole pixels, so the glyph keeps a fixed relation to the row the line is drawn on. */
-  vertical-align: -1px;
-  vertical-align: round(-0.0555em, 1px);
+  position: absolute;
+  inset-inline-start: var(--card-icon-inset);
+  inset-block-start: calc(
+    var(--card-padding) + (var(--card-line-height) * 1em - var(--card-icon-size)) / 2);
+  inset-block-start: calc(
+    var(--card-padding) + (var(--card-line-height) * 1em - round(var(--card-icon-size), 1px)) / 2);
+  width: round(var(--card-icon-size), 1px);
+  height: round(var(--card-icon-size), 1px);
+  line-height: 1;
+
+  &::before {
+    font-size: var(--card-icon-size);
+    font-size: round(var(--card-icon-size), 1px);
+  }
 }
 
 .board-view-container .board-note > .edit-icon {
@@ -1051,7 +1057,9 @@ body#trilium-app.motion-disabled .board-view.editing-open :is(
  * worked out where it is used, and both sit in the card's own font.
  */
 .board-view-container .title-editor-field .title-editor-icon {
-  --note-icon-size: var(--card-icon-size);
+  /* Rounded here, not in `note_icon.css`: that file rounds the glyph but not the box, and the
+     insets below are computed from the box. */
+  --note-icon-size: round(var(--card-icon-size), 1px);
   --note-icon-container-padding-size: 4px;
   --title-editor-icon-inset: var(--card-icon-inset);
   /* No disc behind it, and the colour the line itself is written in: it stands in the text being
