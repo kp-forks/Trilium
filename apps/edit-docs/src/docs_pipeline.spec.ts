@@ -1,14 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-import { normalizeLineEndings, rewriteHelpLinks } from "./utils.js";
-
-// utils.ts bootstraps Electron at module load (registers the `trilium-app://` scheme and
-// pulls in the desktop window service, whose resource_dir lookup calls process.exit in a
-// non-Electron test runner). Stub those side-effectful imports so the pure helpers below
-// (rewriteHelpLinks, normalizeLineEndings) can be imported in isolation.
-vi.mock("electron", () => ({ default: { app: {}, protocol: { registerSchemesAsPrivileged: () => {} } } }));
-vi.mock("@triliumnext/desktop/src/protocol.js", () => ({ registerTriliumAppScheme: () => {}, setupTriliumAppProtocol: () => {} }));
-vi.mock("@triliumnext/desktop/src/services/window.js", () => ({ default: {}, setupWindowing: () => {} }));
+import { normalizeLineEndings, rewriteHelpLinks } from "./docs_pipeline.js";
 
 describe("rewriteHelpLinks", () => {
     it("prefixes plain help-note links with _help_", () => {
