@@ -13,7 +13,7 @@ import options from "../../../services/options.js";
 import { sanitizeNoteContentHtml } from "../../../services/sanitize_content.js";
 import { ensureMimeTypesForHighlighting, isSyntaxHighlightEnabled } from "../../../services/syntax_highlight.js";
 import { getTaskStateDefinitions, openCustomTaskStateConfig } from "../../../services/task_states.js";
-import { isMac } from "../../../services/utils.js";
+import { isMac, openInAppHelpFromUrl } from "../../../services/utils.js";
 import { resolveContentLanguage } from "../../../utils/formatters.js";
 import SAMPLE_DIAGRAMS from "../mermaid/sample_diagrams.js";
 import buildAiAssistantStream, { type AiNoteLocationProvider, buildAiAssistantQuickActions } from "./ai_assistant_stream.js";
@@ -66,7 +66,8 @@ export async function buildConfig(opts: BuildEditorOptions): Promise<EditorConfi
         mermaid: {
             lazyLoad: async () => (await import("mermaid")).default, // FIXME
             config: getMermaidConfig(),
-            samples: SAMPLE_DIAGRAMS
+            samples: SAMPLE_DIAGRAMS,
+            openHelp: () => openInAppHelpFromUrl("s1aBHPd79XYj")
         },
         image: {
             styles: {
