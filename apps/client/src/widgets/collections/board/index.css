@@ -57,6 +57,10 @@
   --board-drag-stack-offset: 4px;
   /* The ring a carried card wears, which the stack behind it starts clear of. */
   --board-drag-ring-width: 3px;
+  /* The gap a carried card or column would drop into. Both are drawn at 0.6 opacity, so these
+     carry less weight than the values alone suggest. */
+  --board-drop-placeholder-background: rgba(0, 0, 0, 0.15);
+  --board-column-drop-placeholder-background: rgba(0, 0, 0, 0.1);
   /* The ring a picked-out card carries. */
   --board-selected-ring-color: var(--link-color);
   /* The wedge in a card's foot corner while cards are being selected, until the card is. */
@@ -1203,7 +1207,7 @@ body#trilium-app.motion-disabled .board-view.editing-open :is(
   /* The gap below is the card's `margin-block`, which the card reads at `--card-font-size`. */
   margin-block: 0 calc(0.65 * var(--card-font-size));
   border-radius: 5px;
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: var(--board-drop-placeholder-background);
   opacity: 0;
   /* Opacity only: the height is the carried card's, so any change in it is a mismatch to see
      rather than a movement to smooth over, and it slides to follow the pointer rather than easing
@@ -1248,7 +1252,7 @@ body#trilium-app.motion-disabled .board-view.editing-open :is(
   flex-shrink: 0;
   height: 200px;
   border-radius: 8px;
-  background-color: rgba(0, 0, 0, 0.1);
+  background-color: var(--board-column-drop-placeholder-background);
   opacity: 0;
   /* Carried to where the column would land, the same way the columns it passes step aside. */
   transition: opacity 0.15s ease, transform 0.2s ease;
