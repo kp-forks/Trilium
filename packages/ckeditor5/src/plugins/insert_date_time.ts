@@ -8,7 +8,8 @@ export default class InsertDateTimePlugin extends Plugin {
         const editor = this.editor;
         const t = editor.t;
 
-        editor.commands.add(COMMAND_NAME, new InsertDateTimeCommand(editor));
+        const command = new InsertDateTimeCommand(editor);
+        editor.commands.add(COMMAND_NAME, command);
 
         editor.ui.componentFactory.add('dateTime', locale => {
             const view = new ButtonView( locale );
@@ -19,8 +20,6 @@ export default class InsertDateTimePlugin extends Plugin {
                 tooltip: true
             } );
 
-            // enable only if the editor is not read only
-            const command = editor.commands.get(COMMAND_NAME)!;
             view.bind('isEnabled').to(command, 'isEnabled');
             view.on('execute', () => {
                 editor.execute(COMMAND_NAME);
@@ -31,19 +30,22 @@ export default class InsertDateTimePlugin extends Plugin {
     }
 }
 
+/**
+ * Inserts the current date and time, formatted by the host through `formatDateTime()`, in place of
+ * the selection. The text takes the selection's attributes, so it stays bold inside bold text.
+ */
 class InsertDateTimeCommand extends Command {
 
-    refresh() {
-        this.isEnabled = !this.editor.isReadOnly;
-    }
-
     execute() {
-        const editor = this.editor;
-        const editorEl = editor.editing.view.getDomRoot();
-        const component = glob.getComponentByEl(editorEl);
+        const model = this.editor.model;
+        const selection = model.document.selection;
+        const editorEl = this.editor.editing.view.getDomRoot();
+        const text = glob.getComponentByEl<EditorComponent>(editorEl).formatDateTime(new Date());
 
-        component.triggerCommand('insertDateTimeToText');
-        editor.editing.view.focus();
+        model.change(writer => {
+            const attributes = selection.getAttributes();
+            model.insertContent(writer.createText(text, attributes));
+        });
     }
 
 }
