@@ -66,30 +66,46 @@ async function main() {
         console.log(`Built icon pack ${iconPack.name}.`);
     }
 
-    const builtIconPacks = [
-        boxicons3("basic"),
-        boxicons3("brands"),
-        mdi(),
-        phosphor("regular"),
-        phosphor("fill")
-    ];
-    const builtinIconPacks = [
-        { iconPack: ckeditor(), manifestFileName: "icon_pack_text_editor.json" }
-    ];
+    // Keyed by prefix so that a pack is only constructed when it is requested.
+    const builtIconPacks: Record<string, () => IconPackData> = {
+        bx3: () => boxicons3("basic"),
+        bxl3: () => boxicons3("brands"),
+        mdi: () => mdi(),
+        ph: () => phosphor("regular"),
+        "ph-fill": () => phosphor("fill")
+    };
+    const builtinIconPacks: Record<string, BuiltinIconPack> = {
+        cke: { build: ckeditor, manifestFileName: "icon_pack_text_editor.json" }
+    };
 
     // Prefixes given on the command line (`pnpm start cke`) build only those packs.
     const requested = process.argv.slice(2);
-    const isRequested = (iconPack: IconPackData) => (
-        !requested.length || requested.includes(iconPack.prefix)
-    );
-    await Promise.all(builtIconPacks.filter(isRequested).map(buildIconPack));
-    for (const { iconPack, manifestFileName } of builtinIconPacks) {
-        if (isRequested(iconPack)) {
-            writeBuiltinIconPack(iconPack, manifestFileName);
+    const isRequested = (prefix: string) => !requested.length || requested.includes(prefix);
+    await Promise.all(Object.entries(builtIconPacks)
+        .filter(([ prefix ]) => isRequested(prefix))
+        .map(([ prefix, build ]) => buildIconPack(checkPrefix(build(), prefix))));
+    for (const [ prefix, { build, manifestFileName } ] of Object.entries(builtinIconPacks)) {
+        if (isRequested(prefix)) {
+            writeBuiltinIconPack(checkPrefix(build(), prefix), manifestFileName);
         }
     }
 
     console.log(`\n✅ Built icon packs are available at ${resolve(outputDir)}.`);
+}
+
+interface BuiltinIconPack {
+    build: () => IconPackData;
+    manifestFileName: string;
+}
+
+/** Fails the build when a pack's key in `main()` no longer matches the prefix its provider sets. */
+function checkPrefix(iconPack: IconPackData, prefix: string) {
+    if (iconPack.prefix !== prefix) {
+        throw new Error(
+            `Icon pack ${iconPack.name} has prefix "${iconPack.prefix}", expected "${prefix}".`
+        );
+    }
+    return iconPack;
 }
 
 /**
