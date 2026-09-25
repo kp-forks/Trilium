@@ -211,6 +211,7 @@ You can select multiple cards in the following ways:
 *   **Using only the keyboard:**
     *   To add the currently focused card to the selection, press <kbd>Ctrl</kbd> + <kbd>Space</kbd>. Repeat this for the other cards you want to select. Pressing <kbd>Ctrl</kbd> + <kbd>Space</kbd> again on a selected card will deselect it.
     *   To select a continuous sequence of cards within a column, hold <kbd>Shift</kbd> and use the <kbd>Up</kbd> and <kbd>Down</kbd> arrow keys to expand or shrink the selection.
+    *   To select every card in the column the focus is in, press <kbd>Ctrl</kbd> + <kbd>A</kbd>. The same action is available from the column menu, as <span class="tn-icon bx bx-selection"></span> **Select all cards**.
     *   Press <kbd>Esc</kbd> to clear the selection.
 
 ### Moving cards between columns

@@ -10,8 +10,8 @@
   --board-item-hover-background-saturation: 100%;
   --board-item-hover-background-lightness: 98.5%;
 
-  /* What a card stands on while its title is being typed. The pointer leaves the card as the
-     reader moves to the field, so this is the hover lightness and the colour does not change. */
+  /* The background of a card being edited. Set to the hover lightness so the colour does not
+     change when the pointer leaves the card. */
   --board-item-editing-background-lightness: var(--board-item-hover-background-lightness);
 
   /* The inbox's own surfaces. It holds what has not been sorted yet, so it stands on the board

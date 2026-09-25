@@ -1877,7 +1877,7 @@ export function TitleEditor({
      * that would have ended the edit being spent.
      */
     const isHoldingOpen = useRef(false);
-    /** The box holding the field and the picker, against which focus is told inside from outside. */
+    /** The box holding the field and the picker. `iconFocusOut` tests `relatedTarget` against it. */
     const fieldRef = useRef<HTMLDivElement>(null);
     const iconRef = useRef<HTMLSpanElement>(null);
     /**
@@ -2085,8 +2085,8 @@ export function TitleEditor({
     };
 
     /**
-     * Ends the edit once the picker hands focus on to something outside the field's own box.
-     * Focus going back to the field, or into the picker's menu, leaves the editor where it is.
+     * Ends the edit when focus moves outside `fieldRef`. A `relatedTarget` inside it is the field
+     * itself; `isHoldingOpen` covers the picker's menu, which is drawn outside `fieldRef`.
      */
     function iconFocusOut(e: JSX.TargetedFocusEvent<HTMLSpanElement>) {
         isIconFocused.current = false;

@@ -304,7 +304,7 @@ export function useBoardKeyboard({
         // back towards where the range began, and carries focus with it.
         if (e.shiftKey && RANGE_KEYS.includes(e.key)) {
             // A header and the button under a column hold no card, so a range starts at neither.
-            // The press is left to the browser there, as it was before the board answered for it.
+            // The key is left to the browser there.
             if (spot.kind !== "item") return;
 
             // Taken whether or not it leads anywhere: a card at the end of its column is no reason

@@ -214,7 +214,7 @@ export default function Column({
         useContext(BoardActionsContext);
     const { branchIdToEdit, columnNameToEdit, draggedCard, draggedColumn } =
         useContext(BoardDragStateContext);
-    // The store itself, for the menu entry that picks out the whole column.
+    // Read for the `Select all cards` menu entry, which calls `selection.selectAll`.
     const selection = useSelection();
     // Every card on the move. The one under the pointer is taken out of the flow by the gesture
     // itself; the rest of a carried selection stay where they are drawn and are dimmed instead.

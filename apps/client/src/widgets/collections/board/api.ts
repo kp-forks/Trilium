@@ -42,7 +42,7 @@ export type CardPlacement = "top" | "bottom";
 /** The relation a card carries to stand in for another note rather than open an editor of its own. */
 export const CARD_REDIRECT_RELATION = "board:cardRedirectTo";
 
-/** The name the relation above shipped under. Still read, so boards already using it keep working. */
+/** The previous name of the relation above. `openCard` falls back to it. */
 export const CARD_REDIRECT_RELATION_LEGACY = "boardCardRedirectTo";
 
 /** One write's claim on a column, held until that write lands or is taken back. */

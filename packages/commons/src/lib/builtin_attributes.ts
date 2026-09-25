@@ -271,7 +271,7 @@ const BUILTIN_ATTRIBUTES = [
     { type: "label", name: "board:showInbox", valueType: "boolean", hasUserValue: true },
     // Carried by a card that stands in for another note: opening it navigates there instead.
     { type: "relation", name: "board:cardRedirectTo" },
-    // The name the relation above shipped under, still read so existing boards keep working.
+    // The previous name of the relation above. Still read, so existing boards keep redirecting.
     { type: "relation", name: "boardCardRedirectTo" },
     // How wide the board draws its columns. Absent for the narrow default.
     { type: "label", name: "board:columnWidth", valueType: "select", hasUserValue: true,

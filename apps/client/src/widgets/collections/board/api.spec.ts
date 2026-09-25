@@ -594,8 +594,8 @@ describe("BoardApi card operations", () => {
         });
 
         /**
-         * The relation is read under both names, so a board written before the rename still
-         * redirects. Stated as literals: these are what a reader types, not what the code calls it.
+         * `openCard` reads both names. Written as literals rather than as the constants, so the
+         * test pins the attribute names users type.
          */
         it.each([ "board:cardRedirectTo", "boardCardRedirectTo" ])(
             "redirects through the %s relation", (relation) => {
