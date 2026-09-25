@@ -47,7 +47,7 @@ import aiIcon from "../ai_assistant/theme/icons/ai.svg?raw";
 import { COMMAND_NAME as INCLUDE_NOTE_COMMAND } from "../includenote.js";
 import { INSERT_ICON_COMMAND } from "../inline_icon/inline_icon_editing.js";
 import InlineIconUI from "../inline_icon/inline_icon_ui.js";
-import { COMMAND_NAME as INSERT_DATE_TIME_COMMAND } from "../insert_date_time.js";
+import InsertDateTimePlugin, { COMMAND_NAME as INSERT_DATE_TIME_COMMAND, getDateTimeFormatOptions } from "../insert_date_time.js";
 import { COMMAND_NAME as INTERNAL_LINK_COMMAND } from "../internallink.js";
 import { COMMAND_NAME as MARKDOWN_IMPORT_COMMAND } from "../markdownimport.js";
 import MathUI from "../math/math_ui.js";
@@ -352,13 +352,7 @@ export function buildTriliumSlashCommands(editor: Editor): SlashCommandDefinitio
             icon: insertFootnoteIcon,
             commandName: "InsertFootnote"
         },
-        {
-            id: "datetime",
-            title: t("Insert date/time"),
-            description: t("Insert the current date and time"),
-            icon: dateTimeIcon,
-            commandName: INSERT_DATE_TIME_COMMAND
-        },
+        ...buildDateTimeSlashCommands(editor),
         {
             id: "internal-link",
             title: t("Internal link"),
@@ -528,6 +522,42 @@ function buildMermaidSlashCommands(editor: Editor): SlashCommandDefinition[] {
     }));
 
     return [ blank, ...templates ];
+}
+
+/**
+ * One entry per format `getDateTimeFormatOptions()` offers. The entry for the user's default format
+ * shows its output as the description; each preset carries it in the title, so the rows differ at a
+ * glance. `_catalog()` runs on every query, so the previews show the current time.
+ */
+function buildDateTimeSlashCommands(editor: Editor): SlashCommandDefinition[] {
+    if (!editor.plugins.has(InsertDateTimePlugin)) {
+        return [];
+    }
+
+    const t = editor.locale.t;
+    const [ defaultOption, ...presets ] = getDateTimeFormatOptions(editor);
+    const aliases = [ "date", "time", "now", "today", "timestamp" ];
+
+    const defaultEntry: SlashCommandDefinition = {
+        id: "datetime",
+        title: t("Insert date/time"),
+        description: defaultOption.preview,
+        aliases,
+        icon: dateTimeIcon,
+        commandName: INSERT_DATE_TIME_COMMAND
+    };
+
+    const presetEntries = presets.map(({ format, kind, preview }) => ({
+        id: `datetime-${format}`,
+        title: kind === "time" ? t("Insert time: %0", preview) : t("Insert date/time: %0", preview),
+        aliases,
+        icon: dateTimeIcon,
+        // `commandName` supplies the enabled state; `execute` passes the format along.
+        commandName: INSERT_DATE_TIME_COMMAND,
+        execute: (target: Editor) => target.execute(INSERT_DATE_TIME_COMMAND, { format })
+    }));
+
+    return [ defaultEntry, ...presetEntries ];
 }
 
 function buildAlignmentSlashCommands(editor: Editor): SlashCommandDefinition[] {

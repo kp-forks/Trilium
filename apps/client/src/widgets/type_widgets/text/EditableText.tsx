@@ -154,13 +154,13 @@ export default function EditableText({ note, parentComponent, ntxId, noteContext
             setIconPickerRequest(request);
             return () => setIconPickerRequest(null);
         },
-        insertDateTimeToTextCommand() {
-            if (!editorApiRef.current) return;
-            const date = new Date();
-            const customDateTimeFormat = options.get("customDateTimeFormat");
-            const dateString = utils.formatDateTime(date, customDateTimeFormat);
-
-            addTextToEditor(dateString);
+        formatDateTime(date: Date, format?: string) {
+            return utils.formatDateTime(date, format ?? options.get("customDateTimeFormat"));
+        },
+        // Keyboard shortcut
+        async insertDateTimeToTextCommand() {
+            const editor = await waitForEditor();
+            editor?.execute("insertDateTimeToText");
         },
         // Include note functionality note
         addIncludeNoteToTextCommand() {

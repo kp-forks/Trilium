@@ -18,10 +18,11 @@ import {
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { createTestEditor } from "../../../test/editor-kit.js";
+import { installGlobMock } from "../../../test/globals-test-kit.js";
 import { COMMAND_NAME as INCLUDE_NOTE_COMMAND } from "../includenote.js";
 import { INSERT_ICON_COMMAND } from "../inline_icon/inline_icon_editing.js";
 import InlineIconUI from "../inline_icon/inline_icon_ui.js";
-import { COMMAND_NAME as INSERT_DATE_TIME_COMMAND } from "../insert_date_time.js";
+import InsertDateTimePlugin, { COMMAND_NAME as INSERT_DATE_TIME_COMMAND, DATE_TIME_PRESETS } from "../insert_date_time.js";
 import { COMMAND_NAME as INTERNAL_LINK_COMMAND } from "../internallink.js";
 import { COMMAND_NAME as MARKDOWN_IMPORT_COMMAND } from "../markdownimport.js";
 import MathUI from "../math/math_ui.js";
@@ -630,7 +631,6 @@ describe("buildTriliumSlashCommands", () => {
     it.each([
         [ "collapsible", "Collapsible block", "collapsible" ],
         [ "footnote", "Footnote", "InsertFootnote" ],
-        [ "datetime", "Insert date/time", INSERT_DATE_TIME_COMMAND ],
         [ "internal-link", "Internal link", INTERNAL_LINK_COMMAND ],
         [ "include-note", "Include note", INCLUDE_NOTE_COMMAND ],
         [ "page-break", "Page break", "pageBreak" ],
@@ -660,6 +660,62 @@ describe("buildTriliumSlashCommands", () => {
         definition(id).execute?.(fake);
 
         expect(executeSpy).toHaveBeenCalledWith("alignment", { value });
+    });
+
+    it("offers no date/time entries without the date/time plugin", () => {
+        expect(buildTriliumSlashCommands(editor).some((entry) => entry.id.startsWith("datetime"))).toBe(false);
+    });
+
+    describe("date/time entries", () => {
+        let formatDateTime: ReturnType<typeof vi.fn>;
+
+        beforeEach(async () => {
+            formatDateTime = vi.fn((_date: Date, format?: string) => format ?? "2026-09-25 10:30");
+            installGlobMock({ getComponentByEl: () => ({ formatDateTime }) });
+            editor = await createTestEditor([ Essentials, Paragraph, InsertDateTimePlugin ]);
+        });
+
+        function dateTimeEntries() {
+            return buildTriliumSlashCommands(editor).filter((entry) => entry.id.startsWith("datetime"));
+        }
+
+        it("shows the default format's output under the plain entry", () => {
+            const entry = definition("datetime");
+
+            expect(entry.title).toBe("Insert date/time");
+            expect(entry.description).toBe("2026-09-25 10:30");
+            expect(entry.commandName).toBe(INSERT_DATE_TIME_COMMAND);
+            expect(entry.icon).toContain("<svg");
+        });
+
+        it("offers each preset titled with its output, inserting in that format", () => {
+            const { fake, executeSpy } = makeFakeEditor();
+            const presets = dateTimeEntries().slice(1);
+
+            expect(presets.map((entry) => entry.title))
+                .toEqual(DATE_TIME_PRESETS.map(({ format, kind }) => (kind === "time" ? `Insert time: ${format}` : `Insert date/time: ${format}`)));
+            expect(presets.map((entry) => entry.title)).toContain("Insert time: HH:mm");
+
+            for (const [ index, entry ] of presets.entries()) {
+                expect(entry.commandName).toBe(INSERT_DATE_TIME_COMMAND);
+                entry.execute?.(fake);
+                expect(executeSpy).toHaveBeenLastCalledWith(INSERT_DATE_TIME_COMMAND, { format: DATE_TIME_PRESETS[index].format });
+            }
+        });
+
+        it("leaves out a preset whose output matches the default format", () => {
+            formatDateTime.mockImplementation((_date: Date, format?: string) => (format === "HH:mm" ? "2026-09-25 10:30" : format ?? "2026-09-25 10:30"));
+
+            expect(dateTimeEntries()).toHaveLength(DATE_TIME_PRESETS.length);
+        });
+
+        it("finds every date/time entry by the words people type for it", () => {
+            const entries = dateTimeEntries();
+
+            for (const query of [ "date", "time", "now", "today", "timestamp" ]) {
+                expect(matchSlashCommands(entries, query)).toHaveLength(entries.length);
+            }
+        });
     });
 
     it("finds the to-do list under the names other editors give it", () => {
