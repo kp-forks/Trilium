@@ -426,6 +426,9 @@
     --board-drop-hint-background-lightness: 45%;
     --board-drop-hint-color: #ffffffc9;
 
+    /* Darker than the default: the board is already dark, so a lighter wash barely shows. */
+    --board-edit-backdrop: rgba(0, 0, 0, 0.3);
+
     --board-text-saturation: 25%;
     --board-text-lightness: 80%;
     --board-muted-text-saturation: 18%;
