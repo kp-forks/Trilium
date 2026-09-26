@@ -216,7 +216,7 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
         white-space: nowrap;
     }
 
-    /* The label is left out of the body, so the opened thought shows it in full. */
+    /* The label is the only copy of its line, so the opened thought wraps it in full. */
     &[open] > .expandable-section-summary :is(.expandable-section-label, .llm-chat-thinking-label) {
         white-space: normal;
     }
