@@ -1,26 +1,43 @@
-/* Tool call specific styles (card/section structure is in ExpandableCard.css) */
+/* Tool calls share the thought's disclosure line (`.llm-chat-thinking` in ChatMessage.css). */
+.llm-chat-tool-calls {
+    margin: 0.25rem 0;
+    font-size: 0.85rem;
+    color: var(--muted-text-color);
+}
 
-.expandable-card.llm-chat-tool-call-card {
-    border-radius: 6px;
+.llm-chat-tool-call {
+    & + & {
+        border-top: none;
+    }
 
-    .expandable-section-summary {
-        padding: 0.25rem 0.6rem;
+    > .expandable-section-summary {
+        width: fit-content;
+        max-width: 100%;
+        padding: 0.15rem 0;
+        gap: 0.4rem;
         font-weight: normal;
         line-height: 1.4rem;
 
         > .bx {
             font-size: 0.9rem;
-            margin-right: 0.1rem;
-            color: var(--muted-text-color);
+            line-height: inherit;
+            margin-right: 0;
+        }
+
+        > .expandable-section-chevron {
+            margin-left: 0;
         }
 
         &:hover {
-            background: var(--hover-item-background-color);
+            color: var(--main-text-color);
         }
     }
 
-    .expandable-section-body {
-        border-top: 1px solid var(--main-border-color);
+    /* The left margin centers the rule under the 0.9rem icon of the line above. */
+    > .expandable-section-body {
+        margin: 0.15rem 0 0.25rem 0.45rem;
+        padding-left: 0.85rem;
+        border-left: 2px solid var(--main-border-color);
     }
 }
 
@@ -43,13 +60,9 @@
 /* Section body (input + result) */
 .llm-chat-tool-call-input,
 .llm-chat-tool-call-result {
-    padding: 0.4rem 0.6rem;
+    padding: 0.25rem 0;
     max-height: 300px;
     overflow: auto;
-}
-
-.llm-chat-tool-call-result {
-    border-top: 1px solid var(--main-border-color);
 }
 
 .expandable-section-body pre {
@@ -116,8 +129,8 @@
 }
 
 /* Tool call error styling */
-.llm-chat-tool-call-error > .expandable-section-summary,
-.expandable-card.llm-chat-tool-call-card .llm-chat-tool-call-error > .expandable-section-summary > .bx {
+/* Outranks the summary's hover color, so an errored call stays red. */
+.llm-chat-tool-call.llm-chat-tool-call-error > .expandable-section-summary {
     color: var(--danger-color, #dc3545);
 }
 

@@ -5,7 +5,7 @@ import { Trans } from "react-i18next";
 import { t } from "../../../services/i18n.js";
 import { NewNoteLink } from "../../react/NoteLink.js";
 import { EditNoteContentDiff, isSmallEdit, parseNoteContentEdits } from "./EditNoteContentDiff.js";
-import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
+import { ExpandableSection } from "./ExpandableCard.js";
 import type { ToolCall } from "./llm_chat_types.js";
 
 interface ToolCallContext {
@@ -198,7 +198,7 @@ function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
         <ExpandableSection
             icon={toolCallIcon(toolCall)}
             label={<ToolCallLabel toolCall={toolCall} />}
-            className={hasError ? "llm-chat-tool-call-error" : ""}
+            className={`llm-chat-tool-call ${hasError ? "llm-chat-tool-call-error" : ""}`}
             open={noteContentEdits ? isSmallEdit(noteContentEdits) : isStreamingInput || undefined}
         >
             <div className={`llm-chat-tool-call-input ${isStreamingInput ? "llm-chat-tool-call-input-streaming" : ""}`}>
@@ -243,7 +243,7 @@ function ToolCallGroupSection({ toolCalls }: { toolCalls: ToolCall[] }) {
     );
 
     return (
-        <ExpandableSection icon={icon} label={label} className="llm-chat-tool-call-group">
+        <ExpandableSection icon={icon} label={label} className="llm-chat-tool-call llm-chat-tool-call-group">
             {toolCalls.map((tc, idx) => (
                 <ToolCallSection key={tc.id ?? idx} toolCall={tc} />
             ))}
@@ -267,16 +267,16 @@ function groupByToolName(toolCalls: ToolCall[]): Array<ToolCall | ToolCall[]> {
     return groups;
 }
 
-/** A card that groups one or more sequential tool calls together. */
+/** One or more sequential tool calls, each a disclosure line like a thought. */
 export default function ToolCallCard({ toolCalls }: { toolCalls: ToolCall[] }) {
     const groups = groupByToolName(toolCalls);
     return (
-        <ExpandableCard className="llm-chat-tool-call-card">
+        <div className="llm-chat-tool-calls">
             {groups.map((group, idx) => (
                 Array.isArray(group)
                     ? <ToolCallGroupSection key={idx} toolCalls={group} />
                     : <ToolCallSection key={group.id ?? idx} toolCall={group} />
             ))}
-        </ExpandableCard>
+        </div>
     );
 }
