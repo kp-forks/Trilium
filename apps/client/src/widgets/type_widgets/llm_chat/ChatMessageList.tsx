@@ -42,16 +42,8 @@ export default function ChatMessageList({ chat, emptyStateText, className }: Cha
         />
     )), [messages, isStreaming, retryLast]);
 
-    // Stable placeholder objects: rebuilt only when their streamed content advances, so
-    // renders caused by anything else let memo(ChatMessage) skip the placeholders too.
-    const thinkingMessage = useMemo<StoredMessage | null>(() => chat.streamingThinking ? {
-        id: "streaming-thinking",
-        role: "assistant",
-        content: chat.streamingThinking,
-        createdAt: new Date().toISOString(),
-        type: "thinking"
-    } : null, [chat.streamingThinking]);
-
+    // A stable placeholder object: rebuilt only when its streamed content advances, so
+    // renders caused by anything else let memo(ChatMessage) skip the placeholder too.
     const streamingMessage = useMemo<StoredMessage | null>(() => chat.streamingBlocks.length > 0 ? {
         id: "streaming",
         role: "assistant",
@@ -67,19 +59,13 @@ export default function ChatMessageList({ chat, emptyStateText, className }: Cha
                     <NoItems icon="bx bx-conversation" text={emptyStateText} />
                 )}
                 {storedMessages}
-                {isStreaming && !thinkingMessage && !streamingMessage && (
+                {isStreaming && !streamingMessage && (
                     <div className={`chat-stream-status ${chat.streamingStatus ? "" : "chat-stream-status-waiting"}`} role="status">
                         <LoadingSpinner />
                         {chat.streamingStatus
                             ? t(`llm_chat.stream_status.${chat.streamingStatus}`)
                             : t("llm_chat.stream_status.waiting_for_reply")}
                     </div>
-                )}
-                {isStreaming && thinkingMessage && (
-                    <ChatMessage
-                        message={thinkingMessage}
-                        isStreaming
-                    />
                 )}
                 {isStreaming && streamingMessage && (
                     <ChatMessage

@@ -39,4 +39,17 @@ describe("ToolCallCard", () => {
         expect([ ...card.querySelectorAll(".llm-chat-tool-call-detail") ].map(detail => detail.textContent))
             .toEqual([ "rocket", "weather Sibiu", "https://triliumnotes.org" ]);
     });
+
+    it("lists the calls as bare disclosure lines rather than in a card", () => {
+        const target = renderCard([
+            { id: "1", toolName: "get_note", input: { noteId: "a" }, result: "{}" },
+            { id: "2", toolName: "get_note", input: { noteId: "b" }, result: "{}" },
+            { id: "3", toolName: "web_search", input: { query: "rocket" }, result: "Sunny" }
+        ]);
+        expect(target.querySelector(".expandable-card")).toBeNull();
+        const lines = [ ...(target.querySelector(".llm-chat-tool-calls")?.children ?? []) ];
+        expect(lines.map(line => line instanceof HTMLDetailsElement && line.classList.contains("llm-chat-tool-call")))
+            .toEqual([ true, true ]);
+        expect(lines[0]?.querySelectorAll(".expandable-section-body > details.llm-chat-tool-call")).toHaveLength(2);
+    });
 });

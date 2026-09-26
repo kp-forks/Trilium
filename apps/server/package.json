@@ -32,6 +32,7 @@
     "proxy-nginx-subdir": "docker run --name trilium-nginx-subdir --rm -p 8095:8095 --add-host=host.docker.internal:host-gateway -v ./docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro nginx:latest"
   },
   "dependencies": {
+    "@agentclientprotocol/codex-acp": "1.13.1",
     "@ai-sdk/anthropic": "4.0.60",
     "@ai-sdk/google": "4.0.77",
     "@ai-sdk/openai": "4.0.72",

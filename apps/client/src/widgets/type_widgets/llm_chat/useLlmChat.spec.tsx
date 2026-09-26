@@ -302,6 +302,53 @@ describe("useLlmChat", () => {
         expect(api().getContent()).toMatchObject({ selectedModel: "mini", selectedProvider: "openai", selectedProviderId: "o_1" });
     });
 
+    it("keeps thoughts in stream order inside the reply, and never sends them back", async () => {
+        streamChatCompletionMock.mockImplementationOnce(async (_messages, _options, cb) => {
+            cb.onThinking("**Reading** the ");
+            cb.onThinking("hostname");
+            cb.onToolUse("c1", "shell", {});
+            cb.onToolResult("c1", "shell", "pc", false);
+            cb.onThinking("Got it.");
+            cb.onChunk("Your PC is pc.");
+            cb.onDone();
+        });
+        await mountChat();
+        await act(async () => {
+            api().loadFromContent({
+                version: 1,
+                messages: [
+                    { id: "m1", role: "user", content: "hi", createdAt: "2026-01-01T00:00:00.000Z" },
+                    { id: "m2", role: "assistant", type: "thinking", content: "old thoughts", createdAt: "2026-01-01T00:00:01.000Z" },
+                    { id: "m3", role: "assistant", content: "hello", createdAt: "2026-01-01T00:00:02.000Z" }
+                ]
+            });
+        });
+
+        for (const text of ["name?", "thanks"]) {
+            await act(async () => {
+                api().setInput(text);
+            });
+            await act(async () => {
+                await api().handleSubmit(new Event("submit"));
+            });
+        }
+
+        expect(api().messages[4]).toMatchObject({
+            role: "assistant",
+            content: [
+                { type: "thinking", content: "**Reading** the hostname" },
+                { type: "tool_call", toolCall: { id: "c1", result: "pc" } },
+                { type: "thinking", content: "Got it." },
+                { type: "text", content: "Your PC is pc." }
+            ]
+        });
+        expect(api().messages.filter(m => m.type === "thinking").map(m => m.id)).toEqual(["m2"]);
+
+        const sent = (call: number) => (streamChatCompletionMock.mock.calls[call][0] as { content: unknown }[]).map(m => m.content);
+        expect(sent(0)).toEqual(["hi", "hello", "name?"]);
+        expect(sent(1)).toEqual(["hi", "hello", "name?", "Your PC is pc.", "thanks"]);
+    });
+
     it("keeps what a turn waits on until the turn ends", async () => {
         let callbacks: { onStatus: (status: string) => void } | undefined;
         let finish: () => void = () => undefined;

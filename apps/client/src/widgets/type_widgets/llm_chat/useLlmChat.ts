@@ -40,7 +40,7 @@ function getLastUserMessageEl(container: HTMLElement): HTMLElement | null {
 /**
  * Flatten a stored message's content into the wire format the server expects.
  * Plain string content stays as-is; block-shaped content (with images) becomes
- * an ordered array of text/image parts, with tool-call blocks stripped.
+ * an ordered array of text/image parts, with tool-call and thinking blocks stripped.
  */
 function flattenToApiContent(content: string | ContentBlock[]): string | LlmMessagePart[] {
     if (typeof content === "string") {
@@ -59,7 +59,8 @@ function flattenToApiContent(content: string | ContentBlock[]): string | LlmMess
         }
         // tool_call blocks belong to assistant history rendering only — they
         // are reconstructed from the model's own tool-use turns and must not
-        // be re-sent as user/assistant content.
+        // be re-sent as user/assistant content. thinking blocks are the model's
+        // reasoning, which it must not read back as something it said.
     }
     // Collapse to a string if there is no multimodal content — keeps backwards
     // compatibility with providers/paths that haven't been touched.
@@ -94,7 +95,6 @@ export interface UseLlmChatReturn {
     hasInputText: boolean;
     isStreaming: boolean;
     streamingBlocks: ContentBlock[];
-    streamingThinking: string;
     /** What the streaming turn waits on before its reply starts, if the server said. */
     streamingStatus: LlmStreamStatus | null;
     pendingCitations: LlmCitation[];
@@ -201,7 +201,6 @@ export function useLlmChat(
     // displayed `streamingBlocks` is derived from this with the trailing text
     // block smoothed via useSmoothStreaming for a steady reveal cadence.
     const [targetBlocks, setTargetBlocks] = useState<ContentBlock[]>([]);
-    const [streamingThinking, setStreamingThinking] = useState("");
     const [streamingStatus, setStreamingStatus] = useState<LlmStreamStatus | null>(null);
     const { displayedText: smoothedTailText, append: smoothAppend, drain: smoothDrain, reset: smoothReset } = useSmoothStreaming();
     const [pendingCitations, setPendingCitations] = useState<LlmCitation[]>([]);
@@ -557,11 +556,9 @@ export function useLlmChat(
         setMessagesInternal(conversation);
         setIsStreaming(true);
         setTargetBlocks([]);
-        setStreamingThinking("");
         setStreamingStatus(null);
         smoothReset();
 
-        let thinkingContent = "";
         const contentBlocks: ContentBlock[] = [];
         const citations: LlmCitation[] = [];
         let usage: LlmUsage | undefined;
@@ -577,7 +574,7 @@ export function useLlmChat(
             return block as ContentBlock & { type: "text" };
         }
 
-        const apiMessages: LlmMessage[] = trimToFirstUserMessage(conversation).map(m => ({
+        const apiMessages: LlmMessage[] = trimToFirstUserMessage(conversation.filter(m => m.type !== "thinking")).map(m => ({
             role: m.role,
             content: stripQuoteSourcesFromApiContent(flattenToApiContent(m.content))
         }));
@@ -634,35 +631,18 @@ export function useLlmChat(
                 }
             }
 
-            const finalNewMessages: StoredMessage[] = [];
-
-            if (thinkingContent) {
-                finalNewMessages.push({
-                    id: randomString(),
-                    role: "assistant",
-                    content: thinkingContent,
-                    createdAt: new Date().toISOString(),
-                    type: "thinking"
-                });
-            }
-
             if (contentBlocks.length > 0) {
-                finalNewMessages.push({
+                setMessages([...conversation, {
                     id: randomString(),
                     role: "assistant",
                     content: contentBlocks,
                     createdAt: new Date().toISOString(),
                     citations: citations.length > 0 ? citations : undefined,
                     usage
-                });
-            }
-
-            if (finalNewMessages.length > 0) {
-                setMessages([...conversation, ...finalNewMessages]);
+                }]);
             }
 
             setTargetBlocks([]);
-            setStreamingThinking("");
             setPendingCitations([]);
             setStreamingStatus(null);
             setIsStreaming(false);
@@ -689,8 +669,16 @@ export function useLlmChat(
                     setTargetBlocks([...contentBlocks]);
                 },
                 onThinking: (text) => {
-                    thinkingContent += text;
-                    setStreamingThinking(thinkingContent);
+                    const last = contentBlocks[contentBlocks.length - 1];
+                    if (last?.type === "thinking") {
+                        contentBlocks[contentBlocks.length - 1] = { type: "thinking", content: last.content + text };
+                    } else {
+                        // The smoother animates only a trailing text block, so reveal the
+                        // text before this thought in full.
+                        smoothDrain();
+                        contentBlocks.push({ type: "thinking", content: text });
+                    }
+                    setTargetBlocks([...contentBlocks]);
                 },
                 onToolInputStart: (toolCallId, toolName) => {
                     // Snap any pending smoothed text to its full value before
@@ -793,7 +781,6 @@ export function useLlmChat(
                     setMessages(finalMessages);
                     smoothReset();
                     setTargetBlocks([]);
-                    setStreamingThinking("");
                     setStreamingStatus(null);
                     setIsStreaming(false);
                 },
@@ -822,7 +809,6 @@ export function useLlmChat(
             }]);
             smoothReset();
             setTargetBlocks([]);
-            setStreamingThinking("");
             setStreamingStatus(null);
             setIsStreaming(false);
             abortControllerRef.current = null;
@@ -928,7 +914,6 @@ export function useLlmChat(
         hasInputText,
         isStreaming,
         streamingBlocks,
-        streamingThinking,
         streamingStatus,
         pendingCitations,
         pendingAttachments,

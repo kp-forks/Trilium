@@ -31,7 +31,6 @@ function renderStreamingTurn(streamingBlocks: ContentBlock[], streamingStatus: s
         messages: [],
         isStreaming: true,
         streamingStatus,
-        streamingThinking: "",
         streamingBlocks,
         pendingCitations: [],
         retryLast: () => undefined,
