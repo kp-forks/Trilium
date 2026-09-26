@@ -1260,8 +1260,8 @@ importers:
         specifier: workspace:*
         version: link:../commons
       '@typescript/vfs':
-        specifier: 1.6.4
-        version: 1.6.4(supports-color@10.2.2)(typescript@6.0.3)
+        specifier: 1.6.5
+        version: 1.6.5(supports-color@10.2.2)(typescript@6.0.3)
       '@valtown/codemirror-ts':
         specifier: 2.3.1
         version: 2.3.1(@codemirror/autocomplete@6.20.3)(@codemirror/lint@6.9.7)(@codemirror/state@6.7.5)(@codemirror/view@6.43.12)
@@ -5072,8 +5072,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@typescript/vfs@1.6.4':
-    resolution: {integrity: sha512-PJFXFS4ZJKiJ9Qiuix6Dz/OwEIqHD7Dme1UwZhTK11vR+5dqW2ACbdndWQexBzCx+CPuMe5WBYQWCsFyGlQLlQ==}
+  '@typescript/vfs@1.6.5':
+    resolution: {integrity: sha512-gobLHQLmvQGJInFk31NvgMd1uYzRXsd8qgnOssyLD055R2QPnw1ubRbBQ4+T+5qC7IQVuYXdvNDE2G7tMDVHgw==}
     peerDependencies:
       typescript: '*'
 
@@ -16312,7 +16312,7 @@ snapshots:
   '@typescript/typescript-win32-x64@7.0.2':
     optional: true
 
-  '@typescript/vfs@1.6.4(supports-color@10.2.2)(typescript@6.0.3)':
+  '@typescript/vfs@1.6.5(supports-color@10.2.2)(typescript@6.0.3)':
     dependencies:
       debug: 4.4.3(supports-color@10.2.2)
       typescript: 6.0.3
