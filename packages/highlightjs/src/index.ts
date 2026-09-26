@@ -34,6 +34,22 @@ export async function ensureMimeTypes(mimeTypes: MimeType[]) {
     }
 }
 
+/**
+ * Makes the registered languages match `mimeTypes`: registers the enabled ones, like
+ * {@link ensureMimeTypes}, and unregisters the disabled ones that are registered.
+ */
+export async function syncMimeTypes(mimeTypes: MimeType[]) {
+    for (const mimeType of mimeTypes) {
+        const mime = normalizeMimeTypeForCKEditor(mimeType.mime);
+        if (!mimeType.enabled && registeredMimeTypes.has(mime)) {
+            hljs.unregisterLanguage(mime);
+            registeredMimeTypes.delete(mime);
+        }
+    }
+
+    await ensureMimeTypes(mimeTypes);
+}
+
 export function highlight(code: string, options: HighlightOptions) {
     if (unsupportedMimeTypes.has(options.language)) {
         return null;

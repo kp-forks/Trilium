@@ -7,7 +7,10 @@ import options from "../services/options.js";
 import * as sanitize from "../services/sanitizer.js";
 import * as utils from "../services/utils/index.js";
 import { buildShareNote, buildShareNotes } from "../test/shaca_mocking.js";
-import { ensureShareHighlighting, getContent, getMimeTypesForOption, readShareTemplate, renderCode, renderNoteContent, type Result, shouldSyntaxHighlight } from "./content_renderer.js";
+import {
+    ensureShareHighlighting, getContent, getMimeTypesForOption, readShareTemplate, renderCode,
+    renderNoteContent, type Result, shouldSyntaxHighlight
+} from "./content_renderer.js";
 import type SNote from "./shaca/entities/snote.js";
 import shaca from "./shaca/shaca.js";
 import shareRoot from "./share_root.js";
@@ -286,14 +289,19 @@ describe("content_renderer", () => {
             await ensureShareHighlighting();
             const xml = "&lt;t t-name=&quot;x&quot;&gt;&lt;/t&gt;";
             // text-x-cobol is not enabled by default, so it is never registered.
-            const languages = [ "text-x-python", "text-plain", "text-x-cobol", "text-x-trilium-auto" ];
+            const languages = [
+                "text-x-python", "text-plain", "text-x-cobol", "text-x-trilium-auto"
+            ];
             const note = buildShareNote({
-                content: languages.map((language) => `<pre><code class="language-${language}">${xml}</code></pre>`).join("")
+                content: languages
+                    .map((lang) => `<pre><code class="language-${lang}">${xml}</code></pre>`)
+                    .join("")
             });
 
             const result = getContent(note);
             if (typeof result.content !== "string") throw new Error("expected string content");
-            const [ python, plain, cobol, auto ] = parse(result.content, { blockTextElements: {} }).querySelectorAll("code");
+            const [ python, plain, cobol, auto ] = parse(result.content, { blockTextElements: {} })
+                .querySelectorAll("code");
             expect(python.classList.contains("hljs")).toBe(true);
             expect(python.innerHTML).toContain("hljs-string");
             expect(python.innerHTML).not.toContain("hljs-tag");
@@ -308,7 +316,8 @@ describe("content_renderer", () => {
                 { id: "pycode", type: "code", mime: "text/x-python", content: `<t t-name="x"></t>` }
             ]);
             const note = buildShareNote({
-                content: `<section class="include-note" data-note-id="pycode" data-box-size="medium">&nbsp;</section>`
+                content: '<section class="include-note" data-note-id="pycode" '
+                    + 'data-box-size="medium">&nbsp;</section>'
             });
 
             const result = getContent(note);
@@ -729,18 +738,26 @@ describe("content_renderer", () => {
     });
 
     describe("ensureShareHighlighting", () => {
-        it("registers once per value of codeNotesMimeTypes", async () => {
+        it("registers once per option value and drops a disabled language", async () => {
             const getOption = vi.spyOn(options, "getOptionOrNull");
+            const pythonBlock = () => buildShareNote({
+                content: `<pre><code class="language-text-x-python">def x(): pass</code></pre>`
+            });
 
             getOption.mockReturnValue(JSON.stringify([ "text/x-python" ]));
             const first = ensureShareHighlighting();
             expect(ensureShareHighlighting()).toBe(first);
             await first;
+            expect(getContent(pythonBlock()).content).toContain("hljs-keyword");
 
             getOption.mockReturnValue(JSON.stringify([ "text/x-go" ]));
-            expect(ensureShareHighlighting()).not.toBe(first);
+            const second = ensureShareHighlighting();
+            expect(second).not.toBe(first);
+            await second;
+            expect(getContent(pythonBlock()).content).not.toContain("hljs");
 
             getOption.mockRestore();
+            await ensureShareHighlighting();
         });
     });
 

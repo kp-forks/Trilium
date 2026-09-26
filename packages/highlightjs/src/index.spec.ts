@@ -56,6 +56,19 @@ describe("ensureMimeTypes", () => {
         expect(highlightAuto(python).language).toBe("text-x-python");
     });
 
+    it("syncMimeTypes unregisters a mime type that was disabled", async () => {
+        const { syncMimeTypes, getLanguage } = await freshModule();
+
+        await syncMimeTypes([ mime("text/x-python"), mime("application/json") ]);
+        await syncMimeTypes([ mime("text/x-python", false), mime("application/json") ]);
+
+        expect(getLanguage("text-x-python")).toBeUndefined();
+        expect(getLanguage("application-json")).toBeDefined();
+
+        await syncMimeTypes([ mime("text/x-python") ]);
+        expect(getLanguage("text-x-python")).toBeDefined();
+    });
+
     it("remembers a mime type with no highlight.js definition as unsupported", async () => {
         const { ensureMimeTypes, highlight } = await freshModule();
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);

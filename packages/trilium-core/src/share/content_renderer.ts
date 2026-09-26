@@ -1,7 +1,10 @@
-import { extractYouTubeVideoId, isHttpUrl, MIME_TYPE_AUTO, type MimeType, MIME_TYPES_DICT, normalizeMimeTypeForCKEditor, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
+import {
+    extractYouTubeVideoId, isHttpUrl, MIME_TYPE_AUTO, type MimeType, MIME_TYPES_DICT,
+    normalizeMimeTypeForCKEditor, safeLinkPreviewHref, safeLinkPreviewImageSrc
+} from "@triliumnext/commons";
 import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
-import { ensureMimeTypes, getLanguage, highlight, highlightAuto } from "@triliumnext/highlightjs";
+import { getLanguage, highlight, highlightAuto, syncMimeTypes } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
 import { t } from "i18next";
@@ -720,9 +723,9 @@ let registeredMimeTypesOption: string | null = null;
 let pendingRegistration: Promise<void> | null = null;
 
 /**
- * Registers the highlight.js languages enabled in the `codeNotesMimeTypes` option, which are the
- * only ones `highlightAuto` considers. The renderer is synchronous, so callers await this before
- * rendering a share page or a share-theme export.
+ * Registers the highlight.js languages enabled in the `codeNotesMimeTypes` option and unregisters
+ * the disabled ones, so `highlightAuto` considers only the enabled ones. The renderer is
+ * synchronous, so callers await this before rendering a share page or a share-theme export.
  */
 export function ensureShareHighlighting(): Promise<void> {
     const optionValue = options.getOptionOrNull("codeNotesMimeTypes");
@@ -732,7 +735,7 @@ export function ensureShareHighlighting(): Promise<void> {
 
     registeredMimeTypesOption = optionValue;
     pendingRegistration = Promise.resolve()
-        .then(() => ensureMimeTypes(getMimeTypesForOption(optionValue)))
+        .then(() => syncMimeTypes(getMimeTypesForOption(optionValue)))
         .catch((e: unknown) => {
             getLog().error(`Unable to register the languages for syntax highlighting: ${e}`);
             pendingRegistration = null;
@@ -769,7 +772,9 @@ export function renderCode(result: Result, mime?: string) {
         // code note would explode into a pathological node-html-parser tree and hang the event
         // loop (#9717). The <code> wrapper and its `language-*` class additionally let renderText
         // apply syntax highlighting, bounded by shouldSyntaxHighlight().
-        const languageClass = mime ? ` class="language-${escapeHtml(normalizeMimeTypeForCKEditor(mime))}"` : "";
+        const languageClass = mime
+            ? ` class="language-${escapeHtml(normalizeMimeTypeForCKEditor(mime))}"`
+            : "";
         result.content = `<pre><code${languageClass}>${escapeHtml(result.content)}</code></pre>`;
     }
 }
