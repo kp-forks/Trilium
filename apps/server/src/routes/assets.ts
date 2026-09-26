@@ -133,10 +133,9 @@ export function getShareThemeAssetDir() {
 /** The client's build output: `public/` in a packaged app, `apps/client/dist` in development. */
 export function getClientBuildDir() {
     if (process.env.NODE_ENV === "development") {
-        const srcRoot = path.join(__dirname, "..", "..");
-        return path.join(srcRoot, "../client/dist");
+        return path.join(getClientDir(), "..", "dist");
     }
-    return path.join(getResourceDir(), "public");
+    return getClientDir();
 }
 
 export function getPdfjsAssetDir() {

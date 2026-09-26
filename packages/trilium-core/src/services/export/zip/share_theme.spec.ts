@@ -359,10 +359,18 @@ describe("hasMermaidDiagrams", () => {
 });
 
 describe("mapMermaidExportFiles", () => {
+    it("maps nothing from a development manifest, which lists no built files", () => {
+        expect(mapMermaidExportFiles({ entry: "/@fs/repo/apps/client/src/share_mermaid.ts", files: [] }))
+            .toBeUndefined();
+    });
+
     it("flattens the listed files into assets/client and rewrites the manifest to match", () => {
         const entry = "../../../src/share_mermaid-abc.js";
         const core = "../../../src/mermaid.core-def.js";
         const mapped = mapMermaidExportFiles({ entry, files: [ entry, core ] });
+        if (!mapped) {
+            throw new Error("The manifest mapped to nothing.");
+        }
 
         expect(mapped.files).toEqual([
             { source: entry, target: "assets/client/share_mermaid-abc.js" },

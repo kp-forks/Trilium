@@ -2,6 +2,7 @@ import type { ShareMermaidManifest } from "@triliumnext/commons";
 import {
     binary_utils,
     type ExportFormat,
+    getLog,
     icon_packs,
     type ZipExportProviderData,
     ZipExportProvider
@@ -71,7 +72,10 @@ async function loadShareThemeExportAssets(): Promise<ShareThemeExportAssets> {
     };
 }
 
-/** Fetches the client's mermaid through the manifest the build writes next to the share theme. */
+/**
+ * Fetches the client's mermaid through the manifest the build writes next to the share theme. The
+ * development server's manifest lists no built files, so its exports show diagrams as code blocks.
+ */
 async function addMermaidFiles(
     files: Map<string, string | Uint8Array>,
     mapFiles: typeof mapMermaidExportFiles
@@ -80,6 +84,11 @@ async function addMermaidFiles(
     const manifestBytes = await fetchAsset(manifestUrl.href);
     const manifest = JSON.parse(binary_utils.decodeUtf8(manifestBytes)) as ShareMermaidManifest;
     const mapped = mapFiles(manifest);
+    if (!mapped) {
+        getLog().info("Exporting without mermaid, since the manifest lists no built files.");
+        return;
+    }
+
     const contents = await Promise.all(mapped.files.map(({ source }) =>
         fetchAsset(new URL(source, manifestUrl).href)));
 

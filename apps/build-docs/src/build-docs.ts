@@ -324,9 +324,14 @@ export default async function buildDocs({ gitRootDir }: BuildContext) {
 
 /**
  * Builds the share theme and the client, whose mermaid the export copies next to the theme for
- * the pages that have a diagram.
+ * the pages that have a diagram. The client builds for production: this process runs with
+ * `NODE_ENV=development`, under which the client's Vite config writes no `share_mermaid.json`.
  */
 function buildShareThemeAssets(gitRootDir: string) {
     execSync("pnpm run --filter share-theme dist", { stdio: "inherit", cwd: gitRootDir });
-    execSync("pnpm run --filter client build", { stdio: "inherit", cwd: gitRootDir });
+    execSync("pnpm run --filter client build", {
+        stdio: "inherit",
+        cwd: gitRootDir,
+        env: { ...process.env, NODE_ENV: "production" }
+    });
 }

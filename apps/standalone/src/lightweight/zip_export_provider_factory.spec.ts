@@ -76,6 +76,21 @@ describe("standaloneZipExportProviderFactory", () => {
             .toBe("content of /src/entry-a.js");
     });
 
+    it("exports without mermaid when the development server lists no built files", async () => {
+        const manifest = { entry: "/@fs/repo/apps/client/src/share_mermaid.ts", files: [] };
+        vi.stubGlobal("fetch", vi.fn(async (url: string) => new Response(
+            url.endsWith("share_mermaid.json") ? JSON.stringify(manifest) : "content"
+        )));
+
+        const provider = await standaloneZipExportProviderFactory("share",
+            makeData(`<pre><code class="language-mermaid">graph TD;</code></pre>`));
+
+        type WithAssets = { assets: { files: Map<string, string | Uint8Array> } };
+        const names = [ ...(provider as unknown as WithAssets).assets.files.keys() ];
+        expect(names).toContain("assets/scripts.js");
+        expect(names.filter((name) => name.startsWith("assets/client/"))).toEqual([]);
+    });
+
     it("fails the share-theme export when a theme file cannot be fetched", async () => {
         vi.stubGlobal("fetch", vi.fn(async () => new Response("", { status: 404 })));
 

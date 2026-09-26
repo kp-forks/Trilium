@@ -58,6 +58,11 @@ function addMermaidFiles(files: Map<string, string | Uint8Array>) {
 
     const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as ShareMermaidManifest;
     const mapped = mapMermaidExportFiles(manifest);
+    if (!mapped) {
+        getLog().info(`Exporting without mermaid, since ${manifestPath} lists no built files.`);
+        return;
+    }
+
     files.set(mapped.manifest.path, mapped.manifest.content);
     for (const { source, target } of mapped.files) {
         files.set(target, readFileSync(join(manifestDir, source)));

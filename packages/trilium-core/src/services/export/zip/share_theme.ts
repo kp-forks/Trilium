@@ -211,9 +211,14 @@ const MARKDOWN_MERMAID_FENCE = /^ {0,3}(`{3,}|~{3,})\s*mermaid\b/m;
 
 /**
  * Maps the files `manifest` lists to their place in the archive, flattened into `assets/client/`,
- * and returns the manifest the exported pages read there.
+ * and returns the manifest the exported pages read there. Returns `undefined` when the manifest
+ * does not list its own entry: a development server's points at a source module and lists no files.
  */
 export function mapMermaidExportFiles(manifest: ShareMermaidManifest) {
+    if (!manifest.files.includes(manifest.entry)) {
+        return undefined;
+    }
+
     return {
         manifest: {
             path: `${MERMAID_ARCHIVE_DIR}/share_mermaid.json`,
