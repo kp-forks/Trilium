@@ -9,12 +9,13 @@ import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
+import LoadingSpinner from "../../react/LoadingSpinner.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { formatErrorDetails } from "./chat_error.js";
 import { renderMarkdown } from "./chat_markdown.js";
 import { renderQuoteSourceLinks } from "./chat_quote.js";
 import { ExpandableCard, ExpandableSection } from "./ExpandableCard.js";
-import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type TextFileBlock, type ToolCallBlock } from "./llm_chat_types.js";
+import { type ContentBlock, type FileBlock, getMessageText, type ImageBlock, type StoredMessage, type TextBlock, type TextFileBlock, type ThinkingBlock, type ToolCallBlock } from "./llm_chat_types.js";
 import { shortModelName } from "./model_name.js";
 import { SafeImage } from "./retry_image.js";
 import ToolCallCard from "./ToolCallCard.js";
@@ -54,6 +55,7 @@ interface Props {
 
 type ContentGroup =
     | { type: "text"; block: TextBlock; index: number }
+    | { type: "thinking"; block: ThinkingBlock; index: number }
     | { type: "tool_calls"; blocks: ToolCallBlock[]; index: number }
     | { type: "image"; block: ImageBlock; index: number }
     | { type: "file"; block: FileBlock; index: number }
@@ -118,6 +120,38 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
     );
 }
 
+/**
+ * One stretch of the model's reasoning. A finished one folds to a line named by its leading
+ * `**Title**`, the shape of Codex's reasoning summaries. The one being generated stays open,
+ * clamped to its last lines under a spinner and its latest title.
+ */
+function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }) {
+    if (isLive) {
+        return (
+            <ExpandableCard className="llm-chat-thinking-card llm-chat-thinking-live">
+                <div className="llm-chat-thinking-header">
+                    <LoadingSpinner />
+                    <span className="llm-chat-thinking-title">{latestThinkingTitle(content) ?? t("llm_chat.thinking")}</span>
+                </div>
+                <div className="llm-chat-thinking-content">
+                    <TextBlockContent content={content} />
+                </div>
+            </ExpandableCard>
+        );
+    }
+
+    const { title, body } = splitThinkingTitle(content);
+    return (
+        <ExpandableCard className="llm-chat-thinking-card">
+            <ExpandableSection icon="bx bx-brain" label={title ?? t("llm_chat.thought_process")}>
+                <div className="llm-chat-thinking-content">
+                    <TextBlockContent content={body} />
+                </div>
+            </ExpandableSection>
+        </ExpandableCard>
+    );
+}
+
 function ChatMessage({ message, isStreaming, onRetry }: Props) {
     const isError = message.type === "error";
     const isThinking = message.type === "thinking";
@@ -144,17 +178,11 @@ function ChatMessage({ message, isStreaming, onRetry }: Props) {
         isThinking && "llm-chat-message-thinking"
     ].filter(Boolean).join(" ");
 
-    // Render thinking messages in a collapsible card
+    // Chats saved before reasoning moved into the reply hold it as a message of its own.
     if (isThinking) {
         return (
             <div className="llm-chat-message-wrapper llm-chat-message-wrapper-assistant">
-                <ExpandableCard className="llm-chat-thinking-card">
-                    <ExpandableSection icon="bx bx-brain" label={t("llm_chat.thought_process")}>
-                        <div className="llm-chat-thinking-content">
-                            <TextBlockContent content={textContent} isStreaming={isStreaming} />
-                        </div>
-                    </ExpandableSection>
-                </ExpandableCard>
+                <ThinkingCard content={textContent} />
             </div>
         );
     }
@@ -260,6 +288,8 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
             } else {
                 groups.push({ type: "tool_calls", blocks: [block], index: i });
             }
+        } else if (block.type === "thinking") {
+            groups.push({ type: "thinking", block, index: i });
         } else if (block.type === "image") {
             groups.push({ type: "image", block, index: i });
         } else if (block.type === "file") {
@@ -276,13 +306,17 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
 
 function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
     return groupContentBlocks(blocks).map((group) => {
+        const isLastBlock = group.index === blocks.length - 1;
         if (group.type === "text") {
-            const isLastBlock = group.index === blocks.length - 1;
             return (
                 <div key={group.index}>
                     <TextBlockContent content={group.block.content} isStreaming={isStreaming && isLastBlock} />
                 </div>
             );
+        }
+
+        if (group.type === "thinking") {
+            return <ThinkingCard key={group.index} content={group.block.content} isLive={isStreaming && isLastBlock} />;
         }
 
         if (group.type === "image") {
@@ -319,4 +353,18 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
 
         return <ToolCallCard key={group.index} toolCalls={group.blocks.map((b) => b.toolCall)} />;
     });
+}
+
+/** Matches a line that is only bold text, the title Codex puts on each reasoning summary. */
+const THINKING_TITLE_LINE = /^\*\*([^*\n]+)\*\*[ \t]*$/gm;
+
+/** Split a thought's leading `**Title**` line from the rest, so the title can name the folded card. */
+function splitThinkingTitle(content: string): { title?: string; body: string } {
+    const match = /^\s*\*\*([^*\n]+)\*\*[ \t]*(?:\n|$)/.exec(content);
+    return match ? { title: match[1].trim(), body: content.slice(match[0].length).trimStart() } : { body: content };
+}
+
+/** The last `**Title**` line of a thought, naming what the model is working on now. */
+function latestThinkingTitle(content: string): string | undefined {
+    return [...content.matchAll(THINKING_TITLE_LINE)].at(-1)?.[1].trim();
 }

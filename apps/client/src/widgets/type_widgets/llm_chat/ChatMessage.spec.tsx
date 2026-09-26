@@ -60,20 +60,57 @@ describe("ChatMessage footer", () => {
 });
 
 describe("ChatMessage thinking", () => {
-    it("renders the thought process as Markdown, as Codex writes its reasoning summaries", () => {
-        host = document.body.appendChild(document.createElement("div"));
+    function renderMessage(content: StoredMessage["content"], options: { type?: StoredMessage["type"]; isStreaming?: boolean } = {}) {
+        host ??= document.body.appendChild(document.createElement("div"));
         const target = host;
-        const message: StoredMessage = {
-            id: "t1", role: "assistant", type: "thinking", createdAt: "2026-01-01T00:00:00.000Z",
-            content: "**Retrieving PC hostname with command**\n\nI'll read `/etc/hostname`."
-        };
-        act(() => render(<ChatMessage message={message} />, target));
+        const message: StoredMessage = { id: "m1", role: "assistant", type: options.type, createdAt: "2026-01-01T00:00:00.000Z", content };
+        act(() => render(<ChatMessage message={message} isStreaming={options.isStreaming} />, target));
+        return target;
+    }
 
-        const thinking = target.querySelector(".llm-chat-thinking-content");
-        expect(thinking?.textContent).toContain("Retrieving PC hostname with command");
-        const content = thinking?.querySelector(".markdown-stub");
-        expect(content).not.toBeNull();
-        expect(content?.textContent).toContain("<strong>Retrieving PC hostname with command</strong>");
-        expect(content?.textContent).toContain("<code>/etc/hostname</code>");
+    it("folds each finished thought to its title, in stream order between the tool calls", () => {
+        const target = renderMessage([
+            { type: "thinking", content: "**Retrieving PC hostname with command**\n\nI'll read `/etc/hostname`." },
+            { type: "tool_call", toolCall: { id: "c1", toolName: "shell", input: {}, result: "pc" } },
+            { type: "thinking", content: "The file holds the name." },
+            { type: "text", content: "Your PC is called pc." }
+        ]);
+
+        const blocks = [...(target.querySelector(".llm-chat-message-content")?.children ?? [])];
+        expect(blocks.map(el => el.classList.contains("llm-chat-thinking-card"))).toEqual([true, false, true, false]);
+
+        const [titled, untitled] = target.querySelectorAll(".llm-chat-thinking-card");
+        const details = titled.querySelector("details");
+        expect(details).not.toBeNull();
+        expect(details?.open).toBe(false);
+        expect(titled.querySelector(".expandable-section-label")?.textContent).toBe("Retrieving PC hostname with command");
+        const body = titled.querySelector(".llm-chat-thinking-content .markdown-stub")?.textContent;
+        expect(body).toContain("<code>/etc/hostname</code>");
+        expect(body).not.toContain("Retrieving PC hostname");
+        expect(untitled.querySelector(".expandable-section-label")?.textContent).toBe("llm_chat.thought_process");
+    });
+
+    it("shows the thought being generated under a spinner and its latest title, and folds it once the turn moves on", () => {
+        const thought = { type: "thinking" as const, content: "**Reading the hostname**\n\nFirst.\n\n**Checking the network**\n\nSecond." };
+        let target = renderMessage([thought], { isStreaming: true });
+        let card = target.querySelector(".llm-chat-thinking-card");
+        expect(card?.classList.contains("llm-chat-thinking-live")).toBe(true);
+        expect(card?.querySelector("details")).toBeNull();
+        expect(card?.querySelector(".bx-spin")).not.toBeNull();
+        expect(card?.querySelector(".llm-chat-thinking-title")?.textContent).toBe("Checking the network");
+        expect(card?.querySelector(".llm-chat-thinking-content .markdown-stub")?.textContent).toContain("Second.");
+
+        target = renderMessage([thought, { type: "tool_call", toolCall: { id: "c1", toolName: "shell", input: {} } }], { isStreaming: true });
+        card = target.querySelector(".llm-chat-thinking-card");
+        expect(card?.classList.contains("llm-chat-thinking-live")).toBe(false);
+        expect(card?.querySelector("details")?.open).toBe(false);
+        expect(card?.querySelector(".expandable-section-label")?.textContent).toBe("Reading the hostname");
+    });
+
+    it("renders a stored thinking message from before thoughts moved into the reply", () => {
+        const target = renderMessage("**Retrieving PC hostname with command**\n\nI'll read `/etc/hostname`.", { type: "thinking" });
+        const card = target.querySelector(".llm-chat-thinking-card");
+        expect(card?.querySelector(".expandable-section-label")?.textContent).toBe("Retrieving PC hostname with command");
+        expect(card?.querySelector(".llm-chat-thinking-content .markdown-stub")?.textContent).toContain("<code>/etc/hostname</code>");
     });
 });

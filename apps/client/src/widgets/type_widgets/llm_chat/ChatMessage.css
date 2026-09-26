@@ -204,18 +204,50 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
     width: 100%;
     max-width: 100%;
     border-style: dashed;
-    margin-right: 0;
-    margin: 0;
 }
 
-.llm-chat-thinking-card .expandable-section-summary {
+.llm-chat-thinking-card .expandable-section-summary,
+.llm-chat-thinking-header {
     color: var(--muted-text-color);
+}
+
+.llm-chat-thinking-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.75rem;
+    font-weight: 500;
+
+    > .bx {
+        font-size: 1rem;
+    }
+}
+
+.llm-chat-thinking-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .llm-chat-thinking-content {
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
     color: var(--muted-text-color);
+}
+
+/* Aligning the content to the end clips the overflow at the top, keeping the newest lines in view. */
+.llm-chat-thinking-live .llm-chat-thinking-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    max-height: calc(4 * 1.6em + 1rem);
+    padding-top: 0;
+    overflow: hidden;
+
+    > * {
+        flex-shrink: 0;
+    }
 }
 
 /* Markdown styles */

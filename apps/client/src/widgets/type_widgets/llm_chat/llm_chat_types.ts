@@ -21,6 +21,15 @@ export interface TextBlock {
     content: string;
 }
 
+/**
+ * A stretch of the model's reasoning, kept in stream order among the reply's other blocks.
+ * It is shown in the timeline but never sent back to the model.
+ */
+export interface ThinkingBlock {
+    type: "thinking";
+    content: string;
+}
+
 /** A tool invocation block shown inline in the message timeline. */
 export interface ToolCallBlock {
     type: "tool_call";
@@ -71,7 +80,7 @@ export interface TextFileBlock {
 }
 
 /** An ordered content block in a chat message. */
-export type ContentBlock = TextBlock | ToolCallBlock | ImageBlock | FileBlock | TextFileBlock;
+export type ContentBlock = TextBlock | ThinkingBlock | ToolCallBlock | ImageBlock | FileBlock | TextFileBlock;
 
 /**
  * Extract the plain text from message content (works for both legacy string and block formats).
@@ -138,7 +147,10 @@ export interface StoredMessage {
     content: string | ContentBlock[];
     createdAt: string;
     citations?: LlmCitation[];
-    /** Message type for special rendering. Defaults to "message" if omitted. */
+    /**
+     * Message type for special rendering. Defaults to "message" if omitted. `"thinking"` appears
+     * only in chats saved before reasoning moved into {@link ThinkingBlock}s.
+     */
     type?: MessageType;
     /**
      * For `type: "error"` messages, the failed provider call's context (HTTP status, URL,
