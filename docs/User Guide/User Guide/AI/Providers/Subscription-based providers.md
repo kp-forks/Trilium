@@ -112,3 +112,4 @@ trilium
 
 *   The agent can only work with your notes through Trilium's note tools, and search the web when the chat allows it; its own file, shell and other tools are blocked for security reasons.
 *   The ChatGPT sign-in opens in a browser on the device running Trilium, so it might not be possible to set up the provider while using the web version of a Docker installation. <a class="reference-link" href="../../Installation%20%26%20Setup/Desktop%20Installation.md">Desktop Installation</a> should work fine.
+*   Images and SVGs can be attached to the conversation, PDFs cannot. The LLM should still be able to read PDF notes and attachments via <a class="reference-link" href="../../Advanced%20Usage/Text%20Extraction%20(OCR).md">Text Extraction (OCR)</a> when the note tools are enabled.
