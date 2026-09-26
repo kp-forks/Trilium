@@ -85,7 +85,11 @@ export default class BuildHelper {
                 // the require.resolve branch is unreachable, but esbuild
                 // still sees the static string and warns. External marker
                 // suppresses the warning without changing runtime behavior.
-                "@triliumnext/core/src/assets/*"
+                "@triliumnext/core/src/assets/*",
+                // The Codex ACP adapter is copied to RESOURCE_DIR/codex-acp.mjs by the
+                // build; codex_binary.ts only require.resolve()s the package when running
+                // from source.
+                "@agentclientprotocol/codex-acp"
             ],
             metafile: true,
             loader: {

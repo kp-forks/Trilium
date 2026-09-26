@@ -1,11 +1,12 @@
 /**
- * Live integration test for the Codex Agent provider: drives the user's real
- * `codex-acp` and asserts that a chat turn gets an answer.
+ * Live integration test for the Codex Agent provider: runs the installed
+ * `@agentclientprotocol/codex-acp` in a worker against the user's real `codex`
+ * (TRILIUM_CODEX_PATH or PATH) and asserts that a chat turn gets an answer.
  *
- * Opt-in — it starts the adapter, needs a saved ChatGPT sign-in, and spends the
+ * Opt-in — it starts Codex, needs a saved ChatGPT sign-in, and spends the
  * plan's Codex usage, so it never runs in CI:
  *
- *     TRILIUM_CODEX_LIVE_TEST=1 pnpm --filter server test codex_agent.live
+ *     TRILIUM_CODEX_LIVE_TEST=1 TRILIUM_RESOURCE_DIR=src pnpm --filter server test codex_agent.live
  *
  * The sign-in (`auth.json`) is copied from TRILIUM_CODEX_LIVE_HOME (default: the
  * dev server's `data/codex-agent/home`) into a temporary data directory.

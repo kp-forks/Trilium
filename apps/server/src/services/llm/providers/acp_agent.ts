@@ -40,6 +40,8 @@ export interface AcpLaunchSpec {
     args: string[];
     /** Launch through a shell (npm `.cmd` shims on Windows). */
     shell?: boolean;
+    /** `binary` is a Node script to run in a worker thread (see {@link AcpClient.startWorker}). */
+    worker?: boolean;
     /** Variables set on top of the server's own environment. */
     env?: Record<string, string>;
 }
@@ -688,7 +690,7 @@ ${firstMessage.substring(0, 500)}`
         } = {}
     ): Promise<AcpClient> {
         const launch = await this.launchSpec();
-        const client = AcpClient.start(launch.binary, {
+        const client = (launch.worker ? AcpClient.startWorker : AcpClient.start)(launch.binary, {
             cwd: this.agentCwd(),
             shell: launch.shell,
             args: launch.args,

@@ -16,7 +16,10 @@ vi.mock("../../data_dir.js", async () => {
     return { default: { TRILIUM_DATA_DIR: path.join(os.tmpdir(), "trilium-codex-agent-spec") } };
 });
 
-vi.mock("./codex_binary.js", () => ({ resolveCodexBinaryPath: async () => "/usr/bin/codex-acp" }));
+vi.mock("./codex_binary.js", () => ({
+    resolveCodexBinaryPath: async () => "/usr/bin/codex",
+    resolveCodexAcpScript: () => "/opt/trilium/assets/codex-acp.mjs"
+}));
 vi.mock("./acp_mcp_endpoint.js", () => ({ getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret" }));
 vi.mock("@triliumnext/core/src/services/llm/note_hint.js", () => ({ buildNoteHint: () => null }));
 vi.mock("@triliumnext/core/src/services/llm/attachment_content.js", () => ({ resolveAttachmentPart: vi.fn() }));
@@ -27,10 +30,12 @@ class FakeAcpError extends Error {
     }
 }
 
+type StartOptions = { args?: string[]; env?: Record<string, string>; cwd: string; onAgentRequest?: (m: string, p: unknown) => unknown };
+
 /** Answers like `codex-acp`: `session/new` fails until `authenticate` has run, when `signedIn` is false. */
 class FakeAcpClient {
     static current: FakeAcpClient | undefined;
-    static lastStart: { binary: string; opts: { args?: string[]; env?: Record<string, string>; cwd: string } } | undefined;
+    static lastStart: { worker: boolean; binary: string; opts: { args?: string[]; env?: Record<string, string>; cwd: string } } | undefined;
     static signedIn = true;
     /** An error `session/new` fails with, when set. */
     static sessionFailure: Error | undefined;
@@ -38,8 +43,16 @@ class FakeAcpClient {
     requests: { method: string; params: unknown }[] = [];
     onAgentRequest?: (method: string, params: unknown) => unknown;
 
-    static start(binary: string, opts: { args?: string[]; env?: Record<string, string>; cwd: string; onAgentRequest?: (m: string, p: unknown) => unknown }) {
-        FakeAcpClient.lastStart = { binary, opts };
+    static start(binary: string, opts: StartOptions) {
+        return FakeAcpClient.launch(false, binary, opts);
+    }
+
+    static startWorker(script: string, opts: StartOptions) {
+        return FakeAcpClient.launch(true, script, opts);
+    }
+
+    private static launch(worker: boolean, binary: string, opts: StartOptions) {
+        FakeAcpClient.lastStart = { worker, binary, opts };
         FakeAcpClient.current = new FakeAcpClient();
         FakeAcpClient.current.onAgentRequest = opts.onAgentRequest;
         return FakeAcpClient.current;
@@ -113,12 +126,17 @@ beforeEach(() => {
 });
 
 describe("CodexAgentProvider", () => {
-    it("launches the adapter read-only, with a home of Trilium's own, and denies what it asks permission for", async () => {
+    it("runs the bundled adapter in a worker against the user's Codex, read-only, with a home of Trilium's own, and denies what it asks permission for", async () => {
         await collect(new CodexAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
 
         const start = FakeAcpClient.lastStart;
-        expect(start?.binary).toBe("/usr/bin/codex-acp");
-        expect(start?.opts.env).toEqual({ CODEX_HOME: path.join(DATA_DIR, "codex-agent", "home"), INITIAL_AGENT_MODE: "read-only" });
+        expect(start?.worker).toBe(true);
+        expect(start?.binary).toBe("/opt/trilium/assets/codex-acp.mjs");
+        expect(start?.opts.env).toEqual({
+            CODEX_PATH: "/usr/bin/codex",
+            CODEX_HOME: path.join(DATA_DIR, "codex-agent", "home"),
+            INITIAL_AGENT_MODE: "read-only"
+        });
         expect(start?.opts.cwd).toBe(path.join(DATA_DIR, "codex-agent", "workspace"));
         expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", {
             toolCall: { kind: "execute", title: "rm -rf /" },
@@ -144,7 +162,7 @@ describe("CodexAgentProvider", () => {
             return new CodexAgentProvider().listModels().then(() => "resolved", (err: Error) => err.message);
         };
         expect(await failureOf(new Error("ACP request \"authenticate\" timed out after 300000ms"))).toMatch(/sign-in was not completed in time/);
-        expect(await failureOf(new Error("spawn /usr/bin/codex-acp ENOENT"))).toBe("Failed to start the Codex ACP adapter: spawn /usr/bin/codex-acp ENOENT");
+        expect(await failureOf(new Error("spawn /usr/bin/codex ENOENT"))).toBe("Failed to start Codex: spawn /usr/bin/codex ENOENT");
         expect(await failureOf(new Error("Something else"))).toBe("Something else");
     });
 

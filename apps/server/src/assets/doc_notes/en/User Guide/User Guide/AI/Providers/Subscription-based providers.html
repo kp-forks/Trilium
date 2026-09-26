@@ -1,9 +1,9 @@
 <p>Some cloud providers offer a subscription, which has a fixed monthly fee
   instead of pay-per-use (unlike the API keys).</p>
 <p>In a nutshell, subscription-based providers work by either reusing your
-  existing CLI tools (e.g. Claude Code, GitHub Copilot via ACP) whereas some
-  require installing the ACP server manually (e.g. Google Antigravity, OpenAI
-  Codex). Because they require something to be installed on your device,
+  existing CLI tools (e.g. Claude Code, GitHub Copilot and OpenAI Codex via
+  ACP) whereas some require installing the ACP server manually (e.g. Google
+  Antigravity). Because they require something to be installed on your device,
   these providers are not available on Mobile (Android or iOS) or standalone
   mode.</p>
 <p>See also the dedicated&nbsp;<a class="reference-link" href="#root/_help_cRRrdZjgyhNc">Privacy</a>&nbsp;section
@@ -142,10 +142,10 @@ trilium</code></pre>
   Go, Plus, Pro or Business), without an API key. Usage counts against your
   plan's Codex limits, which are small on the Free plan.</p>
 <ol>
-  <li>Install the Codex ACP adapter on the machine that runs Trilium with <code>npm install -g @agentclientprotocol/codex-acp</code>.
-    It brings its own copy of the Codex CLI, so Codex doesn't need to be installed
-    separately. For a <a class="reference-link" href="#root/_help_WOcw2SLH6tbX">Server Installation</a> it
-    needs to be installed on the server.</li>
+  <li>Install the Codex CLI on the machine that runs Trilium, for example with <code>npm install -g @openai/codex</code>.
+    As with Claude Code, for a <a class="reference-link" href="#root/_help_WOcw2SLH6tbX">Server Installation</a> it
+    needs to be installed on the server. Trilium ships the ACP adapter that
+    connects to it, so nothing else is needed.</li>
   <li>Go to <a class="reference-link" href="#root/_help_4TIF1oA4VQRO">Options</a> → <em>AI / LLM</em> and
     add the OpenAI Codex provider. When the list of models is loaded for the
     first time, the ChatGPT sign-in page opens in a browser on the machine
@@ -154,11 +154,11 @@ trilium</code></pre>
 <p>Trilium keeps its own Codex sign-in and settings, separate from any Codex
   CLI you use in a terminal, so an existing <code>codex login</code> is not
   reused.</p>
-<p>Trilium will identify the Codex ACP adapter in this order:</p>
+<p>Trilium will identify your Codex CLI in this order:</p>
 <ul>
-  <li>By looking for a <code>TRILIUM_CODEX_ACP_PATH</code> environment variable
-    pointing to the <code>codex-acp</code> binary.</li>
-  <li>By looking for <code>codex-acp</code> in your PATH.</li>
+  <li>By looking for a <code>TRILIUM_CODEX_PATH</code> environment variable pointing
+    to the Codex binary.</li>
+  <li>By looking for <code>codex</code> in your PATH.</li>
   <li>By asking your login shell for its <code>PATH</code>, the same as for Claude
     Code.</li>
 </ul>

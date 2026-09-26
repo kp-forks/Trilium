@@ -1,11 +1,12 @@
 /**
- * Codex Agent provider — drives OpenAI Codex through its ACP adapter
- * (`codex-acp`, the Agent Client Protocol) as a subprocess. This lets users
- * with a ChatGPT account — Free, Go, Plus, Pro or Business — use the in-app
- * chat without an API key: the adapter signs in with the ChatGPT account and
+ * Codex Agent provider — drives the user's own Codex CLI through the ACP
+ * adapter Trilium ships (`codex-acp`, the Agent Client Protocol), which runs in
+ * a worker thread and starts `codex app-server` (see codex_binary.ts). This
+ * lets users with a ChatGPT account — Free, Go, Plus, Pro or Business — use the
+ * in-app chat without an API key: Codex signs in with the ChatGPT account and
  * bills the plan's Codex usage.
  *
- * `CODEX_HOME` points the adapter at a directory of Trilium's own, so its
+ * `CODEX_HOME` points Codex at a directory of Trilium's own, so its
  * sign-in, sessions, MCP servers and skills are Trilium's rather than those of
  * the user's own Codex setup. The session starts in the `read-only` mode, where
  * Codex asks before anything that writes or reaches the network, and the
@@ -20,8 +21,7 @@ import path from "path";
 import dataDirs from "../../data_dir.js";
 import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpSessionModelState, describeError } from "./acp_agent.js";
 import { type AcpClient, AcpError } from "./acp_client.js";
-import { resolveCodexBinaryPath } from "./codex_binary.js";
-import { needsShell } from "./copilot_binary.js";
+import { resolveCodexAcpScript, resolveCodexBinaryPath } from "./codex_binary.js";
 
 /** The model id that leaves the session on the model Codex picks. */
 const DEFAULT_MODEL_ID = "default";
@@ -75,14 +75,14 @@ export class CodexAgentProvider extends AcpAgentProvider {
     }
 
     protected async launchSpec(): Promise<AcpLaunchSpec> {
-        const binary = await resolveCodexBinaryPath();
+        const codex = await resolveCodexBinaryPath();
         const home = agentHome();
         fs.mkdirSync(home, { recursive: true });
         return {
-            binary,
+            binary: resolveCodexAcpScript(),
             args: [],
-            shell: needsShell(binary),
-            env: { CODEX_HOME: home, INITIAL_AGENT_MODE: "read-only" }
+            worker: true,
+            env: { CODEX_PATH: codex, CODEX_HOME: home, INITIAL_AGENT_MODE: "read-only" }
         };
     }
 
@@ -124,7 +124,7 @@ export class CodexAgentProvider extends AcpAgentProvider {
             return "The ChatGPT sign-in was not completed in time. Try again, and finish signing in in the browser window that opens on the device running Trilium.";
         }
         if (/ENOENT|spawn/i.test(text)) {
-            return `Failed to start the Codex ACP adapter: ${text}`;
+            return `Failed to start Codex: ${text}`;
         }
         return text;
     }
