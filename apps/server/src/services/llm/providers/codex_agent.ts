@@ -84,6 +84,14 @@ const sourcesByTurn = new WeakMap<LlmProviderConfig, Map<string, LlmCitation>>()
 const webrunCalls = new Map<string, BuiltInToolDisplay>();
 const MAX_WEBRUN_CALLS = 200;
 
+/**
+ * The models the last catalog described as `Older …`, which
+ * {@link CodexAgentProvider.recommendedModelIds} leaves unselected when a newer one is
+ * listed. Kept beside the catalog rather than on `ModelInfo`, whose `isLegacy` marks
+ * only the `Legacy …` ones.
+ */
+const olderModelIds = new Set<string>();
+
 export class CodexAgentProvider extends AcpAgentProvider {
     name = "codex-agent";
     protected readonly logLabel = "Codex Agent provider";
@@ -91,9 +99,21 @@ export class CodexAgentProvider extends AcpAgentProvider {
     protected readonly defaultModelId = DEFAULT_MODEL_ID;
     protected readonly agentDirName = path.join("codex-agent", "workspace");
 
-    /** Everything Codex does not describe as older or legacy. */
+    /**
+     * The newest models this Codex offers, and its default. Codex describes a
+     * model against OpenAI's newest (`Older …`, `Legacy …`), which an older Codex
+     * does not list, so the newest tier present is chosen: the models described
+     * as neither, else the older ones, else the rest.
+     */
     recommendedModelIds(models: ModelInfo[]): Set<string> {
-        return new Set(models.filter(m => !m.isLegacy).map(m => m.id));
+        const listed = models.filter(m => m.id !== DEFAULT_MODEL_ID);
+        const tiers = [
+            listed.filter(m => !m.isLegacy && !olderModelIds.has(m.id)),
+            listed.filter(m => !m.isLegacy),
+            listed
+        ];
+        const newest = tiers.find(tier => tier.length > 0) ?? [];
+        return new Set([ DEFAULT_MODEL_ID, ...newest.map(m => m.id) ]);
     }
 
     protected titleModelId(): string | undefined {
@@ -335,8 +355,12 @@ export function decideCodexPermission(
  * Codex itself shows, newest first.
  */
 export function buildCodexModelList(remote: AcpSessionModelState): ModelInfo[] {
+    olderModelIds.clear();
     const models = groupCodexCatalog(remote).map<ModelInfo>(entry => {
-        const common = { pricing: { input: 0, output: 0 }, isSubscription: true, ...(entry.legacy && { isLegacy: true }) };
+        if (entry.age === "older") {
+            olderModelIds.add(entry.id);
+        }
+        const common = { pricing: { input: 0, output: 0 }, isSubscription: true, ...(entry.age === "legacy" && { isLegacy: true }) };
         if (entry.efforts.length === 0) {
             return { id: entry.id, name: entry.name, ...common };
         }
@@ -368,7 +392,7 @@ export function resolveCodexModel(model: string, effort: LlmReasoningEffort | un
 
 /** The catalog's models, variants of one model gathered into one entry. */
 function groupCodexCatalog(remote: AcpSessionModelState) {
-    const entries = new Map<string, { id: string; name: string; efforts: LlmReasoningEffort[]; legacy: boolean }>();
+    const entries = new Map<string, { id: string; name: string; efforts: LlmReasoningEffort[]; age: ModelAge }>();
     for (const model of remote.availableModels ?? []) {
         if (!model.modelId || model.modelId === DEFAULT_MODEL_ID) {
             continue;
@@ -381,7 +405,7 @@ function groupCodexCatalog(remote: AcpSessionModelState) {
         const id = variant ? variant[1] : model.modelId;
         let entry = entries.get(id);
         if (!entry) {
-            entry = { id, name: displayName(id, model), efforts: [], legacy: isLegacy(model) };
+            entry = { id, name: displayName(id, model), efforts: [], age: modelAge(model) };
             entries.set(id, entry);
         }
         if (effort) {
@@ -399,7 +423,7 @@ function recordCatalog(remote: AcpSessionModelState) {
     const entries = groupCodexCatalog(remote);
     const efforts = new Map(entries.filter(e => e.efforts.length > 0).map(e => [ e.id, e.efforts ]));
     // The newest model at its lightest level; Codex lists its fast model first.
-    const lead = entries.find(e => !e.legacy) ?? entries[0];
+    const lead = [ "current", "older", "legacy" ].map(age => entries.find(e => e.age === age)).find(Boolean);
     const titleModel = lead && (lead.efforts.length ? `${lead.id}[${lead.efforts[0]}]` : lead.id);
     catalog = { efforts, titleModel };
 }
@@ -410,9 +434,15 @@ function displayName(id: string, model: AcpModel): string {
     return /^gpt-/i.test(id) && !/^gpt/i.test(name) ? `GPT-${name}` : name;
 }
 
-/** Codex describes the models it keeps for compatibility as `Older …` or `Legacy …`. */
-function isLegacy(model: AcpModel): boolean {
-    return /^(older|legacy)\b/i.test(model.description ?? "");
+/** How Codex describes a model against OpenAI's newest: `Older …`, `Legacy …`, or neither. */
+type ModelAge = "current" | "older" | "legacy";
+
+function modelAge(model: AcpModel): ModelAge {
+    const description = model.description ?? "";
+    if (/^legacy\b/i.test(description)) {
+        return "legacy";
+    }
+    return /^older\b/i.test(description) ? "older" : "current";
 }
 
 function asEffort(level: string): LlmReasoningEffort | undefined {
@@ -476,4 +506,5 @@ export class CitationStripper {
 export function resetCodexCatalogForTests(): void {
     catalog = { efforts: new Map() };
     webrunCalls.clear();
+    olderModelIds.clear();
 }

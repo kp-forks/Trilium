@@ -247,18 +247,33 @@ describe("CodexAgentProvider", () => {
 });
 
 describe("buildCodexModelList", () => {
-    it("lists each model once with the efforts it comes in, marks the older ones and pre-selects the rest", () => {
+    it("lists each model once with the efforts it comes in, marks the legacy ones and pre-selects the newest", () => {
         const models = buildCodexModelList({ availableModels: REMOTE_MODELS });
 
         expect(models).toEqual([
             { id: "default", name: "Default", pricing: { input: 0, output: 0 }, isDefault: true, isSubscription: true },
             { id: "gpt-6-luna", name: "GPT-6 Luna", pricing: { input: 0, output: 0 }, isSubscription: true, reasoningEfforts: ["low", "medium", "high", "xhigh", "max"], defaultReasoningEffort: "medium" },
-            // `ultra` is no level Trilium can name, so it is left out.
-            { id: "gpt-5.6-terra", name: "GPT-5.6 Terra", pricing: { input: 0, output: 0 }, isSubscription: true, isLegacy: true, reasoningEfforts: ["low", "medium", "high", "xhigh", "max"], defaultReasoningEffort: "medium" },
+            // `ultra` is no level Trilium can name, so it is left out. An "Older" model is no legacy one.
+            { id: "gpt-5.6-terra", name: "GPT-5.6 Terra", pricing: { input: 0, output: 0 }, isSubscription: true, reasoningEfforts: ["low", "medium", "high", "xhigh", "max"], defaultReasoningEffort: "medium" },
             // Sorted weakest first, defaulting to the lightest without medium.
             { id: "gpt-5.5", name: "GPT-5.5", pricing: { input: 0, output: 0 }, isSubscription: true, isLegacy: true, reasoningEfforts: ["low", "high"], defaultReasoningEffort: "low" }
         ]);
         expect([...new CodexAgentProvider().recommendedModelIds(models)]).toEqual(["default", "gpt-6-luna"]);
+    });
+
+    it("pre-selects the newest models an older Codex offers, which OpenAI describes as older", () => {
+        // Codex 0.146.0 lists no GPT-6 Luna; OpenAI describes the rest against it.
+        const olderCodex = [
+            { modelId: "gpt-5.6-terra[medium]", name: "5.6 Terra (medium)", description: "Older balanced model for straightforward work." },
+            { modelId: "gpt-5.6-luna[medium]", name: "5.6 Luna (medium)", description: "Older fast and efficient model." },
+            { modelId: "gpt-5.5[medium]", name: "5.5 (medium)", description: "Legacy coding model." }
+        ];
+        const provider = new CodexAgentProvider();
+        expect([...provider.recommendedModelIds(buildCodexModelList({ availableModels: olderCodex }))])
+            .toEqual(["default", "gpt-5.6-terra", "gpt-5.6-luna"]);
+        // With only legacy models left, those are the newest there are.
+        expect([...provider.recommendedModelIds(buildCodexModelList({ availableModels: olderCodex.slice(2) }))])
+            .toEqual(["default", "gpt-5.5"]);
     });
 
     it("keeps a model without a level in its id as it is", () => {
