@@ -205,19 +205,29 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
     font-size: 0.85rem;
     color: var(--muted-text-color);
 
+    /* Top alignment with a shared line height keeps the icons on the first line of the label,
+       whether it wraps or not. */
     .expandable-section-summary,
     .llm-chat-thinking-header {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 0.4rem;
         width: fit-content;
         max-width: 100%;
         padding: 0.15rem 0;
         font-weight: normal;
+        line-height: 1.4rem;
 
         > .bx {
             font-size: 1rem;
+            line-height: inherit;
             margin-right: 0;
+        }
+
+        /* The brain and the live spinner share a size, so a thought keeps its place when it stops streaming. */
+        > .bx-brain,
+        > .bx-loader {
+            font-size: 0.9rem;
         }
     }
 
@@ -228,6 +238,16 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
     .expandable-section-chevron {
         margin-left: 0;
     }
+
+    /* `text-overflow` needs a block container: as a flex container the label never shows the ellipsis. */
+    .expandable-section-label {
+        display: block;
+    }
+
+    /* The label is left out of the body, so the opened thought shows it in full. */
+    &[open] > .expandable-section-summary .expandable-section-label {
+        white-space: normal;
+    }
 }
 
 .llm-chat-thinking-title {
@@ -237,10 +257,10 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
     white-space: nowrap;
 }
 
-/* The left margin centers the rule under the 1rem icon of the line above. */
+/* The left margin centers the rule under the 0.9rem icon of the line above. */
 .llm-chat-thinking-content {
-    margin: 0.15rem 0 0.25rem 0.5rem;
-    padding-left: 0.9rem;
+    margin: 0.15rem 0 0.25rem 0.45rem;
+    padding-left: 0.85rem;
     border-left: 2px solid var(--main-border-color);
 }
 

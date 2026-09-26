@@ -122,8 +122,9 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
 
 /**
  * One stretch of the model's reasoning. A finished one folds to a single muted line: its leading
- * `**Title**` (the shape of Codex's reasoning summaries), or else its first line. The one being
- * generated stays open, clamped to its last lines under a spinner and its latest title.
+ * `**Title**` (the shape of Codex's reasoning summaries), or else its first line, which the body
+ * then leaves out. The one being generated stays open, clamped to its last lines under a spinner
+ * and its latest title.
  */
 function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }) {
     if (isLive) {
@@ -140,12 +141,14 @@ function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }
         );
     }
 
-    const { title, body } = splitThinkingTitle(content);
+    const { label, body } = splitThinkingLabel(content);
     return (
-        <ExpandableSection className="llm-chat-thinking" icon="bx bx-brain" label={title ?? firstLinePlainText(content) ?? t("llm_chat.thought_process")}>
-            <div className="llm-chat-thinking-content">
-                <TextBlockContent content={body} />
-            </div>
+        <ExpandableSection className="llm-chat-thinking" icon="bx bx-brain" label={label || t("llm_chat.thought_process")}>
+            {body && (
+                <div className="llm-chat-thinking-content">
+                    <TextBlockContent content={body} />
+                </div>
+            )}
         </ExpandableSection>
     );
 }
@@ -356,15 +359,16 @@ function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
 /** Matches a line that is only bold text, the title Codex puts on each reasoning summary. */
 const THINKING_TITLE_LINE = /^\*\*([^*\n]+)\*\*[ \t]*$/gm;
 
-/** Split a thought's leading `**Title**` line from the rest, so the title can name the folded card. */
-function splitThinkingTitle(content: string): { title?: string; body: string } {
-    const match = /^\s*\*\*([^*\n]+)\*\*[ \t]*(?:\n|$)/.exec(content);
-    return match ? { title: match[1].trim(), body: content.slice(match[0].length).trimStart() } : { body: content };
-}
-
-/** The first line of a thought without its inline Markdown marks, to name a thought that has no title. */
-function firstLinePlainText(content: string): string | undefined {
-    return content.trim().split("\n")[0].replace(/\*\*|`/g, "").trim() || undefined;
+/**
+ * Split off the line that names a folded thought: its leading `**Title**`, or else its first line
+ * without inline Markdown marks. The body is the rest, so the opened thought does not repeat it.
+ */
+function splitThinkingLabel(content: string): { label: string; body: string } {
+    const trimmed = content.trim();
+    const title = /^\*\*([^*\n]+)\*\*[ \t]*(?:\n|$)/.exec(trimmed);
+    const firstLine = title?.[0] ?? trimmed.split("\n", 1)[0];
+    const label = title?.[1] ?? firstLine.replace(/\*\*|`/g, "");
+    return { label: label.trim(), body: trimmed.slice(firstLine.length).trim() };
 }
 
 /** The last `**Title**` line of a thought, naming what the model is working on now. */
