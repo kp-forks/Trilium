@@ -24,8 +24,8 @@ vi.mock("./acp_mcp_endpoint.js", () => ({
     getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret",
     getAcpHookEndpointUrl: getAcpHookEndpointUrlMock
 }));
-vi.mock("./antigravity_hook.js", async (importOriginal) => ({
-    ...await importOriginal<typeof import("./antigravity_hook.js")>(),
+vi.mock("./acp_hook.js", async (importOriginal) => ({
+    ...await importOriginal<typeof import("./acp_hook.js")>(),
     resolveCurlPath: async () => "/usr/bin/curl"
 }));
 vi.mock("@triliumnext/core/src/services/llm/note_hint.js", () => ({ buildNoteHint: () => null }));
@@ -341,7 +341,7 @@ describe("AntigravityAgentProvider", () => {
     it("signs in during the model probe, but reports a missing sign-in in the chat instead", async () => {
         FakeAcpClient.signedIn = false;
         const chunks = await collect(new AntigravityAgentProvider().chatChunks([{ role: "user", content: "hi" }], {}));
-        expect(chunks).toEqual([{ type: "error", error: expect.stringContaining("not signed in") }]);
+        expect(chunks).toEqual([{ type: "error", error: "Google Antigravity is not signed in. Open this provider in the AI settings and go to the model selection, which opens the Google sign-in page in a browser on the device running Trilium." }]);
         expect(FakeAcpClient.current?.methods()).not.toContain("authenticate");
 
         const models = await new AntigravityAgentProvider().listModels();

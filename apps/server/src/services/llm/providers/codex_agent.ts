@@ -20,10 +20,10 @@ import type { LlmProviderConfig, ModelInfo } from "@triliumnext/core/src/service
 import path from "path";
 
 import dataDirs from "../../data_dir.js";
-import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, type BuiltInToolDisplay, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
-import { type AcpClient, AcpError } from "./acp_client.js";
+import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, type BuiltInToolDisplay, denyPermission, describeError, nearestEffort, NOTE_TOOLS_MCP_SERVER_NAME, sortEfforts } from "./acp_agent.js";
+import type { AcpClient } from "./acp_client.js";
 import { getAcpHookEndpointUrl } from "./acp_mcp_endpoint.js";
-import { buildHookCommand, resolveCurlPath } from "./antigravity_hook.js";
+import { buildHookCommand, resolveCurlPath } from "./acp_hook.js";
 import { resolveCodexAcpScript, resolveCodexBinaryPath } from "./codex_binary.js";
 import { buildCodexHookCommand, type CodexHookAnswer, codexSearchSources, decideCodexToolCall, describeWebrunInput, webrunFailure, writeCodexHooks } from "./codex_hook.js";
 
@@ -41,13 +41,6 @@ const AVAILABLE_MODELS: ModelInfo[] = [
 
 /** The adapter's sign-in method for a ChatGPT account; its other one takes an API key, which the OpenAI provider serves. */
 const SIGN_IN_METHOD = "chat-gpt";
-
-/** How long the add-provider screen waits for the user to finish signing in in the browser. */
-export const SIGN_IN_TIMEOUT_MS = 5 * 60_000;
-
-/** How long after a sign-in `session/new` is retried while Codex's account does not show it yet, and how often. */
-const SIGN_IN_SETTLE_MS = 10_000;
-const SIGN_IN_RETRY_MS = 500;
 
 /**
  * The settings the adapter merges into every session, as `CODEX_CONFIG`.
@@ -98,6 +91,7 @@ export class CodexAgentProvider extends AcpAgentProvider {
     protected readonly fallbackModels = AVAILABLE_MODELS;
     protected readonly defaultModelId = DEFAULT_MODEL_ID;
     protected readonly agentDirName = path.join("codex-agent", "workspace");
+    protected readonly signIn = { methodId: SIGN_IN_METHOD, product: "OpenAI Codex", account: "ChatGPT" };
 
     /**
      * The newest models this Codex offers, and its default. Codex describes a
@@ -191,47 +185,13 @@ export class CodexAgentProvider extends AcpAgentProvider {
         return { toolName, toolInput };
     }
 
-    /**
-     * Open a session, signing in first when Codex has no saved sign-in and the
-     * user is on the add-provider screen to complete it. The adapter opens the
-     * ChatGPT sign-in page in a browser on the device running Trilium and
-     * answers `authenticate` once the user has finished there; it keeps the
-     * sign-in under `CODEX_HOME`, so later sessions need none.
-     *
-     * Codex reports the sign-in complete before its account shows it, so the
-     * first `session/new` after it can still find no account; it is retried
-     * for a few seconds.
-     */
+    /** Remember the catalog of every session opened, which picks the variant a turn runs on. */
     protected async createSession(client: AcpClient, params: AcpNewSessionParams, interactive: boolean, timeoutMs: number) {
-        let created: Awaited<ReturnType<AcpAgentProvider["createSession"]>>;
-        try {
-            created = await super.createSession(client, params, interactive, timeoutMs);
-        } catch (err) {
-            if (!interactive || !isSignInRequired(err)) {
-                throw err;
-            }
-            await client.request("authenticate", { methodId: SIGN_IN_METHOD }, SIGN_IN_TIMEOUT_MS);
-            created = await this.createSessionAfterSignIn(client, params, timeoutMs);
-        }
+        const created = await super.createSession(client, params, interactive, timeoutMs);
         if (created.models) {
             recordCatalog(created.models);
         }
         return created;
-    }
-
-    /** `session/new` once a sign-in has completed, retried while Codex's account does not show it yet. */
-    private async createSessionAfterSignIn(client: AcpClient, params: AcpNewSessionParams, timeoutMs: number) {
-        const giveUpAt = Date.now() + SIGN_IN_SETTLE_MS;
-        for (;;) {
-            try {
-                return await super.createSession(client, params, true, timeoutMs);
-            } catch (err) {
-                if (!isSignInRequired(err) || Date.now() >= giveUpAt) {
-                    throw err;
-                }
-                await new Promise(resolve => setTimeout(resolve, SIGN_IN_RETRY_MS));
-            }
-        }
     }
 
     /** The turn, with the citation markers Codex writes into its reply taken out (see {@link CitationStripper}). */
@@ -305,11 +265,9 @@ export class CodexAgentProvider extends AcpAgentProvider {
 
     protected describeFailure(error: unknown): string {
         const text = describeError(error);
-        if (isSignInRequired(error)) {
-            return "OpenAI Codex is not signed in. Open this provider in the AI settings and go to the model selection, which opens the ChatGPT sign-in page in a browser on the device running Trilium.";
-        }
-        if (/"authenticate" timed out/.test(text)) {
-            return "The ChatGPT sign-in was not completed in time. Try again, and finish signing in in the browser window that opens on the device running Trilium.";
+        const signInFailure = this.describeSignInFailure(error);
+        if (signInFailure) {
+            return signInFailure;
         }
         if (/ENOENT|spawn/i.test(text)) {
             return `Failed to start Codex: ${text}`;
@@ -380,14 +338,7 @@ export function resolveCodexModel(model: string, effort: LlmReasoningEffort | un
     if (!levels?.length) {
         return model;
     }
-    const wanted = LLM_REASONING_EFFORTS.indexOf(effort ?? defaultEffort(levels));
-    let chosen = levels[0];
-    for (const level of levels) {
-        if (Math.abs(LLM_REASONING_EFFORTS.indexOf(level) - wanted) <= Math.abs(LLM_REASONING_EFFORTS.indexOf(chosen) - wanted)) {
-            chosen = level;
-        }
-    }
-    return `${model}[${chosen}]`;
+    return `${model}[${nearestEffort(levels, effort ?? defaultEffort(levels))}]`;
 }
 
 /** The catalog's models, variants of one model gathered into one entry. */
@@ -412,10 +363,7 @@ function groupCodexCatalog(remote: AcpSessionModelState) {
             entry.efforts.push(effort);
         }
     }
-    for (const entry of entries.values()) {
-        entry.efforts.sort((a, b) => LLM_REASONING_EFFORTS.indexOf(a) - LLM_REASONING_EFFORTS.indexOf(b));
-    }
-    return [ ...entries.values() ];
+    return [ ...entries.values() ].map(entry => ({ ...entry, efforts: sortEfforts(entry.efforts) }));
 }
 
 /** Remember the variants and the title model of a catalog Codex reported. */
@@ -459,9 +407,6 @@ function agentHome(): string {
     return path.resolve(dataDirs.TRILIUM_DATA_DIR, "codex-agent", "home");
 }
 
-function isSignInRequired(error: unknown): boolean {
-    return error instanceof AcpError && error.code === -32000 && /authentication required/i.test(error.message);
-}
 
 /** A citation marker opens with U+E200, separates its parts with U+E202 and closes with U+E201, private-use characters. */
 const MARKER_START = "\uE200";

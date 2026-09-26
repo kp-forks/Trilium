@@ -23,10 +23,7 @@ const AGENT_CWD = path.resolve(os.tmpdir(), "trilium-copilot-agent-spec", "copil
 
 // BYO binary resolution shells out to the user's `copilot`; stub it.
 const resolveCopilotBinaryMock = vi.hoisted(() => vi.fn(async () => "/usr/bin/copilot"));
-vi.mock("./copilot_binary.js", () => ({
-    resolveCopilotBinaryPath: resolveCopilotBinaryMock,
-    needsShell: () => false
-}));
+vi.mock("./copilot_binary.js", () => ({ resolveCopilotBinaryPath: resolveCopilotBinaryMock }));
 
 // The loopback MCP endpoint opens a real socket; stub it to a fixed URL.
 const mcpEndpointMock = vi.hoisted(() => vi.fn(async () => "http://127.0.0.1:12345/mcp-secret"));

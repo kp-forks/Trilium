@@ -4,7 +4,7 @@ import os from "os";
 import path from "path";
 import { describe, expect, it } from "vitest";
 
-import { resolveCurlPath } from "./antigravity_hook.js";
+import { resolveCurlPath } from "./acp_hook.js";
 import { buildCodexHookCommand, codexSearchSources, decideCodexToolCall, describeWebrunInput, webrunFailure, writeCodexHooks } from "./codex_hook.js";
 
 /** `PreToolUse` events as Codex 0.146.0 and 0.156.1 send them, less the session bookkeeping. */

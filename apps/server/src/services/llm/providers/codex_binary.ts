@@ -15,41 +15,26 @@
  */
 
 import { getLog } from "@triliumnext/core";
-import { execFile } from "child_process";
 import { existsSync } from "fs";
 import path from "path";
-import { promisify } from "util";
 
 import { RESOURCE_DIR } from "../../resource_dir.js";
-import { findOnPath } from "./binary_lookup.js";
-import { needsShell } from "./copilot_binary.js";
-
-const execFileAsync = promisify(execFile);
+import { cachedProbe, findOnPath, runVersionProbe } from "./binary_lookup.js";
 
 const PROBE_TIMEOUT_MS = 15000;
 
 const INSTALL_HINT = "Install it (for example with `npm install -g @openai/codex`) on the machine running the Trilium server, or set the TRILIUM_CODEX_PATH environment variable to its location.";
 
-/**
- * The in-flight/successful resolution. Caching the promise lets concurrent
- * first calls share one probe; a failed probe clears it so a later install is
- * picked up without a restart.
- */
-let cachedResolution: Promise<string> | undefined;
+/** The probed binary, shared by concurrent first calls (see {@link cachedProbe}). */
+const probed = cachedProbe(probeBinary);
 
 export function resolveCodexBinaryPath(): Promise<string> {
-    if (!cachedResolution) {
-        cachedResolution = probeBinary().catch((err: unknown) => {
-            cachedResolution = undefined;
-            throw err;
-        });
-    }
-    return cachedResolution;
+    return probed.resolve();
 }
 
 /** For tests: forget the probed binary so the next call re-resolves. */
 export function resetCodexBinaryCache(): void {
-    cachedResolution = undefined;
+    probed.reset();
 }
 
 /**
@@ -66,16 +51,9 @@ async function probeBinary(): Promise<string> {
 
     // Async on purpose — this runs on the first chat request, and a sync probe
     // would freeze the whole server for up to the timeout.
-    let output: string;
-    try {
-        // `shell` is required for the .cmd shim npm creates on Windows, and
-        // then the path is not quoted for us.
-        const shell = needsShell(binary);
-        const { stdout } = await execFileAsync(shell ? `"${binary}"` : binary, ["--version"], { timeout: PROBE_TIMEOUT_MS, encoding: "utf8", shell });
-        output = stdout.trim();
-    } catch (err) {
-        const detail = err instanceof Error ? err.message : String(err);
-        throw new Error(`Found the Codex CLI at "${binary}" but it failed to run (${detail}). ${INSTALL_HINT}`);
+    const { output, failure } = await runVersionProbe(binary, PROBE_TIMEOUT_MS);
+    if (failure) {
+        throw new Error(`Found the Codex CLI at "${binary}" but it failed to run (${failure}). ${INSTALL_HINT}`);
     }
 
     const version = /\d+\.\d+\.\d+\S*/.exec(output)?.[0];

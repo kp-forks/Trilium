@@ -1,9 +1,10 @@
 /**
  * Shared base for the providers that drive a subscription agent over the Agent
- * Client Protocol (ACP) — GitHub Copilot (`copilot --acp`) and Google
- * Antigravity (`agy_acp_server`). The agent CLI runs as a subprocess, owns the
- * account's authentication, runs its own agentic loop and keeps conversation
- * history in host-side sessions. So every ACP provider:
+ * Client Protocol (ACP) — GitHub Copilot (`copilot --acp`), Google Antigravity
+ * (`agy_acp_server`) and OpenAI Codex (through `codex-acp`). The agent runs as a
+ * subprocess or in a worker thread, owns the account's authentication, runs its
+ * own agentic loop and keeps conversation history in host-side sessions. So
+ * every ACP provider:
  *   - implements `chatChunks()` (chunk-native streaming) instead of `chat()`,
  *   - keeps its agent process running between turns (see acp_client_pool.ts),
  *   - maps chat notes to ACP sessions and sends only the newest user message
@@ -18,7 +19,7 @@
  * permission policy; the protocol handling lives here.
  */
 
-import type { LlmMessage, LlmMessagePart, LlmStreamChunk } from "@triliumnext/commons";
+import { LLM_REASONING_EFFORTS, type LlmMessage, type LlmMessagePart, type LlmReasoningEffort, type LlmStreamChunk } from "@triliumnext/commons";
 import { getLog } from "@triliumnext/core";
 import { resolveAttachmentPart } from "@triliumnext/core/src/services/llm/attachment_content.js";
 import { buildNoteHint } from "@triliumnext/core/src/services/llm/note_hint.js";
@@ -29,7 +30,7 @@ import fs from "fs";
 import path from "path";
 
 import dataDirs from "../../data_dir.js";
-import { AcpClient } from "./acp_client.js";
+import { AcpClient, AcpError } from "./acp_client.js";
 import { AcpClientPool, type AcpLease, type AcpPoolConnection } from "./acp_client_pool.js";
 import { getAcpMcpEndpointUrl } from "./acp_mcp_endpoint.js";
 import { attachmentPlaceholder, buildHistoryReplay, hashTranscript } from "./transcript.js";
@@ -108,6 +109,28 @@ const MODEL_PROBE_TIMEOUT_MS = 60_000;
 
 export const INIT_TIMEOUT_MS = 30_000;
 export const SESSION_TIMEOUT_MS = 120_000;
+
+/** How long the add-provider screen waits for the user to finish signing in in the browser. */
+export const SIGN_IN_TIMEOUT_MS = 5 * 60_000;
+
+/**
+ * How long after a sign-in `session/new` is retried while the agent's account
+ * does not show it yet, and how often: Codex reports a sign-in complete before
+ * its account does.
+ */
+const SIGN_IN_SETTLE_MS = 10_000;
+const SIGN_IN_RETRY_MS = 500;
+
+/** How an agent signs in from the add-provider screen (see {@link AcpAgentProvider.signIn}). */
+export interface AcpSignIn {
+    /** The ACP `authenticate` method. */
+    methodId: string;
+    /** The provider's name in messages ("OpenAI Codex"). */
+    product: string;
+    /** The account the user signs in with ("ChatGPT"). */
+    account: string;
+}
+
 /** Upper bound for a whole prompt turn (agentic loops included). */
 const PROMPT_TIMEOUT_MS = 15 * 60_000;
 
@@ -306,11 +329,46 @@ export abstract class AcpAgentProvider implements LlmProvider {
     }
 
     /**
-     * Open a session. `interactive` is true only on the add-provider screen,
-     * where a subclass can run a sign-in the user is there to complete.
+     * How the agent signs in from the add-provider screen: the `authenticate`
+     * method that opens its sign-in page in a browser on the device running
+     * Trilium, and the names its messages use. Absent for an agent whose CLI
+     * is signed in on its own (`copilot login`).
      */
-    protected async createSession(client: AcpClient, params: AcpNewSessionParams, _interactive: boolean, timeoutMs: number) {
-        return await client.request<{ sessionId: string; models?: AcpSessionModelState }>("session/new", params, timeoutMs);
+    protected readonly signIn?: AcpSignIn;
+
+    /**
+     * Open a session. `interactive` is true only on the add-provider screen: an
+     * agent with a {@link signIn} that has no saved sign-in then signs in, and
+     * the session is opened once the user has finished in the browser. The
+     * agent keeps the sign-in, so later sessions need none.
+     */
+    protected async createSession(client: AcpClient, params: AcpNewSessionParams, interactive: boolean, timeoutMs: number) {
+        try {
+            return await openSession(client, params, timeoutMs);
+        } catch (err) {
+            if (!this.signIn || !interactive || !isSignInRequired(err)) {
+                throw err;
+            }
+            await client.request("authenticate", { methodId: this.signIn.methodId }, SIGN_IN_TIMEOUT_MS);
+            return await openSessionAfterSignIn(client, params, timeoutMs);
+        }
+    }
+
+    /**
+     * What to tell the user about a sign-in that is missing or was not
+     * completed, for {@link describeFailure}; undefined for any other failure.
+     */
+    protected describeSignInFailure(error: unknown): string | undefined {
+        if (!this.signIn) {
+            return undefined;
+        }
+        if (isSignInRequired(error)) {
+            return `${this.signIn.product} is not signed in. Open this provider in the AI settings and go to the model selection, which opens the ${this.signIn.account} sign-in page in a browser on the device running Trilium.`;
+        }
+        if (/"authenticate" timed out/.test(describeError(error))) {
+            return `The ${this.signIn.account} sign-in was not completed in time. Try again, and finish signing in in the browser window that opens on the device running Trilium.`;
+        }
+        return undefined;
     }
 
     /**
@@ -968,6 +1026,31 @@ export function describeError(error: unknown): string {
     return error instanceof Error ? error.message : String(error);
 }
 
+/** Whether an agent refused a request because no one is signed in. */
+export function isSignInRequired(error: unknown): boolean {
+    return error instanceof AcpError && error.code === -32000 && /authentication required/i.test(error.message);
+}
+
+/** Effort levels weakest first, for an agent that names a level inside its model ids. */
+export function sortEfforts(efforts: LlmReasoningEffort[]): LlmReasoningEffort[] {
+    return [ ...efforts ].sort((a, b) => LLM_REASONING_EFFORTS.indexOf(a) - LLM_REASONING_EFFORTS.indexOf(b));
+}
+
+/**
+ * The level of `levels` (sorted weakest first) nearest to `wanted`, the
+ * higher on a tie, for a model that lacks the level a chat chose.
+ */
+export function nearestEffort(levels: LlmReasoningEffort[], wanted: LlmReasoningEffort): LlmReasoningEffort {
+    const target = LLM_REASONING_EFFORTS.indexOf(wanted);
+    let chosen = levels[0];
+    for (const level of levels) {
+        if (Math.abs(LLM_REASONING_EFFORTS.indexOf(level) - target) <= Math.abs(LLM_REASONING_EFFORTS.indexOf(chosen) - target)) {
+            chosen = level;
+        }
+    }
+    return chosen;
+}
+
 /** ACP content block (subset used by these providers). */
 type AcpContentBlock =
     | { type: "text"; text: string }
@@ -1138,5 +1221,24 @@ function describeStopReason(stopReason: string): string {
             return `The agent stopped early (${stopReason.replace(/_/g, " ")}). Try a narrower request.`;
         default:
             return `Agent stopped: ${stopReason}`;
+    }
+}
+
+function openSession(client: AcpClient, params: AcpNewSessionParams, timeoutMs: number) {
+    return client.request<{ sessionId: string; models?: AcpSessionModelState }>("session/new", params, timeoutMs);
+}
+
+/** `session/new` once a sign-in has completed, retried while the agent's account does not show it yet. */
+async function openSessionAfterSignIn(client: AcpClient, params: AcpNewSessionParams, timeoutMs: number) {
+    const giveUpAt = Date.now() + SIGN_IN_SETTLE_MS;
+    for (;;) {
+        try {
+            return await openSession(client, params, timeoutMs);
+        } catch (err) {
+            if (!isSignInRequired(err) || Date.now() >= giveUpAt) {
+                throw err;
+            }
+            await new Promise(resolve => setTimeout(resolve, SIGN_IN_RETRY_MS));
+        }
     }
 }

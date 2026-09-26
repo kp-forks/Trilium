@@ -24,7 +24,7 @@ import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
 
 import { type BuiltInToolDisplay, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
-import { buildHookCommand, stringsIn } from "./antigravity_hook.js";
+import { buildHookCommand, stringsIn } from "./acp_hook.js";
 import { type HostLookup, isPublicHttpUrl } from "./public_url.js";
 
 /** What the hook prints: no decision leaves the call to Codex, a `deny` stops it. */
