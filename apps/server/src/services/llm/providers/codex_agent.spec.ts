@@ -108,7 +108,7 @@ class FakeAcpClient {
 vi.mock("./acp_client.js", () => ({ AcpClient: FakeAcpClient, AcpError: FakeAcpError }));
 
 const { resetAcpAgentStateForTests } = await import("./acp_agent.js");
-const { buildCodexModelList, CodexAgentProvider, decideCodexPermission, resetCodexCatalogForTests } = await import("./codex_agent.js");
+const { buildCodexModelList, CitationStripper, CodexAgentProvider, decideCodexPermission, resetCodexCatalogForTests } = await import("./codex_agent.js");
 
 /** Part of the catalog codex-acp 1.13.1 reports on session/new for a ChatGPT account. */
 const REMOTE_MODELS = [
@@ -312,10 +312,14 @@ describe("CodexAgentProvider web search", () => {
         FakeAcpClient.onPrompt = async client => {
             const decide = getAcpHookEndpointUrlMock.mock.calls.at(-1)?.[1];
             decisions.push(await decide?.({ hook_event_name: "PreToolUse", session_id: "sess-1", tool_name: "webrun", tool_input: { search_query: [ { q: "kernel" } ] } }));
-            client.onNotification?.("session/update", {
-                sessionId: "sess-1",
-                update: { sessionUpdate: "tool_call", toolCallId: "search-1", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "" } }
-            });
+            const update = (u: Record<string, unknown>) => client.onNotification?.("session/update", { sessionId: "sess-1", update: u });
+            update({ sessionUpdate: "tool_call", toolCallId: "search-1", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "" } });
+            // codex-acp 1.13.1 reports a finished search with no content, only its final title.
+            update({ sessionUpdate: "tool_call_update", toolCallId: "search-1", title: "Web search: weather Sibiu", status: "completed", rawInput: { type: "webSearch", query: "weather Sibiu" } });
+            // A citation marker, split across chunks as a stream can split it.
+            for (const text of [ "Cloudy, 12\u00b0C. \uE200cite\uE202turn3se", "arch2\uE202turn3search0\uE201", " Low chance of rain." ]) {
+                update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text } });
+            }
         };
         const provider = new CodexAgentProvider();
 
@@ -327,5 +331,26 @@ describe("CodexAgentProvider web search", () => {
             { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: "Web search is turned off for this chat." } }
         ]);
         expect(searching).toContainEqual({ type: "tool_use", toolCallId: "search-1", toolName: "web_search", toolInput: { type: "webSearch", query: "" } });
+        // A finished call the chat would otherwise show as still running.
+        expect(searching).toContainEqual({ type: "tool_result", toolCallId: "search-1", toolName: "web_search", result: "Web search: weather Sibiu", isError: false });
+        expect(searching.map(c => (c.type === "text" ? c.content : "")).join("")).toBe("Cloudy, 12\u00b0C.  Low chance of rain.");
+    });
+});
+
+describe("CitationStripper", () => {
+    const strip = (...chunks: string[]) => {
+        const stripper = new CitationStripper();
+        return chunks.map(chunk => stripper.push(chunk));
+    };
+
+    it("removes whole and split markers, holding back only what a marker might still need", () => {
+        expect(strip("A \uE200cite\uE202turn0search1\uE201 and \uE200cite\uE202turn0search2\uE201.")).toEqual([ "A  and ." ]);
+        expect(strip("A \uE200cite\uE202tu", "rn0search1", "\uE201 B")).toEqual([ "A ", "", " B" ]);
+        // A marker that never closes is dropped with the rest of the turn.
+        expect(strip("A \uE200cite\uE202turn0")).toEqual([ "A " ]);
+    });
+
+    it("lets an opening through once it has run longer than any marker", () => {
+        expect(strip("A \uE200", "x".repeat(250))).toEqual([ "A ", "x".repeat(250) ]);
     });
 });

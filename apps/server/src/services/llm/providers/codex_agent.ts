@@ -15,7 +15,7 @@
  * calls to Trilium's note tools.
  */
 
-import { LLM_REASONING_EFFORTS, type LlmReasoningEffort } from "@triliumnext/commons";
+import { LLM_REASONING_EFFORTS, type LlmMessage, type LlmReasoningEffort, type LlmStreamChunk } from "@triliumnext/commons";
 import type { LlmProviderConfig, ModelInfo } from "@triliumnext/core/src/services/llm/types.js";
 import path from "path";
 
@@ -152,6 +152,21 @@ export class CodexAgentProvider extends AcpAgentProvider {
             recordCatalog(created.models);
         }
         return created;
+    }
+
+    /** The turn, with the citation markers Codex writes into its reply taken out (see {@link CitationStripper}). */
+    async *chatChunks(messages: LlmMessage[], config: LlmProviderConfig, signal?: AbortSignal): AsyncIterable<LlmStreamChunk> {
+        const citations = new CitationStripper();
+        for await (const chunk of super.chatChunks(messages, config, signal)) {
+            if (chunk.type !== "text") {
+                yield chunk;
+                continue;
+            }
+            const text = citations.push(chunk.content);
+            if (text) {
+                yield { ...chunk, content: text };
+            }
+        }
     }
 
     protected describeFailure(error: unknown): string {
@@ -302,6 +317,37 @@ function agentHome(): string {
 
 function isSignInRequired(error: unknown): boolean {
     return error instanceof AcpError && error.code === -32000 && /authentication required/i.test(error.message);
+}
+
+/** A citation marker opens with U+E200 and closes with U+E201, private-use characters. */
+const MARKER_START = "";
+const COMPLETE_MARKER = /[^]*/g;
+
+/** Longer than any citation marker; an opening held back past it was no marker. */
+const MAX_MARKER_LENGTH = 200;
+
+/**
+ * Removes the citation markers OpenAI's models write after a web search,
+ * `U+E200 cite U+E202 turn3search2 U+E201`, from streamed text. Codex's own
+ * interface turns them into links to the search results, which the adapter
+ * never passes on, so the chat would show them as `citeturn3search2`. A
+ * marker can span chunks, so text from an unclosed one is held back until it
+ * closes, and dropped if it never does.
+ */
+export class CitationStripper {
+    private pending = "";
+
+    /** The text of `chunk` that is safe to show now. */
+    push(chunk: string): string {
+        let text = (this.pending + chunk).replace(COMPLETE_MARKER, "");
+        let open = text.indexOf(MARKER_START);
+        if (open >= 0 && text.length - open > MAX_MARKER_LENGTH) {
+            text = text.replaceAll(MARKER_START, "");
+            open = -1;
+        }
+        this.pending = open >= 0 ? text.slice(open) : "";
+        return open >= 0 ? text.slice(0, open) : text;
+    }
 }
 
 /** For tests: forget the recorded catalog. */

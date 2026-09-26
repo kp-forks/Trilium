@@ -887,7 +887,9 @@ export function createUpdateCollector(
                             type: "tool_result",
                             toolCallId,
                             toolName,
-                            result: flattenToolContent(update.content, update.rawOutput),
+                            // The chat reads an empty result as a call still running. A
+                            // built-in search reports none, and its final title names what it did.
+                            result: flattenToolContent(update.content, update.rawOutput) || update.title || "",
                             isError: update.status === "failed"
                         });
                         toolNamesById.delete(toolCallId);
