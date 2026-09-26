@@ -46,6 +46,16 @@ describe("ensureMimeTypes", () => {
         expect(highlight("{}", { language: "application-json" })).not.toBeNull();
     });
 
+    it("limits highlightAuto to the registered mime types", async () => {
+        const { ensureMimeTypes, highlightAuto } = await freshModule();
+        const python = "def greet(name):\n    return f\"Hello, {name}\"\n";
+
+        expect(highlightAuto(python).language).toBeUndefined();
+
+        await ensureMimeTypes([mime("text/x-python")]);
+        expect(highlightAuto(python).language).toBe("text-x-python");
+    });
+
     it("remembers a mime type with no highlight.js definition as unsupported", async () => {
         const { ensureMimeTypes, highlight } = await freshModule();
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
