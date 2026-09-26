@@ -1,44 +1,6 @@
-/* Tool calls share the thought's disclosure line (`.llm-chat-thinking` in ChatMessage.css). */
+/* Each call is an `.expandable-line` (ExpandableCard.css). */
 .llm-chat-tool-calls {
     margin: 0.25rem 0;
-    font-size: 0.85rem;
-    color: var(--muted-text-color);
-}
-
-.llm-chat-tool-call {
-    & + & {
-        border-top: none;
-    }
-
-    > .expandable-section-summary {
-        width: fit-content;
-        max-width: 100%;
-        padding: 0.15rem 0;
-        gap: 0.4rem;
-        font-weight: normal;
-        line-height: 1.4rem;
-
-        > .bx {
-            font-size: 0.9rem;
-            line-height: inherit;
-            margin-right: 0;
-        }
-
-        > .expandable-section-chevron {
-            margin-left: 0;
-        }
-
-        &:hover {
-            color: var(--main-text-color);
-        }
-    }
-
-    /* The left margin centers the rule under the 0.9rem icon of the line above. */
-    > .expandable-section-body {
-        margin: 0.15rem 0 0.25rem 0.45rem;
-        padding-left: 0.85rem;
-        border-left: 2px solid var(--main-border-color);
-    }
 }
 
 .llm-chat-tool-call-detail {

@@ -198,6 +198,7 @@ function ToolCallSection({ toolCall }: { toolCall: ToolCall }) {
         <ExpandableSection
             icon={toolCallIcon(toolCall)}
             label={<ToolCallLabel toolCall={toolCall} />}
+            variant="line"
             className={`llm-chat-tool-call ${hasError ? "llm-chat-tool-call-error" : ""}`}
             open={noteContentEdits ? isSmallEdit(noteContentEdits) : isStreamingInput || undefined}
         >
@@ -243,7 +244,7 @@ function ToolCallGroupSection({ toolCalls }: { toolCalls: ToolCall[] }) {
     );
 
     return (
-        <ExpandableSection icon={icon} label={label} className="llm-chat-tool-call llm-chat-tool-call-group">
+        <ExpandableSection variant="line" icon={icon} label={label} className="llm-chat-tool-call llm-chat-tool-call-group">
             {toolCalls.map((tc, idx) => (
                 <ToolCallSection key={tc.id ?? idx} toolCall={tc} />
             ))}

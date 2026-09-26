@@ -9,12 +9,17 @@ interface ExpandableSectionProps {
     /** Whether the section is expanded on initial render. */
     open?: boolean;
     children?: ComponentChildren;
+    /**
+     * `card` is a row of an ExpandableCard; `line` is a bare muted line whose body hangs off a rule
+     * under the icon, as used by thoughts and tool calls.
+     */
+    variant?: "card" | "line";
 }
 
-/** A collapsible section within an ExpandableCard. */
-export function ExpandableSection({ icon, label, className, open, children }: ExpandableSectionProps) {
+/** A collapsible section, either a row of an ExpandableCard or a standalone disclosure line. */
+export function ExpandableSection({ icon, label, className, open, children, variant = "card" }: ExpandableSectionProps) {
     return (
-        <details className={`expandable-section ${className ?? ""}`} open={open}>
+        <details className={`expandable-section ${variant === "line" ? "expandable-line" : ""} ${className ?? ""}`} open={open}>
             <summary className="expandable-section-summary">
                 <span className={icon} />
                 <span className="expandable-section-label">{label}</span>

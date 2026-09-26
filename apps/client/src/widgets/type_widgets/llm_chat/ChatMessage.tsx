@@ -130,12 +130,12 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
 function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }) {
     if (isLive) {
         return (
-            <div className="llm-chat-thinking llm-chat-thinking-live">
-                <div className="llm-chat-thinking-header">
+            <div className="expandable-line llm-chat-thinking llm-chat-thinking-live">
+                <div className="expandable-line-header">
                     <LoadingSpinner />
                     <span className="llm-chat-thinking-title">{latestThinkingTitle(content) ?? t("llm_chat.thinking")}</span>
                 </div>
-                <div className="llm-chat-thinking-content">
+                <div className="expandable-line-body llm-chat-thinking-content">
                     <TextBlockContent content={content} />
                 </div>
             </div>
@@ -148,7 +148,7 @@ function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }
     }
 
     return (
-        <ExpandableSection className="llm-chat-thinking" icon="bx bx-brain" label={label || t("llm_chat.thought_process")}>
+        <ExpandableSection variant="line" className="llm-chat-thinking" icon="bx bx-brain" label={label || t("llm_chat.thought_process")}>
             <div className="llm-chat-thinking-content">
                 <TextBlockContent content={body} />
             </div>
@@ -174,6 +174,7 @@ function ThinkingLine({ label }: { label: string }) {
 
     return (
         <ExpandableSection
+            variant="line"
             className={`llm-chat-thinking ${fits ? "llm-chat-thinking-fits" : ""}`}
             icon="bx bx-brain"
             label={<span ref={labelRef} className="llm-chat-thinking-label">{label}</span>}
