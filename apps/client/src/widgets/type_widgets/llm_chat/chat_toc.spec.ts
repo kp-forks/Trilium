@@ -281,7 +281,7 @@ describe("extractChatHeadings", () => {
                 assistantMessage("a1", "Answer")
             ], containerWith(
                 messageWrapper("u1"),
-                messageWrapper("a1", `<div class="llm-chat-thinking-card">${markdownContent("<h1>Thought</h1>")}</div>${markdownContent("<h1>Real</h1>")}`)
+                messageWrapper("a1", `<div class="llm-chat-thinking">${markdownContent("<h1>Thought</h1>")}</div>${markdownContent("<h1>Real</h1>")}`)
             ));
             expect(headings).toMatchObject([
                 { id: "u1", level: 1 },

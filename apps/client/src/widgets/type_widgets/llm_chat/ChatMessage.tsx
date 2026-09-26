@@ -121,14 +121,14 @@ function CitationsSection({ citations }: { citations: LlmCitation[] }) {
 }
 
 /**
- * One stretch of the model's reasoning. A finished one folds to a line named by its leading
- * `**Title**`, the shape of Codex's reasoning summaries. The one being generated stays open,
- * clamped to its last lines under a spinner and its latest title.
+ * One stretch of the model's reasoning. A finished one folds to a single muted line: its leading
+ * `**Title**` (the shape of Codex's reasoning summaries), or else its first line. The one being
+ * generated stays open, clamped to its last lines under a spinner and its latest title.
  */
 function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }) {
     if (isLive) {
         return (
-            <ExpandableCard className="llm-chat-thinking-card llm-chat-thinking-live">
+            <div className="llm-chat-thinking llm-chat-thinking-live">
                 <div className="llm-chat-thinking-header">
                     <LoadingSpinner />
                     <span className="llm-chat-thinking-title">{latestThinkingTitle(content) ?? t("llm_chat.thinking")}</span>
@@ -136,19 +136,17 @@ function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }
                 <div className="llm-chat-thinking-content">
                     <TextBlockContent content={content} />
                 </div>
-            </ExpandableCard>
+            </div>
         );
     }
 
     const { title, body } = splitThinkingTitle(content);
     return (
-        <ExpandableCard className="llm-chat-thinking-card">
-            <ExpandableSection icon="bx bx-brain" label={title ?? t("llm_chat.thought_process")}>
-                <div className="llm-chat-thinking-content">
-                    <TextBlockContent content={body} />
-                </div>
-            </ExpandableSection>
-        </ExpandableCard>
+        <ExpandableSection className="llm-chat-thinking" icon="bx bx-brain" label={title ?? firstLinePlainText(content) ?? t("llm_chat.thought_process")}>
+            <div className="llm-chat-thinking-content">
+                <TextBlockContent content={body} />
+            </div>
+        </ExpandableSection>
     );
 }
 
@@ -362,6 +360,11 @@ const THINKING_TITLE_LINE = /^\*\*([^*\n]+)\*\*[ \t]*$/gm;
 function splitThinkingTitle(content: string): { title?: string; body: string } {
     const match = /^\s*\*\*([^*\n]+)\*\*[ \t]*(?:\n|$)/.exec(content);
     return match ? { title: match[1].trim(), body: content.slice(match[0].length).trimStart() } : { body: content };
+}
+
+/** The first line of a thought without its inline Markdown marks, to name a thought that has no title. */
+function firstLinePlainText(content: string): string | undefined {
+    return content.trim().split("\n")[0].replace(/\*\*|`/g, "").trim() || undefined;
 }
 
 /** The last `**Title**` line of a thought, naming what the model is working on now. */
