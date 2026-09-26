@@ -372,11 +372,17 @@ describe("AcpClient.startWorker", () => {
             process.exit(0);
         });
     `;
+    let dir: string;
     let script: string;
 
     beforeEach(() => {
-        script = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "trilium-acp-worker-")), "agent.mjs");
+        dir = fs.mkdtempSync(path.join(os.tmpdir(), "trilium-acp-worker-"));
+        script = path.join(dir, "agent.mjs");
         fs.writeFileSync(script, ECHO_AGENT);
+    });
+
+    afterEach(() => {
+        fs.rmSync(dir, { recursive: true, force: true });
     });
 
     it("speaks to a script in a worker thread over its stdio, with the given args and environment", async () => {
