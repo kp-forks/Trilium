@@ -54,18 +54,24 @@ const HOOK_TIMEOUT_S = 10;
 const NOTE_TOOLS_ONLY = "Trilium does not allow this tool. Use Trilium's note tools to read, search and edit the user's notes instead.";
 const WEB_SEARCH_OFF = "Web search is turned off for this chat.";
 const PRIVATE_ADDRESS = "Trilium does not allow opening local or private addresses.";
+const UNKNOWN_RESULT = "Trilium can only open search results this chat's searches returned. Open the page by its URL instead.";
+
+/** What the hook knows of the chat turn running in a session (the event's `session_id`, the ACP session id). */
+export interface CodexTurns {
+    /** The turn's configuration. */
+    configOf(sessionId: string): LlmProviderConfig | undefined;
+    /** The URL of a search result the turn's web searches returned, by its id (`turn1search0`). */
+    urlOf(sessionId: string, ref: string): string | undefined;
+}
 
 /**
  * The answer to one `PreToolUse` call: Trilium's note tools pass, and the web
  * search passes in a chat that allows it when every URL it opens is on the
- * public internet. Everything else is denied. `configOf` gives the chat turn's
- * configuration for the event's `session_id`, the ACP session id.
+ * public internet. A page opened by a search result's id is checked by that
+ * result's URL, and an id the turn's searches never returned is refused, as
+ * its destination cannot be checked. Everything else is denied.
  */
-export async function decideCodexToolCall(
-    payload: unknown,
-    configOf: (sessionId: string) => LlmProviderConfig | undefined,
-    lookup?: HostLookup
-): Promise<CodexHookAnswer> {
+export async function decideCodexToolCall(payload: unknown, turns: CodexTurns, lookup?: HostLookup): Promise<CodexHookAnswer> {
     const event = payload as { tool_name?: unknown; tool_input?: unknown; session_id?: unknown } | null;
     const toolName = typeof event?.tool_name === "string" ? event.tool_name : "";
     if (toolName.startsWith(`mcp__${NOTE_TOOLS_MCP_SERVER_NAME}__`)) {
@@ -74,11 +80,20 @@ export async function decideCodexToolCall(
     if (toolName !== WEB_TOOL) {
         return deny(NOTE_TOOLS_ONLY);
     }
-    const config = typeof event?.session_id === "string" ? configOf(event.session_id) : undefined;
-    if (config?.enableWebSearch !== true) {
+    const sessionId = typeof event?.session_id === "string" ? event.session_id : undefined;
+    if (sessionId === undefined || turns.configOf(sessionId)?.enableWebSearch !== true) {
         return deny(WEB_SEARCH_OFF);
     }
-    const urls = stringsIn(event?.tool_input).filter(value => /^https?:\/\//i.test(value));
+    const isUrl = (value: string) => /^https?:\/\//i.test(value);
+    const opened = (event?.tool_input as { open?: unknown } | null | undefined)?.open;
+    const urls = stringsIn(event?.tool_input).filter(isUrl);
+    for (const ref of stringsIn(opened).filter(value => !isUrl(value))) {
+        const url = turns.urlOf(sessionId, ref);
+        if (url === undefined) {
+            return deny(UNKNOWN_RESULT);
+        }
+        urls.push(url);
+    }
     const allPublic = await Promise.all(urls.map(url => isPublicHttpUrl(url, lookup)));
     return allPublic.every(Boolean) ? {} : deny(PRIVATE_ADDRESS);
 }

@@ -229,7 +229,10 @@ export class CodexAgentProvider extends AcpAgentProvider {
         }
         const search = codexSearchSources(payload);
         if (!search) {
-            return decideCodexToolCall(payload, sessionId => this.turnConfigOf(sessionId));
+            return decideCodexToolCall(payload, {
+                configOf: sessionId => this.turnConfigOf(sessionId),
+                urlOf: (sessionId, ref) => this.sourceUrl(sessionId, ref)
+            });
         }
         const config = this.turnConfigOf(search.sessionId);
         if (config) {
@@ -252,15 +255,20 @@ export class CodexAgentProvider extends AcpAgentProvider {
         if (event?.hook_event_name !== "PreToolUse" || event.tool_name !== "webrun" || typeof event.tool_use_id !== "string") {
             return;
         }
-        const config = typeof event.session_id === "string" ? this.turnConfigOf(event.session_id) : undefined;
-        const sources = config ? sourcesByTurn.get(config) : undefined;
-        webrunCalls.set(event.tool_use_id, describeWebrunInput(event.tool_input, ref => sources?.get(ref)?.url));
+        const sessionId = typeof event.session_id === "string" ? event.session_id : undefined;
+        webrunCalls.set(event.tool_use_id, describeWebrunInput(event.tool_input, ref => (sessionId ? this.sourceUrl(sessionId, ref) : undefined)));
         for (const oldest of webrunCalls.keys()) {
             if (webrunCalls.size <= MAX_WEBRUN_CALLS) {
                 break;
             }
             webrunCalls.delete(oldest);
         }
+    }
+
+    /** The URL of a search result the web searches of the turn running in `sessionId` returned, by its id. */
+    private sourceUrl(sessionId: string, ref: string): string | undefined {
+        const config = this.turnConfigOf(sessionId);
+        return config ? sourcesByTurn.get(config)?.get(ref)?.url : undefined;
     }
 
     protected describeFailure(error: unknown): string {

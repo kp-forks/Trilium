@@ -21,17 +21,22 @@ const denied = (reason: RegExp) => ({ hookSpecificOutput: { hookEventName: "PreT
 
 describe("decideCodexToolCall", () => {
     const configs: Record<string, { enableWebSearch?: boolean }> = { web: { enableWebSearch: true }, offline: {} };
-    const configOf = (sessionId: string) => configs[sessionId];
+    // The web chat's searches returned two results: one on the public internet, one on the local network.
+    const results: Record<string, string> = { turn1search0: "https://example.com/news", turn1search1: "http://router.lan/admin" };
+    const turns = {
+        configOf: (sessionId: string) => configs[sessionId],
+        urlOf: (sessionId: string, ref: string) => (sessionId === "web" ? results[ref] : undefined)
+    };
     // example.com resolves to a public address, everything else to a private one.
     const lookup = async (host: string) => (host === "example.com" ? [ "93.184.215.14" ] : [ "192.168.1.1" ]);
-    const decide = (event: object, sessionId = "web") => decideCodexToolCall({ ...event, session_id: sessionId, hook_event_name: "PreToolUse" }, configOf, lookup);
+    const decide = (event: object, sessionId = "web") => decideCodexToolCall({ ...event, session_id: sessionId, hook_event_name: "PreToolUse" }, turns, lookup);
 
     it("lets Trilium's note tools through and denies every other tool, whatever the chat allows", async () => {
         expect(await decide(EVENTS.noteTool)).toEqual({});
         for (const event of [ EVENTS.shell, EVENTS.viewImage, EVENTS.otherMcp, { tool_name: "browser_use" }, {} ]) {
             expect(await decide(event)).toEqual(denied(/note tools/));
         }
-        expect(await decideCodexToolCall(null, configOf, lookup)).toEqual(denied(/note tools/));
+        expect(await decideCodexToolCall(null, turns, lookup)).toEqual(denied(/note tools/));
     });
 
     it("lets the web search through only in a chat that allows it, and only to public addresses", async () => {
@@ -41,7 +46,14 @@ describe("decideCodexToolCall", () => {
         expect(await decide(EVENTS.search, "offline")).toEqual(denied(/turned off/));
         // A session no chat turn is attached to, such as the title's, has no web access.
         expect(await decide(EVENTS.search, "unknown")).toEqual(denied(/turned off/));
-        expect(await decideCodexToolCall(EVENTS.search, configOf, lookup)).toEqual(denied(/turned off/));
+        expect(await decideCodexToolCall(EVENTS.search, turns, lookup)).toEqual(denied(/turned off/));
+    });
+
+    it("checks a page opened by a search result's id by that result's URL, and refuses an id it cannot check", async () => {
+        const openResult = (ref: string) => ({ tool_name: "webrun", tool_input: { open: [ { ref_id: ref } ], response_length: "medium" } });
+        expect(await decide(openResult("turn1search0"))).toEqual({});
+        expect(await decide(openResult("turn1search1"))).toEqual(denied(/private addresses/));
+        expect(await decide(openResult("turn9search9"))).toEqual(denied(/search results this chat/));
     });
 });
 
