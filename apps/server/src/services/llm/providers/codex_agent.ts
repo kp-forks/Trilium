@@ -132,9 +132,21 @@ export class CodexAgentProvider extends AcpAgentProvider {
         return update.toolCallId?.startsWith("mcp_startup.") ?? false;
     }
 
-    /** The web search, which the adapter reports with the kind `search`, under the name the other providers' searches carry. */
+    /**
+     * The web search, under the name the other providers' searches carry, with
+     * its query or the page it opens, where the chat looks for a detail. The
+     * adapter announces a search with the kind `search` and an empty query, and
+     * reports the query only in later updates, which carry no kind.
+     */
     protected describeBuiltInTool(update: AcpToolCallUpdate): BuiltInToolDisplay | undefined {
-        return update.kind === "search" ? { toolName: "web_search" } : undefined;
+        const input = update.rawInput as { type?: unknown; query?: unknown; action?: { type?: unknown; url?: unknown } | null } | undefined;
+        if (update.kind !== "search" && input?.type !== "webSearch") {
+            return undefined;
+        }
+        if (input?.action?.type === "openPage" && typeof input.action.url === "string") {
+            return { toolName: "web_search", toolInput: { url: input.action.url } };
+        }
+        return { toolName: "web_search", toolInput: typeof input?.query === "string" && input.query ? { query: input.query } : {} };
     }
 
     /**

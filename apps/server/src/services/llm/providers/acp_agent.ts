@@ -882,6 +882,12 @@ export function createUpdateCollector(
                     if (!toolCallId || toolName === undefined) {
                         break; // not a call announced this turn
                     }
+                    // An agent can fill in a built-in call's input only as it runs (Codex
+                    // announces a web search before its query); the chat replaces the input.
+                    const input = mcpToolCall(update) ? undefined : describeBuiltIn?.(update)?.toolInput;
+                    if (input && Object.keys(input).length > 0) {
+                        emit({ type: "tool_use", toolCallId, toolName, toolInput: input });
+                    }
                     if (update.status === "completed" || update.status === "failed") {
                         emit({
                             type: "tool_result",

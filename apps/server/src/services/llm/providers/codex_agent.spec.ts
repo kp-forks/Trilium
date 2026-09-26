@@ -316,6 +316,12 @@ describe("CodexAgentProvider web search", () => {
             update({ sessionUpdate: "tool_call", toolCallId: "search-1", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "" } });
             // codex-acp 1.13.1 reports a finished search with no content, only its final title.
             update({ sessionUpdate: "tool_call_update", toolCallId: "search-1", title: "Web search: weather Sibiu", status: "completed", rawInput: { type: "webSearch", query: "weather Sibiu" } });
+            // An opened page, which names its URL in the action.
+            update({ sessionUpdate: "tool_call", toolCallId: "search-2", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "", action: null } });
+            update({
+                sessionUpdate: "tool_call_update", toolCallId: "search-2", title: "Open page: https://www.kernel.org/", status: "completed",
+                rawInput: { type: "webSearch", query: "https://www.kernel.org/", action: { type: "openPage", url: "https://www.kernel.org/" } }
+            });
             // The search's results, as the PostToolUse hook posts them; the marker below cites one of them and one it never returned.
             await decide?.({
                 hook_event_name: "PostToolUse", session_id: "sess-1", tool_name: "webrun",
@@ -335,9 +341,16 @@ describe("CodexAgentProvider web search", () => {
             {},
             { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: "Web search is turned off for this chat." } }
         ]);
-        expect(searching).toContainEqual({ type: "tool_use", toolCallId: "search-1", toolName: "web_search", toolInput: { type: "webSearch", query: "" } });
-        // A finished call the chat would otherwise show as still running.
-        expect(searching).toContainEqual({ type: "tool_result", toolCallId: "search-1", toolName: "web_search", result: "Web search: weather Sibiu", isError: false });
+        // Announced without a query, then shown with the query or page once the adapter reports it,
+        // and finished with a result the chat does not read as a call still running.
+        expect(searching.filter(c => c.type === "tool_use" || c.type === "tool_result")).toEqual([
+            { type: "tool_use", toolCallId: "search-1", toolName: "web_search", toolInput: {} },
+            { type: "tool_use", toolCallId: "search-1", toolName: "web_search", toolInput: { query: "weather Sibiu" } },
+            { type: "tool_result", toolCallId: "search-1", toolName: "web_search", result: "Web search: weather Sibiu", isError: false },
+            { type: "tool_use", toolCallId: "search-2", toolName: "web_search", toolInput: {} },
+            { type: "tool_use", toolCallId: "search-2", toolName: "web_search", toolInput: { url: "https://www.kernel.org/" } },
+            { type: "tool_result", toolCallId: "search-2", toolName: "web_search", result: "Open page: https://www.kernel.org/", isError: false }
+        ]);
         expect(searching.map(c => (c.type === "text" ? c.content : "")).join("")).toBe("Cloudy, 12\u00b0C.  Low chance of rain.");
         // The marker becomes a Trilium citation for the result the search returned.
         expect(searching.filter(c => c.type === "citation")).toEqual([
