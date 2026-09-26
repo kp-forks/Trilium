@@ -66,6 +66,8 @@ export interface AcpPermissionRequest {
         _meta?: Record<string, unknown>;
     };
     options?: { optionId: string; name?: string; kind?: string }[];
+    /** Agent-specific metadata about the request, set by the agent itself. */
+    _meta?: Record<string, unknown>;
 }
 
 /** The `models` block of a `session/new` response — ACP's model-selection state. */
@@ -236,9 +238,14 @@ export abstract class AcpAgentProvider implements LlmProvider {
      * Permission policy. The default denies every request; a subclass whose
      * agent asks before running Trilium's own note tools approves those.
      * `config` is the chat turn's configuration, and absent outside a chat
-     * turn (the model probe, the title).
+     * turn (the model probe, the title). `mcpServerOf` names the MCP server of
+     * a tool call the agent announced before asking about it.
      */
-    protected decidePermission(request: AcpPermissionRequest, _config?: LlmProviderConfig): AcpPermissionOutcome | Promise<AcpPermissionOutcome> {
+    protected decidePermission(
+        request: AcpPermissionRequest,
+        _config?: LlmProviderConfig,
+        _mcpServerOf?: (toolCallId: string | undefined) => string | undefined
+    ): AcpPermissionOutcome | Promise<AcpPermissionOutcome> {
         return denyPermission(request, this.logLabel);
     }
 
@@ -690,16 +697,21 @@ ${firstMessage.substring(0, 500)}`
         } = {}
     ): Promise<AcpClient> {
         const launch = await this.launchSpec();
+        const mcpServers = new McpToolCallServers();
         const client = (launch.worker ? AcpClient.startWorker : AcpClient.start)(launch.binary, {
             cwd: this.agentCwd(),
             shell: launch.shell,
             args: launch.args,
             env: launch.env,
-            onNotification,
+            onNotification: (method, params) => {
+                mcpServers.observe(method, params);
+                onNotification(method, params);
+            },
             onAgentRequest: (method, params) => this.handleAgentRequest(
                 method,
                 params,
-                options.turnConfig?.((params as { sessionId?: string } | undefined)?.sessionId)
+                options.turnConfig?.((params as { sessionId?: string } | undefined)?.sessionId),
+                toolCallId => mcpServers.serverOf(toolCallId)
             ),
             onExit: options.onExit
         });
@@ -729,9 +741,14 @@ ${firstMessage.substring(0, 500)}`
      * Handle agent→client requests. Only the permission callback is supported;
      * everything else (fs, terminal) was never advertised and is refused.
      */
-    private handleAgentRequest(method: string, params: unknown, config: LlmProviderConfig | undefined): unknown {
+    private handleAgentRequest(
+        method: string,
+        params: unknown,
+        config: LlmProviderConfig | undefined,
+        mcpServerOf: (toolCallId: string | undefined) => string | undefined
+    ): unknown {
         if (method === "session/request_permission") {
-            return this.decidePermission(params as AcpPermissionRequest, config);
+            return this.decidePermission(params as AcpPermissionRequest, config, mcpServerOf);
         }
         throw new Error(`Trilium does not support "${method}".`);
     }
@@ -838,7 +855,7 @@ export function createUpdateCollector(
                     if (!update.toolCallId || toolNamesById.has(update.toolCallId) || isHidden?.(update)) {
                         break; // malformed, a re-announcement of a known call, or hidden
                     }
-                    const mcpTool = mcpToolName(update._meta);
+                    const mcpTool = mcpToolCall(update)?.tool;
                     const builtIn = mcpTool ? undefined : describeBuiltIn?.(update);
                     const toolName = mcpTool ?? builtIn?.toolName ?? (update.title || "tool");
                     toolNamesById.set(update.toolCallId, toolName);
@@ -986,16 +1003,51 @@ function wrapSystemInstructions(systemPrompt: string): string | null {
 }
 
 /**
- * The MCP tool behind a tool call, from the `_meta` that `agy_acp_server` sets on
- * calls to a client-provided MCP server. The call's title is `<server>_<tool>`,
- * which matches none of the tool labels the chat has.
+ * The MCP server and tool behind a tool call the agent marks with
+ * `_meta.is_mcp_tool_call`: `agy_acp_server` names them in `_meta.mcp`,
+ * `codex-acp` in `rawInput` (`{ server, tool, arguments }`). The call's title
+ * (`<server>_<tool>`, `mcp.<server>.<tool>`) matches none of the tool labels the
+ * chat has.
  */
-function mcpToolName(meta: unknown): string | undefined {
-    const typed = meta as { is_mcp_tool_call?: unknown; mcp?: { tool?: unknown } } | undefined;
-    return typed?.is_mcp_tool_call === true && typeof typed.mcp?.tool === "string" ? typed.mcp.tool : undefined;
+function mcpToolCall(update: AcpToolCallUpdate): { server?: string; tool?: string } | undefined {
+    const meta = update._meta as { is_mcp_tool_call?: unknown; mcp?: { server?: unknown; tool?: unknown } } | undefined;
+    if (meta?.is_mcp_tool_call !== true) {
+        return undefined;
+    }
+    const input = update.rawInput as { server?: unknown; tool?: unknown } | undefined;
+    const pick = (...values: unknown[]) => values.find((value): value is string => typeof value === "string");
+    return { server: pick(meta.mcp?.server, input?.server), tool: pick(meta.mcp?.tool, input?.tool) };
 }
 
-/** An MCP call's arguments, which `agy_acp_server` reports wrapped as `{ arguments: … }`. */
+/**
+ * The MCP server of each tool call an agent announced and has not finished,
+ * by call id. `codex-acp` asks permission for an MCP call with only its id, so
+ * the permission policy looks the server up here.
+ */
+class McpToolCallServers {
+    private readonly byToolCallId = new Map<string, string>();
+
+    observe(method: string, params: unknown): void {
+        const update = method === "session/update" ? (params as AcpSessionUpdate | undefined)?.update : undefined;
+        if (!update?.toolCallId) {
+            return;
+        }
+        if (update.sessionUpdate === "tool_call") {
+            const server = mcpToolCall(update)?.server;
+            if (server) {
+                this.byToolCallId.set(update.toolCallId, server);
+            }
+        } else if (update.sessionUpdate === "tool_call_update" && (update.status === "completed" || update.status === "failed")) {
+            this.byToolCallId.delete(update.toolCallId);
+        }
+    }
+
+    serverOf(toolCallId: string | undefined): string | undefined {
+        return toolCallId ? this.byToolCallId.get(toolCallId) : undefined;
+    }
+}
+
+/** An MCP call's arguments, which `agy_acp_server` and `codex-acp` report wrapped as `{ arguments: … }`. */
 function unwrapMcpArguments(rawInput: unknown): unknown {
     const wrapped = rawInput as { arguments?: unknown } | undefined;
     return wrapped && typeof wrapped.arguments === "object" && wrapped.arguments !== null ? wrapped.arguments : rawInput ?? {};
@@ -1025,6 +1077,14 @@ function flattenToolContent(content: unknown, rawOutput: unknown): string {
                     : extractText(item);
             })
             .filter(Boolean);
+        if (texts.length > 0) {
+            return texts.join("\n");
+        }
+    }
+    // `codex-acp` reports an MCP call's result only as `{ result: CallToolResult, error }`.
+    const mcpResult = (rawOutput as { result?: { content?: unknown } } | null | undefined)?.result?.content;
+    if (Array.isArray(mcpResult) && mcpResult.length > 0) {
+        const texts = mcpResult.map(extractText).filter(Boolean);
         if (texts.length > 0) {
             return texts.join("\n");
         }

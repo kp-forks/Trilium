@@ -100,6 +100,6 @@ Trilium will identify your Codex CLI in this order:
 
 ### Known limitations
 
-*   Codex runs in its read-only mode and every action it asks permission for is denied, so it cannot edit files, run commands or search the web.
-*   Trilium's note tools and web search are not supported yet, so Codex cannot read or modify your notes.
+*   The agent can only work with your notes through Trilium's note tools; its own file, shell and web tools are blocked for security reasons.
+*   Web search is not supported yet.
 *   The ChatGPT sign-in opens in a browser on the device running Trilium, so it might not be possible to set up the provider while using the web version of a Docker installation. <a class="reference-link" href="../../Installation%20%26%20Setup/Desktop%20Installation.md">Desktop Installation</a> should work fine.

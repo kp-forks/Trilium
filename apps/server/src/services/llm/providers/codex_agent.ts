@@ -9,8 +9,8 @@
  * `CODEX_HOME` points Codex at a directory of Trilium's own, so its
  * sign-in, sessions, MCP servers and skills are Trilium's rather than those of
  * the user's own Codex setup. The session starts in the `read-only` mode, where
- * Codex asks before anything that writes or reaches the network, and the
- * default permission policy denies every such request.
+ * Codex asks before anything that writes or reaches the network, and
+ * {@link decideCodexPermission} approves only calls to Trilium's note tools.
  */
 
 import { LLM_REASONING_EFFORTS, type LlmReasoningEffort } from "@triliumnext/commons";
@@ -19,7 +19,7 @@ import fs from "fs";
 import path from "path";
 
 import dataDirs from "../../data_dir.js";
-import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpSessionModelState, describeError } from "./acp_agent.js";
+import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
 import { type AcpClient, AcpError } from "./acp_client.js";
 import { resolveCodexAcpScript, resolveCodexBinaryPath } from "./codex_binary.js";
 
@@ -91,6 +91,19 @@ export class CodexAgentProvider extends AcpAgentProvider {
         return buildCodexModelList(remote);
     }
 
+    protected decidePermission(
+        request: AcpPermissionRequest,
+        _config?: LlmProviderConfig,
+        mcpServerOf?: (toolCallId: string | undefined) => string | undefined
+    ): AcpPermissionOutcome {
+        return decideCodexPermission(request, this.logLabel, mcpServerOf);
+    }
+
+    /** The adapter reports each MCP server's startup as a tool call of its own, `mcp_startup.<server>`. */
+    protected isInternalToolCall(update: AcpToolCallUpdate): boolean {
+        return update.toolCallId?.startsWith("mcp_startup.") ?? false;
+    }
+
     /**
      * Open a session, signing in first when Codex has no saved sign-in and the
      * user is on the add-provider screen to complete it. The adapter opens the
@@ -128,6 +141,33 @@ export class CodexAgentProvider extends AcpAgentProvider {
         }
         return text;
     }
+}
+
+/**
+ * Approve once a call to Trilium's note tools; deny everything else.
+ *
+ * Codex asks before running an MCP tool that is not marked read-only, and the
+ * adapter forwards that as a permission request marked
+ * `_meta.is_mcp_tool_approval`. The request carries only the id of the tool
+ * call, which the adapter announced just before with its server in `rawInput`,
+ * so the server is looked up with `mcpServerOf`. When several calls to one
+ * server wait at once, the adapter cannot tell which one is asking and names
+ * the server in `toolCall.rawInput.serverName` instead. Codex fills in both,
+ * not the model.
+ */
+export function decideCodexPermission(
+    request: AcpPermissionRequest,
+    logLabel: string,
+    mcpServerOf?: (toolCallId: string | undefined) => string | undefined
+): AcpPermissionOutcome {
+    const toolCall = request.toolCall;
+    const standaloneServer = (toolCall?.rawInput as { serverName?: unknown } | undefined)?.serverName;
+    const server = mcpServerOf?.(toolCall?.toolCallId) ?? standaloneServer;
+    const allowOnce = request.options?.find(o => o.kind === "allow_once");
+    if (request._meta?.is_mcp_tool_approval === true && server === NOTE_TOOLS_MCP_SERVER_NAME && allowOnce) {
+        return { outcome: { outcome: "selected", optionId: allowOnce.optionId } };
+    }
+    return denyPermission(request, logLabel);
 }
 
 /**

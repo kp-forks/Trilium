@@ -30,7 +30,13 @@ class FakeAcpError extends Error {
     }
 }
 
-type StartOptions = { args?: string[]; env?: Record<string, string>; cwd: string; onAgentRequest?: (m: string, p: unknown) => unknown };
+type StartOptions = {
+    args?: string[];
+    env?: Record<string, string>;
+    cwd: string;
+    onAgentRequest?: (m: string, p: unknown) => unknown;
+    onNotification?: (m: string, p: unknown) => void;
+};
 
 /** Answers like `codex-acp`: `session/new` fails until `authenticate` has run, when `signedIn` is false. */
 class FakeAcpClient {
@@ -39,9 +45,12 @@ class FakeAcpClient {
     static signedIn = true;
     /** An error `session/new` fails with, when set. */
     static sessionFailure: Error | undefined;
+    /** Runs while session/prompt is answered, as the agent's own notifications and requests do. */
+    static onPrompt: ((client: FakeAcpClient) => Promise<void>) | undefined;
 
     requests: { method: string; params: unknown }[] = [];
     onAgentRequest?: (method: string, params: unknown) => unknown;
+    onNotification?: (method: string, params: unknown) => void;
 
     static start(binary: string, opts: StartOptions) {
         return FakeAcpClient.launch(false, binary, opts);
@@ -55,6 +64,7 @@ class FakeAcpClient {
         FakeAcpClient.lastStart = { worker, binary, opts };
         FakeAcpClient.current = new FakeAcpClient();
         FakeAcpClient.current.onAgentRequest = opts.onAgentRequest;
+        FakeAcpClient.current.onNotification = opts.onNotification;
         return FakeAcpClient.current;
     }
 
@@ -69,6 +79,7 @@ class FakeAcpClient {
             return { sessionId: "sess-1", models: { currentModelId: "gpt-6-luna[medium]", availableModels: REMOTE_MODELS } } as T;
         }
         if (method === "session/prompt") {
+            await FakeAcpClient.onPrompt?.(this);
             return { stopReason: "end_turn" } as T;
         }
         return {} as T;
@@ -88,7 +99,7 @@ class FakeAcpClient {
 vi.mock("./acp_client.js", () => ({ AcpClient: FakeAcpClient, AcpError: FakeAcpError }));
 
 const { resetAcpAgentStateForTests } = await import("./acp_agent.js");
-const { buildCodexModelList, CodexAgentProvider, resetCodexCatalogForTests } = await import("./codex_agent.js");
+const { buildCodexModelList, CodexAgentProvider, decideCodexPermission, resetCodexCatalogForTests } = await import("./codex_agent.js");
 
 /** Part of the catalog codex-acp 1.13.1 reports on session/new for a ChatGPT account. */
 const REMOTE_MODELS = [
@@ -123,6 +134,7 @@ beforeEach(() => {
     FakeAcpClient.lastStart = undefined;
     FakeAcpClient.signedIn = true;
     FakeAcpClient.sessionFailure = undefined;
+    FakeAcpClient.onPrompt = undefined;
 });
 
 describe("CodexAgentProvider", () => {
@@ -207,5 +219,72 @@ describe("buildCodexModelList", () => {
     it("keeps a model without a level in its id as it is", () => {
         expect(buildCodexModelList({ availableModels: [{ modelId: "codex-mini", name: "Codex Mini" }] })[1])
             .toEqual({ id: "codex-mini", name: "Codex Mini", pricing: { input: 0, output: 0 }, isSubscription: true });
+    });
+});
+
+/** The options codex-acp 1.13.1 offers for an MCP tool approval. */
+const MCP_APPROVAL_OPTIONS = [
+    { optionId: "allow_once", name: "Allow", kind: "allow_once" },
+    { optionId: "allow_session", name: "Allow for this session", kind: "allow_always" },
+    { optionId: "allow_always", name: "Always allow", kind: "allow_always" },
+    { optionId: "cancel", name: "Cancel", kind: "reject_once" }
+];
+
+/** A tool call as codex-acp 1.13.1 announces an MCP call, before asking to run it. */
+function mcpToolCall(toolCallId: string, server: string, tool: string, args: Record<string, unknown>) {
+    return {
+        sessionUpdate: "tool_call", toolCallId, kind: "execute", title: `mcp.${server}.${tool}`, status: "in_progress",
+        rawInput: { server, tool, arguments: args }, _meta: { is_mcp_tool_call: true }
+    };
+}
+
+/** The permission request codex-acp 1.13.1 sends for an announced MCP call. */
+function mcpApproval(toolCallId: string, extra: Record<string, unknown> = {}) {
+    return { sessionId: "sess-1", toolCall: { toolCallId, kind: "execute", status: "pending", ...extra }, _meta: { is_mcp_tool_approval: true }, options: MCP_APPROVAL_OPTIONS };
+}
+
+const ALLOWED = { outcome: { outcome: "selected", optionId: "allow_once" } };
+const DENIED = { outcome: { outcome: "selected", optionId: "cancel" } };
+
+describe("CodexAgentProvider note tools", () => {
+    it("runs Trilium's note tools, shown by their name and result, and denies calls to any other MCP server", async () => {
+        const answers: unknown[] = [];
+        FakeAcpClient.onPrompt = async client => {
+            const update = (u: Record<string, unknown>) => client.onNotification?.("session/update", { sessionId: "sess-1", update: u });
+            const ask = async (request: unknown) => answers.push(await client.onAgentRequest?.("session/request_permission", request));
+
+            update({ sessionUpdate: "tool_call", toolCallId: "mcp_startup.trilium", kind: "other", title: "mcp__trilium__startup", status: "failed" });
+            update(mcpToolCall("exec-1", "trilium", "read_note", { noteId: "abc" }));
+            await ask(mcpApproval("exec-1"));
+            update(mcpToolCall("exec-2", "codex_apps", "send_email", { to: "x" }));
+            await ask(mcpApproval("exec-2"));
+            // A request that is no MCP approval is denied even for a note-tool call.
+            await ask({ ...mcpApproval("exec-1"), _meta: undefined });
+            update({
+                sessionUpdate: "tool_call_update", toolCallId: "exec-1", status: "completed",
+                rawOutput: { result: { content: [{ type: "text", text: "Note abc: groceries." }], structuredContent: null, _meta: null }, error: null }
+            });
+            // Once finished, the call id no longer vouches for anything.
+            await ask(mcpApproval("exec-1"));
+        };
+
+        const chunks = await collect(new CodexAgentProvider().chatChunks([{ role: "user", content: "hi" }], { enableNoteTools: true }));
+
+        expect(answers).toEqual([ALLOWED, DENIED, DENIED, DENIED]);
+        expect(chunks.filter(c => c.type === "tool_use" || c.type === "tool_result")).toEqual([
+            { type: "tool_use", toolCallId: "exec-1", toolName: "read_note", toolInput: { noteId: "abc" } },
+            { type: "tool_use", toolCallId: "exec-2", toolName: "send_email", toolInput: { to: "x" } },
+            { type: "tool_result", toolCallId: "exec-1", toolName: "read_note", result: "Note abc: groceries.", isError: false }
+        ]);
+    });
+
+    it("approves a call the adapter could not match to its announcement by the server it names", () => {
+        const standalone = (serverName: string) => ({
+            ...mcpApproval("elicitation:sess-1:trilium:1", { title: "MCP tool call approval", rawInput: { serverName, description: "Allow?" } })
+        });
+        expect(decideCodexPermission(standalone("trilium"), "test")).toEqual(ALLOWED);
+        expect(decideCodexPermission(standalone("codex_apps"), "test")).toEqual(DENIED);
+        // No one-shot allow on offer: nothing is approved permanently.
+        expect(decideCodexPermission({ ...standalone("trilium"), options: MCP_APPROVAL_OPTIONS.slice(1) }, "test")).toEqual(DENIED);
     });
 });
