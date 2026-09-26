@@ -25,7 +25,7 @@ import { type AcpClient, AcpError } from "./acp_client.js";
 import { getAcpHookEndpointUrl } from "./acp_mcp_endpoint.js";
 import { buildHookCommand, resolveCurlPath } from "./antigravity_hook.js";
 import { resolveCodexAcpScript, resolveCodexBinaryPath } from "./codex_binary.js";
-import { buildCodexHookCommand, type CodexHookAnswer, codexSearchSources, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
+import { buildCodexHookCommand, type CodexHookAnswer, codexSearchSources, decideCodexToolCall, describeWebrunInput, webrunFailure, writeCodexHooks } from "./codex_hook.js";
 
 /** The model id that leaves the session on the model Codex picks. */
 const DEFAULT_MODEL_ID = "default";
@@ -72,6 +72,13 @@ let catalog: { efforts: Map<string, LlmReasoningEffort[]>; titleModel?: string }
  * the turn's session, which the hook finds by session id.
  */
 const sourcesByTurn = new WeakMap<LlmProviderConfig, Map<string, LlmCitation>>();
+
+/**
+ * How the chat shows each `webrun` call, by its id, which is also the ACP tool
+ * call's. An entry goes once its call finishes; the cap bounds calls that never do.
+ */
+const webrunCalls = new Map<string, BuiltInToolDisplay>();
+const MAX_WEBRUN_CALLS = 200;
 
 export class CodexAgentProvider extends AcpAgentProvider {
     name = "codex-agent";
@@ -133,20 +140,31 @@ export class CodexAgentProvider extends AcpAgentProvider {
     }
 
     /**
-     * The web search, under the name the other providers' searches carry, with
-     * its query or the page it opens, where the chat looks for a detail. The
-     * adapter announces a search with the kind `search` and an empty query, and
-     * reports the query only in later updates, which carry no kind.
+     * A `webrun` call, under the names the other providers' web tools carry —
+     * `read_web_page` for a page it opens, `web_search` for the rest — with its
+     * query or page, where the chat looks for a detail. The adapter announces
+     * every call as a search with an empty query and reports the query only in
+     * later updates, which carry no kind, so the hook's record fills the gap.
      */
     protected describeBuiltInTool(update: AcpToolCallUpdate): BuiltInToolDisplay | undefined {
         const input = update.rawInput as { type?: unknown; query?: unknown; action?: { type?: unknown; url?: unknown } | null } | undefined;
         if (update.kind !== "search" && input?.type !== "webSearch") {
             return undefined;
         }
-        if (input?.action?.type === "openPage" && typeof input.action.url === "string") {
-            return { toolName: "web_search", toolInput: { url: input.action.url } };
+        // What the hook saw of the call, for the `webrun` operations the adapter reports without a query.
+        const call = update.toolCallId ? webrunCalls.get(update.toolCallId) : undefined;
+        if (update.toolCallId && (update.status === "completed" || update.status === "failed")) {
+            webrunCalls.delete(update.toolCallId);
         }
-        return { toolName: "web_search", toolInput: typeof input?.query === "string" && input.query ? { query: input.query } : {} };
+        const toolName = call?.toolName ?? "web_search";
+        let toolInput = call?.toolInput ?? {};
+        // The adapter can name a page opened by a result id with that id, so only a URL replaces what the hook resolved.
+        if (input?.action?.type === "openPage" && typeof input.action.url === "string" && /^https?:\/\//i.test(input.action.url)) {
+            toolInput = { url: input.action.url };
+        } else if (toolName === "web_search" && typeof input?.query === "string" && input.query) {
+            toolInput = { query: input.query };
+        }
+        return { toolName, toolInput };
     }
 
     /**
@@ -196,9 +214,16 @@ export class CodexAgentProvider extends AcpAgentProvider {
 
     /**
      * Answer the hook: decide a tool call before it runs, and after a web search
-     * remember its sources for the turn, which the citations in the reply name.
+     * remember its sources for the turn, which the citations in the reply name,
+     * or mark the call failed when it did not work.
      */
     private answerHook(payload: unknown): Promise<CodexHookAnswer> | CodexHookAnswer {
+        this.recordWebrunCall(payload);
+        // Codex reports a `webrun` call done before this hook learns that it failed.
+        const failure = webrunFailure(payload);
+        if (failure) {
+            this.reportToolFailure(failure.sessionId, failure.toolCallId, failure.reason);
+        }
         const search = codexSearchSources(payload);
         if (!search) {
             return decideCodexToolCall(payload, sessionId => this.turnConfigOf(sessionId));
@@ -212,6 +237,27 @@ export class CodexAgentProvider extends AcpAgentProvider {
             sourcesByTurn.set(config, known);
         }
         return {};
+    }
+
+    /**
+     * Remember how the chat shows a `webrun` call, from its `PreToolUse` event,
+     * which reaches Trilium before the adapter announces the call. A page opened
+     * by a result's id is shown by that result's URL.
+     */
+    private recordWebrunCall(payload: unknown): void {
+        const event = payload as { hook_event_name?: unknown; tool_name?: unknown; tool_use_id?: unknown; tool_input?: unknown; session_id?: unknown } | null;
+        if (event?.hook_event_name !== "PreToolUse" || event.tool_name !== "webrun" || typeof event.tool_use_id !== "string") {
+            return;
+        }
+        const config = typeof event.session_id === "string" ? this.turnConfigOf(event.session_id) : undefined;
+        const sources = config ? sourcesByTurn.get(config) : undefined;
+        webrunCalls.set(event.tool_use_id, describeWebrunInput(event.tool_input, ref => sources?.get(ref)?.url));
+        for (const oldest of webrunCalls.keys()) {
+            if (webrunCalls.size <= MAX_WEBRUN_CALLS) {
+                break;
+            }
+            webrunCalls.delete(oldest);
+        }
     }
 
     protected describeFailure(error: unknown): string {
@@ -403,7 +449,8 @@ export class CitationStripper {
     }
 }
 
-/** For tests: forget the recorded catalog. */
+/** For tests: forget the recorded catalog and web tool calls. */
 export function resetCodexCatalogForTests(): void {
     catalog = { efforts: new Map() };
+    webrunCalls.clear();
 }

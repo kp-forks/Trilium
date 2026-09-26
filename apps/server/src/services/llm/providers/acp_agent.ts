@@ -259,6 +259,18 @@ export abstract class AcpAgentProvider implements LlmProvider {
     }
 
     /**
+     * Mark a tool call of the chat turn running in `sessionId` as failed, with
+     * `reason` as its result, for a failure the agent reports done and a hook
+     * learns of only afterwards.
+     */
+    protected reportToolFailure(sessionId: string, toolCallId: string, reason: string): void {
+        this.state().pool.deliver(sessionId, {
+            sessionId,
+            update: { sessionUpdate: "tool_call_update", toolCallId, status: "failed", content: [ { type: "content", content: { type: "text", text: reason } } ] }
+        });
+    }
+
+    /**
      * Whether a tool call is the agent's own bookkeeping rather than work the
      * user asked for, and so stays out of the chat. Display only: the call has
      * already passed the permission policy.
@@ -833,6 +845,8 @@ export function createUpdateCollector(
     // toolCallId → display name, for labelling results; also the guard that
     // only this turn's tool calls produce result chunks.
     const toolNamesById = new Map<string, string>();
+    // toolCallId → how the call ended, so each end is reported once.
+    const endedById = new Map<string, "completed" | "failed">();
 
     const collector = {
         sessionId: undefined as string | undefined,
@@ -888,7 +902,10 @@ export function createUpdateCollector(
                     if (input && Object.keys(input).length > 0) {
                         emit({ type: "tool_use", toolCallId, toolName, toolInput: input });
                     }
-                    if (update.status === "completed" || update.status === "failed") {
+                    // A call ends once; a later failure still replaces a completion, for an agent
+                    // that learns only afterwards that a call it reported done did not work.
+                    const ended = endedById.get(toolCallId);
+                    if ((update.status === "completed" && !ended) || (update.status === "failed" && ended !== "failed")) {
                         emit({
                             type: "tool_result",
                             toolCallId,
@@ -898,7 +915,7 @@ export function createUpdateCollector(
                             result: flattenToolContent(update.content, update.rawOutput) || update.title || "",
                             isError: update.status === "failed"
                         });
-                        toolNamesById.delete(toolCallId);
+                        endedById.set(toolCallId, update.status);
                     }
                     break;
                 }

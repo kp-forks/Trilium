@@ -322,11 +322,23 @@ describe("CodexAgentProvider web search", () => {
                 sessionUpdate: "tool_call_update", toolCallId: "search-2", title: "Open page: https://www.kernel.org/", status: "completed",
                 rawInput: { type: "webSearch", query: "https://www.kernel.org/", action: { type: "openPage", url: "https://www.kernel.org/" } }
             });
+            // A weather lookup webrun could not run, which the adapter reports as a finished search
+            // without a query; only the hooks see what it asked and, after it ends, that it failed.
+            const weather = { session_id: "sess-1", tool_name: "webrun", tool_use_id: "search-3" };
+            await decide?.({ ...weather, hook_event_name: "PreToolUse", tool_input: { weather: [ { location: "Romania, Sibiu", duration: 3 } ], response_length: "short" } });
+            update({ sessionUpdate: "tool_call", toolCallId: "search-3", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "", action: null } });
+            update({ sessionUpdate: "tool_call_update", toolCallId: "search-3", title: "Web search", status: "completed", rawInput: { type: "webSearch", query: "", action: { type: "other" } } });
+            await decide?.({ ...weather, hook_event_name: "PostToolUse", tool_response: [ { type: "input_text", text: "Found no tool response. This likely means the arguments you provided were not valid." } ] });
             // The search's results, as the PostToolUse hook posts them; the marker below cites one of them and one it never returned.
             await decide?.({
                 hook_event_name: "PostToolUse", session_id: "sess-1", tool_name: "webrun",
                 tool_response: [ { type: "input_text", text: "Vremea \u00een Sibiu (https://www.celsium.ro/vremea-sibiu)\n\uE200cite\uE202turn3search2\uE201 [wordlim: 200] Crawled: today" } ]
             });
+            // The page of one of those results, opened by its id; the completion naming the page by
+            // that id too must not replace the URL the result gave.
+            await decide?.({ session_id: "sess-1", tool_name: "webrun", tool_use_id: "search-4", hook_event_name: "PreToolUse", tool_input: { open: [ { ref_id: "turn3search2" } ], response_length: "medium" } });
+            update({ sessionUpdate: "tool_call", toolCallId: "search-4", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "", action: null } });
+            update({ sessionUpdate: "tool_call_update", toolCallId: "search-4", title: "Open page", status: "completed", rawInput: { type: "webSearch", query: "turn3search2", action: { type: "openPage", url: "turn3search2" } } });
             // A citation marker, split across chunks as a stream can split it.
             for (const text of [ "Cloudy, 12\u00b0C. \uE200cite\uE202turn3se", "arch2\uE202turn3search0\uE201", " Low chance of rain." ]) {
                 update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text } });
@@ -349,7 +361,15 @@ describe("CodexAgentProvider web search", () => {
             { type: "tool_result", toolCallId: "search-1", toolName: "web_search", result: "Web search: weather Sibiu", isError: false },
             { type: "tool_use", toolCallId: "search-2", toolName: "web_search", toolInput: {} },
             { type: "tool_use", toolCallId: "search-2", toolName: "web_search", toolInput: { url: "https://www.kernel.org/" } },
-            { type: "tool_result", toolCallId: "search-2", toolName: "web_search", result: "Open page: https://www.kernel.org/", isError: false }
+            { type: "tool_result", toolCallId: "search-2", toolName: "web_search", result: "Open page: https://www.kernel.org/", isError: false },
+            { type: "tool_use", toolCallId: "search-3", toolName: "web_search", toolInput: { query: "weather: Romania, Sibiu" } },
+            { type: "tool_use", toolCallId: "search-3", toolName: "web_search", toolInput: { query: "weather: Romania, Sibiu" } },
+            { type: "tool_result", toolCallId: "search-3", toolName: "web_search", result: "Web search", isError: false },
+            // The failure the hook learns of afterwards replaces the result.
+            { type: "tool_result", toolCallId: "search-3", toolName: "web_search", result: "Found no tool response. This likely means the arguments you provided were not valid.", isError: true },
+            { type: "tool_use", toolCallId: "search-4", toolName: "read_web_page", toolInput: { url: "https://www.celsium.ro/vremea-sibiu" } },
+            { type: "tool_use", toolCallId: "search-4", toolName: "read_web_page", toolInput: { url: "https://www.celsium.ro/vremea-sibiu" } },
+            { type: "tool_result", toolCallId: "search-4", toolName: "read_web_page", result: "Open page", isError: false }
         ]);
         expect(searching.map(c => (c.type === "text" ? c.content : "")).join("")).toBe("Cloudy, 12\u00b0C.  Low chance of rain.");
         // The marker becomes a Trilium citation for the result the search returned.

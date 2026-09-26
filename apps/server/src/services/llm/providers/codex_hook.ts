@@ -23,7 +23,7 @@ import type { LlmProviderConfig } from "@triliumnext/core/src/services/llm/types
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
 
-import { NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
+import { type BuiltInToolDisplay, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
 import { buildHookCommand, stringsIn } from "./antigravity_hook.js";
 import { type HostLookup, isPublicHttpUrl } from "./public_url.js";
 
@@ -38,6 +38,12 @@ export interface CodexHookAnswer {
 
 /** The name Codex gives its web search in hook events. */
 const WEB_TOOL = "webrun";
+
+/** `webrun` arguments that tune every operation rather than name one. */
+const WEBRUN_OPTIONS = new Set([ "response_length" ]);
+
+/** How `webrun` answers a call it could not run, in place of results. */
+const WEBRUN_NO_RESPONSE = "Found no tool response.";
 
 /** `<title> (<url>)` and, on the next line, the result's citation marker, `U+E200 cite U+E202 <id> U+E201`. */
 const SEARCH_RESULT_HEADER = /^(.*) \((https?:\/\/\S+)\)\n\uE200cite\uE202([^\uE201\uE202]+)\uE201/gm;
@@ -95,6 +101,45 @@ export function codexSearchSources(payload: unknown): { sessionId: string; sourc
         }
     }
     return { sessionId: event.session_id, sources };
+}
+
+/**
+ * How the chat shows a `webrun` call. `webrun` runs several operations —
+ * `search_query` (`[{ q }]`), `open` (`[{ ref_id }]`, a URL or the id of an
+ * earlier result, which `urlOf` resolves), and others such as `weather`
+ * (`[{ location }]`) — which the adapter reports as a web search with an empty
+ * query unless it is a search. A call that only opens a page is the chat's
+ * `read_web_page`; the rest are `web_search`, with the query or operation.
+ */
+export function describeWebrunInput(toolInput: unknown, urlOf: (ref: string) => string | undefined = () => undefined): BuiltInToolDisplay {
+    const operations = Object.entries(toolInput && typeof toolInput === "object" ? toolInput : {})
+        .filter(([ operation ]) => !WEBRUN_OPTIONS.has(operation));
+    if (operations.length === 1 && operations[0][0] === "open") {
+        const ref = stringsIn(operations[0][1])[0];
+        const url = ref && (/^https?:\/\//i.test(ref) ? ref : urlOf(ref));
+        return { toolName: "read_web_page", toolInput: url ? { url } : {} };
+    }
+    const parts = operations.map(([ operation, value ]) => {
+        const values = stringsIn(value).join(", ");
+        return operation === "search_query" ? values : `${operation}: ${values}`;
+    }).filter(Boolean);
+    return { toolName: "web_search", toolInput: parts.length > 0 ? { query: parts.join("; ") } : {} };
+}
+
+/**
+ * The `webrun` call a `PostToolUse` event reports as failed although Codex
+ * reported it done: its response then says so in place of results, as for a
+ * `weather` call whose location it could not read. Undefined for any other
+ * event.
+ */
+export function webrunFailure(payload: unknown): { sessionId: string; toolCallId: string; reason: string } | undefined {
+    const event = payload as { hook_event_name?: unknown; tool_name?: unknown; session_id?: unknown; tool_use_id?: unknown; tool_response?: unknown } | null;
+    if (event?.hook_event_name !== "PostToolUse" || event.tool_name !== WEB_TOOL
+        || typeof event.session_id !== "string" || typeof event.tool_use_id !== "string") {
+        return undefined;
+    }
+    const reason = stringsIn(event.tool_response).find(text => text.startsWith(WEBRUN_NO_RESPONSE));
+    return reason ? { sessionId: event.session_id, toolCallId: event.tool_use_id, reason } : undefined;
 }
 
 /**

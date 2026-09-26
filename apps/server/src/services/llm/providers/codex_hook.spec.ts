@@ -5,7 +5,7 @@ import path from "path";
 import { describe, expect, it } from "vitest";
 
 import { resolveCurlPath } from "./antigravity_hook.js";
-import { buildCodexHookCommand, codexSearchSources, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
+import { buildCodexHookCommand, codexSearchSources, decideCodexToolCall, describeWebrunInput, webrunFailure, writeCodexHooks } from "./codex_hook.js";
 
 /** `PreToolUse` events as Codex 0.146.0 and 0.156.1 send them, less the session bookkeeping. */
 const EVENTS = {
@@ -102,5 +102,42 @@ describe("codexSearchSources", () => {
         expect(codexSearchSources(post({ tool_name: "mcp__trilium__read_note" }))).toBeUndefined();
         expect(codexSearchSources(post({ session_id: undefined }))).toBeUndefined();
         expect(codexSearchSources(null)).toBeUndefined();
+    });
+});
+
+describe("webrun calls", () => {
+    it("shows a search and any other operation as a web search, with its query", () => {
+        // Inputs as Codex 0.156.1 sent them.
+        expect(describeWebrunInput({ search_query: [ { q: "Sibiu weather" }, { q: "Sibiu forecast" } ], response_length: "short" }))
+            .toEqual({ toolName: "web_search", toolInput: { query: "Sibiu weather, Sibiu forecast" } });
+        expect(describeWebrunInput({ weather: [ { location: "Romania, Sibiu", duration: 3 } ], response_length: "short" }))
+            .toEqual({ toolName: "web_search", toolInput: { query: "weather: Romania, Sibiu" } });
+        // Two operations at once are both named, and a call naming none shows no detail.
+        expect(describeWebrunInput({ search_query: [ { q: "a" } ], open: [ { ref_id: "https://b.example/" } ] }))
+            .toEqual({ toolName: "web_search", toolInput: { query: "a; open: https://b.example/" } });
+        expect(describeWebrunInput({ response_length: "short" })).toEqual({ toolName: "web_search", toolInput: {} });
+        expect(describeWebrunInput(undefined)).toEqual({ toolName: "web_search", toolInput: {} });
+    });
+
+    it("shows opening a page as reading it, by its URL or the URL of the result it opens", () => {
+        const urlOf = (ref: string) => (ref === "turn2search0" ? "https://www.celsium.ro/vremea-sibiu" : undefined);
+        expect(describeWebrunInput({ open: [ { ref_id: "https://example.com/" } ], response_length: "short" }, urlOf))
+            .toEqual({ toolName: "read_web_page", toolInput: { url: "https://example.com/" } });
+        expect(describeWebrunInput({ open: [ { ref_id: "turn2search0" } ], response_length: "medium" }, urlOf))
+            .toEqual({ toolName: "read_web_page", toolInput: { url: "https://www.celsium.ro/vremea-sibiu" } });
+        // A result this turn never saw has no URL to show; its id means nothing to the user.
+        expect(describeWebrunInput({ open: [ { ref_id: "turn9search9" } ] }, urlOf)).toEqual({ toolName: "read_web_page", toolInput: {} });
+    });
+
+    it("finds a call webrun could not run, by the message it answers with", () => {
+        const failure = "Found no tool response. This likely means the arguments you provided were not valid.";
+        const post = (text: string, extra: object = {}) => ({
+            hook_event_name: "PostToolUse", session_id: "sess-1", tool_name: "webrun", tool_use_id: "exec-1",
+            tool_response: [ { type: "input_text", text } ], ...extra
+        });
+        expect(webrunFailure(post(failure))).toEqual({ sessionId: "sess-1", toolCallId: "exec-1", reason: failure });
+        expect(webrunFailure(post("Weather in Sibiu (https://example.com)"))).toBeUndefined();
+        expect(webrunFailure(post(failure, { hook_event_name: "PreToolUse" }))).toBeUndefined();
+        expect(webrunFailure(post(failure, { tool_use_id: undefined }))).toBeUndefined();
     });
 });
