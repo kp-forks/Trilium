@@ -10,6 +10,7 @@ export { default as Themes, type Theme, type ThemeVariant, getThemeVariant } fro
 const registeredMimeTypes = new Set<string>();
 const unsupportedMimeTypes = new Set<string>();
 let highlightingThemeEl: HTMLStyleElement | null = null;
+let lastSync: Promise<void> = Promise.resolve();
 
 export async function ensureMimeTypes(mimeTypes: MimeType[]) {
     for (const mimeType of mimeTypes) {
@@ -36,9 +37,17 @@ export async function ensureMimeTypes(mimeTypes: MimeType[]) {
 
 /**
  * Makes the registered languages match `mimeTypes`: registers the enabled ones, like
- * {@link ensureMimeTypes}, and unregisters the disabled ones that are registered.
+ * {@link ensureMimeTypes}, and unregisters the disabled ones that are registered. Calls run one
+ * after another, so a language import still pending from an earlier call cannot register a
+ * language that a later call disabled.
  */
-export async function syncMimeTypes(mimeTypes: MimeType[]) {
+export function syncMimeTypes(mimeTypes: MimeType[]): Promise<void> {
+    const sync = lastSync.then(() => applyMimeTypes(mimeTypes));
+    lastSync = sync.catch(() => undefined);
+    return sync;
+}
+
+async function applyMimeTypes(mimeTypes: MimeType[]) {
     for (const mimeType of mimeTypes) {
         const mime = normalizeMimeTypeForCKEditor(mimeType.mime);
         if (!mimeType.enabled && registeredMimeTypes.has(mime)) {

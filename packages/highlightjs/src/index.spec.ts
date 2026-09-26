@@ -69,6 +69,16 @@ describe("ensureMimeTypes", () => {
         expect(getLanguage("text-x-python")).toBeDefined();
     });
 
+    it("syncMimeTypes applies overlapping calls in order", async () => {
+        const { syncMimeTypes, getLanguage } = await freshModule();
+
+        const enabling = syncMimeTypes([ mime("text/x-python") ]);
+        const disabling = syncMimeTypes([ mime("text/x-python", false) ]);
+        await Promise.all([ enabling, disabling ]);
+
+        expect(getLanguage("text-x-python")).toBeUndefined();
+    });
+
     it("remembers a mime type with no highlight.js definition as unsupported", async () => {
         const { ensureMimeTypes, highlight } = await freshModule();
         const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
