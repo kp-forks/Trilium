@@ -339,8 +339,8 @@ importers:
         specifier: 2.0.4
         version: 2.0.4
       react-i18next:
-        specifier: 17.0.14
-        version: 17.0.14(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
+        specifier: 17.0.15
+        version: 17.0.15(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
       react-window:
         specifier: 2.3.3
         version: 2.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -959,8 +959,8 @@ importers:
         specifier: 10.29.8
         version: 10.29.8(preact-render-to-string@6.7.0)
       react-i18next:
-        specifier: 17.0.14
-        version: 17.0.14(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
+        specifier: 17.0.15
+        version: 17.0.15(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
       react-window:
         specifier: 2.3.3
         version: 2.3.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -1051,8 +1051,8 @@ importers:
         specifier: 6.7.0
         version: 6.7.0(preact@10.29.8)
       react-i18next:
-        specifier: 17.0.14
-        version: 17.0.14(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
+        specifier: 17.0.15
+        version: 17.0.15(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3)
     devDependencies:
       '@preact/preset-vite':
         specifier: 2.10.6
@@ -10125,8 +10125,8 @@ packages:
     peerDependencies:
       react: ^18.3.1
 
-  react-i18next@17.0.14:
-    resolution: {integrity: sha512-ZpMBfJL3BiXPuYHj5QMY1GwvKJNhE1vCxOJQ8BoMBdHP5XONTfi/Qss1nuRlnFdIl72PKo2jPmw+fxuLjRFgaQ==}
+  react-i18next@17.0.15:
+    resolution: {integrity: sha512-7uYpx/oBkesLto7cOzOmfITlUBaXHCAcFahmgETMfWr8nbbWRRnVGvz8wsH/xpbNcyoH+NpCcnOQEqWPMO6/hw==}
     peerDependencies:
       i18next: '>= 26.2.0'
       react: '>= 16.8.0'
@@ -22991,7 +22991,7 @@ snapshots:
       react: 18.3.1
       scheduler: 0.23.2
 
-  react-i18next@17.0.14(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3):
+  react-i18next@17.0.15(i18next@26.4.2(typescript@6.0.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(typescript@6.0.3):
     dependencies:
       '@babel/runtime': 7.29.7
       html-parse-stringify: 4.0.1
