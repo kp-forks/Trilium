@@ -1358,9 +1358,6 @@ importers:
       katex:
         specifier: 0.18.7
         version: 0.18.7
-      mermaid:
-        specifier: 12.0.0
-        version: 12.0.0
     devDependencies:
       '@digitak/esrun':
         specifier: 3.2.26
