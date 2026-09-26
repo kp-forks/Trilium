@@ -5,7 +5,7 @@ import path from "path";
 import { describe, expect, it } from "vitest";
 
 import { resolveCurlPath } from "./antigravity_hook.js";
-import { buildCodexHookCommand, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
+import { buildCodexHookCommand, codexSearchSources, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
 
 /** `PreToolUse` events as Codex 0.146.0 and 0.156.1 send them, less the session bookkeeping. */
 const EVENTS = {
@@ -46,12 +46,15 @@ describe("decideCodexToolCall", () => {
 });
 
 describe("Codex hook", () => {
-    it("writes a hook for every tool call to hooks.json in Codex's home", () => {
+    it("writes a hook before and after every tool call to hooks.json in Codex's home", () => {
         const home = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "trilium-codex-hook-")), "home");
         try {
-            writeCodexHooks(home, "run-the-hook");
+            writeCodexHooks(home, "before", "after");
             expect(JSON.parse(fs.readFileSync(path.join(home, "hooks.json"), "utf8"))).toEqual({
-                hooks: { PreToolUse: [ { matcher: ".*", hooks: [ { type: "command", command: "run-the-hook", timeout: 10 } ] } ] }
+                hooks: {
+                    PreToolUse: [ { matcher: ".*", hooks: [ { type: "command", command: "before", timeout: 10 } ] } ],
+                    PostToolUse: [ { matcher: ".*", hooks: [ { type: "command", command: "after", timeout: 10 } ] } ]
+                }
             });
         } finally {
             fs.rmSync(path.dirname(home), { recursive: true, force: true });
@@ -70,5 +73,34 @@ describe("Codex hook", () => {
             child.stdin?.end("{}");
         });
         expect(exitCode).toBe(2);
+    });
+});
+
+describe("codexSearchSources", () => {
+    /** The start of a `webrun` response as Codex 0.156.1 sent it after a search. */
+    const RESPONSE = [ { type: "input_text", text: [
+        "Vremea în Sibiu pe 26 septembrie 2026 (Prognoza) (https://www.celsium.ro/vremea-sibiu/2026-09-26)",
+        "\uE200cite\uE202turn1search0\uE201 [wordlim: 200] Crawled: 2 days ago; # Vremea în Sibiu",
+        "some page text (https://example.com/not-a-header)",
+        "Sibiu (https://en.wikipedia.org/wiki/Sibiu_(city))",
+        "\uE200cite\uE202turn1search13\uE201 [wordlim: 200] Crawled: 4 months ago; Sibiu"
+    ].join("\n") } ];
+    const post = (extra: object) => ({ hook_event_name: "PostToolUse", session_id: "sess-1", tool_name: "webrun", tool_response: RESPONSE, ...extra });
+
+    it("maps each search result's citation id to its title and URL", () => {
+        expect(codexSearchSources(post({}))).toEqual({
+            sessionId: "sess-1",
+            sources: new Map([
+                [ "turn1search0", { title: "Vremea în Sibiu pe 26 septembrie 2026 (Prognoza)", url: "https://www.celsium.ro/vremea-sibiu/2026-09-26" } ],
+                [ "turn1search13", { title: "Sibiu", url: "https://en.wikipedia.org/wiki/Sibiu_(city)" } ]
+            ])
+        });
+    });
+
+    it("reads only a finished web search", () => {
+        expect(codexSearchSources(post({ hook_event_name: "PreToolUse" }))).toBeUndefined();
+        expect(codexSearchSources(post({ tool_name: "mcp__trilium__read_note" }))).toBeUndefined();
+        expect(codexSearchSources(post({ session_id: undefined }))).toBeUndefined();
+        expect(codexSearchSources(null)).toBeUndefined();
     });
 });

@@ -307,7 +307,7 @@ describe("CodexAgentProvider note tools", () => {
 });
 
 describe("CodexAgentProvider web search", () => {
-    it("lets the web search through the hook only in a chat that allows it, and shows it as a web search", async () => {
+    it("lets the web search through the hook only in a chat that allows it, and shows it as a web search with its sources", async () => {
         const decisions: unknown[] = [];
         FakeAcpClient.onPrompt = async client => {
             const decide = getAcpHookEndpointUrlMock.mock.calls.at(-1)?.[1];
@@ -316,6 +316,11 @@ describe("CodexAgentProvider web search", () => {
             update({ sessionUpdate: "tool_call", toolCallId: "search-1", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "" } });
             // codex-acp 1.13.1 reports a finished search with no content, only its final title.
             update({ sessionUpdate: "tool_call_update", toolCallId: "search-1", title: "Web search: weather Sibiu", status: "completed", rawInput: { type: "webSearch", query: "weather Sibiu" } });
+            // The search's results, as the PostToolUse hook posts them; the marker below cites one of them and one it never returned.
+            await decide?.({
+                hook_event_name: "PostToolUse", session_id: "sess-1", tool_name: "webrun",
+                tool_response: [ { type: "input_text", text: "Vremea \u00een Sibiu (https://www.celsium.ro/vremea-sibiu)\n\uE200cite\uE202turn3search2\uE201 [wordlim: 200] Crawled: today" } ]
+            });
             // A citation marker, split across chunks as a stream can split it.
             for (const text of [ "Cloudy, 12\u00b0C. \uE200cite\uE202turn3se", "arch2\uE202turn3search0\uE201", " Low chance of rain." ]) {
                 update({ sessionUpdate: "agent_message_chunk", content: { type: "text", text } });
@@ -334,13 +339,17 @@ describe("CodexAgentProvider web search", () => {
         // A finished call the chat would otherwise show as still running.
         expect(searching).toContainEqual({ type: "tool_result", toolCallId: "search-1", toolName: "web_search", result: "Web search: weather Sibiu", isError: false });
         expect(searching.map(c => (c.type === "text" ? c.content : "")).join("")).toBe("Cloudy, 12\u00b0C.  Low chance of rain.");
+        // The marker becomes a Trilium citation for the result the search returned.
+        expect(searching.filter(c => c.type === "citation")).toEqual([
+            { type: "citation", citation: { title: "Vremea \u00een Sibiu", url: "https://www.celsium.ro/vremea-sibiu" } }
+        ]);
     });
 });
 
 describe("CitationStripper", () => {
     const strip = (...chunks: string[]) => {
         const stripper = new CitationStripper();
-        return chunks.map(chunk => stripper.push(chunk));
+        return chunks.map(chunk => stripper.push(chunk).text);
     };
 
     it("removes whole and split markers, holding back only what a marker might still need", () => {
@@ -348,6 +357,11 @@ describe("CitationStripper", () => {
         expect(strip("A \uE200cite\uE202tu", "rn0search1", "\uE201 B")).toEqual([ "A ", "", " B" ]);
         // A marker that never closes is dropped with the rest of the turn.
         expect(strip("A \uE200cite\uE202turn0")).toEqual([ "A " ]);
+    });
+
+    it("reports the search results a marker cites, and nothing for another kind of marker", () => {
+        expect(new CitationStripper().push("A \uE200cite\uE202turn1search0\uE202turn1search3\uE201 B \uE200entity\uE202x\uE201"))
+            .toEqual({ text: "A  B ", refs: [ "turn1search0", "turn1search3" ] });
     });
 
     it("lets an opening through once it has run longer than any marker", () => {

@@ -13,8 +13,12 @@
  * {@link decideCodexToolCall} answers from an allow-list. Codex lets a call
  * through when its hook fails with any exit code but 2, so the hook command
  * turns a failed `curl` into exit 2.
+ *
+ * A `PostToolUse` hook posts each finished call too, so Trilium can read the
+ * sources out of a web search (see {@link codexSearchSources}).
  */
 
+import type { LlmCitation } from "@triliumnext/commons";
 import type { LlmProviderConfig } from "@triliumnext/core/src/services/llm/types.js";
 import { mkdirSync, writeFileSync } from "fs";
 import path from "path";
@@ -34,6 +38,9 @@ export interface CodexHookAnswer {
 
 /** The name Codex gives its web search in hook events. */
 const WEB_TOOL = "webrun";
+
+/** `<title> (<url>)` and, on the next line, the result's citation marker, `U+E200 cite U+E202 <id> U+E201`. */
+const SEARCH_RESULT_HEADER = /^(.*) \((https?:\/\/\S+)\)\n\uE200cite\uE202([^\uE201\uE202]+)\uE201/gm;
 
 /** How long Codex waits for the hook, in seconds; `curl` (see `buildHookCommand`) gives up first. */
 const HOOK_TIMEOUT_S = 10;
@@ -70,14 +77,35 @@ export async function decideCodexToolCall(
     return allPublic.every(Boolean) ? {} : deny(PRIVATE_ADDRESS);
 }
 
-/** Write the hook to `<home>/hooks.json`, replacing what an earlier run wrote. */
-export function writeCodexHooks(home: string, command: string): void {
-    mkdirSync(home, { recursive: true });
-    const hooks = {
-        hooks: {
-            PreToolUse: [ { matcher: ".*", hooks: [ { type: "command", command, timeout: HOOK_TIMEOUT_S } ] } ]
+/**
+ * The sources a web search returned, by the id the model cites them with
+ * (`turn1search0`), from a `PostToolUse` event for `webrun`; undefined for any
+ * other event. Each result in the tool's response opens with a line
+ * `<title> (<url>)` followed by the result's citation marker.
+ */
+export function codexSearchSources(payload: unknown): { sessionId: string; sources: Map<string, LlmCitation> } | undefined {
+    const event = payload as { hook_event_name?: unknown; tool_name?: unknown; tool_response?: unknown; session_id?: unknown } | null;
+    if (event?.hook_event_name !== "PostToolUse" || event.tool_name !== WEB_TOOL || typeof event.session_id !== "string") {
+        return undefined;
+    }
+    const sources = new Map<string, LlmCitation>();
+    for (const text of stringsIn(event.tool_response)) {
+        for (const [ , title, url, ref ] of text.matchAll(SEARCH_RESULT_HEADER)) {
+            sources.set(ref, { title, url });
         }
-    };
+    }
+    return { sessionId: event.session_id, sources };
+}
+
+/**
+ * Write the hooks to `<home>/hooks.json`, replacing what an earlier run wrote:
+ * `preCommand` before every tool call, `postCommand` after, which reads the
+ * sources out of a web search (see {@link codexSearchSources}).
+ */
+export function writeCodexHooks(home: string, preCommand: string, postCommand: string): void {
+    mkdirSync(home, { recursive: true });
+    const hook = (command: string) => [ { matcher: ".*", hooks: [ { type: "command", command, timeout: HOOK_TIMEOUT_S } ] } ];
+    const hooks = { hooks: { PreToolUse: hook(preCommand), PostToolUse: hook(postCommand) } };
     writeFileSync(path.join(home, "hooks.json"), JSON.stringify(hooks, null, 2));
 }
 

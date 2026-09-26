@@ -15,7 +15,7 @@
  * calls to Trilium's note tools.
  */
 
-import { LLM_REASONING_EFFORTS, type LlmMessage, type LlmReasoningEffort, type LlmStreamChunk } from "@triliumnext/commons";
+import { LLM_REASONING_EFFORTS, type LlmCitation, type LlmMessage, type LlmReasoningEffort, type LlmStreamChunk } from "@triliumnext/commons";
 import type { LlmProviderConfig, ModelInfo } from "@triliumnext/core/src/services/llm/types.js";
 import path from "path";
 
@@ -23,9 +23,9 @@ import dataDirs from "../../data_dir.js";
 import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, type BuiltInToolDisplay, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
 import { type AcpClient, AcpError } from "./acp_client.js";
 import { getAcpHookEndpointUrl } from "./acp_mcp_endpoint.js";
-import { resolveCurlPath } from "./antigravity_hook.js";
+import { buildHookCommand, resolveCurlPath } from "./antigravity_hook.js";
 import { resolveCodexAcpScript, resolveCodexBinaryPath } from "./codex_binary.js";
-import { buildCodexHookCommand, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
+import { buildCodexHookCommand, type CodexHookAnswer, codexSearchSources, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
 
 /** The model id that leaves the session on the model Codex picks. */
 const DEFAULT_MODEL_ID = "default";
@@ -66,6 +66,13 @@ const VARIANT_NAME = /^(.+?) \([^)]+\)$/;
  */
 let catalog: { efforts: Map<string, LlmReasoningEffort[]>; titleModel?: string } = { efforts: new Map() };
 
+/**
+ * The sources each chat turn's web searches returned, by the id the model cites
+ * them with, keyed by the turn's configuration: the object the pool attaches to
+ * the turn's session, which the hook finds by session id.
+ */
+const sourcesByTurn = new WeakMap<LlmProviderConfig, Map<string, LlmCitation>>();
+
 export class CodexAgentProvider extends AcpAgentProvider {
     name = "codex-agent";
     protected readonly logLabel = "Codex Agent provider";
@@ -90,10 +97,10 @@ export class CodexAgentProvider extends AcpAgentProvider {
         const [ codex, curl, hookUrl ] = await Promise.all([
             resolveCodexBinaryPath(),
             resolveCurlPath(),
-            getAcpHookEndpointUrl("codex", payload => decideCodexToolCall(payload, sessionId => this.turnConfigOf(sessionId)))
+            getAcpHookEndpointUrl("codex", payload => this.answerHook(payload))
         ]);
         const home = agentHome();
-        writeCodexHooks(home, buildCodexHookCommand(curl, hookUrl));
+        writeCodexHooks(home, buildCodexHookCommand(curl, hookUrl), buildHookCommand(curl, hookUrl));
         return {
             binary: resolveCodexAcpScript(),
             args: [],
@@ -162,11 +169,37 @@ export class CodexAgentProvider extends AcpAgentProvider {
                 yield chunk;
                 continue;
             }
-            const text = citations.push(chunk.content);
+            const { text, refs } = citations.push(chunk.content);
             if (text) {
                 yield { ...chunk, content: text };
             }
+            for (const ref of refs) {
+                const citation = sourcesByTurn.get(config)?.get(ref);
+                if (citation) {
+                    yield { type: "citation", citation };
+                }
+            }
         }
+    }
+
+    /**
+     * Answer the hook: decide a tool call before it runs, and after a web search
+     * remember its sources for the turn, which the citations in the reply name.
+     */
+    private answerHook(payload: unknown): Promise<CodexHookAnswer> | CodexHookAnswer {
+        const search = codexSearchSources(payload);
+        if (!search) {
+            return decideCodexToolCall(payload, sessionId => this.turnConfigOf(sessionId));
+        }
+        const config = this.turnConfigOf(search.sessionId);
+        if (config) {
+            const known = sourcesByTurn.get(config) ?? new Map<string, LlmCitation>();
+            for (const [ ref, citation ] of search.sources) {
+                known.set(ref, citation);
+            }
+            sourcesByTurn.set(config, known);
+        }
+        return {};
     }
 
     protected describeFailure(error: unknown): string {
@@ -319,34 +352,42 @@ function isSignInRequired(error: unknown): boolean {
     return error instanceof AcpError && error.code === -32000 && /authentication required/i.test(error.message);
 }
 
-/** A citation marker opens with U+E200 and closes with U+E201, private-use characters. */
-const MARKER_START = "";
-const COMPLETE_MARKER = /[^]*/g;
+/** A citation marker opens with U+E200, separates its parts with U+E202 and closes with U+E201, private-use characters. */
+const MARKER_START = "\uE200";
+const MARKER_SEPARATOR = "\uE202";
+const COMPLETE_MARKER = /\uE200[^\uE201]*\uE201/g;
 
 /** Longer than any citation marker; an opening held back past it was no marker. */
 const MAX_MARKER_LENGTH = 200;
 
 /**
  * Removes the citation markers OpenAI's models write after a web search,
- * `U+E200 cite U+E202 turn3search2 U+E201`, from streamed text. Codex's own
- * interface turns them into links to the search results, which the adapter
- * never passes on, so the chat would show them as `citeturn3search2`. A
+ * `U+E200 cite U+E202 turn3search2 U+E201`, from streamed text, and reports the
+ * search results they cite, which {@link CodexAgentProvider.chatChunks} turns into
+ * Trilium citations. Left in, the chat would show them as `citeturn3search2`. A
  * marker can span chunks, so text from an unclosed one is held back until it
  * closes, and dropped if it never does.
  */
 export class CitationStripper {
     private pending = "";
 
-    /** The text of `chunk` that is safe to show now. */
-    push(chunk: string): string {
-        let text = (this.pending + chunk).replace(COMPLETE_MARKER, "");
+    /** The text of `chunk` that is safe to show now, and the search results the removed markers cite. */
+    push(chunk: string): { text: string; refs: string[] } {
+        const refs: string[] = [];
+        let text = (this.pending + chunk).replace(COMPLETE_MARKER, marker => {
+            const [ kind, ...ids ] = marker.slice(1, -1).split(MARKER_SEPARATOR);
+            if (kind === "cite") {
+                refs.push(...ids);
+            }
+            return "";
+        });
         let open = text.indexOf(MARKER_START);
         if (open >= 0 && text.length - open > MAX_MARKER_LENGTH) {
             text = text.replaceAll(MARKER_START, "");
             open = -1;
         }
         this.pending = open >= 0 ? text.slice(open) : "";
-        return open >= 0 ? text.slice(0, open) : text;
+        return { text: open >= 0 ? text.slice(0, open) : text, refs };
     }
 }
 
