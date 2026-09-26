@@ -1,7 +1,7 @@
-import { extractYouTubeVideoId, isHttpUrl, type MimeType, MIME_TYPES_DICT, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
+import { extractYouTubeVideoId, isHttpUrl, MIME_TYPE_AUTO, type MimeType, MIME_TYPES_DICT, normalizeMimeTypeForCKEditor, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
 import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
-import { ensureMimeTypes, highlightAuto } from "@triliumnext/highlightjs";
+import { ensureMimeTypes, getLanguage, highlight, highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
 import { t } from "i18next";
@@ -44,6 +44,8 @@ const HIGHLIGHT_MAX_LINE_COUNT = 500;
  * minified code), so a separate character ceiling guards `highlightAuto`'s size-driven cost.
  */
 const HIGHLIGHT_MAX_CHAR_COUNT = 50_000;
+
+const PLAIN_TEXT_LANGUAGE = normalizeMimeTypeForCKEditor("text/plain");
 
 /**
  * The base a web view's rooted source is resolved against, to tell a path that stays on this site
@@ -339,7 +341,7 @@ export function getContent(note: SNote | BNote, options: ShareRenderOptions = {}
     } else if (note.type === "code" && note.mime === "text/x-markdown") {
         renderMarkdown(result, note);
     } else if (note.type === "code") {
-        renderCode(result);
+        renderCode(result, note.mime);
     } else if (note.type === "mermaid") {
         renderMermaid(result, note);
     } else if (["image", "canvas", "mindMap"].includes(note.type)) {
@@ -547,15 +549,7 @@ function renderText(result: Result, note: SNote | BNote, options: ShareRenderOpt
                 continue;
             }
 
-            // codeEl.text recursively traverses the node's subtree, so read it once.
-            const codeText = codeEl.text;
-            if (!shouldSyntaxHighlight(codeText)) {
-                continue;
-            }
-
-            const highlightResult = highlightAuto(codeText);
-            codeEl.innerHTML = highlightResult.value;
-            codeEl.classList.add("hljs");
+            highlightCodeBlock(codeEl);
         }
 
         result.content = document.innerHTML ?? "";
@@ -664,19 +658,11 @@ function renderMarkdown(result: Result, note: SNote | BNote) {
     const document = parse(html, parseOpts);
     for (const codeEl of document.querySelectorAll("pre code")) {
         if (codeEl.classList.contains("language-mermaid")
-            || codeEl.classList.contains("language-text-x-trilium-auto")) {
+            || codeEl.classList.contains(`language-${MIME_TYPE_AUTO}`)) {
             continue;
         }
 
-        // codeEl.text recursively traverses the node's subtree, so read it once.
-        const codeText = codeEl.text;
-        if (!shouldSyntaxHighlight(codeText)) {
-            continue;
-        }
-
-        const highlightResult = highlightAuto(codeText);
-        codeEl.innerHTML = highlightResult.value;
-        codeEl.classList.add("hljs");
+        highlightCodeBlock(codeEl);
     }
 
     result.content = document.innerHTML;
@@ -701,6 +687,33 @@ export function shouldSyntaxHighlight(code: string) {
         }
     }
     return true;
+}
+
+/**
+ * Highlights a `<pre><code>` block in place, in the language its `language-*` class names. A block
+ * without one, or set to auto-detect, goes through `highlightAuto`. Plain text and a language that
+ * {@link ensureShareHighlighting} did not register stay unhighlighted.
+ */
+function highlightCodeBlock(codeEl: HTMLElement) {
+    const language = [ ...codeEl.classList.values() ]
+        .find((className) => className.startsWith("language-"))
+        ?.slice("language-".length) ?? MIME_TYPE_AUTO;
+    const isAuto = language === MIME_TYPE_AUTO;
+    if (language === PLAIN_TEXT_LANGUAGE || (!isAuto && !getLanguage(language))) {
+        return;
+    }
+
+    // codeEl.text recursively traverses the node's subtree, so read it once.
+    const codeText = codeEl.text;
+    if (!shouldSyntaxHighlight(codeText)) {
+        return;
+    }
+
+    const highlightResult = isAuto ? highlightAuto(codeText) : highlight(codeText, { language });
+    if (highlightResult) {
+        codeEl.innerHTML = highlightResult.value;
+        codeEl.classList.add("hljs");
+    }
 }
 
 let registeredMimeTypesOption: string | null = null;
@@ -746,7 +759,7 @@ export function getMimeTypesForOption(optionValue: string | null): MimeType[] {
 /**
  * Renders a code note.
  */
-export function renderCode(result: Result) {
+export function renderCode(result: Result, mime?: string) {
     if (typeof result.content !== "string" || !result.content?.trim()) {
         result.isEmpty = true;
     } else {
@@ -754,9 +767,10 @@ export function renderCode(result: Result) {
         // When such a code note is included into a shared text note, renderText re-parses the
         // resulting HTML; with unescaped angle brackets (e.g. generics, comparisons, JSX) a large
         // code note would explode into a pathological node-html-parser tree and hang the event
-        // loop (#9717). The <code> wrapper additionally lets renderText apply syntax highlighting,
-        // bounded by shouldSyntaxHighlight().
-        result.content = `<pre><code>${escapeHtml(result.content)}</code></pre>`;
+        // loop (#9717). The <code> wrapper and its `language-*` class additionally let renderText
+        // apply syntax highlighting, bounded by shouldSyntaxHighlight().
+        const languageClass = mime ? ` class="language-${escapeHtml(normalizeMimeTypeForCKEditor(mime))}"` : "";
+        result.content = `<pre><code${languageClass}>${escapeHtml(result.content)}</code></pre>`;
     }
 }
 

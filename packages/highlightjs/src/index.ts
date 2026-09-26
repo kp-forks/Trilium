@@ -81,4 +81,4 @@ export async function loadTheme(theme: "none" | Theme) {
     highlightingThemeEl.textContent = normalizeThemeCss(themeCss);
 }
 
-export const { highlightAuto } = hljs;
+export const { getLanguage, highlightAuto } = hljs;

@@ -282,6 +282,43 @@ describe("content_renderer", () => {
             `);
         });
 
+        it("highlights a code block in the language it declares", async () => {
+            await ensureShareHighlighting();
+            const xml = "&lt;t t-name=&quot;x&quot;&gt;&lt;/t&gt;";
+            // text-x-cobol is not enabled by default, so it is never registered.
+            const languages = [ "text-x-python", "text-plain", "text-x-cobol", "text-x-trilium-auto" ];
+            const note = buildShareNote({
+                content: languages.map((language) => `<pre><code class="language-${language}">${xml}</code></pre>`).join("")
+            });
+
+            const result = getContent(note);
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            const [ python, plain, cobol, auto ] = parse(result.content, { blockTextElements: {} }).querySelectorAll("code");
+            expect(python.classList.contains("hljs")).toBe(true);
+            expect(python.innerHTML).toContain("hljs-string");
+            expect(python.innerHTML).not.toContain("hljs-tag");
+            expect(plain.innerHTML).toBe(xml);
+            expect(cobol.innerHTML).toBe(xml);
+            expect(auto.innerHTML).toContain("hljs-tag");
+        });
+
+        it("highlights an included code note in its own language", async () => {
+            await ensureShareHighlighting();
+            buildShareNotes([
+                { id: "pycode", type: "code", mime: "text/x-python", content: `<t t-name="x"></t>` }
+            ]);
+            const note = buildShareNote({
+                content: `<section class="include-note" data-note-id="pycode" data-box-size="medium">&nbsp;</section>`
+            });
+
+            const result = getContent(note);
+            if (typeof result.content !== "string") throw new Error("expected string content");
+            const code = parse(result.content, { blockTextElements: {} }).querySelector("code");
+            expect(code?.classList.contains("language-text-x-python")).toBe(true);
+            expect(code?.innerHTML).toContain("hljs-string");
+            expect(code?.innerHTML).not.toContain("hljs-tag");
+        });
+
         describe("Reference links", () => {
             it("handles attachment link", () => {
                 const content = trimIndentation`\
