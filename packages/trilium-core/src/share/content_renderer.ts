@@ -1,7 +1,7 @@
-import { extractYouTubeVideoId, isHttpUrl, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
+import { extractYouTubeVideoId, isHttpUrl, type MimeType, MIME_TYPES_DICT, safeLinkPreviewHref, safeLinkPreviewImageSrc } from "@triliumnext/commons";
 import { renderToHtml as renderMarkdownToHtml } from "@triliumnext/commons/src/lib/markdown_renderer.js";
 import { renderSpreadsheetToHtml } from "@triliumnext/commons/src/lib/spreadsheet/render_to_html.js";
-import { highlightAuto } from "@triliumnext/highlightjs";
+import { ensureMimeTypes, highlightAuto } from "@triliumnext/highlightjs";
 import ejs from "ejs";
 import escapeHtml from "escape-html";
 import { t } from "i18next";
@@ -701,6 +701,46 @@ export function shouldSyntaxHighlight(code: string) {
         }
     }
     return true;
+}
+
+let registeredMimeTypesOption: string | null = null;
+let pendingRegistration: Promise<void> | null = null;
+
+/**
+ * Registers the highlight.js languages enabled in the `codeNotesMimeTypes` option, which are the
+ * only ones `highlightAuto` considers. The renderer is synchronous, so callers await this before
+ * rendering a share page or a share-theme export.
+ */
+export function ensureShareHighlighting(): Promise<void> {
+    const optionValue = options.getOptionOrNull("codeNotesMimeTypes");
+    if (pendingRegistration && optionValue === registeredMimeTypesOption) {
+        return pendingRegistration;
+    }
+
+    registeredMimeTypesOption = optionValue;
+    pendingRegistration = Promise.resolve()
+        .then(() => ensureMimeTypes(getMimeTypesForOption(optionValue)))
+        .catch((e: unknown) => {
+            getLog().error(`Unable to register the languages for syntax highlighting: ${e}`);
+            pendingRegistration = null;
+        });
+    return pendingRegistration;
+}
+
+/**
+ * Returns every MIME type in `MIME_TYPES_DICT`, enabled when the `codeNotesMimeTypes` option value
+ * lists it. Mirrors `getMimeTypes()` in the client: a missing option falls back to the defaults,
+ * and `text/plain` is always enabled.
+ */
+export function getMimeTypesForOption(optionValue: string | null): MimeType[] {
+    const enabledMimes: (string | null)[] = optionValue
+        ? JSON.parse(optionValue)
+        : MIME_TYPES_DICT.filter((mt) => mt.default).map((mt) => mt.mime);
+
+    return MIME_TYPES_DICT.map((mt) => ({
+        ...mt,
+        enabled: enabledMimes.includes(mt.mime) || mt.mime === "text/plain"
+    }));
 }
 
 /**

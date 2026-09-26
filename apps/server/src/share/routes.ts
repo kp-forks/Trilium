@@ -1,4 +1,4 @@
-import { getShareRoutes, handleShareRequest, type ShareReply, type ShareRequest } from "@triliumnext/core/src/share/index.js";
+import { ensureShareHighlighting, getShareRoutes, handleShareRequest, type ShareReply, type ShareRequest } from "@triliumnext/core/src/share/index.js";
 import type { Request, Response, Router } from "express";
 
 import { registerShareProvider } from "./share_provider.js";
@@ -8,7 +8,8 @@ function register(router: Router) {
     registerShareProvider();
 
     for (const route of getShareRoutes()) {
-        router.get(route.path, (req, res) => {
+        router.get(route.path, async (req, res) => {
+            await ensureShareHighlighting();
             send(res, handleShareRequest(route, toShareRequest(req)));
         });
     }

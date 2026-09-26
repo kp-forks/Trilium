@@ -430,6 +430,7 @@ async function dispatchShare(path: ShareRoutePath, req: BrowserRequest) {
     ]);
 
     registerShareProvider();
+    await share.ensureShareHighlighting();
 
     /* v8 ignore next -- @preserve: BrowserRouter.dispatch always sets req.headers, so the ?? fallback is unreachable. */
     const headers = req.headers ?? {};

@@ -6,7 +6,7 @@
  * dynamic import, which only defers its cost — EJS, the share theme and the syntax highlighter —
  * while nothing in the eager graph imports it.
  */
-export { assetUrlFragment, readShareTemplate, renderNoteContent, renderNoteForExport } from "./content_renderer.js";
+export { assetUrlFragment, ensureShareHighlighting, readShareTemplate, renderNoteContent, renderNoteForExport } from "./content_renderer.js";
 export { getShareRoute, getShareRoutes, handleShareRequest, isVisibleInShareTree, type ShareReply, type ShareRequest, type ShareRoute } from "./handlers.js";
 export { SHARE_ROUTE_PATHS, type ShareRoutePath } from "./route_paths.js";
 export { initShare, isShareReady, type ShareProvider, type ShareSql } from "./share_provider.js";

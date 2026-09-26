@@ -3,10 +3,11 @@ import ejs from "ejs";
 import { parse } from "node-html-parser";
 import { describe, expect, it, vi } from "vitest";
 
+import options from "../services/options.js";
 import * as sanitize from "../services/sanitizer.js";
 import * as utils from "../services/utils/index.js";
 import { buildShareNote, buildShareNotes } from "../test/shaca_mocking.js";
-import { getContent, readShareTemplate, renderCode, renderNoteContent, type Result, shouldSyntaxHighlight } from "./content_renderer.js";
+import { ensureShareHighlighting, getContent, getMimeTypesForOption, readShareTemplate, renderCode, renderNoteContent, type Result, shouldSyntaxHighlight } from "./content_renderer.js";
 import type SNote from "./shaca/entities/snote.js";
 import shaca from "./shaca/shaca.js";
 import shareRoot from "./share_root.js";
@@ -251,7 +252,8 @@ describe("content_renderer", () => {
             expect(result.content).toContain("<p>After</p>");
         });
 
-        it("handles syntax highlight for code blocks with escaped syntax", () => {
+        it("handles syntax highlight for code blocks with escaped syntax", async () => {
+            await ensureShareHighlighting();
             const note = buildShareNote({
                 id: "note",
                 content: trimIndentation`\
@@ -686,6 +688,39 @@ describe("content_renderer", () => {
             // No newlines, so the line check never trips — the character ceiling must catch it.
             expect(shouldSyntaxHighlight("x".repeat(50_000))).toBe(true);
             expect(shouldSyntaxHighlight("x".repeat(50_001))).toBe(false);
+        });
+    });
+
+    describe("ensureShareHighlighting", () => {
+        it("registers once per value of codeNotesMimeTypes", async () => {
+            const getOption = vi.spyOn(options, "getOptionOrNull");
+
+            getOption.mockReturnValue(JSON.stringify([ "text/x-python" ]));
+            const first = ensureShareHighlighting();
+            expect(ensureShareHighlighting()).toBe(first);
+            await first;
+
+            getOption.mockReturnValue(JSON.stringify([ "text/x-go" ]));
+            expect(ensureShareHighlighting()).not.toBe(first);
+
+            getOption.mockRestore();
+        });
+    });
+
+    describe("getMimeTypesForOption", () => {
+        const enabledMimes = (optionValue: string | null) => getMimeTypesForOption(optionValue)
+            .filter((mt) => mt.enabled)
+            .map((mt) => mt.mime);
+
+        it("enables the listed MIME types plus text/plain", () => {
+            expect(enabledMimes(JSON.stringify([ "text/x-python", null ])))
+                .toStrictEqual([ "text/plain", "text/x-python" ]);
+        });
+
+        it("falls back to the default MIME types when the option is missing", () => {
+            const enabled = enabledMimes(null);
+            expect(enabled).toContain("text/x-python");
+            expect(enabled).not.toContain("text/x-cobol");
         });
     });
 
