@@ -52,6 +52,9 @@ class FakeAcpClient {
     static current: FakeAcpClient | undefined;
     static lastStart: { worker: boolean; binary: string; opts: { args?: string[]; env?: Record<string, string>; cwd: string } } | undefined;
     static signedIn = true;
+    /** How many `session/new` calls after `authenticate` still find no account, as Codex's can lag a completed sign-in. */
+    static accountLag = 0;
+    static lagLeft = 0;
     /** An error `session/new` fails with, when set. */
     static sessionFailure: Error | undefined;
     /** Runs while session/prompt is answered, as the agent's own notifications and requests do. */
@@ -81,10 +84,11 @@ class FakeAcpClient {
         this.requests.push({ method, params });
         if (method === "authenticate") {
             FakeAcpClient.signedIn = true;
+            FakeAcpClient.lagLeft = FakeAcpClient.accountLag;
         }
         if (method === "session/new") {
             if (FakeAcpClient.sessionFailure) throw FakeAcpClient.sessionFailure;
-            if (!FakeAcpClient.signedIn) throw new FakeAcpError(-32000, "Authentication required");
+            if (!FakeAcpClient.signedIn || FakeAcpClient.lagLeft-- > 0) throw new FakeAcpError(-32000, "Authentication required");
             return { sessionId: "sess-1", models: { currentModelId: "gpt-6-luna[medium]", availableModels: REMOTE_MODELS } } as T;
         }
         if (method === "session/prompt") {
@@ -142,6 +146,8 @@ beforeEach(() => {
     FakeAcpClient.current = undefined;
     FakeAcpClient.lastStart = undefined;
     FakeAcpClient.signedIn = true;
+    FakeAcpClient.accountLag = 0;
+    FakeAcpClient.lagLeft = 0;
     FakeAcpClient.sessionFailure = undefined;
     FakeAcpClient.onPrompt = undefined;
 });
@@ -182,6 +188,28 @@ describe("CodexAgentProvider", () => {
         await new CodexAgentProvider().listModels();
         expect(FakeAcpClient.current?.methods()).toEqual(["initialize", "session/new", "authenticate", "session/new"]);
         expect(FakeAcpClient.current?.requests[2].params).toEqual({ methodId: "chat-gpt" });
+    });
+
+    it("waits for Codex's account to show a sign-in it reported complete, for a while", async () => {
+        vi.useFakeTimers();
+        try {
+            FakeAcpClient.signedIn = false;
+            FakeAcpClient.accountLag = 2;
+            const listing = new CodexAgentProvider().listModels();
+            await vi.advanceTimersByTimeAsync(2_000);
+            expect((await listing).map(m => m.id)).toContain("gpt-6-luna");
+            expect(FakeAcpClient.current?.methods()).toEqual(["initialize", "session/new", "authenticate", "session/new", "session/new", "session/new"]);
+
+            // An account that never shows the sign-in is reported after ten seconds.
+            resetAcpAgentStateForTests();
+            FakeAcpClient.signedIn = false;
+            FakeAcpClient.accountLag = Infinity;
+            const failing = new CodexAgentProvider().listModels().then(() => "resolved", (err: Error) => err.message);
+            await vi.advanceTimersByTimeAsync(11_000);
+            expect(await failing).toMatch(/not signed in/);
+        } finally {
+            vi.useRealTimers();
+        }
     });
 
     it("explains a failure to start, sign in or answer in words the user can act on", async () => {

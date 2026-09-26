@@ -45,6 +45,10 @@ const SIGN_IN_METHOD = "chat-gpt";
 /** How long the add-provider screen waits for the user to finish signing in in the browser. */
 export const SIGN_IN_TIMEOUT_MS = 5 * 60_000;
 
+/** How long after a sign-in `session/new` is retried while Codex's account does not show it yet, and how often. */
+const SIGN_IN_SETTLE_MS = 10_000;
+const SIGN_IN_RETRY_MS = 500;
+
 /**
  * The settings the adapter merges into every session, as `CODEX_CONFIG`.
  * Codex runs a hook only once the user has trusted it, which no one can do in
@@ -173,6 +177,10 @@ export class CodexAgentProvider extends AcpAgentProvider {
      * ChatGPT sign-in page in a browser on the device running Trilium and
      * answers `authenticate` once the user has finished there; it keeps the
      * sign-in under `CODEX_HOME`, so later sessions need none.
+     *
+     * Codex reports the sign-in complete before its account shows it, so the
+     * first `session/new` after it can still find no account; it is retried
+     * for a few seconds.
      */
     protected async createSession(client: AcpClient, params: AcpNewSessionParams, interactive: boolean, timeoutMs: number) {
         let created: Awaited<ReturnType<AcpAgentProvider["createSession"]>>;
@@ -183,12 +191,27 @@ export class CodexAgentProvider extends AcpAgentProvider {
                 throw err;
             }
             await client.request("authenticate", { methodId: SIGN_IN_METHOD }, SIGN_IN_TIMEOUT_MS);
-            created = await super.createSession(client, params, interactive, timeoutMs);
+            created = await this.createSessionAfterSignIn(client, params, timeoutMs);
         }
         if (created.models) {
             recordCatalog(created.models);
         }
         return created;
+    }
+
+    /** `session/new` once a sign-in has completed, retried while Codex's account does not show it yet. */
+    private async createSessionAfterSignIn(client: AcpClient, params: AcpNewSessionParams, timeoutMs: number) {
+        const giveUpAt = Date.now() + SIGN_IN_SETTLE_MS;
+        for (;;) {
+            try {
+                return await super.createSession(client, params, true, timeoutMs);
+            } catch (err) {
+                if (!isSignInRequired(err) || Date.now() >= giveUpAt) {
+                    throw err;
+                }
+                await new Promise(resolve => setTimeout(resolve, SIGN_IN_RETRY_MS));
+            }
+        }
     }
 
     /** The turn, with the citation markers Codex writes into its reply taken out (see {@link CitationStripper}). */
