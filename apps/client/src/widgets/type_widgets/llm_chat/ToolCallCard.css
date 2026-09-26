@@ -1,11 +1,27 @@
 /* Tool call specific styles (card/section structure is in ExpandableCard.css) */
 
-/* Elevated tool-call card — a filled surface lifted off the message area with a
-   soft shadow, so a tool call reads as a distinct card rather than an outline. */
 .expandable-card.llm-chat-tool-call-card {
-    box-shadow: var(--card-box-shadow);
-    border: 1px solid var(--card-border-color);
-    background: var(--card-background-color);
+    border-radius: 6px;
+
+    .expandable-section-summary {
+        padding: 0.25rem 0.6rem;
+        font-weight: normal;
+        line-height: 1.4rem;
+
+        > .bx {
+            font-size: 0.9rem;
+            margin-right: 0.1rem;
+            color: var(--muted-text-color);
+        }
+
+        &:hover {
+            background: var(--hover-item-background-color);
+        }
+    }
+
+    .expandable-section-body {
+        border-top: 1px solid var(--main-border-color);
+    }
 }
 
 .llm-chat-tool-call-detail {
@@ -19,11 +35,6 @@
     margin-left: 0.35rem;
 }
 
-/* Folded group — separate the first nested row from the group header. */
-.llm-chat-tool-call-group[open] > .expandable-section-body > .expandable-section:first-child {
-    border-top: 1px solid var(--main-border-color);
-}
-
 .llm-chat-tool-call-note-ref {
     font-weight: 400;
     margin-left: 0.25rem;
@@ -32,7 +43,7 @@
 /* Section body (input + result) */
 .llm-chat-tool-call-input,
 .llm-chat-tool-call-result {
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.6rem;
     max-height: 300px;
     overflow: auto;
 }
@@ -105,7 +116,8 @@
 }
 
 /* Tool call error styling */
-.llm-chat-tool-call-error .expandable-section-summary {
+.llm-chat-tool-call-error > .expandable-section-summary,
+.expandable-card.llm-chat-tool-call-card .llm-chat-tool-call-error > .expandable-section-summary > .bx {
     color: var(--danger-color, #dc3545);
 }
 
