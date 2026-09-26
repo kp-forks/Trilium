@@ -335,11 +335,15 @@ function groupContentBlocks(blocks: ContentBlock[]): ContentGroup[] {
 }
 
 function renderContentBlocks(blocks: ContentBlock[], isStreaming?: boolean) {
-    return groupContentBlocks(blocks).map((group) => {
+    const groups = groupContentBlocks(blocks);
+    const lastStep = groups.findLastIndex(group => group.type === "thinking" || group.type === "tool_calls");
+    const reply = lastStep >= 0 && groups[lastStep + 1]?.type === "text" ? groups[lastStep + 1] : undefined;
+
+    return groups.map((group) => {
         const isLastBlock = group.index === blocks.length - 1;
         if (group.type === "text") {
             return (
-                <div key={group.index}>
+                <div key={group.index} className={group === reply ? "llm-chat-reply" : undefined}>
                     <TextBlockContent content={group.block.content} isStreaming={isStreaming && isLastBlock} />
                 </div>
             );

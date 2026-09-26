@@ -145,4 +145,18 @@ describe("ChatMessage thinking", () => {
         expect(card?.querySelector(".expandable-section-label")?.textContent).toBe("Retrieving PC hostname with command");
         expect(card?.querySelector(".llm-chat-thinking-content .markdown-stub")?.textContent).toContain("<code>/etc/hostname</code>");
     });
+
+    it("marks only the text after the last thought or tool call as the reply", () => {
+        const target = renderMessage([
+            { type: "thinking", content: "**Inspecting available tool names**" },
+            { type: "text", content: "I'll add a French pangram." },
+            { type: "tool_call", toolCall: { id: "c1", toolName: "create_note", input: {}, result: "{}" } },
+            { type: "text", content: "Added the French pangram." }
+        ]);
+        const replies = [...target.querySelectorAll(".llm-chat-reply")];
+        expect(replies.map(el => el.textContent)).toEqual([ "Added the French pangram." ]);
+
+        const plain = renderMessage([{ type: "text", content: "Hello." }]);
+        expect(plain.querySelector(".llm-chat-reply")).toBeNull();
+    });
 });

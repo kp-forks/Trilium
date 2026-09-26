@@ -251,6 +251,11 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
     }
 }
 
+/* The text after the last thought or tool call, set apart from the steps that led to it. */
+.llm-chat-reply {
+    margin-top: 1rem;
+}
+
 /* Markdown styles */
 .llm-chat-markdown {
     line-height: 1.6;
