@@ -27,6 +27,7 @@ Trilium integrates multiple <a class="reference-link" href="Providers/Subscript
 *   Claude Code by reusing your CLI.
 *   GitHub Copilot by reusing your CLI's ACP.
 *   Google Antigravity by downloading and setting up an ACP for Trilium.
+*   OpenAI Codex by installing the Codex ACP adapter for Trilium.
 
 ## Local/self-hosted providers
 

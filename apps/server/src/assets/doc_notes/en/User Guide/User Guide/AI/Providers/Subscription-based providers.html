@@ -2,9 +2,10 @@
   instead of pay-per-use (unlike the API keys).</p>
 <p>In a nutshell, subscription-based providers work by either reusing your
   existing CLI tools (e.g. Claude Code, GitHub Copilot via ACP) whereas some
-  require installing the ACP server manually (e.g. Google Antigravity). Because
-  they require something to be installed on your device, these providers
-  are not available on Mobile (Android or iOS) or standalone mode.</p>
+  require installing the ACP server manually (e.g. Google Antigravity, OpenAI
+  Codex). Because they require something to be installed on your device,
+  these providers are not available on Mobile (Android or iOS) or standalone
+  mode.</p>
 <p>See also the dedicated&nbsp;<a class="reference-link" href="#root/_help_cRRrdZjgyhNc">Privacy</a>&nbsp;section
   to better understand what data is being sent to a cloud provider.</p>
 <h2>Claude Code</h2>
@@ -130,4 +131,45 @@ trilium</code></pre>
     note tools are enabled.</li>
   <li>The results of tool calls (e.g. reading a note, writing attributes) are
     not properly displayed because they are not exposed by the ACP server.</li>
+</ul>
+<h2>OpenAI Codex</h2>
+<aside class="admonition note">
+  <p>This subscription-based provider is still in beta. It is safe to use (won't
+    use additional funds and respects the terms of use), but you might experience
+    small issues. Consider <a class="reference-link" href="#root/_help_wy8So3yZZlH9">Reporting issues</a>.</p>
+</aside>
+<p>OpenAI Codex gives access to the Codex models of your ChatGPT plan (Free,
+  Go, Plus, Pro or Business), without an API key. Usage counts against your
+  plan's Codex limits, which are small on the Free plan.</p>
+<ol>
+  <li>Install the Codex ACP adapter on the machine that runs Trilium with <code>npm install -g @agentclientprotocol/codex-acp</code>.
+    It brings its own copy of the Codex CLI, so Codex doesn't need to be installed
+    separately. For a <a class="reference-link" href="#root/_help_WOcw2SLH6tbX">Server Installation</a> it
+    needs to be installed on the server.</li>
+  <li>Go to <a class="reference-link" href="#root/_help_4TIF1oA4VQRO">Options</a> → <em>AI / LLM</em> and
+    add the OpenAI Codex provider. When the list of models is loaded for the
+    first time, the ChatGPT sign-in page opens in a browser on the machine
+    running Trilium; finish signing in there.</li>
+</ol>
+<p>Trilium keeps its own Codex sign-in and settings, separate from any Codex
+  CLI you use in a terminal, so an existing <code>codex login</code> is not
+  reused.</p>
+<p>Trilium will identify the Codex ACP adapter in this order:</p>
+<ul>
+  <li>By looking for a <code>TRILIUM_CODEX_ACP_PATH</code> environment variable
+    pointing to the <code>codex-acp</code> binary.</li>
+  <li>By looking for <code>codex-acp</code> in your PATH.</li>
+  <li>By asking your login shell for its <code>PATH</code>, the same as for Claude
+    Code.</li>
+</ul>
+<h3>Known limitations</h3>
+<ul>
+  <li>Codex runs in its read-only mode and every action it asks permission for
+    is denied, so it cannot edit files, run commands or search the web.</li>
+  <li>Trilium's note tools and web search are not supported yet, so Codex cannot
+    read or modify your notes.</li>
+  <li>The ChatGPT sign-in opens in a browser on the device running Trilium,
+    so it might not be possible to set up the provider while using the web
+    version of a Docker installation. <a class="reference-link" href="#root/_help_poXkQfguuA0U">Desktop Installation</a> should
+    work fine.</li>
 </ul>

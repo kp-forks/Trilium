@@ -25,6 +25,7 @@ export const PROVIDER_ICONS: Record<string, string> = {
     anthropic: anthropicIcon,
     "antigravity-agent": antigravityIcon,
     "claude-agent": claudeAgentIcon,
+    "codex-agent": openaiIcon,
     "copilot-agent": githubCopilotIcon,
     deepseek: deepseekIcon,
     google: geminiIcon,
