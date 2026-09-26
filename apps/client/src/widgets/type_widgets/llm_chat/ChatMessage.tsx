@@ -3,12 +3,13 @@ import "../markdown/MarkdownCommons.css";
 
 import { type LlmCitation } from "@triliumnext/commons";
 import { memo } from "preact/compat";
-import { useMemo } from "preact/hooks";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "preact/hooks";
 
 import { t } from "../../../services/i18n.js";
 import utils from "../../../services/utils.js";
 import { ExtendedAdmonition } from "../../react/Admonition.js";
 import Button from "../../react/Button.js";
+import { useResizeObserver } from "../../react/hooks.js";
 import LoadingSpinner from "../../react/LoadingSpinner.js";
 import { ReadOnlyTextContent } from "../text/ReadOnlyText.js";
 import { formatErrorDetails } from "./chat_error.js";
@@ -142,14 +143,41 @@ function ThinkingCard({ content, isLive }: { content: string; isLive?: boolean }
     }
 
     const { label, body } = splitThinkingLabel(content);
+    if (!body) {
+        return <ThinkingLine label={label || t("llm_chat.thought_process")} />;
+    }
+
     return (
         <ExpandableSection className="llm-chat-thinking" icon="bx bx-brain" label={label || t("llm_chat.thought_process")}>
-            {body && (
-                <div className="llm-chat-thinking-content">
-                    <TextBlockContent content={body} />
-                </div>
-            )}
+            <div className="llm-chat-thinking-content">
+                <TextBlockContent content={body} />
+            </div>
         </ExpandableSection>
+    );
+}
+
+/**
+ * A finished thought with nothing under its label. It opens, letting the label wrap, only when the
+ * label is cut off. The label is measured while closed, since an open one wraps and always fits.
+ */
+function ThinkingLine({ label }: { label: string }) {
+    const labelRef = useRef<HTMLSpanElement>(null);
+    const [fits, setFits] = useState(true);
+    const measure = useCallback(() => {
+        const el = labelRef.current;
+        if (el && !el.closest("details")?.open) {
+            setFits(el.scrollWidth <= el.clientWidth);
+        }
+    }, []);
+    useLayoutEffect(measure, [label, measure]);
+    useResizeObserver(labelRef, measure);
+
+    return (
+        <ExpandableSection
+            className={`llm-chat-thinking ${fits ? "llm-chat-thinking-fits" : ""}`}
+            icon="bx bx-brain"
+            label={<span ref={labelRef} className="llm-chat-thinking-label">{label}</span>}
+        />
     );
 }
 

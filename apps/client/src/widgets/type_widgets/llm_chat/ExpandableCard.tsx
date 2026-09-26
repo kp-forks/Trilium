@@ -8,7 +8,7 @@ interface ExpandableSectionProps {
     className?: string;
     /** Whether the section is expanded on initial render. */
     open?: boolean;
-    children: ComponentChildren;
+    children?: ComponentChildren;
 }
 
 /** A collapsible section within an ExpandableCard. */

@@ -91,11 +91,35 @@ describe("ChatMessage thinking", () => {
         expect(untitledBody).not.toContain("holds");
     });
 
-    it("leaves a one-line thought without a body, since its label already says it all", () => {
-        const target = renderMessage([{ type: "thinking", content: "I should look up who maintains it." }]);
-        const thought = target.querySelector(".llm-chat-thinking");
-        expect(thought?.querySelector(".expandable-section-label")?.textContent).toBe("I should look up who maintains it.");
-        expect(thought?.querySelector(".llm-chat-thinking-content")).toBeNull();
+    it("opens a thought with nothing under its label only when the label is cut off", () => {
+        const scrollWidth = vi.spyOn(Element.prototype, "scrollWidth", "get").mockReturnValue(100);
+        const clientWidth = vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(100);
+        try {
+            const content = [
+                { type: "thinking" as const, content: "I should look up who maintains it." },
+                { type: "thinking" as const, content: "\n\n**Acknowledging uncertainty on contentPreview meaning**" }
+            ];
+            let thoughts = [...renderMessage(content).querySelectorAll(".llm-chat-thinking")];
+            expect(thoughts.map(el => el.querySelector(".llm-chat-thinking-label")?.textContent)).toEqual([
+                "I should look up who maintains it.",
+                "Acknowledging uncertainty on contentPreview meaning"
+            ]);
+            for (const thought of thoughts) {
+                expect(thought instanceof HTMLDetailsElement).toBe(true);
+                expect(thought.classList.contains("llm-chat-thinking-fits")).toBe(true);
+                expect(thought.querySelector(".llm-chat-thinking-content")).toBeNull();
+            }
+
+            host && render(null, host);
+            scrollWidth.mockReturnValue(250);
+            thoughts = [...renderMessage(content).querySelectorAll(".llm-chat-thinking")];
+            for (const thought of thoughts) {
+                expect(thought.classList.contains("llm-chat-thinking-fits")).toBe(false);
+            }
+        } finally {
+            scrollWidth.mockRestore();
+            clientWidth.mockRestore();
+        }
     });
 
     it("shows the thought being generated under a spinner and its latest title, and folds it once the turn moves on", () => {

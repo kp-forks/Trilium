@@ -244,9 +244,25 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
         display: block;
     }
 
+    .llm-chat-thinking-label {
+        display: block;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     /* The label is left out of the body, so the opened thought shows it in full. */
-    &[open] > .expandable-section-summary .expandable-section-label {
+    &[open] > .expandable-section-summary :is(.expandable-section-label, .llm-chat-thinking-label) {
         white-space: normal;
+    }
+
+    /* A body-less thought whose label fits has nothing to reveal. */
+    &.llm-chat-thinking-fits > .expandable-section-summary {
+        pointer-events: none;
+
+        .expandable-section-chevron {
+            display: none;
+        }
     }
 }
 
