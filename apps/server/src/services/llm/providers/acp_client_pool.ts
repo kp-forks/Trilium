@@ -113,6 +113,11 @@ export class AcpClientPool {
         this.pooled?.turns.delete(sessionId);
     }
 
+    /** The configuration of the turn attached to `sessionId` on the pooled client. */
+    turnConfig(sessionId: string): LlmProviderConfig | undefined {
+        return this.pooled?.turns.get(sessionId)?.config;
+    }
+
     /** Stop the pooled subprocess now. */
     dispose(): void {
         this.cancelIdleTimer();

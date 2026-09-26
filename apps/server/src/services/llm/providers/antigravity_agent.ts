@@ -125,7 +125,7 @@ export class AntigravityAgentProvider extends AcpAgentProvider {
         const [ binary, curl, hookUrl ] = await Promise.all([
             resolveAntigravityBinaryPath(),
             resolveCurlPath(),
-            getAcpHookEndpointUrl(payload => this.decideToolCall(payload, dirs))
+            getAcpHookEndpointUrl("antigravity", payload => this.decideToolCall(payload, dirs))
         ]);
         writeAntigravityHooks(home, buildHookCommand(curl, hookUrl));
         return {

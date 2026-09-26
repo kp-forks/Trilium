@@ -8,20 +8,24 @@
  *
  * `CODEX_HOME` points Codex at a directory of Trilium's own, so its
  * sign-in, sessions, MCP servers and skills are Trilium's rather than those of
- * the user's own Codex setup. The session starts in the `read-only` mode, where
- * Codex asks before anything that writes or reaches the network, and
- * {@link decideCodexPermission} approves only calls to Trilium's note tools.
+ * the user's own Codex setup. A `PreToolUse` hook lets through only Trilium's
+ * note tools and, in a chat that allows it, the web search (see codex_hook.ts).
+ * Behind it, the session starts in the `read-only` mode, where Codex asks
+ * before anything that writes, and {@link decideCodexPermission} approves only
+ * calls to Trilium's note tools.
  */
 
 import { LLM_REASONING_EFFORTS, type LlmReasoningEffort } from "@triliumnext/commons";
 import type { LlmProviderConfig, ModelInfo } from "@triliumnext/core/src/services/llm/types.js";
-import fs from "fs";
 import path from "path";
 
 import dataDirs from "../../data_dir.js";
-import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
+import { AcpAgentProvider, type AcpLaunchSpec, type AcpModel, type AcpNewSessionParams, type AcpPermissionOutcome, type AcpPermissionRequest, type AcpSessionModelState, type AcpToolCallUpdate, type BuiltInToolDisplay, denyPermission, describeError, NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
 import { type AcpClient, AcpError } from "./acp_client.js";
+import { getAcpHookEndpointUrl } from "./acp_mcp_endpoint.js";
+import { resolveCurlPath } from "./antigravity_hook.js";
 import { resolveCodexAcpScript, resolveCodexBinaryPath } from "./codex_binary.js";
+import { buildCodexHookCommand, decideCodexToolCall, writeCodexHooks } from "./codex_hook.js";
 
 /** The model id that leaves the session on the model Codex picks. */
 const DEFAULT_MODEL_ID = "default";
@@ -40,6 +44,14 @@ const SIGN_IN_METHOD = "chat-gpt";
 
 /** How long the add-provider screen waits for the user to finish signing in in the browser. */
 export const SIGN_IN_TIMEOUT_MS = 5 * 60_000;
+
+/**
+ * The settings the adapter merges into every session, as `CODEX_CONFIG`.
+ * Codex runs a hook only once the user has trusted it, which no one can do in
+ * Trilium's own `CODEX_HOME`; `features.hooks` keeps the hook running should
+ * the feature's default change.
+ */
+const CODEX_CONFIG = { bypass_hook_trust: true, features: { hooks: true } };
 
 /** `gpt-6-luna[medium]` → model `gpt-6-luna`, level `medium`. */
 const VARIANT_ID = /^(.+)\[([^\]]+)\]$/;
@@ -75,14 +87,23 @@ export class CodexAgentProvider extends AcpAgentProvider {
     }
 
     protected async launchSpec(): Promise<AcpLaunchSpec> {
-        const codex = await resolveCodexBinaryPath();
+        const [ codex, curl, hookUrl ] = await Promise.all([
+            resolveCodexBinaryPath(),
+            resolveCurlPath(),
+            getAcpHookEndpointUrl("codex", payload => decideCodexToolCall(payload, sessionId => this.turnConfigOf(sessionId)))
+        ]);
         const home = agentHome();
-        fs.mkdirSync(home, { recursive: true });
+        writeCodexHooks(home, buildCodexHookCommand(curl, hookUrl));
         return {
             binary: resolveCodexAcpScript(),
             args: [],
             worker: true,
-            env: { CODEX_PATH: codex, CODEX_HOME: home, INITIAL_AGENT_MODE: "read-only" }
+            env: {
+                CODEX_PATH: codex,
+                CODEX_HOME: home,
+                INITIAL_AGENT_MODE: "read-only",
+                CODEX_CONFIG: JSON.stringify(CODEX_CONFIG)
+            }
         };
     }
 
@@ -102,6 +123,11 @@ export class CodexAgentProvider extends AcpAgentProvider {
     /** The adapter reports each MCP server's startup as a tool call of its own, `mcp_startup.<server>`. */
     protected isInternalToolCall(update: AcpToolCallUpdate): boolean {
         return update.toolCallId?.startsWith("mcp_startup.") ?? false;
+    }
+
+    /** The web search, which the adapter reports with the kind `search`, under the name the other providers' searches carry. */
+    protected describeBuiltInTool(update: AcpToolCallUpdate): BuiltInToolDisplay | undefined {
+        return update.kind === "search" ? { toolName: "web_search" } : undefined;
     }
 
     /**

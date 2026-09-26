@@ -1,0 +1,95 @@
+/**
+ * Decides every tool call Codex makes.
+ *
+ * Codex's `read-only` mode confines writes and the network, not reads: its
+ * shell and its image viewer (`view_image`, which opens any file) run without
+ * asking permission, and its web search (`webrun`) is on by default. More tools
+ * arrive with Codex's releases (apps, a browser), and the user brings their own
+ * Codex, so a list of what to switch off cannot keep up.
+ *
+ * Codex runs `PreToolUse` hooks from `<CODEX_HOME>/hooks.json` before every tool
+ * call, built-in and MCP alike, so Trilium writes one there that posts each
+ * call to its loopback listener (`getAcpHookEndpointUrl`) with `curl`, and
+ * {@link decideCodexToolCall} answers from an allow-list. Codex lets a call
+ * through when its hook fails with any exit code but 2, so the hook command
+ * turns a failed `curl` into exit 2.
+ */
+
+import type { LlmProviderConfig } from "@triliumnext/core/src/services/llm/types.js";
+import { mkdirSync, writeFileSync } from "fs";
+import path from "path";
+
+import { NOTE_TOOLS_MCP_SERVER_NAME } from "./acp_agent.js";
+import { buildHookCommand, stringsIn } from "./antigravity_hook.js";
+import { type HostLookup, isPublicHttpUrl } from "./public_url.js";
+
+/** What the hook prints: no decision leaves the call to Codex, a `deny` stops it. */
+export interface CodexHookAnswer {
+    hookSpecificOutput?: {
+        hookEventName: "PreToolUse";
+        permissionDecision: "deny";
+        permissionDecisionReason: string;
+    };
+}
+
+/** The name Codex gives its web search in hook events. */
+const WEB_TOOL = "webrun";
+
+/** How long Codex waits for the hook, in seconds; `curl` (see `buildHookCommand`) gives up first. */
+const HOOK_TIMEOUT_S = 10;
+
+const NOTE_TOOLS_ONLY = "Trilium does not allow this tool. Use Trilium's note tools to read, search and edit the user's notes instead.";
+const WEB_SEARCH_OFF = "Web search is turned off for this chat.";
+const PRIVATE_ADDRESS = "Trilium does not allow opening local or private addresses.";
+
+/**
+ * The answer to one `PreToolUse` call: Trilium's note tools pass, and the web
+ * search passes in a chat that allows it when every URL it opens is on the
+ * public internet. Everything else is denied. `configOf` gives the chat turn's
+ * configuration for the event's `session_id`, the ACP session id.
+ */
+export async function decideCodexToolCall(
+    payload: unknown,
+    configOf: (sessionId: string) => LlmProviderConfig | undefined,
+    lookup?: HostLookup
+): Promise<CodexHookAnswer> {
+    const event = payload as { tool_name?: unknown; tool_input?: unknown; session_id?: unknown } | null;
+    const toolName = typeof event?.tool_name === "string" ? event.tool_name : "";
+    if (toolName.startsWith(`mcp__${NOTE_TOOLS_MCP_SERVER_NAME}__`)) {
+        return {};
+    }
+    if (toolName !== WEB_TOOL) {
+        return deny(NOTE_TOOLS_ONLY);
+    }
+    const config = typeof event?.session_id === "string" ? configOf(event.session_id) : undefined;
+    if (config?.enableWebSearch !== true) {
+        return deny(WEB_SEARCH_OFF);
+    }
+    const urls = stringsIn(event?.tool_input).filter(value => /^https?:\/\//i.test(value));
+    const allPublic = await Promise.all(urls.map(url => isPublicHttpUrl(url, lookup)));
+    return allPublic.every(Boolean) ? {} : deny(PRIVATE_ADDRESS);
+}
+
+/** Write the hook to `<home>/hooks.json`, replacing what an earlier run wrote. */
+export function writeCodexHooks(home: string, command: string): void {
+    mkdirSync(home, { recursive: true });
+    const hooks = {
+        hooks: {
+            PreToolUse: [ { matcher: ".*", hooks: [ { type: "command", command, timeout: HOOK_TIMEOUT_S } ] } ]
+        }
+    };
+    writeFileSync(path.join(home, "hooks.json"), JSON.stringify(hooks, null, 2));
+}
+
+/**
+ * Antigravity's `curl` command, failing closed: Codex blocks a call only on
+ * exit code 2, so any failure (Trilium unreachable, an error response, the
+ * time limit) becomes one. `||` reads the same under `sh -c` and `cmd /c`.
+ */
+export function buildCodexHookCommand(curl: string, hookUrl: string): string {
+    return `${buildHookCommand(curl, hookUrl)} || exit 2`;
+}
+
+function deny(reason: string): CodexHookAnswer {
+    return { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: reason } };
+}

@@ -92,7 +92,7 @@ export function writeAntigravityHooks(home: string, command: string): void {
  */
 export function buildHookCommand(curl: string, hookUrl: string): string {
     if (curl.includes("\"")) {
-        throw new Error(`Cannot quote the path of curl for the Antigravity hook: ${curl}`);
+        throw new Error(`Cannot quote the path of curl for the agent hook: ${curl}`);
     }
     return `"${curl}" --silent --show-error --fail --noproxy 127.0.0.1 --max-time ${CURL_MAX_TIME_S} --data-binary @- ${hookUrl}`;
 }
@@ -119,12 +119,13 @@ export function resetCurlCache(): void {
 async function findCurl(): Promise<string> {
     const curl = await findOnPath("curl");
     if (!curl) {
-        throw new Error("Google Antigravity needs curl, which Trilium uses to control the agent's file access, and curl was not found. Install curl (it ships with Windows 10 and later and with macOS) and make sure it is on PATH.");
+        throw new Error("The Google Antigravity and OpenAI Codex providers need curl, which Trilium uses to control what the agent can access, and curl was not found. Install curl (it ships with Windows 10 and later and with macOS) and make sure it is on PATH.");
     }
     return curl;
 }
 
-function stringsIn(value: unknown): string[] {
+/** Every string inside a hook call's arguments, however deeply nested. */
+export function stringsIn(value: unknown): string[] {
     if (typeof value === "string") {
         return [ value ];
     }

@@ -250,6 +250,15 @@ export abstract class AcpAgentProvider implements LlmProvider {
     }
 
     /**
+     * The configuration of the chat turn running in `sessionId` on the pooled
+     * agent, for a hook that decides a tool call outside the ACP connection.
+     * Undefined outside a chat turn.
+     */
+    protected turnConfigOf(sessionId: string): LlmProviderConfig | undefined {
+        return this.state().pool.turnConfig(sessionId);
+    }
+
+    /**
      * Whether a tool call is the agent's own bookkeeping rather than work the
      * user asked for, and so stays out of the chat. Display only: the call has
      * already passed the permission policy.

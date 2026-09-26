@@ -1,4 +1,5 @@
 import type { LlmStreamChunk } from "@triliumnext/commons";
+import fs from "fs";
 import os from "os";
 import path from "path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -20,7 +21,15 @@ vi.mock("./codex_binary.js", () => ({
     resolveCodexBinaryPath: async () => "/usr/bin/codex",
     resolveCodexAcpScript: () => "/opt/trilium/assets/codex-acp.mjs"
 }));
-vi.mock("./acp_mcp_endpoint.js", () => ({ getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret" }));
+const getAcpHookEndpointUrlMock = vi.hoisted(() => vi.fn(async (_name: string, _handler: (payload: unknown) => unknown) => "http://127.0.0.1:12345/hook-secret/codex"));
+vi.mock("./acp_mcp_endpoint.js", () => ({
+    getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret",
+    getAcpHookEndpointUrl: getAcpHookEndpointUrlMock
+}));
+vi.mock("./antigravity_hook.js", async (importOriginal) => ({
+    ...await importOriginal<typeof import("./antigravity_hook.js")>(),
+    resolveCurlPath: async () => "/usr/bin/curl"
+}));
 vi.mock("@triliumnext/core/src/services/llm/note_hint.js", () => ({ buildNoteHint: () => null }));
 vi.mock("@triliumnext/core/src/services/llm/attachment_content.js", () => ({ resolveAttachmentPart: vi.fn() }));
 
@@ -144,11 +153,19 @@ describe("CodexAgentProvider", () => {
         const start = FakeAcpClient.lastStart;
         expect(start?.worker).toBe(true);
         expect(start?.binary).toBe("/opt/trilium/assets/codex-acp.mjs");
+        const home = path.join(DATA_DIR, "codex-agent", "home");
         expect(start?.opts.env).toEqual({
             CODEX_PATH: "/usr/bin/codex",
-            CODEX_HOME: path.join(DATA_DIR, "codex-agent", "home"),
-            INITIAL_AGENT_MODE: "read-only"
+            CODEX_HOME: home,
+            INITIAL_AGENT_MODE: "read-only",
+            CODEX_CONFIG: JSON.stringify({ bypass_hook_trust: true, features: { hooks: true } })
         });
+        // Every tool call goes through the hook, which fails closed.
+        expect(getAcpHookEndpointUrlMock).toHaveBeenCalledWith("codex", expect.any(Function));
+        expect(JSON.parse(fs.readFileSync(path.join(home, "hooks.json"), "utf8")).hooks.PreToolUse).toEqual([ {
+            matcher: ".*",
+            hooks: [ { type: "command", timeout: 10, command: "\"/usr/bin/curl\" --silent --show-error --fail --noproxy 127.0.0.1 --max-time 8 --data-binary @- http://127.0.0.1:12345/hook-secret/codex || exit 2" } ]
+        } ]);
         expect(start?.opts.cwd).toBe(path.join(DATA_DIR, "codex-agent", "workspace"));
         expect(FakeAcpClient.current?.onAgentRequest?.("session/request_permission", {
             toolCall: { kind: "execute", title: "rm -rf /" },
@@ -286,5 +303,29 @@ describe("CodexAgentProvider note tools", () => {
         expect(decideCodexPermission(standalone("codex_apps"), "test")).toEqual(DENIED);
         // No one-shot allow on offer: nothing is approved permanently.
         expect(decideCodexPermission({ ...standalone("trilium"), options: MCP_APPROVAL_OPTIONS.slice(1) }, "test")).toEqual(DENIED);
+    });
+});
+
+describe("CodexAgentProvider web search", () => {
+    it("lets the web search through the hook only in a chat that allows it, and shows it as a web search", async () => {
+        const decisions: unknown[] = [];
+        FakeAcpClient.onPrompt = async client => {
+            const decide = getAcpHookEndpointUrlMock.mock.calls.at(-1)?.[1];
+            decisions.push(await decide?.({ hook_event_name: "PreToolUse", session_id: "sess-1", tool_name: "webrun", tool_input: { search_query: [ { q: "kernel" } ] } }));
+            client.onNotification?.("session/update", {
+                sessionId: "sess-1",
+                update: { sessionUpdate: "tool_call", toolCallId: "search-1", kind: "search", title: "Web search", status: "in_progress", rawInput: { type: "webSearch", query: "" } }
+            });
+        };
+        const provider = new CodexAgentProvider();
+
+        const searching = await collect(provider.chatChunks([{ role: "user", content: "hi" }], { chatNoteId: "a", enableWebSearch: true }));
+        await collect(provider.chatChunks([{ role: "user", content: "hi" }], { chatNoteId: "b" }));
+
+        expect(decisions).toEqual([
+            {},
+            { hookSpecificOutput: { hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: "Web search is turned off for this chat." } }
+        ]);
+        expect(searching).toContainEqual({ type: "tool_use", toolCallId: "search-1", toolName: "web_search", toolInput: { type: "webSearch", query: "" } });
     });
 });

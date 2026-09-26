@@ -98,8 +98,10 @@ Trilium will identify your Codex CLI in this order:
 *   By looking for `codex` in your PATH.
 *   By asking your login shell for its `PATH`, the same as for Claude Code.
 
+> [!NOTE]
+> Trilium needs `curl` to use OpenAI Codex, the same as for Google Antigravity: Trilium checks every tool call Codex makes through it. It comes with Windows 10 and later, macOS and most Linux distributions.
+
 ### Known limitations
 
-*   The agent can only work with your notes through Trilium's note tools; its own file, shell and web tools are blocked for security reasons.
-*   Web search is not supported yet.
+*   The agent can only work with your notes through Trilium's note tools, and search the web when the chat allows it; its own file, shell and other tools are blocked for security reasons.
 *   The ChatGPT sign-in opens in a browser on the device running Trilium, so it might not be possible to set up the provider while using the web version of a Docker installation. <a class="reference-link" href="../../Installation%20%26%20Setup/Desktop%20Installation.md">Desktop Installation</a> should work fine.

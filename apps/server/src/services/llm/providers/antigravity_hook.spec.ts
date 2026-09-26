@@ -100,7 +100,7 @@ describe("resolveCurlPath", () => {
 
     it("finds curl once, and explains what to install when it is missing", async () => {
         findOnPathMock.mockResolvedValueOnce(undefined);
-        await expect(resolveCurlPath()).rejects.toThrow(/Google Antigravity needs curl.*Install curl/s);
+        await expect(resolveCurlPath()).rejects.toThrow(/Google Antigravity and OpenAI Codex providers need curl.*Install curl/s);
 
         findOnPathMock.mockResolvedValue("/usr/bin/curl");
         await expect(resolveCurlPath()).resolves.toBe("/usr/bin/curl");

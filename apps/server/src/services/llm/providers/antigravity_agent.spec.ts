@@ -19,7 +19,7 @@ vi.mock("../../data_dir.js", async () => {
 });
 
 vi.mock("./antigravity_binary.js", () => ({ resolveAntigravityBinaryPath: async () => "/opt/agy/agy_acp_server.par" }));
-const getAcpHookEndpointUrlMock = vi.hoisted(() => vi.fn(async (_handler: (payload: unknown) => unknown) => "http://127.0.0.1:12345/hook-secret"));
+const getAcpHookEndpointUrlMock = vi.hoisted(() => vi.fn(async (_name: string, _handler: (payload: unknown) => unknown) => "http://127.0.0.1:12345/hook-secret/antigravity"));
 vi.mock("./acp_mcp_endpoint.js", () => ({
     getAcpMcpEndpointUrl: async () => "http://127.0.0.1:12345/mcp-secret",
     getAcpHookEndpointUrl: getAcpHookEndpointUrlMock
@@ -244,10 +244,11 @@ describe("AntigravityAgentProvider", () => {
         const hooks = JSON.parse(fs.readFileSync(path.join(home, "config", "hooks.json"), "utf8"));
         expect(hooks["trilium-file-access"].PreToolUse[0]).toMatchObject({
             matcher: ".*",
-            hooks: [ { command: "\"/usr/bin/curl\" --silent --show-error --fail --noproxy 127.0.0.1 --max-time 8 --data-binary @- http://127.0.0.1:12345/hook-secret" } ]
+            hooks: [ { command: "\"/usr/bin/curl\" --silent --show-error --fail --noproxy 127.0.0.1 --max-time 8 --data-binary @- http://127.0.0.1:12345/hook-secret/antigravity" } ]
         });
 
-        const decide = getAcpHookEndpointUrlMock.mock.calls[0][0];
+        const [ name, decide ] = getAcpHookEndpointUrlMock.mock.calls[0];
+        expect(name).toBe("antigravity");
         const tokenRead = { toolCall: { name: "view_file", args: { AbsolutePath: path.join(home, "antigravity-acp", "acp_token.json") } } };
         expect(decide(tokenRead)).toMatchObject({ decision: "deny" });
         expect(infoLogMock).toHaveBeenCalledWith(expect.stringContaining(`kept view_file out of the server's private folder`));
