@@ -151,8 +151,7 @@ function ChatMessage({ message, isStreaming, onRetry }: Props) {
                 <ExpandableCard className="llm-chat-thinking-card">
                     <ExpandableSection icon="bx bx-brain" label={t("llm_chat.thought_process")}>
                         <div className="llm-chat-thinking-content">
-                            {textContent}
-                            {isStreaming && <span className="llm-chat-cursor" />}
+                            <TextBlockContent content={textContent} isStreaming={isStreaming} />
                         </div>
                     </ExpandableSection>
                 </ExpandableCard>

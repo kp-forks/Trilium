@@ -58,3 +58,22 @@ describe("ChatMessage footer", () => {
         expect(tokens?.getAttribute("title")).toBe("llm_chat.tokens_detail(800/0)");
     });
 });
+
+describe("ChatMessage thinking", () => {
+    it("renders the thought process as Markdown, as Codex writes its reasoning summaries", () => {
+        host = document.body.appendChild(document.createElement("div"));
+        const target = host;
+        const message: StoredMessage = {
+            id: "t1", role: "assistant", type: "thinking", createdAt: "2026-01-01T00:00:00.000Z",
+            content: "**Retrieving PC hostname with command**\n\nI'll read `/etc/hostname`."
+        };
+        act(() => render(<ChatMessage message={message} />, target));
+
+        const thinking = target.querySelector(".llm-chat-thinking-content");
+        expect(thinking?.textContent).toContain("Retrieving PC hostname with command");
+        const content = thinking?.querySelector(".markdown-stub");
+        expect(content).not.toBeNull();
+        expect(content?.textContent).toContain("<strong>Retrieving PC hostname with command</strong>");
+        expect(content?.textContent).toContain("<code>/etc/hostname</code>");
+    });
+});

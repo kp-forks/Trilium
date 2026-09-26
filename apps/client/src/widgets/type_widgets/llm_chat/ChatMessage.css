@@ -216,7 +216,6 @@ body.background-effects.theme-supports-background-effects .llm-chat-message-user
     padding: 0.5rem 0.75rem;
     font-size: 0.9rem;
     color: var(--muted-text-color);
-    white-space: pre-wrap;
 }
 
 /* Markdown styles */
