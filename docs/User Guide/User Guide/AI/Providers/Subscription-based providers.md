@@ -51,7 +51,7 @@ Trilium will identify your Copilot CLI in this order:
 > [!NOTE]
 > This subscription-based provider is still in beta. It is safe to use (won't use additional funds and respects the terms of use), but you might experience small issues. Consider <a class="reference-link" href="../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
 
-Google Antigravity gives access to Gemini models using a Google account (free, Google AI Pro or Google AI Ultra), without an API key.
+Google Antigravity gives access to Gemini models using a Google account (free, Google AI Pro or Google AI Ultra), without an API key. At the time of writing, a free Google account is enough to use it.
 
 Unlike Claude Code or GitHub Copilot, Google's Antigravity ACP server is not part of the CLI so it needs to be installed manually just for Trilium. The downloaded archive is around 112-334 MB and the extracted size is around 230 MB-2 GB based on the platform.
 
@@ -85,7 +85,7 @@ trilium
 > [!NOTE]
 > This subscription-based provider is still in beta. It is safe to use (won't use additional funds and respects the terms of use), but you might experience small issues. Consider <a class="reference-link" href="../../Troubleshooting/Reporting%20issues.md">Reporting issues</a>.
 
-OpenAI Codex gives access to the Codex models of your ChatGPT plan (Free, Go, Plus, Pro or Business), without an API key. Usage counts against your plan's Codex limits, which are small on the Free plan.
+OpenAI Codex gives access to the Codex models of your ChatGPT plan (Free, Go, Plus, Pro or Business), without an API key. At the time of writing, a free ChatGPT account is enough to use it. Usage counts against your plan's Codex limits, which are small on the Free plan.
 
 1.  Install the Codex CLI on the machine that runs Trilium, for example with `npm install -g @openai/codex`. As with Claude Code, for a <a class="reference-link" href="../../Installation%20%26%20Setup/Server%20Installation.md">Server Installation</a> it needs to be installed on the server. Trilium ships the ACP adapter that connects to it, so nothing else is needed.
 2.  Go to <a class="reference-link" href="../../Basic%20Concepts%20and%20Features/UI%20Elements/Options.md">Options</a> → _AI / LLM_ and add the OpenAI Codex provider. When the list of models is loaded for the first time, the ChatGPT sign-in page opens in a browser on the machine running Trilium; finish signing in there.
@@ -97,6 +97,13 @@ Trilium will identify your Codex CLI in this order:
 *   By looking for a `TRILIUM_CODEX_PATH` environment variable pointing to the Codex binary.
 *   By looking for `codex` in your PATH.
 *   By asking your login shell for its `PATH`, the same as for Claude Code.
+
+On NixOS, Codex is available as the `codex` package in nixpkgs. The stable channel can lag behind Codex's releases, so a newer version can be taken from `nixos-unstable`:
+
+```sh
+nix shell github:nixos/nixpkgs/nixos-unstable#codex
+trilium
+```
 
 > [!NOTE]
 > Trilium needs `curl` to use OpenAI Codex, the same as for Google Antigravity: Trilium checks every tool call Codex makes through it. It comes with Windows 10 and later, macOS and most Linux distributions.

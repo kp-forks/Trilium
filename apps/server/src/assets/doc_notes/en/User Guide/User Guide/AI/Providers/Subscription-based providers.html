@@ -85,7 +85,8 @@
     small issues. Consider&nbsp;<a class="reference-link" href="#root/_help_wy8So3yZZlH9">Reporting issues</a>.</p>
 </aside>
 <p>Google Antigravity gives access to Gemini models using a Google account
-  (free, Google AI Pro or Google AI Ultra), without an API key.</p>
+  (free, Google AI Pro or Google AI Ultra), without an API key. At the time
+  of writing, a free Google account is enough to use it.</p>
 <p>Unlike Claude Code or GitHub Copilot, Google's Antigravity ACP server
   is not part of the CLI so it needs to be installed manually just for Trilium.
   The downloaded archive is around 112-334 MB and the extracted size is around
@@ -139,8 +140,9 @@ trilium</code></pre>
     small issues. Consider <a class="reference-link" href="#root/_help_wy8So3yZZlH9">Reporting issues</a>.</p>
 </aside>
 <p>OpenAI Codex gives access to the Codex models of your ChatGPT plan (Free,
-  Go, Plus, Pro or Business), without an API key. Usage counts against your
-  plan's Codex limits, which are small on the Free plan.</p>
+  Go, Plus, Pro or Business), without an API key. At the time of writing,
+  a free ChatGPT account is enough to use it. Usage counts against your plan's
+  Codex limits, which are small on the Free plan.</p>
 <ol>
   <li>Install the Codex CLI on the machine that runs Trilium, for example with <code>npm install -g @openai/codex</code>.
     As with Claude Code, for a <a class="reference-link" href="#root/_help_WOcw2SLH6tbX">Server Installation</a> it
@@ -162,6 +164,10 @@ trilium</code></pre>
   <li>By asking your login shell for its <code>PATH</code>, the same as for Claude
     Code.</li>
 </ul>
+<p>On NixOS, Codex is available as the <code>codex</code> package in nixpkgs.
+  The stable channel can lag behind Codex's releases, so a newer version
+  can be taken from <code>nixos-unstable</code>:</p><pre><code class="language-text-x-sh">nix shell github:nixos/nixpkgs/nixos-unstable#codex
+trilium</code></pre>
 <aside class="admonition note">
   <p>Trilium needs <code>curl</code> to use OpenAI Codex, the same as for Google
     Antigravity: Trilium checks every tool call Codex makes through it. It
